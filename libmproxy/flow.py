@@ -9,7 +9,7 @@ import cookielib
 import os
 import re
 import urlparse
-
+import inspect
 
 from netlib import odict, wsgi
 from netlib.http.semantics import CONTENT_MISSING
@@ -20,6 +20,10 @@ from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
 from .protocol import Kill
 from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, HTTPRequest
+
+
+class PluginError(Exception):
+    pass
 
 
 class AppRegistry:
@@ -621,6 +625,111 @@ class State(object):
         self.flows.kill_all(master)
 
 
+class Plugins(object):
+    def __init__(self):
+        self._view_plugins = {}
+        self._action_plugins = {}
+
+    def __iter__(self):
+        for plugin_type in ('view_plugins', 'action_plugins'):
+            yield (plugin_type, getattr(self, '_' + plugin_type))
+
+    def __getitem__(self, key):
+        if key in ('view_plugins', 'action_plugins'):
+            return getattr(self, '_' + key)
+        else:
+            return None
+
+    def get_option(self, plugin_id, option_id):
+        for plugin_type, plugin_dicts in dict(self).items():
+            for _plugin_id, plugin_dict in plugin_dicts.items():
+                if plugin_id != _plugin_id:
+                    continue
+
+                for _option in plugin_dict['options']:
+                    if _option['id'] != option_id:
+                        continue
+
+                    return _option
+
+        return None
+
+    def get_action(self, plugin_id, action_id):
+        for plugin_type, plugin_dicts in dict(self).items():
+            for _plugin_id, plugin_dict in plugin_dicts.items():
+                if plugin_id != _plugin_id:
+                    continue
+
+                for _action in plugin_dict['actions']:
+                    if _action['id'] != action_id:
+                        continue
+
+                    return _action
+
+        return None
+
+    def set_option_value(self, action_plugin_id, option_id, option_value):
+        option = self.get_option(action_plugin_id, option_id)
+        if option:
+            option['state']['value'] = str(option_value.encode('utf-8'))
+            return
+
+        raise PluginError("No action plugin %s with option %s" % (action_plugin_id, option_id))
+
+    def get_option_value(self, action_plugin_id, option_id):
+        option = self.get_option(action_plugin_id, option_id)
+        if option:
+            return str(option['state']['value'].encode('utf-8'))
+
+        raise PluginError("No action plugin %s with option %s" % (action_plugin_id, option_id))
+
+    def register_view(self, id, **kwargs):
+        if self._view_plugins.get(id):
+            raise PluginError("Duplicate view registration for %s" % (id, ))
+
+        if not kwargs.get('transformer') or not \
+                callable(kwargs['transformer']):
+            raise PluginError("No transformer method passed for view %s" % (id, ))
+
+        script_path = inspect.stack()[1][1]
+
+        view_plugin = {
+            'title': kwargs.get('title') or id,
+            'transformer': kwargs['transformer'],
+            'script_path': script_path,
+        }
+        self._view_plugins[id] = view_plugin
+
+        print("Registered view plugin %s from script %s" % (kwargs['title'], script_path))
+
+    def register_action(self, id, **kwargs):
+        if self._action_plugins.get(id):
+            raise PluginError("Duplicate action registration for %s" % (id, ))
+
+        script_path = inspect.stack()[1][1]
+
+        actions = kwargs.get('actions')
+        for action in actions:
+            if not action.get('state'):
+                action['state'] = {}
+
+            if not action['state'].get('every_flow'):
+                action['state']['every_flow'] = False
+
+            if not action.get('possible_hooks'):
+                action['possible_hooks'] = []
+
+        action_plugin = {
+            'title': kwargs.get('title') or id,
+            'script_path': script_path,
+            'actions': actions,
+            'options': kwargs.get('options')
+        }
+        self._action_plugins[id] = action_plugin
+
+        print("Registered action plugin %s from script %s" % (kwargs['title'], script_path))
+
+
 class FlowMaster(controller.Master):
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
@@ -649,6 +758,8 @@ class FlowMaster(controller.Master):
 
         self.stream = None
         self.apps = AppRegistry()
+
+        self.plugins = Plugins()
 
     def start_app(self, host, port):
         self.apps.add(
@@ -973,6 +1084,31 @@ class FlowMaster(controller.Master):
         f.reply()
         return f
 
+    def run_plugin_hooks(self, hook, f):
+        if self.plugins:
+            action_plugins = self.plugins['action_plugins']
+            for _plugin_id, plugin_dict in action_plugins.items():
+                plugin = plugin_dict
+
+                for action in plugin_dict['actions']:
+                    if hook in action['possible_hooks']:
+                        if action['state']['every_flow']:
+                            found = False
+                            script = None
+                            for _script in self.scripts:
+                                if _script.args[0] != plugin['script_path']:
+                                    continue
+
+                                found = True
+                                script = _script
+                                break
+
+                            if not found:
+                                return
+
+                            self.add_event("Running on every %s: %s" % (hook, action['id']), "debug")
+                            self._run_single_script_hook(script, action['id'], f)
+
     def handle_request(self, f):
         if f.live:
             app = self.apps.get(f.request)
@@ -991,6 +1127,7 @@ class FlowMaster(controller.Master):
         self.replacehooks.run(f)
         self.setheaders.run(f)
         self.run_script_hook("request", f)
+        self.run_plugin_hooks("request", f)
         self.process_new_request(f)
         return f
 
@@ -1012,6 +1149,7 @@ class FlowMaster(controller.Master):
         self.replacehooks.run(f)
         self.setheaders.run(f)
         self.run_script_hook("response", f)
+        self.run_plugin_hooks('response', f)
         if self.client_playback:
             self.client_playback.clear(f)
         self.process_new_response(f)

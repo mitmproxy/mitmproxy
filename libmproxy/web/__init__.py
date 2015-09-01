@@ -4,7 +4,6 @@ import tornado.ioloop
 import tornado.httpserver
 import os
 import sys
-import inspect
 from .. import controller, flow, filt
 from . import app
 
@@ -129,105 +128,10 @@ class Options(object):
                 setattr(self, i, None)
 
 
-class WebPlugins(object):
-    def __init__(self):
-        self._view_plugins = {}
-        self._action_plugins = {}
-
-    def __iter__(self):
-        for plugin_type in ('view_plugins', 'action_plugins'):
-            yield (plugin_type, getattr(self, '_' + plugin_type))
-
-    def get_option(self, plugin_id, option_id):
-        for plugin_type, plugin_dicts in dict(self).items():
-            for _plugin_id, plugin_dict in plugin_dicts.items():
-                if plugin_id != _plugin_id:
-                    continue
-
-                for _option in plugin_dict['options']:
-                    if _option['id'] != option_id:
-                        continue
-
-                    return _option
-
-        return None
-
-    def get_action(self, plugin_id, action_id):
-        for plugin_type, plugin_dicts in dict(self).items():
-            for _plugin_id, plugin_dict in plugin_dicts.items():
-                if plugin_id != _plugin_id:
-                    continue
-
-                for _action in plugin_dict['actions']:
-                    if _action['id'] != action_id:
-                        continue
-
-                    return _action
-
-        return None
-
-    def set_option_value(self, action_plugin_id, option_id, option_value):
-        option = self.get_option(action_plugin_id, option_id)
-        if option:
-            option['state']['value'] = str(option_value.encode('utf-8'))
-            return
-
-        raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
-
-    def get_option_value(self, action_plugin_id, option_id):
-        option = self.get_option(action_plugin_id, option_id)
-        if option:
-            return str(option['state']['value'].encode('utf-8'))
-
-        raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
-
-    def register_view(self, id, **kwargs):
-        if self._view_plugins.get(id):
-            raise WebError("Duplicate view registration for %s" % (id, ))
-
-        if not kwargs.get('transformer') or not \
-                callable(kwargs['transformer']):
-            raise WebError("No transformer method passed for view %s" % (id, ))
-
-        script_path = inspect.stack()[1][1]
-
-        self._view_plugins[id] = {}
-        self._view_plugins[id]['title'] = kwargs.get('title') or id
-        self._view_plugins[id]['transformer'] = kwargs['transformer']
-        self._view_plugins[id]['script_path'] = script_path
-
-        print("Registered view plugin %s form script %s" % (kwargs['title'], script_path))
-
-    def register_action(self, id, **kwargs):
-        if self._action_plugins.get(id):
-            raise WebError("Duplicate action registration for %s" % (id, ))
-
-        script_path = inspect.stack()[1][1]
-
-        self._action_plugins[id] = {}
-        self._action_plugins[id]['title'] = kwargs.get('title') or id
-        self._action_plugins[id]['script_path'] = script_path
-        self._action_plugins[id]['actions'] = kwargs.get('actions')
-        self._action_plugins[id]['options'] = kwargs.get('options')
-
-        for action in self._action_plugins[id]['actions']:
-            if not action.get('state'):
-                action['state'] = {}
-
-            if not action['state'].get('every_flow'):
-                action['state']['every_flow'] = False
-
-            if not action.get('possible_hooks'):
-                action['possible_hooks'] = []
-
-        print("Registered action plugin %s from script %s" % (kwargs['title'], script_path))
-
-
 class WebMaster(flow.FlowMaster):
     def __init__(self, server, options, outfile=sys.stdout):
         self.outfile = outfile
         self.options = options
-        self.plugins = None
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
 
@@ -243,8 +147,6 @@ class WebMaster(flow.FlowMaster):
                 self.start_stream(f, self.filt)
             except IOError as v:
                 raise WebError(v.strerror)
-
-        self.plugins = WebPlugins()
 
         scripts = options.scripts or []
         for command in scripts:
@@ -288,47 +190,12 @@ class WebMaster(flow.FlowMaster):
         else:
             f.reply()
 
-    def _handle_plugin_hooks(self, f, hook):
-        if self.plugins:
-            for plugin_type, plugin_dicts in dict(self.plugins).items():
-                if plugin_type != 'action_plugins':
-                    continue
-
-                for _plugin_id, plugin_dict in plugin_dicts.items():
-                    plugin = plugin_dict
-
-                    for action in plugin_dict['actions']:
-                        if hook in action['possible_hooks']:
-                            if action['state']['every_flow']:
-                                found = False
-                                script = None
-                                for _script in self.scripts:
-                                    if _script.args[0] != plugin['script_path']:
-                                        continue
-
-                                    found = True
-                                    script = _script
-                                    break
-
-                                if not found:
-                                    self._process_flow(f)
-                                    return
-
-                                self.add_event("Running on every %s: %s" % (hook, action['id']), "debug")
-                                self._run_single_script_hook(script, action['id'], f)
-
     def handle_request(self, f):
-        self._handle_plugin_hooks(f, 'request')
-
         super(WebMaster, self).handle_request(f)
-
         self._process_flow(f)
 
     def handle_response(self, f):
-        self._handle_plugin_hooks(f, 'response')
-
         super(WebMaster, self).handle_response(f)
-
         self._process_flow(f)
 
     def handle_error(self, f):
