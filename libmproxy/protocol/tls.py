@@ -259,9 +259,17 @@ class TlsLayer(Layer):
                 (tls_cert_err['depth'], tls_cert_err['errno']),
                 "error")
             self.log("Aborting connection attempt", "error")
-            raise ProtocolException("Cannot establish TLS with server: %s" % repr(e), e)
+            raise ProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                address=repr(self.server_conn.address),
+                sni=self.sni_for_server_connection,
+                e=repr(e),
+            ), e)
         except NetLibError as e:
-            raise ProtocolException("Cannot establish TLS with server: %s" % repr(e), e)
+            raise ProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                address=repr(self.server_conn.address),
+                sni=self.sni_for_server_connection,
+                e=repr(e),
+            ), e)
 
         self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
 
