@@ -36,7 +36,6 @@ def test_plugins_views():
 def test_plugins_actions():
     s = flow.State()
     fm = flow.FlowMaster(None, s)
-    sp = tutils.test_data.path("scripts/a.py")
     f = tutils.tflow(req=netlib.tutils.treq(), resp=True)
 
     plugins = fm.plugins
@@ -72,7 +71,7 @@ def test_plugins_actions():
 def test_action_plugin_simple():
     s = flow.State()
     fm = flow.FlowMaster(None, s)
-    fm.load_script(tutils.test_data.path("scripts/a.py"))
+    fm.load_script(tutils.test_data.path("scripts/test_plugin.py"))
     f = tutils.tflow(req=netlib.tutils.treq(), resp=True)
 
     plugins = fm.plugins
