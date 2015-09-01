@@ -145,15 +145,6 @@ passed to us. Now we can pause the conversation, and initiate an upstream
 connection using the correct SNI value, which then serves us the correct
 upstream certificate, from which we can extract the expected CN and SANs.
 
-There's another wrinkle here. Due to a limitation of the SSL library mitmproxy
-uses, we can't detect that a connection _hasn't_ sent an SNI request until it's
-too late for upstream certificate sniffing. In practice, we therefore make a
-vanilla SSL connection upstream to sniff non-SNI certificates, and then discard
-the connection if the client sends an SNI notification. If you're watching your
-traffic with a packet sniffer, you'll see two connections to the server when an
-SNI request is made, the first of which is immediately closed after the SSL
-handshake. Luckily, this is almost never an issue in practice.
-
 ## Putting it all together
 
 Lets put all of this together into the complete explicitly proxied HTTPS flow.

@@ -1,6 +1,10 @@
-[rum]
+[run]
 branch = True
 
 [report]
 omit = *contrib*, *tnetstring*, *platform*, *console*, *main.py
 include = *libmproxy*
+exclude_lines =
+    pragma: nocover
+    pragma: no cover
+    raise NotImplementedError()

@@ -1,14 +1,10 @@
 from __future__ import absolute_import
 import os
 import datetime
-import urllib
 import re
 import time
-import functools
-import cgi
 import json
 
-import netlib.utils
 
 def timestamp():
     """

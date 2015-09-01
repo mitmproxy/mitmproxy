@@ -8,7 +8,7 @@ from netlib.http.semantics import CONTENT_MISSING
 import netlib.utils
 
 from .. import utils
-from ..protocol.http import decoded
+from ..models import decoded
 from . import signals
 
 

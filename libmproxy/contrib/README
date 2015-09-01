@@ -8,3 +8,7 @@ jsbeautifier, git checkout 25/03/12, MIT license
 
 wbxml
     - https://github.com/davidpshaw/PyWBXMLDecoder
+
+tls, BSD license
+    - https://github.com/mhils/tls/tree/mitmproxy
+    - limited to required files.

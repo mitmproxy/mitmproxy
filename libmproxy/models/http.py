@@ -1,47 +1,16 @@
-from __future__ import absolute_import
+from __future__ import (absolute_import, print_function, division)
 import Cookie
 import copy
-import threading
-import time
-import urllib
-import urlparse
 from email.utils import parsedate_tz, formatdate, mktime_tz
+import time
 
-import netlib
-from netlib import http, tcp, odict, utils, encoding
-from netlib.http import cookies, semantics, http1
-
-from .tcp import TCPHandler
-from .primitives import KILL, ProtocolHandler, Flow, Error
-from ..proxy.connection import ServerConnection
-from .. import utils, controller, stateobject, proxy
-
-
-class decoded(object):
-    """
-    A context manager that decodes a request or response, and then
-    re-encodes it with the same encoding after execution of the block.
-
-    Example:
-    with decoded(request):
-        request.content = request.content.replace("foo", "bar")
-    """
-
-    def __init__(self, o):
-        self.o = o
-        ce = o.headers.get_first("content-encoding")
-        if ce in encoding.ENCODINGS:
-            self.ce = ce
-        else:
-            self.ce = None
-
-    def __enter__(self):
-        if self.ce:
-            self.o.decode()
-
-    def __exit__(self, type, value, tb):
-        if self.ce:
-            self.o.encode(self.ce)
+from libmproxy import utils
+from netlib import odict, encoding
+from netlib.http import status_codes
+from netlib.tcp import Address
+from netlib.http.semantics import Request, Response, CONTENT_MISSING
+from .. import version, stateobject
+from .flow import Flow
 
 
 class MessageMixin(stateobject.StateObject):
@@ -124,7 +93,7 @@ class MessageMixin(stateobject.StateObject):
         return c
 
 
-class HTTPRequest(MessageMixin, semantics.Request):
+class HTTPRequest(MessageMixin, Request):
     """
     An HTTP request.
 
@@ -170,21 +139,21 @@ class HTTPRequest(MessageMixin, semantics.Request):
     """
 
     def __init__(
-        self,
-        form_in,
-        method,
-        scheme,
-        host,
-        port,
-        path,
-        httpversion,
-        headers,
-        body,
-        timestamp_start=None,
-        timestamp_end=None,
-        form_out=None,
+            self,
+            form_in,
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            httpversion,
+            headers,
+            body,
+            timestamp_start=None,
+            timestamp_end=None,
+            form_out=None,
     ):
-        semantics.Request.__init__(
+        Request.__init__(
             self,
             form_in,
             method,
@@ -240,31 +209,15 @@ class HTTPRequest(MessageMixin, semantics.Request):
     def from_protocol(
             self,
             protocol,
-            include_body=True,
-            body_size_limit=None,
+            *args,
+            **kwargs
     ):
-        req = protocol.read_request(
-            include_body = include_body,
-            body_size_limit = body_size_limit,
-        )
-
-        return HTTPRequest(
-            req.form_in,
-            req.method,
-            req.scheme,
-            req.host,
-            req.port,
-            req.path,
-            req.httpversion,
-            req.headers,
-            req.body,
-            req.timestamp_start,
-            req.timestamp_end,
-        )
+        req = protocol.read_request(*args, **kwargs)
+        return self.wrap(req)
 
     @classmethod
     def wrap(self, request):
-        return HTTPRequest(
+        req = HTTPRequest(
             form_in=request.form_in,
             method=request.method,
             scheme=request.scheme,
@@ -278,6 +231,9 @@ class HTTPRequest(MessageMixin, semantics.Request):
             timestamp_end=request.timestamp_end,
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
+        if hasattr(request, 'stream_id'):
+            req.stream_id = request.stream_id
+        return req
 
     def __hash__(self):
         return id(self)
@@ -298,7 +254,7 @@ class HTTPRequest(MessageMixin, semantics.Request):
         return c
 
 
-class HTTPResponse(MessageMixin, semantics.Response):
+class HTTPResponse(MessageMixin, Response):
     """
     An HTTP response.
 
@@ -331,7 +287,7 @@ class HTTPResponse(MessageMixin, semantics.Response):
             timestamp_start=None,
             timestamp_end=None,
     ):
-        semantics.Response.__init__(
+        Response.__init__(
             self,
             httpversion,
             status_code,
@@ -362,29 +318,15 @@ class HTTPResponse(MessageMixin, semantics.Response):
     def from_protocol(
             self,
             protocol,
-            request_method,
-            include_body=True,
-            body_size_limit=None
+            *args,
+            **kwargs
     ):
-        resp = protocol.read_response(
-            request_method,
-            body_size_limit,
-            include_body=include_body
-        )
-
-        return HTTPResponse(
-            resp.httpversion,
-            resp.status_code,
-            resp.msg,
-            resp.headers,
-            resp.body,
-            resp.timestamp_start,
-            resp.timestamp_end,
-        )
+        resp = protocol.read_response(*args, **kwargs)
+        return self.wrap(resp)
 
     @classmethod
     def wrap(self, response):
-        return HTTPResponse(
+        resp = HTTPResponse(
             httpversion=response.httpversion,
             status_code=response.status_code,
             msg=response.msg,
@@ -393,6 +335,9 @@ class HTTPResponse(MessageMixin, semantics.Response):
             timestamp_start=response.timestamp_start,
             timestamp_end=response.timestamp_end,
         )
+        if hasattr(response, 'stream_id'):
+            resp.stream_id = response.stream_id
+        return resp
 
     def _refresh_cookie(self, c, delta):
         """
@@ -443,3 +388,167 @@ class HTTPResponse(MessageMixin, semantics.Response):
             c.append(self._refresh_cookie(i, delta))
         if c:
             self.headers["set-cookie"] = c
+
+
+class HTTPFlow(Flow):
+    """
+    A HTTPFlow is a collection of objects representing a single HTTP
+    transaction. The main attributes are:
+
+        request: HTTPRequest object
+        response: HTTPResponse object
+        error: Error object
+        server_conn: ServerConnection object
+        client_conn: ClientConnection object
+
+    Note that it's possible for a Flow to have both a response and an error
+    object. This might happen, for instance, when a response was received
+    from the server, but there was an error sending it back to the client.
+
+    The following additional attributes are exposed:
+
+        intercepted: Is this flow currently being intercepted?
+        live: Does this flow have a live client connection?
+    """
+
+    def __init__(self, client_conn, server_conn, live=None):
+        super(HTTPFlow, self).__init__("http", client_conn, server_conn, live)
+        self.request = None
+        """@type: HTTPRequest"""
+        self.response = None
+        """@type: HTTPResponse"""
+
+    _stateobject_attributes = Flow._stateobject_attributes.copy()
+    _stateobject_attributes.update(
+        request=HTTPRequest,
+        response=HTTPResponse
+    )
+
+    @classmethod
+    def from_state(cls, state):
+        f = cls(None, None)
+        f.load_state(state)
+        return f
+
+    def __repr__(self):
+        s = "<HTTPFlow"
+        for a in ("request", "response", "error", "client_conn", "server_conn"):
+            if getattr(self, a, False):
+                s += "\r\n  %s = {flow.%s}" % (a, a)
+        s += ">"
+        return s.format(flow=self)
+
+    def copy(self):
+        f = super(HTTPFlow, self).copy()
+        if self.request:
+            f.request = self.request.copy()
+        if self.response:
+            f.response = self.response.copy()
+        return f
+
+    def match(self, f):
+        """
+            Match this flow against a compiled filter expression. Returns True
+            if matched, False if not.
+
+            If f is a string, it will be compiled as a filter expression. If
+            the expression is invalid, ValueError is raised.
+        """
+        if isinstance(f, basestring):
+            from .. import filt
+
+            f = filt.parse(f)
+            if not f:
+                raise ValueError("Invalid filter expression.")
+        if f:
+            return f(self)
+        return True
+
+    def replace(self, pattern, repl, *args, **kwargs):
+        """
+            Replaces a regular expression pattern with repl in both request and
+            response of the flow. Encoded content will be decoded before
+            replacement, and re-encoded afterwards.
+
+            Returns the number of replacements made.
+        """
+        c = self.request.replace(pattern, repl, *args, **kwargs)
+        if self.response:
+            c += self.response.replace(pattern, repl, *args, **kwargs)
+        return c
+
+
+class decoded(object):
+    """
+    A context manager that decodes a request or response, and then
+    re-encodes it with the same encoding after execution of the block.
+
+    Example:
+    with decoded(request):
+        request.content = request.content.replace("foo", "bar")
+    """
+
+    def __init__(self, o):
+        self.o = o
+        ce = o.headers.get_first("content-encoding")
+        if ce in encoding.ENCODINGS:
+            self.ce = ce
+        else:
+            self.ce = None
+
+    def __enter__(self):
+        if self.ce:
+            self.o.decode()
+
+    def __exit__(self, type, value, tb):
+        if self.ce:
+            self.o.encode(self.ce)
+
+
+def make_error_response(status_code, message, headers=None):
+    response = status_codes.RESPONSES.get(status_code, "Unknown")
+    body = """
+        <html>
+            <head>
+                <title>%d %s</title>
+            </head>
+            <body>%s</body>
+        </html>
+    """.strip() % (status_code, response, message)
+
+    if not headers:
+        headers = odict.ODictCaseless()
+    headers["Server"] = [version.NAMEVERSION]
+    headers["Connection"] = ["close"]
+    headers["Content-Length"] = [len(body)]
+    headers["Content-Type"] = ["text/html"]
+
+    return HTTPResponse(
+        (1, 1),  # FIXME: Should be a string.
+        status_code,
+        response,
+        headers,
+        body,
+    )
+
+
+def make_connect_request(address):
+    address = Address.wrap(address)
+    return HTTPRequest(
+        "authority", "CONNECT", None, address.host, address.port, None, (1, 1),
+        odict.ODictCaseless(), ""
+    )
+
+
+def make_connect_response(httpversion):
+    headers = odict.ODictCaseless([
+        ["Content-Length", "0"],
+        ["Proxy-Agent", version.NAMEVERSION]
+    ])
+    return HTTPResponse(
+        httpversion,
+        200,
+        "Connection established",
+        headers,
+        "",
+    )

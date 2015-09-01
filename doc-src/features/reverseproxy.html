@@ -7,22 +7,17 @@ mitmproxy forwards HTTP proxy requests to an upstream proxy server.
 <table class="table">
     <tbody>
         <tr>
-            <th width="20%">command-line</th> <td>-R <i>schema</i>://hostname[:port]</td>
+            <th width="20%">command-line</th> <td>-R <i>scheme</i>://hostname[:port]</td>
         </tr>
     </tbody>
 </table>
 
-Here, **schema** is one of http, https, http2https or https2http. The latter
-two extended schema specifications control the use of HTTP and HTTPS on
-mitmproxy and the upstream server. You can indicate that mitmproxy should use
-HTTP, and the upstream server uses HTTPS like this:
+Here, **scheme** signifies if the proxy should use TLS to connect to the server.
+mitmproxy accepts both encrypted and unencrypted requests and transforms them to what the server
+expects.
 
-	http2https://hostname:port
-
-And you can indicate that mitmproxy should use HTTPS while the upstream
-service uses HTTP like this:
-
-	https2http://hostname:port
+    mitmdump -R https://httpbin.org -p 80
+    mitmdump -R https://httpbin.org -p 443
 
 
 ### Host Header

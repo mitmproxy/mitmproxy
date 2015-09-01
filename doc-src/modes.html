@@ -149,7 +149,7 @@ this:
     <h1>Reverse Proxy</h1>
 </div>
 
-Mitmproxy is usually used with a client that uses the proxy to access the
+mitmproxy is usually used with a client that uses the proxy to access the
 Internet. Using reverse proxy mode, you can use mitmproxy to act like a normal
 HTTP server:
 
@@ -173,15 +173,15 @@ on port 80. You can test your app on the example.com domain and get all
 requests recorded in mitmproxy.
 
 - Say you have some toy project that should get SSL support. Simply set up
-mitmproxy with SSL termination and you're done (<code>mitmdump -p 443 -R
-https2http://localhost:80/</code>). There are better tools for this specific
-task, but mitmproxy is very quick and simple way to set up an SSL-speaking
-server.
+mitmproxy as a reverse proxy on port 443 and you're done (<code>mitmdump -p 443 -R
+http://localhost:80/</code>). mitmproxy auto-detects TLS traffic and intercepts it dynamically.
+There are better tools for this specific task, but mitmproxy is very quick and simple way to
+set up an SSL-speaking server.
 
 - Want to add a non-SSL-capable compression proxy in front of your server? You
-could even spawn a mitmproxy instance that terminates SSL (https2http://...),
+could even spawn a mitmproxy instance that terminates SSL (-R http://...),
 point it to the compression proxy and let the compression proxy point to a
-SSL-initiating mitmproxy (http2https://...), which then points to the real
+SSL-initiating mitmproxy (-R https://...), which then points to the real
 server. As you see, it's a fairly flexible thing.
 
 Note that mitmproxy supports either an HTTP or an HTTPS upstream server, not

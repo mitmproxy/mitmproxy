@@ -1,20 +1,14 @@
-import argparse
+import mock
+from OpenSSL import SSL
+
 from libmproxy import cmdline
-from libmproxy.proxy import ProxyConfig, process_proxy_options
-from libmproxy.proxy.connection import ServerConnection
-from libmproxy.proxy.primitives import ProxyError
+from libmproxy.proxy import ProxyConfig
+from libmproxy.proxy.config import process_proxy_options
+from libmproxy.models.connections import ServerConnection
 from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 import tutils
 from libpathod import test
 from netlib import http, tcp
-import mock
-
-from OpenSSL import SSL
-
-
-def test_proxy_error():
-    p = ProxyError(111, "msg")
-    assert str(p)
 
 
 class TestServerConnection:
@@ -97,13 +91,10 @@ class TestProcessProxyOptions:
         self.assert_err("expected one argument", "-U")
         self.assert_err("Invalid server specification", "-U", "upstream")
 
-        self.assert_noerr("--spoof")
-        self.assert_noerr("--ssl-spoof")
+        self.assert_err("not allowed with", "-R", "http://localhost", "-T")
 
-        self.assert_noerr("--spoofed-port", "443")
-        self.assert_err("expected one argument", "--spoofed-port")
-
-        self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
+    def test_socks_auth(self):
+        self.assert_err("Proxy Authentication not supported in SOCKS mode.", "--socks", "--nonanonymous")
 
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
@@ -181,13 +172,19 @@ class TestDummyServer:
 class TestConnectionHandler:
     def test_fatal_error(self):
         config = mock.Mock()
-        config.mode.get_upstream_server.side_effect = RuntimeError
+        root_layer = mock.Mock()
+        root_layer.side_effect = RuntimeError
+        config.mode.return_value = root_layer
+        channel = mock.Mock()
+
+        def ask(_, x):
+            return x
+        channel.ask = ask
         c = ConnectionHandler(
-            config,
             mock.MagicMock(),
-            ("127.0.0.1",
-             8080),
-            None,
-            mock.MagicMock())
+            ("127.0.0.1", 8080),
+            config,
+            channel
+        )
         with tutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output

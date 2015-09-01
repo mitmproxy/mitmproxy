@@ -1,606 +1,347 @@
-from __future__ import absolute_import
-import Cookie
-import copy
-import threading
-import time
-import urllib
-import urlparse
-from email.utils import parsedate_tz, formatdate, mktime_tz
+from __future__ import (absolute_import, print_function, division)
 
-import netlib
-from netlib import http, tcp, odict, utils, encoding
-from netlib.http import cookies, http1, http2
+from netlib import tcp
+from netlib.http import http1, HttpErrorConnClosed, HttpError
 from netlib.http.semantics import CONTENT_MISSING
+from netlib import odict
+from netlib.tcp import NetLibError, Address
+from netlib.http.http1 import HTTP1Protocol
+from netlib.http.http2 import HTTP2Protocol
+from netlib.http.http2.frame import WindowUpdateFrame
 
-from .tcp import TCPHandler
-from .primitives import KILL, ProtocolHandler, Flow, Error
-from ..proxy.connection import ServerConnection
-from .. import utils, controller, stateobject, proxy
-
-from .http_wrappers import decoded, HTTPRequest, HTTPResponse
-
-
-class KillSignal(Exception):
-    pass
-
-
-def send_connect_request(conn, host, port, update_state=True):
-    upstream_request = HTTPRequest(
-        "authority",
-        "CONNECT",
-        None,
-        host,
-        port,
-        None,
-        (1, 1),
-        odict.ODictCaseless(),
-        ""
-    )
-
-    # we currently only support HTTP/1 CONNECT requests
-    protocol = http1.HTTP1Protocol(conn)
-
-    conn.send(protocol.assemble(upstream_request))
-    resp = HTTPResponse.from_protocol(protocol, upstream_request.method)
-    if resp.status_code != 200:
-        raise proxy.ProxyError(resp.status_code,
-                               "Cannot establish SSL " +
-                               "connection with upstream proxy: \r\n" +
-                               repr(resp))
-    if update_state:
-        conn.state.append(("http", {
-            "state": "connect",
-            "host": host,
-            "port": port}
-        ))
-    return resp
+from .. import utils
+from ..exceptions import InvalidCredentials, HttpException, ProtocolException
+from ..models import (
+    HTTPFlow, HTTPRequest, HTTPResponse, make_error_response, make_connect_response, Error
+)
+from .base import Layer, Kill
 
 
-class HTTPFlow(Flow):
-    """
-    A HTTPFlow is a collection of objects representing a single HTTP
-    transaction. The main attributes are:
+class _HttpLayer(Layer):
+    supports_streaming = False
 
-        request: HTTPRequest object
-        response: HTTPResponse object
-        error: Error object
-        server_conn: ServerConnection object
-        client_conn: ClientConnection object
+    def read_request(self):
+        raise NotImplementedError()
 
-    Note that it's possible for a Flow to have both a response and an error
-    object. This might happen, for instance, when a response was received
-    from the server, but there was an error sending it back to the client.
+    def send_request(self, request):
+        raise NotImplementedError()
 
-    The following additional attributes are exposed:
+    def read_response(self, request_method):
+        raise NotImplementedError()
 
-        intercepted: Is this flow currently being intercepted?
-        live: Does this flow have a live client connection?
-    """
-
-    def __init__(self, client_conn, server_conn, live=None):
-        super(HTTPFlow, self).__init__("http", client_conn, server_conn, live)
-        self.request = None
-        """@type: HTTPRequest"""
-        self.response = None
-        """@type: HTTPResponse"""
-
-    _stateobject_attributes = Flow._stateobject_attributes.copy()
-    _stateobject_attributes.update(
-        request=HTTPRequest,
-        response=HTTPResponse
-    )
-
-    @classmethod
-    def from_state(cls, state):
-        f = cls(None, None)
-        f.load_state(state)
-        return f
-
-    def __repr__(self):
-        s = "<HTTPFlow"
-        for a in ("request", "response", "error", "client_conn", "server_conn"):
-            if getattr(self, a, False):
-                s += "\r\n  %s = {flow.%s}" % (a, a)
-        s += ">"
-        return s.format(flow=self)
-
-    def copy(self):
-        f = super(HTTPFlow, self).copy()
-        if self.request:
-            f.request = self.request.copy()
-        if self.response:
-            f.response = self.response.copy()
-        return f
-
-    def match(self, f):
-        """
-            Match this flow against a compiled filter expression. Returns True
-            if matched, False if not.
-
-            If f is a string, it will be compiled as a filter expression. If
-            the expression is invalid, ValueError is raised.
-        """
-        if isinstance(f, basestring):
-            from .. import filt
-
-            f = filt.parse(f)
-            if not f:
-                raise ValueError("Invalid filter expression.")
-        if f:
-            return f(self)
-        return True
-
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in both request and
-            response of the flow. Encoded content will be decoded before
-            replacement, and re-encoded afterwards.
-
-            Returns the number of replacements made.
-        """
-        c = self.request.replace(pattern, repl, *args, **kwargs)
-        if self.response:
-            c += self.response.replace(pattern, repl, *args, **kwargs)
-        return c
+    def send_response(self, response):
+        raise NotImplementedError()
 
 
-class HTTPHandler(ProtocolHandler):
-    """
-    HTTPHandler implements mitmproxys understanding of the HTTP protocol.
+class _StreamingHttpLayer(_HttpLayer):
+    supports_streaming = True
 
-    """
+    def read_response_headers(self):
+        raise NotImplementedError
 
-    def __init__(self, c):
-        super(HTTPHandler, self).__init__(c)
-        self.expected_form_in = c.config.mode.http_form_in
-        self.expected_form_out = c.config.mode.http_form_out
-        self.skip_authentication = False
+    def read_response_body(self, headers, request_method, response_code, max_chunk_size=None):
+        raise NotImplementedError()
+        yield "this is a generator"  # pragma: no cover
 
-    def handle_messages(self):
-        while self.handle_flow():
-            pass
+    def send_response_headers(self, response):
+        raise NotImplementedError
 
-    def get_response_from_server(self, flow):
-        self.c.establish_server_connection()
+    def send_response_body(self, response, chunks):
+        raise NotImplementedError()
 
-        for attempt in (0, 1):
-            try:
-                if not self.c.server_conn.protocol:
-                    # instantiate new protocol if connection does not have one yet
-                    # TODO: select correct protocol based on ALPN (?)
-                    self.c.server_conn.protocol = http1.HTTP1Protocol(self.c.server_conn)
-                    # self.c.server_conn.protocol = http2.HTTP2Protocol(self.c.server_conn)
-                    # self.c.server_conn.protocol.perform_connection_preface()
 
-                self.c.server_conn.send(self.c.server_conn.protocol.assemble(flow.request))
+class Http1Layer(_StreamingHttpLayer):
+    def __init__(self, ctx, mode):
+        super(Http1Layer, self).__init__(ctx)
+        self.mode = mode
+        self.client_protocol = HTTP1Protocol(self.client_conn)
+        self.server_protocol = HTTP1Protocol(self.server_conn)
 
-                # Only get the headers at first...
-                flow.response = HTTPResponse.from_protocol(
-                    self.c.server_conn.protocol,
-                    flow.request.method,
-                    body_size_limit=self.c.config.body_size_limit,
-                    include_body=False,
-                )
-                break
-            except (tcp.NetLibError, http.HttpErrorConnClosed) as v:
-                self.c.log(
-                    "error in server communication: %s" % repr(v),
-                    level="debug"
-                )
-                if attempt == 0:
-                    # In any case, we try to reconnect at least once. This is
-                    # necessary because it might be possible that we already
-                    # initiated an upstream connection after clientconnect that
-                    # has already been expired, e.g consider the following event
-                    # log:
-                    # > clientconnect (transparent mode destination known)
-                    # > serverconnect
-                    # > read n% of large request
-                    # > server detects timeout, disconnects
-                    # > read (100-n)% of large request
-                    # > send large request upstream
-                    self.c.server_reconnect()
-                else:
-                    raise
+    def read_request(self):
+        return HTTPRequest.from_protocol(
+            self.client_protocol,
+            body_size_limit=self.config.body_size_limit
+        )
 
-        # call the appropriate script hook - this is an opportunity for an
-        # inline script to set flow.stream = True
-        flow = self.c.channel.ask("responseheaders", flow)
-        if flow is None or flow == KILL:
-            raise KillSignal()
-        else:
-            # now get the rest of the request body, if body still needs to be
-            # read but not streaming this response
-            if flow.response.stream:
-                flow.response.content = CONTENT_MISSING
-            else:
-                if isinstance(self.c.server_conn.protocol, http1.HTTP1Protocol):
-                    # streaming is only supported with HTTP/1 at the moment
-                    flow.response.content = self.c.server_conn.protocol.read_http_body(
-                        flow.response.headers,
-                        self.c.config.body_size_limit,
-                        flow.request.method,
-                        flow.response.code,
-                        False
-                    )
-        flow.response.timestamp_end = utils.timestamp()
+    def send_request(self, request):
+        self.server_conn.send(self.server_protocol.assemble(request))
 
-    def handle_flow(self):
-        flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
+    def read_response(self, request_method):
+        return HTTPResponse.from_protocol(
+            self.server_protocol,
+            request_method=request_method,
+            body_size_limit=self.config.body_size_limit,
+            include_body=True
+        )
 
-        try:
-            try:
-                if not flow.client_conn.protocol:
-                    # instantiate new protocol if connection does not have one yet
-                    # the first request might be a CONNECT - which is currently only supported with HTTP/1
-                    flow.client_conn.protocol = http1.HTTP1Protocol(self.c.client_conn)
+    def send_response(self, response):
+        self.client_conn.send(self.client_protocol.assemble(response))
 
-                req = HTTPRequest.from_protocol(
-                    flow.client_conn.protocol,
-                    body_size_limit=self.c.config.body_size_limit
-                )
-            except tcp.NetLibError:
-                # don't throw an error for disconnects that happen
-                # before/between requests.
-                return False
+    def read_response_headers(self):
+        return HTTPResponse.from_protocol(
+            self.server_protocol,
+            request_method=None,  # does not matter if we don't read the body.
+            body_size_limit=self.config.body_size_limit,
+            include_body=False
+        )
 
-            self.c.log(
-                "request",
-                "debug",
-                [repr(req)]
-            )
-            ret = self.process_request(flow, req)
-            if ret:
-                # instantiate new protocol if connection does not have one yet
-                # TODO: select correct protocol based on ALPN (?)
-                flow.client_conn.protocol = http1.HTTP1Protocol(self.c.client_conn)
-                # flow.client_conn.protocol = http2.HTTP2Protocol(self.c.client_conn, is_server=True)
-            if ret is not None:
-                return ret
-
-            # Be careful NOT to assign the request to the flow before
-            # process_request completes. This is because the call can raise an
-            # exception. If the request object is already attached, this results
-            # in an Error object that has an attached request that has not been
-            # sent through to the Master.
-            flow.request = req
-            request_reply = self.c.channel.ask("request", flow)
-            if request_reply is None or request_reply == KILL:
-                raise KillSignal()
-
-            # The inline script may have changed request.host
-            self.process_server_address(flow)
-
-            if isinstance(request_reply, HTTPResponse):
-                flow.response = request_reply
-            else:
-                self.get_response_from_server(flow)
-
-            # no further manipulation of self.c.server_conn beyond this point
-            # we can safely set it as the final attribute value here.
-            flow.server_conn = self.c.server_conn
-
-            self.c.log(
-                "response",
-                "debug",
-                [repr(flow.response)]
-            )
-            response_reply = self.c.channel.ask("response", flow)
-            if response_reply is None or response_reply == KILL:
-                raise KillSignal()
-
-            self.send_response_to_client(flow)
-
-            if self.check_close_connection(flow):
-                return False
-
-            # We sent a CONNECT request to an upstream proxy.
-            if flow.request.form_in == "authority" and flow.response.code == 200:
-                # TODO: Possibly add headers (memory consumption/usefulness
-                # tradeoff) Make sure to add state info before the actual
-                # processing of the CONNECT request happens. During an SSL
-                # upgrade, we may receive an SNI indication from the client,
-                # which resets the upstream connection. If this is the case, we
-                # must already re-issue the CONNECT request at this point.
-                self.c.server_conn.state.append(
-                    (
-                        "http", {
-                            "state": "connect",
-                            "host": flow.request.host,
-                            "port": flow.request.port
-                        }
-                    )
-                )
-                if not self.process_connect_request(
-                        (flow.request.host, flow.request.port)):
-                    return False
-
-            # If the user has changed the target server on this connection,
-            # restore the original target server
-            flow.live.restore_server()
-
-            return True  # Next flow please.
-        except (
-                http.HttpAuthenticationError,
-                http.HttpError,
-                proxy.ProxyError,
-                tcp.NetLibError,
-        ) as e:
-            self.handle_error(e, flow)
-        except KillSignal:
-            self.c.log("Connection killed", "info")
-        finally:
-            flow.live = None  # Connection is not live anymore.
-        return False
-
-    def handle_server_reconnect(self, state):
-        if state["state"] == "connect":
-            send_connect_request(
-                self.c.server_conn,
-                state["host"],
-                state["port"],
-                update_state=False
-            )
-        else:  # pragma: nocover
-            raise RuntimeError("Unknown State: %s" % state["state"])
-
-    def handle_error(self, error, flow=None):
-        message = repr(error)
-        message_debug = None
-
-        if isinstance(error, tcp.NetLibError):
-            message = None
-            message_debug = "TCP connection closed unexpectedly."
-        elif "tlsv1 alert unknown ca" in message:
-            message = "TLSv1 Alert Unknown CA: The client does not trust the proxy's certificate."
-        elif "handshake error" in message:
-            message_debug = message
-            message = "SSL handshake error: The client may not trust the proxy's certificate."
-
-        if message:
-            self.c.log(message, level="info")
-        if message_debug:
-            self.c.log(message_debug, level="debug")
-
-        if flow:
-            # TODO: no flows without request or with both request and response
-            # at the moment.
-            if flow.request and not flow.response:
-                flow.error = Error(message or message_debug)
-                self.c.channel.ask("error", flow)
-        try:
-            status_code = getattr(error, "code", 502)
-            headers = getattr(error, "headers", None)
-
-            html_message = message or ""
-            if message_debug:
-                html_message += "<pre>%s</pre>" % message_debug
-            self.send_error(status_code, html_message, headers)
-        except:
-            pass
-
-    def send_error(self, status_code, message, headers):
-        response = http.status_codes.RESPONSES.get(status_code, "Unknown")
-        body = """
-            <html>
-                <head>
-                    <title>%d %s</title>
-                </head>
-                <body>%s</body>
-            </html>
-        """ % (status_code, response, message)
-
-        if not headers:
-            headers = odict.ODictCaseless()
-        assert isinstance(headers, odict.ODictCaseless)
-
-        headers["Server"] = [self.c.config.server_version]
-        headers["Connection"] = ["close"]
-        headers["Content-Length"] = [len(body)]
-        headers["Content-Type"] = ["text/html"]
-
-        resp = HTTPResponse(
-            (1, 1),  # if HTTP/2 is used, this value is ignored anyway
-            status_code,
-            response,
+    def read_response_body(self, headers, request_method, response_code, max_chunk_size=None):
+        return self.server_protocol.read_http_body_chunked(
             headers,
-            body,
+            self.config.body_size_limit,
+            request_method,
+            response_code,
+            False,
+            max_chunk_size
         )
 
-        # if no protocol is assigned yet - just assume HTTP/1
-        # TODO: maybe check ALPN and use HTTP/2 if required?
-        protocol = self.c.client_conn.protocol or http1.HTTP1Protocol(self.c.client_conn)
-        self.c.client_conn.send(protocol.assemble(resp))
+    def send_response_headers(self, response):
+        h = self.client_protocol._assemble_response_first_line(response)
+        self.client_conn.wfile.write(h + "\r\n")
+        h = self.client_protocol._assemble_response_headers(
+            response,
+            preserve_transfer_encoding=True
+        )
+        self.client_conn.send(h + "\r\n")
 
-    def process_request(self, flow, request):
-        """
-        @returns:
-        True, if the request should not be sent upstream
-        False, if the connection should be aborted
-        None, if the request should be sent upstream
-        (a status code != None should be returned directly by handle_flow)
-        """
-
-        if not self.skip_authentication:
-            self.authenticate(request)
-
-        # Determine .scheme, .host and .port attributes
-        # For absolute-form requests, they are directly given in the request.
-        # For authority-form requests, we only need to determine the request scheme.
-        # For relative-form requests, we need to determine host and port as
-        # well.
-        if not request.scheme:
-            request.scheme = "https" if flow.server_conn and flow.server_conn.ssl_established else "http"
-        if not request.host:
-            # Host/Port Complication: In upstream mode, use the server we CONNECTed to,
-            # not the upstream proxy.
-            if flow.server_conn:
-                for s in flow.server_conn.state:
-                    if s[0] == "http" and s[1]["state"] == "connect":
-                        request.host, request.port = s[1]["host"], s[1]["port"]
-            if not request.host and flow.server_conn:
-                request.host, request.port = flow.server_conn.address.host, flow.server_conn.address.port
-
-
-        # Now we can process the request.
-        if request.form_in == "authority":
-            if self.c.client_conn.ssl_established:
-                raise http.HttpError(
-                    400,
-                    "Must not CONNECT on already encrypted connection"
-                )
-
-            if self.c.config.mode == "regular":
-                self.c.set_server_address((request.host, request.port))
-                # Update server_conn attribute on the flow
-                flow.server_conn = self.c.server_conn
-
-                # since we currently only support HTTP/1 CONNECT requests
-                # the response must be HTTP/1 as well
-                self.c.client_conn.send(
-                    ('HTTP/%s.%s 200 ' % (request.httpversion[0], request.httpversion[1])) +
-                    'Connection established\r\n' +
-                    'Content-Length: 0\r\n' +
-                    ('Proxy-agent: %s\r\n' % self.c.config.server_version) +
-                    '\r\n'
-                )
-                return self.process_connect_request(self.c.server_conn.address)
-            elif self.c.config.mode == "upstream":
-                return None
-            else:
-                # CONNECT should never occur if we don't expect absolute-form
-                # requests
-                pass
-
-        elif request.form_in == self.expected_form_in:
-            request.form_out = self.expected_form_out
-            if request.form_in == "absolute":
-                if request.scheme != "http":
-                    raise http.HttpError(
-                        400,
-                        "Invalid request scheme: %s" % request.scheme
-                    )
-                if self.c.config.mode == "regular":
-                    # Update info so that an inline script sees the correct
-                    # value at flow.server_conn
-                    self.c.set_server_address((request.host, request.port))
-                    flow.server_conn = self.c.server_conn
-
-            elif request.form_in == "relative":
-                if self.c.config.mode == "spoof":
-                    # Host header
-                    h = request.pretty_host(hostheader=True)
-                    if h is None:
-                        raise http.HttpError(
-                            400,
-                            "Invalid request: No host information"
-                        )
-                    p = netlib.utils.parse_url("http://" + h)
-                    request.scheme = p[0]
-                    request.host = p[1]
-                    request.port = p[2]
-                    self.c.set_server_address((request.host, request.port))
-                    flow.server_conn = self.c.server_conn
-
-                if self.c.config.mode == "sslspoof":
-                    # SNI is processed in server.py
-                    if not (flow.server_conn and flow.server_conn.ssl_established):
-                        raise http.HttpError(
-                            400,
-                            "Invalid request: No host information"
-                        )
-
-            return None
-
-        raise http.HttpError(
-            400, "Invalid HTTP request form (expected: %s, got: %s)" % (
-                self.expected_form_in, request.form_in
+    def send_response_body(self, response, chunks):
+        if self.client_protocol.has_chunked_encoding(response.headers):
+            chunks = (
+                "%d\r\n%s\r\n" % (len(chunk), chunk)
+                for chunk in chunks
             )
+        for chunk in chunks:
+            self.client_conn.send(chunk)
+
+    def connect(self):
+        self.ctx.connect()
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def reconnect(self):
+        self.ctx.reconnect()
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def set_server(self, *args, **kwargs):
+        self.ctx.set_server(*args, **kwargs)
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def __call__(self):
+        layer = HttpLayer(self, self.mode)
+        layer()
+
+
+# TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
+class Http2Layer(_HttpLayer):
+    def __init__(self, ctx, mode):
+        super(Http2Layer, self).__init__(ctx)
+        self.mode = mode
+        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
+
+    def read_request(self):
+        request = HTTPRequest.from_protocol(
+            self.client_protocol,
+            body_size_limit=self.config.body_size_limit
+        )
+        self._stream_id = request.stream_id
+        return request
+
+    def send_request(self, message):
+        # TODO: implement flow control and WINDOW_UPDATE frames
+        self.server_conn.send(self.server_protocol.assemble(message))
+
+    def read_response(self, request_method):
+        return HTTPResponse.from_protocol(
+            self.server_protocol,
+            request_method=request_method,
+            body_size_limit=self.config.body_size_limit,
+            include_body=True,
+            stream_id=self._stream_id
         )
 
-    def process_server_address(self, flow):
-        # Depending on the proxy mode, server handling is entirely different
-        # We provide a mostly unified API to the user, which needs to be
-        # unfiddled here
-        # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
-        address = tcp.Address((flow.request.host, flow.request.port))
+    def send_response(self, message):
+        # TODO: implement flow control and WINDOW_UPDATE frames
+        self.client_conn.send(self.client_protocol.assemble(message))
 
-        ssl = (flow.request.scheme == "https")
+    def connect(self):
+        self.ctx.connect()
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol.perform_connection_preface()
 
-        if self.c.config.mode == "upstream":
-            # The connection to the upstream proxy may have a state we may need
-            # to take into account.
-            connected_to = None
-            for s in flow.server_conn.state:
-                if s[0] == "http" and s[1]["state"] == "connect":
-                    connected_to = tcp.Address((s[1]["host"], s[1]["port"]))
+    def reconnect(self):
+        self.ctx.reconnect()
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol.perform_connection_preface()
 
-            # We need to reconnect if the current flow either requires a
-            # (possibly impossible) change to the connection state, e.g. the
-            # host has changed but we already CONNECTed somewhere else.
-            needs_server_change = (
-                ssl != self.c.server_conn.ssl_established
-                or
-                # HTTP proxying is "stateless", CONNECT isn't.
-                (connected_to and address != connected_to)
-            )
+    def set_server(self, *args, **kwargs):
+        self.ctx.set_server(*args, **kwargs)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol.perform_connection_preface()
 
-            if needs_server_change:
-                # force create new connection to the proxy server to reset
-                # state
-                self.live.change_server(self.c.server_conn.address, force=True)
-                if ssl:
-                    send_connect_request(
-                        self.c.server_conn,
-                        address.host,
-                        address.port
-                    )
-                    self.c.establish_ssl(server=True)
+    def __call__(self):
+        self.server_protocol.perform_connection_preface()
+        layer = HttpLayer(self, self.mode)
+        layer()
+
+    def handle_unexpected_frame(self, frame):
+        if isinstance(frame, WindowUpdateFrame):
+            # Clients are sending WindowUpdate frames depending on their flow control algorithm.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should keep track of our own flow control window and
+            # stall transmission if the outgoing flow control buffer is full.
+            return
+        self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
+
+
+class ConnectServerConnection(object):
+    """
+    "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.
+    """
+
+    def __init__(self, address, ctx):
+        self.address = tcp.Address.wrap(address)
+        self._ctx = ctx
+
+    @property
+    def via(self):
+        return self._ctx.server_conn
+
+    def __getattr__(self, item):
+        return getattr(self.via, item)
+
+    def __nonzero__(self):
+        return bool(self.via)
+
+
+class UpstreamConnectLayer(Layer):
+    def __init__(self, ctx, connect_request):
+        super(UpstreamConnectLayer, self).__init__(ctx)
+        self.connect_request = connect_request
+        self.server_conn = ConnectServerConnection(
+            (connect_request.host, connect_request.port),
+            self.ctx
+        )
+
+    def __call__(self):
+        layer = self.ctx.next_layer(self)
+        layer()
+
+    def _send_connect_request(self):
+        self.send_request(self.connect_request)
+        resp = self.read_response("CONNECT")
+        if resp.code != 200:
+            raise ProtocolException("Reconnect: Upstream server refuses CONNECT request")
+
+    def connect(self):
+        if not self.server_conn:
+            self.ctx.connect()
+            self._send_connect_request()
         else:
-            # If we're not in upstream mode, we just want to update the host
-            # and possibly establish TLS. This is a no op if the addresses
-            # match.
-            self.live.change_server(address, ssl=ssl)
+            pass  # swallow the message
 
-        flow.server_conn = self.c.server_conn
+    def reconnect(self):
+        self.ctx.reconnect()
+        self._send_connect_request()
 
-    def send_response_to_client(self, flow):
-        if not flow.response.stream:
-            # no streaming:
-            # we already received the full response from the server and can
-            # send it to the client straight away.
-            self.c.client_conn.send(self.c.client_conn.protocol.assemble(flow.response))
+    def set_server(self, address, server_tls=None, sni=None, depth=1):
+        if depth == 1:
+            if self.ctx.server_conn:
+                self.ctx.reconnect()
+            address = Address.wrap(address)
+            self.connect_request.host = address.host
+            self.connect_request.port = address.port
+            self.server_conn.address = address
         else:
-            if isinstance(self.c.client_conn.protocol, http2.HTTP2Protocol):
-                raise NotImplementedError("HTTP streaming with HTTP/2 is currently not supported.")
+            self.ctx.set_server(address, server_tls, sni, depth - 1)
 
 
-            # streaming:
-            # First send the headers and then transfer the response
-            # incrementally:
-            h = self.c.client_conn.protocol._assemble_response_first_line(flow.response)
-            self.c.client_conn.send(h + "\r\n")
-            h = self.c.client_conn.protocol._assemble_response_headers(flow.response, preserve_transfer_encoding=True)
-            self.c.client_conn.send(h + "\r\n")
+class HttpLayer(Layer):
+    def __init__(self, ctx, mode):
+        super(HttpLayer, self).__init__(ctx)
+        self.mode = mode
+        self.__original_server_conn = None
+        "Contains the original destination in transparent mode, which needs to be restored"
+        "if an inline script modified the target server for a single http request"
 
-            chunks = self.c.server_conn.protocol.read_http_body_chunked(
-                flow.response.headers,
-                self.c.config.body_size_limit,
-                flow.request.method,
-                flow.response.code,
-                False,
-                4096
-            )
+    def __call__(self):
+        if self.mode == "transparent":
+            self.__original_server_conn = self.server_conn
+        while True:
+            try:
+                flow = HTTPFlow(self.client_conn, self.server_conn, live=self)
 
-            if callable(flow.response.stream):
-                chunks = flow.response.stream(chunks)
+                try:
+                    request = self.read_request()
+                except tcp.NetLibError:
+                    # don't throw an error for disconnects that happen
+                    # before/between requests.
+                    return
 
-            for chunk in chunks:
-                for part in chunk:
-                    self.c.client_conn.wfile.write(part)
-                self.c.client_conn.wfile.flush()
+                self.log("request", "debug", [repr(request)])
 
-            flow.response.timestamp_end = utils.timestamp()
+                # Handle Proxy Authentication
+                self.authenticate(request)
+
+                # Regular Proxy Mode: Handle CONNECT
+                if self.mode == "regular" and request.form_in == "authority":
+                    self.handle_regular_mode_connect(request)
+                    return
+
+                # Make sure that the incoming request matches our expectations
+                self.validate_request(request)
+
+                flow.request = request
+                self.process_request_hook(flow)
+
+                if not flow.response:
+                    self.establish_server_connection(flow)
+                    self.get_response_from_server(flow)
+
+                self.send_response_to_client(flow)
+
+                if self.check_close_connection(flow):
+                    return
+
+                # TODO: Implement HTTP Upgrade
+
+                # Upstream Proxy Mode: Handle CONNECT
+                if flow.request.form_in == "authority" and flow.response.code == 200:
+                    self.handle_upstream_mode_connect(flow.request.copy())
+                    return
+
+            except (HttpErrorConnClosed, NetLibError, HttpError, ProtocolException) as e:
+                if flow.request and not flow.response:
+                    flow.error = Error(repr(e))
+                    self.channel.ask("error", flow)
+                try:
+                    self.send_response(make_error_response(
+                        getattr(e, "code", 502),
+                        repr(e)
+                    ))
+                except NetLibError:
+                    pass
+                if isinstance(e, ProtocolException):
+                    raise e
+                else:
+                    raise ProtocolException("Error in HTTP connection: %s" % repr(e), e)
+            finally:
+                flow.live = False
+
+    def handle_regular_mode_connect(self, request):
+        self.set_server((request.host, request.port))
+        self.send_response(make_connect_response(request.httpversion))
+        layer = self.ctx.next_layer(self)
+        layer()
+
+    def handle_upstream_mode_connect(self, connect_request):
+        layer = UpstreamConnectLayer(self, connect_request)
+        layer()
 
     def check_close_connection(self, flow):
         """
@@ -622,157 +363,183 @@ class HTTPHandler(ProtocolHandler):
                 False,
                 flow.request.method,
                 flow.response.code) == -1
-            )
-        if close_connection:
-            if flow.request.form_in == "authority" and flow.response.code == 200:
-                # Workaround for
-                # https://github.com/mitmproxy/mitmproxy/issues/313: Some
-                # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
-                # and no Content-Length header
-                pass
-            else:
-                return True
-        return False
+        )
+        if flow.request.form_in == "authority" and flow.response.code == 200:
+            # Workaround for
+            # https://github.com/mitmproxy/mitmproxy/issues/313: Some
+            # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
+            # and no Content-Length header
 
-    def process_connect_request(self, address):
-        """
-        Process a CONNECT request.
-        Returns True if the CONNECT request has been processed successfully.
-        Returns False, if the connection should be closed immediately.
-        """
-        address = tcp.Address.wrap(address)
-        if self.c.config.check_ignore(address):
-            self.c.log("Ignore host: %s:%s" % address(), "info")
-            TCPHandler(self.c, log=False).handle_messages()
             return False
+        return close_connection
+
+    def send_response_to_client(self, flow):
+        if not (self.supports_streaming and flow.response.stream):
+            # no streaming:
+            # we already received the full response from the server and can
+            # send it to the client straight away.
+            self.send_response(flow.response)
         else:
-            self.expected_form_in = "relative"
-            self.expected_form_out = "relative"
-            self.skip_authentication = True
-
-            # In practice, nobody issues a CONNECT request to send unencrypted
-            # HTTP requests afterwards. If we don't delegate to TCP mode, we
-            # should always negotiate a SSL connection.
-            #
-            # FIXME: Turns out the previous statement isn't entirely true.
-            # Chrome on Windows CONNECTs to :80 if an explicit proxy is
-            # configured and a websocket connection should be established. We
-            # don't support websocket at the moment, so it fails anyway, but we
-            # should come up with a better solution to this if we start to
-            # support WebSockets.
-            should_establish_ssl = (
-                address.port in self.c.config.ssl_ports
-                or
-                not self.c.config.check_tcp(address)
+            # streaming:
+            # First send the headers and then transfer the response incrementally
+            self.send_response_headers(flow.response)
+            chunks = self.read_response_body(
+                flow.response.headers,
+                flow.request.method,
+                flow.response.code,
+                max_chunk_size=4096
             )
+            if callable(flow.response.stream):
+                chunks = flow.response.stream(chunks)
+            self.send_response_body(flow.response, chunks)
+            flow.response.timestamp_end = utils.timestamp()
 
-            if should_establish_ssl:
-                self.c.log(
-                    "Received CONNECT request to SSL port. "
-                    "Upgrading to SSL...", "debug"
-                )
-                server_ssl = not self.c.config.no_upstream_cert
-                if server_ssl:
-                    self.c.establish_server_connection()
-                self.c.establish_ssl(server=server_ssl, client=True)
-                self.c.log("Upgrade to SSL completed.", "debug")
+    def get_response_from_server(self, flow):
+        def get_response():
+            self.send_request(flow.request)
+            if self.supports_streaming:
+                flow.response = self.read_response_headers()
+            else:
+                flow.response = self.read_response(flow.request.method)
 
-            if self.c.config.check_tcp(address):
-                self.c.log(
-                    "Generic TCP mode for host: %s:%s" % address(),
-                    "info"
-                )
-                TCPHandler(self.c).handle_messages()
-                return False
+        try:
+            get_response()
+        except (tcp.NetLibError, HttpErrorConnClosed) as v:
+            self.log(
+                "server communication error: %s" % repr(v),
+                level="debug"
+            )
+            # In any case, we try to reconnect at least once. This is
+            # necessary because it might be possible that we already
+            # initiated an upstream connection after clientconnect that
+            # has already been expired, e.g consider the following event
+            # log:
+            # > clientconnect (transparent mode destination known)
+            # > serverconnect (required for client tls handshake)
+            # > read n% of large request
+            # > server detects timeout, disconnects
+            # > read (100-n)% of large request
+            # > send large request upstream
+            self.reconnect()
+            get_response()
 
-            return True
+        # call the appropriate script hook - this is an opportunity for an
+        # inline script to set flow.stream = True
+        flow = self.channel.ask("responseheaders", flow)
+        if flow == Kill:
+            raise Kill()
+
+        if self.supports_streaming:
+            if flow.response.stream:
+                flow.response.content = CONTENT_MISSING
+            else:
+                flow.response.content = "".join(self.read_response_body(
+                    flow.response.headers,
+                    flow.request.method,
+                    flow.response.code
+                ))
+            flow.response.timestamp_end = utils.timestamp()
+
+        # no further manipulation of self.server_conn beyond this point
+        # we can safely set it as the final attribute value here.
+        flow.server_conn = self.server_conn
+
+        self.log(
+            "response",
+            "debug",
+            [repr(flow.response)]
+        )
+        response_reply = self.channel.ask("response", flow)
+        if response_reply == Kill:
+            raise Kill()
+
+    def process_request_hook(self, flow):
+        # Determine .scheme, .host and .port attributes for inline scripts.
+        # For absolute-form requests, they are directly given in the request.
+        # For authority-form requests, we only need to determine the request scheme.
+        # For relative-form requests, we need to determine host and port as
+        # well.
+        if self.mode == "regular":
+            pass  # only absolute-form at this point, nothing to do here.
+        elif self.mode == "upstream":
+            if flow.request.form_in == "authority":
+                flow.request.scheme = "http"  # pseudo value
+        else:
+            flow.request.host = self.__original_server_conn.address.host
+            flow.request.port = self.__original_server_conn.address.port
+            flow.request.scheme = "https" if self.__original_server_conn.tls_established else "http"
+
+        request_reply = self.channel.ask("request", flow)
+        if request_reply == Kill:
+            raise Kill()
+        if isinstance(request_reply, HTTPResponse):
+            flow.response = request_reply
+            return
+
+    def establish_server_connection(self, flow):
+        address = tcp.Address((flow.request.host, flow.request.port))
+        tls = (flow.request.scheme == "https")
+
+        if self.mode == "regular" or self.mode == "transparent":
+            # If there's an existing connection that doesn't match our expectations, kill it.
+            if address != self.server_conn.address or tls != self.server_conn.ssl_established:
+                self.set_server(address, tls, address.host)
+            # Establish connection is neccessary.
+            if not self.server_conn:
+                self.connect()
+        else:
+            if not self.server_conn:
+                self.connect()
+            if tls:
+                raise HttpException("Cannot change scheme in upstream proxy mode.")
+            """
+            # This is a very ugly (untested) workaround to solve a very ugly problem.
+            if self.server_conn and self.server_conn.tls_established and not ssl:
+                self.reconnect()
+            elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
+                if self.server_conn.tls_established:
+                    self.reconnect()
+
+                self.send_request(make_connect_request(address))
+                tls_layer = TlsLayer(self, False, True)
+                tls_layer._establish_tls_with_server()
+            """
+
+    def validate_request(self, request):
+        if request.form_in == "absolute" and request.scheme != "http":
+            self.send_response(
+                make_error_response(400, "Invalid request scheme: %s" % request.scheme))
+            raise HttpException("Invalid request scheme: %s" % request.scheme)
+
+        expected_request_forms = {
+            "regular": ("absolute",),  # an authority request would already be handled.
+            "upstream": ("authority", "absolute"),
+            "transparent": ("relative",)
+        }
+
+        allowed_request_forms = expected_request_forms[self.mode]
+        if request.form_in not in allowed_request_forms:
+            err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
+                " or ".join(allowed_request_forms), request.form_in
+            )
+            self.send_response(make_error_response(400, err_message))
+            raise HttpException(err_message)
+
+        if self.mode == "regular":
+            request.form_out = "relative"
 
     def authenticate(self, request):
-        if self.c.config.authenticator:
-            if self.c.config.authenticator.authenticate(request.headers):
-                self.c.config.authenticator.clean(request.headers)
+        if self.config.authenticator:
+            if self.config.authenticator.authenticate(request.headers):
+                self.config.authenticator.clean(request.headers)
             else:
-                raise http.HttpAuthenticationError(
-                    self.c.config.authenticator.auth_challenge_headers())
-        return request.headers
-
-
-class RequestReplayThread(threading.Thread):
-    name = "RequestReplayThread"
-
-    def __init__(self, config, flow, masterq, should_exit):
-        """
-            masterqueue can be a queue or None, if no scripthooks should be
-            processed.
-        """
-        self.config, self.flow = config, flow
-        if masterq:
-            self.channel = controller.Channel(masterq, should_exit)
-        else:
-            self.channel = None
-        super(RequestReplayThread, self).__init__()
-
-    def run(self):
-        r = self.flow.request
-        form_out_backup = r.form_out
-        try:
-            self.flow.response = None
-
-            # If we have a channel, run script hooks.
-            if self.channel:
-                request_reply = self.channel.ask("request", self.flow)
-                if request_reply is None or request_reply == KILL:
-                    raise KillSignal()
-                elif isinstance(request_reply, HTTPResponse):
-                    self.flow.response = request_reply
-
-            if not self.flow.response:
-                # In all modes, we directly connect to the server displayed
-                if self.config.mode == "upstream":
-                    server_address = self.config.mode.get_upstream_server(
-                        self.flow.client_conn
-                    )[2:]
-                    server = ServerConnection(server_address)
-                    server.connect()
-                    if r.scheme == "https":
-                        send_connect_request(server, r.host, r.port)
-                        server.establish_ssl(
-                            self.config.clientcerts,
-                            sni=self.flow.server_conn.sni
-                        )
-                        r.form_out = "relative"
-                    else:
-                        r.form_out = "absolute"
-                else:
-                    server_address = (r.host, r.port)
-                    server = ServerConnection(server_address)
-                    server.connect()
-                    if r.scheme == "https":
-                        server.establish_ssl(
-                            self.config.clientcerts,
-                            sni=self.flow.server_conn.sni
-                        )
-                    r.form_out = "relative"
-
-                server.send(self.flow.server_conn.protocol.assemble(r))
-                self.flow.server_conn = server
-                self.flow.server_conn.protocol = http1.HTTP1Protocol(self.flow.server_conn)
-                self.flow.response = HTTPResponse.from_protocol(
-                    self.flow.server_conn.protocol,
-                    r.method,
-                    body_size_limit=self.config.body_size_limit,
-                )
-            if self.channel:
-                response_reply = self.channel.ask("response", self.flow)
-                if response_reply is None or response_reply == KILL:
-                    raise KillSignal()
-        except (proxy.ProxyError, http.HttpError, tcp.NetLibError) as v:
-            self.flow.error = Error(repr(v))
-            if self.channel:
-                self.channel.ask("error", self.flow)
-        except KillSignal:
-            # KillSignal should only be raised if there's a channel in the
-            # first place.
-            self.channel.tell("log", proxy.Log("Connection killed", "info"))
-        finally:
-            r.form_out = form_out_backup
+                self.send_response(make_error_response(
+                    407,
+                    "Proxy Authentication Required",
+                    odict.ODictCaseless(
+                        [
+                            [k, v] for k, v in
+                            self.config.authenticator.auth_challenge_headers().items()
+                            ])
+                ))
+                raise InvalidCredentials("Proxy Authentication Required")

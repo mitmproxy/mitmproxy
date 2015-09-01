@@ -2,7 +2,7 @@ import cStringIO
 from netlib import odict
 from libmproxy import filt, flow
 from libmproxy.protocol import http
-from libmproxy.protocol.primitives import Error
+from libmproxy.models import Error
 import tutils
 
 

@@ -1,6 +1,5 @@
 import os.path
 import threading
-import Queue
 import shutil
 import tempfile
 import flask
@@ -8,7 +7,6 @@ import mock
 
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
-from libmproxy.proxy.primitives import TransparentProxyMode
 import libpathod.test
 import libpathod.pathoc
 from libmproxy import flow, controller
@@ -130,7 +128,6 @@ class ProxTestBase(object):
             no_upstream_cert = cls.no_upstream_cert,
             cadir = cls.cadir,
             authenticator = cls.authenticator,
-            ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),
             clientcerts = tutils.test_data.path("data/clientcert") if cls.clientcerts else None
         )
 
@@ -183,22 +180,24 @@ class TResolver:
     def original_addr(self, sock):
         return ("127.0.0.1", self.port)
 
-
 class TransparentProxTest(ProxTestBase):
     ssl = None
     resolver = TResolver
 
     @classmethod
-    @mock.patch("libmproxy.platform.resolver")
-    def setupAll(cls, _):
+    def setupAll(cls):
         super(TransparentProxTest, cls).setupAll()
-        if cls.ssl:
-            ports = [cls.server.port, cls.server2.port]
-        else:
-            ports = []
-        cls.config.mode = TransparentProxyMode(
-            cls.resolver(cls.server.port),
-            ports)
+
+        cls._resolver = mock.patch(
+            "libmproxy.platform.resolver",
+            new=lambda: cls.resolver(cls.server.port)
+        )
+        cls._resolver.start()
+
+    @classmethod
+    def teardownAll(cls):
+        cls._resolver.stop()
+        super(TransparentProxTest, cls).teardownAll()
 
     @classmethod
     def get_proxy_config(cls):
@@ -235,12 +234,10 @@ class ReverseProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = [
-            True if cls.ssl else False,
-            True if cls.ssl else False,
-            "127.0.0.1",
-            cls.server.port
-        ]
+        d["upstream_server"] = (
+            "https" if cls.ssl else "http",
+            ("127.0.0.1", cls.server.port)
+        )
         d["mode"] = "reverse"
         return d
 
@@ -273,48 +270,6 @@ class SocksModeTest(HTTPProxTest):
         d = ProxTestBase.get_proxy_config()
         d["mode"] = "socks5"
         return d
-
-class SpoofModeTest(ProxTestBase):
-    ssl = None
-
-    @classmethod
-    def get_proxy_config(cls):
-        d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = None
-        d["mode"] = "spoof"
-        return d
-
-    def pathoc(self, sni=None):
-        """
-            Returns a connected Pathoc instance.
-        """
-        p = libpathod.pathoc.Pathoc(
-            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
-        )
-        p.connect()
-        return p
-
-
-class SSLSpoofModeTest(ProxTestBase):
-    ssl = True
-
-    @classmethod
-    def get_proxy_config(cls):
-        d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = None
-        d["mode"] = "sslspoof"
-        d["spoofed_ssl_port"] = 443
-        return d
-
-    def pathoc(self, sni=None):
-        """
-            Returns a connected Pathoc instance.
-        """
-        p = libpathod.pathoc.Pathoc(
-            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
-        )
-        p.connect()
-        return p
 
 
 class ChainProxTest(ProxTestBase):
@@ -360,7 +315,7 @@ class ChainProxTest(ProxTestBase):
         if cls.chain:  # First proxy is in normal mode.
             d.update(
                 mode="upstream",
-                upstream_server=(False, False, "127.0.0.1", cls.chain[0].port)
+                upstream_server=("http", ("127.0.0.1", cls.chain[0].port))
             )
         return d
 

@@ -1,6 +1,6 @@
 def modify(chunks):
-    for prefix, content, suffix in chunks:
-        yield prefix, content.replace("foo", "bar"), suffix
+    for chunk in chunks:
+        yield chunk.replace("foo", "bar")
 
 
 def responseheaders(context, flow):

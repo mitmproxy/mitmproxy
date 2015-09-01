@@ -1,26 +1,31 @@
-from __future__ import absolute_import
+from __future__ import (absolute_import, print_function, division)
+import collections
 import os
 import re
 from OpenSSL import SSL
 
-import netlib
-from netlib import http, certutils, tcp
+from netlib import certutils, tcp
 from netlib.http import authentication
+from netlib.tcp import Address, sslversion_choices
 
-from .. import utils, platform, version
-from .primitives import RegularProxyMode, SpoofMode, SSLSpoofMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
+from .. import utils, platform
 
-TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
 CA_DIR = "~/.mitmproxy"
 
+# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
+# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
+DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
+
 
 class HostMatcher(object):
-    def __init__(self, patterns=[]):
+    def __init__(self, patterns=tuple()):
         self.patterns = list(patterns)
         self.regexes = [re.compile(p, re.IGNORECASE) for p in self.patterns]
 
     def __call__(self, address):
+        if not address:
+            return False
         address = tcp.Address.wrap(address)
         host = "%s:%s" % (address.host, address.port)
         if any(rex.search(host) for rex in self.regexes):
@@ -32,61 +37,44 @@ class HostMatcher(object):
         return bool(self.patterns)
 
 
+ServerSpec = collections.namedtuple("ServerSpec", "scheme address")
+
+
 class ProxyConfig:
     def __init__(
             self,
             host='',
             port=8080,
-            server_version=version.NAMEVERSION,
             cadir=CA_DIR,
             clientcerts=None,
             no_upstream_cert=False,
             body_size_limit=None,
-            mode=None,
+            mode="regular",
             upstream_server=None,
-            http_form_in=None,
-            http_form_out=None,
             authenticator=None,
-            ignore_hosts=[],
-            tcp_hosts=[],
+            ignore_hosts=tuple(),
+            tcp_hosts=tuple(),
             ciphers_client=None,
             ciphers_server=None,
-            certs=[],
-            ssl_version_client=tcp.SSL_DEFAULT_METHOD,
-            ssl_version_server=tcp.SSL_DEFAULT_METHOD,
-            ssl_ports=TRANSPARENT_SSL_PORTS,
-            spoofed_ssl_port=None,
+            certs=tuple(),
+            ssl_version_client="secure",
+            ssl_version_server="secure",
             ssl_verify_upstream_cert=False,
-            ssl_upstream_trusted_cadir=None,
-            ssl_upstream_trusted_ca=None
+            ssl_verify_upstream_trusted_cadir=None,
+            ssl_verify_upstream_trusted_ca=None,
     ):
         self.host = host
         self.port = port
-        self.server_version = server_version
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
-
-        if mode == "transparent":
-            self.mode = TransparentProxyMode(platform.resolver(), ssl_ports)
-        elif mode == "socks5":
-            self.mode = Socks5ProxyMode(ssl_ports)
-        elif mode == "reverse":
-            self.mode = ReverseProxyMode(upstream_server)
-        elif mode == "upstream":
-            self.mode = UpstreamProxyMode(upstream_server)
-        elif mode == "spoof":
-            self.mode = SpoofMode()
-        elif mode == "sslspoof":
-            self.mode = SSLSpoofMode(spoofed_ssl_port)
+        self.mode = mode
+        if upstream_server:
+            self.upstream_server = ServerSpec(upstream_server[0], Address.wrap(upstream_server[1]))
         else:
-            self.mode = RegularProxyMode()
-
-        # Handle manual overrides of the http forms
-        self.mode.http_form_in = http_form_in or self.mode.http_form_in
-        self.mode.http_form_out = http_form_out or self.mode.http_form_out
+            self.upstream_server = None
 
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
@@ -94,41 +82,33 @@ class ProxyConfig:
         self.cadir = os.path.expanduser(cadir)
         self.certstore = certutils.CertStore.from_store(
             self.cadir,
-            CONF_BASENAME)
+            CONF_BASENAME
+        )
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
-        self.ssl_ports = ssl_ports
 
-        if isinstance(ssl_version_client, int):
-            self.openssl_method_client = ssl_version_client
-        else:
-            self.openssl_method_client = tcp.SSL_VERSIONS[ssl_version_client]
-        if isinstance(ssl_version_server, int):
-            self.openssl_method_server = ssl_version_server
-        else:
-            self.openssl_method_server = tcp.SSL_VERSIONS[ssl_version_server]
+        self.openssl_method_client, self.openssl_options_client = \
+            sslversion_choices[ssl_version_client]
+        self.openssl_method_server, self.openssl_options_server = \
+            sslversion_choices[ssl_version_server]
 
         if ssl_verify_upstream_cert:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER
         else:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
-        self.openssl_trusted_cadir_server = ssl_upstream_trusted_cadir
-        self.openssl_trusted_ca_server = ssl_upstream_trusted_ca
-
-        self.openssl_options_client = tcp.SSL_DEFAULT_OPTIONS
-        self.openssl_options_server = tcp.SSL_DEFAULT_OPTIONS
+        self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
+        self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
 
 
 def process_proxy_options(parser, options):
     body_size_limit = utils.parse_size(options.body_size_limit)
 
     c = 0
-    mode, upstream_server, spoofed_ssl_port = None, None, None
+    mode, upstream_server = "regular", None
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
-            return parser.error(
-                "Transparent mode not supported on this platform.")
+            return parser.error("Transparent mode not supported on this platform.")
         mode = "transparent"
     if options.socks_proxy:
         c += 1
@@ -141,32 +121,33 @@ def process_proxy_options(parser, options):
         c += 1
         mode = "upstream"
         upstream_server = options.upstream_proxy
-    if options.spoof_mode:
-        c += 1
-        mode = "spoof"
-    if options.ssl_spoof_mode:
-        c += 1
-        mode = "sslspoof"
-        spoofed_ssl_port = options.spoofed_ssl_port
     if c > 1:
         return parser.error(
             "Transparent, SOCKS5, reverse and upstream proxy mode "
-            "are mutually exclusive.")
+            "are mutually exclusive. Read the docs on proxy modes to understand why."
+        )
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
-        if not os.path.exists(
-                options.clientcerts) or not os.path.isdir(
-                options.clientcerts):
+        if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
             return parser.error(
                 "Client certificate directory does not exist or is not a directory: %s" %
-                options.clientcerts)
+                options.clientcerts
+            )
 
-    if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
+    if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
+
+        if options.socks_proxy:
+            return parser.error(
+                "Proxy Authentication not supported in SOCKS mode. "
+                "https://github.com/mitmproxy/mitmproxy/issues/738"
+            )
+
         if options.auth_singleuser:
             if len(options.auth_singleuser.split(':')) != 2:
                 return parser.error(
-                    "Invalid single-user specification. Please use the format username:password")
+                    "Invalid single-user specification. Please use the format username:password"
+                )
             username, password = options.auth_singleuser.split(':')
             password_manager = authentication.PassManSingleUser(username, password)
         elif options.auth_nonanonymous:
@@ -191,12 +172,6 @@ def process_proxy_options(parser, options):
             parser.error("Certificate file does not exist: %s" % parts[1])
         certs.append(parts)
 
-    ssl_ports = options.ssl_ports
-    if options.ssl_ports != TRANSPARENT_SSL_PORTS:
-        # arparse appends to default value by default, strip that off.
-        # see http://bugs.python.org/issue16399
-        ssl_ports = ssl_ports[len(TRANSPARENT_SSL_PORTS):]
-
     return ProxyConfig(
         host=options.addr,
         port=options.port,
@@ -206,99 +181,15 @@ def process_proxy_options(parser, options):
         body_size_limit=body_size_limit,
         mode=mode,
         upstream_server=upstream_server,
-        http_form_in=options.http_form_in,
-        http_form_out=options.http_form_out,
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
         authenticator=authenticator,
         ciphers_client=options.ciphers_client,
         ciphers_server=options.ciphers_server,
-        certs=certs,
+        certs=tuple(certs),
         ssl_version_client=options.ssl_version_client,
         ssl_version_server=options.ssl_version_server,
-        ssl_ports=ssl_ports,
-        spoofed_ssl_port=spoofed_ssl_port,
         ssl_verify_upstream_cert=options.ssl_verify_upstream_cert,
-        ssl_upstream_trusted_cadir=options.ssl_upstream_trusted_cadir,
-        ssl_upstream_trusted_ca=options.ssl_upstream_trusted_ca
-    )
-
-
-def ssl_option_group(parser):
-    group = parser.add_argument_group("SSL")
-    group.add_argument(
-        "--cert",
-        dest='certs',
-        default=[],
-        type=str,
-        metavar="SPEC",
-        action="append",
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '
-        'The domain may include a wildcard, and is equal to "*" if not specified. '
-        'The file at path is a certificate in PEM format. If a private key is included in the PEM, '
-        'it is used, else the default key in the conf dir is used. '
-        'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
-        'Can be passed multiple times.')
-    group.add_argument(
-        "--ciphers-client", action="store",
-        type=str, dest="ciphers_client", default=None,
-        help="Set supported ciphers for client connections. (OpenSSL Syntax)"
-    )
-    group.add_argument(
-        "--ciphers-server", action="store",
-        type=str, dest="ciphers_server", default=None,
-        help="Set supported ciphers for server connections. (OpenSSL Syntax)"
-    )
-    group.add_argument(
-        "--client-certs", action="store",
-        type=str, dest="clientcerts", default=None,
-        help="Client certificate directory."
-    )
-    group.add_argument(
-        "--no-upstream-cert", default=False,
-        action="store_true", dest="no_upstream_cert",
-        help="Don't connect to upstream server to look up certificate details."
-    )
-    group.add_argument(
-        "--verify-upstream-cert", default=False,
-        action="store_true", dest="ssl_verify_upstream_cert",
-        help="Verify upstream server SSL/TLS certificates and fail if invalid "
-             "or not present."
-    )
-    group.add_argument(
-        "--upstream-trusted-cadir", default=None, action="store",
-        dest="ssl_upstream_trusted_cadir",
-        help="Path to a directory of trusted CA certificates for upstream "
-             "server verification prepared using the c_rehash tool."
-    )
-    group.add_argument(
-        "--upstream-trusted-ca", default=None, action="store",
-        dest="ssl_upstream_trusted_ca",
-        help="Path to a PEM formatted trusted CA certificate."
-    )
-    group.add_argument(
-        "--ssl-port",
-        action="append",
-        type=int,
-        dest="ssl_ports",
-        default=list(TRANSPARENT_SSL_PORTS),
-        metavar="PORT",
-        help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
-        "Defaults to %s." %
-        str(TRANSPARENT_SSL_PORTS))
-    group.add_argument(
-        "--ssl-version-client", dest="ssl_version_client", type=str, default=tcp.SSL_DEFAULT_VERSION,
-        choices=tcp.SSL_VERSIONS.keys(),
-        help=""""
-            Use a specified protocol for client connections:
-            TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
-            Default to SSLv23."""
-    )
-    group.add_argument(
-        "--ssl-version-server", dest="ssl_version_server", type=str, default=tcp.SSL_DEFAULT_VERSION,
-        choices=tcp.SSL_VERSIONS.keys(),
-        help=""""
-            Use a specified protocol for server connections:
-            TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
-            Default to SSLv23."""
+        ssl_verify_upstream_trusted_cadir=options.ssl_verify_upstream_trusted_cadir,
+        ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca
     )

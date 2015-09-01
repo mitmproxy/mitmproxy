@@ -4,6 +4,7 @@ from cStringIO import StringIO
 from mock import MagicMock
 
 from libmproxy.protocol.http import *
+import netlib.http
 from netlib import odict
 from netlib.http import http1
 from netlib.http.semantics import CONTENT_MISSING
@@ -56,7 +57,7 @@ class TestInvalidRequests(tservers.HTTPProxTest):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
         assert r.status_code == 400
-        assert "Must not CONNECT on already encrypted connection" in r.body
+        assert "Invalid HTTP request form" in r.body
 
     def test_relative_request(self):
         p = self.pathoc_raw()

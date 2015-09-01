@@ -9,29 +9,42 @@ Using transparent mode is the better option most of the time.
 
 Usage:
     mitmproxy
-        -p 80
-        -R http://example.com/  // Used as the target location if no Host header is present
-    mitmproxy
         -p 443
-        -R https://example.com/ // Used as the target locaction if neither SNI nor host header are present.
+        -s dns_spoofing.py
+        # Used as the target location if neither SNI nor host header are present.
+        -R http://example.com/
+    mitmdump
+        -p 80
+        -R http://localhost:443/
 
-mitmproxy will always connect to the default location first, so it must be reachable.
-As a workaround, you can spawn an arbitrary HTTP server and use that for both endpoints, e.g.
-mitmproxy -p  80 -R       http://localhost:8000
-mitmproxy -p 443 -R https2http://localhost:8000
+    (Setting up a single proxy instance and using iptables to redirect to it
+    works as well)
 """
+import re
+
+
+# This regex extracts splits the host header into host and port.
+# Handles the edge case of IPv6 addresses containing colons.
+# https://bugzilla.mozilla.org/show_bug.cgi?id=45891
+parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
 def request(context, flow):
     if flow.client_conn.ssl_established:
-        # TLS SNI or Host header
-        flow.request.host = flow.client_conn.connection.get_servername(
-        ) or flow.request.pretty_host(hostheader=True)
-
-        # If you use a https2http location as default destination, these
-        # attributes need to be corrected as well:
-        flow.request.port = 443
         flow.request.scheme = "https"
+        sni = flow.client_conn.connection.get_servername()
+        port = 443
     else:
-        # Host header
-        flow.request.host = flow.request.pretty_host(hostheader=True)
+        flow.request.scheme = "http"
+        sni = None
+        port = 80
+
+    host_header = flow.request.pretty_host(hostheader=True)
+    m = parse_host_header.match(host_header)
+    if m:
+        host_header = m.group("host").strip("[]")
+        if m.group("port"):
+            port = int(m.group("port"))
+
+    flow.request.host = sni or host_header
+    flow.request.port = port
