@@ -1,6 +1,7 @@
 import urwid
 
-from . import common, signals, grideditor, contentview
+from .. import contentview
+from . import common, signals, grideditor
 from . import select, palettes
 
 footer = [

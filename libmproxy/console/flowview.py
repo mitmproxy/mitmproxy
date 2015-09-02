@@ -6,9 +6,9 @@ import urwid
 from netlib import odict
 from netlib.http.semantics import CONTENT_MISSING
 
-from . import common, grideditor, contentview, signals, searchable, tabs
+from . import common, grideditor, signals, searchable, tabs
 from . import flowdetailview
-from .. import utils, controller
+from .. import utils, controller, contentview
 from ..models import HTTPRequest, HTTPResponse, decoded
 
 

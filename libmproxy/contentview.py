@@ -14,10 +14,10 @@ import html2text
 import netlib.utils
 from netlib import odict, encoding
 
-from . import common, signals
-from .. import utils
-from ..contrib import jsbeautifier
-from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
+from .console import common, signals
+from . import utils
+from .contrib import jsbeautifier
+from .contrib.wbxml.ASCommandResponse import ASCommandResponse
 
 try:
     import pyamf
