@@ -179,7 +179,7 @@ class FlowView(tabs.Tabs):
                 limit = sys.maxsize
             else:
                 limit = contentview.VIEW_CUTOFF
-            description, text_objects = cache.get(
+            description, text_tuples = cache.get(
                 contentview.get_content_view,
                 viewmode,
                 tuple(tuple(i) for i in conn.headers.lst),
@@ -187,7 +187,18 @@ class FlowView(tabs.Tabs):
                 limit,
                 isinstance(conn, HTTPRequest)
             )
-            return (description, text_objects)
+            return (description, self.translator(text_tuples))
+
+    def translator(self, text_tuples):
+        text_objects = []
+        for i in text_tuples:
+            if type(i) is list:
+                text_objects.append(
+                    urwid.Text(i)
+                )
+            else:
+                text_objects.append(i)
+        return text_objects
 
     def viewmode_get(self):
         override = self.state.get_flow_setting(

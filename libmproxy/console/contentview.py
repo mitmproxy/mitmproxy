@@ -8,7 +8,6 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 import subprocess
 import traceback
-import urwid
 import html2text
 
 import netlib.utils
@@ -47,7 +46,7 @@ def _view_text(content, total, limit):
     txt = []
     for i in netlib.utils.cleanBin(content).splitlines():
         txt.append(
-            urwid.Text(("text", i), wrap="any")
+            [("text", i)]
         )
     trailer(total, txt, limit)
     return txt
@@ -56,15 +55,12 @@ def _view_text(content, total, limit):
 def trailer(clen, txt, limit):
     rem = clen - limit
     if rem > 0:
-        txt.append(urwid.Text(""))
         txt.append(
-            urwid.Text(
-                [
-                    ("highlight", "... %s of data not shown. Press " % netlib.utils.pretty_size(rem)),
-                    ("key", "f"),
-                    ("highlight", " to load all data.")
-                ]
-            )
+            [
+                ("highlight", "... %s of data not shown. Press " % netlib.utils.pretty_size(rem)),
+                ("key", "f"),
+                ("highlight", " to load all data.")
+            ]
         )
 
 
@@ -103,13 +99,13 @@ class ViewHex:
     def __call__(self, hdrs, content, limit):
         txt = []
         for offset, hexa, s in netlib.utils.hexdump(content[:limit]):
-            txt.append(urwid.Text([
+            txt.append([
                 ("offset", offset),
                 " ",
                 ("text", hexa),
                 "   ",
                 ("text", s),
-            ]))
+            ])
         trailer(len(content), txt, limit)
         return "Hex", txt
 
@@ -156,7 +152,7 @@ class ViewXML:
         txt = []
         for i in s[:limit].strip().split("\n"):
             txt.append(
-                urwid.Text(("text", i)),
+                [("text", i)],
             )
         trailer(len(content), txt, limit)
         return "XML-like data", txt
@@ -175,7 +171,7 @@ class ViewJSON:
             for i in lines:
                 sofar += len(i)
                 txt.append(
-                    urwid.Text(("text", i)),
+                    [("text", i)],
                 )
                 if sofar > limit:
                     break
@@ -244,7 +240,7 @@ class ViewMultipart:
         v = netlib.utils.multipartdecode(hdrs, content)
         if v:
             r = [
-                urwid.Text(("highlight", "Form data:\n")),
+                [("highlight", "Form data:\n")],
             ]
             r.extend(common.format_keyvals(
                 v,
@@ -308,15 +304,15 @@ if pyamf:
             txt = []
             for target, message in iter(envelope):
                 if isinstance(message, pyamf.remoting.Request):
-                    txt.append(urwid.Text([
+                    txt.append([
                         ("header", "Request: "),
                         ("text", str(target)),
-                    ]))
+                    ])
                 else:
-                    txt.append(urwid.Text([
+                    txt.append([
                         ("header", "Response: "),
                         ("text", "%s, code %s" % (target, message.status)),
-                    ]))
+                    ])
 
                 s = json.dumps(self.unpack(message), indent=4)
                 txt.extend(_view_text(s[:limit], len(s), limit))
