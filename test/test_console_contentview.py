@@ -7,7 +7,7 @@ import sys
 import netlib.utils
 from netlib import odict, encoding
 
-import libmproxy.console.contentview as cv
+import libmproxy.contentview as cv
 from libmproxy import utils, flow
 import tutils
 
