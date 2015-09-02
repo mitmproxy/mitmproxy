@@ -14,7 +14,6 @@ import html2text
 import netlib.utils
 from netlib import odict, encoding
 
-from .console import common, signals
 from . import utils
 from .contrib import jsbeautifier
 from .contrib.wbxml.ASCommandResponse import ASCommandResponse
@@ -38,6 +37,10 @@ else:
     cssutils.ser.prefs.validOnly = False
 
 VIEW_CUTOFF = 1024 * 50
+
+
+def format_keyvals(lst, key="key", val="text", indent=0):
+    raise NotImplementedError()
 
 
 def _view_text(content, total, limit):
@@ -227,7 +230,7 @@ class ViewURLEncoded:
     def __call__(self, hdrs, content, limit):
         lines = netlib.utils.urldecode(content)
         if lines:
-            body = common.format_keyvals(
+            body = format_keyvals(
                 [(k + ":", v) for (k, v) in lines],
                 key = "header",
                 val = "text"
@@ -246,7 +249,7 @@ class ViewMultipart:
             r = [
                 urwid.Text(("highlight", "Form data:\n")),
             ]
-            r.extend(common.format_keyvals(
+            r.extend(format_keyvals(
                 v,
                 key = "header",
                 val = "text"
@@ -396,7 +399,7 @@ class ViewImage:
             clean.append(
                 [netlib.utils.cleanBin(i[0]), netlib.utils.cleanBin(i[1])]
             )
-        fmt = common.format_keyvals(
+        fmt = format_keyvals(
             clean,
             key = "header",
             val = "text"
@@ -508,9 +511,13 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, hdrItems, content, limit, is_request):
+def get_content_view(viewmode, hdrItems, content, limit, is_request, log=None):
     """
-        Returns a (msg, body) tuple.
+        Returns:
+            A (msg, body) tuple.
+
+        Raises:
+            ContentViewException, if the content view threw an error.
     """
     if not content:
         if is_request:
@@ -531,9 +538,10 @@ def get_content_view(viewmode, hdrItems, content, limit, is_request):
         ret = viewmode(hdrs, content, limit)
     # Third-party viewers can fail in unexpected ways...
     except Exception:
-        s = traceback.format_exc()
-        s = "Content viewer failed: \n" + s
-        signals.add_event(s, "error")
+        if log:
+            s = traceback.format_exc()
+            s = "Content viewer failed: \n" + s
+            log(s, "error")
         ret = None
     if not ret:
         ret = get("Raw")(hdrs, content, limit)
