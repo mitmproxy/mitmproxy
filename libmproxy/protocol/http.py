@@ -7,7 +7,7 @@ from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
-from netlib.http.http2.frame import WindowUpdateFrame
+from netlib.http.http2.frame import PriorityFrame, WindowUpdateFrame
 
 from .. import utils
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
@@ -195,6 +195,13 @@ class Http2Layer(_HttpLayer):
             # simply accept them, and hide them from the log.
             # Ideally we should keep track of our own flow control window and
             # stall transmission if the outgoing flow control buffer is full.
+            return
+        if isinstance(frame, PriorityFrame):
+            # Clients are sending Priority frames depending on their implementation.
+            # The RFC does not clearly state when or which priority preferences should be set.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should forward them to the server.
             return
         self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
 
