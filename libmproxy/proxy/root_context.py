@@ -11,21 +11,31 @@ from .modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
 
 class RootContext(object):
     """
-    The outmost context provided to the root layer.
-    As a consequence, every layer has .client_conn, .channel, .next_layer() and .config.
+    The outermost context provided to the root layer.
+    As a consequence, every layer has access to methods and attributes defined here.
+
+    Attributes:
+        client_conn:
+            The :py:class:`client connection <libmproxy.models.ClientConnection>`.
+        channel:
+            A :py:class:`~libmproxy.controller.Channel` to communicate with the FlowMaster.
+            Provides :py:meth:`.ask() <libmproxy.controller.Channel.ask>` and
+            :py:meth:`.tell() <libmproxy.controller.Channel.tell>` methods.
+        config:
+            The :py:class:`proxy server's configuration <libmproxy.proxy.ProxyConfig>`
     """
 
     def __init__(self, client_conn, config, channel):
-        self.client_conn = client_conn  # Client Connection
-        self.channel = channel  # provides .ask() method to communicate with FlowMaster
-        self.config = config  # Proxy Configuration
+        self.client_conn = client_conn
+        self.channel = channel
+        self.config = config
 
     def next_layer(self, top_layer):
         """
         This function determines the next layer in the protocol stack.
 
         Arguments:
-            top_layer: the current top layer.
+            top_layer: the current innermost layer.
 
         Returns:
             The next layer

@@ -237,8 +237,8 @@ class TlsLayer(Layer):
             If so, we first connect to the server and then to the client.
             If not, we only connect to the client and do the server_ssl lazily on a Connect message.
 
-        An additional complexity is that establish ssl with the server may require a SNI value from the client.
-        In an ideal world, we'd do the following:
+        An additional complexity is that establish ssl with the server may require a SNI value from
+        the client. In an ideal world, we'd do the following:
             1. Start the SSL handshake with the client
             2. Check if the client sends a SNI.
             3. Pause the client handshake, establish SSL with the server.
