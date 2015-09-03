@@ -285,6 +285,8 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         return True
 
     def _handle_unexpected_frame(self, frm):
+        if isinstance(frm, frame.SettingsFrame):
+            return
         if self.unhandled_frame_cb:
             self.unhandled_frame_cb(frm)
 
