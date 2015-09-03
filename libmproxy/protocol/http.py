@@ -237,6 +237,11 @@ class Http2Layer(_HttpLayer):
             # simply accept them, and hide them from the log.
             # Ideally we should forward them to the server.
             return
+        if isinstance(frame, GoAwayFrame):
+            # Client wants to terminate the connection,
+            # relay it to the server.
+            self.server_conn.send(frame.to_bytes())
+            return
         if isinstance(frame, PingFrame):
             # respond with pong
             self.server_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
