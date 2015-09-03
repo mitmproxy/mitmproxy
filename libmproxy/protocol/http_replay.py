@@ -6,7 +6,7 @@ from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
 from ..controller import Channel
 from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
-from .base import Log, Kill
+from .base import Kill
 
 
 # TODO: Doesn't really belong into libmproxy.protocol...
@@ -89,8 +89,9 @@ class RequestReplayThread(threading.Thread):
             if self.channel:
                 self.channel.ask("error", self.flow)
         except Kill:
-            # KillSignal should only be raised if there's a channel in the
+            # Kill should only be raised if there's a channel in the
             # first place.
+            from ..proxy.root_context import Log
             self.channel.tell("log", Log("Connection killed", "info"))
         finally:
             r.form_out = form_out_backup

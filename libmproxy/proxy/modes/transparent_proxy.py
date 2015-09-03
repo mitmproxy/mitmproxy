@@ -21,4 +21,4 @@ class TransparentProxy(Layer, ServerConnectionMixin):
             layer()
         finally:
             if self.server_conn:
-                self._disconnect()
+                self.disconnect()

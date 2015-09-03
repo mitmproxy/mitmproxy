@@ -81,15 +81,6 @@ class Layer(_LayerCodeCompletion):
         """
         return getattr(self.ctx, name)
 
-    def log(self, msg, level, subs=()):
-        full_msg = [
-            "{}: {}".format(repr(self.client_conn.address), msg)
-        ]
-        for i in subs:
-            full_msg.append("  -> " + i)
-        full_msg = "\n".join(full_msg)
-        self.channel.tell("log", Log(full_msg, level))
-
     @property
     def layers(self):
         return [self] + self.ctx.layers
@@ -106,15 +97,9 @@ class ServerConnectionMixin(object):
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
         self.server_conn = ServerConnection(server_address)
-        self._check_self_connect()
+        self.__check_self_connect()
 
-    def reconnect(self):
-        address = self.server_conn.address
-        self._disconnect()
-        self.server_conn.address = address
-        self.connect()
-
-    def _check_self_connect(self):
+    def __check_self_connect(self):
         """
         We try to protect the proxy from _accidentally_ connecting to itself,
         e.g. because of a failed transparent lookup or an invalid configuration.
@@ -134,10 +119,10 @@ class ServerConnectionMixin(object):
     def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
             if self.server_conn:
-                self._disconnect()
+                self.disconnect()
             self.log("Set new server address: " + repr(address), "debug")
             self.server_conn.address = address
-            self._check_self_connect()
+            self.__check_self_connect()
             if server_tls:
                 raise ProtocolException(
                     "Cannot upgrade to TLS, no TLS layer on the protocol stack."
@@ -145,15 +130,16 @@ class ServerConnectionMixin(object):
         else:
             self.ctx.set_server(address, server_tls, sni, depth - 1)
 
-    def _disconnect(self):
+    def disconnect(self):
         """
         Deletes (and closes) an existing server connection.
         """
         self.log("serverdisconnect", "debug", [repr(self.server_conn.address)])
+        address = self.server_conn.address
         self.server_conn.finish()
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
-        self.server_conn = ServerConnection(None)
+        self.server_conn = ServerConnection(address)
 
     def connect(self):
         if not self.server_conn.address:
@@ -165,12 +151,6 @@ class ServerConnectionMixin(object):
         except tcp.NetLibError as e:
             raise ProtocolException(
                 "Server connection to %s failed: %s" % (repr(self.server_conn.address), e), e)
-
-
-class Log(object):
-    def __init__(self, msg, level="info"):
-        self.msg = msg
-        self.level = level
 
 
 class Kill(Exception):

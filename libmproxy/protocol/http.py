@@ -143,10 +143,6 @@ class Http1Layer(_StreamingHttpLayer):
         self.ctx.connect()
         self.server_protocol = HTTP1Protocol(self.server_conn)
 
-    def reconnect(self):
-        self.ctx.reconnect()
-        self.server_protocol = HTTP1Protocol(self.server_conn)
-
     def set_server(self, *args, **kwargs):
         self.ctx.set_server(*args, **kwargs)
         self.server_protocol = HTTP1Protocol(self.server_conn)
@@ -198,12 +194,6 @@ class Http2Layer(_HttpLayer):
 
     def connect(self):
         self.ctx.connect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
-        self.server_protocol.perform_connection_preface()
-
-    def reconnect(self):
-        self.ctx.reconnect()
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
                                              unhandled_frame_cb=self.handle_unexpected_frame_from_server)
         self.server_protocol.perform_connection_preface()
@@ -314,14 +304,10 @@ class UpstreamConnectLayer(Layer):
         else:
             pass  # swallow the message
 
-    def reconnect(self):
-        self.ctx.reconnect()
-        self._send_connect_request()
-
     def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
             if self.ctx.server_conn:
-                self.ctx.reconnect()
+                self.ctx.disconnect()
             address = Address.wrap(address)
             self.connect_request.host = address.host
             self.connect_request.port = address.port
@@ -459,7 +445,8 @@ class HttpLayer(Layer):
             # > server detects timeout, disconnects
             # > read (100-n)% of large request
             # > send large request upstream
-            self.reconnect()
+            self.disconnect()
+            self.connect()
             get_response()
 
         # call the appropriate script hook - this is an opportunity for an
@@ -534,10 +521,12 @@ class HttpLayer(Layer):
             """
             # This is a very ugly (untested) workaround to solve a very ugly problem.
             if self.server_conn and self.server_conn.tls_established and not ssl:
-                self.reconnect()
+                self.disconnect()
+                self.connect()
             elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
                 if self.server_conn.tls_established:
-                    self.reconnect()
+                    self.disconnect()
+                    self.connect()
 
                 self.send_request(make_connect_request(address))
                 tls_layer = TlsLayer(self, False, True)

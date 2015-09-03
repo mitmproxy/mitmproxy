@@ -85,9 +85,28 @@ class RootContext(object):
         # d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))
         # is_http2_magic = (d == HTTP2Protocol.CLIENT_CONNECTION_PREFACE)
 
+    def log(self, msg, level, subs=()):
+        """
+        Send a log message to the master.
+        """
+
+        full_msg = [
+            "{}: {}".format(repr(self.client_conn.address), msg)
+        ]
+        for i in subs:
+            full_msg.append("  -> " + i)
+        full_msg = "\n".join(full_msg)
+        self.channel.tell("log", Log(full_msg, level))
+
     @property
     def layers(self):
         return []
 
     def __repr__(self):
         return "RootContext"
+
+
+class Log(object):
+    def __init__(self, msg, level="info"):
+        self.msg = msg
+        self.level = level

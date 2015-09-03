@@ -8,10 +8,10 @@ from netlib import tcp
 from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
 from ..exceptions import ProtocolException, ServerException
-from ..protocol import Log, Kill
+from ..protocol import Kill
 from ..models import ClientConnection, make_error_response
 from .modes import HttpUpstreamProxy, HttpProxy, ReverseProxy, TransparentProxy, Socks5Proxy
-from .root_context import RootContext
+from .root_context import RootContext, Log
 
 
 class DummyServer:

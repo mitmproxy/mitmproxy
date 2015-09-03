@@ -338,11 +338,6 @@ class TlsLayer(Layer):
         if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
-    def reconnect(self):
-        self.ctx.reconnect()
-        if self._server_tls and not self.server_conn.tls_established:
-            self._establish_tls_with_server()
-
     def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1 and server_tls is not None:
             self.ctx.set_server(address, None, None, 1)
