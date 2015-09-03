@@ -261,16 +261,21 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             print(frm.human_readable(">>"))
 
     def read_frame(self, hide=False):
-        frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
-        if not hide and self.dump_frames:  # pragma no cover
-            print(frm.human_readable("<<"))
-        if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
-            self._apply_settings(frm.settings, hide)
+        while True:
+            frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
+            if not hide and self.dump_frames:  # pragma no cover
+                print(frm.human_readable("<<"))
 
-        if isinstance(frm, frame.DataFrame) and frm.length > 0:
-            self._update_flow_control_window(frm.stream_id, frm.length)
-
-        return frm
+            if isinstance(frm, frame.PingFrame):
+                raw_bytes = frame.PingFrame(flags=frame.Frame.FLAG_ACK, payload=frm.payload).to_bytes()
+                self.tcp_handler.wfile.write(raw_bytes)
+                self.tcp_handler.wfile.flush()
+                continue
+            if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
+                self._apply_settings(frm.settings, hide)
+            if isinstance(frm, frame.DataFrame) and frm.length > 0:
+                self._update_flow_control_window(frm.stream_id, frm.length)
+            return frm
 
     def check_alpn(self):
         alp = self.tcp_handler.get_alpn_proto_negotiated()
