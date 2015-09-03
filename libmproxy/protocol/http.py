@@ -7,7 +7,7 @@ from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
-from netlib.http.http2.frame import WindowUpdateFrame
+from netlib.http.http2.frame import Frame, GoAwayFrame, PriorityFrame, WindowUpdateFrame
 
 from .. import utils
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
@@ -136,9 +136,9 @@ class Http2Layer(_HttpLayer):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
         self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_client)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
 
     def read_request(self):
         request = HTTPRequest.from_protocol(
@@ -162,25 +162,26 @@ class Http2Layer(_HttpLayer):
         )
 
     def send_response(self, message):
-        # TODO: implement flow control and WINDOW_UPDATE frames
+        # TODO: implement flow control to prevent client buffer filling up
+        # maintain a send buffer size, and read WindowUpdateFrames from client to increase the send buffer
         self.client_conn.send(self.client_protocol.assemble(message))
 
     def connect(self):
         self.ctx.connect()
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
         self.server_protocol.perform_connection_preface()
 
     def reconnect(self):
         self.ctx.reconnect()
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
         self.server_protocol.perform_connection_preface()
 
     def set_server(self, *args, **kwargs):
         self.ctx.set_server(*args, **kwargs)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
         self.server_protocol.perform_connection_preface()
 
     def __call__(self):
@@ -188,13 +189,39 @@ class Http2Layer(_HttpLayer):
         layer = HttpLayer(self, self.mode)
         layer()
 
-    def handle_unexpected_frame(self, frame):
+        # terminate the connection
+        self.client_conn.send(GoAwayFrame().to_bytes())
+
+    def handle_unexpected_frame_from_client(self, frame):
+        if isinstance(frame, PriorityFrame):
+            # Clients are sending Priority frames depending on their implementation.
+            # The RFC does not clearly state when or which priority preferences should be set.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should forward them to the server.
+            return
+        if isinstance(frame, PingFrame):
+            # respond with pong
+            self.server_conn.send(PingFrame(flags=frame.Frame.FLAG_ACK, payload=frame.payload).to_bytes())
+            return
+        self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
+
+    def handle_unexpected_frame_from_server(self, frame):
         if isinstance(frame, WindowUpdateFrame):
             # Clients are sending WindowUpdate frames depending on their flow control algorithm.
             # Since we cannot predict these frames, and we do not need to respond to them,
             # simply accept them, and hide them from the log.
             # Ideally we should keep track of our own flow control window and
             # stall transmission if the outgoing flow control buffer is full.
+            return
+        if isinstance(frame, GoAwayFrame):
+            # Server wants to terminate the connection,
+            # relay it to the client.
+            self.client_conn.send(frame.to_bytes())
+            return
+        if isinstance(frame, PingFrame):
+            # respond with pong
+            self.client_conn.send(PingFrame(flags=frame.Frame.FLAG_ACK, payload=frame.payload).to_bytes())
             return
         self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
 
