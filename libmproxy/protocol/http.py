@@ -32,6 +32,9 @@ class _HttpLayer(Layer):
     def send_response(self, response):
         raise NotImplementedError()
 
+    def check_close_connection(self, flow):
+        raise NotImplementedError()
+
 
 class _StreamingHttpLayer(_HttpLayer):
     supports_streaming = True
@@ -113,6 +116,29 @@ class Http1Layer(_StreamingHttpLayer):
         for chunk in chunks:
             self.client_conn.send(chunk)
 
+    def check_close_connection(self, flow):
+        close_connection = (
+            http1.HTTP1Protocol.connection_close(
+                flow.request.httpversion,
+                flow.request.headers
+            ) or http1.HTTP1Protocol.connection_close(
+                flow.response.httpversion,
+                flow.response.headers
+            ) or http1.HTTP1Protocol.expected_http_body_size(
+                flow.response.headers,
+                False,
+                flow.request.method,
+                flow.response.code) == -1
+        )
+        if flow.request.form_in == "authority" and flow.response.code == 200:
+            # Workaround for
+            # https://github.com/mitmproxy/mitmproxy/issues/313: Some
+            # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
+            # and no Content-Length header
+
+            return False
+        return close_connection
+
     def connect(self):
         self.ctx.connect()
         self.server_protocol = HTTP1Protocol(self.server_conn)
@@ -165,6 +191,10 @@ class Http2Layer(_HttpLayer):
         # TODO: implement flow control to prevent client buffer filling up
         # maintain a send buffer size, and read WindowUpdateFrames from client to increase the send buffer
         self.client_conn.send(self.client_protocol.assemble(message))
+
+    def check_close_connection(self, flow):
+        # TODO: add a timer to disconnect after a 10 second timeout
+        return False
 
     def connect(self):
         self.ctx.connect()
@@ -369,36 +399,6 @@ class HttpLayer(Layer):
     def handle_upstream_mode_connect(self, connect_request):
         layer = UpstreamConnectLayer(self, connect_request)
         layer()
-
-    def check_close_connection(self, flow):
-        """
-            Checks if the connection should be closed depending on the HTTP
-            semantics. Returns True, if so.
-        """
-
-        # TODO: add logic for HTTP/2
-
-        close_connection = (
-            http1.HTTP1Protocol.connection_close(
-                flow.request.httpversion,
-                flow.request.headers
-            ) or http1.HTTP1Protocol.connection_close(
-                flow.response.httpversion,
-                flow.response.headers
-            ) or http1.HTTP1Protocol.expected_http_body_size(
-                flow.response.headers,
-                False,
-                flow.request.method,
-                flow.response.code) == -1
-        )
-        if flow.request.form_in == "authority" and flow.response.code == 200:
-            # Workaround for
-            # https://github.com/mitmproxy/mitmproxy/issues/313: Some
-            # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
-            # and no Content-Length header
-
-            return False
-        return close_connection
 
     def send_response_to_client(self, flow):
         if not (self.supports_streaming and flow.response.stream):
