@@ -234,7 +234,7 @@ class Http2Layer(_HttpLayer):
             return
         if isinstance(frame, PingFrame):
             # respond with pong
-            self.server_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
+            self.client_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
             return
         self.log("Unexpected HTTP2 frame from client: %s" % frame.human_readable(), "info")
 
@@ -253,7 +253,7 @@ class Http2Layer(_HttpLayer):
             return
         if isinstance(frame, PingFrame):
             # respond with pong
-            self.client_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
+            self.server_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
             return
         self.log("Unexpected HTTP2 frame from server: %s" % frame.human_readable(), "info")
 
