@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import urwid
 
 from . import common, signals
-from .. import filt, version
+from .. import filt, version, contentview
 
 footer = [
     ("heading", 'mitmproxy v%s ' % version.VERSION),
@@ -34,11 +34,11 @@ class HelpView(urwid.ListBox):
             ("arrows", "up, down, left, right"),
         ]
         text.extend(
-            common.format_keyvals(
+            common.urwid_keyvals(contentview.format_keyvals(
                 keys,
                 key="key",
                 val="text",
-                indent=4))
+                indent=4)))
 
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
@@ -50,7 +50,7 @@ class HelpView(urwid.ListBox):
             ("S", "server replay of HTTP responses"),
         ]
         text.extend(
-            common.format_keyvals(keys, key="key", val="text", indent=4)
+            common.urwid_keyvals(contentview.format_keyvals(keys, key="key", val="text", indent=4))
         )
 
         text.append(urwid.Text([("head", "\n\nFilter expressions:\n")]))
@@ -76,7 +76,7 @@ class HelpView(urwid.ListBox):
                 ("(...)", "grouping"),
             ]
         )
-        text.extend(common.format_keyvals(f, key="key", val="text", indent=4))
+        text.extend(common.urwid_keyvals(contentview.format_keyvals(f, key="key", val="text", indent=4)))
 
         text.append(
             urwid.Text(
@@ -97,7 +97,7 @@ class HelpView(urwid.ListBox):
             ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(
-            common.format_keyvals(examples, key="key", val="text", indent=4)
+            common.urwid_keyvals(contentview.format_keyvals(examples, key="key", val="text", indent=4))
         )
         return text
 

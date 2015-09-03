@@ -55,41 +55,18 @@ def highlight_key(str, key, textattr="text", keyattr="key"):
 KEY_MAX = 30
 
 
-def format_keyvals(lst, key="key", val="text", indent=0):
-    """
-        Format a list of (key, value) tuples.
-
-        If key is None, it's treated specially:
-            - We assume a sub-value, and add an extra indent.
-            - The value is treated as a pre-formatted list of directives.
-    """
+def urwid_keyvals(parts):
     ret = []
-    if lst:
-        maxk = min(max(len(i[0]) for i in lst if i and i[0]), KEY_MAX)
-        for i, kv in enumerate(lst):
-            if kv is None:
-                ret.append(urwid.Text(""))
-            else:
-                if isinstance(kv[1], urwid.Widget):
-                    v = kv[1]
-                elif kv[1] is None:
-                    v = urwid.Text("")
-                else:
-                    v = urwid.Text([(val, kv[1])])
-                ret.append(
-                    urwid.Columns(
-                        [
-                            ("fixed", indent, urwid.Text("")),
-                            (
-                                "fixed",
-                                maxk,
-                                urwid.Text([(key, kv[0] or "")])
-                            ),
-                            v
-                        ],
-                        dividechars = 2
-                    )
-                )
+    for col in parts:
+        newcol = [
+            (col[0][0], col[0][1], urwid.Text(col[0][2])),
+            (col[1][0], col[1][1], urwid.Text(col[1][2])),
+            urwid.Text(col[2])
+        ]
+        urwid.Columns(
+            newcol,
+            dividechars = 2
+        )
     return ret
 
 

@@ -52,19 +52,19 @@ def format_keyvals(lst, key="key", val="text", indent=0):
         maxk = min(max(len(i[0]) for i in lst if i and i[0]), KEY_MAX)
         for i, kv in enumerate(lst):
             if kv is None:
-                ret.append([""])
+                ret.append(("",))
             else:
                 if kv[1] is None:
-                    v = [(val, "")]
+                    v = (val, "")
                 else:
-                    v = [(val, kv[1])]
+                    v = (val, kv[1])
                 ret.append(
                     [
-                        ("fixed", indent, [""]),
+                        ("fixed", indent, (val, "")),
                         (
                             "fixed",
                             maxk,
-                            [(key, kv[0] or "")]
+                            (key, kv[0] or "")
                         ),
                         v
                     ],

@@ -81,7 +81,7 @@ def _mkhelp():
         ("n", "repeat search forward"),
         ("N", "repeat search backwards"),
     ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+    text.extend(common.urwid_keyvals(contentview.format_keyvals(keys, key="key", val="text", indent=4)))
     return text
 help_context = _mkhelp()
 
@@ -210,10 +210,12 @@ class FlowView(tabs.Tabs):
 
     def conn_text(self, conn):
         if conn:
-            txt = common.format_keyvals(
-                [(h + ":", v) for (h, v) in conn.headers.lst],
-                key = "header",
-                val = "text"
+            txt = common.urwid_keyvals(
+                contentview.format_keyvals(
+                    [(h + ":", v) for (h, v) in conn.headers.lst],
+                    key = "header",
+                    val = "text"
+                )
             )
             viewmode = self.viewmode_get()
             msg, body = self.content_view(viewmode, conn)

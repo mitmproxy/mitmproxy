@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import urwid
 from . import common, searchable
-from .. import utils
+from .. import utils, contentview
 
 
 def maybe_timestamp(base, attr):
@@ -27,7 +27,7 @@ def flowdetails(state, flow):
         ]
 
         text.extend(
-            common.format_keyvals(parts, key="key", val="text", indent=4)
+            common.urwid_keyvals(contentview.format_keyvals(parts, key="key", val="text", indent=4))
         )
 
         c = sc.cert
@@ -43,10 +43,12 @@ def flowdetails(state, flow):
                     "Subject",
                     urwid.BoxAdapter(
                         urwid.ListBox(
-                            common.format_keyvals(
-                                c.subject,
-                                key="highlight",
-                                val="text"
+                            common.urwid_keyvals(
+                                contentview.format_keyvals(
+                                    c.subject,
+                                    key="highlight",
+                                    val="text"
+                                )
                             )
                         ),
                         len(c.subject)
@@ -56,8 +58,10 @@ def flowdetails(state, flow):
                     "Issuer",
                     urwid.BoxAdapter(
                         urwid.ListBox(
-                            common.format_keyvals(
-                                c.issuer, key="highlight", val="text"
+                            common.urwid_keyvals(
+                                contentview.format_keyvals(
+                                    c.issuer, key="highlight", val="text"
+                                )
                             )
                         ),
                         len(c.issuer)
@@ -73,7 +77,7 @@ def flowdetails(state, flow):
                     ]
                 )
             text.extend(
-                common.format_keyvals(parts, key="key", val="text", indent=4)
+                common.urwid_keyvals(contentview.format_keyvals(parts, key="key", val="text", indent=4))
             )
 
     if cc:
@@ -85,7 +89,7 @@ def flowdetails(state, flow):
         ]
 
         text.extend(
-            common.format_keyvals(parts, key="key", val="text", indent=4)
+            common.urwid_keyvals(contentview.format_keyvals(parts, key="key", val="text", indent=4))
         )
 
     parts = []
@@ -150,5 +154,5 @@ def flowdetails(state, flow):
     parts = sorted(parts, key=lambda p: p[1])
 
     text.append(urwid.Text([("head", "Timing:")]))
-    text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
+    text.extend(common.urwid_keyvals(contentview.format_keyvals(parts, key="key", val="text", indent=4)))
     return searchable.Searchable(state, text)
