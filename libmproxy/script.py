@@ -11,6 +11,10 @@ class ScriptError(Exception):
 
 
 class ScriptContext:
+    """
+    The script context should be used to interact with the global mitmproxy state from within a
+    script.
+    """
     def __init__(self, master):
         self._master = master
 
