@@ -36,10 +36,40 @@ else:
     cssutils.ser.prefs.validOnly = False
 
 VIEW_CUTOFF = 1024 * 50
+KEY_MAX = 30
 
 
 def format_keyvals(lst, key="key", val="text", indent=0):
-    raise NotImplementedError()
+    """
+        Format a list of (key, value) tuples.
+
+        If key is None, it's treated specially:
+            - We assume a sub-value, and add an extra indent.
+            - The value is treated as a pre-formatted list of directives.
+    """
+    ret = []
+    if lst:
+        maxk = min(max(len(i[0]) for i in lst if i and i[0]), KEY_MAX)
+        for i, kv in enumerate(lst):
+            if kv is None:
+                ret.append([""])
+            else:
+                if kv[1] is None:
+                    v = [(val, "")]
+                else:
+                    v = [(val, kv[1])]
+                ret.append(
+                    [
+                        ("fixed", indent, [""]),
+                        (
+                            "fixed",
+                            maxk,
+                            [(key, kv[0] or "")]
+                        ),
+                        v
+                    ],
+                )
+    return ret
 
 
 def _view_text(content, total, limit):

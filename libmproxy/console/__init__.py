@@ -14,9 +14,9 @@ import traceback
 import urwid
 import weakref
 
-from .. import controller, flow, script
+from .. import controller, flow, script, contentview
 from . import flowlist, flowview, help, window, signals, options
-from . import grideditor, palettes, contentview, statusbar, palettepicker
+from . import grideditor, palettes, statusbar, palettepicker
 
 EVENTLOG_SIZE = 500
 
