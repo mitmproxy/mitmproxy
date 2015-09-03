@@ -246,9 +246,16 @@ class Http2Layer(_HttpLayer):
             # respond with pong
             self.server_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
             return
-        self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
+        self.log("Unexpected HTTP2 frame from client: %s" % frame.human_readable(), "info")
 
     def handle_unexpected_frame_from_server(self, frame):
+        if isinstance(frame, WindowUpdateFrame):
+            # Servers are sending WindowUpdate frames depending on their flow control algorithm.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should keep track of our own flow control window and
+            # stall transmission if the outgoing flow control buffer is full.
+            return
         if isinstance(frame, GoAwayFrame):
             # Server wants to terminate the connection,
             # relay it to the client.
@@ -258,7 +265,7 @@ class Http2Layer(_HttpLayer):
             # respond with pong
             self.client_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
             return
-        self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
+        self.log("Unexpected HTTP2 frame from server: %s" % frame.human_readable(), "info")
 
 
 class ConnectServerConnection(object):
