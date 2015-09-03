@@ -1,9 +1,8 @@
-from libmproxy.protocol.http import HTTPResponse
-from netlib.odict import ODictCaseless
-
 """
 This example shows two ways to redirect flows to other destinations.
 """
+from libmproxy.models import HTTPResponse
+from netlib.odict import ODictCaseless
 
 
 def request(context, flow):
