@@ -304,16 +304,22 @@ class UpstreamConnectLayer(Layer):
         else:
             pass  # swallow the message
 
-    def set_server(self, address, server_tls=None, sni=None, depth=1):
-        if depth == 1:
-            if self.ctx.server_conn:
-                self.ctx.disconnect()
-            address = Address.wrap(address)
-            self.connect_request.host = address.host
-            self.connect_request.port = address.port
-            self.server_conn.address = address
-        else:
-            self.ctx.set_server(address, server_tls, sni, depth - 1)
+    def change_upstream_proxy_server(self, address):
+        if address != self.server_conn.via.address:
+            self.ctx.set_server(address)
+
+    def set_server(self, address, server_tls=None, sni=None):
+        if self.ctx.server_conn:
+            self.ctx.disconnect()
+        address = Address.wrap(address)
+        self.connect_request.host = address.host
+        self.connect_request.port = address.port
+        self.server_conn.address = address
+
+        if server_tls:
+            raise ProtocolException(
+                "Cannot upgrade to TLS, no TLS layer on the protocol stack."
+            )
 
 
 class HttpLayer(Layer):
@@ -387,6 +393,12 @@ class HttpLayer(Layer):
                     raise ProtocolException("Error in HTTP connection: %s" % repr(e), e)
             finally:
                 flow.live = False
+
+    def change_upstream_proxy_server(self, address):
+        # Make set_upstream_proxy_server always available,
+        # even if there's no UpstreamConnectLayer
+        if address != self.server_conn.address:
+            return self.set_server(address)
 
     def handle_regular_mode_connect(self, request):
         self.set_server((request.host, request.port))

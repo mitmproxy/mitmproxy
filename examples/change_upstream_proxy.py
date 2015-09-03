@@ -4,7 +4,6 @@
 # Usage: mitmdump -U http://default-upstream-proxy.local:8080/ -s change_upstream_proxy.py
 #
 # If you want to change the target server, you should modify flow.request.host and flow.request.port
-# flow.live.set_server should only be used by inline scripts to change the upstream proxy.
 
 
 def proxy_address(flow):
@@ -22,13 +21,4 @@ def request(context, flow):
         return
     address = proxy_address(flow)
     if flow.live:
-        if flow.request.scheme == "http":
-            # For a normal HTTP request, we just change the proxy server and we're done!
-            if address != flow.live.server_conn.address:
-                flow.live.set_server(address, depth=1)
-        else:
-            # If we have CONNECTed (and thereby established "destination state"), the story is
-            # a bit more complex. Now we don't want to change the top level address (which is
-            # the connect destination) but the address below that. (Notice the `.via` and depth=2).
-            if address != flow.live.server_conn.via.address:
-                flow.live.set_server(address, depth=2)
+        flow.live.change_upstream_proxy_server(address)

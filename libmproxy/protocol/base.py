@@ -116,19 +116,16 @@ class ServerConnectionMixin(object):
                     "The proxy shall not connect to itself.".format(repr(address))
                 )
 
-    def set_server(self, address, server_tls=None, sni=None, depth=1):
-        if depth == 1:
-            if self.server_conn:
-                self.disconnect()
-            self.log("Set new server address: " + repr(address), "debug")
-            self.server_conn.address = address
-            self.__check_self_connect()
-            if server_tls:
-                raise ProtocolException(
-                    "Cannot upgrade to TLS, no TLS layer on the protocol stack."
-                )
-        else:
-            self.ctx.set_server(address, server_tls, sni, depth - 1)
+    def set_server(self, address, server_tls=None, sni=None):
+        if self.server_conn:
+            self.disconnect()
+        self.log("Set new server address: " + repr(address), "debug")
+        self.server_conn.address = address
+        self.__check_self_connect()
+        if server_tls:
+            raise ProtocolException(
+                "Cannot upgrade to TLS, no TLS layer on the protocol stack."
+            )
 
     def disconnect(self):
         """
