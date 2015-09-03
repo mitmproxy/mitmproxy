@@ -232,10 +232,6 @@ class Http2Layer(_HttpLayer):
             # relay it to the server.
             self.server_conn.send(frame.to_bytes())
             return
-        if isinstance(frame, PingFrame):
-            # respond with pong
-            self.client_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
-            return
         self.log("Unexpected HTTP2 frame from client: %s" % frame.human_readable(), "info")
 
     def handle_unexpected_frame_from_server(self, frame):
@@ -250,10 +246,6 @@ class Http2Layer(_HttpLayer):
             # Server wants to terminate the connection,
             # relay it to the client.
             self.client_conn.send(frame.to_bytes())
-            return
-        if isinstance(frame, PingFrame):
-            # respond with pong
-            self.server_conn.send(PingFrame(flags=Frame.FLAG_ACK, payload=frame.payload).to_bytes())
             return
         self.log("Unexpected HTTP2 frame from server: %s" % frame.human_readable(), "info")
 
