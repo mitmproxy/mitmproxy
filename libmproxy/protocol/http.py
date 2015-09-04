@@ -7,7 +7,7 @@ from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
-from netlib.http.http2.frame import Frame, PingFrame, GoAwayFrame, PriorityFrame, WindowUpdateFrame
+from netlib.http.http2.frame import GoAwayFrame, PriorityFrame, WindowUpdateFrame
 
 from .. import utils
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException

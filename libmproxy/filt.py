@@ -35,7 +35,6 @@ from __future__ import absolute_import
 import re
 import sys
 import pyparsing as pp
-from .models import decoded
 
 
 class _Token:
@@ -179,13 +178,11 @@ class FBod(_Rex):
 
     def __call__(self, f):
         if f.request and f.request.content:
-            with decoded(f.request):
-                if re.search(self.expr, f.request.content):
-                    return True
+            if re.search(self.expr, f.request.get_decoded_content()):
+                return True
         if f.response and f.response.content:
-            with decoded(f.response):
-                if re.search(self.expr, f.response.content):
-                    return True
+            if re.search(self.expr, f.response.get_decoded_content()):
+                return True
         return False
 
 
@@ -195,9 +192,8 @@ class FBodRequest(_Rex):
 
     def __call__(self, f):
         if f.request and f.request.content:
-            with decoded(f.request):
-                if re.search(self.expr, f.request.content):
-                    return True
+            if re.search(self.expr, f.request.get_decoded_content()):
+                return True
 
 
 class FBodResponse(_Rex):
@@ -206,9 +202,8 @@ class FBodResponse(_Rex):
 
     def __call__(self, f):
         if f.response and f.response.content:
-            with decoded(f.response):
-                if re.search(self.expr, f.response.content):
-                    return True
+            if re.search(self.expr, f.response.get_decoded_content()):
+                return True
 
 
 class FMethod(_Rex):
