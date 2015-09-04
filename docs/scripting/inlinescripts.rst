@@ -1,3 +1,5 @@
+.. _inline-scripts:
+
 Inline Scripts
 ==============
 
@@ -56,6 +58,7 @@ Events are listed in the order they usually occur.
     a connection can correspond to multiple HTTP requests.
 
     .. versionchanged:: 0.14
+
     :param Layer root_layer: The root layer (see :ref:`protocols` for an explanation what the root
         layer is), which provides transparent access to all attributes of the
         :py:class:`~libmproxy.proxy.RootContext`. For example, ``root_layer.client_conn.address``
@@ -111,6 +114,7 @@ Events are listed in the order they usually occur.
     Called when the proxy has closed the server connection.
 
     .. versionadded:: 0.14
+
     :param ServerConnection server_conn: see :py:func:`serverconnect`
 
 .. py:function:: clientdisconnect(context, root_layer)
@@ -118,6 +122,7 @@ Events are listed in the order they usually occur.
     Called when a client disconnects from the proxy.
 
     .. versionchanged:: 0.14
+
     :param Layer root_layer: see :py:func:`clientconnect`
 
 .. py:function:: done(context)

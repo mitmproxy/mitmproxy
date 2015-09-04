@@ -1,7 +1,7 @@
-.. _exceptions:
+.. _proxy:
 
-Proxy
-=====
+Proxy Server
+============
 
 .. automodule:: libmproxy.proxy
 
