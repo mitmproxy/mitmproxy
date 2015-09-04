@@ -53,8 +53,8 @@ def format_dict(d):
         key += ":"
         key = key.ljust(max_key_len + 2)
         yield (
-            ("key", key),
-            ("value", value)
+            ("header", key),
+            ("text", value)
         )
 
 
@@ -110,12 +110,16 @@ def trailer(clen, txt, limit):
 """
 
 
-class View:
+class View(object):
     name = None
     prompt = ()
     content_types = []
 
     def __call__(self, hdrs, content, limit):
+        """
+        Returns:
+            A (mode name, content generator) tuple.
+        """
         raise NotImplementedError()
 
 
@@ -132,8 +136,8 @@ class ViewAuto(View):
             if ct in content_types_map:
                 return content_types_map[ct][0](hdrs, content, limit)
             elif utils.isXML(content):
-                return ViewXML(hdrs, content, limit)
-        return ViewRaw(hdrs, content, limit)
+                return get("XML")(hdrs, content, limit)
+        return get("Raw")(hdrs, content, limit)
 
 
 class ViewRaw(View):
@@ -217,7 +221,7 @@ class ViewJSON(View):
         return "JSON", format_text(pretty_json, limit)
 
 
-class ViewHTML:
+class ViewHTML(View):
     name = "HTML"
     prompt = ("html", "h")
     content_types = ["text/html"]
@@ -238,7 +242,7 @@ class ViewHTML:
             return "HTML", format_text(s, limit)
 
 
-class ViewHTMLOutline:
+class ViewHTMLOutline(View):
     name = "HTML Outline"
     prompt = ("html outline", "o")
     content_types = ["text/html"]
@@ -249,43 +253,34 @@ class ViewHTMLOutline:
         h.ignore_images = True
         h.body_width = 0
         content = h.handle(content)
-        txt = _view_text(content[:limit], len(content), limit)
-        return "HTML Outline", txt
+        return "HTML Outline", format_text(content, limit)
 
 
-class ViewURLEncoded:
+class ViewURLEncoded(View):
     name = "URL-encoded"
     prompt = ("urlencoded", "u")
     content_types = ["application/x-www-form-urlencoded"]
 
     def __call__(self, hdrs, content, limit):
-        lines = netlib.utils.urldecode(content)
-        if lines:
-            body = format_keyvals(
-                [(k + ":", v) for (k, v) in lines],
-                key="header",
-                val="text"
-            )
-            return "URLEncoded form", body
+        d = netlib.utils.urldecode(content)
+        return "URLEncoded form", format_dict(d)
 
 
-class ViewMultipart:
+class ViewMultipart(View):
     name = "Multipart Form"
     prompt = ("multipart", "m")
     content_types = ["multipart/form-data"]
 
+    @staticmethod
+    def _format(v):
+        yield (("highlight", "Form data:\n"))
+        for message in format_dict({key:val for key,val in v}):
+            yield message
+
     def __call__(self, hdrs, content, limit):
         v = netlib.utils.multipartdecode(hdrs, content)
         if v:
-            r = [
-                urwid.Text(("highlight", "Form data:\n")),
-            ]
-            r.extend(format_keyvals(
-                v,
-                key="header",
-                val="text"
-            ))
-            return "Multipart form", r
+            return "Multipart form", self._format(v)
 
 
 if pyamf:
@@ -310,7 +305,7 @@ if pyamf:
     pyamf.register_class_loader(pyamf_class_loader)
 
 
-    class ViewAMF:
+    class ViewAMF(View):
         name = "AMF"
         prompt = ("amf", "f")
         content_types = ["application/x-amf"]
@@ -337,31 +332,32 @@ if pyamf:
             else:
                 return b
 
+        def _format(self, envelope, limit):
+            for target, message in iter(envelope):
+                if isinstance(message, pyamf.remoting.Request):
+                    yield (
+                        ("header", "Request: "),
+                        ("text", str(target)),
+                    )
+                else:
+                    yield (
+                        ("header", "Response: "),
+                        ("text", "%s, code %s" % (target, message.status)),
+                    )
+
+                s = json.dumps(self.unpack(message), indent=4)
+                for msg in format_text(s, limit):
+                    yield msg
+
         def __call__(self, hdrs, content, limit):
             envelope = remoting.decode(content, strict=False)
             if not envelope:
                 return None
 
-            txt = []
-            for target, message in iter(envelope):
-                if isinstance(message, pyamf.remoting.Request):
-                    txt.append(urwid.Text([
-                        ("header", "Request: "),
-                        ("text", str(target)),
-                    ]))
-                else:
-                    txt.append(urwid.Text([
-                        ("header", "Response: "),
-                        ("text", "%s, code %s" % (target, message.status)),
-                    ]))
-
-                s = json.dumps(self.unpack(message), indent=4)
-                txt.extend(_view_text(s[:limit], len(s), limit))
-
-            return "AMF v%s" % envelope.amfVersion, txt
+            return "AMF v%s" % envelope.amfVersion, self._format(envelope, limit)
 
 
-class ViewJavaScript:
+class ViewJavaScript(View):
     name = "JavaScript"
     prompt = ("javascript", "j")
     content_types = [
@@ -374,10 +370,11 @@ class ViewJavaScript:
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
         res = jsbeautifier.beautify(content[:limit], opts)
-        return "JavaScript", _view_text(res, len(res), limit)
+        cutoff = max(0, len(content) - limit)
+        return "JavaScript", format_text(res, limit - cutoff)
 
 
-class ViewCSS:
+class ViewCSS(View):
     name = "CSS"
     prompt = ("css", "c")
     content_types = [
@@ -391,10 +388,10 @@ class ViewCSS:
         else:
             beautified = content
 
-        return "CSS", _view_text(beautified, len(beautified), limit)
+        return "CSS", format_text(beautified, limit)
 
 
-class ViewImage:
+class ViewImage(View):
     name = "Image"
     prompt = ("image", "i")
     content_types = [
@@ -433,15 +430,11 @@ class ViewImage:
             clean.append(
                 [netlib.utils.cleanBin(i[0]), netlib.utils.cleanBin(i[1])]
             )
-        fmt = format_keyvals(
-            clean,
-            key="header",
-            val="text"
-        )
+        fmt = format_dict({k:v for k,v in clean})
         return "%s image" % img.format, fmt
 
 
-class ViewProtobuf:
+class ViewProtobuf(View):
     """Human friendly view of protocol buffers
     The view uses the protoc compiler to decode the binary
     """
@@ -480,11 +473,10 @@ class ViewProtobuf:
 
     def __call__(self, hdrs, content, limit):
         decoded = self.decode_protobuf(content)
-        txt = _view_text(decoded[:limit], len(decoded), limit)
-        return "Protobuf", txt
+        return "Protobuf", format_text(decoded, limit)
 
 
-class ViewWBXML:
+class ViewWBXML(View):
     name = "WBXML"
     prompt = ("wbxml", "w")
     content_types = [
@@ -497,8 +489,7 @@ class ViewWBXML:
         try:
             parser = ASCommandResponse(content)
             parsedContent = parser.xmlString
-            txt = _view_text(parsedContent, len(parsedContent), limit)
-            return "WBXML", txt
+            return "WBXML", format_text(parsedContent, limit)
         except:
             return None
 
