@@ -2,18 +2,18 @@ from __future__ import absolute_import
 import cStringIO
 import json
 import logging
+import subprocess
+import traceback
+
 import lxml.html
 import lxml.etree
 from PIL import Image
 from PIL.ExifTags import TAGS
-import subprocess
-import traceback
 import urwid
 import html2text
 
 import netlib.utils
 from netlib import odict, encoding
-
 from . import utils
 from .contrib import jsbeautifier
 from .contrib.wbxml.ASCommandResponse import ASCommandResponse
@@ -37,16 +37,54 @@ else:
     cssutils.ser.prefs.validOnly = False
 
 VIEW_CUTOFF = 1024 * 50
+KEY_MAX = 30
 
 
-def format_keyvals(lst, key="key", val="text", indent=0):
-    raise NotImplementedError()
+def format_dict(d):
+    """
+    Transforms the given dictionary into a list of
+        ("key",   key  )
+        ("value", value)
+    tuples, where key is padded to a uniform width.
+    """
+    max_key_len = max(len(k) for k in d.keys())
+    max_key_len = min(max_key_len, KEY_MAX)
+    for key, value in d.items():
+        key += ":"
+        key = key.ljust(max_key_len + 2)
+        yield (
+            ("key", key),
+            ("value", value)
+        )
 
 
+def format_text(content, limit):
+    """
+    Transforms the given content into
+    """
+    content = netlib.utils.cleanBin(content)
+
+    for line in content[:limit].splitlines():
+        yield ("text", line)
+
+    for msg in trailer(content, limit):
+        yield msg
+
+
+def trailer(content, limit):
+    bytes_removed = len(content) - limit
+    if bytes_removed > 0:
+        yield (
+            "cutoff",
+            "... {} of data not shown.".format(netlib.utils.pretty_size(bytes_removed))
+        )
+
+
+"""
 def _view_text(content, total, limit):
-    """
+    ""
         Generates a body for a chunk of text.
-    """
+    ""
     txt = []
     for i in netlib.utils.cleanBin(content).splitlines():
         txt.append(
@@ -69,9 +107,19 @@ def trailer(clen, txt, limit):
                 ]
             )
         )
+"""
 
 
-class ViewAuto:
+class View:
+    name = None
+    prompt = ()
+    content_types = []
+
+    def __call__(self, hdrs, content, limit):
+        raise NotImplementedError()
+
+
+class ViewAuto(View):
     name = "Auto"
     prompt = ("auto", "a")
     content_types = []
@@ -84,40 +132,40 @@ class ViewAuto:
             if ct in content_types_map:
                 return content_types_map[ct][0](hdrs, content, limit)
             elif utils.isXML(content):
-                return get("XML")(hdrs, content, limit)
-        return get("Raw")(hdrs, content, limit)
+                return ViewXML(hdrs, content, limit)
+        return ViewRaw(hdrs, content, limit)
 
 
-class ViewRaw:
+class ViewRaw(View):
     name = "Raw"
     prompt = ("raw", "r")
     content_types = []
 
     def __call__(self, hdrs, content, limit):
-        txt = _view_text(content[:limit], len(content), limit)
-        return "Raw", txt
+        return "Raw", format_text(content, limit)
 
 
-class ViewHex:
+class ViewHex(View):
     name = "Hex"
     prompt = ("hex", "e")
     content_types = []
 
-    def __call__(self, hdrs, content, limit):
-        txt = []
+    @staticmethod
+    def _format(content, limit):
         for offset, hexa, s in netlib.utils.hexdump(content[:limit]):
-            txt.append(urwid.Text([
-                ("offset", offset),
-                " ",
-                ("text", hexa),
-                "   ",
+            yield (
+                ("offset", offset + " "),
+                ("text", hexa + "   "),
                 ("text", s),
-            ]))
-        trailer(len(content), txt, limit)
-        return "Hex", txt
+            )
+        for msg in trailer(content, limit):
+            yield msg
+
+    def __call__(self, hdrs, content, limit):
+        return "Hex", self._format(content, limit)
 
 
-class ViewXML:
+class ViewXML(View):
     name = "XML"
     prompt = ("xml", "x")
     content_types = ["text/xml"]
@@ -153,37 +201,20 @@ class ViewXML:
             pretty_print=True,
             xml_declaration=True,
             doctype=doctype or None,
-            encoding = docinfo.encoding
+            encoding=docinfo.encoding
         )
 
-        txt = []
-        for i in s[:limit].strip().split("\n"):
-            txt.append(
-                urwid.Text(("text", i)),
-            )
-        trailer(len(content), txt, limit)
-        return "XML-like data", txt
+        return "XML-like data", format_text(s, limit)
 
 
-class ViewJSON:
+class ViewJSON(View):
     name = "JSON"
     prompt = ("json", "s")
     content_types = ["application/json"]
 
     def __call__(self, hdrs, content, limit):
-        lines = utils.pretty_json(content)
-        if lines:
-            txt = []
-            sofar = 0
-            for i in lines:
-                sofar += len(i)
-                txt.append(
-                    urwid.Text(("text", i)),
-                )
-                if sofar > limit:
-                    break
-            trailer(sum(len(i) for i in lines), txt, limit)
-            return "JSON", txt
+        pretty_json = utils.pretty_json(content)
+        return "JSON", format_text(pretty_json, limit)
 
 
 class ViewHTML:
@@ -204,7 +235,7 @@ class ViewHTML:
                 pretty_print=True,
                 doctype=docinfo.doctype
             )
-            return "HTML", _view_text(s[:limit], len(s), limit)
+            return "HTML", format_text(s, limit)
 
 
 class ViewHTMLOutline:
@@ -232,8 +263,8 @@ class ViewURLEncoded:
         if lines:
             body = format_keyvals(
                 [(k + ":", v) for (k, v) in lines],
-                key = "header",
-                val = "text"
+                key="header",
+                val="text"
             )
             return "URLEncoded form", body
 
@@ -251,8 +282,8 @@ class ViewMultipart:
             ]
             r.extend(format_keyvals(
                 v,
-                key = "header",
-                val = "text"
+                key="header",
+                val="text"
             ))
             return "Multipart form", r
 
@@ -266,6 +297,7 @@ if pyamf:
             data = input.readObject()
             self["data"] = data
 
+
     def pyamf_class_loader(s):
         for i in pyamf.CLASS_LOADERS:
             if i != pyamf_class_loader:
@@ -274,7 +306,9 @@ if pyamf:
                     return v
         return DummyObject
 
+
     pyamf.register_class_loader(pyamf_class_loader)
+
 
     class ViewAMF:
         name = "AMF"
@@ -401,8 +435,8 @@ class ViewImage:
             )
         fmt = format_keyvals(
             clean,
-            key = "header",
-            val = "text"
+            key="header",
+            val="text"
         )
         return "%s image" % img.format, fmt
 
@@ -468,6 +502,7 @@ class ViewWBXML:
         except:
             return None
 
+
 views = [
     ViewAuto(),
     ViewRaw(),
@@ -494,7 +529,6 @@ for i in views:
     for ct in i.content_types:
         l = content_types_map.setdefault(ct, [])
         l.append(i)
-
 
 view_prompts = [i.prompt for i in views]
 
