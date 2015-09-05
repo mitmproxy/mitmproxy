@@ -174,7 +174,7 @@ class DumpMaster(flow.FlowMaster):
 
     def _print_message(self, message):
         if self.o.flow_detail >= 2:
-            print(self.indent(4, message.headers.format()), file=self.outfile)
+            print(self.indent(4, str(message.headers)), file=self.outfile)
         if self.o.flow_detail >= 3:
             if message.content == CONTENT_MISSING:
                 print(self.indent(4, "(content missing)"), file=self.outfile)

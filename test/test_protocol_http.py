@@ -5,7 +5,6 @@ from mock import MagicMock
 
 from libmproxy.protocol.http import *
 import netlib.http
-from netlib import odict
 from netlib.http import http1
 from netlib.http.semantics import CONTENT_MISSING
 

@@ -12,7 +12,7 @@ import urwid
 import html2text
 
 import netlib.utils
-from netlib import odict, encoding
+from netlib import encoding
 
 from . import common, signals
 from .. import utils
@@ -74,7 +74,7 @@ class ViewAuto:
     content_types = []
 
     def __call__(self, hdrs, content, limit):
-        ctype = hdrs.get_first("content-type")
+        ctype = hdrs.get("content-type")
         if ctype:
             ct = netlib.utils.parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
@@ -508,7 +508,7 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, hdrItems, content, limit, is_request):
+def get_content_view(viewmode, headers, content, limit, is_request):
     """
         Returns a (msg, body) tuple.
     """
@@ -519,16 +519,14 @@ def get_content_view(viewmode, hdrItems, content, limit, is_request):
             return "No content", ""
     msg = []
 
-    hdrs = odict.ODictCaseless([list(i) for i in hdrItems])
-
-    enc = hdrs.get_first("content-encoding")
+    enc = headers.get("content-encoding")
     if enc and enc != "identity":
         decoded = encoding.decode(enc, content)
         if decoded:
             content = decoded
             msg.append("[decoded %s]" % enc)
     try:
-        ret = viewmode(hdrs, content, limit)
+        ret = viewmode(headers, content, limit)
     # Third-party viewers can fail in unexpected ways...
     except Exception:
         s = traceback.format_exc()
@@ -536,7 +534,7 @@ def get_content_view(viewmode, hdrItems, content, limit, is_request):
         signals.add_event(s, "error")
         ret = None
     if not ret:
-        ret = get("Raw")(hdrs, content, limit)
+        ret = get("Raw")(headers, content, limit)
         msg.append("Couldn't parse: falling back to Raw")
     else:
         msg.append(ret[0])

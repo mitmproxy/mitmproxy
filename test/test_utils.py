@@ -1,6 +1,5 @@
 import json
 from libmproxy import utils
-from netlib import odict
 import tutils
 
 utils.CERT_SLEEP_TIME = 0

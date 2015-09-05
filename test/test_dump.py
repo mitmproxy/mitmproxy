@@ -145,7 +145,7 @@ class TestDumpMaster:
         o = dump.Options(setheaders=[(".*", "one", "two")])
         m = dump.DumpMaster(None, o, outfile=cs)
         f = self._cycle(m, "content")
-        assert f.request.headers["one"] == ["two"]
+        assert f.request.headers["one"] == "two"
 
     def test_basic(self):
         for i in (1, 2, 3):
