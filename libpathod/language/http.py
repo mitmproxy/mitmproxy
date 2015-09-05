@@ -197,10 +197,10 @@ class Response(_HTTPMessage):
                     1,
                     Code(101)
                 )
-            hdrs = netlib.websockets.WebsocketsProtocol.server_handshake_headers(
+            headers = netlib.websockets.WebsocketsProtocol.server_handshake_headers(
                 settings.websocket_key
             )
-            for i in hdrs.lst:
+            for i in headers.fields:
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
@@ -309,7 +309,7 @@ class Request(_HTTPMessage):
                     1,
                     Method("get")
                 )
-            for i in netlib.websockets.WebsocketsProtocol.client_handshake_headers().lst:
+            for i in netlib.websockets.WebsocketsProtocol.client_handshake_headers().fields:
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(

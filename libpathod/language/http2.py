@@ -1,7 +1,6 @@
 import pyparsing as pp
 
-from netlib import odict
-from netlib.http import user_agents, semantics
+from netlib.http import user_agents, semantics, Headers
 from . import base, message
 
 """
@@ -179,7 +178,7 @@ class Response(_HTTP2Message):
         if self.rendered_values:
             return self.rendered_values
         else:
-            headers = odict.ODictCaseless([header.values(settings) for header in self.headers])
+            headers = Headers([header.values(settings) for header in self.headers])
 
             body = self.body
             if body:
@@ -262,7 +261,7 @@ class Request(_HTTP2Message):
             if self.nested_response:
                 path += self.nested_response.parsed.spec()
 
-            headers = odict.ODictCaseless([header.values(settings) for header in self.headers])
+            headers = Headers([header.values(settings) for header in self.headers])
 
             body = self.body
             if body:

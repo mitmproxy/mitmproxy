@@ -4,9 +4,8 @@ import os
 import sys
 import threading
 import urllib
-import time
 
-from netlib import tcp, http, wsgi, certutils, websockets, odict
+from netlib import tcp, http, certutils, websockets
 from netlib.http import http1, http2
 
 from . import version, app, language, utils, log, protocols
@@ -160,7 +159,7 @@ class PathodHandler(tcp.BaseHandler):
                 request=dict(
                     path=path,
                     method=method,
-                    headers=headers.lst,
+                    headers=headers.fields,
                     httpversion=httpversion,
                     sni=self.sni,
                     remote_address=self.address(),
