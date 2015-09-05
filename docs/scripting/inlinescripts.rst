@@ -152,10 +152,8 @@ The main classes you will deal with in writing mitmproxy scripts are:
     - An HTTP response.
 :py:class:`~libmproxy.models.Error`
     - A communications error.
-:py:class:`netlib.odict.ODDict`
-    - A dictionary-like object for managing sets of key/value data. There
-      is also a variant called ODictCaseless that ignores key case for some
-      calls (used mainly for headers).
+:py:class:`netlib.http.Headers`
+    - A dictionary-like object for managing HTTP headers.
 :py:class:`netlib.certutils.SSLCert`
     - Exposes information SSL certificates.
 :py:class:`libmproxy.flow.FlowMaster`

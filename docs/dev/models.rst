@@ -19,6 +19,7 @@ Models
     :undoc-members:
 
     .. autoclass:: Headers
+        :show-inheritance:
         :members:
         :special-members:
         :no-undoc-members:

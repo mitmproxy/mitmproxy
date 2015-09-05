@@ -25,7 +25,7 @@ Mitmproxy's regular mode is the simplest and the easiest to set up.
 1. Start mitmproxy.
 2. Configure your client to use mitmproxy by explicitly setting an HTTP proxy.
 3. Quick Check: You should already be able to visit an unencrypted HTTP site through the proxy.
-4. Open the magic domain <strong>mitm.it</strong> and install the certificate for your device.
+4. Open the magic domain **mitm.it** and install the certificate for your device.
 
 .. note::
     Unfortunately, some applications bypass the system HTTP proxy settings - Android applications
@@ -91,7 +91,7 @@ In this scenario, we would:
 2. Configure the client to use the proxy machine's IP as the default gateway.
 3. Quick Check: At this point, you should already be able to visit an
    unencrypted HTTP site over the proxy.
-4. Open the magic domain <strong>mitm.it</strong> and install the certificate
+4. Open the magic domain **mitm.it**mitm and install the certificate
    for your device.
 
 Setting the custom gateway on clients can be automated by serving the settings

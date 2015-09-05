@@ -56,7 +56,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'mitmproxy dev docs'
+project = u'mitmproxy docs'
 copyright = u'2015, the mitmproxy project'
 author = u'The mitmproxy project'
 

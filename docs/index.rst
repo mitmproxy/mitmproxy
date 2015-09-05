@@ -17,6 +17,13 @@
 
     mitmproxy
     mitmdump
+    config
+
+.. toctree::
+    :hidden:
+    :caption: Features
+
+    filters
 
 .. toctree::
     :hidden:
