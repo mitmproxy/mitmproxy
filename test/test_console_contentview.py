@@ -164,16 +164,16 @@ Content-Disposition: form-data; name="submit-name"
 Larry
 --AaB03x
         """.strip()
-        h = Headers(content_type="multipart/form-data; boundary=AaB03x"),
+        h = Headers(content_type="multipart/form-data; boundary=AaB03x")
         assert view(h, v, 1000)
 
-        h = Headers(),
+        h = Headers()
         assert not view(h, v, 1000)
 
-        h = Headers(content_type="multipart/form-data"),
+        h = Headers(content_type="multipart/form-data")
         assert not view(h, v, 1000)
 
-        h = Headers(content_type="unparseable"),
+        h = Headers(content_type="unparseable")
         assert not view(h, v, 1000)
 
     def test_get_content_view(self):
