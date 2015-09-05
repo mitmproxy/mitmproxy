@@ -1,4 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
+import UserDict
 import urllib
 import urlparse
 
@@ -12,8 +13,135 @@ HDR_FORM_MULTIPART = "multipart/form-data"
 CONTENT_MISSING = 0
 
 
-class ProtocolMixin(object):
+class Headers(UserDict.DictMixin):
+    """
+    Header class which allows both convenient access to individual headers as well as
+    direct access to the underlying raw data. Provides a full dictionary interface.
 
+    Example:
+
+    .. code-block:: python
+
+        # Create header from a list of (header_name, header_value) tuples
+        >>> h = Headers([
+                ["Host","example.com"],
+                ["Accept","text/html"],
+                ["accept","application/xml"]
+            ])
+
+        # Headers mostly behave like a normal dict.
+        >>> h["Host"]
+        "example.com"
+
+        # HTTP Headers are case insensitive
+        >>> h["host"]
+        "example.com"
+
+        # Multiple headers are folded into a single header as per RFC7230
+        >>> h["Accept"]
+        "text/html, application/xml"
+
+        # Setting a header removes all existing headers with the same name.
+        >>> h["Accept"] = "application/text"
+        >>> h["Accept"]
+        "application/text"
+
+        # str(h) returns a HTTP1 header block.
+        >>> print(h)
+        Host: example.com
+        Accept: application/text
+
+        # For full control, the raw header lines can be accessed
+        >>> h.lines
+
+        # Headers can also be crated from keyword arguments
+        >>> h = Headers(host="example.com", content_type="application/xml")
+
+    Caveats:
+        For use with the "Set-Cookie" header, see :py:meth:`get_all`.
+    """
+
+    def __init__(self, lines=None, **headers):
+        """
+        For convenience, underscores in header names will be transformed to dashes.
+        This behaviour does not extend to other methods.
+
+        If ``**headers`` contains multiple keys that have equal ``.lower()``s,
+        the behavior is undefined.
+        """
+        self.lines = lines or []
+
+        # content_type -> content-type
+        headers = {k.replace("_", "-"): v for k, v in headers.iteritems()}
+        self.update(headers)
+
+    def __str__(self):
+        return "\r\n".join(": ".join(line) for line in self.lines)
+
+    def __getitem__(self, key):
+        values = self.get_all(key)
+        if not values:
+            raise KeyError(key)
+        else:
+            return ", ".join(values)
+
+    def __setitem__(self, key, value):
+        idx = self._index(key)
+
+        # To please the human eye, we insert at the same position the first existing header occured.
+        if idx is not None:
+            del self[key]
+            self.lines.insert(idx, [key, value])
+        else:
+            self.lines.append([key, value])
+
+    def __delitem__(self, key):
+        key = key.lower()
+        self.lines = [
+            line for line in self.lines
+            if key != line[0].lower()
+        ]
+
+    def _index(self, key):
+        key = key.lower()
+        for i, line in enumerate(self):
+            if line[0].lower() == key:
+                return i
+        return None
+
+    def keys(self):
+        return list(set(line[0] for line in self.lines))
+
+    def __eq__(self, other):
+        return self.lines == other.lines
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def get_all(self, key, default=None):
+        """
+        Like :py:meth:`get`, but does not fold multiple headers into a single one.
+        This is useful for Set-Cookie headers, which do not support folding.
+
+        See also: https://tools.ietf.org/html/rfc7230#section-3.2.2
+        """
+        key = key.lower()
+        values = [line[1] for line in self.lines if line[0].lower() == key]
+        return values or default
+
+    def set_all(self, key, values):
+        """
+        Explicitly set multiple headers for the given key.
+        See: :py:meth:`get_all`
+        """
+        if key in self:
+            del self[key]
+        self.lines.extend(
+            [key, value] for value in values
+        )
+
+
+class ProtocolMixin(object):
     def read_request(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
