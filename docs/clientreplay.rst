@@ -1,4 +1,4 @@
 .. _clientreplay:
 
-Client-side replay
+Client-side Replay
 ==================
