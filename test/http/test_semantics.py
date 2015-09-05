@@ -445,3 +445,148 @@ class TestResponse(object):
         v = resp.get_cookies()
         assert len(v) == 1
         assert v["foo"] == [["bar", odict.ODictCaseless()]]
+
+
+class TestHeaders(object):
+    def _2host(self):
+        return semantics.Headers(
+            [
+                ["Host", "example.com"],
+                ["host", "example.org"]
+             ]
+        )
+
+    def test_init(self):
+        h = semantics.Headers()
+        assert len(h) == 0
+
+        h = semantics.Headers([["Host", "example.com"]])
+        assert len(h) == 1
+        assert h["Host"] == "example.com"
+
+        h = semantics.Headers(Host="example.com")
+        assert len(h) == 1
+        assert h["Host"] == "example.com"
+
+        h = semantics.Headers(
+            [["Host", "invalid"]],
+            Host="example.com"
+        )
+        assert len(h) == 1
+        assert h["Host"] == "example.com"
+
+        h = semantics.Headers(
+            [["Host", "invalid"], ["Accept", "text/plain"]],
+            Host="example.com"
+        )
+        assert len(h) == 2
+        assert h["Host"] == "example.com"
+        assert h["Accept"] == "text/plain"
+
+    def test_getitem(self):
+        h = semantics.Headers(Host="example.com")
+        assert h["Host"] == "example.com"
+        assert h["host"] == "example.com"
+        tutils.raises(KeyError, h.__getitem__, "Accept")
+
+        h = self._2host()
+        assert h["Host"] == "example.com, example.org"
+
+    def test_str(self):
+        h = semantics.Headers(Host="example.com")
+        assert str(h) == "Host: example.com"
+
+        h = semantics.Headers([
+            ["Host", "example.com"],
+            ["Accept", "text/plain"]
+        ])
+        assert str(h) == "Host: example.com\r\nAccept: text/plain"
+
+    def test_setitem(self):
+        h = semantics.Headers()
+        h["Host"] = "example.com"
+        assert "Host" in h
+        assert "host" in h
+        assert h["Host"] == "example.com"
+
+        h["host"] = "example.org"
+        assert "Host" in h
+        assert "host" in h
+        assert h["Host"] == "example.org"
+
+        h["accept"] = "text/plain"
+        assert len(h) == 2
+        assert "Accept" in h
+        assert "Host" in h
+
+        h = self._2host()
+        assert len(h.fields) == 2
+        h["Host"] = "example.com"
+        assert len(h.fields) == 1
+        assert "Host" in h
+
+    def test_delitem(self):
+        h = semantics.Headers(Host="example.com")
+        assert len(h) == 1
+        del h["host"]
+        assert len(h) == 0
+        try:
+            del h["host"]
+        except KeyError:
+            assert True
+        else:
+            assert False
+
+        h = self._2host()
+        del h["Host"]
+        assert len(h) == 0
+
+    def test_keys(self):
+        h = semantics.Headers(Host="example.com")
+        assert len(h.keys()) == 1
+        assert h.keys()[0] == "Host"
+
+        h = self._2host()
+        assert len(h.keys()) == 1
+        assert h.keys()[0] == "Host"
+
+    def test_eq_ne(self):
+        h1 = semantics.Headers(Host="example.com")
+        h2 = semantics.Headers(host="example.com")
+        assert not (h1 == h2)
+        assert h1 != h2
+
+        h1 = semantics.Headers(Host="example.com")
+        h2 = semantics.Headers(Host="example.com")
+        assert h1 == h2
+        assert not (h1 != h2)
+
+        assert h1 != None
+
+    def test_get_all(self):
+        h = self._2host()
+        assert h.get_all("host") == ["example.com", "example.org"]
+        assert h.get_all("accept", 42) is 42
+
+    def test_set_all(self):
+        h = semantics.Headers(Host="example.com")
+        h.set_all("Accept", ["text/plain"])
+        assert len(h) == 2
+        assert "accept" in h
+
+        h = self._2host()
+        h.set_all("Host", ["example.org"])
+        assert h["host"] == "example.org"
+
+        h.set_all("Host", ["example.org", "example.net"])
+        assert h["host"] == "example.org, example.net"
+
+    def test_state(self):
+        h = self._2host()
+        assert len(h.get_state()) == 2
+        assert h == semantics.Headers.from_state(h.get_state())
+
+        h2 = semantics.Headers()
+        assert h != h2
+        h2.load_state(h.get_state())
+        assert h == h2
