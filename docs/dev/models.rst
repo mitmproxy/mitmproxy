@@ -17,3 +17,8 @@ Models
 .. automodule:: netlib.http.semantics
     :members: Request, Response
     :undoc-members:
+
+    .. autoclass:: Headers
+        :members:
+        :special-members:
+        :no-undoc-members:
