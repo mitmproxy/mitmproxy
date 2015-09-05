@@ -41,7 +41,9 @@ dev_deps = {
     "nose-cov>=1.6",
     "coveralls>=0.4.1",
     "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
-    "countershape"
+    "sphinx>=1.3.1",
+    "sphinx-autobuild>=0.5.2",
+    "sphinxcontrib-documentedlist>=0.1",
 }
 # Add *all* script dependencies to developer dependencies.
 for script_deps in scripts.values():

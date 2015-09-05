@@ -23,7 +23,11 @@
     :hidden:
     :caption: Features
 
-    filters
+    features/anticache
+    features/filters
+    features/replacements
+    features/clientreplay
+    features/upstreamcerts
 
 .. toctree::
     :hidden:
