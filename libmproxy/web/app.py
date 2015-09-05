@@ -27,8 +27,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
     @property
     def json(self):
-        if not self.request.headers.get(
-                "Content-Type").startswith("application/json"):
+        if not self.request.headers.get("Content-Type").startswith("application/json"):
             return None
         return json.loads(self.request.body)
 
@@ -186,12 +185,12 @@ class FlowContent(RequestHandler):
         if not message.content:
             raise APIError(400, "No content.")
 
-        content_encoding = message.headers.get_first("Content-Encoding", None)
+        content_encoding = message.headers.get("Content-Encoding", None)
         if content_encoding:
             content_encoding = re.sub(r"[^\w]", "", content_encoding)
             self.set_header("Content-Encoding", content_encoding)
 
-        original_cd = message.headers.get_first("Content-Disposition", None)
+        original_cd = message.headers.get("Content-Disposition", None)
         filename = None
         if original_cd:
             filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)

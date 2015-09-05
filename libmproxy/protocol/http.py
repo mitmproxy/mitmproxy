@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 
 from netlib import tcp
-from netlib.http import http1, HttpErrorConnClosed, HttpError
+from netlib.http import http1, HttpErrorConnClosed, HttpError, Headers
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 from netlib.tcp import NetLibError, Address
@@ -568,10 +568,6 @@ class HttpLayer(Layer):
                 self.send_response(make_error_response(
                     407,
                     "Proxy Authentication Required",
-                    odict.ODictCaseless(
-                        [
-                            [k, v] for k, v in
-                            self.config.authenticator.auth_challenge_headers().items()
-                            ])
+                    Headers(**self.config.authenticator.auth_challenge_headers())
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")

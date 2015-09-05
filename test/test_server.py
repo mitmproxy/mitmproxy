@@ -623,8 +623,7 @@ class MasterRedirectRequest(tservers.TestMaster):
 
     def handle_response(self, f):
         f.response.content = str(f.client_conn.address.port)
-        f.response.headers[
-            "server-conn-id"] = [str(f.server_conn.source_address.port)]
+        f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
         super(MasterRedirectRequest, self).handle_response(f)
 
 
@@ -721,7 +720,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
         protocol = http.http1.HTTP1Protocol(rfile=fconn)
         resp = protocol.read_response("GET", None, include_body=False)
 
-        assert resp.headers["Transfer-Encoding"][0] == 'chunked'
+        assert resp.headers["Transfer-Encoding"] == 'chunked'
         assert resp.status_code == 200
 
         chunks = list(protocol.read_http_body_chunked(
@@ -743,7 +742,7 @@ class TestFakeResponse(tservers.HTTPProxTest):
 
     def test_fake(self):
         f = self.pathod("200")
-        assert "header_response" in f.headers.keys()
+        assert "header_response" in f.headers
 
 
 class TestServerConnect(tservers.HTTPProxTest):
