@@ -1,10 +1,5 @@
-from __future__ import absolute_import
-import base64
-import hashlib
-import os
 
-from netlib import odict
-from netlib import utils
+
 
 # Colleciton of utility functions that implement small portions of the RFC6455
 # WebSockets Protocol Useful for building WebSocket clients and servers.
@@ -18,6 +13,13 @@ from netlib import utils
 
 # The magic sha that websocket servers must know to prove they understand
 # RFC6455
+from __future__ import absolute_import
+import base64
+import hashlib
+import os
+from ..http import Headers
+from .. import utils
+
 websockets_magic = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 VERSION = "13"
 
@@ -66,11 +68,11 @@ class WebsocketsProtocol(object):
             specified, it is generated, and can be found in sec-websocket-key in
             the returned header set.
 
-            Returns an instance of ODictCaseless
+            Returns an instance of Headers
         """
         if not key:
             key = base64.b64encode(os.urandom(16)).decode('utf-8')
-        return odict.ODictCaseless([
+        return Headers([
             ('Connection', 'Upgrade'),
             ('Upgrade', 'websocket'),
             (HEADER_WEBSOCKET_KEY, key),
@@ -82,7 +84,7 @@ class WebsocketsProtocol(object):
         """
           The server response is a valid HTTP 101 response.
         """
-        return odict.ODictCaseless(
+        return Headers(
             [
                 ('Connection', 'Upgrade'),
                 ('Upgrade', 'websocket'),
@@ -93,16 +95,16 @@ class WebsocketsProtocol(object):
 
     @classmethod
     def check_client_handshake(self, headers):
-        if headers.get_first("upgrade", None) != "websocket":
+        if headers.get("upgrade") != "websocket":
             return
-        return headers.get_first(HEADER_WEBSOCKET_KEY)
+        return headers.get(HEADER_WEBSOCKET_KEY)
 
 
     @classmethod
     def check_server_handshake(self, headers):
-        if headers.get_first("upgrade", None) != "websocket":
+        if headers.get("upgrade") != "websocket":
             return
-        return headers.get_first(HEADER_WEBSOCKET_ACCEPT)
+        return headers.get(HEADER_WEBSOCKET_ACCEPT)
 
 
     @classmethod

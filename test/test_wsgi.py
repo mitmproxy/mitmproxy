@@ -1,12 +1,12 @@
 import cStringIO
 import sys
-from netlib import wsgi, odict
+from netlib import wsgi
+from netlib.http import Headers
 
 
 def tflow():
-    h = odict.ODictCaseless()
-    h["test"] = ["value"]
-    req = wsgi.Request("http", "GET", "/", h, "")
+    headers = Headers(test="value")
+    req = wsgi.Request("http", "GET", "/", headers, "")
     return wsgi.Flow(("127.0.0.1", 8888), req)
 
 

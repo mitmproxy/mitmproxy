@@ -3,8 +3,8 @@ import string
 import sys
 import time
 
-from netlib import odict, utils, tcp, http
-from netlib.http import semantics
+from ... import utils, tcp, http
+from .. import semantics, Headers
 from ..exceptions import *
 
 
@@ -96,7 +96,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         if headers is None:
             raise HttpError(400, "Invalid headers")
 
-        expect_header = headers.get_first("expect", "").lower()
+        expect_header = headers.get("expect", "").lower()
         if expect_header == "100-continue" and httpversion == (1, 1):
             self.tcp_handler.wfile.write(
                 'HTTP/1.1 100 Continue\r\n'
@@ -232,10 +232,9 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             Read a set of headers.
             Stop once a blank line is reached.
 
-            Return a ODictCaseless object, or None if headers are invalid.
+            Return a Header object, or None if headers are invalid.
         """
         ret = []
-        name = ''
         while True:
             line = self.tcp_handler.rfile.readline()
             if not line or line == '\r\n' or line == '\n':
@@ -254,7 +253,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
                     ret.append([name, value])
                 else:
                     return None
-        return odict.ODictCaseless(ret)
+        return Headers(ret)
 
 
     def read_http_body(self, *args, **kwargs):
@@ -272,7 +271,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
     ):
         """
             Read an HTTP message body:
-                headers: An ODictCaseless object
+                headers: A Header object
                 limit: Size limit.
                 is_request: True if the body to read belongs to a request, False
                 otherwise
@@ -356,7 +355,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             return None
         if "content-length" in headers:
             try:
-                size = int(headers["content-length"][0])
+                size = int(headers["content-length"])
                 if size < 0:
                     raise ValueError()
                 return size
@@ -369,9 +368,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
     @classmethod
     def has_chunked_encoding(self, headers):
-        return "chunked" in [
-            i.lower() for i in utils.get_header_tokens(headers, "transfer-encoding")
-        ]
+        return "chunked" in headers.get("transfer-encoding", "").lower()
 
 
     def _get_request_line(self):
@@ -547,18 +544,20 @@ class HTTP1Protocol(semantics.ProtocolMixin):
     def _assemble_request_headers(self, request):
         headers = request.headers.copy()
         for k in request._headers_to_strip_off:
-            del headers[k]
+            headers.pop(k, None)
         if 'host' not in headers and request.scheme and request.host and request.port:
-            headers["Host"] = [utils.hostport(request.scheme,
-                                              request.host,
-                                              request.port)]
+            headers["Host"] = utils.hostport(
+                request.scheme,
+                request.host,
+                request.port
+            )
 
         # If content is defined (i.e. not None or CONTENT_MISSING), we always
         # add a content-length header.
         if request.body or request.body == "":
-            headers["Content-Length"] = [str(len(request.body))]
+            headers["Content-Length"] = str(len(request.body))
 
-        return headers.format()
+        return str(headers)
 
     def _assemble_response_first_line(self, response):
         return 'HTTP/%s.%s %s %s' % (
@@ -575,13 +574,13 @@ class HTTP1Protocol(semantics.ProtocolMixin):
     ):
         headers = response.headers.copy()
         for k in response._headers_to_strip_off:
-            del headers[k]
+            headers.pop(k, None)
         if not preserve_transfer_encoding:
-            del headers['Transfer-Encoding']
+            headers.pop('Transfer-Encoding', None)
 
         # If body is defined (i.e. not None or CONTENT_MISSING), we always
         # add a content-length header.
         if response.body or response.body == "":
-            headers["Content-Length"] = [str(len(response.body))]
+            headers["Content-Length"] = str(len(response.body))
 
-        return headers.format()
+        return str(headers)

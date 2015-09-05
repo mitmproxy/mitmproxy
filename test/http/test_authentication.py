@@ -1,18 +1,18 @@
 import binascii
 
-from netlib import odict, http, tutils
-from netlib.http import authentication
+from netlib import tutils
+from netlib.http import authentication, Headers
 
 
 def test_parse_http_basic_auth():
     vals = ("basic", "foo", "bar")
-    assert http.authentication.parse_http_basic_auth(
-        http.authentication.assemble_http_basic_auth(*vals)
+    assert authentication.parse_http_basic_auth(
+        authentication.assemble_http_basic_auth(*vals)
     ) == vals
-    assert not http.authentication.parse_http_basic_auth("")
-    assert not http.authentication.parse_http_basic_auth("foo bar")
+    assert not authentication.parse_http_basic_auth("")
+    assert not authentication.parse_http_basic_auth("foo bar")
     v = "basic " + binascii.b2a_base64("foo")
-    assert not http.authentication.parse_http_basic_auth(v)
+    assert not authentication.parse_http_basic_auth(v)
 
 
 class TestPassManNonAnon:
@@ -65,35 +65,35 @@ class TestBasicProxyAuth:
 
     def test_simple(self):
         ba = authentication.BasicProxyAuth(authentication.PassManNonAnon(), "test")
-        h = odict.ODictCaseless()
+        headers = Headers()
         assert ba.auth_challenge_headers()
-        assert not ba.authenticate(h)
+        assert not ba.authenticate(headers)
 
     def test_authenticate_clean(self):
         ba = authentication.BasicProxyAuth(authentication.PassManNonAnon(), "test")
 
-        hdrs = odict.ODictCaseless()
+        headers = Headers()
         vals = ("basic", "foo", "bar")
-        hdrs[ba.AUTH_HEADER] = [authentication.assemble_http_basic_auth(*vals)]
-        assert ba.authenticate(hdrs)
+        headers[ba.AUTH_HEADER] = authentication.assemble_http_basic_auth(*vals)
+        assert ba.authenticate(headers)
 
-        ba.clean(hdrs)
-        assert not ba.AUTH_HEADER in hdrs
+        ba.clean(headers)
+        assert not ba.AUTH_HEADER in headers
 
-        hdrs[ba.AUTH_HEADER] = [""]
-        assert not ba.authenticate(hdrs)
+        headers[ba.AUTH_HEADER] = ""
+        assert not ba.authenticate(headers)
 
-        hdrs[ba.AUTH_HEADER] = ["foo"]
-        assert not ba.authenticate(hdrs)
+        headers[ba.AUTH_HEADER] = "foo"
+        assert not ba.authenticate(headers)
 
         vals = ("foo", "foo", "bar")
-        hdrs[ba.AUTH_HEADER] = [authentication.assemble_http_basic_auth(*vals)]
-        assert not ba.authenticate(hdrs)
+        headers[ba.AUTH_HEADER] = authentication.assemble_http_basic_auth(*vals)
+        assert not ba.authenticate(headers)
 
         ba = authentication.BasicProxyAuth(authentication.PassMan(), "test")
         vals = ("basic", "foo", "bar")
-        hdrs[ba.AUTH_HEADER] = [authentication.assemble_http_basic_auth(*vals)]
-        assert not ba.authenticate(hdrs)
+        headers[ba.AUTH_HEADER] = authentication.assemble_http_basic_auth(*vals)
+        assert not ba.authenticate(headers)
 
 
 class Bunch:

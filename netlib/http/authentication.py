@@ -62,10 +62,10 @@ class BasicProxyAuth(NullProxyAuth):
         del headers[self.AUTH_HEADER]
 
     def authenticate(self, headers):
-        auth_value = headers.get(self.AUTH_HEADER, [])
+        auth_value = headers.get(self.AUTH_HEADER)
         if not auth_value:
             return False
-        parts = parse_http_basic_auth(auth_value[0])
+        parts = parse_http_basic_auth(auth_value)
         if not parts:
             return False
         scheme, username, password = parts

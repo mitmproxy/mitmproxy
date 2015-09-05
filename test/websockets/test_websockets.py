@@ -42,7 +42,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         preamble = 'HTTP/1.1 101 %s' % status_codes.RESPONSES.get(101)
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.server_handshake_headers(key)
-        self.wfile.write(headers.format() + "\r\n")
+        self.wfile.write(str(headers) + "\r\n")
         self.wfile.flush()
         self.handshake_done = True
 
@@ -66,8 +66,8 @@ class WebSocketsClient(tcp.TCPClient):
         preamble = 'GET / HTTP/1.1'
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.client_handshake_headers()
-        self.client_nonce = headers.get_first("sec-websocket-key")
-        self.wfile.write(headers.format() + "\r\n")
+        self.client_nonce = headers["sec-websocket-key"]
+        self.wfile.write(str(headers) + "\r\n")
         self.wfile.flush()
 
         resp = http1_protocol.read_response("GET", None)
@@ -145,13 +145,13 @@ class TestWebSockets(tservers.ServerTestBase):
     def test_check_server_handshake(self):
         headers = self.protocol.server_handshake_headers("key")
         assert self.protocol.check_server_handshake(headers)
-        headers["Upgrade"] = ["not_websocket"]
+        headers["Upgrade"] = "not_websocket"
         assert not self.protocol.check_server_handshake(headers)
 
     def test_check_client_handshake(self):
         headers = self.protocol.client_handshake_headers("key")
         assert self.protocol.check_client_handshake(headers) == "key"
-        headers["Upgrade"] = ["not_websocket"]
+        headers["Upgrade"] = "not_websocket"
         assert not self.protocol.check_client_handshake(headers)
 
 
@@ -166,7 +166,7 @@ class BadHandshakeHandler(WebSocketsEchoHandler):
         preamble = 'HTTP/1.1 101 %s' % status_codes.RESPONSES.get(101)
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.server_handshake_headers("malformed key")
-        self.wfile.write(headers.format() + "\r\n")
+        self.wfile.write(str(headers) + "\r\n")
         self.wfile.flush()
         self.handshake_done = True
 

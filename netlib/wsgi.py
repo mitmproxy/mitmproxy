@@ -3,7 +3,7 @@ import cStringIO
 import urllib
 import time
 import traceback
-from . import odict, tcp
+from . import http, tcp
 
 
 class ClientConn(object):
@@ -68,8 +68,8 @@ class WSGIAdaptor(object):
             'SCRIPT_NAME': '',
             'PATH_INFO': urllib.unquote(path_info),
             'QUERY_STRING': query,
-            'CONTENT_TYPE': flow.request.headers.get('Content-Type', [''])[0],
-            'CONTENT_LENGTH': flow.request.headers.get('Content-Length', [''])[0],
+            'CONTENT_TYPE': flow.request.headers.get('Content-Type', ''),
+            'CONTENT_LENGTH': flow.request.headers.get('Content-Length', ''),
             'SERVER_NAME': self.domain,
             'SERVER_PORT': str(self.port),
             # FIXME: We need to pick up the protocol read from the request.
@@ -115,12 +115,12 @@ class WSGIAdaptor(object):
         def write(data):
             if not state["headers_sent"]:
                 soc.write("HTTP/1.1 %s\r\n" % state["status"])
-                h = state["headers"]
-                if 'server' not in h:
-                    h["Server"] = [self.sversion]
-                if 'date' not in h:
-                    h["Date"] = [date_time_string()]
-                soc.write(h.format())
+                headers = state["headers"]
+                if 'server' not in headers:
+                    headers["Server"] = self.sversion
+                if 'date' not in headers:
+                    headers["Date"] = date_time_string()
+                soc.write(str(headers))
                 soc.write("\r\n")
                 state["headers_sent"] = True
             if data:
@@ -137,7 +137,7 @@ class WSGIAdaptor(object):
             elif state["status"]:
                 raise AssertionError('Response already started')
             state["status"] = status
-            state["headers"] = odict.ODictCaseless(headers)
+            state["headers"] = http.Headers(headers)
             return write
 
         errs = cStringIO.StringIO()
@@ -149,7 +149,7 @@ class WSGIAdaptor(object):
                 write(i)
             if not state["headers_sent"]:
                 write("")
-        except Exception:
+        except Exception as e:
             try:
                 s = traceback.format_exc()
                 errs.write(s)

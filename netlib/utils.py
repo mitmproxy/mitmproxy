@@ -204,11 +204,10 @@ def get_header_tokens(headers, key):
         follow a pattern where each header line can containe comma-separated
         tokens, and headers can be set multiple times.
     """
-    toks = []
-    for i in headers[key]:
-        for j in i.split(","):
-            toks.append(j.strip())
-    return toks
+    if key not in headers:
+        return []
+    tokens = headers[key].split(",")
+    return [token.strip() for token in tokens]
 
 
 def hostport(scheme, host, port):
@@ -270,11 +269,11 @@ def parse_content_type(c):
     return ts[0].lower(), ts[1].lower(), d
 
 
-def multipartdecode(hdrs, content):
+def multipartdecode(headers, content):
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
-    v = hdrs.get_first("content-type")
+    v = headers.get("content-type")
     if v:
         v = parse_content_type(v)
         if not v:

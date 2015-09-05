@@ -33,7 +33,7 @@ class TestRequest(object):
         r = tutils.treq()
         assert repr(r)
 
-    def test_headers_odict(self):
+    def test_headers(self):
         tutils.raises(AssertionError, semantics.Request,
             'form_in',
             'method',
@@ -54,7 +54,7 @@ class TestRequest(object):
             'path',
             (1, 1),
         )
-        assert isinstance(req.headers, odict.ODictCaseless)
+        assert isinstance(req.headers, http.Headers)
 
     def test_equal(self):
         a = tutils.treq()
@@ -76,30 +76,30 @@ class TestRequest(object):
 
     def test_anticache(self):
         req = tutils.treq()
-        req.headers.add("If-Modified-Since", "foo")
-        req.headers.add("If-None-Match", "bar")
+        req.headers["If-Modified-Since"] = "foo"
+        req.headers["If-None-Match"] = "bar"
         req.anticache()
         assert "If-Modified-Since" not in req.headers
         assert "If-None-Match" not in req.headers
 
     def test_anticomp(self):
         req = tutils.treq()
-        req.headers.add("Accept-Encoding", "foobar")
+        req.headers["Accept-Encoding"] = "foobar"
         req.anticomp()
-        assert req.headers["Accept-Encoding"] == ["identity"]
+        assert req.headers["Accept-Encoding"] == "identity"
 
     def test_constrain_encoding(self):
         req = tutils.treq()
-        req.headers.add("Accept-Encoding", "identity, gzip, foo")
+        req.headers["Accept-Encoding"] = "identity, gzip, foo"
         req.constrain_encoding()
-        assert "foo" not in req.headers.get_first("Accept-Encoding")
+        assert "foo" not in req.headers["Accept-Encoding"]
 
     def test_update_host(self):
         req = tutils.treq()
-        req.headers.add("Host", "")
+        req.headers["Host"] = ""
         req.host = "foobar"
         req.update_host_header()
-        assert req.headers.get_first("Host") == "foobar"
+        assert req.headers["Host"] == "foobar"
 
     def test_get_form(self):
         req = tutils.treq()
@@ -113,7 +113,7 @@ class TestRequest(object):
 
         req = tutils.treq()
         req.body = "foobar"
-        req.headers["Content-Type"] = [semantics.HDR_FORM_URLENCODED]
+        req.headers["Content-Type"] = semantics.HDR_FORM_URLENCODED
         req.get_form()
         assert req.get_form_urlencoded.called
         assert not req.get_form_multipart.called
@@ -123,7 +123,7 @@ class TestRequest(object):
     def test_get_form_with_multipart(self, mock_method_urlencoded, mock_method_multipart):
         req = tutils.treq()
         req.body = "foobar"
-        req.headers["Content-Type"] = [semantics.HDR_FORM_MULTIPART]
+        req.headers["Content-Type"] = semantics.HDR_FORM_MULTIPART
         req.get_form()
         assert not req.get_form_urlencoded.called
         assert req.get_form_multipart.called
@@ -132,23 +132,25 @@ class TestRequest(object):
         req = tutils.treq("foobar")
         assert req.get_form_urlencoded() == odict.ODict()
 
-        req.headers["Content-Type"] = [semantics.HDR_FORM_URLENCODED]
+        req.headers["Content-Type"] = semantics.HDR_FORM_URLENCODED
         assert req.get_form_urlencoded() == odict.ODict(utils.urldecode(req.body))
 
     def test_get_form_multipart(self):
         req = tutils.treq("foobar")
         assert req.get_form_multipart() == odict.ODict()
 
-        req.headers["Content-Type"] = [semantics.HDR_FORM_MULTIPART]
+        req.headers["Content-Type"] = semantics.HDR_FORM_MULTIPART
         assert req.get_form_multipart() == odict.ODict(
             utils.multipartdecode(
                 req.headers,
-                req.body))
+                req.body
+            )
+        )
 
     def test_set_form_urlencoded(self):
         req = tutils.treq()
         req.set_form_urlencoded(odict.ODict([('foo', 'bar'), ('rab', 'oof')]))
-        assert req.headers.get_first("Content-Type") == semantics.HDR_FORM_URLENCODED
+        assert req.headers["Content-Type"] == semantics.HDR_FORM_URLENCODED
         assert req.body
 
     def test_get_path_components(self):
@@ -176,7 +178,7 @@ class TestRequest(object):
         r = tutils.treq()
         assert r.pretty_host(True) == "address"
         assert r.pretty_host(False) == "address"
-        r.headers["host"] = ["other"]
+        r.headers["host"] = "other"
         assert r.pretty_host(True) == "other"
         assert r.pretty_host(False) == "address"
         r.host = None
@@ -187,7 +189,7 @@ class TestRequest(object):
         assert r.pretty_host(False) is None
 
         # Invalid IDNA
-        r.headers["host"] = [".disqus.com"]
+        r.headers["host"] = ".disqus.com"
         assert r.pretty_host(True) == ".disqus.com"
 
     def test_pretty_url(self):
@@ -201,49 +203,37 @@ class TestRequest(object):
         assert req.pretty_url(False) == "http://address:22/path"
 
     def test_get_cookies_none(self):
-        h = odict.ODictCaseless()
+        headers = http.Headers()
         r = tutils.treq()
-        r.headers = h
+        r.headers = headers
         assert len(r.get_cookies()) == 0
 
     def test_get_cookies_single(self):
-        h = odict.ODictCaseless()
-        h["Cookie"] = ["cookiename=cookievalue"]
         r = tutils.treq()
-        r.headers = h
+        r.headers = http.Headers(cookie="cookiename=cookievalue")
         result = r.get_cookies()
         assert len(result) == 1
         assert result['cookiename'] == ['cookievalue']
 
     def test_get_cookies_double(self):
-        h = odict.ODictCaseless()
-        h["Cookie"] = [
-            "cookiename=cookievalue;othercookiename=othercookievalue"
-        ]
         r = tutils.treq()
-        r.headers = h
+        r.headers = http.Headers(cookie="cookiename=cookievalue;othercookiename=othercookievalue")
         result = r.get_cookies()
         assert len(result) == 2
         assert result['cookiename'] == ['cookievalue']
         assert result['othercookiename'] == ['othercookievalue']
 
     def test_get_cookies_withequalsign(self):
-        h = odict.ODictCaseless()
-        h["Cookie"] = [
-            "cookiename=coo=kievalue;othercookiename=othercookievalue"
-        ]
         r = tutils.treq()
-        r.headers = h
+        r.headers = http.Headers(cookie="cookiename=coo=kievalue;othercookiename=othercookievalue")
         result = r.get_cookies()
         assert len(result) == 2
         assert result['cookiename'] == ['coo=kievalue']
         assert result['othercookiename'] == ['othercookievalue']
 
     def test_set_cookies(self):
-        h = odict.ODictCaseless()
-        h["Cookie"] = ["cookiename=cookievalue"]
         r = tutils.treq()
-        r.headers = h
+        r.headers = http.Headers(cookie="cookiename=cookievalue")
         result = r.get_cookies()
         result["cookiename"] = ["foo"]
         r.set_cookies(result)
@@ -348,7 +338,7 @@ class TestEmptyRequest(object):
         assert req
 
 class TestResponse(object):
-    def test_headers_odict(self):
+    def test_headers(self):
         tutils.raises(AssertionError, semantics.Response,
             (1, 1),
             200,
@@ -359,7 +349,7 @@ class TestResponse(object):
             (1, 1),
             200,
         )
-        assert isinstance(resp.headers, odict.ODictCaseless)
+        assert isinstance(resp.headers, http.Headers)
 
     def test_equal(self):
         a = tutils.tresp()
@@ -374,32 +364,26 @@ class TestResponse(object):
     def test_repr(self):
         r = tutils.tresp()
         assert "unknown content type" in repr(r)
-        r.headers["content-type"] = ["foo"]
+        r.headers["content-type"] = "foo"
         assert "foo" in repr(r)
         assert repr(tutils.tresp(content=CONTENT_MISSING))
 
     def test_get_cookies_none(self):
-        h = odict.ODictCaseless()
         resp = tutils.tresp()
-        resp.headers = h
+        resp.headers = http.Headers()
         assert not resp.get_cookies()
 
     def test_get_cookies_simple(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=cookievalue"]
         resp = tutils.tresp()
-        resp.headers = h
+        resp.headers = http.Headers(set_cookie="cookiename=cookievalue")
         result = resp.get_cookies()
         assert len(result) == 1
         assert "cookiename" in result
         assert result["cookiename"][0] == ["cookievalue", odict.ODict()]
 
     def test_get_cookies_with_parameters(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = [
-            "cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly"]
         resp = tutils.tresp()
-        resp.headers = h
+        resp.headers = http.Headers(set_cookie="cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly")
         result = resp.get_cookies()
         assert len(result) == 1
         assert "cookiename" in result
@@ -412,12 +396,8 @@ class TestResponse(object):
         assert attrs["httponly"] == [None]
 
     def test_get_cookies_no_value(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = [
-            "cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"
-        ]
         resp = tutils.tresp()
-        resp.headers = h
+        resp.headers = http.Headers(set_cookie="cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/")
         result = resp.get_cookies()
         assert len(result) == 1
         assert "cookiename" in result
@@ -425,10 +405,11 @@ class TestResponse(object):
         assert len(result["cookiename"][0][1]) == 2
 
     def test_get_cookies_twocookies(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=cookievalue", "othercookie=othervalue"]
         resp = tutils.tresp()
-        resp.headers = h
+        resp.headers = http.Headers([
+            ["Set-Cookie", "cookiename=cookievalue"],
+            ["Set-Cookie", "othercookie=othervalue"]
+        ])
         result = resp.get_cookies()
         assert len(result) == 2
         assert "cookiename" in result
@@ -453,140 +434,140 @@ class TestHeaders(object):
             [
                 ["Host", "example.com"],
                 ["host", "example.org"]
-             ]
+            ]
         )
 
     def test_init(self):
-        h = semantics.Headers()
-        assert len(h) == 0
+        headers = semantics.Headers()
+        assert len(headers) == 0
 
-        h = semantics.Headers([["Host", "example.com"]])
-        assert len(h) == 1
-        assert h["Host"] == "example.com"
+        headers = semantics.Headers([["Host", "example.com"]])
+        assert len(headers) == 1
+        assert headers["Host"] == "example.com"
 
-        h = semantics.Headers(Host="example.com")
-        assert len(h) == 1
-        assert h["Host"] == "example.com"
+        headers = semantics.Headers(Host="example.com")
+        assert len(headers) == 1
+        assert headers["Host"] == "example.com"
 
-        h = semantics.Headers(
+        headers = semantics.Headers(
             [["Host", "invalid"]],
             Host="example.com"
         )
-        assert len(h) == 1
-        assert h["Host"] == "example.com"
+        assert len(headers) == 1
+        assert headers["Host"] == "example.com"
 
-        h = semantics.Headers(
+        headers = semantics.Headers(
             [["Host", "invalid"], ["Accept", "text/plain"]],
             Host="example.com"
         )
-        assert len(h) == 2
-        assert h["Host"] == "example.com"
-        assert h["Accept"] == "text/plain"
+        assert len(headers) == 2
+        assert headers["Host"] == "example.com"
+        assert headers["Accept"] == "text/plain"
 
     def test_getitem(self):
-        h = semantics.Headers(Host="example.com")
-        assert h["Host"] == "example.com"
-        assert h["host"] == "example.com"
-        tutils.raises(KeyError, h.__getitem__, "Accept")
+        headers = semantics.Headers(Host="example.com")
+        assert headers["Host"] == "example.com"
+        assert headers["host"] == "example.com"
+        tutils.raises(KeyError, headers.__getitem__, "Accept")
 
-        h = self._2host()
-        assert h["Host"] == "example.com, example.org"
+        headers = self._2host()
+        assert headers["Host"] == "example.com, example.org"
 
     def test_str(self):
-        h = semantics.Headers(Host="example.com")
-        assert str(h) == "Host: example.com"
+        headers = semantics.Headers(Host="example.com")
+        assert str(headers) == "Host: example.com\r\n"
 
-        h = semantics.Headers([
+        headers = semantics.Headers([
             ["Host", "example.com"],
             ["Accept", "text/plain"]
         ])
-        assert str(h) == "Host: example.com\r\nAccept: text/plain"
+        assert str(headers) == "Host: example.com\r\nAccept: text/plain\r\n"
 
     def test_setitem(self):
-        h = semantics.Headers()
-        h["Host"] = "example.com"
-        assert "Host" in h
-        assert "host" in h
-        assert h["Host"] == "example.com"
+        headers = semantics.Headers()
+        headers["Host"] = "example.com"
+        assert "Host" in headers
+        assert "host" in headers
+        assert headers["Host"] == "example.com"
 
-        h["host"] = "example.org"
-        assert "Host" in h
-        assert "host" in h
-        assert h["Host"] == "example.org"
+        headers["host"] = "example.org"
+        assert "Host" in headers
+        assert "host" in headers
+        assert headers["Host"] == "example.org"
 
-        h["accept"] = "text/plain"
-        assert len(h) == 2
-        assert "Accept" in h
-        assert "Host" in h
+        headers["accept"] = "text/plain"
+        assert len(headers) == 2
+        assert "Accept" in headers
+        assert "Host" in headers
 
-        h = self._2host()
-        assert len(h.fields) == 2
-        h["Host"] = "example.com"
-        assert len(h.fields) == 1
-        assert "Host" in h
+        headers = self._2host()
+        assert len(headers.fields) == 2
+        headers["Host"] = "example.com"
+        assert len(headers.fields) == 1
+        assert "Host" in headers
 
     def test_delitem(self):
-        h = semantics.Headers(Host="example.com")
-        assert len(h) == 1
-        del h["host"]
-        assert len(h) == 0
+        headers = semantics.Headers(Host="example.com")
+        assert len(headers) == 1
+        del headers["host"]
+        assert len(headers) == 0
         try:
-            del h["host"]
+            del headers["host"]
         except KeyError:
             assert True
         else:
             assert False
 
-        h = self._2host()
-        del h["Host"]
-        assert len(h) == 0
+        headers = self._2host()
+        del headers["Host"]
+        assert len(headers) == 0
 
     def test_keys(self):
-        h = semantics.Headers(Host="example.com")
-        assert len(h.keys()) == 1
-        assert h.keys()[0] == "Host"
+        headers = semantics.Headers(Host="example.com")
+        assert len(headers.keys()) == 1
+        assert headers.keys()[0] == "Host"
 
-        h = self._2host()
-        assert len(h.keys()) == 1
-        assert h.keys()[0] == "Host"
+        headers = self._2host()
+        assert len(headers.keys()) == 1
+        assert headers.keys()[0] == "Host"
 
     def test_eq_ne(self):
-        h1 = semantics.Headers(Host="example.com")
-        h2 = semantics.Headers(host="example.com")
-        assert not (h1 == h2)
-        assert h1 != h2
+        headers1 = semantics.Headers(Host="example.com")
+        headers2 = semantics.Headers(host="example.com")
+        assert not (headers1 == headers2)
+        assert headers1 != headers2
 
-        h1 = semantics.Headers(Host="example.com")
-        h2 = semantics.Headers(Host="example.com")
-        assert h1 == h2
-        assert not (h1 != h2)
+        headers1 = semantics.Headers(Host="example.com")
+        headers2 = semantics.Headers(Host="example.com")
+        assert headers1 == headers2
+        assert not (headers1 != headers2)
 
-        assert h1 != None
+        assert headers1 != 42
 
     def test_get_all(self):
-        h = self._2host()
-        assert h.get_all("host") == ["example.com", "example.org"]
-        assert h.get_all("accept", 42) is 42
+        headers = self._2host()
+        assert headers.get_all("host") == ["example.com", "example.org"]
+        assert headers.get_all("accept", 42) is 42
 
     def test_set_all(self):
-        h = semantics.Headers(Host="example.com")
-        h.set_all("Accept", ["text/plain"])
-        assert len(h) == 2
-        assert "accept" in h
+        headers = semantics.Headers(Host="example.com")
+        headers.set_all("Accept", ["text/plain"])
+        assert len(headers) == 2
+        assert "accept" in headers
 
-        h = self._2host()
-        h.set_all("Host", ["example.org"])
-        assert h["host"] == "example.org"
+        headers = self._2host()
+        headers.set_all("Host", ["example.org"])
+        assert headers["host"] == "example.org"
 
-        h.set_all("Host", ["example.org", "example.net"])
-        assert h["host"] == "example.org, example.net"
+        headers.set_all("Host", ["example.org", "example.net"])
+        assert headers["host"] == "example.org, example.net"
 
     def test_state(self):
-        h = self._2host()
-        assert len(h.get_state()) == 2
-        assert h == semantics.Headers.from_state(h.get_state())
+        headers = self._2host()
+        assert len(headers.get_state()) == 2
+        assert headers == semantics.Headers.from_state(headers.get_state())
 
-        h2 = semantics.Headers()
-        assert h != h2
-        h2.load_state(h.get_state())
-        assert h == h2
+        headers2 = semantics.Headers()
+        assert headers != headers2
+        headers2.load_state(headers.get_state())
+        assert headers == headers2

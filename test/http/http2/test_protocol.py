@@ -1,8 +1,8 @@
 import OpenSSL
 import mock
 
-from netlib import tcp, odict, http, tutils
-from netlib.http import http2
+from netlib import tcp, http, tutils
+from netlib.http import http2, Headers
 from netlib.http.http2 import HTTP2Protocol
 from netlib.http.http2.frame import *
 from ... import tservers
@@ -229,11 +229,11 @@ class TestCreateHeaders():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_create_headers(self):
-        headers = [
+        headers = http.Headers([
             (b':method', b'GET'),
             (b':path', b'index.html'),
             (b':scheme', b'https'),
-            (b'foo', b'bar')]
+            (b'foo', b'bar')])
 
         bytes = HTTP2Protocol(self.c)._create_headers(
             headers, 1, end_stream=True)
@@ -248,12 +248,12 @@ class TestCreateHeaders():
             .decode('hex')
 
     def test_create_headers_multiple_frames(self):
-        headers = [
+        headers = http.Headers([
             (b':method', b'GET'),
             (b':path', b'/'),
             (b':scheme', b'https'),
             (b'foo', b'bar'),
-            (b'server', b'version')]
+            (b'server', b'version')])
 
         protocol = HTTP2Protocol(self.c)
         protocol.http2_settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE] = 8
@@ -309,7 +309,7 @@ class TestReadRequest(tservers.ServerTestBase):
         req = protocol.read_request()
 
         assert req.stream_id
-        assert req.headers.lst == [[u':method', u'GET'], [u':path', u'/'], [u':scheme', u'https']]
+        assert req.headers.fields == [[':method', 'GET'], [':path', '/'], [':scheme', 'https']]
         assert req.body == b'foobar'
 
 
@@ -415,7 +415,7 @@ class TestReadResponse(tservers.ServerTestBase):
         assert resp.httpversion == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
-        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
+        assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]
         assert resp.body == b'foobar'
         assert resp.timestamp_end
 
@@ -442,7 +442,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.httpversion == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
-        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
+        assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]
         assert resp.body == b''
 
 
@@ -490,7 +490,7 @@ class TestAssembleRequest(object):
             '',
             '/',
             (2, 0),
-            odict.ODictCaseless([('foo', 'bar')]),
+            http.Headers([('foo', 'bar')]),
             'foobar',
         ))
         assert len(bytes) == 2
@@ -528,7 +528,7 @@ class TestAssembleResponse(object):
             (2, 0),
             200,
             '',
-            odict.ODictCaseless([('foo', 'bar')]),
+            Headers(foo="bar"),
             'foobar'
         ))
         assert len(bytes) == 2

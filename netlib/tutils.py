@@ -5,7 +5,7 @@ import time
 import shutil
 from contextlib import contextmanager
 
-from netlib import tcp, utils, odict, http
+from netlib import tcp, utils, http
 
 
 def treader(bytes):
@@ -73,8 +73,8 @@ def treq(content="content", scheme="http", host="address", port=22):
     """
     @return: libmproxy.protocol.http.HTTPRequest
     """
-    headers = odict.ODictCaseless()
-    headers["header"] = ["qvalue"]
+    headers = http.Headers()
+    headers["header"] = "qvalue"
     req = http.Request(
         "relative",
         "GET",
@@ -108,8 +108,8 @@ def tresp(content="message"):
     @return: libmproxy.protocol.http.HTTPResponse
     """
 
-    headers = odict.ODictCaseless()
-    headers["header_response"] = ["svalue"]
+    headers = http.Headers()
+    headers["header_response"] = "svalue"
 
     resp = http.semantics.Response(
         (1, 1),

@@ -3,7 +3,7 @@ import itertools
 import time
 
 from hpack.hpack import Encoder, Decoder
-from netlib import http, utils, odict
+from netlib import http, utils
 from netlib.http import semantics
 from . import frame
 
@@ -85,10 +85,10 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         timestamp_end = time.time()
 
-        authority = headers.get_first(':authority', '')
-        method = headers.get_first(':method', 'GET')
-        scheme = headers.get_first(':scheme', 'https')
-        path = headers.get_first(':path', '/')
+        authority = headers.get(':authority', '')
+        method = headers.get(':method', 'GET')
+        scheme = headers.get(':scheme', 'https')
+        path = headers.get(':path', '/')
         host = None
         port = None
 
@@ -161,7 +161,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         response = http.Response(
             (2, 0),
-            int(headers.get_first(':status')),
+            int(headers.get(':status', 502)),
             "",
             headers,
             body,
@@ -181,16 +181,14 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         headers = request.headers.copy()
 
-        if ':authority' not in headers.keys():
-            headers.add(':authority', bytes(authority), prepend=True)
-        if ':scheme' not in headers.keys():
-            headers.add(':scheme', bytes(request.scheme), prepend=True)
-        if ':path' not in headers.keys():
-            headers.add(':path', bytes(request.path), prepend=True)
-        if ':method' not in headers.keys():
-            headers.add(':method', bytes(request.method), prepend=True)
-
-        headers = headers.items()
+        if ':authority' not in headers:
+            headers.fields.insert(0, (':authority', bytes(authority)))
+        if ':scheme' not in headers:
+            headers.fields.insert(0, (':scheme', bytes(request.scheme)))
+        if ':path' not in headers:
+            headers.fields.insert(0, (':path', bytes(request.path)))
+        if ':method' not in headers:
+            headers.fields.insert(0, (':method', bytes(request.method)))
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id
@@ -206,10 +204,8 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         headers = response.headers.copy()
 
-        if ':status' not in headers.keys():
-            headers.add(':status', bytes(str(response.status_code)), prepend=True)
-
-        headers = headers.items()
+        if ':status' not in headers:
+            headers.fields.insert(0, (':status', bytes(str(response.status_code))))
 
         if hasattr(response, 'stream_id'):
             stream_id = response.stream_id
@@ -329,7 +325,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
                 else:
                     yield frame.ContinuationFrame, i
 
-        header_block_fragment = self.encoder.encode(headers)
+        header_block_fragment = self.encoder.encode(headers.fields)
 
         chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
         chunks = range(0, len(header_block_fragment), chunk_size)
@@ -402,8 +398,8 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             else:
                 self._handle_unexpected_frame(frm)
 
-        headers = odict.ODictCaseless()
-        for header, value in self.decoder.decode(header_block_fragment):
-            headers.add(header, value)
+        headers = http.Headers(
+            [[str(k), str(v)] for k, v in self.decoder.decode(header_block_fragment)]
+        )
 
         return stream_id, headers, body

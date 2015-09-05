@@ -2,7 +2,7 @@ import cStringIO
 import textwrap
 
 from netlib import http, odict, tcp, tutils
-from netlib.http import semantics
+from netlib.http import semantics, Headers
 from netlib.http.http1 import HTTP1Protocol
 from ... import tservers
 
@@ -29,164 +29,161 @@ def test_stripped_chunked_encoding_no_content():
     """
 
     r = tutils.treq(content="")
-    r.headers["Transfer-Encoding"] = ["chunked"]
+    r.headers["Transfer-Encoding"] = "chunked"
     assert "Content-Length" in mock_protocol()._assemble_request_headers(r)
 
     r = tutils.tresp(content="")
-    r.headers["Transfer-Encoding"] = ["chunked"]
+    r.headers["Transfer-Encoding"] = "chunked"
     assert "Content-Length" in mock_protocol()._assemble_response_headers(r)
 
 
 def test_has_chunked_encoding():
-    h = odict.ODictCaseless()
-    assert not HTTP1Protocol.has_chunked_encoding(h)
-    h["transfer-encoding"] = ["chunked"]
-    assert HTTP1Protocol.has_chunked_encoding(h)
+    headers = http.Headers()
+    assert not HTTP1Protocol.has_chunked_encoding(headers)
+    headers["transfer-encoding"] = "chunked"
+    assert HTTP1Protocol.has_chunked_encoding(headers)
 
 
 def test_read_chunked():
-    h = odict.ODictCaseless()
-    h["transfer-encoding"] = ["chunked"]
+    headers = http.Headers()
+    headers["transfer-encoding"] = "chunked"
 
     data = "1\r\na\r\n0\r\n"
     tutils.raises(
         "malformed chunked body",
         mock_protocol(data).read_http_body,
-        h, None, "GET", None, True
+        headers, None, "GET", None, True
     )
 
     data = "1\r\na\r\n0\r\n\r\n"
-    assert mock_protocol(data).read_http_body(h, None, "GET", None, True) == "a"
+    assert mock_protocol(data).read_http_body(headers, None, "GET", None, True) == "a"
 
     data = "\r\n\r\n1\r\na\r\n0\r\n\r\n"
-    assert mock_protocol(data).read_http_body(h, None, "GET", None, True) == "a"
+    assert mock_protocol(data).read_http_body(headers, None, "GET", None, True) == "a"
 
     data = "\r\n"
     tutils.raises(
         "closed prematurely",
         mock_protocol(data).read_http_body,
-        h, None, "GET", None, True
+        headers, None, "GET", None, True
     )
 
     data = "1\r\nfoo"
     tutils.raises(
         "malformed chunked body",
         mock_protocol(data).read_http_body,
-        h, None, "GET", None, True
+        headers, None, "GET", None, True
     )
 
     data = "foo\r\nfoo"
     tutils.raises(
         http.HttpError,
         mock_protocol(data).read_http_body,
-        h, None, "GET", None, True
+        headers, None, "GET", None, True
     )
 
     data = "5\r\naaaaa\r\n0\r\n\r\n"
-    tutils.raises("too large", mock_protocol(data).read_http_body, h, 2, "GET", None, True)
+    tutils.raises("too large", mock_protocol(data).read_http_body, headers, 2, "GET", None, True)
 
 
 def test_connection_close():
-    h = odict.ODictCaseless()
-    assert HTTP1Protocol.connection_close((1, 0), h)
-    assert not HTTP1Protocol.connection_close((1, 1), h)
+    headers = Headers()
+    assert HTTP1Protocol.connection_close((1, 0), headers)
+    assert not HTTP1Protocol.connection_close((1, 1), headers)
 
-    h["connection"] = ["keep-alive"]
-    assert not HTTP1Protocol.connection_close((1, 1), h)
+    headers["connection"] = "keep-alive"
+    assert not HTTP1Protocol.connection_close((1, 1), headers)
 
-    h["connection"] = ["close"]
-    assert HTTP1Protocol.connection_close((1, 1), h)
+    headers["connection"] = "close"
+    assert HTTP1Protocol.connection_close((1, 1), headers)
 
 
 def test_read_http_body_request():
-    h = odict.ODictCaseless()
+    headers = Headers()
     data = "testing"
-    assert mock_protocol(data).read_http_body(h, None, "GET", None, True) == ""
+    assert mock_protocol(data).read_http_body(headers, None, "GET", None, True) == ""
 
 
 def test_read_http_body_response():
-    h = odict.ODictCaseless()
+    headers = Headers()
     data = "testing"
-    assert mock_protocol(data).read_http_body(h, None, "GET", 200, False) == "testing"
+    assert mock_protocol(data).read_http_body(headers, None, "GET", 200, False) == "testing"
 
 
 def test_read_http_body():
     # test default case
-    h = odict.ODictCaseless()
-    h["content-length"] = [7]
+    headers = Headers()
+    headers["content-length"] = "7"
     data = "testing"
-    assert mock_protocol(data).read_http_body(h, None, "GET", 200, False) == "testing"
+    assert mock_protocol(data).read_http_body(headers, None, "GET", 200, False) == "testing"
 
     # test content length: invalid header
-    h["content-length"] = ["foo"]
+    headers["content-length"] = "foo"
     data = "testing"
     tutils.raises(
         http.HttpError,
         mock_protocol(data).read_http_body,
-        h, None, "GET", 200, False
+        headers, None, "GET", 200, False
     )
 
     # test content length: invalid header #2
-    h["content-length"] = [-1]
+    headers["content-length"] = "-1"
     data = "testing"
     tutils.raises(
         http.HttpError,
         mock_protocol(data).read_http_body,
-        h, None, "GET", 200, False
+        headers, None, "GET", 200, False
     )
 
     # test content length: content length > actual content
-    h["content-length"] = [5]
+    headers["content-length"] = "5"
     data = "testing"
     tutils.raises(
         http.HttpError,
         mock_protocol(data).read_http_body,
-        h, 4, "GET", 200, False
+        headers, 4, "GET", 200, False
     )
 
     # test content length: content length < actual content
     data = "testing"
-    assert len(mock_protocol(data).read_http_body(h, None, "GET", 200, False)) == 5
+    assert len(mock_protocol(data).read_http_body(headers, None, "GET", 200, False)) == 5
 
     # test no content length: limit > actual content
-    h = odict.ODictCaseless()
+    headers = Headers()
     data = "testing"
-    assert len(mock_protocol(data).read_http_body(h, 100, "GET", 200, False)) == 7
+    assert len(mock_protocol(data).read_http_body(headers, 100, "GET", 200, False)) == 7
 
     # test no content length: limit < actual content
     data = "testing"
     tutils.raises(
         http.HttpError,
         mock_protocol(data).read_http_body,
-        h, 4, "GET", 200, False
+        headers, 4, "GET", 200, False
     )
 
     # test chunked
-    h = odict.ODictCaseless()
-    h["transfer-encoding"] = ["chunked"]
+    headers = Headers()
+    headers["transfer-encoding"] = "chunked"
     data = "5\r\naaaaa\r\n0\r\n\r\n"
-    assert mock_protocol(data).read_http_body(h, 100, "GET", 200, False) == "aaaaa"
+    assert mock_protocol(data).read_http_body(headers, 100, "GET", 200, False) == "aaaaa"
 
 
 def test_expected_http_body_size():
     # gibber in the content-length field
-    h = odict.ODictCaseless()
-    h["content-length"] = ["foo"]
-    assert HTTP1Protocol.expected_http_body_size(h, False, "GET", 200) is None
+    headers = Headers(content_length="foo")
+    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) is None
     # negative number in the content-length field
-    h = odict.ODictCaseless()
-    h["content-length"] = ["-7"]
-    assert HTTP1Protocol.expected_http_body_size(h, False, "GET", 200) is None
+    headers = Headers(content_length="-7")
+    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) is None
     # explicit length
-    h = odict.ODictCaseless()
-    h["content-length"] = ["5"]
-    assert HTTP1Protocol.expected_http_body_size(h, False, "GET", 200) == 5
+    headers = Headers(content_length="5")
+    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) == 5
     # no length
-    h = odict.ODictCaseless()
-    assert HTTP1Protocol.expected_http_body_size(h, False, "GET", 200) == -1
+    headers = Headers()
+    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) == -1
     # no length request
-    h = odict.ODictCaseless()
-    assert HTTP1Protocol.expected_http_body_size(h, True, "GET", None) == 0
+    headers = Headers()
+    assert HTTP1Protocol.expected_http_body_size(headers, True, "GET", None) == 0
 
 
 def test_get_request_line():
@@ -265,8 +262,8 @@ class TestReadHeaders:
             Header2: two
             \r\n
         """
-        h = self._read(data)
-        assert h.lst == [["Header", "one"], ["Header2", "two"]]
+        headers = self._read(data)
+        assert headers.fields == [["Header", "one"], ["Header2", "two"]]
 
     def test_read_multi(self):
         data = """
@@ -274,8 +271,8 @@ class TestReadHeaders:
             Header: two
             \r\n
         """
-        h = self._read(data)
-        assert h.lst == [["Header", "one"], ["Header", "two"]]
+        headers = self._read(data)
+        assert headers.fields == [["Header", "one"], ["Header", "two"]]
 
     def test_read_continued(self):
         data = """
@@ -284,8 +281,8 @@ class TestReadHeaders:
             Header2: three
             \r\n
         """
-        h = self._read(data)
-        assert h.lst == [["Header", "one\r\n two"], ["Header2", "three"]]
+        headers = self._read(data)
+        assert headers.fields == [["Header", "one\r\n two"], ["Header2", "three"]]
 
     def test_read_continued_err(self):
         data = "\tfoo: bar\r\n"
@@ -389,7 +386,7 @@ class TestReadResponse(object):
             HTTP/1.1 200
         """
         assert self.tst(data, "GET", None) == http.Response(
-            (1, 1), 200, '', odict.ODictCaseless(), ''
+            (1, 1), 200, '', Headers(), ''
         )
 
     def test_simple_message(self):
@@ -397,7 +394,7 @@ class TestReadResponse(object):
             HTTP/1.1 200 OK
         """
         assert self.tst(data, "GET", None) == http.Response(
-            (1, 1), 200, 'OK', odict.ODictCaseless(), ''
+            (1, 1), 200, 'OK', Headers(), ''
         )
 
     def test_invalid_http_version(self):
@@ -419,7 +416,7 @@ class TestReadResponse(object):
             HTTP/1.1 200 OK
         """
         assert self.tst(data, "GET", None) == http.Response(
-            (1, 1), 100, 'CONTINUE', odict.ODictCaseless(), ''
+            (1, 1), 100, 'CONTINUE', Headers(), ''
         )
 
     def test_simple_body(self):

@@ -1,5 +1,5 @@
-from netlib import utils, odict, tutils
-
+from netlib import utils, tutils
+from netlib.http import Headers
 
 def test_bidi():
     b = utils.BiDi(a=1, b=2)
@@ -88,20 +88,21 @@ def test_urldecode():
 
 
 def test_get_header_tokens():
-    h = odict.ODictCaseless()
-    assert utils.get_header_tokens(h, "foo") == []
-    h["foo"] = ["bar"]
-    assert utils.get_header_tokens(h, "foo") == ["bar"]
-    h["foo"] = ["bar, voing"]
-    assert utils.get_header_tokens(h, "foo") == ["bar", "voing"]
-    h["foo"] = ["bar, voing", "oink"]
-    assert utils.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
+    headers = Headers()
+    assert utils.get_header_tokens(headers, "foo") == []
+    headers["foo"] = "bar"
+    assert utils.get_header_tokens(headers, "foo") == ["bar"]
+    headers["foo"] = "bar, voing"
+    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing"]
+    headers.set_all("foo", ["bar, voing", "oink"])
+    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
 
 
 def test_multipartdecode():
     boundary = 'somefancyboundary'
-    headers = odict.ODict(
-        [('content-type', ('multipart/form-data; boundary=%s' % boundary))])
+    headers = Headers(
+        content_type='multipart/form-data; boundary=%s' % boundary
+    )
     content = "--{0}\n" \
               "Content-Disposition: form-data; name=\"field1\"\n\n" \
               "value1\n" \
