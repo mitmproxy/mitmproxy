@@ -91,7 +91,7 @@ In this scenario, we would:
 2. Configure the client to use the proxy machine's IP as the default gateway.
 3. Quick Check: At this point, you should already be able to visit an
    unencrypted HTTP site over the proxy.
-4. Open the magic domain **mitm.it**mitm and install the certificate
+4. Open the magic domain **mitm.it** and install the certificate
    for your device.
 
 Setting the custom gateway on clients can be automated by serving the settings

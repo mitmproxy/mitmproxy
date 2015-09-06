@@ -1,4 +1,4 @@
-.. _inline-scripts:
+.. _inlinescripts:
 
 Inline Scripts
 ==============
