@@ -5,7 +5,8 @@ Transparently proxify virtual machines
 
 This walkthrough illustrates how to set up transparent proxying with mitmproxy.
 We use VirtualBox VMs with an Ubuntu proxy machine in this example,
-but the general *Internet <--> Proxy VM <--> (Virtual) Internal Network* setup can be applied to other setups.
+but the general *Internet <--> Proxy VM <--> (Virtual) Internal Network* setup can be applied to
+other setups.
 
 1. Configure Proxy VM
 ---------------------
@@ -35,9 +36,9 @@ DHCP and TFTP) services to a small-scale network.
 
 -   Before we get to that, we need to fix some Ubuntu quirks:
     **Ubuntu >12.04** runs an internal dnsmasq instance (listening on loopback only) by default
-    `[1] <https://www.stgraber.org/2012/02/24/dns-in-ubuntu-12-04/>`_. For our use case, this needs to be
-    disabled by changing ``dns=dnsmasq`` to ``#dns=dnsmasq`` in **/etc/NetworkManager/NetworkManager.conf**
-    and running
+    `[1] <https://www.stgraber.org/2012/02/24/dns-in-ubuntu-12-04/>`_. For our use case, this needs
+    to be disabled by changing ``dns=dnsmasq`` to ``#dns=dnsmasq`` in
+    **/etc/NetworkManager/NetworkManager.conf** and running
 
     >>> sudo restart network-manager
 
@@ -84,4 +85,5 @@ Finally, we can run mitmproxy in transparent mode with
 >>> mitmproxy -T
 
 The proxied machine cannot to leak any data outside of HTTP or DNS requests.
-If required, you can now :ref:`install the mitmproxy certificates on the proxied machine <certinstall>`.
+If required, you can now :ref:`install the mitmproxy certificates on the proxied machine
+<certinstall>`.

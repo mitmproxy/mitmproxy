@@ -7,15 +7,16 @@ Mitmproxy is configured through a set of files in the users ~/.mitmproxy
 directory.
 
 mitmproxy.conf
-	Settings for the :program:`mitmproxy`. This file can contain any options supported by mitmproxy.
+    Settings for the :program:`mitmproxy`. This file can contain any options supported by
+    mitmproxy.
 
 mitmdump.conf
-	Settings for the :program:`mitmdump`. This file can contain any options supported by mitmdump.
+    Settings for the :program:`mitmdump`. This file can contain any options supported by mitmdump.
 
 common.conf
-	Settings shared between all command-line tools. Settings in this file are over-ridden by those
-	in the tool-specific files. Only options shared by mitmproxy and mitmdump should be used in this
-	file.
+    Settings shared between all command-line tools. Settings in this file are over-ridden by those
+    in the tool-specific files. Only options shared by mitmproxy and mitmdump should be used in
+    this file.
 
 Syntax
 ------
@@ -25,9 +26,9 @@ Comments
 
 .. code-block:: none
 
-	# this is a comment
-	; this is also a comment (.ini style)
-	--- and this is a comment too (yaml style)
+    # this is a comment
+    ; this is also a comment (.ini style)
+    --- and this is a comment too (yaml style)
 
 Key/Value pairs
 ^^^^^^^^^^^^^^^
@@ -38,12 +39,12 @@ Key/Value pairs
 
 .. code-block:: none
 
-	name = value   # (.ini style)
-	name: value    # (yaml style)
-	--name value   # (command-line option style)
+    name = value   # (.ini style)
+    name: value    # (yaml style)
+    --name value   # (command-line option style)
 
-	fruit = [apple, orange, lemon]
-	indexes = [1, 12, 35 , 40]
+    fruit = [apple, orange, lemon]
+    indexes = [1, 12, 35 , 40]
 
 Flags
 ^^^^^
@@ -52,9 +53,9 @@ These are boolean options that take no value but true/false.
 
 .. code-block:: none
 
-	name = true    # (.ini style)
-	name
-	--name 	 	   # (command-line option style)
+    name = true    # (.ini style)
+    name
+    --name 	 	   # (command-line option style)
 
 Options
 -------
@@ -75,11 +76,11 @@ Note that :option:`--port` is an option supported by all tools.
 
 .. code-block:: none
 
-	port = 8080
+    port = 8080
 
 mitmproxy.conf
 ^^^^^^^^^^^^^^
 
 .. code-block:: none
 
-	palette = light
+    palette = light

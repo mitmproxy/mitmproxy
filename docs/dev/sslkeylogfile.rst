@@ -3,8 +3,8 @@
 TLS Master Secrets
 ==================
 
-The SSL master keys can be logged by mitmproxy so that external programs can decrypt TLS connections
-both from and to the proxy. Key logging is enabled by setting the environment variable
+The SSL master keys can be logged by mitmproxy so that external programs can decrypt TLS
+connections both from and to the proxy. Key logging is enabled by setting the environment variable
 :envvar:`SSLKEYLOGFILE` so that it points to a writable text file.
 Recent versions of WireShark can use these log files to decrypt packets.
 You can specify the key file path in WireShark via

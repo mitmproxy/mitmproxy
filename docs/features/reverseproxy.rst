@@ -51,6 +51,7 @@ There are two ways to solve this:
 1. Modify the hosts file of your OS so that "example.com" resolves to your proxy's IP.
    Then, access example.com directly. Make sure that your proxy can still resolve the original IP
    or specify an IP in mitmproxy.
-2. Use mitmproxy's :ref:`setheaders` feature to rewrite the host header: ``--setheader :~q:Host:example.com``.
+2. Use mitmproxy's :ref:`setheaders` feature to rewrite the host header:
+   ``--setheader :~q:Host:example.com``.
    However, keep in mind that absolute URLs within the returned document or HTTP redirects will
    cause the client application to bypass the proxy.

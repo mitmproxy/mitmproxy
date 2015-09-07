@@ -22,7 +22,8 @@ command-line       :option:`--tcp HOST`
 mitmproxy shortcut :kbd:`o` then :kbd:`T`
 ================== ======================
 
-For a detailed description how the hostname pattern works, please look at the :ref:`passthrough` feature.
+For a detailed description how the hostname pattern works, please look at the :ref:`passthrough`
+feature.
 
 .. seealso::
 

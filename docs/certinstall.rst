@@ -111,12 +111,13 @@ CA and cert files
 
 The files created by mitmproxy in the .mitmproxy directory are as follows:
 
-===================== ====================================================================================
+===================== ==========================================================================
 mitmproxy-ca.pem      The certificate **and the private key** in PEM format.
-mitmproxy-ca-cert.pem The certificate in PEM format. Use this to distribute on most non-Windows platforms.
+mitmproxy-ca-cert.pem The certificate in PEM format.
+                      Use this to distribute on most non-Windows platforms.
 mitmproxy-ca-cert.p12 The certificate in PKCS12 format. For use on Windows.
 mitmproxy-ca-cert.cer Same file as .pem, but with an extension expected by some Android devices.
-===================== ====================================================================================
+===================== ==========================================================================
 
 Using a custom certificate
 --------------------------
@@ -166,8 +167,8 @@ no such file exists, it will be generated automatically.
 Using a client side certificate
 -------------------------------
 
-You can use a client certificate by passing the ``--client-certs DIRECTORY``
-option to mitmproxy.  If you visit example.org, mitmproxy looks for a file named ``example.org.pem``
-in the specified directory and uses this as the client cert. The certificate file needs to be in
-the PEM format and should contain both the unencrypted private key and the certificate.
+You can use a client certificate by passing the ``--client-certs DIRECTORY`` option to mitmproxy.
+If you visit example.org, mitmproxy looks for a file named ``example.org.pem`` in the specified
+directory and uses this as the client cert. The certificate file needs to be in the PEM format and
+should contain both the unencrypted private key and the certificate.
 

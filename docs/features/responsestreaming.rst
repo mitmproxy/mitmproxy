@@ -47,9 +47,9 @@ Responses that should be tagged for streaming by setting their ``.stream`` attri
 Implementation Details
 ----------------------
 
-When response streaming is enabled, portions of the code which would have otherwise performed changes
-on the response body will see an empty response body instead (:py:data:`netlib.http.CONTENT_MISSING`).
-Any modifications will be ignored.
+When response streaming is enabled, portions of the code which would have otherwise performed
+changes on the response body will see an empty response body instead
+(:py:data:`netlib.http.CONTENT_MISSING`). Any modifications will be ignored.
 
 Streamed responses are usually sent in chunks of 4096 bytes. If the response is sent with a
 ``Transfer-Encoding: chunked`` header, the response will be streamed one chunk at a time.
@@ -57,7 +57,8 @@ Streamed responses are usually sent in chunks of 4096 bytes. If the response is 
 Modifying streamed data
 -----------------------
 
-If the ``.stream`` attribute is callable, ``.stream`` will wrap the generator that yields all chunks.
+If the ``.stream`` attribute is callable, ``.stream`` will wrap the generator that yields all
+chunks.
 
 .. literalinclude:: ../../examples/stream_modify.py
    :caption: examples/stream_modify.py
