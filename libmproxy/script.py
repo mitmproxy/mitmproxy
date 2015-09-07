@@ -179,7 +179,8 @@ def concurrent(fn):
             "error",
             "clientconnect",
             "serverconnect",
-            "clientdisconnect"):
+            "clientdisconnect",
+            "next_layer"):
         def _concurrent(ctx, obj):
             _handle_concurrent_reply(fn, obj, ctx, obj)
 
