@@ -945,21 +945,25 @@ class FlowMaster(controller.Master):
         self.add_event(l.msg, l.level)
         l.reply()
 
-    def handle_clientconnect(self, cc):
-        self.run_script_hook("clientconnect", cc)
-        cc.reply()
+    def handle_clientconnect(self, root_layer):
+        self.run_script_hook("clientconnect", root_layer)
+        root_layer.reply()
 
-    def handle_clientdisconnect(self, r):
-        self.run_script_hook("clientdisconnect", r)
-        r.reply()
+    def handle_clientdisconnect(self, root_layer):
+        self.run_script_hook("clientdisconnect", root_layer)
+        root_layer.reply()
 
-    def handle_serverconnect(self, sc):
-        self.run_script_hook("serverconnect", sc)
-        sc.reply()
+    def handle_serverconnect(self, server_conn):
+        self.run_script_hook("serverconnect", server_conn)
+        server_conn.reply()
 
-    def handle_serverdisconnect(self, sc):
-        self.run_script_hook("serverdisconnect", sc)
-        sc.reply()
+    def handle_serverdisconnect(self, server_conn):
+        self.run_script_hook("serverdisconnect", server_conn)
+        server_conn.reply()
+
+    def handle_next_layer(self, top_layer):
+        self.run_script_hook("next_layer", top_layer)
+        top_layer.reply()
 
     def handle_error(self, f):
         self.state.update_flow(f)

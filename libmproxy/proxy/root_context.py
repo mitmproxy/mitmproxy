@@ -40,7 +40,10 @@ class RootContext(object):
         Returns:
             The next layer
         """
+        layer = self._next_layer(top_layer)
+        return self.channel.ask("next_layer", layer)
 
+    def _next_layer(self, top_layer):
         # 1. Check for --ignore.
         if self.config.check_ignore(top_layer.server_conn.address):
             return RawTCPLayer(top_layer, logging=False)

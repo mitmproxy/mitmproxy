@@ -29,6 +29,10 @@ class ProtocolException(ProxyException):
     pass
 
 
+class TlsException(ProtocolException):
+    pass
+
+
 class Socks5Exception(ProtocolException):
     pass
 
