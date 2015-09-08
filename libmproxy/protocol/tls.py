@@ -6,8 +6,8 @@ from construct import ConstructError
 
 from netlib.tcp import NetLibError, NetLibInvalidCertificateError
 from netlib.http.http1 import HTTP1Protocol
-from ..contrib.tls._constructs import ClientHello, CipherSuites
-from ..exceptions import ProtocolException
+from ..contrib.tls._constructs import ClientHello
+from ..exceptions import ProtocolException, TlsException
 from .base import Layer
 
 
@@ -201,6 +201,7 @@ CIPHER_ID_NAME_MAP = {
     0x080080: 'RC4-64-MD5',
 }
 
+
 def is_tls_record_magic(d):
     """
     Returns:
@@ -290,11 +291,11 @@ class TlsLayer(Layer):
         while len(client_hello) < client_hello_size:
             record_header = self.client_conn.rfile.peek(offset + 5)[offset:]
             if not is_tls_record_magic(record_header) or len(record_header) != 5:
-                raise ProtocolException('Expected TLS record, got "%s" instead.' % record_header)
+                raise TlsException('Expected TLS record, got "%s" instead.' % record_header)
             record_size = struct.unpack("!H", record_header[3:])[0] + 5
             record_body = self.client_conn.rfile.peek(offset + record_size)[offset + 5:]
             if len(record_body) != record_size - 5:
-                raise ProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
+                raise TlsException("Unexpected EOF in TLS handshake: %s" % record_body)
             client_hello += record_body
             offset += record_size
             client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
@@ -405,7 +406,7 @@ class TlsLayer(Layer):
                 alpn_select_callback=self.__alpn_select_callback,
             )
         except NetLibError as e:
-            raise ProtocolException("Cannot establish TLS with client: %s" % repr(e), e)
+            raise TlsException("Cannot establish TLS with client: %s" % repr(e), e)
 
     def _establish_tls_with_server(self):
         self.log("Establish TLS with server", "debug")
@@ -452,13 +453,13 @@ class TlsLayer(Layer):
                 (tls_cert_err['depth'], tls_cert_err['errno']),
                 "error")
             self.log("Aborting connection attempt", "error")
-            raise ProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+            raise TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                 address=repr(self.server_conn.address),
                 sni=self.sni_for_server_connection,
                 e=repr(e),
             ), e)
         except NetLibError as e:
-            raise ProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+            raise TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                 address=repr(self.server_conn.address),
                 sni=self.sni_for_server_connection,
                 e=repr(e),
@@ -487,5 +488,4 @@ class TlsLayer(Layer):
         if self._sni_from_server_change:
             sans.add(self._sni_from_server_change)
 
-        sans.discard(host)
         return self.config.certstore.get_cert(host, list(sans))
