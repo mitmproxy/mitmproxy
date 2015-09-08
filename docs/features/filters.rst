@@ -7,6 +7,7 @@ Many commands in :program:`mitmproxy` and :program:`mitmdump` take a filter expr
 Filter expressions consist of the following operators:
 
 .. documentedlist::
+    :header: "Expression" "Description"
     :listobject: libmproxy.filt.help
 
 - Regexes are Python-style

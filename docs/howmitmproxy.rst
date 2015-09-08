@@ -210,20 +210,20 @@ explicit HTTPS connections to establish the CN and SANs, and cope with SNI.
 .. image:: schematics/how-mitmproxy-works-transparent-https.png
     :align: center
 
- 1. The client makes a connection to the server.
- 2. The router redirects the connection to mitmproxy, which is typically listening on a local port
-    of the same host. Mitmproxy then consults the routing mechanism to establish what the original
-    destination was.
- 3. The client believes it's talking to the remote server, and initiates the SSL connection.
-    It uses SNI to indicate the hostname it is connecting to.
- 4. Mitmproxy connects to the server, and establishes an SSL connection using the SNI hostname
-    indicated by the client.
- 5. The server responds with the matching SSL certificate, which contains the CN and SAN values
-    needed to generate the interception certificate.
- 6. Mitmproxy generates the interception cert, and continues the client SSL handshake paused in
-    step 3.
- 7. The client sends the request over the established SSL connection.
- 8. Mitmproxy passes the request on to the server over the SSL connection initiated in step 4.
+1. The client makes a connection to the server.
+2. The router redirects the connection to mitmproxy, which is typically listening on a local port
+   of the same host. Mitmproxy then consults the routing mechanism to establish what the original
+   destination was.
+3. The client believes it's talking to the remote server, and initiates the SSL connection.
+   It uses SNI to indicate the hostname it is connecting to.
+4. Mitmproxy connects to the server, and establishes an SSL connection using the SNI hostname
+   indicated by the client.
+5. The server responds with the matching SSL certificate, which contains the CN and SAN values
+   needed to generate the interception certificate.
+6. Mitmproxy generates the interception cert, and continues the client SSL handshake paused in
+   step 3.
+7. The client sends the request over the established SSL connection.
+8. Mitmproxy passes the request on to the server over the SSL connection initiated in step 4.
 
 .. rubric:: Footnotes
 
