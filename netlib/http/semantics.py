@@ -14,7 +14,7 @@ HDR_FORM_MULTIPART = "multipart/form-data"
 CONTENT_MISSING = 0
 
 
-class Headers(UserDict.DictMixin):
+class Headers(object, UserDict.DictMixin):
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
@@ -135,7 +135,7 @@ class Headers(UserDict.DictMixin):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def get_all(self, name, default=[]):
+    def get_all(self, name):
         """
         Like :py:meth:`get`, but does not fold multiple headers into a single one.
         This is useful for Set-Cookie headers, which do not support folding.
@@ -144,7 +144,7 @@ class Headers(UserDict.DictMixin):
         """
         name = name.lower()
         values = [value for n, value in self.fields if n.lower() == name]
-        return values or default
+        return values
 
     def set_all(self, name, values):
         """

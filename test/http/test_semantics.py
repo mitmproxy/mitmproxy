@@ -547,7 +547,7 @@ class TestHeaders(object):
     def test_get_all(self):
         headers = self._2host()
         assert headers.get_all("host") == ["example.com", "example.org"]
-        assert headers.get_all("accept", 42) is 42
+        assert headers.get_all("accept") == []
 
     def test_set_all(self):
         headers = semantics.Headers(Host="example.com")
