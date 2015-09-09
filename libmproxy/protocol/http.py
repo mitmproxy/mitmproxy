@@ -511,7 +511,7 @@ class HttpLayer(Layer):
 
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
-            if address != self.server_conn.address or tls != self.server_conn.ssl_established:
+            if address != self.server_conn.address or tls != self.server_conn.tls_established:
                 self.set_server(address, tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
