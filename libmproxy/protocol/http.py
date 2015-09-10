@@ -59,6 +59,8 @@ class _StreamingHttpLayer(_HttpLayer):
         raise NotImplementedError()
 
     def send_response(self, response):
+        if response.body == CONTENT_MISSING:
+            raise HttpError(502, "Cannot assemble flow with CONTENT_MISSING")
         self.send_response_headers(response)
         self.send_response_body(response, response.body)
 
