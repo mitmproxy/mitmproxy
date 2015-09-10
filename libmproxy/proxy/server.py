@@ -3,6 +3,7 @@ from __future__ import (absolute_import, print_function, division)
 import traceback
 import sys
 import socket
+import six
 
 from netlib import tcp
 from netlib.http.http1 import HTTP1Protocol
@@ -39,7 +40,11 @@ class ProxyServer(tcp.TCPServer):
         try:
             super(ProxyServer, self).__init__((config.host, config.port))
         except socket.error as e:
-            raise ServerException('Error starting proxy server: ' + repr(e), e)
+            six.reraise(
+                ServerException,
+                ServerException('Error starting proxy server: ' + repr(e), e),
+                sys.exc_info()[2]
+            )
         self.channel = None
 
     def start_slave(self, klass, channel):
@@ -117,6 +122,7 @@ class ConnectionHandler(object):
             self.log("Connection killed", "info")
         except ProtocolException as e:
             self.log(repr(e), "info")
+            self.log(traceback.format_exc(), "debug")
             # If an error propagates to the topmost level,
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.

@@ -1,16 +1,17 @@
 from __future__ import (absolute_import, print_function, division)
 
 import struct
+import sys
 
 from construct import ConstructError
 import six
-import sys
 
 from netlib.tcp import NetLibError, NetLibInvalidCertificateError
 from netlib.http.http1 import HTTP1Protocol
 from ..contrib.tls._constructs import ClientHello
-from ..exceptions import ProtocolException, TlsException
+from ..exceptions import ProtocolException, TlsException, ClientHandshakeException
 from .base import Layer
+
 
 
 # taken from https://testssl.sh/openssl-rfc.mappping.html
@@ -407,8 +408,17 @@ class TlsLayer(Layer):
                 chain_file=chain_file,
                 alpn_select_callback=self.__alpn_select_callback,
             )
+            # Some TLS clients will not fail the handshake,
+            # but will immediately throw an "unexpected eof" error on the first read.
+            # The reason for this might be difficult to find, so we try to peek here to see if it
+            # raises ann error.
+            self.client_conn.rfile.peek(0)
         except NetLibError as e:
-            raise TlsException("Cannot establish TLS with client: %s" % repr(e), e)
+            six.reraise(
+                ClientHandshakeException,
+                ClientHandshakeException("Cannot establish TLS with client: %s" % repr(e), e),
+                sys.exc_info()[2]
+            )
 
     def _establish_tls_with_server(self):
         self.log("Establish TLS with server", "debug")
@@ -457,17 +467,25 @@ class TlsLayer(Layer):
                 (tls_cert_err['depth'], tls_cert_err['errno']),
                 "error")
             self.log("Aborting connection attempt", "error")
-            raise TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
-                address=repr(self.server_conn.address),
-                sni=self.sni_for_server_connection,
-                e=repr(e),
-            ), e)
+            six.reraise(
+                TlsException,
+                TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                    address=repr(self.server_conn.address),
+                    sni=self.sni_for_server_connection,
+                    e=repr(e),
+                ), e),
+                sys.exc_info()[2]
+            )
         except NetLibError as e:
-            raise TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
-                address=repr(self.server_conn.address),
-                sni=self.sni_for_server_connection,
-                e=repr(e),
-            ), e)
+            six.reraise(
+                TlsException,
+                TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                    address=repr(self.server_conn.address),
+                    sni=self.sni_for_server_connection,
+                    e=repr(e),
+                ), e),
+                sys.exc_info()[2]
+            )
 
         self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
 

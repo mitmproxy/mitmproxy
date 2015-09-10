@@ -1,6 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
 import socket
 import select
+import six
+import sys
 
 from OpenSSL import SSL
 
@@ -63,4 +65,8 @@ class RawTCPLayer(Layer):
                         )
 
         except (socket.error, NetLibError, SSL.Error) as e:
-            raise ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e)), e)
+            six.reraise(
+                ProtocolException,
+                ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e)), e),
+                sys.exc_info()[2]
+            )

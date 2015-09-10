@@ -33,6 +33,11 @@ class TlsException(ProtocolException):
     pass
 
 
+class ClientHandshakeException(TlsException):
+    # This subclass is quite useful to give hints about cert errors.
+    pass
+
+
 class Socks5Exception(ProtocolException):
     pass
 
