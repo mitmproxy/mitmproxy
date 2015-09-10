@@ -4,7 +4,7 @@ import select
 
 from OpenSSL import SSL
 
-from netlib.tcp import NetLibError
+from netlib.tcp import NetLibError, ssl_read_select
 from netlib.utils import cleanBin
 from ..exceptions import ProtocolException
 from .base import Layer
@@ -28,7 +28,7 @@ class RawTCPLayer(Layer):
 
         try:
             while True:
-                r, _, _ = select.select(conns, [], [], 10)
+                r = ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client
 
