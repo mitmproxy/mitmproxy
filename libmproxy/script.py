@@ -95,8 +95,8 @@ class Script:
         """
         if self.ns is not None:
             self.unload()
-        ns = {}
         script_dir = os.path.dirname(os.path.abspath(self.args[0]))
+        ns = {'__file__': os.path.abspath(self.args[0])}
         sys.path.append(script_dir)
         try:
             execfile(self.args[0], ns, ns)
