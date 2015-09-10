@@ -45,11 +45,22 @@ class _StreamingHttpLayer(_HttpLayer):
         raise NotImplementedError()
         yield "this is a generator"  # pragma: no cover
 
+    def read_response(self, request_method):
+        response = self.read_response_headers()
+        response.body = "".join(
+            self.read_response_body(response.headers, request_method, response.code)
+        )
+        return response
+
     def send_response_headers(self, response):
         raise NotImplementedError
 
     def send_response_body(self, response, chunks):
         raise NotImplementedError()
+
+    def send_response(self, response):
+        self.send_response_headers(response)
+        self.send_response_body(response, response.body)
 
 
 class Http1Layer(_StreamingHttpLayer):
@@ -67,17 +78,6 @@ class Http1Layer(_StreamingHttpLayer):
 
     def send_request(self, request):
         self.server_conn.send(self.server_protocol.assemble(request))
-
-    def read_response(self, request_method):
-        return HTTPResponse.from_protocol(
-            self.server_protocol,
-            request_method=request_method,
-            body_size_limit=self.config.body_size_limit,
-            include_body=True
-        )
-
-    def send_response(self, response):
-        self.client_conn.send(self.client_protocol.assemble(response))
 
     def read_response_headers(self):
         return HTTPResponse.from_protocol(
