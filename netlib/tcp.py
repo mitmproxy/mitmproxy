@@ -356,6 +356,27 @@ class Address(object):
         return hash(self.address) ^ 42  # different hash than the tuple alone.
 
 
+def ssl_read_select(rlist, timeout):
+    """
+    This is a wrapper around select.select() which also works for SSL.Connections
+    by taking ssl_connection.pending() into account.
+
+    Caveats:
+        If .pending() > 0 for any of the connections in rlist, we avoid the select syscall
+        and **will not include any other connections which may or may not be ready**.
+
+    Args:
+        rlist: wait until ready for reading
+
+    Returns:
+        subset of rlist which is ready for reading.
+    """
+    return [
+        conn for conn in rlist
+        if isinstance(conn, SSL.Connection) and conn.pending() > 0
+    ] or select.select(rlist, (), (), timeout)[0]
+
+
 def close_socket(sock):
     """
     Does a hard close of a socket, without emitting a RST.
