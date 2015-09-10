@@ -412,7 +412,7 @@ class TlsLayer(Layer):
             # but will immediately throw an "unexpected eof" error on the first read.
             # The reason for this might be difficult to find, so we try to peek here to see if it
             # raises ann error.
-            self.client_conn.rfile.peek(0)
+            self.client_conn.rfile.peek(1)
         except NetLibError as e:
             six.reraise(
                 ClientHandshakeException,
