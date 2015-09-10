@@ -1,4 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
+import six
+import sys
 
 from netlib import tcp
 from netlib.http import http1, HttpErrorConnClosed, HttpError, Headers
@@ -62,7 +64,7 @@ class _StreamingHttpLayer(_HttpLayer):
         if response.body == CONTENT_MISSING:
             raise HttpError(502, "Cannot assemble flow with CONTENT_MISSING")
         self.send_response_headers(response)
-        self.send_response_body(response, response.body)
+        self.send_response_body(response, [response.body])
 
 
 class Http1Layer(_StreamingHttpLayer):
@@ -381,9 +383,9 @@ class HttpLayer(Layer):
                 except NetLibError:
                     pass
                 if isinstance(e, ProtocolException):
-                    raise e
+                    six.reraise(*sys.exc_info())
                 else:
-                    raise ProtocolException("Error in HTTP connection: %s" % repr(e), e)
+                    six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e), e), sys.exc_info()[2])
             finally:
                 flow.live = False
 
