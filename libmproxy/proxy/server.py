@@ -116,7 +116,7 @@ class ConnectionHandler(object):
         except Kill:
             self.log("Connection killed", "info")
         except ProtocolException as e:
-            self.log(e, "info")
+            self.log(repr(e), "info")
             # If an error propagates to the topmost level,
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.
