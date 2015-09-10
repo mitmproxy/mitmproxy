@@ -8,6 +8,7 @@ import time
 import traceback
 
 import certifi
+import six
 import OpenSSL
 from OpenSSL import SSL
 
@@ -295,7 +296,7 @@ class Reader(_FileLike):
                     self.o._raise_ssl_error(self.o._ssl, result)
                     return SSL._ffi.buffer(buf, result)[:]
             except SSL.Error as e:
-                raise NetLibSSLError(repr(e))
+                six.reraise(NetLibSSLError, NetLibSSLError(str(e)), sys.exc_info()[2])
         else:
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 

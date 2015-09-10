@@ -413,9 +413,9 @@ class HTTP1Protocol(semantics.ProtocolMixin):
                 suffix = self.tcp_handler.rfile.readline(5)
                 if suffix != '\r\n':
                     raise HttpError(code, "Malformed chunked body")
-                yield chunk
                 if length == 0:
                     return
+                yield chunk
 
     @classmethod
     def _parse_http_protocol(self, line):
