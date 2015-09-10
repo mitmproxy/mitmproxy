@@ -383,7 +383,7 @@ class HttpLayer(Layer):
                 except NetLibError:
                     pass
                 if isinstance(e, ProtocolException):
-                    six.reraise(*sys.exc_info())
+                    six.reraise(ProtocolException, e, sys.exc_info()[2])
                 else:
                     six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e), e), sys.exc_info()[2])
             finally:
