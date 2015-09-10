@@ -711,7 +711,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("127.0.0.1", self.proxy.port))
         fconn = connection.makefile()
-        spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n7\\r\\nisatest\\r\\n0\\r\\n\\r\\n"'
+        spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n11\\r\\nisatest__reachhex\\r\\n0\\r\\n\\r\\n"'
         connection.send(
             "GET %s/p/%s HTTP/1.1\r\n" %
             (self.server.urlbase, spec))
@@ -726,7 +726,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
         chunks = list(protocol.read_http_body_chunked(
             resp.headers, None, "GET", 200, False
         ))
-        assert chunks == ["this", "isatest", ""]
+        assert chunks == ["this", "isatest__reachhex"]
 
         connection.close()
 

@@ -1,6 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
-import six
+import itertools
 import sys
+
+import six
 
 from netlib import tcp
 from netlib.http import http1, HttpErrorConnClosed, HttpError, Headers
@@ -9,14 +11,13 @@ from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
 from netlib.http.http2.frame import GoAwayFrame, PriorityFrame, WindowUpdateFrame
-
 from .. import utils
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from ..models import (
     HTTPFlow, HTTPRequest, HTTPResponse, make_error_response, make_connect_response, Error
 )
 from .base import Layer, Kill
-from .rawtcp import RawTCPLayer
+
 
 class _HttpLayer(Layer):
     supports_streaming = False
@@ -108,16 +109,21 @@ class Http1Layer(_StreamingHttpLayer):
             response,
             preserve_transfer_encoding=True
         )
-        self.client_conn.send(h + "\r\n")
+        self.client_conn.wfile.write(h + "\r\n")
+        self.client_conn.wfile.flush()
 
     def send_response_body(self, response, chunks):
         if self.client_protocol.has_chunked_encoding(response.headers):
-            chunks = (
-                "%d\r\n%s\r\n" % (len(chunk), chunk)
-                for chunk in chunks
+            chunks = itertools.chain(
+                (
+                    "{:x}\r\n{}\r\n".format(len(chunk), chunk)
+                    for chunk in chunks if chunk
+                ),
+                ("0\r\n\r\n",)
             )
         for chunk in chunks:
-            self.client_conn.send(chunk)
+            self.client_conn.wfile.write(chunk)
+            self.client_conn.wfile.flush()
 
     def check_close_connection(self, flow):
         close_connection = (
