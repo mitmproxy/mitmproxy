@@ -1,8 +1,13 @@
 from __future__ import (absolute_import, print_function, division)
+import string
+import sys
 
+import six
+
+from libmproxy.exceptions import ProtocolException
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
-
+from netlib.tcp import NetLibError
 from ..protocol import (
     RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin
 )
@@ -48,7 +53,10 @@ class RootContext(object):
         if self.config.check_ignore(top_layer.server_conn.address):
             return RawTCPLayer(top_layer, logging=False)
 
-        d = top_layer.client_conn.rfile.peek(3)
+        try:
+            d = top_layer.client_conn.rfile.peek(3)
+        except NetLibError as e:
+            six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
         client_tls = is_tls_record_magic(d)
 
         # 2. Always insert a TLS layer, even if there's neither client nor server tls.
@@ -82,21 +90,17 @@ class RootContext(object):
             if alpn == HTTP1Protocol.ALPN_PROTO_HTTP1:
                 return Http1Layer(top_layer, 'transparent')
 
-        # 6. Assume HTTP1 by default
-        return Http1Layer(top_layer, 'transparent')
+        # 6. Check for raw tcp mode
+        is_ascii = (
+            len(d) == 3 and
+            # better be safe here and don't expect uppercase...
+            all(x in string.ascii_letters for x in d)
+        )
+        if self.config.rawtcp and not is_ascii:
+            return RawTCPLayer(top_layer)
 
-        # In a future version, we want to implement TCP passthrough as the last fallback,
-        # but we don't have the UI part ready for that.
-        #
-        # d = top_layer.client_conn.rfile.peek(3)
-        # is_ascii = (
-        #     len(d) == 3 and
-        #     # better be safe here and don't expect uppercase...
-        #     all(x in string.ascii_letters for x in d)
-        # )
-        # # TODO: This could block if there are not enough bytes available?
-        # d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))
-        # is_http2_magic = (d == HTTP2Protocol.CLIENT_CONNECTION_PREFACE)
+        # 7. Assume HTTP1 by default
+        return Http1Layer(top_layer, 'transparent')
 
     def log(self, msg, level, subs=()):
         """

@@ -16,7 +16,7 @@ from ..models import (
     HTTPFlow, HTTPRequest, HTTPResponse, make_error_response, make_connect_response, Error
 )
 from .base import Layer, Kill
-
+from .rawtcp import RawTCPLayer
 
 class _HttpLayer(Layer):
     supports_streaming = False
@@ -364,7 +364,13 @@ class HttpLayer(Layer):
                 if self.check_close_connection(flow):
                     return
 
-                # TODO: Implement HTTP Upgrade
+                # Handle 101 Switching Protocols
+                # It may be useful to pass additional args (such as the upgrade header)
+                # to next_layer in the future
+                if flow.response.status_code == 101:
+                    layer = self.ctx.next_layer(self)
+                    layer()
+                    return
 
                 # Upstream Proxy Mode: Handle CONNECT
                 if flow.request.form_in == "authority" and flow.response.code == 200:

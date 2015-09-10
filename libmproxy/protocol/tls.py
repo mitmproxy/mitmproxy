@@ -3,6 +3,8 @@ from __future__ import (absolute_import, print_function, division)
 import struct
 
 from construct import ConstructError
+import six
+import sys
 
 from netlib.tcp import NetLibError, NetLibInvalidCertificateError
 from netlib.http.http1 import HTTP1Protocol
@@ -387,7 +389,7 @@ class TlsLayer(Layer):
                 self._establish_tls_with_client()
             except:
                 pass
-            raise e
+            six.reraise(*sys.exc_info())
 
         self._establish_tls_with_client()
 
@@ -416,9 +418,11 @@ class TlsLayer(Layer):
             # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
             deprecated_http2_variant = lambda x: x.startswith("h2-") or x.startswith("spdy")
             if self.client_alpn_protocols:
-                alpn = filter(lambda x: not deprecated_http2_variant(x), self.client_alpn_protocols)
+                alpn = [x for x in self.client_alpn_protocols if not deprecated_http2_variant(x)]
             else:
                 alpn = None
+            if alpn and "h2" in alpn and not self.config.http2 :
+                alpn.remove("h2")
 
             ciphers_server = self.config.ciphers_server
             if not ciphers_server:
