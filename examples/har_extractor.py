@@ -147,8 +147,8 @@ def response(context, flow):
     response_body_size = len(flow.response.content)
     response_body_decoded_size = len(flow.response.get_decoded_content())
     response_body_compression = response_body_decoded_size - response_body_size
-    response_mime_type = flow.response.headers.get_first('Content-Type', '')
-    response_redirect_url = flow.response.headers.get_first('Location', '')
+    response_mime_type = flow.response.headers.get('Content-Type', '')
+    response_redirect_url = flow.response.headers.get('Location', '')
 
     entry = HAR.entries(
         {
@@ -201,12 +201,12 @@ def response(context, flow):
     # Lookup the referer in the page_ref of context.HARLog to point this entries
     # pageref attribute to the right pages object, then set it as a new
     # reference to build a reference tree.
-    elif context.HARLog.get_page_ref(flow.request.headers.get('Referer', (None, ))[0]) is not None:
+    elif context.HARLog.get_page_ref(flow.request.headers.get('Referer')) is not None:
         entry['pageref'] = context.HARLog.get_page_ref(
-            flow.request.headers['Referer'][0]
+            flow.request.headers['Referer']
         )
         context.HARLog.set_page_ref(
-            flow.request.headers['Referer'][0], entry['pageref']
+            flow.request.headers['Referer'], entry['pageref']
         )
 
     context.HARLog.add(entry)

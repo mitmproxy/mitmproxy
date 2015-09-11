@@ -83,7 +83,8 @@ setup(
         "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: Proxy Servers",
-        "Topic :: Software Development :: Testing"],
+        "Topic :: Software Development :: Testing"
+    ],
     packages=find_packages(),
     include_package_data=True,
     entry_points={
@@ -94,8 +95,13 @@ setup(
         'contentviews': [
             "pyamf>=0.6.1",
             "protobuf>=2.5.0",
-            "cssutils>=1.0"],
+            "cssutils>=1.0"
+        ],
         'examples': [
             "pytz",
             "harparser",
-            "beautifulsoup4"]})
+            "beautifulsoup4",
+            "enum34"
+        ]
+    }
+)

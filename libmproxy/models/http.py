@@ -5,8 +5,8 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
 from libmproxy import utils
-from netlib import odict, encoding
-from netlib.http import status_codes
+from netlib import encoding
+from netlib.http import status_codes, Headers
 from netlib.tcp import Address
 from netlib.http.semantics import Request, Response, CONTENT_MISSING
 from .. import version, stateobject
@@ -16,7 +16,7 @@ from .flow import Flow
 class MessageMixin(stateobject.StateObject):
     _stateobject_attributes = dict(
         httpversion=tuple,
-        headers=odict.ODictCaseless,
+        headers=Headers,
         body=str,
         timestamp_start=float,
         timestamp_end=float
@@ -40,7 +40,7 @@ class MessageMixin(stateobject.StateObject):
             header.
             Doesn't change the message iteself or its headers.
         """
-        ce = self.headers.get_first("content-encoding")
+        ce = self.headers.get("content-encoding")
         if not self.body or ce not in encoding.ENCODINGS:
             return self.body
         return encoding.decode(ce, self.body)
@@ -53,14 +53,14 @@ class MessageMixin(stateobject.StateObject):
 
             Returns True if decoding succeeded, False otherwise.
         """
-        ce = self.headers.get_first("content-encoding")
+        ce = self.headers.get("content-encoding")
         if not self.body or ce not in encoding.ENCODINGS:
             return False
         data = encoding.decode(ce, self.body)
         if data is None:
             return False
         self.body = data
-        del self.headers["content-encoding"]
+        self.headers.pop("content-encoding", None)
         return True
 
     def encode(self, e):
@@ -70,7 +70,7 @@ class MessageMixin(stateobject.StateObject):
         """
         # FIXME: Error if there's an existing encoding header?
         self.body = encoding.encode(e, self.body)
-        self.headers["content-encoding"] = [e]
+        self.headers["content-encoding"] = e
 
     def copy(self):
         c = copy.copy(self)
@@ -86,11 +86,18 @@ class MessageMixin(stateobject.StateObject):
             Returns the number of replacements made.
         """
         with decoded(self):
-            self.body, c = utils.safe_subn(
+            self.body, count = utils.safe_subn(
                 pattern, repl, self.body, *args, **kwargs
             )
-        c += self.headers.replace(pattern, repl, *args, **kwargs)
-        return c
+        fields = []
+        for name, value in self.headers.fields:
+            name, c = utils.safe_subn(pattern, repl, name, *args, **kwargs)
+            count += c
+            value, c = utils.safe_subn(pattern, repl, value, *args, **kwargs)
+            count += c
+            fields.append([name, value])
+        self.headers.fields = fields
+        return count
 
 
 class HTTPRequest(MessageMixin, Request):
@@ -115,7 +122,7 @@ class HTTPRequest(MessageMixin, Request):
 
         httpversion: HTTP version tuple, e.g. (1,1)
 
-        headers: odict.ODictCaseless object
+        headers: Headers object
 
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
@@ -266,7 +273,7 @@ class HTTPResponse(MessageMixin, Response):
 
         msg: HTTP response message
 
-        headers: ODict Caseless object
+        headers: Headers object
 
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
@@ -379,15 +386,15 @@ class HTTPResponse(MessageMixin, Response):
         ]
         for i in refresh_headers:
             if i in self.headers:
-                d = parsedate_tz(self.headers[i][0])
+                d = parsedate_tz(self.headers[i])
                 if d:
                     new = mktime_tz(d) + delta
-                    self.headers[i] = [formatdate(new)]
+                    self.headers[i] = formatdate(new)
         c = []
-        for i in self.headers["set-cookie"]:
+        for i in self.headers.get_all("set-cookie"):
             c.append(self._refresh_cookie(i, delta))
         if c:
-            self.headers["set-cookie"] = c
+            self.headers.set_all("set-cookie", c)
 
 
 class HTTPFlow(Flow):
@@ -490,7 +497,7 @@ class decoded(object):
 
     def __init__(self, o):
         self.o = o
-        ce = o.headers.get_first("content-encoding")
+        ce = o.headers.get("content-encoding")
         if ce in encoding.ENCODINGS:
             self.ce = ce
         else:
@@ -517,11 +524,12 @@ def make_error_response(status_code, message, headers=None):
     """.strip() % (status_code, response, message)
 
     if not headers:
-        headers = odict.ODictCaseless()
-    headers["Server"] = [version.NAMEVERSION]
-    headers["Connection"] = ["close"]
-    headers["Content-Length"] = [len(body)]
-    headers["Content-Type"] = ["text/html"]
+        headers = Headers(
+            Server=version.NAMEVERSION,
+            Connection="close",
+            Content_Length=str(len(body)),
+            Content_Type="text/html"
+        )
 
     return HTTPResponse(
         (1, 1),  # FIXME: Should be a string.
@@ -536,15 +544,15 @@ def make_connect_request(address):
     address = Address.wrap(address)
     return HTTPRequest(
         "authority", "CONNECT", None, address.host, address.port, None, (1, 1),
-        odict.ODictCaseless(), ""
+        Headers(), ""
     )
 
 
 def make_connect_response(httpversion):
-    headers = odict.ODictCaseless([
-        ["Content-Length", "0"],
-        ["Proxy-Agent", version.NAMEVERSION]
-    ])
+    headers = Headers(
+        Content_Length="0",
+        Proxy_Agent=version.NAMEVERSION
+    )
     return HTTPResponse(
         httpversion,
         200,

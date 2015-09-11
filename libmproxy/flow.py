@@ -11,8 +11,8 @@ import re
 import urlparse
 
 
-from netlib import odict, wsgi
-from netlib.http.semantics import CONTENT_MISSING
+from netlib import wsgi
+from netlib.http.semantics import CONTENT_MISSING, Headers
 import netlib.http
 from . import controller, tnetstring, filt, script, version
 from .onboarding import app
@@ -45,7 +45,7 @@ class AppRegistry:
         if (request.host, request.port) in self.apps:
             return self.apps[(request.host, request.port)]
         if "host" in request.headers:
-            host = request.headers["host"][0]
+            host = request.headers["host"]
             return self.apps.get((host, request.port), None)
 
 
@@ -144,15 +144,15 @@ class SetHeaders:
         for _, header, value, cpatt in self.lst:
             if cpatt(f):
                 if f.response:
-                    del f.response.headers[header]
+                    f.response.headers.pop(header, None)
                 else:
-                    del f.request.headers[header]
+                    f.request.headers.pop(header, None)
         for _, header, value, cpatt in self.lst:
             if cpatt(f):
                 if f.response:
-                    f.response.headers.add(header, value)
+                    f.response.headers.fields.append((header, value))
                 else:
-                    f.request.headers.add(header, value)
+                    f.request.headers.fields.append((header, value))
 
 
 class StreamLargeBodies(object):
@@ -278,14 +278,11 @@ class ServerPlaybackState:
             key.append(p[1])
 
         if self.headers:
-            hdrs = []
+            headers = []
             for i in self.headers:
-                v = r.headers[i]
-                # Slightly subtle: we need to convert everything to strings
-                # to prevent a mismatch between unicode/non-unicode.
-                v = [str(x) for x in v]
-                hdrs.append((i, v))
-            key.append(hdrs)
+                v = r.headers.get(i)
+                headers.append((i, v))
+            key.append(headers)
         return hashlib.sha256(repr(key)).digest()
 
     def next_flow(self, request):
@@ -329,7 +326,7 @@ class StickyCookieState:
         return False
 
     def handle_response(self, f):
-        for i in f.response.headers["set-cookie"]:
+        for i in f.response.headers.get_all("set-cookie"):
             # FIXME: We now know that Cookie.py screws up some cookies with
             # valid RFC 822/1123 datetime specifications for expiry. Sigh.
             c = Cookie.SimpleCookie(str(i))
@@ -351,7 +348,7 @@ class StickyCookieState:
                     l.append(self.jar[i].output(header="").strip())
         if l:
             f.request.stickycookie = True
-            f.request.headers["cookie"] = l
+            f.request.headers.set_all("cookie",l)
 
 
 class StickyAuthState:
@@ -836,7 +833,7 @@ class FlowMaster(controller.Master):
             ssl_established=True
         ))
         f = HTTPFlow(c, s)
-        headers = odict.ODictCaseless()
+        headers = Headers()
 
         req = HTTPRequest(
             "absolute",
@@ -930,8 +927,7 @@ class FlowMaster(controller.Master):
             f.backup()
             f.request.is_replay = True
             if f.request.content:
-                f.request.headers[
-                    "Content-Length"] = [str(len(f.request.content))]
+                f.request.headers["Content-Length"] = str(len(f.request.content))
             f.response = None
             f.error = None
             self.process_new_request(f)
@@ -949,21 +945,25 @@ class FlowMaster(controller.Master):
         self.add_event(l.msg, l.level)
         l.reply()
 
-    def handle_clientconnect(self, cc):
-        self.run_script_hook("clientconnect", cc)
-        cc.reply()
+    def handle_clientconnect(self, root_layer):
+        self.run_script_hook("clientconnect", root_layer)
+        root_layer.reply()
 
-    def handle_clientdisconnect(self, r):
-        self.run_script_hook("clientdisconnect", r)
-        r.reply()
+    def handle_clientdisconnect(self, root_layer):
+        self.run_script_hook("clientdisconnect", root_layer)
+        root_layer.reply()
 
-    def handle_serverconnect(self, sc):
-        self.run_script_hook("serverconnect", sc)
-        sc.reply()
+    def handle_serverconnect(self, server_conn):
+        self.run_script_hook("serverconnect", server_conn)
+        server_conn.reply()
 
-    def handle_serverdisconnect(self, sc):
-        self.run_script_hook("serverdisconnect", sc)
-        sc.reply()
+    def handle_serverdisconnect(self, server_conn):
+        self.run_script_hook("serverdisconnect", server_conn)
+        server_conn.reply()
+
+    def handle_next_layer(self, top_layer):
+        self.run_script_hook("next_layer", top_layer)
+        top_layer.reply()
 
     def handle_error(self, f):
         self.state.update_flow(f)

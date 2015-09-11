@@ -1,10 +1,8 @@
-from libmproxy.protocol.http import HTTPResponse
-from netlib.odict import ODictCaseless
-
 """
 This example shows two ways to redirect flows to other destinations.
 """
-
+from libmproxy.models import HTTPResponse
+from netlib.http import Headers
 
 def request(context, flow):
     # pretty_host(hostheader=True) takes the Host: header of the request into account,
@@ -15,7 +13,7 @@ def request(context, flow):
     if flow.request.pretty_host(hostheader=True).endswith("example.com"):
         resp = HTTPResponse(
             [1, 1], 200, "OK",
-            ODictCaseless([["Content-Type", "text/html"]]),
+            Headers(Content_Type="text/html"),
             "helloworld")
         flow.reply(resp)
 

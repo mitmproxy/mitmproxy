@@ -1,11 +1,13 @@
 import os
 from nose.plugins.skip import SkipTest
+from netlib.http import Headers
+
 if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
 import sys
 
 import netlib.utils
-from netlib import odict, encoding
+from netlib import encoding
 
 import libmproxy.contentview as cv
 from libmproxy import utils, flow
@@ -33,34 +35,28 @@ class TestContentView:
     def test_view_auto(self):
         v = cv.ViewAuto()
         f = v(
-            odict.ODictCaseless(),
+            Headers(),
             "foo",
             1000
         )
         assert f[0] == "Raw"
 
         f = v(
-            odict.ODictCaseless(
-                [["content-type", "text/html"]],
-            ),
+            Headers(content_type="text/html"),
             "<html></html>",
             1000
         )
         assert f[0] == "HTML"
 
         f = v(
-            odict.ODictCaseless(
-                [["content-type", "text/flibble"]],
-            ),
+            Headers(content_type="text/flibble"),
             "foo",
             1000
         )
         assert f[0] == "Raw"
 
         f = v(
-            odict.ODictCaseless(
-                [["content-type", "text/flibble"]],
-            ),
+            Headers(content_type="text/flibble"),
             "<xml></xml>",
             1000
         )
@@ -168,28 +164,22 @@ Content-Disposition: form-data; name="submit-name"
 Larry
 --AaB03x
         """.strip()
-        h = odict.ODictCaseless(
-            [("Content-Type", "multipart/form-data; boundary=AaB03x")]
-        )
+        h = Headers(content_type="multipart/form-data; boundary=AaB03x")
         assert view(h, v, 1000)
 
-        h = odict.ODictCaseless()
+        h = Headers()
         assert not view(h, v, 1000)
 
-        h = odict.ODictCaseless(
-            [("Content-Type", "multipart/form-data")]
-        )
+        h = Headers(content_type="multipart/form-data")
         assert not view(h, v, 1000)
 
-        h = odict.ODictCaseless(
-            [("Content-Type", "unparseable")]
-        )
+        h = Headers(content_type="unparseable")
         assert not view(h, v, 1000)
 
     def test_get_content_view(self):
         r = cv.get_content_view(
             cv.get("Raw"),
-            [["content-type", "application/json"]],
+            Headers(content_type="application/json"),
             "[1, 2, 3]",
             1000,
             False
@@ -198,7 +188,7 @@ Larry
 
         r = cv.get_content_view(
             cv.get("Auto"),
-            [["content-type", "application/json"]],
+            Headers(content_type="application/json"),
             "[1, 2, 3]",
             1000,
             False
@@ -207,7 +197,7 @@ Larry
 
         r = cv.get_content_view(
             cv.get("Auto"),
-            [["content-type", "application/json"]],
+            Headers(content_type="application/json"),
             "[1, 2",
             1000,
             False
@@ -216,7 +206,7 @@ Larry
 
         r = cv.get_content_view(
             cv.get("AMF"),
-            [],
+            Headers(),
             "[1, 2",
             1000,
             False
@@ -225,10 +215,10 @@ Larry
 
         r = cv.get_content_view(
             cv.get("Auto"),
-            [
-                ["content-type", "application/json"],
-                ["content-encoding", "gzip"]
-            ],
+            Headers(
+                content_type="application/json",
+                content_encoding="gzip"
+            ),
             encoding.encode('gzip', "[1, 2, 3]"),
             1000,
             False
@@ -238,10 +228,10 @@ Larry
 
         r = cv.get_content_view(
             cv.get("XML"),
-            [
-                ["content-type", "application/json"],
-                ["content-encoding", "gzip"]
-            ],
+            Headers(
+                content_type="application/json",
+                content_encoding="gzip"
+            ),
             encoding.encode('gzip', "[1, 2, 3]"),
             1000,
             False

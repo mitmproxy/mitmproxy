@@ -415,9 +415,9 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2,
             resp_clen = contentdesc,
             roundtrip = roundtrip,
         ))
-        t = f.response.headers["content-type"]
+        t = f.response.headers.get("content-type")
         if t:
-            d["resp_ctype"] = t[0].split(";")[0]
+            d["resp_ctype"] = t.split(";")[0]
         else:
             d["resp_ctype"] = ""
     return flowcache.get(

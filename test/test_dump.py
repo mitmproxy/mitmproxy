@@ -6,7 +6,7 @@ import netlib.tutils
 from netlib.http.semantics import CONTENT_MISSING
 
 from libmproxy import dump, flow
-from libmproxy.protocol import Log
+from libmproxy.proxy import Log
 import tutils
 import mock
 
@@ -145,7 +145,7 @@ class TestDumpMaster:
         o = dump.Options(setheaders=[(".*", "one", "two")])
         m = dump.DumpMaster(None, o, outfile=cs)
         f = self._cycle(m, "content")
-        assert f.request.headers["one"] == ["two"]
+        assert f.request.headers["one"] == "two"
 
     def test_basic(self):
         for i in (1, 2, 3):

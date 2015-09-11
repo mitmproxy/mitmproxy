@@ -1,14 +1,16 @@
 from __future__ import (absolute_import, print_function, division)
+import itertools
+import sys
+
+import six
 
 from netlib import tcp
-from netlib.http import http1, HttpErrorConnClosed, HttpError
+from netlib.http import http1, HttpErrorConnClosed, HttpError, Headers
 from netlib.http.semantics import CONTENT_MISSING
-from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
-from netlib.http.http2.frame import WindowUpdateFrame
-
+from netlib.http.http2.frame import GoAwayFrame, PriorityFrame, WindowUpdateFrame
 from .. import utils
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from ..models import (
@@ -32,6 +34,9 @@ class _HttpLayer(Layer):
     def send_response(self, response):
         raise NotImplementedError()
 
+    def check_close_connection(self, flow):
+        raise NotImplementedError()
+
 
 class _StreamingHttpLayer(_HttpLayer):
     supports_streaming = True
@@ -43,11 +48,24 @@ class _StreamingHttpLayer(_HttpLayer):
         raise NotImplementedError()
         yield "this is a generator"  # pragma: no cover
 
+    def read_response(self, request_method):
+        response = self.read_response_headers()
+        response.body = "".join(
+            self.read_response_body(response.headers, request_method, response.code)
+        )
+        return response
+
     def send_response_headers(self, response):
         raise NotImplementedError
 
     def send_response_body(self, response, chunks):
         raise NotImplementedError()
+
+    def send_response(self, response):
+        if response.body == CONTENT_MISSING:
+            raise HttpError(502, "Cannot assemble flow with CONTENT_MISSING")
+        self.send_response_headers(response)
+        self.send_response_body(response, [response.body])
 
 
 class Http1Layer(_StreamingHttpLayer):
@@ -65,17 +83,6 @@ class Http1Layer(_StreamingHttpLayer):
 
     def send_request(self, request):
         self.server_conn.send(self.server_protocol.assemble(request))
-
-    def read_response(self, request_method):
-        return HTTPResponse.from_protocol(
-            self.server_protocol,
-            request_method=request_method,
-            body_size_limit=self.config.body_size_limit,
-            include_body=True
-        )
-
-    def send_response(self, response):
-        self.client_conn.send(self.client_protocol.assemble(response))
 
     def read_response_headers(self):
         return HTTPResponse.from_protocol(
@@ -102,23 +109,47 @@ class Http1Layer(_StreamingHttpLayer):
             response,
             preserve_transfer_encoding=True
         )
-        self.client_conn.send(h + "\r\n")
+        self.client_conn.wfile.write(h + "\r\n")
+        self.client_conn.wfile.flush()
 
     def send_response_body(self, response, chunks):
         if self.client_protocol.has_chunked_encoding(response.headers):
-            chunks = (
-                "%d\r\n%s\r\n" % (len(chunk), chunk)
-                for chunk in chunks
+            chunks = itertools.chain(
+                (
+                    "{:x}\r\n{}\r\n".format(len(chunk), chunk)
+                    for chunk in chunks if chunk
+                ),
+                ("0\r\n\r\n",)
             )
         for chunk in chunks:
-            self.client_conn.send(chunk)
+            self.client_conn.wfile.write(chunk)
+            self.client_conn.wfile.flush()
+
+    def check_close_connection(self, flow):
+        close_connection = (
+            http1.HTTP1Protocol.connection_close(
+                flow.request.httpversion,
+                flow.request.headers
+            ) or http1.HTTP1Protocol.connection_close(
+                flow.response.httpversion,
+                flow.response.headers
+            ) or http1.HTTP1Protocol.expected_http_body_size(
+                flow.response.headers,
+                False,
+                flow.request.method,
+                flow.response.code) == -1
+        )
+        if flow.request.form_in == "authority" and flow.response.code == 200:
+            # Workaround for
+            # https://github.com/mitmproxy/mitmproxy/issues/313: Some
+            # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
+            # and no Content-Length header
+
+            return False
+        return close_connection
 
     def connect(self):
         self.ctx.connect()
-        self.server_protocol = HTTP1Protocol(self.server_conn)
-
-    def reconnect(self):
-        self.ctx.reconnect()
         self.server_protocol = HTTP1Protocol(self.server_conn)
 
     def set_server(self, *args, **kwargs):
@@ -136,9 +167,9 @@ class Http2Layer(_HttpLayer):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
         self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_client)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
 
     def read_request(self):
         request = HTTPRequest.from_protocol(
@@ -162,25 +193,24 @@ class Http2Layer(_HttpLayer):
         )
 
     def send_response(self, message):
-        # TODO: implement flow control and WINDOW_UPDATE frames
+        # TODO: implement flow control to prevent client buffer filling up
+        # maintain a send buffer size, and read WindowUpdateFrames from client to increase the send buffer
         self.client_conn.send(self.client_protocol.assemble(message))
+
+    def check_close_connection(self, flow):
+        # TODO: add a timer to disconnect after a 10 second timeout
+        return False
 
     def connect(self):
         self.ctx.connect()
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
-        self.server_protocol.perform_connection_preface()
-
-    def reconnect(self):
-        self.ctx.reconnect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
         self.server_protocol.perform_connection_preface()
 
     def set_server(self, *args, **kwargs):
         self.ctx.set_server(*args, **kwargs)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame)
+                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
         self.server_protocol.perform_connection_preface()
 
     def __call__(self):
@@ -188,7 +218,10 @@ class Http2Layer(_HttpLayer):
         layer = HttpLayer(self, self.mode)
         layer()
 
-    def handle_unexpected_frame(self, frame):
+        # terminate the connection
+        self.client_conn.send(GoAwayFrame().to_bytes())
+
+    def handle_unexpected_frame_from_client(self, frame):
         if isinstance(frame, WindowUpdateFrame):
             # Clients are sending WindowUpdate frames depending on their flow control algorithm.
             # Since we cannot predict these frames, and we do not need to respond to them,
@@ -196,7 +229,34 @@ class Http2Layer(_HttpLayer):
             # Ideally we should keep track of our own flow control window and
             # stall transmission if the outgoing flow control buffer is full.
             return
-        self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
+        if isinstance(frame, PriorityFrame):
+            # Clients are sending Priority frames depending on their implementation.
+            # The RFC does not clearly state when or which priority preferences should be set.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should forward them to the server.
+            return
+        if isinstance(frame, GoAwayFrame):
+            # Client wants to terminate the connection,
+            # relay it to the server.
+            self.server_conn.send(frame.to_bytes())
+            return
+        self.log("Unexpected HTTP2 frame from client: %s" % frame.human_readable(), "info")
+
+    def handle_unexpected_frame_from_server(self, frame):
+        if isinstance(frame, WindowUpdateFrame):
+            # Servers are sending WindowUpdate frames depending on their flow control algorithm.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should keep track of our own flow control window and
+            # stall transmission if the outgoing flow control buffer is full.
+            return
+        if isinstance(frame, GoAwayFrame):
+            # Server wants to terminate the connection,
+            # relay it to the client.
+            self.client_conn.send(frame.to_bytes())
+            return
+        self.log("Unexpected HTTP2 frame from server: %s" % frame.human_readable(), "info")
 
 
 class ConnectServerConnection(object):
@@ -245,20 +305,22 @@ class UpstreamConnectLayer(Layer):
         else:
             pass  # swallow the message
 
-    def reconnect(self):
-        self.ctx.reconnect()
-        self._send_connect_request()
+    def change_upstream_proxy_server(self, address):
+        if address != self.server_conn.via.address:
+            self.ctx.set_server(address)
 
-    def set_server(self, address, server_tls=None, sni=None, depth=1):
-        if depth == 1:
-            if self.ctx.server_conn:
-                self.ctx.reconnect()
-            address = Address.wrap(address)
-            self.connect_request.host = address.host
-            self.connect_request.port = address.port
-            self.server_conn.address = address
-        else:
-            self.ctx.set_server(address, server_tls, sni, depth - 1)
+    def set_server(self, address, server_tls=None, sni=None):
+        if self.ctx.server_conn:
+            self.ctx.disconnect()
+        address = Address.wrap(address)
+        self.connect_request.host = address.host
+        self.connect_request.port = address.port
+        self.server_conn.address = address
+
+        if server_tls:
+            raise ProtocolException(
+                "Cannot upgrade to TLS, no TLS layer on the protocol stack."
+            )
 
 
 class HttpLayer(Layer):
@@ -308,7 +370,13 @@ class HttpLayer(Layer):
                 if self.check_close_connection(flow):
                     return
 
-                # TODO: Implement HTTP Upgrade
+                # Handle 101 Switching Protocols
+                # It may be useful to pass additional args (such as the upgrade header)
+                # to next_layer in the future
+                if flow.response.status_code == 101:
+                    layer = self.ctx.next_layer(self)
+                    layer()
+                    return
 
                 # Upstream Proxy Mode: Handle CONNECT
                 if flow.request.form_in == "authority" and flow.response.code == 200:
@@ -327,11 +395,17 @@ class HttpLayer(Layer):
                 except NetLibError:
                     pass
                 if isinstance(e, ProtocolException):
-                    raise e
+                    six.reraise(ProtocolException, e, sys.exc_info()[2])
                 else:
-                    raise ProtocolException("Error in HTTP connection: %s" % repr(e), e)
+                    six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
                 flow.live = False
+
+    def change_upstream_proxy_server(self, address):
+        # Make set_upstream_proxy_server always available,
+        # even if there's no UpstreamConnectLayer
+        if address != self.server_conn.address:
+            return self.set_server(address)
 
     def handle_regular_mode_connect(self, request):
         self.set_server((request.host, request.port))
@@ -342,36 +416,6 @@ class HttpLayer(Layer):
     def handle_upstream_mode_connect(self, connect_request):
         layer = UpstreamConnectLayer(self, connect_request)
         layer()
-
-    def check_close_connection(self, flow):
-        """
-            Checks if the connection should be closed depending on the HTTP
-            semantics. Returns True, if so.
-        """
-
-        # TODO: add logic for HTTP/2
-
-        close_connection = (
-            http1.HTTP1Protocol.connection_close(
-                flow.request.httpversion,
-                flow.request.headers
-            ) or http1.HTTP1Protocol.connection_close(
-                flow.response.httpversion,
-                flow.response.headers
-            ) or http1.HTTP1Protocol.expected_http_body_size(
-                flow.response.headers,
-                False,
-                flow.request.method,
-                flow.response.code) == -1
-        )
-        if flow.request.form_in == "authority" and flow.response.code == 200:
-            # Workaround for
-            # https://github.com/mitmproxy/mitmproxy/issues/313: Some
-            # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
-            # and no Content-Length header
-
-            return False
-        return close_connection
 
     def send_response_to_client(self, flow):
         if not (self.supports_streaming and flow.response.stream):
@@ -420,7 +464,8 @@ class HttpLayer(Layer):
             # > server detects timeout, disconnects
             # > read (100-n)% of large request
             # > send large request upstream
-            self.reconnect()
+            self.disconnect()
+            self.connect()
             get_response()
 
         # call the appropriate script hook - this is an opportunity for an
@@ -482,7 +527,7 @@ class HttpLayer(Layer):
 
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
-            if address != self.server_conn.address or tls != self.server_conn.ssl_established:
+            if address != self.server_conn.address or tls != self.server_conn.tls_established:
                 self.set_server(address, tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
@@ -495,10 +540,12 @@ class HttpLayer(Layer):
             """
             # This is a very ugly (untested) workaround to solve a very ugly problem.
             if self.server_conn and self.server_conn.tls_established and not ssl:
-                self.reconnect()
+                self.disconnect()
+                self.connect()
             elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
                 if self.server_conn.tls_established:
-                    self.reconnect()
+                    self.disconnect()
+                    self.connect()
 
                 self.send_request(make_connect_request(address))
                 tls_layer = TlsLayer(self, False, True)
@@ -536,10 +583,6 @@ class HttpLayer(Layer):
                 self.send_response(make_error_response(
                     407,
                     "Proxy Authentication Required",
-                    odict.ODictCaseless(
-                        [
-                            [k, v] for k, v in
-                            self.config.authenticator.auth_challenge_headers().items()
-                            ])
+                    Headers(**self.config.authenticator.auth_challenge_headers())
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")

@@ -8,9 +8,8 @@
     Note that request and response messages are not automatically replied to,
     so we need to implement handlers to do this.
 """
-import os
-from libmproxy import flow, proxy
-from libmproxy.proxy.server import ProxyServer
+from libmproxy import flow
+from libmproxy.proxy import ProxyServer, ProxyConfig
 
 
 class MyMaster(flow.FlowMaster):
@@ -34,7 +33,7 @@ class MyMaster(flow.FlowMaster):
         return f
 
 
-config = proxy.ProxyConfig(
+config = ProxyConfig(
     port=8080,
     # use ~/.mitmproxy/mitmproxy-ca.pem as default CA file.
     cadir="~/.mitmproxy/"

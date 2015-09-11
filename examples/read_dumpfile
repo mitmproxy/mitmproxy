@@ -4,7 +4,6 @@
 #
 
 from libmproxy import flow
-import json
 import pprint
 import sys
 
