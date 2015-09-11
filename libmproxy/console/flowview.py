@@ -199,7 +199,7 @@ class FlowView(tabs.Tabs):
             s = "Content viewer failed: \n" + traceback.format_exc()
             signals.add_event(s, "error")
             description, lines = contentview.get_content_view(
-                viewmode, headers, content, limit, is_request
+                contentview.get("Raw"), headers, content, limit, is_request
             )
             description = description.replace("Raw", "Couldn't parse: falling back to Raw")
         text_objects = [urwid.Text(l) for l in lines]
