@@ -397,7 +397,7 @@ class HttpLayer(Layer):
                 if isinstance(e, ProtocolException):
                     six.reraise(ProtocolException, e, sys.exc_info()[2])
                 else:
-                    six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e), e), sys.exc_info()[2])
+                    six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
                 flow.live = False
 

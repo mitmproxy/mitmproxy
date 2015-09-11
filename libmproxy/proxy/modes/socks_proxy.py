@@ -48,7 +48,7 @@ class Socks5Proxy(Layer, ServerConnectionMixin):
             self.client_conn.wfile.flush()
 
         except (socks.SocksError, NetLibError) as e:
-            raise Socks5Exception("SOCKS5 mode failure: %s" % repr(e), e)
+            raise Socks5Exception("SOCKS5 mode failure: %s" % repr(e))
 
         self.server_conn.address = connect_request.addr
 

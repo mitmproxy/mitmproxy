@@ -416,7 +416,12 @@ class TlsLayer(Layer):
         except NetLibError as e:
             six.reraise(
                 ClientHandshakeException,
-                ClientHandshakeException("Cannot establish TLS with client: %s" % repr(e), e),
+                ClientHandshakeException(
+                    "Cannot establish TLS with client (sni: {sni}): {e}".format(
+                        sni=self.client_sni, e=repr(e)
+                    ),
+                    self.client_sni or repr(self.server_conn.address)
+                ),
                 sys.exc_info()[2]
             )
 
@@ -473,7 +478,7 @@ class TlsLayer(Layer):
                     address=repr(self.server_conn.address),
                     sni=self.sni_for_server_connection,
                     e=repr(e),
-                ), e),
+                )),
                 sys.exc_info()[2]
             )
         except NetLibError as e:
@@ -483,7 +488,7 @@ class TlsLayer(Layer):
                     address=repr(self.server_conn.address),
                     sni=self.sni_for_server_connection,
                     e=repr(e),
-                ), e),
+                )),
                 sys.exc_info()[2]
             )
 

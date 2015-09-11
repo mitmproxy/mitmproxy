@@ -67,6 +67,6 @@ class RawTCPLayer(Layer):
         except (socket.error, NetLibError, SSL.Error) as e:
             six.reraise(
                 ProtocolException,
-                ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e)), e),
+                ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e))),
                 sys.exc_info()[2]
             )

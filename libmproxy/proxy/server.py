@@ -8,7 +8,7 @@ import six
 from netlib import tcp
 from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
-from ..exceptions import ProtocolException, ServerException
+from ..exceptions import ProtocolException, ServerException, ClientHandshakeException
 from ..protocol import Kill
 from ..models import ClientConnection, make_error_response
 from .modes import HttpUpstreamProxy, HttpProxy, ReverseProxy, TransparentProxy, Socks5Proxy
@@ -42,7 +42,7 @@ class ProxyServer(tcp.TCPServer):
         except socket.error as e:
             six.reraise(
                 ServerException,
-                ServerException('Error starting proxy server: ' + repr(e), e),
+                ServerException('Error starting proxy server: ' + repr(e)),
                 sys.exc_info()[2]
             )
         self.channel = None
@@ -121,8 +121,18 @@ class ConnectionHandler(object):
         except Kill:
             self.log("Connection killed", "info")
         except ProtocolException as e:
-            self.log(repr(e), "info")
-            self.log(traceback.format_exc(), "debug")
+
+            if isinstance(e, ClientHandshakeException):
+                self.log(
+                    "Client Handshake failed. "
+                    "The client may not trust the proxy's certificate for {}.".format(e.server),
+                    "error"
+                )
+                self.log(repr(e), "debug")
+            else:
+                self.log(repr(e), "error")
+
+                self.log(traceback.format_exc(), "debug")
             # If an error propagates to the topmost level,
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.

@@ -1,6 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
-import six
 import sys
+
+import six
+
 from netlib import tcp
 from ..models import ServerConnection
 from ..exceptions import ProtocolException
@@ -176,8 +178,11 @@ class ServerConnectionMixin(object):
         except tcp.NetLibError as e:
             six.reraise(
                 ProtocolException,
-                ProtocolException("Server connection to %s failed: %s" %
-                                  (repr(self.server_conn.address), e), e),
+                ProtocolException(
+                    "Server connection to {} failed: {}".format(
+                        repr(self.server_conn.address), str(e)
+                    )
+                ),
                 sys.exc_info()[2]
             )
 
