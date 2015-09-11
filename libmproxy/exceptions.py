@@ -51,3 +51,7 @@ class InvalidCredentials(HttpException):
 
 class ServerException(ProxyException):
     pass
+
+
+class ContentViewException(ProxyException):
+    pass

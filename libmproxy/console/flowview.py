@@ -1,15 +1,17 @@
 from __future__ import absolute_import
 import os
 import sys
+import traceback
 import urwid
 
 from netlib import odict
 from netlib.http.semantics import CONTENT_MISSING, Headers
 
-from . import common, grideditor, contentview, signals, searchable, tabs
+from . import common, grideditor, signals, searchable, tabs
 from . import flowdetailview
-from .. import utils, controller
+from .. import utils, controller, contentview
 from ..models import HTTPRequest, HTTPResponse, decoded
+from ..exceptions import ContentViewException
 
 
 class SearchError(Exception):
@@ -179,15 +181,29 @@ class FlowView(tabs.Tabs):
                 limit = sys.maxsize
             else:
                 limit = contentview.VIEW_CUTOFF
-            description, text_objects = cache.get(
-                contentview.get_content_view,
+            return cache.get(
+                self._get_content_view,
                 viewmode,
                 conn.headers,
                 conn.content,
                 limit,
                 isinstance(conn, HTTPRequest)
             )
-            return (description, text_objects)
+
+    def _get_content_view(self, viewmode, headers, content, limit, is_request):
+        try:
+            description, lines = contentview.get_content_view(
+                viewmode, headers, content, limit, is_request
+            )
+        except ContentViewException:
+            s = "Content viewer failed: \n" + traceback.format_exc()
+            signals.add_event(s, "error")
+            description, lines = contentview.get_content_view(
+                viewmode, headers, content, limit, is_request
+            )
+            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
+        text_objects = [urwid.Text(l) for l in lines]
+        return description, text_objects
 
     def viewmode_get(self):
         override = self.state.get_flow_setting(
