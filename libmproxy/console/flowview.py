@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import sys
+import traceback
 import urwid
 
 from netlib import odict
@@ -10,6 +11,7 @@ from . import common, grideditor, signals, searchable, tabs
 from . import flowdetailview
 from .. import utils, controller, contentview
 from ..models import HTTPRequest, HTTPResponse, decoded
+from ..exceptions import ContentViewException
 
 
 class SearchError(Exception):
@@ -180,15 +182,28 @@ class FlowView(tabs.Tabs):
             else:
                 limit = contentview.VIEW_CUTOFF
             description, text_objects = cache.get(
-                contentview.get_content_view,
+                self._get_content_view,
                 viewmode,
                 conn.headers,
                 conn.content,
                 limit,
-                isinstance(conn, HTTPRequest),
-                signals.add_event
+                isinstance(conn, HTTPRequest)
             )
             return (description, text_objects)
+
+    def _get_content_view(self, viewmode, headers, content, limit, is_request):
+        try:
+            return contentview.get_content_view(
+                viewmode, headers, content, limit, is_request
+            )
+        except ContentViewException:
+            s = "Content viewer failed: \n" + traceback.format_exc()
+            signals.add_event(s, "error")
+            msg, view = contentview.get_content_view(
+                viewmode, headers, content, limit, is_request
+            )
+            msg = msg.replace("Raw", "Couldn't parse: falling back to Raw")
+            return msg, view
 
     def viewmode_get(self):
         override = self.state.get_flow_setting(

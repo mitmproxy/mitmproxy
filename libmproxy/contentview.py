@@ -3,13 +3,15 @@ import cStringIO
 import json
 import logging
 import subprocess
-import traceback
 
 import lxml.html
 import lxml.etree
 from PIL import Image
 from PIL.ExifTags import TAGS
 import html2text
+import six
+import sys
+from libmproxy.exceptions import ContentViewException
 
 import netlib.utils
 from . import utils
@@ -77,36 +79,6 @@ def trailer(content, limit):
             "cutoff",
             "... {} of data not shown.".format(netlib.utils.pretty_size(bytes_removed))
         )
-
-
-"""
-def _view_text(content, total, limit):
-    ""
-        Generates a body for a chunk of text.
-    ""
-    txt = []
-    for i in netlib.utils.cleanBin(content).splitlines():
-        txt.append(
-            urwid.Text(("text", i), wrap="any")
-        )
-    trailer(total, txt, limit)
-    return txt
-
-
-def trailer(clen, txt, limit):
-    rem = clen - limit
-    if rem > 0:
-        txt.append(urwid.Text(""))
-        txt.append(
-            urwid.Text(
-                [
-                    ("highlight", "... %s of data not shown. Press " % netlib.utils.pretty_size(rem)),
-                    ("key", "f"),
-                    ("highlight", " to load all data.")
-                ]
-            )
-        )
-"""
 
 
 class View(object):
@@ -535,7 +507,7 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, headers, content, limit, is_request, log=None):
+def get_content_view(viewmode, headers, content, limit, is_request):
     """
         Returns:
             A (msg, body) tuple.
@@ -559,12 +531,12 @@ def get_content_view(viewmode, headers, content, limit, is_request, log=None):
     try:
         ret = viewmode(headers, content, limit)
     # Third-party viewers can fail in unexpected ways...
-    except Exception:
-        if log:
-            s = traceback.format_exc()
-            s = "Content viewer failed: \n" + s
-            log(s, "error")
-        ret = None
+    except Exception as e:
+        six.reraise(
+            ContentViewException,
+            ContentViewException(str(e)),
+            sys.exc_info()[2]
+        )
     if not ret:
         ret = get("Raw")(headers, content, limit)
         msg.append("Couldn't parse: falling back to Raw")
