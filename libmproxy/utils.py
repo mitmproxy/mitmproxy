@@ -54,7 +54,7 @@ def pretty_json(s):
         p = json.loads(s)
     except ValueError:
         return None
-    return json.dumps(p, sort_keys=True, indent=4).split("\n")
+    return json.dumps(p, sort_keys=True, indent=4)
 
 
 def pretty_duration(secs):

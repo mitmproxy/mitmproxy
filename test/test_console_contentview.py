@@ -1,16 +1,12 @@
-import os
-from nose.plugins.skip import SkipTest
+from libmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 
-if os.name == "nt":
-    raise SkipTest("Skipped on Windows.")
 import sys
 
 import netlib.utils
 from netlib import encoding
 
 import libmproxy.contentview as cv
-from libmproxy import utils, flow
 import tutils
 
 try:
@@ -26,11 +22,11 @@ except:
 
 class TestContentView:
     def test_trailer(self):
-        txt = []
-        cv.trailer(5, txt, 1000)
-        assert not txt
-        cv.trailer(cv.VIEW_CUTOFF + 10, txt, cv.VIEW_CUTOFF)
-        assert txt
+        txt = "X"*10
+        lines = cv.trailer(txt, 1000)
+        assert not list(lines)
+        lines = cv.trailer(txt, 5)
+        assert list(lines)
 
     def test_view_auto(self):
         v = cv.ViewAuto()
@@ -124,16 +120,16 @@ class TestContentView:
         result = v([], 'a', 100)
 
         if cssutils:
-            assert len(result[1]) == 0
+            assert len(list(result[1])) == 0
         else:
-            assert len(result[1]) == 1
+            assert len(list(result[1])) == 1
 
         result = v([], fixture_1, 100)
 
         if cssutils:
-            assert len(result[1]) > 1
+            assert len(list(result[1])) > 1
         else:
-            assert len(result[1]) == 1
+            assert len(list(result[1])) == 1
 
     def test_view_hex(self):
         v = cv.ViewHex()
@@ -204,14 +200,15 @@ Larry
         )
         assert "Raw" in r[0]
 
-        r = cv.get_content_view(
+        tutils.raises(
+            ContentViewException,
+            cv.get_content_view,
             cv.get("AMF"),
             Headers(),
             "[1, 2",
             1000,
             False
         )
-        assert "Raw" in r[0]
 
         r = cv.get_content_view(
             cv.get("Auto"),

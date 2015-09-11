@@ -3,21 +3,23 @@ import cStringIO
 import json
 import logging
 import subprocess
+import sys
 
 import lxml.html
 import lxml.etree
 from PIL import Image
+
 from PIL.ExifTags import TAGS
 import html2text
 import six
-import sys
-from libmproxy.exceptions import ContentViewException
 
+from netlib.odict import ODict
+from netlib import encoding
 import netlib.utils
 from . import utils
+from .exceptions import ContentViewException
 from .contrib import jsbeautifier
 from .contrib.wbxml.ASCommandResponse import ASCommandResponse
-from netlib import encoding
 
 try:
     import pyamf
@@ -53,10 +55,10 @@ def format_dict(d):
     for key, value in d.items():
         key += ":"
         key = key.ljust(max_key_len + 2)
-        yield (
+        yield [
             ("header", key),
             ("text", value)
-        )
+        ]
 
 
 def format_text(content, limit):
@@ -66,7 +68,7 @@ def format_text(content, limit):
     content = netlib.utils.cleanBin(content)
 
     for line in content[:limit].splitlines():
-        yield ("text", line)
+        yield [("text", line)]
 
     for msg in trailer(content, limit):
         yield msg
@@ -75,10 +77,9 @@ def format_text(content, limit):
 def trailer(content, limit):
     bytes_removed = len(content) - limit
     if bytes_removed > 0:
-        yield (
-            "cutoff",
-            "... {} of data not shown.".format(netlib.utils.pretty_size(bytes_removed))
-        )
+        yield [
+            ("cutoff", "... {} of data not shown.".format(netlib.utils.pretty_size(bytes_removed)))
+        ]
 
 
 class View(object):
@@ -89,7 +90,10 @@ class View(object):
     def __call__(self, hdrs, content, limit):
         """
         Returns:
-            A (mode name, content generator) tuple.
+            A (description, content generator) tuple.
+
+            The content generator yields lists of (style, text) tuples.
+            Iit must not yield tuples of tuples, because urwid cannot process that.
         """
         raise NotImplementedError()
 
@@ -128,11 +132,11 @@ class ViewHex(View):
     @staticmethod
     def _format(content, limit):
         for offset, hexa, s in netlib.utils.hexdump(content[:limit]):
-            yield (
+            yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
-                ("text", s),
-            )
+                ("text", s)
+            ]
         for msg in trailer(content, limit):
             yield msg
 
@@ -189,7 +193,8 @@ class ViewJSON(View):
 
     def __call__(self, hdrs, content, limit):
         pretty_json = utils.pretty_json(content)
-        return "JSON", format_text(pretty_json, limit)
+        if pretty_json:
+            return "JSON", format_text(pretty_json, limit)
 
 
 class ViewHTML(View):
@@ -234,7 +239,7 @@ class ViewURLEncoded(View):
 
     def __call__(self, hdrs, content, limit):
         d = netlib.utils.urldecode(content)
-        return "URLEncoded form", format_dict(d)
+        return "URLEncoded form", format_dict(ODict(d))
 
 
 class ViewMultipart(View):
@@ -244,8 +249,8 @@ class ViewMultipart(View):
 
     @staticmethod
     def _format(v):
-        yield (("highlight", "Form data:\n"))
-        for message in format_dict({key:val for key,val in v}):
+        yield [("highlight", "Form data:\n")]
+        for message in format_dict(ODict(v)):
             yield message
 
     def __call__(self, hdrs, content, limit):
@@ -306,15 +311,15 @@ if pyamf:
         def _format(self, envelope, limit):
             for target, message in iter(envelope):
                 if isinstance(message, pyamf.remoting.Request):
-                    yield (
+                    yield [
                         ("header", "Request: "),
                         ("text", str(target)),
-                    )
+                    ]
                 else:
-                    yield (
+                    yield [
                         ("header", "Response: "),
                         ("text", "%s, code %s" % (target, message.status)),
-                    )
+                    ]
 
                 s = json.dumps(self.unpack(message), indent=4)
                 for msg in format_text(s, limit):
@@ -322,10 +327,8 @@ if pyamf:
 
         def __call__(self, hdrs, content, limit):
             envelope = remoting.decode(content, strict=False)
-            if not envelope:
-                return None
-
-            return "AMF v%s" % envelope.amfVersion, self._format(envelope, limit)
+            if envelope:
+                return "AMF v%s" % envelope.amfVersion, self._format(envelope, limit)
 
 
 class ViewJavaScript(View):
@@ -401,7 +404,7 @@ class ViewImage(View):
             clean.append(
                 [netlib.utils.cleanBin(i[0]), netlib.utils.cleanBin(i[1])]
             )
-        fmt = format_dict({k:v for k,v in clean})
+        fmt = format_dict(ODict(clean))
         return "%s image" % img.format, fmt
 
 
@@ -460,7 +463,8 @@ class ViewWBXML(View):
         try:
             parser = ASCommandResponse(content)
             parsedContent = parser.xmlString
-            return "WBXML", format_text(parsedContent, limit)
+            if parsedContent:
+                return "WBXML", format_text(parsedContent, limit)
         except:
             return None
 
@@ -510,16 +514,16 @@ def get(name):
 def get_content_view(viewmode, headers, content, limit, is_request):
     """
         Returns:
-            A (msg, body) tuple.
+            A (description, content generator) tuple.
 
         Raises:
             ContentViewException, if the content view threw an error.
     """
     if not content:
         if is_request:
-            return "No request content (press tab to view response)", ""
+            return "No request content (press tab to view response)", []
         else:
-            return "No content", ""
+            return "No content", []
     msg = []
 
     enc = headers.get("content-encoding")

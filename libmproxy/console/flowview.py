@@ -181,7 +181,7 @@ class FlowView(tabs.Tabs):
                 limit = sys.maxsize
             else:
                 limit = contentview.VIEW_CUTOFF
-            description, text_objects = cache.get(
+            return cache.get(
                 self._get_content_view,
                 viewmode,
                 conn.headers,
@@ -189,21 +189,21 @@ class FlowView(tabs.Tabs):
                 limit,
                 isinstance(conn, HTTPRequest)
             )
-            return (description, text_objects)
 
     def _get_content_view(self, viewmode, headers, content, limit, is_request):
         try:
-            return contentview.get_content_view(
+            description, lines = contentview.get_content_view(
                 viewmode, headers, content, limit, is_request
             )
         except ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()
             signals.add_event(s, "error")
-            msg, view = contentview.get_content_view(
+            description, lines = contentview.get_content_view(
                 viewmode, headers, content, limit, is_request
             )
-            msg = msg.replace("Raw", "Couldn't parse: falling back to Raw")
-            return msg, view
+            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
+        text_objects = [urwid.Text(l) for l in lines]
+        return description, text_objects
 
     def viewmode_get(self):
         override = self.state.get_flow_setting(

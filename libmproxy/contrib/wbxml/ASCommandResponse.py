@@ -38,10 +38,10 @@ class ASCommandResponse:
 			if ( len(response) > 0):
 				self.xmlString = self.decodeWBXML(self.wbxmlBody)
 			else:
-				logging.error("Empty WBXML body passed")
+				raise ValueError("Empty WBXML body passed")
 		except Exception as e:
-			logging.error("Error: {0}".format(e.message))
 			self.xmlString = None
+			raise ValueError("Error: {0}".format(e.message))
 
 	def getWBXMLBytes(self):
 		return self.wbxmlBytes
@@ -70,4 +70,3 @@ if __name__ == "__main__":
 		logging.info("-"*100)
 		instance = ASCommandResponse(byteWBXML)
 		logging.info(instance.xmlString)
-		
