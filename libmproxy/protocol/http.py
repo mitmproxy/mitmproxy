@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 import itertools
 import sys
+import traceback
 
 import six
 
@@ -384,9 +385,13 @@ class HttpLayer(Layer):
                     return
 
             except (HttpErrorConnClosed, NetLibError, HttpError, ProtocolException) as e:
+                error_propagated = False
                 if flow.request and not flow.response:
-                    flow.error = Error(repr(e))
+                    flow.error = Error(str(e))
                     self.channel.ask("error", flow)
+                    self.log(traceback.format_exc(), "debug")
+                    error_propagated = True
+
                 try:
                     self.send_response(make_error_response(
                         getattr(e, "code", 502),
@@ -394,10 +399,12 @@ class HttpLayer(Layer):
                     ))
                 except NetLibError:
                     pass
-                if isinstance(e, ProtocolException):
-                    six.reraise(ProtocolException, e, sys.exc_info()[2])
-                else:
-                    six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
+
+                if not error_propagated:
+                    if isinstance(e, ProtocolException):
+                        six.reraise(ProtocolException, e, sys.exc_info()[2])
+                    else:
+                        six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
                 flow.live = False
 

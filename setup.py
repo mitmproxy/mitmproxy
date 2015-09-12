@@ -23,15 +23,17 @@ deps = {
     "html2text>=2015.4.14",
     "construct>=2.5.2",
     "six>=1.9.0",
+    "lxml>=3.3.6",
+    "Pillow>=2.3.0",
 }
 # A script -> additional dependencies dict.
 scripts = {
     "mitmproxy": {
         "urwid>=1.3",
-        "lxml>=3.3.6",
-        "Pillow>=2.3.0",
     },
-    "mitmdump": set(),
+    "mitmdump": {
+        "click>=5.1",
+    },
     "mitmweb": set()
 }
 # Developer dependencies

@@ -1,14 +1,16 @@
 from __future__ import absolute_import, print_function
-import json
 import sys
 import os
+import traceback
+
+import click
+import itertools
 
 from netlib.http.semantics import CONTENT_MISSING
 import netlib.utils
-
-from . import flow, filt, utils
-from .protocol import http
-
+from . import flow, filt, contentviews
+from .exceptions import ContentViewException
+from .models import HTTPRequest
 
 class DumpError(Exception):
     pass
@@ -55,26 +57,8 @@ class Options(object):
                 setattr(self, i, None)
 
 
-def str_response(resp):
-    r = "%s %s" % (resp.code, resp.msg)
-    if resp.is_replay:
-        r = "[replay] " + r
-    return r
-
-
-def str_request(f, showhost):
-    if f.client_conn:
-        c = f.client_conn.address.host
-    else:
-        c = "[replay]"
-    r = "%s %s %s" % (c, f.request.method, f.request.pretty_url(showhost))
-    if f.request.stickycookie:
-        r = "[stickycookie] " + r
-    return r
-
-
 class DumpMaster(flow.FlowMaster):
-    def __init__(self, server, options, outfile=sys.stdout):
+    def __init__(self, server, options, outfile=None):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
@@ -103,7 +87,7 @@ class DumpMaster(flow.FlowMaster):
         if options.outfile:
             path = os.path.expanduser(options.outfile[0])
             try:
-                f = file(path, options.outfile[1])
+                f = open(path, options.outfile[1])
                 self.start_stream(f, self.filt)
             except IOError as v:
                 raise DumpError(v.strerror)
@@ -163,72 +147,168 @@ class DumpMaster(flow.FlowMaster):
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
         if self.o.verbosity >= needed:
-            print(e, file=self.outfile)
-            self.outfile.flush()
+            self.echo(
+                e,
+                fg="red" if level == "error" else None,
+                dim=(level == "debug")
+            )
 
     @staticmethod
-    def indent(n, t):
-        l = str(t).strip().splitlines()
+    def indent(n, text):
+        l = str(text).strip().splitlines()
         pad = " " * n
         return "\n".join(pad + i for i in l)
 
-    def _print_message(self, message):
+    def echo(self, text, indent=None, **style):
+        if indent:
+            text = self.indent(indent, text)
+        click.secho(text, file=self.outfile, **style)
+
+    def _echo_message(self, message):
         if self.o.flow_detail >= 2:
-            print(self.indent(4, str(message.headers)), file=self.outfile)
+            headers = "\r\n".join(
+                "{}: {}".format(
+                    click.style(k, fg="blue", bold=True),
+                    click.style(v, fg="blue"))
+                    for k, v in message.headers.fields
+            )
+            self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
-            if message.content == CONTENT_MISSING:
-                print(self.indent(4, "(content missing)"), file=self.outfile)
-            elif message.content:
-                print("", file=self.outfile)
-                content = message.get_decoded_content()
-                if not utils.isBin(content):
-                    try:
-                        jsn = json.loads(content)
-                        print(
-                            self.indent(
-                                4,
-                                json.dumps(
-                                    jsn,
-                                    indent=2)),
-                            file=self.outfile)
-                    except ValueError:
-                        print(self.indent(4, content), file=self.outfile)
+            if message.body == CONTENT_MISSING:
+                self.echo("(content missing)", indent=4)
+            elif message.body:
+                self.echo("")
+
+                try:
+                    type, lines = contentviews.get_content_view(
+                        contentviews.get("Auto"),
+                        message.body,
+                        headers=message.headers
+                    )
+                except ContentViewException:
+                    s = "Content viewer failed: \n" + traceback.format_exc()
+                    self.add_event(s, "debug")
+                    type, lines = contentviews.get_content_view(
+                        contentviews.get("Raw"),
+                        message.body,
+                        headers=message.headers
+                    )
+
+                styles = dict(
+                    highlight=dict(bold=True),
+                    offset=dict(fg="blue"),
+                    header=dict(fg="green", bold=True),
+                    text=dict(fg="green")
+                )
+
+                def colorful(line):
+                    yield u"    "  # we can already indent here
+                    for (style, text) in line:
+                        yield click.style(text, **styles.get(style, {}))
+
+                if self.o.flow_detail == 3:
+                    lines_to_echo = itertools.islice(lines, 70)
                 else:
-                    d = netlib.utils.hexdump(content)
-                    d = "\n".join("%s\t%s %s" % i for i in d)
-                    print(self.indent(4, d), file=self.outfile)
+                    lines_to_echo = lines
+
+                lines_to_echo = list(lines_to_echo)
+
+                content = u"\r\n".join(
+                    u"".join(colorful(line)) for line in lines_to_echo
+                )
+
+                self.echo(content)
+                if next(lines, None):
+                    self.echo("(cut off)", indent=4, dim=True)
+
         if self.o.flow_detail >= 2:
-            print("", file=self.outfile)
+            self.echo("")
+
+    def _echo_request_line(self, flow):
+        if flow.request.stickycookie:
+            stickycookie = click.style("[stickycookie] ", fg="yellow", bold=True)
+        else:
+            stickycookie = ""
+
+        if flow.client_conn:
+            client = click.style(flow.client_conn.address.host, bold=True)
+        else:
+            client = click.style("[replay]", fg="yellow", bold=True)
+
+        method = flow.request.method
+        method_color=dict(
+            GET="green",
+            DELETE="red"
+        ).get(method.upper(), "magenta")
+        method = click.style(method, fg=method_color, bold=True)
+        url = click.style(flow.request.pretty_url(self.showhost), bold=True)
+
+        line = "{stickycookie}{client} {method} {url}".format(
+            stickycookie=stickycookie,
+            client=client,
+            method=method,
+            url=url
+        )
+        self.echo(line)
+
+    def _echo_response_line(self, flow):
+        if flow.response.is_replay:
+            replay = click.style("[replay] ", fg="yellow", bold=True)
+        else:
+            replay = ""
+
+        code = flow.response.status_code
+        code_color = None
+        if 200 <= code < 300:
+            code_color = "green"
+        elif 300 <= code < 400:
+            code_color = "magenta"
+        elif 400 <= code < 600:
+            code_color = "red"
+        code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
+        msg = click.style(flow.response.msg, fg=code_color, bold=True)
+
+        if flow.response.content == CONTENT_MISSING:
+            size = "(content missing)"
+        else:
+            size = netlib.utils.pretty_size(len(flow.response.content))
+        size = click.style(size, bold=True)
+
+        arrows = click.style("<<", bold=True)
+
+        line = "{replay} {arrows} {code} {msg} {size}".format(
+            replay=replay,
+            arrows=arrows,
+            code=code,
+            msg=msg,
+            size=size
+        )
+        self.echo(line)
+
+    def echo_flow(self, f):
+        if self.o.flow_detail == 0:
+            return
+
+        if f.request:
+            self._echo_request_line(f)
+            self._echo_message(f.request)
+
+        if f.response:
+            self._echo_response_line(f)
+            self._echo_message(f.response)
+
+        if f.error:
+            self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
+
+        if self.outfile:
+            self.outfile.flush()
 
     def _process_flow(self, f):
         self.state.delete_flow(f)
         if self.filt and not f.match(self.filt):
             return
 
-        if self.o.flow_detail == 0:
-            return
-
-        if f.request:
-            print(str_request(f, self.showhost), file=self.outfile)
-            self._print_message(f.request)
-
-        if f.response:
-            if f.response.content == CONTENT_MISSING:
-                sz = "(content missing)"
-            else:
-                sz = netlib.utils.pretty_size(len(f.response.content))
-            print(
-                " << %s %s" %
-                (str_response(
-                    f.response),
-                    sz),
-                file=self.outfile)
-            self._print_message(f.response)
-
-        if f.error:
-            print(" << {}".format(f.error.msg), file=self.outfile)
-
-        self.outfile.flush()
+        self.echo_flow(f)
 
     def handle_request(self, f):
         flow.FlowMaster.handle_request(self, f)

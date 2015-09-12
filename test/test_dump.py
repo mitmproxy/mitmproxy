@@ -1,5 +1,6 @@
 import os
 from cStringIO import StringIO
+from libmproxy.exceptions import ContentViewException
 from libmproxy.models import HTTPResponse
 
 import netlib.tutils
@@ -12,17 +13,51 @@ import mock
 
 
 def test_strfuncs():
-    t = HTTPResponse.wrap(netlib.tutils.tresp())
-    t.is_replay = True
-    dump.str_response(t)
+    o = dump.Options()
+    m = dump.DumpMaster(None, o)
 
-    f = tutils.tflow()
-    f.client_conn = None
-    f.request.stickycookie = True
-    assert "stickycookie" in dump.str_request(f, False)
-    assert "stickycookie" in dump.str_request(f, True)
-    assert "replay" in dump.str_request(f, False)
-    assert "replay" in dump.str_request(f, True)
+    m.outfile = StringIO()
+    m.o.flow_detail = 0
+    m.echo_flow(tutils.tflow())
+    assert not m.outfile.getvalue()
+
+    m.o.flow_detail = 4
+    m.echo_flow(tutils.tflow())
+    assert m.outfile.getvalue()
+
+    m.outfile = StringIO()
+    m.echo_flow(tutils.tflow(resp=True))
+    assert "<<" in m.outfile.getvalue()
+
+    m.outfile = StringIO()
+    m.echo_flow(tutils.tflow(err=True))
+    assert "<<" in m.outfile.getvalue()
+
+    flow = tutils.tflow()
+    flow.request = netlib.tutils.treq()
+    flow.request.stickycookie = True
+    flow.client_conn = mock.MagicMock()
+    flow.client_conn.address.host = "foo"
+    flow.response = netlib.tutils.tresp(content=CONTENT_MISSING)
+    flow.response.is_replay = True
+    flow.response.code = 300
+    m.echo_flow(flow)
+
+
+    flow = tutils.tflow(resp=netlib.tutils.tresp("{"))
+    flow.response.headers["content-type"] = "application/json"
+    flow.response.code = 400
+    m.echo_flow(flow)
+
+
+@mock.patch("libmproxy.contentviews.get_content_view")
+def test_contentview(get_content_view):
+    get_content_view.side_effect = ContentViewException(""), ("x", iter([]))
+
+    o = dump.Options(flow_detail=4, verbosity=3)
+    m = dump.DumpMaster(None, o, StringIO())
+    m.echo_flow(tutils.tflow())
+    assert "Content viewer failed" in m.outfile.getvalue()
 
 
 class TestDumpMaster:
