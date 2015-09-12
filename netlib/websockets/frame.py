@@ -236,7 +236,7 @@ class Frame(object):
     def human_readable(self):
         ret = self.header.human_readable()
         if self.payload:
-            ret = ret + "\nPayload:\n" + utils.cleanBin(self.payload)
+            ret = ret + "\nPayload:\n" + utils.clean_bin(self.payload)
         return ret
 
     def __repr__(self):

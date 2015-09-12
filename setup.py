@@ -46,6 +46,7 @@ setup(
         "cryptography>=1.0",
         "passlib>=1.6.2",
         "hpack>=1.0.1",
+        "six>=1.9.0",
         "certifi"
     ],
     extras_require={

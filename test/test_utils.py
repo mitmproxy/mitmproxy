@@ -15,10 +15,17 @@ def test_hexdump():
 
 
 def test_cleanBin():
-    assert utils.cleanBin("one") == "one"
-    assert utils.cleanBin("\00ne") == ".ne"
-    assert utils.cleanBin("\nne") == "\nne"
-    assert utils.cleanBin("\nne", True) == ".ne"
+    assert utils.clean_bin(b"one") == b"one"
+    assert utils.clean_bin(b"\00ne") == b".ne"
+    assert utils.clean_bin(b"\nne") == b"\nne"
+    assert utils.clean_bin(b"\nne", False) == b".ne"
+    assert utils.clean_bin(u"\u2605".encode("utf8")) == b"..."
+
+    assert utils.clean_bin(u"one") == u"one"
+    assert utils.clean_bin(u"\00ne") == u".ne"
+    assert utils.clean_bin(u"\nne") == u"\nne"
+    assert utils.clean_bin(u"\nne", False) == u".ne"
+    assert utils.clean_bin(u"\u2605") == u"\u2605"
 
 
 def test_pretty_size():

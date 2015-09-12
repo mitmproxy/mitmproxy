@@ -5,6 +5,8 @@ import urllib
 import urlparse
 import string
 import re
+import six
+import unicodedata
 
 
 def isascii(s):
@@ -20,22 +22,31 @@ def bytes_to_int(i):
     return int(i.encode('hex'), 16)
 
 
-def cleanBin(s, fixspacing=False):
+def clean_bin(s, keep_spacing=True):
     """
-        Cleans binary data to make it safe to display. If fixspacing is True,
-        tabs, newlines and so forth will be maintained, if not, they will be
-        replaced with a placeholder.
+        Cleans binary data to make it safe to display.
+
+        Args:
+            keep_spacing: If False, tabs and newlines will also be replaced.
     """
-    parts = []
-    for i in s:
-        o = ord(i)
-        if (o > 31 and o < 127):
-            parts.append(i)
-        elif i in "\n\t" and not fixspacing:
-            parts.append(i)
+    if isinstance(s, six.text_type):
+        if keep_spacing:
+            keep = u" \n\r\t"
         else:
-            parts.append(".")
-    return "".join(parts)
+            keep = u" "
+        return u"".join(
+            ch if (unicodedata.category(ch)[0] not in "CZ" or ch in keep) else u"."
+            for ch in s
+        )
+    else:
+        if keep_spacing:
+            keep = b"\n\r\t"
+        else:
+            keep = b""
+        return b"".join(
+            ch if (31 < ord(ch) < 127 or ch in keep) else b"."
+            for ch in s
+        )
 
 
 def hexdump(s):
@@ -52,7 +63,7 @@ def hexdump(s):
             x += " "
             x += " ".join("  " for i in range(16 - len(part)))
         parts.append(
-            (o, x, cleanBin(part, True))
+            (o, x, clean_bin(part, False))
         )
     return parts
 
