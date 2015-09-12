@@ -52,7 +52,7 @@ def test_strfuncs():
 
 @mock.patch("libmproxy.contentviews.get_content_view")
 def test_contentview(get_content_view):
-    get_content_view.side_effect = ContentViewException(""), ("x", [])
+    get_content_view.side_effect = ContentViewException(""), ("x", iter([]))
 
     o = dump.Options(flow_detail=4, verbosity=3)
     m = dump.DumpMaster(None, o, StringIO())
