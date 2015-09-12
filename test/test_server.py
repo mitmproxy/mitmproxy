@@ -522,13 +522,13 @@ class TestProxy(tservers.HTTPProxTest):
         assert f.response.code == 304
 
     def test_response_timestamps(self):
-        # test that we notice at least 2 sec delay between timestamps
+        # test that we notice at least 1 sec delay between timestamps
         # in response object
         f = self.pathod("304:b@1k:p50,1")
         assert f.status_code == 304
 
         response = self.master.state.view[0].response
-        assert 1 <= response.timestamp_end - response.timestamp_start <= 1.2
+        assert 0.9 <= response.timestamp_end - response.timestamp_start <= 1.2
 
     def test_request_timestamps(self):
         # test that we notice a delay between timestamps in request object
@@ -547,8 +547,9 @@ class TestProxy(tservers.HTTPProxTest):
         request, response = self.master.state.view[
                                 0].request, self.master.state.view[0].response
         assert response.code == 304  # sanity test for our low level request
-        # time.sleep might be a little bit shorter than a second
-        assert 0.95 < (request.timestamp_end - request.timestamp_start) < 1.2
+        # time.sleep might be a little bit shorter than a second,
+        # we observed up to 0.93s on appveyor.
+        assert 0.8 < (request.timestamp_end - request.timestamp_start) < 1.2
 
     def test_request_timestamps_not_affected_by_client_time(self):
         # test that don't include user wait time in request's timestamps
