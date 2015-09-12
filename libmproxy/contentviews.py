@@ -27,7 +27,7 @@ import six
 
 from netlib.odict import ODict
 from netlib import encoding
-import netlib.utils
+from netlib.utils import clean_bin, hexdump, urldecode, multipartdecode, parse_content_type
 
 from . import utils
 from .exceptions import ContentViewException
@@ -121,12 +121,14 @@ class ViewAuto(View):
         headers = metadata.get("headers", {})
         ctype = headers.get("content-type")
         if ctype:
-            ct = netlib.utils.parse_content_type(ctype) if ctype else None
+            ct = parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
             elif utils.isXML(data):
                 return get("XML")(data, **metadata)
+        if utils.isMostlyBin(data):
+            return get("Hex")(data)
         return get("Raw")(data)
 
 
@@ -146,7 +148,7 @@ class ViewHex(View):
 
     @staticmethod
     def _format(data):
-        for offset, hexa, s in netlib.utils.hexdump(data):
+        for offset, hexa, s in hexdump(data):
             yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
@@ -251,7 +253,7 @@ class ViewURLEncoded(View):
     content_types = ["application/x-www-form-urlencoded"]
 
     def __call__(self, data, **metadata):
-        d = netlib.utils.urldecode(data)
+        d = urldecode(data)
         return "URLEncoded form", format_dict(ODict(d))
 
 
@@ -268,7 +270,7 @@ class ViewMultipart(View):
 
     def __call__(self, data, **metadata):
         headers = metadata.get("headers", {})
-        v = netlib.utils.multipartdecode(headers, data)
+        v = multipartdecode(headers, data)
         if v:
             return "Multipart form", self._format(v)
 
@@ -519,6 +521,21 @@ def get(name):
             return i
 
 
+def safe_to_print(lines, encoding="utf8"):
+    """
+    Wraps a content generator so that each text portion is a *safe to print* unicode string.
+    """
+    for line in lines:
+        clean_line = []
+        for (style, text) in line:
+            try:
+                text = clean_bin(text.decode(encoding, "strict"))
+            except UnicodeDecodeError:
+                text = clean_bin(text).decode(encoding, "strict")
+            clean_line.append((style, text))
+        yield clean_line
+
+
 def get_content_view(viewmode, data, **metadata):
     """
         Args:
@@ -527,6 +544,7 @@ def get_content_view(viewmode, data, **metadata):
 
         Returns:
             A (description, content generator) tuple.
+            In contrast to calling the views directly, text is always safe-to-print unicode.
 
         Raises:
             ContentViewException, if the content view threw an error.
@@ -556,4 +574,4 @@ def get_content_view(viewmode, data, **metadata):
         msg.append("Couldn't parse: falling back to Raw")
     else:
         msg.append(ret[0])
-    return " ".join(msg), ret[1]
+    return " ".join(msg), safe_to_print(ret[1])

@@ -7,7 +7,7 @@ import sys
 from OpenSSL import SSL
 
 from netlib.tcp import NetLibError, ssl_read_select
-from netlib.utils import cleanBin
+from netlib.utils import clean_bin
 from ..exceptions import ProtocolException
 from .base import Layer
 
@@ -58,7 +58,7 @@ class RawTCPLayer(Layer):
                             direction = "-> tcp -> {}".format(repr(self.server_conn.address))
                         else:
                             direction = "<- tcp <- {}".format(repr(self.server_conn.address))
-                        data = cleanBin(buf[:size].tobytes())
+                        data = clean_bin(buf[:size].tobytes())
                         self.log(
                             "{}\r\n{}".format(direction, data),
                             "info"

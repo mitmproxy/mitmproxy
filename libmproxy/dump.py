@@ -57,12 +57,8 @@ class Options(object):
                 setattr(self, i, None)
 
 
-_contentview_auto = contentviews.get("Auto")
-_contentview_raw = contentviews.get("Raw")
-
-
 class DumpMaster(flow.FlowMaster):
-    def __init__(self, server, options, outfile=sys.stdout):
+    def __init__(self, server, options, outfile=None):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
@@ -91,7 +87,7 @@ class DumpMaster(flow.FlowMaster):
         if options.outfile:
             path = os.path.expanduser(options.outfile[0])
             try:
-                f = file(path, options.outfile[1])
+                f = open(path, options.outfile[1])
                 self.start_stream(f, self.filt)
             except IOError as v:
                 raise DumpError(v.strerror)
@@ -185,16 +181,16 @@ class DumpMaster(flow.FlowMaster):
 
                 try:
                     type, lines = contentviews.get_content_view(
-                        _contentview_auto,
-                         message.body,
+                        contentviews.get("Auto"),
+                        message.body,
                         headers=message.headers
                     )
                 except ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
                     self.add_event(s, "debug")
                     type, lines = contentviews.get_content_view(
-                        _contentview_raw,
-                         message.body,
+                        contentviews.get("Raw"),
+                        message.body,
                         headers=message.headers
                     )
 
@@ -206,17 +202,19 @@ class DumpMaster(flow.FlowMaster):
                 )
 
                 def colorful(line):
-                    yield "    "  # we can already indent here
+                    yield u"    "  # we can already indent here
                     for (style, text) in line:
                         yield click.style(text, **styles.get(style, {}))
 
                 if self.o.flow_detail == 3:
-                    lines_to_echo = itertools.islice(lines, contentviews.VIEW_CUTOFF)
+                    lines_to_echo = itertools.islice(lines, 70)
                 else:
                     lines_to_echo = lines
 
-                content = "\r\n".join(
-                    "".join(colorful(line)) for line in lines_to_echo
+                lines_to_echo = list(lines_to_echo)
+
+                content = u"\r\n".join(
+                    u"".join(colorful(line)) for line in lines_to_echo
                 )
 
                 self.echo(content)
@@ -302,7 +300,8 @@ class DumpMaster(flow.FlowMaster):
         if f.error:
             self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
 
-        self.outfile.flush()
+        if self.outfile:
+            self.outfile.flush()
 
     def _process_flow(self, f):
         self.state.delete_flow(f)
