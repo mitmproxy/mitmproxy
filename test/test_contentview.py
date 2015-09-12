@@ -6,7 +6,7 @@ import sys
 import netlib.utils
 from netlib import encoding
 
-import libmproxy.contentview as cv
+import libmproxy.contentviews as cv
 import tutils
 
 try:
@@ -21,12 +21,6 @@ except:
 
 
 class TestContentView:
-    def test_trailer(self):
-        txt = "X"*10
-        lines = cv.trailer(txt, 1000)
-        assert not list(lines)
-        lines = cv.trailer(txt, 5)
-        assert list(lines)
 
     def test_view_auto(self):
         v = cv.ViewAuto()

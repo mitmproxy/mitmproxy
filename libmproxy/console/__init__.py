@@ -14,7 +14,7 @@ import traceback
 import urwid
 import weakref
 
-from .. import controller, flow, script, contentview
+from .. import controller, flow, script, contentviews
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
 
@@ -26,7 +26,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.follow_focus = None
-        self.default_body_view = contentview.get("Auto")
+        self.default_body_view = contentviews.get("Auto")
         self.flowsettings = weakref.WeakKeyDictionary()
         self.last_search = None
 
@@ -648,7 +648,7 @@ class ConsoleMaster(flow.FlowMaster):
         return self.state.set_intercept(txt)
 
     def change_default_display_mode(self, t):
-        v = contentview.get_by_shortcut(t)
+        v = contentviews.get_by_shortcut(t)
         self.state.default_body_view = v
         self.refresh_focus()
 

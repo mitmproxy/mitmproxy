@@ -4,11 +4,11 @@ import os
 import traceback
 
 import click
-
+import itertools
 
 from netlib.http.semantics import CONTENT_MISSING
 import netlib.utils
-from . import flow, filt, contentview
+from . import flow, filt, contentviews
 from .exceptions import ContentViewException
 from .models import HTTPRequest
 
@@ -55,6 +55,10 @@ class Options(object):
         for i in self.attributes:
             if not hasattr(self, i):
                 setattr(self, i, None)
+
+
+_contentview_auto = contentviews.get("Auto")
+_contentview_raw = contentviews.get("Raw")
 
 
 class DumpMaster(flow.FlowMaster):
@@ -174,28 +178,24 @@ class DumpMaster(flow.FlowMaster):
             )
             self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
-            if message.content == CONTENT_MISSING:
+            if message.body == CONTENT_MISSING:
                 self.echo("(content missing)", indent=4)
-            elif message.content:
+            elif message.body:
                 self.echo("")
-                cutoff = sys.maxsize if self.o.flow_detail >= 4 else contentview.VIEW_CUTOFF
+
                 try:
-                    type, lines = contentview.get_content_view(
-                        contentview.get("Auto"),
-                        message.headers,
-                        message.body,
-                        cutoff,
-                        isinstance(message, HTTPRequest)
+                    type, lines = contentviews.get_content_view(
+                        _contentview_auto,
+                         message.body,
+                        headers=message.headers
                     )
                 except ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
                     self.add_event(s, "debug")
-                    type, lines = contentview.get_content_view(
-                        contentview.get("Raw"),
-                        message.headers,
-                        message.body,
-                        cutoff,
-                        isinstance(message, HTTPRequest)
+                    type, lines = contentviews.get_content_view(
+                        _contentview_raw,
+                         message.body,
+                        headers=message.headers
                     )
 
                 styles = dict(
@@ -210,10 +210,18 @@ class DumpMaster(flow.FlowMaster):
                     for (style, text) in line:
                         yield click.style(text, **styles.get(style, {}))
 
+                if self.o.flow_detail == 3:
+                    lines_to_echo = itertools.islice(lines, contentviews.VIEW_CUTOFF)
+                else:
+                    lines_to_echo = lines
+
                 content = "\r\n".join(
-                    "".join(colorful(line)) for line in lines
+                    "".join(colorful(line)) for line in lines_to_echo
                 )
+
                 self.echo(content)
+                if next(lines, None):
+                    self.echo("(cut off)", indent=4, dim=True)
 
         if self.o.flow_detail >= 2:
             self.echo("")

@@ -1,6 +1,5 @@
 import os
 from cStringIO import StringIO
-from libmproxy.contentview import ViewAuto
 from libmproxy.exceptions import ContentViewException
 from libmproxy.models import HTTPResponse
 
@@ -51,7 +50,7 @@ def test_strfuncs():
     m.echo_flow(flow)
 
 
-@mock.patch("libmproxy.contentview.get_content_view")
+@mock.patch("libmproxy.contentviews.get_content_view")
 def test_contentview(get_content_view):
     get_content_view.side_effect = ContentViewException(""), ("x", [])
 
