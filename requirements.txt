@@ -1,2 +1,1 @@
--e git+https://github.com/mitmproxy/pathod.git#egg=pathod
 -e .[dev]
