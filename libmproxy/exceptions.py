@@ -11,15 +11,8 @@ from __future__ import (absolute_import, print_function, division)
 class ProxyException(Exception):
     """
     Base class for all exceptions thrown by libmproxy.
-
-    Args:
-        message: the error message
-        cause: (optional) an error object that caused this exception, e.g. an IOError.
     """
-    def __init__(self, message):
-        """
-        :param message: Error Message
-        """
+    def __init__(self, message=None):
         super(ProxyException, self).__init__(message)
 
 

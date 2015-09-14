@@ -227,6 +227,7 @@ class TlsLayer(Layer):
     def __init__(self, ctx, client_tls, server_tls):
         self.client_sni = None
         self.client_alpn_protocols = None
+        self.client_ciphers = []
 
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
