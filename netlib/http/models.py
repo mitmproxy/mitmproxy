@@ -1,20 +1,25 @@
-from __future__ import (absolute_import, print_function, division)
-import UserDict
+from __future__ import absolute_import, print_function, division
 import copy
-import urllib
-import urlparse
 
-from .. import odict
-from . import cookies, exceptions
-from netlib import utils, encoding
+from ..odict import ODict
+from .. import utils, encoding
+from ..utils import always_bytes, always_byte_args
+from . import cookies
 
-HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
-HDR_FORM_MULTIPART = "multipart/form-data"
+import six
+from six.moves import urllib
+try:
+    from collections import MutableMapping
+except ImportError:
+    from collections.abc import MutableMapping
+
+HDR_FORM_URLENCODED = b"application/x-www-form-urlencoded"
+HDR_FORM_MULTIPART = b"multipart/form-data"
 
 CONTENT_MISSING = 0
 
 
-class Headers(object, UserDict.DictMixin):
+class Headers(MutableMapping, object):
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
@@ -62,10 +67,12 @@ class Headers(object, UserDict.DictMixin):
         For use with the "Set-Cookie" header, see :py:meth:`get_all`.
     """
 
+    @always_byte_args("ascii")
     def __init__(self, fields=None, **headers):
         """
         Args:
-            fields: (optional) list of ``(name, value)`` header tuples, e.g. ``[("Host","example.com")]``
+            fields: (optional) list of ``(name, value)`` header tuples,
+                e.g. ``[("Host","example.com")]``. All names and values must be bytes.
             **headers: Additional headers to set. Will overwrite existing values from `fields`.
                 For convenience, underscores in header names will be transformed to dashes -
                 this behaviour does not extend to other methods.
@@ -76,21 +83,25 @@ class Headers(object, UserDict.DictMixin):
 
         # content_type -> content-type
         headers = {
-            name.replace("_", "-"): value
-            for name, value in headers.iteritems()
+            name.encode("ascii").replace(b"_", b"-"): value
+            for name, value in six.iteritems(headers)
         }
         self.update(headers)
 
-    def __str__(self):
-        return "\r\n".join(": ".join(field) for field in self.fields) + "\r\n"
+    def __bytes__(self):
+        return b"\r\n".join(b": ".join(field) for field in self.fields) + b"\r\n"
 
+    if six.PY2:
+        __str__ = __bytes__
+
+    @always_byte_args("ascii")
     def __getitem__(self, name):
         values = self.get_all(name)
         if not values:
             raise KeyError(name)
-        else:
-            return ", ".join(values)
+        return b", ".join(values)
 
+    @always_byte_args("ascii")
     def __setitem__(self, name, value):
         idx = self._index(name)
 
@@ -101,6 +112,7 @@ class Headers(object, UserDict.DictMixin):
         else:
             self.fields.append([name, value])
 
+    @always_byte_args("ascii")
     def __delitem__(self, name):
         if name not in self:
             raise KeyError(name)
@@ -110,22 +122,25 @@ class Headers(object, UserDict.DictMixin):
             if name != field[0].lower()
         ]
 
+    def __iter__(self):
+        seen = set()
+        for name, _ in self.fields:
+            name_lower = name.lower()
+            if name_lower not in seen:
+                seen.add(name_lower)
+                yield name
+
+    def __len__(self):
+        return len(set(name.lower() for name, _ in self.fields))
+
+    #__hash__ = object.__hash__
+
     def _index(self, name):
         name = name.lower()
         for i, field in enumerate(self.fields):
             if field[0].lower() == name:
                 return i
         return None
-
-    def keys(self):
-        seen = set()
-        names = []
-        for name, _ in self.fields:
-            name_lower = name.lower()
-            if name_lower not in seen:
-                seen.add(name_lower)
-                names.append(name)
-        return names
 
     def __eq__(self, other):
         if isinstance(other, Headers):
@@ -135,6 +150,7 @@ class Headers(object, UserDict.DictMixin):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    @always_byte_args("ascii")
     def get_all(self, name):
         """
         Like :py:meth:`get`, but does not fold multiple headers into a single one.
@@ -142,8 +158,8 @@ class Headers(object, UserDict.DictMixin):
 
         See also: https://tools.ietf.org/html/rfc7230#section-3.2.2
         """
-        name = name.lower()
-        values = [value for n, value in self.fields if n.lower() == name]
+        name_lower = name.lower()
+        values = [value for n, value in self.fields if n.lower() == name_lower]
         return values
 
     def set_all(self, name, values):
@@ -151,6 +167,8 @@ class Headers(object, UserDict.DictMixin):
         Explicitly set multiple headers for the given key.
         See: :py:meth:`get_all`
         """
+        name = always_bytes(name, "ascii")
+        values = (always_bytes(value, "ascii") for value in values)
         if name in self:
             del self[name]
         self.fields.extend(
@@ -170,28 +188,6 @@ class Headers(object, UserDict.DictMixin):
     @classmethod
     def from_state(cls, state):
         return cls([list(field) for field in state])
-
-
-class ProtocolMixin(object):
-    def read_request(self, *args, **kwargs):  # pragma: no cover
-        raise NotImplementedError
-
-    def read_response(self, *args, **kwargs):  # pragma: no cover
-        raise NotImplementedError
-
-    def assemble(self, message):
-        if isinstance(message, Request):
-            return self.assemble_request(message)
-        elif isinstance(message, Response):
-            return self.assemble_response(message)
-        else:
-            raise ValueError("HTTP message not supported.")
-
-    def assemble_request(self, *args, **kwargs):  # pragma: no cover
-        raise NotImplementedError
-
-    def assemble_response(self, *args, **kwargs):  # pragma: no cover
-        raise NotImplementedError
 
 
 class Request(object):
@@ -248,42 +244,14 @@ class Request(object):
             return False
 
     def __repr__(self):
-        # return "Request(%s - %s, %s)" % (self.method, self.host, self.path)
-
-        return "<HTTPRequest: {0}>".format(
-            self.legacy_first_line()[:-9]
-        )
-
-    def legacy_first_line(self, form=None):
-        if form is None:
-            form = self.form_out
-        if form == "relative":
-            return '%s %s HTTP/%s.%s' % (
-                self.method,
-                self.path,
-                self.httpversion[0],
-                self.httpversion[1],
-            )
-        elif form == "authority":
-            return '%s %s:%s HTTP/%s.%s' % (
-                self.method,
-                self.host,
-                self.port,
-                self.httpversion[0],
-                self.httpversion[1],
-            )
-        elif form == "absolute":
-            return '%s %s://%s:%s%s HTTP/%s.%s' % (
-                self.method,
-                self.scheme,
-                self.host,
-                self.port,
-                self.path,
-                self.httpversion[0],
-                self.httpversion[1],
-            )
+        if self.host and self.port:
+            hostport = "{}:{}".format(self.host, self.port)
         else:
-            raise exceptions.HttpError(400, "Invalid request form")
+            hostport = ""
+        path = self.path or ""
+        return "HTTPRequest({} {}{})".format(
+            self.method, hostport, path
+        )
 
     def anticache(self):
         """
@@ -336,7 +304,7 @@ class Request(object):
                 return self.get_form_urlencoded()
             elif HDR_FORM_MULTIPART in self.headers.get("content-type","").lower():
                 return self.get_form_multipart()
-        return odict.ODict([])
+        return ODict([])
 
     def get_form_urlencoded(self):
         """
@@ -345,16 +313,16 @@ class Request(object):
             indicates non-form data.
         """
         if self.body and HDR_FORM_URLENCODED in self.headers.get("content-type","").lower():
-            return odict.ODict(utils.urldecode(self.body))
-        return odict.ODict([])
+            return ODict(utils.urldecode(self.body))
+        return ODict([])
 
     def get_form_multipart(self):
         if self.body and HDR_FORM_MULTIPART in self.headers.get("content-type","").lower():
-            return odict.ODict(
+            return ODict(
                 utils.multipartdecode(
                     self.headers,
                     self.body))
-        return odict.ODict([])
+        return ODict([])
 
     def set_form_urlencoded(self, odict):
         """
@@ -373,8 +341,8 @@ class Request(object):
 
             Components are unquoted.
         """
-        _, _, path, _, _, _ = urlparse.urlparse(self.url)
-        return [urllib.unquote(i) for i in path.split("/") if i]
+        _, _, path, _, _, _ = urllib.parse.urlparse(self.url)
+        return [urllib.parse.unquote(i) for i in path.split(b"/") if i]
 
     def set_path_components(self, lst):
         """
@@ -382,10 +350,10 @@ class Request(object):
 
             Components are quoted.
         """
-        lst = [urllib.quote(i, safe="") for i in lst]
-        path = "/" + "/".join(lst)
-        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.url)
-        self.url = urlparse.urlunparse(
+        lst = [urllib.parse.quote(i, safe="") for i in lst]
+        path = b"/" + b"/".join(lst)
+        scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
+        self.url = urllib.parse.urlunparse(
             [scheme, netloc, path, params, query, fragment]
         )
 
@@ -393,18 +361,18 @@ class Request(object):
         """
             Gets the request query string. Returns an ODict object.
         """
-        _, _, _, _, query, _ = urlparse.urlparse(self.url)
+        _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
         if query:
-            return odict.ODict(utils.urldecode(query))
-        return odict.ODict([])
+            return ODict(utils.urldecode(query))
+        return ODict([])
 
     def set_query(self, odict):
         """
             Takes an ODict object, and sets the request query string.
         """
-        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.url)
+        scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
         query = utils.urlencode(odict.lst)
-        self.url = urlparse.urlunparse(
+        self.url = urllib.parse.urlunparse(
             [scheme, netloc, path, params, query, fragment]
         )
 
@@ -421,18 +389,13 @@ class Request(object):
             but not the resolved name. This is disabled by default, as an
             attacker may spoof the host header to confuse an analyst.
         """
-        host = None
-        if hostheader:
-            host = self.headers.get("Host")
-        if not host:
-            host = self.host
-        if host:
+        if hostheader and b"Host" in self.headers:
             try:
-                return host.encode("idna")
+                return self.headers[b"Host"].decode("idna")
             except ValueError:
-                return host
-        else:
-            return None
+                pass
+        if self.host:
+            return self.host.decode("idna")
 
     def pretty_url(self, hostheader):
         if self.form_out == "authority":  # upstream proxy mode
@@ -446,7 +409,7 @@ class Request(object):
         """
             Returns a possibly empty netlib.odict.ODict object.
         """
-        ret = odict.ODict()
+        ret = ODict()
         for i in self.headers.get_all("cookie"):
             ret.extend(cookies.parse_cookie_header(i))
         return ret
@@ -477,8 +440,10 @@ class Request(object):
             Parses a URL specification, and updates the Request's information
             accordingly.
 
-            Returns False if the URL was invalid, True if the request succeeded.
+            Raises:
+                ValueError if the URL was invalid
         """
+        # TODO: Should handle incoming unicode here.
         parts = utils.parse_url(url)
         if not parts:
             raise ValueError("Invalid URL: %s" % url)
@@ -493,32 +458,6 @@ class Request(object):
     def content(self, content):  # pragma: no cover
         # TODO: remove deprecated setter
         self.body = content
-
-
-class EmptyRequest(Request):
-    def __init__(
-            self,
-            form_in="",
-            method="",
-            scheme="",
-            host="",
-            port="",
-            path="",
-            httpversion=(0, 0),
-            headers=None,
-            body=""
-    ):
-        super(EmptyRequest, self).__init__(
-            form_in=form_in,
-            method=method,
-            scheme=scheme,
-            host=host,
-            port=port,
-            path=path,
-            httpversion=httpversion,
-            headers=headers,
-            body=body,
-        )
 
 
 class Response(object):
@@ -591,7 +530,7 @@ class Response(object):
             if v:
                 name, value, attrs = v
                 ret.append([name, [value, attrs]])
-        return odict.ODict(ret)
+        return ODict(ret)
 
     def set_cookies(self, odict):
         """

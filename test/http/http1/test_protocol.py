@@ -1,9 +1,12 @@
-import cStringIO
+from io import BytesIO
 import textwrap
+from http.http1.protocol import _parse_authority_form
+from netlib.exceptions import HttpSyntaxException, HttpReadDisconnect, HttpException
 
-from netlib import http, odict, tcp, tutils
+from netlib import http, tcp, tutils
 from netlib.http import semantics, Headers
-from netlib.http.http1 import HTTP1Protocol
+from netlib.http.http1 import HTTP1Protocol, read_message_body, read_request, \
+    read_message_body_chunked, expected_http_body_size
 from ... import tservers
 
 
@@ -14,8 +17,8 @@ class NoContentLengthHTTPHandler(tcp.BaseHandler):
 
 
 def mock_protocol(data=''):
-    rfile = cStringIO.StringIO(data)
-    wfile = cStringIO.StringIO()
+    rfile = BytesIO(data)
+    wfile = BytesIO()
     return HTTP1Protocol(rfile=rfile, wfile=wfile)
 
 
@@ -37,53 +40,35 @@ def test_stripped_chunked_encoding_no_content():
     assert "Content-Length" in mock_protocol()._assemble_response_headers(r)
 
 
-def test_has_chunked_encoding():
-    headers = http.Headers()
-    assert not HTTP1Protocol.has_chunked_encoding(headers)
-    headers["transfer-encoding"] = "chunked"
-    assert HTTP1Protocol.has_chunked_encoding(headers)
-
-
 def test_read_chunked():
-    headers = http.Headers()
-    headers["transfer-encoding"] = "chunked"
+    req = tutils.treq(None)
+    req.headers["Transfer-Encoding"] = "chunked"
 
-    data = "1\r\na\r\n0\r\n"
-    tutils.raises(
-        "malformed chunked body",
-        mock_protocol(data).read_http_body,
-        headers, None, "GET", None, True
-    )
+    data = b"1\r\na\r\n0\r\n"
+    with tutils.raises(HttpSyntaxException):
+        read_message_body(BytesIO(data), req)
 
-    data = "1\r\na\r\n0\r\n\r\n"
-    assert mock_protocol(data).read_http_body(headers, None, "GET", None, True) == "a"
+    data = b"1\r\na\r\n0\r\n\r\n"
+    assert read_message_body(BytesIO(data), req) == b"a"
 
-    data = "\r\n\r\n1\r\na\r\n0\r\n\r\n"
-    assert mock_protocol(data).read_http_body(headers, None, "GET", None, True) == "a"
+    data = b"\r\n\r\n1\r\na\r\n1\r\nb\r\n0\r\n\r\n"
+    assert read_message_body(BytesIO(data), req) == b"ab"
 
-    data = "\r\n"
-    tutils.raises(
-        "closed prematurely",
-        mock_protocol(data).read_http_body,
-        headers, None, "GET", None, True
-    )
+    data = b"\r\n"
+    with tutils.raises("closed prematurely"):
+        read_message_body(BytesIO(data), req)
 
-    data = "1\r\nfoo"
-    tutils.raises(
-        "malformed chunked body",
-        mock_protocol(data).read_http_body,
-        headers, None, "GET", None, True
-    )
+    data = b"1\r\nfoo"
+    with tutils.raises("malformed chunked body"):
+        read_message_body(BytesIO(data), req)
 
-    data = "foo\r\nfoo"
-    tutils.raises(
-        http.HttpError,
-        mock_protocol(data).read_http_body,
-        headers, None, "GET", None, True
-    )
+    data = b"foo\r\nfoo"
+    with tutils.raises(HttpSyntaxException):
+        read_message_body(BytesIO(data), req)
 
-    data = "5\r\naaaaa\r\n0\r\n\r\n"
-    tutils.raises("too large", mock_protocol(data).read_http_body, headers, 2, "GET", None, True)
+    data = b"5\r\naaaaa\r\n0\r\n\r\n"
+    with tutils.raises("too large"):
+        read_message_body(BytesIO(data), req, limit=2)
 
 
 def test_connection_close():
@@ -171,52 +156,37 @@ def test_read_http_body():
 def test_expected_http_body_size():
     # gibber in the content-length field
     headers = Headers(content_length="foo")
-    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) is None
+    with tutils.raises(HttpSyntaxException):
+        expected_http_body_size(headers, False, "GET", 200) is None
     # negative number in the content-length field
     headers = Headers(content_length="-7")
-    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) is None
+    with tutils.raises(HttpSyntaxException):
+        expected_http_body_size(headers, False, "GET", 200) is None
     # explicit length
     headers = Headers(content_length="5")
-    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) == 5
+    assert expected_http_body_size(headers, False, "GET", 200) == 5
     # no length
     headers = Headers()
-    assert HTTP1Protocol.expected_http_body_size(headers, False, "GET", 200) == -1
+    assert expected_http_body_size(headers, False, "GET", 200) == -1
     # no length request
     headers = Headers()
-    assert HTTP1Protocol.expected_http_body_size(headers, True, "GET", None) == 0
-
-
-def test_get_request_line():
-    data = "\nfoo"
-    p = mock_protocol(data)
-    assert p._get_request_line() == "foo"
-    assert not p._get_request_line()
-
-
-def test_parse_http_protocol():
-    assert HTTP1Protocol._parse_http_protocol("HTTP/1.1") == (1, 1)
-    assert HTTP1Protocol._parse_http_protocol("HTTP/0.0") == (0, 0)
-    assert not HTTP1Protocol._parse_http_protocol("HTTP/a.1")
-    assert not HTTP1Protocol._parse_http_protocol("HTTP/1.a")
-    assert not HTTP1Protocol._parse_http_protocol("foo/0.0")
-    assert not HTTP1Protocol._parse_http_protocol("HTTP/x")
+    assert expected_http_body_size(headers, True, "GET", None) == 0
+    # expect header
+    headers = Headers(content_length="5", expect="100-continue")
+    assert expected_http_body_size(headers, True, "GET", None) == 0
 
 
 def test_parse_init_connect():
-    assert HTTP1Protocol._parse_init_connect("CONNECT host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol._parse_init_connect("C\xfeONNECT host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol._parse_init_connect("CONNECT \0host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com:444444 HTTP/1.0")
-    assert not HTTP1Protocol._parse_init_connect("bogus")
-    assert not HTTP1Protocol._parse_init_connect("GET host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com443 HTTP/1.0")
-    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com:443 foo/1.0")
-    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com:foo HTTP/1.0")
+    assert _parse_authority_form(b"CONNECT host.com:443 HTTP/1.0")
+    tutils.raises(ValueError,_parse_authority_form, b"\0host.com:443")
+    tutils.raises(ValueError,_parse_authority_form, b"host.com:444444")
+    tutils.raises(ValueError,_parse_authority_form, b"CONNECT host.com443 HTTP/1.0")
+    tutils.raises(ValueError,_parse_authority_form, b"CONNECT host.com:foo HTTP/1.0")
 
 
 def test_parse_init_proxy():
-    u = "GET http://foo.com:8888/test HTTP/1.1"
-    m, s, h, po, pa, httpversion = HTTP1Protocol._parse_init_proxy(u)
+    u = b"GET http://foo.com:8888/test HTTP/1.1"
+    m, s, h, po, pa, httpversion = HTTP1Protocol._parse_absolute_form(u)
     assert m == "GET"
     assert s == "http"
     assert h == "foo.com"
@@ -225,11 +195,14 @@ def test_parse_init_proxy():
     assert httpversion == (1, 1)
 
     u = "G\xfeET http://foo.com:8888/test HTTP/1.1"
-    assert not HTTP1Protocol._parse_init_proxy(u)
+    assert not HTTP1Protocol._parse_absolute_form(u)
 
-    assert not HTTP1Protocol._parse_init_proxy("invalid")
-    assert not HTTP1Protocol._parse_init_proxy("GET invalid HTTP/1.1")
-    assert not HTTP1Protocol._parse_init_proxy("GET http://foo.com:8888/test foo/1.1")
+    with tutils.raises(ValueError):
+        assert not HTTP1Protocol._parse_absolute_form("invalid")
+    with tutils.raises(ValueError):
+        assert not HTTP1Protocol._parse_absolute_form("GET invalid HTTP/1.1")
+    with tutils.raises(ValueError):
+        assert not HTTP1Protocol._parse_absolute_form("GET http://foo.com:8888/test foo/1.1")
 
 
 def test_parse_init_http():
@@ -317,14 +290,10 @@ class TestReadRequest(object):
             "get / HTTP/1.1\r\nfoo"
         )
         tutils.raises(
-            tcp.NetLibDisconnect,
+            HttpReadDisconnect,
             self.tst,
             "\r\n"
         )
-
-    def test_empty(self):
-        v = self.tst("", allow_empty=True)
-        assert isinstance(v, semantics.EmptyRequest)
 
     def test_asterisk_form_in(self):
         v = self.tst("OPTIONS * HTTP/1.1")
@@ -356,18 +325,18 @@ class TestReadRequest(object):
         assert v.host == "foo.com"
 
     def test_expect(self):
-        data = "".join(
-            "GET / HTTP/1.1\r\n"
-            "Content-Length: 3\r\n"
-            "Expect: 100-continue\r\n\r\n"
-            "foobar"
+        data = (
+            b"GET / HTTP/1.1\r\n"
+            b"Content-Length: 3\r\n"
+            b"Expect: 100-continue\r\n"
+            b"\r\n"
+            b"foobar"
         )
 
-        p = mock_protocol(data)
-        v = p.read_request()
-        assert p.tcp_handler.wfile.getvalue() == "HTTP/1.1 100 Continue\r\n\r\n"
-        assert v.body == "foo"
-        assert p.tcp_handler.rfile.read(3) == "bar"
+        rfile = BytesIO(data)
+        r = read_request(rfile)
+        assert r.body == b""
+        assert rfile.read(-1) == b"foobar"
 
 
 class TestReadResponse(object):

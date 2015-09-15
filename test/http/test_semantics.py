@@ -475,7 +475,7 @@ class TestHeaders(object):
 
     def test_str(self):
         headers = semantics.Headers(Host="example.com")
-        assert str(headers) == "Host: example.com\r\n"
+        assert bytes(headers) == "Host: example.com\r\n"
 
         headers = semantics.Headers([
             ["Host", "example.com"],

@@ -1,4 +1,4 @@
-import cStringIO
+from io import BytesIO
 from nose.tools import assert_equal
 
 from netlib import tcp, tutils
@@ -7,7 +7,7 @@ from netlib.http.http2.frame import *
 
 def hex_to_file(data):
     data = data.decode('hex')
-    return tcp.Reader(cStringIO.StringIO(data))
+    return tcp.Reader(BytesIO(data))
 
 
 def test_invalid_flags():

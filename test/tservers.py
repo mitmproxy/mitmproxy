@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 import threading
-import Queue
-import cStringIO
+from six.moves import queue
+from io import StringIO
 import OpenSSL
 from netlib import tcp
 from netlib import tutils
@@ -27,7 +27,7 @@ class ServerTestBase(object):
 
     @classmethod
     def setupAll(cls):
-        cls.q = Queue.Queue()
+        cls.q = queue.Queue()
         s = cls.makeserver()
         cls.port = s.address.port
         cls.server = ServerThread(s)
@@ -102,6 +102,6 @@ class TServer(tcp.TCPServer):
         h.finish()
 
     def handle_error(self, connection, client_address, fp=None):
-        s = cStringIO.StringIO()
+        s = StringIO()
         tcp.TCPServer.handle_error(self, connection, client_address, s)
         self.q.put(s.getvalue())

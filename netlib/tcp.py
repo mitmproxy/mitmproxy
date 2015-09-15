@@ -834,14 +834,14 @@ class TCPServer(object):
         # If a thread has persisted after interpreter exit, the module might be
         # none.
         if traceback:
-            exc = traceback.format_exc()
-            print('-' * 40, file=fp)
+            exc = six.text_type(traceback.format_exc())
+            print(u'-' * 40, file=fp)
             print(
-                "Error in processing of request from %s:%s" % (
+                u"Error in processing of request from %s:%s" % (
                     client_address.host, client_address.port
                 ), file=fp)
             print(exc, file=fp)
-            print('-' * 40, file=fp)
+            print(u'-' * 40, file=fp)
 
     def handle_client_connection(self, conn, client_address):  # pragma: no cover
         """
