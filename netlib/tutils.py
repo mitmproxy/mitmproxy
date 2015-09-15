@@ -7,13 +7,15 @@ from contextlib import contextmanager
 import six
 import sys
 
-from netlib import tcp, utils, http
+from . import utils
+from .http import Request, Response, Headers
 
 
 def treader(bytes):
     """
         Construct a tcp.Read object from bytes.
     """
+    from . import tcp  # TODO: move to top once cryptography is on Python 3.5
     fp = BytesIO(bytes)
     return tcp.Reader(fp)
 
@@ -91,55 +93,39 @@ class RaisesContext(object):
 test_data = utils.Data(__name__)
 
 
-def treq(content="content", scheme="http", host="address", port=22):
+def treq(**kwargs):
     """
-    @return: libmproxy.protocol.http.HTTPRequest
+    Returns:
+        netlib.http.Request
     """
-    headers = http.Headers()
-    headers["header"] = "qvalue"
-    req = http.Request(
-        "relative",
-        "GET",
-        scheme,
-        host,
-        port,
-        "/path",
-        (1, 1),
-        headers,
-        content,
-        None,
-        None,
+    default = dict(
+        form_in="relative",
+        method=b"GET",
+        scheme=b"http",
+        host=b"address",
+        port=22,
+        path=b"/path",
+        httpversion=b"HTTP/1.1",
+        headers=Headers(header=b"qvalue"),
+        body=b"content"
     )
-    return req
+    default.update(kwargs)
+    return Request(**default)
 
 
-def treq_absolute(content="content"):
+def tresp(**kwargs):
     """
-    @return: libmproxy.protocol.http.HTTPRequest
+    Returns:
+        netlib.http.Response
     """
-    r = treq(content)
-    r.form_in = r.form_out = "absolute"
-    r.host = "address"
-    r.port = 22
-    r.scheme = "http"
-    return r
-
-
-def tresp(content="message"):
-    """
-    @return: libmproxy.protocol.http.HTTPResponse
-    """
-
-    headers = http.Headers()
-    headers["header_response"] = "svalue"
-
-    resp = http.semantics.Response(
-        (1, 1),
-        200,
-        "OK",
-        headers,
-        content,
+    default = dict(
+        httpversion=b"HTTP/1.1",
+        status_code=200,
+        msg=b"OK",
+        headers=Headers(header_response=b"svalue"),
+        body=b"message",
         timestamp_start=time.time(),
-        timestamp_end=time.time(),
+        timestamp_end=time.time()
     )
-    return resp
+    default.update(kwargs)
+    return Response(**default)

@@ -4,7 +4,7 @@ import time
 
 from hpack.hpack import Encoder, Decoder
 from netlib import http, utils
-from netlib.http import semantics
+from netlib.http import models as semantics
 from . import frame
 
 
@@ -15,7 +15,7 @@ class TCPHandler(object):
         self.wfile = wfile
 
 
-class HTTP2Protocol(semantics.ProtocolMixin):
+class HTTP2Protocol(object):
 
     ERROR_CODES = utils.BiDi(
         NO_ERROR=0x0,

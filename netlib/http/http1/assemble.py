@@ -31,8 +31,6 @@ def assemble_response_head(response):
     return b"%s\r\n%s\r\n" % (first_line, headers)
 
 
-
-
 def _assemble_request_line(request, form=None):
     if form is None:
         form = request.form_out
@@ -50,7 +48,7 @@ def _assemble_request_line(request, form=None):
             request.httpversion
         )
     elif form == "absolute":
-        return b"%s %s://%s:%s%s %s" % (
+        return b"%s %s://%s:%d%s %s" % (
             request.method,
             request.scheme,
             request.host,
@@ -78,11 +76,11 @@ def _assemble_request_headers(request):
     if request.body or request.body == b"":
         headers[b"Content-Length"] = str(len(request.body)).encode("ascii")
 
-    return str(headers)
+    return bytes(headers)
 
 
 def _assemble_response_line(response):
-    return b"%s %s %s" % (
+    return b"%s %d %s" % (
         response.httpversion,
         response.status_code,
         response.msg,

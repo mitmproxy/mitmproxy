@@ -2,21 +2,21 @@ import OpenSSL
 import mock
 
 from netlib import tcp, http, tutils
-from netlib.http import http2, Headers
-from netlib.http.http2 import HTTP2Protocol
+from netlib.http import Headers
+from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 from netlib.http.http2.frame import *
 from ... import tservers
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
-        h = http2.TCPHandler(rfile='foo', wfile='bar')
+        h = TCPHandler(rfile='foo', wfile='bar')
         p = HTTP2Protocol(h)
         assert p.tcp_handler.rfile == 'foo'
         assert p.tcp_handler.wfile == 'bar'
 
     def test_direct(self):
         p = HTTP2Protocol(rfile='foo', wfile='bar')
-        assert isinstance(p.tcp_handler, http2.TCPHandler)
+        assert isinstance(p.tcp_handler, TCPHandler)
         assert p.tcp_handler.rfile == 'foo'
         assert p.tcp_handler.wfile == 'bar'
 
@@ -32,8 +32,8 @@ class EchoHandler(tcp.BaseHandler):
 
 
 class TestProtocol:
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_server_connection_preface")
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_client_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_server_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_client_connection_preface")
     def test_perform_connection_preface(self, mock_client_method, mock_server_method):
         protocol = HTTP2Protocol(is_server=False)
         protocol.connection_preface_performed = True
@@ -46,8 +46,8 @@ class TestProtocol:
         assert mock_client_method.called
         assert not mock_server_method.called
 
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_server_connection_preface")
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_client_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_server_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_client_connection_preface")
     def test_perform_connection_preface_server(self, mock_client_method, mock_server_method):
         protocol = HTTP2Protocol(is_server=True)
         protocol.connection_preface_performed = True

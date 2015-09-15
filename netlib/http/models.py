@@ -474,7 +474,6 @@ class Response(object):
             msg=None,
             headers=None,
             body=None,
-            sslinfo=None,
             timestamp_start=None,
             timestamp_end=None,
     ):
@@ -487,7 +486,6 @@ class Response(object):
         self.msg = msg
         self.headers = headers
         self.body = body
-        self.sslinfo = sslinfo
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 

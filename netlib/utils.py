@@ -40,9 +40,9 @@ def clean_bin(s, keep_spacing=True):
         )
     else:
         if keep_spacing:
-            keep = b"\n\r\t"
+            keep = (9, 10, 13)  # \t, \n, \r,
         else:
-            keep = b""
+            keep = ()
         return b"".join(
             six.int2byte(ch) if (31 < ch < 127 or ch in keep) else b"."
             for ch in six.iterbytes(s)
@@ -251,7 +251,7 @@ def hostport(scheme, host, port):
     if (port, scheme) in [(80, "http"), (443, "https")]:
         return host
     else:
-        return b"%s:%s" % (host, port)
+        return b"%s:%d" % (host, port)
 
 
 def unparse_url(scheme, host, port, path=""):

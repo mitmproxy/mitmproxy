@@ -1,11 +1,13 @@
 import os
 
 from nose.tools import raises
+from netlib.http.http1 import read_response, read_request
 
 from netlib import tcp, tutils, websockets, http
 from netlib.http import status_codes
-from netlib.http.exceptions import *
-from netlib.http.http1 import HTTP1Protocol
+from netlib.tutils import treq
+
+from netlib.exceptions import *
 from .. import tservers
 
 
@@ -34,9 +36,8 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         frame.to_file(self.wfile)
 
     def handshake(self):
-        http1_protocol = HTTP1Protocol(self)
 
-        req = http1_protocol.read_request()
+        req = read_request(self.rfile)
         key = self.protocol.check_client_handshake(req.headers)
 
         preamble = 'HTTP/1.1 101 %s' % status_codes.RESPONSES.get(101)
@@ -61,8 +62,6 @@ class WebSocketsClient(tcp.TCPClient):
     def connect(self):
         super(WebSocketsClient, self).connect()
 
-        http1_protocol = HTTP1Protocol(self)
-
         preamble = 'GET / HTTP/1.1'
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.client_handshake_headers()
@@ -70,7 +69,7 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.write(str(headers) + "\r\n")
         self.wfile.flush()
 
-        resp = http1_protocol.read_response("GET", None)
+        resp = read_response(self.rfile, treq(method="GET"))
         server_nonce = self.protocol.check_server_handshake(resp.headers)
 
         if not server_nonce == self.protocol.create_server_nonce(
@@ -158,9 +157,8 @@ class TestWebSockets(tservers.ServerTestBase):
 class BadHandshakeHandler(WebSocketsEchoHandler):
 
     def handshake(self):
-        http1_protocol = HTTP1Protocol(self)
 
-        client_hs = http1_protocol.read_request()
+        client_hs = read_request(self.rfile)
         self.protocol.check_client_handshake(client_hs.headers)
 
         preamble = 'HTTP/1.1 101 %s' % status_codes.RESPONSES.get(101)
