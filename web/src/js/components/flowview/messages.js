@@ -121,7 +121,7 @@ var RequestLine = React.createClass({
     render: function () {
         var flow = this.props.flow;
         var url = flowutils.RequestUtils.pretty_url(flow.request);
-        var httpver = "HTTP/" + flow.request.httpversion.join(".");
+        var httpver = flow.request.httpversion;
 
         return <div className="first-line request-line">
             <ValueEditor
@@ -175,7 +175,7 @@ var RequestLine = React.createClass({
 var ResponseLine = React.createClass({
     render: function () {
         var flow = this.props.flow;
-        var httpver = "HTTP/" + flow.response.httpversion.join(".");
+        var httpver = flow.response.httpversion;
         return <div className="first-line response-line">
             <ValueEditor
                 ref="httpVersion"

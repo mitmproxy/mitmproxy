@@ -102,7 +102,7 @@ def tflowview(request_contents=None):
     if request_contents is None:
         flow = tflow()
     else:
-        flow = tflow(req=netlib.tutils.treq(request_contents))
+        flow = tflow(req=netlib.tutils.treq(body=request_contents))
 
     fv = FlowView(m, cs, flow)
     return fv

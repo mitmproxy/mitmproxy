@@ -4,7 +4,7 @@ from libmproxy.exceptions import ContentViewException
 from libmproxy.models import HTTPResponse
 
 import netlib.tutils
-from netlib.http.semantics import CONTENT_MISSING
+from netlib.http import CONTENT_MISSING
 
 from libmproxy import dump, flow
 from libmproxy.proxy import Log
@@ -38,13 +38,13 @@ def test_strfuncs():
     flow.request.stickycookie = True
     flow.client_conn = mock.MagicMock()
     flow.client_conn.address.host = "foo"
-    flow.response = netlib.tutils.tresp(content=CONTENT_MISSING)
+    flow.response = netlib.tutils.tresp(body=CONTENT_MISSING)
     flow.response.is_replay = True
     flow.response.code = 300
     m.echo_flow(flow)
 
 
-    flow = tutils.tflow(resp=netlib.tutils.tresp("{"))
+    flow = tutils.tflow(resp=netlib.tutils.tresp(body="{"))
     flow.response.headers["content-type"] = "application/json"
     flow.response.code = 400
     m.echo_flow(flow)
@@ -62,14 +62,14 @@ def test_contentview(get_content_view):
 
 class TestDumpMaster:
     def _cycle(self, m, content):
-        f = tutils.tflow(req=netlib.tutils.treq(content))
+        f = tutils.tflow(req=netlib.tutils.treq(body=content))
         l = Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)
         m.handle_clientconnect(f.client_conn)
         m.handle_serverconnect(f.server_conn)
         m.handle_request(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(body=content))
         f = m.handle_response(f)
         m.handle_clientdisconnect(f.client_conn)
         return f

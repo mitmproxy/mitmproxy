@@ -6,7 +6,7 @@ import traceback
 import click
 import itertools
 
-from netlib.http.semantics import CONTENT_MISSING
+from netlib.http import CONTENT_MISSING
 import netlib.utils
 from . import flow, filt, contentviews
 from .exceptions import ContentViewException

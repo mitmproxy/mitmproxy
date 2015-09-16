@@ -128,7 +128,7 @@ def response(context, flow):
 
     request_query_string = [{"name": k, "value": v}
                             for k, v in flow.request.get_query()]
-    request_http_version = ".".join([str(v) for v in flow.request.httpversion])
+    request_http_version = flow.request.httpversion
     # Cookies are shaped as tuples by MITMProxy.
     request_cookies = [{"name": k.strip(), "value": v[0]}
                        for k, v in (flow.request.get_cookies() or {}).iteritems()]

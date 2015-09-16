@@ -6,18 +6,17 @@ import time
 
 from libmproxy import utils
 from netlib import encoding
-from netlib.http import status_codes, Headers
+from netlib.http import status_codes, Headers, Request, Response, CONTENT_MISSING
 from netlib.tcp import Address
-from netlib.http.semantics import Request, Response, CONTENT_MISSING
 from .. import version, stateobject
 from .flow import Flow
 
 
 class MessageMixin(stateobject.StateObject):
     _stateobject_attributes = dict(
-        httpversion=tuple,
+        httpversion=bytes,
         headers=Headers,
-        body=str,
+        body=bytes,
         timestamp_start=float,
         timestamp_end=float
     )
@@ -120,7 +119,7 @@ class HTTPRequest(MessageMixin, Request):
 
         path: Path portion of the URL (not present in authority-form)
 
-        httpversion: HTTP version tuple, e.g. (1,1)
+        httpversion: HTTP version, e.g. "HTTP/1.1"
 
         headers: Headers object
 
@@ -186,11 +185,11 @@ class HTTPRequest(MessageMixin, Request):
     _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
     _stateobject_attributes.update(
         form_in=str,
-        method=str,
-        scheme=str,
-        host=str,
+        method=bytes,
+        scheme=bytes,
+        host=bytes,
         port=int,
-        path=str,
+        path=bytes,
         form_out=str,
         is_replay=bool
     )
@@ -267,7 +266,7 @@ class HTTPResponse(MessageMixin, Response):
 
     Exposes the following attributes:
 
-        httpversion: HTTP version tuple, e.g. (1, 0), (1, 1), or (2, 0)
+        httpversion: HTTP version, e.g. "HTTP/1.1"
 
         status_code: HTTP response status code
 
@@ -312,7 +311,7 @@ class HTTPResponse(MessageMixin, Response):
     _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
     _stateobject_attributes.update(
         status_code=int,
-        msg=str
+        msg=bytes
     )
 
     @classmethod
@@ -532,7 +531,7 @@ def make_error_response(status_code, message, headers=None):
         )
 
     return HTTPResponse(
-        (1, 1),  # FIXME: Should be a string.
+        b"HTTP/1.1",
         status_code,
         response,
         headers,
@@ -543,7 +542,7 @@ def make_error_response(status_code, message, headers=None):
 def make_connect_request(address):
     address = Address.wrap(address)
     return HTTPRequest(
-        "authority", "CONNECT", None, address.host, address.port, None, (1, 1),
+        "authority", "CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
         Headers(), ""
     )
 

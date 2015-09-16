@@ -1,13 +1,14 @@
 import socket
 import time
 from OpenSSL import SSL
+from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.tcp import Address
 
 import netlib.tutils
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
-from netlib.http import authentication
-from netlib.http.semantics import CONTENT_MISSING
+from netlib.http import authentication, CONTENT_MISSING, http1
+from netlib.tutils import raises
 from libpathod import pathoc, pathod
 
 from libmproxy.proxy.config import HostMatcher
@@ -143,10 +144,9 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        tutils.raises(
-            "invalid server response",
-            self.pathod,
-            spec)  # pathoc tries to parse answer as HTTP
+        with raises(HttpException):
+            self.pathod(spec)  # pathoc tries to parse answer as HTTP
+
         self._ignore_off()
 
     def _tcpproxy_on(self):
@@ -250,11 +250,6 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert p.request(req % self.server2.urlbase)
         assert switched(self.proxy.log)
 
-    def test_get_connection_err(self):
-        p = self.pathoc()
-        ret = p.request("get:'http://localhost:0'")
-        assert ret.status_code == 502
-
     def test_blank_leading_line(self):
         p = self.pathoc()
         req = "get:'%s/p/201':i0,'\r\n'"
@@ -262,8 +257,8 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
 
     def test_invalid_headers(self):
         p = self.pathoc()
-        req = p.request("get:'http://foo':h':foo'='bar'")
-        assert req.status_code == 400
+        resp = p.request("get:'http://foo':h':foo'='bar'")
+        assert resp.status_code == 400
 
     def test_empty_chunked_content(self):
         """
@@ -570,17 +565,23 @@ class TestProxy(tservers.HTTPProxTest):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("localhost", self.proxy.port))
         connection.send(
-            "GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n" %
+            "GET http://localhost:%d/p/200:b@1k HTTP/1.1\r\n" %
             self.server.port)
         connection.send("\r\n")
-        connection.recv(5000)
+        # a bit hacky: make sure that we don't just read the headers only.
+        recvd = 0
+        while recvd < 1024:
+            recvd += len(connection.recv(5000))
         connection.send(
-            "GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n" %
+            "GET http://localhost:%d/p/200:b@1k HTTP/1.1\r\n" %
             self.server.port)
         connection.send("\r\n")
-        connection.recv(5000)
+        recvd = 0
+        while recvd < 1024:
+            recvd += len(connection.recv(5000))
         connection.close()
 
+        print(self.master.state.view._list)
         first_flow = self.master.state.view[0]
         second_flow = self.master.state.view[1]
         assert first_flow.server_conn.timestamp_tcp_setup
@@ -718,15 +719,12 @@ class TestStreamRequest(tservers.HTTPProxTest):
             (self.server.urlbase, spec))
         connection.send("\r\n")
 
-        protocol = http.http1.HTTP1Protocol(rfile=fconn)
-        resp = protocol.read_response("GET", None, include_body=False)
+        resp = http1.read_response_head(fconn)
 
         assert resp.headers["Transfer-Encoding"] == 'chunked'
         assert resp.status_code == 200
 
-        chunks = list(protocol.read_http_body_chunked(
-            resp.headers, None, "GET", 200, False
-        ))
+        chunks = list(http1.read_body(fconn, None))
         assert chunks == ["this", "isatest__reachhex"]
 
         connection.close()
@@ -743,7 +741,7 @@ class TestFakeResponse(tservers.HTTPProxTest):
 
     def test_fake(self):
         f = self.pathod("200")
-        assert "header_response" in f.headers
+        assert "header-response" in f.headers
 
 
 class TestServerConnect(tservers.HTTPProxTest):
@@ -766,7 +764,8 @@ class TestKillRequest(tservers.HTTPProxTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        tutils.raises("server disconnect", self.pathod, "200")
+        with raises(HttpReadDisconnect):
+            self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
 
@@ -780,7 +779,8 @@ class TestKillResponse(tservers.HTTPProxTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        tutils.raises("server disconnect", self.pathod, "200")
+        with raises(HttpReadDisconnect):
+            self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
 
@@ -907,7 +907,7 @@ class TestUpstreamProxySSL(
         """
 
         def handle_request(f):
-            f.request.httpversion = (1, 0)
+            f.request.httpversion = b"HTTP/1.1"
             del f.request.headers["Content-Length"]
             f.reply()
 

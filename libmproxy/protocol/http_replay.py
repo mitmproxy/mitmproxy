@@ -1,8 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 import threading
+from libmproxy.exceptions import ReplayException
+from netlib.exceptions import HttpException
+from netlib.http import http1
 
-from netlib.http import HttpError
-from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
 from ..controller import Channel
 from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
@@ -47,13 +48,17 @@ class RequestReplayThread(threading.Thread):
                     server_address = self.config.upstream_server.address
                     server = ServerConnection(server_address)
                     server.connect()
-                    protocol = HTTP1Protocol(server)
                     if r.scheme == "https":
                         connect_request = make_connect_request((r.host, r.port))
-                        server.send(protocol.assemble(connect_request))
-                        resp = protocol.read_response("CONNECT")
+                        server.wfile.write(http1.assemble_request(connect_request))
+                        server.wfile.flush()
+                        resp = http1.read_response(
+                            server.rfile,
+                            connect_request,
+                            body_size_limit=self.config.body_size_limit
+                        )
                         if resp.code != 200:
-                            raise HttpError(502, "Upstream server refuses CONNECT request")
+                            raise ReplayException("Upstream server refuses CONNECT request")
                         server.establish_ssl(
                             self.config.clientcerts,
                             sni=self.flow.server_conn.sni
@@ -65,7 +70,6 @@ class RequestReplayThread(threading.Thread):
                     server_address = (r.host, r.port)
                     server = ServerConnection(server_address)
                     server.connect()
-                    protocol = HTTP1Protocol(server)
                     if r.scheme == "https":
                         server.establish_ssl(
                             self.config.clientcerts,
@@ -73,18 +77,19 @@ class RequestReplayThread(threading.Thread):
                         )
                     r.form_out = "relative"
 
-                server.send(protocol.assemble(r))
+                server.wfile.write(http1.assemble_request(r))
+                server.wfile.flush()
                 self.flow.server_conn = server
-                self.flow.response = HTTPResponse.from_protocol(
-                    protocol,
-                    r.method,
-                    body_size_limit=self.config.body_size_limit,
+                self.flow.response = http1.read_response(
+                    server.rfile,
+                    r,
+                    body_size_limit=self.config.body_size_limit
                 )
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)
                 if response_reply == Kill:
                     raise Kill()
-        except (HttpError, NetLibError) as v:
+        except (ReplayException, HttpException, NetLibError) as v:
             self.flow.error = Error(repr(v))
             if self.channel:
                 self.channel.ask("error", self.flow)
