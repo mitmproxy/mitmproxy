@@ -102,7 +102,7 @@ Docs
 ----
 
 The mitmproxy documentation is build using Sphinx_, which is installed automatically if you set up a development
-environment as described below.
+environment as described above.
 After installation, you can render the documentation like this:
 
 .. code-block:: text
