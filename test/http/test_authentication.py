@@ -5,7 +5,7 @@ from netlib.http import authentication, Headers
 
 
 def test_parse_http_basic_auth():
-    vals = ("basic", "foo", "bar")
+    vals = (b"basic", b"foo", b"bar")
     assert authentication.parse_http_basic_auth(
         authentication.assemble_http_basic_auth(*vals)
     ) == vals

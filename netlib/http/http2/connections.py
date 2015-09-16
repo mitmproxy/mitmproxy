@@ -3,8 +3,8 @@ import itertools
 import time
 
 from hpack.hpack import Encoder, Decoder
-from netlib import http, utils
-from netlib.http import semantics
+from ... import utils
+from .. import Headers, Response, Request, ALPN_PROTO_H2
 from . import frame
 
 
@@ -15,7 +15,7 @@ class TCPHandler(object):
         self.wfile = wfile
 
 
-class HTTP2Protocol(semantics.ProtocolMixin):
+class HTTP2Protocol(object):
 
     ERROR_CODES = utils.BiDi(
         NO_ERROR=0x0,
@@ -35,8 +35,6 @@ class HTTP2Protocol(semantics.ProtocolMixin):
     )
 
     CLIENT_CONNECTION_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-
-    ALPN_PROTO_H2 = 'h2'
 
     def __init__(
         self,
@@ -62,6 +60,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
     def read_request(
         self,
+        __rfile,
         include_body=True,
         body_size_limit=None,
         allow_empty=False,
@@ -111,7 +110,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             port = 80 if scheme == 'http' else 443
         port = int(port)
 
-        request = http.Request(
+        request = Request(
             form_in,
             method,
             scheme,
@@ -131,6 +130,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
     def read_response(
         self,
+        __rfile,
         request_method='',
         body_size_limit=None,
         include_body=True,
@@ -159,7 +159,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         else:
             timestamp_end = None
 
-        response = http.Response(
+        response = Response(
             (2, 0),
             int(headers.get(':status', 502)),
             "",
@@ -172,8 +172,16 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         return response
 
+    def assemble(self, message):
+        if isinstance(message, Request):
+            return self.assemble_request(message)
+        elif isinstance(message, Response):
+            return self.assemble_response(message)
+        else:
+            raise ValueError("HTTP message not supported.")
+
     def assemble_request(self, request):
-        assert isinstance(request, semantics.Request)
+        assert isinstance(request, Request)
 
         authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
         if self.tcp_handler.address.port != 443:
@@ -200,7 +208,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             self._create_body(request.body, stream_id)))
 
     def assemble_response(self, response):
-        assert isinstance(response, semantics.Response)
+        assert isinstance(response, Response)
 
         headers = response.headers.copy()
 
@@ -275,7 +283,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
     def check_alpn(self):
         alp = self.tcp_handler.get_alpn_proto_negotiated()
-        if alp != self.ALPN_PROTO_H2:
+        if alp != ALPN_PROTO_H2:
             raise NotImplementedError(
                 "HTTP2Protocol can not handle unknown ALP: %s" % alp)
         return True
@@ -405,7 +413,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             else:
                 self._handle_unexpected_frame(frm)
 
-        headers = http.Headers(
+        headers = Headers(
             [[str(k), str(v)] for k, v in self.decoder.decode(header_block_fragment)]
         )
 

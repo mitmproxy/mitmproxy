@@ -1,12 +1,31 @@
-import sys
+from __future__ import absolute_import, print_function, division
 import struct
 from hpack.hpack import Encoder, Decoder
 
-from .. import utils
+from ...utils import BiDi
+from ...exceptions import HttpSyntaxException
 
 
-class FrameSizeError(Exception):
-    pass
+ERROR_CODES = BiDi(
+    NO_ERROR=0x0,
+    PROTOCOL_ERROR=0x1,
+    INTERNAL_ERROR=0x2,
+    FLOW_CONTROL_ERROR=0x3,
+    SETTINGS_TIMEOUT=0x4,
+    STREAM_CLOSED=0x5,
+    FRAME_SIZE_ERROR=0x6,
+    REFUSED_STREAM=0x7,
+    CANCEL=0x8,
+    COMPRESSION_ERROR=0x9,
+    CONNECT_ERROR=0xa,
+    ENHANCE_YOUR_CALM=0xb,
+    INADEQUATE_SECURITY=0xc,
+    HTTP_1_1_REQUIRED=0xd
+)
+
+CLIENT_CONNECTION_PREFACE = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+
+ALPN_PROTO_H2 = b'h2'
 
 
 class Frame(object):
@@ -30,7 +49,9 @@ class Frame(object):
             length=0,
             flags=FLAG_NO_FLAGS,
             stream_id=0x0):
-        valid_flags = reduce(lambda x, y: x | y, self.VALID_FLAGS, 0x0)
+        valid_flags = 0
+        for flag in self.VALID_FLAGS:
+            valid_flags |= flag
         if flags | valid_flags != valid_flags:
             raise ValueError('invalid flags detected.')
 
@@ -61,7 +82,7 @@ class Frame(object):
             SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
 
         if length > max_frame_size:
-            raise FrameSizeError(
+            raise HttpSyntaxException(
                 "Frame size exceeded: %d, but only %d allowed." % (
                     length, max_frame_size))
 
@@ -80,7 +101,7 @@ class Frame(object):
         stream_id = fields[4]
 
         if raw_header[:4] == b'HTTP':  # pragma no cover
-            print >> sys.stderr, "WARNING: This looks like an HTTP/1 connection!"
+            raise HttpSyntaxException("Expected HTTP2 Frame, got HTTP/1 connection")
 
         cls._check_frame_size(length, state)
 
@@ -339,7 +360,7 @@ class SettingsFrame(Frame):
     TYPE = 0x4
     VALID_FLAGS = [Frame.FLAG_ACK]
 
-    SETTINGS = utils.BiDi(
+    SETTINGS = BiDi(
         SETTINGS_HEADER_TABLE_SIZE=0x1,
         SETTINGS_ENABLE_PUSH=0x2,
         SETTINGS_MAX_CONCURRENT_STREAMS=0x3,
@@ -366,7 +387,7 @@ class SettingsFrame(Frame):
     def from_bytes(cls, state, length, flags, stream_id, payload):
         f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
-        for i in xrange(0, len(payload), 6):
+        for i in range(0, len(payload), 6):
             identifier, value = struct.unpack("!HL", payload[i:i + 6])
             f.settings[identifier] = value
 

@@ -1,4 +1,4 @@
-import cStringIO
+from io import BytesIO
 from nose.tools import assert_equal
 
 from netlib import tcp, tutils
@@ -7,7 +7,7 @@ from netlib.http.http2.frame import *
 
 def hex_to_file(data):
     data = data.decode('hex')
-    return tcp.Reader(cStringIO.StringIO(data))
+    return tcp.Reader(BytesIO(data))
 
 
 def test_invalid_flags():
@@ -39,7 +39,7 @@ def test_too_large_frames():
         flags=Frame.FLAG_END_STREAM,
         stream_id=0x1234567,
         payload='foobar' * 3000)
-    tutils.raises(FrameSizeError, f.to_bytes)
+    tutils.raises(HttpSyntaxException, f.to_bytes)
 
 
 def test_data_frame_to_bytes():

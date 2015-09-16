@@ -2,13 +2,13 @@
     Utility functions for decoding response bodies.
 """
 from __future__ import absolute_import
-import cStringIO
+from io import BytesIO
 import gzip
 import zlib
 
 __ALL__ = ["ENCODINGS"]
 
-ENCODINGS = set(["identity", "gzip", "deflate"])
+ENCODINGS = {"identity", "gzip", "deflate"}
 
 
 def decode(e, content):
@@ -42,7 +42,7 @@ def identity(content):
 
 
 def decode_gzip(content):
-    gfile = gzip.GzipFile(fileobj=cStringIO.StringIO(content))
+    gfile = gzip.GzipFile(fileobj=BytesIO(content))
     try:
         return gfile.read()
     except (IOError, EOFError):
@@ -50,7 +50,7 @@ def decode_gzip(content):
 
 
 def encode_gzip(content):
-    s = cStringIO.StringIO()
+    s = BytesIO()
     gf = gzip.GzipFile(fileobj=s, mode='wb')
     gf.write(content)
     gf.close()

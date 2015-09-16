@@ -15,6 +15,8 @@ matrix:
             - debian-sid
           packages:
             - libssl-dev
+    - python: 3.5
+      script: "nosetests --with-cov --cov-report term-missing test/http/http1"
     - python: pypy
     - python: pypy
       env: OPENSSL=1.0.2

@@ -36,46 +36,51 @@ def test_pretty_size():
 
 
 def test_parse_url():
-    assert not utils.parse_url("")
+    with tutils.raises(ValueError):
+        utils.parse_url("")
 
-    u = "http://foo.com:8888/test"
-    s, h, po, pa = utils.parse_url(u)
-    assert s == "http"
-    assert h == "foo.com"
+    s, h, po, pa = utils.parse_url(b"http://foo.com:8888/test")
+    assert s == b"http"
+    assert h == b"foo.com"
     assert po == 8888
-    assert pa == "/test"
+    assert pa == b"/test"
 
     s, h, po, pa = utils.parse_url("http://foo/bar")
-    assert s == "http"
-    assert h == "foo"
+    assert s == b"http"
+    assert h == b"foo"
     assert po == 80
-    assert pa == "/bar"
+    assert pa == b"/bar"
 
-    s, h, po, pa = utils.parse_url("http://user:pass@foo/bar")
-    assert s == "http"
-    assert h == "foo"
+    s, h, po, pa = utils.parse_url(b"http://user:pass@foo/bar")
+    assert s == b"http"
+    assert h == b"foo"
     assert po == 80
-    assert pa == "/bar"
+    assert pa == b"/bar"
 
-    s, h, po, pa = utils.parse_url("http://foo")
-    assert pa == "/"
+    s, h, po, pa = utils.parse_url(b"http://foo")
+    assert pa == b"/"
 
-    s, h, po, pa = utils.parse_url("https://foo")
+    s, h, po, pa = utils.parse_url(b"https://foo")
     assert po == 443
 
-    assert not utils.parse_url("https://foo:bar")
-    assert not utils.parse_url("https://foo:")
+    with tutils.raises(ValueError):
+        utils.parse_url(b"https://foo:bar")
 
     # Invalid IDNA
-    assert not utils.parse_url("http://\xfafoo")
+    with tutils.raises(ValueError):
+        utils.parse_url("http://\xfafoo")
     # Invalid PATH
-    assert not utils.parse_url("http:/\xc6/localhost:56121")
+    with tutils.raises(ValueError):
+        utils.parse_url("http:/\xc6/localhost:56121")
     # Null byte in host
-    assert not utils.parse_url("http://foo\0")
+    with tutils.raises(ValueError):
+        utils.parse_url("http://foo\0")
     # Port out of range
-    assert not utils.parse_url("http://foo:999999")
+    _, _, port, _ = utils.parse_url("http://foo:999999")
+    assert port == 80
     # Invalid IPv6 URL - see http://www.ietf.org/rfc/rfc2732.txt
-    assert not utils.parse_url('http://lo[calhost')
+    with tutils.raises(ValueError):
+        utils.parse_url('http://lo[calhost')
 
 
 def test_unparse_url():
@@ -106,23 +111,25 @@ def test_get_header_tokens():
 
 
 def test_multipartdecode():
-    boundary = 'somefancyboundary'
+    boundary = b'somefancyboundary'
     headers = Headers(
-        content_type='multipart/form-data; boundary=%s' % boundary
+        content_type=b'multipart/form-data; boundary=' + boundary
     )
-    content = "--{0}\n" \
-              "Content-Disposition: form-data; name=\"field1\"\n\n" \
-              "value1\n" \
-              "--{0}\n" \
-              "Content-Disposition: form-data; name=\"field2\"\n\n" \
-              "value2\n" \
-              "--{0}--".format(boundary)
+    content = (
+        "--{0}\n"
+        "Content-Disposition: form-data; name=\"field1\"\n\n"
+        "value1\n"
+        "--{0}\n"
+        "Content-Disposition: form-data; name=\"field2\"\n\n"
+        "value2\n"
+        "--{0}--".format(boundary).encode("ascii")
+    )
 
     form = utils.multipartdecode(headers, content)
 
     assert len(form) == 2
-    assert form[0] == ('field1', 'value1')
-    assert form[1] == ('field2', 'value2')
+    assert form[0] == (b"field1", b"value1")
+    assert form[1] == (b"field2", b"value2")
 
 
 def test_parse_content_type():

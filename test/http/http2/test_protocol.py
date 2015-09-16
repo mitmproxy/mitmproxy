@@ -2,21 +2,21 @@ import OpenSSL
 import mock
 
 from netlib import tcp, http, tutils
-from netlib.http import http2, Headers
-from netlib.http.http2 import HTTP2Protocol
+from netlib.http import Headers
+from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 from netlib.http.http2.frame import *
 from ... import tservers
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
-        h = http2.TCPHandler(rfile='foo', wfile='bar')
+        h = TCPHandler(rfile='foo', wfile='bar')
         p = HTTP2Protocol(h)
         assert p.tcp_handler.rfile == 'foo'
         assert p.tcp_handler.wfile == 'bar'
 
     def test_direct(self):
         p = HTTP2Protocol(rfile='foo', wfile='bar')
-        assert isinstance(p.tcp_handler, http2.TCPHandler)
+        assert isinstance(p.tcp_handler, TCPHandler)
         assert p.tcp_handler.rfile == 'foo'
         assert p.tcp_handler.wfile == 'bar'
 
@@ -32,8 +32,8 @@ class EchoHandler(tcp.BaseHandler):
 
 
 class TestProtocol:
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_server_connection_preface")
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_client_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_server_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_client_connection_preface")
     def test_perform_connection_preface(self, mock_client_method, mock_server_method):
         protocol = HTTP2Protocol(is_server=False)
         protocol.connection_preface_performed = True
@@ -46,8 +46,8 @@ class TestProtocol:
         assert mock_client_method.called
         assert not mock_server_method.called
 
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_server_connection_preface")
-    @mock.patch("netlib.http.http2.HTTP2Protocol.perform_client_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_server_connection_preface")
+    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_client_connection_preface")
     def test_perform_connection_preface_server(self, mock_client_method, mock_server_method):
         protocol = HTTP2Protocol(is_server=True)
         protocol.connection_preface_performed = True
@@ -64,7 +64,7 @@ class TestProtocol:
 class TestCheckALPNMatch(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
-        alpn_select=HTTP2Protocol.ALPN_PROTO_H2,
+        alpn_select=ALPN_PROTO_H2,
     )
 
     if OpenSSL._util.lib.Cryptography_HAS_ALPN:
@@ -72,7 +72,7 @@ class TestCheckALPNMatch(tservers.ServerTestBase):
         def test_check_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=[HTTP2Protocol.ALPN_PROTO_H2])
+            c.convert_to_ssl(alpn_protos=[ALPN_PROTO_H2])
             protocol = HTTP2Protocol(c)
             assert protocol.check_alpn()
 
@@ -88,7 +88,7 @@ class TestCheckALPNMismatch(tservers.ServerTestBase):
         def test_check_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=[HTTP2Protocol.ALPN_PROTO_H2])
+            c.convert_to_ssl(alpn_protos=[ALPN_PROTO_H2])
             protocol = HTTP2Protocol(c)
             tutils.raises(NotImplementedError, protocol.check_alpn)
 
@@ -306,7 +306,7 @@ class TestReadRequest(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c, is_server=True)
         protocol.connection_preface_performed = True
 
-        req = protocol.read_request()
+        req = protocol.read_request(NotImplemented)
 
         assert req.stream_id
         assert req.headers.fields == [[':method', 'GET'], [':path', '/'], [':scheme', 'https']]
@@ -329,7 +329,7 @@ class TestReadRequestRelative(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c, is_server=True)
         protocol.connection_preface_performed = True
 
-        req = protocol.read_request()
+        req = protocol.read_request(NotImplemented)
 
         assert req.form_in == "relative"
         assert req.method == "OPTIONS"
@@ -352,7 +352,7 @@ class TestReadRequestAbsolute(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c, is_server=True)
         protocol.connection_preface_performed = True
 
-        req = protocol.read_request()
+        req = protocol.read_request(NotImplemented)
 
         assert req.form_in == "absolute"
         assert req.scheme == "http"
@@ -378,13 +378,13 @@ class TestReadRequestConnect(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c, is_server=True)
         protocol.connection_preface_performed = True
 
-        req = protocol.read_request()
+        req = protocol.read_request(NotImplemented)
         assert req.form_in == "authority"
         assert req.method == "CONNECT"
         assert req.host == "address"
         assert req.port == 22
 
-        req = protocol.read_request()
+        req = protocol.read_request(NotImplemented)
         assert req.form_in == "authority"
         assert req.method == "CONNECT"
         assert req.host == "example.com"
@@ -410,7 +410,7 @@ class TestReadResponse(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_response(stream_id=42)
+        resp = protocol.read_response(NotImplemented, stream_id=42)
 
         assert resp.httpversion == (2, 0)
         assert resp.status_code == 200
@@ -436,7 +436,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_response(stream_id=42)
+        resp = protocol.read_response(NotImplemented, stream_id=42)
 
         assert resp.stream_id == 42
         assert resp.httpversion == (2, 0)

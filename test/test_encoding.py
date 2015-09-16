@@ -9,25 +9,29 @@ def test_identity():
 
 
 def test_gzip():
-    assert "string" == encoding.decode(
+    assert b"string" == encoding.decode(
         "gzip",
         encoding.encode(
             "gzip",
-            "string"))
-    assert None == encoding.decode("gzip", "bogus")
+            b"string"
+        )
+    )
+    assert encoding.decode("gzip", b"bogus") is None
 
 
 def test_deflate():
-    assert "string" == encoding.decode(
+    assert b"string" == encoding.decode(
         "deflate",
         encoding.encode(
             "deflate",
-            "string"))
-    assert "string" == encoding.decode(
+            b"string"
+        )
+    )
+    assert b"string" == encoding.decode(
         "deflate",
         encoding.encode(
             "deflate",
-            "string")[
-            2:-
-            4])
-    assert None == encoding.decode("deflate", "bogus")
+            b"string"
+        )[2:-4]
+    )
+    assert encoding.decode("deflate", b"bogus") is None
