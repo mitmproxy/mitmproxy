@@ -1,7 +1,5 @@
 |travis| |coveralls| |downloads| |latest-release| |python-versions|
 
-|
-
 ``mitmproxy`` is an interactive, SSL-capable man-in-the-middle proxy for HTTP
 with a console interface.
 
@@ -50,7 +48,7 @@ To get started hacking on mitmproxy, make sure you have Python_ 2.7.x. with
 virtualenv_ installed (you can find installation instructions for virtualenv here_).
 Then do the following:
 
-.. code-block:: none
+.. code-block:: text
 
     git clone https://github.com/mitmproxy/mitmproxy.git
     git clone https://github.com/mitmproxy/netlib.git
@@ -68,7 +66,7 @@ checkouts will be reflected live in the virtualenv.
 To confirm that you're up and running, activate the virtualenv, and run the
 mitmproxy test suite:
 
-.. code-block:: none
+.. code-block:: text
 
     . ../venv.mitmproxy/bin/activate # ..\venv.mitmproxy\Scripts\activate.bat on Windows
     nosetests ./test
@@ -78,7 +76,7 @@ Note that the main executables for the project - ``mitmdump``, ``mitmproxy`` and
 virtualenv, they will be on your $PATH, and you can run them like any other
 command:
 
-.. code-block:: none
+.. code-block:: text
 
     mitmdump --version
 
@@ -92,7 +90,7 @@ Testing
 If you've followed the procedure above, you already have all the development
 requirements installed, and you can simply run the test suite:
 
-.. code-block:: none
+.. code-block:: text
 
     nosetests --with-cov --cov-report term-missing
 
@@ -107,7 +105,7 @@ The mitmproxy documentation is build using Sphinx_, which is installed automatic
 environment as described below.
 After installation, you can render the documentation like this:
 
-.. code-block:: none
+.. code-block:: text
 
     cd docs
     make clean
