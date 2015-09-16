@@ -20,7 +20,7 @@ class TestRequest(object):
             'host',
             'port',
             'path',
-            (1, 1),
+            b"HTTP/1.1",
             'foobar',
         )
 
@@ -31,7 +31,7 @@ class TestRequest(object):
             'host',
             'port',
             'path',
-            (1, 1),
+            b"HTTP/1.1",
         )
         assert isinstance(req.headers, Headers)
 
@@ -307,13 +307,13 @@ class TestRequest(object):
 class TestResponse(object):
     def test_headers(self):
         tutils.raises(AssertionError, Response,
-            (1, 1),
+            b"HTTP/1.1",
             200,
             headers='foobar',
         )
 
         resp = Response(
-            (1, 1),
+            b"HTTP/1.1",
             200,
         )
         assert isinstance(resp.headers, Headers)

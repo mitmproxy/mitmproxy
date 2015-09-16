@@ -27,5 +27,6 @@ class HttpException(NetlibException):
 class HttpReadDisconnect(HttpException, ReadDisconnect):
     pass
 
+
 class HttpSyntaxException(HttpException):
     pass

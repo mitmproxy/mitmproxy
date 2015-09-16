@@ -37,14 +37,14 @@ def _check_exception(expected, actual, exc_tb):
         if expected.lower() not in str(actual).lower():
             six.reraise(AssertionError, AssertionError(
                 "Expected %s, but caught %s" % (
-                    repr(str(expected)), actual
+                    repr(expected), repr(actual)
                 )
             ), exc_tb)
     else:
         if not isinstance(actual, expected):
             six.reraise(AssertionError, AssertionError(
                 "Expected %s, but caught %s %s" % (
-                    expected.__name__, actual.__class__.__name__, str(actual)
+                    expected.__name__, actual.__class__.__name__, repr(actual)
                 )
             ), exc_tb)
 

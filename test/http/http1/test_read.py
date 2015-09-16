@@ -108,14 +108,14 @@ class TestReadBody(object):
 
 def test_connection_close():
     headers = Headers()
-    assert connection_close((1, 0), headers)
-    assert not connection_close((1, 1), headers)
+    assert connection_close(b"HTTP/1.0", headers)
+    assert not connection_close(b"HTTP/1.1", headers)
 
     headers["connection"] = "keep-alive"
-    assert not connection_close((1, 1), headers)
+    assert not connection_close(b"HTTP/1.1", headers)
 
     headers["connection"] = "close"
-    assert connection_close((1, 1), headers)
+    assert connection_close(b"HTTP/1.1", headers)
 
 
 def test_expected_http_body_size():
@@ -281,6 +281,10 @@ class TestReadHeaders(object):
         with raises(HttpSyntaxException):
             self._read(data)
 
+    def test_read_empty_name(self):
+        data = b":foo"
+        with raises(HttpSyntaxException):
+            self._read(data)
 
 def test_read_chunked():
     req = treq(body=None)

@@ -6,8 +6,7 @@ import re
 from ... import utils
 from ...exceptions import HttpReadDisconnect, HttpSyntaxException, HttpException
 from .. import Request, Response, Headers
-
-ALPN_PROTO_HTTP1 = b'http/1.1'
+from netlib.tcp import NetLibDisconnect
 
 
 def read_request(rfile, body_size_limit=None):
@@ -157,10 +156,10 @@ def connection_close(http_version, headers):
 
     # If we don't have a Connection header, HTTP 1.1 connections are assumed to
     # be persistent
-    return http_version != (1, 1)
+    return http_version != b"HTTP/1.1"
 
 
-def expected_http_body_size(request, response=False):
+def expected_http_body_size(request, response=None):
     """
         Returns:
             The expected body length:
@@ -211,10 +210,13 @@ def expected_http_body_size(request, response=False):
 
 
 def _get_first_line(rfile):
-    line = rfile.readline()
-    if line == b"\r\n" or line == b"\n":
-        # Possible leftover from previous message
+    try:
         line = rfile.readline()
+        if line == b"\r\n" or line == b"\n":
+            # Possible leftover from previous message
+            line = rfile.readline()
+    except NetLibDisconnect:
+        raise HttpReadDisconnect()
     if not line:
         raise HttpReadDisconnect()
     line = line.strip()
@@ -317,6 +319,8 @@ def _read_headers(rfile):
             try:
                 name, value = line.split(b":", 1)
                 value = value.strip()
+                if not name or not value:
+                    raise ValueError()
                 ret.append([name, value])
             except ValueError:
                 raise HttpSyntaxException("Invalid headers")

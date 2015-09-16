@@ -25,9 +25,9 @@ def assemble_response(response):
     return head + response.body
 
 
-def assemble_response_head(response):
+def assemble_response_head(response, preserve_transfer_encoding=False):
     first_line = _assemble_response_line(response)
-    headers = _assemble_response_headers(response)
+    headers = _assemble_response_headers(response, preserve_transfer_encoding)
     return b"%s\r\n%s\r\n" % (first_line, headers)
 
 

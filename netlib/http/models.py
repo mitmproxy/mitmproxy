@@ -13,6 +13,9 @@ try:
 except ImportError:
     from collections.abc import MutableMapping
 
+# TODO: Move somewhere else?
+ALPN_PROTO_HTTP1 = b'http/1.1'
+ALPN_PROTO_H2 = b'h2'
 HDR_FORM_URLENCODED = b"application/x-www-form-urlencoded"
 HDR_FORM_MULTIPART = b"multipart/form-data"
 
