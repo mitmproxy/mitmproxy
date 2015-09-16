@@ -94,7 +94,7 @@ get set up to contribute to the project, install Python as outlined above, then 
 Hacking_ section of the README on GitHub.
 
 
-.. _Hacking: https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking
+.. _Hacking: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst#hacking
 .. _mitmproxy.org: https://mitmproxy.org/
 .. _`Python website`: https://www.python.org/downloads/windows/
 .. _pip: https://pip.pypa.io/en/latest/installing.html
