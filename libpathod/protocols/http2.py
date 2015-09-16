@@ -5,7 +5,7 @@ class HTTP2Protocol:
 
     def __init__(self, pathod_handler):
         self.pathod_handler = pathod_handler
-        self.wire_protocol = http2.connections.HTTP2Protocol(
+        self.wire_protocol = http2.HTTP2Protocol(
             self.pathod_handler, is_server=True, dump_frames=self.pathod_handler.http2_framedump
         )
 

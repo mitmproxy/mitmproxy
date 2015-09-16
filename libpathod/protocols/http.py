@@ -68,8 +68,4 @@ class HTTPProtocol(object):
         return self.pathod_handler.handle_http_request, None
 
     def read_request(self, lg=None):
-        try:
-            return http1.read_request(self.pathod_handler.rfile)
-        except HttpReadDisconnect:
-            # TODO: This is
-            return Request("", b"", b"", b"", b"", b"", b"", None, b"")
+        return http1.read_request(self.pathod_handler.rfile)

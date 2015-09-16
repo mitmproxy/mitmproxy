@@ -6,7 +6,7 @@ import threading
 import urllib
 
 from netlib import tcp, http, certutils, websockets
-from netlib.exceptions import HttpException
+from netlib.exceptions import HttpException, HttpReadDisconnect
 from netlib.http import ALPN_PROTO_HTTP1, ALPN_PROTO_H2
 
 from . import version, app, language, utils, log, protocols
@@ -126,13 +126,12 @@ class PathodHandler(tcp.BaseHandler):
         with logger.ctx() as lg:
             try:
                 req = self.protocol.read_request(self.rfile)
+            except HttpReadDisconnect:
+                return None, None
             except HttpException as s:
                 s = str(s)
                 lg(s)
                 return None, dict(type="error", msg=s)
-
-            if req.method == b"" and req.form_in == "":
-                return None, None
 
             if req.method == 'CONNECT':
                 return self.protocol.handle_http_connect([req.host, req.port, req.httpversion], lg)

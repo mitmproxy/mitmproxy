@@ -14,7 +14,7 @@ import six
 
 from netlib import tcp, http, certutils, websockets, socks
 from netlib.exceptions import HttpException
-from netlib.http import http1, http2, ALPN_PROTO_HTTP1
+from netlib.http import http1, http2
 
 import language.http
 import language.websockets
@@ -289,7 +289,7 @@ class Pathoc(tcp.TCPClient):
         self.sslinfo = None
         if self.ssl:
             try:
-                alpn_protos = [ALPN_PROTO_HTTP1]
+                alpn_protos = [http.ALPN_PROTO_HTTP1]
                 if self.use_http2:
                     alpn_protos.append(http.ALPN_PROTO_H2)
 
