@@ -63,7 +63,7 @@ class LogCtx(object):
             for line in netlib.utils.hexdump(data):
                 self("\t%s %s %s" % line)
         else:
-            for i in netlib.utils.cleanBin(data).split("\n"):
+            for i in netlib.utils.clean_bin(data).split("\n"):
                 self("\t%s" % i)
 
     def __call__(self, line):

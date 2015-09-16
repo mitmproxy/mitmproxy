@@ -6,7 +6,8 @@ import threading
 import urllib
 
 from netlib import tcp, http, certutils, websockets
-from netlib.http import http1, http2
+from netlib.exceptions import HttpException
+from netlib.http import ALPN_PROTO_HTTP1, ALPN_PROTO_H2
 
 from . import version, app, language, utils, log, protocols
 import language.http
@@ -40,7 +41,7 @@ class SSLOptions(object):
         ssl_options=tcp.SSL_DEFAULT_OPTIONS,
         ciphers=None,
         certs=None,
-        alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
+        alpn_select=ALPN_PROTO_H2,
     ):
         self.confdir = confdir
         self.cn = cn
@@ -124,13 +125,13 @@ class PathodHandler(tcp.BaseHandler):
         """
         with logger.ctx() as lg:
             try:
-                req = self.protocol.read_request()
-            except http.HttpError as s:
+                req = self.protocol.read_request(self.rfile)
+            except HttpException as s:
                 s = str(s)
                 lg(s)
                 return None, dict(type="error", msg=s)
 
-            if isinstance(req, http.EmptyRequest):
+            if req.method == b"" and req.form_in == "":
                 return None, None
 
             if req.method == 'CONNECT':
@@ -259,7 +260,7 @@ class PathodHandler(tcp.BaseHandler):
                 return
 
             alp = self.get_alpn_proto_negotiated()
-            if alp == http2.HTTP2Protocol.ALPN_PROTO_H2:
+            if alp == ALPN_PROTO_H2:
                 self.protocol = protocols.http2.HTTP2Protocol(self)
                 self.use_http2 = True
 

@@ -5,9 +5,11 @@ import OpenSSL
 from mock import Mock
 
 from netlib import tcp, http, socks
+from netlib.exceptions import HttpException
 from netlib.http import http1, http2
 
 from libpathod import pathoc, test, version, pathod, language
+from netlib.tutils import raises
 import tutils
 
 
@@ -82,7 +84,7 @@ class _TestDaemon:
                 r = r.freeze(language.Settings())
             try:
                 c.request(r)
-            except (http.HttpError, tcp.NetLibError):
+            except (HttpException, tcp.NetLibError):
                 pass
         return s.getvalue()
 
@@ -92,7 +94,7 @@ class TestDaemonSSL(_TestDaemon):
     ssloptions = pathod.SSLOptions(
         request_client_cert=True,
         sans=["test1.com", "test2.com"],
-        alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
+        alpn_select=http.ALPN_PROTO_H2,
     )
 
     def test_sni(self):
@@ -222,11 +224,13 @@ class TestDaemon(_TestDaemon):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
         c.rfile, c.wfile = cStringIO.StringIO(), cStringIO.StringIO()
-        tutils.raises("connect failed", c.http_connect, to)
+        with raises("connect failed"):
+            c.http_connect(to)
         c.rfile = cStringIO.StringIO(
             "HTTP/1.1 500 OK\r\n"
         )
-        tutils.raises("connect failed", c.http_connect, to)
+        with raises("connect failed"):
+            c.http_connect(to)
         c.rfile = cStringIO.StringIO(
             "HTTP/1.1 200 OK\r\n"
         )
@@ -273,7 +277,7 @@ class TestDaemonHTTP2(_TestDaemon):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
             )
-            assert isinstance(c.protocol, http1.HTTP1Protocol)
+            assert c.protocol == http1
 
         def test_http2_alpn(self):
             c = pathoc.Pathoc(

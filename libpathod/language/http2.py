@@ -1,6 +1,7 @@
 import pyparsing as pp
 
-from netlib.http import user_agents, semantics, Headers
+from netlib import http
+from netlib.http import user_agents, Headers
 from . import base, message
 
 """
@@ -184,7 +185,7 @@ class Response(_HTTP2Message):
             if body:
                 body = body.string()
 
-            resp = semantics.Response(
+            resp = http.Response(
                 (2, 0),
                 self.code.string(),
                 '',
@@ -267,7 +268,7 @@ class Request(_HTTP2Message):
             if body:
                 body = body.string()
 
-            req = semantics.Request(
+            req = http.Request(
                 '',
                 self.method.string(),
                 '',
