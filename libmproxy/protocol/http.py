@@ -5,6 +5,9 @@ import traceback
 
 import six
 
+import threading
+import Queue
+
 from netlib import tcp
 from netlib.http import http1, HttpErrorConnClosed, HttpError, Headers
 from netlib.http.semantics import CONTENT_MISSING
@@ -105,7 +108,7 @@ class Http1Layer(_StreamingHttpLayer):
 
     def send_response_headers(self, response):
         h = self.client_protocol._assemble_response_first_line(response)
-        self.client_conn.wfile.write(h + "\r\n")
+        self.client_conn.send(h + "\r\n")
         h = self.client_protocol._assemble_response_headers(
             response,
             preserve_transfer_encoding=True
@@ -162,65 +165,36 @@ class Http1Layer(_StreamingHttpLayer):
         layer()
 
 
-# TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
-class Http2Layer(_HttpLayer):
+class Http2Layer(Layer):
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
-        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True,
-                                             unhandled_frame_cb=self.handle_unexpected_frame_from_client)
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
-
-    def read_request(self):
-        request = HTTPRequest.from_protocol(
-            self.client_protocol,
-            body_size_limit=self.config.body_size_limit
-        )
-        self._stream_id = request.stream_id
-        return request
-
-    def send_request(self, message):
-        # TODO: implement flow control and WINDOW_UPDATE frames
-        self.server_conn.send(self.server_protocol.assemble(message))
-
-    def read_response(self, request_method):
-        return HTTPResponse.from_protocol(
-            self.server_protocol,
-            request_method=request_method,
-            body_size_limit=self.config.body_size_limit,
-            include_body=True,
-            stream_id=self._stream_id
-        )
-
-    def send_response(self, message):
-        # TODO: implement flow control to prevent client buffer filling up
-        # maintain a send buffer size, and read WindowUpdateFrames from client to increase the send buffer
-        self.client_conn.send(self.client_protocol.assemble(message))
-
-    def check_close_connection(self, flow):
-        # TODO: add a timer to disconnect after a 10 second timeout
-        return False
-
-    def connect(self):
-        self.ctx.connect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
-        self.server_protocol.perform_connection_preface()
-
-    def set_server(self, *args, **kwargs):
-        self.ctx.set_server(*args, **kwargs)
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
-                                             unhandled_frame_cb=self.handle_unexpected_frame_from_server)
-        self.server_protocol.perform_connection_preface()
+        self.streams = Queue.Queue()
+        self.client_protocol = HTTP2Protocol(
+            self.client_conn,
+            is_server=True,
+            new_stream_cb=self.handle_new_stream,
+            unhandled_frame_cb=self.handle_unexpected_frame_from_client)
+        self.server_protocol = HTTP2Protocol(
+            self.server_conn,
+            is_server=False,
+            unhandled_frame_cb=self.handle_unexpected_frame_from_server)
 
     def __call__(self):
+        self.client_protocol.perform_connection_preface()
         self.server_protocol.perform_connection_preface()
-        layer = HttpLayer(self, self.mode)
-        layer()
+
+        while True:
+            stream_id = self.streams.get()
+            layer = Http2SingleStreamLayer(self, stream_id)
+            new_layer = threading.Thread(target=layer)
+            new_layer.start()
 
         # terminate the connection
         self.client_conn.send(GoAwayFrame().to_bytes())
+
+    def handle_new_stream(self, stream_id):
+        self.streams.put(stream_id)
 
     def handle_unexpected_frame_from_client(self, frame):
         if isinstance(frame, WindowUpdateFrame):
@@ -258,6 +232,74 @@ class Http2Layer(_HttpLayer):
             self.client_conn.send(frame.to_bytes())
             return
         self.log("Unexpected HTTP2 frame from server: %s" % frame.human_readable(), "info")
+
+    def connect(self):
+        self.ctx.connect()
+        self.server_protocol = HTTP2Protocol(
+            self.server_conn,
+            is_server=False,
+            unhandled_frame_cb=self.handle_unexpected_frame_from_server)
+        self.server_protocol.perform_connection_preface()
+
+    def set_server(self, *args, **kwargs):
+        self.ctx.set_server(*args, **kwargs)
+        self.server_protocol = HTTP2Protocol(
+            self.server_conn,
+            is_server=False,
+            unhandled_frame_cb=self.handle_unexpected_frame_from_server)
+        self.server_protocol.perform_connection_preface()
+
+class Http2SingleStreamLayer(_HttpLayer):
+    def __init__(self, ctx, stream_id):
+        super(Http2SingleStreamLayer, self).__init__(ctx)
+        self._stream_id = stream_id
+
+    def read_request(self):
+        request = HTTPRequest.from_protocol(
+            self.client_protocol,
+            body_size_limit=self.config.body_size_limit,
+            stream_id=self._stream_id,
+        )
+        return request
+
+    def send_request(self, message):
+        # TODO: implement flow control to prevent client buffer filling up
+        # We need to maintain a send-buffer size, and read WindowUpdateFrames
+        # from the client to increase the send buffer.
+        message.stream_id = self._stream_id
+        self.server_protocol.send_request(message)
+
+    def read_response(self, request_method):
+        return HTTPResponse.from_protocol(
+            self.server_protocol,
+            request_method=request_method,
+            body_size_limit=self.config.body_size_limit,
+            include_body=True,
+            stream_id=self._stream_id,
+        )
+
+    def send_response(self, message):
+        # TODO: implement flow control to prevent client buffer filling up
+        # We need to maintain a send-buffer size, and read WindowUpdateFrames
+        # from the client to increase the send buffer.
+        message.stream_id = self._stream_id
+        self.client_protocol.send_response(message)
+
+    def check_close_connection(self, flow):
+        # This layer only handles a single stream.
+        # Single use means discarding it afterwards.
+        return True
+
+    def __call__(self):
+        layer = HttpLayer(self, self.mode)
+        layer()
+
+    def connect(self):
+        raise NotImplementedError()
+
+    def set_server(self, *args, **kwargs):
+        # do not mess with the server connection - all streams share it.
+        pass
 
 
 class ConnectServerConnection(object):

@@ -2,6 +2,9 @@ from __future__ import (absolute_import, print_function, division)
 
 import copy
 import os
+import threading
+import time
+import StringIO
 
 from netlib import tcp, certutils
 from .. import stateobject, utils
@@ -26,6 +29,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
         self.protocol = None
+        self.socket_lock = threading.Lock()
 
     def __nonzero__(self):
         return bool(self.connection) and not self.finished
@@ -70,8 +74,15 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     def send(self, message):
         if isinstance(message, list):
             message = b''.join(message)
-        self.wfile.write(message)
-        self.wfile.flush()
+        with self.socket_lock:
+            buffer = StringIO.StringIO(message).getvalue()
+            while True:
+                try:
+                    self.wfile.write(buffer)
+                    self.wfile.flush()
+                    break
+                except:
+                    time.sleep(0)
 
     @classmethod
     def from_state(cls, state):
@@ -98,6 +109,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_tcp_setup = None
         self.timestamp_ssl_setup = None
         self.protocol = None
+        self.socket_lock = threading.Lock()
 
     def __nonzero__(self):
         return bool(self.connection) and not self.finished
@@ -170,8 +182,15 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def send(self, message):
         if isinstance(message, list):
             message = b''.join(message)
-        self.wfile.write(message)
-        self.wfile.flush()
+        with self.socket_lock:
+            buffer = StringIO.StringIO(message).getvalue()
+            while True:
+                try:
+                    self.wfile.write(buffer)
+                    self.wfile.flush()
+                    break
+                except:
+                    time.sleep(0)
 
     def establish_ssl(self, clientcerts, sni, **kwargs):
         clientcert = None
