@@ -4,7 +4,7 @@ import urwid
 import urwid.util
 import os
 
-from netlib.http.semantics import CONTENT_MISSING
+from netlib.http import CONTENT_MISSING
 import netlib.utils
 
 from .. import utils

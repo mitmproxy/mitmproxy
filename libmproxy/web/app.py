@@ -128,12 +128,10 @@ class FlowHandler(RequestHandler):
             if a == "request":
                 request = flow.request
                 for k, v in b.iteritems():
-                    if k in ["method", "scheme", "host", "path"]:
+                    if k in ["method", "scheme", "host", "path", "httpversion"]:
                         setattr(request, k, str(v))
                     elif k == "port":
                         request.port = int(v)
-                    elif k == "httpversion":
-                        request.httpversion = tuple(int(x) for x in v)
                     elif k == "headers":
                         request.headers.load_state(v)
                     else:
@@ -147,7 +145,7 @@ class FlowHandler(RequestHandler):
                     elif k == "code":
                         response.code = int(v)
                     elif k == "httpversion":
-                        response.httpversion = tuple(int(x) for x in v)
+                        response.httpversion = str(v)
                     elif k == "headers":
                         response.headers.load_state(v)
                     else:

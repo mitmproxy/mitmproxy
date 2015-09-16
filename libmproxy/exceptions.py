@@ -34,11 +34,7 @@ class Socks5Exception(ProtocolException):
     pass
 
 
-class HttpException(ProtocolException):
-    pass
-
-
-class InvalidCredentials(HttpException):
+class HttpProtocolException(ProtocolException):
     pass
 
 
@@ -47,4 +43,8 @@ class ServerException(ProxyException):
 
 
 class ContentViewException(ProxyException):
+    pass
+
+
+class ReplayException(ProxyException):
     pass

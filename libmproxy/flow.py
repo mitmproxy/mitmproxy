@@ -12,7 +12,8 @@ import urlparse
 
 
 from netlib import wsgi
-from netlib.http.semantics import CONTENT_MISSING, Headers
+from netlib.exceptions import HttpException
+from netlib.http import CONTENT_MISSING, Headers, http1
 import netlib.http
 from . import controller, tnetstring, filt, script, version
 from .onboarding import app
@@ -161,9 +162,8 @@ class StreamLargeBodies(object):
 
     def run(self, flow, is_request):
         r = flow.request if is_request else flow.response
-        code = flow.response.code if flow.response else None
-        expected_size = netlib.http.http1.HTTP1Protocol.expected_http_body_size(
-            r.headers, is_request, flow.request.method, code
+        expected_size = http1.expected_http_body_size(
+            flow.request, flow.response if not is_request else None
         )
         if not (0 <= expected_size <= self.max_size):
             # r.stream may already be a callable, which we want to preserve.
@@ -842,7 +842,7 @@ class FlowMaster(controller.Master):
             host,
             port,
             path,
-            (1, 1),
+            b"HTTP/1.1",
             headers,
             None,
             None,
@@ -1000,7 +1000,7 @@ class FlowMaster(controller.Master):
         try:
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
-        except netlib.http.HttpError:
+        except HttpException:
             f.reply(Kill)
             return
 

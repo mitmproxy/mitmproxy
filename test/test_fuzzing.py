@@ -17,15 +17,11 @@ class TestFuzzy(tservers.HTTPProxTest):
         p = self.pathoc()
         assert p.request(req % self.server.port).status_code == 400
 
-    def test_invalid_ports(self):
-        req = 'get:"http://localhost:999999"'
-        p = self.pathoc()
-        assert p.request(req).status_code == 400
-
     def test_invalid_ipv6_url(self):
         req = 'get:"http://localhost:%s":i13,"["'
         p = self.pathoc()
-        assert p.request(req % self.server.port).status_code == 400
+        resp = p.request(req % self.server.port)
+        assert resp.status_code == 400
 
     # def test_invalid_upstream(self):
     #     req = r"get:'http://localhost:%s/p/200:i10,\x27+\x27'"

@@ -5,8 +5,7 @@ import sys
 import six
 
 from libmproxy.exceptions import ProtocolException
-from netlib.http.http1 import HTTP1Protocol
-from netlib.http.http2 import HTTP2Protocol
+from netlib.http import ALPN_PROTO_H2, ALPN_PROTO_HTTP1
 from netlib.tcp import NetLibError
 from ..protocol import (
     RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin
@@ -85,9 +84,9 @@ class RootContext(object):
         # 5. Check for TLS ALPN (HTTP1/HTTP2)
         if isinstance(top_layer, TlsLayer):
             alpn = top_layer.client_conn.get_alpn_proto_negotiated()
-            if alpn == HTTP2Protocol.ALPN_PROTO_H2:
+            if alpn == ALPN_PROTO_H2:
                 return Http2Layer(top_layer, 'transparent')
-            if alpn == HTTP1Protocol.ALPN_PROTO_HTTP1:
+            if alpn == ALPN_PROTO_HTTP1:
                 return Http1Layer(top_layer, 'transparent')
 
         # 6. Check for raw tcp mode

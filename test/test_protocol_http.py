@@ -1,46 +1,36 @@
-import cStringIO
-from cStringIO import StringIO
+from io import BytesIO
+from netlib.exceptions import HttpSyntaxException
 
-from mock import MagicMock
-
-from libmproxy.protocol.http import *
-import netlib.http
 from netlib.http import http1
-from netlib.http.semantics import CONTENT_MISSING
-
+from netlib.tutils import treq, raises
 import tutils
 import tservers
-
-def mock_protocol(data=''):
-    rfile = cStringIO.StringIO(data)
-    wfile = cStringIO.StringIO()
-    return http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
 
 
 class TestHTTPResponse:
     def test_read_from_stringio(self):
-        s = "HTTP/1.1 200 OK\r\n" \
-             "Content-Length: 7\r\n" \
-             "\r\n"\
-             "content\r\n" \
-             "HTTP/1.1 204 OK\r\n" \
-             "\r\n"
-
-        protocol = mock_protocol(s)
-        r = HTTPResponse.from_protocol(protocol, "GET")
-        assert r.status_code == 200
-        assert r.content == "content"
-        assert HTTPResponse.from_protocol(protocol, "GET").status_code == 204
-
-        protocol = mock_protocol(s)
-        # HEAD must not have content by spec. We should leave it on the pipe.
-        r = HTTPResponse.from_protocol(protocol, "HEAD")
-        assert r.status_code == 200
-        assert r.content == ""
-        tutils.raises(
-            "Invalid server response: 'content",
-            HTTPResponse.from_protocol, protocol, "GET"
+        s = (
+            b"HTTP/1.1 200 OK\r\n"
+            b"Content-Length: 7\r\n"
+            b"\r\n"
+            b"content\r\n"
+            b"HTTP/1.1 204 OK\r\n"
+            b"\r\n"
         )
+        rfile = BytesIO(s)
+        r = http1.read_response(rfile, treq())
+        assert r.status_code == 200
+        assert r.content == b"content"
+        assert http1.read_response(rfile, treq()).status_code == 204
+
+        rfile = BytesIO(s)
+        # HEAD must not have content by spec. We should leave it on the pipe.
+        r = http1.read_response(rfile, treq(method=b"HEAD"))
+        assert r.status_code == 200
+        assert r.content == b""
+
+        with raises(HttpSyntaxException):
+            http1.read_response(rfile, treq())
 
 
 class TestHTTPFlow(object):

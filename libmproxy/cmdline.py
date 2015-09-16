@@ -103,11 +103,15 @@ def parse_setheader(s):
 
 
 def parse_server_spec(url):
-    p = netlib.utils.parse_url(url)
-    if not p or not p[1] or p[0] not in ("http", "https"):
+    try:
+        p = netlib.utils.parse_url(url)
+        if p[0] not in ("http", "https"):
+            raise ValueError()
+    except ValueError:
         raise configargparse.ArgumentTypeError(
             "Invalid server specification: %s" % url
         )
+
     address = Address(p[1:3])
     scheme = p[0].lower()
     return config.ServerSpec(scheme, address)

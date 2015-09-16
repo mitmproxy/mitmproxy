@@ -84,7 +84,7 @@ class TestMatching:
             "host",
             80,
             "/path",
-            (1, 1),
+            b"HTTP/1.1",
             headers,
             "content_request",
             None,
@@ -99,8 +99,7 @@ class TestMatching:
 
         headers = Headers([["header_response", "svalue"]])
         f.response = http.HTTPResponse(
-            (1,
-             1),
+            b"HTTP/1.1",
             200,
             "OK",
             headers,

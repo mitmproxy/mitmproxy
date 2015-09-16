@@ -8,7 +8,7 @@ import mock
 
 import netlib.utils
 from netlib import odict
-from netlib.http.semantics import CONTENT_MISSING, HDR_FORM_URLENCODED, Headers
+from netlib.http import CONTENT_MISSING, HDR_FORM_URLENCODED, Headers
 from libmproxy import filt, protocol, controller, tnetstring, flow
 from libmproxy.models import Error, Flow, HTTPRequest, HTTPResponse, HTTPFlow, decoded
 from libmproxy.proxy.config import HostMatcher
@@ -849,7 +849,7 @@ class TestFlowMaster:
         s = flow.State()
 
         f = tutils.tflow()
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(f.request))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(body=f.request))
         pb = [f]
 
         fm = flow.FlowMaster(None, s)
@@ -903,7 +903,7 @@ class TestFlowMaster:
     def test_server_playback_kill(self):
         s = flow.State()
         f = tutils.tflow()
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(f.request))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(body=f.request))
         pb = [f]
         fm = flow.FlowMaster(None, s)
         fm.refresh_server_playback = True
@@ -1043,7 +1043,7 @@ class TestRequest:
 
     def test_getset_form_urlencoded(self):
         d = odict.ODict([("one", "two"), ("three", "four")])
-        r = HTTPRequest.wrap(netlib.tutils.treq(content=netlib.utils.urlencode(d.lst)))
+        r = HTTPRequest.wrap(netlib.tutils.treq(body=netlib.utils.urlencode(d.lst)))
         r.headers["content-type"] = HDR_FORM_URLENCODED
         assert r.get_form_urlencoded() == d
 

@@ -6,7 +6,7 @@ import sys
 import urwid
 
 from netlib import odict
-from netlib.http.semantics import CONTENT_MISSING, Headers
+from netlib.http import CONTENT_MISSING, Headers
 from . import common, grideditor, signals, searchable, tabs
 from . import flowdetailview
 from .. import utils, controller, contentviews
