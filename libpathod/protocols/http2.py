@@ -14,7 +14,7 @@ class HTTP2Protocol:
 
     def read_request(self, lg=None):
         self.wire_protocol.perform_server_connection_preface()
-        return self.wire_protocol.read_request()
+        return self.wire_protocol.read_request(self.pathod_handler.rfile)
 
     def assemble(self, message):
         return self.wire_protocol.assemble(message)

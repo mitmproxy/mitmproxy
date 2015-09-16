@@ -10,8 +10,10 @@ import time
 import threading
 
 import OpenSSL.crypto
+import six
 
 from netlib import tcp, http, certutils, websockets, socks
+from netlib.exceptions import HttpException
 from netlib.http import http1, http2
 
 import language.http
@@ -19,7 +21,7 @@ import language.websockets
 from . import utils, log
 
 import logging
-from netlib.http.http1 import HTTP1Protocol
+from netlib.tutils import treq
 
 logging.getLogger("hpack").setLevel(logging.WARNING)
 
@@ -213,7 +215,7 @@ class Pathoc(tcp.TCPClient):
                 )
             self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
-            self.protocol = http1.HTTP1Protocol(self)
+            self.protocol = http1
 
         self.settings = language.Settings(
             is_client=True,
@@ -229,15 +231,14 @@ class Pathoc(tcp.TCPClient):
             '\r\n'
         )
         self.wfile.flush()
-        l = self.rfile.readline()
-        if not l:
-            raise PathocError("Proxy CONNECT failed")
-        parsed = self.protocol.parse_response_line(l)
-        if not parsed[1] == 200:
-            raise PathocError(
-                "Proxy CONNECT failed: %s - %s" % (parsed[1], parsed[2])
-            )
-        self.protocol.read_headers()
+        try:
+            resp = self.protocol.read_response(self.rfile, treq(method="CONNECT"))
+            if resp.status_code != 200:
+                raise HttpException("Unexpected status code: %s" % resp.status_code)
+        except HttpException as e:
+            six.reraise(PathocError, PathocError(
+                "Proxy CONNECT failed: %s" % repr(e)
+            ))
 
     def socks_connect(self, connect_to):
         try:
@@ -288,9 +289,9 @@ class Pathoc(tcp.TCPClient):
         self.sslinfo = None
         if self.ssl:
             try:
-                alpn_protos = [HTTP1Protocol.ALPN_PROTO_HTTP1]
+                alpn_protos = [http.ALPN_PROTO_HTTP1]
                 if self.use_http2:
-                    alpn_protos.append(http2.HTTP2Protocol.ALPN_PROTO_H2)
+                    alpn_protos.append(http.ALPN_PROTO_H2)
 
                 self.convert_to_ssl(
                     sni=self.sni,
@@ -408,9 +409,9 @@ class Pathoc(tcp.TCPClient):
                 req = language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
 
-                resp = self.protocol.read_response(req["method"], None)
+                resp = self.protocol.read_response(self.rfile, treq(method=req["method"]))
                 resp.sslinfo = self.sslinfo
-            except http.HttpError as v:
+            except HttpException as v:
                 lg("Invalid server response: %s" % v)
                 raise
             except tcp.NetLibTimeout:

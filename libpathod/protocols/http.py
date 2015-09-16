@@ -1,14 +1,12 @@
-from netlib import tcp, http, wsgi
-from netlib.http import http1
-from .. import version, app, language, utils, log
+from netlib import tcp, wsgi
+from netlib.exceptions import HttpReadDisconnect
+from netlib.http import http1, Request
+from .. import version, language
 
-class HTTPProtocol:
 
+class HTTPProtocol(object):
     def __init__(self, pathod_handler):
         self.pathod_handler = pathod_handler
-        self.wire_protocol = http1.HTTP1Protocol(
-            self.pathod_handler
-        )
 
     def make_error_response(self, reason, body):
         return language.http.make_error_response(reason, body)
@@ -70,4 +68,4 @@ class HTTPProtocol:
         return self.pathod_handler.handle_http_request, None
 
     def read_request(self, lg=None):
-        return self.wire_protocol.read_request(allow_empty=True)
+        return http1.read_request(self.pathod_handler.rfile)

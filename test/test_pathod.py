@@ -4,6 +4,7 @@ import OpenSSL
 
 from libpathod import pathod, version
 from netlib import tcp, http
+from netlib.exceptions import HttpException
 import tutils
 
 
@@ -180,16 +181,16 @@ class CommonTests(tutils.DaemonTests):
 
     def test_invalid_content_length(self):
         tutils.raises(
-            http.HttpError,
+            HttpException,
             self.pathoc,
             ["get:/:h'content-length'='foo'"]
         )
         l = self.d.last_log()
         assert l["type"] == "error"
-        assert "Content-Length unknown" in l["msg"]
+        assert "Unparseable Content Length" in l["msg"]
 
     def test_invalid_headers(self):
-        tutils.raises(http.HttpError, self.pathoc, ["get:/:h'\t'='foo'"])
+        tutils.raises(HttpException, self.pathoc, ["get:/:h'\t'='foo'"])
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "Invalid headers" in l["msg"]
@@ -247,7 +248,7 @@ class TestDaemon(CommonTests):
 
     def test_connect_err(self):
         tutils.raises(
-            http.HttpError,
+            HttpException,
             self.pathoc,
             [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port)
