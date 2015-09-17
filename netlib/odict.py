@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 import re
 import copy
+import six
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):
@@ -67,10 +68,10 @@ class ODict(object):
             Sets the values for key k. If there are existing values for this
             key, they are cleared.
         """
-        if isinstance(valuelist, basestring):
+        if isinstance(valuelist, six.text_type) or isinstance(valuelist, six.binary_type):
             raise ValueError(
                 "Expected list of values instead of string. "
-                "Example: odict['Host'] = ['www.example.com']"
+                "Example: odict[b'Host'] = [b'www.example.com']"
             )
         kc = self._kconv(k)
         new = []
@@ -134,13 +135,6 @@ class ODict(object):
     def __repr__(self):
         return repr(self.lst)
 
-    def format(self):
-        elements = []
-        for itm in self.lst:
-            elements.append(itm[0] + ": " + str(itm[1]))
-        elements.append("")
-        return "\r\n".join(elements)
-
     def in_any(self, key, value, caseless=False):
         """
             Do any of the values matching key contain value?
@@ -153,19 +147,6 @@ class ODict(object):
             if caseless:
                 i = i.lower()
             if value in i:
-                return True
-        return False
-
-    def match_re(self, expr):
-        """
-            Match the regular expression against each (key, value) pair. For
-            each pair a string of the following format is matched against:
-
-            "key: value"
-        """
-        for k, v in self.lst:
-            s = "%s: %s" % (k, v)
-            if re.search(expr, s):
                 return True
         return False
 

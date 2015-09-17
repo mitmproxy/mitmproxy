@@ -136,7 +136,7 @@ class Headers(MutableMapping, object):
     def __len__(self):
         return len(set(name.lower() for name, _ in self.fields))
 
-    #__hash__ = object.__hash__
+    # __hash__ = object.__hash__
 
     def _index(self, name):
         name = name.lower()
@@ -227,11 +227,11 @@ class Request(Message):
     # This list is adopted legacy code.
     # We probably don't need to strip off keep-alive.
     _headers_to_strip_off = [
-        b'Proxy-Connection',
-        b'Keep-Alive',
-        b'Connection',
-        b'Transfer-Encoding',
-        b'Upgrade',
+        'Proxy-Connection',
+        'Keep-Alive',
+        'Connection',
+        'Transfer-Encoding',
+        'Upgrade',
     ]
 
     def __init__(
@@ -275,8 +275,8 @@ class Request(Message):
             response. That is, we remove ETags and If-Modified-Since headers.
         """
         delheaders = [
-            b"if-modified-since",
-            b"if-none-match",
+            b"If-Modified-Since",
+            b"If-None-Match",
         ]
         for i in delheaders:
             self.headers.pop(i, None)
@@ -286,16 +286,16 @@ class Request(Message):
             Modifies this request to remove headers that will compress the
             resource's data.
         """
-        self.headers[b"accept-encoding"] = b"identity"
+        self.headers["Accept-Encoding"] = b"identity"
 
     def constrain_encoding(self):
         """
             Limits the permissible Accept-Encoding values, based on what we can
             decode appropriately.
         """
-        accept_encoding = self.headers.get(b"accept-encoding")
+        accept_encoding = self.headers.get(b"Accept-Encoding")
         if accept_encoding:
-            self.headers[b"accept-encoding"] = (
+            self.headers["Accept-Encoding"] = (
                 ', '.join(
                     e
                     for e in encoding.ENCODINGS
@@ -316,9 +316,9 @@ class Request(Message):
             indicates non-form data.
         """
         if self.body:
-            if HDR_FORM_URLENCODED in self.headers.get("content-type","").lower():
+            if HDR_FORM_URLENCODED in self.headers.get("Content-Type", "").lower():
                 return self.get_form_urlencoded()
-            elif HDR_FORM_MULTIPART in self.headers.get("content-type","").lower():
+            elif HDR_FORM_MULTIPART in self.headers.get("Content-Type", "").lower():
                 return self.get_form_multipart()
         return ODict([])
 
@@ -328,12 +328,12 @@ class Request(Message):
             Returns an empty ODict if there is no data or the content-type
             indicates non-form data.
         """
-        if self.body and HDR_FORM_URLENCODED in self.headers.get("content-type","").lower():
+        if self.body and HDR_FORM_URLENCODED in self.headers.get("Content-Type", "").lower():
             return ODict(utils.urldecode(self.body))
         return ODict([])
 
     def get_form_multipart(self):
-        if self.body and HDR_FORM_MULTIPART in self.headers.get("content-type","").lower():
+        if self.body and HDR_FORM_MULTIPART in self.headers.get("Content-Type", "").lower():
             return ODict(
                 utils.multipartdecode(
                     self.headers,
@@ -405,9 +405,9 @@ class Request(Message):
             but not the resolved name. This is disabled by default, as an
             attacker may spoof the host header to confuse an analyst.
         """
-        if hostheader and b"Host" in self.headers:
+        if hostheader and "Host" in self.headers:
             try:
-                return self.headers[b"Host"].decode("idna")
+                return self.headers["Host"].decode("idna")
             except ValueError:
                 pass
         if self.host:
@@ -426,7 +426,7 @@ class Request(Message):
             Returns a possibly empty netlib.odict.ODict object.
         """
         ret = ODict()
-        for i in self.headers.get_all("cookie"):
+        for i in self.headers.get_all("Cookie"):
             ret.extend(cookies.parse_cookie_header(i))
         return ret
 
@@ -468,9 +468,9 @@ class Request(Message):
 
 class Response(Message):
     _headers_to_strip_off = [
-        b'Proxy-Connection',
-        b'Alternate-Protocol',
-        b'Alt-Svc',
+        'Proxy-Connection',
+        'Alternate-Protocol',
+        'Alt-Svc',
     ]
 
     def __init__(
@@ -498,7 +498,7 @@ class Response(Message):
         return "<Response: {status_code} {msg} ({contenttype}, {size})>".format(
             status_code=self.status_code,
             msg=self.msg,
-            contenttype=self.headers.get("content-type", "unknown content type"),
+            contenttype=self.headers.get("Content-Type", "unknown content type"),
             size=size)
 
     def get_cookies(self):
@@ -511,7 +511,7 @@ class Response(Message):
             attributes (e.g. HTTPOnly) are indicated by a Null value.
         """
         ret = []
-        for header in self.headers.get_all(b"set-cookie"):
+        for header in self.headers.get_all("Set-Cookie"):
             v = cookies.parse_set_cookie_header(header)
             if v:
                 name, value, attrs = v
@@ -534,4 +534,4 @@ class Response(Message):
                     i[1][1]
                 )
             )
-        self.headers.set_all(b"Set-Cookie", values)
+        self.headers.set_all("Set-Cookie", values)

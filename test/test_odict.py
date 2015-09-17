@@ -1,7 +1,7 @@
 from netlib import odict, tutils
 
 
-class TestODict:
+class TestODict(object):
 
     def setUp(self):
         self.od = odict.ODict()
@@ -13,21 +13,10 @@ class TestODict:
 
     def test_str_err(self):
         h = odict.ODict()
-        tutils.raises(ValueError, h.__setitem__, "key", "foo")
-
-    def test_dictToHeader1(self):
-        self.od.add("one", "uno")
-        self.od.add("two", "due")
-        self.od.add("two", "tre")
-        expected = [
-            "one: uno\r\n",
-            "two: due\r\n",
-            "two: tre\r\n",
-            "\r\n"
-        ]
-        out = self.od.format()
-        for i in expected:
-            assert out.find(i) >= 0
+        with tutils.raises(ValueError):
+            h["key"] = u"foo"
+        with tutils.raises(ValueError):
+            h["key"] = b"foo"
 
     def test_getset_state(self):
         self.od.add("foo", 1)
@@ -39,23 +28,6 @@ class TestODict:
         b = odict.ODict()
         b.load_state(state)
         assert b == self.od
-
-    def test_dictToHeader2(self):
-        self.od["one"] = ["uno"]
-        expected1 = "one: uno\r\n"
-        expected2 = "\r\n"
-        out = self.od.format()
-        assert out.find(expected1) >= 0
-        assert out.find(expected2) >= 0
-
-    def test_match_re(self):
-        h = odict.ODict()
-        h.add("one", "uno")
-        h.add("two", "due")
-        h.add("two", "tre")
-        assert h.match_re("uno")
-        assert h.match_re("two: due")
-        assert not h.match_re("nonono")
 
     def test_in_any(self):
         self.od["one"] = ["atwoa", "athreea"]
@@ -122,7 +94,7 @@ class TestODict:
         assert a["a"] == ["b", "b"]
 
 
-class TestODictCaseless:
+class TestODictCaseless(object):
 
     def setUp(self):
         self.od = odict.ODictCaseless()

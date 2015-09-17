@@ -36,8 +36,8 @@ class TestRequest(object):
         assert isinstance(req.headers, Headers)
 
     def test_equal(self):
-        a = tutils.treq()
-        b = tutils.treq()
+        a = tutils.treq(timestamp_start=42, timestamp_end=43)
+        b = tutils.treq(timestamp_start=42, timestamp_end=43)
         assert a == b
 
         assert not a == 'foo'
@@ -319,8 +319,8 @@ class TestResponse(object):
         assert isinstance(resp.headers, Headers)
 
     def test_equal(self):
-        a = tutils.tresp()
-        b = tutils.tresp()
+        a = tutils.tresp(timestamp_start=42, timestamp_end=43)
+        b = tutils.tresp(timestamp_start=42, timestamp_end=43)
         assert a == b
 
         assert not a == 'foo'

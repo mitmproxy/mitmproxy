@@ -2,10 +2,12 @@ from netlib import encoding
 
 
 def test_identity():
-    assert "string" == encoding.decode("identity", "string")
-    assert "string" == encoding.encode("identity", "string")
-    assert not encoding.encode("nonexistent", "string")
-    assert None == encoding.decode("nonexistent encoding", "string")
+    assert b"string" == encoding.decode("identity", b"string")
+    assert b"string" == encoding.encode("identity", b"string")
+    assert b"string" == encoding.encode(b"identity", b"string")
+    assert b"string" == encoding.decode(b"identity", b"string")
+    assert not encoding.encode("nonexistent", b"string")
+    assert not encoding.decode("nonexistent encoding", b"string")
 
 
 def test_gzip():

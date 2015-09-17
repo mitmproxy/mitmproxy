@@ -16,7 +16,11 @@ matrix:
           packages:
             - libssl-dev
     - python: 3.5
-      script: "nosetests --with-cov --cov-report term-missing test/http/http1"
+      script:
+        - nosetests --with-cov --cov-report term-missing test/http/http1
+        - nosetests --with-cov --cov-report term-missing test/test_utils.py
+        - nosetests --with-cov --cov-report term-missing test/test_encoding.py
+        - nosetests --with-cov --cov-report term-missing test/test_odict.py
     - python: pypy
     - python: pypy
       env: OPENSSL=1.0.2

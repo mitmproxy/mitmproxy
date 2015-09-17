@@ -5,28 +5,30 @@ from __future__ import absolute_import
 from io import BytesIO
 import gzip
 import zlib
-
-__ALL__ = ["ENCODINGS"]
-
-ENCODINGS = {"identity", "gzip", "deflate"}
+from .utils import always_byte_args
 
 
+ENCODINGS = {b"identity", b"gzip", b"deflate"}
+
+
+@always_byte_args("ascii", "ignore")
 def decode(e, content):
     encoding_map = {
-        "identity": identity,
-        "gzip": decode_gzip,
-        "deflate": decode_deflate,
+        b"identity": identity,
+        b"gzip": decode_gzip,
+        b"deflate": decode_deflate,
     }
     if e not in encoding_map:
         return None
     return encoding_map[e](content)
 
 
+@always_byte_args("ascii", "ignore")
 def encode(e, content):
     encoding_map = {
-        "identity": identity,
-        "gzip": encode_gzip,
-        "deflate": encode_deflate,
+        b"identity": identity,
+        b"gzip": encode_gzip,
+        b"deflate": encode_deflate,
     }
     if e not in encoding_map:
         return None
@@ -80,3 +82,5 @@ def encode_deflate(content):
         Returns compressed content, always including zlib header and checksum.
     """
     return zlib.compress(content)
+
+__all__ = ["ENCODINGS", "encode", "decode"]

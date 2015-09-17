@@ -246,7 +246,7 @@ def unparse_url(scheme, host, port, path=""):
     """
         Returns a URL string, constructed from the specified compnents.
     """
-    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
+    return b"%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
 def urlencode(s):
@@ -295,7 +295,7 @@ def multipartdecode(headers, content):
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
-    v = headers.get("content-type")
+    v = headers.get(b"Content-Type")
     if v:
         v = parse_content_type(v)
         if not v:
@@ -304,33 +304,33 @@ def multipartdecode(headers, content):
         if not boundary:
             return []
 
-        rx = re.compile(r'\bname="([^"]+)"')
+        rx = re.compile(br'\bname="([^"]+)"')
         r = []
 
-        for i in content.split("--" + boundary):
+        for i in content.split(b"--" + boundary):
             parts = i.splitlines()
-            if len(parts) > 1 and parts[0][0:2] != "--":
+            if len(parts) > 1 and parts[0][0:2] != b"--":
                 match = rx.search(parts[1])
                 if match:
                     key = match.group(1)
-                    value = "".join(parts[3 + parts[2:].index(""):])
+                    value = b"".join(parts[3 + parts[2:].index(b""):])
                     r.append((key, value))
         return r
     return []
 
 
-def always_bytes(unicode_or_bytes, encoding):
+def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):
-        return unicode_or_bytes.encode(encoding)
+        return unicode_or_bytes.encode(*encode_args)
     return unicode_or_bytes
 
 
-def always_byte_args(encoding):
+def always_byte_args(*encode_args):
     """Decorator that transparently encodes all arguments passed as unicode"""
     def decorator(fun):
         def _fun(*args, **kwargs):
-            args = [always_bytes(arg, encoding) for arg in args]
-            kwargs = {k: always_bytes(v, encoding) for k, v in six.iteritems(kwargs)}
+            args = [always_bytes(arg, *encode_args) for arg in args]
+            kwargs = {k: always_bytes(v, *encode_args) for k, v in six.iteritems(kwargs)}
             return fun(*args, **kwargs)
         return _fun
     return decorator
