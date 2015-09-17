@@ -91,21 +91,12 @@ class Http1Layer(_StreamingHttpLayer):
         return http1.read_body(self.server_conn.rfile, expected_size, self.config.body_size_limit)
 
     def send_response_headers(self, response):
-        raw = http1.assemble_response_head(response, preserve_transfer_encoding=True)
+        raw = http1.assemble_response_head(response)
         self.client_conn.wfile.write(raw)
         self.client_conn.wfile.flush()
 
     def send_response_body(self, response, chunks):
-        if b"chunked" in response.headers.get(b"transfer-encoding", b"").lower():
-            # TODO: Move this into netlib.http.http1
-            chunks = itertools.chain(
-                (
-                    "{:x}\r\n{}\r\n".format(len(chunk), chunk)
-                    for chunk in chunks if chunk
-                ),
-                ("0\r\n\r\n",)
-            )
-        for chunk in chunks:
+        for chunk in http1.assemble_body(response.headers, chunks):
             self.client_conn.wfile.write(chunk)
             self.client_conn.wfile.flush()
 
