@@ -1,7 +1,9 @@
 import time
 
-from netlib import tcp, http, wsgi, certutils, websockets
-from .. import version, app, language, utils, log
+from netlib import websockets
+from .. import language
+from netlib.exceptions import NetlibException
+
 
 class WebsocketsProtocol:
 
@@ -14,7 +16,7 @@ class WebsocketsProtocol:
                 started = time.time()
                 try:
                     frm = websockets.Frame.from_file(self.pathod_handler.rfile)
-                except tcp.NetLibIncomplete as e:
+                except NetlibException as e:
                     lg("Error reading websocket frame: %s" % e)
                     break
                 ended = time.time()
