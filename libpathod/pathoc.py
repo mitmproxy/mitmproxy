@@ -13,7 +13,8 @@ import OpenSSL.crypto
 import six
 
 from netlib import tcp, http, certutils, websockets, socks
-from netlib.exceptions import HttpException
+from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsException, TcpException, \
+    NetlibException
 from netlib.http import http1, http2
 
 import language.http
@@ -123,7 +124,7 @@ class WebsocketFrameReader(threading.Thread):
                     with self.logger.ctx() as log:
                         try:
                             frm = websockets.Frame.from_file(self.rfile)
-                        except tcp.NetLibDisconnect:
+                        except TcpDisconnect:
                             return
                         self.frames_queue.put(frm)
                         log("<< %s" % frm.header.human_readable())
@@ -270,7 +271,7 @@ class Pathoc(tcp.TCPClient):
                     connect_reply.msg,
                     "SOCKS server error"
                 )
-        except (socks.SocksError, tcp.NetLibDisconnect) as e:
+        except (socks.SocksError, TcpDisconnect) as e:
             raise PathocError(str(e))
 
     def connect(self, connect_to=None, showssl=False, fp=sys.stdout):
@@ -301,7 +302,7 @@ class Pathoc(tcp.TCPClient):
                     cipher_list=self.ciphers,
                     alpn_protos=alpn_protos
                 )
-            except tcp.NetLibError as v:
+            except TlsException as v:
                 raise PathocError(str(v))
 
             self.sslinfo = SSLInfo(
@@ -394,7 +395,7 @@ class Pathoc(tcp.TCPClient):
 
             Returns Response if we have a non-ignored response.
 
-            May raise http.HTTPError, tcp.NetLibError
+            May raise a NetlibException
         """
         logger = log.ConnectionLogger(
             self.fp,
@@ -414,7 +415,7 @@ class Pathoc(tcp.TCPClient):
             except HttpException as v:
                 lg("Invalid server response: %s" % v)
                 raise
-            except tcp.NetLibTimeout:
+            except TcpTimeout:
                 if self.ignoretimeout:
                     lg("Timeout (ignored)")
                     return None
@@ -438,7 +439,7 @@ class Pathoc(tcp.TCPClient):
 
             Returns Response if we have a non-ignored response.
 
-            May raise http.HTTPError, tcp.NetLibError
+            May raise a NetlibException
         """
         if isinstance(r, basestring):
             r = language.parse_pathoc(r, self.use_http2).next()
@@ -495,7 +496,7 @@ def main(args):  # pragma: nocover
             trycount = 0
             try:
                 p.connect(args.connect_to, args.showssl)
-            except tcp.NetLibError as v:
+            except TcpException as v:
                 print >> sys.stderr, str(v)
                 continue
             except PathocError as v:
@@ -523,7 +524,7 @@ def main(args):  # pragma: nocover
                     # We consume the queue when we can, so it doesn't build up.
                     for i_ in p.wait(timeout=0, finish=False):
                         pass
-                except (http.HttpError, tcp.NetLibError) as v:
+                except NetlibException:
                     break
             for i_ in p.wait(timeout=0.01, finish=True):
                 pass

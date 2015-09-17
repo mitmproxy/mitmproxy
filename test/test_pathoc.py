@@ -5,7 +5,7 @@ import OpenSSL
 from mock import Mock
 
 from netlib import tcp, http, socks
-from netlib.exceptions import HttpException
+from netlib.exceptions import HttpException, TcpException, NetlibException
 from netlib.http import http1, http2
 
 from libpathod import pathoc, test, version, pathod, language
@@ -84,7 +84,7 @@ class _TestDaemon:
                 r = r.freeze(language.Settings())
             try:
                 c.request(r)
-            except (HttpException, tcp.NetLibError):
+            except NetlibException:
                 pass
         return s.getvalue()
 

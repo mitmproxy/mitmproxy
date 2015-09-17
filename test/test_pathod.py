@@ -4,7 +4,7 @@ import OpenSSL
 
 from libpathod import pathod, version
 from netlib import tcp, http
-from netlib.exceptions import HttpException
+from netlib.exceptions import HttpException, TlsException
 import tutils
 
 
@@ -264,7 +264,7 @@ class TestDaemonSSL(CommonTests):
         c.wbufsize = 0
         c.connect()
         c.wfile.write("\0\0\0\0")
-        tutils.raises(tcp.NetLibError, c.convert_to_ssl)
+        tutils.raises(TlsException, c.convert_to_ssl)
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "SSL" in l["msg"]

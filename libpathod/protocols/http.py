@@ -1,5 +1,5 @@
 from netlib import tcp, wsgi
-from netlib.exceptions import HttpReadDisconnect
+from netlib.exceptions import HttpReadDisconnect, TlsException
 from netlib.http import http1, Request
 from .. import version, language
 
@@ -61,7 +61,7 @@ class HTTPProtocol(object):
                     options=self.pathod_handler.server.ssloptions.ssl_options,
                     alpn_select=self.pathod_handler.server.ssloptions.alpn_select,
                 )
-            except tcp.NetLibError as v:
+            except TlsException as v:
                 s = str(v)
                 lg(s)
                 return None, dict(type="error", msg=s)

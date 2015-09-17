@@ -6,8 +6,8 @@ import threading
 import urllib
 
 from netlib import tcp, http, certutils, websockets
-from netlib.exceptions import HttpException, HttpReadDisconnect
-from netlib.http import ALPN_PROTO_HTTP1, ALPN_PROTO_H2
+from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
+    TlsException
 
 from . import version, app, language, utils, log, protocols
 import language.http
@@ -41,7 +41,7 @@ class SSLOptions(object):
         ssl_options=tcp.SSL_DEFAULT_OPTIONS,
         ciphers=None,
         certs=None,
-        alpn_select=ALPN_PROTO_H2,
+        alpn_select=http.ALPN_PROTO_H2,
     ):
         self.confdir = confdir
         self.cn = cn
@@ -247,7 +247,7 @@ class PathodHandler(tcp.BaseHandler):
                     options=self.server.ssloptions.ssl_options,
                     alpn_select=self.server.ssloptions.alpn_select,
                 )
-            except tcp.NetLibError as v:
+            except TlsException as v:
                 s = str(v)
                 self.server.add_log(
                     dict(
@@ -259,7 +259,7 @@ class PathodHandler(tcp.BaseHandler):
                 return
 
             alp = self.get_alpn_proto_negotiated()
-            if alp == ALPN_PROTO_H2:
+            if alp == http.ALPN_PROTO_H2:
                 self.protocol = protocols.http2.HTTP2Protocol(self)
                 self.use_http2 = True
 
@@ -387,7 +387,7 @@ class Pathod(tcp.TCPServer):
         try:
             h.handle()
             h.finish()
-        except tcp.NetLibDisconnect:  # pragma: no cover
+        except TcpDisconnect:  # pragma: no cover
             log.write_raw(self.logfp, "Disconnect")
             self.add_log(
                 dict(
@@ -396,7 +396,7 @@ class Pathod(tcp.TCPServer):
                 )
             )
             return
-        except tcp.NetLibTimeout:
+        except TcpTimeout:
             log.write_raw(self.logfp, "Timeout")
             self.add_log(
                 dict(

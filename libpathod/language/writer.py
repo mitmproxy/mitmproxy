@@ -1,4 +1,5 @@
 import time
+from netlib.exceptions import TcpDisconnect
 import netlib.tcp
 
 BLOCKSIZE = 1024
@@ -62,5 +63,5 @@ def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
                 return True
             elif a[1] == "inject":
                 send_chunk(fp, a[2], blocksize, 0, len(a[2]))
-    except netlib.tcp.NetLibDisconnect:  # pragma: no cover
+    except TcpDisconnect:  # pragma: no cover
         return True
