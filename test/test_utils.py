@@ -103,11 +103,11 @@ def test_get_header_tokens():
     headers = Headers()
     assert utils.get_header_tokens(headers, "foo") == []
     headers["foo"] = "bar"
-    assert utils.get_header_tokens(headers, "foo") == ["bar"]
+    assert utils.get_header_tokens(headers, "foo") == [b"bar"]
     headers["foo"] = "bar, voing"
-    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing"]
+    assert utils.get_header_tokens(headers, "foo") == [b"bar", b"voing"]
     headers.set_all("foo", ["bar, voing", "oink"])
-    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
+    assert utils.get_header_tokens(headers, "foo") == [b"bar", b"voing", b"oink"]
 
 
 def test_multipartdecode():
@@ -134,8 +134,8 @@ def test_multipartdecode():
 
 def test_parse_content_type():
     p = utils.parse_content_type
-    assert p("text/html") == ("text", "html", {})
-    assert p("text") is None
+    assert p(b"text/html") == (b"text", b"html", {})
+    assert p(b"text") is None
 
-    v = p("text/html; charset=UTF-8")
-    assert v == ('text', 'html', {'charset': 'UTF-8'})
+    v = p(b"text/html; charset=UTF-8")
+    assert v == (b'text', b'html', {b'charset': b'UTF-8'})

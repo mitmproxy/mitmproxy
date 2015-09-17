@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import os
 import struct
 import io
+import six
 
 from .protocol import Masker
 from netlib import tcp
@@ -127,8 +128,8 @@ class FrameHeader(object):
         """
           read a websockets frame header
         """
-        first_byte = utils.bytes_to_int(fp.safe_read(1))
-        second_byte = utils.bytes_to_int(fp.safe_read(1))
+        first_byte = six.byte2int(fp.safe_read(1))
+        second_byte = six.byte2int(fp.safe_read(1))
 
         fin = utils.getbit(first_byte, 7)
         rsv1 = utils.getbit(first_byte, 6)
@@ -145,9 +146,9 @@ class FrameHeader(object):
         if length_code <= 125:
             payload_length = length_code
         elif length_code == 126:
-            payload_length = utils.bytes_to_int(fp.safe_read(2))
+            payload_length, = struct.unpack("!H", fp.safe_read(2))
         elif length_code == 127:
-            payload_length = utils.bytes_to_int(fp.safe_read(8))
+            payload_length, = struct.unpack("!Q", fp.safe_read(8))
 
         # masking key only present if mask bit set
         if mask_bit == 1:

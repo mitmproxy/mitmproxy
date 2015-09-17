@@ -413,7 +413,7 @@ class TestReadResponse(tservers.ServerTestBase):
 
         resp = protocol.read_response(NotImplemented, stream_id=42)
 
-        assert resp.httpversion == (2, 0)
+        assert resp.http_version == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
         assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]
@@ -440,7 +440,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         resp = protocol.read_response(NotImplemented, stream_id=42)
 
         assert resp.stream_id == 42
-        assert resp.httpversion == (2, 0)
+        assert resp.http_version == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
         assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]

@@ -50,14 +50,14 @@ def _assemble_request_line(request, form=None):
         return b"%s %s %s" % (
             request.method,
             request.path,
-            request.httpversion
+            request.http_version
         )
     elif form == "authority":
         return b"%s %s:%d %s" % (
             request.method,
             request.host,
             request.port,
-            request.httpversion
+            request.http_version
         )
     elif form == "absolute":
         return b"%s %s://%s:%d%s %s" % (
@@ -66,7 +66,7 @@ def _assemble_request_line(request, form=None):
             request.host,
             request.port,
             request.path,
-            request.httpversion
+            request.http_version
         )
     else:  # pragma: nocover
         raise RuntimeError("Invalid request form")
@@ -93,7 +93,7 @@ def _assemble_request_headers(request):
 
 def _assemble_response_line(response):
     return b"%s %d %s" % (
-        response.httpversion,
+        response.http_version,
         response.status_code,
         response.msg,
     )

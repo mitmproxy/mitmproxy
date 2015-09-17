@@ -105,7 +105,7 @@ def treq(**kwargs):
         host=b"address",
         port=22,
         path=b"/path",
-        httpversion=b"HTTP/1.1",
+        http_version=b"HTTP/1.1",
         headers=Headers(header=b"qvalue"),
         body=b"content"
     )
@@ -119,7 +119,7 @@ def tresp(**kwargs):
         netlib.http.Response
     """
     default = dict(
-        httpversion=b"HTTP/1.1",
+        http_version=b"HTTP/1.1",
         status_code=200,
         msg=b"OK",
         headers=Headers(header_response=b"svalue"),

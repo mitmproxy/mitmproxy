@@ -17,11 +17,6 @@ def isascii(bytes):
     return True
 
 
-# best way to do it in python 2.x
-def bytes_to_int(i):
-    return int(i.encode('hex'), 16)
-
-
 def clean_bin(s, keep_spacing=True):
     """
         Cleans binary data to make it safe to display.
@@ -51,21 +46,15 @@ def clean_bin(s, keep_spacing=True):
 
 def hexdump(s):
     """
-        Returns a set of tuples:
-            (offset, hex, str)
+        Returns:
+            A generator of (offset, hex, str) tuples
     """
-    parts = []
     for i in range(0, len(s), 16):
-        o = "%.10x" % i
+        offset = b"%.10x" % i
         part = s[i:i + 16]
-        x = " ".join("%.2x" % ord(i) for i in part)
-        if len(part) < 16:
-            x += " "
-            x += " ".join("  " for i in range(16 - len(part)))
-        parts.append(
-            (o, x, clean_bin(part, False))
-        )
-    return parts
+        x = b" ".join(b"%.2x" % i for i in six.iterbytes(part))
+        x = x.ljust(47)  # 16*2 + 15
+        yield (offset, x, clean_bin(part, False))
 
 
 def setbit(byte, offset, value):
@@ -80,8 +69,7 @@ def setbit(byte, offset, value):
 
 def getbit(byte, offset):
     mask = 1 << offset
-    if byte & mask:
-        return True
+    return bool(byte & mask)
 
 
 class BiDi(object):
@@ -159,7 +147,7 @@ def is_valid_host(host):
         return False
     if len(host) > 255:
         return False
-    if host[-1] == ".":
+    if host[-1] == b".":
         host = host[:-1]
     return all(_label_valid.match(x) for x in host.split(b"."))
 
@@ -248,7 +236,7 @@ def hostport(scheme, host, port):
     """
         Returns the host component, with a port specifcation if needed.
     """
-    if (port, scheme) in [(80, "http"), (443, "https")]:
+    if (port, scheme) in [(80, b"http"), (443, b"https")]:
         return host
     else:
         return b"%s:%d" % (host, port)

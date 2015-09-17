@@ -17,6 +17,7 @@ from __future__ import absolute_import
 import base64
 import hashlib
 import os
+import six
 from ..http import Headers
 from .. import utils
 
@@ -40,7 +41,7 @@ class Masker(object):
 
     def __init__(self, key):
         self.key = key
-        self.masks = [utils.bytes_to_int(byte) for byte in key]
+        self.masks = [six.byte2int(byte) for byte in key]
         self.offset = 0
 
     def mask(self, offset, data):

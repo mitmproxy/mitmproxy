@@ -193,15 +193,45 @@ class Headers(MutableMapping, object):
         return cls([list(field) for field in state])
 
 
-class Request(object):
+class Message(object):
+    def __init__(self, http_version, headers, body, timestamp_start, timestamp_end):
+        self.http_version = http_version
+        if not headers:
+            headers = Headers()
+        assert isinstance(headers, Headers)
+        self.headers = headers
+
+        self._body = body
+        self.timestamp_start = timestamp_start
+        self.timestamp_end = timestamp_end
+
+    @property
+    def body(self):
+        return self._body
+
+    @body.setter
+    def body(self, body):
+        self._body = body
+        if isinstance(body, bytes):
+            self.headers[b"Content-Length"] = str(len(body)).encode()
+
+    content = body
+
+    def __eq__(self, other):
+        if isinstance(other, Message):
+            return self.__dict__ == other.__dict__
+        return False
+
+
+class Request(Message):
     # This list is adopted legacy code.
     # We probably don't need to strip off keep-alive.
     _headers_to_strip_off = [
-        'Proxy-Connection',
-        'Keep-Alive',
-        'Connection',
-        'Transfer-Encoding',
-        'Upgrade',
+        b'Proxy-Connection',
+        b'Keep-Alive',
+        b'Connection',
+        b'Transfer-Encoding',
+        b'Upgrade',
     ]
 
     def __init__(
@@ -212,16 +242,14 @@ class Request(object):
             host,
             port,
             path,
-            httpversion,
+            http_version,
             headers=None,
             body=None,
             timestamp_start=None,
             timestamp_end=None,
             form_out=None
     ):
-        if not headers:
-            headers = Headers()
-        assert isinstance(headers, Headers)
+        super(Request, self).__init__(http_version, headers, body, timestamp_start, timestamp_end)
 
         self.form_in = form_in
         self.method = method
@@ -229,22 +257,7 @@ class Request(object):
         self.host = host
         self.port = port
         self.path = path
-        self.httpversion = httpversion
-        self.headers = headers
-        self._body = body
-        self.timestamp_start = timestamp_start
-        self.timestamp_end = timestamp_end
         self.form_out = form_out or form_in
-
-    def __eq__(self, other):
-        try:
-            self_d = [self.__dict__[k] for k in self.__dict__ if
-                      k not in ('timestamp_start', 'timestamp_end')]
-            other_d = [other.__dict__[k] for k in other.__dict__ if
-                       k not in ('timestamp_start', 'timestamp_end')]
-            return self_d == other_d
-        except:
-            return False
 
     def __repr__(self):
         if self.host and self.port:
@@ -262,8 +275,8 @@ class Request(object):
             response. That is, we remove ETags and If-Modified-Since headers.
         """
         delheaders = [
-            "if-modified-since",
-            "if-none-match",
+            b"if-modified-since",
+            b"if-none-match",
         ]
         for i in delheaders:
             self.headers.pop(i, None)
@@ -273,16 +286,16 @@ class Request(object):
             Modifies this request to remove headers that will compress the
             resource's data.
         """
-        self.headers["accept-encoding"] = "identity"
+        self.headers[b"accept-encoding"] = b"identity"
 
     def constrain_encoding(self):
         """
             Limits the permissible Accept-Encoding values, based on what we can
             decode appropriately.
         """
-        accept_encoding = self.headers.get("accept-encoding")
+        accept_encoding = self.headers.get(b"accept-encoding")
         if accept_encoding:
-            self.headers["accept-encoding"] = (
+            self.headers[b"accept-encoding"] = (
                 ', '.join(
                     e
                     for e in encoding.ENCODINGS
@@ -335,7 +348,7 @@ class Request(object):
         """
         # FIXME: If there's an existing content-type header indicating a
         # url-encoded form, leave it alone.
-        self.headers["Content-Type"] = HDR_FORM_URLENCODED
+        self.headers[b"Content-Type"] = HDR_FORM_URLENCODED
         self.body = utils.urlencode(odict.lst)
 
     def get_path_components(self):
@@ -452,37 +465,17 @@ class Request(object):
             raise ValueError("Invalid URL: %s" % url)
         self.scheme, self.host, self.port, self.path = parts
 
-    @property
-    def body(self):
-        return self._body
 
-    @body.setter
-    def body(self, body):
-        self._body = body
-        if isinstance(body, bytes):
-            self.headers["Content-Length"] = str(len(body)).encode()
-
-    @property
-    def content(self):  # pragma: no cover
-        # TODO: remove deprecated getter
-        return self.body
-
-    @content.setter
-    def content(self, content):  # pragma: no cover
-        # TODO: remove deprecated setter
-        self.body = content
-
-
-class Response(object):
+class Response(Message):
     _headers_to_strip_off = [
-        'Proxy-Connection',
-        'Alternate-Protocol',
-        'Alt-Svc',
+        b'Proxy-Connection',
+        b'Alternate-Protocol',
+        b'Alt-Svc',
     ]
 
     def __init__(
             self,
-            httpversion,
+            http_version,
             status_code,
             msg=None,
             headers=None,
@@ -490,27 +483,9 @@ class Response(object):
             timestamp_start=None,
             timestamp_end=None,
     ):
-        if not headers:
-            headers = Headers()
-        assert isinstance(headers, Headers)
-
-        self.httpversion = httpversion
+        super(Response, self).__init__(http_version, headers, body, timestamp_start, timestamp_end)
         self.status_code = status_code
         self.msg = msg
-        self.headers = headers
-        self._body = body
-        self.timestamp_start = timestamp_start
-        self.timestamp_end = timestamp_end
-
-    def __eq__(self, other):
-        try:
-            self_d = [self.__dict__[k] for k in self.__dict__ if
-                      k not in ('timestamp_start', 'timestamp_end')]
-            other_d = [other.__dict__[k] for k in other.__dict__ if
-                       k not in ('timestamp_start', 'timestamp_end')]
-            return self_d == other_d
-        except:
-            return False
 
     def __repr__(self):
         # return "Response(%s - %s)" % (self.status_code, self.msg)
@@ -536,7 +511,7 @@ class Response(object):
             attributes (e.g. HTTPOnly) are indicated by a Null value.
         """
         ret = []
-        for header in self.headers.get_all("set-cookie"):
+        for header in self.headers.get_all(b"set-cookie"):
             v = cookies.parse_set_cookie_header(header)
             if v:
                 name, value, attrs = v
@@ -559,34 +534,4 @@ class Response(object):
                     i[1][1]
                 )
             )
-        self.headers.set_all("Set-Cookie", values)
-
-    @property
-    def body(self):
-        return self._body
-
-    @body.setter
-    def body(self, body):
-        self._body = body
-        if isinstance(body, bytes):
-            self.headers["Content-Length"] = str(len(body)).encode()
-
-    @property
-    def content(self):  # pragma: no cover
-        # TODO: remove deprecated getter
-        return self.body
-
-    @content.setter
-    def content(self, content):  # pragma: no cover
-        # TODO: remove deprecated setter
-        self.body = content
-
-    @property
-    def code(self):  # pragma: no cover
-        # TODO: remove deprecated getter
-        return self.status_code
-
-    @code.setter
-    def code(self, code):  # pragma: no cover
-        # TODO: remove deprecated setter
-        self.status_code = code
+        self.headers.set_all(b"Set-Cookie", values)
