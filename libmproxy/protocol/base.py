@@ -6,6 +6,7 @@ import six
 from netlib import tcp
 from ..models import ServerConnection
 from ..exceptions import ProtocolException
+from netlib.exceptions import TcpException
 
 
 class _LayerCodeCompletion(object):
@@ -175,7 +176,7 @@ class ServerConnectionMixin(object):
         self.channel.ask("serverconnect", self.server_conn)
         try:
             self.server_conn.connect()
-        except tcp.NetLibError as e:
+        except TcpException as e:
             six.reraise(
                 ProtocolException,
                 ProtocolException(

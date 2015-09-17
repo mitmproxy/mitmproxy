@@ -26,7 +26,7 @@ import random
 
 from enum import Enum
 
-from libmproxy.exceptions import TlsException
+from libmproxy.exceptions import TlsProtocolException
 from libmproxy.protocol import TlsLayer, RawTCPLayer
 
 
@@ -98,7 +98,7 @@ class TlsFeedback(TlsLayer):
 
         try:
             super(TlsFeedback, self)._establish_tls_with_client()
-        except TlsException as e:
+        except TlsProtocolException as e:
             tls_strategy.record_failure(server_address)
             raise e
         else:

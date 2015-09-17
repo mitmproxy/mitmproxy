@@ -6,10 +6,10 @@ import traceback
 import six
 
 from netlib import tcp
-from netlib.exceptions import HttpException, HttpReadDisconnect
+from netlib.exceptions import HttpException, HttpReadDisconnect, TcpException
 from netlib.http import http1, Headers
 from netlib.http import CONTENT_MISSING
-from netlib.tcp import NetLibError, Address
+from netlib.tcp import Address
 from netlib.http.http2.connections import HTTP2Protocol
 from netlib.http.http2.frame import GoAwayFrame, PriorityFrame, WindowUpdateFrame
 from .. import utils
@@ -321,7 +321,7 @@ class HttpLayer(Layer):
             except HttpReadDisconnect:
                 # don't throw an error for disconnects that happen before/between requests.
                 return
-            except (HttpException, NetLibError) as e:
+            except (HttpException, TcpException) as e:
                 self.send_error_response(400, repr(e))
                 six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
 
@@ -358,7 +358,7 @@ class HttpLayer(Layer):
                     self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
-            except (HttpException, NetLibError) as e:
+            except (HttpException, TcpException) as e:
                 self.send_error_response(502, repr(e))
 
                 if not flow.response:
@@ -375,7 +375,7 @@ class HttpLayer(Layer):
         try:
             response = make_error_response(code, message)
             self.send_response(response)
-        except NetLibError:
+        except TcpException:
             pass
 
     def change_upstream_proxy_server(self, address):
@@ -423,7 +423,7 @@ class HttpLayer(Layer):
 
         try:
             get_response()
-        except (tcp.NetLibError, HttpException) as v:
+        except (TcpException, HttpException) as v:
             self.log(
                 "server communication error: %s" % repr(v),
                 level="debug"

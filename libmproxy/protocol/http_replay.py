@@ -1,10 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 import threading
 from libmproxy.exceptions import ReplayException
-from netlib.exceptions import HttpException
+from netlib.exceptions import HttpException, TcpException
 from netlib.http import http1
 
-from netlib.tcp import NetLibError
 from ..controller import Channel
 from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
 from .base import Kill
@@ -89,7 +88,7 @@ class RequestReplayThread(threading.Thread):
                 response_reply = self.channel.ask("response", self.flow)
                 if response_reply == Kill:
                     raise Kill()
-        except (ReplayException, HttpException, NetLibError) as v:
+        except (ReplayException, HttpException, TcpException) as v:
             self.flow.error = Error(repr(v))
             if self.channel:
                 self.channel.ask("error", self.flow)

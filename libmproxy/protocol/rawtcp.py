@@ -5,8 +5,9 @@ import six
 import sys
 
 from OpenSSL import SSL
+from netlib.exceptions import TcpException
 
-from netlib.tcp import NetLibError, ssl_read_select
+from netlib.tcp import ssl_read_select
 from netlib.utils import clean_bin
 from ..exceptions import ProtocolException
 from .base import Layer
@@ -64,7 +65,7 @@ class RawTCPLayer(Layer):
                             "info"
                         )
 
-        except (socket.error, NetLibError, SSL.Error) as e:
+        except (socket.error, TcpException, SSL.Error) as e:
             six.reraise(
                 ProtocolException,
                 ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e))),

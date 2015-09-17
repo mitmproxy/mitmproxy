@@ -260,21 +260,6 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         resp = p.request("get:'http://foo':h':foo'='bar'")
         assert resp.status_code == 400
 
-    def test_empty_chunked_content(self):
-        """
-        https://github.com/mitmproxy/mitmproxy/issues/186
-        """
-        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        connection.connect(("127.0.0.1", self.proxy.port))
-        spec = '301:h"Transfer-Encoding"="chunked":r:b"0\\r\\n\\r\\n"'
-        connection.send(
-            "GET http://localhost:%d/p/%s HTTP/1.1\r\n" %
-            (self.server.port, spec))
-        connection.send("\r\n")
-        resp = connection.recv(50000)
-        connection.close()
-        assert "content-length" in resp.lower()
-
     def test_stream(self):
         self.master.set_stream_large_bodies(1024 * 2)
 
@@ -624,7 +609,7 @@ class MasterRedirectRequest(tservers.TestMaster):
         super(MasterRedirectRequest, self).handle_request(f)
 
     def handle_response(self, f):
-        f.response.content = str(f.client_conn.address.port)
+        f.response.body = str(f.client_conn.address.port)
         f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
         super(MasterRedirectRequest, self).handle_response(f)
 

@@ -6,8 +6,8 @@ import socket
 import six
 
 from netlib import tcp
+from netlib.exceptions import TcpException
 from netlib.http.http1 import assemble_response
-from netlib.tcp import NetLibError
 from ..exceptions import ProtocolException, ServerException, ClientHandshakeException
 from ..protocol import Kill
 from ..models import ClientConnection, make_error_response
@@ -139,7 +139,7 @@ class ConnectionHandler(object):
             try:
                 error_response = make_error_response(502, repr(e))
                 self.client_conn.send(assemble_response(error_response))
-            except NetLibError:
+            except TcpException:
                 pass
         except Exception:
             self.log(traceback.format_exc(), "error")

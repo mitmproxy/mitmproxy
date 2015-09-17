@@ -1,9 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
 from netlib import socks
-from netlib.tcp import NetLibError
+from netlib.exceptions import TcpException
 
-from ...exceptions import Socks5Exception
+from ...exceptions import Socks5ProtocolException
 from ...protocol import Layer, ServerConnectionMixin
 
 
@@ -47,8 +47,8 @@ class Socks5Proxy(Layer, ServerConnectionMixin):
             connect_reply.to_file(self.client_conn.wfile)
             self.client_conn.wfile.flush()
 
-        except (socks.SocksError, NetLibError) as e:
-            raise Socks5Exception("SOCKS5 mode failure: %s" % repr(e))
+        except (socks.SocksError, TcpException) as e:
+            raise Socks5ProtocolException("SOCKS5 mode failure: %s" % repr(e))
 
         self.server_conn.address = connect_request.addr
 

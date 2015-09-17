@@ -20,17 +20,17 @@ class ProtocolException(ProxyException):
     pass
 
 
-class TlsException(ProtocolException):
+class TlsProtocolException(ProtocolException):
     pass
 
 
-class ClientHandshakeException(TlsException):
+class ClientHandshakeException(TlsProtocolException):
     def __init__(self, message, server):
         super(ClientHandshakeException, self).__init__(message)
         self.server = server
 
 
-class Socks5Exception(ProtocolException):
+class Socks5ProtocolException(ProtocolException):
     pass
 
 

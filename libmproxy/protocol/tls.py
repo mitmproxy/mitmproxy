@@ -5,11 +5,11 @@ import sys
 
 from construct import ConstructError
 import six
+from netlib.exceptions import InvalidCertificateException, TcpException, TlsException
 
-from netlib.tcp import NetLibError, NetLibInvalidCertificateError
 from netlib.http import ALPN_PROTO_HTTP1
 from ..contrib.tls._constructs import ClientHello
-from ..exceptions import ProtocolException, TlsException, ClientHandshakeException
+from ..exceptions import ProtocolException, TlsProtocolException, ClientHandshakeException
 from .base import Layer
 
 
@@ -295,11 +295,11 @@ class TlsLayer(Layer):
         while len(client_hello) < client_hello_size:
             record_header = self.client_conn.rfile.peek(offset + 5)[offset:]
             if not is_tls_record_magic(record_header) or len(record_header) != 5:
-                raise TlsException('Expected TLS record, got "%s" instead.' % record_header)
+                raise TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
             record_size = struct.unpack("!H", record_header[3:])[0] + 5
             record_body = self.client_conn.rfile.peek(offset + record_size)[offset + 5:]
             if len(record_body) != record_size - 5:
-                raise TlsException("Unexpected EOF in TLS handshake: %s" % record_body)
+                raise TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
             client_hello += record_body
             offset += record_size
             client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
@@ -414,7 +414,7 @@ class TlsLayer(Layer):
             # The reason for this might be difficult to find, so we try to peek here to see if it
             # raises ann error.
             self.client_conn.rfile.peek(1)
-        except NetLibError as e:
+        except TlsException as e:
             six.reraise(
                 ClientHandshakeException,
                 ClientHandshakeException(
@@ -466,7 +466,7 @@ class TlsLayer(Layer):
                     (tls_cert_err['depth'], tls_cert_err['errno']),
                     "error")
                 self.log("Ignoring server verification error, continuing with connection", "error")
-        except NetLibInvalidCertificateError as e:
+        except InvalidCertificateException as e:
             tls_cert_err = self.server_conn.ssl_verification_error
             self.log(
                 "TLS verification failed for upstream server at depth %s with error: %s" %
@@ -474,18 +474,18 @@ class TlsLayer(Layer):
                 "error")
             self.log("Aborting connection attempt", "error")
             six.reraise(
-                TlsException,
-                TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                TlsProtocolException,
+                TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
                     sni=self.sni_for_server_connection,
                     e=repr(e),
                 )),
                 sys.exc_info()[2]
             )
-        except NetLibError as e:
+        except TlsException as e:
             six.reraise(
-                TlsException,
-                TlsException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                TlsProtocolException,
+                TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
                     sni=self.sni_for_server_connection,
                     e=repr(e),

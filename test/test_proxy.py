@@ -6,6 +6,7 @@ from libmproxy.proxy import ProxyConfig
 from libmproxy.proxy.config import process_proxy_options
 from libmproxy.models.connections import ServerConnection
 from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
+from netlib.exceptions import TcpDisconnect
 import tutils
 from libpathod import test
 from netlib import http, tcp
@@ -40,7 +41,7 @@ class TestServerConnection:
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)
-        sc.connection.flush = mock.Mock(side_effect=tcp.NetLibDisconnect)
+        sc.connection.flush = mock.Mock(side_effect=TcpDisconnect)
         sc.finish()
 
     def test_repr(self):

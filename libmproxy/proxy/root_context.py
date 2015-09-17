@@ -5,8 +5,8 @@ import sys
 import six
 
 from libmproxy.exceptions import ProtocolException
+from netlib.exceptions import TcpException
 from netlib.http import ALPN_PROTO_H2, ALPN_PROTO_HTTP1
-from netlib.tcp import NetLibError
 from ..protocol import (
     RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin
 )
@@ -54,7 +54,7 @@ class RootContext(object):
 
         try:
             d = top_layer.client_conn.rfile.peek(3)
-        except NetLibError as e:
+        except TcpException as e:
             six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
         client_tls = is_tls_record_magic(d)
 
