@@ -23,7 +23,7 @@ class Path(base.Value):
     pass
 
 
-class Code(base.Integer):
+class StatusCode(base.Integer):
     pass
 
 
@@ -155,15 +155,15 @@ class Response(_HTTPMessage):
         actions.DisconnectAt,
         actions.InjectAt,
     )
-    logattrs = ["code", "reason", "version", "body"]
+    logattrs = ["status_code", "reason", "version", "body"]
 
     @property
     def ws(self):
         return self.tok(WS)
 
     @property
-    def code(self):
-        return self.tok(Code)
+    def status_code(self):
+        return self.tok(StatusCode)
 
     @property
     def reason(self):
@@ -171,15 +171,15 @@ class Response(_HTTPMessage):
 
     def preamble(self, settings):
         l = [self.version, " "]
-        l.extend(self.code.values(settings))
-        code = int(self.code.value)
+        l.extend(self.status_code.values(settings))
+        status_code = int(self.status_code.value)
         l.append(" ")
         if self.reason:
             l.extend(self.reason.values(settings))
         else:
             l.append(
                 status_codes.RESPONSES.get(
-                    code,
+                    status_code,
                     "Unknown code"
                 )
             )
@@ -192,10 +192,10 @@ class Response(_HTTPMessage):
                 raise exceptions.RenderError(
                     "No websocket key - have we seen a client handshake?"
                 )
-            if not self.code:
+            if not self.status_code:
                 tokens.insert(
                     1,
-                    Code(101)
+                    StatusCode(101)
                 )
             headers = netlib.websockets.WebsocketsProtocol.server_handshake_headers(
                 settings.websocket_key
@@ -235,9 +235,9 @@ class Response(_HTTPMessage):
                 pp.MatchFirst(
                     [
                         WS.expr() + pp.Optional(
-                            base.Sep + Code.expr()
+                            base.Sep + StatusCode.expr()
                         ),
-                        Code.expr(),
+                        StatusCode.expr(),
                     ]
                 ),
                 pp.ZeroOrMore(base.Sep + atom)
@@ -370,7 +370,7 @@ class Request(_HTTPMessage):
 
 def make_error_response(reason, body=None):
     tokens = [
-        Code("800"),
+        StatusCode("800"),
         Header(
             base.TokValueLiteral("Content-Type"),
             base.TokValueLiteral("text/plain")

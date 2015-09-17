@@ -149,7 +149,7 @@ class TestResponse:
 
     def test_response(self):
         r = language.parse_pathod("400:m'msg'").next()
-        assert r.code.string() == "400"
+        assert r.status_code.string() == "400"
         assert r.reason.string() == "msg"
 
         r = language.parse_pathod("400:m'msg':b@100b").next()
@@ -158,7 +158,7 @@ class TestResponse:
         assert str(r)
 
         r = language.parse_pathod("200").next()
-        assert r.code.string() == "200"
+        assert r.status_code.string() == "200"
         assert not r.reason
         assert "OK" in [i[:] for i in r.preamble({})]
 
@@ -261,7 +261,7 @@ class TestResponse:
         r = language.parse_pathod("ws").next()
         tutils.raises("no websocket key", r.resolve, language.Settings())
         res = r.resolve(language.Settings(websocket_key="foo"))
-        assert res.code.string() == "101"
+        assert res.status_code.string() == "101"
 
 
 def test_ctype_shortcut():

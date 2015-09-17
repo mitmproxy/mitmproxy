@@ -187,13 +187,13 @@ class TestResponse:
 
     def test_simple(self):
         r = parse_response('200:r:h"foo"="bar"')
-        assert r.code.string() == "200"
+        assert r.status_code.string() == "200"
         assert len(r.headers) == 1
         assert r.headers[0].values(default_settings()) == ("foo", "bar")
         assert r.body is None
 
         r = parse_response('200:r:h"foo"="bar":bfoobar:h"bla"="fasel"')
-        assert r.code.string() == "200"
+        assert r.status_code.string() == "200"
         assert len(r.headers) == 2
         assert r.headers[0].values(default_settings()) == ("foo", "bar")
         assert r.headers[1].values(default_settings()) == ("bla", "fasel")

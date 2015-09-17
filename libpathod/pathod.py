@@ -134,11 +134,11 @@ class PathodHandler(tcp.BaseHandler):
                 return None, dict(type="error", msg=s)
 
             if req.method == 'CONNECT':
-                return self.protocol.handle_http_connect([req.host, req.port, req.httpversion], lg)
+                return self.protocol.handle_http_connect([req.host, req.port, req.http_version], lg)
 
             method = req.method
             path = req.path
-            httpversion = req.httpversion
+            http_version = req.http_version
             headers = req.headers
             body = req.body
 
@@ -160,7 +160,7 @@ class PathodHandler(tcp.BaseHandler):
                     path=path,
                     method=method,
                     headers=headers.fields,
-                    httpversion=httpversion,
+                    http_version=http_version,
                     sni=self.sni,
                     remote_address=self.address(),
                     clientcert=clientcert,

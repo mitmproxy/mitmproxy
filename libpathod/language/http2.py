@@ -83,7 +83,7 @@ class _HTTP2Message(message.Message):
         return self
 
 
-class Code(base.Integer):
+class StatusCode(base.Integer):
     pass
 
 
@@ -159,8 +159,8 @@ class Response(_HTTP2Message):
         self.stream_id = 2
 
     @property
-    def code(self):
-        return self.tok(Code)
+    def status_code(self):
+        return self.tok(StatusCode)
 
     @classmethod
     def expr(cls):
@@ -168,7 +168,7 @@ class Response(_HTTP2Message):
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
-                Code.expr(),
+                StatusCode.expr(),
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
@@ -187,7 +187,7 @@ class Response(_HTTP2Message):
 
             resp = http.Response(
                 (2, 0),
-                self.code.string(),
+                self.status_code.string(),
                 '',
                 headers,
                 body,
@@ -289,7 +289,7 @@ class Request(_HTTP2Message):
 
 def make_error_response(reason, body=None):
     tokens = [
-        Code("800"),
+        StatusCode("800"),
         Body(base.TokValueLiteral("pathod error: " + (body or reason))),
     ]
     return Response(tokens)
