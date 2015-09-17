@@ -14,7 +14,7 @@ from .flow import Flow
 
 class MessageMixin(stateobject.StateObject):
     _stateobject_attributes = dict(
-        httpversion=bytes,
+        http_version=bytes,
         headers=Headers,
         body=bytes,
         timestamp_start=float,
@@ -119,7 +119,7 @@ class HTTPRequest(MessageMixin, Request):
 
         path: Path portion of the URL (not present in authority-form)
 
-        httpversion: HTTP version, e.g. "HTTP/1.1"
+        http_version: HTTP version, e.g. "HTTP/1.1"
 
         headers: Headers object
 
@@ -152,7 +152,7 @@ class HTTPRequest(MessageMixin, Request):
             host,
             port,
             path,
-            httpversion,
+            http_version,
             headers,
             body,
             timestamp_start=None,
@@ -167,7 +167,7 @@ class HTTPRequest(MessageMixin, Request):
             host,
             port,
             path,
-            httpversion,
+            http_version,
             headers,
             body,
             timestamp_start,
@@ -230,7 +230,7 @@ class HTTPRequest(MessageMixin, Request):
             host=request.host,
             port=request.port,
             path=request.path,
-            httpversion=request.httpversion,
+            http_version=request.http_version,
             headers=request.headers,
             body=request.body,
             timestamp_start=request.timestamp_start,
@@ -266,7 +266,7 @@ class HTTPResponse(MessageMixin, Response):
 
     Exposes the following attributes:
 
-        httpversion: HTTP version, e.g. "HTTP/1.1"
+        http_version: HTTP version, e.g. "HTTP/1.1"
 
         status_code: HTTP response status code
 
@@ -285,7 +285,7 @@ class HTTPResponse(MessageMixin, Response):
 
     def __init__(
             self,
-            httpversion,
+            http_version,
             status_code,
             msg,
             headers,
@@ -295,7 +295,7 @@ class HTTPResponse(MessageMixin, Response):
     ):
         Response.__init__(
             self,
-            httpversion,
+            http_version,
             status_code,
             msg,
             headers,
@@ -333,7 +333,7 @@ class HTTPResponse(MessageMixin, Response):
     @classmethod
     def wrap(self, response):
         resp = HTTPResponse(
-            httpversion=response.httpversion,
+            http_version=response.http_version,
             status_code=response.status_code,
             msg=response.msg,
             headers=response.headers,
@@ -547,13 +547,13 @@ def make_connect_request(address):
     )
 
 
-def make_connect_response(httpversion):
+def make_connect_response(http_version):
     headers = Headers(
         Content_Length="0",
         Proxy_Agent=version.NAMEVERSION
     )
     return HTTPResponse(
-        httpversion,
+        http_version,
         200,
         "Connection established",
         headers,

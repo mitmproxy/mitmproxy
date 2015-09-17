@@ -44,9 +44,9 @@ var IconColumn = React.createClass({
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            if (flow.response.code === 304) {
+            if (flow.response.status_code === 304) {
                 icon = "resource-icon-not-modified";
-            } else if (300 <= flow.response.code && flow.response.code < 400) {
+            } else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
                 icon = "resource-icon-redirect";
             } else if (contentType && contentType.indexOf("image") >= 0) {
                 icon = "resource-icon-image";
@@ -118,14 +118,14 @@ var StatusColumn = React.createClass({
             }
         }),
         sortKeyFun: function(flow){
-            return flow.response ? flow.response.code : undefined;
+            return flow.response ? flow.response.status_code : undefined;
         }
     },
     render: function () {
         var flow = this.props.flow;
         var status;
         if (flow.response) {
-            status = flow.response.code;
+            status = flow.response.status_code;
         } else {
             status = null;
         }

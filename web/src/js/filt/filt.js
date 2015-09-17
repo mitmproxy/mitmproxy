@@ -1654,7 +1654,7 @@ module.exports = (function() {
     assetFilter.desc = "is asset";
     function responseCode(code){
         function responseCodeFilter(flow){
-            return flow.response && flow.response.code === code;
+            return flow.response && flow.response.status_code === code;
         }
         responseCodeFilter.desc = "resp. code is " + code;
         return responseCodeFilter;

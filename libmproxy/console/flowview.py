@@ -298,7 +298,7 @@ class FlowView(tabs.Tabs):
     def set_resp_code(self, code):
         response = self.flow.response
         try:
-            response.code = int(code)
+            response.status_code = int(code)
         except ValueError:
             return None
         import BaseHTTPServer
@@ -357,7 +357,7 @@ class FlowView(tabs.Tabs):
         else:
             if not self.flow.response:
                 self.flow.response = HTTPResponse(
-                    self.flow.request.httpversion,
+                    self.flow.request.http_version,
                     200, "OK", Headers(), ""
                 )
                 self.flow.response.reply = controller.DummyReply()
@@ -447,7 +447,7 @@ class FlowView(tabs.Tabs):
         elif part == "o":
             signals.status_prompt.send(
                 prompt = "Code",
-                text = str(message.code),
+                text = str(message.status_code),
                 callback = self.set_resp_code
             )
         elif part == "m":

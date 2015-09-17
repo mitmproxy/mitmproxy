@@ -393,7 +393,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2,
         req_url = f.request.pretty_url(hostheader=hostheader),
 
         err_msg = f.error.msg if f.error else None,
-        resp_code = f.response.code if f.response else None,
+        resp_code = f.response.status_code if f.response else None,
 
         marked = marked,
     )
@@ -410,7 +410,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2,
         roundtrip = utils.pretty_duration(duration)
 
         d.update(dict(
-            resp_code = f.response.code,
+            resp_code = f.response.status_code,
             resp_is_replay = f.response.is_replay,
             resp_clen = contentdesc,
             roundtrip = roundtrip,

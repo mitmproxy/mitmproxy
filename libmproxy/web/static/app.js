@@ -2098,7 +2098,7 @@ var RequestLine = React.createClass({displayName: "RequestLine",
     render: function () {
         var flow = this.props.flow;
         var url = flowutils.RequestUtils.pretty_url(flow.request);
-        var httpver = "HTTP/" + flow.request.httpversion.join(".");
+        var httpver = "HTTP/" + flow.request.http_version.join(".");
 
         return React.createElement("div", {className: "first-line request-line"}, 
             React.createElement(ValueEditor, {
@@ -2144,7 +2144,7 @@ var RequestLine = React.createClass({displayName: "RequestLine",
         var ver = flowutils.parseHttpVersion(nextVer);
         actions.FlowActions.update(
             this.props.flow,
-            {request: {httpversion: ver}}
+            {request: {http_version: ver}}
         );
     }
 });
@@ -2152,7 +2152,7 @@ var RequestLine = React.createClass({displayName: "RequestLine",
 var ResponseLine = React.createClass({displayName: "ResponseLine",
     render: function () {
         var flow = this.props.flow;
-        var httpver = "HTTP/" + flow.response.httpversion.join(".");
+        var httpver = "HTTP/" + flow.response.http_version.join(".");
         return React.createElement("div", {className: "first-line response-line"}, 
             React.createElement(ValueEditor, {
                 ref: "httpVersion", 

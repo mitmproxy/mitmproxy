@@ -121,7 +121,7 @@ var RequestLine = React.createClass({
     render: function () {
         var flow = this.props.flow;
         var url = flowutils.RequestUtils.pretty_url(flow.request);
-        var httpver = flow.request.httpversion;
+        var httpver = flow.request.http_version;
 
         return <div className="first-line request-line">
             <ValueEditor
@@ -167,7 +167,7 @@ var RequestLine = React.createClass({
         var ver = flowutils.parseHttpVersion(nextVer);
         actions.FlowActions.update(
             this.props.flow,
-            {request: {httpversion: ver}}
+            {request: {http_version: ver}}
         );
     }
 });
@@ -175,7 +175,7 @@ var RequestLine = React.createClass({
 var ResponseLine = React.createClass({
     render: function () {
         var flow = this.props.flow;
-        var httpver = flow.response.httpversion;
+        var httpver = flow.response.http_version;
         return <div className="first-line response-line">
             <ValueEditor
                 ref="httpVersion"
@@ -186,7 +186,7 @@ var ResponseLine = React.createClass({
         &nbsp;
             <ValueEditor
                 ref="code"
-                content={flow.response.code + ""}
+                content={flow.response.status_code + ""}
                 onDone={this.onCodeChange}
                 isValid={this.isValidCode}
                 inline/>
@@ -205,7 +205,7 @@ var ResponseLine = React.createClass({
         var ver = flowutils.parseHttpVersion(nextVer);
         actions.FlowActions.update(
             this.props.flow,
-            {response: {httpversion: ver}}
+            {response: {http_version: ver}}
         );
     },
     onMsgChange: function (nextMsg) {
@@ -279,7 +279,7 @@ var Response = React.createClass({
     edit: function (k) {
         switch (k) {
             case "c":
-                this.refs.responseLine.refs.code.focus();
+                this.refs.responseLine.refs.status_code.focus();
                 break;
             case "m":
                 this.refs.responseLine.refs.msg.focus();

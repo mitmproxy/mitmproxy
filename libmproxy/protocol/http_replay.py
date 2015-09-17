@@ -56,7 +56,7 @@ class RequestReplayThread(threading.Thread):
                             connect_request,
                             body_size_limit=self.config.body_size_limit
                         )
-                        if resp.code != 200:
+                        if resp.status_code != 200:
                             raise ReplayException("Upstream server refuses CONNECT request")
                         server.establish_ssl(
                             self.config.clientcerts,

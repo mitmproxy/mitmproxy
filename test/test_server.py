@@ -49,18 +49,18 @@ class CommonMixin:
         else:
             assert len(self.master.state.view) == 1
         l = self.master.state.view[-1]
-        assert l.response.code == 304
+        assert l.response.status_code == 304
         l.request.path = "/p/305"
         self.wait_until_not_live(l)
         rt = self.master.replay_request(l, block=True)
-        assert l.response.code == 305
+        assert l.response.status_code == 305
 
         # Disconnect error
         l.request.path = "/p/305:d0"
         rt = self.master.replay_request(l, block=True)
         assert not rt
         if isinstance(self, tservers.HTTPUpstreamProxTest):
-            assert l.response.code == 502
+            assert l.response.status_code == 502
         else:
             assert l.error
 
@@ -72,7 +72,7 @@ class CommonMixin:
         rt = self.master.replay_request(l, block=True)
         assert not rt
         if isinstance(self, tservers.HTTPUpstreamProxTest):
-            assert l.response.code == 502
+            assert l.response.status_code == 502
         else:
             assert l.error
 
@@ -85,7 +85,7 @@ class CommonMixin:
         l = self.master.state.view[-1]
         assert l.client_conn.address
         assert "host" in l.request.headers
-        assert l.response.code == 304
+        assert l.response.status_code == 304
 
     def test_invalid_http(self):
         t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
@@ -499,7 +499,7 @@ class TestProxy(tservers.HTTPProxTest):
         f = self.master.state.view[0]
         assert f.client_conn.address
         assert "host" in f.request.headers
-        assert f.response.code == 304
+        assert f.response.status_code == 304
 
     def test_response_timestamps(self):
         # test that we notice at least 1 sec delay between timestamps
@@ -526,7 +526,7 @@ class TestProxy(tservers.HTTPProxTest):
 
         request, response = self.master.state.view[
                                 0].request, self.master.state.view[0].response
-        assert response.code == 304  # sanity test for our low level request
+        assert response.status_code == 304  # sanity test for our low level request
         # time.sleep might be a little bit shorter than a second,
         # we observed up to 0.93s on appveyor.
         assert 0.8 < (request.timestamp_end - request.timestamp_start) < 1.2
@@ -892,7 +892,7 @@ class TestUpstreamProxySSL(
         """
 
         def handle_request(f):
-            f.request.httpversion = b"HTTP/1.1"
+            f.request.http_version = b"HTTP/1.1"
             del f.request.headers["Content-Length"]
             f.reply()
 

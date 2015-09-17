@@ -128,7 +128,7 @@ def response(context, flow):
 
     request_query_string = [{"name": k, "value": v}
                             for k, v in flow.request.get_query()]
-    request_http_version = flow.request.httpversion
+    request_http_version = flow.request.http_version
     # Cookies are shaped as tuples by MITMProxy.
     request_cookies = [{"name": k.strip(), "value": v[0]}
                        for k, v in (flow.request.get_cookies() or {}).iteritems()]
@@ -136,8 +136,7 @@ def response(context, flow):
     request_headers_size = len(str(flow.request.headers))
     request_body_size = len(flow.request.content)
 
-    response_http_version = ".".join(
-        [str(v) for v in flow.response.httpversion])
+    response_http_version = flow.response.http_version
     # Cookies are shaped as tuples by MITMProxy.
     response_cookies = [{"name": k.strip(), "value": v[0]}
                         for k, v in (flow.response.get_cookies() or {}).iteritems()]
@@ -165,7 +164,7 @@ def response(context, flow):
                 "bodySize": request_body_size,
             },
             "response": {
-                "status": flow.response.code,
+                "status": flow.response.status_code,
                 "statusText": flow.response.msg,
                 "httpVersion": response_http_version,
                 "cookies": response_cookies,

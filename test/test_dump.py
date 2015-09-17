@@ -40,13 +40,13 @@ def test_strfuncs():
     flow.client_conn.address.host = "foo"
     flow.response = netlib.tutils.tresp(body=CONTENT_MISSING)
     flow.response.is_replay = True
-    flow.response.code = 300
+    flow.response.status_code = 300
     m.echo_flow(flow)
 
 
     flow = tutils.tflow(resp=netlib.tutils.tresp(body="{"))
     flow.response.headers["content-type"] = "application/json"
-    flow.response.code = 400
+    flow.response.status_code = 400
     m.echo_flow(flow)
 
 

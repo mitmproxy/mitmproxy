@@ -678,11 +678,11 @@ class TestSerialize:
         w = flow.FilteredFlowWriter(sio, fl)
 
         f = tutils.tflow(resp=True)
-        f.response.code = 200
+        f.response.status_code = 200
         w.add(f)
 
         f = tutils.tflow(resp=True)
-        f.response.code = 201
+        f.response.status_code = 201
         w.add(f)
 
         sio.seek(0)

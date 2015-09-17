@@ -270,7 +270,7 @@ class FCode(_Int):
     help = "HTTP response code"
 
     def __call__(self, f):
-        if f.response and f.response.code == self.num:
+        if f.response and f.response.status_code == self.num:
             return True
 
 

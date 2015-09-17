@@ -102,16 +102,16 @@ class Http1Layer(_StreamingHttpLayer):
 
     def check_close_connection(self, flow):
         request_close = http1.connection_close(
-            flow.request.httpversion,
+            flow.request.http_version,
             flow.request.headers
         )
         response_close = http1.connection_close(
-            flow.response.httpversion,
+            flow.response.http_version,
             flow.response.headers
         )
         read_until_eof = http1.expected_http_body_size(flow.request, flow.response) == -1
         close_connection = request_close or response_close or read_until_eof
-        if flow.request.form_in == "authority" and flow.response.code == 200:
+        if flow.request.form_in == "authority" and flow.response.status_code == 200:
             # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
             # Charles Proxy sends a CONNECT response with HTTP/1.0
             # and no Content-Length header
@@ -258,7 +258,7 @@ class UpstreamConnectLayer(Layer):
     def _send_connect_request(self):
         self.send_request(self.connect_request)
         resp = self.read_response(self.connect_request)
-        if resp.code != 200:
+        if resp.status_code != 200:
             raise ProtocolException("Reconnect: Upstream server refuses CONNECT request")
 
     def connect(self):
@@ -345,7 +345,7 @@ class HttpLayer(Layer):
                     return
 
                 # Upstream Proxy Mode: Handle CONNECT
-                if flow.request.form_in == "authority" and flow.response.code == 200:
+                if flow.request.form_in == "authority" and flow.response.status_code == 200:
                     self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
@@ -377,7 +377,7 @@ class HttpLayer(Layer):
 
     def handle_regular_mode_connect(self, request):
         self.set_server((request.host, request.port))
-        self.send_response(make_connect_response(request.httpversion))
+        self.send_response(make_connect_response(request.http_version))
         layer = self.ctx.next_layer(self)
         layer()
 
