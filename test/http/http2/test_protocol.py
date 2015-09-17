@@ -2,6 +2,7 @@ import OpenSSL
 import mock
 
 from netlib import tcp, http, tutils
+from netlib.exceptions import TcpDisconnect
 from netlib.http import Headers
 from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 from netlib.http.http2.frame import *
@@ -127,7 +128,7 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
         protocol.perform_server_connection_preface()
         assert protocol.connection_preface_performed
 
-        tutils.raises(tcp.NetLibDisconnect, protocol.perform_server_connection_preface, force=True)
+        tutils.raises(TcpDisconnect, protocol.perform_server_connection_preface, force=True)
 
 
 class TestPerformClientConnectionPreface(tservers.ServerTestBase):

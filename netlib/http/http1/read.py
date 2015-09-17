@@ -4,15 +4,14 @@ import sys
 import re
 
 from ... import utils
-from ...exceptions import HttpReadDisconnect, HttpSyntaxException, HttpException
+from ...exceptions import HttpReadDisconnect, HttpSyntaxException, HttpException, TcpDisconnect
 from .. import Request, Response, Headers
-from netlib.tcp import NetLibDisconnect
 
 
 def read_request(rfile, body_size_limit=None):
     request = read_request_head(rfile)
     expected_body_size = expected_http_body_size(request)
-    request.body = b"".join(read_body(rfile, expected_body_size, limit=body_size_limit))
+    request._body = b"".join(read_body(rfile, expected_body_size, limit=body_size_limit))
     request.timestamp_end = time.time()
     return request
 
@@ -51,7 +50,7 @@ def read_request_head(rfile):
 def read_response(rfile, request, body_size_limit=None):
     response = read_response_head(rfile)
     expected_body_size = expected_http_body_size(request, response)
-    response.body = b"".join(read_body(rfile, expected_body_size, body_size_limit))
+    response._body = b"".join(read_body(rfile, expected_body_size, body_size_limit))
     response.timestamp_end = time.time()
     return response
 
@@ -215,7 +214,7 @@ def _get_first_line(rfile):
         if line == b"\r\n" or line == b"\n":
             # Possible leftover from previous message
             line = rfile.readline()
-    except NetLibDisconnect:
+    except TcpDisconnect:
         raise HttpReadDisconnect()
     if not line:
         raise HttpReadDisconnect()

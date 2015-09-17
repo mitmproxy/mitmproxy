@@ -14,7 +14,7 @@ def test_hexdump():
     assert utils.hexdump("one\0" * 10)
 
 
-def test_cleanBin():
+def test_clean_bin():
     assert utils.clean_bin(b"one") == b"one"
     assert utils.clean_bin(b"\00ne") == b".ne"
     assert utils.clean_bin(b"\nne") == b"\nne"

@@ -16,7 +16,7 @@ class NetlibException(Exception):
         super(NetlibException, self).__init__(message)
 
 
-class ReadDisconnect(object):
+class Disconnect(object):
     """Immediate EOF"""
 
 
@@ -24,9 +24,35 @@ class HttpException(NetlibException):
     pass
 
 
-class HttpReadDisconnect(HttpException, ReadDisconnect):
+class HttpReadDisconnect(HttpException, Disconnect):
     pass
 
 
 class HttpSyntaxException(HttpException):
+    pass
+
+
+class TcpException(NetlibException):
+    pass
+
+
+class TcpDisconnect(TcpException, Disconnect):
+    pass
+
+
+
+
+class TcpReadIncomplete(TcpException):
+    pass
+
+
+class TcpTimeout(TcpException):
+    pass
+
+
+class TlsException(NetlibException):
+    pass
+
+
+class InvalidCertificateException(TlsException):
     pass

@@ -16,6 +16,9 @@ from . import certutils, version_check
 
 # This is a rather hackish way to make sure that
 # the latest version of pyOpenSSL is actually installed.
+from netlib.exceptions import InvalidCertificateException, TcpReadIncomplete, TlsException, \
+    TcpTimeout, TcpDisconnect, TcpException
+
 version_check.check_pyopenssl_version()
 
 
@@ -24,11 +27,17 @@ EINTR = 4
 # To enable all SSL methods use: SSLv23
 # then add options to disable certain methods
 # https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
+SSL_BASIC_OPTIONS = (
+    SSL.OP_CIPHER_SERVER_PREFERENCE
+)
+if hasattr(SSL, "OP_NO_COMPRESSION"):
+    SSL_BASIC_OPTIONS |= SSL.OP_NO_COMPRESSION
+
 SSL_DEFAULT_METHOD = SSL.SSLv23_METHOD
 SSL_DEFAULT_OPTIONS = (
     SSL.OP_NO_SSLv2 |
     SSL.OP_NO_SSLv3 |
-    SSL.OP_CIPHER_SERVER_PREFERENCE
+    SSL_BASIC_OPTIONS
 )
 if hasattr(SSL, "OP_NO_COMPRESSION"):
     SSL_DEFAULT_OPTIONS |= SSL.OP_NO_COMPRESSION
@@ -39,41 +48,16 @@ Don't ask...
 https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
 """
 sslversion_choices = {
-    "all": (SSL.SSLv23_METHOD, 0),
+    "all": (SSL.SSLv23_METHOD, SSL_BASIC_OPTIONS),
     # SSLv23_METHOD + NO_SSLv2 + NO_SSLv3 == TLS 1.0+
     # TLSv1_METHOD would be TLS 1.0 only
-    "secure": (SSL.SSLv23_METHOD, (SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3)),
-    "SSLv2": (SSL.SSLv2_METHOD, 0),
-    "SSLv3": (SSL.SSLv3_METHOD, 0),
-    "TLSv1": (SSL.TLSv1_METHOD, 0),
-    "TLSv1_1": (SSL.TLSv1_1_METHOD, 0),
-    "TLSv1_2": (SSL.TLSv1_2_METHOD, 0),
+    "secure": (SSL.SSLv23_METHOD, (SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL_BASIC_OPTIONS)),
+    "SSLv2": (SSL.SSLv2_METHOD, SSL_BASIC_OPTIONS),
+    "SSLv3": (SSL.SSLv3_METHOD, SSL_BASIC_OPTIONS),
+    "TLSv1": (SSL.TLSv1_METHOD, SSL_BASIC_OPTIONS),
+    "TLSv1_1": (SSL.TLSv1_1_METHOD, SSL_BASIC_OPTIONS),
+    "TLSv1_2": (SSL.TLSv1_2_METHOD, SSL_BASIC_OPTIONS),
 }
-
-
-class NetLibError(Exception):
-    pass
-
-
-class NetLibDisconnect(NetLibError):
-    pass
-
-
-class NetLibIncomplete(NetLibError):
-    pass
-
-
-class NetLibTimeout(NetLibError):
-    pass
-
-
-class NetLibSSLError(NetLibError):
-    pass
-
-
-class NetLibInvalidCertificateError(NetLibSSLError):
-    pass
-
 
 class SSLKeyLogger(object):
 
@@ -168,17 +152,17 @@ class Writer(_FileLike):
 
     def flush(self):
         """
-            May raise NetLibDisconnect
+            May raise TcpDisconnect
         """
         if hasattr(self.o, "flush"):
             try:
                 self.o.flush()
             except (socket.error, IOError) as v:
-                raise NetLibDisconnect(str(v))
+                raise TcpDisconnect(str(v))
 
     def write(self, v):
         """
-            May raise NetLibDisconnect
+            May raise TcpDisconnect
         """
         if v:
             self.first_byte_timestamp = self.first_byte_timestamp or time.time()
@@ -191,7 +175,7 @@ class Writer(_FileLike):
                     self.add_log(v[:r])
                     return r
             except (SSL.Error, socket.error) as e:
-                raise NetLibDisconnect(str(e))
+                raise TcpDisconnect(str(e))
 
 
 class Reader(_FileLike):
@@ -210,23 +194,29 @@ class Reader(_FileLike):
             try:
                 data = self.o.read(rlen)
             except SSL.ZeroReturnError:
+                # TLS connection was shut down cleanly
                 break
-            except SSL.WantReadError:
+            except (SSL.WantWriteError, SSL.WantReadError):
+                # From the OpenSSL docs:
+                # If the underlying BIO is non-blocking, SSL_read() will also return when the
+                # underlying BIO could not satisfy the needs of SSL_read() to continue the
+                # operation. In this case a call to SSL_get_error with the return value of
+                # SSL_read() will yield SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE.
                 if (time.time() - start) < self.o.gettimeout():
                     time.sleep(0.1)
                     continue
                 else:
-                    raise NetLibTimeout
+                    raise TcpTimeout()
             except socket.timeout:
-                raise NetLibTimeout
-            except socket.error:
-                raise NetLibDisconnect
+                raise TcpTimeout()
+            except socket.error as e:
+                raise TcpDisconnect(str(e))
             except SSL.SysCallError as e:
                 if e.args == (-1, 'Unexpected EOF'):
                     break
-                raise NetLibSSLError(e.message)
+                raise TlsException(e.message)
             except SSL.Error as e:
-                raise NetLibSSLError(e.message)
+                raise TlsException(e.message)
             self.first_byte_timestamp = self.first_byte_timestamp or time.time()
             if not data:
                 break
@@ -260,9 +250,9 @@ class Reader(_FileLike):
         result = self.read(length)
         if length != -1 and len(result) != length:
             if not result:
-                raise NetLibDisconnect()
+                raise TcpDisconnect()
             else:
-                raise NetLibIncomplete(
+                raise TcpReadIncomplete(
                     "Expected %s bytes, got %s" % (length, len(result))
                 )
         return result
@@ -275,15 +265,15 @@ class Reader(_FileLike):
             Up to the next N bytes if peeking is successful.
 
         Raises:
-            NetLibError if there was an error with the socket
-            NetLibSSLError if there was an error with pyOpenSSL.
+            TcpException if there was an error with the socket
+            TlsException if there was an error with pyOpenSSL.
             NotImplementedError if the underlying file object is not a (pyOpenSSL) socket
         """
         if isinstance(self.o, socket._fileobject):
             try:
                 return self.o._sock.recv(length, socket.MSG_PEEK)
             except socket.error as e:
-                raise NetLibError(repr(e))
+                raise TcpException(repr(e))
         elif isinstance(self.o, SSL.Connection):
             try:
                 if tuple(int(x) for x in OpenSSL.__version__.split(".")[:2]) > (0, 15):
@@ -296,7 +286,7 @@ class Reader(_FileLike):
                     self.o._raise_ssl_error(self.o._ssl, result)
                     return SSL._ffi.buffer(buf, result)[:]
             except SSL.Error as e:
-                six.reraise(NetLibSSLError, NetLibSSLError(str(e)), sys.exc_info()[2])
+                six.reraise(TlsException, TlsException(str(e)), sys.exc_info()[2])
         else:
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
@@ -461,7 +451,7 @@ class _Connection(object):
                 try:
                     self.wfile.flush()
                     self.wfile.close()
-                except NetLibDisconnect:
+                except TcpDisconnect:
                     pass
 
             self.rfile.close()
@@ -525,7 +515,7 @@ class _Connection(object):
                 # TODO: maybe change this to with newer pyOpenSSL APIs
                 context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
-                raise NetLibError("SSL cipher specification error: %s" % str(v))
+                raise TlsException("SSL cipher specification error: %s" % str(v))
 
         # SSLKEYLOGFILE
         if log_ssl_key:
@@ -546,7 +536,7 @@ class _Connection(object):
             elif alpn_select_callback is not None and alpn_select is None:
                 context.set_alpn_select_callback(alpn_select_callback)
             elif alpn_select_callback is not None and alpn_select is not None:
-                raise NetLibError("ALPN error: only define alpn_select (string) OR alpn_select_callback (method).")
+                raise TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (method).")
 
         return context
 
@@ -594,7 +584,7 @@ class TCPClient(_Connection):
                 context.use_privatekey_file(cert)
                 context.use_certificate_file(cert)
             except SSL.Error as v:
-                raise NetLibError("SSL client certificate error: %s" % str(v))
+                raise TlsException("SSL client certificate error: %s" % str(v))
         return context
 
     def convert_to_ssl(self, sni=None, alpn_protos=None, **sslctx_kwargs):
@@ -618,15 +608,15 @@ class TCPClient(_Connection):
             self.connection.do_handshake()
         except SSL.Error as v:
             if self.ssl_verification_error:
-                raise NetLibInvalidCertificateError("SSL handshake error: %s" % repr(v))
+                raise InvalidCertificateException("SSL handshake error: %s" % repr(v))
             else:
-                raise NetLibError("SSL handshake error: %s" % repr(v))
+                raise TlsException("SSL handshake error: %s" % repr(v))
 
         # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
         # certificate validation failure
         verification_mode = sslctx_kwargs.get('verify_options', None)
         if self.ssl_verification_error is not None and verification_mode == SSL.VERIFY_PEER:
-            raise NetLibInvalidCertificateError("SSL handshake error: certificate verify failed")
+            raise InvalidCertificateException("SSL handshake error: certificate verify failed")
 
         self.ssl_established = True
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
@@ -644,7 +634,7 @@ class TCPClient(_Connection):
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
         except (socket.error, IOError) as err:
-            raise NetLibError(
+            raise TcpException(
                 'Error connecting to "%s": %s' %
                 (self.address.host, err))
         self.connection = connection
@@ -750,7 +740,7 @@ class BaseHandler(_Connection):
         try:
             self.connection.do_handshake()
         except SSL.Error as v:
-            raise NetLibError("SSL handshake error: %s" % repr(v))
+            raise TlsException("SSL handshake error: %s" % repr(v))
         self.ssl_established = True
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)

@@ -95,9 +95,9 @@ def _assemble_response_headers(response, preserve_transfer_encoding=False):
     if not preserve_transfer_encoding:
         headers.pop(b"Transfer-Encoding", None)
 
-    # If body is defined (i.e. not None or CONTENT_MISSING), we always
-    # add a content-length header.
-    if response.body or response.body == b"":
-        headers[b"Content-Length"] = str(len(response.body)).encode("ascii")
+        # If body is defined (i.e. not None or CONTENT_MISSING),
+        # we now need to set a content-length header.
+        if response.body or response.body == b"":
+            headers[b"Content-Length"] = str(len(response.body)).encode("ascii")
 
     return bytes(headers)

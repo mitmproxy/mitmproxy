@@ -231,7 +231,7 @@ class Request(object):
         self.path = path
         self.httpversion = httpversion
         self.headers = headers
-        self.body = body
+        self._body = body
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
         self.form_out = form_out or form_in
@@ -453,6 +453,16 @@ class Request(object):
         self.scheme, self.host, self.port, self.path = parts
 
     @property
+    def body(self):
+        return self._body
+
+    @body.setter
+    def body(self, body):
+        self._body = body
+        if isinstance(body, bytes):
+            self.headers["Content-Length"] = str(len(body)).encode()
+
+    @property
     def content(self):  # pragma: no cover
         # TODO: remove deprecated getter
         return self.body
@@ -488,7 +498,7 @@ class Response(object):
         self.status_code = status_code
         self.msg = msg
         self.headers = headers
-        self.body = body
+        self._body = body
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 
@@ -550,6 +560,16 @@ class Response(object):
                 )
             )
         self.headers.set_all("Set-Cookie", values)
+
+    @property
+    def body(self):
+        return self._body
+
+    @body.setter
+    def body(self, body):
+        self._body = body
+        if isinstance(body, bytes):
+            self.headers["Content-Length"] = str(len(body)).encode()
 
     @property
     def content(self):  # pragma: no cover

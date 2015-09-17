@@ -176,7 +176,7 @@ class TestBadHandshake(tservers.ServerTestBase):
     """
     handler = BadHandshakeHandler
 
-    @raises(tcp.NetLibDisconnect)
+    @raises(TcpDisconnect)
     def test(self):
         client = WebSocketsClient(("127.0.0.1", self.port))
         client.connect()

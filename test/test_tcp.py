@@ -12,6 +12,8 @@ import OpenSSL
 
 from netlib import tcp, certutils, tutils
 from . import tservers
+from netlib.exceptions import InvalidCertificateException, TcpReadIncomplete, TlsException, \
+    TcpTimeout, TcpDisconnect, TcpException
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -93,7 +95,7 @@ class TestServerBind(tservers.ServerTestBase):
                 c.connect()
                 assert c.rfile.readline() == str(("127.0.0.1", random_port))
                 return
-            except tcp.NetLibError:  # port probably already in use
+            except TcpException:  # port probably already in use
                 pass
 
 
@@ -140,7 +142,7 @@ class TestFinishFail(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.wfile.write("foo\n")
-        c.wfile.flush = mock.Mock(side_effect=tcp.NetLibDisconnect)
+        c.wfile.flush = mock.Mock(side_effect=TcpDisconnect)
         c.finish()
 
 
@@ -180,7 +182,7 @@ class TestSSLv3Only(tservers.ServerTestBase):
     def test_failure(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
-        tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com")
+        tutils.raises(TlsException, c.convert_to_ssl, sni="foo.com")
 
 
 class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
@@ -224,7 +226,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
         c.connect()
 
         tutils.raises(
-            tcp.NetLibInvalidCertificateError,
+            InvalidCertificateException,
             c.convert_to_ssl,
             verify_options=SSL.VERIFY_PEER,
             ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
@@ -327,7 +329,7 @@ class TestSSLClientCert(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         tutils.raises(
-            tcp.NetLibError,
+            TlsException,
             c.convert_to_ssl,
             cert=tutils.test_data.path("data/clientcert/make")
         )
@@ -432,7 +434,7 @@ class TestSSLDisconnect(tservers.ServerTestBase):
         # Excercise SSL.ZeroReturnError
         c.rfile.read(10)
         c.close()
-        tutils.raises(tcp.NetLibDisconnect, c.wfile.write, "foo")
+        tutils.raises(TcpDisconnect, c.wfile.write, "foo")
         tutils.raises(Queue.Empty, self.q.get_nowait)
 
 
@@ -447,7 +449,7 @@ class TestSSLHardDisconnect(tservers.ServerTestBase):
         # Exercise SSL.SysCallError
         c.rfile.read(10)
         c.close()
-        tutils.raises(tcp.NetLibDisconnect, c.wfile.write, "foo")
+        tutils.raises(TcpDisconnect, c.wfile.write, "foo")
 
 
 class TestDisconnect(tservers.ServerTestBase):
@@ -470,7 +472,7 @@ class TestServerTimeOut(tservers.ServerTestBase):
             self.settimeout(0.01)
             try:
                 self.rfile.read(10)
-            except tcp.NetLibTimeout:
+            except TcpTimeout:
                 self.timeout = True
 
     def test_timeout(self):
@@ -488,7 +490,7 @@ class TestTimeOut(tservers.ServerTestBase):
         c.connect()
         c.settimeout(0.1)
         assert c.gettimeout() == 0.1
-        tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
+        tutils.raises(TcpTimeout, c.rfile.read, 10)
 
 
 class TestALPNClient(tservers.ServerTestBase):
@@ -540,7 +542,7 @@ class TestSSLTimeOut(tservers.ServerTestBase):
         c.connect()
         c.convert_to_ssl()
         c.settimeout(0.1)
-        tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
+        tutils.raises(TcpTimeout, c.rfile.read, 10)
 
 
 class TestDHParams(tservers.ServerTestBase):
@@ -570,7 +572,7 @@ class TestTCPClient:
 
     def test_conerr(self):
         c = tcp.TCPClient(("127.0.0.1", 0))
-        tutils.raises(tcp.NetLibError, c.connect)
+        tutils.raises(TcpException, c.connect)
 
 
 class TestFileLike:
@@ -639,7 +641,7 @@ class TestFileLike:
         o = mock.MagicMock()
         o.flush = mock.MagicMock(side_effect=socket.error)
         s.o = o
-        tutils.raises(tcp.NetLibDisconnect, s.flush)
+        tutils.raises(TcpDisconnect, s.flush)
 
     def test_reader_read_error(self):
         s = cStringIO.StringIO("foobar\nfoobar")
@@ -647,7 +649,7 @@ class TestFileLike:
         o = mock.MagicMock()
         o.read = mock.MagicMock(side_effect=socket.error)
         s.o = o
-        tutils.raises(tcp.NetLibDisconnect, s.read, 10)
+        tutils.raises(TcpDisconnect, s.read, 10)
 
     def test_reset_timestamps(self):
         s = cStringIO.StringIO("foobar\nfoobar")
@@ -678,24 +680,24 @@ class TestFileLike:
         s = mock.MagicMock()
         s.read = mock.MagicMock(side_effect=SSL.Error())
         s = tcp.Reader(s)
-        tutils.raises(tcp.NetLibSSLError, s.read, 1)
+        tutils.raises(TlsException, s.read, 1)
 
     def test_read_syscall_ssl_error(self):
         s = mock.MagicMock()
         s.read = mock.MagicMock(side_effect=SSL.SysCallError())
         s = tcp.Reader(s)
-        tutils.raises(tcp.NetLibSSLError, s.read, 1)
+        tutils.raises(TlsException, s.read, 1)
 
     def test_reader_readline_disconnect(self):
         o = mock.MagicMock()
         o.read = mock.MagicMock(side_effect=socket.error)
         s = tcp.Reader(o)
-        tutils.raises(tcp.NetLibDisconnect, s.readline, 10)
+        tutils.raises(TcpDisconnect, s.readline, 10)
 
     def test_reader_incomplete_error(self):
         s = cStringIO.StringIO("foobar")
         s = tcp.Reader(s)
-        tutils.raises(tcp.NetLibIncomplete, s.safe_read, 10)
+        tutils.raises(TcpReadIncomplete, s.safe_read, 10)
 
 
 class TestAddress:
