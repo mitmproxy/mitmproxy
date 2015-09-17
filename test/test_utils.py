@@ -11,7 +11,7 @@ def test_bidi():
 
 
 def test_hexdump():
-    assert utils.hexdump("one\0" * 10)
+    assert list(utils.hexdump("one\0" * 10))
 
 
 def test_clean_bin():

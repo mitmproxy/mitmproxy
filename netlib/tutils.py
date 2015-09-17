@@ -123,7 +123,9 @@ def tresp(**kwargs):
         status_code=200,
         msg=b"OK",
         headers=Headers(header_response=b"svalue"),
-        body=b"message"
+        body=b"message",
+        timestamp_start=time.time(),
+        timestamp_end=time.time(),
     )
     default.update(kwargs)
     return Response(**default)
