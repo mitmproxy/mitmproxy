@@ -27,7 +27,8 @@ as late as possible; this makes server replay without any outgoing connections p
 
 from __future__ import (absolute_import, print_function, division)
 from .base import Layer, ServerConnectionMixin, Kill
-from .http import Http1Layer, Http2Layer
+from .http import Http1Layer
+from .http2 import Http2Layer
 from .tls import TlsLayer, is_tls_record_magic
 from .rawtcp import RawTCPLayer
 

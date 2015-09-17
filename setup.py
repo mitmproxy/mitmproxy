@@ -25,6 +25,7 @@ deps = {
     "six>=1.9.0",
     "lxml>=3.3.6",
     "Pillow>=2.3.0",
+    "backports.socketpair>=3.5.0.2",
 }
 # A script -> additional dependencies dict.
 scripts = {
