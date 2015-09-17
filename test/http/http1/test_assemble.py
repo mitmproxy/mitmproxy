@@ -4,8 +4,8 @@ from netlib.http import CONTENT_MISSING, Headers
 from netlib.http.http1.assemble import (
     assemble_request, assemble_request_head, assemble_response,
     assemble_response_head, _assemble_request_line, _assemble_request_headers,
-    _assemble_response_headers
-)
+    _assemble_response_headers,
+    assemble_body)
 from netlib.tutils import treq, raises, tresp
 
 
@@ -50,6 +50,17 @@ def test_assemble_response_head():
     assert b"message" not in c
 
 
+def test_assemble_body():
+    c = list(assemble_body(Headers(), [b"body"]))
+    assert c == [b"body"]
+
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a", b""]))
+    assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
+
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"]))
+    assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
+
+
 def test_assemble_request_line():
     assert _assemble_request_line(treq()) == b"GET /path HTTP/1.1"
 
@@ -83,8 +94,7 @@ def test_assemble_response_headers():
     r = tresp(body=b"")
     r.headers["Transfer-Encoding"] = b"chunked"
     c = _assemble_response_headers(r)
-    assert b"Content-Length" in c
-    assert b"Transfer-Encoding" not in c
+    assert b"Transfer-Encoding" in c
 
     assert b"Proxy-Connection" not in _assemble_response_headers(
         tresp(headers=Headers(Proxy_Connection=b"42"))

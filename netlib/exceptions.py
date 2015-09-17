@@ -40,8 +40,6 @@ class TcpDisconnect(TcpException, Disconnect):
     pass
 
 
-
-
 class TcpReadIncomplete(TcpException):
     pass
 

@@ -9,6 +9,7 @@ from .read import (
 from .assemble import (
     assemble_request, assemble_request_head,
     assemble_response, assemble_response_head,
+    assemble_body,
 )
 
 
@@ -20,4 +21,5 @@ __all__ = [
     "expected_http_body_size",
     "assemble_request", "assemble_request_head",
     "assemble_response", "assemble_response_head",
+    "assemble_body",
 ]

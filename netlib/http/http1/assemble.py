@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 from ... import utils
+import itertools
 from ...exceptions import HttpException
 from .. import CONTENT_MISSING
 
@@ -25,10 +26,21 @@ def assemble_response(response):
     return head + response.body
 
 
-def assemble_response_head(response, preserve_transfer_encoding=False):
+def assemble_response_head(response):
     first_line = _assemble_response_line(response)
-    headers = _assemble_response_headers(response, preserve_transfer_encoding)
+    headers = _assemble_response_headers(response)
     return b"%s\r\n%s\r\n" % (first_line, headers)
+
+
+def assemble_body(headers, body_chunks):
+    if b"chunked" in headers.get(b"transfer-encoding", b"").lower():
+        for chunk in body_chunks:
+            if chunk:
+                yield b"%x\r\n%s\r\n" % (len(chunk), chunk)
+        yield b"0\r\n\r\n"
+    else:
+        for chunk in body_chunks:
+            yield chunk
 
 
 def _assemble_request_line(request, form=None):
@@ -87,17 +99,9 @@ def _assemble_response_line(response):
     )
 
 
-def _assemble_response_headers(response, preserve_transfer_encoding=False):
-    # TODO: Remove preserve_transfer_encoding
+def _assemble_response_headers(response):
     headers = response.headers.copy()
     for k in response._headers_to_strip_off:
         headers.pop(k, None)
-    if not preserve_transfer_encoding:
-        headers.pop(b"Transfer-Encoding", None)
-
-        # If body is defined (i.e. not None or CONTENT_MISSING),
-        # we now need to set a content-length header.
-        if response.body or response.body == b"":
-            headers[b"Content-Length"] = str(len(response.body)).encode("ascii")
 
     return bytes(headers)
