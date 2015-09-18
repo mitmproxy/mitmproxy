@@ -330,7 +330,17 @@ class HttpLayer(Layer):
                 if not flow.response:
                     self.establish_server_connection(flow)
                     self.get_response_from_server(flow)
+                else:
+                    # response was set by an inline script.
+                    # we now need to emulate the responseheaders hook.
+                    flow = self.channel.ask("responseheaders", flow)
+                    if flow == Kill:
+                        raise Kill()
 
+                self.log("response", "debug", [repr(flow.response)])
+                flow = self.channel.ask("response", flow)
+                if flow == Kill:
+                    raise Kill()
                 self.send_response_to_client(flow)
 
                 if self.check_close_connection(flow):
@@ -453,15 +463,6 @@ class HttpLayer(Layer):
         # no further manipulation of self.server_conn beyond this point
         # we can safely set it as the final attribute value here.
         flow.server_conn = self.server_conn
-
-        self.log(
-            "response",
-            "debug",
-            [repr(flow.response)]
-        )
-        response_reply = self.channel.ask("response", flow)
-        if response_reply == Kill:
-            raise Kill()
 
     def process_request_hook(self, flow):
         # Determine .scheme, .host and .port attributes for inline scripts.
