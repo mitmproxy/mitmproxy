@@ -92,7 +92,10 @@ class Headers(MutableMapping, object):
         self.update(headers)
 
     def __bytes__(self):
-        return b"\r\n".join(b": ".join(field) for field in self.fields) + b"\r\n"
+        if self.fields:
+            return b"\r\n".join(b": ".join(field) for field in self.fields) + b"\r\n"
+        else:
+            return b""
 
     if six.PY2:
         __str__ = __bytes__
@@ -224,16 +227,6 @@ class Message(object):
 
 
 class Request(Message):
-    # This list is adopted legacy code.
-    # We probably don't need to strip off keep-alive.
-    _headers_to_strip_off = [
-        'Proxy-Connection',
-        'Keep-Alive',
-        'Connection',
-        'Transfer-Encoding',
-        'Upgrade',
-    ]
-
     def __init__(
             self,
             form_in,
@@ -467,12 +460,6 @@ class Request(Message):
 
 
 class Response(Message):
-    _headers_to_strip_off = [
-        'Proxy-Connection',
-        'Alternate-Protocol',
-        'Alt-Svc',
-    ]
-
     def __init__(
             self,
             http_version,

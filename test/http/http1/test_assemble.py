@@ -79,14 +79,9 @@ def test_assemble_request_headers():
     r = treq(body=b"")
     r.headers[b"Transfer-Encoding"] = b"chunked"
     c = _assemble_request_headers(r)
-    assert b"Content-Length" in c
-    assert b"Transfer-Encoding" not in c
+    assert b"Transfer-Encoding" in c
 
     assert b"Host" in _assemble_request_headers(treq(headers=Headers()))
-
-    assert b"Proxy-Connection" not in _assemble_request_headers(
-        treq(headers=Headers(Proxy_Connection="42"))
-    )
 
 
 def test_assemble_response_headers():
@@ -95,7 +90,3 @@ def test_assemble_response_headers():
     r.headers["Transfer-Encoding"] = b"chunked"
     c = _assemble_response_headers(r)
     assert b"Transfer-Encoding" in c
-
-    assert b"Proxy-Connection" not in _assemble_response_headers(
-        tresp(headers=Headers(Proxy_Connection=b"42"))
-    )

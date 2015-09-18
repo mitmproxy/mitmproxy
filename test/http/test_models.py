@@ -442,13 +442,16 @@ class TestHeaders(object):
 
     def test_str(self):
         headers = Headers(Host="example.com")
-        assert bytes(headers) == "Host: example.com\r\n"
+        assert bytes(headers) == b"Host: example.com\r\n"
 
         headers = Headers([
-            ["Host", "example.com"],
-            ["Accept", "text/plain"]
+            [b"Host", b"example.com"],
+            [b"Accept", b"text/plain"]
         ])
-        assert str(headers) == "Host: example.com\r\nAccept: text/plain\r\n"
+        assert bytes(headers) == b"Host: example.com\r\nAccept: text/plain\r\n"
+
+        headers = Headers()
+        assert bytes(headers) == b""
 
     def test_setitem(self):
         headers = Headers()

@@ -10,7 +10,8 @@ def assemble_request(request):
     if request.body == CONTENT_MISSING:
         raise HttpException("Cannot assemble flow with CONTENT_MISSING")
     head = assemble_request_head(request)
-    return head + request.body
+    body = b"".join(assemble_body(request.headers, [request.body]))
+    return head + body
 
 
 def assemble_request_head(request):
@@ -23,7 +24,8 @@ def assemble_response(response):
     if response.body == CONTENT_MISSING:
         raise HttpException("Cannot assemble flow with CONTENT_MISSING")
     head = assemble_response_head(response)
-    return head + response.body
+    body = b"".join(assemble_body(response.headers, [response.body]))
+    return head + body
 
 
 def assemble_response_head(response):
@@ -74,20 +76,12 @@ def _assemble_request_line(request, form=None):
 
 def _assemble_request_headers(request):
     headers = request.headers.copy()
-    for k in request._headers_to_strip_off:
-        headers.pop(k, None)
     if b"host" not in headers and request.scheme and request.host and request.port:
         headers[b"Host"] = utils.hostport(
             request.scheme,
             request.host,
             request.port
         )
-
-    # If content is defined (i.e. not None or CONTENT_MISSING), we always
-    # add a content-length header.
-    if request.body or request.body == b"":
-        headers[b"Content-Length"] = str(len(request.body)).encode("ascii")
-
     return bytes(headers)
 
 
@@ -100,8 +94,4 @@ def _assemble_response_line(response):
 
 
 def _assemble_response_headers(response):
-    headers = response.headers.copy()
-    for k in response._headers_to_strip_off:
-        headers.pop(k, None)
-
-    return bytes(headers)
+    return bytes(response.headers)
