@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
+import sys
 
 from netlib import version
 
@@ -12,6 +13,18 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, 'README.mkd'), encoding='utf-8') as f:
     long_description = f.read()
+
+deps = {
+    "pyasn1>=0.1.7",
+    "pyOpenSSL>=0.15.1",
+    "cryptography>=1.0",
+    "passlib>=1.6.2",
+    "hpack>=1.0.1",
+    "six>=1.9.0",
+    "certifi>=2015.9.6.2",
+}
+if sys.version_info < (3, 0):
+    deps.add("ipaddress>=1.0.14")
 
 setup(
     name="netlib",
@@ -40,15 +53,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        "pyasn1>=0.1.7",
-        "pyOpenSSL>=0.15.1",
-        "cryptography>=1.0",
-        "passlib>=1.6.2",
-        "hpack>=1.0.1",
-        "six>=1.9.0",
-        "certifi"
-    ],
+    install_requires=list(deps),
     extras_require={
         'dev': [
             "mock>=1.0.1",

@@ -4,6 +4,7 @@ import ssl
 import time
 import datetime
 import itertools
+import ipaddress
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
@@ -85,8 +86,13 @@ def dummy_cert(privkey, cacert, commonname, sans):
     """
     ss = []
     for i in sans:
-        ss.append("DNS: %s" % i)
-    ss = ", ".join(ss)
+        try:
+            ipaddress.ip_address(i.decode("ascii"))
+        except ValueError:
+            ss.append(b"DNS: %s" % i)
+        else:
+            ss.append(b"IP: %s" % i)
+    ss = b", ".join(ss)
 
     cert = OpenSSL.crypto.X509()
     cert.gmtime_adj_notBefore(-3600 * 48)
@@ -335,6 +341,7 @@ class CertStore(object):
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
+    # TODO: We should also handle iPAddresses.
     componentType = namedtype.NamedTypes(
         namedtype.NamedType('dNSName', char.IA5String().subtype(
             implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
