@@ -922,7 +922,7 @@ class FlowMaster(controller.Master):
         if f.request:
             f.backup()
             f.request.is_replay = True
-            if f.request.content:
+            if "Content-Length" in f.request.headers:
                 f.request.headers["Content-Length"] = str(len(f.request.content))
             f.response = None
             f.error = None

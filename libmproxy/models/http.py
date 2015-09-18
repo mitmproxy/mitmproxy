@@ -549,7 +549,6 @@ def make_connect_request(address):
 
 def make_connect_response(http_version):
     headers = Headers(
-        Content_Length="0",
         Proxy_Agent=version.NAMEVERSION
     )
     return HTTPResponse(
