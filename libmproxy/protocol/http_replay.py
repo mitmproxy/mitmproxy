@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 import threading
+import traceback
 from libmproxy.exceptions import ReplayException
 from netlib.exceptions import HttpException, TcpException
 from netlib.http import http1
@@ -79,17 +80,17 @@ class RequestReplayThread(threading.Thread):
                 server.wfile.write(http1.assemble_request(r))
                 server.wfile.flush()
                 self.flow.server_conn = server
-                self.flow.response = http1.read_response(
+                self.flow.response = HTTPResponse.wrap(http1.read_response(
                     server.rfile,
                     r,
                     body_size_limit=self.config.body_size_limit
-                )
+                ))
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)
                 if response_reply == Kill:
                     raise Kill()
-        except (ReplayException, HttpException, TcpException) as v:
-            self.flow.error = Error(repr(v))
+        except (ReplayException, HttpException, TcpException) as e:
+            self.flow.error = Error(str(e))
             if self.channel:
                 self.channel.ask("error", self.flow)
         except Kill:
@@ -97,5 +98,8 @@ class RequestReplayThread(threading.Thread):
             # first place.
             from ..proxy.root_context import Log
             self.channel.tell("log", Log("Connection killed", "info"))
+        except Exception:
+            from ..proxy.root_context import Log
+            self.channel.tell("log", Log(traceback.format_exc(), "error"))
         finally:
             r.form_out = form_out_backup

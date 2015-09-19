@@ -54,7 +54,7 @@ Then do the following:
     git clone https://github.com/mitmproxy/netlib.git
     git clone https://github.com/mitmproxy/pathod.git
     cd mitmproxy
-    source ./dev
+    ./dev
 
 
 The *dev* script will create a virtualenv environment in a directory called

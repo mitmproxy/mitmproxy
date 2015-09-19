@@ -244,13 +244,9 @@ class ServerPlaybackState:
         _, _, path, _, query, _ = urlparse.urlparse(r.url)
         queriesArray = urlparse.parse_qsl(query, keep_blank_values=True)
 
-        # scheme should match the client connection to be able to replay
-        # although r.scheme may have been changed to http to connect to upstream server
-        scheme = "https" if flow.client_conn and flow.client_conn.ssl_established else "http"
-
         key = [
             str(r.port),
-            str(scheme),
+            str(r.scheme),
             str(r.method),
             str(path),
         ]
@@ -926,7 +922,7 @@ class FlowMaster(controller.Master):
         if f.request:
             f.backup()
             f.request.is_replay = True
-            if f.request.content:
+            if "Content-Length" in f.request.headers:
                 f.request.headers["Content-Length"] = str(len(f.request.content))
             f.response = None
             f.error = None

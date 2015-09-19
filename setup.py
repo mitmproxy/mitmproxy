@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
+import sys
 from libmproxy import version
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
@@ -48,6 +49,11 @@ dev_deps = {
     "sphinx-autobuild>=0.5.2",
     "sphinxcontrib-documentedlist>=0.2",
 }
+example_deps = {
+    "pytz",
+    "harparser",
+    "beautifulsoup4",
+}
 # Add *all* script dependencies to developer dependencies.
 for script_deps in scripts.values():
     dev_deps.update(script_deps)
@@ -60,6 +66,9 @@ if os.name == "nt":
 # Add dependencies for available scripts as core dependencies.
 for script_deps in scripts.values():
     deps.update(script_deps)
+
+if sys.version_info < (3, 4):
+    example_deps.add("enum34")
 
 console_scripts = ["%s = libmproxy.main:%s" % (s, s) for s in scripts.keys()]
 
@@ -102,11 +111,6 @@ setup(
             "protobuf>=2.5.0",
             "cssutils>=1.0"
         ],
-        'examples': [
-            "pytz",
-            "harparser",
-            "beautifulsoup4",
-            "enum34"
-        ]
+        'examples': list(example_deps)
     }
 )
