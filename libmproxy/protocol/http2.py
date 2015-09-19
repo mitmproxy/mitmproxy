@@ -12,6 +12,9 @@ from hyperframe.frame import (
     DataFrame,
     SettingsFrame,
     WindowUpdateFrame,
+    PriorityFrame,
+    AltSvcFrame,
+    BlockedFrame,
 )
 
 from netlib.http import http1, http2
@@ -89,6 +92,11 @@ class Http2Layer(Layer):
                     is_window_update_frame = (
                         isinstance(frame, WindowUpdateFrame)
                     )
+                    is_ignored_frame = (
+                        isinstance(frame, PriorityFrame) or
+                        isinstance(frame, AltSvcFrame) or
+                        isinstance(frame, BlockedFrame)
+                    )
                     if is_new_stream:
                         self._create_new_stream(frame, source)
                     elif is_server_headers:
@@ -99,6 +107,8 @@ class Http2Layer(Layer):
                         self._process_settings_frame(frame, source)
                     elif is_window_update_frame:
                         self._process_window_update_frame(frame)
+                    elif is_ignored_frame:
+                        pass
                     else:
                         raise Http2ProtocolException("Unexpected Frame: %s" % repr(frame))
 
