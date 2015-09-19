@@ -121,7 +121,7 @@ class Http2Layer(Layer):
         pass  # yolo flow control
 
     def _process_settings_frame(self, settings_frame, source):
-        if 'FLAG_ACK' in settings_frame.flags:
+        if 'ACK' in settings_frame.flags:
             pass
         else:
             # yolo settings processing
