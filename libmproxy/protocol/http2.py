@@ -6,9 +6,19 @@ import threading
 import backports.socketpair
 import time
 
+from hyperframe.frame import (
+    Frame,
+    HeadersFrame,
+    DataFrame,
+    SettingsFrame,
+    WindowUpdateFrame,
+    PriorityFrame,
+    AltSvcFrame,
+    BlockedFrame,
+)
+
 from netlib.http import http1, http2
-from netlib.http.http2 import Http2ClientConnection, Http2ServerConnection, HeadersFrame, DataFrame, \
-    SettingsFrame, WindowUpdateFrame, Frame, make_response
+from netlib.http.http2 import Http2ClientConnection, Http2ServerConnection, make_response
 from netlib.tcp import Reader, ssl_read_select
 from ..exceptions import Http2ProtocolException, ProtocolException
 from ..models import HTTPRequest, HTTPResponse
@@ -82,6 +92,11 @@ class Http2Layer(Layer):
                     is_window_update_frame = (
                         isinstance(frame, WindowUpdateFrame)
                     )
+                    is_ignored_frame = (
+                        isinstance(frame, PriorityFrame) or
+                        isinstance(frame, AltSvcFrame) or
+                        isinstance(frame, BlockedFrame)
+                    )
                     if is_new_stream:
                         self._create_new_stream(frame, source)
                     elif is_server_headers:
@@ -92,6 +107,8 @@ class Http2Layer(Layer):
                         self._process_settings_frame(frame, source)
                     elif is_window_update_frame:
                         self._process_window_update_frame(frame)
+                    elif is_ignored_frame:
+                        pass
                     else:
                         raise Http2ProtocolException("Unexpected Frame: %s" % repr(frame))
 
@@ -104,11 +121,12 @@ class Http2Layer(Layer):
         pass  # yolo flow control
 
     def _process_settings_frame(self, settings_frame, source):
-        if settings_frame.flags & Frame.FLAG_ACK:
+        if 'ACK' in settings_frame.flags:
             pass
         else:
             # yolo settings processing
-            settings_ack_frame = SettingsFrame(flags=Frame.FLAG_ACK)
+            settings_ack_frame = SettingsFrame(0)  # TODO: use new hyperframe init
+            settings_ack_frame.flags = ['ACK']
             source.send_frame(settings_ack_frame)
 
     def _process_data_frame(self, data_frame, source):
@@ -122,7 +140,7 @@ class Http2Layer(Layer):
             chunk = b"%x\r\n%s\r\n" % (len(data_frame.payload), data_frame.payload)
             target.sendall(chunk)
 
-        if data_frame.flags & Frame.FLAG_END_STREAM:
+        if 'END_STREAM' in data_frame.flags:
             target.sendall("0\r\n\r\n")
             target.shutdown(socket.SHUT_WR)
 
@@ -133,7 +151,7 @@ class Http2Layer(Layer):
         stream.start()
 
         stream.client_conn.headers.put(headers)
-        if header_frames[-1].flags & Frame.FLAG_END_STREAM:
+        if 'END_STREAM' in header_frames[-1].flags:
             stream.into_client_conn.sendall("0\r\n\r\n")
             stream.into_client_conn.shutdown(socket.SHUT_WR)
 
@@ -142,7 +160,7 @@ class Http2Layer(Layer):
         stream = source.streams[headers_frame.stream_id]
 
         stream.server_conn.headers.put(headers)
-        if header_frames[-1].flags & Frame.FLAG_END_STREAM:
+        if 'END_STREAM' in header_frames[-1].flags:
             stream.into_server_conn.sendall("0\r\n\r\n")
             stream.into_server_conn.shutdown(socket.SHUT_WR)
 
