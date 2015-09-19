@@ -80,17 +80,17 @@ class RequestReplayThread(threading.Thread):
                 server.wfile.write(http1.assemble_request(r))
                 server.wfile.flush()
                 self.flow.server_conn = server
-                self.flow.response = http1.read_response(
+                self.flow.response = HTTPResponse.wrap(http1.read_response(
                     server.rfile,
                     r,
                     body_size_limit=self.config.body_size_limit
-                )
+                ))
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)
                 if response_reply == Kill:
                     raise Kill()
-        except (ReplayException, HttpException, TcpException) as v:
-            self.flow.error = Error(repr(v))
+        except (ReplayException, HttpException, TcpException) as e:
+            self.flow.error = Error(str(e))
             if self.channel:
                 self.channel.ask("error", self.flow)
         except Kill:
