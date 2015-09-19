@@ -215,9 +215,9 @@ def _get_first_line(rfile):
             # Possible leftover from previous message
             line = rfile.readline()
     except TcpDisconnect:
-        raise HttpReadDisconnect()
+        raise HttpReadDisconnect("Remote disconnected")
     if not line:
-        raise HttpReadDisconnect()
+        raise HttpReadDisconnect("Remote disconnected")
     line = line.strip()
     try:
         line.decode("ascii")
@@ -227,7 +227,11 @@ def _get_first_line(rfile):
 
 
 def _read_request_line(rfile):
-    line = _get_first_line(rfile)
+    try:
+        line = _get_first_line(rfile)
+    except HttpReadDisconnect:
+        # We want to provide a better error message.
+        raise HttpReadDisconnect("Client disconnected")
 
     try:
         method, path, http_version = line.split(b" ")
@@ -270,7 +274,11 @@ def _parse_authority_form(hostport):
 
 
 def _read_response_line(rfile):
-    line = _get_first_line(rfile)
+    try:
+        line = _get_first_line(rfile)
+    except HttpReadDisconnect:
+        # We want to provide a better error message.
+        raise HttpReadDisconnect("Server disconnected")
 
     try:
 
