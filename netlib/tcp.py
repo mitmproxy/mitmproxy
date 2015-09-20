@@ -7,6 +7,8 @@ import threading
 import time
 import traceback
 
+from six.moves import range
+
 import certifi
 import six
 import OpenSSL
@@ -227,7 +229,7 @@ class Reader(_FileLike):
         return result
 
     def readline(self, size=None):
-        result = ''
+        result = b''
         bytes_read = 0
         while True:
             if size is not None and bytes_read >= size:
@@ -399,7 +401,7 @@ def close_socket(sock):
             sock.settimeout(sock.gettimeout() or 20)
 
             # limit at a megabyte so that we don't read infinitely
-            for _ in xrange(1024 ** 3 // 4096):
+            for _ in range(1024 ** 3 // 4096):
                 # may raise a timeout/disconnect exception.
                 if not sock.recv(4096):
                     break
@@ -649,7 +651,7 @@ class TCPClient(_Connection):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
-            return ""
+            return b""
 
 
 class BaseHandler(_Connection):

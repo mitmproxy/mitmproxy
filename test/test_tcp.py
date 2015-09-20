@@ -49,9 +49,9 @@ class ALPNHandler(tcp.BaseHandler):
     def handle(self):
         alp = self.get_alpn_proto_negotiated()
         if alp:
-            self.wfile.write("%s" % alp)
+            self.wfile.write(("%s" % alp).encode("ascii"))
         else:
-            self.wfile.write("NONE")
+            self.wfile.write(b"NONE")
         self.wfile.flush()
 
 
@@ -503,24 +503,24 @@ class TestALPNClient(tservers.ServerTestBase):
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=["foo", "bar", "fasel"])
-            assert c.get_alpn_proto_negotiated() == "bar"
-            assert c.rfile.readline().strip() == "bar"
+            c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
+            assert c.get_alpn_proto_negotiated() == b"bar"
+            assert c.rfile.readline().strip() == b"bar"
 
         def test_no_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
             c.convert_to_ssl()
-            assert c.get_alpn_proto_negotiated() == ""
-            assert c.rfile.readline().strip() == "NONE"
+            assert c.get_alpn_proto_negotiated() == b""
+            assert c.rfile.readline().strip() == b"NONE"
 
     else:
         def test_none_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=["foo", "bar", "fasel"])
-            assert c.get_alpn_proto_negotiated() == ""
-            assert c.rfile.readline() == "NONE"
+            c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
+            assert c.get_alpn_proto_negotiated() == b""
+            assert c.rfile.readline() == b"NONE"
 
 
 class TestNoSSLNoALPNClient(tservers.ServerTestBase):
