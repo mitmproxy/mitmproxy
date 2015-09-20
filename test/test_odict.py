@@ -3,9 +3,6 @@ from netlib import odict, tutils
 
 class TestODict(object):
 
-    def setUp(self):
-        self.od = odict.ODict()
-
     def test_repr(self):
         h = odict.ODict()
         h["one"] = ["two"]
@@ -19,72 +16,81 @@ class TestODict(object):
             h["key"] = b"foo"
 
     def test_getset_state(self):
-        self.od.add("foo", 1)
-        self.od.add("foo", 2)
-        self.od.add("bar", 3)
-        state = self.od.get_state()
+        od = odict.ODict()
+        od.add("foo", 1)
+        od.add("foo", 2)
+        od.add("bar", 3)
+        state = od.get_state()
         nd = odict.ODict.from_state(state)
-        assert nd == self.od
+        assert nd == od
         b = odict.ODict()
         b.load_state(state)
-        assert b == self.od
+        assert b == od
 
     def test_in_any(self):
-        self.od["one"] = ["atwoa", "athreea"]
-        assert self.od.in_any("one", "two")
-        assert self.od.in_any("one", "three")
-        assert not self.od.in_any("one", "four")
-        assert not self.od.in_any("nonexistent", "foo")
-        assert not self.od.in_any("one", "TWO")
-        assert self.od.in_any("one", "TWO", True)
+        od = odict.ODict()
+        od["one"] = ["atwoa", "athreea"]
+        assert od.in_any("one", "two")
+        assert od.in_any("one", "three")
+        assert not od.in_any("one", "four")
+        assert not od.in_any("nonexistent", "foo")
+        assert not od.in_any("one", "TWO")
+        assert od.in_any("one", "TWO", True)
 
     def test_iter(self):
-        assert not [i for i in self.od]
-        self.od.add("foo", 1)
-        assert [i for i in self.od]
+        od = odict.ODict()
+        assert not [i for i in od]
+        od.add("foo", 1)
+        assert [i for i in od]
 
     def test_keys(self):
-        assert not self.od.keys()
-        self.od.add("foo", 1)
-        assert self.od.keys() == ["foo"]
-        self.od.add("foo", 2)
-        assert self.od.keys() == ["foo"]
-        self.od.add("bar", 2)
-        assert len(self.od.keys()) == 2
+        od = odict.ODict()
+        assert not od.keys()
+        od.add("foo", 1)
+        assert od.keys() == ["foo"]
+        od.add("foo", 2)
+        assert od.keys() == ["foo"]
+        od.add("bar", 2)
+        assert len(od.keys()) == 2
 
     def test_copy(self):
-        self.od.add("foo", 1)
-        self.od.add("foo", 2)
-        self.od.add("bar", 3)
-        assert self.od == self.od.copy()
-        assert not self.od != self.od.copy()
+        od = odict.ODict()
+        od.add("foo", 1)
+        od.add("foo", 2)
+        od.add("bar", 3)
+        assert od == od.copy()
+        assert not od != od.copy()
 
     def test_del(self):
-        self.od.add("foo", 1)
-        self.od.add("Foo", 2)
-        self.od.add("bar", 3)
-        del self.od["foo"]
-        assert len(self.od.lst) == 2
+        od = odict.ODict()
+        od.add("foo", 1)
+        od.add("Foo", 2)
+        od.add("bar", 3)
+        del od["foo"]
+        assert len(od.lst) == 2
 
     def test_replace(self):
-        self.od.add("one", "two")
-        self.od.add("two", "one")
-        assert self.od.replace("one", "vun") == 2
-        assert self.od.lst == [
+        od = odict.ODict()
+        od.add("one", "two")
+        od.add("two", "one")
+        assert od.replace("one", "vun") == 2
+        assert od.lst == [
             ["vun", "two"],
             ["two", "vun"],
         ]
 
     def test_get(self):
-        self.od.add("one", "two")
-        assert self.od.get("one") == ["two"]
-        assert self.od.get("two") is None
+        od = odict.ODict()
+        od.add("one", "two")
+        assert od.get("one") == ["two"]
+        assert od.get("two") is None
 
     def test_get_first(self):
-        self.od.add("one", "two")
-        self.od.add("one", "three")
-        assert self.od.get_first("one") == "two"
-        assert self.od.get_first("two") is None
+        od = odict.ODict()
+        od.add("one", "two")
+        od.add("one", "three")
+        assert od.get_first("one") == "two"
+        assert od.get_first("two") is None
 
     def test_extend(self):
         a = odict.ODict([["a", "b"], ["c", "d"]])
@@ -96,9 +102,6 @@ class TestODict(object):
 
 class TestODictCaseless(object):
 
-    def setUp(self):
-        self.od = odict.ODictCaseless()
-
     def test_override(self):
         o = odict.ODictCaseless()
         o.add('T', 'application/x-www-form-urlencoded; charset=UTF-8')
@@ -106,29 +109,32 @@ class TestODictCaseless(object):
         assert o["T"] == ["foo"]
 
     def test_case_preservation(self):
-        self.od["Foo"] = ["1"]
-        assert "foo" in self.od
-        assert self.od.items()[0][0] == "Foo"
-        assert self.od.get("foo") == ["1"]
-        assert self.od.get("foo", [""]) == ["1"]
-        assert self.od.get("Foo", [""]) == ["1"]
-        assert self.od.get("xx", "yy") == "yy"
+        od = odict.ODictCaseless()
+        od["Foo"] = ["1"]
+        assert "foo" in od
+        assert od.items()[0][0] == "Foo"
+        assert od.get("foo") == ["1"]
+        assert od.get("foo", [""]) == ["1"]
+        assert od.get("Foo", [""]) == ["1"]
+        assert od.get("xx", "yy") == "yy"
 
     def test_del(self):
-        self.od.add("foo", 1)
-        self.od.add("Foo", 2)
-        self.od.add("bar", 3)
-        del self.od["foo"]
-        assert len(self.od) == 1
+        od = odict.ODictCaseless()
+        od.add("foo", 1)
+        od.add("Foo", 2)
+        od.add("bar", 3)
+        del od["foo"]
+        assert len(od) == 1
 
     def test_keys(self):
-        assert not self.od.keys()
-        self.od.add("foo", 1)
-        assert self.od.keys() == ["foo"]
-        self.od.add("Foo", 2)
-        assert self.od.keys() == ["foo"]
-        self.od.add("bar", 2)
-        assert len(self.od.keys()) == 2
+        od = odict.ODictCaseless()
+        assert not od.keys()
+        od.add("foo", 1)
+        assert od.keys() == ["foo"]
+        od.add("Foo", 2)
+        assert od.keys() == ["foo"]
+        od.add("bar", 2)
+        assert len(od.keys()) == 2
 
     def test_add_order(self):
         od = odict.ODict(

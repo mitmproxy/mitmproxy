@@ -26,7 +26,7 @@ class ServerTestBase(object):
     addr = ("localhost", 0)
 
     @classmethod
-    def setupAll(cls):
+    def setup_class(cls):
         cls.q = queue.Queue()
         s = cls.makeserver()
         cls.port = s.address.port
@@ -38,7 +38,7 @@ class ServerTestBase(object):
         return TServer(cls.ssl, cls.q, cls.handler, cls.addr)
 
     @classmethod
-    def teardownAll(cls):
+    def teardown_class(cls):
         cls.server.shutdown()
 
     @property

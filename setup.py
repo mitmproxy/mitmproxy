@@ -57,6 +57,8 @@ setup(
     extras_require={
         'dev': [
             "mock>=1.0.1",
+            "pytest>=2.8.0",
+            "pytest-xdist>=1.13.1",
             "nose>=1.3.0",
             "nose-cov>=1.6",
             "coveralls>=0.4.1",
