@@ -17,12 +17,7 @@ matrix:
             - libssl-dev
     - python: 3.5
       script:
-        - nosetests --with-cov --cov-report term-missing test/http/http1
-        - nosetests --with-cov --cov-report term-missing test/test_utils.py
-        - nosetests --with-cov --cov-report term-missing test/test_encoding.py
-        - nosetests --with-cov --cov-report term-missing test/test_odict.py
-        - nosetests --with-cov --cov-report term-missing test/test_certutils.py
-        - nosetests --with-cov --cov-report term-missing test/test_socks.py
+        - py.test3 -n 4 -k "not http2 and not websockets and not wsgi and not models" .
     - python: pypy
     - python: pypy
       env: OPENSSL=1.0.2

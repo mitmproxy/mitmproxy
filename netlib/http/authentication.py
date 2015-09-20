@@ -12,7 +12,7 @@ def parse_http_basic_auth(s):
         user = binascii.a2b_base64(words[1])
     except binascii.Error:
         return None
-    parts = user.split(':')
+    parts = user.split(b':')
     if len(parts) != 2:
         return None
     return scheme, parts[0], parts[1]
@@ -69,7 +69,7 @@ class BasicProxyAuth(NullProxyAuth):
         if not parts:
             return False
         scheme, username, password = parts
-        if scheme.lower() != 'basic':
+        if scheme.lower() != b'basic':
             return False
         if not self.password_manager.test(username, password):
             return False

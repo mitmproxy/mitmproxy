@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 
+import binascii
 from six.moves import range
 
 import certifi
@@ -78,14 +79,11 @@ class SSLKeyLogger(object):
                     d = os.path.dirname(self.filename)
                     if not os.path.isdir(d):
                         os.makedirs(d)
-                    self.f = open(self.filename, "a")
-                    self.f.write("\r\n")
-                client_random = connection.client_random().encode("hex")
-                masterkey = connection.master_key().encode("hex")
-                self.f.write(
-                    "CLIENT_RANDOM {} {}\r\n".format(
-                        client_random,
-                        masterkey))
+                    self.f = open(self.filename, "ab")
+                    self.f.write(b"\r\n")
+                client_random = binascii.hexlify(connection.client_random())
+                masterkey = binascii.hexlify(connection.master_key())
+                self.f.write(b"CLIENT_RANDOM %s %s\r\n" % (client_random, masterkey))
                 self.f.flush()
 
     def close(self):
@@ -140,7 +138,7 @@ class _FileLike(object):
         """
         if not self.is_logging():
             raise ValueError("Not logging!")
-        return "".join(self._log)
+        return b"".join(self._log)
 
     def add_log(self, v):
         if self.is_logging():
@@ -216,9 +214,9 @@ class Reader(_FileLike):
             except SSL.SysCallError as e:
                 if e.args == (-1, 'Unexpected EOF'):
                     break
-                raise TlsException(e.message)
+                raise TlsException(str(e))
             except SSL.Error as e:
-                raise TlsException(e.message)
+                raise TlsException(str(e))
             self.first_byte_timestamp = self.first_byte_timestamp or time.time()
             if not data:
                 break
@@ -240,7 +238,7 @@ class Reader(_FileLike):
                 break
             else:
                 result += ch
-                if ch == '\n':
+                if ch == b'\n':
                     break
         return result
 
@@ -757,7 +755,7 @@ class BaseHandler(_Connection):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
-            return ""
+            return b""
 
 
 class TCPServer(object):
@@ -829,9 +827,7 @@ class TCPServer(object):
             exc = six.text_type(traceback.format_exc())
             print(u'-' * 40, file=fp)
             print(
-                u"Error in processing of request from %s:%s" % (
-                    client_address.host, client_address.port
-                ), file=fp)
+                u"Error in processing of request from %s" % repr(client_address), file=fp)
             print(exc, file=fp)
             print(u'-' * 40, file=fp)
 

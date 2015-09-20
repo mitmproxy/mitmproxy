@@ -11,7 +11,7 @@ def test_parse_http_basic_auth():
     ) == vals
     assert not authentication.parse_http_basic_auth("")
     assert not authentication.parse_http_basic_auth("foo bar")
-    v = "basic " + binascii.b2a_base64("foo")
+    v = b"basic " + binascii.b2a_base64(b"foo")
     assert not authentication.parse_http_basic_auth(v)
 
 
@@ -34,7 +34,7 @@ class TestPassManHtpasswd:
     def test_simple(self):
         pm = authentication.PassManHtpasswd(tutils.test_data.path("data/htpasswd"))
 
-        vals = ("basic", "test", "test")
+        vals = (b"basic", b"test", b"test")
         authentication.assemble_http_basic_auth(*vals)
         assert pm.test("test", "test")
         assert not pm.test("test", "foo")
@@ -73,7 +73,7 @@ class TestBasicProxyAuth:
         ba = authentication.BasicProxyAuth(authentication.PassManNonAnon(), "test")
 
         headers = Headers()
-        vals = ("basic", "foo", "bar")
+        vals = (b"basic", b"foo", b"bar")
         headers[ba.AUTH_HEADER] = authentication.assemble_http_basic_auth(*vals)
         assert ba.authenticate(headers)
 
@@ -86,12 +86,12 @@ class TestBasicProxyAuth:
         headers[ba.AUTH_HEADER] = "foo"
         assert not ba.authenticate(headers)
 
-        vals = ("foo", "foo", "bar")
+        vals = (b"foo", b"foo", b"bar")
         headers[ba.AUTH_HEADER] = authentication.assemble_http_basic_auth(*vals)
         assert not ba.authenticate(headers)
 
         ba = authentication.BasicProxyAuth(authentication.PassMan(), "test")
-        vals = ("basic", "foo", "bar")
+        vals = (b"basic", b"foo", b"bar")
         headers[ba.AUTH_HEADER] = authentication.assemble_http_basic_auth(*vals)
         assert not ba.authenticate(headers)
 
