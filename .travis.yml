@@ -36,6 +36,7 @@ matrix:
     # We allow pypy to fail until Travis fixes their infrastructure to a pypy
     # with a recent enought CFFI library to run cryptography 1.0+.
     - python: pypy
+    - python: pypy3
 
 install:
   - "pip install --src . -r requirements.txt"
@@ -44,7 +45,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "nosetests --with-cov --cov-report term-missing"
+  - "py.test -n 4 --cov netlib"
 
 after_success:
   - coveralls

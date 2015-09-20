@@ -1,3 +1,11 @@
+[run]
+branch = True
+
 [report]
-omit = *contrib*
+show_missing = True
 include = *netlib/netlib*
+exclude_lines =
+    pragma: nocover
+    pragma: no cover
+    raise NotImplementedError()
+omit = *contrib*
