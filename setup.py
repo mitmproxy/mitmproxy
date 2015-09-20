@@ -60,8 +60,6 @@ setup(
             "pytest>=2.8.0",
             "pytest-xdist>=1.13.1",
             "pytest-cov>=2.1.0",
-            "nose>=1.3.0",
-            "nose-cov>=1.6",
             "coveralls>=0.4.1",
             "autopep8>=1.0.3",
             "autoflake>=0.6.6",
