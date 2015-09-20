@@ -1,6 +1,5 @@
 import os
 
-from nose.tools import raises
 from netlib.http.http1 import read_response, read_request
 
 from netlib import tcp, tutils, websockets, http
@@ -176,11 +175,11 @@ class TestBadHandshake(tservers.ServerTestBase):
     """
     handler = BadHandshakeHandler
 
-    @raises(TcpDisconnect)
     def test(self):
-        client = WebSocketsClient(("127.0.0.1", self.port))
-        client.connect()
-        client.send_message(b"hello")
+        with tutils.raises(TcpDisconnect):
+            client = WebSocketsClient(("127.0.0.1", self.port))
+            client.connect()
+            client.send_message(b"hello")
 
 
 class TestFrameHeader:

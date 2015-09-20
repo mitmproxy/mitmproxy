@@ -1,5 +1,3 @@
-import nose.tools
-
 from netlib.http import cookies
 
 
@@ -13,7 +11,7 @@ def test_read_token():
         [(" foo=bar", 1), ("foo", 4)],
     ]
     for q, a in tokens:
-        nose.tools.eq_(cookies._read_token(*q), a)
+        assert cookies._read_token(*q) == a
 
 
 def test_read_quoted_string():
@@ -25,7 +23,7 @@ def test_read_quoted_string():
         [('"fo\\\"" x', 0), ("fo\"", 6)],
     ]
     for q, a in tokens:
-        nose.tools.eq_(cookies._read_quoted_string(*q), a)
+        assert cookies._read_quoted_string(*q) == a
 
 
 def test_read_pairs():
@@ -61,7 +59,7 @@ def test_read_pairs():
     ]
     for s, lst in vals:
         ret, off = cookies._read_pairs(s)
-        nose.tools.eq_(ret, lst)
+        assert ret == lst
 
 
 def test_pairs_roundtrips():
@@ -109,10 +107,10 @@ def test_pairs_roundtrips():
     ]
     for s, lst in pairs:
         ret, off = cookies._read_pairs(s)
-        nose.tools.eq_(ret, lst)
+        assert ret == lst
         s2 = cookies._format_pairs(lst)
         ret, off = cookies._read_pairs(s2)
-        nose.tools.eq_(ret, lst)
+        assert ret == lst
 
 
 def test_cookie_roundtrips():
@@ -128,10 +126,10 @@ def test_cookie_roundtrips():
     ]
     for s, lst in pairs:
         ret = cookies.parse_cookie_header(s)
-        nose.tools.eq_(ret.lst, lst)
+        assert ret.lst == lst
         s2 = cookies.format_cookie_header(ret)
         ret = cookies.parse_cookie_header(s2)
-        nose.tools.eq_(ret.lst, lst)
+        assert ret.lst == lst
 
 
 def test_parse_set_cookie_pairs():
@@ -181,10 +179,10 @@ def test_parse_set_cookie_pairs():
     ]
     for s, lst in pairs:
         ret = cookies._parse_set_cookie_pairs(s)
-        nose.tools.eq_(ret, lst)
+        assert ret == lst
         s2 = cookies._format_set_cookie_pairs(ret)
         ret2 = cookies._parse_set_cookie_pairs(s2)
-        nose.tools.eq_(ret2, lst)
+        assert  ret2 == lst
 
 
 def test_parse_set_cookie_header():
@@ -209,11 +207,11 @@ def test_parse_set_cookie_header():
         if expected:
             assert ret[0] == expected[0]
             assert ret[1] == expected[1]
-            nose.tools.eq_(ret[2].lst, expected[2])
+            assert ret[2].lst == expected[2]
             s2 = cookies.format_set_cookie_header(*ret)
             ret2 = cookies.parse_set_cookie_header(s2)
             assert ret2[0] == expected[0]
             assert ret2[1] == expected[1]
-            nose.tools.eq_(ret2[2].lst, expected[2])
+            assert ret2[2].lst == expected[2]
         else:
             assert ret is None
