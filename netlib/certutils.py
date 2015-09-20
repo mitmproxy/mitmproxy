@@ -5,6 +5,8 @@ import time
 import datetime
 import itertools
 import ipaddress
+
+import sys
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
@@ -184,7 +186,7 @@ class CertStore(object):
             with open(path, "wb") as f:
                 f.write(DEFAULT_DHPARAM)
 
-        bio = OpenSSL.SSL._lib.BIO_new_file(path, b"r")
+        bio = OpenSSL.SSL._lib.BIO_new_file(path.encode(sys.getfilesystemencoding()), b"r")
         if bio != OpenSSL.SSL._ffi.NULL:
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
             dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(
@@ -318,10 +320,9 @@ class CertStore(object):
         potential_keys.append((commonname, tuple(sans)))
 
         name = next(
-            itertools.ifilter(
-                lambda key: key in self.certs,
-                potential_keys),
-            None)
+            filter(lambda key: key in self.certs, potential_keys),
+            None
+        )
         if name:
             entry = self.certs[name]
         else:

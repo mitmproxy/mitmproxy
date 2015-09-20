@@ -1,8 +1,11 @@
 from __future__ import (absolute_import, print_function, division)
-import cStringIO
+from io import BytesIO
 import urllib
 import time
 import traceback
+
+import six
+
 from . import http, tcp
 
 
@@ -58,7 +61,7 @@ class WSGIAdaptor(object):
         environ = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': flow.request.scheme,
-            'wsgi.input': cStringIO.StringIO(flow.request.body or ""),
+            'wsgi.input': BytesIO(flow.request.body or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,
@@ -91,17 +94,17 @@ class WSGIAdaptor(object):
             Make a best-effort attempt to write an error page. If headers are
             already sent, we just bung the error into the page.
         """
-        c = """
+        c = b"""
             <html>
                 <h1>Internal Server Error</h1>
                 <pre>%s"</pre>
             </html>
-        """ % s
+        """.strip() % s
         if not headers_sent:
-            soc.write("HTTP/1.1 500 Internal Server Error\r\n")
-            soc.write("Content-Type: text/html\r\n")
-            soc.write("Content-Length: %s\r\n" % len(c))
-            soc.write("\r\n")
+            soc.write(b"HTTP/1.1 500 Internal Server Error\r\n")
+            soc.write(b"Content-Type: text/html\r\n")
+            soc.write(b"Content-Length: %s\r\n" % len(c))
+            soc.write(b"\r\n")
         soc.write(c)
 
     def serve(self, request, soc, **env):
@@ -114,14 +117,14 @@ class WSGIAdaptor(object):
 
         def write(data):
             if not state["headers_sent"]:
-                soc.write("HTTP/1.1 %s\r\n" % state["status"])
+                soc.write(b"HTTP/1.1 %s\r\n" % state["status"])
                 headers = state["headers"]
                 if 'server' not in headers:
                     headers["Server"] = self.sversion
                 if 'date' not in headers:
                     headers["Date"] = date_time_string()
-                soc.write(str(headers))
-                soc.write("\r\n")
+                soc.write(bytes(headers))
+                soc.write(b"\r\n")
                 state["headers_sent"] = True
             if data:
                 soc.write(data)
@@ -131,7 +134,7 @@ class WSGIAdaptor(object):
             if exc_info:
                 try:
                     if state["headers_sent"]:
-                        raise exc_info[0], exc_info[1], exc_info[2]
+                        six.reraise(*exc_info)
                 finally:
                     exc_info = None
             elif state["status"]:
@@ -140,7 +143,7 @@ class WSGIAdaptor(object):
             state["headers"] = http.Headers(headers)
             return write
 
-        errs = cStringIO.StringIO()
+        errs = BytesIO()
         try:
             dataiter = self.app(
                 self.make_environ(request, errs, **env), start_response
@@ -148,7 +151,7 @@ class WSGIAdaptor(object):
             for i in dataiter:
                 write(i)
             if not state["headers_sent"]:
-                write("")
+                write(b"")
         except Exception as e:
             try:
                 s = traceback.format_exc()

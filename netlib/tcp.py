@@ -76,7 +76,7 @@ class SSLKeyLogger(object):
                     d = os.path.dirname(self.filename)
                     if not os.path.isdir(d):
                         os.makedirs(d)
-                    self.f = open(self.filename, "ab")
+                    self.f = open(self.filename, "a")
                     self.f.write("\r\n")
                 client_random = connection.client_random().encode("hex")
                 masterkey = connection.master_key().encode("hex")
@@ -184,7 +184,7 @@ class Reader(_FileLike):
         """
             If length is -1, we read until connection closes.
         """
-        result = ''
+        result = b''
         start = time.time()
         while length == -1 or length > 0:
             if length == -1 or length > self.BLOCKSIZE:

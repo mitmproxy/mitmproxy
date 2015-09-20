@@ -23,7 +23,7 @@ def test_client_greeting_assert_socks5():
     msg = socks.ClientGreeting.from_file(raw)
     tutils.raises(socks.SocksError, msg.assert_socks5)
 
-    raw = tutils.treader(b"HTTP/1.1 200 OK" + " " * 100)
+    raw = tutils.treader(b"HTTP/1.1 200 OK" + b" " * 100)
     msg = socks.ClientGreeting.from_file(raw)
     try:
         msg.assert_socks5()
