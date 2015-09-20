@@ -8,27 +8,25 @@ import zlib
 from .utils import always_byte_args
 
 
-ENCODINGS = {b"identity", b"gzip", b"deflate"}
+ENCODINGS = {"identity", "gzip", "deflate"}
 
 
-@always_byte_args("ascii", "ignore")
 def decode(e, content):
     encoding_map = {
-        b"identity": identity,
-        b"gzip": decode_gzip,
-        b"deflate": decode_deflate,
+        "identity": identity,
+        "gzip": decode_gzip,
+        "deflate": decode_deflate,
     }
     if e not in encoding_map:
         return None
     return encoding_map[e](content)
 
 
-@always_byte_args("ascii", "ignore")
 def encode(e, content):
     encoding_map = {
-        b"identity": identity,
-        b"gzip": encode_gzip,
-        b"deflate": encode_deflate,
+        "identity": identity,
+        "gzip": encode_gzip,
+        "deflate": encode_deflate,
     }
     if e not in encoding_map:
         return None

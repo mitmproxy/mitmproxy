@@ -2,13 +2,14 @@ from __future__ import absolute_import
 import os
 import struct
 import io
+import warnings
+
 import six
 
 from .protocol import Masker
 from netlib import tcp
 from netlib import utils
 
-DEFAULT = object()
 
 MAX_16_BIT_INT = (1 << 16)
 MAX_64_BIT_INT = (1 << 64)
@@ -33,9 +34,9 @@ class FrameHeader(object):
         rsv1=False,
         rsv2=False,
         rsv3=False,
-        masking_key=DEFAULT,
-        mask=DEFAULT,
-        length_code=DEFAULT
+        masking_key=None,
+        mask=None,
+        length_code=None
     ):
         if not 0 <= opcode < 2 ** 4:
             raise ValueError("opcode must be 0-16")
@@ -46,18 +47,18 @@ class FrameHeader(object):
         self.rsv2 = rsv2
         self.rsv3 = rsv3
 
-        if length_code is DEFAULT:
+        if length_code is None:
             self.length_code = self._make_length_code(self.payload_length)
         else:
             self.length_code = length_code
 
-        if mask is DEFAULT and masking_key is DEFAULT:
+        if mask is None and masking_key is None:
             self.mask = False
-            self.masking_key = ""
-        elif mask is DEFAULT:
+            self.masking_key = b""
+        elif mask is None:
             self.mask = 1
             self.masking_key = masking_key
-        elif masking_key is DEFAULT:
+        elif masking_key is None:
             self.mask = mask
             self.masking_key = os.urandom(4)
         else:
@@ -81,7 +82,7 @@ class FrameHeader(object):
         else:
             return 127
 
-    def human_readable(self):
+    def __repr__(self):
         vals = [
             "ws frame:",
             OPCODE.get_name(self.opcode, hex(self.opcode)).lower()
@@ -98,7 +99,11 @@ class FrameHeader(object):
             vals.append(" %s" % utils.pretty_size(self.payload_length))
         return "".join(vals)
 
-    def to_bytes(self):
+    def human_readable(self):
+        warnings.warn("FrameHeader.to_bytes is deprecated, use bytes(frame_header) instead.", DeprecationWarning)
+        return repr(self)
+
+    def __bytes__(self):
         first_byte = utils.setbit(0, 7, self.fin)
         first_byte = utils.setbit(first_byte, 6, self.rsv1)
         first_byte = utils.setbit(first_byte, 5, self.rsv2)
@@ -107,7 +112,7 @@ class FrameHeader(object):
 
         second_byte = utils.setbit(self.length_code, 7, self.mask)
 
-        b = chr(first_byte) + chr(second_byte)
+        b = six.int2byte(first_byte) + six.int2byte(second_byte)
 
         if self.payload_length < 126:
             pass
@@ -119,9 +124,16 @@ class FrameHeader(object):
             # '!Q' = pack as 64 bit unsigned long long
             # add 8 bytes extended payload length
             b += struct.pack('!Q', self.payload_length)
-        if self.masking_key is not None:
+        if self.masking_key:
             b += self.masking_key
         return b
+
+    if six.PY2:
+        __str__ = __bytes__
+
+    def to_bytes(self):
+        warnings.warn("FrameHeader.to_bytes is deprecated, use bytes(frame_header) instead.", DeprecationWarning)
+        return bytes(self)
 
     @classmethod
     def from_file(cls, fp):
@@ -154,7 +166,7 @@ class FrameHeader(object):
         if mask_bit == 1:
             masking_key = fp.safe_read(4)
         else:
-            masking_key = None
+            masking_key = False
 
         return cls(
             fin=fin,
@@ -169,7 +181,9 @@ class FrameHeader(object):
         )
 
     def __eq__(self, other):
-        return self.to_bytes() == other.to_bytes()
+        if isinstance(other, FrameHeader):
+            return bytes(self) == bytes(other)
+        return False
 
 
 class Frame(object):
@@ -200,7 +214,7 @@ class Frame(object):
          +---------------------------------------------------------------+
     """
 
-    def __init__(self, payload="", **kwargs):
+    def __init__(self, payload=b"", **kwargs):
         self.payload = payload
         kwargs["payload_length"] = kwargs.get("payload_length", len(payload))
         self.header = FrameHeader(**kwargs)
@@ -216,7 +230,7 @@ class Frame(object):
             masking_key = os.urandom(4)
         else:
             mask_bit = 0
-            masking_key = None
+            masking_key = False
 
         return cls(
             message,
@@ -234,28 +248,37 @@ class Frame(object):
         """
         return cls.from_file(tcp.Reader(io.BytesIO(bytestring)))
 
-    def human_readable(self):
-        ret = self.header.human_readable()
+    def __repr__(self):
+        ret = repr(self.header)
         if self.payload:
-            ret = ret + "\nPayload:\n" + utils.clean_bin(self.payload)
+            ret = ret + "\nPayload:\n" + utils.clean_bin(self.payload).decode("ascii")
         return ret
 
-    def __repr__(self):
-        return self.header.human_readable()
+    def human_readable(self):
+        warnings.warn("Frame.to_bytes is deprecated, use bytes(frame) instead.", DeprecationWarning)
+        return repr(self)
 
-    def to_bytes(self):
+    def __bytes__(self):
         """
             Serialize the frame to wire format. Returns a string.
         """
-        b = self.header.to_bytes()
+        b = bytes(self.header)
         if self.header.masking_key:
             b += Masker(self.header.masking_key)(self.payload)
         else:
             b += self.payload
         return b
 
+    if six.PY2:
+        __str__ = __bytes__
+
+    def to_bytes(self):
+        warnings.warn("FrameHeader.to_bytes is deprecated, use bytes(frame_header) instead.", DeprecationWarning)
+        return bytes(self)
+
     def to_file(self, writer):
-        writer.write(self.to_bytes())
+        warnings.warn("Frame.to_file is deprecated, use wfile.write(bytes(frame)) instead.", DeprecationWarning)
+        writer.write(bytes(self))
         writer.flush()
 
     @classmethod
@@ -286,4 +309,6 @@ class Frame(object):
         )
 
     def __eq__(self, other):
-        return self.to_bytes() == other.to_bytes()
+        if isinstance(other, Frame):
+            return bytes(self) == bytes(other)
+        return False

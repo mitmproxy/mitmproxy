@@ -58,20 +58,20 @@ class TestRequest(object):
         req = tutils.treq()
         req.headers["Accept-Encoding"] = "foobar"
         req.anticomp()
-        assert req.headers["Accept-Encoding"] == "identity"
+        assert req.headers["Accept-Encoding"] == b"identity"
 
     def test_constrain_encoding(self):
         req = tutils.treq()
         req.headers["Accept-Encoding"] = "identity, gzip, foo"
         req.constrain_encoding()
-        assert "foo" not in req.headers["Accept-Encoding"]
+        assert b"foo" not in req.headers["Accept-Encoding"]
 
     def test_update_host(self):
         req = tutils.treq()
         req.headers["Host"] = ""
         req.host = "foobar"
         req.update_host_header()
-        assert req.headers["Host"] == "foobar"
+        assert req.headers["Host"] == b"foobar"
 
     def test_get_form(self):
         req = tutils.treq()
@@ -132,7 +132,7 @@ class TestRequest(object):
 
     def test_set_path_components(self):
         req = tutils.treq()
-        req.set_path_components(["foo", "bar"])
+        req.set_path_components([b"foo", b"bar"])
         # TODO: add meaningful assertions
 
     def test_get_query(self):
@@ -140,7 +140,7 @@ class TestRequest(object):
         assert req.get_query().lst == []
 
         req.url = "http://localhost:80/foo?bar=42"
-        assert req.get_query().lst == [("bar", "42")]
+        assert req.get_query().lst == [(b"bar", b"42")]
 
     def test_set_query(self):
         req = tutils.treq()
@@ -167,12 +167,12 @@ class TestRequest(object):
     def test_pretty_url(self):
         req = tutils.treq()
         req.form_out = "authority"
-        assert req.pretty_url(True) == "address:22"
-        assert req.pretty_url(False) == "address:22"
+        assert req.pretty_url(True) == b"address:22"
+        assert req.pretty_url(False) == b"address:22"
 
         req.form_out = "relative"
-        assert req.pretty_url(True) == "http://address:22/path"
-        assert req.pretty_url(False) == "http://address:22/path"
+        assert req.pretty_url(True) == b"http://address:22/path"
+        assert req.pretty_url(False) == b"http://address:22/path"
 
     def test_get_cookies_none(self):
         headers = Headers()
@@ -213,11 +213,11 @@ class TestRequest(object):
 
     def test_set_url(self):
         r = tutils.treq(form_in="absolute")
-        r.url = "https://otheraddress:42/ORLY"
-        assert r.scheme == "https"
-        assert r.host == "otheraddress"
+        r.url = b"https://otheraddress:42/ORLY"
+        assert r.scheme == b"https"
+        assert r.host == b"otheraddress"
         assert r.port == 42
-        assert r.path == "/ORLY"
+        assert r.path == b"/ORLY"
 
         try:
             r.url = "//localhost:80/foo@bar"
@@ -374,8 +374,8 @@ class TestResponse(object):
     def test_get_cookies_twocookies(self):
         resp = tutils.tresp()
         resp.headers = Headers([
-            ["Set-Cookie", "cookiename=cookievalue"],
-            ["Set-Cookie", "othercookie=othervalue"]
+            [b"Set-Cookie", b"cookiename=cookievalue"],
+            [b"Set-Cookie", b"othercookie=othervalue"]
         ])
         result = resp.get_cookies()
         assert len(result) == 2
@@ -399,8 +399,8 @@ class TestHeaders(object):
     def _2host(self):
         return Headers(
             [
-                ["Host", "example.com"],
-                ["host", "example.org"]
+                [b"Host", b"example.com"],
+                [b"host", b"example.org"]
             ]
         )
 
@@ -408,37 +408,37 @@ class TestHeaders(object):
         headers = Headers()
         assert len(headers) == 0
 
-        headers = Headers([["Host", "example.com"]])
+        headers = Headers([[b"Host", b"example.com"]])
         assert len(headers) == 1
-        assert headers["Host"] == "example.com"
+        assert headers["Host"] == b"example.com"
 
         headers = Headers(Host="example.com")
         assert len(headers) == 1
-        assert headers["Host"] == "example.com"
+        assert headers["Host"] == b"example.com"
 
         headers = Headers(
-            [["Host", "invalid"]],
+            [[b"Host", b"invalid"]],
             Host="example.com"
         )
         assert len(headers) == 1
-        assert headers["Host"] == "example.com"
+        assert headers["Host"] == b"example.com"
 
         headers = Headers(
-            [["Host", "invalid"], ["Accept", "text/plain"]],
+            [[b"Host", b"invalid"], [b"Accept", b"text/plain"]],
             Host="example.com"
         )
         assert len(headers) == 2
-        assert headers["Host"] == "example.com"
-        assert headers["Accept"] == "text/plain"
+        assert headers["Host"] == b"example.com"
+        assert headers["Accept"] == b"text/plain"
 
     def test_getitem(self):
         headers = Headers(Host="example.com")
-        assert headers["Host"] == "example.com"
-        assert headers["host"] == "example.com"
+        assert headers["Host"] == b"example.com"
+        assert headers["host"] == b"example.com"
         tutils.raises(KeyError, headers.__getitem__, "Accept")
 
         headers = self._2host()
-        assert headers["Host"] == "example.com, example.org"
+        assert headers["Host"] == b"example.com, example.org"
 
     def test_str(self):
         headers = Headers(Host="example.com")
@@ -458,12 +458,12 @@ class TestHeaders(object):
         headers["Host"] = "example.com"
         assert "Host" in headers
         assert "host" in headers
-        assert headers["Host"] == "example.com"
+        assert headers["Host"] == b"example.com"
 
         headers["host"] = "example.org"
         assert "Host" in headers
         assert "host" in headers
-        assert headers["Host"] == "example.org"
+        assert headers["Host"] == b"example.org"
 
         headers["accept"] = "text/plain"
         assert len(headers) == 2
@@ -494,12 +494,10 @@ class TestHeaders(object):
 
     def test_keys(self):
         headers = Headers(Host="example.com")
-        assert len(headers.keys()) == 1
-        assert headers.keys()[0] == "Host"
+        assert list(headers.keys()) == [b"Host"]
 
         headers = self._2host()
-        assert len(headers.keys()) == 1
-        assert headers.keys()[0] == "Host"
+        assert list(headers.keys()) == [b"Host"]
 
     def test_eq_ne(self):
         headers1 = Headers(Host="example.com")
@@ -516,7 +514,7 @@ class TestHeaders(object):
 
     def test_get_all(self):
         headers = self._2host()
-        assert headers.get_all("host") == ["example.com", "example.org"]
+        assert headers.get_all("host") == [b"example.com", b"example.org"]
         assert headers.get_all("accept") == []
 
     def test_set_all(self):
@@ -527,10 +525,10 @@ class TestHeaders(object):
 
         headers = self._2host()
         headers.set_all("Host", ["example.org"])
-        assert headers["host"] == "example.org"
+        assert headers["host"] == b"example.org"
 
         headers.set_all("Host", ["example.org", "example.net"])
-        assert headers["host"] == "example.org, example.net"
+        assert headers["host"] == b"example.org, example.net"
 
     def test_state(self):
         headers = self._2host()

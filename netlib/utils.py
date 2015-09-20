@@ -9,6 +9,41 @@ import six
 from six.moves import urllib
 
 
+def always_bytes(unicode_or_bytes, *encode_args):
+    if isinstance(unicode_or_bytes, six.text_type):
+        return unicode_or_bytes.encode(*encode_args)
+    return unicode_or_bytes
+
+
+def always_byte_args(*encode_args):
+    """Decorator that transparently encodes all arguments passed as unicode"""
+    def decorator(fun):
+        def _fun(*args, **kwargs):
+            args = [always_bytes(arg, *encode_args) for arg in args]
+            kwargs = {k: always_bytes(v, *encode_args) for k, v in six.iteritems(kwargs)}
+            return fun(*args, **kwargs)
+        return _fun
+    return decorator
+
+
+def native(s, encoding="latin-1"):
+    """
+    Convert :py:class:`bytes` or :py:class:`unicode` to the native
+    :py:class:`str` type, using latin1 encoding if conversion is necessary.
+
+    https://www.python.org/dev/peps/pep-3333/#a-note-on-string-types
+    """
+    if not isinstance(s, (six.binary_type, six.text_type)):
+        raise TypeError("%r is neither bytes nor unicode" % s)
+    if six.PY3:
+        if isinstance(s, six.binary_type):
+            return s.decode(encoding)
+    else:
+        if isinstance(s, six.text_type):
+            return s.encode(encoding)
+    return s
+
+
 def isascii(bytes):
     try:
         bytes.decode("ascii")
@@ -238,6 +273,7 @@ def get_header_tokens(headers, key):
     return [token.strip() for token in tokens]
 
 
+@always_byte_args()
 def hostport(scheme, host, port):
     """
         Returns the host component, with a port specifcation if needed.
@@ -323,20 +359,3 @@ def multipartdecode(headers, content):
                     r.append((key, value))
         return r
     return []
-
-
-def always_bytes(unicode_or_bytes, *encode_args):
-    if isinstance(unicode_or_bytes, six.text_type):
-        return unicode_or_bytes.encode(*encode_args)
-    return unicode_or_bytes
-
-
-def always_byte_args(*encode_args):
-    """Decorator that transparently encodes all arguments passed as unicode"""
-    def decorator(fun):
-        def _fun(*args, **kwargs):
-            args = [always_bytes(arg, *encode_args) for arg in args]
-            kwargs = {k: always_bytes(v, *encode_args) for k, v in six.iteritems(kwargs)}
-            return fun(*args, **kwargs)
-        return _fun
-    return decorator

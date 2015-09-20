@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import six
 import sys
 
-from . import utils
+from . import utils, tcp
 from .http import Request, Response, Headers
 
 
@@ -15,7 +15,6 @@ def treader(bytes):
     """
         Construct a tcp.Read object from bytes.
     """
-    from . import tcp  # TODO: move to top once cryptography is on Python 3.5
     fp = BytesIO(bytes)
     return tcp.Reader(fp)
 
@@ -106,7 +105,7 @@ def treq(**kwargs):
         port=22,
         path=b"/path",
         http_version=b"HTTP/1.1",
-        headers=Headers(header=b"qvalue"),
+        headers=Headers(header="qvalue"),
         body=b"content"
     )
     default.update(kwargs)

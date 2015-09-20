@@ -17,11 +17,12 @@ from __future__ import absolute_import
 import base64
 import hashlib
 import os
+
+import binascii
 import six
 from ..http import Headers
-from .. import utils
 
-websockets_magic = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+websockets_magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 VERSION = "13"
 
 HEADER_WEBSOCKET_KEY = 'sec-websocket-key'
@@ -41,14 +42,21 @@ class Masker(object):
 
     def __init__(self, key):
         self.key = key
-        self.masks = [six.byte2int(byte) for byte in key]
         self.offset = 0
 
     def mask(self, offset, data):
-        result = ""
-        for c in data:
-            result += chr(ord(c) ^ self.masks[offset % 4])
-            offset += 1
+        result = bytearray(data)
+        if six.PY2:
+            for i in range(len(data)):
+                result[i] ^= ord(self.key[offset % 4])
+                offset += 1
+            result = str(result)
+        else:
+
+            for i in range(len(data)):
+                result[i] ^= self.key[offset % 4]
+                offset += 1
+            result = bytes(result)
         return result
 
     def __call__(self, data):
@@ -73,37 +81,35 @@ class WebsocketsProtocol(object):
         """
         if not key:
             key = base64.b64encode(os.urandom(16)).decode('utf-8')
-        return Headers([
-            ('Connection', 'Upgrade'),
-            ('Upgrade', 'websocket'),
-            (HEADER_WEBSOCKET_KEY, key),
-            (HEADER_WEBSOCKET_VERSION, version)
-        ])
+        return Headers(**{
+            HEADER_WEBSOCKET_KEY: key,
+            HEADER_WEBSOCKET_VERSION: version,
+            "Connection": "Upgrade",
+            "Upgrade": "websocket",
+        })
 
     @classmethod
     def server_handshake_headers(self, key):
         """
           The server response is a valid HTTP 101 response.
         """
-        return Headers(
-            [
-                ('Connection', 'Upgrade'),
-                ('Upgrade', 'websocket'),
-                (HEADER_WEBSOCKET_ACCEPT, self.create_server_nonce(key))
-            ]
-        )
+        return Headers(**{
+            HEADER_WEBSOCKET_ACCEPT: self.create_server_nonce(key),
+            "Connection": "Upgrade",
+            "Upgrade": "websocket",
+        })
 
 
     @classmethod
     def check_client_handshake(self, headers):
-        if headers.get("upgrade") != "websocket":
+        if headers.get("upgrade") != b"websocket":
             return
         return headers.get(HEADER_WEBSOCKET_KEY)
 
 
     @classmethod
     def check_server_handshake(self, headers):
-        if headers.get("upgrade") != "websocket":
+        if headers.get("upgrade") != b"websocket":
             return
         return headers.get(HEADER_WEBSOCKET_ACCEPT)
 
@@ -111,5 +117,5 @@ class WebsocketsProtocol(object):
     @classmethod
     def create_server_nonce(self, client_nonce):
         return base64.b64encode(
-            hashlib.sha1(client_nonce + websockets_magic).hexdigest().decode('hex')
+            binascii.unhexlify(hashlib.sha1(client_nonce + websockets_magic).hexdigest())
         )

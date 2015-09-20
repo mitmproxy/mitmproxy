@@ -3,7 +3,7 @@ import copy
 
 from ..odict import ODict
 from .. import utils, encoding
-from ..utils import always_bytes, always_byte_args
+from ..utils import always_bytes, always_byte_args, native
 from . import cookies
 
 import six
@@ -254,7 +254,7 @@ class Request(Message):
 
     def __repr__(self):
         if self.host and self.port:
-            hostport = "{}:{}".format(self.host, self.port)
+            hostport = "{}:{}".format(native(self.host,"idna"), self.port)
         else:
             hostport = ""
         path = self.path or ""
@@ -279,14 +279,14 @@ class Request(Message):
             Modifies this request to remove headers that will compress the
             resource's data.
         """
-        self.headers["Accept-Encoding"] = b"identity"
+        self.headers["Accept-Encoding"] = "identity"
 
     def constrain_encoding(self):
         """
             Limits the permissible Accept-Encoding values, based on what we can
             decode appropriately.
         """
-        accept_encoding = self.headers.get(b"Accept-Encoding")
+        accept_encoding = native(self.headers.get("Accept-Encoding"), "ascii")
         if accept_encoding:
             self.headers["Accept-Encoding"] = (
                 ', '.join(
@@ -309,9 +309,9 @@ class Request(Message):
             indicates non-form data.
         """
         if self.body:
-            if HDR_FORM_URLENCODED in self.headers.get("Content-Type", "").lower():
+            if HDR_FORM_URLENCODED in self.headers.get("Content-Type", b"").lower():
                 return self.get_form_urlencoded()
-            elif HDR_FORM_MULTIPART in self.headers.get("Content-Type", "").lower():
+            elif HDR_FORM_MULTIPART in self.headers.get("Content-Type", b"").lower():
                 return self.get_form_multipart()
         return ODict([])
 
@@ -321,12 +321,12 @@ class Request(Message):
             Returns an empty ODict if there is no data or the content-type
             indicates non-form data.
         """
-        if self.body and HDR_FORM_URLENCODED in self.headers.get("Content-Type", "").lower():
+        if self.body and HDR_FORM_URLENCODED in self.headers.get("Content-Type", b"").lower():
             return ODict(utils.urldecode(self.body))
         return ODict([])
 
     def get_form_multipart(self):
-        if self.body and HDR_FORM_MULTIPART in self.headers.get("Content-Type", "").lower():
+        if self.body and HDR_FORM_MULTIPART in self.headers.get("Content-Type", b"").lower():
             return ODict(
                 utils.multipartdecode(
                     self.headers,
@@ -351,7 +351,7 @@ class Request(Message):
             Components are unquoted.
         """
         _, _, path, _, _, _ = urllib.parse.urlparse(self.url)
-        return [urllib.parse.unquote(i) for i in path.split(b"/") if i]
+        return [urllib.parse.unquote(native(i,"ascii")) for i in path.split(b"/") if i]
 
     def set_path_components(self, lst):
         """
@@ -360,7 +360,7 @@ class Request(Message):
             Components are quoted.
         """
         lst = [urllib.parse.quote(i, safe="") for i in lst]
-        path = b"/" + b"/".join(lst)
+        path = always_bytes("/" + "/".join(lst))
         scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
         self.url = urllib.parse.urlunparse(
             [scheme, netloc, path, params, query, fragment]
@@ -408,11 +408,11 @@ class Request(Message):
 
     def pretty_url(self, hostheader):
         if self.form_out == "authority":  # upstream proxy mode
-            return "%s:%s" % (self.pretty_host(hostheader), self.port)
+            return b"%s:%d" % (always_bytes(self.pretty_host(hostheader)), self.port)
         return utils.unparse_url(self.scheme,
                                  self.pretty_host(hostheader),
                                  self.port,
-                                 self.path).encode('ascii')
+                                 self.path)
 
     def get_cookies(self):
         """
@@ -420,7 +420,7 @@ class Request(Message):
         """
         ret = ODict()
         for i in self.headers.get_all("Cookie"):
-            ret.extend(cookies.parse_cookie_header(i))
+            ret.extend(cookies.parse_cookie_header(native(i,"ascii")))
         return ret
 
     def set_cookies(self, odict):
@@ -441,7 +441,7 @@ class Request(Message):
             self.host,
             self.port,
             self.path
-        ).encode('ascii')
+        )
 
     @url.setter
     def url(self, url):
@@ -499,7 +499,7 @@ class Response(Message):
         """
         ret = []
         for header in self.headers.get_all("Set-Cookie"):
-            v = cookies.parse_set_cookie_header(header)
+            v = cookies.parse_set_cookie_header(native(header, "ascii"))
             if v:
                 name, value, attrs = v
                 ret.append([name, [value, attrs]])

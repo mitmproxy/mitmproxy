@@ -5,8 +5,8 @@ from netlib.http import Headers
 
 
 def tflow():
-    headers = Headers(test="value")
-    req = wsgi.Request("http", "GET", "/", headers, "")
+    headers = Headers(test=b"value")
+    req = wsgi.Request("http", "GET", "/", "HTTP/1.1", headers, "")
     return wsgi.Flow(("127.0.0.1", 8888), req)
 
 
@@ -20,7 +20,7 @@ class TestApp:
         status = '200 OK'
         response_headers = [('Content-type', 'text/plain')]
         start_response(status, response_headers)
-        return ['Hello', ' world!\n']
+        return [b'Hello', b' world!\n']
 
 
 class TestWSGI:
@@ -47,8 +47,8 @@ class TestWSGI:
         assert not err
 
         val = wfile.getvalue()
-        assert "Hello world" in val
-        assert "Server:" in val
+        assert b"Hello world" in val
+        assert b"Server:" in val
 
     def _serve(self, app):
         w = wsgi.WSGIAdaptor(app, "foo", 80, "version")
@@ -77,7 +77,7 @@ class TestWSGI:
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
             start_response(status, response_headers)
-        assert "Internal Server Error" in self._serve(app)
+        assert b"Internal Server Error" in self._serve(app)
 
     def test_serve_single_err(self):
         def app(environ, start_response):
@@ -88,7 +88,8 @@ class TestWSGI:
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers, ei)
-        assert "Internal Server Error" in self._serve(app)
+            yield b""
+        assert b"Internal Server Error" in self._serve(app)
 
     def test_serve_double_err(self):
         def app(environ, start_response):
@@ -99,7 +100,7 @@ class TestWSGI:
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
-            yield "aaa"
+            yield b"aaa"
             start_response(status, response_headers, ei)
-            yield "bbb"
-        assert "Internal Server Error" in self._serve(app)
+            yield b"bbb"
+        assert b"Internal Server Error" in self._serve(app)

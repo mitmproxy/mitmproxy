@@ -1,13 +1,14 @@
 from __future__ import (absolute_import, print_function, division)
-from io import BytesIO
+from io import BytesIO, StringIO
 import urllib
 import time
 import traceback
 
 import six
+from six.moves import urllib
 
+from netlib.utils import always_bytes, native
 from . import http, tcp
-
 
 class ClientConn(object):
 
@@ -24,9 +25,10 @@ class Flow(object):
 
 class Request(object):
 
-    def __init__(self, scheme, method, path, headers, body):
+    def __init__(self, scheme, method, path, http_version, headers, body):
         self.scheme, self.method, self.path = scheme, method, path
         self.headers, self.body = headers, body
+        self.http_version = http_version
 
 
 def date_time_string():
@@ -53,38 +55,38 @@ class WSGIAdaptor(object):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 
     def make_environ(self, flow, errsoc, **extra):
-        if '?' in flow.request.path:
-            path_info, query = flow.request.path.split('?', 1)
+        path = native(flow.request.path)
+        if '?' in path:
+            path_info, query = native(path).split('?', 1)
         else:
-            path_info = flow.request.path
+            path_info = path
             query = ''
         environ = {
             'wsgi.version': (1, 0),
-            'wsgi.url_scheme': flow.request.scheme,
+            'wsgi.url_scheme': native(flow.request.scheme),
             'wsgi.input': BytesIO(flow.request.body or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,
             'wsgi.run_once': False,
             'SERVER_SOFTWARE': self.sversion,
-            'REQUEST_METHOD': flow.request.method,
+            'REQUEST_METHOD': native(flow.request.method),
             'SCRIPT_NAME': '',
-            'PATH_INFO': urllib.unquote(path_info),
+            'PATH_INFO': urllib.parse.unquote(path_info),
             'QUERY_STRING': query,
-            'CONTENT_TYPE': flow.request.headers.get('Content-Type', ''),
-            'CONTENT_LENGTH': flow.request.headers.get('Content-Length', ''),
+            'CONTENT_TYPE': native(flow.request.headers.get('Content-Type', '')),
+            'CONTENT_LENGTH': native(flow.request.headers.get('Content-Length', '')),
             'SERVER_NAME': self.domain,
             'SERVER_PORT': str(self.port),
-            # FIXME: We need to pick up the protocol read from the request.
-            'SERVER_PROTOCOL': "HTTP/1.1",
+            'SERVER_PROTOCOL': native(flow.request.http_version),
         }
         environ.update(extra)
         if flow.client_conn.address:
-            environ["REMOTE_ADDR"], environ[
-                "REMOTE_PORT"] = flow.client_conn.address()
+            environ["REMOTE_ADDR"] = native(flow.client_conn.address.host)
+            environ["REMOTE_PORT"] = flow.client_conn.address.port
 
         for key, value in flow.request.headers.items():
-            key = 'HTTP_' + key.upper().replace('-', '_')
+            key = 'HTTP_' + native(key).upper().replace('-', '_')
             if key not in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
                 environ[key] = value
         return environ
@@ -99,7 +101,7 @@ class WSGIAdaptor(object):
                 <h1>Internal Server Error</h1>
                 <pre>%s"</pre>
             </html>
-        """.strip() % s
+        """.strip() % s.encode()
         if not headers_sent:
             soc.write(b"HTTP/1.1 500 Internal Server Error\r\n")
             soc.write(b"Content-Type: text/html\r\n")
@@ -117,7 +119,7 @@ class WSGIAdaptor(object):
 
         def write(data):
             if not state["headers_sent"]:
-                soc.write(b"HTTP/1.1 %s\r\n" % state["status"])
+                soc.write(b"HTTP/1.1 %s\r\n" % state["status"].encode())
                 headers = state["headers"]
                 if 'server' not in headers:
                     headers["Server"] = self.sversion
@@ -132,18 +134,17 @@ class WSGIAdaptor(object):
 
         def start_response(status, headers, exc_info=None):
             if exc_info:
-                try:
-                    if state["headers_sent"]:
-                        six.reraise(*exc_info)
-                finally:
-                    exc_info = None
+                if state["headers_sent"]:
+                    six.reraise(*exc_info)
             elif state["status"]:
                 raise AssertionError('Response already started')
             state["status"] = status
-            state["headers"] = http.Headers(headers)
-            return write
+            state["headers"] = http.Headers([[always_bytes(k), always_bytes(v)] for k,v in headers])
+            if exc_info:
+                self.error_page(soc, state["headers_sent"], traceback.format_tb(exc_info[2]))
+                state["headers_sent"] = True
 
-        errs = BytesIO()
+        errs = six.BytesIO()
         try:
             dataiter = self.app(
                 self.make_environ(request, errs, **env), start_response
@@ -155,7 +156,7 @@ class WSGIAdaptor(object):
         except Exception as e:
             try:
                 s = traceback.format_exc()
-                errs.write(s)
+                errs.write(s.encode("utf-8", "replace"))
                 self.error_page(soc, state["headers_sent"], s)
             except Exception:    # pragma: no cover
                 pass
