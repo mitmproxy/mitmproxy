@@ -7,7 +7,6 @@ import backports.socketpair
 import time
 
 from hyperframe.frame import (
-    Frame,
     HeadersFrame,
     DataFrame,
     SettingsFrame,
@@ -136,8 +135,8 @@ class Http2Layer(Layer):
         else:
             target = stream.into_server_conn
 
-        if len(data_frame.payload) > 0:
-            chunk = b"%x\r\n%s\r\n" % (len(data_frame.payload), data_frame.payload)
+        if len(data_frame.data) > 0:
+            chunk = b"%x\r\n%s\r\n" % (len(data_frame.data), data_frame.data)
             target.sendall(chunk)
 
         if 'END_STREAM' in data_frame.flags:
