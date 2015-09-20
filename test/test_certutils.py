@@ -100,10 +100,10 @@ class TestDummyCert:
             r = certutils.dummy_cert(
                 ca.default_privatekey,
                 ca.default_ca,
-                "foo.com",
-                ["one.com", "two.com", "*.three.com"]
+                b"foo.com",
+                [b"one.com", b"two.com", b"*.three.com"]
             )
-            assert r.cn == "foo.com"
+            assert r.cn == b"foo.com"
 
 
 class TestSSLCert:
@@ -112,13 +112,13 @@ class TestSSLCert:
         with open(tutils.test_data.path("data/text_cert"), "rb") as f:
             d = f.read()
         c1 = certutils.SSLCert.from_pem(d)
-        assert c1.cn == "google.com"
+        assert c1.cn == b"google.com"
         assert len(c1.altnames) == 436
 
         with open(tutils.test_data.path("data/text_cert_2"), "rb") as f:
             d = f.read()
         c2 = certutils.SSLCert.from_pem(d)
-        assert c2.cn == "www.inode.co.nz"
+        assert c2.cn == b"www.inode.co.nz"
         assert len(c2.altnames) == 2
         assert c2.digest("sha1")
         assert c2.notbefore

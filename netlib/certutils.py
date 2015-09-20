@@ -3,7 +3,7 @@ import os
 import ssl
 import time
 import datetime
-import itertools
+from six.moves import filter
 import ipaddress
 
 import sys
@@ -396,12 +396,12 @@ class SSLCert(object):
     @property
     def notbefore(self):
         t = self.x509.get_notBefore()
-        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
+        return datetime.datetime.strptime(t.decode("ascii"), "%Y%m%d%H%M%SZ")
 
     @property
     def notafter(self):
         t = self.x509.get_notAfter()
-        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
+        return datetime.datetime.strptime(t.decode("ascii"), "%Y%m%d%H%M%SZ")
 
     @property
     def has_expired(self):

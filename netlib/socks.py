@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
-import socket
 import struct
 import array
+import ipaddress
 from . import tcp, utils
 
 
@@ -133,19 +133,23 @@ class Message(object):
     def from_file(cls, f):
         ver, msg, rsv, atyp = struct.unpack("!BBBB", f.safe_read(4))
         if rsv != 0x00:
-            raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE,
-                             "Socks Request: Invalid reserved byte: %s" % rsv)
-
+            raise SocksError(
+                REP.GENERAL_SOCKS_SERVER_FAILURE,
+                "Socks Request: Invalid reserved byte: %s" % rsv
+            )
         if atyp == ATYP.IPV4_ADDRESS:
             # We use tnoa here as ntop is not commonly available on Windows.
-            host = socket.inet_ntoa(f.safe_read(4))
+            host = ipaddress.IPv4Address(f.safe_read(4)).compressed
             use_ipv6 = False
         elif atyp == ATYP.IPV6_ADDRESS:
-            host = socket.inet_ntop(socket.AF_INET6, f.safe_read(16))
+            host = ipaddress.IPv6Address(f.safe_read(16)).compressed
             use_ipv6 = True
         elif atyp == ATYP.DOMAINNAME:
             length, = struct.unpack("!B", f.safe_read(1))
             host = f.safe_read(length)
+            if not utils.is_valid_host(host):
+                raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, "Invalid hostname: %s" % host)
+            host = host.decode("idna")
             use_ipv6 = False
         else:
             raise SocksError(REP.ADDRESS_TYPE_NOT_SUPPORTED,
@@ -158,12 +162,12 @@ class Message(object):
     def to_file(self, f):
         f.write(struct.pack("!BBBB", self.ver, self.msg, 0x00, self.atyp))
         if self.atyp == ATYP.IPV4_ADDRESS:
-            f.write(socket.inet_aton(self.addr.host))
+            f.write(ipaddress.IPv4Address(self.addr.host).packed)
         elif self.atyp == ATYP.IPV6_ADDRESS:
-            f.write(socket.inet_pton(socket.AF_INET6, self.addr.host))
+            f.write(ipaddress.IPv6Address(self.addr.host).packed)
         elif self.atyp == ATYP.DOMAINNAME:
             f.write(struct.pack("!B", len(self.addr.host)))
-            f.write(self.addr.host)
+            f.write(self.addr.host.encode("idna"))
         else:
             raise SocksError(
                 REP.ADDRESS_TYPE_NOT_SUPPORTED,

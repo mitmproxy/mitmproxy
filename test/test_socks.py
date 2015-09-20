@@ -1,6 +1,6 @@
+import ipaddress
 from io import BytesIO
 import socket
-from nose.plugins.skip import SkipTest
 from netlib import socks, tcp, tutils
 
 
@@ -33,7 +33,7 @@ def test_client_greeting_assert_socks5():
     else:
         assert False
 
-    raw = tutils.treader(b"GET / HTTP/1.1" + " " * 100)
+    raw = tutils.treader(b"GET / HTTP/1.1" + b" " * 100)
     msg = socks.ClientGreeting.from_file(raw)
     try:
         msg.assert_socks5()
@@ -64,7 +64,7 @@ def test_server_greeting():
 
 
 def test_server_greeting_assert_socks5():
-    raw = tutils.treader(b"HTTP/1.1 200 OK" + " " * 100)
+    raw = tutils.treader(b"HTTP/1.1 200 OK" + b" " * 100)
     msg = socks.ServerGreeting.from_file(raw)
     try:
         msg.assert_socks5()
@@ -74,7 +74,7 @@ def test_server_greeting_assert_socks5():
     else:
         assert False
 
-    raw = tutils.treader(b"GET / HTTP/1.1" + " " * 100)
+    raw = tutils.treader(b"GET / HTTP/1.1" + b" " * 100)
     msg = socks.ServerGreeting.from_file(raw)
     try:
         msg.assert_socks5()
@@ -97,7 +97,7 @@ def test_message():
     assert msg.ver == 5
     assert msg.msg == 0x01
     assert msg.atyp == 0x03
-    assert msg.addr == (b"example.com", 0xDEAD)
+    assert msg.addr == ("example.com", 0xDEAD)
 
 
 def test_message_assert_socks5():
@@ -116,20 +116,16 @@ def test_message_ipv4():
     msg.to_file(out)
 
     assert out.getvalue() == raw.getvalue()[:-2]
-    assert msg.addr == (b"127.0.0.1", 0xDEAD)
+    assert msg.addr == ("127.0.0.1", 0xDEAD)
 
 
 def test_message_ipv6():
-    if not hasattr(socket, "inet_ntop"):
-        raise SkipTest("Skipped because inet_ntop is not available")
     # Test ATYP=0x04 (IPV6)
     ipv6_addr = "2001:db8:85a3:8d3:1319:8a2e:370:7344"
 
     raw = tutils.treader(
         b"\x05\x01\x00\x04" +
-        socket.inet_pton(
-            socket.AF_INET6,
-            ipv6_addr) +
+        ipaddress.IPv6Address(ipv6_addr).packed +
         b"\xDE\xAD\xBE\xEF")
     out = BytesIO()
     msg = socks.Message.from_file(raw)

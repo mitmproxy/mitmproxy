@@ -22,6 +22,7 @@ matrix:
         - nosetests --with-cov --cov-report term-missing test/test_encoding.py
         - nosetests --with-cov --cov-report term-missing test/test_odict.py
         - nosetests --with-cov --cov-report term-missing test/test_certutils.py
+        - nosetests --with-cov --cov-report term-missing test/test_socks.py
     - python: pypy
     - python: pypy
       env: OPENSSL=1.0.2
