@@ -13,14 +13,10 @@ from netlib import http, tcp
 from netlib.http import http1
 
 
-class TestServerConnection:
-    def setUp(self):
-        self.d = test.Daemon()
-
-    def tearDown(self):
-        self.d.shutdown()
+class TestServerConnection(object):
 
     def test_simple(self):
+        self.d = test.Daemon()
         sc = ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         f = tutils.tflow()
@@ -35,14 +31,17 @@ class TestServerConnection:
         assert self.d.last_log()
 
         sc.finish()
+        self.d.shutdown()
 
     def test_terminate_error(self):
+        self.d = test.Daemon()
         sc = ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)
         sc.connection.flush = mock.Mock(side_effect=TcpDisconnect)
         sc.finish()
+        self.d.shutdown()
 
     def test_repr(self):
         sc = tutils.tserver_conn()

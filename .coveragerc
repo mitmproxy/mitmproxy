@@ -2,9 +2,10 @@
 branch = True
 
 [report]
-omit = *contrib*, *tnetstring*, *platform*, *console*, *main.py
+show_missing = True
 include = *libmproxy*
 exclude_lines =
     pragma: nocover
     pragma: no cover
     raise NotImplementedError()
+omit = *contrib*, *tnetstring*, *platform*, *console*, *main.py

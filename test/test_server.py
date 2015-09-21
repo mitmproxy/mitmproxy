@@ -158,7 +158,7 @@ class TcpMixin:
 
     def _tcpproxy_off(self):
         assert hasattr(self, "_tcpproxy_backup")
-        self.config.check_ignore = self._tcpproxy_backup
+        self.config.check_tcp = self._tcpproxy_backup
         del self._tcpproxy_backup
 
     def test_tcp(self):

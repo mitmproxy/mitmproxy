@@ -8,6 +8,7 @@ from libmproxy import utils
 from netlib import encoding
 from netlib.http import status_codes, Headers, Request, Response, CONTENT_MISSING
 from netlib.tcp import Address
+from netlib.utils import native
 from .. import version, stateobject
 from .flow import Flow
 
@@ -497,6 +498,8 @@ class decoded(object):
     def __init__(self, o):
         self.o = o
         ce = o.headers.get("content-encoding")
+        if ce:
+            ce = native(ce, "ascii", "ignore")
         if ce in encoding.ENCODINGS:
             self.ce = ce
         else:
@@ -504,7 +507,8 @@ class decoded(object):
 
     def __enter__(self):
         if self.ce:
-            self.o.decode()
+            if not self.o.decode():
+                self.ce = None
 
     def __exit__(self, type, value, tb):
         if self.ce:
