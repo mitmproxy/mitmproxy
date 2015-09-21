@@ -55,38 +55,38 @@ class WSGIAdaptor(object):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 
     def make_environ(self, flow, errsoc, **extra):
-        path = native(flow.request.path)
+        path = native(flow.request.path, "latin-1")
         if '?' in path:
-            path_info, query = native(path).split('?', 1)
+            path_info, query = native(path, "latin-1").split('?', 1)
         else:
             path_info = path
             query = ''
         environ = {
             'wsgi.version': (1, 0),
-            'wsgi.url_scheme': native(flow.request.scheme),
+            'wsgi.url_scheme': native(flow.request.scheme, "latin-1"),
             'wsgi.input': BytesIO(flow.request.body or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,
             'wsgi.run_once': False,
             'SERVER_SOFTWARE': self.sversion,
-            'REQUEST_METHOD': native(flow.request.method),
+            'REQUEST_METHOD': native(flow.request.method, "latin-1"),
             'SCRIPT_NAME': '',
             'PATH_INFO': urllib.parse.unquote(path_info),
             'QUERY_STRING': query,
-            'CONTENT_TYPE': native(flow.request.headers.get('Content-Type', '')),
-            'CONTENT_LENGTH': native(flow.request.headers.get('Content-Length', '')),
+            'CONTENT_TYPE': native(flow.request.headers.get('Content-Type', ''), "latin-1"),
+            'CONTENT_LENGTH': native(flow.request.headers.get('Content-Length', ''), "latin-1"),
             'SERVER_NAME': self.domain,
             'SERVER_PORT': str(self.port),
-            'SERVER_PROTOCOL': native(flow.request.http_version),
+            'SERVER_PROTOCOL': native(flow.request.http_version, "latin-1"),
         }
         environ.update(extra)
         if flow.client_conn.address:
-            environ["REMOTE_ADDR"] = native(flow.client_conn.address.host)
+            environ["REMOTE_ADDR"] = native(flow.client_conn.address.host, "latin-1")
             environ["REMOTE_PORT"] = flow.client_conn.address.port
 
         for key, value in flow.request.headers.items():
-            key = 'HTTP_' + native(key).upper().replace('-', '_')
+            key = 'HTTP_' + native(key, "latin-1").upper().replace('-', '_')
             if key not in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
                 environ[key] = value
         return environ

@@ -26,7 +26,7 @@ def always_byte_args(*encode_args):
     return decorator
 
 
-def native(s, encoding="latin-1"):
+def native(s, *encoding_opts):
     """
     Convert :py:class:`bytes` or :py:class:`unicode` to the native
     :py:class:`str` type, using latin1 encoding if conversion is necessary.
@@ -37,10 +37,10 @@ def native(s, encoding="latin-1"):
         raise TypeError("%r is neither bytes nor unicode" % s)
     if six.PY3:
         if isinstance(s, six.binary_type):
-            return s.decode(encoding)
+            return s.decode(*encoding_opts)
     else:
         if isinstance(s, six.text_type):
-            return s.encode(encoding)
+            return s.encode(*encoding_opts)
     return s
 
 
