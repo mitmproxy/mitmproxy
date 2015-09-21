@@ -279,6 +279,7 @@ class Reader(_FileLike):
                 if tuple(int(x) for x in OpenSSL.__version__.split(".")[:2]) > (0, 15):
                     return self.o.recv(length, socket.MSG_PEEK)
                 else:
+                    # TODO: remove once a new version is released
                     # Polyfill for pyOpenSSL <= 0.15.1
                     # Taken from https://github.com/pyca/pyopenssl/commit/1d95dea7fea03c7c0df345a5ea30c12d8a0378d2
                     buf = SSL._ffi.new("char[]", length)
