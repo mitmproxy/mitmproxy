@@ -9,18 +9,18 @@ def parse_http_basic_auth(s):
         return None
     scheme = words[0]
     try:
-        user = binascii.a2b_base64(words[1])
+        user = binascii.a2b_base64(words[1]).decode("utf8", "replace")
     except binascii.Error:
         return None
-    parts = user.split(b':')
+    parts = user.split(':')
     if len(parts) != 2:
         return None
     return scheme, parts[0], parts[1]
 
 
 def assemble_http_basic_auth(scheme, username, password):
-    v = binascii.b2a_base64(username + b":" + password)
-    return scheme + b" " + v
+    v = binascii.b2a_base64((username + ":" + password).encode("utf8")).decode("ascii")
+    return scheme + " " + v
 
 
 class NullProxyAuth(object):
@@ -69,7 +69,7 @@ class BasicProxyAuth(NullProxyAuth):
         if not parts:
             return False
         scheme, username, password = parts
-        if scheme.lower() != b'basic':
+        if scheme.lower() != 'basic':
             return False
         if not self.password_manager.test(username, password):
             return False

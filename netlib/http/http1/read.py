@@ -146,11 +146,11 @@ def connection_close(http_version, headers):
         according to RFC 2616 Section 8.1.
     """
     # At first, check if we have an explicit Connection header.
-    if b"connection" in headers:
+    if "connection" in headers:
         tokens = utils.get_header_tokens(headers, "connection")
-        if b"close" in tokens:
+        if "close" in tokens:
             return True
-        elif b"keep-alive" in tokens:
+        elif "keep-alive" in tokens:
             return False
 
     # If we don't have a Connection header, HTTP 1.1 connections are assumed to
@@ -181,7 +181,7 @@ def expected_http_body_size(request, response=None):
         is_request = False
 
     if is_request:
-        if headers.get(b"expect", b"").lower() == b"100-continue":
+        if headers.get("expect", "").lower() == "100-continue":
             return 0
     else:
         if request.method.upper() == b"HEAD":
@@ -193,11 +193,11 @@ def expected_http_body_size(request, response=None):
         if response_code in (204, 304):
             return 0
 
-    if b"chunked" in headers.get(b"transfer-encoding", b"").lower():
+    if "chunked" in headers.get("transfer-encoding", "").lower():
         return None
-    if b"content-length" in headers:
+    if "content-length" in headers:
         try:
-            size = int(headers[b"content-length"])
+            size = int(headers["content-length"])
             if size < 0:
                 raise ValueError()
             return size

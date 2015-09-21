@@ -35,7 +35,7 @@ def assemble_response_head(response):
 
 
 def assemble_body(headers, body_chunks):
-    if b"chunked" in headers.get(b"transfer-encoding", b"").lower():
+    if "chunked" in headers.get("transfer-encoding", "").lower():
         for chunk in body_chunks:
             if chunk:
                 yield b"%x\r\n%s\r\n" % (len(chunk), chunk)
@@ -76,8 +76,8 @@ def _assemble_request_line(request, form=None):
 
 def _assemble_request_headers(request):
     headers = request.headers.copy()
-    if b"host" not in headers and request.scheme and request.host and request.port:
-        headers[b"Host"] = utils.hostport(
+    if "host" not in headers and request.scheme and request.host and request.port:
+        headers["host"] = utils.hostport(
             request.scheme,
             request.host,
             request.port

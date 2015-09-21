@@ -80,7 +80,7 @@ class WebsocketsProtocol(object):
             Returns an instance of Headers
         """
         if not key:
-            key = base64.b64encode(os.urandom(16)).decode('utf-8')
+            key = base64.b64encode(os.urandom(16)).decode('ascii')
         return Headers(**{
             HEADER_WEBSOCKET_KEY: key,
             HEADER_WEBSOCKET_VERSION: version,
@@ -95,27 +95,25 @@ class WebsocketsProtocol(object):
         """
         return Headers(**{
             HEADER_WEBSOCKET_ACCEPT: self.create_server_nonce(key),
-            "Connection": "Upgrade",
-            "Upgrade": "websocket",
+            "connection": "Upgrade",
+            "upgrade": "websocket",
         })
 
 
     @classmethod
     def check_client_handshake(self, headers):
-        if headers.get("upgrade") != b"websocket":
+        if headers.get("upgrade") != "websocket":
             return
         return headers.get(HEADER_WEBSOCKET_KEY)
 
 
     @classmethod
     def check_server_handshake(self, headers):
-        if headers.get("upgrade") != b"websocket":
+        if headers.get("upgrade") != "websocket":
             return
         return headers.get(HEADER_WEBSOCKET_ACCEPT)
 
 
     @classmethod
     def create_server_nonce(self, client_nonce):
-        return base64.b64encode(
-            binascii.unhexlify(hashlib.sha1(client_nonce + websockets_magic).hexdigest())
-        )
+        return base64.b64encode(hashlib.sha1(client_nonce + websockets_magic).digest())

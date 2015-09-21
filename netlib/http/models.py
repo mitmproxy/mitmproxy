@@ -1,199 +1,20 @@
-from __future__ import absolute_import, print_function, division
-import copy
+
 
 from ..odict import ODict
 from .. import utils, encoding
-from ..utils import always_bytes, always_byte_args, native
+from ..utils import always_bytes, native
 from . import cookies
+from .headers import Headers
 
-import six
 from six.moves import urllib
-try:
-    from collections import MutableMapping
-except ImportError:
-    from collections.abc import MutableMapping
 
 # TODO: Move somewhere else?
 ALPN_PROTO_HTTP1 = b'http/1.1'
 ALPN_PROTO_H2 = b'h2'
-HDR_FORM_URLENCODED = b"application/x-www-form-urlencoded"
-HDR_FORM_MULTIPART = b"multipart/form-data"
+HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
+HDR_FORM_MULTIPART = "multipart/form-data"
 
 CONTENT_MISSING = 0
-
-
-class Headers(MutableMapping, object):
-    """
-    Header class which allows both convenient access to individual headers as well as
-    direct access to the underlying raw data. Provides a full dictionary interface.
-
-    Example:
-
-    .. code-block:: python
-
-        # Create header from a list of (header_name, header_value) tuples
-        >>> h = Headers([
-                ["Host","example.com"],
-                ["Accept","text/html"],
-                ["accept","application/xml"]
-            ])
-
-        # Headers mostly behave like a normal dict.
-        >>> h["Host"]
-        "example.com"
-
-        # HTTP Headers are case insensitive
-        >>> h["host"]
-        "example.com"
-
-        # Multiple headers are folded into a single header as per RFC7230
-        >>> h["Accept"]
-        "text/html, application/xml"
-
-        # Setting a header removes all existing headers with the same name.
-        >>> h["Accept"] = "application/text"
-        >>> h["Accept"]
-        "application/text"
-
-        # str(h) returns a HTTP1 header block.
-        >>> print(h)
-        Host: example.com
-        Accept: application/text
-
-        # For full control, the raw header fields can be accessed
-        >>> h.fields
-
-        # Headers can also be crated from keyword arguments
-        >>> h = Headers(host="example.com", content_type="application/xml")
-
-    Caveats:
-        For use with the "Set-Cookie" header, see :py:meth:`get_all`.
-    """
-
-    @always_byte_args("ascii")
-    def __init__(self, fields=None, **headers):
-        """
-        Args:
-            fields: (optional) list of ``(name, value)`` header tuples,
-                e.g. ``[("Host","example.com")]``. All names and values must be bytes.
-            **headers: Additional headers to set. Will overwrite existing values from `fields`.
-                For convenience, underscores in header names will be transformed to dashes -
-                this behaviour does not extend to other methods.
-                If ``**headers`` contains multiple keys that have equal ``.lower()`` s,
-                the behavior is undefined.
-        """
-        self.fields = fields or []
-
-        # content_type -> content-type
-        headers = {
-            name.encode("ascii").replace(b"_", b"-"): value
-            for name, value in six.iteritems(headers)
-        }
-        self.update(headers)
-
-    def __bytes__(self):
-        if self.fields:
-            return b"\r\n".join(b": ".join(field) for field in self.fields) + b"\r\n"
-        else:
-            return b""
-
-    if six.PY2:
-        __str__ = __bytes__
-
-    @always_byte_args("ascii")
-    def __getitem__(self, name):
-        values = self.get_all(name)
-        if not values:
-            raise KeyError(name)
-        return b", ".join(values)
-
-    @always_byte_args("ascii")
-    def __setitem__(self, name, value):
-        idx = self._index(name)
-
-        # To please the human eye, we insert at the same position the first existing header occured.
-        if idx is not None:
-            del self[name]
-            self.fields.insert(idx, [name, value])
-        else:
-            self.fields.append([name, value])
-
-    @always_byte_args("ascii")
-    def __delitem__(self, name):
-        if name not in self:
-            raise KeyError(name)
-        name = name.lower()
-        self.fields = [
-            field for field in self.fields
-            if name != field[0].lower()
-        ]
-
-    def __iter__(self):
-        seen = set()
-        for name, _ in self.fields:
-            name_lower = name.lower()
-            if name_lower not in seen:
-                seen.add(name_lower)
-                yield name
-
-    def __len__(self):
-        return len(set(name.lower() for name, _ in self.fields))
-
-    # __hash__ = object.__hash__
-
-    def _index(self, name):
-        name = name.lower()
-        for i, field in enumerate(self.fields):
-            if field[0].lower() == name:
-                return i
-        return None
-
-    def __eq__(self, other):
-        if isinstance(other, Headers):
-            return self.fields == other.fields
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    @always_byte_args("ascii")
-    def get_all(self, name):
-        """
-        Like :py:meth:`get`, but does not fold multiple headers into a single one.
-        This is useful for Set-Cookie headers, which do not support folding.
-
-        See also: https://tools.ietf.org/html/rfc7230#section-3.2.2
-        """
-        name_lower = name.lower()
-        values = [value for n, value in self.fields if n.lower() == name_lower]
-        return values
-
-    def set_all(self, name, values):
-        """
-        Explicitly set multiple headers for the given key.
-        See: :py:meth:`get_all`
-        """
-        name = always_bytes(name, "ascii")
-        values = (always_bytes(value, "ascii") for value in values)
-        if name in self:
-            del self[name]
-        self.fields.extend(
-            [name, value] for value in values
-        )
-
-    def copy(self):
-        return Headers(copy.copy(self.fields))
-
-    # Implement the StateObject protocol from mitmproxy
-    def get_state(self, short=False):
-        return tuple(tuple(field) for field in self.fields)
-
-    def load_state(self, state):
-        self.fields = [list(field) for field in state]
-
-    @classmethod
-    def from_state(cls, state):
-        return cls([list(field) for field in state])
 
 
 class Message(object):
@@ -216,7 +37,7 @@ class Message(object):
     def body(self, body):
         self._body = body
         if isinstance(body, bytes):
-            self.headers[b"content-length"] = str(len(body)).encode()
+            self.headers["content-length"] = str(len(body)).encode()
 
     content = body
 
@@ -268,8 +89,8 @@ class Request(Message):
             response. That is, we remove ETags and If-Modified-Since headers.
         """
         delheaders = [
-            b"if-modified-since",
-            b"if-none-match",
+            "if-modified-since",
+            "if-none-match",
         ]
         for i in delheaders:
             self.headers.pop(i, None)
@@ -279,14 +100,14 @@ class Request(Message):
             Modifies this request to remove headers that will compress the
             resource's data.
         """
-        self.headers["accept-encoding"] = b"identity"
+        self.headers["accept-encoding"] = "identity"
 
     def constrain_encoding(self):
         """
             Limits the permissible Accept-Encoding values, based on what we can
             decode appropriately.
         """
-        accept_encoding = native(self.headers.get("accept-encoding"), "ascii")
+        accept_encoding = self.headers.get("accept-encoding")
         if accept_encoding:
             self.headers["accept-encoding"] = (
                 ', '.join(
@@ -309,9 +130,9 @@ class Request(Message):
             indicates non-form data.
         """
         if self.body:
-            if HDR_FORM_URLENCODED in self.headers.get("content-type", b"").lower():
+            if HDR_FORM_URLENCODED in self.headers.get("content-type", "").lower():
                 return self.get_form_urlencoded()
-            elif HDR_FORM_MULTIPART in self.headers.get("content-type", b"").lower():
+            elif HDR_FORM_MULTIPART in self.headers.get("content-type", "").lower():
                 return self.get_form_multipart()
         return ODict([])
 
@@ -321,12 +142,12 @@ class Request(Message):
             Returns an empty ODict if there is no data or the content-type
             indicates non-form data.
         """
-        if self.body and HDR_FORM_URLENCODED in self.headers.get("content-type", b"").lower():
+        if self.body and HDR_FORM_URLENCODED in self.headers.get("content-type", "").lower():
             return ODict(utils.urldecode(self.body))
         return ODict([])
 
     def get_form_multipart(self):
-        if self.body and HDR_FORM_MULTIPART in self.headers.get("content-type", b"").lower():
+        if self.body and HDR_FORM_MULTIPART in self.headers.get("content-type", "").lower():
             return ODict(
                 utils.multipartdecode(
                     self.headers,
@@ -341,7 +162,7 @@ class Request(Message):
         """
         # FIXME: If there's an existing content-type header indicating a
         # url-encoded form, leave it alone.
-        self.headers[b"content-type"] = HDR_FORM_URLENCODED
+        self.headers["content-type"] = HDR_FORM_URLENCODED
         self.body = utils.urlencode(odict.lst)
 
     def get_path_components(self):
@@ -400,7 +221,7 @@ class Request(Message):
         """
         if hostheader and "host" in self.headers:
             try:
-                return self.headers["host"].decode("idna")
+                return self.headers["host"]
             except ValueError:
                 pass
         if self.host:
@@ -420,7 +241,7 @@ class Request(Message):
         """
         ret = ODict()
         for i in self.headers.get_all("Cookie"):
-            ret.extend(cookies.parse_cookie_header(native(i,"ascii")))
+            ret.extend(cookies.parse_cookie_header(i))
         return ret
 
     def set_cookies(self, odict):
@@ -499,7 +320,7 @@ class Response(Message):
         """
         ret = []
         for header in self.headers.get_all("set-cookie"):
-            v = cookies.parse_set_cookie_header(native(header, "ascii"))
+            v = cookies.parse_set_cookie_header(header)
             if v:
                 name, value, attrs = v
                 ret.append([name, [value, attrs]])

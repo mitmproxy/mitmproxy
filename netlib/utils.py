@@ -269,7 +269,7 @@ def get_header_tokens(headers, key):
     """
     if key not in headers:
         return []
-    tokens = headers[key].split(b",")
+    tokens = headers[key].split(",")
     return [token.strip() for token in tokens]
 
 
@@ -320,14 +320,14 @@ def parse_content_type(c):
 
             ("text", "html", {"charset": "UTF-8"})
     """
-    parts = c.split(b";", 1)
-    ts = parts[0].split(b"/", 1)
+    parts = c.split(";", 1)
+    ts = parts[0].split("/", 1)
     if len(ts) != 2:
         return None
     d = {}
     if len(parts) == 2:
-        for i in parts[1].split(b";"):
-            clause = i.split(b"=", 1)
+        for i in parts[1].split(";"):
+            clause = i.split("=", 1)
             if len(clause) == 2:
                 d[clause[0].strip()] = clause[1].strip()
     return ts[0].lower(), ts[1].lower(), d
@@ -337,13 +337,14 @@ def multipartdecode(headers, content):
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
-    v = headers.get(b"Content-Type")
+    v = headers.get("Content-Type")
     if v:
         v = parse_content_type(v)
         if not v:
             return []
-        boundary = v[2].get(b"boundary")
-        if not boundary:
+        try:
+            boundary = v[2]["boundary"].encode("ascii")
+        except (KeyError, UnicodeError):
             return []
 
         rx = re.compile(br'\bname="([^"]+)"')

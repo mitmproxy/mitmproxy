@@ -77,16 +77,16 @@ def test_assemble_request_line():
 def test_assemble_request_headers():
     # https://github.com/mitmproxy/mitmproxy/issues/186
     r = treq(body=b"")
-    r.headers[b"Transfer-Encoding"] = b"chunked"
+    r.headers["Transfer-Encoding"] = "chunked"
     c = _assemble_request_headers(r)
     assert b"Transfer-Encoding" in c
 
-    assert b"Host" in _assemble_request_headers(treq(headers=Headers()))
+    assert b"host" in _assemble_request_headers(treq(headers=Headers()))
 
 
 def test_assemble_response_headers():
     # https://github.com/mitmproxy/mitmproxy/issues/186
     r = tresp(body=b"")
-    r.headers["Transfer-Encoding"] = b"chunked"
+    r.headers["Transfer-Encoding"] = "chunked"
     c = _assemble_response_headers(r)
     assert b"Transfer-Encoding" in c

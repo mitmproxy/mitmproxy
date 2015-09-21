@@ -64,15 +64,14 @@ class WebSocketsClient(tcp.TCPClient):
         preamble = b'GET / HTTP/1.1'
         self.wfile.write(preamble + b"\r\n")
         headers = self.protocol.client_handshake_headers()
-        self.client_nonce = headers["sec-websocket-key"]
+        self.client_nonce = headers["sec-websocket-key"].encode("ascii")
         self.wfile.write(bytes(headers) + b"\r\n")
         self.wfile.flush()
 
         resp = read_response(self.rfile, treq(method="GET"))
         server_nonce = self.protocol.check_server_handshake(resp.headers)
 
-        if not server_nonce == self.protocol.create_server_nonce(
-                self.client_nonce):
+        if not server_nonce == self.protocol.create_server_nonce(self.client_nonce):
             self.close()
 
     def read_next_message(self):
@@ -207,14 +206,14 @@ class TestFrameHeader:
             fin=True,
             payload_length=10
         )
-        assert f.human_readable()
+        assert repr(f)
         f = websockets.FrameHeader()
-        assert f.human_readable()
+        assert repr(f)
 
     def test_funky(self):
         f = websockets.FrameHeader(masking_key=b"test", mask=False)
-        bytes = f.to_bytes()
-        f2 = websockets.FrameHeader.from_file(tutils.treader(bytes))
+        raw = bytes(f)
+        f2 = websockets.FrameHeader.from_file(tutils.treader(raw))
         assert not f2.mask
 
     def test_violations(self):

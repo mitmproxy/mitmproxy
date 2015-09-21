@@ -1,9 +1,7 @@
 from __future__ import absolute_import, print_function, division
 from io import BytesIO
 import textwrap
-
 from mock import Mock
-
 from netlib.exceptions import HttpException, HttpSyntaxException, HttpReadDisconnect
 from netlib.http import Headers
 from netlib.http.http1.read import (
@@ -35,7 +33,7 @@ def test_read_request_head():
     rfile.first_byte_timestamp = 42
     r = read_request_head(rfile)
     assert r.method == b"GET"
-    assert r.headers["Content-Length"] == b"4"
+    assert r.headers["Content-Length"] == "4"
     assert r.body is None
     assert rfile.reset_timestamps.called
     assert r.timestamp_start == 42
@@ -62,7 +60,7 @@ def test_read_response_head():
     rfile.first_byte_timestamp = 42
     r = read_response_head(rfile)
     assert r.status_code == 418
-    assert r.headers["Content-Length"] == b"4"
+    assert r.headers["Content-Length"] == "4"
     assert r.body is None
     assert rfile.reset_timestamps.called
     assert r.timestamp_start == 42
@@ -76,13 +74,11 @@ class TestReadBody(object):
         assert body == b"foo"
         assert rfile.read() == b"bar"
 
-
     def test_known_size(self):
         rfile = BytesIO(b"foobar")
         body = b"".join(read_body(rfile, 3))
         assert body == b"foo"
         assert rfile.read() == b"bar"
-
 
     def test_known_size_limit(self):
         rfile = BytesIO(b"foobar")
@@ -98,7 +94,6 @@ class TestReadBody(object):
         rfile = BytesIO(b"foobar")
         body = b"".join(read_body(rfile, -1))
         assert body == b"foobar"
-
 
     def test_unknown_size_limit(self):
         rfile = BytesIO(b"foobar")
@@ -121,13 +116,13 @@ def test_connection_close():
 def test_expected_http_body_size():
     # Expect: 100-continue
     assert expected_http_body_size(
-        treq(headers=Headers(expect=b"100-continue", content_length=b"42"))
+        treq(headers=Headers(expect="100-continue", content_length="42"))
     ) == 0
 
     # http://tools.ietf.org/html/rfc7230#section-3.3
     assert expected_http_body_size(
         treq(method=b"HEAD"),
-        tresp(headers=Headers(content_length=b"42"))
+        tresp(headers=Headers(content_length="42"))
     ) == 0
     assert expected_http_body_size(
         treq(method=b"CONNECT"),
@@ -141,17 +136,17 @@ def test_expected_http_body_size():
 
     # chunked
     assert expected_http_body_size(
-        treq(headers=Headers(transfer_encoding=b"chunked")),
+        treq(headers=Headers(transfer_encoding="chunked")),
     ) is None
 
     # explicit length
-    for l in (b"foo", b"-7"):
+    for val in (b"foo", b"-7"):
         with raises(HttpSyntaxException):
             expected_http_body_size(
-                treq(headers=Headers(content_length=l))
+                treq(headers=Headers(content_length=val))
             )
     assert expected_http_body_size(
-        treq(headers=Headers(content_length=b"42"))
+        treq(headers=Headers(content_length="42"))
     ) == 42
 
     # no length
@@ -285,6 +280,7 @@ class TestReadHeaders(object):
         data = b":foo"
         with raises(HttpSyntaxException):
             self._read(data)
+
 
 def test_read_chunked():
     req = treq(body=None)

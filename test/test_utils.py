@@ -103,17 +103,17 @@ def test_get_header_tokens():
     headers = Headers()
     assert utils.get_header_tokens(headers, "foo") == []
     headers["foo"] = "bar"
-    assert utils.get_header_tokens(headers, "foo") == [b"bar"]
+    assert utils.get_header_tokens(headers, "foo") == ["bar"]
     headers["foo"] = "bar, voing"
-    assert utils.get_header_tokens(headers, "foo") == [b"bar", b"voing"]
+    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing"]
     headers.set_all("foo", ["bar, voing", "oink"])
-    assert utils.get_header_tokens(headers, "foo") == [b"bar", b"voing", b"oink"]
+    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
 
 
 def test_multipartdecode():
-    boundary = b'somefancyboundary'
+    boundary = 'somefancyboundary'
     headers = Headers(
-        content_type=b'multipart/form-data; boundary=' + boundary
+        content_type='multipart/form-data; boundary=' + boundary
     )
     content = (
         "--{0}\n"
@@ -122,7 +122,7 @@ def test_multipartdecode():
         "--{0}\n"
         "Content-Disposition: form-data; name=\"field2\"\n\n"
         "value2\n"
-        "--{0}--".format(boundary.decode()).encode()
+        "--{0}--".format(boundary).encode()
     )
 
     form = utils.multipartdecode(headers, content)
@@ -134,8 +134,8 @@ def test_multipartdecode():
 
 def test_parse_content_type():
     p = utils.parse_content_type
-    assert p(b"text/html") == (b"text", b"html", {})
-    assert p(b"text") is None
+    assert p("text/html") == ("text", "html", {})
+    assert p("text") is None
 
-    v = p(b"text/html; charset=UTF-8")
-    assert v == (b'text', b'html', {b'charset': b'UTF-8'})
+    v = p("text/html; charset=UTF-8")
+    assert v == ('text', 'html', {'charset': 'UTF-8'})
