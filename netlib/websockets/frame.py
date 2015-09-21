@@ -14,6 +14,8 @@ from netlib import utils
 MAX_16_BIT_INT = (1 << 16)
 MAX_64_BIT_INT = (1 << 64)
 
+DEFAULT=object()
+
 OPCODE = utils.BiDi(
     CONTINUE=0x00,
     TEXT=0x01,
@@ -34,9 +36,9 @@ class FrameHeader(object):
         rsv1=False,
         rsv2=False,
         rsv3=False,
-        masking_key=None,
-        mask=None,
-        length_code=None
+        masking_key=DEFAULT,
+        mask=DEFAULT,
+        length_code=DEFAULT
     ):
         if not 0 <= opcode < 2 ** 4:
             raise ValueError("opcode must be 0-16")
@@ -47,18 +49,18 @@ class FrameHeader(object):
         self.rsv2 = rsv2
         self.rsv3 = rsv3
 
-        if length_code is None:
+        if length_code is DEFAULT:
             self.length_code = self._make_length_code(self.payload_length)
         else:
             self.length_code = length_code
 
-        if mask is None and masking_key is None:
+        if mask is DEFAULT and masking_key is DEFAULT:
             self.mask = False
             self.masking_key = b""
-        elif mask is None:
+        elif mask is DEFAULT:
             self.mask = 1
             self.masking_key = masking_key
-        elif masking_key is None:
+        elif masking_key is DEFAULT:
             self.mask = mask
             self.masking_key = os.urandom(4)
         else:
@@ -166,7 +168,7 @@ class FrameHeader(object):
         if mask_bit == 1:
             masking_key = fp.safe_read(4)
         else:
-            masking_key = False
+            masking_key = None
 
         return cls(
             fin=fin,
@@ -230,7 +232,7 @@ class Frame(object):
             masking_key = os.urandom(4)
         else:
             mask_bit = 0
-            masking_key = False
+            masking_key = None
 
         return cls(
             message,
