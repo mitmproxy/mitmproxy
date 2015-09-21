@@ -12,3 +12,4 @@ netlib
 venv
 .idea/
 pathod.egg-info/
+.cache/

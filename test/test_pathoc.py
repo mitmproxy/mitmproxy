@@ -22,10 +22,10 @@ class _TestDaemon:
     ssloptions = pathod.SSLOptions()
 
     @classmethod
-    def setUpAll(self):
-        self.d = test.Daemon(
-            ssl=self.ssl,
-            ssloptions=self.ssloptions,
+    def setup_class(cls):
+        cls.d = test.Daemon(
+            ssl=cls.ssl,
+            ssloptions=cls.ssloptions,
             staticdir=tutils.test_data.path("data"),
             anchors=[
                 (re.compile("/anchor/.*"), "202")
@@ -33,8 +33,8 @@ class _TestDaemon:
         )
 
     @classmethod
-    def tearDownAll(self):
-        self.d.shutdown()
+    def teardown_class(cls):
+        cls.d.shutdown()
 
     def setUp(self):
         self.d.clear_log()

@@ -16,7 +16,7 @@ def test_simple():
 
         # Check the returned data
         assert r.status_code == 200
-        assert len(r.body) == 100
+        assert len(r.content) == 100
 
         # Check pathod's internal log
         log = d.last_log()["request"]

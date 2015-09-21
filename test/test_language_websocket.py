@@ -131,11 +131,8 @@ class TestWebsocketFrame:
         assert frm.payload == "abc"
 
     def test_knone(self):
-        tutils.raises(
-            "expected 4 bytes",
-            self.fr,
-            "wf:b'foo':mask:knone",
-        )
+        with tutils.raises("expected 4 bytes"):
+            self.fr("wf:b'foo':mask:knone")
 
     def test_length(self):
         assert self.fr("wf:l3:b'foo'").header.payload_length == 3

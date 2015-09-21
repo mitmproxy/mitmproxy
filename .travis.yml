@@ -38,7 +38,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "nosetests --with-cov --cov-report term-missing"
+  - "py.test --cov pathod -v"
 
 after_success:
   - coveralls
@@ -51,7 +51,7 @@ notifications:
     on_failure: always
   slack:
     rooms:
-        - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+      - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
     on_success: change
     on_failure: always
 

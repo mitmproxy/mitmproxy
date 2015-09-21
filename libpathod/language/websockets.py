@@ -212,7 +212,7 @@ class WebsocketFrame(message.Message):
             if v is not None:
                 frameparts[i] = v.value
         frame = netlib.websockets.FrameHeader(**frameparts)
-        vals = [frame.to_bytes()]
+        vals = [bytes(frame)]
         if bodygen:
             if frame.masking_key and not self.rawbody:
                 masker = netlib.websockets.Masker(frame.masking_key)
