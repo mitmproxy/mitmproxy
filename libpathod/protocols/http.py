@@ -23,7 +23,7 @@ class HTTPProtocol(object):
                 msg="Access denied: web interface disabled"
             )
         lg("app: %s %s" % (method, path))
-        req = wsgi.Request("http", method, path, headers, body)
+        req = wsgi.Request("http", method, path, b"HTTP/1.1", headers, body)
         flow = wsgi.Flow(self.pathod_handler.address, req)
         sn = self.pathod_handler.connection.getsockname()
         a = wsgi.WSGIAdaptor(

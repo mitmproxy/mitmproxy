@@ -1,2 +1,10 @@
+[run]
+branch = True
+
 [report]
+show_missing = True
 include = *libpathod*
+exclude_lines =
+    pragma: nocover
+    pragma: no cover
+    raise NotImplementedError()
