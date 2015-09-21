@@ -18,6 +18,7 @@ mitmdumpc
 netlib
 pathod
 libpathod
+.cache/
 
 # UI
 

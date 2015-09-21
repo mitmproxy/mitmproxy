@@ -35,7 +35,7 @@ matrix:
     - python: pypy
 
 install:
-  - "pip install --src . -r requirements.txt"
+  - "pip install -r requirements.txt"
 
 before_script:
   - "openssl version -a"
