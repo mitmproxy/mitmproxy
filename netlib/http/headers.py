@@ -14,16 +14,16 @@ except ImportError:  # Workaround for Python < 3.3
 
 import six
 
-from netlib.utils import always_byte_args
+from netlib.utils import always_byte_args, always_bytes
 
 if six.PY2:
     _native = lambda x: x
-    _asbytes = lambda x: x
+    _always_bytes = lambda x: x
     _always_byte_args = lambda x: x
 else:
     # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
     _native = lambda x: x.decode("utf-8", "surrogateescape")
-    _asbytes = lambda x: x.encode("utf-8", "surrogateescape")
+    _always_bytes = lambda x: always_bytes(x, "utf-8", "surrogateescape")
     _always_byte_args = always_byte_args("utf-8", "surrogateescape")
 
 
@@ -95,9 +95,9 @@ class Headers(MutableMapping, object):
 
         # content_type -> content-type
         headers = {
-            _asbytes(name).replace(b"_", b"-"): value
+            _always_bytes(name).replace(b"_", b"-"): value
             for name, value in six.iteritems(headers)
-        }
+            }
         self.update(headers)
 
     def __bytes__(self):
@@ -183,7 +183,7 @@ class Headers(MutableMapping, object):
         Explicitly set multiple headers for the given key.
         See: :py:meth:`get_all`
         """
-        values = map(_asbytes, values)  # _always_byte_args does not fix lists
+        values = map(_always_bytes, values)  # _always_byte_args does not fix lists
         if name in self:
             del self[name]
         self.fields.extend(
