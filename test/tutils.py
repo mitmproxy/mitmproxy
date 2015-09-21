@@ -6,16 +6,13 @@ import sys
 from cStringIO import StringIO
 from contextlib import contextmanager
 
-from nose.plugins.skip import SkipTest
-from mock import Mock
+from unittest.case import SkipTest
 
 import netlib.tutils
 from libmproxy import utils, controller
 from libmproxy.models import (
     ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow
 )
-from libmproxy.console.flowview import FlowView
-from libmproxy.console import ConsoleState
 
 
 def _SkipWindows(*args):

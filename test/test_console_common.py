@@ -1,5 +1,5 @@
 import os
-from nose.plugins.skip import SkipTest
+from unittest.case import SkipTest
 if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
 

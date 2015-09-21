@@ -30,7 +30,7 @@ Note that this means we don't support transparent mode for earlier versions of O
 
  5. And now enable it:
 
-    >>>sudo pfctl -e
+    >>> sudo pfctl -e
 
  6. Configure sudoers to allow mitmproxy to access pfctl. Edit the file
     **/etc/sudoers** on your system as root. Add the following line to the end

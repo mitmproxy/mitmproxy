@@ -41,7 +41,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "nosetests --with-cov --cov-report term-missing"
+  - "py.test -n 4 --cov libmproxy"
 
 after_success:
   - coveralls

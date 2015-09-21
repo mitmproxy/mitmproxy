@@ -69,7 +69,7 @@ mitmproxy test suite:
 .. code-block:: text
 
     . ../venv.mitmproxy/bin/activate # ..\venv.mitmproxy\Scripts\activate.bat on Windows
-    nosetests ./test
+    py.test -n 4 --cov libmproxy
 
 Note that the main executables for the project - ``mitmdump``, ``mitmproxy`` and
 ``mitmweb`` - are all created within the virtualenv. After activating the
@@ -92,7 +92,7 @@ requirements installed, and you can simply run the test suite:
 
 .. code-block:: text
 
-    nosetests --with-cov --cov-report term-missing
+    py.test -n 4 --cov libmproxy
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project maintains 100% test coverage.

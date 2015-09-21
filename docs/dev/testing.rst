@@ -7,10 +7,10 @@ All the mitmproxy projects strive to maintain 100% code coverage. In general,
 patches and pull requests will be declined unless they're accompanied by a
 suitable extension to the test suite.
 
-Our tests are written for the nose_ test framework.
+Our tests are written for the `py.test`_ or nose_ test frameworks.
 At the point where you send your pull request, a command like this:
 
->>> nosetests --with-cov --cov-report term-missing ./test
+>>> py.test -n 4 --cov libmproxy
 
 Should give output something like this:
 
@@ -44,3 +44,4 @@ excluded from coverage analysis either in the **.coveragerc** file, or using
 these measures as sparingly as possible.
 
 .. _nose: https://nose.readthedocs.org/en/latest/
+.. _py.test: https://pytest.org/

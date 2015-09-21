@@ -40,8 +40,9 @@ scripts = {
 # Developer dependencies
 dev_deps = {
     "mock>=1.0.1",
-    "nose>=1.3.0",
-    "nose-cov>=1.6",
+    "pytest>=2.8.0",
+    "pytest-xdist>=1.13.1",
+    "pytest-cov>=2.1.0",
     "coveralls>=0.4.1",
     "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "sphinx>=1.3.1",
