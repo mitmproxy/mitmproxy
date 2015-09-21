@@ -8,4 +8,4 @@ install:
   - "%PYTHON%\\python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 build: off  # Not a C# project
 test_script:
-  - "%PYTHON%\\Scripts\\nosetests"
+  - "%PYTHON%\\Scripts\\py.test -n 4"
