@@ -25,10 +25,6 @@ from ..http import Headers
 websockets_magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 VERSION = "13"
 
-HEADER_WEBSOCKET_KEY = 'sec-websocket-key'
-HEADER_WEBSOCKET_ACCEPT = 'sec-websocket-accept'
-HEADER_WEBSOCKET_VERSION = 'sec-websocket-version'
-
 
 class Masker(object):
 
@@ -81,37 +77,37 @@ class WebsocketsProtocol(object):
         """
         if not key:
             key = base64.b64encode(os.urandom(16)).decode('ascii')
-        return Headers(**{
-            HEADER_WEBSOCKET_KEY: key,
-            HEADER_WEBSOCKET_VERSION: version,
-            "Connection": "Upgrade",
-            "Upgrade": "websocket",
-        })
+        return Headers(
+            sec_websocket_key=key,
+            sec_websocket_version=version,
+            connection="Upgrade",
+            upgrade="websocket",
+        )
 
     @classmethod
     def server_handshake_headers(self, key):
         """
           The server response is a valid HTTP 101 response.
         """
-        return Headers(**{
-            HEADER_WEBSOCKET_ACCEPT: self.create_server_nonce(key),
-            "connection": "Upgrade",
-            "upgrade": "websocket",
-        })
+        return Headers(
+            sec_websocket_accept=self.create_server_nonce(key),
+            connection="Upgrade",
+            upgrade="websocket"
+        )
 
 
     @classmethod
     def check_client_handshake(self, headers):
         if headers.get("upgrade") != "websocket":
             return
-        return headers.get(HEADER_WEBSOCKET_KEY)
+        return headers.get("sec-websocket-key")
 
 
     @classmethod
     def check_server_handshake(self, headers):
         if headers.get("upgrade") != "websocket":
             return
-        return headers.get(HEADER_WEBSOCKET_ACCEPT)
+        return headers.get("sec-websocket-accept")
 
 
     @classmethod

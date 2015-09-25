@@ -337,7 +337,7 @@ def multipartdecode(headers, content):
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
-    v = headers.get("Content-Type")
+    v = headers.get("content-type")
     if v:
         v = parse_content_type(v)
         if not v:
