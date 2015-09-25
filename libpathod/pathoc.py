@@ -410,7 +410,7 @@ class Pathoc(tcp.TCPClient):
                 req = language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
 
-                resp = self.protocol.read_response(self.rfile, treq(method=req["method"]))
+                resp = self.protocol.read_response(self.rfile, treq(method=req["method"].encode()))
                 resp.sslinfo = self.sslinfo
             except HttpException as v:
                 lg("Invalid server response: %s" % v)

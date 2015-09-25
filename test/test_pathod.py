@@ -228,6 +228,7 @@ class CommonTests(tutils.DaemonTests):
             ws_read_limit=1,
             timeout=1
         )
+        # FIXME: Race Condition?
         assert "Parse error" in self.d.text_log()
 
     def test_websocket_frame_disconnect_error(self):
