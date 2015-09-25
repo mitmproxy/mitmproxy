@@ -241,7 +241,11 @@ class DumpMaster(flow.FlowMaster):
             DELETE="red"
         ).get(method.upper(), "magenta")
         method = click.style(method, fg=method_color, bold=True)
-        url = click.style(flow.request.pretty_url(self.showhost), bold=True)
+        if self.showhost:
+            url = flow.request.pretty_url
+        else:
+            url = flow.request.url
+        url = click.style(url, bold=True)
 
         line = "{stickycookie}{client} {method} {url}".format(
             stickycookie=stickycookie,

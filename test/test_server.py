@@ -235,7 +235,8 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         # There's a race here, which means we can get any of a number of errors.
         # Rather than introduce yet another sleep into the test suite, we just
         # relax the Exception specification.
-        tutils.raises(Exception, p.request, "get:'%s'" % response)
+        with raises(Exception):
+            p.request("get:'%s'" % response)
 
     def test_reconnect(self):
         req = "get:'%s/p/200:b@1:da'" % self.server.urlbase
@@ -573,7 +574,6 @@ class TestProxy(tservers.HTTPProxTest):
             recvd += len(connection.recv(5000))
         connection.close()
 
-        print(self.master.state.view._list)
         first_flow = self.master.state.view[0]
         second_flow = self.master.state.view[1]
         assert first_flow.server_conn.timestamp_tcp_setup

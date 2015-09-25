@@ -62,7 +62,7 @@ def test_contentview(get_content_view):
 
 class TestDumpMaster:
     def _cycle(self, m, content):
-        f = tutils.tflow(req=netlib.tutils.treq(body=content))
+        f = tutils.tflow(req=netlib.tutils.treq(content=content))
         l = Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)

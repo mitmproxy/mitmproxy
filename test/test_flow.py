@@ -338,7 +338,7 @@ class TestServerPlaybackState:
         assert s._hash(r) == s._hash(r2)
 
 
-class TestFlow:
+class TestFlow(object):
     def test_copy(self):
         f = tutils.tflow(resp=True)
         a0 = f.get_state()
@@ -1017,10 +1017,10 @@ class TestRequest:
         r.port = 22
         assert r.url == "https://address:22/path"
 
-        assert r.pretty_url(True) == "https://address:22/path"
+        assert r.pretty_url == "https://address:22/path"
         r.headers["Host"] = "foo.com"
-        assert r.pretty_url(False) == "https://address:22/path"
-        assert r.pretty_url(True) == "https://foo.com:22/path"
+        assert r.url == "https://address:22/path"
+        assert r.pretty_url == "https://foo.com:22/path"
 
     def test_path_components(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
@@ -1043,7 +1043,7 @@ class TestRequest:
 
     def test_getset_form_urlencoded(self):
         d = odict.ODict([("one", "two"), ("three", "four")])
-        r = HTTPRequest.wrap(netlib.tutils.treq(body=netlib.utils.urlencode(d.lst)))
+        r = HTTPRequest.wrap(netlib.tutils.treq(content=netlib.utils.urlencode(d.lst)))
         r.headers["content-type"] = HDR_FORM_URLENCODED
         assert r.get_form_urlencoded() == d
 
