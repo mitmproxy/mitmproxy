@@ -16,8 +16,8 @@ from netlib.tutils import treq, tresp, raises
 def test_read_request():
     rfile = BytesIO(b"GET / HTTP/1.1\r\n\r\nskip")
     r = read_request(rfile)
-    assert r.method == b"GET"
-    assert r.body == b""
+    assert r.method == "GET"
+    assert r.content == b""
     assert r.timestamp_end
     assert rfile.read() == b"skip"
 
@@ -32,7 +32,7 @@ def test_read_request_head():
     rfile.reset_timestamps = Mock()
     rfile.first_byte_timestamp = 42
     r = read_request_head(rfile)
-    assert r.method == b"GET"
+    assert r.method == "GET"
     assert r.headers["Content-Length"] == "4"
     assert r.body is None
     assert rfile.reset_timestamps.called
@@ -283,7 +283,7 @@ class TestReadHeaders(object):
 
 
 def test_read_chunked():
-    req = treq(body=None)
+    req = treq(content=None)
     req.headers["Transfer-Encoding"] = "chunked"
 
     data = b"1\r\na\r\n0\r\n"

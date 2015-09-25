@@ -39,6 +39,7 @@ class TestRequest(object):
         a = tutils.treq(timestamp_start=42, timestamp_end=43)
         b = tutils.treq(timestamp_start=42, timestamp_end=43)
         assert a == b
+        assert not a != b
 
         assert not a == 'foo'
         assert not b == 'foo'
@@ -70,45 +71,17 @@ class TestRequest(object):
         req = tutils.treq()
         req.headers["Host"] = ""
         req.host = "foobar"
-        req.update_host_header()
         assert req.headers["Host"] == "foobar"
 
-    def test_get_form(self):
-        req = tutils.treq()
-        assert req.get_form() == ODict()
-
-    @mock.patch("netlib.http.Request.get_form_multipart")
-    @mock.patch("netlib.http.Request.get_form_urlencoded")
-    def test_get_form_with_url_encoded(self, mock_method_urlencoded, mock_method_multipart):
-        req = tutils.treq()
-        assert req.get_form() == ODict()
-
-        req = tutils.treq()
-        req.body = "foobar"
-        req.headers["Content-Type"] = HDR_FORM_URLENCODED
-        req.get_form()
-        assert req.get_form_urlencoded.called
-        assert not req.get_form_multipart.called
-
-    @mock.patch("netlib.http.Request.get_form_multipart")
-    @mock.patch("netlib.http.Request.get_form_urlencoded")
-    def test_get_form_with_multipart(self, mock_method_urlencoded, mock_method_multipart):
-        req = tutils.treq()
-        req.body = "foobar"
-        req.headers["Content-Type"] = HDR_FORM_MULTIPART
-        req.get_form()
-        assert not req.get_form_urlencoded.called
-        assert req.get_form_multipart.called
-
     def test_get_form_urlencoded(self):
-        req = tutils.treq(body="foobar")
+        req = tutils.treq(content="foobar")
         assert req.get_form_urlencoded() == ODict()
 
         req.headers["Content-Type"] = HDR_FORM_URLENCODED
         assert req.get_form_urlencoded() == ODict(utils.urldecode(req.body))
 
     def test_get_form_multipart(self):
-        req = tutils.treq(body="foobar")
+        req = tutils.treq(content="foobar")
         assert req.get_form_multipart() == ODict()
 
         req.headers["Content-Type"] = HDR_FORM_MULTIPART
@@ -140,7 +113,7 @@ class TestRequest(object):
         assert req.get_query().lst == []
 
         req.url = "http://localhost:80/foo?bar=42"
-        assert req.get_query().lst == [(b"bar", b"42")]
+        assert req.get_query().lst == [("bar", "42")]
 
     def test_set_query(self):
         req = tutils.treq()
@@ -148,31 +121,23 @@ class TestRequest(object):
 
     def test_pretty_host(self):
         r = tutils.treq()
-        assert r.pretty_host(True) == "address"
-        assert r.pretty_host(False) == "address"
+        assert r.pretty_host == "address"
+        assert r.host == "address"
         r.headers["host"] = "other"
-        assert r.pretty_host(True) == "other"
-        assert r.pretty_host(False) == "address"
+        assert r.pretty_host == "other"
+        assert r.host == "address"
         r.host = None
-        assert r.pretty_host(True) == "other"
-        assert r.pretty_host(False) is None
-        del r.headers["host"]
-        assert r.pretty_host(True) is None
-        assert r.pretty_host(False) is None
+        assert r.pretty_host is None
+        assert r.host is None
 
         # Invalid IDNA
         r.headers["host"] = ".disqus.com"
-        assert r.pretty_host(True) == ".disqus.com"
+        assert r.pretty_host == ".disqus.com"
 
     def test_pretty_url(self):
-        req = tutils.treq()
-        req.form_out = "authority"
-        assert req.pretty_url(True) == b"address:22"
-        assert req.pretty_url(False) == b"address:22"
-
-        req.form_out = "relative"
-        assert req.pretty_url(True) == b"http://address:22/path"
-        assert req.pretty_url(False) == b"http://address:22/path"
+        req = tutils.treq(first_line_format="relative")
+        assert req.pretty_url == "http://address:22/path"
+        assert req.url == "http://address:22/path"
 
     def test_get_cookies_none(self):
         headers = Headers()
@@ -212,12 +177,12 @@ class TestRequest(object):
         assert r.get_cookies()["cookiename"] == ["foo"]
 
     def test_set_url(self):
-        r = tutils.treq(form_in="absolute")
+        r = tutils.treq(first_line_format="absolute")
         r.url = b"https://otheraddress:42/ORLY"
-        assert r.scheme == b"https"
-        assert r.host == b"otheraddress"
+        assert r.scheme == "https"
+        assert r.host == "otheraddress"
         assert r.port == 42
-        assert r.path == b"/ORLY"
+        assert r.path == "/ORLY"
 
         try:
             r.url = "//localhost:80/foo@bar"
@@ -230,7 +195,7 @@ class TestRequest(object):
     #     protocol = mock_protocol("OPTIONS * HTTP/1.1")
     #     f.request = HTTPRequest.from_protocol(protocol)
     #
-    #     assert f.request.form_in == "relative"
+    #     assert f.request.first_line_format == "relative"
     #     f.request.host = f.server_conn.address.host
     #     f.request.port = f.server_conn.address.port
     #     f.request.scheme = "http"
@@ -266,7 +231,7 @@ class TestRequest(object):
     #         "CONNECT address:22 HTTP/1.1\r\n"
     #         "Host: address:22\r\n"
     #         "Content-Length: 0\r\n\r\n")
-    #     assert r.pretty_url(False) == "address:22"
+    #     assert r.pretty_url == "address:22"
     #
     # def test_absolute_form_in(self):
     #     protocol = mock_protocol("GET oops-no-protocol.com HTTP/1.1")

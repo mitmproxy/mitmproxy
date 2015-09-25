@@ -273,22 +273,27 @@ def get_header_tokens(headers, key):
     return [token.strip() for token in tokens]
 
 
-@always_byte_args()
 def hostport(scheme, host, port):
     """
         Returns the host component, with a port specifcation if needed.
     """
-    if (port, scheme) in [(80, b"http"), (443, b"https")]:
+    if (port, scheme) in [(80, "http"), (443, "https"), (80, b"http"), (443, b"https")]:
         return host
     else:
-        return b"%s:%d" % (host, port)
+        if isinstance(host, six.binary_type):
+            return b"%s:%d" % (host, port)
+        else:
+            return "%s:%d" % (host, port)
 
 
 def unparse_url(scheme, host, port, path=""):
     """
-        Returns a URL string, constructed from the specified compnents.
+    Returns a URL string, constructed from the specified components.
+
+    Args:
+        All args must be str.
     """
-    return b"%s://%s%s" % (scheme, hostport(scheme, host, port), path)
+    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
 def urlencode(s):

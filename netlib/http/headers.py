@@ -27,7 +27,7 @@ else:
     _always_byte_args = always_byte_args("utf-8", "surrogateescape")
 
 
-class Headers(MutableMapping, object):
+class Headers(MutableMapping):
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
