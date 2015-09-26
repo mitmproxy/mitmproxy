@@ -1105,35 +1105,6 @@ class TestRequest:
         r.constrain_encoding()
         assert "oink" not in r.headers["accept-encoding"]
 
-    def test_decodeencode(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.content = "falafel"
-        assert not r.decode()
-
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("identity")
-        assert r.headers["content-encoding"] == "identity"
-        assert r.content == "falafel"
-
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("gzip")
-        assert r.headers["content-encoding"] == "gzip"
-        assert r.content != "falafel"
-        r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
     def test_get_decoded_content(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
         r.content = None
@@ -1192,35 +1163,6 @@ class TestResponse:
         assert not "foo" in r.content
         assert r.headers["boo"] == "boo"
 
-    def test_decodeencode(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        assert r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("identity")
-        assert r.headers["content-encoding"] == "identity"
-        assert r.content == "falafel"
-
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("gzip")
-        assert r.headers["content-encoding"] == "gzip"
-        assert r.content != "falafel"
-        assert r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
-        r.headers["content-encoding"] = "gzip"
-        assert not r.decode()
-        assert r.content == "falafel"
-
     def test_get_content_type(self):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.headers = Headers(content_type="text/plain")
@@ -1263,27 +1205,6 @@ class TestClientConnection:
         assert c3.get_state() == c.get_state()
 
         assert str(c)
-
-
-def test_decoded():
-    r = HTTPRequest.wrap(netlib.tutils.treq())
-    assert r.content == "content"
-    assert "content-encoding" not in r.headers
-    r.encode("gzip")
-    assert r.headers["content-encoding"]
-    assert r.content != "content"
-    with decoded(r):
-        assert "content-encoding" not in r.headers
-        assert r.content == "content"
-    assert r.headers["content-encoding"]
-    assert r.content != "content"
-
-    with decoded(r):
-        r.content = "foo"
-
-    assert r.content != "foo"
-    r.decode()
-    assert r.content == "foo"
 
 
 def test_replacehooks():
