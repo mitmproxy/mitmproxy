@@ -290,9 +290,9 @@ class Pathoc(tcp.TCPClient):
         self.sslinfo = None
         if self.ssl:
             try:
-                alpn_protos = [http.ALPN_PROTO_HTTP1]
+                alpn_protos = [b'http/1.1']
                 if self.use_http2:
-                    alpn_protos.append(http.ALPN_PROTO_H2)
+                    alpn_protos.append(b'h2')
 
                 self.convert_to_ssl(
                     sni=self.sni,
@@ -424,7 +424,7 @@ class Pathoc(tcp.TCPClient):
             finally:
                 if resp:
                     lg("<< %s %s: %s bytes" % (
-                        resp.status_code, utils.xrepr(resp.msg), len(resp.body)
+                        resp.status_code, utils.xrepr(resp.msg), len(resp.content)
                     ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()

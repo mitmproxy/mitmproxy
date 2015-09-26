@@ -73,12 +73,10 @@ class DaemonTests(object):
             verify=False,
             params=params
         )
-        resp.body = resp.content
         return resp
 
     def get(self, spec):
         resp = requests.get(self.d.p(spec), verify=False)
-        resp.body = resp.content
         return resp
 
     def pathoc(

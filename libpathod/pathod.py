@@ -41,7 +41,7 @@ class SSLOptions(object):
         ssl_options=tcp.SSL_DEFAULT_OPTIONS,
         ciphers=None,
         certs=None,
-        alpn_select=http.ALPN_PROTO_H2,
+        alpn_select=b'h2',
     ):
         self.confdir = confdir
         self.cn = cn
@@ -140,7 +140,7 @@ class PathodHandler(tcp.BaseHandler):
             path = req.path
             http_version = req.http_version
             headers = req.headers
-            body = req.body
+            body = req.content
 
             clientcert = None
             if self.clientcert:
@@ -259,7 +259,7 @@ class PathodHandler(tcp.BaseHandler):
                 return
 
             alp = self.get_alpn_proto_negotiated()
-            if alp == http.ALPN_PROTO_H2:
+            if alp == b'h2':
                 self.protocol = protocols.http2.HTTP2Protocol(self)
                 self.use_http2 = True
 

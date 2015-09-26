@@ -52,7 +52,7 @@ class TestNoApi(tutils.DaemonTests):
         assert self.getpath("/log").status_code == 404
         r = self.getpath("/")
         assert r.status_code == 200
-        assert not "Log" in r.body
+        assert not "Log" in r.content
 
 
 class TestNotAfterConnect(tutils.DaemonTests):
@@ -120,7 +120,7 @@ class TestNocraft(tutils.DaemonTests):
     def test_nocraft(self):
         r = self.get(r"200:b'\xf0'")
         assert r.status_code == 800
-        assert "Crafting disabled" in r.body
+        assert "Crafting disabled" in r.content
 
 
 class CommonTests(tutils.DaemonTests):
@@ -153,7 +153,7 @@ class CommonTests(tutils.DaemonTests):
 
     def test_disconnect(self):
         rsp = self.get("202:b@100k:d200")
-        assert len(rsp.body) < 200
+        assert len(rsp.content) < 200
 
     def test_parserr(self):
         rsp = self.get("400:msg,b:")
@@ -162,7 +162,7 @@ class CommonTests(tutils.DaemonTests):
     def test_static(self):
         rsp = self.get("200:b<file")
         assert rsp.status_code == 200
-        assert rsp.body.strip() == "testfile"
+        assert rsp.content.strip() == "testfile"
 
     def test_anchor(self):
         rsp = self.getpath("anchor/foo")
@@ -202,7 +202,7 @@ class CommonTests(tutils.DaemonTests):
     def test_source_access_denied(self):
         rsp = self.get("200:b</foo")
         assert rsp.status_code == 800
-        assert "File access denied" in rsp.body
+        assert "File access denied" in rsp.content
 
     def test_proxy(self):
         r, _ = self.pathoc([r"get:'http://foo.com/p/202':da"])
