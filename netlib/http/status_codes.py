@@ -1,4 +1,4 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
 CONTINUE = 100
 SWITCHING = 101
@@ -37,6 +37,7 @@ REQUEST_URI_TOO_LONG = 414
 UNSUPPORTED_MEDIA_TYPE = 415
 REQUESTED_RANGE_NOT_SATISFIABLE = 416
 EXPECTATION_FAILED = 417
+IM_A_TEAPOT = 418
 
 INTERNAL_SERVER_ERROR = 500
 NOT_IMPLEMENTED = 501
@@ -91,6 +92,7 @@ RESPONSES = {
     UNSUPPORTED_MEDIA_TYPE: "Unsupported Media Type",
     REQUESTED_RANGE_NOT_SATISFIABLE: "Requested Range not satisfiable",
     EXPECTATION_FAILED: "Expectation Failed",
+    IM_A_TEAPOT: "I'm a teapot",
 
     # 500
     INTERNAL_SERVER_ERROR: "Internal Server Error",

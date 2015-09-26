@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 from io import BytesIO
 import textwrap
 from mock import Mock
-from netlib.exceptions import HttpException, HttpSyntaxException, HttpReadDisconnect
+from netlib.exceptions import HttpException, HttpSyntaxException, HttpReadDisconnect, TcpDisconnect
 from netlib.http import Headers
 from netlib.http.http1.read import (
     read_request, read_response, read_request_head,
@@ -100,6 +100,11 @@ class TestReadBody(object):
         with raises(HttpException):
             b"".join(read_body(rfile, -1, 3))
 
+    def test_max_chunk_size(self):
+        rfile = BytesIO(b"123456")
+        assert list(read_body(rfile, -1, max_chunk_size=None)) == [b"123456"]
+        rfile = BytesIO(b"123456")
+        assert list(read_body(rfile, -1, max_chunk_size=1)) == [b"1", b"2", b"3", b"4", b"5", b"6"]
 
 def test_connection_close():
     headers = Headers()
@@ -169,6 +174,11 @@ def test_get_first_line():
         rfile = BytesIO(b"")
         _get_first_line(rfile)
 
+    with raises(HttpReadDisconnect):
+        rfile = Mock()
+        rfile.readline.side_effect = TcpDisconnect
+        _get_first_line(rfile)
+
     with raises(HttpSyntaxException):
         rfile = BytesIO(b"GET /\xff HTTP/1.1")
         _get_first_line(rfile)
@@ -191,7 +201,8 @@ def test_read_request_line():
         t(b"GET / WTF/1.1")
     with raises(HttpSyntaxException):
         t(b"this is not http")
-
+    with raises(HttpReadDisconnect):
+        t(b"")
 
 def test_parse_authority_form():
     assert _parse_authority_form(b"foo:42") == (b"foo", 42)
@@ -218,6 +229,8 @@ def test_read_response_line():
         t(b"HTTP/1.1 OK OK")
     with raises(HttpSyntaxException):
         t(b"WTF/1.1 200 OK")
+    with raises(HttpReadDisconnect):
+        t(b"")
 
 
 def test_check_http_version():

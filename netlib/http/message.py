@@ -9,7 +9,7 @@ from .. import encoding, utils
 
 CONTENT_MISSING = 0
 
-if six.PY2:
+if six.PY2:  # pragma: nocover
     _native = lambda x: x
     _always_bytes = lambda x: x
 else:
@@ -110,15 +110,48 @@ class Message(object):
     def text(self, text):
         raise NotImplementedError()
 
+    def decode(self):
+        """
+            Decodes body based on the current Content-Encoding header, then
+            removes the header. If there is no Content-Encoding header, no
+            action is taken.
+
+            Returns:
+                True, if decoding succeeded.
+                False, otherwise.
+        """
+        ce = self.headers.get("content-encoding")
+        data = encoding.decode(ce, self.content)
+        if data is None:
+            return False
+        self.content = data
+        self.headers.pop("content-encoding", None)
+        return True
+
+    def encode(self, e):
+        """
+            Encodes body with the encoding e, where e is "gzip", "deflate" or "identity".
+
+            Returns:
+                True, if decoding succeeded.
+                False, otherwise.
+        """
+        data = encoding.encode(e, self.content)
+        if data is None:
+            return False
+        self.content = data
+        self.headers["content-encoding"] = e
+        return True
+
     # Legacy
 
     @property
-    def body(self):
+    def body(self):  # pragma: nocover
         warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
         return self.content
 
     @body.setter
-    def body(self, body):
+    def body(self, body):  # pragma: nocover
         warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
         self.content = body
 
@@ -146,8 +179,7 @@ class decoded(object):
 
     def __enter__(self):
         if self.ce:
-            if not self.message.decode():
-                self.ce = None
+            self.message.decode()
 
     def __exit__(self, type, value, tb):
         if self.ce:

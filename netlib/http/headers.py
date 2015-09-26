@@ -8,15 +8,15 @@ from __future__ import absolute_import, print_function, division
 import copy
 try:
     from collections.abc import MutableMapping
-except ImportError:  # Workaround for Python < 3.3
-    from collections import MutableMapping
+except ImportError:  # pragma: nocover
+    from collections import MutableMapping  # Workaround for Python < 3.3
 
 
 import six
 
 from netlib.utils import always_byte_args, always_bytes
 
-if six.PY2:
+if six.PY2:  # pragma: nocover
     _native = lambda x: x
     _always_bytes = lambda x: x
     _always_byte_args = lambda x: x
@@ -106,7 +106,7 @@ class Headers(MutableMapping):
         else:
             return b""
 
-    if six.PY2:
+    if six.PY2:  # pragma: nocover
         __str__ = __bytes__
 
     @_always_byte_args

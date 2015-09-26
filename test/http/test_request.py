@@ -1,3 +1,230 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-# TODO
+import six
+
+from netlib import utils
+from netlib.http import Headers
+from netlib.odict import ODict
+from netlib.tutils import treq, raises
+from .test_message import _test_decoded_attr, _test_passthrough_attr
+
+
+class TestRequestData(object):
+    def test_init(self):
+        with raises(AssertionError):
+            treq(headers="foobar")
+
+        assert isinstance(treq(headers=None).headers, Headers)
+
+    def test_eq_ne(self):
+        request_data = treq().data
+        same = treq().data
+        assert request_data == same
+        assert not request_data != same
+
+        other = treq(content=b"foo").data
+        assert not request_data == other
+        assert request_data != other
+
+        assert request_data != 0
+
+
+class TestRequestCore(object):
+    def test_repr(self):
+        request = treq()
+        assert repr(request) == "Request(GET address:22/path)"
+        request.host = None
+        assert repr(request) == "Request(GET /path)"
+
+    test_first_line_format = _test_passthrough_attr(treq(), "first_line_format")
+    test_method = _test_decoded_attr(treq(), "method")
+    test_scheme = _test_decoded_attr(treq(), "scheme")
+    test_port = _test_passthrough_attr(treq(), "port")
+    test_path = _test_decoded_attr(treq(), "path")
+
+    def test_host(self):
+        if six.PY2:
+            from unittest import SkipTest
+            raise SkipTest()
+
+        request = treq()
+        assert request.host == request.data.host.decode("idna")
+
+        # Test IDNA encoding
+        # Set str, get raw bytes
+        request.host = "ídna.example"
+        assert request.data.host == b"xn--dna-qma.example"
+        # Set raw bytes, get decoded
+        request.data.host = b"xn--idn-gla.example"
+        assert request.host == "idná.example"
+        # Set bytes, get raw bytes
+        request.host = b"xn--dn-qia9b.example"
+        assert request.data.host == b"xn--dn-qia9b.example"
+        # IDNA encoding is not bijective
+        request.host = "fußball"
+        assert request.host == "fussball"
+
+        # Don't fail on garbage
+        request.data.host = b"foo\xFF\x00bar"
+        assert request.host.startswith("foo")
+        assert request.host.endswith("bar")
+        # foo.bar = foo.bar should not cause any side effects.
+        d = request.host
+        request.host = d
+        assert request.data.host == b"foo\xFF\x00bar"
+
+    def test_host_header_update(self):
+        request = treq()
+        assert "host" not in request.headers
+        request.host = "example.com"
+        assert "host" not in request.headers
+
+        request.headers["Host"] = "foo"
+        request.host = "example.org"
+        assert request.headers["Host"] == "example.org"
+
+
+class TestRequestUtils(object):
+    def test_url(self):
+        request = treq()
+        assert request.url == "http://address:22/path"
+
+        request.url = "https://otheraddress:42/foo"
+        assert request.scheme == "https"
+        assert request.host == "otheraddress"
+        assert request.port == 42
+        assert request.path == "/foo"
+
+        with raises(ValueError):
+            request.url = "not-a-url"
+
+    def test_pretty_host(self):
+        request = treq()
+        assert request.pretty_host == "address"
+        assert request.host == "address"
+        request.headers["host"] = "other"
+        assert request.pretty_host == "other"
+        assert request.host == "address"
+        request.host = None
+        assert request.pretty_host is None
+        assert request.host is None
+
+        # Invalid IDNA
+        request.headers["host"] = ".disqus.com"
+        assert request.pretty_host == ".disqus.com"
+
+    def test_pretty_url(self):
+        request = treq()
+        assert request.url == "http://address:22/path"
+        assert request.pretty_url == "http://address:22/path"
+        request.headers["host"] = "other"
+        assert request.pretty_url == "http://other:22/path"
+
+    def test_pretty_url_authority(self):
+        request = treq(first_line_format="authority")
+        assert request.pretty_url == "address:22"
+
+    def test_get_query(self):
+        request = treq()
+        assert request.query is None
+
+        request.url = "http://localhost:80/foo?bar=42"
+        assert request.query.lst == [("bar", "42")]
+
+    def test_set_query(self):
+        request = treq()
+        request.query = ODict([])
+
+    def test_get_cookies_none(self):
+        request = treq()
+        request.headers = Headers()
+        assert len(request.cookies) == 0
+
+    def test_get_cookies_single(self):
+        request = treq()
+        request.headers = Headers(cookie="cookiename=cookievalue")
+        result = request.cookies
+        assert len(result) == 1
+        assert result['cookiename'] == ['cookievalue']
+
+    def test_get_cookies_double(self):
+        request = treq()
+        request.headers = Headers(cookie="cookiename=cookievalue;othercookiename=othercookievalue")
+        result = request.cookies
+        assert len(result) == 2
+        assert result['cookiename'] == ['cookievalue']
+        assert result['othercookiename'] == ['othercookievalue']
+
+    def test_get_cookies_withequalsign(self):
+        request = treq()
+        request.headers = Headers(cookie="cookiename=coo=kievalue;othercookiename=othercookievalue")
+        result = request.cookies
+        assert len(result) == 2
+        assert result['cookiename'] == ['coo=kievalue']
+        assert result['othercookiename'] == ['othercookievalue']
+
+    def test_set_cookies(self):
+        request = treq()
+        request.headers = Headers(cookie="cookiename=cookievalue")
+        result = request.cookies
+        result["cookiename"] = ["foo"]
+        request.cookies = result
+        assert request.cookies["cookiename"] == ["foo"]
+
+    def test_get_path_components(self):
+        request = treq(path=b"/foo/bar")
+        assert request.path_components == ["foo", "bar"]
+
+    def test_set_path_components(self):
+        request = treq()
+        request.path_components = ["foo", "baz"]
+        assert request.path == "/foo/baz"
+        request.path_components = []
+        assert request.path == "/"
+
+    def test_anticache(self):
+        request = treq()
+        request.headers["If-Modified-Since"] = "foo"
+        request.headers["If-None-Match"] = "bar"
+        request.anticache()
+        assert "If-Modified-Since" not in request.headers
+        assert "If-None-Match" not in request.headers
+
+    def test_anticomp(self):
+        request = treq()
+        request.headers["Accept-Encoding"] = "foobar"
+        request.anticomp()
+        assert request.headers["Accept-Encoding"] == "identity"
+
+    def test_constrain_encoding(self):
+        request = treq()
+        request.headers["Accept-Encoding"] = "identity, gzip, foo"
+        request.constrain_encoding()
+        assert "foo" not in request.headers["Accept-Encoding"]
+        assert "gzip" in request.headers["Accept-Encoding"]
+
+    def test_get_urlencoded_form(self):
+        request = treq(content="foobar")
+        assert request.urlencoded_form is None
+
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        assert request.urlencoded_form == ODict(utils.urldecode(request.content))
+
+    def test_set_urlencoded_form(self):
+        request = treq()
+        request.urlencoded_form = ODict([('foo', 'bar'), ('rab', 'oof')])
+        assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
+        assert request.content
+
+    def test_get_multipart_form(self):
+        request = treq(content="foobar")
+        assert request.multipart_form is None
+
+        request.headers["Content-Type"] = "multipart/form-data"
+        assert request.multipart_form == ODict(
+            utils.multipartdecode(
+                request.headers,
+                request.content
+            )
+        )

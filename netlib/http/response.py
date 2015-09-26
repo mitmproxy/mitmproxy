@@ -106,20 +106,20 @@ class Response(Message):
 
     # Legacy
 
-    def get_cookies(self):
+    def get_cookies(self):  # pragma: nocover
         warnings.warn(".get_cookies is deprecated, use .cookies instead.", DeprecationWarning)
         return self.cookies
 
-    def set_cookies(self, odict):
+    def set_cookies(self, odict):  # pragma: nocover
         warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
         self.cookies = odict
 
     @property
-    def msg(self):
+    def msg(self):  # pragma: nocover
         warnings.warn(".msg is deprecated, use .reason instead.", DeprecationWarning)
         return self.reason
 
     @msg.setter
-    def msg(self, reason):
+    def msg(self, reason):  # pragma: nocover
         warnings.warn(".msg is deprecated, use .reason instead.", DeprecationWarning)
         self.reason = reason

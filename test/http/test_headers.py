@@ -38,6 +38,9 @@ class TestHeaders(object):
         assert headers["Host"] == "example.com"
         assert headers["Accept"] == "text/plain"
 
+        with raises(ValueError):
+            Headers([[b"Host", u"not-bytes"]])
+
     def test_getitem(self):
         headers = Headers(Host="example.com")
         assert headers["Host"] == "example.com"
