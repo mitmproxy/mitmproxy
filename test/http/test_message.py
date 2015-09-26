@@ -1,43 +1,53 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-from netlib.http import decoded
-from netlib.tutils import tresp
+from netlib.http import decoded, Headers
+from netlib.tutils import tresp, raises
 
 
 def _test_passthrough_attr(message, attr):
-    def t(self=None):
-        assert getattr(message, attr) == getattr(message.data, attr)
-        setattr(message, attr, "foo")
-        assert getattr(message.data, attr) == "foo"
-    return t
+    assert getattr(message, attr) == getattr(message.data, attr)
+    setattr(message, attr, "foo")
+    assert getattr(message.data, attr) == "foo"
 
 
 def _test_decoded_attr(message, attr):
-    def t(self=None):
-        assert getattr(message, attr) == getattr(message.data, attr).decode("utf8")
-        # Set str, get raw bytes
-        setattr(message, attr, "foo")
-        assert getattr(message.data, attr) == b"foo"
-        # Set raw bytes, get decoded
-        setattr(message.data, attr, b"bar")
-        assert getattr(message, attr) == "bar"
-        # Set bytes, get raw bytes
-        setattr(message, attr, b"baz")
-        assert getattr(message.data, attr) == b"baz"
+    assert getattr(message, attr) == getattr(message.data, attr).decode("utf8")
+    # Set str, get raw bytes
+    setattr(message, attr, "foo")
+    assert getattr(message.data, attr) == b"foo"
+    # Set raw bytes, get decoded
+    setattr(message.data, attr, b"bar")
+    assert getattr(message, attr) == "bar"
+    # Set bytes, get raw bytes
+    setattr(message, attr, b"baz")
+    assert getattr(message.data, attr) == b"baz"
 
-        # Set UTF8
-        setattr(message, attr, "Non-Autorisé")
-        assert getattr(message.data, attr) == b"Non-Autoris\xc3\xa9"
-        # Don't fail on garbage
-        setattr(message.data, attr, b"foo\xFF\x00bar")
-        assert getattr(message, attr).startswith("foo")
-        assert getattr(message, attr).endswith("bar")
-        # foo.bar = foo.bar should not cause any side effects.
-        d = getattr(message, attr)
-        setattr(message, attr, d)
-        assert getattr(message.data, attr) == b"foo\xFF\x00bar"
-    return t
+    # Set UTF8
+    setattr(message, attr, "Non-Autorisé")
+    assert getattr(message.data, attr) == b"Non-Autoris\xc3\xa9"
+    # Don't fail on garbage
+    setattr(message.data, attr, b"foo\xFF\x00bar")
+    assert getattr(message, attr).startswith("foo")
+    assert getattr(message, attr).endswith("bar")
+    # foo.bar = foo.bar should not cause any side effects.
+    d = getattr(message, attr)
+    setattr(message, attr, d)
+    assert getattr(message.data, attr) == b"foo\xFF\x00bar"
+
+
+class TestMessageData(object):
+    def test_eq_ne(self):
+        data = tresp(timestamp_start=42, timestamp_end=42).data
+        same = tresp(timestamp_start=42, timestamp_end=42).data
+        assert data == same
+        assert not data != same
+
+        other = tresp(content=b"foo").data
+        assert not data == other
+        assert data != other
+
+        assert data != 0
 
 
 class TestMessage(object):
@@ -67,12 +77,20 @@ class TestMessage(object):
         assert resp.data.content == b""
         assert resp.headers["content-length"] == "0"
 
-    test_content_basic = _test_passthrough_attr(tresp(), "content")
-    test_headers = _test_passthrough_attr(tresp(), "headers")
-    test_timestamp_start = _test_passthrough_attr(tresp(), "timestamp_start")
-    test_timestamp_end = _test_passthrough_attr(tresp(), "timestamp_end")
+    def test_content_basic(self):
+        _test_passthrough_attr(tresp(), "content")
 
-    test_http_version = _test_decoded_attr(tresp(), "http_version")
+    def test_headers(self):
+        _test_passthrough_attr(tresp(), "headers")
+
+    def test_timestamp_start(self):
+        _test_passthrough_attr(tresp(), "timestamp_start")
+
+    def test_timestamp_end(self):
+        _test_passthrough_attr(tresp(), "timestamp_end")
+
+    def teste_http_version(self):
+        _test_decoded_attr(tresp(), "http_version")
 
 
 class TestDecodedDecorator(object):
@@ -133,4 +151,3 @@ class TestDecodedDecorator(object):
 
         assert "content-encoding" not in r.headers
         assert r.content is None
-

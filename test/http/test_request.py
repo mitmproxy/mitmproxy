@@ -17,31 +17,31 @@ class TestRequestData(object):
 
         assert isinstance(treq(headers=None).headers, Headers)
 
-    def test_eq_ne(self):
-        request_data = treq().data
-        same = treq().data
-        assert request_data == same
-        assert not request_data != same
-
-        other = treq(content=b"foo").data
-        assert not request_data == other
-        assert request_data != other
-
-        assert request_data != 0
-
 
 class TestRequestCore(object):
+    """
+    Tests for builtins and the attributes that are directly proxied from the data structure
+    """
     def test_repr(self):
         request = treq()
         assert repr(request) == "Request(GET address:22/path)"
         request.host = None
         assert repr(request) == "Request(GET /path)"
 
-    test_first_line_format = _test_passthrough_attr(treq(), "first_line_format")
-    test_method = _test_decoded_attr(treq(), "method")
-    test_scheme = _test_decoded_attr(treq(), "scheme")
-    test_port = _test_passthrough_attr(treq(), "port")
-    test_path = _test_decoded_attr(treq(), "path")
+    def test_first_line_format(self):
+        _test_passthrough_attr(treq(), "first_line_format")
+
+    def test_method(self):
+        _test_decoded_attr(treq(), "method")
+
+    def test_scheme(self):
+        _test_decoded_attr(treq(), "scheme")
+
+    def test_port(self):
+        _test_passthrough_attr(treq(), "port")
+
+    def test_path(self):
+        _test_decoded_attr(treq(), "path")
 
     def test_host(self):
         if six.PY2:
@@ -86,6 +86,9 @@ class TestRequestCore(object):
 
 
 class TestRequestUtils(object):
+    """
+    Tests for additional convenience methods.
+    """
     def test_url(self):
         request = treq()
         assert request.url == "http://address:22/path"
@@ -199,6 +202,11 @@ class TestRequestUtils(object):
 
     def test_constrain_encoding(self):
         request = treq()
+
+        h = request.headers.copy()
+        request.constrain_encoding()  # no-op if there is no accept_encoding header.
+        assert request.headers == h
+
         request.headers["Accept-Encoding"] = "identity, gzip, foo"
         request.constrain_encoding()
         assert "foo" not in request.headers["Accept-Encoding"]

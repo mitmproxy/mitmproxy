@@ -78,10 +78,19 @@ def test_assemble_request_headers():
     # https://github.com/mitmproxy/mitmproxy/issues/186
     r = treq(content=b"")
     r.headers["Transfer-Encoding"] = "chunked"
-    c = _assemble_request_headers(r)
+    c = _assemble_request_headers(r.data)
     assert b"Transfer-Encoding" in c
 
-    assert b"host" in _assemble_request_headers(treq(headers=Headers()))
+
+def test_assemble_request_headers_host_header():
+    r = treq()
+    r.headers = Headers()
+    c = _assemble_request_headers(r.data)
+    assert b"host" in c
+
+    r.host = None
+    c = _assemble_request_headers(r.data)
+    assert b"host" not in c
 
 
 def test_assemble_response_headers():

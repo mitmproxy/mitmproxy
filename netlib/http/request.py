@@ -10,10 +10,10 @@ from netlib.http import cookies
 from netlib.odict import ODict
 from .. import encoding
 from .headers import Headers
-from .message import Message, _native, _always_bytes
+from .message import Message, _native, _always_bytes, MessageData
 
 
-class RequestData(object):
+class RequestData(MessageData):
     def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=None, content=None,
                  timestamp_start=None, timestamp_end=None):
         if not headers:
@@ -31,14 +31,6 @@ class RequestData(object):
         self.content = content
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
-
-    def __eq__(self, other):
-        if isinstance(other, RequestData):
-            return self.__dict__ == other.__dict__
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
 
 class Request(Message):

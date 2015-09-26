@@ -4,12 +4,12 @@ import warnings
 
 from . import cookies
 from .headers import Headers
-from .message import Message, _native, _always_bytes
+from .message import Message, _native, _always_bytes, MessageData
 from .. import utils
 from ..odict import ODict
 
 
-class ResponseData(object):
+class ResponseData(MessageData):
     def __init__(self, http_version, status_code, reason=None, headers=None, content=None,
                  timestamp_start=None, timestamp_end=None):
         if not headers:
@@ -23,14 +23,6 @@ class ResponseData(object):
         self.content = content
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
-
-    def __eq__(self, other):
-        if isinstance(other, ResponseData):
-            return self.__dict__ == other.__dict__
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
 
 class Response(Message):
@@ -48,7 +40,7 @@ class Response(Message):
                 utils.pretty_size(len(self.content))
             )
         else:
-            details = "content missing"
+            details = "no content"
         return "Response({status_code} {reason}, {details})".format(
             status_code=self.status_code,
             reason=self.reason,

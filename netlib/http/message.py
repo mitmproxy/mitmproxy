@@ -18,6 +18,16 @@ else:
     _always_bytes = lambda x: utils.always_bytes(x, "utf-8", "surrogateescape")
 
 
+class MessageData(object):
+    def __eq__(self, other):
+        if isinstance(other, MessageData):
+            return self.__dict__ == other.__dict__
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 class Message(object):
     def __init__(self, data):
         self.data = data

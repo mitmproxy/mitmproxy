@@ -117,6 +117,9 @@ def test_connection_close():
     headers["connection"] = "close"
     assert connection_close(b"HTTP/1.1", headers)
 
+    headers["connection"] = "foobar"
+    assert connection_close(b"HTTP/1.0", headers)
+    assert not connection_close(b"HTTP/1.1", headers)
 
 def test_expected_http_body_size():
     # Expect: 100-continue

@@ -58,6 +58,7 @@ def _read_quoted_string(s, start):
     escaping = False
     ret = []
     # Skip the first quote
+    i = start  # initialize in case the loop doesn't run.
     for i in range(start + 1, len(s)):
         if escaping:
             ret.append(s[i])
