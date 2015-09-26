@@ -616,7 +616,7 @@ class MasterRedirectRequest(tservers.TestMaster):
         super(MasterRedirectRequest, self).handle_request(f)
 
     def handle_response(self, f):
-        f.response.body = str(f.client_conn.address.port)
+        f.response.content = str(f.client_conn.address.port)
         f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
         super(MasterRedirectRequest, self).handle_response(f)
 

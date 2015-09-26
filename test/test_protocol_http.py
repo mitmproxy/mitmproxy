@@ -46,11 +46,11 @@ class TestInvalidRequests(tservers.HTTPProxTest):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
         assert r.status_code == 400
-        assert "Invalid HTTP request form" in r.body
+        assert "Invalid HTTP request form" in r.content
 
     def test_relative_request(self):
         p = self.pathoc_raw()
         p.connect()
         r = p.request("get:/p/200")
         assert r.status_code == 400
-        assert "Invalid HTTP request form" in r.body
+        assert "Invalid HTTP request form" in r.content

@@ -174,15 +174,15 @@ class DumpMaster(flow.FlowMaster):
             )
             self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
-            if message.body == CONTENT_MISSING:
+            if message.content == CONTENT_MISSING:
                 self.echo("(content missing)", indent=4)
-            elif message.body:
+            elif message.content:
                 self.echo("")
 
                 try:
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Auto"),
-                        message.body,
+                        message.content,
                         headers=message.headers
                     )
                 except ContentViewException:
@@ -190,7 +190,7 @@ class DumpMaster(flow.FlowMaster):
                     self.add_event(s, "debug")
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
-                        message.body,
+                        message.content,
                         headers=message.headers
                     )
 
@@ -270,7 +270,7 @@ class DumpMaster(flow.FlowMaster):
         elif 400 <= code < 600:
             code_color = "red"
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        msg = click.style(flow.response.msg, fg=code_color, bold=True)
+        reason = click.style(flow.response.reason, fg=code_color, bold=True)
 
         if flow.response.content == CONTENT_MISSING:
             size = "(content missing)"
@@ -280,11 +280,11 @@ class DumpMaster(flow.FlowMaster):
 
         arrows = click.style("<<", bold=True)
 
-        line = "{replay} {arrows} {code} {msg} {size}".format(
+        line = "{replay} {arrows} {code} {reason} {size}".format(
             replay=replay,
             arrows=arrows,
             code=code,
-            msg=msg,
+            reason=reason,
             size=size
         )
         self.echo(line)

@@ -3,11 +3,6 @@
 Models
 ======
 
-.. warning::
-    The documentation for models has not been converted to rst yet and **many attributes/features
-    are missing**.
-    Please read the source code instead.
-
 .. automodule:: netlib.http
 
     .. autoclass:: Request
@@ -40,14 +35,22 @@ Models
 
     .. autoclass:: Response
 
-        .. warning:: Docs missing.
-
+        .. rubric:: Data
+        .. autoattribute:: http_version
+        .. autoattribute:: status_code
+        .. autoattribute:: reason
+        .. autoattribute:: headers
+        .. autoattribute:: content
+        .. autoattribute:: timestamp_start
+        .. autoattribute:: timestamp_end
+        .. rubric:: Computed Properties and Convenience Methods
+        .. autoattribute:: text
+        .. autoattribute:: cookies
 
     .. autoclass:: Headers
         :members:
         :special-members:
         :no-undoc-members:
-
 
     .. autoclass:: decoded
 

@@ -24,9 +24,9 @@ class MessageMixin(stateobject.StateObject):
     def get_state(self, short=False):
         ret = super(MessageMixin, self).get_state(short)
         if short:
-            if self.body:
-                ret["contentLength"] = len(self.body)
-            elif self.body == CONTENT_MISSING:
+            if self.content:
+                ret["contentLength"] = len(self.content)
+            elif self.content == CONTENT_MISSING:
                 ret["contentLength"] = None
             else:
                 ret["contentLength"] = 0
@@ -39,9 +39,9 @@ class MessageMixin(stateobject.StateObject):
             Doesn't change the message iteself or its headers.
         """
         ce = self.headers.get("content-encoding")
-        if not self.body or ce not in encoding.ENCODINGS:
-            return self.body
-        return encoding.decode(ce, self.body)
+        if not self.content or ce not in encoding.ENCODINGS:
+            return self.content
+        return encoding.decode(ce, self.content)
 
     def decode(self):
         """
@@ -52,12 +52,12 @@ class MessageMixin(stateobject.StateObject):
             Returns True if decoding succeeded, False otherwise.
         """
         ce = self.headers.get("content-encoding")
-        if not self.body or ce not in encoding.ENCODINGS:
+        if not self.content or ce not in encoding.ENCODINGS:
             return False
-        data = encoding.decode(ce, self.body)
+        data = encoding.decode(ce, self.content)
         if data is None:
             return False
-        self.body = data
+        self.content = data
         self.headers.pop("content-encoding", None)
         return True
 
@@ -67,7 +67,7 @@ class MessageMixin(stateobject.StateObject):
             or "identity".
         """
         # FIXME: Error if there's an existing encoding header?
-        self.body = encoding.encode(e, self.body)
+        self.content = encoding.encode(e, self.content)
         self.headers["content-encoding"] = e
 
     def copy(self):
@@ -87,8 +87,8 @@ class MessageMixin(stateobject.StateObject):
             Returns the number of replacements made.
         """
         with decoded(self):
-            self.body, count = utils.safe_subn(
-                pattern, repl, self.body, *args, **kwargs
+            self.content, count = utils.safe_subn(
+                pattern, repl, self.content, *args, **kwargs
             )
         fields = []
         for name, value in self.headers.fields:
@@ -290,9 +290,9 @@ class HTTPResponse(MessageMixin, Response):
             self,
             http_version,
             status_code,
-            msg,
+            reason,
             headers,
-            body,
+            content,
             timestamp_start=None,
             timestamp_end=None,
     ):
@@ -300,9 +300,9 @@ class HTTPResponse(MessageMixin, Response):
             self,
             http_version,
             status_code,
-            msg,
+            reason,
             headers,
-            body,
+            content,
             timestamp_start=timestamp_start,
             timestamp_end=timestamp_end,
         )
@@ -339,9 +339,9 @@ class HTTPResponse(MessageMixin, Response):
         resp = HTTPResponse(
             http_version=response.http_version,
             status_code=response.status_code,
-            msg=response.msg,
+            reason=response.reason,
             headers=response.headers,
-            body=response.body,
+            content=response.content,
             timestamp_start=response.timestamp_start,
             timestamp_end=response.timestamp_end,
         )

@@ -38,13 +38,13 @@ def test_strfuncs():
     flow.request.stickycookie = True
     flow.client_conn = mock.MagicMock()
     flow.client_conn.address.host = "foo"
-    flow.response = netlib.tutils.tresp(body=CONTENT_MISSING)
+    flow.response = netlib.tutils.tresp(content=CONTENT_MISSING)
     flow.response.is_replay = True
     flow.response.status_code = 300
     m.echo_flow(flow)
 
 
-    flow = tutils.tflow(resp=netlib.tutils.tresp(body="{"))
+    flow = tutils.tflow(resp=netlib.tutils.tresp(content="{"))
     flow.response.headers["content-type"] = "application/json"
     flow.response.status_code = 400
     m.echo_flow(flow)
@@ -69,7 +69,7 @@ class TestDumpMaster:
         m.handle_clientconnect(f.client_conn)
         m.handle_serverconnect(f.server_conn)
         m.handle_request(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(body=content))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
         f = m.handle_response(f)
         m.handle_clientdisconnect(f.client_conn)
         return f
