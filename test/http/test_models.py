@@ -3,9 +3,7 @@ import mock
 from netlib import tutils
 from netlib import utils
 from netlib.odict import ODict, ODictCaseless
-from netlib.http import Request, Response, Headers, CONTENT_MISSING, HDR_FORM_URLENCODED, \
-    HDR_FORM_MULTIPART
-
+from netlib.http import Request, Response, Headers, CONTENT_MISSING
 
 class TestRequest(object):
     def test_repr(self):
@@ -77,14 +75,14 @@ class TestRequest(object):
         req = tutils.treq(content="foobar")
         assert req.get_form_urlencoded() == ODict()
 
-        req.headers["Content-Type"] = HDR_FORM_URLENCODED
+        req.headers["Content-Type"] = "application/x-www-form-urlencoded"
         assert req.get_form_urlencoded() == ODict(utils.urldecode(req.body))
 
     def test_get_form_multipart(self):
         req = tutils.treq(content="foobar")
         assert req.get_form_multipart() == ODict()
 
-        req.headers["Content-Type"] = HDR_FORM_MULTIPART
+        req.headers["Content-Type"] = "multipart/form-data"
         assert req.get_form_multipart() == ODict(
             utils.multipartdecode(
                 req.headers,
@@ -95,7 +93,7 @@ class TestRequest(object):
     def test_set_form_urlencoded(self):
         req = tutils.treq()
         req.set_form_urlencoded(ODict([('foo', 'bar'), ('rab', 'oof')]))
-        assert req.headers["Content-Type"] == HDR_FORM_URLENCODED
+        assert req.headers["Content-Type"] == "application/x-www-form-urlencoded"
         assert req.body
 
     def test_get_path_components(self):
@@ -298,7 +296,7 @@ class TestResponse(object):
         assert "unknown content type" in repr(r)
         r.headers["content-type"] = "foo"
         assert "foo" in repr(r)
-        assert repr(tutils.tresp(body=CONTENT_MISSING))
+        assert repr(tutils.tresp(content=CONTENT_MISSING))
 
     def test_get_cookies_none(self):
         resp = tutils.tresp()

@@ -10,7 +10,7 @@ def assemble_request(request):
     if request.content == CONTENT_MISSING:
         raise HttpException("Cannot assemble flow with CONTENT_MISSING")
     head = assemble_request_head(request)
-    body = b"".join(assemble_body(request.headers, [request.data.content]))
+    body = b"".join(assemble_body(request.data.headers, [request.data.content]))
     return head + body
 
 
@@ -24,13 +24,13 @@ def assemble_response(response):
     if response.content == CONTENT_MISSING:
         raise HttpException("Cannot assemble flow with CONTENT_MISSING")
     head = assemble_response_head(response)
-    body = b"".join(assemble_body(response.headers, [response.content]))
+    body = b"".join(assemble_body(response.data.headers, [response.data.content]))
     return head + body
 
 
 def assemble_response_head(response):
-    first_line = _assemble_response_line(response)
-    headers = _assemble_response_headers(response)
+    first_line = _assemble_response_line(response.data)
+    headers = _assemble_response_headers(response.data)
     return b"%s\r\n%s\r\n" % (first_line, headers)
 
 
@@ -92,11 +92,11 @@ def _assemble_request_headers(request_data):
     return bytes(headers)
 
 
-def _assemble_response_line(response):
+def _assemble_response_line(response_data):
     return b"%s %d %s" % (
-        response.http_version,
-        response.status_code,
-        response.msg,
+        response_data.http_version,
+        response_data.status_code,
+        response_data.reason,
     )
 
 

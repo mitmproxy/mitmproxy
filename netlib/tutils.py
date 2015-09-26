@@ -120,9 +120,9 @@ def tresp(**kwargs):
     default = dict(
         http_version=b"HTTP/1.1",
         status_code=200,
-        msg=b"OK",
-        headers=Headers(header_response=b"svalue"),
-        body=b"message",
+        reason=b"OK",
+        headers=Headers(header_response="svalue"),
+        content=b"message",
         timestamp_start=time.time(),
         timestamp_end=time.time(),
     )

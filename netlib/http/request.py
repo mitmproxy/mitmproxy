@@ -55,7 +55,7 @@ class Request(Message):
         else:
             hostport = ""
         path = self.path or ""
-        return "HTTPRequest({} {}{})".format(
+        return "Request({} {}{})".format(
             self.method, hostport, path
         )
 
@@ -97,7 +97,8 @@ class Request(Message):
     @property
     def host(self):
         """
-        Target host for the request. This may be directly taken in the request (e.g. "GET http://example.com/ HTTP/1.1")
+        Target host. This may be parsed from the raw request
+        (e.g. from a ``GET http://example.com/ HTTP/1.1`` request line)
         or inferred from the proxy mode (e.g. an IP in transparent mode).
         """
 
@@ -154,6 +155,83 @@ class Request(Message):
     def path(self, path):
         self.data.path = _always_bytes(path)
 
+    @property
+    def url(self):
+        """
+        The URL string, constructed from the request's URL components
+        """
+        return utils.unparse_url(self.scheme, self.host, self.port, self.path)
+
+    @url.setter
+    def url(self, url):
+        self.scheme, self.host, self.port, self.path = utils.parse_url(url)
+
+    @property
+    def pretty_host(self):
+        """
+        Similar to :py:attr:`host`, but using the Host headers as an additional preferred data source.
+        This is useful in transparent mode where :py:attr:`host` is only an IP address,
+        but may not reflect the actual destination as the Host header could be spoofed.
+        """
+        return self.headers.get("host", self.host)
+
+    @property
+    def pretty_url(self):
+        """
+        Like :py:attr:`url`, but using :py:attr:`pretty_host` instead of :py:attr:`host`.
+        """
+        if self.first_line_format == "authority":
+            return "%s:%d" % (self.pretty_host, self.port)
+        return utils.unparse_url(self.scheme, self.pretty_host, self.port, self.path)
+
+    @property
+    def query(self):
+        """
+        The request query string as an :py:class:`ODict` object.
+        None, if there is no query.
+        """
+        _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
+        if query:
+            return ODict(utils.urldecode(query))
+        return None
+
+    @query.setter
+    def query(self, odict):
+        query = utils.urlencode(odict.lst)
+        scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
+        self.url = urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment])
+
+    @property
+    def cookies(self):
+        """
+        The request cookies.
+        An empty :py:class:`ODict` object if the cookie monster ate them all.
+        """
+        ret = ODict()
+        for i in self.headers.get_all("Cookie"):
+            ret.extend(cookies.parse_cookie_header(i))
+        return ret
+
+    @cookies.setter
+    def cookies(self, odict):
+        self.headers["cookie"] = cookies.format_cookie_header(odict)
+
+    @property
+    def path_components(self):
+        """
+        The URL's path components as a list of strings.
+        Components are unquoted.
+        """
+        _, _, path, _, _, _ = urllib.parse.urlparse(self.url)
+        return [urllib.parse.unquote(i) for i in path.split("/") if i]
+
+    @path_components.setter
+    def path_components(self, components):
+        components = map(lambda x: urllib.parse.quote(x, safe=""), components)
+        path = "/" + "/".join(components)
+        scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
+        self.url = urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment])
+
     def anticache(self):
         """
         Modifies this request to remove headers that might produce a cached
@@ -191,7 +269,7 @@ class Request(Message):
     @property
     def urlencoded_form(self):
         """
-        The URL-encoded form data as an ODict object.
+        The URL-encoded form data as an :py:class:`ODict` object.
         None if there is no data or the content-type indicates non-form data.
         """
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
@@ -211,7 +289,7 @@ class Request(Message):
     @property
     def multipart_form(self):
         """
-        The multipart form data as an ODict object.
+        The multipart form data as an :py:class:`ODict` object.
         None if there is no data or the content-type indicates non-form data.
         """
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
@@ -222,75 +300,6 @@ class Request(Message):
     @multipart_form.setter
     def multipart_form(self):
         raise NotImplementedError()
-
-    @property
-    def path_components(self):
-        """
-        The URL's path components as a list of strings.
-        Components are unquoted.
-        """
-        _, _, path, _, _, _ = urllib.parse.urlparse(self.url)
-        return [urllib.parse.unquote(i) for i in path.split("/") if i]
-
-    @path_components.setter
-    def path_components(self, components):
-        components = map(lambda x: urllib.parse.quote(x, safe=""), components)
-        path = "/" + "/".join(components)
-        scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
-        self.url = urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment])
-
-    @property
-    def query(self):
-        """
-        The request query string as an ODict object.
-        None, if there is no query.
-        """
-        _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
-        if query:
-            return ODict(utils.urldecode(query))
-        return None
-
-    @query.setter
-    def query(self, odict):
-        query = utils.urlencode(odict.lst)
-        scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
-        self.url = urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment])
-
-    @property
-    def cookies(self):
-        """
-        The request cookies.
-        An empty ODict object if the cookie monster ate them all.
-        """
-        ret = ODict()
-        for i in self.headers.get_all("Cookie"):
-            ret.extend(cookies.parse_cookie_header(i))
-        return ret
-
-    @cookies.setter
-    def cookies(self, odict):
-        self.headers["cookie"] = cookies.format_cookie_header(odict)
-
-    @property
-    def url(self):
-        """
-        The URL string, constructed from the request's URL components
-        """
-        return utils.unparse_url(self.scheme, self.host, self.port, self.path)
-
-    @url.setter
-    def url(self, url):
-        self.scheme, self.host, self.port, self.path = utils.parse_url(url)
-
-    @property
-    def pretty_host(self):
-        return self.headers.get("host", self.host)
-
-    @property
-    def pretty_url(self):
-        if self.first_line_format == "authority":
-            return "%s:%d" % (self.pretty_host, self.port)
-        return utils.unparse_url(self.scheme, self.pretty_host, self.port, self.path)
 
     # Legacy
 

@@ -65,7 +65,7 @@ class TestProtocol:
 class TestCheckALPNMatch(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
-        alpn_select=ALPN_PROTO_H2,
+        alpn_select=b'h2',
     )
 
     if OpenSSL._util.lib.Cryptography_HAS_ALPN:
@@ -73,7 +73,7 @@ class TestCheckALPNMatch(tservers.ServerTestBase):
         def test_check_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=[ALPN_PROTO_H2])
+            c.convert_to_ssl(alpn_protos=[b'h2'])
             protocol = HTTP2Protocol(c)
             assert protocol.check_alpn()
 
@@ -89,7 +89,7 @@ class TestCheckALPNMismatch(tservers.ServerTestBase):
         def test_check_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=[ALPN_PROTO_H2])
+            c.convert_to_ssl(alpn_protos=[b'h2'])
             protocol = HTTP2Protocol(c)
             tutils.raises(NotImplementedError, protocol.check_alpn)
 
@@ -311,7 +311,7 @@ class TestReadRequest(tservers.ServerTestBase):
 
         assert req.stream_id
         assert req.headers.fields == [[':method', 'GET'], [':path', '/'], [':scheme', 'https']]
-        assert req.body == b'foobar'
+        assert req.content == b'foobar'
 
 
 class TestReadRequestRelative(tservers.ServerTestBase):
@@ -417,7 +417,7 @@ class TestReadResponse(tservers.ServerTestBase):
         assert resp.status_code == 200
         assert resp.msg == ""
         assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]
-        assert resp.body == b'foobar'
+        assert resp.content == b'foobar'
         assert resp.timestamp_end
 
 
@@ -444,7 +444,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.status_code == 200
         assert resp.msg == ""
         assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]
-        assert resp.body == b''
+        assert resp.content == b''
 
 
 class TestAssembleRequest(object):

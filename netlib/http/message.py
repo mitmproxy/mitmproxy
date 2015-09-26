@@ -6,11 +6,14 @@ import six
 
 from .. import encoding, utils
 
+
+CONTENT_MISSING = 0
+
 if six.PY2:
     _native = lambda x: x
     _always_bytes = lambda x: x
 else:
-    # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
+    # While the HTTP head _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
     _native = lambda x: x.decode("utf-8", "surrogateescape")
     _always_bytes = lambda x: utils.always_bytes(x, "utf-8", "surrogateescape")
 
@@ -28,17 +31,6 @@ class Message(object):
         return not self.__eq__(other)
 
     @property
-    def http_version(self):
-        """
-        Version string, e.g. "HTTP/1.1"
-        """
-        return _native(self.data.http_version)
-
-    @http_version.setter
-    def http_version(self, http_version):
-        self.data.http_version = _always_bytes(http_version)
-
-    @property
     def headers(self):
         """
         Message headers object
@@ -51,6 +43,32 @@ class Message(object):
     @headers.setter
     def headers(self, h):
         self.data.headers = h
+
+    @property
+    def content(self):
+        """
+        The raw (encoded) HTTP message body
+
+        See also: :py:attr:`text`
+        """
+        return self.data.content
+
+    @content.setter
+    def content(self, content):
+        self.data.content = content
+        if isinstance(content, bytes):
+            self.headers["content-length"] = str(len(content))
+
+    @property
+    def http_version(self):
+        """
+        Version string, e.g. "HTTP/1.1"
+        """
+        return _native(self.data.http_version)
+
+    @http_version.setter
+    def http_version(self, http_version):
+        self.data.http_version = _always_bytes(http_version)
 
     @property
     def timestamp_start(self):
@@ -75,25 +93,13 @@ class Message(object):
         self.data.timestamp_end = timestamp_end
 
     @property
-    def content(self):
-        """
-        The raw (encoded) HTTP message body
-
-        See also: :py:attr:`text`
-        """
-        return self.data.content
-
-    @content.setter
-    def content(self, content):
-        self.data.content = content
-        if isinstance(content, bytes):
-            self.headers["content-length"] = str(len(content))
-
-    @property
     def text(self):
         """
         The decoded HTTP message body.
-        Decoded contents are not cached, so this method is relatively expensive to call.
+        Decoded contents are not cached, so accessing this attribute repeatedly is relatively expensive.
+
+        .. note::
+            This is not implemented yet.
 
         See also: :py:attr:`content`, :py:class:`decoded`
         """
@@ -103,6 +109,8 @@ class Message(object):
     @text.setter
     def text(self, text):
         raise NotImplementedError()
+
+    # Legacy
 
     @property
     def body(self):

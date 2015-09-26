@@ -4,7 +4,7 @@ import time
 
 from hpack.hpack import Encoder, Decoder
 from ... import utils
-from .. import Headers, Response, Request, ALPN_PROTO_H2
+from .. import Headers, Response, Request
 from . import frame
 
 
@@ -283,7 +283,7 @@ class HTTP2Protocol(object):
 
     def check_alpn(self):
         alp = self.tcp_handler.get_alpn_proto_negotiated()
-        if alp != ALPN_PROTO_H2:
+        if alp != b'h2':
             raise NotImplementedError(
                 "HTTP2Protocol can not handle unknown ALP: %s" % alp)
         return True

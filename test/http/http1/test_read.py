@@ -34,7 +34,7 @@ def test_read_request_head():
     r = read_request_head(rfile)
     assert r.method == "GET"
     assert r.headers["Content-Length"] == "4"
-    assert r.body is None
+    assert r.content is None
     assert rfile.reset_timestamps.called
     assert r.timestamp_start == 42
     assert rfile.read() == b"skip"
@@ -45,7 +45,7 @@ def test_read_response():
     rfile = BytesIO(b"HTTP/1.1 418 I'm a teapot\r\n\r\nbody")
     r = read_response(rfile, req)
     assert r.status_code == 418
-    assert r.body == b"body"
+    assert r.content == b"body"
     assert r.timestamp_end
 
 
@@ -61,7 +61,7 @@ def test_read_response_head():
     r = read_response_head(rfile)
     assert r.status_code == 418
     assert r.headers["Content-Length"] == "4"
-    assert r.body is None
+    assert r.content is None
     assert rfile.reset_timestamps.called
     assert r.timestamp_start == 42
     assert rfile.read() == b"skip"
