@@ -201,7 +201,7 @@ class HTTPRequest(MessageMixin, Request):
     def from_state(cls, state):
         f = cls(
             None,
-            None,
+            b"",
             None,
             None,
             None,
