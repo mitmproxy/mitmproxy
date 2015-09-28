@@ -29,7 +29,7 @@ class RequestHandler(tornado.web.RequestHandler):
     def json(self):
         if not self.request.headers.get("Content-Type").startswith("application/json"):
             return None
-        return json.loads(self.request.body)
+        return json.loads(self.request.content)
 
     @property
     def state(self):

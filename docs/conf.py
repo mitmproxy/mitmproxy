@@ -40,6 +40,9 @@ extensions = [
     'sphinxcontrib.documentedlist'
 ]
 
+# https://github.com/sphinx-doc/sphinx/pull/2053
+napoleon_include_special_with_doc = False
+
 autodoc_member_order = "bysource"
 
 # Add any paths that contain templates here, relative to this directory.

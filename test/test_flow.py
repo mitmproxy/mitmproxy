@@ -8,8 +8,8 @@ import mock
 
 import netlib.utils
 from netlib import odict
-from netlib.http import CONTENT_MISSING, HDR_FORM_URLENCODED, Headers
-from libmproxy import filt, protocol, controller, tnetstring, flow
+from netlib.http import CONTENT_MISSING, Headers
+from libmproxy import filt, controller, tnetstring, flow
 from libmproxy.models import Error, Flow, HTTPRequest, HTTPResponse, HTTPFlow, decoded
 from libmproxy.proxy.config import HostMatcher
 from libmproxy.proxy import ProxyConfig
@@ -338,7 +338,7 @@ class TestServerPlaybackState:
         assert s._hash(r) == s._hash(r2)
 
 
-class TestFlow:
+class TestFlow(object):
     def test_copy(self):
         f = tutils.tflow(resp=True)
         a0 = f.get_state()
@@ -849,7 +849,7 @@ class TestFlowMaster:
         s = flow.State()
 
         f = tutils.tflow()
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(body=f.request))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
 
         fm = flow.FlowMaster(None, s)
@@ -903,7 +903,7 @@ class TestFlowMaster:
     def test_server_playback_kill(self):
         s = flow.State()
         f = tutils.tflow()
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(body=f.request))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
         fm = flow.FlowMaster(None, s)
         fm.refresh_server_playback = True
@@ -1017,10 +1017,10 @@ class TestRequest:
         r.port = 22
         assert r.url == "https://address:22/path"
 
-        assert r.pretty_url(True) == "https://address:22/path"
+        assert r.pretty_url == "https://address:22/path"
         r.headers["Host"] = "foo.com"
-        assert r.pretty_url(False) == "https://address:22/path"
-        assert r.pretty_url(True) == "https://foo.com:22/path"
+        assert r.url == "https://address:22/path"
+        assert r.pretty_url == "https://foo.com:22/path"
 
     def test_path_components(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
@@ -1043,8 +1043,8 @@ class TestRequest:
 
     def test_getset_form_urlencoded(self):
         d = odict.ODict([("one", "two"), ("three", "four")])
-        r = HTTPRequest.wrap(netlib.tutils.treq(body=netlib.utils.urlencode(d.lst)))
-        r.headers["content-type"] = HDR_FORM_URLENCODED
+        r = HTTPRequest.wrap(netlib.tutils.treq(content=netlib.utils.urlencode(d.lst)))
+        r.headers["content-type"] = "application/x-www-form-urlencoded"
         assert r.get_form_urlencoded() == d
 
         d = odict.ODict([("x", "y")])
@@ -1105,35 +1105,6 @@ class TestRequest:
         r.constrain_encoding()
         assert "oink" not in r.headers["accept-encoding"]
 
-    def test_decodeencode(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.content = "falafel"
-        assert not r.decode()
-
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("identity")
-        assert r.headers["content-encoding"] == "identity"
-        assert r.content == "falafel"
-
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("gzip")
-        assert r.headers["content-encoding"] == "gzip"
-        assert r.content != "falafel"
-        r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
     def test_get_decoded_content(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
         r.content = None
@@ -1192,35 +1163,6 @@ class TestResponse:
         assert not "foo" in r.content
         assert r.headers["boo"] == "boo"
 
-    def test_decodeencode(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        assert r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("identity")
-        assert r.headers["content-encoding"] == "identity"
-        assert r.content == "falafel"
-
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        r.headers["content-encoding"] = "identity"
-        r.content = "falafel"
-        r.encode("gzip")
-        assert r.headers["content-encoding"] == "gzip"
-        assert r.content != "falafel"
-        assert r.decode()
-        assert "content-encoding" not in r.headers
-        assert r.content == "falafel"
-
-        r.headers["content-encoding"] = "gzip"
-        assert not r.decode()
-        assert r.content == "falafel"
-
     def test_get_content_type(self):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.headers = Headers(content_type="text/plain")
@@ -1263,27 +1205,6 @@ class TestClientConnection:
         assert c3.get_state() == c.get_state()
 
         assert str(c)
-
-
-def test_decoded():
-    r = HTTPRequest.wrap(netlib.tutils.treq())
-    assert r.content == "content"
-    assert "content-encoding" not in r.headers
-    r.encode("gzip")
-    assert r.headers["content-encoding"]
-    assert r.content != "content"
-    with decoded(r):
-        assert "content-encoding" not in r.headers
-        assert r.content == "content"
-    assert r.headers["content-encoding"]
-    assert r.content != "content"
-
-    with decoded(r):
-        r.content = "foo"
-
-    assert r.content != "foo"
-    r.decode()
-    assert r.content == "foo"
 
 
 def test_replacehooks():

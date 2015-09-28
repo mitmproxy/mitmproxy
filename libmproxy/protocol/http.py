@@ -54,7 +54,7 @@ class _StreamingHttpLayer(_HttpLayer):
 
     def read_response(self, request):
         response = self.read_response_headers()
-        response.body = b"".join(
+        response.content = b"".join(
             self.read_response_body(request, response)
         )
         return response
@@ -66,10 +66,10 @@ class _StreamingHttpLayer(_HttpLayer):
         raise NotImplementedError()
 
     def send_response(self, response):
-        if response.body == CONTENT_MISSING:
+        if response.content == CONTENT_MISSING:
             raise HttpException("Cannot assemble flow with CONTENT_MISSING")
         self.send_response_headers(response)
-        self.send_response_body(response, [response.body])
+        self.send_response_body(response, [response.content])
 
 
 class Http1Layer(_StreamingHttpLayer):

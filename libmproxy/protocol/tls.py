@@ -7,7 +7,6 @@ from construct import ConstructError
 import six
 from netlib.exceptions import InvalidCertificateException, TcpException, TlsException
 
-from netlib.http import ALPN_PROTO_HTTP1
 from ..contrib.tls._constructs import ClientHello
 from ..exceptions import ProtocolException, TlsProtocolException, ClientHandshakeException
 from .base import Layer
@@ -367,8 +366,8 @@ class TlsLayer(Layer):
         """
 
         # This gets triggered if we haven't established an upstream connection yet.
-        default_alpn = ALPN_PROTO_HTTP1
-        # alpn_preference = ALPN_PROTO_H2
+        default_alpn = b'http/1.1'
+        # alpn_preference = b'h2'
 
         if self.alpn_for_client_connection in options:
             choice = bytes(self.alpn_for_client_connection)

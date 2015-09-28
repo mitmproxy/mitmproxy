@@ -390,7 +390,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2,
         req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay,
         req_method = f.request.method,
-        req_url = f.request.pretty_url(hostheader=hostheader),
+        req_url = f.request.pretty_url if hostheader else f.request.url,
 
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.status_code if f.response else None,
