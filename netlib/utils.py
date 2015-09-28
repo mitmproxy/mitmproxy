@@ -237,8 +237,9 @@ def parse_url(url):
     if isinstance(url, six.binary_type):
         host = parsed.hostname
 
-        # this should not raise a ValueError
-        decode_parse_result(parsed, "ascii")
+        # this should not raise a ValueError,
+        # but we try to be very forgiving here and accept just everything.
+        # decode_parse_result(parsed, "ascii")
     else:
         host = parsed.hostname.encode("idna")
         parsed = encode_parse_result(parsed, "ascii")

@@ -211,6 +211,10 @@ def test_read_response_line():
 
     assert t(b"HTTP/1.1 200 OK") == (b"HTTP/1.1", 200, b"OK")
     assert t(b"HTTP/1.1 200") == (b"HTTP/1.1", 200, b"")
+
+    # https://github.com/mitmproxy/mitmproxy/issues/784
+    assert t(b"HTTP/1.1 200") == (b"HTTP/1.1 Non-Autoris\xc3\xa9", 200, b"")
+
     with raises(HttpSyntaxException):
         assert t(b"HTTP/1.1")
 

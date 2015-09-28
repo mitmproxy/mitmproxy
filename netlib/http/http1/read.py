@@ -218,11 +218,6 @@ def _get_first_line(rfile):
         raise HttpReadDisconnect("Remote disconnected")
     if not line:
         raise HttpReadDisconnect("Remote disconnected")
-    line = line.strip()
-    try:
-        line.decode("ascii")
-    except ValueError:
-        raise HttpSyntaxException("Non-ascii characters in first line: {}".format(line))
     return line.strip()
 
 
