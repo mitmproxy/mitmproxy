@@ -169,10 +169,6 @@ def test_get_first_line():
         rfile = BytesIO(b"")
         _get_first_line(rfile)
 
-    with raises(HttpSyntaxException):
-        rfile = BytesIO(b"GET /\xff HTTP/1.1")
-        _get_first_line(rfile)
-
 
 def test_read_request_line():
     def t(b):
@@ -213,7 +209,7 @@ def test_read_response_line():
     assert t(b"HTTP/1.1 200") == (b"HTTP/1.1", 200, b"")
 
     # https://github.com/mitmproxy/mitmproxy/issues/784
-    assert t(b"HTTP/1.1 200") == (b"HTTP/1.1 Non-Autoris\xc3\xa9", 200, b"")
+    assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (b"HTTP/1.1", 200, b"Non-Autoris\xc3\xa9")
 
     with raises(HttpSyntaxException):
         assert t(b"HTTP/1.1")
