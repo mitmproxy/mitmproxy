@@ -17,8 +17,8 @@ def _test_decoded_attr(message, attr):
     setattr(message, attr, "foo")
     assert getattr(message.data, attr) == b"foo"
     # Set raw bytes, get decoded
-    setattr(message.data, attr, b"bar")
-    assert getattr(message, attr) == "bar"
+    setattr(message.data, attr, b"BAR")  # use uppercase so that we can also cover request.method
+    assert getattr(message, attr) == "BAR"
     # Set bytes, get raw bytes
     setattr(message, attr, b"baz")
     assert getattr(message.data, attr) == b"baz"
@@ -27,13 +27,13 @@ def _test_decoded_attr(message, attr):
     setattr(message, attr, "Non-Autorisé")
     assert getattr(message.data, attr) == b"Non-Autoris\xc3\xa9"
     # Don't fail on garbage
-    setattr(message.data, attr, b"foo\xFF\x00bar")
-    assert getattr(message, attr).startswith("foo")
-    assert getattr(message, attr).endswith("bar")
+    setattr(message.data, attr, b"FOO\xFF\x00BAR")
+    assert getattr(message, attr).startswith("FOO")
+    assert getattr(message, attr).endswith("BAR")
     # foo.bar = foo.bar should not cause any side effects.
     d = getattr(message, attr)
     setattr(message, attr, d)
-    assert getattr(message.data, attr) == b"foo\xFF\x00bar"
+    assert getattr(message.data, attr) == b"FOO\xFF\x00BAR"
 
 
 class TestMessageData(object):
