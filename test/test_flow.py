@@ -1155,6 +1155,11 @@ class TestResponse:
         c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
         assert "00:21:38" in r._refresh_cookie(c, 60)
 
+        # https://github.com/mitmproxy/mitmproxy/issues/773
+        c = ">=A"
+        with tutils.raises(ValueError):
+            r._refresh_cookie(c, 60)
+
     def test_replace(self):
         r = HTTPResponse.wrap(netlib.tutils.tresp())
         r.headers["Foo"] = "fOo"

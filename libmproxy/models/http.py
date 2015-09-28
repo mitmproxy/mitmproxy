@@ -354,7 +354,10 @@ class HTTPResponse(MessageMixin, Response):
             Takes a cookie string c and a time delta in seconds, and returns
             a refreshed cookie string.
         """
-        c = Cookie.SimpleCookie(str(c))
+        try:
+            c = Cookie.SimpleCookie(str(c))
+        except Cookie.CookieError:
+            raise ValueError("Invalid Cookie")
         for i in c.values():
             if "expires" in i:
                 d = parsedate_tz(i["expires"])
@@ -369,7 +372,10 @@ class HTTPResponse(MessageMixin, Response):
                     # appear to parse this tolerantly - maybe we should too.
                     # For now, we just ignore this.
                     del i["expires"]
-        return c.output(header="").strip()
+        ret = c.output(header="").strip()
+        if not ret:
+            raise ValueError("Invalid Cookie")
+        return ret
 
     def refresh(self, now=None):
         """
@@ -394,8 +400,12 @@ class HTTPResponse(MessageMixin, Response):
                     new = mktime_tz(d) + delta
                     self.headers[i] = formatdate(new)
         c = []
-        for i in self.headers.get_all("set-cookie"):
-            c.append(self._refresh_cookie(i, delta))
+        for set_cookie_header in self.headers.get_all("set-cookie"):
+            try:
+                refreshed = self._refresh_cookie(set_cookie_header, delta)
+            except ValueError:
+                refreshed = set_cookie_header
+            c.append(refreshed)
         if c:
             self.headers.set_all("set-cookie", c)
 
