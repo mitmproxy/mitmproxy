@@ -562,3 +562,5 @@ def make_connect_response(http_version):
         headers,
         "",
     )
+
+expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, "Continue", Headers(), b"")

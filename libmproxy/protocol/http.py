@@ -15,7 +15,7 @@ from netlib.http.http2.frame import GoAwayFrame, PriorityFrame, WindowUpdateFram
 from .. import utils
 from ..exceptions import HttpProtocolException, ProtocolException
 from ..models import (
-    HTTPFlow, HTTPRequest, HTTPResponse, make_error_response, make_connect_response, Error
+    HTTPFlow, HTTPRequest, HTTPResponse, make_error_response, make_connect_response, Error, expect_continue_response
 )
 from .base import Layer, Kill
 
@@ -26,10 +26,13 @@ class _HttpLayer(Layer):
     def read_request(self):
         raise NotImplementedError()
 
+    def read_request_body(self, request):
+        raise NotImplementedError()
+
     def send_request(self, request):
         raise NotImplementedError()
 
-    def read_response(self, request_method):
+    def read_response(self, request):
         raise NotImplementedError()
 
     def send_response(self, response):
@@ -77,6 +80,10 @@ class Http1Layer(_StreamingHttpLayer):
     def read_request(self):
         req = http1.read_request(self.client_conn.rfile, body_size_limit=self.config.body_size_limit)
         return HTTPRequest.wrap(req)
+
+    def read_request_body(self, request):
+        expected_size = http1.expected_http_body_size(request)
+        return http1.read_body(self.client_conn.rfile, expected_size, self.config.body_size_limit)
 
     def send_request(self, request):
         self.server_conn.wfile.write(http1.assemble_request(request))
@@ -299,7 +306,7 @@ class HttpLayer(Layer):
             self.__original_server_conn = self.server_conn
         while True:
             try:
-                request = self.read_request()
+                request = self.get_request_from_client()
                 self.log("request", "debug", [repr(request)])
 
                 # Handle Proxy Authentication
@@ -371,6 +378,14 @@ class HttpLayer(Layer):
                     six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
                 flow.live = False
+
+    def get_request_from_client(self):
+        request = self.read_request()
+        if request.headers.get("expect", "").lower() == "100-continue":
+            self.send_response(expect_continue_response)
+            request.headers.pop("expect")
+            request.body = b"".join(self.read_request_body(request))
+        return request
 
     def send_error_response(self, code, message):
         try:
@@ -478,6 +493,7 @@ class HttpLayer(Layer):
         else:
             flow.request.host = self.__original_server_conn.address.host
             flow.request.port = self.__original_server_conn.address.port
+            # TODO: This does not really work if we change the first request and --no-upstream-cert is enabled
             flow.request.scheme = "https" if self.__original_server_conn.tls_established else "http"
 
         request_reply = self.channel.ask("request", flow)
