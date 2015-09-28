@@ -8,15 +8,15 @@ from __future__ import absolute_import, print_function, division
 import copy
 try:
     from collections.abc import MutableMapping
-except ImportError:  # Workaround for Python < 3.3
-    from collections import MutableMapping
+except ImportError:  # pragma: nocover
+    from collections import MutableMapping  # Workaround for Python < 3.3
 
 
 import six
 
 from netlib.utils import always_byte_args, always_bytes
 
-if six.PY2:
+if six.PY2:  # pragma: nocover
     _native = lambda x: x
     _always_bytes = lambda x: x
     _always_byte_args = lambda x: x
@@ -27,7 +27,7 @@ else:
     _always_byte_args = always_byte_args("utf-8", "surrogateescape")
 
 
-class Headers(MutableMapping, object):
+class Headers(MutableMapping):
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
@@ -36,12 +36,8 @@ class Headers(MutableMapping, object):
 
     .. code-block:: python
 
-        # Create header from a list of (header_name, header_value) tuples
-        >>> h = Headers([
-                ["Host","example.com"],
-                ["Accept","text/html"],
-                ["accept","application/xml"]
-            ])
+        # Create headers with keyword arguments
+        >>> h = Headers(host="example.com", content_type="application/xml")
 
         # Headers mostly behave like a normal dict.
         >>> h["Host"]
@@ -50,6 +46,13 @@ class Headers(MutableMapping, object):
         # HTTP Headers are case insensitive
         >>> h["host"]
         "example.com"
+
+        # Headers can also be creatd from a list of raw (header_name, header_value) byte tuples
+        >>> h = Headers([
+            [b"Host",b"example.com"],
+            [b"Accept",b"text/html"],
+            [b"accept",b"application/xml"]
+        ])
 
         # Multiple headers are folded into a single header as per RFC7230
         >>> h["Accept"]
@@ -60,16 +63,13 @@ class Headers(MutableMapping, object):
         >>> h["Accept"]
         "application/text"
 
-        # str(h) returns a HTTP1 header block.
-        >>> print(h)
+        # bytes(h) returns a HTTP1 header block.
+        >>> print(bytes(h))
         Host: example.com
         Accept: application/text
 
         # For full control, the raw header fields can be accessed
         >>> h.fields
-
-        # Headers can also be crated from keyword arguments
-        >>> h = Headers(host="example.com", content_type="application/xml")
 
     Caveats:
         For use with the "Set-Cookie" header, see :py:meth:`get_all`.
@@ -79,8 +79,8 @@ class Headers(MutableMapping, object):
     def __init__(self, fields=None, **headers):
         """
         Args:
-            fields: (optional) list of ``(name, value)`` header tuples,
-                e.g. ``[("Host","example.com")]``. All names and values must be bytes.
+            fields: (optional) list of ``(name, value)`` header byte tuples,
+                e.g. ``[(b"Host", b"example.com")]``. All names and values must be bytes.
             **headers: Additional headers to set. Will overwrite existing values from `fields`.
                 For convenience, underscores in header names will be transformed to dashes -
                 this behaviour does not extend to other methods.
@@ -106,7 +106,7 @@ class Headers(MutableMapping, object):
         else:
             return b""
 
-    if six.PY2:
+    if six.PY2:  # pragma: nocover
         __str__ = __bytes__
 
     @_always_byte_args

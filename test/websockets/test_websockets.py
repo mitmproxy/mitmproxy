@@ -68,7 +68,7 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.write(bytes(headers) + b"\r\n")
         self.wfile.flush()
 
-        resp = read_response(self.rfile, treq(method="GET"))
+        resp = read_response(self.rfile, treq(method=b"GET"))
         server_nonce = self.protocol.check_server_handshake(resp.headers)
 
         if not server_nonce == self.protocol.create_server_nonce(self.client_nonce):

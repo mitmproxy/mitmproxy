@@ -12,6 +12,8 @@ ENCODINGS = {"identity", "gzip", "deflate"}
 
 
 def decode(e, content):
+    if not isinstance(content, bytes):
+        return None
     encoding_map = {
         "identity": identity,
         "gzip": decode_gzip,
@@ -23,6 +25,8 @@ def decode(e, content):
 
 
 def encode(e, content):
+    if not isinstance(content, bytes):
+        return None
     encoding_map = {
         "identity": identity,
         "gzip": encode_gzip,

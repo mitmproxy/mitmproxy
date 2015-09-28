@@ -21,6 +21,7 @@ def test_read_quoted_string():
         [(r'"f\\o" x', 0), (r"f\o", 6)],
         [(r'"f\\" x', 0), (r"f" + '\\', 5)],
         [('"fo\\\"" x', 0), ("fo\"", 6)],
+        [('"foo" x', 7), ("", 8)],
     ]
     for q, a in tokens:
         assert cookies._read_quoted_string(*q) == a

@@ -25,9 +25,9 @@ class Flow(object):
 
 class Request(object):
 
-    def __init__(self, scheme, method, path, http_version, headers, body):
+    def __init__(self, scheme, method, path, http_version, headers, content):
         self.scheme, self.method, self.path = scheme, method, path
-        self.headers, self.body = headers, body
+        self.headers, self.content = headers, content
         self.http_version = http_version
 
 
@@ -64,7 +64,7 @@ class WSGIAdaptor(object):
         environ = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': native(flow.request.scheme, "latin-1"),
-            'wsgi.input': BytesIO(flow.request.body or b""),
+            'wsgi.input': BytesIO(flow.request.content or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,

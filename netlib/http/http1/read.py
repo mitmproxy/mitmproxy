@@ -11,7 +11,7 @@ from .. import Request, Response, Headers
 def read_request(rfile, body_size_limit=None):
     request = read_request_head(rfile)
     expected_body_size = expected_http_body_size(request)
-    request._body = b"".join(read_body(rfile, expected_body_size, limit=body_size_limit))
+    request.data.content = b"".join(read_body(rfile, expected_body_size, limit=body_size_limit))
     request.timestamp_end = time.time()
     return request
 
@@ -50,7 +50,7 @@ def read_request_head(rfile):
 def read_response(rfile, request, body_size_limit=None):
     response = read_response_head(rfile)
     expected_body_size = expected_http_body_size(request, response)
-    response._body = b"".join(read_body(rfile, expected_body_size, body_size_limit))
+    response.data.content = b"".join(read_body(rfile, expected_body_size, body_size_limit))
     response.timestamp_end = time.time()
     return response
 
@@ -155,7 +155,7 @@ def connection_close(http_version, headers):
 
     # If we don't have a Connection header, HTTP 1.1 connections are assumed to
     # be persistent
-    return http_version != b"HTTP/1.1"
+    return http_version != "HTTP/1.1" and http_version != b"HTTP/1.1"  # FIXME: Remove one case.
 
 
 def expected_http_body_size(request, response=None):
@@ -184,11 +184,11 @@ def expected_http_body_size(request, response=None):
         if headers.get("expect", "").lower() == "100-continue":
             return 0
     else:
-        if request.method.upper() == b"HEAD":
+        if request.method.upper() == "HEAD":
             return 0
         if 100 <= response_code <= 199:
             return 0
-        if response_code == 200 and request.method.upper() == b"CONNECT":
+        if response_code == 200 and request.method.upper() == "CONNECT":
             return 0
         if response_code in (204, 304):
             return 0

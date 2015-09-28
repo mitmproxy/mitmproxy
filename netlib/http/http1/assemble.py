@@ -7,30 +7,30 @@ from .. import CONTENT_MISSING
 
 
 def assemble_request(request):
-    if request.body == CONTENT_MISSING:
+    if request.content == CONTENT_MISSING:
         raise HttpException("Cannot assemble flow with CONTENT_MISSING")
     head = assemble_request_head(request)
-    body = b"".join(assemble_body(request.headers, [request.body]))
+    body = b"".join(assemble_body(request.data.headers, [request.data.content]))
     return head + body
 
 
 def assemble_request_head(request):
-    first_line = _assemble_request_line(request)
-    headers = _assemble_request_headers(request)
+    first_line = _assemble_request_line(request.data)
+    headers = _assemble_request_headers(request.data)
     return b"%s\r\n%s\r\n" % (first_line, headers)
 
 
 def assemble_response(response):
-    if response.body == CONTENT_MISSING:
+    if response.content == CONTENT_MISSING:
         raise HttpException("Cannot assemble flow with CONTENT_MISSING")
     head = assemble_response_head(response)
-    body = b"".join(assemble_body(response.headers, [response.body]))
+    body = b"".join(assemble_body(response.data.headers, [response.data.content]))
     return head + body
 
 
 def assemble_response_head(response):
-    first_line = _assemble_response_line(response)
-    headers = _assemble_response_headers(response)
+    first_line = _assemble_response_line(response.data)
+    headers = _assemble_response_headers(response.data)
     return b"%s\r\n%s\r\n" % (first_line, headers)
 
 
@@ -45,51 +45,58 @@ def assemble_body(headers, body_chunks):
             yield chunk
 
 
-def _assemble_request_line(request, form=None):
-    if form is None:
-        form = request.form_out
+def _assemble_request_line(request_data):
+    """
+    Args:
+        request_data (netlib.http.request.RequestData)
+    """
+    form = request_data.first_line_format
     if form == "relative":
         return b"%s %s %s" % (
-            request.method,
-            request.path,
-            request.http_version
+            request_data.method,
+            request_data.path,
+            request_data.http_version
         )
     elif form == "authority":
         return b"%s %s:%d %s" % (
-            request.method,
-            request.host,
-            request.port,
-            request.http_version
+            request_data.method,
+            request_data.host,
+            request_data.port,
+            request_data.http_version
         )
     elif form == "absolute":
         return b"%s %s://%s:%d%s %s" % (
-            request.method,
-            request.scheme,
-            request.host,
-            request.port,
-            request.path,
-            request.http_version
+            request_data.method,
+            request_data.scheme,
+            request_data.host,
+            request_data.port,
+            request_data.path,
+            request_data.http_version
         )
-    else:  # pragma: nocover
+    else:
         raise RuntimeError("Invalid request form")
 
 
-def _assemble_request_headers(request):
-    headers = request.headers.copy()
-    if "host" not in headers and request.scheme and request.host and request.port:
+def _assemble_request_headers(request_data):
+    """
+    Args:
+        request_data (netlib.http.request.RequestData)
+    """
+    headers = request_data.headers.copy()
+    if "host" not in headers and request_data.scheme and request_data.host and request_data.port:
         headers["host"] = utils.hostport(
-            request.scheme,
-            request.host,
-            request.port
+            request_data.scheme,
+            request_data.host,
+            request_data.port
         )
     return bytes(headers)
 
 
-def _assemble_response_line(response):
+def _assemble_response_line(response_data):
     return b"%s %d %s" % (
-        response.http_version,
-        response.status_code,
-        response.msg,
+        response_data.http_version,
+        response_data.status_code,
+        response_data.reason,
     )
 
 

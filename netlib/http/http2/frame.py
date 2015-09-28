@@ -25,9 +25,6 @@ ERROR_CODES = BiDi(
 
 CLIENT_CONNECTION_PREFACE = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 
-ALPN_PROTO_H2 = b'h2'
-
-
 class Frame(object):
 
     """

@@ -84,10 +84,10 @@ def test_parse_url():
 
 
 def test_unparse_url():
-    assert utils.unparse_url(b"http", b"foo.com", 99, b"") == b"http://foo.com:99"
-    assert utils.unparse_url(b"http", b"foo.com", 80, b"/bar") == b"http://foo.com/bar"
-    assert utils.unparse_url(b"https", b"foo.com", 80, b"") == b"https://foo.com:80"
-    assert utils.unparse_url(b"https", b"foo.com", 443, b"") == b"https://foo.com"
+    assert utils.unparse_url("http", "foo.com", 99, "") == "http://foo.com:99"
+    assert utils.unparse_url("http", "foo.com", 80, "/bar") == "http://foo.com/bar"
+    assert utils.unparse_url("https", "foo.com", 80, "") == "https://foo.com:80"
+    assert utils.unparse_url("https", "foo.com", 443, "") == "https://foo.com"
 
 
 def test_urlencode():

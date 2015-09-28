@@ -20,7 +20,7 @@ def test_assemble_request():
     )
 
     with raises(HttpException):
-        assemble_request(treq(body=CONTENT_MISSING))
+        assemble_request(treq(content=CONTENT_MISSING))
 
 
 def test_assemble_request_head():
@@ -40,7 +40,7 @@ def test_assemble_response():
     )
 
     with raises(HttpException):
-        assemble_response(tresp(body=CONTENT_MISSING))
+        assemble_response(tresp(content=CONTENT_MISSING))
 
 
 def test_assemble_response_head():
@@ -62,31 +62,40 @@ def test_assemble_body():
 
 
 def test_assemble_request_line():
-    assert _assemble_request_line(treq()) == b"GET /path HTTP/1.1"
+    assert _assemble_request_line(treq().data) == b"GET /path HTTP/1.1"
 
-    authority_request = treq(method=b"CONNECT", form_in="authority")
+    authority_request = treq(method=b"CONNECT", first_line_format="authority").data
     assert _assemble_request_line(authority_request) == b"CONNECT address:22 HTTP/1.1"
 
-    absolute_request = treq(form_in="absolute")
+    absolute_request = treq(first_line_format="absolute").data
     assert _assemble_request_line(absolute_request) == b"GET http://address:22/path HTTP/1.1"
 
     with raises(RuntimeError):
-        _assemble_request_line(treq(), "invalid_form")
+        _assemble_request_line(treq(first_line_format="invalid_form").data)
 
 
 def test_assemble_request_headers():
     # https://github.com/mitmproxy/mitmproxy/issues/186
-    r = treq(body=b"")
+    r = treq(content=b"")
     r.headers["Transfer-Encoding"] = "chunked"
-    c = _assemble_request_headers(r)
+    c = _assemble_request_headers(r.data)
     assert b"Transfer-Encoding" in c
 
-    assert b"host" in _assemble_request_headers(treq(headers=Headers()))
+
+def test_assemble_request_headers_host_header():
+    r = treq()
+    r.headers = Headers()
+    c = _assemble_request_headers(r.data)
+    assert b"host" in c
+
+    r.host = None
+    c = _assemble_request_headers(r.data)
+    assert b"host" not in c
 
 
 def test_assemble_response_headers():
     # https://github.com/mitmproxy/mitmproxy/issues/186
-    r = tresp(body=b"")
+    r = tresp(content=b"")
     r.headers["Transfer-Encoding"] = "chunked"
     c = _assemble_response_headers(r)
     assert b"Transfer-Encoding" in c

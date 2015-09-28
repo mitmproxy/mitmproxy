@@ -98,7 +98,7 @@ def treq(**kwargs):
         netlib.http.Request
     """
     default = dict(
-        form_in="relative",
+        first_line_format="relative",
         method=b"GET",
         scheme=b"http",
         host=b"address",
@@ -106,7 +106,7 @@ def treq(**kwargs):
         path=b"/path",
         http_version=b"HTTP/1.1",
         headers=Headers(header="qvalue"),
-        body=b"content"
+        content=b"content"
     )
     default.update(kwargs)
     return Request(**default)
@@ -120,9 +120,9 @@ def tresp(**kwargs):
     default = dict(
         http_version=b"HTTP/1.1",
         status_code=200,
-        msg=b"OK",
-        headers=Headers(header_response=b"svalue"),
-        body=b"message",
+        reason=b"OK",
+        headers=Headers(header_response="svalue"),
+        content=b"message",
         timestamp_start=time.time(),
         timestamp_end=time.time(),
     )
