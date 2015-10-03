@@ -382,6 +382,7 @@ class HttpLayer(Layer):
     def get_request_from_client(self):
         request = self.read_request()
         if request.headers.get("expect", "").lower() == "100-continue":
+            # TODO: We may have to use send_response_headers for HTTP2 here.
             self.send_response(expect_continue_response)
             request.headers.pop("expect")
             request.body = b"".join(self.read_request_body(request))
@@ -491,8 +492,12 @@ class HttpLayer(Layer):
             if flow.request.form_in == "authority":
                 flow.request.scheme = "http"  # pseudo value
         else:
+            # Setting request.host also updates the host header, which we want to preserve
+            host_header = flow.request.headers.get("host", None)
             flow.request.host = self.__original_server_conn.address.host
             flow.request.port = self.__original_server_conn.address.port
+            if host_header:
+                flow.request.headers["host"] = host_header
             # TODO: This does not really work if we change the first request and --no-upstream-cert is enabled
             flow.request.scheme = "https" if self.__original_server_conn.tls_established else "http"
 
