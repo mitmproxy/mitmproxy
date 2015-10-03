@@ -83,7 +83,7 @@ class Script:
                  "If your script path contains spaces, "
                  "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") %
                 args[0])
-        elif not os.path.isfile(args[0]):
+        elif os.path.isdir(args[0]):
             raise ScriptError("Not a file: %s" % args[0])
         return args
 
