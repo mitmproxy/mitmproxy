@@ -36,4 +36,4 @@ We're happy to hear what you'd like to see in mitmproxy. Please file feature req
 We're always happy to accept patches. Please submit them in the form of pull requests to the main [mitmproxy repository](https://github.com/mitmproxy/mitmproxy/).  
 If you're working on something cool, please do not hesistate and get in touch!
 
-Instructions for setting up a development environment can be found in the [README](README.mkd).  
+Instructions for setting up a development environment can be found in the [README](README.rst).  
