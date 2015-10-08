@@ -137,8 +137,8 @@ header .menu {
   border-bottom: solid #a6a6a6 1px;
 }
 .menu-row {
-  margin-left: -2.5px;
-  margin-right: -2.5px;
+  margin-left: -2px;
+  margin-right: -3px;
 }
 .filter-input {
   position: relative;
