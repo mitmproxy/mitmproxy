@@ -519,12 +519,10 @@ class FlowView(tabs.Tabs):
             self._w.keypress(size, key)
         elif key == "a":
             self.flow.accept_intercept(self.master)
-            signals.pop_view_state.send(self)
-            self.master.view_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
         elif key == "A":
             self.master.accept_all()
-            signals.pop_view_state.send(self)
-            self.master.view_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
