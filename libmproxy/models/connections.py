@@ -136,7 +136,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         d = super(ServerConnection, self).get_state(short)
         d.update(
             address=({"address": self.address(),
-                     "use_ipv6": self.address.use_ipv6} if self.address else None), 
+                     "use_ipv6": self.address.use_ipv6} if self.address else {}), 
             source_address=({"address": self.source_address(),
                              "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
             cert=self.cert.to_pem() if self.cert else None
