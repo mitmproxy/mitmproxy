@@ -203,7 +203,7 @@ def raw_format_flow(f, focus, extended, padding):
 
 
 # Save file to disk
-def save_data(path, data, master, state):
+def save_data(path, data):
     if not path:
         return
     try:
@@ -213,32 +213,32 @@ def save_data(path, data, master, state):
         signals.status_message.send(message=v.strerror)
 
 
-def ask_save_overwite(path, data, master, state):
+def ask_save_overwrite(path, data):
     if not path:
         return
     path = os.path.expanduser(path)
     if os.path.exists(path):
-        def save_overwite(k):
+        def save_overwrite(k):
             if k == "y":
-                save_data(path, data, master, state)
+                save_data(path, data)
 
         signals.status_prompt_onekey.send(
-            prompt = "'" + path + "' already exists. Overwite?",
+            prompt = "'" + path + "' already exists. Overwrite?",
             keys = (
                 ("yes", "y"),
                 ("no", "n"),
             ),
-            callback = save_overwite
+            callback = save_overwrite
         )
     else:
-        save_data(path, data, master, state)
+        save_data(path, data)
 
 
-def ask_save_path(prompt, data, master, state):
+def ask_save_path(prompt, data):
     signals.status_prompt_path.send(
         prompt = prompt,
-        callback = ask_save_overwite,
-        args = (data, master, state)
+        callback = ask_save_overwrite,
+        args = (data)
     )
 
 
@@ -272,6 +272,52 @@ def copy_flow_format_data(part, scope, flow):
                     raise ValueError("Unknown part: {}".format(part))
     return data, False
 
+def copy_as_curl_command(flow):
+
+    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+        return None, "Request content is missing"
+
+    headerString = ""
+    for k,v in flow.request.headers:
+      headerString += " -H '" + k + ":" + v + "' "
+
+    data = "curl"
+
+    if flow.request.method != "GET":
+      data += " -X " + flow.request.method
+
+    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
+    data += " " + headerString + "'" + full_url + "'"
+
+    if flow.request.content != None and flow.request.content != "":
+      data += " --data-binary " + "'" + flow.request.content + "'"
+
+    copy_to_clipboard_or_prompt(data)
+
+
+def copy_to_clipboard_or_prompt(data):
+    # pyperclip calls encode('utf-8') on data to be copied without checking.
+    # if data are already encoded that way UnicodeDecodeError is thrown.
+    toclip = ""
+    try:
+        toclip = data.decode('utf-8')
+    except (UnicodeDecodeError):
+        toclip = data
+
+    try:
+        pyperclip.copy(toclip)
+    except (RuntimeError, UnicodeDecodeError, AttributeError):
+        def save(k):
+            if k == "y":
+                ask_save_path("Save data", data)
+        signals.status_prompt_onekey.send(
+            prompt = "Cannot copy data to clipboard. Save as file?",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = save
+        )
 
 def copy_flow(part, scope, flow, master, state):
     """
@@ -293,28 +339,7 @@ def copy_flow(part, scope, flow, master, state):
             signals.status_message.send(message="No contents to copy.")
         return
 
-    # pyperclip calls encode('utf-8') on data to be copied without checking.
-    # if data are already encoded that way UnicodeDecodeError is thrown.
-    toclip = ""
-    try:
-        toclip = data.decode('utf-8')
-    except (UnicodeDecodeError):
-        toclip = data
-
-    try:
-        pyperclip.copy(toclip)
-    except (RuntimeError, UnicodeDecodeError, AttributeError):
-        def save(k):
-            if k == "y":
-                ask_save_path("Save data", data, master, state)
-        signals.status_prompt_onekey.send(
-            prompt = "Cannot copy data to clipboard. Save as file?",
-            keys = (
-                ("yes", "y"),
-                ("no", "n"),
-            ),
-            callback = save
-        )
+    copy_to_clipboard_or_prompt(data)
 
 
 def ask_copy_part(scope, flow, master, state):
@@ -363,16 +388,12 @@ def ask_save_body(part, master, state, flow):
     elif part == "q" and request_has_content:
         ask_save_path(
             "Save request content",
-            flow.request.get_decoded_content(),
-            master,
-            state
+            flow.request.get_decoded_content()
         )
     elif part == "s" and response_has_content:
         ask_save_path(
             "Save response content",
-            flow.response.get_decoded_content(),
-            master,
-            state
+            flow.response.get_decoded_content()
         )
     else:
         signals.status_message.send(message="No content to save.")

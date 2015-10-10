@@ -24,6 +24,7 @@ def _mkhelp():
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
+        ("Z", "copy as curl command"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
@@ -557,6 +558,8 @@ class FlowView(tabs.Tabs):
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
             )
+        elif key == "Z":
+            common.copy_as_curl_command(self.flow)
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
