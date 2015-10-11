@@ -276,6 +276,10 @@ def copy_flow_format_data(part, scope, flow):
                     raise ValueError("Unknown part: {}".format(part))
     return data, False
 
+def export_prompt(k, flow):
+    if k == "c":
+        copy_as_curl_command(flow)
+
 def copy_as_curl_command(flow):
 
     if flow.request.content is None or flow.request.content == CONTENT_MISSING:
