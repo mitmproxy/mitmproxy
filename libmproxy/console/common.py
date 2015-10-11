@@ -242,7 +242,7 @@ def ask_save_path(prompt, data):
     signals.status_prompt_path.send(
         prompt = prompt,
         callback = ask_save_overwrite,
-        args =  (data, ) 
+        args =  (data, )
     )
 
 
@@ -282,7 +282,7 @@ def copy_as_curl_command(flow):
         return None, "Request content is missing"
 
     headerString = ""
-    for k,v in flow.request.headers:
+    for k,v in flow.request.headers.fields:
       headerString += " -H '" + k + ":" + v + "' "
 
     data = "curl"
