@@ -242,7 +242,7 @@ def ask_save_path(prompt, data):
     signals.status_prompt_path.send(
         prompt = prompt,
         callback = ask_save_overwrite,
-        args = (data)
+        args =  (data, ) 
     )
 
 
