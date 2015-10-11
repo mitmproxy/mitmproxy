@@ -252,7 +252,11 @@ def copy_flow_format_data(part, scope, flow):
                 return None, "Request content is missing"
             with decoded(flow.request):
                 if part == "h":
-                    data += flow.client_conn.protocol.assemble(flow.request)
+                    headerString = ""
+                    for k,v in flow.request.headers.fields:
+                        headerString +=  k + ":" + v + "\n"
+                    data += headerString
+                    data += flow.request.content
                 elif part == "c":
                     data += flow.request.content
                 else:
@@ -265,7 +269,11 @@ def copy_flow_format_data(part, scope, flow):
                 return None, "Response content is missing"
             with decoded(flow.response):
                 if part == "h":
-                    data += flow.client_conn.protocol.assemble(flow.response)
+                    headerString = ""
+                    for k,v in flow.response.headers.fields:
+                        headerString +=  k + ":" + v + "\n"
+                    data += headerString
+                    data += flow.response.content
                 elif part == "c":
                     data += flow.response.content
                 else:
@@ -278,7 +286,7 @@ def copy_as_curl_command(flow):
         return None, "Request content is missing"
 
     headerString = ""
-    for k,v in flow.request.headers:
+    for k,v in flow.request.headers.fields:
       headerString += " -H '" + k + ":" + v + "' "
 
     data = "curl"
