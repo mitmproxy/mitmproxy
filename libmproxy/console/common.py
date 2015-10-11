@@ -252,11 +252,7 @@ def copy_flow_format_data(part, scope, flow):
                 return None, "Request content is missing"
             with decoded(flow.request):
                 if part == "h":
-                    headerString = ""
-                    for k,v in flow.request.headers.fields:
-                        headerString +=  k + ":" + v + "\n"
-                    data += headerString
-                    data += flow.request.content
+                    data += netlib.http.http1.assemble_request(flow.request)
                 elif part == "c":
                     data += flow.request.content
                 else:
@@ -269,11 +265,7 @@ def copy_flow_format_data(part, scope, flow):
                 return None, "Response content is missing"
             with decoded(flow.response):
                 if part == "h":
-                    headerString = ""
-                    for k,v in flow.response.headers.fields:
-                        headerString +=  k + ":" + v + "\n"
-                    data += headerString
-                    data += flow.response.content
+                    data += netlib.http.http1.assemble_response(flow.response)
                 elif part == "c":
                     data += flow.response.content
                 else:
