@@ -25,9 +25,9 @@ def _mkhelp():
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
-        ("Z", "copy as curl command"),
-        ("d", "delete flow"),
         ("D", "duplicate flow"),
+        ("d", "delete flow"),
+        ("E", "export"),        
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("m", "change body display mode for this entity"),
@@ -575,8 +575,16 @@ class FlowView(tabs.Tabs):
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
             )
-        elif key == "Z":
-            common.copy_as_curl_command(self.flow)
+        elif key == "E":
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Export",
+                keys = (
+                    ("as curl command", "c"),
+                ),
+                callback = common.export_prompt,
+                args = (self.flow,)
+            )
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
