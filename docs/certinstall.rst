@@ -159,7 +159,7 @@ Using a custom certificate authority
 By default, mitmproxy will use ``~/.mitmproxy/mitmproxy-ca.pem`` as
 the certificate authority to generate certificates for all domains for which no
 custom certificate is provided (see above). You can use your own certificate
-authority by passing the ``--confdir`` option to mitmproxy. Mitmproxy
+authority by passing the ``--cadir DIRECTORY`` option to mitmproxy. Mitmproxy
 will then look for ``mitmproxy-ca.pem`` in the specified directory. If
 no such file exists, it will be generated automatically.
 
