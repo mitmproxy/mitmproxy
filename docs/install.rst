@@ -11,7 +11,7 @@ Installation On Ubuntu
 Ubuntu comes with Python but we need to install pip, python-dev and several libraries.
 This was tested on a fully patched installation of Ubuntu 14.04.
 
->>> sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev
+>>> sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg8-dev zlib1g-dev
 >>> sudo pip install mitmproxy
 
 Once installation is complete you can run :ref:`mitmproxy` or :ref:`mitmdump` from a terminal.
