@@ -16,7 +16,19 @@ def request(context, flow):
             Headers(Content_Type="text/html"),
             "helloworld")
         flow.reply(resp)
-
+    
+    # Method 1, another example.
+    # Serve local binary file (/home/user/new_file.bin) for request URL (http://example.com/sample.bin)
+    if flow.request.pretty_host.endswith("example.com") and flow.request.url == "/sample.bin":
+        with open("/home/user/new_file.bin", "rb") as nfile:
+            nfile_content = nfile.read()
+        resp = HTTPResponse(
+            [1, 1], 200, "OK",
+            ODictCaseless([["Content-Type", "application/octet-stream"]]),
+            nfile_content)
+        flow.reply(resp)
+    
     # Method 2: Redirect the request to a different server
     if flow.request.pretty_host.endswith("example.org"):
         flow.request.host = "mitmproxy.org"
+    
