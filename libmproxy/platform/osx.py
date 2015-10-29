@@ -19,6 +19,7 @@ class Resolver(object):
 
     def original_addr(self, csock):
         peer = csock.getpeername()
+        insufficient_priv = False
         try:
             stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError, e:
