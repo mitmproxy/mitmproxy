@@ -559,8 +559,6 @@ class TCPClient(_Connection):
 
     @address.setter
     def address(self, address):
-        if self.connection:
-            raise RuntimeError("Cannot change server address after establishing connection")
         if address:
             self.__address = Address.wrap(address)
         else:

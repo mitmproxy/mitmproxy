@@ -92,6 +92,8 @@ class Request(Message):
         Target host. This may be parsed from the raw request
         (e.g. from a ``GET http://example.com/ HTTP/1.1`` request line)
         or inferred from the proxy mode (e.g. an IP in transparent mode).
+
+        Setting the host attribute also updates the host header, if present.
         """
 
         if six.PY2:  # pragma: nocover
