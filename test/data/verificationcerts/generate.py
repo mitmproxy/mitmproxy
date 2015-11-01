@@ -8,14 +8,13 @@ import shutil
 
 
 ROOT_CA = "trusted-root"
-SUBJECT = "/CN=127.0.0.1/"
+SUBJECT = "/CN=example.mitmproxy.org/"
 
 
 def do(args):
     print("> %s" % args)
     args = shlex.split(args)
     output = subprocess.check_output(args)
-    print(output)
     return output
 
 
@@ -51,14 +50,11 @@ do("openssl req -x509 -new -nodes -batch "
    "-days 1024 "
    "-out trusted-root.crt"
    )
-h = do("openssl x509 -hash -noout -in trusted-root.crt").strip()
+h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
 shutil.copyfile("trusted-root.crt", "{}.0".format(h))
 
 # create trusted leaf cert.
 mkcert("trusted-leaf", "-subj {}".format(SUBJECT))
-
-# create wrong host leaf cert.
-mkcert("trusted-leaf-bad-host", "-subj /CN=wrong.host/")
 
 # create self-signed cert
 genrsa("self-signed")
