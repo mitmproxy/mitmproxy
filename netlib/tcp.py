@@ -11,6 +11,7 @@ import binascii
 from six.moves import range
 
 import certifi
+from backports import ssl_match_hostname
 import six
 import OpenSSL
 from OpenSSL import SSL
@@ -597,9 +598,14 @@ class TCPClient(_Connection):
             ca_path: Path to a directory of trusted CA certificates prepared using the c_rehash tool
             ca_pemfile: Path to a PEM formatted trusted CA certificate
         """
+        verification_mode = sslctx_kwargs.get('verify_options', None)
+        if verification_mode == SSL.VERIFY_PEER and not sni:
+            raise TlsException("Cannot validate certificate hostname without SNI")
+
         context = self.create_ssl_context(
             alpn_protos=alpn_protos,
-            **sslctx_kwargs)
+            **sslctx_kwargs
+        )
         self.connection = SSL.Connection(context, self.connection)
         if sni:
             self.sni = sni
@@ -612,15 +618,32 @@ class TCPClient(_Connection):
                 raise InvalidCertificateException("SSL handshake error: %s" % repr(v))
             else:
                 raise TlsException("SSL handshake error: %s" % repr(v))
+        else:
+            # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
+            # certificate validation failure
+            if verification_mode == SSL.VERIFY_PEER and self.ssl_verification_error is not None:
+                raise InvalidCertificateException("SSL handshake error: certificate verify failed")
 
-        # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
-        # certificate validation failure
-        verification_mode = sslctx_kwargs.get('verify_options', None)
-        if self.ssl_verification_error is not None and verification_mode == SSL.VERIFY_PEER:
-            raise InvalidCertificateException("SSL handshake error: certificate verify failed")
+        self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
+
+        # Validate TLS Hostname
+        try:
+            crt = dict(
+                subjectAltName=[("DNS", x.decode("ascii", "strict")) for x in self.cert.altnames]
+            )
+            if self.cert.cn:
+                crt["subject"] = [[["commonName", self.cert.cn.decode("ascii", "strict")]]]
+            if sni:
+                hostname = sni.decode("ascii", "strict")
+            else:
+                hostname = "no-hostname"
+            ssl_match_hostname.match_hostname(crt, hostname)
+        except (ValueError, ssl_match_hostname.CertificateError) as e:
+            self.ssl_verification_error = dict(depth=0, errno="Invalid Hostname")
+            if verification_mode == SSL.VERIFY_PEER:
+                raise InvalidCertificateException("Presented certificate for {} is not valid: {}".format(sni, str(e)))
 
         self.ssl_established = True
-        self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
