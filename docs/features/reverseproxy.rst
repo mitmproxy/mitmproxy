@@ -3,15 +3,15 @@
 Reverse Proxy
 =============
 
-In reverse proxy mode, mitmproxy accepts standard HTTP requests and forwards
+In reverse proxy mode, mitmproxy accepts standard HTTP(S) requests and forwards
 them to the specified upstream server. This is in contrast to :ref:`upstreamproxy`, in which
-mitmproxy forwards HTTP proxy requests to an upstream proxy server.
+mitmproxy forwards HTTP(S) proxy requests to an upstream proxy server.
 
 ================== =====================================
 command-line       :option:`-R http[s]://hostname[:port]`
 ================== =====================================
 
-Here, **scheme** signifies if the proxy should use TLS to connect to the server.
+Here, **http[s]** signifies if the proxy should use TLS to connect to the server.
 mitmproxy always accepts both encrypted and unencrypted requests and transforms
 them to what the server expects.
 
