@@ -1,7 +1,6 @@
 import urwid
 
 from . import select, common, palettes, signals
-from .. import contentview
 
 footer = [
     ('heading_key', "enter/space"), ":select",
@@ -13,7 +12,7 @@ def _mkhelp():
     keys = [
         ("enter/space", "select"),
     ]
-    text.extend(common.urwid_keyvals(contentview.format_keyvals(keys, key="key", val="text", indent=4)))
+    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
 help_context = _mkhelp()
 

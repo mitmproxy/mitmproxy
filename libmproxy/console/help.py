@@ -35,7 +35,7 @@ class HelpView(urwid.ListBox):
             ("arrows", "up, down, left, right"),
         ]
         text.extend(
-            common.urwid_keyvals(contentview.format_keyvals(
+            common.urwid_keyvals(common.format_keyvals(
                 keys,
                 key="key",
                 val="text",
@@ -51,7 +51,7 @@ class HelpView(urwid.ListBox):
             ("S", "server replay of HTTP responses"),
         ]
         text.extend(
-            common.urwid_keyvals(contentview.format_keyvals(keys, key="key", val="text", indent=4))
+            common.urwid_keyvals(common.format_keyvals(keys, key="key", val="text", indent=4))
         )
 
         text.append(urwid.Text([("head", "\n\nFilter expressions:\n")]))
@@ -77,7 +77,7 @@ class HelpView(urwid.ListBox):
                 ("(...)", "grouping"),
             ]
         )
-        text.extend(common.urwid_keyvals(contentview.format_keyvals(f, key="key", val="text", indent=4)))
+        text.extend(common.urwid_keyvals(common.format_keyvals(f, key="key", val="text", indent=4)))
 
         text.append(
             urwid.Text(
@@ -98,7 +98,7 @@ class HelpView(urwid.ListBox):
             ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(
-            common.urwid_keyvals(contentview.format_keyvals(examples, key="key", val="text", indent=4))
+            common.urwid_keyvals(common.format_keyvals(examples, key="key", val="text", indent=4))
         )
         return text
 

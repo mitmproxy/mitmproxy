@@ -5,7 +5,6 @@ from netlib import http
 import netlib.utils
 
 from . import common, signals
-from .. import contentview
 
 
 def _mkhelp():
@@ -34,7 +33,7 @@ def _mkhelp():
         ("enter", "view flow"),
         ("|", "run script on this flow"),
     ]
-    text.extend(common.urwid_keyvals(contentview.format_keyvals(keys, key="key", val="text", indent=4)))
+    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
 help_context = _mkhelp()
 
