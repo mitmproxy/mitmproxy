@@ -189,8 +189,8 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/verificationcerts/untrusted.crt"),
-        key=tutils.test_data.path("data/verificationcerts/verification-server.key")
+        cert=tutils.test_data.path("data/verificationcerts/self-signed.crt"),
+        key=tutils.test_data.path("data/verificationcerts/self-signed.key")
     )
 
     def test_mode_default_should_pass(self):
@@ -226,58 +226,69 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
-        tutils.raises(
-            InvalidCertificateException,
-            c.convert_to_ssl,
-            verify_options=SSL.VERIFY_PEER,
-            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
+        with tutils.raises(InvalidCertificateException):
+            c.convert_to_ssl(
+                sni=b"example.mitmproxy.org",
+                verify_options=SSL.VERIFY_PEER,
+                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+            )
 
         assert c.ssl_verification_error is not None
 
         # Unknown issuing certificate authority for first certificate
-        assert c.ssl_verification_error['errno'] == 20
+        assert c.ssl_verification_error['errno'] == 18
         assert c.ssl_verification_error['depth'] == 0
 
 
-class TestSSLUpstreamCertVerificationWBadCertChain(tservers.ServerTestBase):
+class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/verificationcerts/untrusted-chain.crt"),
-        key=tutils.test_data.path("data/verificationcerts/verification-server.key"))
+        cert=tutils.test_data.path("data/verificationcerts/trusted-leaf.crt"),
+        key=tutils.test_data.path("data/verificationcerts/trusted-leaf.key")
+    )
 
-    def test_mode_strict_should_fail(self):
+    def test_should_fail_without_sni(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
-        tutils.raises(
-            "certificate verify failed",
-            c.convert_to_ssl,
-            verify_options=SSL.VERIFY_PEER,
-            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
+        with tutils.raises(TlsException):
+            c.convert_to_ssl(
+                verify_options=SSL.VERIFY_PEER,
+                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+            )
+
+    def test_should_fail(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        with tutils.raises(InvalidCertificateException):
+            c.convert_to_ssl(
+                sni=b"mitmproxy.org",
+                verify_options=SSL.VERIFY_PEER,
+                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+            )
 
         assert c.ssl_verification_error is not None
-
-        # Untrusted self-signed certificate at second position in certificate
-        # chain
-        assert c.ssl_verification_error['errno'] == 19
-        assert c.ssl_verification_error['depth'] == 1
 
 
 class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/verificationcerts/trusted-chain.crt"),
-        key=tutils.test_data.path("data/verificationcerts/verification-server.key"))
+        cert=tutils.test_data.path("data/verificationcerts/trusted-leaf.crt"),
+        key=tutils.test_data.path("data/verificationcerts/trusted-leaf.key")
+    )
 
     def test_mode_strict_w_pemfile_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
         c.convert_to_ssl(
+            sni=b"example.mitmproxy.org",
             verify_options=SSL.VERIFY_PEER,
-            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
+            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+        )
 
         assert c.ssl_verification_error is None
 
@@ -291,8 +302,10 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
         c.connect()
 
         c.convert_to_ssl(
+            sni=b"example.mitmproxy.org",
             verify_options=SSL.VERIFY_PEER,
-            ca_path=tutils.test_data.path("data/verificationcerts/"))
+            ca_path=tutils.test_data.path("data/verificationcerts/")
+        )
 
         assert c.ssl_verification_error is None
 

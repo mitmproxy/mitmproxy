@@ -22,6 +22,7 @@ deps = {
     "hpack>=1.0.1",
     "six>=1.9.0",
     "certifi>=2015.9.6.2",
+    "backports.ssl_match_hostname>=3.4.0.2",
 }
 if sys.version_info < (3, 0):
     deps.add("ipaddress>=1.0.14")
