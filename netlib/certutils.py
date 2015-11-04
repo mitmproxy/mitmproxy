@@ -12,7 +12,8 @@ from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 
-DEFAULT_EXP = 157680000  # = 24 * 60 * 60 * 365 * 5
+# Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
+DEFAULT_EXP = 94608000  # = 24 * 60 * 60 * 365 * 3
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
 -----BEGIN DH PARAMETERS-----
