@@ -19,7 +19,6 @@ class Resolver(object):
 
     def original_addr(self, csock):
         peer = csock.getpeername()
-        insufficient_priv = False
         try:
             stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError, e:
@@ -27,8 +26,10 @@ class Resolver(object):
                 insufficient_priv = True
             else:
                 raise RuntimeError("Error getting pfctl state: " + repr(e))
+        else:
+            insufficient_priv = "sudo: a password is required" in stxt
 
-        if insufficient_priv is True or "sudo: a password is required" in stxt:
+        if insufficient_priv:
             raise RuntimeError(
                 "Insufficient privileges to access pfctl. "
                 "See http://mitmproxy.org/doc/transparent/osx.html for details.")
