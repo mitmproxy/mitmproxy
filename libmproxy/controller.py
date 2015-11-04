@@ -106,6 +106,7 @@ class Master(object):
             while True:
                 msg = q.get(timeout=timeout)
                 self.handle(*msg)
+                q.task_done()
                 changed = True
         except Queue.Empty:
             pass

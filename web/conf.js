@@ -13,21 +13,19 @@ var conf = {
             "react/addons"
         ],
         app: 'src/js/app.js',
-        jshint: ["src/js/**.js", "!src/js/filt/filt.js"]
+        eslint: ["src/js/**/*.js", "!src/js/filt/filt.js"]
     },
     css: {
         vendor: ["src/css/vendor.less"],
         app: ["src/css/app.less"]
     },
     copy: [
-        "src/images/**",
+        "src/images/**", "src/fonts/fontawesome-webfont.*"
     ],
     templates: [
         "src/templates/*"
     ],
-    fonts: ["src/fontawesome/fontawesome-webfont.*"],
-    peg: ["src/js/filt/filt.peg"],
-    connect: false
+    peg: ["src/js/filt/filt.peg"]
 };
 
 module.exports = conf;

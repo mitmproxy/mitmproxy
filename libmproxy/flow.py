@@ -11,8 +11,9 @@ import re
 import urlparse
 import inspect
 
-from netlib import odict, wsgi
-from netlib.http.semantics import CONTENT_MISSING
+from netlib import wsgi
+from netlib.exceptions import HttpException
+from netlib.http import CONTENT_MISSING, Headers, http1
 import netlib.http
 from . import controller, tnetstring, filt, script, version
 from .onboarding import app
@@ -49,7 +50,7 @@ class AppRegistry:
         if (request.host, request.port) in self.apps:
             return self.apps[(request.host, request.port)]
         if "host" in request.headers:
-            host = request.headers["host"][0]
+            host = request.headers["host"]
             return self.apps.get((host, request.port), None)
 
 
@@ -148,15 +149,15 @@ class SetHeaders:
         for _, header, value, cpatt in self.lst:
             if cpatt(f):
                 if f.response:
-                    del f.response.headers[header]
+                    f.response.headers.pop(header, None)
                 else:
-                    del f.request.headers[header]
+                    f.request.headers.pop(header, None)
         for _, header, value, cpatt in self.lst:
             if cpatt(f):
                 if f.response:
-                    f.response.headers.add(header, value)
+                    f.response.headers.fields.append((header, value))
                 else:
-                    f.request.headers.add(header, value)
+                    f.request.headers.fields.append((header, value))
 
 
 class StreamLargeBodies(object):
@@ -165,9 +166,8 @@ class StreamLargeBodies(object):
 
     def run(self, flow, is_request):
         r = flow.request if is_request else flow.response
-        code = flow.response.code if flow.response else None
-        expected_size = netlib.http.http1.HTTP1Protocol.expected_http_body_size(
-            r.headers, is_request, flow.request.method, code
+        expected_size = http1.expected_http_body_size(
+            flow.request, flow.response if not is_request else None
         )
         if not (0 <= expected_size <= self.max_size):
             # r.stream may already be a callable, which we want to preserve.
@@ -248,19 +248,15 @@ class ServerPlaybackState:
         _, _, path, _, query, _ = urlparse.urlparse(r.url)
         queriesArray = urlparse.parse_qsl(query, keep_blank_values=True)
 
-        # scheme should match the client connection to be able to replay
-        # although r.scheme may have been changed to http to connect to upstream server
-        scheme = "https" if flow.client_conn and flow.client_conn.ssl_established else "http"
-
         key = [
             str(r.port),
-            str(scheme),
+            str(r.scheme),
             str(r.method),
             str(path),
         ]
 
         if not self.ignore_content:
-            form_contents = r.get_form()
+            form_contents = r.urlencoded_form or r.multipart_form
             if self.ignore_payload_params and form_contents:
                 key.extend(
                     p for p in form_contents
@@ -282,14 +278,11 @@ class ServerPlaybackState:
             key.append(p[1])
 
         if self.headers:
-            hdrs = []
+            headers = []
             for i in self.headers:
-                v = r.headers[i]
-                # Slightly subtle: we need to convert everything to strings
-                # to prevent a mismatch between unicode/non-unicode.
-                v = [str(x) for x in v]
-                hdrs.append((i, v))
-            key.append(hdrs)
+                v = r.headers.get(i)
+                headers.append((i, v))
+            key.append(headers)
         return hashlib.sha256(repr(key)).digest()
 
     def next_flow(self, request):
@@ -333,7 +326,7 @@ class StickyCookieState:
         return False
 
     def handle_response(self, f):
-        for i in f.response.headers["set-cookie"]:
+        for i in f.response.headers.get_all("set-cookie"):
             # FIXME: We now know that Cookie.py screws up some cookies with
             # valid RFC 822/1123 datetime specifications for expiry. Sigh.
             c = Cookie.SimpleCookie(str(i))
@@ -355,7 +348,7 @@ class StickyCookieState:
                     l.append(self.jar[i].output(header="").strip())
         if l:
             f.request.stickycookie = True
-            f.request.headers["cookie"] = l
+            f.request.headers.set_all("cookie",l)
 
 
 class StickyAuthState:
@@ -947,7 +940,7 @@ class FlowMaster(controller.Master):
             ssl_established=True
         ))
         f = HTTPFlow(c, s)
-        headers = odict.ODictCaseless()
+        headers = Headers()
 
         req = HTTPRequest(
             "absolute",
@@ -956,7 +949,7 @@ class FlowMaster(controller.Master):
             host,
             port,
             path,
-            (1, 1),
+            b"HTTP/1.1",
             headers,
             None,
             None,
@@ -1040,9 +1033,8 @@ class FlowMaster(controller.Master):
         if f.request:
             f.backup()
             f.request.is_replay = True
-            if f.request.content:
-                f.request.headers[
-                    "Content-Length"] = [str(len(f.request.content))]
+            if "Content-Length" in f.request.headers:
+                f.request.headers["Content-Length"] = str(len(f.request.content))
             f.response = None
             f.error = None
             self.process_new_request(f)
@@ -1060,21 +1052,25 @@ class FlowMaster(controller.Master):
         self.add_event(l.msg, l.level)
         l.reply()
 
-    def handle_clientconnect(self, cc):
-        self.run_script_hook("clientconnect", cc)
-        cc.reply()
+    def handle_clientconnect(self, root_layer):
+        self.run_script_hook("clientconnect", root_layer)
+        root_layer.reply()
 
-    def handle_clientdisconnect(self, r):
-        self.run_script_hook("clientdisconnect", r)
-        r.reply()
+    def handle_clientdisconnect(self, root_layer):
+        self.run_script_hook("clientdisconnect", root_layer)
+        root_layer.reply()
 
-    def handle_serverconnect(self, sc):
-        self.run_script_hook("serverconnect", sc)
-        sc.reply()
+    def handle_serverconnect(self, server_conn):
+        self.run_script_hook("serverconnect", server_conn)
+        server_conn.reply()
 
-    def handle_serverdisconnect(self, sc):
-        self.run_script_hook("serverdisconnect", sc)
-        sc.reply()
+    def handle_serverdisconnect(self, server_conn):
+        self.run_script_hook("serverdisconnect", server_conn)
+        server_conn.reply()
+
+    def handle_next_layer(self, top_layer):
+        self.run_script_hook("next_layer", top_layer)
+        top_layer.reply()
 
     def handle_error(self, f):
         self.state.update_flow(f)
@@ -1137,7 +1133,7 @@ class FlowMaster(controller.Master):
         try:
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
-        except netlib.http.HttpError:
+        except HttpException:
             f.reply(Kill)
             return
 

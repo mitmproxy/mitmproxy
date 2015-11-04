@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 import os
 import re
+
 import configargparse
+
 from netlib.tcp import Address, sslversion_choices
-
 import netlib.utils
-
 from . import filt, utils, version
 from .proxy import config
 
@@ -103,11 +103,15 @@ def parse_setheader(s):
 
 
 def parse_server_spec(url):
-    p = netlib.utils.parse_url(url)
-    if not p or not p[1] or p[0] not in ("http", "https"):
+    try:
+        p = netlib.utils.parse_url(url)
+        if p[0] not in ("http", "https"):
+            raise ValueError()
+    except ValueError:
         raise configargparse.ArgumentTypeError(
             "Invalid server specification: %s" % url
         )
+
     address = Address(p[1:3])
     scheme = p[0].lower()
     return config.ServerSpec(scheme, address)
@@ -358,6 +362,20 @@ def proxy_options(parser):
         action="store", type=int, dest="port", default=8080,
         help="Proxy service port."
     )
+    http2 = group.add_mutually_exclusive_group()
+    http2.add_argument("--http2", action="store_true", dest="http2")
+    http2.add_argument("--no-http2", action="store_false", dest="http2",
+                       help="Explicitly enable/disable experimental HTTP2 support. "
+                            "Disabled by default. "
+                            "Default value will change in a future version."
+                       )
+    rawtcp = group.add_mutually_exclusive_group()
+    rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
+    rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
+                       help="Explicitly enable/disable experimental raw tcp support. "
+                            "Disabled by default. "
+                            "Default value will change in a future version."
+                       )
 
 
 def proxy_ssl_options(parser):

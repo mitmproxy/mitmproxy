@@ -1,6 +1,5 @@
 include mitmproxy mitmdump
-include LICENSE CHANGELOG CONTRIBUTORS README.txt
-exclude README.mkd
+include LICENSE CHANGELOG CONTRIBUTORS README.rst
 recursive-include examples *
 recursive-include doc *
 recursive-include test *

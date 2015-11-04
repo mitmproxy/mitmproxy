@@ -54,6 +54,8 @@ class ProxyConfig:
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
+            http2=False,
+            rawtcp=False,
             ciphers_client=None,
             ciphers_server=None,
             certs=tuple(),
@@ -78,6 +80,8 @@ class ProxyConfig:
 
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
+        self.http2 = http2
+        self.rawtcp = rawtcp
         self.authenticator = authenticator
         self.cadir = os.path.expanduser(cadir)
         self.certstore = certutils.CertStore.from_store(
@@ -183,6 +187,8 @@ def process_proxy_options(parser, options):
         upstream_server=upstream_server,
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
+        http2=options.http2,
+        rawtcp=options.rawtcp,
         authenticator=authenticator,
         ciphers_client=options.ciphers_client,
         ciphers_server=options.ciphers_server,

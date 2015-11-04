@@ -1,7 +1,7 @@
 # Usage: mitmdump -s "iframe_injector.py url"
 # (this script works best with --anticache)
 from bs4 import BeautifulSoup
-from libmproxy.protocol.http import decoded
+from libmproxy.models import decoded
 
 
 def start(context, argv):

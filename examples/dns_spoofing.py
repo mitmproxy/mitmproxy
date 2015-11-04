@@ -39,7 +39,7 @@ def request(context, flow):
         sni = None
         port = 80
 
-    host_header = flow.request.pretty_host(hostheader=True)
+    host_header = flow.request.pretty_host
     m = parse_host_header.match(host_header)
     if m:
         host_header = m.group("host").strip("[]")

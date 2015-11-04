@@ -1,11 +1,14 @@
 from __future__ import (absolute_import, print_function, division)
 import socket
 import select
+import six
+import sys
 
 from OpenSSL import SSL
+from netlib.exceptions import TcpException
 
-from netlib.tcp import NetLibError
-from netlib.utils import cleanBin
+from netlib.tcp import ssl_read_select
+from netlib.utils import clean_bin
 from ..exceptions import ProtocolException
 from .base import Layer
 
@@ -28,7 +31,7 @@ class RawTCPLayer(Layer):
 
         try:
             while True:
-                r, _, _ = select.select(conns, [], [], 10)
+                r = ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client
 
@@ -56,11 +59,15 @@ class RawTCPLayer(Layer):
                             direction = "-> tcp -> {}".format(repr(self.server_conn.address))
                         else:
                             direction = "<- tcp <- {}".format(repr(self.server_conn.address))
-                        data = cleanBin(buf[:size].tobytes())
+                        data = clean_bin(buf[:size].tobytes())
                         self.log(
                             "{}\r\n{}".format(direction, data),
                             "info"
                         )
 
-        except (socket.error, NetLibError, SSL.Error) as e:
-            raise ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e)), e)
+        except (socket.error, TcpException, SSL.Error) as e:
+            six.reraise(
+                ProtocolException,
+                ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e))),
+                sys.exc_info()[2]
+            )

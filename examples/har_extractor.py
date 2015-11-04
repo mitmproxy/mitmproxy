@@ -128,7 +128,7 @@ def response(context, flow):
 
     request_query_string = [{"name": k, "value": v}
                             for k, v in flow.request.get_query()]
-    request_http_version = ".".join([str(v) for v in flow.request.httpversion])
+    request_http_version = flow.request.http_version
     # Cookies are shaped as tuples by MITMProxy.
     request_cookies = [{"name": k.strip(), "value": v[0]}
                        for k, v in (flow.request.get_cookies() or {}).iteritems()]
@@ -136,8 +136,7 @@ def response(context, flow):
     request_headers_size = len(str(flow.request.headers))
     request_body_size = len(flow.request.content)
 
-    response_http_version = ".".join(
-        [str(v) for v in flow.response.httpversion])
+    response_http_version = flow.response.http_version
     # Cookies are shaped as tuples by MITMProxy.
     response_cookies = [{"name": k.strip(), "value": v[0]}
                         for k, v in (flow.response.get_cookies() or {}).iteritems()]
@@ -147,8 +146,8 @@ def response(context, flow):
     response_body_size = len(flow.response.content)
     response_body_decoded_size = len(flow.response.get_decoded_content())
     response_body_compression = response_body_decoded_size - response_body_size
-    response_mime_type = flow.response.headers.get_first('Content-Type', '')
-    response_redirect_url = flow.response.headers.get_first('Location', '')
+    response_mime_type = flow.response.headers.get('Content-Type', '')
+    response_redirect_url = flow.response.headers.get('Location', '')
 
     entry = HAR.entries(
         {
@@ -165,7 +164,7 @@ def response(context, flow):
                 "bodySize": request_body_size,
             },
             "response": {
-                "status": flow.response.code,
+                "status": flow.response.status_code,
                 "statusText": flow.response.msg,
                 "httpVersion": response_http_version,
                 "cookies": response_cookies,
@@ -201,12 +200,12 @@ def response(context, flow):
     # Lookup the referer in the page_ref of context.HARLog to point this entries
     # pageref attribute to the right pages object, then set it as a new
     # reference to build a reference tree.
-    elif context.HARLog.get_page_ref(flow.request.headers.get('Referer', (None, ))[0]) is not None:
+    elif context.HARLog.get_page_ref(flow.request.headers.get('Referer')) is not None:
         entry['pageref'] = context.HARLog.get_page_ref(
-            flow.request.headers['Referer'][0]
+            flow.request.headers['Referer']
         )
         context.HARLog.set_page_ref(
-            flow.request.headers['Referer'][0], entry['pageref']
+            flow.request.headers['Referer'], entry['pageref']
         )
 
     context.HARLog.add(entry)

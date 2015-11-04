@@ -5,19 +5,17 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
 from libmproxy import utils
-from netlib import odict, encoding
-from netlib.http import status_codes
+from netlib import encoding
+from netlib.http import status_codes, Headers, Request, Response, CONTENT_MISSING, decoded
 from netlib.tcp import Address
-from netlib.http.semantics import Request, Response, CONTENT_MISSING
 from .. import version, stateobject
 from .flow import Flow
 
 
 class MessageMixin(stateobject.StateObject):
     _stateobject_attributes = dict(
-        httpversion=tuple,
-        headers=odict.ODictCaseless,
-        body=str,
+        http_version=bytes,
+        headers=Headers,
         timestamp_start=float,
         timestamp_end=float
     )
@@ -26,9 +24,9 @@ class MessageMixin(stateobject.StateObject):
     def get_state(self, short=False):
         ret = super(MessageMixin, self).get_state(short)
         if short:
-            if self.body:
-                ret["contentLength"] = len(self.body)
-            elif self.body == CONTENT_MISSING:
+            if self.content:
+                ret["contentLength"] = len(self.content)
+            elif self.content == CONTENT_MISSING:
                 ret["contentLength"] = None
             else:
                 ret["contentLength"] = 0
@@ -40,10 +38,10 @@ class MessageMixin(stateobject.StateObject):
             header.
             Doesn't change the message iteself or its headers.
         """
-        ce = self.headers.get_first("content-encoding")
-        if not self.body or ce not in encoding.ENCODINGS:
-            return self.body
-        return encoding.decode(ce, self.body)
+        ce = self.headers.get("content-encoding")
+        if not self.content or ce not in encoding.ENCODINGS:
+            return self.content
+        return encoding.decode(ce, self.content)
 
     def decode(self):
         """
@@ -53,14 +51,14 @@ class MessageMixin(stateobject.StateObject):
 
             Returns True if decoding succeeded, False otherwise.
         """
-        ce = self.headers.get_first("content-encoding")
-        if not self.body or ce not in encoding.ENCODINGS:
+        ce = self.headers.get("content-encoding")
+        if not self.content or ce not in encoding.ENCODINGS:
             return False
-        data = encoding.decode(ce, self.body)
+        data = encoding.decode(ce, self.content)
         if data is None:
             return False
-        self.body = data
-        del self.headers["content-encoding"]
+        self.content = data
+        self.headers.pop("content-encoding", None)
         return True
 
     def encode(self, e):
@@ -69,11 +67,14 @@ class MessageMixin(stateobject.StateObject):
             or "identity".
         """
         # FIXME: Error if there's an existing encoding header?
-        self.body = encoding.encode(e, self.body)
-        self.headers["content-encoding"] = [e]
+        self.content = encoding.encode(e, self.content)
+        self.headers["content-encoding"] = e
 
     def copy(self):
         c = copy.copy(self)
+        if hasattr(self, "data"):  # FIXME remove condition
+            c.data = copy.copy(self.data)
+
         c.headers = self.headers.copy()
         return c
 
@@ -86,11 +87,18 @@ class MessageMixin(stateobject.StateObject):
             Returns the number of replacements made.
         """
         with decoded(self):
-            self.body, c = utils.safe_subn(
-                pattern, repl, self.body, *args, **kwargs
+            self.content, count = utils.safe_subn(
+                pattern, repl, self.content, *args, **kwargs
             )
-        c += self.headers.replace(pattern, repl, *args, **kwargs)
-        return c
+        fields = []
+        for name, value in self.headers.fields:
+            name, c = utils.safe_subn(pattern, repl, name, *args, **kwargs)
+            count += c
+            value, c = utils.safe_subn(pattern, repl, value, *args, **kwargs)
+            count += c
+            fields.append([name, value])
+        self.headers.fields = fields
+        return count
 
 
 class HTTPRequest(MessageMixin, Request):
@@ -113,9 +121,9 @@ class HTTPRequest(MessageMixin, Request):
 
         path: Path portion of the URL (not present in authority-form)
 
-        httpversion: HTTP version tuple, e.g. (1,1)
+        http_version: HTTP version, e.g. "HTTP/1.1"
 
-        headers: odict.ODictCaseless object
+        headers: Headers object
 
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
@@ -140,34 +148,34 @@ class HTTPRequest(MessageMixin, Request):
 
     def __init__(
             self,
-            form_in,
+            first_line_format,
             method,
             scheme,
             host,
             port,
             path,
-            httpversion,
+            http_version,
             headers,
-            body,
+            content,
             timestamp_start=None,
             timestamp_end=None,
             form_out=None,
     ):
         Request.__init__(
             self,
-            form_in,
+            first_line_format,
             method,
             scheme,
             host,
             port,
             path,
-            httpversion,
+            http_version,
             headers,
-            body,
+            content,
             timestamp_start,
             timestamp_end,
         )
-        self.form_out = form_out or form_in
+        self.form_out = form_out or first_line_format  # FIXME remove
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
@@ -178,12 +186,13 @@ class HTTPRequest(MessageMixin, Request):
 
     _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
     _stateobject_attributes.update(
-        form_in=str,
-        method=str,
-        scheme=str,
-        host=str,
+        content=bytes,
+        first_line_format=str,
+        method=bytes,
+        scheme=bytes,
+        host=bytes,
         port=int,
-        path=str,
+        path=bytes,
         form_out=str,
         is_replay=bool
     )
@@ -192,7 +201,7 @@ class HTTPRequest(MessageMixin, Request):
     def from_state(cls, state):
         f = cls(
             None,
-            None,
+            b"",
             None,
             None,
             None,
@@ -218,15 +227,15 @@ class HTTPRequest(MessageMixin, Request):
     @classmethod
     def wrap(self, request):
         req = HTTPRequest(
-            form_in=request.form_in,
+            first_line_format=request.form_in,
             method=request.method,
             scheme=request.scheme,
             host=request.host,
             port=request.port,
             path=request.path,
-            httpversion=request.httpversion,
+            http_version=request.http_version,
             headers=request.headers,
-            body=request.body,
+            content=request.content,
             timestamp_start=request.timestamp_start,
             timestamp_end=request.timestamp_end,
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
@@ -260,13 +269,13 @@ class HTTPResponse(MessageMixin, Response):
 
     Exposes the following attributes:
 
-        httpversion: HTTP version tuple, e.g. (1, 0), (1, 1), or (2, 0)
+        http_version: HTTP version, e.g. "HTTP/1.1"
 
         status_code: HTTP response status code
 
         msg: HTTP response message
 
-        headers: ODict Caseless object
+        headers: Headers object
 
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
@@ -279,21 +288,21 @@ class HTTPResponse(MessageMixin, Response):
 
     def __init__(
             self,
-            httpversion,
+            http_version,
             status_code,
-            msg,
+            reason,
             headers,
-            body,
+            content,
             timestamp_start=None,
             timestamp_end=None,
     ):
         Response.__init__(
             self,
-            httpversion,
+            http_version,
             status_code,
-            msg,
+            reason,
             headers,
-            body,
+            content,
             timestamp_start=timestamp_start,
             timestamp_end=timestamp_end,
         )
@@ -304,8 +313,9 @@ class HTTPResponse(MessageMixin, Response):
 
     _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
     _stateobject_attributes.update(
+        body=bytes,
         status_code=int,
-        msg=str
+        msg=bytes
     )
 
     @classmethod
@@ -327,11 +337,11 @@ class HTTPResponse(MessageMixin, Response):
     @classmethod
     def wrap(self, response):
         resp = HTTPResponse(
-            httpversion=response.httpversion,
+            http_version=response.http_version,
             status_code=response.status_code,
-            msg=response.msg,
+            reason=response.reason,
             headers=response.headers,
-            body=response.body,
+            content=response.content,
             timestamp_start=response.timestamp_start,
             timestamp_end=response.timestamp_end,
         )
@@ -344,7 +354,10 @@ class HTTPResponse(MessageMixin, Response):
             Takes a cookie string c and a time delta in seconds, and returns
             a refreshed cookie string.
         """
-        c = Cookie.SimpleCookie(str(c))
+        try:
+            c = Cookie.SimpleCookie(str(c))
+        except Cookie.CookieError:
+            raise ValueError("Invalid Cookie")
         for i in c.values():
             if "expires" in i:
                 d = parsedate_tz(i["expires"])
@@ -359,7 +372,10 @@ class HTTPResponse(MessageMixin, Response):
                     # appear to parse this tolerantly - maybe we should too.
                     # For now, we just ignore this.
                     del i["expires"]
-        return c.output(header="").strip()
+        ret = c.output(header="").strip()
+        if not ret:
+            raise ValueError("Invalid Cookie")
+        return ret
 
     def refresh(self, now=None):
         """
@@ -379,36 +395,38 @@ class HTTPResponse(MessageMixin, Response):
         ]
         for i in refresh_headers:
             if i in self.headers:
-                d = parsedate_tz(self.headers[i][0])
+                d = parsedate_tz(self.headers[i])
                 if d:
                     new = mktime_tz(d) + delta
-                    self.headers[i] = [formatdate(new)]
+                    self.headers[i] = formatdate(new)
         c = []
-        for i in self.headers["set-cookie"]:
-            c.append(self._refresh_cookie(i, delta))
+        for set_cookie_header in self.headers.get_all("set-cookie"):
+            try:
+                refreshed = self._refresh_cookie(set_cookie_header, delta)
+            except ValueError:
+                refreshed = set_cookie_header
+            c.append(refreshed)
         if c:
-            self.headers["set-cookie"] = c
+            self.headers.set_all("set-cookie", c)
 
 
 class HTTPFlow(Flow):
     """
     A HTTPFlow is a collection of objects representing a single HTTP
-    transaction. The main attributes are:
+    transaction.
 
+    Attributes:
         request: HTTPRequest object
         response: HTTPResponse object
         error: Error object
         server_conn: ServerConnection object
         client_conn: ClientConnection object
+        intercepted: Is this flow currently being intercepted?
+        live: Does this flow have a live client connection?
 
     Note that it's possible for a Flow to have both a response and an error
     object. This might happen, for instance, when a response was received
     from the server, but there was an error sending it back to the client.
-
-    The following additional attributes are exposed:
-
-        intercepted: Is this flow currently being intercepted?
-        live: Does this flow have a live client connection?
     """
 
     def __init__(self, client_conn, server_conn, live=None):
@@ -478,33 +496,6 @@ class HTTPFlow(Flow):
         return c
 
 
-class decoded(object):
-    """
-    A context manager that decodes a request or response, and then
-    re-encodes it with the same encoding after execution of the block.
-
-    Example:
-    with decoded(request):
-        request.content = request.content.replace("foo", "bar")
-    """
-
-    def __init__(self, o):
-        self.o = o
-        ce = o.headers.get_first("content-encoding")
-        if ce in encoding.ENCODINGS:
-            self.ce = ce
-        else:
-            self.ce = None
-
-    def __enter__(self):
-        if self.ce:
-            self.o.decode()
-
-    def __exit__(self, type, value, tb):
-        if self.ce:
-            self.o.encode(self.ce)
-
-
 def make_error_response(status_code, message, headers=None):
     response = status_codes.RESPONSES.get(status_code, "Unknown")
     body = """
@@ -517,14 +508,15 @@ def make_error_response(status_code, message, headers=None):
     """.strip() % (status_code, response, message)
 
     if not headers:
-        headers = odict.ODictCaseless()
-    headers["Server"] = [version.NAMEVERSION]
-    headers["Connection"] = ["close"]
-    headers["Content-Length"] = [len(body)]
-    headers["Content-Type"] = ["text/html"]
+        headers = Headers(
+            Server=version.NAMEVERSION,
+            Connection="close",
+            Content_Length=str(len(body)),
+            Content_Type="text/html"
+        )
 
     return HTTPResponse(
-        (1, 1),  # FIXME: Should be a string.
+        b"HTTP/1.1",
         status_code,
         response,
         headers,
@@ -535,20 +527,21 @@ def make_error_response(status_code, message, headers=None):
 def make_connect_request(address):
     address = Address.wrap(address)
     return HTTPRequest(
-        "authority", "CONNECT", None, address.host, address.port, None, (1, 1),
-        odict.ODictCaseless(), ""
+        "authority", "CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
+        Headers(), ""
     )
 
 
-def make_connect_response(httpversion):
-    headers = odict.ODictCaseless([
-        ["Content-Length", "0"],
-        ["Proxy-Agent", version.NAMEVERSION]
-    ])
+def make_connect_response(http_version):
+    headers = Headers(
+        Proxy_Agent=version.NAMEVERSION
+    )
     return HTTPResponse(
-        httpversion,
+        http_version,
         200,
         "Connection established",
         headers,
         "",
     )
+
+expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, "Continue", Headers(), b"")

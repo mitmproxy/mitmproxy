@@ -1,6 +1,6 @@
 import urwid
 
-from .. import contentview
+from .. import contentviews
 from . import common, signals, grideditor
 from . import select, palettes
 
@@ -158,7 +158,7 @@ class Options(urwid.WidgetWrap):
         self.master.scripts = []
         self.master.set_stickyauth(None)
         self.master.set_stickycookie(None)
-        self.master.state.default_body_view = contentview.get("Auto")
+        self.master.state.default_body_view = contentviews.get("Auto")
 
         signals.update_settings.send(self)
         signals.status_message.send(
@@ -233,7 +233,7 @@ class Options(urwid.WidgetWrap):
     def default_displaymode(self):
         signals.status_prompt_onekey.send(
             prompt = "Global default display mode",
-            keys = contentview.view_prompts,
+            keys = contentviews.view_prompts,
             callback = self.master.change_default_display_mode
         )
 

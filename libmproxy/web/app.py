@@ -29,8 +29,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
     @property
     def json(self):
-        if not self.request.headers.get(
-                "Content-Type").startswith("application/json"):
+        if not self.request.headers.get("Content-Type").startswith("application/json"):
             return None
         return json.loads(self.request.body)
 
@@ -131,12 +130,10 @@ class FlowHandler(RequestHandler):
             if a == "request":
                 request = flow.request
                 for k, v in b.iteritems():
-                    if k in ["method", "scheme", "host", "path"]:
+                    if k in ["method", "scheme", "host", "path", "http_version"]:
                         setattr(request, k, str(v))
                     elif k == "port":
                         request.port = int(v)
-                    elif k == "httpversion":
-                        request.httpversion = tuple(int(x) for x in v)
                     elif k == "headers":
                         request.headers.load_state(v)
                     else:
@@ -148,9 +145,9 @@ class FlowHandler(RequestHandler):
                     if k == "msg":
                         response.msg = str(v)
                     elif k == "code":
-                        response.code = int(v)
-                    elif k == "httpversion":
-                        response.httpversion = tuple(int(x) for x in v)
+                        response.status_code = int(v)
+                    elif k == "http_version":
+                        response.http_version = str(v)
                     elif k == "headers":
                         response.headers.load_state(v)
                     else:
@@ -231,12 +228,12 @@ class FlowContent(RequestHandler):
         if not message.content:
             raise APIError(400, "No content.")
 
-        content_encoding = message.headers.get_first("Content-Encoding", None)
+        content_encoding = message.headers.get("Content-Encoding", None)
         if content_encoding:
             content_encoding = re.sub(r"[^\w]", "", content_encoding)
             self.set_header("Content-Encoding", content_encoding)
 
-        original_cd = message.headers.get_first("Content-Disposition", None)
+        original_cd = message.headers.get("Content-Disposition", None)
         filename = None
         if original_cd:
             filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)

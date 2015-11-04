@@ -1,13 +1,14 @@
 import socket
 import time
 from OpenSSL import SSL
+from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.tcp import Address
 
 import netlib.tutils
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
-from netlib.http import authentication
-from netlib.http.semantics import CONTENT_MISSING
+from netlib.http import authentication, CONTENT_MISSING, http1
+from netlib.tutils import raises
 from libpathod import pathoc, pathod
 
 from libmproxy.proxy.config import HostMatcher
@@ -48,18 +49,18 @@ class CommonMixin:
         else:
             assert len(self.master.state.view) == 1
         l = self.master.state.view[-1]
-        assert l.response.code == 304
+        assert l.response.status_code == 304
         l.request.path = "/p/305"
         self.wait_until_not_live(l)
         rt = self.master.replay_request(l, block=True)
-        assert l.response.code == 305
+        assert l.response.status_code == 305
 
         # Disconnect error
         l.request.path = "/p/305:d0"
         rt = self.master.replay_request(l, block=True)
         assert not rt
         if isinstance(self, tservers.HTTPUpstreamProxTest):
-            assert l.response.code == 502
+            assert l.response.status_code == 502
         else:
             assert l.error
 
@@ -71,7 +72,7 @@ class CommonMixin:
         rt = self.master.replay_request(l, block=True)
         assert not rt
         if isinstance(self, tservers.HTTPUpstreamProxTest):
-            assert l.response.code == 502
+            assert l.response.status_code == 502
         else:
             assert l.error
 
@@ -84,7 +85,7 @@ class CommonMixin:
         l = self.master.state.view[-1]
         assert l.client_conn.address
         assert "host" in l.request.headers
-        assert l.response.code == 304
+        assert l.response.status_code == 304
 
     def test_invalid_http(self):
         t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
@@ -117,17 +118,20 @@ class TcpMixin:
         del self._ignore_backup
 
     def test_ignore(self):
-        spec = '304:h"Alternate-Protocol"="mitmproxy-will-remove-this"'
-        n = self.pathod(spec)
+        n = self.pathod("304")
         self._ignore_on()
-        i = self.pathod(spec)
-        i2 = self.pathod(spec)
+        i = self.pathod("305")
+        i2 = self.pathod("306")
         self._ignore_off()
 
-        assert i.status_code == i2.status_code == n.status_code == 304
-        assert "Alternate-Protocol" in i.headers
-        assert "Alternate-Protocol" in i2.headers
-        assert "Alternate-Protocol" not in n.headers
+        self.master.masterq.join()
+
+        assert n.status_code == 304
+        assert i.status_code == 305
+        assert i2.status_code == 306
+        assert any(f.response.status_code == 304 for f in self.master.state.flows)
+        assert not any(f.response.status_code == 305 for f in self.master.state.flows)
+        assert not any(f.response.status_code == 306 for f in self.master.state.flows)
 
         # Test that we get the original SSL cert
         if self.ssl:
@@ -143,10 +147,9 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        tutils.raises(
-            "invalid server response",
-            self.pathod,
-            spec)  # pathoc tries to parse answer as HTTP
+        with raises(HttpException):
+            self.pathod(spec)  # pathoc tries to parse answer as HTTP
+
         self._ignore_off()
 
     def _tcpproxy_on(self):
@@ -157,21 +160,24 @@ class TcpMixin:
 
     def _tcpproxy_off(self):
         assert hasattr(self, "_tcpproxy_backup")
-        self.config.check_ignore = self._tcpproxy_backup
+        self.config.check_tcp = self._tcpproxy_backup
         del self._tcpproxy_backup
 
     def test_tcp(self):
-        spec = '304:h"Alternate-Protocol"="mitmproxy-will-remove-this"'
-        n = self.pathod(spec)
+        n = self.pathod("304")
         self._tcpproxy_on()
-        i = self.pathod(spec)
-        i2 = self.pathod(spec)
+        i = self.pathod("305")
+        i2 = self.pathod("306")
         self._tcpproxy_off()
 
-        assert i.status_code == i2.status_code == n.status_code == 304
-        assert "Alternate-Protocol" in i.headers
-        assert "Alternate-Protocol" in i2.headers
-        assert "Alternate-Protocol" not in n.headers
+        self.master.masterq.join()
+
+        assert n.status_code == 304
+        assert i.status_code == 305
+        assert i2.status_code == 306
+        assert any(f.response.status_code == 304 for f in self.master.state.flows)
+        assert not any(f.response.status_code == 305 for f in self.master.state.flows)
+        assert not any(f.response.status_code == 306 for f in self.master.state.flows)
 
         # Test that we get the original SSL cert
         if self.ssl:
@@ -182,7 +188,8 @@ class TcpMixin:
             assert i_cert == i2_cert == n_cert
 
         # Make sure that TCP messages are in the event log.
-        assert any("mitmproxy-will-remove-this" in m for m in self.master.log)
+        assert any("305" in m for m in self.master.log)
+        assert any("306" in m for m in self.master.log)
 
 
 class AppMixin:
@@ -228,7 +235,8 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         # There's a race here, which means we can get any of a number of errors.
         # Rather than introduce yet another sleep into the test suite, we just
         # relax the Exception specification.
-        tutils.raises(Exception, p.request, "get:'%s'" % response)
+        with raises(Exception):
+            p.request("get:'%s'" % response)
 
     def test_reconnect(self):
         req = "get:'%s/p/200:b@1:da'" % self.server.urlbase
@@ -250,11 +258,6 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert p.request(req % self.server2.urlbase)
         assert switched(self.proxy.log)
 
-    def test_get_connection_err(self):
-        p = self.pathoc()
-        ret = p.request("get:'http://localhost:0'")
-        assert ret.status_code == 502
-
     def test_blank_leading_line(self):
         p = self.pathoc()
         req = "get:'%s/p/201':i0,'\r\n'"
@@ -262,23 +265,8 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
 
     def test_invalid_headers(self):
         p = self.pathoc()
-        req = p.request("get:'http://foo':h':foo'='bar'")
-        assert req.status_code == 400
-
-    def test_empty_chunked_content(self):
-        """
-        https://github.com/mitmproxy/mitmproxy/issues/186
-        """
-        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        connection.connect(("127.0.0.1", self.proxy.port))
-        spec = '301:h"Transfer-Encoding"="chunked":r:b"0\\r\\n\\r\\n"'
-        connection.send(
-            "GET http://localhost:%d/p/%s HTTP/1.1\r\n" %
-            (self.server.port, spec))
-        connection.send("\r\n")
-        resp = connection.recv(50000)
-        connection.close()
-        assert "content-length" in resp.lower()
+        resp = p.request("get:'http://foo':h':foo'='bar'")
+        assert resp.status_code == 400
 
     def test_stream(self):
         self.master.set_stream_large_bodies(1024 * 2)
@@ -519,16 +507,18 @@ class TestProxy(tservers.HTTPProxTest):
         f = self.master.state.view[0]
         assert f.client_conn.address
         assert "host" in f.request.headers
-        assert f.response.code == 304
+        assert f.response.status_code == 304
 
     def test_response_timestamps(self):
-        # test that we notice at least 2 sec delay between timestamps
+        # test that we notice at least 1 sec delay between timestamps
         # in response object
         f = self.pathod("304:b@1k:p50,1")
         assert f.status_code == 304
 
         response = self.master.state.view[0].response
-        assert 1 <= response.timestamp_end - response.timestamp_start <= 1.2
+        # time.sleep might be a little bit shorter than a second,
+        # we observed up to 0.93s on appveyor.
+        assert 0.8 <= response.timestamp_end - response.timestamp_start
 
     def test_request_timestamps(self):
         # test that we notice a delay between timestamps in request object
@@ -546,38 +536,30 @@ class TestProxy(tservers.HTTPProxTest):
 
         request, response = self.master.state.view[
                                 0].request, self.master.state.view[0].response
-        assert response.code == 304  # sanity test for our low level request
-        # time.sleep might be a little bit shorter than a second
-        assert 0.95 < (request.timestamp_end - request.timestamp_start) < 1.2
-
-    def test_request_timestamps_not_affected_by_client_time(self):
-        # test that don't include user wait time in request's timestamps
-
-        f = self.pathod("304:b@10k")
-        assert f.status_code == 304
-        f = self.pathod("304:b@10k")
-        assert f.status_code == 304
-
-        request = self.master.state.view[0].request
-        assert request.timestamp_end - request.timestamp_start <= 0.1
-
-        request = self.master.state.view[1].request
-        assert request.timestamp_end - request.timestamp_start <= 0.1
+        assert response.status_code == 304  # sanity test for our low level request
+        # time.sleep might be a little bit shorter than a second,
+        # we observed up to 0.93s on appveyor.
+        assert 0.8 < (request.timestamp_end - request.timestamp_start)
 
     def test_request_tcp_setup_timestamp_presence(self):
         # tests that the client_conn a tcp connection has a tcp_setup_timestamp
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("localhost", self.proxy.port))
         connection.send(
-            "GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n" %
+            "GET http://localhost:%d/p/200:b@1k HTTP/1.1\r\n" %
             self.server.port)
         connection.send("\r\n")
-        connection.recv(5000)
+        # a bit hacky: make sure that we don't just read the headers only.
+        recvd = 0
+        while recvd < 1024:
+            recvd += len(connection.recv(5000))
         connection.send(
-            "GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n" %
+            "GET http://localhost:%d/p/200:b@1k HTTP/1.1\r\n" %
             self.server.port)
         connection.send("\r\n")
-        connection.recv(5000)
+        recvd = 0
+        while recvd < 1024:
+            recvd += len(connection.recv(5000))
         connection.close()
 
         first_flow = self.master.state.view[0]
@@ -623,8 +605,7 @@ class MasterRedirectRequest(tservers.TestMaster):
 
     def handle_response(self, f):
         f.response.content = str(f.client_conn.address.port)
-        f.response.headers[
-            "server-conn-id"] = [str(f.server_conn.source_address.port)]
+        f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
         super(MasterRedirectRequest, self).handle_response(f)
 
 
@@ -712,22 +693,19 @@ class TestStreamRequest(tservers.HTTPProxTest):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("127.0.0.1", self.proxy.port))
         fconn = connection.makefile()
-        spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n7\\r\\nisatest\\r\\n0\\r\\n\\r\\n"'
+        spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n11\\r\\nisatest__reachhex\\r\\n0\\r\\n\\r\\n"'
         connection.send(
             "GET %s/p/%s HTTP/1.1\r\n" %
             (self.server.urlbase, spec))
         connection.send("\r\n")
 
-        protocol = http.http1.HTTP1Protocol(rfile=fconn)
-        resp = protocol.read_response("GET", None, include_body=False)
+        resp = http1.read_response_head(fconn)
 
-        assert resp.headers["Transfer-Encoding"][0] == 'chunked'
+        assert resp.headers["Transfer-Encoding"] == 'chunked'
         assert resp.status_code == 200
 
-        chunks = list(protocol.read_http_body_chunked(
-            resp.headers, None, "GET", 200, False
-        ))
-        assert chunks == ["this", "isatest", ""]
+        chunks = list(http1.read_body(fconn, None))
+        assert chunks == ["this", "isatest__reachhex"]
 
         connection.close()
 
@@ -743,7 +721,7 @@ class TestFakeResponse(tservers.HTTPProxTest):
 
     def test_fake(self):
         f = self.pathod("200")
-        assert "header_response" in f.headers.keys()
+        assert "header-response" in f.headers
 
 
 class TestServerConnect(tservers.HTTPProxTest):
@@ -766,7 +744,8 @@ class TestKillRequest(tservers.HTTPProxTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        tutils.raises("server disconnect", self.pathod, "200")
+        with raises(HttpReadDisconnect):
+            self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
 
@@ -780,7 +759,8 @@ class TestKillResponse(tservers.HTTPProxTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        tutils.raises("server disconnect", self.pathod, "200")
+        with raises(HttpReadDisconnect):
+            self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
 
@@ -900,23 +880,6 @@ class TestUpstreamProxySSL(
         # request from proxy to chain[1]
         # request from chain[0] (regular proxy doesn't store CONNECTs)
         assert self.chain[1].tmaster.state.flow_count() == 1
-
-    def test_closing_connect_response(self):
-        """
-        https://github.com/mitmproxy/mitmproxy/issues/313
-        """
-
-        def handle_request(f):
-            f.request.httpversion = (1, 0)
-            del f.request.headers["Content-Length"]
-            f.reply()
-
-        _handle_request = self.chain[0].tmaster.handle_request
-        self.chain[0].tmaster.handle_request = handle_request
-        try:
-            assert self.pathoc().request("get:/p/418").status_code == 418
-        finally:
-            self.chain[0].tmaster.handle_request = _handle_request
 
 
 class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):

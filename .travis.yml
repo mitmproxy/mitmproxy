@@ -15,6 +15,9 @@ matrix:
             - debian-sid
           packages:
             - libssl-dev
+    - python: 2.7
+      env: DOCS=1
+      script: 'cd docs && make html'
     - python: pypy
     - python: pypy
       env: OPENSSL=1.0.2
@@ -32,13 +35,13 @@ matrix:
     - python: pypy
 
 install:
-  - "pip install --src . -r requirements.txt"
+  - "pip install -r requirements.txt"
 
 before_script:
   - "openssl version -a"
 
 script:
-  - "nosetests --with-cov --cov-report term-missing"
+  - "py.test -n 4 --cov libmproxy"
 
 after_success:
   - coveralls
@@ -51,7 +54,7 @@ notifications:
     on_failure: always
   slack:
     rooms:
-        - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+      - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
     on_success: change
     on_failure: always
 

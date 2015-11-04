@@ -14,11 +14,11 @@ class TransparentProxy(Layer, ServerConnectionMixin):
         try:
             self.server_conn.address = self.resolver.original_addr(self.client_conn.connection)
         except Exception as e:
-            raise ProtocolException("Transparent mode failure: %s" % repr(e), e)
+            raise ProtocolException("Transparent mode failure: %s" % repr(e))
 
         layer = self.ctx.next_layer(self)
         try:
             layer()
         finally:
             if self.server_conn:
-                self._disconnect()
+                self.disconnect()

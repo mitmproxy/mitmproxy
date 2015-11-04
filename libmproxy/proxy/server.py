@@ -3,15 +3,16 @@ from __future__ import (absolute_import, print_function, division)
 import traceback
 import sys
 import socket
+import six
 
 from netlib import tcp
-from netlib.http.http1 import HTTP1Protocol
-from netlib.tcp import NetLibError
-from ..exceptions import ProtocolException, ServerException
-from ..protocol import Log, Kill
+from netlib.exceptions import TcpException
+from netlib.http.http1 import assemble_response
+from ..exceptions import ProtocolException, ServerException, ClientHandshakeException
+from ..protocol import Kill
 from ..models import ClientConnection, make_error_response
 from .modes import HttpUpstreamProxy, HttpProxy, ReverseProxy, TransparentProxy, Socks5Proxy
-from .root_context import RootContext
+from .root_context import RootContext, Log
 
 
 class DummyServer:
@@ -39,7 +40,11 @@ class ProxyServer(tcp.TCPServer):
         try:
             super(ProxyServer, self).__init__((config.host, config.port))
         except socket.error as e:
-            raise ServerException('Error starting proxy server: ' + repr(e), e)
+            six.reraise(
+                ServerException,
+                ServerException('Error starting proxy server: ' + repr(e)),
+                sys.exc_info()[2]
+            )
         self.channel = None
 
     def start_slave(self, klass, channel):
@@ -116,14 +121,25 @@ class ConnectionHandler(object):
         except Kill:
             self.log("Connection killed", "info")
         except ProtocolException as e:
-            self.log(e, "info")
+
+            if isinstance(e, ClientHandshakeException):
+                self.log(
+                    "Client Handshake failed. "
+                    "The client may not trust the proxy's certificate for {}.".format(e.server),
+                    "error"
+                )
+                self.log(repr(e), "debug")
+            else:
+                self.log(repr(e), "error")
+
+                self.log(traceback.format_exc(), "debug")
             # If an error propagates to the topmost level,
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.
             try:
                 error_response = make_error_response(502, repr(e))
-                self.client_conn.send(HTTP1Protocol().assemble(error_response))
-            except NetLibError:
+                self.client_conn.send(assemble_response(error_response))
+            except TcpException:
                 pass
         except Exception:
             self.log(traceback.format_exc(), "error")

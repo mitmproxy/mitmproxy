@@ -11,6 +11,10 @@ class ScriptError(Exception):
 
 
 class ScriptContext:
+    """
+    The script context should be used to interact with the global mitmproxy state from within a
+    script.
+    """
     def __init__(self, master):
         self._master = master
 
@@ -86,7 +90,7 @@ class Script:
                  "If your script path contains spaces, "
                  "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") %
                 args[0])
-        elif not os.path.isfile(args[0]):
+        elif os.path.isdir(args[0]):
             raise ScriptError("Not a file: %s" % args[0])
         return args
 
@@ -102,8 +106,8 @@ class Script:
         """
         if self.ns is not None:
             self.unload()
-        ns = {}
         script_dir = os.path.dirname(os.path.abspath(self.args[0]))
+        ns = {'__file__': os.path.abspath(self.args[0])}
         sys.path.append(script_dir)
         try:
             execfile(self.args[0], ns, ns)
@@ -186,7 +190,8 @@ def concurrent(fn):
             "error",
             "clientconnect",
             "serverconnect",
-            "clientdisconnect"):
+            "clientdisconnect",
+            "next_layer"):
         def _concurrent(ctx, obj):
             _handle_concurrent_reply(fn, obj, ctx, obj)
 

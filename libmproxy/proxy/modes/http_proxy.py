@@ -10,7 +10,7 @@ class HttpProxy(Layer, ServerConnectionMixin):
             layer()
         finally:
             if self.server_conn:
-                self._disconnect()
+                self.disconnect()
 
 
 class HttpUpstreamProxy(Layer, ServerConnectionMixin):
@@ -23,4 +23,4 @@ class HttpUpstreamProxy(Layer, ServerConnectionMixin):
             layer()
         finally:
             if self.server_conn:
-                self._disconnect()
+                self.disconnect()

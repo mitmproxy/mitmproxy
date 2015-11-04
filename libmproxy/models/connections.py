@@ -51,9 +51,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     def get_state(self, short=False):
         d = super(ClientConnection, self).get_state(short)
         d.update(
-            address={
+            address=({
                 "address": self.address(),
-                "use_ipv6": self.address.use_ipv6},
+                "use_ipv6": self.address.use_ipv6} if self.address else {}),
             clientcert=self.cert.to_pem() if self.clientcert else None)
         return d
 
@@ -135,8 +135,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def get_state(self, short=False):
         d = super(ServerConnection, self).get_state(short)
         d.update(
-            address={"address": self.address(),
-                     "use_ipv6": self.address.use_ipv6},
+            address=({"address": self.address(),
+                     "use_ipv6": self.address.use_ipv6} if self.address else {}),
             source_address=({"address": self.source_address(),
                              "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
             cert=self.cert.to_pem() if self.cert else None

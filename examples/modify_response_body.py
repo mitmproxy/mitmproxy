@@ -1,6 +1,6 @@
 # Usage: mitmdump -s "modify_response_body.py mitmproxy bananas"
 # (this script works best with --anticache)
-from libmproxy.protocol.http import decoded
+from libmproxy.models import decoded
 
 
 def start(context, argv):

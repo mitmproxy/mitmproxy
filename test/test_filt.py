@@ -1,8 +1,8 @@
 import cStringIO
-from netlib import odict
 from libmproxy import filt, flow
 from libmproxy.protocol import http
 from libmproxy.models import Error
+from netlib.http import Headers
 import tutils
 
 
@@ -76,8 +76,7 @@ class TestParsing:
 
 class TestMatching:
     def req(self):
-        headers = odict.ODictCaseless()
-        headers["header"] = ["qvalue"]
+        headers = Headers(header="qvalue")
         req = http.HTTPRequest(
             "absolute",
             "GET",
@@ -85,7 +84,7 @@ class TestMatching:
             "host",
             80,
             "/path",
-            (1, 1),
+            b"HTTP/1.1",
             headers,
             "content_request",
             None,
@@ -98,11 +97,9 @@ class TestMatching:
     def resp(self):
         f = self.req()
 
-        headers = odict.ODictCaseless()
-        headers["header_response"] = ["svalue"]
+        headers = Headers([["header_response", "svalue"]])
         f.response = http.HTTPResponse(
-            (1,
-             1),
+            b"HTTP/1.1",
             200,
             "OK",
             headers,
@@ -123,7 +120,7 @@ class TestMatching:
     def test_asset(self):
         s = self.resp()
         assert not self.q("~a", s)
-        s.response.headers["content-type"] = ["text/javascript"]
+        s.response.headers["content-type"] = "text/javascript"
         assert self.q("~a", s)
 
     def test_fcontenttype(self):
@@ -132,16 +129,16 @@ class TestMatching:
         assert not self.q("~t content", q)
         assert not self.q("~t content", s)
 
-        q.request.headers["content-type"] = ["text/json"]
+        q.request.headers["content-type"] = "text/json"
         assert self.q("~t json", q)
         assert self.q("~tq json", q)
         assert not self.q("~ts json", q)
 
-        s.response.headers["content-type"] = ["text/json"]
+        s.response.headers["content-type"] = "text/json"
         assert self.q("~t json", s)
 
         del s.response.headers["content-type"]
-        s.request.headers["content-type"] = ["text/json"]
+        s.request.headers["content-type"] = "text/json"
         assert self.q("~t json", s)
         assert self.q("~tq json", s)
         assert not self.q("~ts json", s)

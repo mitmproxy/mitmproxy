@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import (absolute_import, print_function, division)
 import os
 import datetime
 import re
@@ -30,13 +30,14 @@ def isBin(s):
     """
     for i in s:
         i = ord(i)
-        if i < 9:
-            return True
-        elif i > 13 and i < 32:
-            return True
-        elif i > 126:
+        if i < 9 or 13 < i < 32 or 126 < i:
             return True
     return False
+
+
+def isMostlyBin(s):
+    s = s[:100]
+    return sum(isBin(ch) for ch in s)/len(s) > 0.3
 
 
 def isXML(s):
@@ -54,7 +55,7 @@ def pretty_json(s):
         p = json.loads(s)
     except ValueError:
         return None
-    return json.dumps(p, sort_keys=True, indent=4).split("\n")
+    return json.dumps(p, sort_keys=True, indent=4)
 
 
 def pretty_duration(secs):

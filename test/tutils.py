@@ -6,19 +6,16 @@ import sys
 from cStringIO import StringIO
 from contextlib import contextmanager
 
-from nose.plugins.skip import SkipTest
-from mock import Mock
+from unittest.case import SkipTest
 
 import netlib.tutils
 from libmproxy import utils, controller
 from libmproxy.models import (
     ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow
 )
-from libmproxy.console.flowview import FlowView
-from libmproxy.console import ConsoleState
 
 
-def _SkipWindows():
+def _SkipWindows(*args):
     raise SkipTest("Skipped on Windows.")
 
 
@@ -96,18 +93,6 @@ def terr(content="error"):
     return err
 
 
-def tflowview(request_contents=None):
-    m = Mock()
-    cs = ConsoleState()
-    if request_contents is None:
-        flow = tflow()
-    else:
-        flow = tflow(req=netlib.tutils.treq(request_contents))
-
-    fv = FlowView(m, cs, flow)
-    return fv
-
-
 def get_body_line(last_displayed_body, line_nb):
     return last_displayed_body.contents()[line_nb + 2]
 
@@ -134,43 +119,7 @@ class MockParser(argparse.ArgumentParser):
         raise Exception(message)
 
 
-def raises(exc, obj, *args, **kwargs):
-    """
-        Assert that a callable raises a specified exception.
-
-        :exc An exception class or a string. If a class, assert that an
-        exception of this type is raised. If a string, assert that the string
-        occurs in the string representation of the exception, based on a
-        case-insenstivie match.
-
-        :obj A callable object.
-
-        :args Arguments to be passsed to the callable.
-
-        :kwargs Arguments to be passed to the callable.
-    """
-    try:
-        obj(*args, **kwargs)
-    except Exception as v:
-        if isinstance(exc, basestring):
-            if exc.lower() in str(v).lower():
-                return
-            else:
-                raise AssertionError(
-                    "Expected %s, but caught %s" % (
-                        repr(str(exc)), v
-                    )
-                )
-        else:
-            if isinstance(v, exc):
-                return
-            else:
-                raise AssertionError(
-                    "Expected %s, but caught %s %s" % (
-                        exc.__name__, v.__class__.__name__, str(v)
-                    )
-                )
-    raise AssertionError("No exception raised.")
+raises = netlib.tutils.raises
 
 
 @contextmanager

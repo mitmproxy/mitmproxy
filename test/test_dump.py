@@ -1,40 +1,75 @@
 import os
 from cStringIO import StringIO
+from libmproxy.exceptions import ContentViewException
 from libmproxy.models import HTTPResponse
 
 import netlib.tutils
-from netlib.http.semantics import CONTENT_MISSING
+from netlib.http import CONTENT_MISSING
 
 from libmproxy import dump, flow
-from libmproxy.protocol import Log
+from libmproxy.proxy import Log
 import tutils
 import mock
 
 
 def test_strfuncs():
-    t = HTTPResponse.wrap(netlib.tutils.tresp())
-    t.is_replay = True
-    dump.str_response(t)
+    o = dump.Options()
+    m = dump.DumpMaster(None, o)
 
-    f = tutils.tflow()
-    f.client_conn = None
-    f.request.stickycookie = True
-    assert "stickycookie" in dump.str_request(f, False)
-    assert "stickycookie" in dump.str_request(f, True)
-    assert "replay" in dump.str_request(f, False)
-    assert "replay" in dump.str_request(f, True)
+    m.outfile = StringIO()
+    m.o.flow_detail = 0
+    m.echo_flow(tutils.tflow())
+    assert not m.outfile.getvalue()
+
+    m.o.flow_detail = 4
+    m.echo_flow(tutils.tflow())
+    assert m.outfile.getvalue()
+
+    m.outfile = StringIO()
+    m.echo_flow(tutils.tflow(resp=True))
+    assert "<<" in m.outfile.getvalue()
+
+    m.outfile = StringIO()
+    m.echo_flow(tutils.tflow(err=True))
+    assert "<<" in m.outfile.getvalue()
+
+    flow = tutils.tflow()
+    flow.request = netlib.tutils.treq()
+    flow.request.stickycookie = True
+    flow.client_conn = mock.MagicMock()
+    flow.client_conn.address.host = "foo"
+    flow.response = netlib.tutils.tresp(content=CONTENT_MISSING)
+    flow.response.is_replay = True
+    flow.response.status_code = 300
+    m.echo_flow(flow)
+
+
+    flow = tutils.tflow(resp=netlib.tutils.tresp(content="{"))
+    flow.response.headers["content-type"] = "application/json"
+    flow.response.status_code = 400
+    m.echo_flow(flow)
+
+
+@mock.patch("libmproxy.contentviews.get_content_view")
+def test_contentview(get_content_view):
+    get_content_view.side_effect = ContentViewException(""), ("x", iter([]))
+
+    o = dump.Options(flow_detail=4, verbosity=3)
+    m = dump.DumpMaster(None, o, StringIO())
+    m.echo_flow(tutils.tflow())
+    assert "Content viewer failed" in m.outfile.getvalue()
 
 
 class TestDumpMaster:
     def _cycle(self, m, content):
-        f = tutils.tflow(req=netlib.tutils.treq(content))
+        f = tutils.tflow(req=netlib.tutils.treq(content=content))
         l = Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)
         m.handle_clientconnect(f.client_conn)
         m.handle_serverconnect(f.server_conn)
         m.handle_request(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content))
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
         f = m.handle_response(f)
         m.handle_clientdisconnect(f.client_conn)
         return f
@@ -145,7 +180,7 @@ class TestDumpMaster:
         o = dump.Options(setheaders=[(".*", "one", "two")])
         m = dump.DumpMaster(None, o, outfile=cs)
         f = self._cycle(m, "content")
-        assert f.request.headers["one"] == ["two"]
+        assert f.request.headers["one"] == "two"
 
     def test_basic(self):
         for i in (1, 2, 3):
