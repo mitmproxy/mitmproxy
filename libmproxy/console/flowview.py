@@ -83,7 +83,7 @@ def _mkhelp():
         ("n", "repeat search forward"),
         ("N", "repeat search backwards"),
     ]
-    text.extend(common.urwid_keyvals(contentview.format_keyvals(keys, key="key", val="text", indent=4)))
+    text.extend(common.urwid_keyvals(contentviews.format_keyvals(keys, key="key", val="text", indent=4)))
     return text
 help_context = _mkhelp()
 
