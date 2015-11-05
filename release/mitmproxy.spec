@@ -4,7 +4,7 @@ from glob import glob
 
 VENV = "../release/venv"
 
-a = Analysis(['../mitmproxy/mitmproxy'],
+a = Analysis(['../../mitmproxy/mitmproxy'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
