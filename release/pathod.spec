@@ -4,7 +4,7 @@ from glob import glob
 
 VENV = "../release/venv"
 
-a = Analysis(['../pathod/pathod'],
+a = Analysis(['../../pathod/pathod'],
              hiddenimports=["_cffi_backend"],
              hookspath=None,
              runtime_hooks=None,
