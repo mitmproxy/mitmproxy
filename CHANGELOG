@@ -1,3 +1,55 @@
+6 November 2015: mitmproxy 0.14
+
+    * Statistics: 399 commits, 13 contributors, 79 closed issues, 37 closed
+      PRs, 103 days
+
+    * Docs: Greatly updated docs now hosted on ReadTheDocs!
+      http://docs.mitmproxy.org
+
+    * Docs: Fixed Typos, updated URLs etc. (Nick Badger, Ben Lerner, Choongwoo
+      Han, onlywade, Jurriaan Bremer)
+
+    * mitmdump: Colorized TTY output
+
+    * mitmdump: Use mitmproxy's content views for human-readable output (Chris
+      Czub)
+
+    * mitmproxy and mitmdump: Support for displaying UTF8 contents
+
+    * mitmproxy: add command line switch to disable mouse interaction (Timothy
+      Elliott)
+
+    * mitmproxy: bug fixes (Choongwoo Han, sethp-jive, FreeArtMan)
+
+    * mitmweb: bug fixes (Colin Bendell)
+
+    * libmproxy: Add ability to fall back to TCP passthrough for non-HTTP
+      connections.
+
+    * libmproxy: Avoid double-connect in case of TLS Server Name Indication.
+      This yields a massive speedup for TLS handshakes.
+
+    * libmproxy: Prevent unneccessary upstream connections (macmantrl)
+
+    * Inline Scripts: New API for HTTP Headers:
+      http://docs.mitmproxy.org/en/latest/dev/models.html#netlib.http.Headers
+
+    * Inline Scripts: Properly handle exceptions in `done` hook
+
+    * Inline Scripts: Allow relative imports, provide `__file__`
+
+    * Examples: Add probabilistic TLS passthrough as an inline script
+
+    * netlib: Refactored HTTP protocol handling code
+
+    * netlib: ALPN support
+
+    * netlib: fixed a bug in the optional certificate verification.
+
+    * netlib: Initial Python 3.5 support (this is the first prerequisite for
+      3.x support in mitmproxy)
+
+
 24 July 2015: mitmproxy 0.13
 
     * Upstream certificate validation. See the --verify-upstream-cert,
