@@ -105,6 +105,16 @@ configure your testing system or browser to trust the mitmproxy CA as a
 signing root authority. For security reasons, the mitmproxy CA is generated uniquely on the first
 start and is not shared between mitmproxy installations on different devices.
 
+Some applications pin their SSL certificates in order to prevent MITM attacks.
+This means that **mitmproxy** and **mitmdump's** certificates will not be
+accepted by these applications. This is because when an application pins a
+certificate it requires that SSL traffic is encrypted with a specific
+certificate rather than any certificate that is signed by a trusted Certificate
+Authority (CA). In order to work around this, it is recommended to use the 
+`Ignore Domains <http://docs.mitmproxy.org/en/stable/features/passthrough.html#ignore-domains>`_
+feature in order to prevent **mitmproxy** and **mitmdump** from intercepting
+traffic to these specific domains. 
+
 
 CA and cert files
 -----------------
