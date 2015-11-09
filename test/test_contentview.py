@@ -217,6 +217,7 @@ Larry
         tcv = TestContentView()
         cv.add(tcv)
 
+        # repeated addition causes exception
         tutils.raises(
             ContentViewException,
             cv.add,
