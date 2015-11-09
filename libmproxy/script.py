@@ -56,6 +56,13 @@ class ScriptContext:
     def app_registry(self):
         return self._master.apps
 
+    @property
+    def plugins(self):
+        if hasattr(self._master, 'plugins'):
+            return self._master.plugins
+
+        return None
+
 
 class Script:
     """

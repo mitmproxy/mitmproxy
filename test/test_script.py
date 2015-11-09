@@ -127,3 +127,13 @@ def test_command_parsing():
     absfilepath = os.path.normcase(tutils.test_data.path("scripts/a.py"))
     s = script.Script(absfilepath, fm)
     assert os.path.isfile(s.args[0])
+
+
+def test_script_plugins():
+    s = flow.State()
+    fm = flow.FlowMaster(None, s)
+    sp = tutils.test_data.path("scripts/a.py")
+    p = script.Script("%s --var 40" % sp, fm)
+
+    assert hasattr(p.ctx, 'plugins')
+
