@@ -63,6 +63,7 @@ class Script:
     """
 
     def __init__(self, command, master):
+        self.command = command
         self.args = self.parse_command(command)
         self.ctx = ScriptContext(master)
         self.ns = None
