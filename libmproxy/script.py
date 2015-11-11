@@ -4,6 +4,9 @@ import traceback
 import threading
 import shlex
 import sys
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler, FileModifiedEvent
+from .console import signals
 
 
 class ScriptError(Exception):
@@ -192,3 +195,22 @@ def concurrent(fn):
         return _concurrent
     raise NotImplementedError(
         "Concurrent decorator not supported for '%s' method." % fn.func_name)
+
+
+class ScriptModified(PatternMatchingEventHandler):
+    
+    def __init__(self, FlowMaster):
+        self.FlowMaster = FlowMaster
+        PatternMatchingEventHandler.__init__(self, ignore_directories=True, patterns=["*.py"])
+    
+    def on_modified(self, event=FileModifiedEvent):
+        self.FlowMaster.reload_scripts()
+        signals.status_message.send(message="script: <{0}> reloaded.".format(event.src_path))
+
+
+def ObserveScripts(FlowMaster, path):
+    script_dir = os.path.dirname(path)
+    event_handler = ScriptModified(FlowMaster)
+    observer = Observer()
+    observer.schedule(event_handler, script_dir)
+    observer.start()

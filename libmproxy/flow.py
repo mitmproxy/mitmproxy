@@ -667,6 +667,10 @@ class FlowMaster(controller.Master):
             self.add_event("Script error:\n" + str(e), "error")
         self.scripts.remove(script_obj)
 
+    def reload_scripts(self):
+        for s in self.scripts[:]:
+            s.load()
+    
     def load_script(self, command):
         """
             Loads a script. Returns an error description if something went
