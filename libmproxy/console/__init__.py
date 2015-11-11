@@ -225,7 +225,6 @@ class ConsoleMaster(flow.FlowMaster):
                 if err:
                     print >> sys.stderr, "Script load error:", err
                     sys.exit(1)
-                script.ObserveScripts(self, i)
 
         if options.outfile:
             err = self.start_stream_to_path(
