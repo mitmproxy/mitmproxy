@@ -443,7 +443,7 @@ module.exports = {
 };
 
 
-},{"./dispatcher.js":21,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -466,7 +466,7 @@ $(function () {
 });
 
 
-},{"./actions.js":2,"./components/proxyapp.js":18,"./connection":20,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":19,"./connection":21,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -935,7 +935,7 @@ module.exports = {
 };
 
 
-},{"../utils.js":26,"./common.js":4,"react":"react"}],6:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"react":"react"}],6:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -1105,7 +1105,7 @@ var EventLog = React.createClass({
 module.exports = EventLog;
 
 
-},{"../actions.js":2,"../store/view.js":25,"./common.js":4,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":26,"./common.js":4,"./virtualscroll.js":20,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1366,7 +1366,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 module.exports = all_columns;
 
 
-},{"../flow/utils.js":23,"../utils.js":26,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":24,"../utils.js":27,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -1567,7 +1567,7 @@ var FlowTable = React.createClass({
 module.exports = FlowTable;
 
 
-},{"../utils.js":26,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":20,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1577,6 +1577,8 @@ var _ = require("lodash");
 
 var MessageUtils = require("../../flow/utils.js").MessageUtils;
 var utils = require("../../utils.js");
+
+var allNames;
 
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
 var ViewImage = React.createClass({
@@ -1608,7 +1610,10 @@ var RawMixin = {
         if (this.state.request) {
             this.state.request.abort();
         }
-        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+
+        var request;
+        if (_.contains(allNames, this.constructor.displayName)) request = MessageUtils.getContent(nextProps.flow, nextProps.message);else request = MessageUtils.getContent(nextProps.flow, nextProps.message, this.constructor.displayName);
+
         this.setState({
             content: undefined,
             request: request
@@ -1697,22 +1702,49 @@ var ViewAuto = React.createClass({
         matches: function matches() {
             return false; // don't match itself
         },
-        findView: function findView(message) {
-            for (var i = 0; i < all.length; i++) {
-                if (all[i].matches(message)) {
-                    return all[i];
+        findView: function findView(message, pluginStore) {
+            var all_views = all.slice();
+            if (pluginStore) {
+                _.each(pluginStore, function (plugin) {
+                    if (plugin.type === 'view_plugins') {
+                        all_views.push(React.createClass({
+                            displayName: plugin.id,
+                            mixins: [RawMixin],
+                            statics: {
+                                matches: function matches(message) {
+                                    return true;
+                                }
+                            },
+                            renderContent: function renderContent() {
+                                return React.createElement(
+                                    "pre",
+                                    null,
+                                    this.state.content
+                                );
+                            }
+                        }));
+                    }
+                });
+            }
+
+            for (var i = all_views.length - 1; i >= 0; i--) {
+                if (all_views[i].matches(message)) {
+                    return all_views[i];
                 }
             }
-            return all[all.length - 1];
+            return all_views[all_views.length - 1];
         }
     },
     render: function render() {
-        var View = ViewAuto.findView(this.props.message);
-        return React.createElement(View, this.props);
+        var View = ViewAuto.findView(this.props.message, this.props.pluginStore);
+        return React.createElement(View, _extends({}, this.props, { pluginStore: this.props.pluginStore }));
     }
 });
 
 var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
+allNames = _.map(all, function (v) {
+    return v.displayName;
+});
 
 var ContentEmpty = React.createClass({
     displayName: "ContentEmpty",
@@ -1771,17 +1803,43 @@ var TooLarge = React.createClass({
 var ViewSelector = React.createClass({
     displayName: "ViewSelector",
 
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
     render: function render() {
+        var all_views = all.slice();
         var views = [];
-        for (var i = 0; i < all.length; i++) {
-            var view = all[i];
+
+        _.each(this.context.pluginStore, function (plugin) {
+            if (plugin.type === 'view_plugins') {
+                all_views.push(React.createClass({
+                    displayName: plugin.id,
+                    mixins: [RawMixin],
+                    statics: {
+                        matches: function matches(message) {
+                            return true;
+                        }
+                    },
+                    renderContent: function renderContent() {
+                        return React.createElement(
+                            "pre",
+                            null,
+                            this.state.content
+                        );
+                    }
+                }));
+            }
+        });
+
+        for (var i = 0; i < all_views.length; i++) {
+            var view = all_views[i];
             var className = "btn btn-default";
             if (view === this.props.active) {
                 className += " active";
             }
             var text;
             if (view === ViewAuto) {
-                text = "auto: " + ViewAuto.findView(this.props.message).displayName.toLowerCase().replace("view", "");
+                text = "auto: " + ViewAuto.findView(this.props.message, this.context.pluginStore).displayName.toLowerCase().replace("view", "");
             } else {
                 text = view.displayName.toLowerCase().replace("view", "");
             }
@@ -1806,6 +1864,9 @@ var ViewSelector = React.createClass({
 var ContentView = React.createClass({
     displayName: "ContentView",
 
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
     getInitialState: function getInitialState() {
         return {
             displayLarge: false,
@@ -1847,7 +1908,7 @@ var ContentView = React.createClass({
         return React.createElement(
             "div",
             null,
-            React.createElement(this.state.View, this.props),
+            React.createElement(this.state.View, _extends({ pluginStore: this.context.pluginStore }, this.props)),
             React.createElement(
                 "div",
                 { className: "view-options text-center" },
@@ -1863,10 +1924,10 @@ var ContentView = React.createClass({
     }
 });
 
-module.exports = ContentView;
+module.exports = { ContentView: ContentView, all: all };
 
 
-},{"../../flow/utils.js":23,"../../utils.js":26,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -2123,7 +2184,7 @@ var Details = React.createClass({
 module.exports = Details;
 
 
-},{"../../utils.js":26,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":27,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -2134,21 +2195,41 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
+var PluginsFlowLevel = require("./plugins.js").PluginsFlowLevel;
 
 var allTabs = {
     request: Messages.Request,
     response: Messages.Response,
     error: Messages.Error,
-    details: Details
+    details: Details,
+    plugins: PluginsFlowLevel
 };
 
 var FlowView = React.createClass({
     displayName: "FlowView",
 
     mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function getChildContext() {
+        return { pluginStore: this.state.pluginStore };
+    },
     getInitialState: function getInitialState() {
+        $.getJSON("/plugins").done((function (message) {
+            var pluginList = [];
+            _.each(message.data, function (plugin) {
+                pluginList.push(plugin);
+            });
+
+            this.setState({ pluginStore: pluginList });
+        }).bind(this)).fail((function () {
+            console.log("Could not fetch plugins");
+        }).bind(this));
+
         return {
-            prompt: false
+            prompt: false,
+            pluginStore: []
         };
     },
     getTabs: function getTabs(flow) {
@@ -2159,6 +2240,9 @@ var FlowView = React.createClass({
             }
         });
         tabs.push("details");
+        // replace w/
+        // if length(available actions for flow) >= 1
+        tabs.push("plugins");
         return tabs;
     },
     nextTab: function nextTab(i) {
@@ -2245,7 +2329,7 @@ var FlowView = React.createClass({
 module.exports = FlowView;
 
 
-},{"../common.js":4,"../prompt.js":17,"./details.js":10,"./messages.js":12,"./nav.js":13,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
+},{"../common.js":4,"../prompt.js":18,"./details.js":10,"./messages.js":12,"./nav.js":13,"./plugins.js":14,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -2257,7 +2341,7 @@ var common = require("../common.js");
 var actions = require("../../actions.js");
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
-var ContentView = require("./contentview.js");
+var ContentView = require("./contentview.js").ContentView;
 var ValueEditor = require("../editor.js").ValueEditor;
 
 var Headers = React.createClass({
@@ -2484,6 +2568,15 @@ var ResponseLine = React.createClass({
 var Request = React.createClass({
     displayName: "Request",
 
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function getChildContext() {
+        return { pluginStore: this.context.pluginStore };
+    },
     render: function render() {
         var flow = this.props.flow;
         return React.createElement(
@@ -2597,7 +2690,7 @@ module.exports = {
 /*<ResponseLine flow={flow}/>*/ /*<RequestLine flow={flow}/>*/
 
 
-},{"../../actions.js":2,"../../flow/utils.js":23,"../../utils.js":26,"../common.js":4,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":27,"../common.js":4,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react"}],13:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -2675,6 +2768,105 @@ module.exports = Nav;
 "use strict";
 
 var React = require("react");
+var _ = require("lodash");
+
+var utils = require("../../utils.js");
+var MessageUtils = require("../../flow/utils.js").MessageUtils;
+
+var PluginOptionsPane = React.createClass({
+    displayName: "PluginOptionsPane",
+
+    getInitialState: function getInitialState() {
+        return {};
+    },
+
+    render: function render() {
+        var rows = [];
+        _.forEach(this.props.plugin_list, function (plugin) {
+            rows.push(React.createElement(
+                "tr",
+                { key: plugin.id },
+                React.createElement(
+                    "td",
+                    null,
+                    plugin.title
+                ),
+                React.createElement("td", null)
+            ));
+        });
+
+        return React.createElement(
+            "table",
+            { className: "plugins-table main" },
+            React.createElement(
+                "thead",
+                null,
+                React.createElement(
+                    "tr",
+                    null,
+                    React.createElement(
+                        "td",
+                        null,
+                        "Name"
+                    ),
+                    React.createElement(
+                        "td",
+                        null,
+                        "Plugin Options"
+                    )
+                )
+            ),
+            React.createElement(
+                "tbody",
+                null,
+                rows
+            )
+        );
+    }
+});
+
+var PluginsTopLevel = React.createClass({
+    displayName: "PluginsTopLevel",
+
+    getInitialState: function getInitialState() {
+        var pluginList = [];
+        $.getJSON("/plugins").done((function (message) {
+            _.each(message.data, function (plugin) {
+                //if (plugin.type === 'action_plugins') {
+                pluginList.push(plugin);
+                //}
+            });
+
+            this.setState({ 'plugin_list': pluginList });
+        }).bind(this)).fail((function () {
+            console.log("Could not fetch plugins");
+        }).bind(this));
+
+        return { 'plugin_list': pluginList };
+    },
+
+    render: function render() {
+        return React.createElement(
+            "div",
+            null,
+            React.createElement(
+                "section",
+                null,
+                React.createElement(PluginOptionsPane, { plugin_list: this.state.plugin_list })
+            )
+        );
+    }
+});
+
+module.exports = {
+    'PluginsTopLevel': PluginsTopLevel
+};
+
+
+},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
+"use strict";
+
+var React = require("react");
 var common = require("./common.js");
 
 var Footer = React.createClass({
@@ -2707,7 +2899,7 @@ var Footer = React.createClass({
 module.exports = Footer;
 
 
-},{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"./common.js":4,"react":"react"}],16:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -3016,6 +3208,22 @@ var ReportsMenu = React.createClass({
     }
 });
 
+var PluginsMenu = React.createClass({
+    displayName: "PluginsMenu",
+
+    statics: {
+        title: "Plugins",
+        route: "plugins"
+    },
+    render: function render() {
+        return React.createElement(
+            "div",
+            null,
+            "Plugins Menu"
+        );
+    }
+});
+
 var FileMenu = React.createClass({
     displayName: "FileMenu",
 
@@ -3096,7 +3304,7 @@ var FileMenu = React.createClass({
     }
 });
 
-var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
+var header_entries = [MainMenu, ViewMenu, PluginsMenu /*, ReportsMenu */];
 
 var Header = React.createClass({
     displayName: "Header",
@@ -3175,7 +3383,7 @@ Shutdown
 */
 
 
-},{"../actions.js":2,"../filt/filt.js":22,"../utils.js":26,"./common.js":4,"jquery":"jquery","react":"react"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":27,"./common.js":4,"jquery":"jquery","react":"react"}],17:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -3418,7 +3626,7 @@ var MainView = React.createClass({
 module.exports = MainView;
 
 
-},{"../actions.js":2,"../filt/filt.js":22,"../store/view.js":25,"../utils.js":26,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],17:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":26,"../utils.js":27,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],18:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -3539,7 +3747,7 @@ var Prompt = React.createClass({
 module.exports = Prompt;
 
 
-},{"../utils.js":26,"./common.js":4,"lodash":"lodash","react":"react"}],18:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"lodash":"lodash","react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -3554,6 +3762,7 @@ var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
+var PluginsTopLevel = require('./flowview/plugins.js').PluginsTopLevel;
 
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({
@@ -3666,6 +3875,7 @@ var routes = React.createElement(
     React.createElement(Route, { name: "flows", path: "flows", handler: MainView }),
     React.createElement(Route, { name: "flow", path: "flows/:flowId/:detailTab", handler: MainView }),
     React.createElement(Route, { name: "reports", handler: Reports }),
+    React.createElement(Route, { name: "plugins", handler: PluginsTopLevel }),
     React.createElement(Redirect, { path: "/", to: "flows" })
 );
 
@@ -3674,7 +3884,7 @@ module.exports = {
 };
 
 
-},{"../actions.js":2,"../store/store.js":24,"../utils.js":26,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":16,"lodash":"lodash","react":"react","react-router":"react-router"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./flowview/plugins.js":14,"./footer.js":15,"./header.js":16,"./mainview.js":17,"lodash":"lodash","react":"react","react-router":"react-router"}],20:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -3764,7 +3974,7 @@ var VirtualScrollMixin = {
 module.exports = VirtualScrollMixin;
 
 
-},{"react":"react"}],20:[function(require,module,exports){
+},{"react":"react"}],21:[function(require,module,exports){
 "use strict";
 
 var actions = require("./actions.js");
@@ -3797,7 +4007,7 @@ function Connection(url) {
 module.exports = Connection;
 
 
-},{"./actions.js":2,"./dispatcher.js":21}],21:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22}],22:[function(require,module,exports){
 "use strict";
 
 var flux = require("flux");
@@ -3822,7 +4032,7 @@ module.exports = {
 };
 
 
-},{"flux":"flux"}],22:[function(require,module,exports){
+},{"flux":"flux"}],23:[function(require,module,exports){
 "use strict";
 
 module.exports = (function () {
@@ -5723,7 +5933,7 @@ module.exports = (function () {
 })();
 
 
-},{"../flow/utils.js":23}],23:[function(require,module,exports){
+},{"../flow/utils.js":24}],24:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -5771,16 +5981,18 @@ var MessageUtils = {
         }
         return false;
     },
-    getContentURL: function getContentURL(flow, message) {
+    getContentURL: function getContentURL(flow, message, viewType) {
         if (message === flow.request) {
             message = "request";
         } else if (message === flow.response) {
             message = "response";
         }
-        return "/flows/" + flow.id + "/" + message + "/content";
+
+        if (viewType !== undefined) return "/flows/" + flow.id + "/" + message + "/content/" + viewType;else return "/flows/" + flow.id + "/" + message + "/content";
     },
-    getContent: function getContent(flow, message) {
-        var url = MessageUtils.getContentURL(flow, message);
+    getContent: function getContent(flow, message, viewType) {
+        var url;
+        if (viewType !== undefined) url = MessageUtils.getContentURL(flow, message, viewType);else url = MessageUtils.getContentURL(flow, message);
         return $.get(url);
     }
 };
@@ -5855,7 +6067,7 @@ module.exports = {
 };
 
 
-},{"jquery":"jquery","lodash":"lodash"}],24:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -6034,7 +6246,7 @@ module.exports = {
 };
 
 
-},{"../actions.js":2,"../dispatcher.js":21,"../utils.js":26,"events":1,"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"../utils.js":27,"events":1,"jquery":"jquery","lodash":"lodash"}],26:[function(require,module,exports){
 "use strict";
 
 var EventEmitter = require('events').EventEmitter;
@@ -6157,7 +6369,7 @@ module.exports = {
 };
 
 
-},{"../utils.js":26,"events":1,"lodash":"lodash"}],26:[function(require,module,exports){
+},{"../utils.js":27,"events":1,"lodash":"lodash"}],27:[function(require,module,exports){
 "use strict";
 
 var $ = require("jquery");

@@ -4,7 +4,8 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
-from .. import version, filt
+from .. import version, filt, contentviews
+from ..exceptions import ContentViewException
 
 
 class APIError(tornado.web.HTTPError):
@@ -176,6 +177,60 @@ class ReplayFlow(RequestHandler):
             raise APIError(400, r)
 
 
+class ViewPluginFlowContent(RequestHandler):
+    def get(self, flow_id, message, plugin_id):
+        message = getattr(self.flow, message)
+
+        if not message.content:
+            raise APIError(400, "No content.")
+
+        content_encoding = message.headers.get("Content-Encoding", None)
+        if content_encoding:
+            content_encoding = re.sub(r"[^\w]", "", content_encoding)
+            self.set_header("Content-Encoding", content_encoding)
+
+        original_cd = message.headers.get("Content-Disposition", None)
+        filename = None
+        if original_cd:
+            filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)
+            if filename:
+                filename = filename.group(1)
+        if not filename:
+            filename = self.flow.request.path.split("?")[0].split("/")[-1]
+
+        filename = re.sub(r"[^\w\" \.\-\(\)]", "", filename)
+        cd = "attachment; filename={}".format(filename)
+        self.set_header("Content-Disposition", cd)
+        self.set_header("Content-Type", "application/text")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("X-Frame-Options", "DENY")
+
+        try:
+            type, lines = contentviews.get_content_view(
+                contentviews.get(plugin_id),
+                message.content,
+                headers=message.headers
+            )
+        except ContentViewException:
+            s = "Content viewer failed: \n" + traceback.format_exc()
+            self.add_event(s, "debug")
+            type, lines = contentviews.get_content_view(
+                contentviews.get("Raw"),
+                message.content,
+                headers=message.headers
+            )
+
+        def get_text(line):
+            for (style, text) in line:
+                yield text
+
+        content = u"\r\n".join(
+            u"".join(get_text(line)) for line in lines
+        )
+
+        self.write(content)
+
+
 class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
@@ -239,6 +294,32 @@ class Settings(RequestHandler):
         )
 
 
+class PluginList(RequestHandler):
+    def get(self):
+        def _flatten(plugin_list):
+            ret_arr = []
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for plugin_id, plugin_dict in plugin_dicts.items():
+                    new_dict = plugin_dict.copy()
+                    new_dict['id'] = plugin_id
+                    new_dict['type'] = plugin_type
+
+                    def _check_dict_for_callables(_dict):
+                        for k, v in _dict.items():
+                            if callable(v):
+                                _dict[k] = repr(v)
+                            if isinstance(v, dict):
+                                _check_dict_for_callables(v)
+
+                    _check_dict_for_callables(new_dict)
+                    ret_arr.append(new_dict)
+            return ret_arr
+
+        self.write(dict(
+            data=list(_flatten(self.master.plugins))
+        ))
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
@@ -255,8 +336,10 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", ViewPluginFlowContent),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
+            (r"/plugins", PluginList),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
