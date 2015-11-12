@@ -85,9 +85,9 @@ def hexdump(s):
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = b"%.10x" % i
+        offset = "{:0=10x}".format(i).encode()
         part = s[i:i + 16]
-        x = b" ".join(b"%.2x" % i for i in six.iterbytes(part))
+        x = b" ".join("{:0=2x}".format(i).encode() for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15
         yield (offset, x, clean_bin(part, False))
 
