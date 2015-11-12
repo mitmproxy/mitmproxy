@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import, print_function, division
 import os.path
 import re
 import string
@@ -61,11 +61,11 @@ def clean_bin(s, keep_spacing=True):
     """
     if isinstance(s, six.text_type):
         if keep_spacing:
-            keep = " \n\r\t"
+            keep = u" \n\r\t"
         else:
-            keep = " "
-        return "".join(
-            ch if (unicodedata.category(ch)[0] not in "CZ" or ch in keep) else "."
+            keep = u" "
+        return u"".join(
+            ch if (unicodedata.category(ch)[0] not in "CZ" or ch in keep) else u"."
             for ch in s
         )
     else:
@@ -85,9 +85,9 @@ def hexdump(s):
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i).encode()
+        offset = b"%.10x" % i
         part = s[i:i + 16]
-        x = b" ".join("{:0=2x}".format(i).encode() for i in six.iterbytes(part))
+        x = b" ".join(b"%.2x" % i for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15
         yield (offset, x, clean_bin(part, False))
 
@@ -122,7 +122,7 @@ class BiDi(object):
     def __init__(self, **kwargs):
         self.names = kwargs
         self.values = {}
-        for k, v in list(kwargs.items()):
+        for k, v in kwargs.items():
             self.values[v] = k
         if len(self.names) != len(self.values):
             raise ValueError("Duplicate values not allowed.")
