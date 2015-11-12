@@ -12,8 +12,6 @@ def tflow():
 
 class TestApp:
 
-    def __init__(self):
-        self.called = False
 
     def __call__(self, environ, start_response):
         self.called = True

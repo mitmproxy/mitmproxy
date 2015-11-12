@@ -96,16 +96,17 @@ class WSGIAdaptor(object):
             Make a best-effort attempt to write an error page. If headers are
             already sent, we just bung the error into the page.
         """
-        c = b"""
+        c = """
             <html>
                 <h1>Internal Server Error</h1>
-                <pre>%s"</pre>
+                <pre>{err}"</pre>
             </html>
-        """.strip() % s.encode()
+        """.format(err=s).strip().encode()
+
         if not headers_sent:
             soc.write(b"HTTP/1.1 500 Internal Server Error\r\n")
             soc.write(b"Content-Type: text/html\r\n")
-            soc.write(b"Content-Length: %s\r\n" % len(c))
+            soc.write("Content-Length: {length}\r\n".format(length=len(c)).encode())
             soc.write(b"\r\n")
         soc.write(c)
 
@@ -119,7 +120,7 @@ class WSGIAdaptor(object):
 
         def write(data):
             if not state["headers_sent"]:
-                soc.write(b"HTTP/1.1 %s\r\n" % state["status"].encode())
+                soc.write("HTTP/1.1 {status}\r\n".format(status=state["status"]).encode())
                 headers = state["headers"]
                 if 'server' not in headers:
                     headers["Server"] = self.sversion
