@@ -15,17 +15,17 @@ with open(os.path.join(here, 'README.mkd'), encoding='utf-8') as f:
     long_description = f.read()
 
 deps = {
-    "pyasn1>=0.1.7",
-    "pyOpenSSL>=0.15.1",
-    "cryptography>=1.0",
-    "passlib>=1.6.2",
-    "hpack>=1.0.1",
-    "six>=1.9.0",
-    "certifi>=2015.9.6.2",
-    "backports.ssl_match_hostname>=3.4.0.2",
+    "pyasn1~=0.1.9",
+    "pyOpenSSL~=0.15.1",
+    "cryptography~=1.1.0",
+    "passlib~=1.6.5",
+    "hpack~=2.0.1",
+    "six~=1.10.0",
+    "certifi>=2015.9.6.2", # no semver here - this should always be on the last release!
+    "backports.ssl_match_hostname~=3.4.0.2",
 }
 if sys.version_info < (3, 0):
-    deps.add("ipaddress>=1.0.14")
+    deps.add("ipaddress~=1.0.15")
 
 setup(
     name="netlib",
