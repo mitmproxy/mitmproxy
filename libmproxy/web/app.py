@@ -4,7 +4,9 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
+from libmproxy.protocol.http import HTTPRequest, HTTPResponse
 from .. import version, filt
+from ..script import ScriptError
 
 
 class APIError(tornado.web.HTTPError):
@@ -176,6 +178,49 @@ class ReplayFlow(RequestHandler):
             raise APIError(400, r)
 
 
+class ViewPluginFlowContent(RequestHandler):
+    def get(self, flow_id, message, plugin_id):
+        message = getattr(self.flow, message)
+
+        if not message.content:
+            raise APIError(400, "No content.")
+
+        content_encoding = message.headers.get_first("Content-Encoding", None)
+        if content_encoding:
+            content_encoding = re.sub(r"[^\w]", "", content_encoding)
+            self.set_header("Content-Encoding", content_encoding)
+
+        original_cd = message.headers.get_first("Content-Disposition", None)
+        filename = None
+        if original_cd:
+            filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)
+            if filename:
+                filename = filename.group(1)
+        if not filename:
+            filename = self.flow.request.path.split("?")[0].split("/")[-1]
+
+        filename = re.sub(r"[^\w\" \.\-\(\)]", "", filename)
+        cd = "attachment; filename={}".format(filename)
+        self.set_header("Content-Disposition", cd)
+        self.set_header("Content-Type", "application/text")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("X-Frame-Options", "DENY")
+
+        transformed_content = message.content
+        for plugin_type, plugin_list in self.master.plugins:
+            if plugin_type != 'view_plugins':
+                continue
+
+            for found_plugin_id, plugin in plugin_list.items():
+                if found_plugin_id == plugin_id:
+                    if isinstance(message, HTTPRequest):
+                        transformed_content = plugin['transformer'](self.flow, target='request')
+                    elif isinstance(message, HTTPResponse):
+                        transformed_content = plugin['transformer'](self.flow, target='response')
+                    break
+        self.write(transformed_content)
+
+
 class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
@@ -239,6 +284,127 @@ class Settings(RequestHandler):
         )
 
 
+class PluginActionEveryFlow(RequestHandler):
+    def post(self, plugin_id, action_id):
+        found = False
+        plugin = None
+        action = self.master.plugins.get_action(plugin_id, action_id)
+
+        if not action:
+            raise APIError(500, 'No action %s for plugin %s' % (action_id, plugin_id))
+
+        if self.json.get('every_flow'):
+            self.master.add_event("Setting plugin %s action %s to run on every flow" % (plugin_id, action_id), "debug")
+            action['state']['every_flow'] = True
+        else:
+            self.master.add_event("Setting plugin %s action %s not to run on every flow" % (plugin_id, action_id), "debug")
+            action['state']['every_flow'] = False
+
+        self.write(dict(
+            data={'success': True}
+        ))
+
+
+class PluginOption(RequestHandler):
+    def post(self, plugin_id, option_id):
+        found = False
+        plugin = None
+        option = self.master.plugins.get_option(plugin_id, option_id)
+
+        if not option:
+            raise APIError(500, 'No option %s for plugin %s' % (option_id, plugin_id))
+
+        if self.json.get('value'):
+            self.master.add_event("Setting plugin %s option %s value to %s" % (plugin_id, option_id, self.json.get('value')), "debug")
+            option['state']['value'] = self.json.get('value')
+        else:
+            self.master.add_event("Setting plugin %s option %s value to empty" % (plugin_id, option_id), "debug")
+            option['state']['value'] = ''
+
+        self.write(dict(
+            data={'success': True}
+        ))
+
+
+class PluginFlowActions(RequestHandler):
+    def post(self, flow_id, plugin_id):
+        found = False
+        plugin = None
+        plugin_list = self.master.plugins
+        class GetOutOfLoop(Exception):
+            pass
+
+        try:
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for _plugin_id, plugin_dict in plugin_dicts.items():
+                    if plugin_id != _plugin_id:
+                        continue
+
+                    for action in plugin_dict['actions']:
+                        if action['id'] != self.json['id']:
+                            continue
+
+                        found = True
+                        plugin = plugin_dict
+                        raise GetOutOfLoop
+        except GetOutOfLoop:
+            pass
+
+        if not found:
+            raise APIError(500, 'No action %s for plugin %s' % (self.json['id'], plugin_id))
+
+        self.master.add_event("Running plugin %s action %s on flow" % (plugin_id, self.json['id']), "debug")
+
+        found = False
+        script = None
+        for _script in self.master.scripts:
+            if _script.args[0] != plugin['script_path']:
+                continue
+
+            found = True
+            script = _script
+            break
+
+        if not found:
+            raise APIError(500, 'No script %s found on master.scripts' % plugin['script_path'])
+
+        try:
+            self.master._run_single_script_hook(script, self.json['id'], self.flow)
+        except ScriptError as e:
+            self.master.add_event("Error running script:\n%s" % repr(e), "error")
+            raise APIError(500, 'Error running script:\n%s' % repr(e))
+
+        self.write(dict(
+            data={'success': True}
+        ))
+
+
+class PluginList(RequestHandler):
+    def get(self):
+        def _flatten(plugin_list):
+            ret_arr = []
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for plugin_id, plugin_dict in plugin_dicts.items():
+                    new_dict = plugin_dict.copy()
+                    new_dict['id'] = plugin_id
+                    new_dict['type'] = plugin_type
+
+                    def _check_dict_for_callables(_dict):
+                        for k, v in _dict.items():
+                            if callable(v):
+                                _dict[k] = repr(v)
+                            if isinstance(v, dict):
+                                _check_dict_for_callables(v)
+
+                    _check_dict_for_callables(new_dict)
+                    ret_arr.append(new_dict)
+            return ret_arr
+
+        self.write(dict(
+            data=list(_flatten(self.master.plugins))
+        ))
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
@@ -255,8 +421,13 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", ViewPluginFlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/plugins/(?P<plugin_id>[\w]+)", PluginFlowActions),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
+            (r"/plugins", PluginList),
+            (r"/plugins/(?P<plugin_id>[\w]+)/actions/(?P<action_id>[\w]+)", PluginActionEveryFlow),
+            (r"/plugins/(?P<plugin_id>[\w]+)/options/(?P<option_id>[\w]+)", PluginOption),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

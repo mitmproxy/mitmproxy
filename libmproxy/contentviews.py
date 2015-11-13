@@ -52,11 +52,8 @@ else:
     cssutils.ser.prefs.indentClosingBrace = False
     cssutils.ser.prefs.validOnly = False
 
-# Default view cutoff *in lines*
-VIEW_CUTOFF = 512
-
+VIEW_CUTOFF = 1024 * 50
 KEY_MAX = 30
-
 
 def format_dict(d):
     """

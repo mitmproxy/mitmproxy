@@ -340,10 +340,49 @@ header .menu {
   padding-right: 1em;
 }
 .connection-table td,
-.timing-table td {
+.timing-table td,
+.plugins-table td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.plugins-table {
+  width: 50%;
+  margin: auto;
+  table-layout: fixed;
+}
+.plugins-table div {
+  clear: both;
+}
+.plugins-table div label,
+.plugins-table div input {
+  float: left;
+}
+.plugins-table.flow div {
+  width: 100%;
+}
+.plugins-table.flow div label,
+.plugins-table.flow div input {
+  width: 50%;
+}
+.plugins-table.main div {
+  width: 100%;
+}
+.plugins-table.main div input {
+  margin-left: 35px;
+}
+.plugins-table thead {
+  border-bottom: 1px solid grey;
+}
+.plugins-table td {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.plugins-table tr:not(:first-child) {
+  border-top: 1px solid #f7f7f7;
+}
+.plugins-table label span.light {
+  font-weight: normal;
 }
 .flowview-image {
   text-align: center;

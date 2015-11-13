@@ -3,11 +3,16 @@ import collections
 import tornado.ioloop
 import tornado.httpserver
 import os
-from .. import controller, flow
+import sys
+from .. import controller, flow, filt
 from . import app
 
 
 class Stop(Exception):
+    pass
+
+
+class WebError(Exception):
     pass
 
 
@@ -93,6 +98,7 @@ class Options(object):
         "kill",
         "intercept",
         "no_server",
+        "outfile",
         "refresh_server_playback",
         "rfile",
         "scripts",
@@ -107,6 +113,7 @@ class Options(object):
         "verbosity",
         "wfile",
         "nopop",
+        "filtstr",
 
         "wdebug",
         "wport",
@@ -122,18 +129,38 @@ class Options(object):
 
 
 class WebMaster(flow.FlowMaster):
-    def __init__(self, server, options):
+    def __init__(self, server, options, outfile=sys.stdout):
+        self.outfile = outfile
         self.options = options
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
+
+        if options.filtstr:
+            self.filt = filt.parse(options.filtstr)
+        else:
+            self.filt = None
+
+        if options.outfile:
+            path = os.path.expanduser(options.outfile[0])
+            try:
+                f = file(path, options.outfile[1])
+                self.start_stream(f, self.filt)
+            except IOError as v:
+                raise WebError(v.strerror)
+
+        scripts = options.scripts or []
+        for command in scripts:
+            err = self.load_script(command)
+            if err:
+                raise WebError(err)
+
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
             except flow.FlowReadError as v:
-                self.add_event(
-                    "Could not read flow file: %s" % v,
-                    "error"
-                )
+                self.add_event("Flow file corrupted.", "error")
+                raise WebError(v)
+
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)
 

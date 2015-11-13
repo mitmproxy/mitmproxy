@@ -6,7 +6,7 @@ from os.path import normpath
 import mock_urwid
 
 import netlib.tutils
-from libmproxy import console
+from libmproxy import console, contentview
 from libmproxy.console import common
 
 import tutils
@@ -99,7 +99,7 @@ class TestConsoleState:
 
 
 def test_format_keyvals():
-    assert common.format_keyvals(
+    assert common.urwid_keyvals(contentview.format_keyvals(
         [
             ("aa", "bb"),
             None,
@@ -107,7 +107,7 @@ def test_format_keyvals():
             (None, "dd"),
             (None, "dd"),
         ]
-    )
+    ))
 
 
 def test_options():

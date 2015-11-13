@@ -173,7 +173,6 @@ _.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-
 module.exports = {
     EventLogStore: EventLogStore,
     SettingsStore: SettingsStore,

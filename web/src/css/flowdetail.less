@@ -103,10 +103,65 @@
     }
 }
 
-.connection-table, .timing-table {
+.connection-table, .timing-table, .plugins-table {
     td {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+}
+
+.plugins-table {
+    width: 50%;
+    margin: auto;
+    table-layout: fixed;
+
+    div {
+        clear: both;
+
+        label, input {
+            float: left;
+        }
+    }
+
+    &.flow {
+        div {
+            width: 100%;
+
+            label, input {
+                width: 50%;
+            }
+        }
+    }
+
+    &.main {
+        div {
+            width: 100%;
+
+            input {
+                margin-left: 35px;
+            }
+        }
+    }
+
+    thead {
+        border-bottom: 1px solid grey;
+    }
+
+    td {
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+
+    tr {
+        &:not(:first-child) {
+            border-top: 1px solid #f7f7f7;
+        }
+    }
+
+    label {
+        span.light {
+            font-weight: normal;
+        }
     }
 }

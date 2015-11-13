@@ -11,7 +11,7 @@ var ActionTypes = {
     // Stores
     SETTINGS_STORE: "settings",
     EVENT_STORE: "events",
-    FLOW_STORE: "flows",
+    FLOW_STORE: "flows"
 };
 
 var StoreCmds = {

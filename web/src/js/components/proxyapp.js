@@ -10,6 +10,7 @@ var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
+var PluginsTopLevel = require('./flowview/plugins.js').PluginsTopLevel;
 
 
 //TODO: Move out of here, just a stub.
@@ -43,6 +44,10 @@ var ProxyAppMain = React.createClass({
         var eventStore = new store.EventLogStore();
         var flowStore = new store.FlowStore();
         var settingsStore = new store.SettingsStore();
+
+        // get the view plugin list and append to ContentView's `all`
+        // so buttons will be available on the UI
+
 
         // Default Settings before fetch
         _.extend(settingsStore.dict, {});
@@ -120,6 +125,7 @@ var routes = (
         <Route name="flows" path="flows" handler={MainView}/>
         <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
         <Route name="reports" handler={Reports}/>
+        <Route name="plugins" handler={PluginsTopLevel}/>
         <Redirect path="/" to="flows" />
     </Route>
 );
