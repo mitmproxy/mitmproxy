@@ -6,7 +6,9 @@ import shlex
 import sys
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler, FileModifiedEvent
+import blinker
 
+sig_script_change = blinker.Signal()
 
 class ScriptError(Exception):
     pass
@@ -70,7 +72,7 @@ class Script:
         self.ctx = ScriptContext(master)
         self.ns = None
         self.load()
-        observe_scripts(master, self.args[0])
+        self.observe_scripts()
 
     @classmethod
     def parse_command(cls, command):
@@ -139,6 +141,13 @@ class Script:
                 raise ScriptError(traceback.format_exc(e))
         else:
             return None
+    
+    def observe_scripts(self):
+        script_dir = os.path.dirname(self.args[0])
+        event_handler = ScriptModified(self)
+        observer = Observer()
+        observer.schedule(event_handler, script_dir)
+        observer.start()
 
 
 class ReplyProxy(object):
@@ -199,19 +208,9 @@ def concurrent(fn):
 
 class ScriptModified(PatternMatchingEventHandler):
     
-    def __init__(self, flow_master):
-        self.flow_master = flow_master
+    def __init__(self, script):
         PatternMatchingEventHandler.__init__(self, ignore_directories=True, patterns=["*.py"])
-        self.context = ScriptContext(self.flow_master)
+        self.script = script
 
     def on_modified(self, event=FileModifiedEvent):
-        self.flow_master.reload_scripts()
-        self.context.log("script: <{}> reloaded.".format(event.src_path))
-
-
-def observe_scripts(flow_master, path):
-    script_dir = os.path.dirname(path)
-    event_handler = ScriptModified(flow_master)
-    observer = Observer()
-    observer.schedule(event_handler, script_dir)
-    observer.start()
+        sig_script_change.send(self.script)

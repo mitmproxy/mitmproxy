@@ -642,6 +642,7 @@ class FlowMaster(controller.Master):
 
         self.stream = None
         self.apps = AppRegistry()
+        script.sig_script_change.connect(self.script_change)
 
     def start_app(self, host, port):
         self.apps.add(
@@ -666,10 +667,6 @@ class FlowMaster(controller.Master):
         except script.ScriptError as e:
             self.add_event("Script error:\n" + str(e), "error")
         self.scripts.remove(script_obj)
-
-    def reload_scripts(self):
-        for s in self.scripts[:]:
-            s.load()
     
     def load_script(self, command):
         """
@@ -1025,6 +1022,9 @@ class FlowMaster(controller.Master):
     def handle_accept_intercept(self, f):
         self.state.update_flow(f)
 
+    def handle_script_change(self, script):
+        script.load()
+
     def shutdown(self):
         self.unload_scripts()
         controller.Master.shutdown(self)
@@ -1040,6 +1040,10 @@ class FlowMaster(controller.Master):
     def stop_stream(self):
         self.stream.fo.close()
         self.stream = None
+
+    def script_change(self, script):
+        self.masterq.put(("script_change", script))
+        self.add_event("<{}> reloaded.".format(script.args[0]))
 
 
 def read_flows_from_paths(paths):
