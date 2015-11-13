@@ -479,34 +479,9 @@ class ViewWBXML(View):
             return None
 
 
-views = [
-    ViewAuto(),
-    ViewRaw(),
-    ViewHex(),
-    ViewJSON(),
-    ViewXML(),
-    ViewWBXML(),
-    ViewHTML(),
-    ViewHTMLOutline(),
-    ViewJavaScript(),
-    ViewCSS(),
-    ViewURLEncoded(),
-    ViewMultipart(),
-    ViewImage(),
-]
-if pyamf:
-    views.append(ViewAMF())
-
-if ViewProtobuf.is_available():
-    views.append(ViewProtobuf())
-
+views = []
 content_types_map = {}
-for i in views:
-    for ct in i.content_types:
-        l = content_types_map.setdefault(ct, [])
-        l.append(i)
-
-view_prompts = [i.prompt for i in views]
+view_prompts = []
 
 
 def get_by_shortcut(c):
@@ -515,23 +490,57 @@ def get_by_shortcut(c):
             return i
 
 
-def add(obj):
+def add(view):
+    # TODO: auto-select a different name (append an integer?)
     for i in views:
-        if i.name == obj.name:
-            raise ContentViewException("Duplicate view: " + obj.name)
+        if i.name == view.name:
+            raise ContentViewException("Duplicate view: " + view.name)
 
+    # TODO: the UI should auto-prompt for a replacement shortcut
     for prompt in view_prompts:
-        if prompt[1] == obj.prompt[1]:
-            raise ContentViewException("Duplicate view shortcut: " + obj.prompt[1])
+        if prompt[1] == view.prompt[1]:
+            raise ContentViewException("Duplicate view shortcut: " + view.prompt[1])
 
-    views.append(obj)
+    views.append(view)
 
-    for ct in obj.content_types:
+    for ct in view.content_types:
         l = content_types_map.setdefault(ct, [])
-        l.append(obj)
+        l.append(view)
 
-    view_prompts.append(obj.prompt)
+    view_prompts.append(view.prompt)
 
+
+def remove(view):
+    for ct in view.content_types:
+        l = content_types_map.setdefault(ct, [])
+        l.remove(view)
+
+        if not len(l):
+            del content_types_map[ct]
+
+    view_prompts.remove(view.prompt)
+    views.remove(view)
+
+
+add(ViewAuto())
+add(ViewRaw())
+add(ViewHex())
+add(ViewJSON())
+add(ViewXML())
+add(ViewWBXML())
+add(ViewHTML())
+add(ViewHTMLOutline())
+add(ViewJavaScript())
+add(ViewCSS())
+add(ViewURLEncoded())
+add(ViewMultipart())
+add(ViewImage())
+
+if pyamf:
+    add(ViewAMF())
+
+if ViewProtobuf.is_available():
+    add(ViewProtobuf())
 
 def get(name):
     for i in views:

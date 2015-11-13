@@ -213,6 +213,7 @@ Larry
     def test_add_cv(self):
         class TestContentView(cv.View):
             name = "test"
+            prompt = ("t", "test")
 
         tcv = TestContentView()
         cv.add(tcv)

@@ -4,14 +4,6 @@ from netlib.http import Headers
 
 
 def test_custom_views():
-    plugins = flow.Plugins()
-
-    # two types: view and action
-    assert 'view_plugins' in dict(plugins).keys()
-
-    view_plugins = plugins['view_plugins']
-    assert len(view_plugins) == 0
-
     class ViewNoop(cv.View):
         name = "noop"
         prompt = ("noop", "n")
@@ -20,12 +12,10 @@ def test_custom_views():
         def __call__(self, data, **metadata):
             return "noop", cv.format_text(data)
 
-    plugins.register_view('noop',
-                          title='Noop View Plugin',
-                          class_ref=ViewNoop)
 
-    assert len(view_plugins) == 1
-    assert view_plugins['noop']['title'] == 'Noop View Plugin'
+    view_obj = ViewNoop()
+
+    cv.add(view_obj)
 
     assert cv.get("noop")
 
@@ -47,3 +37,16 @@ def test_custom_views():
         )
     )
     assert "noop" in r[0]
+
+    # now try removing the custom view
+    cv.remove(view_obj)
+    r = cv.get_content_view(
+        cv.get("Auto"),
+        "[1, 2, 3]",
+        headers=Headers(
+            content_type="text/none"
+        )
+    )
+    assert "noop" not in r[0]
+
+    

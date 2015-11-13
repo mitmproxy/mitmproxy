@@ -24,10 +24,6 @@ from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, 
 from . import contentviews as cv
 
 
-class PluginError(Exception):
-    pass
-
-
 class AppRegistry:
     def __init__(self):
         self.apps = {}
@@ -619,43 +615,6 @@ class State(object):
         self.flows.kill_all(master)
 
 
-class Plugins(object):
-    def __init__(self):
-        self._view_plugins = {}
-
-    def __iter__(self):
-        for plugin_type in ('view_plugins',):
-            yield (plugin_type, getattr(self, '_' + plugin_type))
-
-    def __getitem__(self, key):
-        if key in ('view_plugins',):
-            return getattr(self, '_' + key)
-        else:
-            return None
-
-    def register_view(self, id, **kwargs):
-        if self._view_plugins.get(id):
-            raise PluginError("Duplicate view registration for %s" % (id, ))
-
-        if not kwargs.get('class_ref') or not \
-                callable(kwargs['class_ref']) or not \
-                isinstance(kwargs['class_ref'], type):
-            raise PluginError("No custom content view class passed for view %s" % (id, ))
-
-        script_path = inspect.stack()[1][1]
-
-        view_plugin = {
-            'title': kwargs.get('title') or id,
-            'class_ref': kwargs['class_ref'],
-            'script_path': script_path,
-        }
-        self._view_plugins[id] = view_plugin
-
-        cv.add(kwargs['class_ref']())
-
-        print("Registered view plugin %s from script %s" % (kwargs['title'], script_path))
-
-
 class FlowMaster(controller.Master):
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
@@ -684,8 +643,6 @@ class FlowMaster(controller.Master):
 
         self.stream = None
         self.apps = AppRegistry()
-
-        self.plugins = Plugins()
 
     def start_app(self, host, port):
         self.apps.add(
