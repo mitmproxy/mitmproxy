@@ -141,6 +141,9 @@ def process_proxy_options(parser, options):
 
     if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
 
+        if options.transparent_proxy:
+            return parser.error("Proxy Authentication not supported in transparent mode.")
+
         if options.socks_proxy:
             return parser.error(
                 "Proxy Authentication not supported in SOCKS mode. "

@@ -309,7 +309,10 @@ class HttpLayer(Layer):
                 self.log("request", "debug", [repr(request)])
 
                 # Handle Proxy Authentication
-                if not self.authenticate(request):
+                # Proxy Authentication conceptually does not work in transparent mode.
+                # We catch this misconfiguration on startup. Here, we sort out requests
+                # after a successful CONNECT request (which do not need to be validated anymore)
+                if self.mode != "transparent" and not self.authenticate(request):
                     return
 
                 # Make sure that the incoming request matches our expectations
