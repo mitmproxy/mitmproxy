@@ -516,9 +516,8 @@ class TestProxy(tservers.HTTPProxTest):
         assert f.status_code == 304
 
         response = self.master.state.view[0].response
-        # time.sleep might be a little bit shorter than a second,
-        # we observed up to 0.93s on appveyor.
-        assert 0.8 <= response.timestamp_end - response.timestamp_start
+        # timestamp_start might fire a bit late, so we play safe and only require 300ms.
+        assert 0.3 <= response.timestamp_end - response.timestamp_start
 
     def test_request_timestamps(self):
         # test that we notice a delay between timestamps in request object
@@ -537,9 +536,8 @@ class TestProxy(tservers.HTTPProxTest):
         request, response = self.master.state.view[
                                 0].request, self.master.state.view[0].response
         assert response.status_code == 304  # sanity test for our low level request
-        # time.sleep might be a little bit shorter than a second,
-        # we observed up to 0.93s on appveyor.
-        assert 0.8 < (request.timestamp_end - request.timestamp_start)
+        # timestamp_start might fire a bit late, so we play safe and only require 300ms.
+        assert 0.3 < (request.timestamp_end - request.timestamp_start)
 
     def test_request_tcp_setup_timestamp_presence(self):
         # tests that the client_conn a tcp connection has a tcp_setup_timestamp
