@@ -5,6 +5,8 @@ import threading
 import shlex
 import sys
 
+from . import contentviews as cv
+
 
 class ScriptError(Exception):
     pass
@@ -55,6 +57,12 @@ class ScriptContext:
     @property
     def app_registry(self):
         return self._master.apps
+
+    def add_contentview(self, view_obj):
+        cv.add(view_obj)
+
+    def remove_contentview(self, view_obj):
+        cv.remove(view_obj)
 
 
 class Script:

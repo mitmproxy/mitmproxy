@@ -127,3 +127,4 @@ def test_command_parsing():
     absfilepath = os.path.normcase(tutils.test_data.path("scripts/a.py"))
     s = script.Script(absfilepath, fm)
     assert os.path.isfile(s.args[0])
+

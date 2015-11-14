@@ -9,7 +9,7 @@ import cookielib
 import os
 import re
 import urlparse
-
+import inspect
 
 from netlib import wsgi
 from netlib.exceptions import HttpException
@@ -21,6 +21,7 @@ from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
 from .protocol import Kill
 from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, HTTPRequest
+from . import contentviews as cv
 
 
 class AppRegistry:
