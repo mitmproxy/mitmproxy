@@ -9,19 +9,16 @@ import cookielib
 import os
 import re
 import urlparse
-import inspect
 
 from netlib import wsgi
 from netlib.exceptions import HttpException
 from netlib.http import CONTENT_MISSING, Headers, http1
-import netlib.http
 from . import controller, tnetstring, filt, script, version
 from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
 from .protocol import Kill
 from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, HTTPRequest
-from . import contentviews as cv
 
 
 class AppRegistry:

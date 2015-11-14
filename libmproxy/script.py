@@ -5,7 +5,7 @@ import threading
 import shlex
 import sys
 
-from . import contentviews as cv
+from . import contentviews
 
 
 class ScriptError(Exception):
@@ -59,10 +59,10 @@ class ScriptContext:
         return self._master.apps
 
     def add_contentview(self, view_obj):
-        cv.add(view_obj)
+        contentviews.add(view_obj)
 
     def remove_contentview(self, view_obj):
-        cv.remove(view_obj)
+        contentviews.remove(view_obj)
 
 
 class Script:

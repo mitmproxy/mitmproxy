@@ -1,12 +1,10 @@
 import string
-from libmproxy import script, flow, utils
-import libmproxy.contentviews as cv
-from netlib.http import Headers
 import lxml.html
 import lxml.etree
+from libmproxy import utils, contentviews
 
 
-class ViewPigLatin(cv.View):
+class ViewPigLatin(contentviews.View):
     name = "pig_latin_HTML"
     prompt = ("pig latin HTML", "l")
     content_types = ["text/html"]
@@ -27,19 +25,23 @@ class ViewPigLatin(cv.View):
                     idx = -1
                     while word[idx] in string.punctuation and (idx * -1) != len(word): idx -= 1
                     if word[0].lower() in 'aeiou':
-                        if idx == -1: ret += word[0:] + "hay"
-                        else: ret += word[0:len(word)+idx+1] + "hay" + word[idx+1:]
+                        if idx == -1:
+                            ret += word[0:] + "hay"
+                        else:
+                            ret += word[0:len(word) + idx + 1] + "hay" + word[idx + 1:]
                     else:
-                        if idx == -1: ret += word[1:] + word[0] + "ay"
-                        else: ret += word[1:len(word)+idx+1] + word[0] + "ay" + word[idx+1:]
+                        if idx == -1:
+                            ret += word[1:] + word[0] + "ay"
+                        else:
+                            ret += word[1:len(word) + idx + 1] + word[0] + "ay" + word[idx + 1:]
                     ret += ' '
                 return ret.strip()
 
             def recurse(root):
                 if hasattr(root, 'text') and root.text:
-                        root.text = piglify(root.text)
+                    root.text = piglify(root.text)
                 if hasattr(root, 'tail') and root.tail:
-                        root.tail = piglify(root.tail)
+                    root.tail = piglify(root.tail)
 
                 if len(root):
                     for child in root:
@@ -52,7 +54,7 @@ class ViewPigLatin(cv.View):
                 pretty_print=True,
                 doctype=docinfo.doctype
             )
-            return "HTML", cv.format_text(s)
+            return "HTML", contentviews.format_text(s)
 
 
 pig_view = ViewPigLatin()
