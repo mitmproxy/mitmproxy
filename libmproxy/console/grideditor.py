@@ -636,7 +636,7 @@ class ScriptEditor(GridEditor):
     def is_error(self, col, val):
         try:
             script.Script.parse_command(val)
-        except script.ScriptError as v:
+        except script.ScriptException as v:
             return str(v)
 
 

@@ -48,3 +48,7 @@ class ContentViewException(ProxyException):
 
 class ReplayException(ProxyException):
     pass
+
+
+class ScriptException(ProxyException):
+    pass

@@ -640,6 +640,7 @@ class FlowMaster(controller.Master):
 
         self.stream = None
         self.apps = AppRegistry()
+        script.script_change.connect(self.script_change)
 
     def start_app(self, host, port):
         self.apps.add(
@@ -661,18 +662,18 @@ class FlowMaster(controller.Master):
     def unload_script(self, script_obj):
         try:
             script_obj.unload()
-        except script.ScriptError as e:
+        except script.ScriptException as e:
             self.add_event("Script error:\n" + str(e), "error")
         self.scripts.remove(script_obj)
-
+    
     def load_script(self, command):
         """
             Loads a script. Returns an error description if something went
             wrong.
         """
         try:
-            s = script.Script(command, self)
-        except script.ScriptError as v:
+            s = script.Script(command, script.ScriptContext(self))
+        except script.ScriptException as v:
             return v.args[0]
         self.scripts.append(s)
 
@@ -680,7 +681,7 @@ class FlowMaster(controller.Master):
         if script_obj and not self.pause_scripts:
             try:
                 script_obj.run(name, *args, **kwargs)
-            except script.ScriptError as e:
+            except script.ScriptException as e:
                 self.add_event("Script error:\n" + str(e), "error")
 
     def run_script_hook(self, name, *args, **kwargs):
@@ -1019,6 +1020,9 @@ class FlowMaster(controller.Master):
     def handle_accept_intercept(self, f):
         self.state.update_flow(f)
 
+    def handle_script_change(self, script):
+        script.load()
+
     def shutdown(self):
         self.unload_scripts()
         controller.Master.shutdown(self)
@@ -1034,6 +1038,10 @@ class FlowMaster(controller.Master):
     def stop_stream(self):
         self.stream.fo.close()
         self.stream = None
+
+    def script_change(self, script):
+        self.masterq.put(("script_change", script))
+        self.add_event("<{}> reloaded.".format(script.args[0]))
 
 
 def read_flows_from_paths(paths):
