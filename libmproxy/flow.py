@@ -640,7 +640,6 @@ class FlowMaster(controller.Master):
 
         self.stream = None
         self.apps = AppRegistry()
-        script.script_change.connect(self.script_change)
 
     def start_app(self, host, port):
         self.apps.add(
@@ -664,15 +663,18 @@ class FlowMaster(controller.Master):
             script_obj.unload()
         except script.ScriptException as e:
             self.add_event("Script error:\n" + str(e), "error")
+        script.reloader.unwatch(script_obj)
         self.scripts.remove(script_obj)
     
-    def load_script(self, command):
+    def load_script(self, command, use_reloader=True):
         """
             Loads a script. Returns an error description if something went
             wrong.
         """
         try:
             s = script.Script(command, script.ScriptContext(self))
+            if use_reloader:
+                script.reloader.watch(s, lambda: self.masterq.put(("script_change", s)))
         except script.ScriptException as v:
             return v.args[0]
         self.scripts.append(s)
@@ -1020,8 +1022,33 @@ class FlowMaster(controller.Master):
     def handle_accept_intercept(self, f):
         self.state.update_flow(f)
 
-    def handle_script_change(self, script):
-        script.load()
+    def handle_script_change(self, s):
+        """
+        Handle a script whose contents have been changed on the file system.
+
+        Args:
+            s (script.Script): the changed script
+
+        Returns:
+            True, if reloading was successful.
+            False, otherwise.
+        """
+        ok = True
+        # We deliberately do not want to fail here.
+        # In the worst case, we have an "empty" script object.
+        try:
+            s.unload()
+        except script.ScriptException as e:
+            ok = False
+            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)))
+        try:
+            s.load()
+        except script.ScriptException as e:
+            ok = False
+            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)))
+        else:
+            self.add_event('"{}" reloaded.'.format(s.filename))
+        return ok
 
     def shutdown(self):
         self.unload_scripts()
@@ -1038,11 +1065,6 @@ class FlowMaster(controller.Master):
     def stop_stream(self):
         self.stream.fo.close()
         self.stream = None
-
-    def script_change(self, script):
-        self.masterq.put(("script_change", script))
-        self.add_event("<{}> reloaded.".format(script.args[0]))
-
 
 def read_flows_from_paths(paths):
     """

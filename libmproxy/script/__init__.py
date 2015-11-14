@@ -1,11 +1,13 @@
-from .script import Script, script_change
+from .script import Script
 from .script_context import ScriptContext
 from .concurrent import concurrent
 from ..exceptions import ScriptException
+from . import reloader
 
 __all__ = [
-    "Script", "script_change",
+    "Script",
     "ScriptContext",
     "concurrent",
-    "ScriptException"
+    "ScriptException",
+    "reloader"
 ]

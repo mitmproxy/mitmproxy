@@ -732,6 +732,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.process_flow(f)
         return f
 
-    def script_change(self, script):
-        self.masterq.put(("script_change", script))
-        signals.status_message.send(message="<{}> reloaded.".format(script.args[0]))
+    def handle_script_change(self, script):
+        if super(ConsoleMaster, self).handle_script_change(script):
+            signals.status_message.send(message='"{}" reloaded.'.format(script.filename))
+        else:
+            signals.status_message.send(message='Error reloading "{}".'.format(script.filename))

@@ -26,6 +26,7 @@ deps = {
     "six~=1.10.0",
     "lxml~=3.4.4",
     "Pillow~=3.0.0",
+    "watchdog~=0.8.3",
 }
 # A script -> additional dependencies dict.
 scripts = {

@@ -8,32 +8,27 @@ import os
 import shlex
 import traceback
 import sys
-import blinker
-
-from watchdog.events import PatternMatchingEventHandler, FileModifiedEvent
-from watchdog.observers import Observer
-
 from ..exceptions import ScriptException
-
-script_change = blinker.Signal()
 
 
 class Script(object):
     """
-        Script object representing an inline script.
+    Script object representing an inline script.
     """
 
-    def __init__(self, command, context, use_reloader=True):
+    def __init__(self, command, context):
         self.command = command
         self.args = self.parse_command(command)
         self.ctx = context
         self.ns = None
         self.load()
-        if use_reloader:
-            self.start_observe()
 
-    @classmethod
-    def parse_command(cls, command):
+    @property
+    def filename(self):
+        return self.args[0]
+
+    @staticmethod
+    def parse_command(command):
         if not command or not command.strip():
             raise ScriptException("Empty script command.")
         if os.name == "nt":  # Windows: escape all backslashes in the path.
@@ -64,21 +59,22 @@ class Script(object):
         if self.ns is not None:
             self.unload()
         script_dir = os.path.dirname(os.path.abspath(self.args[0]))
-        ns = {'__file__': os.path.abspath(self.args[0])}
+        self.ns = {'__file__': os.path.abspath(self.args[0])}
         sys.path.append(script_dir)
         try:
-            execfile(self.args[0], ns, ns)
+            execfile(self.args[0], self.ns, self.ns)
         except Exception as e:
             # Python 3: use exception chaining, https://www.python.org/dev/peps/pep-3134/
             raise ScriptException(traceback.format_exc(e))
-        sys.path.pop()
-        self.ns = ns
+        finally:
+            sys.path.pop()
         return self.run("start", self.args)
 
     def unload(self):
-        ret = self.run("done")
-        self.ns = None
-        return ret
+        try:
+            return self.run("done")
+        finally:
+            self.ns = None
 
     def run(self, name, *args, **kwargs):
         """
@@ -99,25 +95,3 @@ class Script(object):
                 raise ScriptException(traceback.format_exc(e))
         else:
             return None
-
-    def start_observe(self):
-        script_dir = os.path.dirname(self.args[0])
-        event_handler = ScriptModified(self)
-        observer = Observer()
-        observer.schedule(event_handler, script_dir)
-        observer.start()
-
-    def stop_observe(self):
-        raise NotImplementedError() # FIXME
-
-
-class ScriptModified(PatternMatchingEventHandler):
-    def __init__(self, script):
-        # We could enumerate all relevant *.py files (as werkzeug does it),
-        # but our case looks like it isn't as simple as enumerating sys.modules.
-        # This should be good enough for now.
-        super(ScriptModified, self).__init__(ignore_directories=True, patterns=["*.py"])
-        self.script = script
-
-    def on_modified(self, event=FileModifiedEvent):
-        script_change.send(self.script)
