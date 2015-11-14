@@ -6,20 +6,42 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
+var PluginsFlowLevel = require("./plugins.js").PluginsFlowLevel;
 
 
 var allTabs = {
     request: Messages.Request,
     response: Messages.Response,
     error: Messages.Error,
-    details: Details
+    details: Details,
+    plugins: PluginsFlowLevel
 };
 
 var FlowView = React.createClass({
     mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function () {
+        return {pluginStore: this.state.pluginStore};
+    },
     getInitialState: function () {
+        $.getJSON("/plugins")
+            .done(function (message) {
+                var pluginList = [];
+                _.each(message.data, function(plugin){
+                        pluginList.push(plugin);
+                });
+
+                this.setState({pluginStore: pluginList});
+            }.bind(this))
+            .fail(function () {
+                console.log("Could not fetch plugins");
+            }.bind(this));
+
         return {
-            prompt: false
+            prompt: false,
+            pluginStore: []
         };
     },
     getTabs: function (flow) {
@@ -30,6 +52,9 @@ var FlowView = React.createClass({
             }
         });
         tabs.push("details");
+        // replace w/
+        // if length(available actions for flow) >= 1
+        tabs.push("plugins");
         return tabs;
     },
     nextTab: function (i) {

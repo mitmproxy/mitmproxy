@@ -515,6 +515,24 @@ def get_by_shortcut(c):
             return i
 
 
+def add(obj):
+    for i in views:
+        if i.name == obj.name:
+            raise ContentViewException("Duplicate view: " + obj.name)
+
+    for prompt in view_prompts:
+        if prompt[1] == obj.prompt[1]:
+            raise ContentViewException("Duplicate view shortcut: " + obj.prompt[1])
+
+    views.append(obj)
+
+    for ct in obj.content_types:
+        l = content_types_map.setdefault(ct, [])
+        l.append(obj)
+
+    view_prompts.append(obj.prompt)
+
+
 def get(name):
     for i in views:
         if i.name == name:

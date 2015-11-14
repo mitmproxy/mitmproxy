@@ -210,6 +210,20 @@ Larry
         assert "decoded gzip" in r[0]
         assert "Raw" in r[0]
 
+    def test_add_cv(self):
+        class TestContentView(cv.View):
+            name = "test"
+
+        tcv = TestContentView()
+        cv.add(tcv)
+
+        # repeated addition causes exception
+        tutils.raises(
+            ContentViewException,
+            cv.add,
+            tcv
+        )
+
 
 if pyamf:
     def test_view_amf_request():

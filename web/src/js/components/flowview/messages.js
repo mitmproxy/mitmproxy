@@ -5,7 +5,7 @@ var common = require("../common.js");
 var actions = require("../../actions.js");
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
-var ContentView = require("./contentview.js");
+var ContentView = require("./contentview.js").ContentView;
 var ValueEditor = require("../editor.js").ValueEditor;
 
 var Headers = React.createClass({
@@ -224,6 +224,15 @@ var ResponseLine = React.createClass({
 });
 
 var Request = React.createClass({
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function () {
+        return {pluginStore: this.context.pluginStore};
+    },
     render: function () {
         var flow = this.props.flow;
         return (

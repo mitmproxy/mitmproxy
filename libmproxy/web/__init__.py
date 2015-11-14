@@ -93,6 +93,7 @@ class Options(object):
         "kill",
         "intercept",
         "no_server",
+        "outfile",
         "refresh_server_playback",
         "rfile",
         "scripts",
@@ -126,6 +127,21 @@ class WebMaster(flow.FlowMaster):
         self.options = options
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
+
+        if options.outfile:
+            path = os.path.expanduser(options.outfile[0])
+            try:
+                f = file(path, options.outfile[1])
+                self.start_stream(f, self.filt)
+            except IOError as v:
+                raise WebError(v.strerror)
+
+        scripts = options.scripts or []
+        for command in scripts:
+            err = self.load_script(command)
+            if err:
+                raise WebError(err)
+
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)

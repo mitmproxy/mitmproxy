@@ -259,6 +259,16 @@ var ReportsMenu = React.createClass({
     }
 });
 
+var PluginsMenu = React.createClass({
+    statics: {
+        title: "Plugins",
+        route: "plugins"
+    },
+    render: function () {
+        return <div>Plugins Menu</div>;
+    }
+});
+
 var FileMenu = React.createClass({
     getInitialState: function () {
         return {
@@ -345,7 +355,7 @@ var FileMenu = React.createClass({
 });
 
 
-var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
+var header_entries = [MainMenu, ViewMenu, PluginsMenu /*, ReportsMenu */];
 
 
 var Header = React.createClass({
