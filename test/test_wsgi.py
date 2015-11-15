@@ -10,8 +10,8 @@ def tflow():
     return wsgi.Flow(("127.0.0.1", 8888), req)
 
 
-class TestApp:
-
+class ExampleApp:
+    
     def __init__(self):
         self.called = False
 
@@ -35,7 +35,7 @@ class TestWSGI:
         assert r["QUERY_STRING"] == "bar=voing"
 
     def test_serve(self):
-        ta = TestApp()
+        ta = ExampleApp()
         w = wsgi.WSGIAdaptor(ta, "foo", 80, "version")
         f = tflow()
         f.request.host = "foo"
