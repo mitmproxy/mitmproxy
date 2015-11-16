@@ -1037,6 +1037,15 @@ class FlowMaster(controller.Master):
         self.stream.fo.close()
         self.stream = None
 
+    def start_stream_to_path(self, path, mode="wb"):
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, mode)
+            self.start_stream(f, None)
+        except IOError as v:
+            return str(v)
+        self.stream_path = path
+
 
 def read_flows_from_paths(paths):
     """
