@@ -134,6 +134,16 @@ class WebMaster(flow.FlowMaster):
                     "Could not read flow file: %s" % v,
                     "error"
                 )
+
+        if options.outfile:
+            err = self.start_stream_to_path(
+                options.outfile[0],
+                options.outfile[1]
+            )
+            if err:
+                print >> sys.stderr, "Stream file error:", err
+                sys.exit(1)
+
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)
 

@@ -665,7 +665,7 @@ class FlowMaster(controller.Master):
             self.add_event("Script error:\n" + str(e), "error")
         script.reloader.unwatch(script_obj)
         self.scripts.remove(script_obj)
-    
+
     def load_script(self, command, use_reloader=False):
         """
             Loads a script. Returns an error description if something went
@@ -1065,6 +1065,16 @@ class FlowMaster(controller.Master):
     def stop_stream(self):
         self.stream.fo.close()
         self.stream = None
+
+    def start_stream_to_path(self, path, mode="wb"):
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, mode)
+            self.start_stream(f, None)
+        except IOError as v:
+            return str(v)
+        self.stream_path = path
+
 
 def read_flows_from_paths(paths):
     """

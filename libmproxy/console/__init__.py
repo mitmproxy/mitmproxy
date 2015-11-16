@@ -290,15 +290,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop.widget = window
         self.loop.draw_screen()
 
-    def start_stream_to_path(self, path, mode="wb"):
-        path = os.path.expanduser(path)
-        try:
-            f = file(path, mode)
-            self.start_stream(f, None)
-        except IOError as v:
-            return str(v)
-        self.stream_path = path
-
     def _run_script_method(self, method, s, f):
         status, val = s.run(method, f)
         if val:
