@@ -297,6 +297,13 @@ class TestReadHeaders(object):
         with raises(HttpSyntaxException):
             self._read(data)
 
+    def test_read_empty_value(self):
+        data = b"bar:"
+        headers = self._read(data)
+        # XXX. WIP. break test
+        # assert headers.fields == [[b"bar", b""]]
+        with raises(HttpSyntaxException):
+            self._read(data)
 
 def test_read_chunked():
     req = treq(content=None)
