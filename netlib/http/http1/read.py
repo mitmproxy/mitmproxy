@@ -321,7 +321,7 @@ def _read_headers(rfile):
             try:
                 name, value = line.split(b":", 1)
                 value = value.strip()
-                if not name or not value:
+                if not name:
                     raise ValueError()
                 ret.append([name, value])
             except ValueError:
