@@ -228,7 +228,8 @@ class ViewHTML(View):
             s = lxml.etree.tostring(
                 d,
                 pretty_print=True,
-                doctype=docinfo.doctype
+                doctype=docinfo.doctype,
+                encoding='utf8'
             )
             return "HTML", format_text(s)
 
