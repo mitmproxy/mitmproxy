@@ -362,6 +362,11 @@ def proxy_options(parser):
         action="store", type=int, dest="port", default=8080,
         help="Proxy service port."
     )
+    group.add_argument(
+        "--invisible",
+        action="store_true", dest="invisible_proxy", default=False,
+        help="Make proxy invisible for the clients."
+    )
     http2 = group.add_mutually_exclusive_group()
     http2.add_argument("--http2", action="store_true", dest="http2")
     http2.add_argument("--no-http2", action="store_false", dest="http2",
