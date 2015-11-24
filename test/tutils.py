@@ -15,13 +15,24 @@ from libmproxy.models import (
 )
 
 
-def _SkipWindows(*args):
+def _skip_windows(*args):
     raise SkipTest("Skipped on Windows.")
 
 
-def SkipWindows(fn):
+def skip_windows(fn):
     if os.name == "nt":
-        return _SkipWindows
+        return _skip_windows
+    else:
+        return fn
+
+
+def _skip_appveyor(*args):
+    raise SkipTest("Skipped on AppVeyor.")
+
+
+def skip_appveyor(fn):
+    if "APPVEYOR" in os.environ:
+        return _skip_appveyor
     else:
         return fn
 

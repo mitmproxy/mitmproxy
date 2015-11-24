@@ -148,7 +148,7 @@ class TestProcessProxyOptions:
 
 class TestProxyServer:
     # binding to 0.0.0.0:1 works without special permissions on Windows
-    @tutils.SkipWindows
+    @tutils.skip_windows
     def test_err(self):
         conf = ProxyConfig(
             port=1
