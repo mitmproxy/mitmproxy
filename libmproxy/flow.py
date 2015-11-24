@@ -666,7 +666,7 @@ class FlowMaster(controller.Master):
         script.reloader.unwatch(script_obj)
         self.scripts.remove(script_obj)
     
-    def load_script(self, command, use_reloader=True):
+    def load_script(self, command, use_reloader=False):
         """
             Loads a script. Returns an error description if something went
             wrong.
