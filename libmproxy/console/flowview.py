@@ -1,8 +1,9 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 import os
 import traceback
 import sys
 
+import math
 import urwid
 
 from netlib import odict
@@ -207,10 +208,26 @@ class FlowView(tabs.Tabs):
         if description == "No content" and isinstance(message, HTTPRequest):
             description = "No request content (press tab to view response)"
 
+        # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
+        chars_per_line = 80
+        max_chars = max_lines * chars_per_line
+        total_chars = 0
         text_objects = []
         for line in lines:
-            text_objects.append(urwid.Text(line))
-            if len(text_objects) == max_lines:
+            txt = []
+            for (style, text) in line:
+                if total_chars + len(text) > max_chars:
+                    text = text[:max_chars-total_chars]
+                txt.append((style, text))
+                total_chars += len(text)
+                if total_chars == max_chars:
+                    break
+
+            # round up to the next line.
+            total_chars = int(math.ceil(total_chars / chars_per_line) * chars_per_line)
+
+            text_objects.append(urwid.Text(txt))
+            if total_chars == max_chars:
                 text_objects.append(urwid.Text([
                     ("highlight", "Stopped displaying data after %d lines. Press " % max_lines),
                     ("key", "f"),

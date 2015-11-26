@@ -17,18 +17,15 @@ import json
 import logging
 import subprocess
 import sys
-
 import lxml.html
 import lxml.etree
 from PIL import Image
 from PIL.ExifTags import TAGS
 import html2text
 import six
-
 from netlib.odict import ODict
 from netlib import encoding
 from netlib.utils import clean_bin, hexdump, urldecode, multipartdecode, parse_content_type
-
 from . import utils
 from .exceptions import ContentViewException
 from .contrib import jsbeautifier
@@ -485,6 +482,12 @@ content_types_map = {}
 view_prompts = []
 
 
+def get(name):
+    for i in views:
+        if i.name == name:
+            return i
+
+
 def get_by_shortcut(c):
     for i in views:
         if i.prompt[1] == c:
@@ -542,11 +545,6 @@ if pyamf:
 
 if ViewProtobuf.is_available():
     add(ViewProtobuf())
-
-def get(name):
-    for i in views:
-        if i.name == name:
-            return i
 
 
 def safe_to_print(lines, encoding="utf8"):
