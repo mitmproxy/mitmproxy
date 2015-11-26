@@ -379,11 +379,10 @@ class TlsLayer(Layer):
         return choice
 
     def _establish_tls_with_client_and_server(self):
-        self.ctx.connect()
-
         # If establishing TLS with the server fails, we try to establish TLS with the client nonetheless
         # to send an error message over TLS.
         try:
+            self.ctx.connect()
             self._establish_tls_with_server()
         except Exception as e:
             try:
