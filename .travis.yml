@@ -5,6 +5,9 @@ matrix:
   fast_finish: true
   include:
     - python: 2.7
+    - language: generic
+      os: osx
+      osx_image: xcode7.1
     - python: 2.7
       env: OPENSSL=1.0.2
       addons:
@@ -35,6 +38,13 @@ matrix:
     - python: pypy
 
 install:
+  - |
+    if [[ $TRAVIS_OS_NAME == "osx" ]]
+    then
+    	brew update || brew update # try again if it fails
+    	brew outdated openssl || brew upgrade openssl
+    	brew install python
+    fi
   - "pip install -r requirements.txt"
 
 before_script:
