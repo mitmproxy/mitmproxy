@@ -130,7 +130,7 @@ class ConnectionHandler(object):
                 )
                 self.log(repr(e), "debug")
             else:
-                self.log(repr(e), "error")
+                self.log(repr(e), "info")
 
                 self.log(traceback.format_exc(), "debug")
             # If an error propagates to the topmost level,
