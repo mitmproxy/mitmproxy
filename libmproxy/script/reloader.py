@@ -6,6 +6,8 @@ _observers = {}
 
 
 def watch(script, callback):
+    if script in _observers:
+        raise RuntimeError("Script already observed")
     script_dir = os.path.dirname(os.path.abspath(script.args[0]))
     event_handler = _ScriptModificationHandler(callback)
     observer = Observer()
@@ -18,6 +20,7 @@ def unwatch(script):
     observer = _observers.pop(script, None)
     if observer:
         observer.stop()
+        observer.join()
 
 
 class _ScriptModificationHandler(PatternMatchingEventHandler):
