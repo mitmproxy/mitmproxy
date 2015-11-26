@@ -318,6 +318,11 @@ class HttpLayer(Layer):
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
 
+                # Regular Proxy Mode: Handle CONNECT
+                if self.mode == "regular" and request.form_in == "authority":
+                    self.handle_regular_mode_connect(request)
+                    return
+
             except HttpReadDisconnect:
                 # don't throw an error for disconnects that happen before/between requests.
                 return
@@ -327,12 +332,6 @@ class HttpLayer(Layer):
 
             try:
                 flow = HTTPFlow(self.client_conn, self.server_conn, live=self)
-
-                # Regular Proxy Mode: Handle CONNECT
-                if self.mode == "regular" and request.form_in == "authority":
-                    self.handle_regular_mode_connect(request)
-                    return
-
                 flow.request = request
                 self.process_request_hook(flow)
 
@@ -368,7 +367,7 @@ class HttpLayer(Layer):
                     self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
-            except NetlibException as e:
+            except (ProtocolException, NetlibException) as e:
                 self.send_error_response(502, repr(e))
 
                 if not flow.response:
