@@ -133,14 +133,17 @@ class ConnectionHandler(object):
                 self.log(repr(e), "error")
 
                 self.log(traceback.format_exc(), "debug")
-            # If an error propagates to the topmost level,
-            # we send an HTTP error response, which is both
-            # understandable by HTTP clients and humans.
-            try:
-                error_response = make_error_response(502, repr(e))
-                self.client_conn.send(assemble_response(error_response))
-            except TcpException:
-                pass
+
+            if not self.config.invisible:
+	        # If an error propagates to the topmost level,
+                # we send an HTTP error response, which is both
+                # understandable by HTTP clients and humans.
+                try:
+		    self.log("VAR: sending error response 502", "info")
+                    error_response = make_error_response(502, repr(e))
+                    self.client_conn.send(assemble_response(error_response))
+                except TcpException:
+                    pass
         except Exception:
             self.log(traceback.format_exc(), "error")
             print(traceback.format_exc(), file=sys.stderr)

@@ -50,6 +50,7 @@ class ProxyConfig:
             no_upstream_cert=False,
             body_size_limit=None,
             mode="regular",
+	    invisible=False,
             upstream_server=None,
             authenticator=None,
             ignore_hosts=tuple(),
@@ -73,6 +74,7 @@ class ProxyConfig:
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
         self.mode = mode
+        self.invisible = invisible
         if upstream_server:
             self.upstream_server = ServerSpec(upstream_server[0], Address.wrap(upstream_server[1]))
         else:
@@ -187,6 +189,7 @@ def process_proxy_options(parser, options):
         no_upstream_cert=options.no_upstream_cert,
         body_size_limit=body_size_limit,
         mode=mode,
+	invisible=options.invisible_proxy,
         upstream_server=upstream_server,
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,

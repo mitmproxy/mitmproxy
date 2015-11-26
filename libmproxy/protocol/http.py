@@ -322,7 +322,8 @@ class HttpLayer(Layer):
                 # don't throw an error for disconnects that happen before/between requests.
                 return
             except NetlibException as e:
-                self.send_error_response(400, repr(e))
+		if not self.config.invisible:
+               	    self.send_error_response(400, repr(e))
                 six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
 
             try:
@@ -369,7 +370,8 @@ class HttpLayer(Layer):
                     return
 
             except NetlibException as e:
-                self.send_error_response(502, repr(e))
+		if not self.config.invisible:
+                    self.send_error_response(502, repr(e))
 
                 if not flow.response:
                     flow.error = Error(str(e))
