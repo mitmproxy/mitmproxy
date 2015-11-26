@@ -31,10 +31,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return bool(self.connection) and not self.finished
 
     def __repr__(self):
-        return "<ClientConnection: {ssl}{host}:{port}>".format(
+        return "<ClientConnection: {ssl}{address}>".format(
             ssl="[ssl] " if self.ssl_established else "",
-            host=self.address.host,
-            port=self.address.port
+            address=repr(self.address)
         )
 
     @property
@@ -109,10 +108,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             ssl = "[ssl] "
         else:
             ssl = ""
-        return "<ServerConnection: {ssl}{host}:{port}>".format(
+        return "<ServerConnection: {ssl}{address}>".format(
             ssl=ssl,
-            host=self.address.host,
-            port=self.address.port
+            address=repr(self.address)
         )
 
     @property
