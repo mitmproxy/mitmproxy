@@ -5,7 +5,7 @@
 from __future__ import absolute_import, division, print_function
 
 from construct import (Array, Bytes, Struct, UBInt16, UBInt32, UBInt8, PascalString, Embed, TunnelAdapter, GreedyRange,
-                       Switch, OptionalGreedyRange)
+                       Switch, OptionalGreedyRange, Optional)
 
 from .utils import UBInt24
 
@@ -112,7 +112,7 @@ Extension = Struct(
 )
 
 extensions = TunnelAdapter(
-    PascalString("extensions", length_field=UBInt16("extensions_length")),
+    Optional(PascalString("extensions", length_field=UBInt16("extensions_length"))),
     OptionalGreedyRange(Extension)
 )
 

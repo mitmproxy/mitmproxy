@@ -318,7 +318,7 @@ class TlsLayer(Layer):
             client_hello = ClientHello.parse(raw_client_hello)
         except ConstructError as e:
             self.log("Cannot parse Client Hello: %s" % repr(e), "error")
-            self.log("Raw Client Hello:\r\n:%s" % raw_client_hello.encode("hex"), "debug")
+            self.log("Raw Client Hello: %s" % raw_client_hello.encode("hex"), "debug")
             return
 
         self.client_ciphers = client_hello.cipher_suites.cipher_suites
