@@ -668,26 +668,20 @@ class TestStreamRequest(tservers.HTTPProxTest):
         p = self.pathoc()
 
         # a request with 100k of data but without content-length
-        self.server.clear_log()
         r1 = p.request("get:'%s/p/200:r:b@100k:d102400'" % self.server.urlbase)
         assert r1.status_code == 200
         assert len(r1.content) > 100000
-        assert self.server.last_log()
 
     def test_stream_multiple(self):
         p = self.pathoc()
 
         # simple request with streaming turned on
-        self.server.clear_log()
         r1 = p.request("get:'%s/p/200'" % self.server.urlbase)
         assert r1.status_code == 200
-        assert self.server.last_log()
 
         # now send back 100k of data, streamed but not chunked
-        self.server.clear_log()
-        r1 = p.request("get:'%s/p/200:b@100k'" % self.server.urlbase)
-        assert r1.status_code == 200
-        assert self.server.last_log()
+        r1 = p.request("get:'%s/p/201:b@100k'" % self.server.urlbase)
+        assert r1.status_code == 201
 
     def test_stream_chunked(self):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
