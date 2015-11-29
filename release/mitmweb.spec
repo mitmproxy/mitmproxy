@@ -2,9 +2,9 @@
 
 from PyInstaller.utils.hooks import collect_data_files
 
-a = Analysis(['../mitmproxy'],
+a = Analysis(['../mitmweb'],
              binaries=None,
-             datas=collect_data_files("libmproxy.onboarding"),
+             datas=collect_data_files("libmproxy"),
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
@@ -15,7 +15,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='mitmproxy',
+          name='mitmweb',
           debug=False,
           strip=None,
           upx=True,

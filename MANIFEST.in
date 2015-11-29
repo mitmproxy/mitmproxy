@@ -1,9 +1,8 @@
-include mitmproxy mitmdump
-include LICENSE CHANGELOG CONTRIBUTORS README.rst
-recursive-include examples *
-recursive-include doc *
-recursive-include test *
-recursive-include libmproxy *
+include mitmproxy mitmdump mitmweb
+include LICENSE CHANGELOG CONTRIBUTORS CONTRIBUTING.md README.rst
+graft examples
+graft doc
+graft test
+prune test/tools
+graft libmproxy
 recursive-exclude * *.pyc *.pyo *.swo *.swp
-recursive-exclude netlib *
-recursive-exclude libpathod *

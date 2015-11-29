@@ -34,7 +34,7 @@ scripts = {
         "urwid~=1.3.1",
     },
     "mitmdump": {
-        "click~=5.1",
+        "click~=6.2",
     },
     "mitmweb": set()
 }
