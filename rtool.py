@@ -219,7 +219,11 @@ def bdist(ctx, use_existing_sdist):
             archive_name = "{project}-{version}-{platform}".format(
                 project=p, 
                 version=version(p), 
-                platform=platform.system()
+                platform={
+                    "Darwin": "osx",
+                    "Windows": "win32",
+				    "Linux": "linux"
+                }.get(platform.system(), platform.system())
             )
             with Archive(join(DIST_DIR, archive_name)) as archive:
                 for tool in conf["tools"]:
