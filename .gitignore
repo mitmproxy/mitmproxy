@@ -1,13 +1,9 @@
 .DS_Store
 MANIFEST
-/dist
-/tmp
-/venv
 *.py[cdo]
 *.swp
 *.swo
 
-/venv
-/release
 /build
-/pyinstallerdist
+/dist
+/mitmproxy_rtool.egg-info
