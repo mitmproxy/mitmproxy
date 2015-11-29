@@ -14,7 +14,7 @@ def serverconnect(context, sc):
 
 @concurrent
 def request(context, flow):
-    time.sleep(0.5)
+    time.sleep(0.1)
 
 
 @concurrent

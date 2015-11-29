@@ -62,6 +62,7 @@ def test_err():
     tutils.raises(script.ScriptException, scr.unload)
 
 
+@tutils.skip_appveyor
 def test_concurrent():
     s = flow.State()
     fm = flow.FlowMaster(None, s)
@@ -77,7 +78,7 @@ def test_concurrent():
 
         # Two instantiations
         assert m.call_count == 0  # No calls yet.
-        assert (time.time() - t_start) < 0.5
+        assert (time.time() - t_start) < 0.1
 
 
 def test_concurrent2():
