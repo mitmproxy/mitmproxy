@@ -56,7 +56,7 @@ script:
 after_success:
   - coveralls
   - |
-    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && -z $TRAVIS_PULL_REQUEST ]]
+    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
     then
         brew install curl --with-libssh2
         pip install virtualenv
