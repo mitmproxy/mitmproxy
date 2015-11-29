@@ -41,11 +41,11 @@ install:
   - |
     if [[ $TRAVIS_OS_NAME == "osx" ]]
     then
-    	brew update || brew update # try again if it fails
-    	brew outdated openssl || brew upgrade openssl
-    	brew install python
+      brew update || brew update # try again if it fails
+      brew outdated openssl || brew upgrade openssl
+      brew install python
     fi
-  - "pip install -r requirements.txt"
+  - "pip install --src .. -r requirements.txt"
 
 before_script:
   - "openssl version -a"
@@ -55,6 +55,19 @@ script:
 
 after_success:
   - coveralls
+  - |
+    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && -z $TRAVIS_PULL_REQUEST ]]
+    then
+        brew install curl --with-libssh2
+        pip install virtualenv
+        git clone https://github.com/mitmproxy/release.git ../release
+        pip install -e ../release
+        python ../release/rtool.py -p mitmproxy bdist
+        for f in ../release/dist/*
+        do
+          $(brew --prefix curl)/bin/curl -u $SNAPSHOT_AUTH --hostpubmd5 $SNAPSHOT_PUBKEY -T $f sftp://$SNAPSHOT_HOST/
+        done
+    fi
 
 notifications:
   irc:
