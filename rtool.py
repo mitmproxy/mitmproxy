@@ -73,7 +73,7 @@ def version(project):
     return runpy.run_path(projects[project]["vfile"])["VERSION"]
 
 def sdist_name(project):
-	return "{project}-{version}.tar.gz".format(project=project, version=version(project))
+    return "{project}-{version}.tar.gz".format(project=project, version=version(project))
 
 @contextlib.contextmanager
 def empty_pythonpath():
@@ -222,7 +222,7 @@ def bdist(ctx, use_existing_sdist):
                 platform={
                     "Darwin": "osx",
                     "Windows": "win32",
-				    "Linux": "linux"
+                    "Linux": "linux"
                 }.get(platform.system(), platform.system())
             )
             with Archive(join(DIST_DIR, archive_name)) as archive:
@@ -262,15 +262,15 @@ def upload_release(username, password, repository):
     """
     
     for project in projects.keys():
-	    print("Uploading {} to {}...".format(project, repository))
-	    subprocess.check_call([
-	        "twine",
-	        "upload",
-	        "-u", username,
-	        "-p", password,
-	        "-r", repository,
-	        join(DIST_DIR, sdist_name(project))
-	    ])
+        print("Uploading {} to {}...".format(project, repository))
+        subprocess.check_call([
+            "twine",
+            "upload",
+            "-u", username,
+            "-p", password,
+            "-r", repository,
+            join(DIST_DIR, sdist_name(project))
+        ])
 
 
 @cli.command("wizard")
