@@ -14,6 +14,7 @@ import pprint
 from zipfile import ZipFile
 import tarfile
 import platform
+import sys
 
 import click
 
@@ -73,7 +74,17 @@ def version(project):
     return runpy.run_path(projects[project]["vfile"])["VERSION"]
 
 def sdist_name(project):
-    return "{project}-{version}.tar.gz".format(project=project, version=version(project))
+    return "{project}-{version}.tar.gz".format(
+        project=project,
+        version=version(project)
+    )
+
+def wheel_name(project):
+    return "{project}-{version}-py{py_version}-none-any.whl".format(
+        project=project,
+        version=version(project),
+        py_version=sys.version_info.major
+    )
 
 @contextlib.contextmanager
 def empty_pythonpath():
@@ -170,7 +181,7 @@ def sdist():
             subprocess.check_call(
                 [
                     "python", "./setup.py",
-                    "-q", "sdist", "--dist-dir", DIST_DIR, "--formats=gztar"
+                    "-q", "sdist", "--dist-dir", DIST_DIR, "--formats=gztar", "bdist_wheel", "--dist-dir", DIST_DIR,
                 ],
                 cwd=conf["dir"]
             )
@@ -183,7 +194,7 @@ def sdist():
         with chdir(DIST_DIR):
             for project, conf in projects.items():
                 print("Installing %s..." % project)
-                subprocess.check_call([VENV_PIP, "install", "-q", sdist_name(project)])
+                subprocess.check_call([VENV_PIP, "install", "-q", wheel_name(project)])
 
             print("Running binaries...")
             for project, conf in projects.items():
@@ -262,15 +273,16 @@ def upload_release(username, password, repository):
     """
     
     for project in projects.keys():
-        print("Uploading {} to {}...".format(project, repository))
-        subprocess.check_call([
-            "twine",
-            "upload",
-            "-u", username,
-            "-p", password,
-            "-r", repository,
-            join(DIST_DIR, sdist_name(project))
-        ])
+        for f in (sdist_name(project), wheel_name(project)):
+            print("Uploading {} to {}...".format(f, repository))
+            subprocess.check_call([
+                "twine",
+                "upload",
+                "-u", username,
+                "-p", password,
+                "-r", repository,
+                join(DIST_DIR, f)
+            ])
 
 
 @cli.command("wizard")
