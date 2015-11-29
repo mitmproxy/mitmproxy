@@ -59,7 +59,6 @@ after_success:
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
     then
         brew install curl --with-libssh2
-        pip install virtualenv
         git clone https://github.com/mitmproxy/release.git ../release
         pip install -e ../release
         python ../release/rtool.py -p mitmproxy bdist
