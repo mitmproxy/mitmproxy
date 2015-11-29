@@ -77,7 +77,7 @@ def test_concurrent():
 
         # Two instantiations
         assert m.call_count == 0  # No calls yet.
-        assert (time.time() - t_start) < 0.09
+        assert (time.time() - t_start) < 0.5
 
 
 def test_concurrent2():
