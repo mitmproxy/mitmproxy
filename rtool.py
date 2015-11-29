@@ -208,9 +208,10 @@ def sdist():
 
 
 @cli.command("bdist")
-@click.option('--use-existing-sdist/--no-use-existing-sdist', default=False)
+@click.option("--use-existing-sdist/--no-use-existing-sdist", default=False)
+@click.argument("pyinstaller_version", envvar="PYINSTALLER_VERSION", default="PyInstaller~=3.0.0")
 @click.pass_context
-def bdist(ctx, use_existing_sdist):
+def bdist(ctx, use_existing_sdist, pyinstaller_version):
     """
     Build a binary distribution
     """
@@ -223,7 +224,7 @@ def bdist(ctx, use_existing_sdist):
         ctx.invoke(sdist)
 
     print("Installing PyInstaller...")
-    subprocess.check_call([VENV_PIP, "install", "-q", "PyInstaller~=3.0.0"])
+    subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version])
 
     for p, conf in projects.items():
         if conf["tools"]:
@@ -261,6 +262,7 @@ def bdist(ctx, use_existing_sdist):
                     subprocess.check_call([executable, "--version"])
 
                     archive.add(executable, os.path.basename(executable))
+            print("Packed {}.".format(archive_name))
 
 
 @cli.command("upload")
