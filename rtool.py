@@ -12,7 +12,7 @@ import shlex
 import runpy
 import pprint
 from zipfile import ZipFile
-from tarfile import TarFile
+import tarfile
 import platform
 
 import click
@@ -31,8 +31,7 @@ if platform.system() == "Windows":
         return a
 else:
     def Archive(name):
-        a = TarFile(name + ".tar.gz", "w:gz")
-        return a
+        return tarfile.open(name + ".tar.gz", "w:gz")
 
 
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
