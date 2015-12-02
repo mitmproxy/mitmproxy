@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
-from netlib import socks
+from netlib import socks, tcp
 from netlib.exceptions import TcpException
 
 from ...exceptions import Socks5ProtocolException
@@ -50,7 +50,9 @@ class Socks5Proxy(Layer, ServerConnectionMixin):
         except (socks.SocksError, TcpException) as e:
             raise Socks5ProtocolException("SOCKS5 mode failure: %s" % repr(e))
 
-        self.server_conn.address = connect_request.addr
+        # https://github.com/mitmproxy/mitmproxy/issues/839
+        address_bytes = (connect_request.addr.host.encode("idna"), connect_request.addr.port)
+        self.server_conn.address = tcp.Address(address_bytes, connect_request.addr.use_ipv6)
 
         layer = self.ctx.next_layer(self)
         try:
