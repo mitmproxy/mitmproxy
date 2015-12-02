@@ -64,7 +64,7 @@ after_success:
         python ../release/rtool.py -p mitmproxy bdist
         for f in ../release/dist/*
         do
-          $(brew --prefix curl)/bin/curl -u $SNAPSHOT_AUTH --hostpubmd5 $SNAPSHOT_PUBKEY -T $f sftp://$SNAPSHOT_HOST/
+          $(brew --prefix curl)/bin/curl -u $SNAPSHOT_AUTH --hostpubmd5 $SNAPSHOT_PUBKEY --retry 5 -T $f sftp://$SNAPSHOT_HOST/
         done
     fi
 
