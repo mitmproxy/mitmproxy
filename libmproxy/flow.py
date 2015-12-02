@@ -13,7 +13,7 @@ import urlparse
 from netlib import wsgi
 from netlib.exceptions import HttpException
 from netlib.http import CONTENT_MISSING, Headers, http1
-from . import controller, tnetstring, filt, script, version
+from . import controller, tnetstring, filt, script, version, flow_format_compat
 from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
@@ -1112,14 +1112,13 @@ class FlowReader:
         try:
             while True:
                 data = tnetstring.load(self.fo)
-                if tuple(data["version"][:2]) != version.IVERSION[:2]:
-                    v = ".".join(str(i) for i in data["version"])
-                    raise FlowReadError(
-                        "Incompatible serialized data version: %s" % v
-                    )
+                try:
+                    data = flow_format_compat.migrate_flow(data)
+                except ValueError as e:
+                    raise FlowReadError(str(e))
                 off = self.fo.tell()
                 yield HTTPFlow.from_state(data)
-        except ValueError as v:
+        except ValueError:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':
                 return
