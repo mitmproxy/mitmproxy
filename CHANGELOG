@@ -1,3 +1,16 @@
+4 December 2015: mitmproxy 0.15
+
+    * Support for loading and converting older dumpfile formats (0.13 and up)
+
+    * Content views for inline script (@chrisczub)
+
+    * Better handling of empty header values (Benjamin Lee/@bltb)
+
+    * Fix a gnarly memory leak in mitmdump
+
+    * A number of bugfixes and small improvements
+
+
 6 November 2015: mitmproxy 0.14
 
     * Statistics: 399 commits, 13 contributors, 79 closed issues, 37 closed
