@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
-
 from os.path import join
 import contextlib
 import os
 import shutil
 import subprocess
-import glob
 import re
 import shlex
 import runpy
-import pprint
-from zipfile import ZipFile
+import zipfile
 import tarfile
 import platform
 import sys
-
 import click
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -27,13 +23,12 @@ else:
 
 if platform.system() == "Windows":
     def Archive(name):
-        a = ZipFile(name + ".zip","w")
+        a = zipfile.ZipFile(name + ".zip", "w")
         a.add = a.write
         return a
 else:
     def Archive(name):
         return tarfile.open(name + ".tar.gz", "w:gz")
-
 
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
 DIST_DIR = join(RELEASE_DIR, "dist")
@@ -46,7 +41,6 @@ PYINSTALLER_DIST = join(BUILD_DIR, "binaries")
 VENV_DIR = join(BUILD_DIR, "venv")
 VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
 VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
-
 
 ALL_PROJECTS = {
     "netlib": {
@@ -70,21 +64,25 @@ if platform.system() == "Windows":
 
 projects = {}
 
-def version(project):
+
+def get_version(project):
     return runpy.run_path(projects[project]["vfile"])["VERSION"]
+
 
 def sdist_name(project):
     return "{project}-{version}.tar.gz".format(
         project=project,
-        version=version(project)
+        version=get_version(project)
     )
+
 
 def wheel_name(project):
     return "{project}-{version}-py{py_version}-none-any.whl".format(
         project=project,
-        version=version(project),
+        version=get_version(project),
         py_version=sys.version_info.major
     )
+
 
 @contextlib.contextmanager
 def empty_pythonpath():
@@ -92,7 +90,7 @@ def empty_pythonpath():
     Make sure that the regular python installation is not on the python path,
     which would give us access to modules installed outside of our virtualenv.
     """
-    pythonpath = os.environ.get("PYTHONPATH","")
+    pythonpath = os.environ.get("PYTHONPATH", "")
     os.environ["PYTHONPATH"] = ""
     yield
     os.environ["PYTHONPATH"] = pythonpath
@@ -118,6 +116,7 @@ def cli(project):
     for name in project:
         projects[name] = ALL_PROJECTS[name]
 
+
 @cli.command("contributors")
 def contributors():
     """
@@ -131,6 +130,7 @@ def contributors():
             )
             with open("CONTRIBUTORS", "w") as f:
                 f.write(contributors_data)
+
 
 @cli.command("set-version")
 @click.argument('version')
@@ -180,8 +180,12 @@ def sdist():
             print("Creating %s source distribution..." % project)
             subprocess.check_call(
                 [
-                    "python", "./setup.py",
-                    "-q", "sdist", "--dist-dir", DIST_DIR, "--formats=gztar", "bdist_wheel", "--dist-dir", DIST_DIR,
+                    "python", "./setup.py", "-q",
+                    "sdist", "--dist-dir", DIST_DIR, "--formats=gztar",
+                    # We are currently not building wheels: mitmproxy has dependencies varying by platform,
+                    # so we'd need environment markers, which are not supported by old versions of setuptools.
+                    # Providing just the source is a bit slower, but it works everywhere.
+                    # "bdist_wheel", "--dist-dir", DIST_DIR,
                 ],
                 cwd=conf["dir"]
             )
@@ -229,8 +233,8 @@ def bdist(ctx, use_existing_sdist, pyinstaller_version):
     for p, conf in projects.items():
         if conf["tools"]:
             archive_name = "{project}-{version}-{platform}".format(
-                project=p, 
-                version=version(p), 
+                project=p,
+                version=get_version(p),
                 platform={
                     "Darwin": "osx",
                     "Windows": "win32",
@@ -273,7 +277,6 @@ def upload_release(username, password, repository):
     """
     Upload source distributions to PyPI
     """
-    
     for project in projects.keys():
         for f in (sdist_name(project), wheel_name(project)):
             print("Uploading {} to {}...".format(f, repository))
@@ -302,13 +305,13 @@ def wizard(ctx, version, username, password, repository):
         if is_dirty:
             raise RuntimeError("%s repository is not clean." % project)
 
-    # Build test release
-    ctx.invoke(bdist)
-    click.confirm("Please test the release now. Is it ok?", abort=True)
-
     # bump version, update docs and contributors
     ctx.invoke(set_version, version=version)
     ctx.invoke(contributors)
+
+    # Build test release
+    ctx.invoke(bdist)
+    click.confirm("Please test the release now. Is it ok?", abort=True)
 
     # version bump commit + tag
     ctx.invoke(
