@@ -38,10 +38,6 @@ def get_server(dummy_server, options):
 
 
 def mitmproxy(args=None):  # pragma: nocover
-    if os.name == "nt":
-        print("Error: mitmproxy's console interface is not supported on Windows. "
-              "You can run mitmdump or mitmweb instead.", file=sys.stderr)
-        sys.exit(1)
     from . import console
 
     check_pyopenssl_version()
