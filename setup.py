@@ -13,6 +13,8 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Core dependencies
+# Do not use the "~=" compatible release specifier.
+# This will break `pip install` on systems with old setuptools versions.
 deps = {
     "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "tornado>=4.3.0, <4.4",
@@ -23,7 +25,7 @@ deps = {
     "html2text==2015.11.4",
     "construct>=2.5.2, <2.6",
     "six>=1.10.0, <1.11",
-    "lxml==3.4.4",  # there are no Windows wheels for 3.5!
+    "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
     "Pillow>=3.0.0, <3.1",
     "watchdog>=0.8.3, <0.9",
 }
