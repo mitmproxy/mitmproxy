@@ -12,11 +12,18 @@ def convert_013_014(data):
     data["response"]["body"] = data["response"].pop("content")
     data["server_conn"].pop("state")
     data["server_conn"]["via"] = None
-    data["version"] = version.IVERSION
+    data["version"] = (0, 14)
     return data
 
+
+def convert_014_015(data):
+    data["version"] = (0, 15)
+    return data
+
+
 converters = {
-    (0, 13): convert_013_014
+    (0, 13): convert_013_014,
+    (0, 14): convert_014_015,
 }
 
 
