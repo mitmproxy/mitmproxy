@@ -15,7 +15,7 @@ after_test:
   - |
     git clone https://github.com/mitmproxy/release.git ..\release
     pip install -e ..\release
-    python ..\release\rtool.py -p mitmproxy bdist
+    python ..\release\rtool.py -p netlib -p mitmproxy bdist
   - ps: Get-ChildItem ..\release\dist\*.zip | ForEach { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 deploy:
 - provider: FTP

@@ -61,7 +61,7 @@ after_success:
         brew install curl --with-libssh2
         git clone https://github.com/mitmproxy/release.git ../release
         pip install -e ../release
-        python ../release/rtool.py -p mitmproxy bdist
+        python ../release/rtool.py -p netlib -p mitmproxy bdist
         for f in ../release/dist/*
         do
           $(brew --prefix curl)/bin/curl -u $SNAPSHOT_AUTH --hostpubmd5 $SNAPSHOT_PUBKEY --retry 5 -T $f sftp://$SNAPSHOT_HOST/
