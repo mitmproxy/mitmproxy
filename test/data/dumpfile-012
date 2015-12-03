@@ -1,0 +1,35 @@
+4092:8:response,491:11:httpversion,8:1:1#1:1#]13:timestamp_end,14:1449080668.874^3:msg,12:Not Modified,15:timestamp_start,14:1449080668.863^7:headers,330:35:13:Cache-Control,14:max-age=604800,]40:4:Date,29:Wed, 02 Dec 2015 18:24:32 GMT,]32:4:Etag,21:"359670651+gzip+gzip",]43:7:Expires,29:Wed, 09 Dec 2015 18:24:32 GMT,]50:13:Last-Modified,29:Fri, 09 Aug 2013 23:54:35 GMT,]27:6:Server,14:ECS (lga/1312),]26:4:Vary,15:Accept-Encoding,]16:7:X-Cache,3:HIT,]25:17:x-ec-custom-error,1:1,]]7:content,0:,4:code,3:304#}4:type,4:http,2:id,36:d209a4fc-8e12-43cb-9250-b0b052d2caf8,5:error,0:~7:version,9:1:0#2:12#]11:client_conn,208:15:ssl_established,4:true!10:clientcert,0:~13:timestamp_end,0:~19:timestamp_ssl_setup,14:1449080668.754^7:address,53:7:address,20:9:127.0.0.1,5:58199#]8:use_ipv6,5:false!}15:timestamp_start,14:1449080666.523^}11:server_conn,2479:15:ssl_established,4:true!14:source_address,57:7:address,24:12:10.67.56.236,5:58201#]8:use_ipv6,5:false!}13:timestamp_end,0:~7:address,54:7:address,21:11:example.com,3:443#]8:use_ipv6,5:false!}15:timestamp_start,14:1449080668.046^3:sni,11:example.com,4:cert,2122:-----BEGIN CERTIFICATE-----
+MIIF8jCCBNqgAwIBAgIQDmTF+8I2reFLFyrrQceMsDANBgkqhkiG9w0BAQsFADBw
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMS8wLQYDVQQDEyZEaWdpQ2VydCBTSEEyIEhpZ2ggQXNz
+dXJhbmNlIFNlcnZlciBDQTAeFw0xNTExMDMwMDAwMDBaFw0xODExMjgxMjAwMDBa
+MIGlMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEUMBIGA1UEBxML
+TG9zIEFuZ2VsZXMxPDA6BgNVBAoTM0ludGVybmV0IENvcnBvcmF0aW9uIGZvciBB
+c3NpZ25lZCBOYW1lcyBhbmQgTnVtYmVyczETMBEGA1UECxMKVGVjaG5vbG9neTEY
+MBYGA1UEAxMPd3d3LmV4YW1wbGUub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAs0CWL2FjPiXBl61lRfvvE0KzLJmG9LWAC3bcBjgsH6NiVVo2dt6u
+Xfzi5bTm7F3K7srfUBYkLO78mraM9qizrHoIeyofrV/n+pZZJauQsPjCPxMEJnRo
+D8Z4KpWKX0LyDu1SputoI4nlQ/htEhtiQnuoBfNZxF7WxcxGwEsZuS1KcXIkHl5V
+RJOreKFHTaXcB1qcZ/QRaBIv0yhxvK1yBTwWddT4cli6GfHcCe3xGMaSL328Fgs3
+jYrvG29PueB6VJi/tbbPu6qTfwp/H1brqdjh29U52Bhb0fJkM9DWxCP/Cattcc7a
+z8EXnCO+LK8vkhw/kAiJWPKx4RBvgy73nwIDAQABo4ICUDCCAkwwHwYDVR0jBBgw
+FoAUUWj/kK8CB3U8zNllZGKiErhZcjswHQYDVR0OBBYEFKZPYB4fLdHn8SOgKpUW
+5Oia6m5IMIGBBgNVHREEejB4gg93d3cuZXhhbXBsZS5vcmeCC2V4YW1wbGUuY29t
+ggtleGFtcGxlLmVkdYILZXhhbXBsZS5uZXSCC2V4YW1wbGUub3Jngg93d3cuZXhh
+bXBsZS5jb22CD3d3dy5leGFtcGxlLmVkdYIPd3d3LmV4YW1wbGUubmV0MA4GA1Ud
+DwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwdQYDVR0f
+BG4wbDA0oDKgMIYuaHR0cDovL2NybDMuZGlnaWNlcnQuY29tL3NoYTItaGEtc2Vy
+dmVyLWc0LmNybDA0oDKgMIYuaHR0cDovL2NybDQuZGlnaWNlcnQuY29tL3NoYTIt
+aGEtc2VydmVyLWc0LmNybDBMBgNVHSAERTBDMDcGCWCGSAGG/WwBATAqMCgGCCsG
+AQUFBwIBFhxodHRwczovL3d3dy5kaWdpY2VydC5jb20vQ1BTMAgGBmeBDAECAjCB
+gwYIKwYBBQUHAQEEdzB1MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2Vy
+dC5jb20wTQYIKwYBBQUHMAKGQWh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9E
+aWdpQ2VydFNIQTJIaWdoQXNzdXJhbmNlU2VydmVyQ0EuY3J0MAwGA1UdEwEB/wQC
+MAAwDQYJKoZIhvcNAQELBQADggEBAISomhGn2L0LJn5SJHuyVZ3qMIlRCIdvqe0Q
+6ls+C8ctRwRO3UU3x8q8OH+2ahxlQmpzdC5al4XQzJLiLjiJ2Q1p+hub8MFiMmVP
+PZjb2tZm2ipWVuMRM+zgpRVM6nVJ9F3vFfUSHOb4/JsEIUvPY+d8/Krc+kPQwLvy
+ieqRbcuFjmqfyPmUv1U9QoI4TQikpw7TZU0zYZANP4C/gj4Ry48/znmUaRvy2kvI
+l7gRQ21qJTK5suoiYoYNo3J9T+pXPGU7Lydz/HwW+w0DpArtAaukI8aNX4ohFUKS
+wDSiIIWIWJiJGbEeIO0TIFwEVWTOnbNl/faPXpk5IRXicapqiII=
+-----END CERTIFICATE-----
+,19:timestamp_ssl_setup,14:1449080668.358^5:state,0:]19:timestamp_tcp_setup,14:1449080668.177^}11:intercepted,5:false!7:request,727:9:is_replay,5:false!4:port,3:443#6:scheme,5:https,6:method,3:GET,4:path,1:/,8:form_out,8:relative,11:httpversion,8:1:1#1:1#]4:host,11:example.com,7:headers,460:22:4:Host,11:example.com,]91:10:User-Agent,73:Mozilla/5.0 (Windows NT 10.0; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0,]76:6:Accept,63:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,]46:15:Accept-Language,23:de,en-US;q=0.7,en;q=0.3,]36:15:Accept-Encoding,13:gzip, deflate,]28:10:Connection,10:keep-alive,]54:17:If-Modified-Since,29:Fri, 09 Aug 2013 23:54:35 GMT,]42:13:If-None-Match,21:"359670651+gzip+gzip",]29:13:Cache-Control,9:max-age=0,]]7:content,0:,7:form_in,8:relative,15:timestamp_start,14:1449080668.754^13:timestamp_end,14:1449080668.757^}}
