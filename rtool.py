@@ -198,7 +198,7 @@ def sdist():
         with chdir(DIST_DIR):
             for project, conf in projects.items():
                 print("Installing %s..." % project)
-                subprocess.check_call([VENV_PIP, "install", "-q", wheel_name(project)])
+                subprocess.check_call([VENV_PIP, "install", "-q", sdist_name(project)])
 
             print("Running binaries...")
             for project, conf in projects.items():
@@ -278,7 +278,12 @@ def upload_release(username, password, repository):
     Upload source distributions to PyPI
     """
     for project in projects.keys():
-        for f in (sdist_name(project), wheel_name(project)):
+        files = (
+            sdist_name(project),
+            # See sdist why this is disabled.
+            # wheel_name(project)
+        )
+        for f in files:
             print("Uploading {} to {}...".format(f, repository))
             subprocess.check_call([
                 "twine",
