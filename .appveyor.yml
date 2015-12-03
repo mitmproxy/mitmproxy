@@ -17,3 +17,13 @@ after_test:
     pip install -e ..\release
     python ..\release\rtool.py -p mitmproxy bdist
   - ps: Get-ChildItem ..\release\dist\*.zip | ForEach { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+deploy:
+- provider: FTP
+  host: 46.101.230.67:2222
+  protocol: sftp
+  username: travis
+  password:
+    secure: +Ousom/XDCLx9+bUjr1mRKepgIzLdqP+clMpoAiPXUysZCDGxODD/7ij4z8GJ3AF
+  folder: snapshots
+  on:
+    branch: master
