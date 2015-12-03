@@ -12,11 +12,8 @@ class TestDaemonManual:
             rsp = requests.get("http://localhost:%s/p/202:da" % d.port)
             assert rsp.ok
             assert rsp.status_code == 202
-        tutils.raises(
-            "Connection aborted",
-            requests.get,
-            "http://localhost:%s/p/202:da" % d.port
-        )
+        with tutils.raises(requests.ConnectionError):
+            requests.get("http://localhost:%s/p/202:da" % d.port)
 
     def test_startstop_ssl(self):
         d = test.Daemon(ssl=True)
@@ -27,11 +24,8 @@ class TestDaemonManual:
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
-        tutils.raises(
-            "Connection aborted",
-            requests.get,
-            "http://localhost:%s/p/202:da" % d.port
-        )
+        with tutils.raises(requests.ConnectionError):
+            requests.get("http://localhost:%s/p/202:da" % d.port)
 
     def test_startstop_ssl_explicit(self):
         ssloptions = dict(
@@ -47,8 +41,5 @@ class TestDaemonManual:
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
-        tutils.raises(
-            "Connection aborted",
-            requests.get,
-            "http://localhost:%s/p/202:da" % d.port
-        )
+        with tutils.raises(requests.ConnectionError):
+            requests.get("http://localhost:%s/p/202:da" % d.port)
