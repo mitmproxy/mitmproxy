@@ -1,23 +1,15 @@
 # -*- mode: python -*-
 
-from glob import glob
+from PyInstaller.utils.hooks import collect_data_files
 
-VENV = "../release/venv"
-
-a = Analysis(['../../pathod/pathoc'],
-             hiddenimports=["_cffi_backend"],
+a = Analysis(['../pathoc'],
+             binaries=None,
+             datas=None,
+             hiddenimports=['_cffi_backend'],
              hookspath=None,
              runtime_hooks=None,
-             excludes=None,
-          )
-a.datas += Tree(
-    os.path.join(
-        VENV,
-        "lib/python2.7/site-packages/certifi",
-    ),
-    prefix = "certifi"
-)
-pyz = PYZ(a.pure)
+             excludes=None)
+pyz = PYZ(a.pure, a.zipped_data)
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
