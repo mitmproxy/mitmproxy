@@ -3,9 +3,17 @@ shallow_clone: true
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
+  PATH: "C:\\Python27;C:\\Python27\\Scripts;%PATH%"
+  PYINSTALLER_VERSION: "git+https://github.com/pyinstaller/pyinstaller.git"
 install:
-  - "%PYTHON%\\Scripts\\pip install --src . -r requirements.txt"
-  - "%PYTHON%\\python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
+  - "pip install --src .. -r requirements.txt"
+  - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 build: off  # Not a C# project
 test_script:
-  - "%PYTHON%\\Scripts\\py.test -n 4"
+  - "py.test -n 4"
+after_test:
+  - |
+    git clone https://github.com/mitmproxy/release.git ..\release
+    pip install -e ..\release
+    python ..\release\rtool.py -p mitmproxy bdist
+  - ps: Get-ChildItem ..\release\dist\*.zip | ForEach { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
