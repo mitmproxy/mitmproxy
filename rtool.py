@@ -314,7 +314,7 @@ def wizard(ctx, version, username, password, repository):
     ctx.invoke(
         git, args=["commit", "-a", "-m", "bump version"]
     )
-    ctx.invoke(git, args=["tag", version])
+    ctx.invoke(git, args=["tag", "v" + version])
     ctx.invoke(git, args=["push"])
     ctx.invoke(git, args=["push", "--tags"])
 
