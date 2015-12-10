@@ -150,7 +150,8 @@ class DumpMaster(flow.FlowMaster):
             self.echo(
                 e,
                 fg="red" if level == "error" else None,
-                dim=(level == "debug")
+                dim=(level == "debug"),
+                err=(level == "error")
             )
 
     @staticmethod
