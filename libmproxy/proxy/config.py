@@ -56,7 +56,7 @@ class ProxyConfig:
             tcp_hosts=tuple(),
             http2=False,
             rawtcp=False,
-            ciphers_client=None,
+            ciphers_client=DEFAULT_CLIENT_CIPHERS,
             ciphers_server=None,
             certs=tuple(),
             ssl_version_client="secure",
