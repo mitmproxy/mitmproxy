@@ -10,7 +10,7 @@ such as videos, where buffering the whole file slows down the client's browser.
 By default, mitmproxy will read the entire response, perform any indicated
 manipulations on it and then send the (possibly modified) response to
 the client. In some cases this is undesirable and you may wish to "stream"
-the reponse back to the client. When streaming is enabled, the response is
+the response back to the client. When streaming is enabled, the response is
 not buffered on the proxy but directly sent back to the client instead.
 
 On the command-line

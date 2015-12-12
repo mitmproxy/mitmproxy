@@ -11,7 +11,7 @@ then used to generate the interception certificate, which is sent to the client
 so the connection can continue.
 
 This rather intricate little dance lets us seamlessly generate correct
-certificates even if the client has specifed only an IP address rather than the
+certificates even if the client has specified only an IP address rather than the
 hostname. It also means that we don't need to sniff additional data to generate
 certs in transparent mode.
 

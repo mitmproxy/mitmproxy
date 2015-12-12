@@ -9,7 +9,7 @@ The setup
 In this tutorial, I'm going to show you how simple it is to creatively
 interfere with Apple Game Center traffic using mitmproxy. To set things up,
 :ref:`install the mitmproxy root certificate <certinstall>`. Then
-start mitmproxy on your desktop, and confige the iPhone to use it as a proxy.
+start mitmproxy on your desktop, and configure the iPhone to use it as a proxy.
 
 
 Taking a look at the Game Center traffic
@@ -111,7 +111,7 @@ player of all time.
 
 There's a curious addendum to this tale. When I first wrote this tutorial, all
 the top competitors' scores were the same: 2,147,483,647 (this is no longer the
-case, beacause there are now so many fellow cheaters using this tutorial). If
+case, because there are now so many fellow cheaters using this tutorial). If
 you think that number seems familiar, you're right: it's 2^31-1, the maximum
 value you can fit into a signed 32-bit int. Now let me tell you another
 peculiar thing about Super Mega Worm - at the end of every game, it submits
