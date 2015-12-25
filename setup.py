@@ -22,7 +22,7 @@ deps = {
     "hpack>=2.0.1, <2.1",
     "six>=1.10.0, <1.11",
     "certifi>=2015.9.6.2",  # no semver here - this should always be on the last release!
-    "backports.ssl_match_hostname>=3.4.0.2, <3.4.1",
+    "backports.ssl_match_hostname>=3.5.0.1, <3.6",
 }
 if sys.version_info < (3, 0):
     deps.add("ipaddress>=1.0.15, <1.1")
