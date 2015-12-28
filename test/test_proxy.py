@@ -1,3 +1,4 @@
+import os
 import mock
 from OpenSSL import SSL
 
@@ -99,8 +100,11 @@ class TestProcessProxyOptions:
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--client-certs", cadir)
+            self.assert_noerr(
+                "--client-certs",
+                os.path.join(tutils.test_data.path("data/clientcert"), "client.pem"))
             self.assert_err(
-                "directory does not exist",
+                "not a file or directory",
                 "--client-certs",
                 "nonexistent")
 

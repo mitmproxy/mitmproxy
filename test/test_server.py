@@ -1,3 +1,4 @@
+import os
 import socket
 import time
 from OpenSSL import SSL
@@ -316,6 +317,14 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
     clientcerts = True
 
     def test_clientcert(self):
+        self.config.clientcerts = os.path.join(
+            tutils.test_data.path("data/clientcert"), "client.pem")
+        f = self.pathod("304")
+        assert f.status_code == 304
+        assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
+
+    def test_clientcerts(self):
+        self.config.clientcerts = tutils.test_data.path("data/clientcert")
         f = self.pathod("304")
         assert f.status_code == 304
         assert self.server.last_log()["request"]["clientcert"]["keyinfo"]

@@ -133,10 +133,12 @@ def process_proxy_options(parser, options):
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
-        if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
+        if not (os.path.exists(options.clientcerts) or
+                os.path.isdir(options.clientcerts) or
+                os.path.isfile(options.clientcerts)):
             return parser.error(
-                "Client certificate directory does not exist or is not a directory: %s" %
-                options.clientcerts
+                "Client certificate argument is not a file or directory, "
+                "or does not exist: %s" % options.clientcerts
             )
 
     if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
