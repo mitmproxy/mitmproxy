@@ -174,11 +174,14 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def establish_ssl(self, clientcerts, sni, **kwargs):
         clientcert = None
         if clientcerts:
-            path = os.path.join(
-                clientcerts,
-                self.address.host.encode("idna")) + ".pem"
-            if os.path.exists(path):
-                clientcert = path
+            if os.path.isfile(clientcerts):
+                clientcert = clientcerts
+            else:
+                path = os.path.join(
+                    clientcerts,
+                    self.address.host.encode("idna")) + ".pem"
+                if os.path.exists(path):
+                    clientcert = path
 
         self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni

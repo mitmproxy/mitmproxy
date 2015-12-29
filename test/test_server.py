@@ -1,3 +1,4 @@
+import os
 import socket
 import time
 from OpenSSL import SSL
@@ -313,13 +314,24 @@ class TestHTTPAuth(tservers.HTTPProxTest):
 class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
-    clientcerts = True
 
-    def test_clientcert(self):
-        f = self.pathod("304")
-        assert f.status_code == 304
-        assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
-
+    def test_clientcert_file(self):
+        try:
+            self.config.clientcerts = os.path.join(
+                tutils.test_data.path("data/clientcert"), "client.pem")
+            f = self.pathod("304")
+            assert f.status_code == 304
+            assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
+        finally:
+            self.config.clientcerts = None
+    def test_clientcert_dir(self):
+        try:
+            self.config.clientcerts = tutils.test_data.path("data/clientcert")
+            f = self.pathod("304")
+            assert f.status_code == 304
+            assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
+        finally:
+            self.config.clientcerts = None
     def test_error_post_connect(self):
         p = self.pathoc()
         assert p.request("get:/:i0,'invalid\r\n\r\n'").status_code == 400

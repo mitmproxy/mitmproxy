@@ -407,7 +407,7 @@ def proxy_ssl_options(parser):
     group.add_argument(
         "--client-certs", action="store",
         type=str, dest="clientcerts", default=None,
-        help="Client certificate directory."
+        help="Client certificate file or directory."
     )
     group.add_argument(
         "--no-upstream-cert", default=False,
