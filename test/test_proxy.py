@@ -104,7 +104,7 @@ class TestProcessProxyOptions:
                 "--client-certs",
                 os.path.join(tutils.test_data.path("data/clientcert"), "client.pem"))
             self.assert_err(
-                "not a file or directory",
+                "path does not exist",
                 "--client-certs",
                 "nonexistent")
 
