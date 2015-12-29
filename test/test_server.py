@@ -324,6 +324,7 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
             self.config.clientcerts = None
+
     def test_clientcert_dir(self):
         try:
             self.config.clientcerts = tutils.test_data.path("data/clientcert")
@@ -332,6 +333,7 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
             self.config.clientcerts = None
+
     def test_error_post_connect(self):
         p = self.pathoc()
         assert p.request("get:/:i0,'invalid\r\n\r\n'").status_code == 400
