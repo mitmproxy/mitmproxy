@@ -502,6 +502,18 @@ class TestHttps2Http(tservers.ReverseProxTest):
 class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):
     ssl = False
 
+    def test_tcp_stream_modify(self):
+        self.master.load_script(
+            tutils.test_data.path("scripts/tcp_stream_modify.py"))
+
+        self._tcpproxy_on()
+        d = self.pathod('200:b"foo"')
+        self._tcpproxy_off()
+
+        assert d.content == "bar"
+
+        self.master.unload_scripts()
+
 
 class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
     ssl = True
