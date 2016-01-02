@@ -53,7 +53,7 @@ class _StreamingHttpLayer(_HttpLayer):
 
     def read_response(self, request):
         response = self.read_response_headers()
-        response.content = b"".join(
+        response.data.content = b"".join(
             self.read_response_body(request, response)
         )
         return response
@@ -469,9 +469,9 @@ class HttpLayer(Layer):
 
         if self.supports_streaming:
             if flow.response.stream:
-                flow.response.content = CONTENT_MISSING
+                flow.response.data.content = CONTENT_MISSING
             else:
-                flow.response.content = b"".join(self.read_response_body(
+                flow.response.data.content = b"".join(self.read_response_body(
                     flow.request,
                     flow.response
                 ))

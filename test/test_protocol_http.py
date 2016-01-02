@@ -1,7 +1,6 @@
 import socket
 from io import BytesIO
 from netlib.exceptions import HttpSyntaxException
-
 from netlib.http import http1
 from netlib.tcp import TCPClient
 from netlib.tutils import treq, raises
@@ -82,3 +81,10 @@ class TestExpectHeader(tservers.HTTPProxTest):
         assert resp.status_code == 200
 
         client.finish()
+
+
+class TestHeadContentLength(tservers.HTTPProxTest):
+    def test_head_content_length(self):
+        p = self.pathoc()
+        resp = p.request("""head:'%s/p/200:h"Content-Length"="42"'""" % self.server.urlbase)
+        assert resp.headers["Content-Length"] == "42"
