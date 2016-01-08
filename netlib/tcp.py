@@ -565,6 +565,17 @@ class TCPClient(_Connection):
         else:
             self.__address = None
 
+    @property
+    def source_address(self):
+        return self.__source_address
+
+    @source_address.setter
+    def source_address(self, source_address):
+        if source_address:
+            self.__source_address = Address.wrap(source_address)
+        else:
+            self.__source_address = None
+
     def close(self):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
