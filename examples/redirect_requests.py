@@ -12,7 +12,7 @@ def request(context, flow):
     # Method 1: Answer with a locally generated response
     if flow.request.pretty_host.endswith("example.com"):
         resp = HTTPResponse(
-            [1, 1], 200, "OK",
+            "HTTP/1.1", 200, "OK",
             Headers(Content_Type="text/html"),
             "helloworld")
         flow.reply(resp)
