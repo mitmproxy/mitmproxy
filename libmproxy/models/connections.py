@@ -88,8 +88,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
-    def __init__(self, address):
-        tcp.TCPClient.__init__(self, address)
+    def __init__(self, address, source_address=None):
+        if source_address:
+            source_address = (source_address, 0)
+        tcp.TCPClient.__init__(self, address, source_address)
 
         self.via = None
         self.timestamp_start = None

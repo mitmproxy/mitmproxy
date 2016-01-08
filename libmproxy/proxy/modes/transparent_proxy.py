@@ -8,6 +8,7 @@ from ...protocol import Layer, ServerConnectionMixin
 class TransparentProxy(Layer, ServerConnectionMixin):
     def __init__(self, ctx):
         super(TransparentProxy, self).__init__(ctx)
+        self.server_conn.source_address = (ctx.config.host, 0)
         self.resolver = platform.resolver()
 
     def __call__(self):
