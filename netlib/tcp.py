@@ -548,8 +548,7 @@ class TCPClient(_Connection):
     def __init__(self, address, source_address=None):
         super(TCPClient, self).__init__(None)
         self.address = address
-        self.source_address = Address.wrap(
-            source_address) if source_address else None
+        self.source_address = source_address
         self.cert = None
         self.ssl_verification_error = None
         self.sni = None
