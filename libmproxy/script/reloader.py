@@ -1,7 +1,7 @@
 import os
 import fnmatch
 from watchdog.events import PatternMatchingEventHandler
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver 
 
 _observers = {}
 
@@ -12,7 +12,7 @@ def watch(script, callback):
     script_dir = os.path.dirname(os.path.abspath(script.args[0]))
     script_name = os.path.basename(script.args[0])
     event_handler = _ScriptModificationHandler(callback, filename=script_name)
-    observer = Observer()
+    observer = PollingObserver()
     observer.schedule(event_handler, script_dir)
     observer.start()
     _observers[script] = observer
@@ -37,7 +37,6 @@ class _ScriptModificationHandler(PatternMatchingEventHandler):
         self.filename = filename 
 
     def on_modified(self, event):
-        # super(_ScriptModificationHandler, self).on_modified(event)
         if event.is_directory:
             files_in_dir = [event.src_path + "/" + \
                     f for f in os.listdir(event.src_path)]
@@ -48,7 +47,7 @@ class _ScriptModificationHandler(PatternMatchingEventHandler):
         else:
             modified_filepath = event.src_path
 
-        if fnmatch.fnmatch(os.path.basename(modifiedFilename), self.filename):
+        if fnmatch.fnmatch(os.path.basename(modified_filepath), self.filename):
             self.callback()
 
 __all__ = ["watch", "unwatch"]
