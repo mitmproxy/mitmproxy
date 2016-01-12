@@ -9,7 +9,6 @@ def start(context, argv) :
 
 def request(context, flow) :
 
-    flow.request.headers.pop('Accept-Encoding', None)
     flow.request.headers.pop('If-Modified-Since', None)
     flow.request.headers.pop('Cache-Control', None)
 
