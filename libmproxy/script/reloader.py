@@ -10,7 +10,8 @@ def watch(script, callback):
     if script in _observers:
         raise RuntimeError("Script already observed")
     script_dir = os.path.dirname(os.path.abspath(script.args[0]))
-    event_handler = _ScriptModificationHandler(callback)
+    script_name = os.path.basename(script.args[0])
+    event_handler = _ScriptModificationHandler(callback, filename=script_name)
     observer = Observer()
     observer.schedule(event_handler, script_dir)
     observer.start()
@@ -25,7 +26,7 @@ def unwatch(script):
 
 
 class _ScriptModificationHandler(PatternMatchingEventHandler):
-    def __init__(self, callback, pattern='*.py'):
+    def __init__(self, callback, filename='*'):
         # We could enumerate all relevant *.py files (as werkzeug does it),
         # but our case looks like it isn't as simple as enumerating sys.modules.
         # This should be good enough for now.
@@ -33,21 +34,21 @@ class _ScriptModificationHandler(PatternMatchingEventHandler):
             ignore_directories=True,
         )
         self.callback = callback
-        self.pattern = pattern
+        self.filename = filename 
 
     def on_modified(self, event):
-        super(_ScriptModificationHandler, self).on_modified(event)
+        # super(_ScriptModificationHandler, self).on_modified(event)
         if event.is_directory:
             files_in_dir = [event.src_path + "/" + \
                     f for f in os.listdir(event.src_path)]
             if len(files_in_dir) > 0:
-                modifiedFilename = max(files_in_dir, key=os.path.getmtime)
+                modified_filepath = max(files_in_dir, key=os.path.getmtime)
             else:
                 return
         else:
-            modifiedFilename = event.src_path
+            modified_filepath = event.src_path
 
-        if fnmatch.fnmatch(os.path.basename(modifiedFilename), self.pattern):
+        if fnmatch.fnmatch(os.path.basename(modifiedFilename), self.filename):
             self.callback()
 
 __all__ = ["watch", "unwatch"]
