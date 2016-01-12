@@ -27,9 +27,7 @@ def unwatch(script):
 
 class _ScriptModificationHandler(PatternMatchingEventHandler):
     def __init__(self, callback, filename='*'):
-        # We could enumerate all relevant *.py files (as werkzeug does it),
-        # but our case looks like it isn't as simple as enumerating sys.modules.
-        # This should be good enough for now.
+
         super(_ScriptModificationHandler, self).__init__(
             ignore_directories=True,
         )
@@ -38,7 +36,7 @@ class _ScriptModificationHandler(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         if event.is_directory:
-            files_in_dir = [event.src_path + "/" + \
+            files_in_dir = [event.src_path + "/" + 
                     f for f in os.listdir(event.src_path)]
             if len(files_in_dir) > 0:
                 modified_filepath = max(files_in_dir, key=os.path.getmtime)
@@ -48,6 +46,10 @@ class _ScriptModificationHandler(PatternMatchingEventHandler):
             modified_filepath = event.src_path
 
         if fnmatch.fnmatch(os.path.basename(modified_filepath), self.filename):
+            self.callback()
+
+    def on_created(self, event):
+        if fnmatch.fnmatch(os.path.basename(event.src_path), self.filename):
             self.callback()
 
 __all__ = ["watch", "unwatch"]
