@@ -666,7 +666,7 @@ class FlowMaster(controller.Master):
         script.reloader.unwatch(script_obj)
         self.scripts.remove(script_obj)
 
-    def load_script(self, command, use_reloader=False):
+    def load_script(self, command, use_reloader=True):
         """
             Loads a script. Returns an error description if something went
             wrong.
@@ -1040,14 +1040,14 @@ class FlowMaster(controller.Master):
             s.unload()
         except script.ScriptException as e:
             ok = False
-            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)))
+            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)), 'error')
         try:
             s.load()
         except script.ScriptException as e:
             ok = False
-            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)))
+            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)), 'error')
         else:
-            self.add_event('"{}" reloaded.'.format(s.filename))
+            self.add_event('"{}" reloaded.'.format(s.filename), 'info')
         return ok
 
     def shutdown(self):
