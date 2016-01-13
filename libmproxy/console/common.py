@@ -281,24 +281,22 @@ def export_prompt(k, flow):
         copy_as_curl_command(flow)
 
 def copy_as_curl_command(flow):
-
     if flow.request.content is None or flow.request.content == CONTENT_MISSING:
         return None, "Request content is missing"
 
-    headerString = ""
-    for k,v in flow.request.headers.fields:
-      headerString += " -H '" + k + ":" + v + "' "
+    data = "curl "
 
-    data = "curl"
+    for k, v in flow.request.headers.fields:
+      data += "-H '%s:%s' " % (k, v)
 
     if flow.request.method != "GET":
-      data += " -X " + flow.request.method
+      data += "-X %s " % flow.request.method
 
     full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
-    data += " " + headerString + "'" + full_url + "'"
+    data += "'%s'" % full_url
 
-    if flow.request.content != None and flow.request.content != "":
-      data += " --data-binary " + "'" + flow.request.content + "'"
+    if flow.request.content:
+      data += " --data-binary '%s'" % flow.request.content
 
     copy_to_clipboard_or_prompt(data)
 
