@@ -276,9 +276,13 @@ def copy_flow_format_data(part, scope, flow):
                     raise ValueError("Unknown part: {}".format(part))
     return data, False
 
+
 def export_prompt(k, flow):
     if k == "c":
         copy_as_curl_command(flow)
+    elif k == "p":
+        copy_as_python_code(flow)
+
 
 def copy_as_curl_command(flow):
     if flow.request.content is None or flow.request.content == CONTENT_MISSING:
@@ -298,6 +302,31 @@ def copy_as_curl_command(flow):
 
     if flow.request.content:
       data += " --data-binary '%s'" % flow.request.content
+
+    copy_to_clipboard_or_prompt(data)
+
+
+def copy_as_python_code(flow):
+    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+        signals.status_message.send(message="Request content is missing")
+        return
+
+    if flow.request.method != "GET":
+        signals.status_message.send(message="Currently, only GET methods are supported")
+        return
+
+    data = ("import requests\n"
+            "headers = {%s}\n"
+            "url = '%s'\n"
+            "resp = requests.get(url, headers=headers)")
+
+    headers = "\n"
+    for k, v in flow.request.headers.fields:
+      headers += "    '%s': '%s',\n" % (k, v)
+
+    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
+
+    data = data % (headers, full_url)
 
     copy_to_clipboard_or_prompt(data)
 
@@ -325,6 +354,7 @@ def copy_to_clipboard_or_prompt(data):
             ),
             callback = save
         )
+
 
 def copy_flow(part, scope, flow, master, state):
     """
