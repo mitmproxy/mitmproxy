@@ -85,12 +85,12 @@ class DumpMaster(flow.FlowMaster):
             self.set_stickyauth(options.stickyauth)
 
         if options.outfile:
-            path = os.path.expanduser(options.outfile[0])
-            try:
-                f = open(path, options.outfile[1])
-                self.start_stream(f, self.filt)
-            except IOError as v:
-                raise DumpError(v.strerror)
+            err = self.start_stream_to_path(
+                options.outfile[0],
+                options.outfile[1]
+            )
+            if err:
+                raise DumpError(err)
 
         if options.replacements:
             for i in options.replacements:
