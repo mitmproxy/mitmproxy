@@ -27,7 +27,7 @@ def _mkhelp():
         ("b", "save request/response body"),
         ("D", "duplicate flow"),
         ("d", "delete flow"),
-        ("E", "export"),        
+        ("E", "export"),
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("m", "change body display mode for this entity"),
@@ -581,6 +581,7 @@ class FlowView(tabs.Tabs):
                 prompt = "Export",
                 keys = (
                     ("as curl command", "c"),
+                    ("as python code", "p"),
                 ),
                 callback = common.export_prompt,
                 args = (self.flow,)
