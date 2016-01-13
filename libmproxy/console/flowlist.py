@@ -262,6 +262,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 keys = (
                     ("as curl command", "c"),
                     ("as python code", "p"),
+                    ("as raw request", "r"),
                 ),
                 callback = common.export_prompt,
                 args = (self.flow,)

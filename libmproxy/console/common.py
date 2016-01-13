@@ -282,6 +282,8 @@ def export_prompt(k, flow):
         copy_as_curl_command(flow)
     elif k == "p":
         copy_as_python_code(flow)
+    elif k == "r":
+        copy_as_raw_request(flow)
 
 
 def copy_as_curl_command(flow):
@@ -327,6 +329,16 @@ def copy_as_python_code(flow):
     full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
 
     data = data % (headers, full_url)
+
+    copy_to_clipboard_or_prompt(data)
+
+
+def copy_as_raw_request(flow):
+    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+        signals.status_message.send(message="Request content is missing")
+        return
+
+    data = netlib.http.http1.assemble_request(flow.request)
 
     copy_to_clipboard_or_prompt(data)
 
