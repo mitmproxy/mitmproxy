@@ -282,7 +282,8 @@ def export_prompt(k, flow):
 
 def copy_as_curl_command(flow):
     if flow.request.content is None or flow.request.content == CONTENT_MISSING:
-        return None, "Request content is missing"
+        signals.status_message.send(message="Request content is missing")
+        return
 
     data = "curl "
 
