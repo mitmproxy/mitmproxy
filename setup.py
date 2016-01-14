@@ -26,7 +26,7 @@ deps = {
     "construct>=2.5.2, <2.6",
     "six>=1.10.0, <1.11",
     "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
-    "Pillow>=3.0.0, <3.1",
+    "Pillow>=3.0.0, <3.2",
     "watchdog>=0.8.3, <0.9",
 }
 # A script -> additional dependencies dict.
