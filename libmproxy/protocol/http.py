@@ -141,6 +141,9 @@ class SafeH2Connection(H2Connection):
             self.conn.send(self.data_to_send())
 
     def safe_increment_flow_control(self, stream_id, length):
+        if length == 0:
+            return
+
         with self.lock:
             self.increment_flow_control_window(length)
             self.conn.send(self.data_to_send())
@@ -152,7 +155,7 @@ class SafeH2Connection(H2Connection):
     def safe_reset_stream(self, stream_id, error_code):
         with self.lock:
             self.reset_stream(stream_id, error_code)
-            self.conn.send(self.h2.data_to_send())
+            self.conn.send(self.data_to_send())
 
     def safe_acknowledge_settings(self, event):
         with self.conn.h2.lock:
@@ -174,9 +177,17 @@ class SafeH2Connection(H2Connection):
             max_outbound_frame_size = self.max_outbound_frame_size
             for i in xrange(0, len(chunk), max_outbound_frame_size):
                 frame_chunk = chunk[i:i+max_outbound_frame_size]
-                with self.lock:
-                    self.send_data(stream_id, frame_chunk)
-                    self.conn.send(self.data_to_send())
+
+                self.lock.acquire()
+                while True:
+                    if self.local_flow_control_window(stream_id) < len(frame_chunk):
+                        self.lock.release()
+                        time.sleep(0)
+                    else:
+                        break
+                self.send_data(stream_id, frame_chunk)
+                self.conn.send(self.data_to_send())
+                self.lock.release()
         with self.lock:
             self.end_stream(stream_id)
             self.conn.send(self.data_to_send())
