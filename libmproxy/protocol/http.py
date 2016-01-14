@@ -173,6 +173,8 @@ class SafeH2Connection(H2Connection):
             self.conn.send(self.data_to_send())
 
     def safe_send_body(self, stream_id, chunks):
+        # TODO: this assumes the MAX_FRAME_SIZE does not change in the middle
+        # of a transfer - it could though. Then we need to re-chunk everything.
         for chunk in chunks:
             max_outbound_frame_size = self.max_outbound_frame_size
             for i in xrange(0, len(chunk), max_outbound_frame_size):
