@@ -5,6 +5,7 @@ import traceback
 import six
 import struct
 import threading
+import time
 import Queue
 
 from netlib import tcp
@@ -154,7 +155,11 @@ class SafeH2Connection(H2Connection):
 
     def safe_reset_stream(self, stream_id, error_code):
         with self.lock:
-            self.reset_stream(stream_id, error_code)
+            try:
+                self.reset_stream(stream_id, error_code)
+            except StreamClosedError:
+                # stream is already closed - good
+                pass
             self.conn.send(self.data_to_send())
 
     def safe_acknowledge_settings(self, event):
@@ -270,7 +275,7 @@ class Http2Layer(Layer):
                     elif isinstance(event, StreamEnded):
                         self.streams[eid].data_finished.set()
                     elif isinstance(event, StreamReset):
-                        self.streams[eid].zombie = True
+                        self.streams[eid].zombie = time.time()
                         if eid in self.streams and event.error_code == 0x8:
                             if is_server:
                                 other_stream_id = self.streams[eid].client_stream_id
@@ -284,17 +289,22 @@ class Http2Layer(Layer):
                     elif isinstance(event, ConnectionTerminated):
                         other_conn.h2.safe_close_connection(event.error_code)
                         return
+                    elif isinstance(event, TrailersReceived):
+                        raise NotImplementedError()
+                    elif isinstance(event, PushedStreamReceived):
+                        raise NotImplementedError()
 
-            # TODO: cleanup resources once we are sure nobody needs them
-            # for stream_id in self.streams.keys():
-            #     if self.streams[stream_id].zombie:
-            #         self.streams.pop(stream_id, None)
+            death_time = time.time() - 10
+            for stream_id in self.streams.keys():
+                zombie = self.streams[stream_id].zombie
+                if zombie and zombie <= death_time:
+                    self.streams.pop(stream_id, None)
 
 
 class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
     def __init__(self, ctx, stream_id, request_headers):
         super(Http2SingleStreamLayer, self).__init__(ctx)
-        self.zombie = False
+        self.zombie = None
         self.client_stream_id = stream_id
         self.server_stream_id = None
         self.request_headers = request_headers
@@ -354,6 +364,9 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
         )
 
     def send_request(self, message):
+        if self.zombie:
+            return
+
         with self.server_conn.h2.lock:
             self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
             self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
@@ -362,10 +375,10 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
                 self.server_stream_id,
                 message.headers
             )
-            self.server_conn.h2.safe_send_body(
-                self.server_stream_id,
-                message.body
-            )
+        self.server_conn.h2.safe_send_body(
+            self.server_stream_id,
+            message.body
+        )
 
     def read_response_headers(self):
         self.response_arrived.wait()
@@ -392,14 +405,22 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
                 while self.data_queue.qsize() > 0:
                     yield self.data_queue.get()
                 return
+            if self.zombie:
+                return
 
     def send_response_headers(self, response):
+        if self.zombie:
+            return
+
         self.client_conn.h2.safe_send_headers(
             self.client_stream_id,
             response.headers
         )
 
     def send_response_body(self, _response, chunks):
+        if self.zombie:
+            return
+
         self.client_conn.h2.safe_send_body(
             self.client_stream_id,
             chunks
@@ -420,7 +441,7 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
     def run(self):
         layer = HttpLayer(self, self.mode)
         layer()
-        self.zombie = True
+        self.zombie = time.time()
 
 
 class ConnectServerConnection(object):
