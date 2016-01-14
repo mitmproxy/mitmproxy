@@ -135,6 +135,11 @@ class SafeH2Connection(H2Connection):
         self.conn = conn
         self.lock = threading.RLock()
 
+    def safe_close_connection(self, error_code):
+        with self.lock:
+            self.close_connection(error_code)
+            self.conn.send(self.data_to_send())
+
     def safe_increment_flow_control(self, stream_id, length):
         with self.lock:
             self.increment_flow_control_window(length)
@@ -263,6 +268,9 @@ class Http2Layer(Layer):
                         source_conn.h2.safe_acknowledge_settings(event)
                         new_settings = dict([(id, cs.new_value) for (id, cs) in event.changed_settings.iteritems()])
                         other_conn.h2.safe_update_settings(new_settings)
+                    elif isinstance(event, ConnectionTerminated):
+                        other_conn.h2.safe_close_connection(event.error_code)
+                        return
 
             # TODO: cleanup resources once we are sure nobody needs them
             # for stream_id in self.streams.keys():
