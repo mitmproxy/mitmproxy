@@ -1,7 +1,12 @@
 import os
 import fnmatch
+import sys
 from watchdog.events import PatternMatchingEventHandler
-from watchdog.observers.polling import PollingObserver 
+if sys.platform == 'darwin':
+    from watchdog.observers.polling import PollingObserver as Observer
+else:
+    from watchdog.observers import Observer
+# Use PollingObserver on OS X, and natvie Observer on Linux and Windows
 
 _observers = {}
 
@@ -12,7 +17,7 @@ def watch(script, callback):
     script_dir = os.path.dirname(os.path.abspath(script.args[0]))
     script_name = os.path.basename(script.args[0])
     event_handler = _ScriptModificationHandler(callback, filename=script_name)
-    observer = PollingObserver()
+    observer = Observer()
     observer.schedule(event_handler, script_dir)
     observer.start()
     _observers[script] = observer
@@ -46,10 +51,6 @@ class _ScriptModificationHandler(PatternMatchingEventHandler):
             modified_filepath = event.src_path
 
         if fnmatch.fnmatch(os.path.basename(modified_filepath), self.filename):
-            self.callback()
-
-    def on_created(self, event):
-        if fnmatch.fnmatch(os.path.basename(event.src_path), self.filename):
             self.callback()
 
 __all__ = ["watch", "unwatch"]
