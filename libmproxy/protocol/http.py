@@ -130,6 +130,7 @@ class Http1Layer(_HttpLayer):
         layer = HttpLayer(self, self.mode)
         layer()
 
+
 class SafeH2Connection(H2Connection):
     def __init__(self, conn, *args, **kwargs):
         super(SafeH2Connection, self).__init__(*args, **kwargs)
@@ -202,6 +203,7 @@ class SafeH2Connection(H2Connection):
             self.end_stream(stream_id)
             self.conn.send(self.data_to_send())
 
+
 class Http2Layer(Layer):
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
@@ -213,9 +215,6 @@ class Http2Layer(Layer):
         # make sure that we only pass actual SSL.Connection objects in here,
         # because otherwise ssl_read_select fails!
         self.active_conns = [self.client_conn.connection]
-
-        if self.server_conn:
-            self._initiate_server_conn()
 
     def _initiate_server_conn(self):
         self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True)
@@ -235,7 +234,15 @@ class Http2Layer(Layer):
     def disconnect(self):
         raise NotImplementedError("Cannot dis- or reconnect in HTTP2 connections.")
 
+    def next_layer(self):
+        # WebSockets over HTTP/2?
+        # CONNECT for proxying?
+        raise NotImplementedError()
+
     def __call__(self):
+        if self.server_conn:
+            self._initiate_server_conn()
+
         preamble = self.client_conn.rfile.read(24)
         self.client_conn.h2.initiate_connection()
         self.client_conn.h2.update_settings({frame.SettingsFrame.ENABLE_PUSH: False})
@@ -267,15 +274,18 @@ class Http2Layer(Layer):
                         if isinstance(event, RequestReceived):
                             headers = Headers([[str(k), str(v)] for k, v in event.headers])
                             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
+                            self.streams[eid].timestamp_start = time.time()
                             self.streams[eid].start()
                         elif isinstance(event, ResponseReceived):
                             headers = Headers([[str(k), str(v)] for k, v in event.headers])
+                            self.streams[eid].timestamp_start = time.time()
                             self.streams[eid].response_headers = headers
                             self.streams[eid].response_arrived.set()
                         elif isinstance(event, DataReceived):
                             self.streams[eid].data_queue.put(event.data)
                             source_conn.h2.safe_increment_flow_control(event.stream_id, len(event.data))
                         elif isinstance(event, StreamEnded):
+                            self.streams[eid].timestamp_end = time.time()
                             self.streams[eid].data_finished.set()
                         elif isinstance(event, StreamReset):
                             self.streams[eid].zombie = time.time()
@@ -322,6 +332,7 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
             return True
 
         try:
+            # TODO: replace private API call
             h2_conn._get_stream_by_id(stream_id)
         except Exception as e:
             if isinstance(e, h2.exceptions.StreamClosedError):
@@ -373,8 +384,8 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
             (2, 0),
             self.request_headers,
             data,
-            # TODO: timestamp_start=None,
-            # TODO: timestamp_end=None,
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end,
             form_out=None, # TODO: (request.form_out if hasattr(request, 'form_out') else None),
         )
 
@@ -405,8 +416,8 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
             reason='',
             headers=self.response_headers,
             content=None,
-            # TODO: timestamp_start=response.timestamp_start,
-            # TODO: timestamp_end=response.timestamp_end,
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end,
         )
 
     def read_response_body(self, request, response):
@@ -624,7 +635,11 @@ class HttpLayer(Layer):
         try:
             response = make_error_response(code, message)
             self.send_response(response)
-        except NetlibException:
+        except Exception as e:
+            self.log(
+                "error: %s" % repr(e),
+                level="debug"
+            )
             pass
 
     def change_upstream_proxy_server(self, address):
