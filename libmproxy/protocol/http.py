@@ -386,7 +386,6 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
             data,
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
-            form_out=None, # TODO: (request.form_out if hasattr(request, 'form_out') else None),
         )
 
     def send_request(self, message):
