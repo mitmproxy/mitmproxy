@@ -548,8 +548,7 @@ class TCPClient(_Connection):
     def __init__(self, address, source_address=None):
         super(TCPClient, self).__init__(None)
         self.address = address
-        self.source_address = Address.wrap(
-            source_address) if source_address else None
+        self.source_address = source_address
         self.cert = None
         self.ssl_verification_error = None
         self.sni = None
@@ -564,6 +563,17 @@ class TCPClient(_Connection):
             self.__address = Address.wrap(address)
         else:
             self.__address = None
+
+    @property
+    def source_address(self):
+        return self.__source_address
+
+    @source_address.setter
+    def source_address(self, source_address):
+        if source_address:
+            self.__source_address = Address.wrap(source_address)
+        else:
+            self.__source_address = None
 
     def close(self):
         # Make sure to close the real socket, not the SSL proxy.
