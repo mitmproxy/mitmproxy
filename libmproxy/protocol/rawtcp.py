@@ -13,6 +13,15 @@ from ..exceptions import ProtocolException
 from .base import Layer
 
 
+class TcpMessage(object):
+    def __init__(self, client_conn, server_conn, sender, receiver, message):
+        self.client_conn = client_conn
+        self.server_conn = server_conn
+        self.sender = sender
+        self.receiver = receiver
+        self.message = message
+
+
 class RawTCPLayer(Layer):
     chunk_size = 4096
 
@@ -50,7 +59,13 @@ class RawTCPLayer(Layer):
                             return
                         continue
 
-                    dst.sendall(buf[:size])
+                    tcp_message = TcpMessage(
+                        self.client_conn, self.server_conn,
+                        self.client_conn if dst == server else self.server_conn,
+                        self.server_conn if dst == server else self.client_conn,
+                        buf[:size].tobytes())
+                    self.channel.ask("tcp_message", tcp_message)
+                    dst.sendall(tcp_message.message)
 
                     if self.logging:
                         # log messages are prepended with the client address,
@@ -59,7 +74,7 @@ class RawTCPLayer(Layer):
                             direction = "-> tcp -> {}".format(repr(self.server_conn.address))
                         else:
                             direction = "<- tcp <- {}".format(repr(self.server_conn.address))
-                        data = clean_bin(buf[:size].tobytes())
+                        data = clean_bin(tcp_message.message)
                         self.log(
                             "{}\r\n{}".format(direction, data),
                             "info"

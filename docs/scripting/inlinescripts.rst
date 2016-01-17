@@ -36,14 +36,13 @@ We encourage you to either browse them locally or on `GitHub`_.
 Events
 ------
 
-.. TODO: Split this into Connection, HTTP and TCP events once we have TCP events.
-
 The ``context`` argument passed to each event method is always a
 :py:class:`~libmproxy.script.ScriptContext` instance. It is guaranteed to be the same object
 for the scripts lifetime and is not shared between multiple inline scripts. You can safely use it
 to store any form of state you require.
 
-Events are listed in the order they usually occur.
+Script Lifecycle Events
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. py:function:: start(context, argv)
 
@@ -51,6 +50,13 @@ Events are listed in the order they usually occur.
 
     :param List[str] argv: The inline scripts' arguments.
         For example, ``mitmproxy -s 'example.py --foo 42'`` sets argv to ``["--foo", "42"]``.
+
+.. py:function:: done(context)
+
+    Called once on script shutdown, after any other events.
+
+Connection Events
+^^^^^^^^^^^^^^^^^
 
 .. py:function:: clientconnect(context, root_layer)
 
@@ -64,14 +70,13 @@ Events are listed in the order they usually occur.
         :py:class:`~libmproxy.proxy.RootContext`. For example, ``root_layer.client_conn.address``
         gives the remote address of the connecting client.
 
+.. py:function:: clientdisconnect(context, root_layer)
 
-.. py:function:: request(context, flow)
+    Called when a client disconnects from the proxy.
 
-    Called when a client request has been received. The ``flow`` object is
-    guaranteed to have a non-None ``request`` attribute.
+    .. versionchanged:: 0.14
 
-    :param HTTPFlow flow: The flow containing the request which has been received.
-        The object is guaranteed to have a non-None ``request`` attribute.
+    :param Layer root_layer: see :py:func:`clientconnect`
 
 .. py:function:: serverconnect(context, server_conn)
 
@@ -80,6 +85,25 @@ Events are listed in the order they usually occur.
 
     :param ServerConnection server_conn: The server connection object. It is guaranteed to have a
         non-None ``address`` attribute.
+
+.. py:function:: serverdisconnect(context, server_conn)
+
+    Called when the proxy has closed the server connection.
+
+    .. versionadded:: 0.14
+
+    :param ServerConnection server_conn: see :py:func:`serverconnect`
+
+HTTP Events
+^^^^^^^^^^^
+
+.. py:function:: request(context, flow)
+
+    Called when a client request has been received. The ``flow`` object is
+    guaranteed to have a non-None ``request`` attribute.
+
+    :param HTTPFlow flow: The flow containing the request which has been received.
+        The object is guaranteed to have a non-None ``request`` attribute.
 
 .. py:function:: responseheaders(context, flow)
 
@@ -109,26 +133,19 @@ Events are listed in the order they usually occur.
     :param HTTPFlow flow: The flow containing the error.
         It is guaranteed to have non-None ``error`` attribute.
 
-.. py:function:: serverdisconnect(context, server_conn)
+TCP Events
+^^^^^^^^^^
 
-    Called when the proxy has closed the server connection.
+.. py:function:: tcp_message(context, tcp_msg)
 
-    .. versionadded:: 0.14
+    .. warning::  API is subject to change
 
-    :param ServerConnection server_conn: see :py:func:`serverconnect`
+    If the proxy is in :ref:`TCP mode <tcpproxy>`, this event is called when it
+    receives a TCP payload from the client or server.
 
-.. py:function:: clientdisconnect(context, root_layer)
+    The sender and receiver are identifiable. The message is user-modifiable.
 
-    Called when a client disconnects from the proxy.
-
-    .. versionchanged:: 0.14
-
-    :param Layer root_layer: see :py:func:`clientconnect`
-
-.. py:function:: done(context)
-
-    Called once on script shutdown, after any other events.
-
+    :param TcpMessage tcp_msg: see *examples/tcp_message.py*
 
 API
 ---

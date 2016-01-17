@@ -1050,6 +1050,10 @@ class FlowMaster(controller.Master):
             self.add_event('"{}" reloaded.'.format(s.filename))
         return ok
 
+    def handle_tcp_message(self, m):
+        self.run_script_hook("tcp_message", m)
+        m.reply()
+
     def shutdown(self):
         self.unload_scripts()
         controller.Master.shutdown(self)
