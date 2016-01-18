@@ -46,7 +46,7 @@ class RequestReplayThread(threading.Thread):
                 # In all modes, we directly connect to the server displayed
                 if self.config.mode == "upstream":
                     server_address = self.config.upstream_server.address
-                    server = ServerConnection(server_address)
+                    server = ServerConnection(server_address, (self.config.host, 0))
                     server.connect()
                     if r.scheme == "https":
                         connect_request = make_connect_request((r.host, r.port))
@@ -68,7 +68,7 @@ class RequestReplayThread(threading.Thread):
                         r.form_out = "absolute"
                 else:
                     server_address = (r.host, r.port)
-                    server = ServerConnection(server_address)
+                    server = ServerConnection(server_address, (self.config.host, 0))
                     server.connect()
                     if r.scheme == "https":
                         server.establish_ssl(
