@@ -109,9 +109,9 @@ class ServerConnectionMixin(object):
                         self.disconnect()
     """
 
-    def __init__(self, server_address=None, source_address=None):
+    def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
-        self.server_conn = ServerConnection(server_address, source_address)
+        self.server_conn = ServerConnection(server_address)
         self.__check_self_connect()
 
     def __check_self_connect(self):
@@ -157,7 +157,7 @@ class ServerConnectionMixin(object):
         """
         self.log("serverdisconnect", "debug", [repr(self.server_conn.address)])
         address = self.server_conn.address
-        source_address = self.server_conn.source_address()[0]
+        source_address = self.server_conn.source_address
         self.server_conn.finish()
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
