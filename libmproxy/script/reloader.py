@@ -38,7 +38,6 @@ class _ScriptModificationHandler(RegexMatchingEventHandler):
             regexes=['.*'+filename]
         )
         self.callback = callback
-        self.filename = filename 
 
     def on_modified(self, event):
         self.callback()
