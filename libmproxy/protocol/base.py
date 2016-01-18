@@ -111,7 +111,7 @@ class ServerConnectionMixin(object):
 
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
-        self.server_conn = ServerConnection(server_address)
+        self.server_conn = ServerConnection(server_address, (self.config.host, 0))
         self.__check_self_connect()
 
     def __check_self_connect(self):

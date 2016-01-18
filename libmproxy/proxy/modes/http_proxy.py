@@ -16,7 +16,6 @@ class HttpProxy(Layer, ServerConnectionMixin):
 class HttpUpstreamProxy(Layer, ServerConnectionMixin):
     def __init__(self, ctx, server_address):
         super(HttpUpstreamProxy, self).__init__(ctx, server_address=server_address)
-        self.server_conn.source_address = (ctx.config.host, 0)
 
     def __call__(self):
         layer = self.ctx.next_layer(self)
