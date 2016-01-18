@@ -240,7 +240,6 @@ class Http2Layer(Layer):
         raise NotImplementedError()
 
     def _handle_event(self, event, source_conn, other_conn, is_server):
-        is_server = (conn == self.server_conn.connection)
         if hasattr(event, 'stream_id'):
             if is_server:
                 eid = self.server_to_client_stream_ids[event.stream_id]
@@ -277,11 +276,13 @@ class Http2Layer(Layer):
             other_conn.h2.safe_update_settings(new_settings)
         elif isinstance(event, ConnectionTerminated):
             other_conn.h2.safe_close_connection(event.error_code)
-            return
+            return False
         elif isinstance(event, TrailersReceived):
             raise NotImplementedError()
         elif isinstance(event, PushedStreamReceived):
             raise NotImplementedError()
+
+        return True
 
     def _cleanup_streams(self):
         death_time = time.time() - 10
@@ -305,9 +306,10 @@ class Http2Layer(Layer):
             for conn in r:
                 source_conn = self.client_conn if conn == self.client_conn.connection else self.server_conn
                 other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
+                is_server = (conn == self.server_conn.connection)
 
                 field = source_conn.rfile.peek(3)
-                length = (field[0] << 16) + (field[1] << 8) + field[2]
+                length = int(field.encode('hex'), 16)
                 raw_frame = source_conn.rfile.safe_read(9 + length)
 
                 with source_conn.h2.lock:
@@ -315,9 +317,10 @@ class Http2Layer(Layer):
                     source_conn.send(source_conn.h2.data_to_send())
 
                     for event in events:
-                        self.handle_event(event, source_conn, other_conn)
+                        if not self._handle_event(event, source_conn, other_conn, is_server):
+                            return
 
-            self.cleanup_streams()
+            self._cleanup_streams()
 
 
 class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
@@ -337,12 +340,12 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
         if self.zombie:
             return True
 
-        try:
-            # TODO: replace private API call
-            h2_conn._get_stream_by_id(stream_id)
-        except Exception as e:
-            if isinstance(e, h2.exceptions.StreamClosedError):
-                return true
+        # try:
+        #     # TODO: replace private API call
+        #     h2_conn._get_stream_by_id(stream_id)
+        # except Exception as e:
+        #     if isinstance(e, h2.exceptions.StreamClosedError):
+        #         return true
 
         return False
 
