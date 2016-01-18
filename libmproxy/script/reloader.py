@@ -5,7 +5,7 @@ if sys.platform == 'darwin':
     from watchdog.observers.polling import PollingObserver as Observer
 else:
     from watchdog.observers import Observer
-# The OSX reloader is watchdog 0.8.3 breaks when unobserving paths. 
+# The OSX reloader in watchdog 0.8.3 breaks when unobserving paths. 
 # We use the PollingObserver instead.
 
 _observers = {}
