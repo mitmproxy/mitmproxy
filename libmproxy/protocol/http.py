@@ -158,7 +158,7 @@ class SafeH2Connection(H2Connection):
         with self.lock:
             try:
                 self.reset_stream(stream_id, error_code)
-            except h2.exceptions.ProtocolError:
+            except h2.exceptions.StreamClosedError:
                 # stream is already closed - good
                 pass
             self.conn.send(self.data_to_send())
