@@ -1,12 +1,12 @@
 import os
-import fnmatch
 import sys
-from watchdog.events import PatternMatchingEventHandler
+from watchdog.events import RegexMatchingEventHandler 
 if sys.platform == 'darwin':
     from watchdog.observers.polling import PollingObserver as Observer
 else:
     from watchdog.observers import Observer
-# Use PollingObserver on OS X, and natvie Observer on Linux and Windows
+# The OSX reloader is watchdog 0.8.3 breaks when unobserving paths. 
+# We use the PollingObserver instead.
 
 _observers = {}
 
@@ -30,28 +30,18 @@ def unwatch(script):
         observer.join()
 
 
-class _ScriptModificationHandler(PatternMatchingEventHandler):
-    def __init__(self, callback, filename='*'):
+class _ScriptModificationHandler(RegexMatchingEventHandler):
+    def __init__(self, callback, filename='.*'):
 
         super(_ScriptModificationHandler, self).__init__(
             ignore_directories=True,
+            regexes=['.*'+filename]
         )
         self.callback = callback
         self.filename = filename 
 
     def on_modified(self, event):
-        if event.is_directory:
-            files_in_dir = [event.src_path + "/" + 
-                    f for f in os.listdir(event.src_path)]
-            if len(files_in_dir) > 0:
-                modified_filepath = max(files_in_dir, key=os.path.getmtime)
-            else:
-                return
-        else:
-            modified_filepath = event.src_path
-
-        if fnmatch.fnmatch(os.path.basename(modified_filepath), self.filename):
-            self.callback()
+        self.callback()
 
 __all__ = ["watch", "unwatch"]
 
