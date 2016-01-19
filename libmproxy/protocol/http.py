@@ -253,11 +253,15 @@ class Http2Layer(Layer):
             self.streams[eid].start()
         elif isinstance(event, ResponseReceived):
             headers = Headers([[str(k), str(v)] for k, v in event.headers])
+            self.streams[eid].queued_data_length = 0
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].response_headers = headers
             self.streams[eid].response_arrived.set()
         elif isinstance(event, DataReceived):
+            if self.config.body_size_limit and self.streams[eid].queued_data_length > self.config.body_size_limit:
+                raise HttpException("HTTP body too large. Limit is {}.".format(self.config.body_size_limit))
             self.streams[eid].data_queue.put(event.data)
+            self.streams[eid].queued_data_length += len(event.data)
             source_conn.h2.safe_increment_flow_control(event.stream_id, len(event.data))
         elif isinstance(event, StreamEnded):
             self.streams[eid].timestamp_end = time.time()
@@ -332,6 +336,7 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
         self.request_headers = request_headers
         self.response_headers = None
         self.data_queue = Queue.Queue()
+        self.queued_data_length = 0
 
         self.response_arrived = threading.Event()
         self.data_finished = threading.Event()
@@ -382,6 +387,7 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
         data = []
         while self.data_queue.qsize() > 0:
             data.append(self.data_queue.get())
+        data = b"".join(data)
 
         return HTTPRequest(
             form_in,
