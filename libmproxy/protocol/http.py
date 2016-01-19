@@ -185,14 +185,14 @@ class SafeH2Connection(H2Connection):
             position = 0
             while position < len(chunk):
                 self.lock.acquire()
+                if is_zombie(self, stream_id):
+                    return
                 max_outbound_frame_size = self.max_outbound_frame_size
                 frame_chunk = chunk[position:position+max_outbound_frame_size]
                 if self.local_flow_control_window(stream_id) < len(frame_chunk):
                     self.lock.release()
                     time.sleep(0)
                     continue
-                if is_zombie(self, stream_id):
-                    return
                 self.send_data(stream_id, frame_chunk)
                 self.conn.send(self.data_to_send())
                 self.lock.release()
