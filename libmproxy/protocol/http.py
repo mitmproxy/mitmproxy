@@ -163,7 +163,7 @@ class SafeH2Connection(H2Connection):
             self.conn.send(self.data_to_send())
 
     def safe_update_settings(self, new_settings):
-        with self.conn.h2.lock:
+        with self.lock:
             self.update_settings(new_settings)
             self.conn.send(self.data_to_send())
 
