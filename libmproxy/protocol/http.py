@@ -16,7 +16,6 @@ from netlib.tcp import Address, ssl_read_select
 import h2
 from h2.connection import H2Connection
 from h2.events import *
-from hyperframe import frame
 
 from .base import Layer, Kill
 from .. import utils
@@ -163,11 +162,6 @@ class SafeH2Connection(H2Connection):
                 pass
             self.conn.send(self.data_to_send())
 
-    def safe_acknowledge_settings(self, event):
-        with self.conn.h2.lock:
-            self.conn.h2.acknowledge_settings(event)
-            self.conn.send(self.data_to_send())
-
     def safe_update_settings(self, new_settings):
         with self.conn.h2.lock:
             self.update_settings(new_settings)
@@ -274,7 +268,6 @@ class Http2Layer(Layer):
                     other_stream_id = self.streams[eid].server_stream_id
                 other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
         elif isinstance(event, RemoteSettingsChanged):
-            source_conn.h2.safe_acknowledge_settings(event)
             new_settings = dict([(id, cs.new_value) for (id, cs) in event.changed_settings.iteritems()])
             other_conn.h2.safe_update_settings(new_settings)
         elif isinstance(event, ConnectionTerminated):
@@ -356,14 +349,6 @@ class Http2SingleStreamLayer(_HttpLayer, threading.Thread):
     def is_zombie(self, h2_conn, stream_id):
         if self.zombie:
             return True
-
-        # try:
-        #     # TODO: replace private API call
-        #     h2_conn._get_stream_by_id(stream_id)
-        # except Exception as e:
-        #     if isinstance(e, h2.exceptions.StreamClosedError):
-        #         return true
-
         return False
 
     def read_request(self):
