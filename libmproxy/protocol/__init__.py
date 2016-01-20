@@ -27,15 +27,19 @@ as late as possible; this makes server replay without any outgoing connections p
 
 from __future__ import (absolute_import, print_function, division)
 from .base import Layer, ServerConnectionMixin, Kill
-from .http import Http1Layer, UpstreamConnectLayer, Http2Layer
 from .tls import TlsLayer
 from .tls import is_tls_record_magic
 from .tls import TlsClientHello
+from .http import UpstreamConnectLayer
+from .http1 import Http1Layer
+from .http2 import Http2Layer
 from .rawtcp import RawTCPLayer
 
 __all__ = [
     "Layer", "ServerConnectionMixin", "Kill",
-    "Http1Layer", "UpstreamConnectLayer", "Http2Layer",
     "TlsLayer", "is_tls_record_magic", "TlsClientHello",
+    "UpstreamConnectLayer",
+    "Http1Layer",
+    "Http2Layer",
     "RawTCPLayer",
 ]
