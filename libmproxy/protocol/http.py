@@ -219,7 +219,6 @@ class Http2Layer(Layer):
     def _initiate_server_conn(self):
         self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True)
         self.server_conn.h2.initiate_connection()
-        self.server_conn.h2.update_settings({frame.SettingsFrame.ENABLE_PUSH: False})
         self.server_conn.send(self.server_conn.h2.data_to_send())
         self.active_conns.append(self.server_conn.connection)
 
@@ -241,7 +240,7 @@ class Http2Layer(Layer):
 
     def _handle_event(self, event, source_conn, other_conn, is_server):
         if hasattr(event, 'stream_id'):
-            if is_server:
+            if is_server and event.stream_id % 2 == 1:
                 eid = self.server_to_client_stream_ids[event.stream_id]
             else:
                 eid = event.stream_id
@@ -281,9 +280,23 @@ class Http2Layer(Layer):
         elif isinstance(event, ConnectionTerminated):
             other_conn.h2.safe_close_connection(event.error_code)
             return False
-        elif isinstance(event, TrailersReceived):
-            raise NotImplementedError()
         elif isinstance(event, PushedStreamReceived):
+            # pushed stream ids should be uniq and not dependent on race conditions
+            # only the parent stream id must be looked up first
+            parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
+            with self.client_conn.h2.lock:
+                self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
+
+            headers = Headers([[str(k), str(v)] for k, v in event.headers])
+            headers['x-mitmproxy-pushed'] = 'true'
+            self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
+            self.streams[event.pushed_stream_id].timestamp_start = time.time()
+            self.streams[event.pushed_stream_id].pushed = True
+            self.streams[event.pushed_stream_id].parent_stream_id = parent_eid
+            self.streams[event.pushed_stream_id].timestamp_end = time.time()
+            self.streams[event.pushed_stream_id].data_finished.set()
+            self.streams[event.pushed_stream_id].start()
+        elif isinstance(event, TrailersReceived):
             raise NotImplementedError()
 
         return True
@@ -301,7 +314,6 @@ class Http2Layer(Layer):
 
         preamble = self.client_conn.rfile.read(24)
         self.client_conn.h2.initiate_connection()
-        self.client_conn.h2.update_settings({frame.SettingsFrame.ENABLE_PUSH: False})
         self.client_conn.h2.receive_data(preamble)
         self.client_conn.send(self.client_conn.h2.data_to_send())
 
