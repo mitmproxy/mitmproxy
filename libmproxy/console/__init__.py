@@ -105,25 +105,25 @@ class ConsoleState(flow.State):
         for f in self.flows:
             if self.flow_marked(f):
                 marked_flows.append(f)
-                
+
         super(ConsoleState, self).clear()
-        
+
         for f in marked_flows:
             self.add_flow(f)
             self.set_flow_marked(f, True)
-        
+
         if len(self.flows.views) == 0:
             self.focus = None
         else:
             self.focus = 0
         self.set_focus(self.focus)
-        
+
     def flow_marked(self, flow):
         return self.get_flow_setting(flow, "marked", False)
-    
+
     def set_flow_marked(self, flow, marked):
         self.add_flow_setting(flow, "marked", marked)
-        
+
 
 class Options(object):
     attributes = [
@@ -134,6 +134,7 @@ class Options(object):
         "anticomp",
         "client_replay",
         "eventlog",
+        "follow",
         "keepserving",
         "kill",
         "intercept",
@@ -212,6 +213,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
+        self.follow = options.follow
 
         if options.client_replay:
             self.client_playback_path(options.client_replay)
@@ -562,6 +564,9 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             body = flowlist.FlowListBox(self)
 
+        if self.follow:
+            self.toggle_follow_flows()
+
         signals.push_view_state.send(
             self,
             window = window.Window(
@@ -604,7 +609,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def save_flows(self, path):
         return self._write_flows(path, self.state.view)
-    
+
     def save_marked_flows(self, path):
         marked_flows = []
         for f in self.state.view:

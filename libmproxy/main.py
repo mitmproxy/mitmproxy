@@ -54,6 +54,7 @@ def mitmproxy(args=None):  # pragma: nocover
     console_options.palette = options.palette
     console_options.palette_transparent = options.palette_transparent
     console_options.eventlog = options.eventlog
+    console_options.follow = options.follow
     console_options.intercept = options.intercept
     console_options.limit = options.limit
     console_options.no_mouse = options.no_mouse
