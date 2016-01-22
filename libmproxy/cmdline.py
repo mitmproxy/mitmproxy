@@ -669,6 +669,11 @@ def mitmproxy():
         help="Show event log."
     )
     parser.add_argument(
+        "-f", "--follow",
+        action="store_true", dest="follow",
+        help="Follow flow list."
+    )
+    parser.add_argument(
         "--no-mouse",
         action="store_true", dest="no_mouse",
         help="Disable mouse interaction."
