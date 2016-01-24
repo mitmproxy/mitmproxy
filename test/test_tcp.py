@@ -10,8 +10,7 @@ import mock
 from OpenSSL import SSL
 import OpenSSL
 
-from netlib import tcp, certutils, tutils
-from . import tservers
+from netlib import tcp, certutils, tutils, tservers
 from netlib.exceptions import InvalidCertificateException, TcpReadIncomplete, TlsException, \
     TcpTimeout, TcpDisconnect, TcpException
 

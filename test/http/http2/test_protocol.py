@@ -1,12 +1,11 @@
 import OpenSSL
 import mock
 
-from netlib import tcp, http, tutils
+from netlib import tcp, http, tutils, tservers
 from netlib.exceptions import TcpDisconnect
 from netlib.http import Headers
 from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 from netlib.http.http2.frame import *
-from ... import tservers
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):

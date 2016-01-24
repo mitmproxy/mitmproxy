@@ -2,12 +2,11 @@ import os
 
 from netlib.http.http1 import read_response, read_request
 
-from netlib import tcp, tutils, websockets, http
+from netlib import tcp, websockets, http, tutils, tservers
 from netlib.http import status_codes
 from netlib.tutils import treq
 
 from netlib.exceptions import *
-from .. import tservers
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):

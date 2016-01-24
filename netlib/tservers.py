@@ -1,8 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
+
 import threading
 from six.moves import queue
 from io import StringIO
 import OpenSSL
+
 from netlib import tcp
 from netlib import tutils
 
