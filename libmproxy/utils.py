@@ -173,3 +173,9 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
         need a better solution that is aware of the actual content ecoding.
     """
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
+
+def http2_read_frame(rfile):
+    field = rfile.peek(3)
+    length = int(field.encode('hex'), 16)
+    raw_frame = rfile.safe_read(9 + length)
+    return raw_frame
