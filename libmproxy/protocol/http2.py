@@ -260,6 +260,9 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
 
+        if authority:
+            host, port = authority.split(':')
+
         if host is None:
             host = 'localhost'
         if port is None:
