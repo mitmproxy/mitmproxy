@@ -206,12 +206,8 @@ class Http2Layer(Layer):
                 other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
                 is_server = (conn == self.server_conn.connection)
 
-                field = source_conn.rfile.peek(3)
-                length = int(field.encode('hex'), 16)
-                raw_frame = source_conn.rfile.safe_read(9 + length)
-
                 with source_conn.h2.lock:
-                    events = source_conn.h2.receive_data(raw_frame)
+                    events = source_conn.h2.receive_data(utils.http2_read_frame(source_conn.rfile))
                     source_conn.send(source_conn.h2.data_to_send())
 
                     for event in events:
