@@ -221,6 +221,75 @@ def is_tls_record_magic(d):
         d[2] in ('\x00', '\x01', '\x02', '\x03')
     )
 
+def get_client_hello(client_conn):
+    """
+    Peek into the socket and read all records that contain the initial client hello message.
+
+    client_conn:
+        The :py:class:`client connection <libmproxy.models.ClientConnection>`.
+
+    Returns:
+        The raw handshake packet bytes, without TLS record header(s).
+    """
+    client_hello = ""
+    client_hello_size = 1
+    offset = 0
+    while len(client_hello) < client_hello_size:
+        record_header = client_conn.rfile.peek(offset + 5)[offset:]
+        if not is_tls_record_magic(record_header) or len(record_header) != 5:
+            raise TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
+        record_size = struct.unpack("!H", record_header[3:])[0] + 5
+        record_body = client_conn.rfile.peek(offset + record_size)[offset + 5:]
+        if len(record_body) != record_size - 5:
+            raise TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
+        client_hello += record_body
+        offset += record_size
+        client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
+    return client_hello
+
+class TlsClientHello(object):
+    def __init__(self, raw_client_hello):
+        self._client_hello = ClientHello.parse(raw_client_hello)
+
+    def raw(self):
+        return self._client_hello
+
+    @property
+    def client_cipher_suites(self):
+        return self._client_hello.cipher_suites.cipher_suites
+
+    @property
+    def client_sni(self):
+        for extension in self._client_hello.extensions:
+            if (extension.type == 0x00 and len(extension.server_names) == 1
+                    and extension.server_names[0].type == 0):
+                return extension.server_names[0].name
+
+    @property
+    def client_alpn_protocols(self):
+        for extension in self._client_hello.extensions:
+            if extension.type == 0x10:
+                return list(extension.alpn_protocols)
+
+    @classmethod
+    def from_client_conn(cls, client_conn):
+        """
+        Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
+        client_conn:
+            The :py:class:`client connection <libmproxy.models.ClientConnection>`.
+        Returns:
+            :py:class:`client hello <libmproxy.protocol.tls.TlsClientHello>`.
+        """
+        try:
+            raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.
+        except ProtocolException as e:
+            raise TlsProtocolException('Cannot parse Client Hello: %s' % repr(e))
+
+        try:
+            return cls(raw_client_hello)
+        except ConstructError as e:
+            #self.log("Raw Client Hello: %s" % raw_client_hello.encode("hex"), "debug")
+            raise TlsProtocolException('Cannot parse Client Hello: %s' % repr(e))
 
 class TlsLayer(Layer):
     def __init__(self, ctx, client_tls, server_tls):
@@ -281,60 +350,15 @@ class TlsLayer(Layer):
         else:
             return "TlsLayer(inactive)"
 
-    def _get_client_hello(self):
-        """
-        Peek into the socket and read all records that contain the initial client hello message.
-
-        Returns:
-            The raw handshake packet bytes, without TLS record header(s).
-        """
-        client_hello = ""
-        client_hello_size = 1
-        offset = 0
-        while len(client_hello) < client_hello_size:
-            record_header = self.client_conn.rfile.peek(offset + 5)[offset:]
-            if not is_tls_record_magic(record_header) or len(record_header) != 5:
-                raise TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
-            record_size = struct.unpack("!H", record_header[3:])[0] + 5
-            record_body = self.client_conn.rfile.peek(offset + record_size)[offset + 5:]
-            if len(record_body) != record_size - 5:
-                raise TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
-            client_hello += record_body
-            offset += record_size
-            client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
-        return client_hello
 
     def _parse_client_hello(self):
         """
         Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
         """
-        try:
-            raw_client_hello = self._get_client_hello()[4:]  # exclude handshake header.
-        except ProtocolException as e:
-            self.log("Cannot parse Client Hello: %s" % repr(e), "error")
-            return
-
-        try:
-            client_hello = ClientHello.parse(raw_client_hello)
-        except ConstructError as e:
-            self.log("Cannot parse Client Hello: %s" % repr(e), "error")
-            self.log("Raw Client Hello: %s" % raw_client_hello.encode("hex"), "debug")
-            return
-
-        self.client_ciphers = client_hello.cipher_suites.cipher_suites
-
-        for extension in client_hello.extensions:
-            if extension.type == 0x00:
-                if len(extension.server_names) != 1 or extension.server_names[0].type != 0:
-                    self.log("Unknown Server Name Indication: %s" % extension.server_names, "error")
-                self.client_sni = extension.server_names[0].name
-            elif extension.type == 0x10:
-                self.client_alpn_protocols = list(extension.alpn_protocols)
-
-        self.log(
-            "Parsed Client Hello: sni=%s, alpn=%s" % (self.client_sni, self.client_alpn_protocols),
-            "debug"
-        )
+        parsed = TlsClientHello.from_client_conn(self.client_conn)
+        self.client_sni = parsed.client_sni
+        self.client_alpn_protocols = parsed.client_alpn_protocols
+        self.client_ciphers  = parsed.client_cipher_suites
 
     def connect(self):
         if not self.server_conn:
@@ -358,6 +382,10 @@ class TlsLayer(Layer):
     @property
     def alpn_for_client_connection(self):
         return self.server_conn.get_alpn_proto_negotiated()
+
+    @property
+    def client_tls(self):
+        return self._client_tls
 
     def __alpn_select_callback(self, conn_, options):
         """
