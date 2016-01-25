@@ -17,7 +17,7 @@ from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
 from .. import utils
 from ..models import HTTPRequest, HTTPResponse
-
+from ..exceptions import HttpProtocolException, ProtocolException
 
 class SafeH2Connection(H2Connection):
     def __init__(self, conn, *args, **kwargs):
@@ -207,7 +207,14 @@ class Http2Layer(Layer):
                 is_server = (conn == self.server_conn.connection)
 
                 with source_conn.h2.lock:
-                    events = source_conn.h2.receive_data(utils.http2_read_frame(source_conn.rfile))
+                    try:
+                        raw_frame = utils.http2_read_frame(source_conn.rfile)
+                    except:
+                        for stream in self.streams.values():
+                            stream.zombie = time.time()
+                        return
+
+                    events = source_conn.h2.receive_data(raw_frame)
                     source_conn.send(source_conn.h2.data_to_send())
 
                     for event in events:
