@@ -52,7 +52,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "py.test -n 4 -s --cov libmproxy"
+  - "py.test -s --cov libmproxy"
 
 after_success:
   - coveralls
