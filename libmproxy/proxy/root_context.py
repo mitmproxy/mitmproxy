@@ -59,7 +59,6 @@ class RootContext(object):
         self.client_conn = client_conn
         self.channel = channel
         self.config = config
-        self._client_tls = False
 
     def next_layer(self, top_layer):
         """
@@ -84,15 +83,15 @@ class RootContext(object):
             d = top_layer.client_conn.rfile.peek(3)
         except TcpException as e:
             six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
-        self._client_tls = is_tls_record_magic(d)
+        client_tls = is_tls_record_magic(d)
 
         # 2. Always insert a TLS layer, even if there's neither client nor server tls.
         # An inline script may upgrade from http to https,
         # in which case we need some form of TLS layer.
         if isinstance(top_layer, ReverseProxy):
-            return TlsLayer(top_layer, self._client_tls, top_layer.server_tls)
+            return TlsLayer(top_layer, client_tls, top_layer.server_tls)
         if isinstance(top_layer, ServerConnectionMixin) or isinstance(top_layer, UpstreamConnectLayer):
-            return TlsLayer(top_layer, self._client_tls, self._client_tls)
+            return TlsLayer(top_layer, client_tls, client_tls)
 
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if isinstance(top_layer, TlsLayer):
@@ -102,7 +101,7 @@ class RootContext(object):
                 return Http1Layer(top_layer, "upstream")
 
         # 4. Check for other TLS cases (e.g. after CONNECT).
-        if self._client_tls:
+        if client_tls:
             return TlsLayer(top_layer, True, True)
 
         # 4. Check for --tcp
