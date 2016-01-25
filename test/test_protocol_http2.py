@@ -107,7 +107,6 @@ class PushHttp2Server(netlib_tservers.ServerTestBase):
                         h2_conn.end_stream(4)
                         self.wfile.write(h2_conn.data_to_send())
                         self.wfile.flush()
-                        print("HERE")
                     elif isinstance(event, h2.events.ConnectionTerminated):
                         return
 
