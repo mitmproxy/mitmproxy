@@ -2,6 +2,8 @@ from __future__ import (absolute_import, print_function, division)
 
 import inspect
 import socket
+import OpenSSL
+import pytest
 from io import BytesIO
 
 import logging
@@ -14,6 +16,11 @@ import h2
 
 from libmproxy import utils
 from . import tservers
+
+requires_alpn = pytest.mark.skipif(
+    not OpenSSL._util.lib.Cryptography_HAS_ALPN,
+    reason="requires OpenSSL with ALPN support")
+
 
 class SimpleHttp2Server(netlib_tservers.ServerTestBase):
     ssl = dict(
@@ -49,6 +56,7 @@ class SimpleHttp2Server(netlib_tservers.ServerTestBase):
                         return
 
 
+@requires_alpn
 class TestHttp2(tservers.ProxTestBase):
     def _setup_connection(self):
         self.config.http2 = True
