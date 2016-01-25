@@ -287,10 +287,6 @@ def export_prompt(k, flow):
 
 
 def copy_as_curl_command(flow):
-    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
-        signals.status_message.send(message="Request content is missing")
-        return
-
     data = "curl "
 
     for k, v in flow.request.headers.fields:
@@ -309,10 +305,6 @@ def copy_as_curl_command(flow):
 
 
 def copy_as_python_code(flow):
-    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
-        signals.status_message.send(message="Request content is missing")
-        return
-
     if flow.request.method != "GET":
         signals.status_message.send(message="Currently, only GET methods are supported")
         return
@@ -334,12 +326,7 @@ def copy_as_python_code(flow):
 
 
 def copy_as_raw_request(flow):
-    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
-        signals.status_message.send(message="Request content is missing")
-        return
-
     data = netlib.http.http1.assemble_request(flow.request)
-
     copy_to_clipboard_or_prompt(data)
 
 
