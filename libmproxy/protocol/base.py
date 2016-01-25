@@ -14,7 +14,7 @@ class _LayerCodeCompletion(object):
     Dummy class that provides type hinting in PyCharm, which simplifies development a lot.
     """
 
-    def __init__(self, **mixin_args):  # pragma: nocover
+    def __init__(self, **mixin_args):  # pragma: no cover
         super(_LayerCodeCompletion, self).__init__(**mixin_args)
         if True:
             return

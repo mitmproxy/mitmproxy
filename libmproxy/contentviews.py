@@ -35,12 +35,12 @@ from .contrib.wbxml.ASCommandResponse import ASCommandResponse
 try:
     import pyamf
     from pyamf import remoting, flex
-except ImportError:  # pragma nocover
+except ImportError:  # pragma no cover
     pyamf = None
 
 try:
     import cssutils
-except ImportError:  # pragma nocover
+except ImportError:  # pragma no cover
     cssutils = None
 else:
     cssutils.log.setLevel(logging.CRITICAL)

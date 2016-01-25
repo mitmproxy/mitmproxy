@@ -122,6 +122,10 @@ class TestHttp2(tservers.ProxTestBase):
                 if isinstance(event, h2.events.StreamEnded):
                     done = True
 
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
         self.server.teardown_class()
 
         assert len(self.master.state.flows) == 1

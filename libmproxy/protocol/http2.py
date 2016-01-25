@@ -249,12 +249,13 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
 
         if path == '*' or path.startswith("/"):
             form_in = "relative"
-        elif method == 'CONNECT':
-            form_in = "authority"
-            if ":" in authority:
-                host, port = authority.split(":", 1)
-            else:
-                host = authority
+        elif method == 'CONNECT':  # pragma: no cover
+            # form_in = "authority"
+            # if ":" in authority:
+            #     host, port = authority.split(":", 1)
+            # else:
+            #     host = authority
+            raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
         else:
             form_in = "absolute"
             # FIXME: verify if path or :host contains what we need
