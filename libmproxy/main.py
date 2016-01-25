@@ -37,7 +37,7 @@ def get_server(dummy_server, options):
             sys.exit(1)
 
 
-def mitmproxy(args=None):  # pragma: nocover
+def mitmproxy(args=None):  # pragma: no cover
     from . import console
 
     check_pyopenssl_version()
@@ -68,7 +68,7 @@ def mitmproxy(args=None):  # pragma: nocover
         pass
 
 
-def mitmdump(args=None):  # pragma: nocover
+def mitmdump(args=None):  # pragma: no cover
     from . import dump
 
     check_pyopenssl_version()
@@ -103,7 +103,7 @@ def mitmdump(args=None):  # pragma: nocover
         pass
 
 
-def mitmweb(args=None):  # pragma: nocover
+def mitmweb(args=None):  # pragma: no cover
     from . import web
 
     check_pyopenssl_version()
