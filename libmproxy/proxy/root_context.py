@@ -4,14 +4,13 @@ import sys
 
 import six
 
-from libmproxy.exceptions import ProtocolException
+from libmproxy.exceptions import ProtocolException, TlsProtocolException
 from netlib.exceptions import TcpException
 from ..protocol import (
     RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin,
-    UpstreamConnectLayer
+    UpstreamConnectLayer, TlsClientHello
 )
 from .modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
-
 
 class RootContext(object):
     """
@@ -48,15 +47,24 @@ class RootContext(object):
         return self.channel.ask("next_layer", layer)
 
     def _next_layer(self, top_layer):
-        # 1. Check for --ignore.
-        if self.config.check_ignore(top_layer.server_conn.address):
-            return RawTCPLayer(top_layer, logging=False)
-
         try:
             d = top_layer.client_conn.rfile.peek(3)
         except TcpException as e:
             six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
         client_tls = is_tls_record_magic(d)
+
+        # 1. check for --ignore
+        if self.config.check_ignore:
+            ignore = self.config.check_ignore(top_layer.server_conn.address)
+            if not ignore and client_tls:
+                try:
+                    client_hello = TlsClientHello.from_client_conn(self.client_conn)
+                except TlsProtocolException as e:
+                    self.log("Cannot parse Client Hello: %s" % repr(e), "error")
+                else:
+                    ignore = self.config.check_ignore((client_hello.client_sni, 443))
+            if ignore:
+                return RawTCPLayer(top_layer, logging=False)
 
         # 2. Always insert a TLS layer, even if there's neither client nor server tls.
         # An inline script may upgrade from http to https,
