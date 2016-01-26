@@ -7,7 +7,7 @@ import pytest
 import traceback
 import os
 import tempfile
-
+import time
 from io import BytesIO
 
 from libmproxy.proxy.config import ProxyConfig
@@ -126,12 +126,15 @@ class _Http2TestBase(object):
 
         return client, h2_conn
 
-    def _send_request(self, wfile, h2_conn, stream_id=1, headers=[], end_stream=True):
+    def _send_request(self, wfile, h2_conn, stream_id=1, headers=[], body=b''):
         h2_conn.send_headers(
             stream_id=stream_id,
             headers=headers,
-            end_stream=end_stream,
+            end_stream=(len(body) == 0),
         )
+        if body:
+            h2_conn.send_data(stream_id, body)
+            h2_conn.end_stream(stream_id)
         wfile.write(h2_conn.data_to_send())
         wfile.flush()
 
@@ -172,7 +175,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
-        ])
+        ], body='my request body echoed back to me')
 
         done = False
         while not done:
@@ -192,6 +195,69 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         assert self.master.state.flows[0].response.status_code == 200
         assert self.master.state.flows[0].response.headers['foo'] == 'bar'
         assert self.master.state.flows[0].response.body == b'foobar'
+
+
+@requires_alpn
+class TestWithBodies(_Http2TestBase, _Http2ServerBase):
+    tmp_data_buffer_foobar = b''
+
+    @classmethod
+    def setup_class(self):
+        _Http2TestBase.setup_class()
+        _Http2ServerBase.setup_class()
+
+    @classmethod
+    def teardown_class(self):
+        _Http2TestBase.teardown_class()
+        _Http2ServerBase.teardown_class()
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        if isinstance(event, h2.events.DataReceived):
+            self.tmp_data_buffer_foobar += event.data
+        elif isinstance(event, h2.events.StreamEnded):
+            h2_conn.send_headers(1, [
+                (':status', '200'),
+            ])
+            h2_conn.send_data(1, self.tmp_data_buffer_foobar)
+            h2_conn.end_stream(1)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+
+        return True
+
+    def test_with_bodies(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+            body='foobar with request body',
+        )
+
+        done = False
+        while not done:
+            events = h2_conn.receive_data(utils.http2_read_frame(client.rfile))
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert self.master.state.flows[0].response.body == b'foobar with request body'
 
 
 @requires_alpn
@@ -308,12 +374,11 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
                 if isinstance(event, h2.events.StreamEnded) and event.stream_id == 1:
                     done = True
                 elif isinstance(event, h2.events.PushedStreamReceived):
-                    h2_conn.reset_stream(event.pushed_stream_id)
+                    h2_conn.reset_stream(event.pushed_stream_id, error_code=0x8)
                     client.wfile.write(h2_conn.data_to_send())
                     client.wfile.flush()
 
         bodies = [flow.response.body for flow in self.master.state.flows]
         assert len(bodies) == 3
         assert b'regular_stream' in bodies
-        assert b'pushed_stream_foo' in bodies
-        assert b'pushed_stream_bar' in bodies
+        # the other two bodies might not be transmitted before the reset
