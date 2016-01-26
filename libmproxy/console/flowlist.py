@@ -16,6 +16,7 @@ def _mkhelp():
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
+        ("E", "export"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
         ("l", "set limit filter pattern"),
@@ -254,6 +255,18 @@ class ConnectionItem(urwid.WidgetWrap):
             )
         elif key == "P":
             common.ask_copy_part("a", self.flow, self.master, self.state)
+        elif key == "E":
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Export",
+                keys = (
+                    ("as curl command", "c"),
+                    ("as python code", "p"),
+                    ("as raw request", "r"),
+                ),
+                callback = common.export_prompt,
+                args = (self.flow,)
+            )
         elif key == "b":
             common.ask_save_body(None, self.master, self.state, self.flow)
         else:
