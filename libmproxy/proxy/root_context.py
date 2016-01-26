@@ -12,33 +12,6 @@ from ..protocol import (
 )
 from .modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
 
-def tls_sni_check_ignore(fun):
-    """
-    A decorator to wrap the process of getting the next layer.
-    If it's a TlsLayer and the client uses SNI, see if the user asked us to
-    ignore the host.
-    Returns:
-        A function that returns the next layer.
-    """
-    def inner(self, top_layer):
-        """
-        Arguments:
-            top_layer: the current innermost layer.
-        Returns:
-            The next layer
-        """
-        layer = fun(self, top_layer)
-        if not isinstance(layer, TlsLayer) or not layer.client_tls:
-            return layer
-        try:
-            parsed_client_hello = TlsClientHello.from_client_conn(self.client_conn)
-            if parsed_client_hello and self.config.check_ignore((parsed_client_hello.client_sni, 443)):
-                return RawTCPLayer(top_layer, logging=False)
-        except TlsProtocolException as e:
-            six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
-        return layer
-    return inner
-
 class RootContext(object):
     """
     The outermost context provided to the root layer.
@@ -73,7 +46,6 @@ class RootContext(object):
         layer = self._next_layer(top_layer)
         return self.channel.ask("next_layer", layer)
 
-    @tls_sni_check_ignore
     def _next_layer(self, top_layer):
         # 1. Check for --ignore.
         if self.config.check_ignore(top_layer.server_conn.address):
@@ -84,6 +56,16 @@ class RootContext(object):
         except TcpException as e:
             six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
         client_tls = is_tls_record_magic(d)
+
+        # 1A. check for --ignore with SNI host
+        if client_tls:
+            try:
+                client_hello = TlsClientHello.from_client_conn(self.client_conn)
+                if (client_hello and
+                        self.config.check_ignore((client_hello.client_sni, 443))):
+                    return RawTCPLayer(top_layer, logging=False)
+            except TlsProtocolException as e:
+                six.reraise(ProtocolException, ProtocolException(str(e)), sys.exc_info()[2])
 
         # 2. Always insert a TLS layer, even if there's neither client nor server tls.
         # An inline script may upgrade from http to https,
