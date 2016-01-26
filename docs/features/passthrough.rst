@@ -31,9 +31,9 @@ mitmproxy allows you to specify a regex which is matched against a ``host:port``
 
 There are two important quirks to consider:
 
-- **In transparent mode, the ignore pattern is matched against the IP.** While we usually infer the
+- **In transparent mode, the ignore pattern is matched against the IP and ClientHello SNI host.** While we usually infer the
   hostname from the Host header if the :option:`--host` argument is passed to mitmproxy, we do not
-  have access to this information before the SSL handshake.
+  have access to this information before the SSL handshake. If the client uses SNI however, then we treat the SNI host as an ignore target.
 - In regular mode, explicit HTTP requests are never ignored. [#explicithttp]_ The ignore pattern is
   applied on CONNECT requests, which initiate HTTPS or clear-text WebSocket connections.
 
