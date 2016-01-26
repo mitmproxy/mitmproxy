@@ -291,6 +291,11 @@ class TlsClientHello(object):
             #self.log("Raw Client Hello: %s" % raw_client_hello.encode("hex"), "debug")
             raise TlsProtocolException('Cannot parse Client Hello: %s' % repr(e))
 
+    def __repr__(self):
+        return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
+                (self.client_sni, self.client_alpn_protocols, self.client_cipher_suites)
+
+
 class TlsLayer(Layer):
     def __init__(self, ctx, client_tls, server_tls):
         self.client_sni = None
