@@ -388,10 +388,6 @@ class TlsLayer(Layer):
     def alpn_for_client_connection(self):
         return self.server_conn.get_alpn_proto_negotiated()
 
-    @property
-    def client_tls(self):
-        return self._client_tls
-
     def __alpn_select_callback(self, conn_, options):
         """
         Once the client signals the alternate protocols it supports,
