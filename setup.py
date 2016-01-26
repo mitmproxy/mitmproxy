@@ -17,7 +17,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 # This will break `pip install` on systems with old setuptools versions.
 deps = {
     "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
-    "h2>=2.0.0",
+    "h2>=2.1.0, <3.0",
     "tornado>=4.3.0, <4.4",
     "configargparse>=0.10.0, <0.11",
     "pyperclip>=1.5.22, <1.6",

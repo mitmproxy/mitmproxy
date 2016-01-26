@@ -144,7 +144,7 @@ class Http2Layer(Layer):
                 raise HttpException("HTTP body too large. Limit is {}.".format(self.config.body_size_limit))
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
-            source_conn.h2.safe_increment_flow_control(event.stream_id, len(event.data))
+            source_conn.h2.safe_increment_flow_control(event.stream_id, event.flow_controlled_length)
         elif isinstance(event, StreamEnded):
             self.streams[eid].timestamp_end = time.time()
             self.streams[eid].data_finished.set()
