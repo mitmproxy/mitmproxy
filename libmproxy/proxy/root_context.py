@@ -62,7 +62,7 @@ class RootContext(object):
                  except TlsProtocolException as e:
                      self.log("Cannot parse Client Hello: %s" % repr(e), "error")
                  else:
-                     address = (client_hello.client_sni, 443) # TODO: may need to wrap that in tcp.Address?
+                     address = (client_hello.client_sni, 443)
             if self.config.check_ignore(address):
                 return RawTCPLayer(top_layer, logging=False)
 
