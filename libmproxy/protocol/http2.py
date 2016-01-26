@@ -105,18 +105,19 @@ class Http2Layer(Layer):
         self.server_conn.send(self.server_conn.h2.data_to_send())
         self.active_conns.append(self.server_conn.connection)
 
-    def connect(self):
-        self.ctx.connect()
-        self.server_conn.connect()
-        self._initiate_server_conn()
+    def connect(self):  # pragma: no cover
+        raise ValueError("CONNECT inside an HTTP2 stream is not supported.")
+        # self.ctx.connect()
+        # self.server_conn.connect()
+        # self._initiate_server_conn()
 
-    def set_server(self):
+    def set_server(self):  # pragma: no cover
         raise NotImplementedError("Cannot change server for HTTP2 connections.")
 
-    def disconnect(self):
+    def disconnect(self):  # pragma: no cover
         raise NotImplementedError("Cannot dis- or reconnect in HTTP2 connections.")
 
-    def next_layer(self):
+    def next_layer(self):  # pragma: no cover
         # WebSockets over HTTP/2?
         # CONNECT for proxying?
         raise NotImplementedError()
@@ -257,13 +258,8 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         if path == '*' or path.startswith("/"):
             form_in = "relative"
         elif method == 'CONNECT':  # pragma: no cover
-            # form_in = "authority"
-            # if ":" in authority:
-            #     host, port = authority.split(":", 1)
-            # else:
-            #     host = authority
             raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
-        else:
+        else:  # pragma: no cover
             form_in = "absolute"
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
@@ -359,10 +355,10 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         # RFC 7540 8.1: An HTTP request/response exchange fully consumes a single stream.
         return True
 
-    def connect(self):
+    def connect(self):  # pragma: no cover
         raise ValueError("CONNECT inside an HTTP2 stream is not supported.")
 
-    def set_server(self, *args, **kwargs):
+    def set_server(self, *args, **kwargs):  # pragma: no cover
         # do not mess with the server connection - all streams share it.
         pass
 
