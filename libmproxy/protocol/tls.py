@@ -360,10 +360,13 @@ class TlsLayer(Layer):
         """
         Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
         """
-        parsed = TlsClientHello.from_client_conn(self.client_conn)
-        self.client_sni = parsed.client_sni
-        self.client_alpn_protocols = parsed.client_alpn_protocols
-        self.client_ciphers  = parsed.client_cipher_suites
+        try:
+            parsed = TlsClientHello.from_client_conn(self.client_conn)
+            self.client_sni = parsed.client_sni
+            self.client_alpn_protocols = parsed.client_alpn_protocols
+            self.client_ciphers  = parsed.client_cipher_suites
+        except TlsProtocolException as e:
+            self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
     def connect(self):
         if not self.server_conn:
