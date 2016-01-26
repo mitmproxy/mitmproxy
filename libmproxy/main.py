@@ -121,6 +121,8 @@ def mitmweb(args=None):  # pragma: nocover
     web_options.wdebug = options.wdebug
     web_options.wiface = options.wiface
     web_options.wport = options.wport
+    web_options.wsingleuser = options.wsingleuser
+    web_options.whtpasswd = options.whtpasswd
 
     server = get_server(web_options.no_server, proxy_config)
 
