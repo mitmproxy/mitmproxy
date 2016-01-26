@@ -111,6 +111,8 @@ class Options(object):
         "wdebug",
         "wport",
         "wiface",
+        "wsingleuser",
+        "whtpasswd",
     ]
 
     def __init__(self, **kwargs):
@@ -125,7 +127,7 @@ class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
         self.options = options
         super(WebMaster, self).__init__(server, WebState())
-        self.app = app.Application(self, self.options.wdebug)
+        self.app = app.Application(self, self.options.wdebug, self.options.wsingleuser, self.options.whtpasswd)
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)

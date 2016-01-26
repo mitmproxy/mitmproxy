@@ -4,7 +4,9 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
+import base64
 from .. import version, filt
+from netlib.http import authentication
 
 
 class APIError(tornado.web.HTTPError):
@@ -24,6 +26,41 @@ class RequestHandler(tornado.web.RequestHandler):
             "connect-src 'self' ws://* ; "
             "style-src   'self' 'unsafe-inline'"
         )
+
+    def set_auth_headers(self):
+        self.set_status(401)
+        self.set_header('WWW-Authenticate', 'Basic realm=MITMWeb')
+        self._transforms = []
+        self.finish()
+
+    def initialize(self, **kwargs):
+        self.singleuser = kwargs.get("singleuser")
+        self.htpasswd = kwargs.get("htpasswd")
+
+    def prepare(self):
+        if self.singleuser or self.htpasswd:
+            auth_header = self.request.headers.get('Authorization')
+            if auth_header is None or not auth_header.startswith('Basic '):
+                self.set_auth_headers()
+            else:
+                self.auth_decoded = base64.decodestring(auth_header[6:])
+                self.username, self.password = self.auth_decoded.split(':', 2)
+                if self.singleuser:
+                    if len(self.singleuser.split(':')) != 2:
+                        raise APIError(400, "Invalid single-user specification. Please use the format username:password")
+                    username, password = self.singleuser.split(':')
+                    password_manager = authentication.PassManSingleUser(username, password)
+                    if not password_manager.test(self.username, self.password):
+                        self.set_auth_headers()
+                        raise APIError(401, "Invalid username or password.")
+                elif self.htpasswd:
+                    try:
+                        password_manager = authentication.PassManHtpasswd(self.htpasswd)
+                    except ValueError as v:
+                        raise APIError(500, "%s. Please contact your systems administrator." % v.message)
+                    if not password_manager.test(self.username, self.password):
+                        self.set_auth_headers()
+                        raise APIError(401, "Invalid username or password.")
 
     @property
     def json(self):
@@ -240,10 +277,14 @@ class Settings(RequestHandler):
 
 
 class Application(tornado.web.Application):
-    def __init__(self, master, debug):
+    def __init__(self, master, debug, singleuser, htpasswd):
         self.master = master
+        self.additional_args = dict(
+            singleuser=singleuser,
+            htpasswd=htpasswd,
+        )
         handlers = [
-            (r"/", IndexHandler),
+            (r"/", IndexHandler, self.additional_args),
             (r"/filter-help", FiltHelp),
             (r"/updates", ClientConnection),
             (r"/events", Events),
