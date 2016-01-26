@@ -265,12 +265,12 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             scheme, host, port, _ = utils.parse_url(path)
 
         if authority:
-            host, port = authority.split(':')
+            host, _, port = authority.partition(':')
 
-        if host is None:
+        if not host:
             host = 'localhost'
-        if port is None:
-            port = 80 if scheme == 'http' else 443
+        if not port:
+            port = 443 if scheme == 'https' else 80
         port = int(port)
 
         data = []
