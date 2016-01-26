@@ -5,9 +5,15 @@ import tornado.websocket
 import logging
 import json
 import base64
+<<<<<<< dc7389b6c64b5b03953b8f7ad85c602ea71ecd3a
 
 from netlib.http import CONTENT_MISSING
 
+=======
+
+from netlib.http import CONTENT_MISSING, authentication
+
+>>>>>>> Added Basic Auth support for mitmweb interface
 from .. import version, filt
 
 
@@ -64,19 +70,46 @@ class RequestHandler(tornado.web.RequestHandler):
         self.finish()
 
     def initialize(self, **kwargs):
+<<<<<<< dc7389b6c64b5b03953b8f7ad85c602ea71ecd3a
         self.wauthenticator = kwargs.get("wauthenticator")
 
     def prepare(self):
         if self.wauthenticator:
+=======
+        self.singleuser = kwargs.get("singleuser")
+        self.htpasswd = kwargs.get("htpasswd")
+
+    def prepare(self):
+        if self.singleuser or self.htpasswd:
+>>>>>>> Added Basic Auth support for mitmweb interface
             auth_header = self.request.headers.get('Authorization')
             if auth_header is None or not auth_header.startswith('Basic '):
                 self.set_auth_headers()
             else:
                 self.auth_decoded = base64.decodestring(auth_header[6:])
                 self.username, self.password = self.auth_decoded.split(':', 2)
+<<<<<<< dc7389b6c64b5b03953b8f7ad85c602ea71ecd3a
                 if not self.wauthenticator.test(self.username, self.password):
                     self.set_auth_headers()
                     raise APIError(401, "Invalid username or password.")
+=======
+                if self.singleuser:
+                    if len(self.singleuser.split(':')) != 2:
+                        raise APIError(400, "Invalid single-user specification. Please use the format username:password")
+                    username, password = self.singleuser.split(':')
+                    password_manager = authentication.PassManSingleUser(username, password)
+                    if not password_manager.test(self.username, self.password):
+                        self.set_auth_headers()
+                        raise APIError(401, "Invalid username or password.")
+                elif self.htpasswd:
+                    try:
+                        password_manager = authentication.PassManHtpasswd(self.htpasswd)
+                    except ValueError as v:
+                        raise APIError(500, "%s. Please contact your systems administrator." % v.message)
+                    if not password_manager.test(self.username, self.password):
+                        self.set_auth_headers()
+                        raise APIError(401, "Invalid username or password.")
+>>>>>>> Added Basic Auth support for mitmweb interface
 
     @property
     def json(self):
