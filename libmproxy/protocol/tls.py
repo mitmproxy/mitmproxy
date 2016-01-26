@@ -283,13 +283,13 @@ class TlsClientHello(object):
         try:
             raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.
         except ProtocolException as e:
-            raise TlsProtocolException('Cannot parse Client Hello: %s' % repr(e))
+            raise TlsProtocolException('Cannot read raw Client Hello: %s' % repr(e))
 
         try:
             return cls(raw_client_hello)
         except ConstructError as e:
-            #self.log("Raw Client Hello: %s" % raw_client_hello.encode("hex"), "debug")
-            raise TlsProtocolException('Cannot parse Client Hello: %s' % repr(e))
+            raise TlsProtocolException('Cannot parse Client Hello: %s, Raw Client Hello: %s' % \
+                            (repr(e), raw_client_hello.encode("hex")))
 
     def __repr__(self):
         return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
