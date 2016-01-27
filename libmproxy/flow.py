@@ -652,7 +652,6 @@ class FlowMaster(controller.Master):
         """
             level: debug, info, error
         """
-        pass
 
     def unload_scripts(self):
         for s in self.scripts[:]:

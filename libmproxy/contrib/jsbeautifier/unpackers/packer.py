@@ -13,7 +13,6 @@
 """Unpacker for Dean Edward's p.a.c.k.e.r"""
 
 import re
-import string
 from . import UnpackingError
 
 PRIORITY = 1

@@ -1,4 +1,3 @@
-import socket
 from io import BytesIO
 from netlib.exceptions import HttpSyntaxException
 from netlib.http import http1

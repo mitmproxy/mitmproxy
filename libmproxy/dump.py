@@ -1,6 +1,4 @@
 from __future__ import absolute_import, print_function
-import sys
-import os
 import traceback
 
 import click
@@ -10,7 +8,6 @@ from netlib.http import CONTENT_MISSING
 import netlib.utils
 from . import flow, filt, contentviews
 from .exceptions import ContentViewException
-from .models import HTTPRequest
 
 class DumpError(Exception):
     pass

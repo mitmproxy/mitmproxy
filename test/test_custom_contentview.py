@@ -1,4 +1,3 @@
-from libmproxy import script, flow
 import libmproxy.contentviews as cv
 from netlib.http import Headers
 

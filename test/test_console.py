@@ -1,9 +1,4 @@
-import os
-import sys
-import mock
 import gc
-from os.path import normpath
-import mock_urwid
 
 import netlib.tutils
 from libmproxy import console
@@ -89,7 +84,7 @@ class TestConsoleState:
         f = self._add_request(c)
         c.add_flow_setting(f, "foo", "bar")
         assert c.get_flow_setting(f, "foo") == "bar"
-        assert c.get_flow_setting(f, "oink") == None
+        assert c.get_flow_setting(f, "oink") is None
         assert c.get_flow_setting(f, "oink", "foo") == "foo"
         assert len(c.flowsettings) == 1
         c.delete_flow(f)

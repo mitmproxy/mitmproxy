@@ -1,5 +1,5 @@
 import cStringIO
-from libmproxy import filt, flow
+from libmproxy import filt
 from libmproxy.protocol import http
 from libmproxy.models import Error
 from netlib.http import Headers

@@ -10,7 +10,6 @@ from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from netlib.exceptions import TcpDisconnect
 import tutils
 from libpathod import test
-from netlib import http, tcp
 from netlib.http import http1
 
 

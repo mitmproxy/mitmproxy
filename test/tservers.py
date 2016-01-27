@@ -1,6 +1,5 @@
 import os.path
 import threading
-import shutil
 import tempfile
 import flask
 import mock
@@ -11,7 +10,6 @@ import libpathod.test
 import libpathod.pathoc
 from libmproxy import flow, controller
 from libmproxy.cmdline import APP_HOST, APP_PORT
-import tutils
 
 testapp = flask.Flask(__name__)
 

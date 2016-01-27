@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function
 import collections
 import tornado.ioloop
 import tornado.httpserver
-import os
 
 from netlib.http import authentication
 

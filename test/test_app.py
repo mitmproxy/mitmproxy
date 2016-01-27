@@ -1,10 +1,3 @@
-import mock
-import socket
-import os
-import time
-from libmproxy import dump
-from netlib import certutils, tcp
-from libpathod.pathoc import Pathoc
 import tutils
 import tservers
 
