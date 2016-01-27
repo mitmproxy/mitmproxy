@@ -1,14 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
 
-import inspect
-import socket
 import OpenSSL
 import pytest
 import traceback
 import os
 import tempfile
-import time
-from io import BytesIO
 
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
@@ -35,10 +31,12 @@ requires_alpn = pytest.mark.skipif(
     not OpenSSL._util.lib.Cryptography_HAS_ALPN,
     reason="requires OpenSSL with ALPN support")
 
+
 class _Http2ServerBase(netlib_tservers.ServerTestBase):
     ssl = dict(alpn_select=b'h2')
 
     class handler(netlib.tcp.BaseHandler):
+
         def handle(self):
             h2_conn = h2.connection.H2Connection(client_side=False)
 
@@ -68,6 +66,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
 
 
 class _Http2TestBase(object):
+
     @classmethod
     def setup_class(self):
         self.config = ProxyConfig(**self.get_proxy_config())
@@ -141,6 +140,7 @@ class _Http2TestBase(object):
 
 @requires_alpn
 class TestSimple(_Http2TestBase, _Http2ServerBase):
+
     @classmethod
     def setup_class(self):
         _Http2TestBase.setup_class()
@@ -262,6 +262,7 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
 
 @requires_alpn
 class TestPushPromise(_Http2TestBase, _Http2ServerBase):
+
     @classmethod
     def setup_class(self):
         _Http2TestBase.setup_class()

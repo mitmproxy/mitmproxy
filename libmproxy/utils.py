@@ -174,6 +174,7 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
     """
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
 
+
 def http2_read_frame(rfile):
     field = rfile.peek(3)
     length = int(field.encode('hex'), 16)
