@@ -23,7 +23,9 @@ from ..models import (
 
 from .base import Layer, Kill
 
+
 class _HttpTransmissionLayer(Layer):
+
     def read_request(self):
         raise NotImplementedError()
 
@@ -233,7 +235,7 @@ class HttpLayer(Layer):
         try:
             response = make_error_response(code, message)
             self.send_response(response)
-        except NetlibException, H2Error:
+        except NetlibException as H2Error:
             pass
 
     def change_upstream_proxy_server(self, address):

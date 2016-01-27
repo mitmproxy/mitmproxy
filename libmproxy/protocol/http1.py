@@ -1,12 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
-import sys
-import traceback
 import six
-import struct
-import threading
-import time
-import Queue
 
 from netlib import tcp
 from netlib.http import http1
@@ -17,6 +11,7 @@ from ..models import HTTPRequest, HTTPResponse
 
 
 class Http1Layer(_HttpTransmissionLayer):
+
     def __init__(self, ctx, mode):
         super(Http1Layer, self).__init__(ctx)
         self.mode = mode

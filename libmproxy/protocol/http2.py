@@ -1,6 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
 
-import struct
 import threading
 import time
 import Queue
@@ -17,9 +16,12 @@ from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
 from .. import utils
 from ..models import HTTPRequest, HTTPResponse
-from ..exceptions import HttpProtocolException, ProtocolException
+from ..exceptions import HttpProtocolException
+from ..exceptions import ProtocolException
+
 
 class SafeH2Connection(H2Connection):
+
     def __init__(self, conn, *args, **kwargs):
         super(SafeH2Connection, self).__init__(*args, **kwargs)
         self.conn = conn
@@ -71,7 +73,7 @@ class SafeH2Connection(H2Connection):
                 if is_zombie(self, stream_id):
                     return
                 max_outbound_frame_size = self.max_outbound_frame_size
-                frame_chunk = chunk[position:position+max_outbound_frame_size]
+                frame_chunk = chunk[position:position + max_outbound_frame_size]
                 if self.local_flow_control_window(stream_id) < len(frame_chunk):
                     self.lock.release()
                     time.sleep(0)
@@ -88,6 +90,7 @@ class SafeH2Connection(H2Connection):
 
 
 class Http2Layer(Layer):
+
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
@@ -226,6 +229,7 @@ class Http2Layer(Layer):
 
 
 class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
+
     def __init__(self, ctx, stream_id, request_headers):
         super(Http2SingleStreamLayer, self).__init__(ctx)
         self.zombie = None
