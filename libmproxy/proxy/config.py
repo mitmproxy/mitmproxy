@@ -19,6 +19,7 @@ DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA
 
 
 class HostMatcher(object):
+
     def __init__(self, patterns=tuple()):
         self.patterns = list(patterns)
         self.regexes = [re.compile(p, re.IGNORECASE) for p in self.patterns]
@@ -41,6 +42,7 @@ ServerSpec = collections.namedtuple("ServerSpec", "scheme address")
 
 
 class ProxyConfig:
+
     def __init__(
             self,
             host='',

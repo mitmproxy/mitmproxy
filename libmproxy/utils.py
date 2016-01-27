@@ -37,7 +37,7 @@ def isBin(s):
 
 def isMostlyBin(s):
     s = s[:100]
-    return sum(isBin(ch) for ch in s)/len(s) > 0.3
+    return sum(isBin(ch) for ch in s) / len(s) > 0.3
 
 
 def isXML(s):
@@ -73,6 +73,7 @@ def pretty_duration(secs):
 
 
 class Data:
+
     def __init__(self, name):
         m = __import__(name)
         dirname, _ = os.path.split(m.__file__)
@@ -93,6 +94,7 @@ pkg_data = Data(__name__)
 
 
 class LRUCache:
+
     """
         A simple LRU cache for generated values.
     """

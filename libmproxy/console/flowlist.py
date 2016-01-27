@@ -43,6 +43,7 @@ footer = [
 
 
 class EventListBox(urwid.ListBox):
+
     def __init__(self, master):
         self.master = master
         urwid.ListBox.__init__(self, master.eventlist)
@@ -60,6 +61,7 @@ class EventListBox(urwid.ListBox):
 
 
 class BodyPile(urwid.Pile):
+
     def __init__(self, master):
         h = urwid.Text("Event log")
         h = urwid.Padding(h, align="left", width=("relative", 100))
@@ -103,6 +105,7 @@ class BodyPile(urwid.Pile):
 
 
 class ConnectionItem(urwid.WidgetWrap):
+
     def __init__(self, master, state, flow, focus):
         self.master, self.state, self.flow = master, state, flow
         self.f = focus
@@ -273,6 +276,7 @@ class ConnectionItem(urwid.WidgetWrap):
 
 
 class FlowListWalker(urwid.ListWalker):
+
     def __init__(self, master, state):
         self.master, self.state = master, state
         signals.flowlist_change.connect(self.sig_flowlist_change)
@@ -301,6 +305,7 @@ class FlowListWalker(urwid.ListWalker):
 
 
 class FlowListBox(urwid.ListBox):
+
     def __init__(self, master):
         self.master = master
         urwid.ListBox.__init__(

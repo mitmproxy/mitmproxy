@@ -4,6 +4,7 @@ from . import signals
 
 
 class Highlight(urwid.AttrMap):
+
     def __init__(self, t):
         urwid.AttrMap.__init__(
             self,
@@ -14,6 +15,7 @@ class Highlight(urwid.AttrMap):
 
 
 class Searchable(urwid.ListBox):
+
     def __init__(self, state, contents):
         self.walker = urwid.SimpleFocusListWalker(contents)
         urwid.ListBox.__init__(self, self.walker)

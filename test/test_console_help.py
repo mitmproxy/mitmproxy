@@ -7,11 +7,13 @@ import libmproxy.console.help as help
 
 
 class DummyLoop:
+
     def __init__(self):
         self.widget = None
 
 
 class DummyMaster:
+
     def __init__(self):
         self.loop = DummyLoop()
 
@@ -20,6 +22,7 @@ class DummyMaster:
 
 
 class TestHelp:
+
     def test_helptext(self):
         h = help.HelpView(None)
         assert h.helptext()

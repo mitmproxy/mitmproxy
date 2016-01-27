@@ -13,6 +13,7 @@ from .base import Layer
 
 
 class TcpMessage(object):
+
     def __init__(self, client_conn, server_conn, sender, receiver, message):
         self.client_conn = client_conn
         self.server_conn = server_conn

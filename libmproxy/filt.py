@@ -38,6 +38,7 @@ import pyparsing as pp
 
 
 class _Token:
+
     def dump(self, indent=0, fp=sys.stdout):
         print >> fp, "\t" * indent, self.__class__.__name__,
         if hasattr(self, "expr"):
@@ -46,6 +47,7 @@ class _Token:
 
 
 class _Action(_Token):
+
     @classmethod
     def make(klass, s, loc, toks):
         return klass(*toks[1:])
@@ -261,6 +263,7 @@ class FDst(_Rex):
 
 
 class _Int(_Action):
+
     def __init__(self, num):
         self.num = int(num)
 
@@ -275,6 +278,7 @@ class FCode(_Int):
 
 
 class FAnd(_Token):
+
     def __init__(self, lst):
         self.lst = lst
 
@@ -288,6 +292,7 @@ class FAnd(_Token):
 
 
 class FOr(_Token):
+
     def __init__(self, lst):
         self.lst = lst
 
@@ -301,6 +306,7 @@ class FOr(_Token):
 
 
 class FNot(_Token):
+
     def __init__(self, itm):
         self.itm = itm[0]
 

@@ -91,6 +91,7 @@ def test_concurrent2():
     m = mock.Mock()
 
     class Dummy:
+
         def __init__(self):
             self.response = self
             self.error = self
@@ -129,4 +130,3 @@ def test_command_parsing():
     absfilepath = os.path.normcase(tutils.test_data.path("scripts/a.py"))
     s = script.Script(absfilepath, script.ScriptContext(fm))
     assert os.path.isfile(s.args[0])
-

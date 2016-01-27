@@ -5,6 +5,7 @@ import urwid
 
 
 class _PathCompleter:
+
     def __init__(self, _testing=False):
         """
             _testing: disables reloading of the lookup table to make testing
@@ -55,6 +56,7 @@ class _PathCompleter:
 
 
 class PathEdit(urwid.Edit, _PathCompleter):
+
     def __init__(self, *args, **kwargs):
         urwid.Edit.__init__(self, *args, **kwargs)
         _PathCompleter.__init__(self)

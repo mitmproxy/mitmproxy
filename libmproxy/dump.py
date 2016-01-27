@@ -9,6 +9,7 @@ import netlib.utils
 from . import flow, filt, contentviews
 from .exceptions import ContentViewException
 
+
 class DumpError(Exception):
     pass
 
@@ -55,6 +56,7 @@ class Options(object):
 
 
 class DumpMaster(flow.FlowMaster):
+
     def __init__(self, server, options, outfile=None):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
@@ -168,7 +170,7 @@ class DumpMaster(flow.FlowMaster):
                 "{}: {}".format(
                     click.style(k, fg="blue", bold=True),
                     click.style(v, fg="blue"))
-                    for k, v in message.headers.fields
+                for k, v in message.headers.fields
             )
             self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
@@ -234,7 +236,7 @@ class DumpMaster(flow.FlowMaster):
             client = click.style("[replay]", fg="yellow", bold=True)
 
         method = flow.request.method
-        method_color=dict(
+        method_color = dict(
             GET="green",
             DELETE="red"
         ).get(method.upper(), "magenta")

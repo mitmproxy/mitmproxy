@@ -4,6 +4,7 @@ import threading
 
 
 class DummyReply:
+
     """
         A reply object that does nothing. Useful when we need an object to seem
         like it has a channel, and during testing.
@@ -17,6 +18,7 @@ class DummyReply:
 
 
 class Reply:
+
     """
         Messages sent through a channel are decorated with a "reply" attribute.
         This object is used to respond to the message through the return
@@ -38,6 +40,7 @@ class Reply:
 
 
 class Channel:
+
     def __init__(self, q, should_exit):
         self.q = q
         self.should_exit = should_exit
@@ -67,6 +70,7 @@ class Channel:
 
 
 class Slave(threading.Thread):
+
     """
         Slaves get a channel end-point through which they can send messages to
         the master.
@@ -84,6 +88,7 @@ class Slave(threading.Thread):
 
 
 class Master(object):
+
     """
         Masters get and respond to messages from slaves.
     """

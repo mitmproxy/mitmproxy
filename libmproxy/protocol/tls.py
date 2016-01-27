@@ -13,7 +13,6 @@ from ..exceptions import ProtocolException, TlsProtocolException, ClientHandshak
 from .base import Layer
 
 
-
 # taken from https://testssl.sh/openssl-rfc.mappping.html
 CIPHER_ID_NAME_MAP = {
     0x00: 'NULL-MD5',
@@ -222,6 +221,7 @@ def is_tls_record_magic(d):
         d[2] in ('\x00', '\x01', '\x02', '\x03')
     )
 
+
 def get_client_hello(client_conn):
     """
     Peek into the socket and read all records that contain the initial client hello message.
@@ -248,7 +248,9 @@ def get_client_hello(client_conn):
         client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
     return client_hello
 
+
 class TlsClientHello(object):
+
     def __init__(self, raw_client_hello):
         self._client_hello = ClientHello.parse(raw_client_hello)
 
@@ -289,15 +291,16 @@ class TlsClientHello(object):
         try:
             return cls(raw_client_hello)
         except ConstructError as e:
-            raise TlsProtocolException('Cannot parse Client Hello: %s, Raw Client Hello: %s' % \
-                            (repr(e), raw_client_hello.encode("hex")))
+            raise TlsProtocolException('Cannot parse Client Hello: %s, Raw Client Hello: %s' %
+                                       (repr(e), raw_client_hello.encode("hex")))
 
     def __repr__(self):
         return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
-                (self.client_sni, self.client_alpn_protocols, self.client_cipher_suites)
+            (self.client_sni, self.client_alpn_protocols, self.client_cipher_suites)
 
 
 class TlsLayer(Layer):
+
     def __init__(self, ctx, client_tls, server_tls):
         self.client_sni = None
         self.client_alpn_protocols = None
@@ -356,7 +359,6 @@ class TlsLayer(Layer):
         else:
             return "TlsLayer(inactive)"
 
-
     def _parse_client_hello(self):
         """
         Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
@@ -365,7 +367,7 @@ class TlsLayer(Layer):
             parsed = TlsClientHello.from_client_conn(self.client_conn)
             self.client_sni = parsed.client_sni
             self.client_alpn_protocols = parsed.client_alpn_protocols
-            self.client_ciphers  = parsed.client_cipher_suites
+            self.client_ciphers = parsed.client_cipher_suites
         except TlsProtocolException as e:
             self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
@@ -468,7 +470,7 @@ class TlsLayer(Layer):
                 alpn = [x for x in self.client_alpn_protocols if not deprecated_http2_variant(x)]
             else:
                 alpn = None
-            if alpn and "h2" in alpn and not self.config.http2 :
+            if alpn and "h2" in alpn and not self.config.http2:
                 alpn.remove("h2")
 
             ciphers_server = self.config.ciphers_server

@@ -7,6 +7,7 @@ from . import pathedit, signals, common
 
 
 class ActionBar(urwid.WidgetWrap):
+
     def __init__(self):
         urwid.WidgetWrap.__init__(self, None)
         self.clear()
@@ -108,6 +109,7 @@ class ActionBar(urwid.WidgetWrap):
 
 
 class StatusBar(urwid.WidgetWrap):
+
     def __init__(self, master, helptext):
         self.master, self.helptext = master, helptext
         self.ab = ActionBar()

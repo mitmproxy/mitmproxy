@@ -14,6 +14,7 @@ class Stop(Exception):
 
 
 class WebFlowView(flow.FlowView):
+
     def __init__(self, store):
         super(WebFlowView, self).__init__(store, None)
 
@@ -50,6 +51,7 @@ class WebFlowView(flow.FlowView):
 
 
 class WebState(flow.State):
+
     def __init__(self):
         super(WebState, self).__init__()
         self.view._close()
@@ -144,6 +146,7 @@ class Options(object):
 
 
 class WebMaster(flow.FlowMaster):
+
     def __init__(self, server, options):
         self.options = options
         super(WebMaster, self).__init__(server, WebState())

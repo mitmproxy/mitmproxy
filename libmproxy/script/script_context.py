@@ -6,6 +6,7 @@ from .. import contentviews
 
 
 class ScriptContext(object):
+
     """
     The script context should be used to interact with the global mitmproxy state from within a
     script.

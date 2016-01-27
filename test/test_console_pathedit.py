@@ -6,6 +6,7 @@ import tutils
 
 
 class TestPathCompleter:
+
     def test_lookup_construction(self):
         c = pathedit._PathCompleter()
 

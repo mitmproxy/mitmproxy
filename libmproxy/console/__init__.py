@@ -22,6 +22,7 @@ EVENTLOG_SIZE = 500
 
 
 class ConsoleState(flow.State):
+
     def __init__(self):
         flow.State.__init__(self)
         self.focus = None

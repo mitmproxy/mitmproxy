@@ -8,6 +8,7 @@ from .. import stateobject, utils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
+
     def __init__(self, client_connection, address, server):
         # Eventually, this object is restored from state. We don't have a
         # connection then.
@@ -88,6 +89,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
+
     def __init__(self, address, source_address=None):
         tcp.TCPClient.__init__(self, address, source_address)
 
@@ -134,7 +136,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         d = super(ServerConnection, self).get_state(short)
         d.update(
             address=({"address": self.address(),
-                     "use_ipv6": self.address.use_ipv6} if self.address else {}),
+                      "use_ipv6": self.address.use_ipv6} if self.address else {}),
             source_address=({"address": self.source_address(),
                              "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
             cert=self.cert.to_pem() if self.cert else None

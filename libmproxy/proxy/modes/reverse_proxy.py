@@ -4,6 +4,7 @@ from ...protocol import Layer, ServerConnectionMixin
 
 
 class ReverseProxy(Layer, ServerConnectionMixin):
+
     def __init__(self, ctx, server_address, server_tls):
         super(ReverseProxy, self).__init__(ctx, server_address=server_address)
         self.server_tls = server_tls

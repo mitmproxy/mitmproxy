@@ -29,6 +29,7 @@ def errapp(environ, start_response):
 
 
 class TestMaster(flow.FlowMaster):
+
     def __init__(self, config):
         config.port = 0
         s = ProxyServer(config)
@@ -55,6 +56,7 @@ class TestMaster(flow.FlowMaster):
 
 
 class ProxyThread(threading.Thread):
+
     def __init__(self, tmaster):
         threading.Thread.__init__(self)
         self.tmaster = tmaster
@@ -131,6 +133,7 @@ class ProxTestBase(object):
 
 
 class HTTPProxTest(ProxTestBase):
+
     def pathoc_raw(self):
         return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), fp=None)
 
@@ -172,11 +175,13 @@ class HTTPProxTest(ProxTestBase):
 
 
 class TResolver:
+
     def __init__(self, port):
         self.port = port
 
     def original_addr(self, sock):
         return ("127.0.0.1", self.port)
+
 
 class TransparentProxTest(ProxTestBase):
     ssl = None
@@ -263,6 +268,7 @@ class ReverseProxTest(ProxTestBase):
 
 
 class SocksModeTest(HTTPProxTest):
+
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
@@ -271,6 +277,7 @@ class SocksModeTest(HTTPProxTest):
 
 
 class ChainProxTest(ProxTestBase):
+
     """
     Chain three instances of mitmproxy in a row to test upstream mode.
     Proxy order is cls.proxy -> cls.chain[0] -> cls.chain[1]

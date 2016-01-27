@@ -121,6 +121,7 @@ def tmpdir(*args, **kwargs):
 
 
 class MockParser(argparse.ArgumentParser):
+
     """
     argparse.ArgumentParser sys.exits() by default.
     Make it more testable by throwing an exception instead.

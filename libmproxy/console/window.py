@@ -3,6 +3,7 @@ from . import signals
 
 
 class Window(urwid.Frame):
+
     def __init__(self, master, body, header, footer, helpctx):
         urwid.Frame.__init__(
             self,

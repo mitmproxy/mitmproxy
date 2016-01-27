@@ -12,6 +12,7 @@ from ..exceptions import ScriptException
 
 
 class Script(object):
+
     """
     Script object representing an inline script.
     """

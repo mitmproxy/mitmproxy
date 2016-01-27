@@ -72,6 +72,7 @@ class _StreamingHttpLayer(_HttpLayer):
 
 
 class Http1Layer(_StreamingHttpLayer):
+
     def __init__(self, ctx, mode):
         super(Http1Layer, self).__init__(ctx)
         self.mode = mode
@@ -132,6 +133,7 @@ class Http1Layer(_StreamingHttpLayer):
 
 # TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
 class Http2Layer(_HttpLayer):
+
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
@@ -229,6 +231,7 @@ class Http2Layer(_HttpLayer):
 
 
 class ConnectServerConnection(object):
+
     """
     "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.
     """
@@ -249,6 +252,7 @@ class ConnectServerConnection(object):
 
 
 class UpstreamConnectLayer(Layer):
+
     def __init__(self, ctx, connect_request):
         super(UpstreamConnectLayer, self).__init__(ctx)
         self.connect_request = connect_request
@@ -293,6 +297,7 @@ class UpstreamConnectLayer(Layer):
 
 
 class HttpLayer(Layer):
+
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
         self.mode = mode
@@ -328,7 +333,8 @@ class HttpLayer(Layer):
                 return
             except NetlibException as e:
                 self.send_error_response(400, repr(e))
-                six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
+                six.reraise(ProtocolException, ProtocolException(
+                    "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
 
             try:
                 flow = HTTPFlow(self.client_conn, self.server_conn, live=self)
@@ -376,7 +382,8 @@ class HttpLayer(Layer):
                     self.log(traceback.format_exc(), "debug")
                     return
                 else:
-                    six.reraise(ProtocolException, ProtocolException("Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
+                    six.reraise(ProtocolException, ProtocolException(
+                        "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
                 flow.live = False
 

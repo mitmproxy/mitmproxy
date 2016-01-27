@@ -3,6 +3,7 @@ import tservers
 
 
 class TestApp(tservers.HTTPProxTest):
+
     def test_basic(self):
         assert self.app("/").status_code == 200
 

@@ -12,6 +12,7 @@ footer = [
 
 
 class HelpView(urwid.ListBox):
+
     def __init__(self, help_context):
         self.help_context = help_context or []
         urwid.ListBox.__init__(

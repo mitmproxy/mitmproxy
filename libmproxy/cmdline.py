@@ -372,10 +372,10 @@ def proxy_options(parser):
     rawtcp = group.add_mutually_exclusive_group()
     rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
     rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
-                       help="Explicitly enable/disable experimental raw tcp support. "
-                            "Disabled by default. "
-                            "Default value will change in a future version."
-                       )
+                        help="Explicitly enable/disable experimental raw tcp support. "
+                        "Disabled by default. "
+                        "Default value will change in a future version."
+                        )
 
 
 def proxy_ssl_options(parser):

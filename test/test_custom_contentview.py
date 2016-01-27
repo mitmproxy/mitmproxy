@@ -11,7 +11,6 @@ def test_custom_views():
         def __call__(self, data, **metadata):
             return "noop", cv.format_text(data)
 
-
     view_obj = ViewNoop()
 
     cv.add(view_obj)
@@ -47,5 +46,3 @@ def test_custom_views():
         )
     )
     assert "noop" not in r[0]
-
-    

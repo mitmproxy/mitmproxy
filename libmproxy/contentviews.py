@@ -275,13 +275,13 @@ class ViewMultipart(View):
 
 if pyamf:
     class DummyObject(dict):
+
         def __init__(self, alias):
             dict.__init__(self)
 
         def __readamf__(self, input):
             data = input.readObject()
             self["data"] = data
-
 
     def pyamf_class_loader(s):
         for i in pyamf.CLASS_LOADERS:
@@ -291,9 +291,7 @@ if pyamf:
                     return v
         return DummyObject
 
-
     pyamf.register_class_loader(pyamf_class_loader)
-
 
     class ViewAMF(View):
         name = "AMF"
@@ -417,6 +415,7 @@ class ViewImage(View):
 
 
 class ViewProtobuf(View):
+
     """Human friendly view of protocol buffers
     The view uses the protoc compiler to decode the binary
     """

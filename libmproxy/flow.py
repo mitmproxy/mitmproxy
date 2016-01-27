@@ -22,6 +22,7 @@ from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, 
 
 
 class AppRegistry:
+
     def __init__(self):
         self.apps = {}
 
@@ -49,6 +50,7 @@ class AppRegistry:
 
 
 class ReplaceHooks:
+
     def __init__(self):
         self.lst = []
 
@@ -101,6 +103,7 @@ class ReplaceHooks:
 
 
 class SetHeaders:
+
     def __init__(self):
         self.lst = []
 
@@ -155,6 +158,7 @@ class SetHeaders:
 
 
 class StreamLargeBodies(object):
+
     def __init__(self, max_size):
         self.max_size = max_size
 
@@ -169,6 +173,7 @@ class StreamLargeBodies(object):
 
 
 class ClientPlaybackState:
+
     def __init__(self, flows, exit):
         self.flows, self.exit = flows, exit
         self.current = None
@@ -203,6 +208,7 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
+
     def __init__(
             self,
             headers,
@@ -295,6 +301,7 @@ class ServerPlaybackState:
 
 
 class StickyCookieState:
+
     def __init__(self, flt):
         """
             flt: Compiled filter.
@@ -342,10 +349,11 @@ class StickyCookieState:
                     l.append(self.jar[i].output(header="").strip())
         if l:
             f.request.stickycookie = True
-            f.request.headers.set_all("cookie",l)
+            f.request.headers.set_all("cookie", l)
 
 
 class StickyAuthState:
+
     def __init__(self, flt):
         """
             flt: Compiled filter.
@@ -397,6 +405,7 @@ class FlowList(object):
 
 
 class FlowView(FlowList):
+
     def __init__(self, store, filt=None):
         self._list = []
         if not filt:
@@ -433,6 +442,7 @@ class FlowView(FlowList):
 
 
 class FlowStore(FlowList):
+
     """
     Responsible for handling flows in the state:
     Keeps a list of all flows and provides views on them.
@@ -526,6 +536,7 @@ class FlowStore(FlowList):
 
 
 class State(object):
+
     def __init__(self):
         self.flows = FlowStore()
         self.view = FlowView(self.flows, None)
@@ -613,6 +624,7 @@ class State(object):
 
 
 class FlowMaster(controller.Master):
+
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
         self.state = state
@@ -1099,6 +1111,7 @@ def read_flows_from_paths(paths):
 
 
 class FlowWriter:
+
     def __init__(self, fo):
         self.fo = fo
 
@@ -1108,12 +1121,14 @@ class FlowWriter:
 
 
 class FlowReadError(Exception):
+
     @property
     def strerror(self):
         return self.args[0]
 
 
 class FlowReader:
+
     def __init__(self, fo):
         self.fo = fo
 
@@ -1139,6 +1154,7 @@ class FlowReader:
 
 
 class FilteredFlowWriter:
+
     def __init__(self, fo, filt):
         self.fo = fo
         self.filt = filt

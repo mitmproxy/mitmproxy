@@ -3,6 +3,7 @@ from time import sleep
 
 
 class service(SocketServer.BaseRequestHandler):
+
     def handle(self):
         data = 'dummy'
         print "Client connected with ", self.client_address

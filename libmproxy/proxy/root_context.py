@@ -12,7 +12,9 @@ from ..protocol import (
 )
 from .modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
 
+
 class RootContext(object):
+
     """
     The outermost context provided to the root layer.
     As a consequence, every layer has access to methods and attributes defined here.
@@ -131,6 +133,7 @@ class RootContext(object):
 
 
 class Log(object):
+
     def __init__(self, msg, level="info"):
         self.msg = msg
         self.level = level

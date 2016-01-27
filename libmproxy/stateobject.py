@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 
 class StateObject(object):
+
     """
         An object with serializable state.
 
