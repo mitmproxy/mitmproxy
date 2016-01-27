@@ -3,7 +3,6 @@ import sys
 
 import six
 
-from netlib import tcp
 from ..models import ServerConnection
 from ..exceptions import ProtocolException
 from netlib.exceptions import TcpException

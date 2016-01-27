@@ -9,7 +9,6 @@ def maybe_timestamp(base, attr):
         return utils.format_timestamp_with_milli(getattr(base, attr))
     else:
         return "active"
-    pass
 
 
 def flowdetails(state, flow):

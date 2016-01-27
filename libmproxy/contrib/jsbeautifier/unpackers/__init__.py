@@ -15,7 +15,6 @@ BLACKLIST = ['jsbeautifier.unpackers.evalbased']
 class UnpackingError(Exception):
     """Badly packed source or general error. Argument is a
     meaningful description."""
-    pass
 
 def getunpackers():
     """Scans the unpackers dir, finds unpackers and add them to UNPACKERS list.

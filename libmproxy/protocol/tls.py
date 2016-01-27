@@ -5,7 +5,8 @@ import sys
 
 from construct import ConstructError
 import six
-from netlib.exceptions import InvalidCertificateException, TcpException, TlsException
+from netlib.exceptions import InvalidCertificateException
+from netlib.exceptions import TlsException
 
 from ..contrib.tls._constructs import ClientHello
 from ..exceptions import ProtocolException, TlsProtocolException, ClientHandshakeException

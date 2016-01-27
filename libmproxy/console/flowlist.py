@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 import urwid
 
-from netlib import http
 import netlib.utils
 
 from . import common, signals

@@ -21,7 +21,7 @@ class Resolver(object):
         peer = csock.getpeername()
         try:
             stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if "sudo: a password is required" in e.output:
                 insufficient_priv = True
             else:
