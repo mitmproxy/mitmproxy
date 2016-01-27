@@ -242,7 +242,7 @@ def ask_save_path(prompt, data):
     signals.status_prompt_path.send(
         prompt = prompt,
         callback = ask_save_overwrite,
-        args =  (data, )
+        args = (data, )
     )
 
 
@@ -290,16 +290,16 @@ def copy_as_curl_command(flow):
     data = "curl "
 
     for k, v in flow.request.headers.fields:
-      data += "-H '%s:%s' " % (k, v)
+        data += "-H '%s:%s' " % (k, v)
 
     if flow.request.method != "GET":
-      data += "-X %s " % flow.request.method
+        data += "-X %s " % flow.request.method
 
     full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
     data += "'%s'" % full_url
 
     if flow.request.content:
-      data += " --data-binary '%s'" % flow.request.content
+        data += " --data-binary '%s'" % flow.request.content
 
     copy_to_clipboard_or_prompt(data)
 
@@ -316,7 +316,7 @@ def copy_as_python_code(flow):
 
     headers = "\n"
     for k, v in flow.request.headers.fields:
-      headers += "    '%s': '%s',\n" % (k, v)
+        headers += "    '%s': '%s',\n" % (k, v)
 
     full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
 
@@ -439,7 +439,7 @@ flowcache = utils.LRUCache(800)
 
 
 def format_flow(f, focus, extended=False, hostheader=False, padding=2,
-        marked=False):
+                marked=False):
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.acked,

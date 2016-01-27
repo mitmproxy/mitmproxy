@@ -9,6 +9,7 @@ from netlib.exceptions import TcpException
 
 
 class _LayerCodeCompletion(object):
+
     """
     Dummy class that provides type hinting in PyCharm, which simplifies development a lot.
     """
@@ -30,6 +31,7 @@ class _LayerCodeCompletion(object):
 
 
 class Layer(_LayerCodeCompletion):
+
     """
     Base class for all layers. All other protocol layers should inherit from this class.
     """
@@ -90,6 +92,7 @@ class Layer(_LayerCodeCompletion):
 
 
 class ServerConnectionMixin(object):
+
     """
     Mixin that provides a layer with the capabilities to manage a server connection.
     The server address can be passed in the constructor or set by calling :py:meth:`set_server`.
@@ -189,6 +192,7 @@ class ServerConnectionMixin(object):
 
 
 class Kill(Exception):
+
     """
     Signal that both client and server connection(s) should be killed immediately.
     """

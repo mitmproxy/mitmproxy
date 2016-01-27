@@ -15,6 +15,7 @@ def read_tnetstring(input):
         input.seek(-1, 1)
     return tnetstring.load(input)
 
+
 @click.command()
 @click.argument("input", type=click.File('rb'))
 def inspect(input):

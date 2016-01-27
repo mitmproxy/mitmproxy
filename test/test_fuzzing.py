@@ -7,6 +7,7 @@ import tservers
 
 
 class TestFuzzy(tservers.HTTPProxTest):
+
     def test_idna_err(self):
         req = r'get:"http://localhost:%s":i10,"\xc6"'
         p = self.pathoc()

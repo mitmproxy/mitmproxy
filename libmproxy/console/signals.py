@@ -2,6 +2,8 @@ import blinker
 
 # Show a status message in the action bar
 sig_add_event = blinker.Signal()
+
+
 def add_event(e, level):
     sig_add_event.send(
         None,

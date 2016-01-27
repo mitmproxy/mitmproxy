@@ -7,6 +7,7 @@ from .connections import ClientConnection, ServerConnection
 
 
 class Error(stateobject.StateObject):
+
     """
         An Error.
 
@@ -53,6 +54,7 @@ class Error(stateobject.StateObject):
 
 
 class Flow(stateobject.StateObject):
+
     """
     A Flow is a collection of objects representing a single transaction.
     This class is usually subclassed for each protocol, e.g. HTTPFlow.

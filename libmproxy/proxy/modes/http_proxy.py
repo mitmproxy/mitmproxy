@@ -4,6 +4,7 @@ from ...protocol import Layer, ServerConnectionMixin
 
 
 class HttpProxy(Layer, ServerConnectionMixin):
+
     def __call__(self):
         layer = self.ctx.next_layer(self)
         try:
@@ -14,6 +15,7 @@ class HttpProxy(Layer, ServerConnectionMixin):
 
 
 class HttpUpstreamProxy(Layer, ServerConnectionMixin):
+
     def __init__(self, ctx, server_address):
         super(HttpUpstreamProxy, self).__init__(ctx, server_address=server_address)
 

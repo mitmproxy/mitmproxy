@@ -65,6 +65,7 @@ class Palette:
 
 
 class LowDark(Palette):
+
     """
         Low-color dark background
     """
@@ -129,6 +130,7 @@ class Dark(LowDark):
 
 
 class LowLight(Palette):
+
     """
         Low-color light background
     """

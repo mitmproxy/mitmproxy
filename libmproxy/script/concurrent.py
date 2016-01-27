@@ -7,6 +7,7 @@ import threading
 
 
 class ReplyProxy(object):
+
     def __init__(self, original_reply, script_thread):
         self.original_reply = original_reply
         self.script_thread = script_thread

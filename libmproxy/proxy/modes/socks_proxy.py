@@ -8,6 +8,7 @@ from ...protocol import Layer, ServerConnectionMixin
 
 
 class Socks5Proxy(Layer, ServerConnectionMixin):
+
     def __init__(self, ctx):
         super(Socks5Proxy, self).__init__(ctx)
 

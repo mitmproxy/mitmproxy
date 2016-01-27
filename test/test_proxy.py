@@ -54,6 +54,7 @@ class TestServerConnection(object):
 
 
 class TestProcessProxyOptions:
+
     def p(self, *args):
         parser = tutils.MockParser()
         cmdline.common_options(parser)
@@ -151,6 +152,7 @@ class TestProcessProxyOptions:
 
 class TestProxyServer:
     # binding to 0.0.0.0:1 works without special permissions on Windows
+
     @tutils.skip_windows
     def test_err(self):
         conf = ProxyConfig(
@@ -166,6 +168,7 @@ class TestProxyServer:
 
 
 class TestDummyServer:
+
     def test_simple(self):
         d = DummyServer(None)
         d.start_slave()
@@ -173,6 +176,7 @@ class TestDummyServer:
 
 
 class TestConnectionHandler:
+
     def test_fatal_error(self):
         config = mock.Mock()
         root_layer = mock.Mock()

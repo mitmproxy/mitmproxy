@@ -102,6 +102,7 @@ class MessageMixin(stateobject.StateObject):
 
 
 class HTTPRequest(MessageMixin, Request):
+
     """
     An HTTP request.
 
@@ -264,6 +265,7 @@ class HTTPRequest(MessageMixin, Request):
 
 
 class HTTPResponse(MessageMixin, Response):
+
     """
     An HTTP response.
 
@@ -411,6 +413,7 @@ class HTTPResponse(MessageMixin, Response):
 
 
 class HTTPFlow(Flow):
+
     """
     A HTTPFlow is a collection of objects representing a single HTTP
     transaction.

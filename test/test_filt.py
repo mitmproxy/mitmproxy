@@ -7,6 +7,7 @@ import tutils
 
 
 class TestParsing:
+
     def _dump(self, x):
         c = cStringIO.StringIO()
         x.dump(fp=c)
@@ -75,6 +76,7 @@ class TestParsing:
 
 
 class TestMatching:
+
     def req(self):
         headers = Headers(header="qvalue")
         req = http.HTTPRequest(

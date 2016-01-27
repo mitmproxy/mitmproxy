@@ -2,6 +2,7 @@ import urwid
 
 
 class Tab(urwid.WidgetWrap):
+
     def __init__(self, offset, content, attr, onclick):
         """
             onclick is called on click with the tab offset as argument
@@ -20,6 +21,7 @@ class Tab(urwid.WidgetWrap):
 
 
 class Tabs(urwid.WidgetWrap):
+
     def __init__(self, tabs, tab_offset=0):
         urwid.WidgetWrap.__init__(self, "")
         self.tab_offset = tab_offset

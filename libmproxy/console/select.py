@@ -4,6 +4,7 @@ from . import common
 
 
 class _OptionWidget(urwid.WidgetWrap):
+
     def __init__(self, option, text, shortcut, active, focus):
         self.option = option
         textattr = "text"
@@ -36,6 +37,7 @@ class _OptionWidget(urwid.WidgetWrap):
 
 
 class OptionWalker(urwid.ListWalker):
+
     def __init__(self, options):
         urwid.ListWalker.__init__(self)
         self.options = options
@@ -59,6 +61,7 @@ class OptionWalker(urwid.ListWalker):
 
 
 class Heading:
+
     def __init__(self, text):
         self.text = text
 
@@ -73,6 +76,7 @@ _neg = lambda: False
 
 
 class Option:
+
     def __init__(self, text, shortcut, getstate=None, activate=None):
         self.text = text
         self.shortcut = shortcut
@@ -89,6 +93,7 @@ class Option:
 
 
 class Select(urwid.ListBox):
+
     def __init__(self, options):
         self.walker = OptionWalker(options)
         urwid.ListBox.__init__(

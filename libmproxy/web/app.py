@@ -12,6 +12,7 @@ class APIError(tornado.web.HTTPError):
 
 
 class RequestHandler(tornado.web.RequestHandler):
+
     def set_default_headers(self):
         super(RequestHandler, self).set_default_headers()
         self.set_header("Server", version.NAMEVERSION)
@@ -56,12 +57,14 @@ class RequestHandler(tornado.web.RequestHandler):
 
 
 class IndexHandler(RequestHandler):
+
     def get(self):
         _ = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         self.render("index.html")
 
 
 class FiltHelp(RequestHandler):
+
     def get(self):
         self.write(dict(
             commands=filt.help
@@ -94,6 +97,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 
 
 class Flows(RequestHandler):
+
     def get(self):
         self.write(dict(
             data=[f.get_state(short=True) for f in self.state.flows]
@@ -101,21 +105,25 @@ class Flows(RequestHandler):
 
 
 class ClearAll(RequestHandler):
+
     def post(self):
         self.state.clear()
 
 
 class AcceptFlows(RequestHandler):
+
     def post(self):
         self.state.flows.accept_all(self.master)
 
 
 class AcceptFlow(RequestHandler):
+
     def post(self, flow_id):
         self.flow.accept_intercept(self.master)
 
 
 class FlowHandler(RequestHandler):
+
     def delete(self, flow_id):
         self.flow.kill(self.master)
         self.state.delete_flow(self.flow)
@@ -156,16 +164,19 @@ class FlowHandler(RequestHandler):
 
 
 class DuplicateFlow(RequestHandler):
+
     def post(self, flow_id):
         self.master.duplicate_flow(self.flow)
 
 
 class RevertFlow(RequestHandler):
+
     def post(self, flow_id):
         self.state.revert(self.flow)
 
 
 class ReplayFlow(RequestHandler):
+
     def post(self, flow_id):
         self.flow.backup()
         self.flow.response = None
@@ -177,6 +188,7 @@ class ReplayFlow(RequestHandler):
 
 
 class FlowContent(RequestHandler):
+
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
 
@@ -207,6 +219,7 @@ class FlowContent(RequestHandler):
 
 
 class Events(RequestHandler):
+
     def get(self):
         self.write(dict(
             data=list(self.state.events)
@@ -214,6 +227,7 @@ class Events(RequestHandler):
 
 
 class Settings(RequestHandler):
+
     def get(self):
         self.write(dict(
             data=dict(
@@ -240,6 +254,7 @@ class Settings(RequestHandler):
 
 
 class Application(tornado.web.Application):
+
     def __init__(self, master, debug):
         self.master = master
         handlers = [

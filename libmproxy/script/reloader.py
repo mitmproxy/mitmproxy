@@ -1,11 +1,11 @@
 import os
 import sys
-from watchdog.events import RegexMatchingEventHandler 
+from watchdog.events import RegexMatchingEventHandler
 if sys.platform == 'darwin':
     from watchdog.observers.polling import PollingObserver as Observer
 else:
     from watchdog.observers import Observer
-# The OSX reloader in watchdog 0.8.3 breaks when unobserving paths. 
+# The OSX reloader in watchdog 0.8.3 breaks when unobserving paths.
 # We use the PollingObserver instead.
 
 _observers = {}
@@ -31,11 +31,12 @@ def unwatch(script):
 
 
 class _ScriptModificationHandler(RegexMatchingEventHandler):
+
     def __init__(self, callback, filename='.*'):
 
         super(_ScriptModificationHandler, self).__init__(
             ignore_directories=True,
-            regexes=['.*'+filename]
+            regexes=['.*' + filename]
         )
         self.callback = callback
 
@@ -43,4 +44,3 @@ class _ScriptModificationHandler(RegexMatchingEventHandler):
         self.callback()
 
 __all__ = ["watch", "unwatch"]
-

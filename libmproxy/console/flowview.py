@@ -96,6 +96,7 @@ footer = [
 
 
 class FlowViewHeader(urwid.WidgetWrap):
+
     def __init__(self, master, f):
         self.master, self.flow = master, f
         self._w = common.format_flow(
@@ -218,7 +219,7 @@ class FlowView(tabs.Tabs):
             txt = []
             for (style, text) in line:
                 if total_chars + len(text) > max_chars:
-                    text = text[:max_chars-total_chars]
+                    text = text[:max_chars - total_chars]
                 txt.append((style, text))
                 total_chars += len(text)
                 if total_chars == max_chars:

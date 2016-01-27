@@ -8,6 +8,7 @@ import tservers
 
 
 class TestHTTPResponse:
+
     def test_read_from_stringio(self):
         s = (
             b"HTTP/1.1 200 OK\r\n"
@@ -34,6 +35,7 @@ class TestHTTPResponse:
 
 
 class TestHTTPFlow(object):
+
     def test_repr(self):
         f = tutils.tflow(resp=True, err=True)
         assert repr(f)
@@ -57,6 +59,7 @@ class TestInvalidRequests(tservers.HTTPProxTest):
 
 
 class TestExpectHeader(tservers.HTTPProxTest):
+
     def test_simple(self):
         client = TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
@@ -83,6 +86,7 @@ class TestExpectHeader(tservers.HTTPProxTest):
 
 
 class TestHeadContentLength(tservers.HTTPProxTest):
+
     def test_head_content_length(self):
         p = self.pathoc()
         resp = p.request("""head:'%s/p/200:h"Content-Length"="42"'""" % self.server.urlbase)

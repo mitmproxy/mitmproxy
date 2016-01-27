@@ -8,6 +8,7 @@ import tutils
 
 
 class TestConsoleState:
+
     def test_flow(self):
         """
             normal flow:

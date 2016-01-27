@@ -43,7 +43,6 @@ def test_strfuncs():
     flow.response.status_code = 300
     m.echo_flow(flow)
 
-
     flow = tutils.tflow(resp=netlib.tutils.tresp(content="{"))
     flow.response.headers["content-type"] = "application/json"
     flow.response.status_code = 400
@@ -61,6 +60,7 @@ def test_contentview(get_content_view):
 
 
 class TestDumpMaster:
+
     def _cycle(self, m, content):
         f = tutils.tflow(req=netlib.tutils.treq(content=content))
         l = Log("connect")

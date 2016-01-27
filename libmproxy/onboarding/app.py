@@ -15,6 +15,7 @@ class Adapter(tornado.wsgi.WSGIAdapter):
     # Tornado doesn't make the WSGI environment available to pages, so this
     # hideous monkey patch is the easiest way to get to the mitmproxy.master
     # variable.
+
     def __init__(self, application):
         self._application = application
 
@@ -32,12 +33,14 @@ class Adapter(tornado.wsgi.WSGIAdapter):
 
 
 class Index(tornado.web.RequestHandler):
+
     def get(self):
         t = loader.load("index.html")
         self.write(t.generate())
 
 
 class PEM(tornado.web.RequestHandler):
+
     @property
     def filename(self):
         return config.CONF_BASENAME + "-ca-cert.pem"
@@ -55,6 +58,7 @@ class PEM(tornado.web.RequestHandler):
 
 
 class P12(tornado.web.RequestHandler):
+
     @property
     def filename(self):
         return config.CONF_BASENAME + "-ca-cert.p12"

@@ -22,6 +22,7 @@ help_context = _mkhelp()
 
 
 class Options(urwid.WidgetWrap):
+
     def __init__(self, master):
         self.master = master
         self.lb = select.Select(

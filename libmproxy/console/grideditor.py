@@ -63,6 +63,7 @@ class TextColumn:
 
 
 class SubgridColumn:
+
     def __init__(self, heading, subeditor):
         self.heading = heading
         self.subeditor = subeditor
@@ -97,6 +98,7 @@ class SubgridColumn:
 
 
 class SEscaped(urwid.WidgetWrap):
+
     def __init__(self, txt):
         txt = txt.encode("string-escape")
         w = urwid.Text(txt, wrap="any")
@@ -113,6 +115,7 @@ class SEscaped(urwid.WidgetWrap):
 
 
 class SEdit(urwid.WidgetWrap):
+
     def __init__(self, txt):
         txt = txt.encode("string-escape")
         w = urwid.Edit(edit_text=txt, wrap="any", multiline=True)
@@ -127,6 +130,7 @@ class SEdit(urwid.WidgetWrap):
 
 
 class GridRow(urwid.WidgetWrap):
+
     def __init__(self, focused, editing, editor, values):
         self.focused, self.editing, self.editor = focused, editing, editor
 
@@ -172,6 +176,7 @@ class GridRow(urwid.WidgetWrap):
 
 
 class GridWalker(urwid.ListWalker):
+
     """
         Stores rows as a list of (rows, errors) tuples, where rows is a list
         and errors is a set with an entry of each offset in rows that is an
@@ -311,6 +316,7 @@ class GridWalker(urwid.ListWalker):
 
 
 class GridListBox(urwid.ListBox):
+
     def __init__(self, lw):
         urwid.ListBox.__init__(self, lw)
 

@@ -29,6 +29,7 @@ import tservers
 
 
 class CommonMixin:
+
     def test_large(self):
         assert len(self.pathod("200:b@50k").content) == 1024 * 50
 
@@ -107,6 +108,7 @@ class CommonMixin:
 
 
 class TcpMixin:
+
     def _ignore_on(self):
         assert not hasattr(self, "_ignore_backup")
         self._ignore_backup = self.config.check_ignore
@@ -194,6 +196,7 @@ class TcpMixin:
 
 
 class AppMixin:
+
     def test_app(self):
         ret = self.app("/")
         assert ret.status_code == 200
@@ -201,6 +204,7 @@ class AppMixin:
 
 
 class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
+
     def test_app_err(self):
         p = self.pathoc()
         ret = p.request("get:'http://errapp/'")
@@ -348,6 +352,7 @@ class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
 
 
 class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxTest):
+
     """
     Test upstream server certificate verification with a trusted server cert.
     """
@@ -374,6 +379,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxTest):
 
 
 class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxTest):
+
     """
     Test upstream server certificate verification with an untrusted server cert.
     """
@@ -412,6 +418,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxTest):
 
 
 class TestHTTPSNoCommonName(tservers.HTTPProxTest):
+
     """
     Test what happens if we get a cert without common name back.
     """
@@ -432,6 +439,7 @@ class TestReverse(tservers.ReverseProxTest, CommonMixin, TcpMixin):
 
 
 class TestSocks5(tservers.SocksModeTest):
+
     def test_simple(self):
         p = self.pathoc()
         p.socks_connect(("localhost", self.server.port))
@@ -469,6 +477,7 @@ class TestSocks5(tservers.SocksModeTest):
 
 
 class TestHttps2Http(tservers.ReverseProxTest):
+
     @classmethod
     def get_proxy_config(cls):
         d = super(TestHttps2Http, cls).get_proxy_config()
@@ -526,6 +535,7 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
 
 
 class TestProxy(tservers.HTTPProxTest):
+
     def test_http(self):
         f = self.pathod("304")
         assert f.status_code == 304
@@ -562,7 +572,7 @@ class TestProxy(tservers.HTTPProxTest):
         connection.close()
 
         request, response = self.master.state.view[
-                                0].request, self.master.state.view[0].response
+            0].request, self.master.state.view[0].response
         assert response.status_code == 304  # sanity test for our low level request
         # timestamp_start might fire a bit late, so we play safe and only require 300ms.
         assert 0.3 <= request.timestamp_end - request.timestamp_start
@@ -678,6 +688,7 @@ class TestRedirectRequest(tservers.HTTPProxTest):
 
 
 class MasterStreamRequest(tservers.TestMaster):
+
     """
         Enables the stream flag on the flow for all requests
     """
@@ -731,6 +742,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
 
 
 class MasterFakeResponse(tservers.TestMaster):
+
     def handle_request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         f.reply(resp)
@@ -748,6 +760,7 @@ class TestServerConnect(tservers.HTTPProxTest):
     masterclass = MasterFakeResponse
     no_upstream_cert = True
     ssl = True
+
     def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no_upstream_cert should not connect to an upstream server"""
         assert self.pathod("200").status_code == 200
@@ -756,6 +769,7 @@ class TestServerConnect(tservers.HTTPProxTest):
 
 
 class MasterKillRequest(tservers.TestMaster):
+
     def handle_request(self, f):
         f.reply(Kill)
 
@@ -771,6 +785,7 @@ class TestKillRequest(tservers.HTTPProxTest):
 
 
 class MasterKillResponse(tservers.TestMaster):
+
     def handle_response(self, f):
         f.reply(Kill)
 
@@ -786,6 +801,7 @@ class TestKillResponse(tservers.HTTPProxTest):
 
 
 class EResolver(tservers.TResolver):
+
     def original_addr(self, sock):
         raise RuntimeError("Could not resolve original destination.")
 
@@ -798,6 +814,7 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
 
 
 class MasterIncomplete(tservers.TestMaster):
+
     def handle_request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = CONTENT_MISSING
@@ -833,9 +850,9 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxTest, CommonMixin, AppMixin):
 
 
 class TestUpstreamProxySSL(
-    tservers.HTTPUpstreamProxTest,
-    CommonMixin,
-    TcpMixin):
+        tservers.HTTPUpstreamProxTest,
+        CommonMixin,
+        TcpMixin):
     ssl = True
 
     def _host_pattern_on(self, attr):
@@ -930,7 +947,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
                       exclude=[
                           # fail first request
                           2,  # allow second request
-                      ])
+        ])
 
         kill_requests(self.chain[0].tmaster, "handle_request",
                       exclude=[
@@ -938,7 +955,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
                           # fail first request
                           3,  # reCONNECT
                           4,  # request
-                      ])
+        ])
 
         p = self.pathoc()
         req = p.request("get:'/p/418:b\"content\"'")
@@ -954,7 +971,6 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
         # (doesn't store (repeated) CONNECTs from chain[0]
         #  as it is a regular proxy)
 
-
         assert not self.chain[1].tmaster.state.flows[0].response  # killed
         assert self.chain[1].tmaster.state.flows[1].response
 
@@ -962,18 +978,18 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
         assert self.proxy.tmaster.state.flows[1].request.form_in == "relative"
 
         assert self.chain[0].tmaster.state.flows[
-                   0].request.form_in == "authority"
+            0].request.form_in == "authority"
         assert self.chain[0].tmaster.state.flows[
-                   1].request.form_in == "relative"
+            1].request.form_in == "relative"
         assert self.chain[0].tmaster.state.flows[
-                   2].request.form_in == "authority"
+            2].request.form_in == "authority"
         assert self.chain[0].tmaster.state.flows[
-                   3].request.form_in == "relative"
+            3].request.form_in == "relative"
 
         assert self.chain[1].tmaster.state.flows[
-                   0].request.form_in == "relative"
+            0].request.form_in == "relative"
         assert self.chain[1].tmaster.state.flows[
-                   1].request.form_in == "relative"
+            1].request.form_in == "relative"
 
         req = p.request("get:'/p/418:b\"content2\"'")
 

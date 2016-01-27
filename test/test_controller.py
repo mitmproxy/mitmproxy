@@ -3,6 +3,7 @@ from libmproxy import controller
 
 
 class TestMaster:
+
     def test_default_handler(self):
         m = controller.Master(None)
         msg = mock.MagicMock()

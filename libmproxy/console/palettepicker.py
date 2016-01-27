@@ -18,6 +18,7 @@ help_context = _mkhelp()
 
 
 class PalettePicker(urwid.WidgetWrap):
+
     def __init__(self, master):
         self.master = master
         low, high = [], []

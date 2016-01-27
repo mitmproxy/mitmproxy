@@ -18,6 +18,7 @@ PROXY_API_PORT = 8085
 
 
 class Resolver(object):
+
     def __init__(self):
         TransparentProxy.setup()
         self.socket = None
@@ -53,6 +54,7 @@ class Resolver(object):
 
 
 class APIRequestHandler(SocketServer.StreamRequestHandler):
+
     """
     TransparentProxy API: Returns the pickled server address, port tuple
     for each received pickled client address, port tuple.
@@ -77,6 +79,7 @@ class APIRequestHandler(SocketServer.StreamRequestHandler):
 
 
 class APIServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+
     def __init__(self, proxifier, *args, **kwargs):
         SocketServer.TCPServer.__init__(self, *args, **kwargs)
         self.proxifier = proxifier
@@ -110,6 +113,7 @@ def MIB_TCPTABLE2(size):
 
 
 class TransparentProxy(object):
+
     """
     Transparent Windows Proxy for mitmproxy based on WinDivert/PyDivert.
 
