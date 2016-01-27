@@ -45,6 +45,19 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python
     fi
+  - |
+      if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
+        export PYENV_ROOT="$HOME/.pyenv"
+        if [ -f "$PYENV_ROOT/bin/pyenv" ]; then
+          pushd "$PYENV_ROOT" && git pull && popd
+        else
+          rm -rf "$PYENV_ROOT" && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
+        fi
+        export PYPY_VERSION="4.0.1"
+        "$PYENV_ROOT/bin/pyenv" install --skip-existing "pypy-$PYPY_VERSION"
+        virtualenv --python="$PYENV_ROOT/versions/pypy-$PYPY_VERSION/bin/python" "$HOME/virtualenvs/pypy-$PYPY_VERSION"
+        source "$HOME/virtualenvs/pypy-$PYPY_VERSION/bin/activate"
+      fi
   - "pip install -U pip setuptools"
   - "pip install --src .. -r requirements.txt"
 
@@ -90,7 +103,8 @@ before_cache:
 cache:
   directories:
     - $HOME/.cache/pip
-    - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
-    - /home/travis/virtualenv/python2.7.9/bin
-    - /home/travis/virtualenv/pypy-2.5.0/site-packages
-    - /home/travis/virtualenv/pypy-2.5.0/bin
+    - $HOME/virtualenv/python2.7.9/lib/python2.7/site-packages
+    - $HOME/virtualenv/python2.7.9/bin
+    - $HOME/.pyenv
+    - $HOME/virtualenv/pypy-2.5.0/site-packages
+    - $HOME/virtualenv/pypy-2.5.0/bin

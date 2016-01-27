@@ -1,16 +1,19 @@
 version: '{build}'
 shallow_clone: true
+build: off  # Not a C# project
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
-  PATH: "C:\\Python27;C:\\Python27\\Scripts;%PATH%"
+  PATH: "%APPDATA%\\Python\\Scripts;C:\\Python27;C:\\Python27\\Scripts;%PATH%"
   PYINSTALLER_VERSION: "git+https://github.com/pyinstaller/pyinstaller.git"
 install:
-  - "pip install --src .. -r requirements.txt"
+  - "pip install --user -U pip setuptools"
+  - "pip install --user --src .. -r requirements.txt"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
-build: off  # Not a C# project
 test_script:
-  - "py.test -n 4"
+  - "py.test -s --cov libmproxy"
+cache:
+  - C:\Users\appveyor\AppData\Local\pip\cache
 after_test:
   - |
     git clone https://github.com/mitmproxy/release.git ..\release
