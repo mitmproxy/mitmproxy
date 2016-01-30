@@ -5,37 +5,33 @@ matrix:
   fast_finish: true
   include:
     - python: 2.7
+    - python: 2.7
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+    - python: pypy
+    - python: pypy
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
     - language: generic
       os: osx
       osx_image: xcode7.1
     - python: 2.7
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
-    - python: 2.7
       env: DOCS=1
       script: 'cd docs && make html'
-    - python: pypy
-    - python: pypy
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
-  allow_failures:
-    # We allow pypy to fail until Travis fixes their infrastructure to a pypy
-    # with a recent enought CFFI library to run cryptography 1.0+.
-    - python: pypy
 
 install:
   - |
