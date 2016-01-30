@@ -159,10 +159,10 @@ def test_expected_http_body_size():
 
     # no length
     assert expected_http_body_size(
-        treq()
+        treq(headers=Headers())
     ) == 0
     assert expected_http_body_size(
-        treq(), tresp()
+        treq(headers=Headers()), tresp(headers=Headers())
     ) == -1
 
 
