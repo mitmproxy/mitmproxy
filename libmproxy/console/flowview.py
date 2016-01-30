@@ -81,6 +81,7 @@ def _mkhelp():
         ("h, l", "previous tab, next tab"),
         ("space", "next flow"),
         ("|", "run script on this flow"),
+        ("s", "reload all the inline scripts"),
         ("/", "search (case sensitive)"),
         ("n", "repeat search forward"),
         ("N", "repeat search backwards"),
@@ -594,6 +595,9 @@ class FlowView(tabs.Tabs):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
+        elif key == "s":
+            self.master.reload_scripts()
+            signals.status_message.send(message="All inline scripts reloaded.")
 
         if not conn and key in set(list("befgmxvz")):
             signals.status_message.send(

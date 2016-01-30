@@ -32,6 +32,7 @@ def _mkhelp():
         ("tab", "tab between eventlog and flow list"),
         ("enter", "view flow"),
         ("|", "run script on this flow"),
+        ("s", "reload all the inline scripts"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
@@ -255,6 +256,9 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
+        elif key == "s":
+            self.master.reload_scripts()
+            signals.status_message.send(message="All inline scripts reloaded.")
         elif key == "P":
             common.ask_copy_part("a", self.flow, self.master, self.state)
         elif key == "E":
