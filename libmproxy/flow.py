@@ -658,6 +658,10 @@ class FlowMaster(controller.Master):
         for s in self.scripts[:]:
             self.unload_script(s)
 
+    def reload_scripts(self):
+        for s in self.scripts[:]:
+            s.load()
+
     def unload_script(self, script_obj):
         try:
             script_obj.unload()
