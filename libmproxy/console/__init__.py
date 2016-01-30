@@ -702,6 +702,7 @@ class ConsoleMaster(flow.FlowMaster):
                 self.state.intercept) and not f.request.is_replay:
             f.intercept(self)
         else:
+            #check if flow was intercepted within an inline script by flow.intercept()
             if f.intercepted:
                 f.intercept(self)
             else:
