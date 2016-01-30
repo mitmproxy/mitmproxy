@@ -3,7 +3,7 @@ The script object representing mitmproxy inline scripts.
 Script objects know nothing about mitmproxy or mitmproxy's API - this knowledge is provided
 by the mitmproxy-specific ScriptContext.
 """
-from __future__ import absolute_import, print_function, division
+# Do not import __future__ here, this would apply transitively to the inline scripts.
 import os
 import shlex
 import traceback
