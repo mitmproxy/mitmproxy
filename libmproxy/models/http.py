@@ -11,9 +11,10 @@ from netlib.tcp import Address
 from .. import version, stateobject
 from .flow import Flow
 
+from collections import OrderedDict
 
 class MessageMixin(stateobject.StateObject):
-    _stateobject_attributes = dict(
+    _stateobject_attributes = OrderedDict(
         http_version=bytes,
         headers=Headers,
         timestamp_start=float,
