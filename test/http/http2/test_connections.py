@@ -1,11 +1,13 @@
 import OpenSSL
 import mock
+import codecs
 
-from netlib import tcp, http, tutils, tservers
+from hyperframe.frame import *
+
+from netlib import tcp, http, utils, tutils, tservers
 from netlib.exceptions import TcpDisconnect
 from netlib.http import Headers
 from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
-from netlib.http.http2.frame import *
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
@@ -97,26 +99,28 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
-            # send magic
-            self.wfile.write(
-                '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'.decode('hex'))
-            self.wfile.flush()
+            try:
+                # send magic
+                self.wfile.write(codecs.decode('505249202a20485454502f322e300d0a0d0a534d0d0a0d0a', 'hex_codec'))
+                self.wfile.flush()
 
-            # send empty settings frame
-            self.wfile.write('000000040000000000'.decode('hex'))
-            self.wfile.flush()
+                # send empty settings frame
+                self.wfile.write(codecs.decode('000000040000000000', 'hex_codec'))
+                self.wfile.flush()
 
-            # check empty settings frame
-            assert self.rfile.read(9) ==\
-                '000000040000000000'.decode('hex')
+                # check empty settings frame
+                raw = utils.http2_read_raw_frame(self.rfile)
+                assert raw == codecs.decode('00000c040000000000000200000000000300000001', 'hex_codec')
 
-            # check settings acknowledgement
-            assert self.rfile.read(9) == \
-                '000000040100000000'.decode('hex')
+                # check settings acknowledgement
+                raw = utils.http2_read_raw_frame(self.rfile)
+                assert raw == codecs.decode('000000040100000000', 'hex_codec')
 
-            # send settings acknowledgement
-            self.wfile.write('000000040100000000'.decode('hex'))
-            self.wfile.flush()
+                # send settings acknowledgement
+                self.wfile.write(codecs.decode('000000040100000000', 'hex_codec'))
+                self.wfile.flush()
+            except Exception as e:
+                print(e)
 
     def test_perform_server_connection_preface(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -126,6 +130,10 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
         assert not protocol.connection_preface_performed
         protocol.perform_server_connection_preface()
         assert protocol.connection_preface_performed
+
+        frm = protocol.read_frame()
+        assert isinstance(frm, SettingsFrame)
+        assert 'ACK' in frm.flags
 
         tutils.raises(TcpDisconnect, protocol.perform_server_connection_preface, force=True)
 
@@ -210,19 +218,19 @@ class TestApplySettings(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
 
         protocol._apply_settings({
-            SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH: 'foo',
-            SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS: 'bar',
-            SettingsFrame.SETTINGS.SETTINGS_INITIAL_WINDOW_SIZE: 'deadbeef',
+            SettingsFrame.ENABLE_PUSH: 'foo',
+            SettingsFrame.MAX_CONCURRENT_STREAMS: 'bar',
+            SettingsFrame.INITIAL_WINDOW_SIZE: 'deadbeef',
         })
 
         assert c.rfile.safe_read(2) == "OK"
 
         assert protocol.http2_settings[
-            SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH] == 'foo'
+            SettingsFrame.ENABLE_PUSH] == 'foo'
         assert protocol.http2_settings[
-            SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS] == 'bar'
+            SettingsFrame.MAX_CONCURRENT_STREAMS] == 'bar'
         assert protocol.http2_settings[
-            SettingsFrame.SETTINGS.SETTINGS_INITIAL_WINDOW_SIZE] == 'deadbeef'
+            SettingsFrame.INITIAL_WINDOW_SIZE] == 'deadbeef'
 
 
 class TestCreateHeaders():
@@ -256,12 +264,12 @@ class TestCreateHeaders():
             (b'server', b'version')])
 
         protocol = HTTP2Protocol(self.c)
-        protocol.http2_settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE] = 8
+        protocol.http2_settings[SettingsFrame.MAX_FRAME_SIZE] = 8
         bytes = protocol._create_headers(headers, 1, end_stream=True)
         assert len(bytes) == 3
-        assert bytes[0] == '000008010000000001828487408294e783'.decode('hex')
+        assert bytes[0] == '000008010100000001828487408294e783'.decode('hex')
         assert bytes[1] == '0000080900000000018c767f7685ee5b10'.decode('hex')
-        assert bytes[2] == '00000209050000000163d5'.decode('hex')
+        assert bytes[2] == '00000209040000000163d5'.decode('hex')
 
 
 class TestCreateBody():
@@ -274,13 +282,13 @@ class TestCreateBody():
 
     def test_create_body_single_frame(self):
         protocol = HTTP2Protocol(self.c)
-        bytes = protocol._create_body('foobar', 1)
+        bytes = protocol._create_body(b'foobar', 1)
         assert b''.join(bytes) == '000006000100000001666f6f626172'.decode('hex')
 
     def test_create_body_multiple_frames(self):
         protocol = HTTP2Protocol(self.c)
-        protocol.http2_settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE] = 5
-        bytes = protocol._create_body('foobarmehm42', 1)
+        protocol.http2_settings[SettingsFrame.MAX_FRAME_SIZE] = 5
+        bytes = protocol._create_body(b'foobarmehm42', 1)
         assert len(bytes) == 3
         assert bytes[0] == '000005000000000001666f6f6261'.decode('hex')
         assert bytes[1] == '000005000000000001726d65686d'.decode('hex')
@@ -441,7 +449,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.stream_id == 42
         assert resp.http_version == (2, 0)
         assert resp.status_code == 200
-        assert resp.msg == ""
+        assert resp.msg == b''
         assert resp.headers.fields == [[':status', '200'], ['etag', 'foobar']]
         assert resp.content == b''
 
