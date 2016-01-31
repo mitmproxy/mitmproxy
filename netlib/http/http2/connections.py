@@ -8,6 +8,11 @@ from .. import Headers, Response, Request
 
 from hyperframe import frame
 
+# TODO: remove once hyperframe released a new version > 3.1.1
+# wrapper for deprecated name in old hyperframe release
+frame.SettingsFrame.MAX_FRAME_SIZE = frame.SettingsFrame.SETTINGS_MAX_FRAME_SIZE
+frame.SettingsFrame.MAX_HEADER_LIST_SIZE = frame.SettingsFrame.SETTINGS_MAX_HEADER_LIST_SIZE
+
 
 class TCPHandler(object):
 
@@ -35,7 +40,7 @@ class HTTP2Protocol(object):
         HTTP_1_1_REQUIRED=0xd
     )
 
-    CLIENT_CONNECTION_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+    CLIENT_CONNECTION_PREFACE = b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n'
 
     HTTP2_DEFAULT_SETTINGS = {
         frame.SettingsFrame.HEADER_TABLE_SIZE: 4096,
@@ -94,7 +99,7 @@ class HTTP2Protocol(object):
 
         timestamp_end = time.time()
 
-        authority = headers.get(':authority', '')
+        authority = headers.get(':authority', b'')
         method = headers.get(':method', 'GET')
         scheme = headers.get(':scheme', 'https')
         path = headers.get(':path', '/')
@@ -113,6 +118,8 @@ class HTTP2Protocol(object):
             form_in = "absolute"
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
+            scheme = scheme.decode('ascii')
+            host = host.decode('ascii')
 
         if host is None:
             host = 'localhost'
@@ -122,18 +129,17 @@ class HTTP2Protocol(object):
 
         request = Request(
             form_in,
-            method,
-            scheme,
-            host,
+            method.encode('ascii'),
+            scheme.encode('ascii'),
+            host.encode('ascii'),
             port,
-            path,
-            (2, 0),
+            path.encode('ascii'),
+            b'2.0',
             headers,
             body,
             timestamp_start,
             timestamp_end,
         )
-        # FIXME: We should not do this.
         request.stream_id = stream_id
 
         return request
@@ -141,7 +147,7 @@ class HTTP2Protocol(object):
     def read_response(
         self,
         __rfile,
-        request_method='',
+        request_method=b'',
         body_size_limit=None,
         include_body=True,
         stream_id=None,
@@ -170,9 +176,9 @@ class HTTP2Protocol(object):
             timestamp_end = None
 
         response = Response(
-            (2, 0),
+            b'2.0',
             int(headers.get(':status', 502)),
-            "",
+            b'',
             headers,
             body,
             timestamp_start=timestamp_start,
@@ -200,13 +206,13 @@ class HTTP2Protocol(object):
         headers = request.headers.copy()
 
         if ':authority' not in headers:
-            headers.fields.insert(0, (':authority', bytes(authority)))
+            headers.fields.insert(0, (b':authority', authority.encode('ascii')))
         if ':scheme' not in headers:
-            headers.fields.insert(0, (':scheme', bytes(request.scheme)))
+            headers.fields.insert(0, (b':scheme', request.scheme.encode('ascii')))
         if ':path' not in headers:
-            headers.fields.insert(0, (':path', bytes(request.path)))
+            headers.fields.insert(0, (b':path', request.path.encode('ascii')))
         if ':method' not in headers:
-            headers.fields.insert(0, (':method', bytes(request.method)))
+            headers.fields.insert(0, (b':method', request.method.encode('ascii')))
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id
@@ -223,7 +229,7 @@ class HTTP2Protocol(object):
         headers = response.headers.copy()
 
         if ':status' not in headers:
-            headers.fields.insert(0, (':status', bytes(str(response.status_code))))
+            headers.fields.insert(0, (b':status', str(response.status_code).encode('ascii')))
 
         if hasattr(response, 'stream_id'):
             stream_id = response.stream_id
@@ -419,7 +425,7 @@ class HTTP2Protocol(object):
                 self._handle_unexpected_frame(frm)
 
         headers = Headers(
-            [[str(k), str(v)] for k, v in self.decoder.decode(header_blocks)]
+            [[k.encode('ascii'), v.encode('ascii')] for k, v in self.decoder.decode(header_blocks)]
         )
 
         return stream_id, headers, body
