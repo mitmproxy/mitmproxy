@@ -424,20 +424,26 @@ class _Connection(object):
     rbufsize = -1
     wbufsize = -1
 
+    def _makefile(self):
+        """
+        Set up .rfile and .wfile attributes from .connection
+        """
+        # Ideally, we would use the Buffered IO in Python 3 by default.
+        # Unfortunately, the implementation of .peek() is broken for n>1 bytes,
+        # as it may just return what's left in the buffer and not all the bytes we want.
+        # As a workaround, we just use unbuffered sockets directly.
+        # https://mail.python.org/pipermail/python-dev/2009-June/089986.html
+        if six.PY2:
+            self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
+            self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
+        else:
+            self.rfile = Reader(socket.SocketIO(self.connection, "rb"))
+            self.wfile = Writer(socket.SocketIO(self.connection, "wb"))
+
     def __init__(self, connection):
         if connection:
             self.connection = connection
-            # Ideally, we would use the Buffered IO in Python 3 by default.
-            # Unfortunately, the implementation of .peek() is broken for n>1 bytes,
-            # as it may just return what's left in the buffer and not all the bytes we want.
-            # As a workaround, we just use unbuffered sockets directly.
-            # https://mail.python.org/pipermail/python-dev/2009-June/089986.html
-            if six.PY2:
-                self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
-                self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
-            else:
-                self.rfile = Reader(socket.SocketIO(self.connection, "rb"))
-                self.wfile = Writer(socket.SocketIO(self.connection, "wb"))
+            self._makefile()
         else:
             self.connection = None
             self.rfile = None
@@ -676,20 +682,12 @@ class TCPClient(_Connection):
             connection.connect(self.address())
             if not self.source_address:
                 self.source_address = Address(connection.getsockname())
-
-            # See _Connection.__init__ why we do this dance.
-            if six.PY2:
-                self.rfile = Reader(connection.makefile('rb', self.rbufsize))
-                self.wfile = Writer(connection.makefile('wb', self.wbufsize))
-            else:
-                self.rfile = Reader(socket.SocketIO(connection, "rb"))
-                self.wfile = Writer(socket.SocketIO(connection, "wb"))
-
         except (socket.error, IOError) as err:
             raise TcpException(
                 'Error connecting to "%s": %s' %
                 (self.address.host, err))
         self.connection = connection
+        self._makefile()
 
     def settimeout(self, n):
         self.connection.settimeout(n)
