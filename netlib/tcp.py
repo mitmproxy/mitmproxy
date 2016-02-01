@@ -272,7 +272,7 @@ class Reader(_FileLike):
         Raises:
             TcpException if there was an error with the socket
             TlsException if there was an error with pyOpenSSL.
-            NotImplementedError if the underlying file object is not a (pyOpenSSL) socket
+            NotImplementedError if the underlying file object is not a [pyOpenSSL] socket
         """
         if isinstance(self.o, socket_fileobject):
             try:

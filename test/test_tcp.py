@@ -12,7 +12,7 @@ import OpenSSL
 
 from netlib import tcp, certutils, tutils, tservers
 from netlib.exceptions import InvalidCertificateException, TcpReadIncomplete, TlsException, \
-    TcpTimeout, TcpDisconnect, TcpException
+    TcpTimeout, TcpDisconnect, TcpException, NetlibException
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -716,15 +716,34 @@ class TestFileLike:
 class TestPeek(tservers.ServerTestBase):
     handler = EchoHandler
 
+    def _connect(self, c):
+        c.connect()
+
     def test_peek(self):
         testval = b"peek!\n"
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
+        self._connect(c)
         c.wfile.write(testval)
         c.wfile.flush()
 
-        assert c.rfile.peek(4) == b"peek"[:4]
-        assert c.rfile.peek(6) == testval
+        assert c.rfile.peek(4) == b"peek"
+        assert c.rfile.peek(6) == b"peek!\n"
+        assert c.rfile.readline() == testval
+
+        c.close()
+        with tutils.raises(NetlibException):
+            if c.rfile.peek(1) == b"":
+                # Workaround for Python 2 on Unix:
+                # Peeking a closed connection does not raise an exception here.
+                raise NetlibException()
+
+
+class TestPeekSSL(TestPeek):
+    ssl = True
+
+    def _connect(self, c):
+        c.connect()
+        c.convert_to_ssl()
 
 
 class TestAddress:
