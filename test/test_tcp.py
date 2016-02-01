@@ -713,6 +713,20 @@ class TestFileLike:
         tutils.raises(TcpReadIncomplete, s.safe_read, 10)
 
 
+class TestPeek(tservers.ServerTestBase):
+    handler = EchoHandler
+
+    def test_peek(self):
+        testval = b"peek!\n"
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.wfile.write(testval)
+        c.wfile.flush()
+
+        assert c.rfile.peek(4) == "peek"[:4]
+        assert c.rfile.peek(6) == testval
+
+
 class TestAddress:
 
     def test_simple(self):
