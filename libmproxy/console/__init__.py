@@ -703,7 +703,11 @@ class ConsoleMaster(flow.FlowMaster):
                 self.state.intercept) and not f.request.is_replay:
             f.intercept(self)
         else:
-            f.reply()
+            #check if flow was intercepted within an inline script by flow.intercept()
+            if f.intercepted:
+                f.intercept(self)
+            else:
+                f.reply()
         signals.flowlist_change.send(self)
         signals.flow_change.send(self, flow = f)
 
