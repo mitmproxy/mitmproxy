@@ -7,6 +7,7 @@ import Queue
 from netlib.tcp import ssl_read_select
 from netlib.exceptions import HttpException
 from netlib.http import Headers
+from netlib.utils import http2_read_raw_frame
 
 import h2
 from h2.connection import H2Connection
@@ -212,7 +213,7 @@ class Http2Layer(Layer):
 
                 with source_conn.h2.lock:
                     try:
-                        raw_frame = utils.http2_read_frame(source_conn.rfile)
+                        raw_frame = b''.join(http2_read_raw_frame(source_conn.rfile))
                     except:
                         for stream in self.streams.values():
                             stream.zombie = time.time()
