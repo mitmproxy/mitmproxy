@@ -48,7 +48,10 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
             self.wfile.flush()
 
             while True:
-                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(self.rfile)))
+                try:
+                    events = h2_conn.receive_data(b''.join(http2_read_raw_frame(self.rfile)))
+                except:
+                    break
                 self.wfile.write(h2_conn.data_to_send())
                 self.wfile.flush()
 
@@ -362,8 +365,8 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
             ('foo', 'bar')
         ])
 
-        done = False
-        while not done:
+        streams = 0
+        while streams != 3:
             try:
                 events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
             except:
@@ -373,8 +376,9 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
 
             for event in events:
                 if isinstance(event, h2.events.StreamEnded) and event.stream_id == 1:
-                    done = True
+                    streams += 1
                 elif isinstance(event, h2.events.PushedStreamReceived):
+                    streams += 1
                     h2_conn.reset_stream(event.pushed_stream_id, error_code=0x8)
                     client.wfile.write(h2_conn.data_to_send())
                     client.wfile.flush()
