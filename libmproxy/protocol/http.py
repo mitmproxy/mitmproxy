@@ -188,7 +188,7 @@ class HttpLayer(Layer):
 
                 self.log("response", "debug", [repr(flow.response)])
                 flow = self.channel.ask("response", flow)
-                if flow == Kill:
+                if not flow or flow == Kill:
                     raise Kill()
                 self.send_response_to_client(flow)
 
