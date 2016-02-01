@@ -723,7 +723,7 @@ class TestPeek(tservers.ServerTestBase):
         c.wfile.write(testval)
         c.wfile.flush()
 
-        assert c.rfile.peek(4) == "peek"[:4]
+        assert c.rfile.peek(4) == b"peek"[:4]
         assert c.rfile.peek(6) == testval
 
 
