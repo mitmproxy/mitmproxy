@@ -20,6 +20,7 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
 import netlib
 from netlib import tservers as netlib_tservers
+from netlib.utils import http2_read_raw_frame
 
 import h2
 from hyperframe.frame import Frame
@@ -47,8 +48,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
             self.wfile.flush()
 
             while True:
-                raw_frame = utils.http2_read_frame(self.rfile)
-                events = h2_conn.receive_data(raw_frame)
+                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(self.rfile)))
                 self.wfile.write(h2_conn.data_to_send())
                 self.wfile.flush()
 
@@ -179,7 +179,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
 
         done = False
         while not done:
-            events = h2_conn.receive_data(utils.http2_read_frame(client.rfile))
+            events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
             client.wfile.write(h2_conn.data_to_send())
             client.wfile.flush()
 
@@ -245,7 +245,7 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
 
         done = False
         while not done:
-            events = h2_conn.receive_data(utils.http2_read_frame(client.rfile))
+            events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
             client.wfile.write(h2_conn.data_to_send())
             client.wfile.flush()
 
@@ -331,7 +331,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         pushed_streams = 0
         while ended_streams != 3:
             try:
-                events = h2_conn.receive_data(utils.http2_read_frame(client.rfile))
+                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())
@@ -365,7 +365,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         done = False
         while not done:
             try:
-                events = h2_conn.receive_data(utils.http2_read_frame(client.rfile))
+                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())
@@ -379,7 +379,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
                     client.wfile.write(h2_conn.data_to_send())
                     client.wfile.flush()
 
-        bodies = [flow.response.body for flow in self.master.state.flows]
+        bodies = [flow.response.body for flow in self.master.state.flows if flow.response]
         assert len(bodies) == 3
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
