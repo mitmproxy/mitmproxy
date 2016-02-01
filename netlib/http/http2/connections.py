@@ -5,7 +5,13 @@ import time
 from hpack.hpack import Encoder, Decoder
 from ... import utils
 from .. import Headers, Response, Request
-from . import frame
+
+from hyperframe import frame
+
+# TODO: remove once hyperframe released a new version > 3.1.1
+# wrapper for deprecated name in old hyperframe release
+frame.SettingsFrame.MAX_FRAME_SIZE = frame.SettingsFrame.SETTINGS_MAX_FRAME_SIZE
+frame.SettingsFrame.MAX_HEADER_LIST_SIZE = frame.SettingsFrame.SETTINGS_MAX_HEADER_LIST_SIZE
 
 
 class TCPHandler(object):
@@ -34,7 +40,16 @@ class HTTP2Protocol(object):
         HTTP_1_1_REQUIRED=0xd
     )
 
-    CLIENT_CONNECTION_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+    CLIENT_CONNECTION_PREFACE = b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n'
+
+    HTTP2_DEFAULT_SETTINGS = {
+        frame.SettingsFrame.HEADER_TABLE_SIZE: 4096,
+        frame.SettingsFrame.ENABLE_PUSH: 1,
+        frame.SettingsFrame.MAX_CONCURRENT_STREAMS: None,
+        frame.SettingsFrame.INITIAL_WINDOW_SIZE: 2 ** 16 - 1,
+        frame.SettingsFrame.MAX_FRAME_SIZE: 2 ** 14,
+        frame.SettingsFrame.MAX_HEADER_LIST_SIZE: None,
+    }
 
     def __init__(
         self,
@@ -54,7 +69,7 @@ class HTTP2Protocol(object):
         self.decoder = decoder or Decoder()
         self.unhandled_frame_cb = unhandled_frame_cb
 
-        self.http2_settings = frame.HTTP2_DEFAULT_SETTINGS.copy()
+        self.http2_settings = self.HTTP2_DEFAULT_SETTINGS.copy()
         self.current_stream_id = None
         self.connection_preface_performed = False
 
@@ -84,7 +99,7 @@ class HTTP2Protocol(object):
 
         timestamp_end = time.time()
 
-        authority = headers.get(':authority', '')
+        authority = headers.get(':authority', b'')
         method = headers.get(':method', 'GET')
         scheme = headers.get(':scheme', 'https')
         path = headers.get(':path', '/')
@@ -103,6 +118,8 @@ class HTTP2Protocol(object):
             form_in = "absolute"
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
+            scheme = scheme.decode('ascii')
+            host = host.decode('ascii')
 
         if host is None:
             host = 'localhost'
@@ -112,18 +129,17 @@ class HTTP2Protocol(object):
 
         request = Request(
             form_in,
-            method,
-            scheme,
-            host,
+            method.encode('ascii'),
+            scheme.encode('ascii'),
+            host.encode('ascii'),
             port,
-            path,
-            (2, 0),
+            path.encode('ascii'),
+            b'2.0',
             headers,
             body,
             timestamp_start,
             timestamp_end,
         )
-        # FIXME: We should not do this.
         request.stream_id = stream_id
 
         return request
@@ -131,7 +147,7 @@ class HTTP2Protocol(object):
     def read_response(
         self,
         __rfile,
-        request_method='',
+        request_method=b'',
         body_size_limit=None,
         include_body=True,
         stream_id=None,
@@ -160,9 +176,9 @@ class HTTP2Protocol(object):
             timestamp_end = None
 
         response = Response(
-            (2, 0),
+            b'2.0',
             int(headers.get(':status', 502)),
-            "",
+            b'',
             headers,
             body,
             timestamp_start=timestamp_start,
@@ -190,13 +206,13 @@ class HTTP2Protocol(object):
         headers = request.headers.copy()
 
         if ':authority' not in headers:
-            headers.fields.insert(0, (':authority', bytes(authority)))
+            headers.fields.insert(0, (b':authority', authority.encode('ascii')))
         if ':scheme' not in headers:
-            headers.fields.insert(0, (':scheme', bytes(request.scheme)))
+            headers.fields.insert(0, (b':scheme', request.scheme.encode('ascii')))
         if ':path' not in headers:
-            headers.fields.insert(0, (':path', bytes(request.path)))
+            headers.fields.insert(0, (b':path', request.path.encode('ascii')))
         if ':method' not in headers:
-            headers.fields.insert(0, (':method', bytes(request.method)))
+            headers.fields.insert(0, (b':method', request.method.encode('ascii')))
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id
@@ -213,7 +229,7 @@ class HTTP2Protocol(object):
         headers = response.headers.copy()
 
         if ':status' not in headers:
-            headers.fields.insert(0, (':status', bytes(str(response.status_code))))
+            headers.fields.insert(0, (b':status', str(response.status_code).encode('ascii')))
 
         if hasattr(response, 'stream_id'):
             stream_id = response.stream_id
@@ -240,9 +256,9 @@ class HTTP2Protocol(object):
             magic = self.tcp_handler.rfile.safe_read(magic_length)
             assert magic == self.CLIENT_CONNECTION_PREFACE
 
-            frm = frame.SettingsFrame(state=self, settings={
-                frame.SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH: 0,
-                frame.SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS: 1,
+            frm = frame.SettingsFrame(settings={
+                frame.SettingsFrame.ENABLE_PUSH: 0,
+                frame.SettingsFrame.MAX_CONCURRENT_STREAMS: 1,
             })
             self.send_frame(frm, hide=True)
             self._receive_settings(hide=True)
@@ -253,12 +269,12 @@ class HTTP2Protocol(object):
 
             self.tcp_handler.wfile.write(self.CLIENT_CONNECTION_PREFACE)
 
-            self.send_frame(frame.SettingsFrame(state=self), hide=True)
+            self.send_frame(frame.SettingsFrame(), hide=True)
             self._receive_settings(hide=True)  # server announces own settings
             self._receive_settings(hide=True)  # server acks my settings
 
     def send_frame(self, frm, hide=False):
-        raw_bytes = frm.to_bytes()
+        raw_bytes = frm.serialize()
         self.tcp_handler.wfile.write(raw_bytes)
         self.tcp_handler.wfile.flush()
         if not hide and self.dump_frames:  # pragma no cover
@@ -266,19 +282,19 @@ class HTTP2Protocol(object):
 
     def read_frame(self, hide=False):
         while True:
-            frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
+            frm = utils.http2_read_frame(self.tcp_handler.rfile)
             if not hide and self.dump_frames:  # pragma no cover
                 print(frm.human_readable("<<"))
 
             if isinstance(frm, frame.PingFrame):
-                raw_bytes = frame.PingFrame(flags=frame.Frame.FLAG_ACK, payload=frm.payload).to_bytes()
+                raw_bytes = frame.PingFrame(flags=['ACK'], payload=frm.payload).serialize()
                 self.tcp_handler.wfile.write(raw_bytes)
                 self.tcp_handler.wfile.flush()
                 continue
-            if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
+            if isinstance(frm, frame.SettingsFrame) and 'ACK' not in frm.flags:
                 self._apply_settings(frm.settings, hide)
-            if isinstance(frm, frame.DataFrame) and frm.length > 0:
-                self._update_flow_control_window(frm.stream_id, frm.length)
+            if isinstance(frm, frame.DataFrame) and frm.flow_controlled_length > 0:
+                self._update_flow_control_window(frm.stream_id, frm.flow_controlled_length)
             return frm
 
     def check_alpn(self):
@@ -321,15 +337,13 @@ class HTTP2Protocol(object):
                 old_value = '-'
             self.http2_settings[setting] = value
 
-        frm = frame.SettingsFrame(
-            state=self,
-            flags=frame.Frame.FLAG_ACK)
+        frm = frame.SettingsFrame(flags=['ACK'])
         self.send_frame(frm, hide)
 
     def _update_flow_control_window(self, stream_id, increment):
-        frm = frame.WindowUpdateFrame(stream_id=0, window_size_increment=increment)
+        frm = frame.WindowUpdateFrame(stream_id=0, window_increment=increment)
         self.send_frame(frm)
-        frm = frame.WindowUpdateFrame(stream_id=stream_id, window_size_increment=increment)
+        frm = frame.WindowUpdateFrame(stream_id=stream_id, window_increment=increment)
         self.send_frame(frm)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
@@ -342,43 +356,40 @@ class HTTP2Protocol(object):
 
         header_block_fragment = self.encoder.encode(headers.fields)
 
-        chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        chunk_size = self.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE]
         chunks = range(0, len(header_block_fragment), chunk_size)
         frms = [frm_cls(
-            state=self,
-            flags=frame.Frame.FLAG_NO_FLAGS,
+            flags=[],
             stream_id=stream_id,
-            header_block_fragment=header_block_fragment[i:i+chunk_size]) for frm_cls, i in frame_cls(chunks)]
+            data=header_block_fragment[i:i+chunk_size]) for frm_cls, i in frame_cls(chunks)]
 
-        last_flags = frame.Frame.FLAG_END_HEADERS
+        frms[-1].flags.add('END_HEADERS')
         if end_stream:
-            last_flags |= frame.Frame.FLAG_END_STREAM
-        frms[-1].flags = last_flags
+            frms[0].flags.add('END_STREAM')
 
         if self.dump_frames:  # pragma no cover
             for frm in frms:
                 print(frm.human_readable(">>"))
 
-        return [frm.to_bytes() for frm in frms]
+        return [frm.serialize() for frm in frms]
 
     def _create_body(self, body, stream_id):
         if body is None or len(body) == 0:
             return b''
 
-        chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        chunk_size = self.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE]
         chunks = range(0, len(body), chunk_size)
         frms = [frame.DataFrame(
-            state=self,
-            flags=frame.Frame.FLAG_NO_FLAGS,
+            flags=[],
             stream_id=stream_id,
-            payload=body[i:i+chunk_size]) for i in chunks]
-        frms[-1].flags = frame.Frame.FLAG_END_STREAM
+            data=body[i:i+chunk_size]) for i in chunks]
+        frms[-1].flags.add('END_STREAM')
 
         if self.dump_frames:  # pragma no cover
             for frm in frms:
                 print(frm.human_readable(">>"))
 
-        return [frm.to_bytes() for frm in frms]
+        return [frm.serialize() for frm in frms]
 
     def _receive_transmission(self, stream_id=None, include_body=True):
         if not include_body:
@@ -386,7 +397,7 @@ class HTTP2Protocol(object):
 
         body_expected = True
 
-        header_block_fragment = b''
+        header_blocks = b''
         body = b''
 
         while True:
@@ -396,10 +407,10 @@ class HTTP2Protocol(object):
                 (stream_id is None or frm.stream_id == stream_id)
             ):
                 stream_id = frm.stream_id
-                header_block_fragment += frm.header_block_fragment
-                if frm.flags & frame.Frame.FLAG_END_STREAM:
+                header_blocks += frm.data
+                if 'END_STREAM' in frm.flags:
                     body_expected = False
-                if frm.flags & frame.Frame.FLAG_END_HEADERS:
+                if 'END_HEADERS' in frm.flags:
                     break
             else:
                 self._handle_unexpected_frame(frm)
@@ -407,14 +418,14 @@ class HTTP2Protocol(object):
         while body_expected:
             frm = self.read_frame()
             if isinstance(frm, frame.DataFrame) and frm.stream_id == stream_id:
-                body += frm.payload
-                if frm.flags & frame.Frame.FLAG_END_STREAM:
+                body += frm.data
+                if 'END_STREAM' in frm.flags:
                     break
             else:
                 self._handle_unexpected_frame(frm)
 
         headers = Headers(
-            [[str(k), str(v)] for k, v in self.decoder.decode(header_block_fragment)]
+            [[k.encode('ascii'), v.encode('ascii')] for k, v in self.decoder.decode(header_blocks)]
         )
 
         return stream_id, headers, body

@@ -16,8 +16,16 @@ matrix:
           packages:
             - libssl-dev
     - python: 3.5
-      script:
-        - py.test -s --cov netlib -k "not http2"
+    - python: 3.5
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
     - python: pypy
     - python: pypy
       env: OPENSSL=1.0.2
@@ -58,7 +66,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "py.test -s --cov netlib"
+  - "py.test -s --cov netlib --timeout 10"
 
 after_success:
   - coveralls

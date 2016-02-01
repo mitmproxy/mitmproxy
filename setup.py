@@ -17,11 +17,12 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 deps = {
     "pyasn1>=0.1.9, <0.2",
     "pyOpenSSL>=0.15.1, <0.16",
-    "cryptography>=1.2.1, <1.3",
+    "cryptography>=1.2.2, <1.3",
     "passlib>=1.6.5, <1.7",
-    "hpack>=2.0.1, <2.1",
+    "hpack>=2.0.1, <3.0",
+    "hyperframe>=3.1.1, <4.0",
     "six>=1.10.0, <1.11",
-    "certifi>=2015.9.6.2",  # no semver here - this should always be on the last release!
+    "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
     "backports.ssl_match_hostname>=3.5.0.1, <3.6",
 }
 if sys.version_info < (3, 0):
@@ -63,6 +64,7 @@ setup(
             "pytest>=2.8.0",
             "pytest-xdist>=1.13.1",
             "pytest-cov>=2.1.0",
+            "pytest-timeout>=1.0.0",
             "coveralls>=0.4.1",
             "autopep8>=1.0.3",
             "autoflake>=0.6.6",
