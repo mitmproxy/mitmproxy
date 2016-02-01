@@ -61,7 +61,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "py.test -s --cov libmproxy"
+  - "py.test -s --cov libmproxy --timeout 30"
 
 after_success:
   - coveralls

@@ -46,6 +46,7 @@ dev_deps = {
     "pytest>=2.8.0",
     "pytest-xdist>=1.13.1",
     "pytest-cov>=2.1.0",
+    "pytest-timeout>=1.0.0",
     "coveralls>=0.4.1",
     "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "sphinx>=1.3.1",
