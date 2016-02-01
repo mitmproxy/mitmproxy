@@ -11,7 +11,7 @@ install:
   - "pip install --user --src .. -r requirements.txt"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 test_script:
-  - "py.test -s --cov libmproxy"
+  - "py.test -s --cov libmproxy --timeout 30"
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
 after_test:
