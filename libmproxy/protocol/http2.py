@@ -72,6 +72,7 @@ class SafeH2Connection(H2Connection):
             while position < len(chunk):
                 self.lock.acquire()
                 if is_zombie(self, stream_id):
+                    self.lock.release()
                     return
                 max_outbound_frame_size = self.max_outbound_frame_size
                 frame_chunk = chunk[position:position + max_outbound_frame_size]
