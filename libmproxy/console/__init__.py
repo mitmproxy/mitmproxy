@@ -251,6 +251,10 @@ class ConsoleMaster(flow.FlowMaster):
         self.__dict__[name] = value
         signals.update_settings.send(self)
 
+    def load_script(self, command, use_reloader=True):
+        # We default to using the reloader in the console ui.
+        super(ConsoleMaster, self).load_script(command, use_reloader)
+
     def sig_add_event(self, sender, e, level):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
         if self.options.verbosity < needed:
