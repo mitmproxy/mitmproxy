@@ -88,6 +88,8 @@ class Script(object):
             Raises:
                 ScriptException if there was an exception.
         """
+        if self.ns is None:
+            raise ScriptException("Script not loaded.")
         f = self.ns.get(name)
         if f:
             try:
