@@ -41,8 +41,12 @@ class TestCertStore:
             ca2 = certutils.CertStore.from_store(d, "test")
             assert ca2.get_cert(b"foo", [])
 
-            assert ca.default_ca.get_serial_number(
-            ) == ca2.default_ca.get_serial_number()
+            assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+
+    def test_create_no_common_name(self):
+        with tutils.tmpdir() as d:
+            ca = certutils.CertStore.from_store(d, "test")
+            assert ca.get_cert(None, [])[0].cn is None
 
     def test_create_tmp(self):
         with tutils.tmpdir() as d:
@@ -53,10 +57,6 @@ class TestCertStore:
 
             r = ca.get_cert(b"*.foo.com", [])
             assert r[1] == ca.default_privatekey
-
-    def test_add_cert(self):
-        with tutils.tmpdir() as d:
-            certutils.CertStore.from_store(d, "test")
 
     def test_sans(self):
         with tutils.tmpdir() as d:
@@ -104,6 +104,14 @@ class TestDummyCert:
                 [b"one.com", b"two.com", b"*.three.com"]
             )
             assert r.cn == b"foo.com"
+
+            r = certutils.dummy_cert(
+                ca.default_privatekey,
+                ca.default_ca,
+                None,
+                []
+            )
+            assert r.cn is None
 
 
 class TestSSLCert:

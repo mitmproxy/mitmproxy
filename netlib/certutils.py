@@ -101,7 +101,8 @@ def dummy_cert(privkey, cacert, commonname, sans):
     cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(DEFAULT_EXP)
     cert.set_issuer(cacert.get_subject())
-    cert.get_subject().CN = commonname
+    if commonname is not None:
+        cert.get_subject().CN = commonname
     cert.set_serial_number(int(time.time() * 10000))
     if ss:
         cert.set_version(2)
@@ -294,6 +295,8 @@ class CertStore(object):
 
     @staticmethod
     def asterisk_forms(dn):
+        if dn is None:
+            return []
         parts = dn.split(b".")
         parts.reverse()
         curr_dn = b""
