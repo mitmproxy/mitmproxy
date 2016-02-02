@@ -1,5 +1,4 @@
-import tutils
-import tservers
+from . import tutils, tservers
 
 
 class TestApp(tservers.HTTPProxTest):

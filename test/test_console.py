@@ -4,7 +4,7 @@ import netlib.tutils
 from libmproxy import console
 from libmproxy.console import common
 
-import tutils
+from . import tutils
 
 
 class TestConsoleState:

@@ -1,6 +1,6 @@
-import tutils
 import sys
 from libmproxy.platform import pf
+from . import tutils
 
 
 class TestLookup:

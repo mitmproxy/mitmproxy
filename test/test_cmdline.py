@@ -1,6 +1,6 @@
 import argparse
 from libmproxy import cmdline
-import tutils
+from . import tutils
 
 
 def test_parse_replace_hook():

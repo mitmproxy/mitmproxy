@@ -8,7 +8,7 @@ from netlib.http import CONTENT_MISSING
 
 from libmproxy import dump, flow
 from libmproxy.proxy import Log
-import tutils
+from . import tutils
 import mock
 
 

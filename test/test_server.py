@@ -16,8 +16,7 @@ from libmproxy.proxy.config import HostMatcher
 from libmproxy.protocol import Kill
 from libmproxy.models import Error, HTTPResponse
 
-import tutils
-import tservers
+from . import tutils, tservers
 
 """
     Note that the choice of response code in these tests matters more than you

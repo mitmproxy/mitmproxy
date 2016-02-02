@@ -19,7 +19,7 @@ from libmproxy.proxy.config import HostMatcher
 from libmproxy.proxy import ProxyConfig
 from libmproxy.proxy.server import DummyServer
 from libmproxy.models.connections import ClientConnection
-import tutils
+from . import tutils
 
 
 def test_app_registry():

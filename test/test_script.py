@@ -2,7 +2,7 @@ import os
 import time
 import mock
 from libmproxy import script, flow
-import tutils
+from . import tutils
 
 
 def test_simple():

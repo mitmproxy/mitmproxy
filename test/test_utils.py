@@ -1,6 +1,6 @@
 import json
 from libmproxy import utils
-import tutils
+from . import tutils
 
 utils.CERT_SLEEP_TIME = 0
 

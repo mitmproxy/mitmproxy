@@ -5,7 +5,7 @@ if os.name == "nt":
 
 
 import libmproxy.console.common as common
-import tutils
+from . import tutils
 
 
 def test_format_flow():
