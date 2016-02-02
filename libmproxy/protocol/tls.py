@@ -529,9 +529,20 @@ class TlsLayer(Layer):
         self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
 
     def _find_cert(self):
-        host = self.server_conn.address.host
+        """
+        This function determines the Common Name (CN) and Subject Alternative Names (SANs)
+        our certificate should have and then fetches a matching cert from the certstore.
+        """
+        host = None
         sans = set()
-        # Incorporate upstream certificate
+
+        # In normal operation, the server address should always be known at this point.
+        # However, we may just want to establish TLS so that we can send an error message to the client,
+        # in which case the address can be None.
+        if self.server_conn.address:
+            host = self.server_conn.address.host
+
+        # Should we incorporate information from the server certificate?
         use_upstream_cert = (
             self.server_conn and
             self.server_conn.tls_established and
@@ -549,4 +560,5 @@ class TlsLayer(Layer):
         if self._sni_from_server_change:
             sans.add(self._sni_from_server_change)
 
+        sans.discard(host)
         return self.config.certstore.get_cert(host, list(sans))
