@@ -8,9 +8,9 @@ from libmproxy.proxy.config import process_proxy_options
 from libmproxy.models.connections import ServerConnection
 from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from netlib.exceptions import TcpDisconnect
-import tutils
 from libpathod import test
 from netlib.http import http1
+from . import tutils
 
 
 class TestServerConnection(object):

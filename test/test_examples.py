@@ -1,7 +1,7 @@
 import glob
 from libmproxy import utils, script
 from libmproxy.proxy import config
-import tservers
+from . import tservers
 
 
 def test_load_scripts():

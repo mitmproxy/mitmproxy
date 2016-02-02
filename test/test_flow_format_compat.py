@@ -1,5 +1,5 @@
 from libmproxy.flow import FlowReader, FlowReadError
-import tutils
+from . import tutils
 
 
 def test_load():

@@ -1,4 +1,4 @@
-import tservers
+from . import tservers
 
 """
     A collection of errors turned up by fuzzing. Errors are integrated here

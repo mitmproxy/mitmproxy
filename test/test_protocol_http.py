@@ -3,8 +3,7 @@ from netlib.exceptions import HttpSyntaxException
 from netlib.http import http1
 from netlib.tcp import TCPClient
 from netlib.tutils import treq, raises
-import tutils
-import tservers
+from . import tutils, tservers
 
 
 class TestHTTPResponse:

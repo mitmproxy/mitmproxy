@@ -4,7 +4,7 @@ import netlib.utils
 from netlib import encoding
 
 import libmproxy.contentviews as cv
-import tutils
+from . import tutils
 
 try:
     import pyamf
