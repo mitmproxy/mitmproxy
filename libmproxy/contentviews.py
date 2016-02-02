@@ -19,6 +19,7 @@ import subprocess
 import sys
 import lxml.html
 import lxml.etree
+import datetime
 from PIL import Image
 from PIL.ExifTags import TAGS
 import html2text
@@ -315,6 +316,8 @@ if pyamf:
                 return b
             elif isinstance(b, list):
                 return [self.unpack(i) for i in b]
+            elif isinstance(b, datetime.datetime):
+                return str(b)
             elif isinstance(b, flex.ArrayCollection):
                 return [self.unpack(i, seen) for i in b]
             else:
