@@ -27,3 +27,6 @@ deploy:
   folder: snapshots
   on:
     branch: master
+notifications:
+- provider: Slack
+  incoming_webhook: https://hooks.slack.com/services/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
