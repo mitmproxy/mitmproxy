@@ -5,6 +5,7 @@ import pytest
 import traceback
 import os
 import tempfile
+import sys
 
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
@@ -47,9 +48,11 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
             self.wfile.write(h2_conn.data_to_send())
             self.wfile.flush()
 
-            while True:
+            done = False
+            while not done:
                 try:
-                    events = h2_conn.receive_data(b''.join(http2_read_raw_frame(self.rfile)))
+                    raw = b''.join(http2_read_raw_frame(self.rfile))
+                    events = h2_conn.receive_data(raw)
                 except:
                     break
                 self.wfile.write(h2_conn.data_to_send())
@@ -58,10 +61,12 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                 for event in events:
                     try:
                         if not self.server.handle_server_event(event, h2_conn, self.rfile, self.wfile):
+                            done = True
                             break
                     except Exception as e:
                         print(repr(e))
                         print(traceback.format_exc())
+                        done = True
                         break
 
     def handle_server_event(self, h2_conn, rfile, wfile):
@@ -182,7 +187,10 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
 
         done = False
         while not done:
-            events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+            try:
+                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+            except:
+                break
             client.wfile.write(h2_conn.data_to_send())
             client.wfile.flush()
 
@@ -248,7 +256,10 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
 
         done = False
         while not done:
-            events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+            try:
+                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+            except:
+                break
             client.wfile.write(h2_conn.data_to_send())
             client.wfile.flush()
 
@@ -303,14 +314,16 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
 
-            h2_conn.send_headers(2, [(':status', '202')])
-            h2_conn.send_headers(4, [(':status', '204')])
+            h2_conn.send_headers(2, [(':status', '200')])
+            h2_conn.send_headers(4, [(':status', '200')])
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
 
             h2_conn.send_data(1, b'regular_stream')
             h2_conn.send_data(2, b'pushed_stream_foo')
             h2_conn.send_data(4, b'pushed_stream_bar')
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
             h2_conn.end_stream(1)
             h2_conn.end_stream(2)
             h2_conn.end_stream(4)
@@ -330,11 +343,14 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
             ('foo', 'bar')
         ])
 
+        done = False
         ended_streams = 0
         pushed_streams = 0
-        while ended_streams != 3:
+        responses = 0
+        while not done:
             try:
-                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+                raw = b''.join(http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())
@@ -345,7 +361,19 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
                     ended_streams += 1
                 elif isinstance(event, h2.events.PushedStreamReceived):
                     pushed_streams += 1
+                elif isinstance(event, h2.events.ResponseReceived):
+                    responses += 1
+                if isinstance(event, h2.events.ConnectionTerminated):
+                    done = True
 
+            if responses == 3 and ended_streams == 3 and pushed_streams == 2:
+                done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert ended_streams == 3
         assert pushed_streams == 2
 
         bodies = [flow.response.body for flow in self.master.state.flows]
@@ -365,8 +393,11 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
             ('foo', 'bar')
         ])
 
-        streams = 0
-        while streams != 3:
+        done = False
+        ended_streams = 0
+        pushed_streams = 0
+        responses = 0
+        while not done:
             try:
                 events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
             except:
@@ -376,12 +407,23 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
 
             for event in events:
                 if isinstance(event, h2.events.StreamEnded) and event.stream_id == 1:
-                    streams += 1
+                    ended_streams += 1
                 elif isinstance(event, h2.events.PushedStreamReceived):
-                    streams += 1
+                    pushed_streams += 1
                     h2_conn.reset_stream(event.pushed_stream_id, error_code=0x8)
                     client.wfile.write(h2_conn.data_to_send())
                     client.wfile.flush()
+                elif isinstance(event, h2.events.ResponseReceived):
+                    responses += 1
+                if isinstance(event, h2.events.ConnectionTerminated):
+                    done = True
+
+            if responses >= 1 and ended_streams >= 1 and pushed_streams == 2:
+                done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
 
         bodies = [flow.response.body for flow in self.master.state.flows if flow.response]
         assert len(bodies) >= 1
