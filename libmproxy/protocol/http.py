@@ -219,6 +219,10 @@ class HttpLayer(Layer):
                 else:
                     six.reraise(ProtocolException, ProtocolException(
                         "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
+            except Exception:
+                import traceback
+                traceback.print_exc()
+                six.reraise(*sys.exc_info()[:3])
             finally:
                 flow.live = False
 
