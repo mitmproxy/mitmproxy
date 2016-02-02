@@ -8,11 +8,6 @@ from .. import Headers, Response, Request
 
 from hyperframe import frame
 
-# TODO: remove once hyperframe released a new version > 3.1.1
-# wrapper for deprecated name in old hyperframe release
-frame.SettingsFrame.MAX_FRAME_SIZE = frame.SettingsFrame.SETTINGS_MAX_FRAME_SIZE
-frame.SettingsFrame.MAX_HEADER_LIST_SIZE = frame.SettingsFrame.SETTINGS_MAX_HEADER_LIST_SIZE
-
 
 class TCPHandler(object):
 
