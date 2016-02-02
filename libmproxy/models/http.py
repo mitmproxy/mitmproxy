@@ -14,6 +14,10 @@ from .flow import Flow
 from collections import OrderedDict
 
 class MessageMixin(stateobject.StateObject):
+    # The restoration order is important currently, e.g. because
+    # of .content setting .headers["content-length"] automatically.
+    # Using OrderedDict is the short term fix, restoring state should
+    # be implemented without side-effects again.
     _stateobject_attributes = OrderedDict(
         http_version=bytes,
         headers=Headers,
