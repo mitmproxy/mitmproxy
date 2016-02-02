@@ -235,7 +235,8 @@ class HttpLayer(Layer):
         try:
             response = make_error_response(code, message)
             self.send_response(response)
-        except NetlibException as H2Error:
+        except (NetlibException, H2Error):
+            self.log(traceback.format_exc(), "debug")
             pass
 
     def change_upstream_proxy_server(self, address):
