@@ -61,7 +61,7 @@ class SafeH2Connection(H2Connection):
 
     def safe_send_headers(self, is_zombie, stream_id, headers):
         with self.lock:
-            if is_zombie(self, stream_id):
+            if is_zombie():
                 return
             self.send_headers(stream_id, headers)
             self.conn.send(self.data_to_send())
@@ -71,7 +71,7 @@ class SafeH2Connection(H2Connection):
             position = 0
             while position < len(chunk):
                 self.lock.acquire()
-                if is_zombie(self, stream_id):
+                if is_zombie():
                     self.lock.release()
                     return
                 max_outbound_frame_size = self.max_outbound_frame_size
@@ -85,7 +85,7 @@ class SafeH2Connection(H2Connection):
                 self.lock.release()
                 position += max_outbound_frame_size
         with self.lock:
-            if is_zombie(self, stream_id):
+            if is_zombie():
                 return
             self.end_stream(stream_id)
             self.conn.send(self.data_to_send())
@@ -246,10 +246,8 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         self.response_arrived = threading.Event()
         self.data_finished = threading.Event()
 
-    def is_zombie(self, h2_conn, stream_id):
-        if self.zombie:
-            return True
-        return False
+    def is_zombie(self):
+        return self.zombie is not None
 
     def read_request(self):
         self.data_finished.wait()
@@ -300,6 +298,8 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         )
 
     def send_request(self, message):
+        if self.zombie:
+            return
         with self.server_conn.h2.lock:
             self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
             self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id

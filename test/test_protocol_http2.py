@@ -384,6 +384,6 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
                     client.wfile.flush()
 
         bodies = [flow.response.body for flow in self.master.state.flows if flow.response]
-        assert len(bodies) == 3
+        assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
