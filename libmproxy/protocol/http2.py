@@ -161,7 +161,8 @@ class Http2Layer(Layer):
                     other_stream_id = self.streams[eid].client_stream_id
                 else:
                     other_stream_id = self.streams[eid].server_stream_id
-                other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
+                if other_stream_id is not None:
+                    other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
         elif isinstance(event, RemoteSettingsChanged):
             new_settings = dict([(id, cs.new_value) for (id, cs) in event.changed_settings.iteritems()])
             other_conn.h2.safe_update_settings(new_settings)
