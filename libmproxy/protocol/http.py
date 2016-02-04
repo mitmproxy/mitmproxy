@@ -188,7 +188,7 @@ class HttpLayer(Layer):
 
                 self.log("response", "debug", [repr(flow.response)])
                 flow = self.channel.ask("response", flow)
-                if not flow or flow == Kill:
+                if flow == Kill:
                     raise Kill()
                 self.send_response_to_client(flow)
 
@@ -219,9 +219,6 @@ class HttpLayer(Layer):
                 else:
                     six.reraise(ProtocolException, ProtocolException(
                         "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
-            except Exception:
-                traceback.print_exc()
-                six.reraise(*sys.exc_info()[:3])
             finally:
                 flow.live = False
 
