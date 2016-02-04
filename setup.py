@@ -63,6 +63,7 @@ setup(
         "Pillow>=3.0.0",
         "watchdog>=0.8.3",
         "click>=6.2",
+        "urwid>=1.3.1",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -70,7 +71,6 @@ setup(
             "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
         ],
         ':sys_platform != "win32"': [
-            "urwid>=1.3.1",
             "lxml>=3.5.0",
         ],
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
