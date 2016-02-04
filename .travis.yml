@@ -32,6 +32,8 @@ matrix:
     - python: 2.7
       env: DOCS=1
       script: 'cd docs && make html'
+  allow_failures:
+    - python: pypy
 
 install:
   - |
@@ -94,3 +96,4 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.pyenv
+    - $HOME/Library/Caches/pip
