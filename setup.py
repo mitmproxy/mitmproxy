@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
-import sys
 from libmproxy import version
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
@@ -11,70 +10,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
-
-# Core dependencies
-# Do not use the "~=" compatible release specifier.
-# This will break `pip install` on systems with old setuptools versions.
-deps = {
-    "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
-    "h2>=2.1.0, <3.0",
-    "tornado>=4.3.0, <4.4",
-    "configargparse>=0.10.0, <0.11",
-    "pyperclip>=1.5.22, <1.6",
-    "blinker>=1.4, <1.5",
-    "pyparsing>=2.0.5, <2.1",
-    "html2text==2015.11.4",
-    "construct>=2.5.2, <2.6",
-    "six>=1.10.0, <1.11",
-    "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
-    "Pillow>=3.0.0, <3.2",
-    "watchdog>=0.8.3, <0.9",
-}
-# A script -> additional dependencies dict.
-scripts = {
-    "mitmproxy": {
-        "urwid>=1.3.1, <1.4",
-    },
-    "mitmdump": {
-        "click>=6.2, <6.3",
-    },
-    "mitmweb": set()
-}
-# Developer dependencies
-dev_deps = {
-    "mock>=1.0.1",
-    "pytest>=2.8.0",
-    "pytest-xdist>=1.13.1",
-    "pytest-cov>=2.1.0",
-    "pytest-timeout>=1.0.0",
-    "coveralls>=0.4.1",
-    "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
-    "sphinx>=1.3.1",
-    "sphinx-autobuild>=0.5.2",
-    "sphinxcontrib-documentedlist>=0.2",
-}
-example_deps = {
-    "pytz==2015.7",
-    "harparser>=0.2, <0.3",
-    "beautifulsoup4>=4.4.1, <4.5",
-}
-# Add *all* script dependencies to developer dependencies.
-for script_deps in scripts.values():
-    dev_deps.update(script_deps)
-
-# Remove mitmproxy for Windows support.
-if os.name == "nt":
-    del scripts["mitmproxy"]
-    deps.add("pydivert>=0.0.7")  # Transparent proxying on Windows
-
-# Add dependencies for available scripts as core dependencies.
-for script_deps in scripts.values():
-    deps.update(script_deps)
-
-if sys.version_info < (3, 4):
-    example_deps.add("enum34>=1.0.4, <1.1")
-
-console_scripts = ["%s = libmproxy.main:%s" % (s, s) for s in scripts.keys()]
 
 setup(
     name="mitmproxy",
@@ -106,15 +41,64 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     entry_points={
-        'console_scripts': console_scripts},
-    install_requires=list(deps),
+        'console_scripts': [
+            'mitmproxy = libmproxy.main:mitmproxy',
+            'mitmdump = libmproxy.main:mitmdump',
+            'mitmweb = libmproxy.main:mitmweb'
+        ]
+    },
+    # https://packaging.python.org/en/latest/requirements/#install-requires
+    # It is not considered best practice to use install_requires to pin dependencies to specific versions.
+    install_requires=[
+        "netlib~={}".format(version.VERSION),
+        "h2~=2.1.0",
+        "tornado~=4.3.0",
+        "configargparse~=0.10.0",
+        "pyperclip~=1.5.22",
+        "blinker~=1.4.0",
+        "pyparsing~=2.0.5",
+        "html2text~=2016.1.8",
+        "construct~=2.5.2",
+        "six~=1.10.0",
+        "Pillow~=3.0.0",
+        "watchdog~=0.8.3",
+        "click~=6.2",
+        "urwid~=1.3.1",
+    ],
     extras_require={
-        'dev': list(dev_deps),
-        'contentviews': [
-            "pyamf>=0.7.2, <0.8",
-            "protobuf>=2.6.1, <2.7",
-            "cssutils>=1.0.1, <1.1"
+        ':sys_platform == "win32"': [
+            "pydivert~=0.0.7",
+            "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
         ],
-        'examples': list(example_deps)
+        ':sys_platform != "win32"': [
+            "lxml~=3.5.0",
+        ],
+        # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
+        # Ubuntu Trusty and other still ship with setuptools < 17.1
+        ':python_version == "2.7"': [
+            "enum34~=1.0.4",
+        ],
+        'dev': [
+            "mock~=1.0.1",
+            "pytest~=2.8.0",
+            "pytest-xdist~=1.13.1",
+            "pytest-cov~=2.1.0",
+            "pytest-timeout~=1.0.0",
+            "coveralls~=0.4.1",
+            "pathod~={}".format(version.VERSION),
+            "sphinx~=1.3.1",
+            "sphinx-autobuild~=0.5.2",
+            "sphinxcontrib-documentedlist~=0.2.0"
+        ],
+        'contentviews': [
+            "pyamf~=0.7.2",
+            "protobuf~=2.6.1",
+            "cssutils~=1.0.1"
+        ],
+        'examples': [
+            "pytz~=2015.7.0",
+            "harparser~=0.2",
+            "beautifulsoup4~=4.4.1",
+        ]
     }
 )
