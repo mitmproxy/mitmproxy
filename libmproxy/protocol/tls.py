@@ -560,5 +560,7 @@ class TlsLayer(Layer):
         if self._sni_from_server_change:
             sans.add(self._sni_from_server_change)
 
-        sans.discard(host)
+        # Some applications don't consider the CN and expect the hostname to be in the SANs.
+        # For example, Thunderbird 38 will display a warning if the remote host is only the CN.
+        sans.add(host)
         return self.config.certstore.get_cert(host, list(sans))
