@@ -182,10 +182,7 @@ def sdist():
                 [
                     "python", "./setup.py", "-q",
                     "sdist", "--dist-dir", DIST_DIR, "--formats=gztar",
-                    # We are currently not building wheels: mitmproxy has dependencies varying by platform,
-                    # so we'd need environment markers, which are not supported by old versions of setuptools.
-                    # Providing just the source is a bit slower, but it works everywhere.
-                    # "bdist_wheel", "--dist-dir", DIST_DIR,
+                    "bdist_wheel", "--dist-dir", DIST_DIR,
                 ],
                 cwd=conf["dir"]
             )
@@ -280,8 +277,7 @@ def upload_release(username, password, repository):
     for project in projects.keys():
         files = (
             sdist_name(project),
-            # See sdist why this is disabled.
-            # wheel_name(project)
+            wheel_name(project)
         )
         for f in files:
             print("Uploading {} to {}...".format(f, repository))
