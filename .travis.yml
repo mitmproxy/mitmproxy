@@ -90,17 +90,7 @@ notifications:
     on_success: always
     on_failure: always
 
-# exclude cryptography from cache
-# it depends on libssl-dev version
-# which needs to be compiled specifically to each version
-before_cache:
-  - pip uninstall -y cryptography
-
 cache:
   directories:
     - $HOME/.cache/pip
-    - $HOME/virtualenv/python2.7.9/lib/python2.7/site-packages
-    - $HOME/virtualenv/python2.7.9/bin
     - $HOME/.pyenv
-    - $HOME/virtualenv/pypy-2.5.0/site-packages
-    - $HOME/virtualenv/pypy-2.5.0/bin
