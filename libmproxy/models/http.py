@@ -11,9 +11,14 @@ from netlib.tcp import Address
 from .. import version, stateobject
 from .flow import Flow
 
+from collections import OrderedDict
 
 class MessageMixin(stateobject.StateObject):
-    _stateobject_attributes = dict(
+    # The restoration order is important currently, e.g. because
+    # of .content setting .headers["content-length"] automatically.
+    # Using OrderedDict is the short term fix, restoring state should
+    # be implemented without side-effects again.
+    _stateobject_attributes = OrderedDict(
         http_version=bytes,
         headers=Headers,
         timestamp_start=float,
@@ -241,8 +246,6 @@ class HTTPRequest(MessageMixin, Request):
             timestamp_end=request.timestamp_end,
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
-        if hasattr(request, 'stream_id'):
-            req.stream_id = request.stream_id
         return req
 
     def __hash__(self):
@@ -347,8 +350,6 @@ class HTTPResponse(MessageMixin, Response):
             timestamp_start=response.timestamp_start,
             timestamp_end=response.timestamp_end,
         )
-        if hasattr(response, 'stream_id'):
-            resp.stream_id = response.stream_id
         return resp
 
     def _refresh_cookie(self, c, delta):

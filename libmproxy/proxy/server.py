@@ -103,9 +103,9 @@ class ConnectionHandler(object):
             return Socks5Proxy(root_context)
         elif mode == "regular":
             return HttpProxy(root_context)
-        elif callable(mode):  # pragma: nocover
+        elif callable(mode):  # pragma: no cover
             return mode(root_context)
-        else:  # pragma: nocover
+        else:  # pragma: no cover
             raise ValueError("Unknown proxy mode: %s" % mode)
 
     def handle(self):

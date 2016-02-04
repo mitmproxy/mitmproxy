@@ -349,7 +349,7 @@ class TlsLayer(Layer):
         layer = self.ctx.next_layer(self)
         layer()
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         if self._client_tls and self._server_tls:
             return "TlsLayer(client and server)"
         elif self._client_tls:
