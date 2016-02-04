@@ -73,7 +73,9 @@ setup(
             "urwid>=1.3.1",
             "lxml>=3.5.0",
         ],
-        ':python_version < "3.4"': [
+        # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
+        # Ubuntu Trusty and other still ship with setuptools < 17.1
+        ':python_version == "2.7"': [
             "enum34>=1.0.4",
         ],
         'dev': [
