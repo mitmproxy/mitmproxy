@@ -51,54 +51,54 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "netlib~={}".format(version.VERSION),
-        "h2>=2.1.0",
-        "tornado>=4.3.0",
-        "configargparse>=0.10.0",
-        "pyperclip>=1.5.22",
-        "blinker>=1.4",
-        "pyparsing>=2.0.5",
-        "html2text>=2016.1.8",
-        "construct>=2.5.2",
-        "six>=1.10.0",
-        "Pillow>=3.0.0",
-        "watchdog>=0.8.3",
-        "click>=6.2",
-        "urwid>=1.3.1",
+        "h2~=2.1.0",
+        "tornado~=4.3.0",
+        "configargparse~=0.10.0",
+        "pyperclip~=1.5.22",
+        "blinker~=1.4.0",
+        "pyparsing~=2.0.5",
+        "html2text~=2016.1.8",
+        "construct~=2.5.2",
+        "six~=1.10.0",
+        "Pillow~=3.0.0",
+        "watchdog~=0.8.3",
+        "click~=6.2",
+        "urwid~=1.3.1",
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "pydivert>=0.0.7",
+            "pydivert~=0.0.7",
             "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
         ],
         ':sys_platform != "win32"': [
-            "lxml>=3.5.0",
+            "lxml~=3.5.0",
         ],
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
         ':python_version == "2.7"': [
-            "enum34>=1.0.4",
+            "enum34~=1.0.4",
         ],
         'dev': [
-            "mock>=1.0.1",
-            "pytest>=2.8.0",
-            "pytest-xdist>=1.13.1",
-            "pytest-cov>=2.1.0",
-            "pytest-timeout>=1.0.0",
-            "coveralls>=0.4.1",
+            "mock~=1.0.1",
+            "pytest~=2.8.0",
+            "pytest-xdist~=1.13.1",
+            "pytest-cov~=2.1.0",
+            "pytest-timeout~=1.0.0",
+            "coveralls~=0.4.1",
             "pathod~={}".format(version.VERSION),
-            "sphinx>=1.3.1",
-            "sphinx-autobuild>=0.5.2",
-            "sphinxcontrib-documentedlist>=0.2.0"
+            "sphinx~=1.3.1",
+            "sphinx-autobuild~=0.5.2",
+            "sphinxcontrib-documentedlist~=0.2.0"
         ],
         'contentviews': [
-            "pyamf>=0.7.2",
-            "protobuf>=2.6.1",
-            "cssutils>=1.0.1"
+            "pyamf~=0.7.2",
+            "protobuf~=2.6.1",
+            "cssutils~=1.0.1"
         ],
         'examples': [
-            "pytz>=2015.7",
-            "harparser>=0.2",
-            "beautifulsoup4>=4.4.1",
+            "pytz~=2015.7.0",
+            "harparser~=0.2",
+            "beautifulsoup4~=4.4.1",
         ]
     }
 )
