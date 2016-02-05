@@ -309,20 +309,32 @@ def copy_as_python_code(flow):
         signals.status_message.send(message="Currently, only GET methods are supported")
         return
 
-    data = ("import requests\n"
-            "headers = {%s}\n"
-            "url = '%s'\n"
-            "resp = requests.get(url, headers=headers)")
+    code = """import requests
 
-    headers = "\n"
-    for k, v in flow.request.headers.fields:
-        headers += "    '%s': '%s',\n" % (k, v)
+url = '{url}'
+{headers}
+response = requests.request(
+    method='{method}',
+    url=url,{args}
+)
 
-    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
+print(response.text)"""
 
-    data = data % (headers, full_url)
+    args = ""
+    headers = ""
+    if flow.request.headers:
+        lines = ["    '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields]
+        headers += "\nheaders = {\n%s}\n" % "".join(lines)
+        args += "\n    headers=headers,"
 
-    copy_to_clipboard_or_prompt(data)
+    code = code.format(
+        url=flow.request.pretty_url,
+        headers=headers,
+        method=flow.request.method,
+        args=args,
+    )
+
+    copy_to_clipboard_or_prompt(code)
 
 
 def copy_as_raw_request(flow):
