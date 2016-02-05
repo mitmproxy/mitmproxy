@@ -76,7 +76,7 @@ setup(
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
         ':python_version == "2.7"': [
-            "enum34>=1.0.4, <1.1",
+            "enum34>=1.1.2, <1.2",
         ],
         'dev': [
             "mock>=1.3.0, <1.4",
@@ -91,7 +91,7 @@ setup(
             "sphinxcontrib-documentedlist>=0.3.0, <0.4"
         ],
         'contentviews': [
-            "pyamf>=0.7.2, <0.8",
+            "pyamf>=0.8.0, <0.9",
             "protobuf>=2.6.1, <2.7",
             "cssutils>=1.0.1, <1.1"
         ],
