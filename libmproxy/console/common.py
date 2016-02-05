@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import urwid
 import urwid.util
 import os
+import urllib
 
 from netlib.http import CONTENT_MISSING
 import netlib.utils
@@ -305,20 +306,20 @@ def copy_as_curl_command(flow):
 
 
 def copy_as_python_code(flow):
-    if flow.request.method != "GET":
-        signals.status_message.send(message="Currently, only GET methods are supported")
-        return
 
     code = """import requests
 
 url = '{url}'
-{headers}
+{headers}{params}{data}
 response = requests.request(
     method='{method}',
     url=url,{args}
 )
 
 print(response.text)"""
+
+    components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
+    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
 
     args = ""
     headers = ""
@@ -327,9 +328,22 @@ print(response.text)"""
         headers += "\nheaders = {\n%s}\n" % "".join(lines)
         args += "\n    headers=headers,"
 
+    params = ""
+    if flow.request.query:
+        lines = ["    '%s': '%s',\n" % (k, v) for k, v in flow.request.query]
+        params="\nparams = {\n%s}\n" % "".join(lines)
+        args += "\n    params=params,"
+
+    data = ""
+    if flow.request.body:
+        data="\ndata = '''%s'''\n" % flow.request.body
+        args += "\n    data=data,"
+
     code = code.format(
-        url=flow.request.pretty_url,
+        url=url,
         headers=headers,
+        params=params,
+        data=data,
         method=flow.request.method,
         args=args,
     )
