@@ -46,20 +46,18 @@ setup(
     },
     install_requires=[
         "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
-        # It's INSANE that we have to do this, but...
-        # FIXME: Requirement to be removed at next release
-        "pip>=1.5.6",
-        "requests>=2.8.1, <2.9",
+        "requests>=2.9.1, <2.10",
         "Flask>=0.10.1, <0.11",
-        "pyparsing>=2.0.5, <2.1"
+        "pyparsing>=2.0.7, <2.1"
     ],
     extras_require={
         'dev': [
-            "mock>=1.0.1",
+            "mock>=1.3.0, <1.4",
             "pytest>=2.8.0",
-            "pytest-xdist>=1.13.1",
-            "pytest-cov>=2.1.0",
-            "coveralls>=0.4.1"
+            "pytest-xdist>=1.14, <1.15",
+            "pytest-cov>=2.2.1, <2.3",
+            "pytest-timeout>=1.0.0, <1.1",
+            "coveralls>=1.1, <1.2"
         ]
     }
 )
