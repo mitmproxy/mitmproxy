@@ -16,6 +16,9 @@ This was tested on a fully patched installation of Ubuntu 14.04.
 
 Once installation is complete you can run :ref:`mitmproxy` or :ref:`mitmdump` from a terminal.
 
+On **Ubuntu 12.04** (and other systems with an outdated version of pip),
+you may need to update pip using ``pip install -U pip`` before installing mitmproxy.
+
 Installation From Source (Ubuntu)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
