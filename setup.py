@@ -36,7 +36,7 @@ setup(
         "Topic :: Software Development :: Testing :: Traffic Generation",
     ],
 
-    packages=find_packages(),
+    packages=find_packages(exclude=["test", "test.*"]),
     include_package_data=True,
     entry_points={
         'console_scripts': [
