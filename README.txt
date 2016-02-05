@@ -17,7 +17,7 @@ And then browse to:
 
     http://localhost:9999
 
-You can aways view the documentation for the latest release at the pathod
+You can always view the documentation for the latest release at the pathod
 website:
     
     http://pathod.net
