@@ -40,7 +40,7 @@ setup(
         "Topic :: Software Development :: Testing",
         "Topic :: Software Development :: Testing :: Traffic Generation",
     ],
-    packages=find_packages(),
+    packages=find_packages(exclude=["test", "test.*"]),
     include_package_data=True,
     zip_safe=False,
     install_requires=[
