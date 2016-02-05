@@ -88,7 +88,7 @@ setup(
             "pathod>={}, <{}".format(version.MINORVERSION, version.NEXT_MINORVERSION),
             "sphinx>=1.3.5, <1.4",
             "sphinx-autobuild>=0.5.2, <0.6",
-            "sphinxcontrib-documentedlist>=0.2.0, <0.3"
+            "sphinxcontrib-documentedlist>=0.3.0, <0.4"
         ],
         'contentviews': [
             "pyamf>=0.7.2, <0.8",
