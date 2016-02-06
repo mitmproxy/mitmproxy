@@ -8,7 +8,7 @@ setup(
         "click>=6.2, <7.0",
         'twine>=1.6.5, <1.7',
         'virtualenv>=14.0.5, <14.1',
-        'wheel>=0.26.0, <0.27',
+        'wheel>=0.28.0, <0.29',
     ],
     entry_points={
         'console_scripts': [
