@@ -68,7 +68,7 @@ setup(
     extras_require={
         ':sys_platform == "win32"': [
             "pydivert>=0.0.7, <0.1",
-            "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
+            "lxml==3.5.0",  # there are no Windows wheels for newer versions, so we pin this.
         ],
         ':sys_platform != "win32"': [
             "lxml>=3.5.0, <3.6",
