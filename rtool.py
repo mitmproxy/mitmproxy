@@ -210,7 +210,7 @@ def sdist():
 
 @cli.command("bdist")
 @click.option("--use-existing-sdist/--no-use-existing-sdist", default=False)
-@click.argument("pyinstaller_version", envvar="PYINSTALLER_VERSION", default="PyInstaller~=3.0.0")
+@click.argument("pyinstaller_version", envvar="PYINSTALLER_VERSION", default="PyInstaller~=3.1.1")
 @click.pass_context
 def bdist(ctx, use_existing_sdist, pyinstaller_version):
     """

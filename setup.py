@@ -5,10 +5,10 @@ setup(
     version='1.0',
     py_modules=['rtool'],
     install_requires=[
-        'click>=6.2',
-        'twine>=1.6.4',
-        'virtualenv>=13.1.2',
-        'wheel>=0.26.0',
+        "click>=6.2, <7.0",
+        'twine>=1.6.5, <1.7',
+        'virtualenv>=14.0.5, <14.1',
+        'wheel>=0.26.0, <0.27',
     ],
     entry_points={
         'console_scripts': [
