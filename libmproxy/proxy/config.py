@@ -180,6 +180,9 @@ def process_proxy_options(parser, options):
             parser.error("Certificate file does not exist: %s" % parts[1])
         certs.append(parts)
 
+    if options.http2 and not tcp.HAS_ALPN:
+        raise RuntimeError("HTTP2 support requires OpenSSL 1.0.2 or above.")
+
     return ProxyConfig(
         host=options.addr,
         port=options.port,
