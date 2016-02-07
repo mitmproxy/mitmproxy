@@ -363,6 +363,11 @@ def proxy_options(parser):
         help="Proxy service port."
     )
     http2 = group.add_mutually_exclusive_group()
+    # !!!
+    # Watch out: We raise a RuntimeError in libmproxy.proxy.config if http2 is enabled,
+    # but the OpenSSL version does not have ALPN support (which is the default on Ubuntu 14.04).
+    # Do not simply set --http2 as enabled by default.
+    # !!!
     http2.add_argument("--http2", action="store_true", dest="http2")
     http2.add_argument("--no-http2", action="store_false", dest="http2",
                        help="Explicitly enable/disable experimental HTTP2 support. "
