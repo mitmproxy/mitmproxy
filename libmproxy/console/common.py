@@ -129,7 +129,7 @@ else:
     SYMBOL_MARK = "[m]"
 
 
-def raw_format_flow(f, focus, extended, padding):
+def raw_format_flow(f, focus, extended):
     f = dict(f)
     pile = []
     req = []
@@ -438,8 +438,7 @@ def ask_save_body(part, master, state, flow):
 flowcache = utils.LRUCache(800)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, padding=2,
-                marked=False):
+def format_flow(f, focus, extended=False, hostheader=False, marked=False):
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.acked,
@@ -479,5 +478,5 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2,
             d["resp_ctype"] = ""
     return flowcache.get(
         raw_format_flow,
-        tuple(sorted(d.items())), focus, extended, padding
+        tuple(sorted(d.items())), focus, extended
     )
