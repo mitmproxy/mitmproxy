@@ -323,7 +323,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             host,
             port,
             path,
-            (2, 0),
+            b"HTTP/2.0",
             self.request_headers,
             data,
             timestamp_start=self.timestamp_start,
@@ -360,7 +360,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         status_code = int(self.response_headers.get(':status', 502))
 
         return HTTPResponse(
-            http_version=(2, 0),
+            http_version=b"HTTP/2.0",
             status_code=status_code,
             reason='',
             headers=self.response_headers,
