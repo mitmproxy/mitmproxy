@@ -160,8 +160,11 @@ def raw_format_flow(f, focus, extended):
     else:
         uc = "title"
 
+    url = f["req_url"]
+    if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
+        url += " " + f["req_http_version"]
     req.append(
-        urwid.Text([(uc, f["req_url"])])
+        urwid.Text([(uc, url)])
     )
 
     pile.append(urwid.Columns(req, dividechars=1))
@@ -473,6 +476,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
         req_is_replay = f.request.is_replay,
         req_method = f.request.method,
         req_url = f.request.pretty_url if hostheader else f.request.url,
+        req_http_version = f.request.http_version,
 
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.status_code if f.response else None,
