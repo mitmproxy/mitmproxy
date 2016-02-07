@@ -31,6 +31,7 @@ else:
     socket_fileobject = socket.SocketIO
 
 EINTR = 4
+HAS_ALPN = OpenSSL._util.lib.Cryptography_HAS_ALPN
 
 # To enable all SSL methods use: SSLv23
 # then add options to disable certain methods
@@ -542,7 +543,7 @@ class _Connection(object):
         if log_ssl_key:
             context.set_info_callback(log_ssl_key)
 
-        if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+        if HAS_ALPN:
             if alpn_protos is not None:
                 # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
@@ -696,7 +697,7 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
+        if HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -802,7 +803,7 @@ class BaseHandler(_Connection):
         self.connection.settimeout(n)
 
     def get_alpn_proto_negotiated(self):
-        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
+        if HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
