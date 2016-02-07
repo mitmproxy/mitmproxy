@@ -247,11 +247,16 @@ class DumpMaster(flow.FlowMaster):
             url = flow.request.url
         url = click.style(url, bold=True)
 
-        line = "{stickycookie}{client} {method} {url}".format(
+        httpversion = ""
+        if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
+            httpversion = " " + flow.request.http_version  # We hide "normal" HTTP 1.
+
+        line = "{stickycookie}{client} {method} {url}{httpversion}".format(
             stickycookie=stickycookie,
             client=client,
             method=method,
-            url=url
+            url=url,
+            httpversion=httpversion
         )
         self.echo(line)
 
