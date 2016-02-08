@@ -4,7 +4,7 @@ from . import tutils
 
 req_get = netlib.tutils.treq(
     method='GET',
-    content=None,
+    content='',
 )
 
 req_post = netlib.tutils.treq(
@@ -77,3 +77,25 @@ def test_python_code():
               """)\n\n"""
               """print(response.text)""")
     assert flow_export.python_code(flow) == result
+
+
+def test_raw_request():
+    flow = tutils.tflow(req=req_get)
+    result = ("""GET /path HTTP/1.1\r\n"""
+              """header: qvalue\r\n"""
+              """host: address:22\r\n\r\n"""
+              """""")
+    assert flow_export.raw_request(flow) == result
+
+    flow = tutils.tflow(req=req_post)
+    result = ("""POST /path HTTP/1.1\r\n"""
+              """host: address:22\r\n\r\n"""
+              """content""")
+    assert flow_export.raw_request(flow) == result
+
+    flow = tutils.tflow(req=req_patch)
+    result = ("""PATCH /path?query=param HTTP/1.1\r\n"""
+              """header: qvalue\r\n"""
+              """host: address:22\r\n\r\n"""
+              """content""")
+    assert flow_export.raw_request(flow) == result
