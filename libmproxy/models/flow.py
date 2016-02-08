@@ -45,7 +45,7 @@ class Error(stateobject.StateObject):
         # the default implementation assumes an empty constructor. Override
         # accordingly.
         f = cls(None)
-        f.load_state(state)
+        f.set_state(state)
         return f
 
     def copy(self):
@@ -93,6 +93,12 @@ class Flow(stateobject.StateObject):
             d.update(backup=self._backup)
         return d
 
+    def set_state(self, state):
+        state.pop("version")
+        if "backup" in state:
+            self._backup = state.pop("backup")
+        super(Flow, self).set_state(state)
+
     def __eq__(self, other):
         return self is other
 
@@ -130,7 +136,7 @@ class Flow(stateobject.StateObject):
             Revert to the last backed up state.
         """
         if self._backup:
-            self.load_state(self._backup)
+            self.set_state(self._backup)
             self._backup = None
 
     def kill(self, master):

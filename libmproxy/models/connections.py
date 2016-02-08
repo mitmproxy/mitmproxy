@@ -42,27 +42,13 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return self.ssl_established
 
     _stateobject_attributes = dict(
+        address=tcp.Address,
+        clientcert=certutils.SSLCert,
         ssl_established=bool,
         timestamp_start=float,
         timestamp_end=float,
         timestamp_ssl_setup=float
     )
-
-    def get_state(self):
-        d = super(ClientConnection, self).get_state()
-        d.update(
-            address=({
-                "address": self.address(),
-                "use_ipv6": self.address.use_ipv6} if self.address else {}),
-            clientcert=self.cert.to_pem() if self.clientcert else None)
-        return d
-
-    def load_state(self, state):
-        super(ClientConnection, self).load_state(state)
-        self.address = tcp.Address(
-            **state["address"]) if state["address"] else None
-        self.clientcert = certutils.SSLCert.from_pem(
-            state["clientcert"]) if state["clientcert"] else None
 
     def copy(self):
         return copy.copy(self)
@@ -76,7 +62,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     @classmethod
     def from_state(cls, state):
         f = cls(None, tuple(), None)
-        f.load_state(state)
+        f.set_state(state)
         return f
 
     def convert_to_ssl(self, *args, **kwargs):
@@ -131,31 +117,10 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         sni=str
     )
 
-    def get_state(self):
-        d = super(ServerConnection, self).get_state()
-        d.update(
-            address=({"address": self.address(),
-                      "use_ipv6": self.address.use_ipv6} if self.address else {}),
-            source_address=({"address": self.source_address(),
-                             "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
-            cert=self.cert.to_pem() if self.cert else None
-        )
-        return d
-
-    def load_state(self, state):
-        super(ServerConnection, self).load_state(state)
-
-        self.address = tcp.Address(
-            **state["address"]) if state["address"] else None
-        self.source_address = tcp.Address(
-            **state["source_address"]) if state["source_address"] else None
-        self.cert = certutils.SSLCert.from_pem(
-            state["cert"]) if state["cert"] else None
-
     @classmethod
     def from_state(cls, state):
         f = cls(tuple())
-        f.load_state(state)
+        f.set_state(state)
         return f
 
     def copy(self):

@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 import Cookie
 import copy
+import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
@@ -8,28 +9,12 @@ from libmproxy import utils
 from netlib import encoding
 from netlib.http import status_codes, Headers, Request, Response, decoded
 from netlib.tcp import Address
-from .. import version, stateobject
+from .. import version
 from .flow import Flow
 
 
 
-class MessageMixin(stateobject.StateObject):
-
-    def get_state(self):
-        state = vars(self.data).copy()
-        state["headers"] = state["headers"].get_state()
-        return state
-
-    def load_state(self, state):
-        for k, v in state.items():
-            if k == "headers":
-                v = Headers.from_state(v)
-            setattr(self.data, k, v)
-
-    @classmethod
-    def from_state(cls, state):
-        state["headers"] = Headers.from_state(state["headers"])
-        return cls(**state)
+class MessageMixin(object):
 
     def get_decoded_content(self):
         """
@@ -136,6 +121,8 @@ class HTTPRequest(MessageMixin, Request):
             timestamp_end=None,
             form_out=None,
             is_replay=False,
+            stickycookie=False,
+            stickyauth=False,
     ):
         Request.__init__(
             self,
@@ -154,21 +141,26 @@ class HTTPRequest(MessageMixin, Request):
         self.form_out = form_out or first_line_format  # FIXME remove
 
         # Have this request's cookies been modified by sticky cookies or auth?
-        self.stickycookie = False
-        self.stickyauth = False
+        self.stickycookie = stickycookie
+        self.stickyauth = stickyauth
 
         # Is this request replayed?
         self.is_replay = is_replay
 
-    @classmethod
-    def from_protocol(
-            self,
-            protocol,
-            *args,
-            **kwargs
-    ):
-        req = protocol.read_request(*args, **kwargs)
-        return self.wrap(req)
+    def get_state(self):
+        state = super(HTTPRequest, self).get_state()
+        state.update(
+            stickycookie = self.stickycookie,
+            stickyauth = self.stickyauth,
+            is_replay = self.is_replay,
+        )
+        return state
+
+    def set_state(self, state):
+        self.stickycookie = state.pop("stickycookie")
+        self.stickyauth = state.pop("stickyauth")
+        self.is_replay = state.pop("is_replay")
+        super(HTTPRequest, self).set_state(state)
 
     @classmethod
     def wrap(self, request):
@@ -187,6 +179,15 @@ class HTTPRequest(MessageMixin, Request):
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
         return req
+
+    @property
+    def form_out(self):
+        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
+        return self.first_line_format
+
+    @form_out.setter
+    def form_out(self, value):
+        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
 
     def __hash__(self):
         return id(self)
@@ -256,16 +257,6 @@ class HTTPResponse(MessageMixin, Response):
         # Is this request replayed?
         self.is_replay = is_replay
         self.stream = False
-
-    @classmethod
-    def from_protocol(
-            self,
-            protocol,
-            *args,
-            **kwargs
-    ):
-        resp = protocol.read_response(*args, **kwargs)
-        return self.wrap(resp)
 
     @classmethod
     def wrap(self, response):
@@ -377,7 +368,7 @@ class HTTPFlow(Flow):
     @classmethod
     def from_state(cls, state):
         f = cls(None, None)
-        f.load_state(state)
+        f.set_state(state)
         return f
 
     def __repr__(self):

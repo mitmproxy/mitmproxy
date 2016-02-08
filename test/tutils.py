@@ -76,7 +76,11 @@ def tclient_conn():
     """
     c = ClientConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
-        clientcert=None
+        clientcert=None,
+        ssl_established=False,
+        timestamp_start=1,
+        timestamp_ssl_setup=2,
+        timestamp_end=3,
     ))
     c.reply = controller.DummyReply()
     return c
@@ -88,9 +92,15 @@ def tserver_conn():
     """
     c = ServerConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
-        state=[],
         source_address=dict(address=("address", 22), use_ipv6=True),
-        cert=None
+        cert=None,
+        timestamp_start=1,
+        timestamp_tcp_setup=2,
+        timestamp_ssl_setup=3,
+        timestamp_end=4,
+        ssl_established=False,
+        sni="address",
+        via=None
     ))
     c.reply = controller.DummyReply()
     return c

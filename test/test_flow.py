@@ -422,7 +422,7 @@ class TestFlow(object):
         assert not f == f2
         f2.error = Error("e2")
         assert not f == f2
-        f.load_state(f2.get_state())
+        f.set_state(f2.get_state())
         assert f.get_state() == f2.get_state()
 
     def test_kill(self):
@@ -1204,7 +1204,7 @@ class TestError:
 
         e2 = Error("bar")
         assert not e == e2
-        e.load_state(e2.get_state())
+        e.set_state(e2.get_state())
         assert e.get_state() == e2.get_state()
 
         e3 = e.copy()
@@ -1224,7 +1224,7 @@ class TestClientConnection:
         assert not c == c2
 
         c2.timestamp_start = 42
-        c.load_state(c2.get_state())
+        c.set_state(c2.get_state())
         assert c.timestamp_start == 42
 
         c3 = c.copy()

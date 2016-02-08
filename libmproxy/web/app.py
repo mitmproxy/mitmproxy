@@ -170,7 +170,7 @@ class FlowHandler(RequestHandler):
                     elif k == "port":
                         request.port = int(v)
                     elif k == "headers":
-                        request.headers.load_state(v)
+                        request.headers.set_state(v)
                     else:
                         print "Warning: Unknown update {}.{}: {}".format(a, k, v)
 
@@ -184,7 +184,7 @@ class FlowHandler(RequestHandler):
                     elif k == "http_version":
                         response.http_version = str(v)
                     elif k == "headers":
-                        response.headers.load_state(v)
+                        response.headers.set_state(v)
                     else:
                         print "Warning: Unknown update {}.{}: {}".format(a, k, v)
             else:
