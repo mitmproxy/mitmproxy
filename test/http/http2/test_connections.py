@@ -414,7 +414,7 @@ class TestReadResponse(tservers.ServerTestBase):
 
         resp = protocol.read_response(NotImplemented, stream_id=42)
 
-        assert resp.http_version == '2.0'
+        assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
         assert resp.msg == ''
         assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
@@ -441,7 +441,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         resp = protocol.read_response(NotImplemented, stream_id=42)
 
         assert resp.stream_id == 42
-        assert resp.http_version == '2.0'
+        assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
         assert resp.msg == ''
         assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
@@ -459,7 +459,7 @@ class TestAssembleRequest(object):
             b'',
             b'',
             b'/',
-            b'2.0',
+            b"HTTP/2.0",
             None,
             None,
         ))
@@ -474,7 +474,7 @@ class TestAssembleRequest(object):
             b'',
             b'',
             b'/',
-            b'2.0',
+            b"HTTP/2.0",
             None,
             None,
         )
@@ -491,7 +491,7 @@ class TestAssembleRequest(object):
             b'',
             b'',
             b'/',
-            b'2.0',
+            b"HTTP/2.0",
             http.Headers([(b'foo', b'bar')]),
             b'foobar',
         ))
@@ -507,7 +507,7 @@ class TestAssembleResponse(object):
 
     def test_simple(self):
         bytes = HTTP2Protocol(self.c, is_server=True).assemble_response(http.Response(
-            b'2.0',
+            b"HTTP/2.0",
             200,
         ))
         assert len(bytes) == 1
@@ -516,7 +516,7 @@ class TestAssembleResponse(object):
 
     def test_with_stream_id(self):
         resp = http.Response(
-            b'2.0',
+            b"HTTP/2.0",
             200,
         )
         resp.stream_id = 0x42
@@ -527,7 +527,7 @@ class TestAssembleResponse(object):
 
     def test_with_body(self):
         bytes = HTTP2Protocol(self.c, is_server=True).assemble_response(http.Response(
-            b'2.0',
+            b"HTTP/2.0",
             200,
             b'',
             http.Headers(foo=b"bar"),

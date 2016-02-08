@@ -129,7 +129,7 @@ class HTTP2Protocol(object):
             host.encode('ascii'),
             port,
             path.encode('ascii'),
-            b'2.0',
+            b"HTTP/2.0",
             headers,
             body,
             timestamp_start,
@@ -171,7 +171,7 @@ class HTTP2Protocol(object):
             timestamp_end = None
 
         response = Response(
-            b'2.0',
+            b"HTTP/2.0",
             int(headers.get(':status', 502)),
             b'',
             headers,
