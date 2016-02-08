@@ -21,9 +21,22 @@ def convert_014_015(data):
     return data
 
 
+def convert_015_016(data):
+    for m in ("request", "response"):
+        if "body" in data[m]:
+            data[m]["content"] = data[m].pop("body")
+        if "httpversion" in data[m]:
+            data[m]["http_version"] = data[m].pop("httpversion")
+    if "msg" in data["response"]:
+        data["response"]["reason"] = data["response"].pop("msg")
+    data["version"] = (0, 16)
+    return data
+
+
 converters = {
     (0, 13): convert_013_014,
     (0, 14): convert_014_015,
+    (0, 15): convert_015_016,
 }
 
 

@@ -86,14 +86,11 @@ class Flow(stateobject.StateObject):
         intercepted=bool
     )
 
-    def get_state(self, short=False):
-        d = super(Flow, self).get_state(short)
+    def get_state(self):
+        d = super(Flow, self).get_state()
         d.update(version=version.IVERSION)
         if self._backup and self._backup != d:
-            if short:
-                d.update(modified=True)
-            else:
-                d.update(backup=self._backup)
+            d.update(backup=self._backup)
         return d
 
     def __eq__(self, other):

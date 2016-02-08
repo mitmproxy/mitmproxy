@@ -6,36 +6,30 @@ import time
 
 from libmproxy import utils
 from netlib import encoding
-from netlib.http import status_codes, Headers, Request, Response, CONTENT_MISSING, decoded
+from netlib.http import status_codes, Headers, Request, Response, decoded
 from netlib.tcp import Address
 from .. import version, stateobject
 from .flow import Flow
 
-from collections import OrderedDict
+
 
 class MessageMixin(stateobject.StateObject):
-    # The restoration order is important currently, e.g. because
-    # of .content setting .headers["content-length"] automatically.
-    # Using OrderedDict is the short term fix, restoring state should
-    # be implemented without side-effects again.
-    _stateobject_attributes = OrderedDict(
-        http_version=bytes,
-        headers=Headers,
-        timestamp_start=float,
-        timestamp_end=float
-    )
-    _stateobject_long_attributes = {"body"}
 
-    def get_state(self, short=False):
-        ret = super(MessageMixin, self).get_state(short)
-        if short:
-            if self.content:
-                ret["contentLength"] = len(self.content)
-            elif self.content == CONTENT_MISSING:
-                ret["contentLength"] = None
-            else:
-                ret["contentLength"] = 0
-        return ret
+    def get_state(self):
+        state = vars(self.data).copy()
+        state["headers"] = state["headers"].get_state()
+        return state
+
+    def load_state(self, state):
+        for k, v in state.items():
+            if k == "headers":
+                v = Headers.from_state(v)
+            setattr(self.data, k, v)
+
+    @classmethod
+    def from_state(cls, state):
+        state["headers"] = Headers.from_state(state["headers"])
+        return cls(**state)
 
     def get_decoded_content(self):
         """
@@ -141,6 +135,7 @@ class HTTPRequest(MessageMixin, Request):
             timestamp_start=None,
             timestamp_end=None,
             form_out=None,
+            is_replay=False,
     ):
         Request.__init__(
             self,
@@ -163,37 +158,7 @@ class HTTPRequest(MessageMixin, Request):
         self.stickyauth = False
 
         # Is this request replayed?
-        self.is_replay = False
-
-    _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
-    _stateobject_attributes.update(
-        content=bytes,
-        first_line_format=str,
-        method=bytes,
-        scheme=bytes,
-        host=bytes,
-        port=int,
-        path=bytes,
-        form_out=str,
-        is_replay=bool
-    )
-
-    @classmethod
-    def from_state(cls, state):
-        f = cls(
-            None,
-            b"",
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None)
-        f.load_state(state)
-        return f
+        self.is_replay = is_replay
 
     @classmethod
     def from_protocol(
@@ -275,6 +240,7 @@ class HTTPResponse(MessageMixin, Response):
             content,
             timestamp_start=None,
             timestamp_end=None,
+            is_replay = False
     ):
         Response.__init__(
             self,
@@ -288,21 +254,8 @@ class HTTPResponse(MessageMixin, Response):
         )
 
         # Is this request replayed?
-        self.is_replay = False
+        self.is_replay = is_replay
         self.stream = False
-
-    _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
-    _stateobject_attributes.update(
-        body=bytes,
-        status_code=int,
-        msg=bytes
-    )
-
-    @classmethod
-    def from_state(cls, state):
-        f = cls(None, None, None, None, None)
-        f.load_state(state)
-        return f
 
     @classmethod
     def from_protocol(

@@ -13,24 +13,20 @@ class StateObject(object):
     # should be serialized. If the attribute is a class, it must implement the
     # StateObject protocol.
     _stateobject_attributes = None
-    # A set() of attributes that should be ignored for short state
-    _stateobject_long_attributes = frozenset([])
 
     def from_state(self, state):
         raise NotImplementedError()
 
-    def get_state(self, short=False):
+    def get_state(self):
         """
             Retrieve object state. If short is true, return an abbreviated
             format with long data elided.
         """
         state = {}
         for attr, cls in self._stateobject_attributes.iteritems():
-            if short and attr in self._stateobject_long_attributes:
-                continue
             val = getattr(self, attr)
             if hasattr(val, "get_state"):
-                state[attr] = val.get_state(short)
+                state[attr] = val.get_state()
             else:
                 state[attr] = val
         return state
