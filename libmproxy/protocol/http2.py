@@ -160,7 +160,8 @@ class Http2Layer(Layer):
         elif isinstance(event, StreamReset):
             self.streams[eid].zombie = time.time()
             self.client_reset_streams.append(self.streams[eid].client_stream_id)
-            self.server_reset_streams.append(self.streams[eid].server_stream_id) if self.streams[eid].server_stream_id
+            if self.streams[eid].server_stream_id:
+                self.server_reset_streams.append(self.streams[eid].server_stream_id)
             if eid in self.streams and event.error_code == 0x8:
                 if is_server:
                     other_stream_id = self.streams[eid].client_stream_id
