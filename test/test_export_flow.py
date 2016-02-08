@@ -4,7 +4,6 @@ from . import tutils
 
 req_get = netlib.tutils.treq(
     method='GET',
-    headers=None,
     content=None,
 )
 
@@ -13,10 +12,22 @@ req_post = netlib.tutils.treq(
     headers=None,
 )
 
+req_patch = netlib.tutils.treq(
+    method='PATCH',
+    path=b"/path?query=param",
+)
 
-def test_request_simple():
+
+def test_curl_command():
     flow = tutils.tflow(req=req_get)
-    assert flow_export.curl_command(flow)
+    result = """curl -H 'header:qvalue' 'http://address/path'"""
+    assert flow_export.curl_command(flow) == result
 
     flow = tutils.tflow(req=req_post)
-    assert flow_export.curl_command(flow)
+    result = """curl -X POST 'http://address/path' --data-binary 'content'"""
+    assert flow_export.curl_command(flow) == result
+
+    flow = tutils.tflow(req=req_patch)
+    result = """curl -H 'header:qvalue' -X PATCH 'http://address/path?query=param' --data-binary 'content'"""
+    assert flow_export.curl_command(flow) == result
+
