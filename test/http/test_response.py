@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
+import six
+
 from netlib.http import Headers
 from netlib.odict import ODict, ODictCaseless
 from netlib.tutils import raises, tresp
@@ -8,7 +10,7 @@ from .test_message import _test_passthrough_attr, _test_decoded_attr
 
 class TestResponseData(object):
     def test_init(self):
-        with raises(ValueError):
+        with raises(ValueError if six.PY2 else TypeError):
             tresp(headers="foobar")
 
         assert isinstance(tresp(headers=None).headers, Headers)

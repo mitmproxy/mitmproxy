@@ -4,7 +4,6 @@ import warnings
 
 import six
 
-from netlib.utils import Serializable
 from .headers import Headers
 from .. import encoding, utils
 
@@ -19,7 +18,7 @@ else:
     _always_bytes = lambda x: utils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class MessageData(Serializable):
+class MessageData(utils.Serializable):
     def __eq__(self, other):
         if isinstance(other, MessageData):
             return self.__dict__ == other.__dict__
@@ -45,7 +44,7 @@ class MessageData(Serializable):
         return cls(**state)
 
 
-class Message(Serializable):
+class Message(utils.Serializable):
     def __init__(self, data):
         self.data = data
 
