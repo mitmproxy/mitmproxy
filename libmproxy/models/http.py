@@ -48,33 +48,6 @@ class MessageMixin(stateobject.StateObject):
             return self.content
         return encoding.decode(ce, self.content)
 
-    def decode(self):
-        """
-            Decodes body based on the current Content-Encoding header, then
-            removes the header. If there is no Content-Encoding header, no
-            action is taken.
-
-            Returns True if decoding succeeded, False otherwise.
-        """
-        ce = self.headers.get("content-encoding")
-        if not self.content or ce not in encoding.ENCODINGS:
-            return False
-        data = encoding.decode(ce, self.content)
-        if data is None:
-            return False
-        self.content = data
-        self.headers.pop("content-encoding", None)
-        return True
-
-    def encode(self, e):
-        """
-            Encodes body with the encoding e, where e is "gzip", "deflate"
-            or "identity".
-        """
-        # FIXME: Error if there's an existing encoding header?
-        self.content = encoding.encode(e, self.content)
-        self.headers["content-encoding"] = e
-
     def copy(self):
         c = copy.copy(self)
         if hasattr(self, "data"):  # FIXME remove condition
