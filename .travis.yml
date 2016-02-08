@@ -51,8 +51,8 @@ notifications:
     on_failure: always
   slack:
     rooms:
-      - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
-    on_success: change
+      - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu#ci
+    on_success: always
     on_failure: always
 
 # exclude cryptography from cache
