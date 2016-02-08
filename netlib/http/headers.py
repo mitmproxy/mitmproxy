@@ -194,7 +194,7 @@ class Headers(MutableMapping):
         return Headers(copy.copy(self.fields))
 
     # Implement the StateObject protocol from mitmproxy
-    def get_state(self, short=False):
+    def get_state(self):
         return tuple(tuple(field) for field in self.fields)
 
     def load_state(self, state):

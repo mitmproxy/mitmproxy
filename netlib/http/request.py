@@ -292,7 +292,7 @@ class Request(Message):
         return None
 
     @multipart_form.setter
-    def multipart_form(self):
+    def multipart_form(self, value):
         raise NotImplementedError()
 
     # Legacy
