@@ -4,8 +4,9 @@ import warnings
 
 import six
 
+from netlib.utils import Serializable
+from .headers import Headers
 from .. import encoding, utils
-
 
 CONTENT_MISSING = 0
 
@@ -18,7 +19,7 @@ else:
     _always_bytes = lambda x: utils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class MessageData(object):
+class MessageData(Serializable):
     def __eq__(self, other):
         if isinstance(other, MessageData):
             return self.__dict__ == other.__dict__
@@ -27,8 +28,24 @@ class MessageData(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def set_state(self, state):
+        for k, v in state.items():
+            if k == "headers":
+                v = Headers.from_state(v)
+            setattr(self, k, v)
 
-class Message(object):
+    def get_state(self):
+        state = vars(self).copy()
+        state["headers"] = state["headers"].get_state()
+        return state
+
+    @classmethod
+    def from_state(cls, state):
+        state["headers"] = Headers.from_state(state["headers"])
+        return cls(**state)
+
+
+class Message(Serializable):
     def __init__(self, data):
         self.data = data
 
@@ -39,6 +56,16 @@ class Message(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def get_state(self):
+        return self.data.get_state()
+
+    def set_state(self, state):
+        self.data.set_state(state)
+
+    @classmethod
+    def from_state(cls, state):
+        return cls(**state)
 
     @property
     def headers(self):

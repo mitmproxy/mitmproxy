@@ -16,9 +16,8 @@ from .message import Message, _native, _always_bytes, MessageData
 class RequestData(MessageData):
     def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=None, content=None,
                  timestamp_start=None, timestamp_end=None):
-        if not headers:
-            headers = Headers()
-        assert isinstance(headers, Headers)
+        if not isinstance(headers, Headers):
+            headers = Headers(headers)
 
         self.first_line_format = first_line_format
         self.method = method

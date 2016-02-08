@@ -8,7 +8,7 @@ from .test_message import _test_passthrough_attr, _test_decoded_attr
 
 class TestResponseData(object):
     def test_init(self):
-        with raises(AssertionError):
+        with raises(ValueError):
             tresp(headers="foobar")
 
         assert isinstance(tresp(headers=None).headers, Headers)

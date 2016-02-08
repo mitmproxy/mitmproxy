@@ -1,13 +1,37 @@
 from __future__ import absolute_import, print_function, division
 import os.path
 import re
-import string
 import codecs
 import unicodedata
+from abc import ABCMeta, abstractmethod
+
 import six
 
 from six.moves import urllib
 import hyperframe
+
+
+@six.add_metaclass(ABCMeta)
+class Serializable(object):
+    """
+    ABC for Python's pickle protocol __getstate__ and __setstate__.
+    """
+
+    @classmethod
+    @abstractmethod
+    def from_state(cls, state):
+        obj = cls.__new__(cls)
+        obj.__setstate__(state)
+        return obj
+
+    @abstractmethod
+    def get_state(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def set_state(self, state):
+        raise NotImplementedError()
+
 
 def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):

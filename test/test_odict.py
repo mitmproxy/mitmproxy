@@ -24,7 +24,7 @@ class TestODict(object):
         nd = odict.ODict.from_state(state)
         assert nd == od
         b = odict.ODict()
-        b.load_state(state)
+        b.set_state(state)
         assert b == od
 
     def test_in_any(self):

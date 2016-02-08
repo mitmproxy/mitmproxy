@@ -148,5 +148,5 @@ class TestHeaders(object):
 
         headers2 = Headers()
         assert headers != headers2
-        headers2.load_state(headers.get_state())
+        headers2.set_state(headers.get_state())
         assert headers == headers2
