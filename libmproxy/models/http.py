@@ -91,10 +91,12 @@ class MessageMixin(stateobject.StateObject):
 
             Returns the number of replacements made.
         """
-        with decoded(self):
-            self.content, count = utils.safe_subn(
-                pattern, repl, self.content, *args, **kwargs
-            )
+        count = 0
+        if self.content:
+            with decoded(self):
+                self.content, count = utils.safe_subn(
+                    pattern, repl, self.content, *args, **kwargs
+                )
         fields = []
         for name, value in self.headers.fields:
             name, c = utils.safe_subn(pattern, repl, name, *args, **kwargs)
