@@ -3,12 +3,12 @@ from __future__ import absolute_import
 import urwid
 import urwid.util
 import os
-import urllib
 
 from netlib.http import CONTENT_MISSING
 import netlib.utils
 
 from .. import utils
+from .. import flow_export
 from ..models import decoded
 from . import signals
 
@@ -282,81 +282,13 @@ def copy_flow_format_data(part, scope, flow):
 
 
 def export_prompt(k, flow):
-    if k == "c":
-        copy_as_curl_command(flow)
-    elif k == "p":
-        copy_as_python_code(flow)
-    elif k == "r":
-        copy_as_raw_request(flow)
-
-
-def copy_as_curl_command(flow):
-    data = "curl "
-
-    for k, v in flow.request.headers.fields:
-        data += "-H '%s:%s' " % (k, v)
-
-    if flow.request.method != "GET":
-        data += "-X %s " % flow.request.method
-
-    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
-    data += "'%s'" % full_url
-
-    if flow.request.content:
-        data += " --data-binary '%s'" % flow.request.content
-
-    copy_to_clipboard_or_prompt(data)
-
-
-def copy_as_python_code(flow):
-
-    code = """import requests
-
-url = '{url}'
-{headers}{params}{data}
-response = requests.request(
-    method='{method}',
-    url=url,{args}
-)
-
-print(response.text)"""
-
-    components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
-    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
-
-    args = ""
-    headers = ""
-    if flow.request.headers:
-        lines = ["    '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields]
-        headers += "\nheaders = {\n%s}\n" % "".join(lines)
-        args += "\n    headers=headers,"
-
-    params = ""
-    if flow.request.query:
-        lines = ["    '%s': '%s',\n" % (k, v) for k, v in flow.request.query]
-        params="\nparams = {\n%s}\n" % "".join(lines)
-        args += "\n    params=params,"
-
-    data = ""
-    if flow.request.body:
-        data="\ndata = '''%s'''\n" % flow.request.body
-        args += "\n    data=data,"
-
-    code = code.format(
-        url=url,
-        headers=headers,
-        params=params,
-        data=data,
-        method=flow.request.method,
-        args=args,
-    )
-
-    copy_to_clipboard_or_prompt(code)
-
-
-def copy_as_raw_request(flow):
-    data = netlib.http.http1.assemble_request(flow.request)
-    copy_to_clipboard_or_prompt(data)
+    exporters = {
+        "c": flow_export.curl_command,
+        "p": flow_export.python_code,
+        "r": flow_export.raw_request,
+    }
+    if k in exporters:
+        copy_to_clipboard_or_prompt(exporters[k](flow))
 
 
 def copy_to_clipboard_or_prompt(data):
