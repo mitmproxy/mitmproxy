@@ -16,7 +16,7 @@ import six
 import OpenSSL
 from OpenSSL import SSL
 
-from . import certutils, version_check
+from . import certutils, version_check, utils
 
 # This is a rather hackish way to make sure that
 # the latest version of pyOpenSSL is actually installed.
@@ -298,7 +298,7 @@ class Reader(_FileLike):
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
 
-class Address(object):
+class Address(utils.Serializable):
 
     """
         This class wraps an IPv4/IPv6 tuple to provide named attributes and
@@ -308,6 +308,20 @@ class Address(object):
     def __init__(self, address, use_ipv6=False):
         self.address = tuple(address)
         self.use_ipv6 = use_ipv6
+
+    def get_state(self):
+        return {
+            "address": self.address,
+            "use_ipv6": self.use_ipv6
+        }
+
+    def set_state(self, state):
+        self.address = state["address"]
+        self.use_ipv6 = state["use_ipv6"]
+
+    @classmethod
+    def from_state(cls, state):
+        return Address(**state)
 
     @classmethod
     def wrap(cls, t):

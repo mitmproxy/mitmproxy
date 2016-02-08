@@ -1,13 +1,44 @@
 from __future__ import absolute_import, print_function, division
 import os.path
 import re
-import string
 import codecs
 import unicodedata
+from abc import ABCMeta, abstractmethod
+
 import six
 
 from six.moves import urllib
 import hyperframe
+
+
+@six.add_metaclass(ABCMeta)
+class Serializable(object):
+    """
+    Abstract Base Class that defines an API to save an object's state and restore it later on.
+    """
+
+    @classmethod
+    @abstractmethod
+    def from_state(cls, state):
+        """
+        Create a new object from the given state.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_state(self):
+        """
+        Retrieve object state.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def set_state(self, state):
+        """
+        Set object state to the given state.
+        """
+        raise NotImplementedError()
+
 
 def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):

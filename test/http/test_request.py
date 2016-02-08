@@ -12,7 +12,7 @@ from .test_message import _test_decoded_attr, _test_passthrough_attr
 
 class TestRequestData(object):
     def test_init(self):
-        with raises(AssertionError):
+        with raises(ValueError if six.PY2 else TypeError):
             treq(headers="foobar")
 
         assert isinstance(treq(headers=None).headers, Headers)

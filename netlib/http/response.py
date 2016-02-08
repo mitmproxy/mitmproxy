@@ -12,9 +12,8 @@ from ..odict import ODict
 class ResponseData(MessageData):
     def __init__(self, http_version, status_code, reason=None, headers=None, content=None,
                  timestamp_start=None, timestamp_end=None):
-        if not headers:
-            headers = Headers()
-        assert isinstance(headers, Headers)
+        if not isinstance(headers, Headers):
+            headers = Headers(headers)
 
         self.http_version = http_version
         self.status_code = status_code

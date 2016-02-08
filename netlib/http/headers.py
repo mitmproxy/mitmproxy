@@ -14,7 +14,7 @@ except ImportError:  # pragma: nocover
 
 import six
 
-from netlib.utils import always_byte_args, always_bytes
+from netlib.utils import always_byte_args, always_bytes, Serializable
 
 if six.PY2:  # pragma: nocover
     _native = lambda x: x
@@ -27,7 +27,7 @@ else:
     _always_byte_args = always_byte_args("utf-8", "surrogateescape")
 
 
-class Headers(MutableMapping):
+class Headers(MutableMapping, Serializable):
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
@@ -193,11 +193,10 @@ class Headers(MutableMapping):
     def copy(self):
         return Headers(copy.copy(self.fields))
 
-    # Implement the StateObject protocol from mitmproxy
     def get_state(self):
         return tuple(tuple(field) for field in self.fields)
 
-    def load_state(self, state):
+    def set_state(self, state):
         self.fields = [list(field) for field in state]
 
     @classmethod

@@ -3,6 +3,8 @@ import re
 import copy
 import six
 
+from .utils import Serializable
+
 
 def safe_subn(pattern, repl, target, *args, **kwargs):
     """
@@ -13,7 +15,7 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
 
 
-class ODict(object):
+class ODict(Serializable):
 
     """
         A dictionary-like object for managing ordered (key, value) data. Think
@@ -172,12 +174,12 @@ class ODict(object):
     def get_state(self):
         return [tuple(i) for i in self.lst]
 
-    def load_state(self, state):
+    def set_state(self, state):
         self.lst = [list(i) for i in state]
 
     @classmethod
-    def from_state(klass, state):
-        return klass([list(i) for i in state])
+    def from_state(cls, state):
+        return cls([list(i) for i in state])
 
 
 class ODictCaseless(ODict):

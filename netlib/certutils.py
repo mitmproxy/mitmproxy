@@ -12,7 +12,10 @@ from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 
+from .utils import Serializable
+
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
+
 DEFAULT_EXP = 94608000  # = 24 * 60 * 60 * 365 * 3
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -361,7 +364,7 @@ class _GeneralNames(univ.SequenceOf):
         constraint.ValueSizeConstraint(1, 1024)
 
 
-class SSLCert(object):
+class SSLCert(Serializable):
 
     def __init__(self, cert):
         """
@@ -375,15 +378,25 @@ class SSLCert(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    @classmethod
-    def from_pem(klass, txt):
-        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
-        return klass(x509)
+    def get_state(self):
+        return self.to_pem()
+
+    def set_state(self, state):
+        self.x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, state)
 
     @classmethod
-    def from_der(klass, der):
+    def from_state(cls, state):
+        cls.from_pem(state)
+
+    @classmethod
+    def from_pem(cls, txt):
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
+        return cls(x509)
+
+    @classmethod
+    def from_der(cls, der):
         pem = ssl.DER_cert_to_PEM_cert(der)
-        return klass.from_pem(pem)
+        return cls.from_pem(pem)
 
     def to_pem(self):
         return OpenSSL.crypto.dump_certificate(
