@@ -48,7 +48,7 @@ setup(
         "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
         "requests>=2.9.1, <2.10",
         "Flask>=0.10.1, <0.11",
-        "pyparsing>=2.0.7, <2.1"
+        "pyparsing>=2.1,<2.2"
     ],
     extras_require={
         'dev': [
