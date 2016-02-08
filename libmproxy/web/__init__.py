@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 import collections
 import tornado.ioloop
 import tornado.httpserver
+
 from .. import controller, flow
 from . import app
 
@@ -20,7 +21,7 @@ class WebFlowView(flow.FlowView):
         app.ClientConnection.broadcast(
             type="flows",
             cmd="add",
-            data=f.get_state(short=True)
+            data=app._strip_content(f.get_state())
         )
 
     def _update(self, f):
@@ -28,7 +29,7 @@ class WebFlowView(flow.FlowView):
         app.ClientConnection.broadcast(
             type="flows",
             cmd="update",
-            data=f.get_state(short=True)
+            data=app._strip_content(f.get_state())
         )
 
     def _remove(self, f):

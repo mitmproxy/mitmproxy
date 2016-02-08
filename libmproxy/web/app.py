@@ -4,7 +4,36 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
+
+from netlib.http import CONTENT_MISSING
 from .. import version, filt
+
+
+def _strip_content(flow_state):
+    """
+    Remove flow message content and cert to save transmission space.
+
+    Args:
+        flow_state: The original flow state. Will be left unmodified
+    """
+    for attr in ("request", "response"):
+        if attr in flow_state:
+            message = flow_state[attr]
+            if message["content"]:
+                message["contentLength"] = len(message["content"])
+            elif message["content"] == CONTENT_MISSING:
+                message["contentLength"] = None
+            else:
+                message["contentLength"] = 0
+            del message["content"]
+
+    if "backup" in flow_state:
+        del flow_state["backup"]
+        flow_state["modified"] = True
+
+    flow_state.get("server_conn", {}).pop("cert", None)
+
+    return flow_state
 
 
 class APIError(tornado.web.HTTPError):
@@ -100,7 +129,7 @@ class Flows(RequestHandler):
 
     def get(self):
         self.write(dict(
-            data=[f.get_state(short=True) for f in self.state.flows]
+            data=[_strip_content(f.get_state()) for f in self.state.flows]
         ))
 
 
@@ -141,7 +170,7 @@ class FlowHandler(RequestHandler):
                     elif k == "port":
                         request.port = int(v)
                     elif k == "headers":
-                        request.headers.load_state(v)
+                        request.headers.set_state(v)
                     else:
                         print "Warning: Unknown update {}.{}: {}".format(a, k, v)
 
@@ -155,7 +184,7 @@ class FlowHandler(RequestHandler):
                     elif k == "http_version":
                         response.http_version = str(v)
                     elif k == "headers":
-                        response.headers.load_state(v)
+                        response.headers.set_state(v)
                     else:
                         print "Warning: Unknown update {}.{}: {}".format(a, k, v)
             else:

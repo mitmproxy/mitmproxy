@@ -1,41 +1,20 @@
 from __future__ import (absolute_import, print_function, division)
 import Cookie
 import copy
+import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
 from libmproxy import utils
 from netlib import encoding
-from netlib.http import status_codes, Headers, Request, Response, CONTENT_MISSING, decoded
+from netlib.http import status_codes, Headers, Request, Response, decoded
 from netlib.tcp import Address
-from .. import version, stateobject
+from .. import version
 from .flow import Flow
 
-from collections import OrderedDict
 
-class MessageMixin(stateobject.StateObject):
-    # The restoration order is important currently, e.g. because
-    # of .content setting .headers["content-length"] automatically.
-    # Using OrderedDict is the short term fix, restoring state should
-    # be implemented without side-effects again.
-    _stateobject_attributes = OrderedDict(
-        http_version=bytes,
-        headers=Headers,
-        timestamp_start=float,
-        timestamp_end=float
-    )
-    _stateobject_long_attributes = {"body"}
 
-    def get_state(self, short=False):
-        ret = super(MessageMixin, self).get_state(short)
-        if short:
-            if self.content:
-                ret["contentLength"] = len(self.content)
-            elif self.content == CONTENT_MISSING:
-                ret["contentLength"] = None
-            else:
-                ret["contentLength"] = 0
-        return ret
+class MessageMixin(object):
 
     def get_decoded_content(self):
         """
@@ -141,6 +120,9 @@ class HTTPRequest(MessageMixin, Request):
             timestamp_start=None,
             timestamp_end=None,
             form_out=None,
+            is_replay=False,
+            stickycookie=False,
+            stickyauth=False,
     ):
         Request.__init__(
             self,
@@ -159,51 +141,26 @@ class HTTPRequest(MessageMixin, Request):
         self.form_out = form_out or first_line_format  # FIXME remove
 
         # Have this request's cookies been modified by sticky cookies or auth?
-        self.stickycookie = False
-        self.stickyauth = False
+        self.stickycookie = stickycookie
+        self.stickyauth = stickyauth
 
         # Is this request replayed?
-        self.is_replay = False
+        self.is_replay = is_replay
 
-    _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
-    _stateobject_attributes.update(
-        content=bytes,
-        first_line_format=str,
-        method=bytes,
-        scheme=bytes,
-        host=bytes,
-        port=int,
-        path=bytes,
-        form_out=str,
-        is_replay=bool
-    )
+    def get_state(self):
+        state = super(HTTPRequest, self).get_state()
+        state.update(
+            stickycookie = self.stickycookie,
+            stickyauth = self.stickyauth,
+            is_replay = self.is_replay,
+        )
+        return state
 
-    @classmethod
-    def from_state(cls, state):
-        f = cls(
-            None,
-            b"",
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None)
-        f.load_state(state)
-        return f
-
-    @classmethod
-    def from_protocol(
-            self,
-            protocol,
-            *args,
-            **kwargs
-    ):
-        req = protocol.read_request(*args, **kwargs)
-        return self.wrap(req)
+    def set_state(self, state):
+        self.stickycookie = state.pop("stickycookie")
+        self.stickyauth = state.pop("stickyauth")
+        self.is_replay = state.pop("is_replay")
+        super(HTTPRequest, self).set_state(state)
 
     @classmethod
     def wrap(self, request):
@@ -222,6 +179,15 @@ class HTTPRequest(MessageMixin, Request):
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
         return req
+
+    @property
+    def form_out(self):
+        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
+        return self.first_line_format
+
+    @form_out.setter
+    def form_out(self, value):
+        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
 
     def __hash__(self):
         return id(self)
@@ -275,6 +241,7 @@ class HTTPResponse(MessageMixin, Response):
             content,
             timestamp_start=None,
             timestamp_end=None,
+            is_replay = False
     ):
         Response.__init__(
             self,
@@ -288,31 +255,8 @@ class HTTPResponse(MessageMixin, Response):
         )
 
         # Is this request replayed?
-        self.is_replay = False
+        self.is_replay = is_replay
         self.stream = False
-
-    _stateobject_attributes = MessageMixin._stateobject_attributes.copy()
-    _stateobject_attributes.update(
-        body=bytes,
-        status_code=int,
-        msg=bytes
-    )
-
-    @classmethod
-    def from_state(cls, state):
-        f = cls(None, None, None, None, None)
-        f.load_state(state)
-        return f
-
-    @classmethod
-    def from_protocol(
-            self,
-            protocol,
-            *args,
-            **kwargs
-    ):
-        resp = protocol.read_response(*args, **kwargs)
-        return self.wrap(resp)
 
     @classmethod
     def wrap(self, response):
@@ -424,7 +368,7 @@ class HTTPFlow(Flow):
     @classmethod
     def from_state(cls, state):
         f = cls(None, None)
-        f.load_state(state)
+        f.set_state(state)
         return f
 
     def __repr__(self):
