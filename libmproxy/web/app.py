@@ -34,11 +34,9 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def initialize(self, **kwargs):
         self.wauthenticator = kwargs.get("wauthenticator")
-        self.singleuser = kwargs.get("singleuser")
-        self.htpasswd = kwargs.get("htpasswd")
 
     def prepare(self):
-        if self.singleuser or self.htpasswd:
+        if self.wauthenticator:
             auth_header = self.request.headers.get('Authorization')
             if auth_header is None or not auth_header.startswith('Basic '):
                 self.set_auth_headers()
@@ -264,12 +262,10 @@ class Settings(RequestHandler):
 
 
 class Application(tornado.web.Application):
-    def __init__(self, master, debug, wauthenticator, singleuser, htpasswd):
+    def __init__(self, master, debug, wauthenticator):
         self.master = master
         self.additional_args = dict(
             wauthenticator=wauthenticator,
-            singleuser=singleuser,
-            htpasswd=htpasswd,
         )
         handlers = [
             (r"/", IndexHandler, self.additional_args),
