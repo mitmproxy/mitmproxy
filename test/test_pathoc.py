@@ -14,7 +14,7 @@ import tutils
 
 
 def test_response():
-    r = http.Response("1.1", 200, "Message", {}, None, None)
+    r = http.Response("HTTP/1.1", 200, "Message", {}, None, None)
     assert repr(r)
 
 
