@@ -14,22 +14,29 @@ import hyperframe
 @six.add_metaclass(ABCMeta)
 class Serializable(object):
     """
-    ABC for Python's pickle protocol __getstate__ and __setstate__.
+    Abstract Base Class that defines an API to save an object's state and restore it later on.
     """
 
     @classmethod
     @abstractmethod
     def from_state(cls, state):
-        obj = cls.__new__(cls)
-        obj.__setstate__(state)
-        return obj
+        """
+        Create a new object from the given state.
+        """
+        raise NotImplementedError()
 
     @abstractmethod
     def get_state(self):
+        """
+        Retrieve object state.
+        """
         raise NotImplementedError()
 
     @abstractmethod
     def set_state(self, state):
+        """
+        Set object state to the given state.
+        """
         raise NotImplementedError()
 
 
