@@ -463,6 +463,11 @@ class TestFlow(object):
         f.response.content = "\xc2foo"
         f.replace("foo", u"bar")
 
+    def test_replace_no_content(self):
+        f = tutils.tflow()
+        f.request.content = CONTENT_MISSING
+        assert f.replace("foo", "bar") == 0
+
     def test_replace(self):
         f = tutils.tflow(resp=True)
         f.request.headers["foo"] = "foo"
