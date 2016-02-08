@@ -29,6 +29,7 @@ def convert_015_016(data):
             data[m]["http_version"] = data[m].pop("httpversion")
     if "msg" in data["response"]:
         data["response"]["reason"] = data["response"].pop("msg")
+    data["request"].pop("form_out", None)
     data["version"] = (0, 16)
     return data
 
