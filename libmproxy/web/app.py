@@ -6,7 +6,6 @@ import logging
 import json
 import base64
 from .. import version, filt
-from netlib.http import authentication
 
 
 class APIError(tornado.web.HTTPError):
@@ -34,6 +33,7 @@ class RequestHandler(tornado.web.RequestHandler):
         self.finish()
 
     def initialize(self, **kwargs):
+        self.wauthenticator = kwargs.get("wauthenticator")
         self.singleuser = kwargs.get("singleuser")
         self.htpasswd = kwargs.get("htpasswd")
 
@@ -45,22 +45,9 @@ class RequestHandler(tornado.web.RequestHandler):
             else:
                 self.auth_decoded = base64.decodestring(auth_header[6:])
                 self.username, self.password = self.auth_decoded.split(':', 2)
-                if self.singleuser:
-                    if len(self.singleuser.split(':')) != 2:
-                        raise APIError(400, "Invalid single-user specification. Please use the format username:password")
-                    username, password = self.singleuser.split(':')
-                    password_manager = authentication.PassManSingleUser(username, password)
-                    if not password_manager.test(self.username, self.password):
-                        self.set_auth_headers()
-                        raise APIError(401, "Invalid username or password.")
-                elif self.htpasswd:
-                    try:
-                        password_manager = authentication.PassManHtpasswd(self.htpasswd)
-                    except ValueError as v:
-                        raise APIError(500, "%s. Please contact your systems administrator." % v.message)
-                    if not password_manager.test(self.username, self.password):
-                        self.set_auth_headers()
-                        raise APIError(401, "Invalid username or password.")
+                if not self.wauthenticator.test(self.username, self.password):
+                    self.set_auth_headers()
+                    raise APIError(401, "Invalid username or password.")
 
     @property
     def json(self):
@@ -277,9 +264,10 @@ class Settings(RequestHandler):
 
 
 class Application(tornado.web.Application):
-    def __init__(self, master, debug, singleuser, htpasswd):
+    def __init__(self, master, debug, wauthenticator, singleuser, htpasswd):
         self.master = master
         self.additional_args = dict(
+            wauthenticator=wauthenticator,
             singleuser=singleuser,
             htpasswd=htpasswd,
         )
