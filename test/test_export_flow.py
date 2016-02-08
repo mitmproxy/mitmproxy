@@ -20,7 +20,7 @@ req_patch = netlib.tutils.treq(
 
 def test_curl_command():
     flow = tutils.tflow(req=req_get)
-    result = """curl -H 'header:qvalue' 'http://address/path'"""
+    result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address/path'"""
     assert flow_export.curl_command(flow) == result
 
     flow = tutils.tflow(req=req_post)
@@ -28,7 +28,7 @@ def test_curl_command():
     assert flow_export.curl_command(flow) == result
 
     flow = tutils.tflow(req=req_patch)
-    result = """curl -H 'header:qvalue' -X PATCH 'http://address/path?query=param' --data-binary 'content'"""
+    result = """curl -H 'header:qvalue' -H 'content-length:7' -X PATCH 'http://address/path?query=param' --data-binary 'content'"""
     assert flow_export.curl_command(flow) == result
 
 
@@ -38,6 +38,7 @@ def test_python_code():
               """url = 'http://address/path'\n\n"""
               """headers = {\n"""
               """    'header': 'qvalue',\n"""
+              """    'content-length': '7',\n"""
               """}\n\n"""
               """response = requests.request(\n"""
               """    method='GET',\n"""
@@ -63,6 +64,7 @@ def test_python_code():
               """url = 'http://address/path'\n\n"""
               """headers = {\n"""
               """    'header': 'qvalue',\n"""
+              """    'content-length': '7',\n"""
               """}\n\n"""
               """params = {\n"""
               """    'query': 'param',\n"""
@@ -83,6 +85,7 @@ def test_raw_request():
     flow = tutils.tflow(req=req_get)
     result = ("""GET /path HTTP/1.1\r\n"""
               """header: qvalue\r\n"""
+              """content-length: 7\r\n"""
               """host: address:22\r\n\r\n"""
               """""")
     assert flow_export.raw_request(flow) == result
@@ -96,6 +99,7 @@ def test_raw_request():
     flow = tutils.tflow(req=req_patch)
     result = ("""PATCH /path?query=param HTTP/1.1\r\n"""
               """header: qvalue\r\n"""
+              """content-length: 7\r\n"""
               """host: address:22\r\n\r\n"""
               """content""")
     assert flow_export.raw_request(flow) == result
