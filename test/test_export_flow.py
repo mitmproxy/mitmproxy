@@ -31,3 +31,49 @@ def test_curl_command():
     result = """curl -H 'header:qvalue' -X PATCH 'http://address/path?query=param' --data-binary 'content'"""
     assert flow_export.curl_command(flow) == result
 
+
+def test_python_code():
+    flow = tutils.tflow(req=req_get)
+    result = ("""import requests\n\n"""
+              """url = 'http://address/path'\n\n"""
+              """headers = {\n"""
+              """    'header': 'qvalue',\n"""
+              """}\n\n"""
+              """response = requests.request(\n"""
+              """    method='GET',\n"""
+              """    url=url,\n"""
+              """    headers=headers,\n"""
+              """)\n\n"""
+              """print(response.text)""")
+    assert flow_export.python_code(flow) == result
+
+    flow = tutils.tflow(req=req_post)
+    result = ("""import requests\n\n"""
+              """url = 'http://address/path'\n\n"""
+              """data = '''content'''\n\n"""
+              """response = requests.request(\n"""
+              """    method='POST',\n"""
+              """    url=url,\n"""
+              """    data=data,\n)\n\n"""
+              """print(response.text)""")
+    assert flow_export.python_code(flow) == result
+
+    flow = tutils.tflow(req=req_patch)
+    result = ("""import requests\n\n"""
+              """url = 'http://address/path'\n\n"""
+              """headers = {\n"""
+              """    'header': 'qvalue',\n"""
+              """}\n\n"""
+              """params = {\n"""
+              """    'query': 'param',\n"""
+              """}\n\n"""
+              """data = '''content'''\n\n"""
+              """response = requests.request(\n"""
+              """    method='PATCH',\n"""
+              """    url=url,\n"""
+              """    headers=headers,\n"""
+              """    params=params,\n"""
+              """    data=data,\n"""
+              """)\n\n"""
+              """print(response.text)""")
+    assert flow_export.python_code(flow) == result
