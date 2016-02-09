@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import netlib.tutils
 from libmproxy import flow_export
 from . import tutils
@@ -34,72 +36,101 @@ def test_curl_command():
 
 def test_python_code():
     flow = tutils.tflow(req=req_get)
-    result = ("""import requests\n\n"""
-              """url = 'http://address/path'\n\n"""
-              """headers = {\n"""
-              """    'header': 'qvalue',\n"""
-              """    'content-length': '7',\n"""
-              """}\n\n"""
-              """response = requests.request(\n"""
-              """    method='GET',\n"""
-              """    url=url,\n"""
-              """    headers=headers,\n"""
-              """)\n\n"""
-              """print(response.text)""")
+    result = dedent("""
+        import requests
+
+        url = 'http://address/path'
+
+        headers = {
+            'header': 'qvalue',
+            'content-length': '7',
+        }
+
+        response = requests.request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
+
+        print(response.text)
+    """).strip()
     assert flow_export.python_code(flow) == result
 
     flow = tutils.tflow(req=req_post)
-    result = ("""import requests\n\n"""
-              """url = 'http://address/path'\n\n"""
-              """data = '''content'''\n\n"""
-              """response = requests.request(\n"""
-              """    method='POST',\n"""
-              """    url=url,\n"""
-              """    data=data,\n)\n\n"""
-              """print(response.text)""")
+    result = dedent("""
+        import requests
+
+        url = 'http://address/path'
+
+        data = '''content'''
+
+        response = requests.request(
+            method='POST',
+            url=url,
+            data=data,
+        )
+
+        print(response.text)
+    """).strip()
     assert flow_export.python_code(flow) == result
 
     flow = tutils.tflow(req=req_patch)
-    result = ("""import requests\n\n"""
-              """url = 'http://address/path'\n\n"""
-              """headers = {\n"""
-              """    'header': 'qvalue',\n"""
-              """    'content-length': '7',\n"""
-              """}\n\n"""
-              """params = {\n"""
-              """    'query': 'param',\n"""
-              """}\n\n"""
-              """data = '''content'''\n\n"""
-              """response = requests.request(\n"""
-              """    method='PATCH',\n"""
-              """    url=url,\n"""
-              """    headers=headers,\n"""
-              """    params=params,\n"""
-              """    data=data,\n"""
-              """)\n\n"""
-              """print(response.text)""")
+    result = dedent("""
+        import requests
+
+        url = 'http://address/path'
+
+        headers = {
+            'header': 'qvalue',
+            'content-length': '7',
+        }
+
+        params = {
+            'query': 'param',
+        }
+
+        data = '''content'''
+
+        response = requests.request(
+            method='PATCH',
+            url=url,
+            headers=headers,
+            params=params,
+            data=data,
+        )
+
+        print(response.text)
+    """).strip()
     assert flow_export.python_code(flow) == result
 
 
 def test_raw_request():
     flow = tutils.tflow(req=req_get)
-    result = ("""GET /path HTTP/1.1\r\n"""
-              """header: qvalue\r\n"""
-              """content-length: 7\r\n"""
-              """host: address:22\r\n\r\n"""
-              """""")
+    result = dedent("""
+        GET /path HTTP/1.1\r
+        header: qvalue\r
+        content-length: 7\r
+        host: address:22\r
+        \r
+    """).strip(" ").lstrip()
     assert flow_export.raw_request(flow) == result
 
     flow = tutils.tflow(req=req_post)
-    result = ("""POST /path HTTP/1.1\r\n"""
-              """host: address:22\r\n\r\n"""
-              """content""")
+    result = dedent("""
+        POST /path HTTP/1.1\r
+        host: address:22\r
+        \r
+        content
+    """).strip()
     assert flow_export.raw_request(flow) == result
 
     flow = tutils.tflow(req=req_patch)
-    result = ("""PATCH /path?query=param HTTP/1.1\r\n"""
-              """header: qvalue\r\n"""
-              """content-length: 7\r\n"""
-              """host: address:22\r\n\r\n"""
-              """content""")
+    result = dedent("""
+        PATCH /path?query=param HTTP/1.1\r
+        header: qvalue\r
+        content-length: 7\r
+        host: address:22\r
+        \r
+        content
+    """).strip()
     assert flow_export.raw_request(flow) == result
