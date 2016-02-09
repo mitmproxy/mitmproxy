@@ -3,6 +3,9 @@ import collections
 import tornado.ioloop
 import tornado.httpserver
 import os
+
+from netlib.http import authentication
+
 from .. import controller, flow
 from . import app
 
@@ -112,6 +115,8 @@ class Options(object):
         "wport",
         "wiface",
         "wauthenticator",
+        "wsingleuser",
+        "whtpasswd",
     ]
 
     def __init__(self, **kwargs):
@@ -120,6 +125,23 @@ class Options(object):
         for i in self.attributes:
             if not hasattr(self, i):
                 setattr(self, i, None)
+
+    def process_web_options(self, parser):
+        if self.wsingleuser or self.whtpasswd:
+            if self.wsingleuser:
+                if len(self.wsingleuser.split(':')) != 2:
+                    return parser.error(
+                        "Invalid single-user specification. Please use the format username:password"
+                    )
+                username, password = self.wsingleuser.split(':')
+                self.wauthenticator = authentication.PassManSingleUser(username, password)
+            elif self.whtpasswd:
+                try:
+                    self.wauthenticator = authentication.PassManHtpasswd(self.whtpasswd)
+                except ValueError as v:
+                    return parser.error(v.message)
+        else:
+            self.wauthenticator = None
 
 
 class WebMaster(flow.FlowMaster):

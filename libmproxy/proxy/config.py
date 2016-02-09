@@ -52,7 +52,6 @@ class ProxyConfig:
             mode="regular",
             upstream_server=None,
             authenticator=None,
-            wauthenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
             http2=False,
@@ -84,7 +83,6 @@ class ProxyConfig:
         self.http2 = http2
         self.rawtcp = rawtcp
         self.authenticator = authenticator
-        self.wauthenticator = wauthenticator
         self.cadir = os.path.expanduser(cadir)
         self.certstore = certutils.CertStore.from_store(
             self.cadir,
@@ -170,23 +168,6 @@ def process_proxy_options(parser, options):
     else:
         authenticator = authentication.NullProxyAuth(None)
 
-    if options.wsingleuser or options.whtpasswd:
-        if options.wsingleuser:
-            if len(options.wsingleuser.split(':')) != 2:
-                return parser.error(
-                    "Invalid single-user specification. Please use the format username:password"
-                )
-            username, password = options.wsingleuser.split(':')
-            wauthenticator = authentication.PassManSingleUser(username, password)
-        elif options.whtpasswd:
-            try:
-                wauthenticator = authentication.PassManHtpasswd(
-                    options.whtpasswd)
-            except ValueError as v:
-                return parser.error(v.message)
-    else:
-        wauthenticator = None
-
     certs = []
     for i in options.certs:
         parts = i.split("=", 1)
@@ -211,7 +192,6 @@ def process_proxy_options(parser, options):
         http2=options.http2,
         rawtcp=options.rawtcp,
         authenticator=authenticator,
-        wauthenticator=wauthenticator,
         ciphers_client=options.ciphers_client,
         ciphers_server=options.ciphers_server,
         certs=tuple(certs),
