@@ -4,6 +4,7 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
+import base64
 
 from netlib.http import CONTENT_MISSING
 from .. import version, filt
@@ -40,7 +41,31 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
-class RequestHandler(tornado.web.RequestHandler):
+class BasicAuth(object):
+    def set_auth_headers(self):
+        self.set_status(401)
+        self.set_header('WWW-Authenticate', 'Basic realm=MITMWeb')
+        self._transforms = []
+        self.finish()
+
+    def initialize(self, **kwargs):
+        self.wauthenticator = kwargs.get("wauthenticator")
+
+    def prepare(self):
+        if self.wauthenticator:
+            auth_header = self.request.headers.get('Authorization')
+            if auth_header is None or not auth_header.startswith('Basic '):
+                self.set_auth_headers()
+            else:
+                self.auth_decoded = base64.decodestring(auth_header[6:])
+                self.username, self.password = self.auth_decoded.split(':', 2)
+                if not self.wauthenticator.test(self.username, self.password):
+                    self.set_auth_headers()
+                    raise APIError(401, "Invalid username or password.")
+
+
+
+class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
     def set_default_headers(self):
         super(RequestHandler, self).set_default_headers()
@@ -100,7 +125,7 @@ class FiltHelp(RequestHandler):
         ))
 
 
-class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
+class WebSocketEventBroadcaster(BasicAuth, tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections = None
 
@@ -284,8 +309,11 @@ class Settings(RequestHandler):
 
 class Application(tornado.web.Application):
 
-    def __init__(self, master, debug):
+    def __init__(self, master, debug, wauthenticator):
         self.master = master
+        self.additional_args = dict(
+            wauthenticator=wauthenticator,
+        )
         handlers = [
             (r"/", IndexHandler),
             (r"/filter-help", FiltHelp),
@@ -302,6 +330,9 @@ class Application(tornado.web.Application):
             (r"/settings", Settings),
             (r"/clear", ClearAll),
         ]
+        for i, handler in enumerate(handlers):
+            handlers[i] += (self.additional_args,)
+
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
