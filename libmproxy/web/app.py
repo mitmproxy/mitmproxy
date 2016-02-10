@@ -46,6 +46,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 if not self.wauthenticator.test(self.username, self.password):
                     self.set_auth_headers()
                     raise APIError(401, "Invalid username or password.")
+                self.set_secure_cookie("wsauth", self.password)
 
     @property
     def json(self):
@@ -93,6 +94,14 @@ class FiltHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections = None
+
+    def initialize(self, **kwargs):
+        self.wauthenticator = kwargs.get("wauthenticator")
+
+    def prepare(self):
+        if self.wauthenticator:
+            if not self.get_secure_cookie("wsauth"):
+                raise APIError(401, "Unauthorized attempt to use WebSockets")
 
     def open(self):
         self.connections.add(self)
@@ -269,19 +278,19 @@ class Application(tornado.web.Application):
         )
         handlers = [
             (r"/", IndexHandler, self.additional_args),
-            (r"/filter-help", FiltHelp),
-            (r"/updates", ClientConnection),
-            (r"/events", Events),
-            (r"/flows", Flows),
-            (r"/flows/accept", AcceptFlows),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/accept", AcceptFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
-            (r"/settings", Settings),
-            (r"/clear", ClearAll),
+            (r"/filter-help", FiltHelp, self.additional_args),
+            (r"/updates", ClientConnection, self.additional_args),
+            (r"/events", Events, self.additional_args),
+            (r"/flows", Flows, self.additional_args),
+            (r"/flows/accept", AcceptFlows, self.additional_args),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler, self.additional_args),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/accept", AcceptFlow, self.additional_args),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow, self.additional_args),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow, self.additional_args),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow, self.additional_args),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent, self.additional_args),
+            (r"/settings", Settings, self.additional_args),
+            (r"/clear", ClearAll, self.additional_args),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
