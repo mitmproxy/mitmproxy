@@ -5,33 +5,33 @@ matrix:
   fast_finish: true
   include:
     - python: 2.7
-    - python: 2.7
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
-    - python: pypy
-    - python: pypy
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
-    - language: generic
-      os: osx
-      osx_image: xcode7.1
-    - python: 2.7
-      env: DOCS=1
-      script: 'cd docs && make html'
+    # - python: 2.7
+    #   env: OPENSSL=1.0.2
+    #   addons:
+    #     apt:
+    #       sources:
+    #         # Debian sid currently holds OpenSSL 1.0.2
+    #         # change this with future releases!
+    #         - debian-sid
+    #       packages:
+    #         - libssl-dev
+    # - python: pypy
+    # - python: pypy
+    #   env: OPENSSL=1.0.2
+    #   addons:
+    #     apt:
+    #       sources:
+    #         # Debian sid currently holds OpenSSL 1.0.2
+    #         # change this with future releases!
+    #         - debian-sid
+    #       packages:
+    #         - libssl-dev
+    # - language: generic
+    #   os: osx
+    #   osx_image: xcode7.1
+    # - python: 2.7
+    #   env: DOCS=1
+    #   script: 'cd docs && make html'
   allow_failures:
     - python: pypy
 
@@ -68,16 +68,32 @@ script:
 after_success:
   - coveralls
   - |
-    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
-    then
-        brew install curl --with-libssh2
+    # if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
+    if [[ $TRAVIS_BRANCH == "sftp" ]]; then
         git clone https://github.com/mitmproxy/release.git ../release
         pip install -e ../release
         python ../release/rtool.py -p netlib -p mitmproxy bdist
-        for f in ../release/dist/*
-        do
-          $(brew --prefix curl)/bin/curl -u $SNAPSHOT_AUTH --hostpubmd5 $SNAPSHOT_PUBKEY --retry 5 -T $f sftp://$SNAPSHOT_HOST/
-        done
+
+        echo "-----BEGIN RSA PRIVATE KEY-----" >  private_key
+        echo $SNAPSHOT_PRIVATEKEY | fold -w 65 >>  private_key
+        echo "-----END RSA PRIVATE KEY-----" >>  private_key
+        chmod 600 private_key
+
+        echo "cd snapshots" > batch.txt
+        echo "mkdir .temp-$TRAVIS_COMMIT" >> batch.txt
+        echo "put -r ../release/dist/* .temp-$TRAVIS_COMMIT/" >> batch.txt
+        echo "rename .temp-$TRAVIS_COMMIT $TRAVIS_COMMIT" >> batch.txt
+        echo "rm latest" >> batch.txt
+        echo "symlink $TRAVIS_COMMIT latest" >> batch.txt
+
+        sftp \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -o LogLevel=quiet \
+          -i private_key \
+          -b batch.txt \
+          -P $SNAPSHOT_PORT \
+          $SNAPSHOT_USERNAME@$SNAPSHOT_HOSTNAME
     fi
 
 notifications:
