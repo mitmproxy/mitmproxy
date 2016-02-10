@@ -1,5 +1,6 @@
 import urllib
 import netlib.http
+from textwrap import dedent
 
 
 def curl_command(flow):
@@ -21,16 +22,18 @@ def curl_command(flow):
 
 
 def python_code(flow):
-    code = """import requests
+    code = dedent("""
+        import requests
 
-url = '{url}'
-{headers}{params}{data}
-response = requests.request(
-    method='{method}',
-    url=url,{args}
-)
+        url = '{url}'
+        {headers}{params}{data}
+        response = requests.request(
+            method='{method}',
+            url=url,{args}
+        )
 
-print(response.text)"""
+        print(response.text)
+    """).strip()
 
     components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
