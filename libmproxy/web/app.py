@@ -46,7 +46,6 @@ class RequestHandler(tornado.web.RequestHandler):
                 if not self.wauthenticator.test(self.username, self.password):
                     self.set_auth_headers()
                     raise APIError(401, "Invalid username or password.")
-                self.set_secure_cookie("wsauth", self.password)
 
     @property
     def json(self):
@@ -95,13 +94,26 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections = None
 
+    def set_auth_headers(self):
+        self.set_status(401)
+        self.set_header('WWW-Authenticate', 'Basic realm=MITMWeb')
+        self._transforms = []
+        self.finish()
+
     def initialize(self, **kwargs):
         self.wauthenticator = kwargs.get("wauthenticator")
 
     def prepare(self):
         if self.wauthenticator:
-            if not self.get_secure_cookie("wsauth"):
-                raise APIError(401, "Unauthorized attempt to use WebSockets")
+            auth_header = self.request.headers.get('Authorization')
+            if auth_header is None or not auth_header.startswith('Basic '):
+                self.set_auth_headers()
+            else:
+                self.auth_decoded = base64.decodestring(auth_header[6:])
+                self.username, self.password = self.auth_decoded.split(':', 2)
+                if not self.wauthenticator.test(self.username, self.password):
+                    self.set_auth_headers()
+                    raise APIError(401, "Invalid username or password.")
 
     def open(self):
         self.connections.add(self)
