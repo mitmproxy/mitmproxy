@@ -136,13 +136,18 @@ class HttpLayer(Layer):
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
         self.mode = mode
-        self.__original_server_conn = None
+
+        self.__initial_server_conn = None
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
+        # We cannot rely on server_conn.tls_established,
+        # see https://github.com/mitmproxy/mitmproxy/issues/925
+        self.__initial_server_tls = None
 
     def __call__(self):
         if self.mode == "transparent":
-            self.__original_server_conn = self.server_conn
+            self.__initial_server_tls = self._server_tls
+            self.__initial_server_conn = self.server_conn
         while True:
             try:
                 request = self.get_request_from_client()
@@ -334,12 +339,11 @@ class HttpLayer(Layer):
         else:
             # Setting request.host also updates the host header, which we want to preserve
             host_header = flow.request.headers.get("host", None)
-            flow.request.host = self.__original_server_conn.address.host
-            flow.request.port = self.__original_server_conn.address.port
+            flow.request.host = self.__initial_server_conn.address.host
+            flow.request.port = self.__initial_server_conn.address.port
             if host_header:
                 flow.request.headers["host"] = host_header
-            # TODO: This does not really work if we change the first request and --no-upstream-cert is enabled
-            flow.request.scheme = "https" if self.__original_server_conn.tls_established else "http"
+            flow.request.scheme = "https" if self.__initial_server_tls else "http"
 
         request_reply = self.channel.ask("request", flow)
         if request_reply == Kill:
