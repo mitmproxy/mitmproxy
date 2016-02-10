@@ -8,6 +8,7 @@ from netlib.http import CONTENT_MISSING
 import netlib.utils
 
 from .. import utils
+from .. import flow_export
 from ..models import decoded
 from . import signals
 
@@ -281,56 +282,13 @@ def copy_flow_format_data(part, scope, flow):
 
 
 def export_prompt(k, flow):
-    if k == "c":
-        copy_as_curl_command(flow)
-    elif k == "p":
-        copy_as_python_code(flow)
-    elif k == "r":
-        copy_as_raw_request(flow)
-
-
-def copy_as_curl_command(flow):
-    data = "curl "
-
-    for k, v in flow.request.headers.fields:
-        data += "-H '%s:%s' " % (k, v)
-
-    if flow.request.method != "GET":
-        data += "-X %s " % flow.request.method
-
-    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
-    data += "'%s'" % full_url
-
-    if flow.request.content:
-        data += " --data-binary '%s'" % flow.request.content
-
-    copy_to_clipboard_or_prompt(data)
-
-
-def copy_as_python_code(flow):
-    if flow.request.method != "GET":
-        signals.status_message.send(message="Currently, only GET methods are supported")
-        return
-
-    data = ("import requests\n"
-            "headers = {%s}\n"
-            "url = '%s'\n"
-            "resp = requests.get(url, headers=headers)")
-
-    headers = "\n"
-    for k, v in flow.request.headers.fields:
-        headers += "    '%s': '%s',\n" % (k, v)
-
-    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
-
-    data = data % (headers, full_url)
-
-    copy_to_clipboard_or_prompt(data)
-
-
-def copy_as_raw_request(flow):
-    data = netlib.http.http1.assemble_request(flow.request)
-    copy_to_clipboard_or_prompt(data)
+    exporters = {
+        "c": flow_export.curl_command,
+        "p": flow_export.python_code,
+        "r": flow_export.raw_request,
+    }
+    if k in exporters:
+        copy_to_clipboard_or_prompt(exporters[k](flow))
 
 
 def copy_to_clipboard_or_prompt(data):
