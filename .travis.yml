@@ -79,21 +79,34 @@ after_success:
         echo "-----END RSA PRIVATE KEY-----" >>  private_key
         chmod 600 private_key
 
+        VERSION=$(python -c 'from libmproxy import version; print(version.VERSION)')
+
+        function r {
+          sftp \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o LogLevel=quiet \
+            -i private_key \
+            -b batch.txt \
+            -P $SNAPSHOT_PORT \
+            $SNAPSHOT_USERNAME@$SNAPSHOT_HOSTNAME
+        }
+
         echo "cd snapshots" > batch.txt
         echo "mkdir .temp-$TRAVIS_COMMIT" >> batch.txt
         echo "put -r ../release/dist/* .temp-$TRAVIS_COMMIT/" >> batch.txt
-        echo "rename .temp-$TRAVIS_COMMIT $TRAVIS_COMMIT" >> batch.txt
+        echo "rename .temp-$TRAVIS_COMMIT v$VERSION-$TRAVIS_COMMIT" >> batch.txt
         echo "rm latest" >> batch.txt
-        echo "symlink $TRAVIS_COMMIT latest" >> batch.txt
+        echo "symlink v$VERSION-$TRAVIS_COMMIT latest" >> batch.txt
+        r
 
-        sftp \
-          -o StrictHostKeyChecking=no \
-          -o UserKnownHostsFile=/dev/null \
-          -o LogLevel=quiet \
-          -i private_key \
-          -b batch.txt \
-          -P $SNAPSHOT_PORT \
-          $SNAPSHOT_USERNAME@$SNAPSHOT_HOSTNAME
+        echo "cd snapshots" > batch.txt
+        echo "ls -t" >> batch.txt
+        OLD_RELEASES=$(r | grep -F "v$VERSION" | sed -e '1,10d' -e 's/^/rmdir "/' -e 's/ *$/"/')
+
+        echo "cd snapshots" > batch.txt
+        echo "$OLD_RELEASES" >> batch.txt
+        r
     fi
 
 notifications:
