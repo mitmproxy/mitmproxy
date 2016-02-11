@@ -11,8 +11,9 @@ import runpy
 import zipfile
 import tarfile
 import platform
-import sys
 import click
+import pysftp
+from six.moves import shlex_quote
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
@@ -23,12 +24,12 @@ else:
 
 if platform.system() == "Windows":
     def Archive(name):
-        a = zipfile.ZipFile(name + ".zip", "w")
+        a = zipfile.ZipFile(name, "w")
         a.add = a.write
         return a
 else:
     def Archive(name):
-        return tarfile.open(name + ".tar.gz", "w:gz")
+        return tarfile.open(name, "w:gz")
 
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
 DIST_DIR = join(RELEASE_DIR, "dist")
@@ -46,17 +47,20 @@ ALL_PROJECTS = {
     "netlib": {
         "tools": [],
         "vfile": join(ROOT_DIR, "netlib/netlib/version.py"),
-        "dir": join(ROOT_DIR, "netlib")
+        "dir": join(ROOT_DIR, "netlib"),
+        "python_version": "py2.py3"  # this is the format in wheel filenames
     },
     "pathod": {
         "tools": ["pathod", "pathoc"],
         "vfile": join(ROOT_DIR, "pathod/libpathod/version.py"),
-        "dir": join(ROOT_DIR, "pathod")
+        "dir": join(ROOT_DIR, "pathod"),
+        "python_version": "py2"
     },
     "mitmproxy": {
         "tools": ["mitmproxy", "mitmdump", "mitmweb"],
         "vfile": join(ROOT_DIR, "mitmproxy/libmproxy/version.py"),
-        "dir": join(ROOT_DIR, "mitmproxy")
+        "dir": join(ROOT_DIR, "mitmproxy"),
+        "python_version": "py2"
     }
 }
 if platform.system() == "Windows":
@@ -69,6 +73,40 @@ def get_version(project):
     return runpy.run_path(projects[project]["vfile"])["VERSION"]
 
 
+def get_snapshot_version(project):
+    last_tag, tag_dist, commit = subprocess.check_output(
+        ["git", "describe", "--tags", "--long"],
+        cwd=projects[project]["dir"]
+    ).strip().rsplit("-", 2)
+    tag_dist = int(tag_dist)
+    if tag_dist == 0:
+        return get_version(project)
+    else:
+        return "{version}dev{tag_dist:04}-{commit}".format(
+            version=get_version(project),  # this should already be the next version
+            tag_dist=tag_dist,
+            commit=commit
+        )
+
+
+def archive_name(project):
+    platform_tag = {
+        "Darwin": "osx",
+        "Windows": "win32",
+        "Linux": "linux"
+    }.get(platform.system(), platform.system())
+    if platform.system() == "Windows":
+        ext = "zip"
+    else:
+        ext = "tar.gz"
+    return "{project}-{version}-{platform}.{ext}".format(
+        project=project,
+        version=get_version(project),
+        platform=platform_tag,
+        ext=ext
+    )
+
+
 def sdist_name(project):
     return "{project}-{version}.tar.gz".format(
         project=project,
@@ -77,10 +115,10 @@ def sdist_name(project):
 
 
 def wheel_name(project):
-    return "{project}-{version}-py{py_version}-none-any.whl".format(
+    return "{project}-{version}-{py_version}-none-any.whl".format(
         project=project,
         version=get_version(project),
-        py_version=sys.version_info.major
+        py_version=projects[project]["python_version"]
     )
 
 
@@ -152,6 +190,14 @@ def set_version(version):
             f.write(new_content)
 
 
+def _git(project, args):
+    print("%s> %s..." % (project, shlex_quote(args)))
+    subprocess.check_call(
+        args,
+        cwd=projects[project]["dir"]
+    )
+
+
 @cli.command("git")
 @click.argument('args', nargs=-1, required=True)
 def git(args):
@@ -160,11 +206,7 @@ def git(args):
     """
     args = ["git"] + list(args)
     for project, conf in projects.items():
-        print("%s> %s..." % (project, " ".join(args)))
-        subprocess.check_call(
-            args,
-            cwd=conf["dir"]
-        )
+        _git(project, args)
 
 
 @cli.command("sdist")
@@ -229,16 +271,7 @@ def bdist(ctx, use_existing_sdist, pyinstaller_version):
 
     for p, conf in projects.items():
         if conf["tools"]:
-            archive_name = "{project}-{version}-{platform}".format(
-                project=p,
-                version=get_version(p),
-                platform={
-                    "Darwin": "osx",
-                    "Windows": "win32",
-                    "Linux": "linux"
-                }.get(platform.system(), platform.system())
-            )
-            with Archive(join(DIST_DIR, archive_name)) as archive:
+            with Archive(join(DIST_DIR, archive_name(p))) as archive:
                 for tool in conf["tools"]:
                     spec = join(conf["dir"], "release", "%s.spec" % tool)
                     print("Building %s binary..." % tool)
@@ -259,26 +292,29 @@ def bdist(ctx, use_existing_sdist, pyinstaller_version):
                     executable = join(PYINSTALLER_DIST, tool)
                     if platform.system() == "Windows":
                         executable += ".exe"
-                    print("Testinng %s..." % executable)
+                    print("> %s --version" % executable)
                     subprocess.check_call([executable, "--version"])
 
                     archive.add(executable, os.path.basename(executable))
-            print("Packed {}.".format(archive_name))
+            print("Packed {}.".format(archive_name(p)))
 
 
-@cli.command("upload")
+@cli.command("upload-release")
 @click.option('--username', prompt=True)
 @click.password_option(confirmation_prompt=False)
 @click.option('--repository', default="pypi")
-def upload_release(username, password, repository):
+@click.option("--sdist/--no-sdist", default=True)
+@click.option("--wheel/--no-wheel", default=True)
+def upload_release(username, password, repository, sdist, wheel):
     """
     Upload source distributions to PyPI
     """
     for project in projects.keys():
-        files = (
-            sdist_name(project),
-            wheel_name(project)
-        )
+        files = []
+        if sdist:
+            files.append(sdist_name(project))
+        if wheel:
+            files.append(wheel_name(project))
         for f in files:
             print("Uploading {} to {}...".format(f, repository))
             subprocess.check_call([
@@ -291,13 +327,61 @@ def upload_release(username, password, repository):
             ])
 
 
+@cli.command("upload-snapshot")
+@click.option("--host", envvar="SNAPSHOT_HOST", prompt=True)
+@click.option("--port", envvar="SNAPSHOT_PORT", type=int, default=22)
+@click.option("--username", envvar="SNAPSHOT_USER", prompt=True)
+@click.option("--password", envvar="SNAPSHOT_PASS", prompt=True, hide_input=True)
+@click.option("--sdist/--no-sdist", default=False)
+@click.option("--wheel/--no-wheel", default=False)
+@click.option("--bdist/--no-bdist", default=False)
+def upload_snapshot(host, port, username, password, sdist, wheel, bdist):
+    """
+    Upload snapshot to snapshot server
+    """
+    with pysftp.Connection(host=host, port=port, username=username, password=password) as sftp:
+        for project, conf in projects.items():
+            dir_name = "snapshots/v{}".format(get_version(project))
+            sftp.makedirs(dir_name)
+            with sftp.cd(dir_name):
+                files = []
+                if sdist:
+                    files.append(sdist_name(project))
+                if wheel:
+                    files.append(wheel_name(project))
+                if bdist and conf["tools"]:
+                    files.append(archive_name(project))
+
+                for f in files:
+                    local_path = join(DIST_DIR, f)
+                    remote_filename = f.replace(get_version(project), get_snapshot_version(project))
+                    symlink_path = "../{}".format(f.replace(get_version(project), "latest"))
+
+                    print("Uploading {} as {}...".format(f, remote_filename))
+                    with click.progressbar(length=os.stat(local_path).st_size) as bar:
+                        sftp.put(
+                            local_path,
+                            "." + remote_filename,
+                            callback=lambda done, total: bar.update(done - bar.pos)
+                        )
+                        # We hide the file during upload.
+                        if sftp.exists(remote_filename):
+                            sftp.remove(remote_filename)
+                        sftp.rename("." + remote_filename, remote_filename)
+
+                    # add symlink
+                    if sftp.lexists(symlink_path):
+                        sftp.remove(symlink_path)
+                    sftp.symlink("v{}/{}".format(get_version(project), remote_filename), symlink_path)
+
+
 @cli.command("wizard")
-@click.option('--version', prompt=True)
+@click.option('--next-version', prompt=True)
 @click.option('--username', prompt="PyPI Username")
 @click.password_option(confirmation_prompt=False, prompt="PyPI Password")
 @click.option('--repository', default="pypi")
 @click.pass_context
-def wizard(ctx, version, username, password, repository):
+def wizard(ctx, next_version, username, password, repository):
     """
     Interactive Release Wizard
     """
@@ -306,29 +390,35 @@ def wizard(ctx, version, username, password, repository):
         if is_dirty:
             raise RuntimeError("%s repository is not clean." % project)
 
-    # bump version, update docs and contributors
-    ctx.invoke(set_version, version=version)
+    # update contributors file
     ctx.invoke(contributors)
 
     # Build test release
     ctx.invoke(bdist)
-    click.confirm("Please test the release now. Is it ok?", abort=True)
 
-    # version bump commit + tag
-    ctx.invoke(
-        git, args=["commit", "-a", "-m", "bump version"]
-    )
-    ctx.invoke(git, args=["tag", "v" + version])
-    ctx.invoke(git, args=["push"])
-    ctx.invoke(git, args=["push", "--tags"])
+    try:
+        click.confirm("Please test the release now. Is it ok?", abort=True)
+    except click.Abort:
+        # undo changes
+        ctx.invoke(git, ["checkout", "CONTRIBUTORS"])
+        raise
 
-    # Re-invoke sdist with bumped version
-    ctx.invoke(sdist)
-    click.confirm("All good, can upload sdist to PyPI?", abort=True)
+    # Everything ok - let's ship it!
+    for p in projects.keys():
+        _git(p, ["tag", "v" + get_version(p)])
+    ctx.invoke(git, ["push", "--tags"])
     ctx.invoke(
         upload_release,
         username=username, password=password, repository=repository
     )
+
+    # version bump commit
+    ctx.invoke(set_version, version=next_version)
+    ctx.invoke(
+        git, args=["commit", "-a", "-m", "bump version"]
+    )
+    ctx.invoke(git, args=["push"])
+
     click.echo("All done!")
 
 
