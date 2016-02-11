@@ -330,16 +330,21 @@ def upload_release(username, password, repository, sdist, wheel):
 @cli.command("upload-snapshot")
 @click.option("--host", envvar="SNAPSHOT_HOST", prompt=True)
 @click.option("--port", envvar="SNAPSHOT_PORT", type=int, default=22)
-@click.option("--username", envvar="SNAPSHOT_USER", prompt=True)
-@click.option("--password", envvar="SNAPSHOT_PASS", prompt=True, hide_input=True)
+@click.option("--user", envvar="SNAPSHOT_USER", prompt=True)
+@click.option("--private-key", default=join(RELEASE_DIR, "rtool.pem"))
+@click.option("--private-key-password", envvar="SNAPSHOT_PASS", prompt=True, hide_input=True)
 @click.option("--sdist/--no-sdist", default=False)
 @click.option("--wheel/--no-wheel", default=False)
 @click.option("--bdist/--no-bdist", default=False)
-def upload_snapshot(host, port, username, password, sdist, wheel, bdist):
+def upload_snapshot(host, port, user, private_key, private_key_password, sdist, wheel, bdist):
     """
     Upload snapshot to snapshot server
     """
-    with pysftp.Connection(host=host, port=port, username=username, password=password) as sftp:
+    with pysftp.Connection(host=host,
+                           port=port,
+                           username=user,
+                           private_key=private_key,
+                           private_key_pass=private_key_password) as sftp:
         for project, conf in projects.items():
             dir_name = "snapshots/v{}".format(get_version(project))
             sftp.makedirs(dir_name)
