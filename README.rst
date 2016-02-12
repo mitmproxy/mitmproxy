@@ -149,8 +149,8 @@ the documentation when a change is detected.
     :alt: Supported Python versions
 
 .. _Python: https://www.python.org/
-.. _virtualenv: https://virtualenv.pypa.io/en/latest/
-.. _here: https://virtualenv.pypa.io/en/latest/installation.html
+.. _virtualenv: http://virtualenv.readthedocs.org/en/latest/
+.. _here: http://virtualenv.readthedocs.org/en/latest/installation.html
 .. _autoenv: https://github.com/kennethreitz/autoenv
 .. _.env: https://github.com/mitmproxy/mitmproxy/blob/master/.env
 .. _Sphinx: http://sphinx-doc.org/
