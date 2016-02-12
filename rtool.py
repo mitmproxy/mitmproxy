@@ -13,6 +13,7 @@ import tarfile
 import platform
 import click
 import pysftp
+import fnmatch
 from six.moves import shlex_quote
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -361,6 +362,11 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
                     local_path = join(DIST_DIR, f)
                     remote_filename = f.replace(get_version(project), get_snapshot_version(project))
                     symlink_path = "../{}".format(f.replace(get_version(project), "latest"))
+
+                    old_version = f.replace(get_version(project), "*")
+                    for f in sftp.listdir():
+                        if fnmatch.fnmatch(f, old_version):
+                            sftp.remove(f)
 
                     print("Uploading {} as {}...".format(f, remote_filename))
                     with click.progressbar(length=os.stat(local_path).st_size) as bar:
