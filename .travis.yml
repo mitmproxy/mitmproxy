@@ -68,16 +68,44 @@ script:
 after_success:
   - coveralls
   - |
-    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
-    then
-        brew install curl --with-libssh2
+    if [[ $TRAVIS_REPO_SLUG == "mitmproxy/mitmproxy" && $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" ]]; then
         git clone https://github.com/mitmproxy/release.git ../release
         pip install -e ../release
         python ../release/rtool.py -p netlib -p mitmproxy bdist
-        for f in ../release/dist/*
-        do
-          $(brew --prefix curl)/bin/curl -u $SNAPSHOT_AUTH --hostpubmd5 $SNAPSHOT_PUBKEY --retry 5 -T $f sftp://$SNAPSHOT_HOST/
-        done
+
+        echo "-----BEGIN RSA PRIVATE KEY-----" >  private_key
+        echo $SNAPSHOT_PRIVATEKEY | fold -w 65 >>  private_key
+        echo "-----END RSA PRIVATE KEY-----" >>  private_key
+        chmod 600 private_key
+
+        VERSION=$(python -c 'from libmproxy import version; print(version.VERSION)')
+
+        function r {
+          sftp \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o LogLevel=quiet \
+            -i private_key \
+            -b batch.txt \
+            -P $SNAPSHOT_PORT \
+            $SNAPSHOT_USERNAME@$SNAPSHOT_HOSTNAME
+        }
+
+        echo "cd snapshots" > batch.txt
+        echo "mkdir .temp-$TRAVIS_COMMIT" >> batch.txt
+        echo "put -r ../release/dist/* .temp-$TRAVIS_COMMIT/" >> batch.txt
+        echo "rename .temp-$TRAVIS_COMMIT v$VERSION-$TRAVIS_COMMIT" >> batch.txt
+        echo "rm latest" >> batch.txt
+        echo "symlink v$VERSION-$TRAVIS_COMMIT latest" >> batch.txt
+        r
+
+        echo "cd snapshots" > batch.txt
+        echo "ls -t" >> batch.txt
+        OLD_RELEASES=$(r | grep -F "v$VERSION" | sed -e '1,10d' -e 's/^/rmdir "/' -e 's/ *$/"/')
+
+        echo "cd snapshots" > batch.txt
+        echo "$OLD_RELEASES" >> batch.txt
+        r
     fi
 
 notifications:
