@@ -1,8 +1,7 @@
 include mitmproxy mitmdump mitmweb
 include LICENSE CHANGELOG CONTRIBUTORS CONTRIBUTING.md README.rst
 graft examples
+graft libmproxy
 graft test
 prune test/tools
-prune docs
-graft libmproxy
-recursive-exclude * *.pyc *.pyo *.swo *.swp
+recursive-exclude * *.pyc *.pyo *.swo *.swp *.map
