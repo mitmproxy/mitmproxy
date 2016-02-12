@@ -366,22 +366,23 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
                     old_version = f.replace(get_version(project), "*")
                     for f in sftp.listdir():
                         if fnmatch.fnmatch(f, old_version):
+                            print("Removing {}...".format(f))
                             sftp.remove(f)
 
-                    print("Uploading {} as {}...".format(f, remote_filename))
+
                     with click.progressbar(length=os.stat(local_path).st_size) as bar:
+                        print("Uploading {} as {}...".format(f, remote_filename))
                         sftp.put(
                             local_path,
                             "." + remote_filename,
                             callback=lambda done, total: bar.update(done - bar.pos)
                         )
                         # We hide the file during upload.
-                        if sftp.exists(remote_filename):
-                            sftp.remove(remote_filename)
                         sftp.rename("." + remote_filename, remote_filename)
 
                     # add symlink
                     if sftp.lexists(symlink_path):
+                        print("Removing {}...".format(symlink_path))
                         sftp.remove(symlink_path)
                     sftp.symlink("v{}/{}".format(get_version(project), remote_filename), symlink_path)
 
