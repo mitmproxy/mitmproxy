@@ -48,21 +48,18 @@ class BasicAuth(object):
         self._transforms = []
         self.finish()
 
-    def initialize(self, **kwargs):
-        self.wauthenticator = kwargs.get("wauthenticator")
-
     def prepare(self):
-        if self.wauthenticator:
+        wauthenticator = self.application.settings['wauthenticator']
+        if wauthenticator:
             auth_header = self.request.headers.get('Authorization')
             if auth_header is None or not auth_header.startswith('Basic '):
                 self.set_auth_headers()
             else:
                 self.auth_decoded = base64.decodestring(auth_header[6:])
                 self.username, self.password = self.auth_decoded.split(':', 2)
-                if not self.wauthenticator.test(self.username, self.password):
+                if not wauthenticator.test(self.username, self.password):
                     self.set_auth_headers()
                     raise APIError(401, "Invalid username or password.")
-
 
 
 class RequestHandler(BasicAuth, tornado.web.RequestHandler):
@@ -311,9 +308,6 @@ class Application(tornado.web.Application):
 
     def __init__(self, master, debug, wauthenticator):
         self.master = master
-        self.additional_args = dict(
-            wauthenticator=wauthenticator,
-        )
         handlers = [
             (r"/", IndexHandler),
             (r"/filter-help", FiltHelp),
@@ -330,14 +324,12 @@ class Application(tornado.web.Application):
             (r"/settings", Settings),
             (r"/clear", ClearAll),
         ]
-        for i, handler in enumerate(handlers):
-            handlers[i] += (self.additional_args,)
-
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
             cookie_secret=os.urandom(256),
             debug=debug,
+            wauthenticator=wauthenticator,
         )
         super(Application, self).__init__(handlers, **settings)
