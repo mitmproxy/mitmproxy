@@ -423,6 +423,8 @@ def wizard(ctx, next_version, username, password, repository):
         username=username, password=password, repository=repository
     )
 
+    click.confirm("Now please wait until CI has built binaries. Finished?")
+
     # version bump commit
     ctx.invoke(set_version, version=next_version)
     ctx.invoke(
