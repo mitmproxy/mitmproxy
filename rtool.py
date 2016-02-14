@@ -192,9 +192,9 @@ def set_version(version):
 
 
 def _git(project, args):
-    print("%s> %s..." % (project, shlex_quote(args)))
+    print("%s> %s..." % (project, " ".join(shlex_quote(a) for a in args)))
     subprocess.check_call(
-        args,
+        ["git"] + list(args),
         cwd=projects[project]["dir"]
     )
 
@@ -205,9 +205,9 @@ def git(args):
     """
     Run a git command on every project
     """
-    args = ["git"] + list(args)
     for project, conf in projects.items():
         _git(project, args)
+        print("")
 
 
 @cli.command("sdist")
@@ -412,13 +412,13 @@ def wizard(ctx, next_version, username, password, repository):
         click.confirm("Please test the release now. Is it ok?", abort=True)
     except click.Abort:
         # undo changes
-        ctx.invoke(git, ["checkout", "CONTRIBUTORS"])
+        ctx.invoke(git, args=["checkout", "CONTRIBUTORS"])
         raise
 
     # Everything ok - let's ship it!
     for p in projects.keys():
         _git(p, ["tag", "v" + get_version(p)])
-    ctx.invoke(git, ["push", "--tags"])
+    ctx.invoke(git, args=["push", "--tags"])
     ctx.invoke(
         upload_release,
         username=username, password=password, repository=repository
