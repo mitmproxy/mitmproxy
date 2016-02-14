@@ -20,6 +20,8 @@ def _strip_content(flow_state):
     for attr in ("request", "response"):
         if attr in flow_state:
             message = flow_state[attr]
+            if message is None:
+                continue
             if message["content"]:
                 message["contentLength"] = len(message["content"])
             elif message["content"] == CONTENT_MISSING:
