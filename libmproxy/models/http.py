@@ -456,14 +456,13 @@ def make_connect_request(address):
 
 
 def make_connect_response(http_version):
-    headers = Headers(
-        Proxy_Agent=version.NAMEVERSION
-    )
+    # Do not send any response headers as it breaks proxying non-80 ports on
+    # Android emulators using the -http-proxy option.
     return HTTPResponse(
         http_version,
         200,
         "Connection established",
-        headers,
+        Headers(),
         "",
     )
 
