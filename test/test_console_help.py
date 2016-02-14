@@ -6,21 +6,6 @@ if os.name == "nt":
 import libmproxy.console.help as help
 
 
-class DummyLoop:
-
-    def __init__(self):
-        self.widget = None
-
-
-class DummyMaster:
-
-    def __init__(self):
-        self.loop = DummyLoop()
-
-    def make_view(self):
-        pass
-
-
 class TestHelp:
 
     def test_helptext(self):
@@ -28,7 +13,6 @@ class TestHelp:
         assert h.helptext()
 
     def test_keypress(self):
-        DummyMaster()
         h = help.HelpView([1, 2, 3])
         assert not h.keypress((0, 0), "q")
         assert not h.keypress((0, 0), "?")

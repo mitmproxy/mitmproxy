@@ -532,7 +532,6 @@ class TestState:
         assert c.flow_count() == 2
         assert c.active_flow_count() == 1
 
-        HTTPResponse.wrap(netlib.tutils.tresp())
         assert not c.update_flow(None)
         assert c.active_flow_count() == 1
 
