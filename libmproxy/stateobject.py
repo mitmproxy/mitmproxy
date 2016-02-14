@@ -3,6 +3,7 @@ from netlib.utils import Serializable
 
 
 class StateObject(Serializable):
+
     """
     An object with serializable state.
 

@@ -234,7 +234,6 @@ class Http2Layer(Layer):
                             stream.zombie = time.time()
                         return
 
-
                     frame, _ = hyperframe.frame.Frame.parse_frame_header(raw_frame[:9])
 
                     if is_server:
