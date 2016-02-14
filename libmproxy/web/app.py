@@ -42,6 +42,7 @@ class APIError(tornado.web.HTTPError):
 
 
 class BasicAuth(object):
+
     def set_auth_headers(self):
         self.set_status(401)
         self.set_header('WWW-Authenticate', 'Basic realm=MITMWeb')

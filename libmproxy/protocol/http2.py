@@ -18,8 +18,6 @@ from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
 from .. import utils
 from ..models import HTTPRequest, HTTPResponse
-from ..exceptions import HttpProtocolException
-from ..exceptions import ProtocolException
 
 
 class SafeH2Connection(H2Connection):
@@ -233,7 +231,6 @@ class Http2Layer(Layer):
                         for stream in self.streams.values():
                             stream.zombie = time.time()
                         return
-
 
                     frame, _ = hyperframe.frame.Frame.parse_frame_header(raw_frame[:9])
 

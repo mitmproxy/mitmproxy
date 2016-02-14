@@ -1,12 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
-import six
 
-from netlib import tcp
 from netlib.http import http1
 
 from .http import _HttpTransmissionLayer, HttpLayer
-from .. import utils
 from ..models import HTTPRequest, HTTPResponse
 
 
