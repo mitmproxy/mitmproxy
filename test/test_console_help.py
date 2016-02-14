@@ -28,7 +28,7 @@ class TestHelp:
         assert h.helptext()
 
     def test_keypress(self):
-        master = DummyMaster()
+        DummyMaster()
         h = help.HelpView([1, 2, 3])
         assert not h.keypress((0, 0), "q")
         assert not h.keypress((0, 0), "?")

@@ -209,7 +209,7 @@ class TestMatching:
 
     def test_method(self):
         q = self.req()
-        s = self.resp()
+        self.resp()
         assert self.q("~m get", q)
         assert not self.q("~m post", q)
 
@@ -218,7 +218,7 @@ class TestMatching:
 
     def test_domain(self):
         q = self.req()
-        s = self.resp()
+        self.resp()
         assert self.q("~d host", q)
         assert not self.q("~d none", q)
 

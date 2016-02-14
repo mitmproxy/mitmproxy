@@ -419,7 +419,7 @@ class TlsLayer(Layer):
         try:
             self.ctx.connect()
             self._establish_tls_with_server()
-        except Exception as e:
+        except Exception:
             try:
                 self._establish_tls_with_client()
             except:

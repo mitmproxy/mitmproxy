@@ -242,7 +242,6 @@ class HttpLayer(Layer):
             self.send_response(response)
         except (NetlibException, H2Error):
             self.log(traceback.format_exc(), "debug")
-            pass
 
     def change_upstream_proxy_server(self, address):
         # Make set_upstream_proxy_server always available,

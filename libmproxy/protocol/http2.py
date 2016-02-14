@@ -18,8 +18,6 @@ from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
 from .. import utils
 from ..models import HTTPRequest, HTTPResponse
-from ..exceptions import HttpProtocolException
-from ..exceptions import ProtocolException
 
 
 class SafeH2Connection(H2Connection):
