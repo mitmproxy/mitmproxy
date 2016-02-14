@@ -131,6 +131,12 @@ class Http2Layer(Layer):
         raise NotImplementedError()
 
     def _handle_event(self, event, source_conn, other_conn, is_server):
+        self.log(
+            "HTTP2 Event from {}".format("server" if is_server else "client"),
+            "debug",
+            [repr(event)]
+        )
+
         if hasattr(event, 'stream_id'):
             if is_server and event.stream_id % 2 == 1:
                 eid = self.server_to_client_stream_ids[event.stream_id]
