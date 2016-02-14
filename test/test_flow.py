@@ -350,7 +350,7 @@ class TestFlow(object):
 
     def test_copy(self):
         f = tutils.tflow(resp=True)
-        a0 = f.get_state()
+        f.get_state()
         f2 = f.copy()
         a = f.get_state()
         b = f2.get_state()
@@ -532,7 +532,6 @@ class TestState:
         assert c.flow_count() == 2
         assert c.active_flow_count() == 1
 
-        _ = HTTPResponse.wrap(netlib.tutils.tresp())
         assert not c.update_flow(None)
         assert c.active_flow_count() == 1
 

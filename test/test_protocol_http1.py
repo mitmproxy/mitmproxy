@@ -1,7 +1,6 @@
-from netlib.exceptions import HttpSyntaxException
 from netlib.http import http1
 from netlib.tcp import TCPClient
-from netlib.tutils import treq, raises
+from netlib.tutils import treq
 from . import tutils, tservers
 
 

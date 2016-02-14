@@ -5,10 +5,8 @@ import pytest
 import traceback
 import os
 import tempfile
-import sys
 
 from libmproxy.proxy.config import ProxyConfig
-from libmproxy.proxy.server import ProxyServer
 from libmproxy.cmdline import APP_HOST, APP_PORT
 
 import logging
@@ -24,9 +22,7 @@ from netlib import tservers as netlib_tservers
 from netlib.utils import http2_read_raw_frame
 
 import h2
-from hyperframe.frame import Frame
 
-from libmproxy import utils
 from . import tservers
 
 requires_alpn = pytest.mark.skipif(

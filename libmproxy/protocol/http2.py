@@ -18,8 +18,6 @@ from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
 from .. import utils
 from ..models import HTTPRequest, HTTPResponse
-from ..exceptions import HttpProtocolException
-from ..exceptions import ProtocolException
 
 
 class SafeH2Connection(H2Connection):
@@ -131,6 +129,12 @@ class Http2Layer(Layer):
         raise NotImplementedError()
 
     def _handle_event(self, event, source_conn, other_conn, is_server):
+        self.log(
+            "HTTP2 Event from {}".format("server" if is_server else "client"),
+            "debug",
+            [repr(event)]
+        )
+
         if hasattr(event, 'stream_id'):
             if is_server and event.stream_id % 2 == 1:
                 eid = self.server_to_client_stream_ids[event.stream_id]
@@ -227,7 +231,6 @@ class Http2Layer(Layer):
                         for stream in self.streams.values():
                             stream.zombie = time.time()
                         return
-
 
                     frame, _ = hyperframe.frame.Frame.parse_frame_header(raw_frame[:9])
 

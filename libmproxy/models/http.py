@@ -13,7 +13,6 @@ from .. import version
 from .flow import Flow
 
 
-
 class MessageMixin(object):
 
     def get_decoded_content(self):
