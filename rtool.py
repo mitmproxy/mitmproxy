@@ -369,9 +369,8 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
                             print("Removing {}...".format(f))
                             sftp.remove(f)
 
-
+                    print("Uploading {} as {}...".format(f, remote_filename))
                     with click.progressbar(length=os.stat(local_path).st_size) as bar:
-                        print("Uploading {} as {}...".format(f, remote_filename))
                         sftp.put(
                             local_path,
                             "." + remote_filename,
