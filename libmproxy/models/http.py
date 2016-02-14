@@ -187,6 +187,7 @@ class HTTPRequest(MessageMixin, Request):
     @form_out.setter
     def form_out(self, value):
         warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
+        self.first_line_format = value
 
     def __hash__(self):
         return id(self)
