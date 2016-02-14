@@ -70,7 +70,7 @@ after_success:
   - |
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
     then
-        git clone https://github.com/mitmproxy/release.git ../release
+        git clone -q https://github.com/mitmproxy/release.git ../release
         pip install -e ../release
         python ../release/rtool.py bdist
         python ../release/rtool.py upload-snapshot --sdist --bdist --wheel
