@@ -56,7 +56,7 @@ setup(
         "configargparse>=0.10, <0.11",
         "pyperclip>=1.5.22, <1.6",
         "blinker>=1.4, <1.5",
-        "pyparsing>=2.0.5, <2.1",
+        "pyparsing>=2.1,<2.2",
         "html2text==2016.1.8",
         "construct>=2.5.2, <2.6",
         "six>=1.10, <1.11",
