@@ -1,8 +1,12 @@
-max-line-length: 120
+ignore-paths:
+  - docs
+  - examples
+  - libmproxy/contrib
+  - web
+max-line-length: 140
 pylint:
   options:
     dummy-variables-rgx: _$|.+_$|dummy_.+
-
   disable:
     - missing-docstring
     - protected-access
