@@ -1,3 +1,26 @@
+15 January 2016: mitmproxy 0.16
+
+    * Completely revised HTTP2 implementation based on hyper-h2 (Thomas Kriechbaumer)
+
+    * Export flows as cURL command, Python code or raw HTTP (Shadab Zafar)
+
+    * Fixed compatibility with the Android Emulator (Will Coster)
+
+    * Script Reloader: Inline scripts are reloaded automatically if modified (Matthew Shao)
+
+    * Inline script hooks for TCP mode (Michael J. Bazzinotti)
+
+    * Add default ciphers to support iOS9 App Transport Security (Jorge Villacorta)
+
+    * Basic Authentication for mitmweb (Guillem Anguera)
+
+    * Exempt connections from interception based on TLS Server Name Indication (David Weinstein)
+
+    * Provide Python Wheels for faster installation
+
+    * Numerous bugfixes and minor improvements
+
+
 4 December 2015: mitmproxy 0.15
 
     * Support for loading and converting older dumpfile formats (0.13 and up)
