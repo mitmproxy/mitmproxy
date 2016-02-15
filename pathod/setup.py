@@ -11,7 +11,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(here, "..", "netlib"))
 from libpathod import version
 
-with open(os.path.join(here, 'README.txt'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(

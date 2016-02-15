@@ -1,3 +1,6 @@
+mitmproxy
+^^^^^^^^^
+
 |travis| |coveralls| |downloads| |latest_release| |python_versions|
 
 This repository contains the **mitmproxy** and **pathod** projects, as well as their shared networking library, **netlib**.
@@ -97,11 +100,11 @@ The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory
 the documentation when a change is detected.
 
 
-.. |mitmproxy_site| image:: https://img.shields.io/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
+.. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |pathod_site| image:: https://img.shields.io/badge/https%3A%2F%2F-pathod.net-blue.svg
+.. |pathod_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-pathod.net-blue.svg
     :target: https://pathod.net/
     :alt: pathod.net
 
@@ -109,31 +112,27 @@ the documentation when a change is detected.
     :target: http://docs.mitmproxy.org/en/latest/
     :alt: mitmproxy documentation
 
-.. |pathod_docs| image:: https://readthedocs.org/projects/mitmproxy/badge/
-    :target: http://pathod.net/docs/pathod
-    :alt: pathod documentation
-
 .. |slack| image:: http://slack.mitmproxy.org/badge.svg
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
-.. |travis| image:: https://img.shields.io/travis/mitmproxy/mitmproxy/master.svg
+.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg
     :target: https://travis-ci.org/mitmproxy/mitmproxy
     :alt: Build Status
 
-.. |coveralls| image:: https://img.shields.io/coveralls/mitmproxy/mitmproxy/master.svg
+.. |coveralls| image:: https://shields.mitmproxy.org/coveralls/mitmproxy/mitmproxy/master.svg
     :target: https://coveralls.io/r/mitmproxy/mitmproxy
     :alt: Coverage Status
 
-.. |downloads| image:: https://img.shields.io/pypi/dm/mitmproxy.svg?color=orange
+.. |downloads| image:: https://shields.mitmproxy.org/pypi/dm/mitmproxy.svg?color=orange
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Downloads
 
-.. |latest_release| image:: https://img.shields.io/pypi/v/mitmproxy.svg
+.. |latest_release| image:: https://shields.mitmproxy.org/pypi/v/mitmproxy.svg
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Latest Version
 
-.. |python_versions| image:: https://img.shields.io/pypi/pyversions/mitmproxy.svg
+.. |python_versions| image:: https://shields.mitmproxy.org/pypi/pyversions/mitmproxy.svg
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 
