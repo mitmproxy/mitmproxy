@@ -1,0 +1,98 @@
+sudo: false
+language: python
+
+matrix:
+  fast_finish: true
+  include:
+    - python: 2.7
+    - python: 2.7
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+    - python: 3.5
+    - python: 3.5
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+    - python: pypy
+    - python: pypy
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+
+install:
+  - |
+    if [[ $TRAVIS_OS_NAME == "osx" ]]
+    then
+      brew update || brew update # try again if it fails
+      brew outdated openssl || brew upgrade openssl
+      brew install python
+    fi
+  - |
+      if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
+        export PYENV_ROOT="$HOME/.pyenv"
+        if [ -f "$PYENV_ROOT/bin/pyenv" ]; then
+          pushd "$PYENV_ROOT" && git pull && popd
+        else
+          rm -rf "$PYENV_ROOT" && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
+        fi
+        export PYPY_VERSION="4.0.1"
+        "$PYENV_ROOT/bin/pyenv" install --skip-existing "pypy-$PYPY_VERSION"
+        virtualenv --python="$PYENV_ROOT/versions/pypy-$PYPY_VERSION/bin/python" "$HOME/virtualenvs/pypy-$PYPY_VERSION"
+        source "$HOME/virtualenvs/pypy-$PYPY_VERSION/bin/activate"
+      fi
+  - "pip install -U pip setuptools"
+  - "pip install --src . -r requirements.txt"
+
+before_script:
+  - "openssl version -a"
+
+script:
+  - "py.test -s --cov netlib --timeout 10"
+
+after_success:
+  - coveralls
+
+notifications:
+  irc:
+    channels:
+      - "irc.oftc.net#mitmproxy"
+    on_success: change
+    on_failure: always
+  slack:
+    rooms:
+        - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu#ci
+    on_success: always
+    on_failure: always
+
+# exclude cryptography from cache
+# it depends on libssl-dev version
+# which needs to be compiled specifically to each version
+before_cache:
+  - pip uninstall -y cryptography
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
+    - /home/travis/virtualenv/python2.7.9/bin
+    - /home/travis/virtualenv/pypy-2.5.0/site-packages
+    - /home/travis/virtualenv/pypy-2.5.0/bin

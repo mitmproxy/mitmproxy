@@ -1,0 +1,16 @@
+MANIFEST
+/build
+/dist
+/tmp
+/doc
+*.py[cdo]
+*.swp
+*.swo
+.coverage
+.idea/
+__pycache__
+_cffi__*
+.eggs/
+netlib.egg-info/
+pathod/
+.cache/

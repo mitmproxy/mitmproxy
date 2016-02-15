@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+import sys
+sys.path.insert(0, "../../")
+from netlib import tcp
+
+
+def get_remote_cert(host, port, sni):
+    c = tcp.TCPClient((host, port))
+    c.connect()
+    c.convert_to_ssl(sni=sni)
+    return c.cert
+
+if len(sys.argv) > 2:
+    port = int(sys.argv[2])
+else:
+    port = 443
+if len(sys.argv) > 3:
+    sni = sys.argv[3]
+else:
+    sni = None
+
+cert = get_remote_cert(sys.argv[1], port, sni)
+print "CN:", cert.cn
+if cert.altnames:
+    print "SANs:",
+    for i in cert.altnames:
+        print "\t", i

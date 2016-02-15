@@ -1,0 +1,4 @@
+include LICENSE CONTRIBUTORS README.rst
+graft test
+prune test/tools
+recursive-exclude * *.pyc *.pyo *.swo *.swp
