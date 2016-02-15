@@ -1,0 +1,83 @@
+
+General build and release utilities for the mitmproxy, netlib and pathod
+projects. These tools assume a directory structure with all repositories at the
+same level, for example:
+
+    /src
+        /mitmproxy
+        /netlib
+        /pathod
+        /release
+
+
+# Release policies
+
+  - By default, every release is a new minor (`0.x`) release and it will be
+    pushed for all three projects.
+
+  - Only if an emergency bugfix is needed, we push a new `0.x.y` bugfix release
+    for a single project. This matches with what we do in `setup.py`:
+
+        "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
+
+
+
+# Release Checklist
+
+## Check out release versions
+
+  - Check out the versions of pathod, netlib and mitmproxy due to be released
+
+  - Verify that repositories are in a clean state:
+
+        `./build git status`
+
+  - Ensure that the website style assets have been compiled for production, and
+    synced to the docs.
+
+  - Render the docs, update CONTRIBUTORS file:
+
+        ./build docs contributors
+
+
+## Test
+
+  - Test the source distributions:
+
+        ./build test
+
+    This does the following:
+     - creates a venv in release/venv
+     - creates source distributions in release/release
+     - installs the source distributions in the venv
+     - and runs all installed tools
+
+
+## Release
+
+  - Make a release commit for all projects, tag and push it:
+
+        ./build git commit -am "Release v0.13"
+        ./build git tag v0.13
+        ./build git push --tags
+
+  - Build the OSX binaries
+    - Follow instructions in osx-binaries
+    - Move to download dir:
+
+          mv ./tmp/osx-mitmproxy-VERSION.tar.gz ~/mitmproxy/www.mitmproxy.org/src/download
+
+  - Move all source distributions from `./dist` to the server:
+
+        mv ./dist/* ~/mitmproxy/www.mitmproxy.org/src/download
+
+  - Upload distributions in `./dist` to PyPI:
+
+        ./build upload
+
+    You can test with [testpypi.python.org](https://testpypi.python.org/pypi) by passing `--repository test`.
+    ([more info](https://tom-christie.github.io/articles/pypi/))
+
+  - Now bump the version number to be ready for the next cycle
+
+    `./build set-version 0.13`
