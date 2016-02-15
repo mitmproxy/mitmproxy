@@ -1,2 +1,0 @@
-libmproxy/web/static/**/* -diff
-web/src/js/filt/filt.js -diff

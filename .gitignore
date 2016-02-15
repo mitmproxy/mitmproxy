@@ -1,0 +1,19 @@
+.DS_Store
+MANIFEST
+*/build
+*/dist
+*/tmp
+/venv
+*.py[cdo]
+*.swp
+*.swo
+*.egg-info/
+.coverage
+.idea
+.cache/
+
+# UI
+
+node_modules
+bower_components
+*.map

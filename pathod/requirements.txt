@@ -1,2 +1,0 @@
--e git+https://github.com/mitmproxy/netlib.git#egg=netlib
--e .[dev]

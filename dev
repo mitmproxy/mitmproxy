@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
-VENV=../venv.mitmproxy
+VENV=./venv
 
 python -m virtualenv $VENV --always-copy
 . $VENV/bin/activate
-pip install --src .. -r requirements.txt
+pip install -e ./netlib[dev]
+pip install -e ./pathod[dev]
+pip install -e ./mitmproxy[dev,examples,contentviews]
 
 echo ""
 echo "* Created virtualenv environment in $VENV."
