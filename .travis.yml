@@ -22,7 +22,7 @@ matrix:
     - python: 3.5
       env: SCOPE="netlib"
     - python: 3.5
-      env: NO_ALPN=1 SCOPE="netlib"
+      env: SCOPE="netlib" NO_ALPN=1
     - python: 2.7
       env: DOCS=1
       script: 'cd mitmproxy/docs && make html'
@@ -44,7 +44,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "py.test -s --cov libmproxy --cov netlib --cov libpathod --timeout 30 ./test/$SCOPE"
+  - "py.test -s --cov-config .coveragerc --timeout 30 ./test/$SCOPE"
 
 after_success:
   - coveralls
