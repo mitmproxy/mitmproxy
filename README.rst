@@ -100,11 +100,11 @@ The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory
 the documentation when a change is detected.
 
 
-.. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
+.. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |pathod_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-pathod.net-blue.svg
+.. |pathod_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-pathod.net-blue.svg
     :target: https://pathod.net/
     :alt: pathod.net
 
