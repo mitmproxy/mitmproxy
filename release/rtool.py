@@ -102,13 +102,6 @@ def archive_name(project):
     )
 
 
-def sdist_name(project):
-    return "{project}-{version}.tar.gz".format(
-        project=project,
-        version=get_version()
-    )
-
-
 def wheel_name(project):
     return "{project}-{version}-{py_version}-none-any.whl".format(
         project=project,
@@ -186,21 +179,20 @@ def set_version(version):
         f.write(new_content)
 
 
-@cli.command("sdist")
-def sdist():
+@cli.command("wheels")
+def wheels():
     """
-    Build a source distribution
+    Build wheels
     """
     with empty_pythonpath():
         print("Building release...")
         if os.path.exists(DIST_DIR):
             shutil.rmtree(DIST_DIR)
         for project, conf in projects.items():
-            print("Creating %s source distribution..." % project)
+            print("Creating wheel for %s ..." % project)
             subprocess.check_call(
                 [
                     "python", "./setup.py", "-q",
-                    "sdist", "--dist-dir", DIST_DIR, "--formats=gztar",
                     "bdist_wheel", "--dist-dir", DIST_DIR,
                 ],
                 cwd=conf["dir"]
@@ -214,7 +206,7 @@ def sdist():
         with chdir(DIST_DIR):
             for project, conf in projects.items():
                 print("Installing %s..." % project)
-                subprocess.check_call([VENV_PIP, "install", "-q", sdist_name(project)])
+                subprocess.check_call([VENV_PIP, "install", "-q", wheel_name(project)])
 
             print("Running binaries...")
             for project, conf in projects.items():
@@ -228,10 +220,10 @@ def sdist():
 
 
 @cli.command("bdist")
-@click.option("--use-existing-sdist/--no-use-existing-sdist", default=False)
+@click.option("--use-existing-wheels/--no-use-existing-wheels", default=False)
 @click.argument("pyinstaller_version", envvar="PYINSTALLER_VERSION", default="PyInstaller~=3.1.1")
 @click.pass_context
-def bdist(ctx, use_existing_sdist, pyinstaller_version):
+def bdist(ctx, use_existing_wheels, pyinstaller_version):
     """
     Build a binary distribution
     """
@@ -240,8 +232,8 @@ def bdist(ctx, use_existing_sdist, pyinstaller_version):
     if os.path.exists(PYINSTALLER_DIST):
         shutil.rmtree(PYINSTALLER_DIST)
 
-    if not use_existing_sdist:
-        ctx.invoke(sdist)
+    if not use_existing_wheels:
+        ctx.invoke(wheels)
 
     print("Installing PyInstaller...")
     subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version])
@@ -280,28 +272,21 @@ def bdist(ctx, use_existing_sdist, pyinstaller_version):
 @click.option('--username', prompt=True)
 @click.password_option(confirmation_prompt=False)
 @click.option('--repository', default="pypi")
-@click.option("--sdist/--no-sdist", default=True)
-@click.option("--wheel/--no-wheel", default=True)
-def upload_release(username, password, repository, sdist, wheel):
+def upload_release(username, password, repository):
     """
-    Upload source distributions to PyPI
+    Upload wheels to PyPI
     """
     for project in projects.keys():
-        files = []
-        if sdist:
-            files.append(sdist_name(project))
-        if wheel:
-            files.append(wheel_name(project))
-        for f in files:
-            print("Uploading {} to {}...".format(f, repository))
-            subprocess.check_call([
-                "twine",
-                "upload",
-                "-u", username,
-                "-p", password,
-                "-r", repository,
-                join(DIST_DIR, f)
-            ])
+        filename = wheel_name(project)
+        print("Uploading {} to {}...".format(filename, repository))
+        subprocess.check_call([
+            "twine",
+            "upload",
+            "-u", username,
+            "-p", password,
+            "-r", repository,
+            join(DIST_DIR, filename)
+        ])
 
 
 @cli.command("upload-snapshot")
@@ -310,10 +295,9 @@ def upload_release(username, password, repository, sdist, wheel):
 @click.option("--user", envvar="SNAPSHOT_USER", prompt=True)
 @click.option("--private-key", default=join(RELEASE_DIR, "rtool.pem"))
 @click.option("--private-key-password", envvar="SNAPSHOT_PASS", prompt=True, hide_input=True)
-@click.option("--sdist/--no-sdist", default=False)
 @click.option("--wheel/--no-wheel", default=False)
 @click.option("--bdist/--no-bdist", default=False)
-def upload_snapshot(host, port, user, private_key, private_key_password, sdist, wheel, bdist):
+def upload_snapshot(host, port, user, private_key, private_key_password, wheel, bdist):
     """
     Upload snapshot to snapshot server
     """
@@ -327,8 +311,6 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
             sftp.makedirs(dir_name)
             with sftp.cd(dir_name):
                 files = []
-                if sdist:
-                    files.append(sdist_name(project))
                 if wheel:
                     files.append(wheel_name(project))
                 if bdist and conf["tools"]:
