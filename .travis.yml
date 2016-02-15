@@ -22,8 +22,7 @@ matrix:
     - python: 3.5
       env: SCOPE="netlib"
     - python: 3.5
-      env: NO_ALPN=1
-      env: SCOPE="netlib"
+      env: NO_ALPN=1 SCOPE="netlib"
     - python: 2.7
       env: DOCS=1
       script: 'cd mitmproxy/docs && make html'
@@ -39,9 +38,7 @@ install:
       brew install python
     fi
   - "pip install -U pip setuptools"
-  - "pip install -e ./netlib[dev]"
-  - "pip install -e ./pathod[dev]"
-  - "pip install -e ./mitmproxy[dev,contentviews,examples]"
+  - "pip install -r requirements.txt"
 
 before_script:
   - "openssl version -a"

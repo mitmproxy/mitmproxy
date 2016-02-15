@@ -1,12 +1,15 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
-from libmproxy import version
+import sys
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
 
 here = os.path.abspath(os.path.dirname(__file__))
+
+sys.path.append(os.path.join(here, "..", "netlib"))
+from libmproxy import version
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()

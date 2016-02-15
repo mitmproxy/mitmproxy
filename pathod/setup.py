@@ -1,12 +1,15 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
-from libpathod import version
+import sys
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
 
 here = os.path.abspath(os.path.dirname(__file__))
+
+sys.path.append(os.path.join(here, "..", "netlib"))
+from libpathod import version
 
 with open(os.path.join(here, 'README.txt'), encoding='utf-8') as f:
     long_description = f.read()
