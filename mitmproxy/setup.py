@@ -79,7 +79,7 @@ setup(
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
         ':python_version == "2.7"': [
-            "enum34>=1.0.4, <1.2",
+            "enum34>=1.0.4, <1.1",
         ],
         'dev': [
             "mock>=1.3.0, <1.4",
