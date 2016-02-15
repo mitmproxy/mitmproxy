@@ -14,7 +14,6 @@ import platform
 import click
 import pysftp
 import fnmatch
-from six.moves import shlex_quote
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
@@ -34,7 +33,8 @@ else:
 
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
 DIST_DIR = join(RELEASE_DIR, "dist")
-ROOT_DIR = join(RELEASE_DIR, "..")
+ROOT_DIR = os.path.normpath(join(RELEASE_DIR, ".."))
+VERSION_FILE = join(ROOT_DIR, "netlib/netlib/version.py")
 
 BUILD_DIR = join(RELEASE_DIR, "build")
 PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
@@ -47,19 +47,16 @@ VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 ALL_PROJECTS = {
     "netlib": {
         "tools": [],
-        "vfile": join(ROOT_DIR, "netlib/netlib/version.py"),
         "dir": join(ROOT_DIR, "netlib"),
         "python_version": "py2.py3"  # this is the format in wheel filenames
     },
     "pathod": {
         "tools": ["pathod", "pathoc"],
-        "vfile": join(ROOT_DIR, "pathod/libpathod/version.py"),
         "dir": join(ROOT_DIR, "pathod"),
         "python_version": "py2"
     },
     "mitmproxy": {
         "tools": ["mitmproxy", "mitmdump", "mitmweb"],
-        "vfile": join(ROOT_DIR, "mitmproxy/libmproxy/version.py"),
         "dir": join(ROOT_DIR, "mitmproxy"),
         "python_version": "py2"
     }
@@ -70,21 +67,18 @@ if platform.system() == "Windows":
 projects = {}
 
 
-def get_version(project):
-    return runpy.run_path(projects[project]["vfile"])["VERSION"]
+def get_version():
+    return runpy.run_path(VERSION_FILE)["VERSION"]
 
 
-def get_snapshot_version(project):
-    last_tag, tag_dist, commit = subprocess.check_output(
-        ["git", "describe", "--tags", "--long"],
-        cwd=projects[project]["dir"]
-    ).strip().rsplit("-", 2)
+def get_snapshot_version():
+    last_tag, tag_dist, commit = git("describe --tags --long").strip().rsplit(b"-", 2)
     tag_dist = int(tag_dist)
     if tag_dist == 0:
-        return get_version(project)
+        return get_version()
     else:
         return "{version}dev{tag_dist:04}-{commit}".format(
-            version=get_version(project),  # this should already be the next version
+            version=get_version(),  # this should already be the next version
             tag_dist=tag_dist,
             commit=commit
         )
@@ -102,7 +96,7 @@ def archive_name(project):
         ext = "tar.gz"
     return "{project}-{version}-{platform}.{ext}".format(
         project=project,
-        version=get_version(project),
+        version=get_version(),
         platform=platform_tag,
         ext=ext
     )
@@ -111,14 +105,14 @@ def archive_name(project):
 def sdist_name(project):
     return "{project}-{version}.tar.gz".format(
         project=project,
-        version=get_version(project)
+        version=get_version()
     )
 
 
 def wheel_name(project):
     return "{project}-{version}-{py_version}-none-any.whl".format(
         project=project,
-        version=get_version(project),
+        version=get_version(),
         py_version=projects[project]["python_version"]
     )
 
@@ -143,6 +137,11 @@ def chdir(path):
     os.chdir(old_dir)
 
 
+def git(args):
+    with chdir(ROOT_DIR):
+        return subprocess.check_output(["git"] + shlex.split(args))
+
+
 @click.group(chain=True)
 @click.option(
     '--project', '-p',
@@ -161,14 +160,11 @@ def contributors():
     """
     Update CONTRIBUTORS.md
     """
-    for project, conf in projects.items():
-        with chdir(conf["dir"]):
-            print("Updating %s/CONTRIBUTORS..." % project)
-            contributors_data = subprocess.check_output(
-                shlex.split("git shortlog -n -s")
-            )
-            with open("CONTRIBUTORS", "w") as f:
-                f.write(contributors_data)
+    with chdir(ROOT_DIR):
+        print("Updating CONTRIBUTORS...")
+        contributors_data = git("shortlog -n -s")
+        with open("CONTRIBUTORS", "w") as f:
+            f.write(contributors_data)
 
 
 @cli.command("set-version")
@@ -179,35 +175,15 @@ def set_version(version):
     """
     print("Update versions...")
     version = ", ".join(version.split("."))
-    for p, conf in projects.items():
-        print("Update %s..." % os.path.normpath(conf["vfile"]))
-        with open(conf["vfile"], "rb") as f:
-            content = f.read()
-        new_content = re.sub(
-            r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version,
-            content
-        )
-        with open(conf["vfile"], "wb") as f:
-            f.write(new_content)
-
-
-def _git(project, args):
-    print("%s> %s..." % (project, " ".join(shlex_quote(a) for a in args)))
-    subprocess.check_call(
-        ["git"] + list(args),
-        cwd=projects[project]["dir"]
+    print("Update %s..." % VERSION_FILE)
+    with open(VERSION_FILE, "rb") as f:
+        content = f.read()
+    new_content = re.sub(
+        r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version,
+        content
     )
-
-
-@cli.command("git")
-@click.argument('args', nargs=-1, required=True)
-def git(args):
-    """
-    Run a git command on every project
-    """
-    for project, conf in projects.items():
-        _git(project, args)
-        print("")
+    with open(VERSION_FILE, "wb") as f:
+        f.write(new_content)
 
 
 @cli.command("sdist")
@@ -274,7 +250,7 @@ def bdist(ctx, use_existing_sdist, pyinstaller_version):
         if conf["tools"]:
             with Archive(join(DIST_DIR, archive_name(p))) as archive:
                 for tool in conf["tools"]:
-                    spec = join(conf["dir"], "release", "%s.spec" % tool)
+                    spec = join(RELEASE_DIR, "%s.spec" % tool)
                     print("Building %s binary..." % tool)
                     subprocess.check_call(
                         [
@@ -347,7 +323,7 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
                            private_key=private_key,
                            private_key_pass=private_key_password) as sftp:
         for project, conf in projects.items():
-            dir_name = "snapshots/v{}".format(get_version(project))
+            dir_name = "snapshots/v{}".format(get_version())
             sftp.makedirs(dir_name)
             with sftp.cd(dir_name):
                 files = []
@@ -360,15 +336,17 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
 
                 for f in files:
                     local_path = join(DIST_DIR, f)
-                    remote_filename = f.replace(get_version(project), get_snapshot_version(project))
-                    symlink_path = "../{}".format(f.replace(get_version(project), "latest"))
+                    remote_filename = f.replace(get_version(), get_snapshot_version())
+                    symlink_path = "../{}".format(f.replace(get_version(), "latest"))
 
-                    old_version = f.replace(get_version(project), "*")
-                    for f in sftp.listdir():
-                        if fnmatch.fnmatch(f, old_version):
-                            print("Removing {}...".format(f))
-                            sftp.remove(f)
+                    # Delete old versions
+                    old_version = f.replace(get_version(), "*")
+                    for f_old in sftp.listdir():
+                        if fnmatch.fnmatch(f_old, old_version):
+                            print("Removing {}...".format(f_old))
+                            sftp.remove(f_old)
 
+                    # Upload new version
                     print("Uploading {} as {}...".format(f, remote_filename))
                     with click.progressbar(length=os.stat(local_path).st_size) as bar:
                         sftp.put(
@@ -379,11 +357,11 @@ def upload_snapshot(host, port, user, private_key, private_key_password, sdist, 
                         # We hide the file during upload.
                         sftp.rename("." + remote_filename, remote_filename)
 
-                    # add symlink
+                    # update symlink for the latest release
                     if sftp.lexists(symlink_path):
                         print("Removing {}...".format(symlink_path))
                         sftp.remove(symlink_path)
-                    sftp.symlink("v{}/{}".format(get_version(project), remote_filename), symlink_path)
+                    sftp.symlink("v{}/{}".format(get_version(), remote_filename), symlink_path)
 
 
 @cli.command("wizard")
@@ -396,10 +374,9 @@ def wizard(ctx, next_version, username, password, repository):
     """
     Interactive Release Wizard
     """
-    for project, conf in projects.items():
-        is_dirty = subprocess.check_output(["git", "status", "--porcelain"], cwd=conf["dir"])
-        if is_dirty:
-            raise RuntimeError("%s repository is not clean." % project)
+    is_dirty = git("status --porcelain")
+    if is_dirty:
+        raise RuntimeError("Repository is not clean.")
 
     # update contributors file
     ctx.invoke(contributors)
@@ -411,13 +388,12 @@ def wizard(ctx, next_version, username, password, repository):
         click.confirm("Please test the release now. Is it ok?", abort=True)
     except click.Abort:
         # undo changes
-        ctx.invoke(git, args=["checkout", "CONTRIBUTORS"])
+        git("checkout CONTRIBUTORS")
         raise
 
     # Everything ok - let's ship it!
-    for p in projects.keys():
-        _git(p, ["tag", "v" + get_version(p)])
-    ctx.invoke(git, args=["push", "--tags"])
+    git("tag v{}".format(get_version()))
+    git("push --tags")
     ctx.invoke(
         upload_release,
         username=username, password=password, repository=repository
@@ -427,10 +403,8 @@ def wizard(ctx, next_version, username, password, repository):
 
     # version bump commit
     ctx.invoke(set_version, version=next_version)
-    ctx.invoke(
-        git, args=["commit", "-a", "-m", "bump version"]
-    )
-    ctx.invoke(git, args=["push"])
+    git("commit -a -m \"bump version\"")
+    git("push")
 
     click.echo("All done!")
 

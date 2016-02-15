@@ -2,7 +2,7 @@
 
 from PyInstaller.utils.hooks import collect_data_files
 
-a = Analysis(['../mitmweb'],
+a = Analysis(['../mitmproxy/mitmweb'],
              binaries=None,
              datas=collect_data_files("libmproxy"),
              hiddenimports=[],

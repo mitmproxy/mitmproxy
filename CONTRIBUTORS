@@ -1,27 +1,30 @@
-  1126	Aldo Cortesi
-   881	Maximilian Hils
-   109	Thomas Kriechbaumer
+  1813	Aldo Cortesi
+  1228	Maximilian Hils
+   282	Thomas Kriechbaumer
     83	Marcelo Glezer
     28	Jim Shaver
     18	Henrik Nordstrom
     17	Shadab Zafar
     14	David Weinstein
+    14	Pedro Worcel
     13	Thomas Roth
-    12	Pedro Worcel
     11	Jake Drahos
     11	Justus Wingert
     11	Stephen Altamirano
     10	András Veres-Szentkirályi
     10	Chris Czub
+    10	Sandor Nemes
+     9	Kyle Morton
      9	Legend Tang
      9	Matthew Shao
+     9	Rouli
+     8	Chandler Abraham
      8	Jason A. Novak
-     8	Rouli
      7	Alexis Hildebrandt
-     7	Sandor Nemes
-     5	Brad Peabody
+     7	Brad Peabody
+     7	Matthias Urlichs
      5	Choongwoo Han
-     5	Matthias Urlichs
+     5	Sam Cleveland
      5	Tomaz Muraus
      5	elitest
      5	iroiro123
@@ -32,8 +35,10 @@
      4	Wade 524
      4	Youhei Sakurai
      4	root
+     3	Benjamin Lee
      3	Chris Neasbitt
      3	Eli Shvartsman
+     3	Felix Yan
      3	Guillem Anguera
      3	Kyle Manna
      3	MatthewShao
@@ -43,6 +48,7 @@
      2	Bennett Blodinger
      2	Colin Bendell
      2	Heikki Hannikainen
+     2	Israel Nir
      2	Jaime Soriano Pastor
      2	Jim Lloyd
      2	Krzysztof Bielicki
@@ -50,14 +56,19 @@
      2	Michael Frister
      2	Nick Badger
      2	Niko Kommenda
+     2	Paul
      2	Rob Wills
+     2	Sean Coates
      2	Terry Long
      2	Wade Catron
      2	alts
      2	isra17
      2	israel
+     2	requires.io
+     1	Andrey Plotnikov
      1	Andy Smith
      1	Ben Lerner
+     1	Bradley Baetz
      1	Chris Hamant
      1	Dan Wilbraham
      1	David Dworken
@@ -65,7 +76,6 @@
      1	Doug Lethin
      1	Eric Entzel
      1	Felix Wolfsteller
-     1	Felix Yan
      1	FreeArtMan
      1	Gabriel Kirkpatrick
      1	Henrik Nordström
@@ -77,8 +87,8 @@
      1	Jean Regisser
      1	Jorge Villacorta
      1	Kit Randel
-     1	Kyle Morton
      1	Lucas Cimon
+     1	M. Utku Altinkaya
      1	Mathieu Mitchell
      1	Michael Bisbjerg
      1	Mike C
@@ -88,7 +98,7 @@
      1	Nick Raptis
      1	Nicolas Esteves
      1	Oleksandr Sheremet
-     1	Paul
+     1	Pritam Baral
      1	Rich Somerfield
      1	Rory McCann
      1	Rune Halvorsen
@@ -102,6 +112,7 @@
      1	Suyash
      1	Tarashish Mishra
      1	TearsDontFalls
+     1	Tim Becker
      1	Timothy Elliott
      1	Ulrich Petri
      1	Vyacheslav Bakhmutov
@@ -113,11 +124,13 @@
      1	gecko655
      1	jlhonora
      1	joebowbeer
+     1	kronick
      1	meeee
      1	michaeljau
      1	peralta
      1	phil plante
      1	sentient07
      1	sethp-jive
+     1	starenka
      1	vzvu3k6k
      1	依云

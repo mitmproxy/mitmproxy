@@ -53,7 +53,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
-        "netlib>={}, <{}".format(version.MINORVERSION, version.NEXT_MINORVERSION),
+        "netlib=={}".format(version.VERSION),
         "h2>=2.1.0, <2.2",
         "tornado>=4.3, <4.4",
         "configargparse>=0.10, <0.11",
@@ -88,9 +88,9 @@ setup(
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",
             "coveralls>=1.1, <1.2",
-            "pathod>={}, <{}".format(version.MINORVERSION, version.NEXT_MINORVERSION),
+            "pathod=={}".format(version.VERSION),
             "sphinx>=1.3.5, <1.4",
-            "sphinx-autobuild>=0.5.2, <0.6",
+            "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.3.0, <0.4"
         ],
         'contentviews': [
