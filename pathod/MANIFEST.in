@@ -1,0 +1,6 @@
+include LICENSE CHANGELOG README.txt
+exclude README.mkd
+recursive-include test *
+recursive-include libpathod *
+recursive-include examples *
+recursive-exclude * *.pyc *.pyo *.swo *.swp

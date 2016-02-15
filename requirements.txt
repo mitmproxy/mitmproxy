@@ -1,3 +1,4 @@
--e git+https://github.com/mitmproxy/netlib.git#egg=netlib
--e git+https://github.com/mitmproxy/pathod.git#egg=pathod
--e .[dev,examples,contentviews]
+-e ./netlib[dev]
+-e ./pathod[dev]
+-e ./mitmproxy[dev,examples,contentviews]
+-e ./release

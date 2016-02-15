@@ -1,0 +1,56 @@
+
+
+.fronttable {
+}
+
+.bigtitle {
+    font-weight: bold;
+    font-size: 50px;
+    line-height: 55px;
+    text-align: center;
+    display: table;
+    height: 300px;
+}
+
+.bigtitle>div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+section {
+    margin-top: 50px;
+}
+
+.example {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.terminal {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: #000;
+    color: #fff;
+}
+
+.innerlink {
+    text-decoration: none;
+    border-bottom:1px dotted;
+    margin-bottom: 15px;
+}
+
+.masthead {
+    padding: 50px 0 60px;
+    text-align: center;
+
+}
+
+.header {
+    font-size: 1.5em;
+}
+
+.page-header {
+    margin-top: 10px;
+
+
+}

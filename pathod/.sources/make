@@ -1,0 +1,5 @@
+#!/bin/sh
+pygmentize -f html ../examples/test_context.py > ../libpathod/templates/examples_context.html
+pygmentize -f html ../examples/test_setup.py > ../libpathod/templates/examples_setup.html
+pygmentize -f html ../examples/test_setupall.py > ../libpathod/templates/examples_setupall.html
+pygmentize -f html ../examples/libpathod_pathoc.py > ../libpathod/templates/libpathod_pathoc.html

@@ -14,19 +14,17 @@ environment:
     secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
 install:
   - "pip install --user -U pip setuptools"
-  - "pip install --user --src .. -r requirements.txt"
+  - "pip install --user -r requirements.txt"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 test_script:
-  - "py.test -s --cov libmproxy --timeout 30"
+  - "py.test -s --cov-config .coveragerc --timeout 30 ./test/"
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
 deploy_script:
   ps: |
     if($Env:APPVEYOR_REPO_BRANCH -match "master") {
-    git clone https://github.com/mitmproxy/release.git ..\release
-    pip install -e ..\release
-    python ..\release\rtool.py bdist
-    python ..\release\rtool.py upload-snapshot --bdist
+    python .\release\rtool.py bdist
+    python .\release\rtool.py upload-snapshot --bdist
     }
 notifications:
 - provider: Slack

@@ -1,44 +1,31 @@
-|travis| |coveralls| |downloads| |latest-release| |python-versions|
+mitmproxy
+^^^^^^^^^
 
-``mitmproxy`` is an interactive, SSL-capable man-in-the-middle proxy for HTTP
-with a console interface.
+|travis| |coveralls| |downloads| |latest_release| |python_versions|
+
+This repository contains the **mitmproxy** and **pathod** projects, as well as their shared networking library, **netlib**.
+
+``mitmproxy`` is an interactive, SSL-capable intercepting proxy with a console interface.
 
 ``mitmdump`` is the command-line version of mitmproxy. Think tcpdump for HTTP.
 
-``libmproxy`` is the library that mitmproxy and mitmdump are built on.
+``pathoc`` and ``pathod`` are perverse HTTP client and server applications designed to let you craft almost any conceivable HTTP request, including ones that creatively violate the standards.
+
 
 Documentation & Help
 --------------------
 
-Documentation, tutorials and distribution packages can be found on the
-mitmproxy website.
+Documentation, tutorials and precompiled binaries can be found on the mitmproxy and pathod websites.
 
-|site|
+|mitmproxy_site| |pathod_site|
 
-Installation Instructions are available in the docs.
+The latest documentation for mitmproxy is also available on ReadTheDocs.
 
-|docs|
+|mitmproxy_docs|
 
 You can join our developer chat on Slack.
 
 |slack|
-
-Features
---------
-
-- Intercept HTTP requests and responses and modify them on the fly.
-- Save complete HTTP conversations for later replay and analysis.
-- Replay the client-side of an HTTP conversations.
-- Replay HTTP responses of a previously recorded server.
-- Reverse proxy mode to forward traffic to a specified server.
-- Transparent proxy mode on OSX and Linux.
-- Make scripted changes to HTTP traffic using Python.
-- SSL certificates for interception are generated on the fly.
-- And much, much more.
-
-``mitmproxy`` is tested and developed on OSX, Linux and OpenBSD.
-On Windows, only mitmdump is supported, which does not have a graphical user interface.
-
 
 
 Hacking
@@ -51,28 +38,25 @@ Then do the following:
 .. code-block:: text
 
     git clone https://github.com/mitmproxy/mitmproxy.git
-    git clone https://github.com/mitmproxy/netlib.git
-    git clone https://github.com/mitmproxy/pathod.git
     cd mitmproxy
     ./dev
 
 
-The *dev* script will create a virtualenv environment in a directory called
-"venv.mitmproxy", and install all of mitmproxy's development requirements, plus
-all optional modules. The primary mitmproxy components - mitmproxy, netlib and
-pathod - are all installed "editable", so any changes to the source in the git
-checkouts will be reflected live in the virtualenv.
+The *dev* script will create a virtualenv environment in a directory called "venv",
+and install all mandatory and optional dependencies into it.
+The primary mitmproxy components - mitmproxy, netlib and pathod - are installed as "editable",
+so any changes to the source in the repository will be reflected live in the virtualenv.
 
 To confirm that you're up and running, activate the virtualenv, and run the
 mitmproxy test suite:
 
 .. code-block:: text
 
-    . ../venv.mitmproxy/bin/activate # ..\venv.mitmproxy\Scripts\activate.bat on Windows
-    py.test -n 4 --cov libmproxy
+    . venv/bin/activate # venv\Scripts\activate.bat on Windows
+    py.test --cov-config .coveragerc test
 
-Note that the main executables for the project - ``mitmdump``, ``mitmproxy`` and
-``mitmweb`` - are all created within the virtualenv. After activating the
+Note that the main executables for the project - ``mitmdump``, ``mitmproxy``,
+``mitmweb``, ``pathod``, and ``pathoc`` - are all created within the virtualenv. After activating the
 virtualenv, they will be on your $PATH, and you can run them like any other
 command:
 
@@ -92,10 +76,10 @@ requirements installed, and you can simply run the test suite:
 
 .. code-block:: text
 
-    py.test -n 4 --cov libmproxy
+    py.test --cov-config .coveragerc test
 
 Please ensure that all patches are accompanied by matching changes in the test
-suite. The project maintains 100% test coverage.
+suite. The project tries to maintain 100% test coverage.
 
 
 Docs
@@ -116,35 +100,39 @@ The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory
 the documentation when a change is detected.
 
 
-.. |site| image:: https://img.shields.io/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
+.. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |docs| image:: https://readthedocs.org/projects/mitmproxy/badge/
+.. |pathod_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-pathod.net-blue.svg
+    :target: https://pathod.net/
+    :alt: pathod.net
+
+.. |mitmproxy_docs| image:: https://readthedocs.org/projects/mitmproxy/badge/
     :target: http://docs.mitmproxy.org/en/latest/
-    :alt: Documentation
+    :alt: mitmproxy documentation
 
 .. |slack| image:: http://slack.mitmproxy.org/badge.svg
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
-.. |travis| image:: https://img.shields.io/travis/mitmproxy/mitmproxy/master.svg
+.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg
     :target: https://travis-ci.org/mitmproxy/mitmproxy
     :alt: Build Status
 
-.. |coveralls| image:: https://img.shields.io/coveralls/mitmproxy/mitmproxy/master.svg
+.. |coveralls| image:: https://shields.mitmproxy.org/coveralls/mitmproxy/mitmproxy/master.svg
     :target: https://coveralls.io/r/mitmproxy/mitmproxy
     :alt: Coverage Status
 
-.. |downloads| image:: https://img.shields.io/pypi/dm/mitmproxy.svg?color=orange
+.. |downloads| image:: https://shields.mitmproxy.org/pypi/dm/mitmproxy.svg?color=orange
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Downloads
 
-.. |latest-release| image:: https://img.shields.io/pypi/v/mitmproxy.svg
+.. |latest_release| image:: https://shields.mitmproxy.org/pypi/v/mitmproxy.svg
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Latest Version
 
-.. |python-versions| image:: https://img.shields.io/pypi/pyversions/mitmproxy.svg
+.. |python_versions| image:: https://shields.mitmproxy.org/pypi/pyversions/mitmproxy.svg
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 

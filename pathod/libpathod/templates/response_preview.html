@@ -1,0 +1,44 @@
+{% extends "frame.html" %} {% block body %}
+<div class="page-header">
+    <h1>pathod preview</h1>
+</div>
+
+<div style="margin-bottom: 20px" class="row">
+    <div class="span2 header">
+        Specification:
+    </div>
+    <div class="span10">
+        {% include "response_previewform.html" %}
+    </div>
+</div>
+
+{% if syntaxerror %}
+<div class="row">
+    <div class="span2 header">
+        Error:
+    </div>
+    <div class="span10">
+        <p style="color: #ff0000">{{ syntaxerror }}</p>
+        <pre>{{ marked }}</pre>
+    </div>
+</div>
+{% elif error %}
+<div class="row">
+    <div class="span2 header">
+        Error:
+    </div>
+    <div class="span10">
+        <p style="color: #ff0000">{{ error }}</p>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="span2 header">
+        Response:
+    </div>
+    <div class="span10">
+        <pre>{{ output }}</pre>
+        <p>Note: pauses are skipped when generating previews!</p>
+    </div>
+</div>
+{% endif %} {% endblock %}

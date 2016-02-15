@@ -1,11 +1,11 @@
 @echo off
-set VENV=..\venv.mitmproxy
+set VENV=.\venv
 
 virtualenv %VENV% --always-copy
 if %errorlevel% neq 0 exit /b %errorlevel%
 call %VENV%\Scripts\activate.bat
 if %errorlevel% neq 0 exit /b %errorlevel%
-pip install --src .. -r requirements.txt
+pip install -r requirements.txt
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo.

@@ -1,0 +1,171 @@
+// Bootswatch.less
+// Swatch: Journal
+// Version: 2.0.4
+// -----------------------------------------------------
+
+// TYPOGRAPHY
+// -----------------------------------------------------
+
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
+
+h1, h2, h3, h4, h5, h6, .navbar .brand {
+	font-weight: 700;
+}
+
+// SCAFFOLDING
+// -----------------------------------------------------
+
+a {
+	text-decoration: none;
+}
+
+.nav a, .navbar .brand, .subnav a, a.btn, .dropdown-menu a {
+	text-decoration: none;
+}
+
+// NAVBAR
+// -----------------------------------------------------
+
+.navbar {
+
+	.navbar-inner {
+		@shadow: 0 2px 4px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1);
+		.box-shadow(@shadow);
+		border-top: 1px solid #E5E5E5;
+		.border-radius(0);
+	}
+
+	.brand {
+		text-shadow: none;
+
+		&:hover {
+			background-color: #EEEEEE;
+		}
+	}
+
+	.navbar-text {
+		line-height: 68px;
+	}
+
+	.nav > li > a {
+		text-shadow: none;
+	}
+
+	.dropdown-menu {
+		.border-radius(0);
+	}
+
+	.nav li.dropdown.active > .dropdown-toggle,
+	.nav li.dropdown.active > .dropdown-toggle:hover,
+	.nav li.dropdown.open > .dropdown-toggle,
+	.nav li.dropdown.active.open > .dropdown-toggle,
+	.nav li.dropdown.active.open > .dropdown-toggle:hover {
+		background-color: @grayLighter;
+		color: @linkColor;
+	}
+
+	.nav li.dropdown .dropdown-toggle .caret,
+	.nav .open .caret,
+	.nav .open .dropdown-toggle:hover .caret {
+		border-top-color: @black;
+		opacity: 1;
+	}
+
+	.nav-collapse.in .nav li > a:hover {
+		background-color: @grayLighter;
+	}
+
+	.nav-collapse .nav li > a {
+		color: @textColor;
+		text-decoration: none;
+		font-weight: normal;
+	}
+
+	.nav-collapse .navbar-form,
+	.nav-collapse .navbar-search {
+		border-color: transparent;
+	}
+
+	.navbar-search .search-query,
+	.navbar-search .search-query:hover {
+		border: 1px solid @grayLighter;
+		color: @textColor;
+		.placeholder(@gray);
+	}
+}
+
+div.subnav {
+	background-color: @bodyBackground;
+	background-image: none;
+	@shadow: 0 1px 2px rgba(0,0,0,.25);
+	.box-shadow(@shadow);
+	.border-radius(0);
+
+	&.subnav-fixed {
+		top: @navbarHeight;
+	}
+
+	.nav > li > a:hover,
+	.nav > .active > a,
+	.nav > .active > a:hover {
+		color: @textColor;
+		text-decoration: none;
+		font-weight: normal;
+	}
+
+	.nav > li:first-child > a,
+	.nav > li:first-child > a:hover {
+		.border-radius(0);
+	}
+}
+
+// BUTTONS
+// -----------------------------------------------------
+
+.btn-primary {
+  .buttonBackground(lighten(@linkColor, 5%), @linkColor);
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	vertical-align: -2px;
+}
+
+// MODALS
+// -----------------------------------------------------
+
+.modal {
+ 	.border-radius(0px);
+	background: @bodyBackground;
+}
+
+.modal-header {
+	border-bottom: none;
+}
+
+.modal-header .close {
+	text-decoration: none;
+}
+
+.modal-footer {
+	background: transparent;
+	.box-shadow(none);
+	border-top: none;
+}
+
+
+// MISC
+// -----------------------------------------------------
+
+code, pre, pre.prettyprint, .well {
+	background-color: @grayLighter;
+}
+
+.hero-unit {
+    .box-shadow(inset 0 1px 1px rgba(0,0,0,.05));
+	border: 1px solid rgba(0,0,0,.05);
+	.border-radius(0);
+}
+
+.table-bordered, .well, .prettyprint {
+	.border-radius(0);
+}

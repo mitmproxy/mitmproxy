@@ -1,0 +1,172 @@
+{% extends "docframe.html" %} {% block body %}
+<div class="page-header">
+    <h1>
+        pathod
+        <small>A pathological web daemon.</small>
+    </h1>
+</div>
+
+<p>
+    Pathod is a pathological HTTP daemon designed to let you craft almost any conceivable
+    HTTP response, including ones that creatively violate the standards. HTTP responses
+    are specified using a
+    <a href="/docs/language">small, terse language</a>, which pathod shares with
+    its evil twin <a href="/docs/pathoc">pathoc</a>.
+</p>
+
+<section>
+    <div class="page-header">
+        <h1>Getting started</h1>
+    </div>
+
+    <p>To start playing with pathod, simply fire up the daemon:</p>
+
+    <pre class="terminal">./pathod</pre>
+
+    <p>
+        By default, the service listens on port 9999 of localhost. Pathod's documentation
+        is self-hosting, and the pathod daemon exposes an interface that lets you
+        play with the specifciation language, preview what responses and requests
+        would look like on the wire, and view internal logs. To access all of this,
+        just fire up your browser, and point it to the following URL:
+    </p>
+
+    <pre class="example">http://localhost:9999</pre>
+
+    <p>
+        The default crafting anchor point is the path <b>/p/</b>. Anything after
+        this URL prefix is treated as a response specifier. So, hitting the following
+        URL will generate an HTTP 200 response with 100 bytes of random data:
+    </p>
+
+    <pre class="example">http://localhost:9999/p/200:b@100</pre>
+
+    <p>
+        See the <a href="/docs/language">language documentation</a> to get (much)
+        fancier. The pathod daemon also takes a range of configuration options. To
+        view those, use the command-line help:
+    </p>
+
+    <pre class="terminal">./pathod --help</pre>
+
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Acting as a proxy</h1>
+    </div>
+
+    <p>
+        Pathod automatically responds to both straight HTTP and proxy requests. For proxy
+        requests, the upstream host is ignored, and the path portion of the URL is
+        used to match anchors. This lets you test software that supports a proxy
+        configuration by spoofing responses from upstream servers.
+    </p>
+
+    <p>
+        By default, we treat all proxy CONNECT requests as HTTPS traffic, serving the response
+        using either pathod's built-in certificates, or the cert/key pair specified
+        by the user. You can over-ride this behaviour if you're testing a client
+        that makes a non-SSL CONNECT request using the -C command-line option.
+    </p>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>Anchors</h1>
+    </div>
+
+    <p>
+        Anchors provide an alternative to specifying the response in the URL. Instead, you
+        attach a response to a pre-configured anchor point, specified with a regex.
+        When a URL matching the regex is requested, the specified response is served.
+    </p>
+
+    <pre class="terminal">./pathod -a "/foo=200"</pre>
+
+    <p>
+        Here, "/foo" is the regex specifying the anchor path, and the part after the "="
+        is a response specifier.
+    </p>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>File Access</h1>
+    </div>
+
+    <p>
+        There are two operators in the <a href="/docs/language">language</a> that
+        load contents from file - the <b>+</b> operator to load an entire request
+        specification from file, and the <b>&gt;</b> value specifier. In pathod,
+        both of these operators are restricted to a directory specified at startup,
+        or disabled if no directory is specified:</p>
+    <pre class="terminal">./pathod -d ~/staticdir"</pre>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>Internal Error Responses</h1>
+    </div>
+
+    <p>
+        Pathod uses the non-standard 800 response code to indicate internal errors, to distinguish
+        them from crafted responses. For example, a request to:
+    </p>
+
+    <pre class="example">http://localhost:9999/p/foo</pre>
+
+    <p>
+        ... will return an 800 response because "foo" is not a valid page specifier.
+    </p>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>API</h1>
+    </div>
+
+    <p>
+        pathod exposes a simple API, intended to make it possible to drive and inspect the
+        daemon remotely for use in unit testing and the like.
+    </p>
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td>
+                    /api/clear_log
+                </td>
+                <td>
+                    A POST to this URL clears the log buffer.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    /api/info
+                </td>
+                <td>
+                    Basic version and configuration info.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    /api/log
+                </td>
+                <td>
+                    Returns the current log buffer. At the moment the buffer size is 500 entries - when
+                    the log grows larger than this, older entries are discarded.
+                    The returned data is a JSON dictionary, with the form:
+
+                    <pre>{ 'log': [ ENTRIES ] } </pre> You can preview the JSON data
+                    returned for a log entry through the built-in web interface.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+{% endblock %}

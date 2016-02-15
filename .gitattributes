@@ -1,2 +1,2 @@
-libmproxy/web/static/**/* -diff
-web/src/js/filt/filt.js -diff
+mitmproxy/libmproxy/web/static/**/* -diff
+mitmproxy/web/src/js/filt/filt.js -diff
