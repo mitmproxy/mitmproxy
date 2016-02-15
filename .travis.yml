@@ -1,37 +1,32 @@
 sudo: false
 language: python
 
+addons:
+  apt:
+    sources:
+      # Debian sid currently holds OpenSSL 1.0.2
+      # change this with future releases!
+      - debian-sid
+    packages:
+      - libssl-dev
+
 matrix:
   fast_finish: true
   include:
     - python: 2.7
     - python: 2.7
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
-    - python: pypy
-    - python: pypy
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
+      env: NO_ALPN=1
     - language: generic
       os: osx
       osx_image: xcode7.1
+    - python: 3.5
+      env: SCOPE="netlib"
+    - python: 3.5
+      env: NO_ALPN=1
+      env: SCOPE="netlib"
     - python: 2.7
       env: DOCS=1
-      script: 'cd docs && make html'
+      script: 'cd mitmproxy/docs && make html'
   allow_failures:
     - python: pypy
 
@@ -43,19 +38,6 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python
     fi
-  - |
-      if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
-        export PYENV_ROOT="$HOME/.pyenv"
-        if [ -f "$PYENV_ROOT/bin/pyenv" ]; then
-          pushd "$PYENV_ROOT" && git pull && popd
-        else
-          rm -rf "$PYENV_ROOT" && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
-        fi
-        export PYPY_VERSION="4.0.1"
-        "$PYENV_ROOT/bin/pyenv" install --skip-existing "pypy-$PYPY_VERSION"
-        virtualenv --python="$PYENV_ROOT/versions/pypy-$PYPY_VERSION/bin/python" "$HOME/virtualenvs/pypy-$PYPY_VERSION"
-        source "$HOME/virtualenvs/pypy-$PYPY_VERSION/bin/activate"
-      fi
   - "pip install -U pip setuptools"
   - "pip install -e ./netlib[dev]"
   - "pip install -e ./pathod[dev]"
@@ -65,17 +47,16 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "py.test -s --cov libmproxy --timeout 30"
+  - "py.test -s --cov libmproxy --cov netlib --cov libpathod --timeout 30 ./test/$SCOPE"
 
 after_success:
   - coveralls
   - |
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
     then
-        git clone -q https://github.com/mitmproxy/release.git ../release
-        pip install -e ../release
-        python ../release/rtool.py bdist
-        python ../release/rtool.py upload-snapshot --sdist --bdist --wheel
+        pip install -e ./release
+        python ./release/rtool.py bdist
+        python ./release/rtool.py upload-snapshot --sdist --bdist --wheel
     fi
 
 notifications:

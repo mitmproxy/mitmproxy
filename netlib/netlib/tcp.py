@@ -31,7 +31,10 @@ else:
     socket_fileobject = socket.SocketIO
 
 EINTR = 4
-HAS_ALPN = OpenSSL._util.lib.Cryptography_HAS_ALPN
+if os.environ.get("NO_ALPN"):
+    HAS_ALPN = False
+else:
+    HAS_ALPN = OpenSSL._util.lib.Cryptography_HAS_ALPN
 
 # To enable all SSL methods use: SSLv23
 # then add options to disable certain methods
