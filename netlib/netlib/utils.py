@@ -4,6 +4,8 @@ import re
 import codecs
 import unicodedata
 from abc import ABCMeta, abstractmethod
+import importlib
+import inspect
 
 import six
 
@@ -186,8 +188,8 @@ def pretty_size(size):
 class Data(object):
 
     def __init__(self, name):
-        m = __import__(name)
-        dirname, _ = os.path.split(m.__file__)
+        m = importlib.import_module(name)
+        dirname = os.path.dirname(inspect.getsourcefile(m))
         self.dirname = os.path.abspath(dirname)
 
     def path(self, path):
@@ -197,7 +199,7 @@ class Data(object):
 
             This function will raise ValueError if the path does not exist.
         """
-        fullpath = os.path.join(self.dirname, '../test/', path)
+        fullpath = os.path.join(self.dirname, path)
         if not os.path.exists(fullpath):
             raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath

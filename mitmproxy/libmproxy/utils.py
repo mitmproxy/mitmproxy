@@ -4,7 +4,8 @@ import datetime
 import re
 import time
 import json
-
+import importlib
+import inspect
 
 def timestamp():
     """
@@ -75,8 +76,8 @@ def pretty_duration(secs):
 class Data:
 
     def __init__(self, name):
-        m = __import__(name)
-        dirname, _ = os.path.split(m.__file__)
+        m = importlib.import_module(name)
+        dirname = os.path.dirname(inspect.getsourcefile(m))
         self.dirname = os.path.abspath(dirname)
 
     def path(self, path):
