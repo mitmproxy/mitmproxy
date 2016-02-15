@@ -282,7 +282,7 @@ class TestHTTP2(tutils.DaemonTests):
     noapi = True
     nohang = True
 
-    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+    if tcp.HAS_ALPN:
 
         def test_http2(self):
             r, _ = self.pathoc(["GET:/"], ssl=True, use_http2=True)

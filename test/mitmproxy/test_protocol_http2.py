@@ -26,7 +26,7 @@ import h2
 from . import tservers
 
 requires_alpn = pytest.mark.skipif(
-    not OpenSSL._util.lib.Cryptography_HAS_ALPN,
+    not netlib.tcp.HAS_ALPN,
     reason="requires OpenSSL with ALPN support")
 
 

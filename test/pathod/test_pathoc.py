@@ -263,7 +263,7 @@ class TestDaemon(_TestDaemon):
 class TestDaemonHTTP2(_TestDaemon):
     ssl = True
 
-    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+    if tcp.HAS_ALPN:
 
         def test_http2(self):
             c = pathoc.Pathoc(

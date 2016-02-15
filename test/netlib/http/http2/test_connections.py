@@ -70,7 +70,7 @@ class TestCheckALPNMatch(tservers.ServerTestBase):
         alpn_select=b'h2',
     )
 
-    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+    if tcp.HAS_ALPN:
 
         def test_check_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -86,7 +86,7 @@ class TestCheckALPNMismatch(tservers.ServerTestBase):
         alpn_select=None,
     )
 
-    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+    if tcp.HAS_ALPN:
 
         def test_check_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))

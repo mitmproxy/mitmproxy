@@ -207,7 +207,7 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
         if self.use_http2:
-            if not OpenSSL._util.lib.Cryptography_HAS_ALPN:  # pragma: nocover
+            if not tcp.HAS_ALPN:  # pragma: nocover
                 log.write_raw(
                     self.fp,
                     "HTTP/2 requires ALPN support. "

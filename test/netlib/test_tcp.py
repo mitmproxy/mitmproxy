@@ -512,7 +512,7 @@ class TestALPNClient(tservers.ServerTestBase):
         alpn_select=b"bar"
     )
 
-    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+    if tcp.HAS_ALPN:
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
