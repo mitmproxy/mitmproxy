@@ -1,0 +1,44 @@
+[![Build Status](https://img.shields.io/travis/mitmproxy/pathod/master.svg)](https://travis-ci.org/mitmproxy/pathod)
+[![Code Health](https://landscape.io/github/mitmproxy/pathod/master/landscape.svg?style=flat)](https://landscape.io/github/mitmproxy/pathod/master)
+[![Coverage Status](https://img.shields.io/coveralls/mitmproxy/pathod/master.svg)](https://coveralls.io/r/mitmproxy/pathod)
+[![Downloads](https://img.shields.io/pypi/dm/pathod.svg?color=orange)](https://pypi.python.org/pypi/pathod)
+[![Latest Version](https://img.shields.io/pypi/v/pathod.svg)](https://pypi.python.org/pypi/pathod)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/pathod.svg)](https://pypi.python.org/pypi/pathod)
+
+__pathod__ is a collection of pathological tools for testing and torturing HTTP
+clients and servers. The project has three components:
+
+- __pathod__, an pathological HTTP daemon.
+- __pathoc__, a perverse HTTP client.
+- __libpathod.test__, an API for easily using __pathod__ and __pathoc__ in unit tests.
+
+
+# Documentation
+
+The pathod documentation is self-hosted. Just fire up pathod, like so:
+
+    ./pathod
+
+And then browse to:
+
+    http://localhost:9999
+
+You can always view the documentation for the latest release at the pathod
+website:
+
+    http://pathod.net
+
+# Installing
+
+If you already have __pip__ on your system, installing __pathod__ and its
+dependencies is dead simple:
+
+    pip install pathod
+
+The project has the following dependencies:
+
+* [netlib](https://github.com/mitmproxy/netlib)
+* [requests](http://docs.python-requests.org/en/latest/index.html)
+
+The project's test suite uses the
+[nose](http://nose.readthedocs.org/en/latest/) unit testing framework.

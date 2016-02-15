@@ -1,0 +1,88 @@
+<pre class="example">code:[colon-separated list of features]</pre>
+
+<table class="table table-bordered">
+    <tbody>
+        <tr>
+            <td>code</td>
+            <td>
+                <p>An integer specifying the HTTP response code.</p>
+                <p>
+                    The special method <b>ws</b> creates a valid websocket upgrade
+                    response (code 101), and moves pathod to websocket mode. Apart
+                    from that, websocket responses are just like any other, and all
+                    aspects of the response can be over-ridden.
+                </p>
+            </td>
+        </tr>
+
+        <tr>
+            <td>m<a href="#valuespec">VALUE</a></td>
+            <td>
+                <span class="badge badge-info">HTTP/1 only</span> HTTP Reason message.
+                Automatically chosen according to the response code if not specified.
+            </td>
+        </tr>
+
+        <tr>
+            <td>h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a></td>
+            <td>
+                Set a header.
+            </td>
+        </tr>
+
+        <tr>
+            <td>r</td>
+            <td>
+                Set the "raw" flag on this response. Pathod will not calculate a Content-Length header
+                if a body is set, or add a Date header to the response.
+            </td>
+        </tr>
+
+        <tr>
+            <td>l<a href="#valuespec">VALUE</a></td>
+            <td>
+                A shortcut for setting the Location header. Equivalent to h"Location"=VALUE
+            </td>
+        </tr>
+
+        <tr>
+            <td>c<a href="#valuespec">VALUE</a></td>
+            <td>
+                A shortcut for setting the Content-Type header. Equivalent to h"Content-Type"=VALUE
+            </td>
+        </tr>
+
+        <tr>
+            <td>b<a href="#valuespec">VALUE</a></td>
+            <td>
+                Set the body. The appropriate Content-Length header is added automatically unless
+                the "r" flag is set.
+            </td>
+        </tr>
+
+        <tr>
+            <td>d<a href="#offsetspec">OFFSET</a></td>
+            <td>
+                <span class="badge badge-info">HTTP/1 only</span> Disconnect after
+                OFFSET bytes.
+            </td>
+        </tr>
+
+        <tr>
+            <td>i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a></td>
+            <td>
+                <span class="badge badge-info">HTTP/1 only</span> Inject the specified
+                value at the offset.
+            </td>
+        </tr>
+
+        <tr>
+            <td>p<a href="#offsetspec">OFFSET</a>,SECONDS</td>
+            <td>
+                <span class="badge badge-info">HTTP/1 only</span> Pause for SECONDS
+                seconds after OFFSET bytes. SECONDS can be an integer or "f" to pause
+                forever.
+            </td>
+        </tr>
+    </tbody>
+</table>

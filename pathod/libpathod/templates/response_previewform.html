@@ -1,0 +1,87 @@
+<form style="margin-bottom: 0" class="form-inline" method="GET" action="/response_preview">
+    <input style="width: 18em" id="spec" name="spec" class="input-medium" value="{{spec}}"
+    placeholder="code:[features]">
+    <input type="submit" class="btn" value="preview">
+    {% if not nocraft %}
+    <a href="#" id="submitspec" class="btn">go</a>
+    {% endif %}
+</form>
+
+<a class="innerlink" data-toggle="collapse" data-target="#responseexamples">examples</a>
+
+<div id="responseexamples" class="collapse">
+    <p>
+        Check out the <a href="/docs/language">complete language docs</a>. Here are
+        some examples to get you started:
+    </p>
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td><a href="/response_preview?spec=200">200</a></td>
+                <td>A basic HTTP 200 response.</td>
+            </tr>
+            <tr>
+                <td><a href="/response_preview?spec=200:r">200:r</a></td>
+                <td>A basic HTTP 200 response with no Content-Length header. This will
+                    hang.
+                </td>
+            </tr>
+            <tr>
+                <td><a href="/response_preview?spec=200:da">200:da</a></td>
+                <td>Server-side disconnect after all content has been sent.</td>
+            </tr>
+            <tr>
+                <td><a href="/response_preview?spec=200:b@100">200:b@100</a></td>
+                <td>
+                    100 random bytes as the body. A Content-Lenght header is added, so the disconnect
+                    is no longer needed.
+                </td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@100:h"Server"="&apos;;drop table servers;"'>200:b@100:h"Etag"="';drop table servers;"</a></td>
+                <td>Add a Server header</td>
+            </tr>
+            <tr>
+                <td><a href="/response_preview?spec=200:b@100:dr">200:b@100:dr</a></td>
+                <td>Drop the connection randomly</td>
+            </tr>
+            <tr>
+                <td><a href="/response_preview?spec=200:b@100,ascii:ir,@1">200:b@100,ascii:ir,@1</a></td>
+                <td>100 ASCII bytes as the body, and randomly inject a random byte</td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@1k:c"text/json"'>200:b@1k:c"text/json"</a></td>
+                <td>1k of random bytes, with a text/json content type</td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@1k:p50,120'>200:b@1k:p50,120</a></td>
+                <td>1k of random bytes, pause for 120 seconds after 50 bytes</td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@1k:pr,f'>200:b@1k:pr,f</a></td>
+                <td>1k of random bytes, but hang forever at a random location</td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/response_preview?spec=200:b@100:h@1k,ascii_letters='foo'">200:b@100:h@1k,ascii_letters='foo'</a>
+                </td>
+                <td>
+                    100 ASCII bytes as the body, randomly generated 100k header name, with the value
+                    'foo'.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% if not nocraft %}
+<script>
+    $(function() {
+        $("#submitspec").click(function() {
+            document.location = "{{craftanchor}}" + $("#spec").val()
+        });
+    });
+
+</script>
+{% endif %}

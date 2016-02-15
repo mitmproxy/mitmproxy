@@ -1,0 +1,70 @@
+sudo: false
+language: python
+
+matrix:
+  fast_finish: true
+  include:
+    - python: 2.7
+    - python: 2.7
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+    - python: pypy
+    - python: pypy
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+  allow_failures:
+    # We allow pypy to fail until Travis fixes their infrastructure to a pypy
+    # with a recent enought CFFI library to run cryptography 1.0+.
+    - python: pypy
+
+install:
+  - "pip install --src . -r requirements.txt"
+
+before_script:
+  - "openssl version -a"
+
+script:
+  - "py.test --cov libpathod -v"
+
+after_success:
+  - coveralls
+
+notifications:
+  irc:
+    channels:
+      - "irc.oftc.net#mitmproxy"
+    on_success: change
+    on_failure: always
+  slack:
+    rooms:
+      - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu#ci
+    on_success: always
+    on_failure: always
+
+# exclude cryptography from cache
+# it depends on libssl-dev version
+# which needs to be compiled specifically to each version
+before_cache:
+  - pip uninstall -y cryptography
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
+    - /home/travis/virtualenv/python2.7.9/bin
+    - /home/travis/virtualenv/pypy-2.5.0/site-packages
+    - /home/travis/virtualenv/pypy-2.5.0/bin

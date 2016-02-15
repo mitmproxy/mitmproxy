@@ -1,0 +1,211 @@
+{% extends "docframe.html" %} {% block body %}
+<div class="page-header">
+    <h1>
+        pathoc
+        <small>A perverse HTTP client.</small>
+    </h1>
+</div>
+
+<p>
+    Pathoc is a perverse HTTP daemon designed to let you craft almost any conceivable
+    HTTP request, including ones that creatively violate the standards. HTTP requests
+    are specified using a
+    <a href="/docs/language">small, terse language</a>, which pathod shares with
+    its server-side twin <a href="/docs/pathod">pathod</a>. To view pathoc's complete
+    range of options, use the command-line help:
+</p>
+
+<pre class="terminal">pathoc --help</pre>
+
+<section>
+    <div class="page-header">
+        <h1>Getting Started</h1>
+    </div>
+
+    <p>The basic pattern for pathoc commands is as follows: </p>
+
+    <pre class="terminal">pathoc hostname request [request ...]</pre>
+
+    <p>
+        That is, we specify the hostname to connect to, followed by one or more requests.
+        Lets start with a simple example:
+    </p>
+
+    <pre class="terminal">
+        &gt; pathoc google.com get:/ &lt;&lt; 301 Moved Permanently: 219 bytes
+    </pre>
+
+    <p>
+        Here, we make a GET request to the path / on port 80 of google.com. Pathoc's output
+        tells us that the server responded with a 301. We can tell pathoc to connect
+        using SSL, in which case the default port is changed to 443 (you can over-ride
+        the default port with the <b>-p</b> command-line option):
+    </p>
+
+    <pre class="terminal">
+        &gt; pathoc -s google.com get:/ &lt;&lt; 301 Moved Permanently: 219 bytes
+    </pre>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>Multiple Requests</h1>
+    </div>
+
+    <p>
+        There are two ways to tell pathoc to issue multiple requests. The first is to specify
+        them on the command-line, like so:
+    </p>
+
+    <pre class="terminal">
+        &gt; pathoc google.com get:/ get:/ &lt;&lt; 301 Moved Permanently: 219 bytes &lt;&lt;
+        301 Moved Permanently: 219 bytes
+    </pre>
+
+    <p>
+        In this case, pathoc issues the specified requests over the same TCP connection -
+        so in the above example only one connection is made to google.com
+    </p>
+
+    <p>The other way to issue multiple requets is to use the <b>-n</b> flag:</p>
+
+    <pre class="terminal">
+        &gt; pathoc -n 2 google.com get:/ &lt;&lt; 301 Moved Permanently: 219 bytes &lt;&lt; 301
+        Moved Permanently: 219 bytes
+    </pre>
+
+    <p>
+        The output is identical, but two separate TCP connections are made to the upstream
+        server. These two specification styles can be combined:
+    </p>
+
+    <pre class="terminal">
+        &gt; pathoc -n 2 google.com get:/ get:/ &lt;&lt; 301 Moved Permanently: 219 bytes &lt;&lt;
+        301 Moved Permanently: 219 bytes &lt;&lt; 301 Moved Permanently: 219 bytes &lt;&lt;
+        301 Moved Permanently: 219 bytes
+    </pre>
+
+    <p>Here, two distinct TCP connections are made, with two requests issued over each.</p>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>Basic Fuzzing</h1>
+    </div>
+
+    <p>
+        The combination of pathoc's powerful request specification language and a few of
+        its command-line options makes for quite a powerful basic fuzzer. Here's
+        an example:
+    </p>
+
+    <pre class="terminal">
+        &gt; pathoc -e -I 200 -t 2 -n 1000 localhost get:/:b@10:ir,@1
+    </pre>
+
+    <p>
+        The request specified here is a valid GET with a body consisting of 10 random bytes,
+        but with 1 random byte inserted in a random place. This could be in the headers,
+        in the initial request line, or in the body itself. There are a few things
+        to note here:
+    </p>
+
+    <ul>
+        <li>
+            Corrupting the request in this way will often make the server enter a state where
+            it's awaiting more input from the client. This is where the
+            <b>-t</b> option comes in, which sets a timeout that causes pathoc to
+            disconnect after two seconds.
+        </li>
+
+        <li>
+            The <b>-n</b> option tells pathoc to repeat the request 1000 times.
+        </li>
+
+        <li>
+            The <b>-I</b> option tells pathoc to ignore HTTP 200 response codes.
+            You can use this to fine-tune what pathoc considers to be an exceptional
+            condition, and therefore log-worthy.
+        </li>
+
+        <li>
+            The <b>-e</b> option tells pathoc to print an explanation of each logged
+            request, in the form of an expanded pathoc specification with all random
+            portions and automatic header additions resolved. This lets you precisely
+            replay a request that triggered an error.
+        </li>
+    </ul>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>Interacting with Proxies</h1>
+    </div>
+
+    <p>
+        Pathoc has a reasonably sophisticated suite of features for interacting with proxies.
+        The proxy request syntax very closely mirrors that of straight HTTP, which
+        means that it is possible to make proxy-style requests using pathoc without
+        any additional syntax, by simply specifying a full URL instead of a simple
+        path:
+    </p>
+
+    <pre class="terminal">&gt; pathoc -p 8080 localhost "get:'http://google.com'"</pre>
+
+    <p>
+        Another common use case is to use an HTTP CONNECT request to probe remote servers
+        via a proxy. This is done with the <b>-c</b> command-line option,
+        which allows you to specify a remote host and port pair:
+    </p>
+
+    <pre class="terminal">&gt; pathoc -c google.com:80 -p 8080 localhost get:/</pre>
+
+    <p>
+        Note that pathoc does <b>not</b> negotiate SSL without being explictly instructed
+        to do so. If you're making a CONNECT request to an SSL-protected resource,
+        you must also pass the <b>-s</b> flag:
+    </p>
+
+    <pre class="terminal">&gt; pathoc -sc google.com:443 -p 8080 localhost get:/</pre>
+</section>
+
+
+<section>
+    <div class="page-header">
+        <h1>Embedded response specification</h1>
+    </div>
+
+    <p>
+        One interesting feature of the Request sppecification language is that you can embed
+        a response specifcation in it, which is then added to the request path. Here's
+        an example:
+    </p>
+
+    <pre class="terminal">&gt; pathoc localhost:9999 "get:/p/:s'401:ir,@1'"</pre>
+
+    <p>
+        This crafts a request that connects to the pathod server, and which then crafts a
+        response that generates a 401, with one random byte embedded at a random
+        point. The response specification is parsed and expanded by pathoc, so you
+        see syntax errors immediately. This really becomes handy when combined with
+        the <b>-e</b> flag to show the expanded request:
+    </p>
+
+    <pre class="terminal">
+        &gt; > pathoc -e localhost:9999 "get:/p/:s'401:ir,@1'" >> Spec: get:/p/:s'401:i15,\'o\':h\'Content-Length\'=\'0\'':h'Content-Length'='0'
+        << 401 Unoauthorized: 0 bytes </pre>
+
+    <p>
+        Note that the embedded response has been resolved <i>before</i> being sent
+        to the server, so that "ir,@1" (embed a random byte at a random location)
+        has become "i15,\'o\'" (embed the character "o" at offset 15). You now have
+        a pathoc request specification that is precisely reproducable, even with
+        random components. This feature comes in terribly handy when testing a proxy,
+        since you can now drive the server repsonse completely from the client, and
+        have a complete log of reproducible requests to analyse afterwards.
+    </p>
+</section>
+{% endblock %}

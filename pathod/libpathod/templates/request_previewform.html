@@ -1,0 +1,53 @@
+<form style="margin-bottom: 0" class="form-inline" method="GET" action="/request_preview">
+    <input style="width: 18em" id="spec" name="spec" class="input-medium" value="{{spec}}"
+    placeholder="method:path:[features]">
+    <input type="submit" class="btn" value="preview">
+</form>
+
+<a class="innerlink" data-toggle="collapse" data-target="#requestexamples">examples</a>
+
+<div id="requestexamples" class="collapse">
+    <p>
+        Check out the <a href="/docs/language">complete language docs</a>. Here are
+        some examples to get you started:
+    </p>
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td><a href="/request_preview?spec=get:/">get:/</a></td>
+                <td>Get path /</td>
+            </tr>
+            <tr>
+                <td><a href="/request_preview?spec=get:/:b@100">get:/:b@100</a></td>
+                <td>100 random bytes as the body</td>
+            </tr>
+            <tr>
+                <td><a href='/request_preview?spec=get:/:h"Etag"="&apos;;drop table browsers;"'>get:/:h"Etag"="';drop table browsers;"</a></td>
+                <td>Add a header</td>
+            </tr>
+            <tr>
+                <td><a href='/request_preview?spec=get:/:u"&apos;;drop table browsers;"'>get:/:u"';drop table browsers;"</a></td>
+                <td>Add a User-Agent header</td>
+            </tr>
+            <tr>
+                <td><a href="/request_preview?spec=get:/:b@100:dr">get:/:b@100:dr</a></td>
+                <td>Drop the connection randomly</td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/request_preview?spec="></a>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><a href="/request_preview?spec=get:/:b@100,ascii:ir,@1">get:/:b@100,ascii:ir,@1</a></td>
+                <td>100 ASCII bytes as the body, and randomly inject a random byte</td>
+            </tr>
+            <tr>
+                <td><a href="/request_preview?spec=ws:/">ws:/</a></td>
+                <td>Initiate a websocket handshake.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

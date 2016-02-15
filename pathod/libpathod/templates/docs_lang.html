@@ -1,0 +1,196 @@
+{% extends "docframe.html" %} {% block body %}
+<div class="page-header">
+    <h1>
+        Language Spec
+        <small>The mini-language at the heart of pathoc and pathod.</small>
+    </h1>
+</div>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#specifying_requests" data-toggle="tab">HTTP Requests</a></li>
+    <li><a href="#specifying_responses" data-toggle="tab">HTTP Responses</a></li>
+    <li><a href="#websockets" data-toggle="tab">Websocket Frames</a></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane" id="specifying_responses">
+        {% include "docs_lang_responses.html" %}
+    </div>
+    <div class="tab-pane active" id="specifying_requests">
+        {% include "docs_lang_requests.html" %}
+    </div>
+    <div class="tab-pane" id="websockets">
+        {% include "docs_lang_websockets.html" %}
+    </div>
+</div>
+
+<section id="features">
+    <div class="page-header">
+        <h1>Features</h1>
+    </div>
+
+    <a id="offsetspec"></a>
+    <h2>OFFSET</h2>
+
+    <p>
+        Offsets are calculated relative to the base message, before any injections or other
+        transforms are applied. They have 3 flavors:
+    </p>
+
+    <ul>
+        <li>An integer byte offset </li>
+        <li><b>r</b> for a random location</li>
+        <li><b>a</b> for the end of the message</li>
+    </ul>
+
+    <a id="valuespec"></a>
+    <h2>VALUE</h2>
+
+    <h3>Literals</h3>
+
+    <p>Literal values are specified as a quoted strings: </p>
+
+    <pre class="example">"foo"</pre>
+
+    <p>
+        Either single or double quotes are accepted, and quotes can be escaped with backslashes
+        within the string:
+    </p>
+
+    <pre class="example">'fo\'o'</pre>
+
+    <p>Literal values can contain Python-style backslash escape sequences:</p>
+
+    <pre class="example">'foo\r\nbar'</pre>
+
+    <h3>Files</h3>
+
+    <p>
+        You can load a value from a specified file path. To do so, you have to specify a
+        _staticdir_ option to pathod on the command-line, like so:
+    </p>
+
+    <pre class="example">pathod -d ~/myassets</pre>
+
+    <p>
+        All paths are relative paths under this directory. File loads are indicated by starting
+        the value specifier with the left angle bracket:
+    </p>
+
+    <pre class="example">&lt;my/path</pre>
+
+    <p>The path value can also be a quoted string, with the same syntax as literals:</p>
+
+    <pre class="example">&lt;"my/path"</pre>
+
+
+    <h3>Generated values</h3>
+
+    <p>
+        An @-symbol lead-in specifies that generated data should be used. There are two components
+        to a generator specification - a size, and a data type. By default pathod
+        assumes a data type of "bytes".
+    </p>
+
+    <p>Here's a value specifier for generating 100 bytes:
+
+        <pre class="example">@100</pre>
+    </p>
+
+    <p>
+        You can use standard suffixes to indicate larger values. Here, for instance, is a
+        specifier for generating 100 megabytes:
+    </p>
+
+    <pre class="example">@100m</pre>
+
+    <p>
+        Data is generated and served efficiently - if you really want to send a terabyte
+        of data to a client, pathod can do it. The supported suffixes are:
+    </p>
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td>b</td>
+                <td>1024**0 (bytes)</td>
+            </tr>
+            <tr>
+                <td>k</td>
+                <td>1024**1 (kilobytes)</td>
+            </tr>
+            <tr>
+                <td>m</td>
+                <td>1024**2 (megabytes)</td>
+            </tr>
+            <tr>
+                <td>g</td>
+                <td>1024**3 (gigabytes)</td>
+            </tr>
+            <tr>
+                <td>t</td>
+                <td>1024**4 (terabytes)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        Data types are separated from the size specification by a comma. This specification
+        generates 100mb of ASCII:
+    </p>
+
+    <pre class="example">@100m,ascii</pre>
+
+    <p>Supported data types are:</p>
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td>ascii</td>
+                <td>All ASCII characters</td>
+            </tr>
+            <tr>
+                <td>ascii_letters</td>
+                <td>A-Za-z</td>
+            </tr>
+            <tr>
+                <td>ascii_lowercase</td>
+                <td>a-z</td>
+            </tr>
+            <tr>
+                <td>ascii_uppercase</td>
+                <td>A-Z</td>
+            </tr>
+            <tr>
+                <td>bytes</td>
+                <td>All 256 byte values</td>
+            </tr>
+            <tr>
+                <td>digits</td>
+                <td>0-9</td>
+            </tr>
+            <tr>
+                <td>hexdigits</td>
+                <td>0-f</td>
+            </tr>
+            <tr>
+                <td>octdigits</td>
+                <td>0-7</td>
+            </tr>
+            <tr>
+                <td>punctuation</td>
+                <td>
+                    <pre>!"#$%&\'()*+,-./:;
+                        <=>?@[\\]^_`{|}~</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>whitespace</td>
+                <td>
+                    <pre>\t\n\x0b\x0c\r and space</pre>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+{% endblock %}

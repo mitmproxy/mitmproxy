@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>pathod</title>
+    <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/pathod.css" rel="stylesheet">
+    <link href="/static/syntax.css" rel="stylesheet">
+    <script src="/static/jquery-1.7.2.min.js"></script>
+    <script src="/static/jquery.scrollTo-min.js"></script>
+    <script src="/static/jquery.localscroll-min.js"></script>
+    <script src="/static/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+    </style>
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </a>
+                <a class="brand" href="/index.html">pathod</a>
+                <div class="nav-collapse">
+                    <ul class="nav">
+                        <li {% if section=="main" %} class="active" {% endif %}><a href="/">home</a></li>
+                        {% if not noapi %}
+                        <li {% if section=="log" %} class="active" {% endif %}><a href="/log">log</a></li>
+                        {% endif %}
+                        <li {% if section=="docs" %} class="active" {% endif %}><a href="/docs/pathod">docs</a></li>
+                        <li {% if section=="about" %} class="active" {% endif %}><a href="/about">about</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        {% block content %} {% endblock %}
+        <hr>
+        <footer>
+            <span>&copy; Aldo Cortesi 2015</span>
+            <span class="pull-right">[served with pathod]</span>
+        </footer>
+    </div>
+</body>
+<script>
+    $(function() {
+        $.localScroll({
+            duration: 300,
+            offset: {
+                top: -45
+            }
+        });
+    });
+
+</script>
+
+</html>

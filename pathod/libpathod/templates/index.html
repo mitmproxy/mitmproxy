@@ -1,0 +1,60 @@
+{% extends "frame.html" %} {% block body %}
+<div class="masthead">
+    <div class="container">
+        <h1>pathod: pathological HTTP</h1>
+
+        <p>Crafted malice for tormenting HTTP clients and servers</p>
+
+        <img src="/static/torture.png">
+    </div>
+</div>
+
+<div class="row">
+    <div class="span6">
+        <div>
+            <h2><a href="/docs/pathod">pathod</a></h2>
+
+            <p>A pathological web daemon.</p>
+
+            {% include "response_previewform.html" %}
+            <br>
+        </div>
+    </div>
+
+    <div class="span6">
+        <div>
+            <h2><a href="/docs/pathoc">pathoc</a></h2>
+
+            <p>A perverse HTTP client.</p>
+
+            {% include "request_previewform.html" %}
+        </div>
+    </div>
+</div>
+
+<section>
+    <div class="page-header">
+        <h1>Install</h1>
+    </div>
+    <div class="row">
+        <div class="span6">
+            <div>
+                <h2>pip</h2>
+
+                <pre>pip install pathod</pre>
+            </div>
+        </div>
+
+        <div class="span6">
+            <div>
+                <h2>source</h2>
+
+                <ul>
+                    <li>Current release: <a href="http://mitmproxy.org/download/pathod-{{version}}.tar.gz">pathod {{version}}</a></li>
+                    <li>GitHub: <a href="https://github.com/mitmproxy/pathod">github.com/mitmproxy/pathod</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

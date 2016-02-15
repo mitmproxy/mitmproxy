@@ -1,0 +1,39 @@
+{% extends "frame.html" %} {% block body %}
+<section>
+    <div class="page-header">
+        <h1>pip</h1>
+    </div>
+
+    <p>The easiest way to install pathod is to use pip:</p>
+
+    <pre>pip install pathod</pre>
+
+    <p>
+        This will automatically pull in all the dependencies, and you should be good to go.
+    </p>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>github</h1>
+    </div>
+
+    <p>You can find the project source on GitHub:</p>
+
+    <div style="margin-top: 20px; margin-bottom: 20px">
+        <a class="btn btn-primary btn-large" href="https://github.com/mitmproxy/pathod">github.com/mitmproxy/pathod</a>
+    </div>
+
+    <p>Please also use the <a href="https://github.com/mitmproxy/pathod/issues">github issue tracker</a>        to report bugs.</p>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>tarball</h1>
+    </div>
+
+    <div style="margin-top: 20px; margin-bottom: 20px">
+        <a class="btn btn-primary btn-large" href="https://github.com/downloads/mitmproxy/pathod/pathod-{{version}}.tar.gz">pathod-{{version}}.tar.gz</a>
+    </div>
+</section>
+{% endblock %}
