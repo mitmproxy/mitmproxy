@@ -136,8 +136,10 @@ class TestRequestUtils(object):
         assert request.query.lst == [("bar", "42")]
 
     def test_set_query(self):
-        request = treq()
+        request = treq(host=b"foo", headers = Headers(host=b"bar"))
         request.query = ODict([])
+        assert request.host == b"foo"
+        assert request.headers["host"] == b"bar"
 
     def test_get_cookies_none(self):
         request = treq()
@@ -180,11 +182,14 @@ class TestRequestUtils(object):
         assert request.path_components == ["foo", "bar"]
 
     def test_set_path_components(self):
-        request = treq()
+        request = treq(host=b"foo", headers = Headers(host=b"bar"))
         request.path_components = ["foo", "baz"]
         assert request.path == "/foo/baz"
         request.path_components = []
         assert request.path == "/"
+        request.query = ODict([])
+        assert request.host == b"foo"
+        assert request.headers["host"] == b"bar"
 
     def test_anticache(self):
         request = treq()
