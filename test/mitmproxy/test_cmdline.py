@@ -1,5 +1,5 @@
 import argparse
-from libmproxy import cmdline
+from mitmproxy import cmdline
 from . import tutils
 
 

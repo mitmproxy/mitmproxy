@@ -2,7 +2,7 @@ from pprint import pprint
 
 import click
 
-from libmproxy import tnetstring
+from mitmproxy import tnetstring
 
 
 def read_tnetstring(input):

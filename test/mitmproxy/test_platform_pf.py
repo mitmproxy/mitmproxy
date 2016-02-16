@@ -1,5 +1,5 @@
 import sys
-from libmproxy.platform import pf
+from mitmproxy.platform import pf
 from . import tutils
 
 

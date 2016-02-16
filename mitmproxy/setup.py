@@ -9,7 +9,7 @@ import sys
 here = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.append(os.path.join(here, "..", "netlib"))
-from libmproxy import version
+from mitmproxy import version
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
@@ -45,9 +45,9 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'mitmproxy = libmproxy.main:mitmproxy',
-            'mitmdump = libmproxy.main:mitmdump',
-            'mitmweb = libmproxy.main:mitmweb'
+            'mitmproxy = mitmproxy.main:mitmproxy',
+            'mitmdump = mitmproxy.main:mitmdump',
+            'mitmweb = mitmproxy.main:mitmweb'
         ]
     },
     # https://packaging.python.org/en/latest/requirements/#install-requires

@@ -6,8 +6,8 @@ import traceback
 import os
 import tempfile
 
-from libmproxy.proxy.config import ProxyConfig
-from libmproxy.cmdline import APP_HOST, APP_PORT
+from mitmproxy.proxy.config import ProxyConfig
+from mitmproxy.cmdline import APP_HOST, APP_PORT
 
 import logging
 logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)

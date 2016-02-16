@@ -12,9 +12,9 @@ from netlib.http import authentication, CONTENT_MISSING, http1
 from netlib.tutils import raises
 from libpathod import pathoc, pathod
 
-from libmproxy.proxy.config import HostMatcher
-from libmproxy.protocol import Kill
-from libmproxy.models import Error, HTTPResponse
+from mitmproxy.proxy.config import HostMatcher
+from mitmproxy.protocol import Kill
+from mitmproxy.models import Error, HTTPResponse
 
 from . import tutils, tservers
 

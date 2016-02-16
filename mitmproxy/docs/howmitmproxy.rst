@@ -236,4 +236,4 @@ explicit HTTPS connections to establish the CN and SANs, and cope with SNI.
 .. _Subject Alternative Name: https://en.wikipedia.org/wiki/SubjectAltName
 .. _iptables: http://www.netfilter.org/
 .. _pf: https://en.wikipedia.org/wiki/PF_\(firewall\)
-.. _modules: https://github.com/mitmproxy/mitmproxy/tree/master/libmproxy/platform
+.. _modules: https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/platform

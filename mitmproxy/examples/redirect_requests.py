@@ -1,7 +1,7 @@
 """
 This example shows two ways to redirect flows to other destinations.
 """
-from libmproxy.models import HTTPResponse
+from mitmproxy.models import HTTPResponse
 from netlib.http import Headers
 
 def request(context, flow):

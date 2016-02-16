@@ -1,8 +1,8 @@
 import gc
 
 import netlib.tutils
-from libmproxy import console
-from libmproxy.console import common
+from mitmproxy import console
+from mitmproxy.console import common
 
 from . import tutils
 

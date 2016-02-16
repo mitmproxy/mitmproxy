@@ -1,4 +1,4 @@
-import libmproxy.contentviews as cv
+import mitmproxy.contentviews as cv
 from netlib.http import Headers
 
 

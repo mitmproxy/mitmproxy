@@ -1,6 +1,6 @@
 import cStringIO
 from PIL import Image
-from libmproxy.models import decoded
+from mitmproxy.models import decoded
 
 
 def response(context, flow):

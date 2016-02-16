@@ -20,9 +20,9 @@ stub.py                   Script stub with a method definition for every event.
 upsidedownternet.py       Rewrites traffic to turn images upside down.
 
 
-# libmproxy examples
+# mitmproxy examples
 flowbasic                 Basic use of mitmproxy as a library.
-stickycookies             An example of writing a custom proxy with libmproxy.
+stickycookies             An example of writing a custom proxy with mitmproxy.
 
 
 # misc

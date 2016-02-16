@@ -1,9 +1,9 @@
-from libmproxy.exceptions import ContentViewException
+from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 import netlib.utils
 from netlib import encoding
 
-import libmproxy.contentviews as cv
+import mitmproxy.contentviews as cv
 from . import tutils
 
 try:

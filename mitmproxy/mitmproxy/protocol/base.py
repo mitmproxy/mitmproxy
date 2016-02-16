@@ -19,15 +19,15 @@ class _LayerCodeCompletion(object):
         if True:
             return
         self.config = None
-        """@type: libmproxy.proxy.ProxyConfig"""
+        """@type: mitmproxy.proxy.ProxyConfig"""
         self.client_conn = None
-        """@type: libmproxy.models.ClientConnection"""
+        """@type: mitmproxy.models.ClientConnection"""
         self.server_conn = None
-        """@type: libmproxy.models.ServerConnection"""
+        """@type: mitmproxy.models.ServerConnection"""
         self.channel = None
-        """@type: libmproxy.controller.Channel"""
+        """@type: mitmproxy.controller.Channel"""
         self.ctx = None
-        """@type: libmproxy.protocol.Layer"""
+        """@type: mitmproxy.protocol.Layer"""
 
 
 class Layer(_LayerCodeCompletion):
@@ -48,9 +48,9 @@ class Layer(_LayerCodeCompletion):
             sub_layer = Layer(root_layer)
             print(sub_layer.client_conn) # 42
 
-        The root layer is passed a :py:class:`libmproxy.proxy.RootContext` object,
-        which provides access to :py:attr:`.client_conn <libmproxy.proxy.RootContext.client_conn>`,
-        :py:attr:`.next_layer <libmproxy.proxy.RootContext.next_layer>` and other basic attributes.
+        The root layer is passed a :py:class:`mitmproxy.proxy.RootContext` object,
+        which provides access to :py:attr:`.client_conn <mitmproxy.proxy.RootContext.client_conn>`,
+        :py:attr:`.next_layer <mitmproxy.proxy.RootContext.next_layer>` and other basic attributes.
 
         Args:
             ctx: The (read-only) parent layer / context.
@@ -70,7 +70,7 @@ class Layer(_LayerCodeCompletion):
             Once the protocol has finished without exceptions.
 
         Raises:
-            ~libmproxy.exceptions.ProtocolException: if an exception occurs. No other exceptions must be raised.
+            ~mitmproxy.exceptions.ProtocolException: if an exception occurs. No other exceptions must be raised.
         """
         raise NotImplementedError()
 
@@ -138,7 +138,7 @@ class ServerConnectionMixin(object):
         Sets a new server address. If there is an existing connection, it will be closed.
 
         Raises:
-            ~libmproxy.exceptions.ProtocolException:
+            ~mitmproxy.exceptions.ProtocolException:
                 if ``server_tls`` is ``True``, but there was no TLS layer on the
                 protocol stack which could have processed this.
         """
@@ -171,7 +171,7 @@ class ServerConnectionMixin(object):
         Must not be called if there is an existing connection.
 
         Raises:
-            ~libmproxy.exceptions.ProtocolException: if the connection could not be established.
+            ~mitmproxy.exceptions.ProtocolException: if the connection could not be established.
         """
         if not self.server_conn.address:
             raise ProtocolException("Cannot connect to server, no server address given.")

@@ -5,10 +5,10 @@ import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
-from libmproxy import utils
 from netlib import encoding
 from netlib.http import status_codes, Headers, Request, Response, decoded
 from netlib.tcp import Address
+from .. import utils
 from .. import version
 from .flow import Flow
 

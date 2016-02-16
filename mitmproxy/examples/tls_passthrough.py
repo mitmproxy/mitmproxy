@@ -26,8 +26,8 @@ import random
 
 from enum import Enum
 
-from libmproxy.exceptions import TlsProtocolException
-from libmproxy.protocol import TlsLayer, RawTCPLayer
+from mitmproxy.exceptions import TlsProtocolException
+from mitmproxy.protocol import TlsLayer, RawTCPLayer
 
 
 class InterceptionResult(Enum):

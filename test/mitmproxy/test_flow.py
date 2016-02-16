@@ -9,16 +9,16 @@ import mock
 import netlib.utils
 from netlib import odict
 from netlib.http import CONTENT_MISSING, Headers
-from libmproxy import filt, controller, tnetstring, flow
-from libmproxy.models import Error
-from libmproxy.models import Flow
-from libmproxy.models import HTTPFlow
-from libmproxy.models import HTTPRequest
-from libmproxy.models import HTTPResponse
-from libmproxy.proxy.config import HostMatcher
-from libmproxy.proxy import ProxyConfig
-from libmproxy.proxy.server import DummyServer
-from libmproxy.models.connections import ClientConnection
+from mitmproxy import filt, controller, tnetstring, flow
+from mitmproxy.models import Error
+from mitmproxy.models import Flow
+from mitmproxy.models import HTTPFlow
+from mitmproxy.models import HTTPRequest
+from mitmproxy.models import HTTPResponse
+from mitmproxy.proxy.config import HostMatcher
+from mitmproxy.proxy import ProxyConfig
+from mitmproxy.proxy.server import DummyServer
+from mitmproxy.models.connections import ClientConnection
 from . import tutils
 
 

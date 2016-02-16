@@ -1,11 +1,11 @@
 import glob
-from libmproxy import utils, script
-from libmproxy.proxy import config
+from mitmproxy import utils, script
+from mitmproxy.proxy import config
 from . import tservers
 
 
 def test_load_scripts():
-    example_dir = utils.Data("libmproxy").path("../examples")
+    example_dir = utils.Data("mitmproxy").path("../examples")
     scripts = glob.glob("%s/*.py" % example_dir)
 
     tmaster = tservers.TestMaster(config.ProxyConfig())

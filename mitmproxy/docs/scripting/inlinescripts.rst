@@ -16,8 +16,8 @@ client:
    :language: python
 
 The first argument to each event method is an instance of
-:py:class:`~libmproxy.script.ScriptContext` that lets the script interact with the global mitmproxy
-state. The **response** event also gets an instance of :py:class:`~libmproxy.script.ScriptContext`,
+:py:class:`~mitmproxy.script.ScriptContext` that lets the script interact with the global mitmproxy
+state. The **response** event also gets an instance of :py:class:`~mitmproxy.script.ScriptContext`,
 which we can use to manipulate the response itself.
 
 We can now run this script using mitmdump or mitmproxy as follows:
@@ -37,7 +37,7 @@ Events
 ------
 
 The ``context`` argument passed to each event method is always a
-:py:class:`~libmproxy.script.ScriptContext` instance. It is guaranteed to be the same object
+:py:class:`~mitmproxy.script.ScriptContext` instance. It is guaranteed to be the same object
 for the scripts lifetime and is not shared between multiple inline scripts. You can safely use it
 to store any form of state you require.
 
@@ -67,7 +67,7 @@ Connection Events
 
     :param Layer root_layer: The root layer (see :ref:`protocols` for an explanation what the root
         layer is), which provides transparent access to all attributes of the
-        :py:class:`~libmproxy.proxy.RootContext`. For example, ``root_layer.client_conn.address``
+        :py:class:`~mitmproxy.proxy.RootContext`. For example, ``root_layer.client_conn.address``
         gives the remote address of the connecting client.
 
 .. py:function:: clientdisconnect(context, root_layer)
@@ -155,32 +155,32 @@ The canonical API documentation is the code, which you can browse here, locally 
 
 The main classes you will deal with in writing mitmproxy scripts are:
 
-:py:class:`~libmproxy.script.ScriptContext`
+:py:class:`~mitmproxy.script.ScriptContext`
     - A handle for interacting with mitmproxy's Flow Master from within scripts.
-:py:class:`~libmproxy.models.ClientConnection`
+:py:class:`~mitmproxy.models.ClientConnection`
     - Describes a client connection.
-:py:class:`~libmproxy.models.ServerConnection`
+:py:class:`~mitmproxy.models.ServerConnection`
     - Describes a server connection.
-:py:class:`~libmproxy.models.HTTPFlow`
+:py:class:`~mitmproxy.models.HTTPFlow`
     - A collection of objects representing a single HTTP transaction.
-:py:class:`~libmproxy.models.HTTPRequest`
+:py:class:`~mitmproxy.models.HTTPRequest`
     - An HTTP request.
-:py:class:`~libmproxy.models.HTTPResponse`
+:py:class:`~mitmproxy.models.HTTPResponse`
     - An HTTP response.
-:py:class:`~libmproxy.models.Error`
+:py:class:`~mitmproxy.models.Error`
     - A communications error.
 :py:class:`netlib.http.Headers`
     - A dictionary-like object for managing HTTP headers.
 :py:class:`netlib.certutils.SSLCert`
     - Exposes information SSL certificates.
-:py:class:`libmproxy.flow.FlowMaster`
-    - The "heart" of libmproxy, usually subclassed as :py:class:`libmproxy.dump.DumpMaster` or
-      :py:class:`libmproxy.console.ConsoleMaster`.
+:py:class:`mitmproxy.flow.FlowMaster`
+    - The "heart" of mitmproxy, usually subclassed as :py:class:`mitmproxy.dump.DumpMaster` or
+      :py:class:`mitmproxy.console.ConsoleMaster`.
 
 Script Context
 --------------
 
-.. autoclass:: libmproxy.script.ScriptContext
+.. autoclass:: mitmproxy.script.ScriptContext
     :members:
     :undoc-members:
 
@@ -189,7 +189,7 @@ Running scripts in parallel
 
 We have a single flow primitive, so when a script is blocking, other requests are not processed.
 While that's usually a very desirable behaviour, blocking scripts can be run threaded by using the
-:py:obj:`libmproxy.script.concurrent` decorator.
+:py:obj:`mitmproxy.script.concurrent` decorator.
 **If your script does not block, you should avoid the overhead of the decorator.**
 
 .. literalinclude:: ../../examples/nonblocking.py
@@ -210,7 +210,7 @@ The arguments are then exposed in the start event:
 Running scripts on saved flows
 ------------------------------
 
-Sometimes, we want to run a script on :py:class:`~libmproxy.models.Flow` objects that are already
+Sometimes, we want to run a script on :py:class:`~mitmproxy.models.Flow` objects that are already
 complete.  This happens when you start a script, and then load a saved set of flows from a file
 (see the "scripted data transformation" example `here <https://mitmproxy.org/doc/mitmdump.html>`_).
 It also happens when you run a one-shot script on a single flow through the ``|`` (pipe) shortcut

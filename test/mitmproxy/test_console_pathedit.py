@@ -1,6 +1,6 @@
 import os
 from os.path import normpath
-from libmproxy.console import pathedit
+from mitmproxy.console import pathedit
 
 from . import tutils
 

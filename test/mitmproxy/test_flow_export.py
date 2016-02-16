@@ -1,7 +1,7 @@
 from textwrap import dedent
 
 import netlib.tutils
-from libmproxy import flow_export
+from mitmproxy import flow_export
 from . import tutils
 
 req_get = netlib.tutils.treq(

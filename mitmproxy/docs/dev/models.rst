@@ -54,6 +54,6 @@ Models
 
     .. autoclass:: decoded
 
-.. automodule:: libmproxy.models
+.. automodule:: mitmproxy.models
     :show-inheritance:
     :members: HTTPFlow, Error, ClientConnection, ServerConnection

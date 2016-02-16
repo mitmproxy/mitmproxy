@@ -8,8 +8,8 @@
     Note that request and response messages are not automatically replied to,
     so we need to implement handlers to do this.
 """
-from libmproxy import flow
-from libmproxy.proxy import ProxyServer, ProxyConfig
+from mitmproxy import flow
+from mitmproxy.proxy import ProxyServer, ProxyConfig
 
 
 class MyMaster(flow.FlowMaster):

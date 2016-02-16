@@ -4,7 +4,7 @@ import sys
 
 import six
 
-from libmproxy.exceptions import ProtocolException, TlsProtocolException
+from mitmproxy.exceptions import ProtocolException, TlsProtocolException
 from netlib.exceptions import TcpException
 from ..protocol import (
     RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin,
@@ -21,13 +21,13 @@ class RootContext(object):
 
     Attributes:
         client_conn:
-            The :py:class:`client connection <libmproxy.models.ClientConnection>`.
+            The :py:class:`client connection <mitmproxy.models.ClientConnection>`.
         channel:
-            A :py:class:`~libmproxy.controller.Channel` to communicate with the FlowMaster.
-            Provides :py:meth:`.ask() <libmproxy.controller.Channel.ask>` and
-            :py:meth:`.tell() <libmproxy.controller.Channel.tell>` methods.
+            A :py:class:`~mitmproxy.controller.Channel` to communicate with the FlowMaster.
+            Provides :py:meth:`.ask() <mitmproxy.controller.Channel.ask>` and
+            :py:meth:`.tell() <mitmproxy.controller.Channel.tell>` methods.
         config:
-            The :py:class:`proxy server's configuration <libmproxy.proxy.ProxyConfig>`
+            The :py:class:`proxy server's configuration <mitmproxy.proxy.ProxyConfig>`
     """
 
     def __init__(self, client_conn, config, channel):

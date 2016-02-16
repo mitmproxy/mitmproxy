@@ -6,8 +6,6 @@ with a console interface.
 
 **mitmdump** is the command-line version of mitmproxy. Think tcpdump for HTTP.
 
-**libmproxy** is the library that mitmproxy and mitmdump are built on.
-
 Documentation, tutorials and distribution packages can be found on the
 mitmproxy website: `mitmproxy.org <https://mitmproxy.org/>`_
 

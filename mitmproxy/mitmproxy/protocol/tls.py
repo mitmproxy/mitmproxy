@@ -227,7 +227,7 @@ def get_client_hello(client_conn):
     Peek into the socket and read all records that contain the initial client hello message.
 
     client_conn:
-        The :py:class:`client connection <libmproxy.models.ClientConnection>`.
+        The :py:class:`client connection <mitmproxy.models.ClientConnection>`.
 
     Returns:
         The raw handshake packet bytes, without TLS record header(s).
@@ -279,9 +279,9 @@ class TlsClientHello(object):
         """
         Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
         client_conn:
-            The :py:class:`client connection <libmproxy.models.ClientConnection>`.
+            The :py:class:`client connection <mitmproxy.models.ClientConnection>`.
         Returns:
-            :py:class:`client hello <libmproxy.protocol.tls.TlsClientHello>`.
+            :py:class:`client hello <mitmproxy.protocol.tls.TlsClientHello>`.
         """
         try:
             raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.

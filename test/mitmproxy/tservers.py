@@ -4,12 +4,12 @@ import tempfile
 import flask
 import mock
 
-from libmproxy.proxy.config import ProxyConfig
-from libmproxy.proxy.server import ProxyServer
+from mitmproxy.proxy.config import ProxyConfig
+from mitmproxy.proxy.server import ProxyServer
 import libpathod.test
 import libpathod.pathoc
-from libmproxy import flow, controller
-from libmproxy.cmdline import APP_HOST, APP_PORT
+from mitmproxy import flow, controller
+from mitmproxy.cmdline import APP_HOST, APP_PORT
 
 testapp = flask.Flask(__name__)
 
@@ -192,7 +192,7 @@ class TransparentProxTest(ProxTestBase):
         super(TransparentProxTest, cls).setup_class()
 
         cls._resolver = mock.patch(
-            "libmproxy.platform.resolver",
+            "mitmproxy.platform.resolver",
             new=lambda: cls.resolver(cls.server.port)
         )
         cls._resolver.start()

@@ -9,8 +9,8 @@ from contextlib import contextmanager
 from unittest.case import SkipTest
 
 import netlib.tutils
-from libmproxy import utils, controller
-from libmproxy.models import (
+from mitmproxy import utils, controller
+from mitmproxy.models import (
     ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow
 )
 
@@ -39,12 +39,12 @@ def skip_appveyor(fn):
 
 def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     """
-    @type client_conn: bool | None | libmproxy.proxy.connection.ClientConnection
-    @type server_conn: bool | None | libmproxy.proxy.connection.ServerConnection
-    @type req:         bool | None | libmproxy.protocol.http.HTTPRequest
-    @type resp:        bool | None | libmproxy.protocol.http.HTTPResponse
-    @type err:         bool | None | libmproxy.protocol.primitives.Error
-    @return:           bool | None | libmproxy.protocol.http.HTTPFlow
+    @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
+    @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
+    @type req:         bool | None | mitmproxy.protocol.http.HTTPRequest
+    @type resp:        bool | None | mitmproxy.protocol.http.HTTPResponse
+    @type err:         bool | None | mitmproxy.protocol.primitives.Error
+    @return:           bool | None | mitmproxy.protocol.http.HTTPFlow
     """
     if client_conn is True:
         client_conn = tclient_conn()
@@ -72,7 +72,7 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
 
 def tclient_conn():
     """
-    @return: libmproxy.proxy.connection.ClientConnection
+    @return: mitmproxy.proxy.connection.ClientConnection
     """
     c = ClientConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
@@ -88,7 +88,7 @@ def tclient_conn():
 
 def tserver_conn():
     """
-    @return: libmproxy.proxy.connection.ServerConnection
+    @return: mitmproxy.proxy.connection.ServerConnection
     """
     c = ServerConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
@@ -108,7 +108,7 @@ def tserver_conn():
 
 def terr(content="error"):
     """
-    @return: libmproxy.protocol.primitives.Error
+    @return: mitmproxy.protocol.primitives.Error
     """
     err = Error(content)
     return err
