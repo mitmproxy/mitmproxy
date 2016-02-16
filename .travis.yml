@@ -53,7 +53,7 @@ after_success:
     then
         pip install -e ./release
         python ./release/rtool.py bdist
-        python ./release/rtool.py upload-snapshot --sdist --bdist --wheel
+        python ./release/rtool.py upload-snapshot --bdist --wheel
     fi
 
 notifications:
