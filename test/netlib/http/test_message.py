@@ -27,13 +27,13 @@ def _test_decoded_attr(message, attr):
     setattr(message, attr, "Non-Autorisé")
     assert getattr(message.data, attr) == b"Non-Autoris\xc3\xa9"
     # Don't fail on garbage
-    setattr(message.data, attr, b"FOO\xFF\x00BAR")
+    setattr(message.data, attr, b"FOO\xBF\x00BAR")
     assert getattr(message, attr).startswith("FOO")
     assert getattr(message, attr).endswith("BAR")
     # foo.bar = foo.bar should not cause any side effects.
     d = getattr(message, attr)
     setattr(message, attr, d)
-    assert getattr(message.data, attr) == b"FOO\xFF\x00BAR"
+    assert getattr(message.data, attr) == b"FOO\xBF\x00BAR"
 
 
 class TestMessageData(object):
