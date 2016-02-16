@@ -1,7 +1,7 @@
 from . import tutils, tservers
 
 
-class TestApp(tservers.HTTPProxTest):
+class TestApp(tservers.HTTPProxyTest):
 
     def test_basic(self):
         assert self.app("/").status_code == 200

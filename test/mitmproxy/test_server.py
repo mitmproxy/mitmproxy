@@ -45,7 +45,7 @@ class CommonMixin:
 
     def test_replay(self):
         assert self.pathod("304").status_code == 304
-        if isinstance(self, tservers.HTTPUpstreamProxTest) and self.ssl:
+        if isinstance(self, tservers.HTTPUpstreamProxyTest) and self.ssl:
             assert len(self.master.state.view) == 2
         else:
             assert len(self.master.state.view) == 1
@@ -60,7 +60,7 @@ class CommonMixin:
         l.request.path = "/p/305:d0"
         rt = self.master.replay_request(l, block=True)
         assert not rt
-        if isinstance(self, tservers.HTTPUpstreamProxTest):
+        if isinstance(self, tservers.HTTPUpstreamProxyTest):
             assert l.response.status_code == 502
         else:
             assert l.error
@@ -72,7 +72,7 @@ class CommonMixin:
         # SSL with the upstream proxy.
         rt = self.master.replay_request(l, block=True)
         assert not rt
-        if isinstance(self, tservers.HTTPUpstreamProxTest):
+        if isinstance(self, tservers.HTTPUpstreamProxyTest):
             assert l.response.status_code == 502
         else:
             assert l.error
@@ -202,7 +202,7 @@ class AppMixin:
         assert "mitmproxy" in ret.content
 
 
-class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
+class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
 
     def test_app_err(self):
         p = self.pathoc()
@@ -292,7 +292,7 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         self.master.unload_scripts()
 
 
-class TestHTTPAuth(tservers.HTTPProxTest):
+class TestHTTPAuth(tservers.HTTPProxyTest):
     authenticator = http.authentication.BasicProxyAuth(
         http.authentication.PassManSingleUser(
             "test",
@@ -314,7 +314,7 @@ class TestHTTPAuth(tservers.HTTPProxTest):
         assert ret.status_code == 202
 
 
-class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
+class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
 
@@ -342,7 +342,7 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
         assert p.request("get:/:i0,'invalid\r\n\r\n'").status_code == 400
 
 
-class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
+class TestHTTPSCertfile(tservers.HTTPProxyTest, CommonMixin):
     ssl = True
     certfile = True
 
@@ -350,7 +350,7 @@ class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
         assert self.pathod("304")
 
 
-class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxTest):
+class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
 
     """
     Test upstream server certificate verification with a trusted server cert.
@@ -377,7 +377,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxTest):
         self.pathoc()
 
 
-class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxTest):
+class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
 
     """
     Test upstream server certificate verification with an untrusted server cert.
@@ -416,7 +416,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxTest):
         assert self._request().status_code == 502
 
 
-class TestHTTPSNoCommonName(tservers.HTTPProxTest):
+class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
 
     """
     Test what happens if we get a cert without common name back.
@@ -433,7 +433,7 @@ class TestHTTPSNoCommonName(tservers.HTTPProxTest):
         assert f.sslinfo.certchain[0].get_subject().CN == "127.0.0.1"
 
 
-class TestReverse(tservers.ReverseProxTest, CommonMixin, TcpMixin):
+class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
     reverse = True
 
 
@@ -475,7 +475,7 @@ class TestSocks5(tservers.SocksModeTest):
         assert "SOCKS5 mode failure" in f.content
 
 
-class TestHttps2Http(tservers.ReverseProxTest):
+class TestHttps2Http(tservers.ReverseProxyTest):
 
     @classmethod
     def get_proxy_config(cls):
@@ -507,7 +507,7 @@ class TestHttps2Http(tservers.ReverseProxTest):
         assert p.request("get:'/p/200'").status_code == 200
 
 
-class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):
+class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
     def test_tcp_stream_modify(self):
@@ -523,7 +523,7 @@ class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):
         self.master.unload_scripts()
 
 
-class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
+class TestTransparentSSL(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = True
 
     def test_sslerr(self):
@@ -533,7 +533,7 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
         assert r.status_code == 502
 
 
-class TestProxy(tservers.HTTPProxTest):
+class TestProxy(tservers.HTTPProxyTest):
 
     def test_http(self):
         f = self.pathod("304")
@@ -611,7 +611,7 @@ class TestProxy(tservers.HTTPProxTest):
         assert f.server_conn.address == ("127.0.0.1", self.server.port)
 
 
-class TestProxySSL(tservers.HTTPProxTest):
+class TestProxySSL(tservers.HTTPProxyTest):
     ssl = True
 
     def test_request_ssl_setup_timestamp_presence(self):
@@ -644,7 +644,7 @@ class MasterRedirectRequest(tservers.TestMaster):
         super(MasterRedirectRequest, self).handle_response(f)
 
 
-class TestRedirectRequest(tservers.HTTPProxTest):
+class TestRedirectRequest(tservers.HTTPProxyTest):
     masterclass = MasterRedirectRequest
     ssl = True
 
@@ -697,7 +697,7 @@ class MasterStreamRequest(tservers.TestMaster):
         f.reply()
 
 
-class TestStreamRequest(tservers.HTTPProxTest):
+class TestStreamRequest(tservers.HTTPProxyTest):
     masterclass = MasterStreamRequest
 
     def test_stream_simple(self):
@@ -747,7 +747,7 @@ class MasterFakeResponse(tservers.TestMaster):
         f.reply(resp)
 
 
-class TestFakeResponse(tservers.HTTPProxTest):
+class TestFakeResponse(tservers.HTTPProxyTest):
     masterclass = MasterFakeResponse
 
     def test_fake(self):
@@ -755,7 +755,7 @@ class TestFakeResponse(tservers.HTTPProxTest):
         assert "header-response" in f.headers
 
 
-class TestServerConnect(tservers.HTTPProxTest):
+class TestServerConnect(tservers.HTTPProxyTest):
     masterclass = MasterFakeResponse
     no_upstream_cert = True
     ssl = True
@@ -773,7 +773,7 @@ class MasterKillRequest(tservers.TestMaster):
         f.reply(Kill)
 
 
-class TestKillRequest(tservers.HTTPProxTest):
+class TestKillRequest(tservers.HTTPProxyTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
@@ -789,7 +789,7 @@ class MasterKillResponse(tservers.TestMaster):
         f.reply(Kill)
 
 
-class TestKillResponse(tservers.HTTPProxTest):
+class TestKillResponse(tservers.HTTPProxyTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
@@ -805,7 +805,7 @@ class EResolver(tservers.TResolver):
         raise RuntimeError("Could not resolve original destination.")
 
 
-class TestTransparentResolveError(tservers.TransparentProxTest):
+class TestTransparentResolveError(tservers.TransparentProxyTest):
     resolver = EResolver
 
     def test_resolve_error(self):
@@ -820,14 +820,14 @@ class MasterIncomplete(tservers.TestMaster):
         f.reply(resp)
 
 
-class TestIncompleteResponse(tservers.HTTPProxTest):
+class TestIncompleteResponse(tservers.HTTPProxyTest):
     masterclass = MasterIncomplete
 
     def test_incomplete(self):
         assert self.pathod("200").status_code == 502
 
 
-class TestUpstreamProxy(tservers.HTTPUpstreamProxTest, CommonMixin, AppMixin):
+class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest, CommonMixin, AppMixin):
     ssl = False
 
     def test_order(self):
@@ -849,7 +849,7 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxTest, CommonMixin, AppMixin):
 
 
 class TestUpstreamProxySSL(
-        tservers.HTTPUpstreamProxTest,
+        tservers.HTTPUpstreamProxyTest,
         CommonMixin,
         TcpMixin):
     ssl = True
@@ -918,7 +918,7 @@ class TestUpstreamProxySSL(
         assert self.chain[1].tmaster.state.flow_count() == 1
 
 
-class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
+class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
     ssl = True
 
     def test_reconnect(self):
