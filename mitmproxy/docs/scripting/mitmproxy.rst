@@ -1,18 +1,18 @@
-.. _libmproxy:
+.. _mitmproxy:
 
-libmproxy
+mitmproxy
 =========
 
 .. note::
 
-    We strongly encourage you to use :ref:`inlinescripts` rather than libmproxy.
+    We strongly encourage you to use :ref:`inlinescripts` rather than mitmproxy.
         - Inline Scripts are equally powerful and provide an easier syntax.
         - Most examples are written as inline scripts.
         - Multiple inline scripts can be used together.
         - Inline Scripts can either be executed headless with mitmdump or within the mitmproxy UI.
 
 
-All of mitmproxy's basic functionality is exposed through the **libmproxy**
+All of mitmproxy's basic functionality is exposed through the **mitmproxy**
 library. The example below shows a simple implementation of the "sticky cookie"
 functionality included in the interactive mitmproxy program. Traffic is
 monitored for ``Cookie`` and ``Set-Cookie`` headers, and requests are rewritten

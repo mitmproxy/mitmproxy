@@ -2,13 +2,13 @@ import os
 import mock
 from OpenSSL import SSL
 
-from libmproxy import cmdline
-from libmproxy.proxy import ProxyConfig
-from libmproxy.proxy.config import process_proxy_options
-from libmproxy.models.connections import ServerConnection
-from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
+from mitmproxy import cmdline
+from mitmproxy.proxy import ProxyConfig
+from mitmproxy.proxy.config import process_proxy_options
+from mitmproxy.models.connections import ServerConnection
+from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from netlib.exceptions import TcpDisconnect
-from libpathod import test
+from pathod import test
 from netlib.http import http1
 from . import tutils
 
@@ -76,11 +76,11 @@ class TestProcessProxyOptions:
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--cadir", cadir)
 
-    @mock.patch("libmproxy.platform.resolver", None)
+    @mock.patch("mitmproxy.platform.resolver", None)
     def test_no_transparent(self):
         self.assert_err("transparent mode not supported", "-T")
 
-    @mock.patch("libmproxy.platform.resolver")
+    @mock.patch("mitmproxy.platform.resolver")
     def test_modes(self, _):
         self.assert_noerr("-R", "http://localhost")
         self.assert_err("expected one argument", "-R")

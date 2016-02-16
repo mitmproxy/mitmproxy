@@ -86,10 +86,10 @@ def make_app(noapi, debug):
             "docs_pathoc.html", True, section="docs", subsection="pathoc"
         )
 
-    @app.route('/docs/libpathod')
-    def docs_libpathod():
+    @app.route('/docs/lib_pathod')
+    def docs_lib_pathod():
         return render(
-            "docs_libpathod.html", True, section="docs", subsection="libpathod"
+            "docs_lib_pathod.html", True, section="docs", subsection="pathod"
         )
 
     @app.route('/docs/test')

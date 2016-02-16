@@ -1,7 +1,7 @@
 import os
 import time
 import mock
-from libmproxy import script, flow
+from mitmproxy import script, flow
 from . import tutils
 
 
@@ -68,7 +68,7 @@ def test_concurrent():
     fm = flow.FlowMaster(None, s)
     fm.load_script(tutils.test_data.path("scripts/concurrent_decorator.py"))
 
-    with mock.patch("libmproxy.controller.DummyReply.__call__") as m:
+    with mock.patch("mitmproxy.controller.DummyReply.__call__") as m:
         f1, f2 = tutils.tflow(), tutils.tflow()
         t_start = time.time()
         fm.handle_request(f1)

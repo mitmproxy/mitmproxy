@@ -10,10 +10,11 @@ import mock
 from OpenSSL import SSL
 import OpenSSL
 
-from netlib import tcp, certutils, tutils, tservers
+from netlib import tcp, certutils, tutils
 from netlib.exceptions import InvalidCertificateException, TcpReadIncomplete, TlsException, \
     TcpTimeout, TcpDisconnect, TcpException, NetlibException
 
+from . import tservers
 
 class EchoHandler(tcp.BaseHandler):
     sni = None

@@ -1,5 +1,5 @@
 import mock
-from libmproxy import controller
+from mitmproxy import controller
 
 
 class TestMaster:

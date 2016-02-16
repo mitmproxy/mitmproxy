@@ -1,6 +1,6 @@
 
-from libpathod import language
-from libpathod.language import websockets
+from pathod import language
+from pathod.language import websockets
 import netlib.websockets
 import tutils
 

@@ -9,7 +9,7 @@ from netlib import tcp
 from netlib import tutils
 
 
-class ServerThread(threading.Thread):
+class _ServerThread(threading.Thread):
 
     def __init__(self, server):
         self.server = server
@@ -22,33 +22,7 @@ class ServerThread(threading.Thread):
         self.server.shutdown()
 
 
-class ServerTestBase(object):
-    ssl = None
-    handler = None
-    addr = ("localhost", 0)
-
-    @classmethod
-    def setup_class(cls):
-        cls.q = queue.Queue()
-        s = cls.makeserver()
-        cls.port = s.address.port
-        cls.server = ServerThread(s)
-        cls.server.start()
-
-    @classmethod
-    def makeserver(cls):
-        return TServer(cls.ssl, cls.q, cls.handler, cls.addr)
-
-    @classmethod
-    def teardown_class(cls):
-        cls.server.shutdown()
-
-    @property
-    def last_handler(self):
-        return self.server.server.last_handler
-
-
-class TServer(tcp.TCPServer):
+class _TServer(tcp.TCPServer):
 
     def __init__(self, ssl, q, handler_klass, addr):
         """
@@ -107,3 +81,29 @@ class TServer(tcp.TCPServer):
         s = StringIO()
         tcp.TCPServer.handle_error(self, connection, client_address, s)
         self.q.put(s.getvalue())
+
+
+class ServerTestBase(object):
+    ssl = None
+    handler = None
+    addr = ("localhost", 0)
+
+    @classmethod
+    def setup_class(cls):
+        cls.q = queue.Queue()
+        s = cls.makeserver()
+        cls.port = s.address.port
+        cls.server = _ServerThread(s)
+        cls.server.start()
+
+    @classmethod
+    def makeserver(cls):
+        return _TServer(cls.ssl, cls.q, cls.handler, cls.addr)
+
+    @classmethod
+    def teardown_class(cls):
+        cls.server.shutdown()
+
+    @property
+    def last_handler(self):
+        return self.server.server.last_handler

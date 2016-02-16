@@ -1,4 +1,4 @@
-from libpathod import utils
+from pathod import utils
 import tutils
 
 

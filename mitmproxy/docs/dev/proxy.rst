@@ -3,7 +3,7 @@
 Proxy Server
 ============
 
-.. automodule:: libmproxy.proxy
+.. automodule:: mitmproxy.proxy
 
     .. autoclass:: ProxyServer
     .. autoclass:: DummyServer

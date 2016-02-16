@@ -1,4 +1,4 @@
-from libpathod import pathod_cmdline as cmdline
+from pathod import pathod_cmdline as cmdline
 import tutils
 import cStringIO
 import mock

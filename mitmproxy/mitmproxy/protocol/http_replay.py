@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 import threading
 import traceback
-from libmproxy.exceptions import ReplayException
+from mitmproxy.exceptions import ReplayException
 from netlib.exceptions import HttpException, TcpException
 from netlib.http import http1
 
@@ -10,7 +10,7 @@ from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
 from .base import Kill
 
 
-# TODO: Doesn't really belong into libmproxy.protocol...
+# TODO: Doesn't really belong into mitmproxy.protocol...
 
 
 class RequestReplayThread(threading.Thread):

@@ -11,7 +11,7 @@ class TestHTTPFlow(object):
         assert repr(f)
 
 
-class TestInvalidRequests(tservers.HTTPProxTest):
+class TestInvalidRequests(tservers.HTTPProxyTest):
     ssl = True
 
     def test_double_connect(self):
@@ -28,7 +28,7 @@ class TestInvalidRequests(tservers.HTTPProxTest):
         assert "Invalid HTTP request form" in r.content
 
 
-class TestExpectHeader(tservers.HTTPProxTest):
+class TestExpectHeader(tservers.HTTPProxyTest):
 
     def test_simple(self):
         client = TCPClient(("127.0.0.1", self.proxy.port))
@@ -55,7 +55,7 @@ class TestExpectHeader(tservers.HTTPProxTest):
         client.finish()
 
 
-class TestHeadContentLength(tservers.HTTPProxTest):
+class TestHeadContentLength(tservers.HTTPProxyTest):
 
     def test_head_content_length(self):
         p = self.pathoc()

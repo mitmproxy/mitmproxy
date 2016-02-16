@@ -3,7 +3,7 @@ import cStringIO
 import OpenSSL
 import pytest
 
-from libpathod import pathod, version
+from pathod import pathod, version
 from netlib import tcp, http
 from netlib.exceptions import HttpException, TlsException
 import tutils

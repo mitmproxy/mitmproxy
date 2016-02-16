@@ -11,7 +11,7 @@ from __future__ import (absolute_import, print_function, division)
 class ProxyException(Exception):
 
     """
-    Base class for all exceptions thrown by libmproxy.
+    Base class for all exceptions thrown by mitmproxy.
     """
 
     def __init__(self, message=None):

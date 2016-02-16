@@ -1,7 +1,7 @@
 import cStringIO
-from libmproxy import filt
-from libmproxy.models import Error
-from libmproxy.models import http
+from mitmproxy import filt
+from mitmproxy.models import Error
+from mitmproxy.models import http
 from netlib.http import Headers
 from . import tutils
 

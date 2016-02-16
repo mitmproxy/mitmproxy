@@ -10,7 +10,7 @@ suitable extension to the test suite.
 Our tests are written for the `py.test`_ or nose_ test frameworks.
 At the point where you send your pull request, a command like this:
 
->>> py.test -n 4 --cov libmproxy
+>>> py.test -n 4 --cov mitmproxy
 
 Should give output something like this:
 
@@ -19,18 +19,18 @@ Should give output something like this:
     > ---------- coverage: platform darwin, python 2.7.2-final-0 --
     > Name                   Stmts   Miss  Cover   Missing
     > ----------------------------------------------------
-    > libmproxy/__init__         0      0   100%
-    > libmproxy/app              4      0   100%
-    > libmproxy/cmdline        100      0   100%
-    > libmproxy/controller      69      0   100%
-    > libmproxy/dump           150      0   100%
-    > libmproxy/encoding        39      0   100%
-    > libmproxy/filt           201      0   100%
-    > libmproxy/flow           891      0   100%
-    > libmproxy/proxy          427      0   100%
-    > libmproxy/script          27      0   100%
-    > libmproxy/utils          133      0   100%
-    > libmproxy/version          4      0   100%
+    > mitmproxy/__init__         0      0   100%
+    > mitmproxy/app              4      0   100%
+    > mitmproxy/cmdline        100      0   100%
+    > mitmproxy/controller      69      0   100%
+    > mitmproxy/dump           150      0   100%
+    > mitmproxy/encoding        39      0   100%
+    > mitmproxy/filt           201      0   100%
+    > mitmproxy/flow           891      0   100%
+    > mitmproxy/proxy          427      0   100%
+    > mitmproxy/script          27      0   100%
+    > mitmproxy/utils          133      0   100%
+    > mitmproxy/version          4      0   100%
     > ----------------------------------------------------
     > TOTAL                   2045      0   100%
     > ----------------------------------------------------

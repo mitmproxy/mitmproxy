@@ -68,14 +68,14 @@ class ConnectionHandler(object):
 
     def __init__(self, client_conn, client_address, config, channel):
         self.config = config
-        """@type: libmproxy.proxy.config.ProxyConfig"""
+        """@type: mitmproxy.proxy.config.ProxyConfig"""
         self.client_conn = ClientConnection(
             client_conn,
             client_address,
             None)
-        """@type: libmproxy.proxy.connection.ClientConnection"""
+        """@type: mitmproxy.proxy.connection.ClientConnection"""
         self.channel = channel
-        """@type: libmproxy.controller.Channel"""
+        """@type: mitmproxy.controller.Channel"""
 
     def _create_root_layer(self):
         root_context = RootContext(

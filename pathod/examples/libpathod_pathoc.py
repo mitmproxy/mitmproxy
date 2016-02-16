@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from libpathod import pathoc
+from pathod import pathoc
 
 p = pathoc.Pathoc(("google.com", 80))
 p.connect()

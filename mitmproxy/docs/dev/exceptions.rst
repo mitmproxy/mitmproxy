@@ -3,7 +3,7 @@
 Exceptions
 ==========
 
-.. automodule:: libmproxy.exceptions
+.. automodule:: mitmproxy.exceptions
     :show-inheritance:
     :members:
     :undoc-members:

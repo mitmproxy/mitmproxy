@@ -3,7 +3,7 @@
 # Simple script showing how to read a mitmproxy dump file
 #
 
-from libmproxy import flow
+from mitmproxy import flow
 import pprint
 import sys
 

@@ -6,7 +6,7 @@ import cStringIO
 from contextlib import contextmanager
 
 import netlib
-from libpathod import utils, test, pathoc, pathod, language
+from pathod import utils, test, pathoc, pathod, language
 from netlib import tcp
 import requests
 

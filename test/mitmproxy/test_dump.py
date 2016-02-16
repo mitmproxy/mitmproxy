@@ -1,13 +1,13 @@
 import os
 from cStringIO import StringIO
-from libmproxy.exceptions import ContentViewException
-from libmproxy.models import HTTPResponse
+from mitmproxy.exceptions import ContentViewException
+from mitmproxy.models import HTTPResponse
 
 import netlib.tutils
 from netlib.http import CONTENT_MISSING
 
-from libmproxy import dump, flow
-from libmproxy.proxy import Log
+from mitmproxy import dump, flow
+from mitmproxy.proxy import Log
 from . import tutils
 import mock
 
@@ -49,7 +49,7 @@ def test_strfuncs():
     m.echo_flow(flow)
 
 
-@mock.patch("libmproxy.contentviews.get_content_view")
+@mock.patch("mitmproxy.contentviews.get_content_view")
 def test_contentview(get_content_view):
     get_content_view.side_effect = ContentViewException(""), ("x", iter([]))
 

@@ -3,7 +3,7 @@ from unittest.case import SkipTest
 if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
 
-import libmproxy.console.help as help
+import mitmproxy.console.help as help
 
 
 class TestHelp:

@@ -3,7 +3,7 @@
 Protocols
 =========
 
-.. automodule:: libmproxy.protocol
+.. automodule:: mitmproxy.protocol
 
     .. autoclass:: Layer
         :members:

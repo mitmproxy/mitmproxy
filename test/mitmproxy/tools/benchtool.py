@@ -5,7 +5,7 @@
 # - Apache Bench "ab" binary
 # - pip install click yappi
 
-from libmproxy.main import mitmdump
+from mitmproxy.main import mitmdump
 from os import system
 from threading import Thread
 import time

@@ -2,7 +2,7 @@ import os
 from unittest.case import SkipTest
 if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
-import libmproxy.console.palettes as palettes
+import mitmproxy.console.palettes as palettes
 
 
 class TestPalette:

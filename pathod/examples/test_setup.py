@@ -1,5 +1,5 @@
 import requests
-from libpathod import test
+from pathod import test
 
 
 class Test:

@@ -6,7 +6,7 @@ from . import tservers
 """
 
 
-class TestFuzzy(tservers.HTTPProxTest):
+class TestFuzzy(tservers.HTTPProxyTest):
 
     def test_idna_err(self):
         req = r'get:"http://localhost:%s":i10,"\xc6"'

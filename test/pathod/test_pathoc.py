@@ -9,7 +9,7 @@ from netlib import tcp, http, socks
 from netlib.exceptions import HttpException, TcpException, NetlibException
 from netlib.http import http1, http2
 
-from libpathod import pathoc, test, version, pathod, language
+from pathod import pathoc, test, version, pathod, language
 from netlib.tutils import raises
 import tutils
 

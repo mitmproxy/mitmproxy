@@ -1,6 +1,6 @@
 [run]
 branch = True
-include = libmproxy netlib libpathod
+include = mitmproxy netlib pathod
 omit = *contrib*, *tnetstring*, *platform*, *console*, *main.py
 
 [report]

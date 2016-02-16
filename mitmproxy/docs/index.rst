@@ -52,7 +52,7 @@
     :caption: Scripting
 
     scripting/inlinescripts
-    scripting/libmproxy
+    scripting/mitmproxy
 
 
 .. toctree::

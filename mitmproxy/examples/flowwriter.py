@@ -1,7 +1,7 @@
 import random
 import sys
 
-from libmproxy.flow import FlowWriter
+from mitmproxy.flow import FlowWriter
 
 
 def start(context, argv):

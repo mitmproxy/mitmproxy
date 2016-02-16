@@ -4,7 +4,7 @@ if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
 
 
-import libmproxy.console.common as common
+import mitmproxy.console.common as common
 from . import tutils
 
 

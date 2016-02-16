@@ -1,4 +1,4 @@
-from libmproxy.flow import FlowReader, FlowReadError
+from mitmproxy.flow import FlowReader, FlowReadError
 from . import tutils
 
 

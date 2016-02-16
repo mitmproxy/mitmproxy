@@ -8,7 +8,7 @@ Filter expressions consist of the following operators:
 
 .. documentedlist::
     :header: "Expression" "Description"
-    :listobject: libmproxy.filt.help
+    :listobject: mitmproxy.filt.help
 
 - Regexes are Python-style
 - Regexes can be specified as quoted strings

@@ -1,6 +1,6 @@
 import os
 
-from libpathod.language import generators
+from pathod.language import generators
 import tutils
 
 

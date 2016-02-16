@@ -1,2 +1,2 @@
-graft libpathod
+graft pathod
 recursive-exclude * *.pyc *.pyo *.swo *.swp *.map

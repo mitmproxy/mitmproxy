@@ -18,7 +18,7 @@ Upgrade request. An actual mitmproxy connection may look as follows (outermost l
 
 Every layer acts as a read-only context for its inner layers (see :py:class:`Layer`). To communicate
 with an outer layer, a layer can use functions provided in the context. The next layer is always
-determined by a call to :py:meth:`.next_layer() <libmproxy.proxy.RootContext.next_layer>`,
+determined by a call to :py:meth:`.next_layer() <mitmproxy.proxy.RootContext.next_layer>`,
 which is provided by the root context.
 
 Another subtle design goal of this architecture is that upstream connections should be established

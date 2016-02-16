@@ -1,12 +1,12 @@
 {% extends "docframe.html" %} {% block body %}
 <div class="page-header">
     <h1>
-        libpathod.test
-        <small>Using libpathod in unit tests.</small>
+        pathod.test
+        <small>Using pathod in unit tests.</small>
     </h1>
 </div>
 
-<p>The <b>libpathod.test</b> module is a light, flexible testing layer for HTTP clients.
+<p>The <b>pathod.test</b> module is a light, flexible testing layer for HTTP clients.
     It works by firing up a Pathod instance in a separate thread, letting you use
     Pathod's full abilities to generate responses, and then query Pathod's internal
     logs to establish what happened. All the mechanics of startup, shutdown, finding
@@ -15,7 +15,7 @@
 
 <p>The canonical docs can be accessed using pydoc: </p>
 
-<pre class="terminal">pydoc libpathod.test</pre>
+<pre class="terminal">pydoc pathod.test</pre>
 
 <p>
     The remainder of this page demonstrates some common interaction patterns using
