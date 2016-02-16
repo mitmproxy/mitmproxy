@@ -192,7 +192,8 @@ class Request(Message):
     def query(self, odict):
         query = utils.urlencode(odict.lst)
         scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
-        self.url = urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment])
+        _, _, _, self.path = utils.parse_url(
+                urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     @property
     def cookies(self):
@@ -223,7 +224,8 @@ class Request(Message):
         components = map(lambda x: urllib.parse.quote(x, safe=""), components)
         path = "/" + "/".join(components)
         scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
-        self.url = urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment])
+        _, _, _, self.path = utils.parse_url(
+                urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def anticache(self):
         """
@@ -351,3 +353,4 @@ class Request(Message):
     def form_out(self, form_out):  # pragma: nocover
         warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
         self.first_line_format = form_out
+
