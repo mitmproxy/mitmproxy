@@ -18,7 +18,7 @@ logging.getLogger("PIL.Image").setLevel(logging.WARNING)
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
 import netlib
-from netlib import tservers as netlib_tservers
+from ..netlib import tservers as netlib_tservers
 from netlib.utils import http2_read_raw_frame
 
 import h2

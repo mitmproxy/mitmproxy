@@ -4,11 +4,12 @@ import codecs
 
 from hyperframe.frame import *
 
-from netlib import tcp, http, utils, tservers
+from netlib import tcp, http, utils
 from netlib.tutils import raises
 from netlib.exceptions import TcpDisconnect
 from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 
+from ... import tservers
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
