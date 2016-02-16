@@ -53,7 +53,7 @@ mitmproxy test suite:
 .. code-block:: text
 
     . venv/bin/activate # venv\Scripts\activate.bat on Windows
-    py.test --cov-config .coveragerc test
+    py.test test
 
 Note that the main executables for the project - ``mitmdump``, ``mitmproxy``,
 ``mitmweb``, ``pathod``, and ``pathoc`` - are all created within the virtualenv. After activating the
@@ -76,7 +76,7 @@ requirements installed, and you can simply run the test suite:
 
 .. code-block:: text
 
-    py.test --cov-config .coveragerc test
+    py.test test
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage.

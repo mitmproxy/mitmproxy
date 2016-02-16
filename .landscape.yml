@@ -1,7 +1,7 @@
 ignore-paths:
   - mitmproxy/docs
   - mitmproxy/examples
-  - mitmproxy/libmproxy/contrib
+  - mitmproxy/mitmproxy/contrib
   - mitmproxy/web
 max-line-length: 140
 pylint:
