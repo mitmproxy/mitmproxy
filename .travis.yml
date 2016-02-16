@@ -44,7 +44,7 @@ before_script:
   - "openssl version -a"
 
 script:
-  - "py.test -s --cov-config .coveragerc --timeout 30 ./test/$SCOPE"
+  - "py.test ./test/$SCOPE"
 
 after_success:
   - coveralls
