@@ -40,9 +40,7 @@ setup(
         "Topic :: Software Development :: Testing",
         "Topic :: Software Development :: Testing :: Traffic Generation",
     ],
-    packages=find_packages(exclude=["test", "test.*"]),
-    include_package_data=True,
-    zip_safe=False,
+    packages=find_packages(),
     install_requires=[
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=0.15.1, <0.16",

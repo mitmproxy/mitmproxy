@@ -1,0 +1,2 @@
+graft libmproxy
+recursive-exclude * *.pyc *.pyo *.swo *.swp *.map
