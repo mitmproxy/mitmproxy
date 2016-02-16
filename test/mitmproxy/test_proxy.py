@@ -8,7 +8,7 @@ from mitmproxy.proxy.config import process_proxy_options
 from mitmproxy.models.connections import ServerConnection
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from netlib.exceptions import TcpDisconnect
-from libpathod import test
+from pathod import test
 from netlib.http import http1
 from . import tutils
 

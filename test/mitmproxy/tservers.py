@@ -6,8 +6,8 @@ import mock
 
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
-import libpathod.test
-import libpathod.pathoc
+import pathod.test
+import pathod.pathoc
 from mitmproxy import flow, controller
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
@@ -89,10 +89,10 @@ class ProxTestBase(object):
 
     @classmethod
     def setup_class(cls):
-        cls.server = libpathod.test.Daemon(
+        cls.server = pathod.test.Daemon(
             ssl=cls.ssl,
             ssloptions=cls.ssloptions)
-        cls.server2 = libpathod.test.Daemon(
+        cls.server2 = pathod.test.Daemon(
             ssl=cls.ssl,
             ssloptions=cls.ssloptions)
 
@@ -135,13 +135,13 @@ class ProxTestBase(object):
 class HTTPProxTest(ProxTestBase):
 
     def pathoc_raw(self):
-        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), fp=None)
+        return pathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), fp=None)
 
     def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(
+        p = pathod.pathoc.Pathoc(
             ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
         )
         if self.ssl:
@@ -164,7 +164,7 @@ class HTTPProxTest(ProxTestBase):
 
     def app(self, page):
         if self.ssl:
-            p = libpathod.pathoc.Pathoc(
+            p = pathod.pathoc.Pathoc(
                 ("127.0.0.1", self.proxy.port), True, fp=None
             )
             p.connect((APP_HOST, APP_PORT))
@@ -224,7 +224,7 @@ class TransparentProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(
+        p = pathod.pathoc.Pathoc(
             ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
         )
         p.connect()
@@ -248,7 +248,7 @@ class ReverseProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(
+        p = pathod.pathoc.Pathoc(
             ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
         )
         p.connect()

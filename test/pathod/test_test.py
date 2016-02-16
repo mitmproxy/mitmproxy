@@ -1,6 +1,6 @@
 import logging
 import requests
-from libpathod import test
+from pathod import test
 import tutils
 logging.disable(logging.CRITICAL)
 

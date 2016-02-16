@@ -1,5 +1,5 @@
 import StringIO
-from libpathod import log
+from pathod import log
 from netlib.exceptions import TcpDisconnect
 import netlib.tcp
 

@@ -8,7 +8,7 @@ clients and servers. The project has three components:
 
 - ``pathod``, an pathological HTTP daemon.
 - ``pathoc``, a perverse HTTP client.
-- ``libpathod.test``, an API for easily using pathod and pathoc in unit tests.
+- ``pathod.test``, an API for easily using pathod and pathoc in unit tests.
 
 Installing
 ----------

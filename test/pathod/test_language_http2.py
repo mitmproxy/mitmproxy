@@ -4,8 +4,8 @@ import netlib
 from netlib import tcp
 from netlib.http import user_agents
 
-from libpathod import language
-from libpathod.language import http2, base
+from pathod import language
+from pathod.language import http2, base
 import tutils
 
 

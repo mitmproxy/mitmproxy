@@ -1,7 +1,7 @@
 import cStringIO
 
-from libpathod import language
-from libpathod.language import writer
+from pathod import language
+from pathod.language import writer
 
 
 def test_send_chunk():

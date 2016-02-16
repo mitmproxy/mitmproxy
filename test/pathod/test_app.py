@@ -21,7 +21,7 @@ class TestApp(tutils.DaemonTests):
         assert self.getpath("/docs/pathod").status_code == 200
         assert self.getpath("/docs/pathoc").status_code == 200
         assert self.getpath("/docs/language").status_code == 200
-        assert self.getpath("/docs/libpathod").status_code == 200
+        assert self.getpath("/docs/pathod").status_code == 200
         assert self.getpath("/docs/test").status_code == 200
 
     def test_log(self):

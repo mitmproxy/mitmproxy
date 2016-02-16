@@ -1,7 +1,7 @@
 import cStringIO
 
-from libpathod import language
-from libpathod.language import http, base
+from pathod import language
+from pathod.language import http, base
 import tutils
 
 

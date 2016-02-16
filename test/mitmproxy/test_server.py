@@ -10,7 +10,7 @@ from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
 from netlib.http import authentication, CONTENT_MISSING, http1
 from netlib.tutils import raises
-from libpathod import pathoc, pathod
+from pathod import pathoc, pathod
 
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.protocol import Kill

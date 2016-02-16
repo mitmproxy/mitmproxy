@@ -1,6 +1,6 @@
 import os
-from libpathod import language
-from libpathod.language import base, exceptions
+from pathod import language
+from pathod.language import base, exceptions
 import tutils
 
 

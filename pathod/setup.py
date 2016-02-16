@@ -9,7 +9,7 @@ import sys
 here = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.append(os.path.join(here, "..", "netlib"))
-from libpathod import version
+from pathod import version
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
@@ -42,8 +42,8 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            "pathod = libpathod.pathod_cmdline:go_pathod",
-            "pathoc = libpathod.pathoc_cmdline:go_pathoc"
+            "pathod = pathod.pathod_cmdline:go_pathod",
+            "pathoc = pathod.pathoc_cmdline:go_pathoc"
         ]
     },
     install_requires=[

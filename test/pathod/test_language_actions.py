@@ -1,7 +1,7 @@
 import cStringIO
 
-from libpathod.language import actions
-from libpathod import language
+from pathod.language import actions
+from pathod import language
 
 
 def parse_request(s):
