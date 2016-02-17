@@ -9,8 +9,6 @@ from netlib.exceptions import HttpException
 from netlib.http import Headers
 from netlib.utils import http2_read_raw_frame
 
-import hyperframe
-import h2
 from h2.connection import H2Connection
 from h2.events import *
 
@@ -231,19 +229,6 @@ class Http2Layer(Layer):
                         for stream in self.streams.values():
                             stream.zombie = time.time()
                         return
-
-                    frame, _ = hyperframe.frame.Frame.parse_frame_header(raw_frame[:9])
-
-                    if is_server:
-                        list = self.server_reset_streams
-                    else:
-                        list = self.client_reset_streams
-                    if frame.stream_id in list:
-                        # this frame belongs to a reset stream - just ignore it
-                        if isinstance(frame, hyperframe.frame.HeadersFrame) or isinstance(frame, hyperframe.frame.ContinuationFrame):
-                            # we need to keep the hpack-decoder happy too
-                            source_conn.h2.decoder.decode(raw_frame[9:])
-                        continue
 
                     events = source_conn.h2.receive_data(raw_frame)
                     source_conn.send(source_conn.h2.data_to_send())
