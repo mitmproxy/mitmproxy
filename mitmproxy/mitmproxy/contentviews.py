@@ -8,7 +8,8 @@ in the future, e.g. to decode protobuf messages sent as WebSocket frames.
 
 Thus, the View API is very minimalistic. The only arguments are `data` and `**metadata`,
 where `data` is the actual content (as bytes). The contents on metadata depend on the protocol in
-use. For HTTP, the message headers are passed as the ``headers`` keyword argument.
+use. For HTTP, the message headers are passed as the ``headers`` keyword argument. For HTTP
+requests, the query parameters are passed as the ``query`` keyword argument.
 
 """
 from __future__ import (absolute_import, print_function, division)
@@ -118,15 +119,19 @@ class ViewAuto(View):
     def __call__(self, data, **metadata):
         headers = metadata.get("headers", {})
         ctype = headers.get("content-type")
-        if ctype:
+        if data and ctype:
             ct = parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
             elif utils.isXML(data):
                 return get("XML")(data, **metadata)
-        if utils.isMostlyBin(data):
+        if metadata.get("query"):
+            return get("Query")(data, **metadata)
+        if data and utils.isMostlyBin(data):
             return get("Hex")(data)
+        if not data:
+            return "No content", []
         return get("Raw")(data)
 
 
@@ -460,6 +465,19 @@ class ViewProtobuf(View):
         return "Protobuf", format_text(decoded)
 
 
+class ViewQuery(View):
+    name = "Query"
+    prompt = ("query", "q")
+    content_types = []
+
+    def __call__(self, data, **metadata):
+        query = metadata.get("query")
+        if query:
+            return "Query", format_dict(query)
+        else:
+            return "Query", format_text("")
+
+
 class ViewWBXML(View):
     name = "WBXML"
     prompt = ("wbxml", "w")
@@ -541,6 +559,7 @@ add(ViewCSS())
 add(ViewURLEncoded())
 add(ViewMultipart())
 add(ViewImage())
+add(ViewQuery())
 
 if pyamf:
     add(ViewAMF())
@@ -577,8 +596,6 @@ def get_content_view(viewmode, data, **metadata):
         Raises:
             ContentViewException, if the content view threw an error.
     """
-    if not data:
-        return "No content", []
     msg = []
 
     headers = metadata.get("headers", {})

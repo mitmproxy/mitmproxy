@@ -193,8 +193,11 @@ class FlowView(tabs.Tabs):
     def _get_content_view(self, viewmode, message, max_lines, _):
 
         try:
+            query = None
+            if isinstance(message, HTTPRequest):
+                query = message.query
             description, lines = contentviews.get_content_view(
-                viewmode, message.content, headers=message.headers
+                viewmode, message.content, headers=message.headers, query=query
             )
         except ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()
