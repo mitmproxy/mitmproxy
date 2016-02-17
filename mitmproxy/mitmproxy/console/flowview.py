@@ -69,7 +69,7 @@ def _mkhelp():
          ),
         ("M", "change default body display mode"),
         ("p", "previous flow"),
-        ("P", "copy response(content/headers) to clipboard"),
+        ("P", "copy request/response (content/headers) to clipboard"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
