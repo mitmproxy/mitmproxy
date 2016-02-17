@@ -56,7 +56,7 @@ class ProxyConfig:
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
-            http2=False,
+            http2=True,
             rawtcp=False,
             ciphers_client=DEFAULT_CLIENT_CIPHERS,
             ciphers_server=None,
@@ -179,9 +179,6 @@ def process_proxy_options(parser, options):
         if not os.path.exists(parts[1]):
             parser.error("Certificate file does not exist: %s" % parts[1])
         certs.append(parts)
-
-    if options.http2 and not tcp.HAS_ALPN:
-        raise RuntimeError("HTTP2 support requires OpenSSL 1.0.2 or above.")
 
     return ProxyConfig(
         host=options.addr,

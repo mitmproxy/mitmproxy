@@ -14,6 +14,8 @@ import traceback
 import urwid
 import weakref
 
+from netlib import tcp
+
 from .. import controller, flow, script, contentviews
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
@@ -451,6 +453,14 @@ class ConsoleMaster(flow.FlowMaster):
             self.loop.draw_screen()
             signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
+
+        if not hasattr(self, 'http2_error_shown') and self.server.config.http2 and not tcp.HAS_ALPN:  # pragma: no cover
+            self.http2_error_shown = True
+            signals.status_message.send(
+                message="ALPN support missing (OpenSSL 1.0.2+ required). "
+                        "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
+                expire=5
+            )
 
     def run(self):
         self.ui = urwid.raw_display.Screen()

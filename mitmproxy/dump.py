@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function
 import traceback
-
+import sys
 import click
 import itertools
 
+from netlib import tcp
 from netlib.http import CONTENT_MISSING
 import netlib.utils
 from . import flow, filt, contentviews
@@ -71,6 +72,11 @@ class DumpMaster(flow.FlowMaster):
         self.replay_ignore_payload_params = options.replay_ignore_payload_params
 
         self.set_stream_large_bodies(options.stream_large_bodies)
+
+        if self.server.config.http2 and not tcp.HAS_ALPN:  # pragma: no cover
+            print("ALPN support missing (OpenSSL 1.0.2+ required)!\n"
+                "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
+                file=sys.stderr)
 
         if options.filtstr:
             self.filt = filt.parse(options.filtstr)
