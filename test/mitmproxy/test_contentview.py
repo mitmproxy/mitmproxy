@@ -1,5 +1,6 @@
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
+from netlib.odict import ODict
 import netlib.utils
 from netlib import encoding
 
@@ -44,6 +45,19 @@ class TestContentView:
             headers=Headers(content_type="text/flibble")
         )
         assert f[0].startswith("XML")
+
+        f = v(
+            "",
+            headers=Headers()
+        )
+        assert f[0] == "No content"
+
+        f = v(
+            "",
+            headers=Headers(),
+            query=ODict([("foo", "bar")]),
+        )
+        assert f[0] == "Query"
 
     def test_view_urlencoded(self):
         d = netlib.utils.urlencode([("one", "two"), ("three", "four")])
@@ -157,6 +171,13 @@ Larry
 
         h = Headers(content_type="unparseable")
         assert not view(v, headers=h)
+
+    def test_view_query(self):
+        d = ""
+        v = cv.ViewQuery()
+        f = v(d, query=ODict([("foo", "bar")]))
+        assert f[0] == "Query"
+        assert [x for x in f[1]] == [[("header", "foo: "), ("text", "bar")]]
 
     def test_get_content_view(self):
         r = cv.get_content_view(
