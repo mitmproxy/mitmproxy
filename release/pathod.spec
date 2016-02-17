@@ -2,7 +2,7 @@
 
 from PyInstaller.utils.hooks import collect_data_files
 
-a = Analysis(['../pathod/bin/pathod'],
+a = Analysis(['../bin/pathod'],
              binaries=None,
              datas=collect_data_files("pathod"),
              hiddenimports=['_cffi_backend'],
