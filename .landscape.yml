@@ -1,6 +1,6 @@
 ignore-paths:
-  - mitmproxy/docs
-  - mitmproxy/examples
+  - docs
+  - examples
   - mitmproxy/mitmproxy/contrib
   - mitmproxy/web
 max-line-length: 140
