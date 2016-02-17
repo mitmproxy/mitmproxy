@@ -106,6 +106,8 @@ class TestRequestUtils(object):
         request = treq()
         assert request.pretty_host == "address"
         assert request.host == "address"
+        request.headers["host"] = "other:22"
+        assert request.pretty_host == "other"
         request.headers["host"] = "other"
         assert request.pretty_host == "other"
         assert request.host == "address"
@@ -123,6 +125,8 @@ class TestRequestUtils(object):
         assert request.pretty_url == "http://address:22/path"
         request.headers["host"] = "other"
         assert request.pretty_url == "http://other:22/path"
+        request.headers["host"] = "other:33"
+        assert request.pretty_url == "http://other:33/path"
 
     def test_pretty_url_authority(self):
         request = treq(first_line_format="authority")
