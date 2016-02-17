@@ -226,12 +226,17 @@
     * pathod: Hugely improved SSL support, including dynamic generation of certificates
     using the mitproxy cacert
 
-    * pathod: pathoc -S dumps information on the remote SSL certificate chain
+7 November 2014: pathod 0.11:
 
-    * pathod: Big improvements to fuzzing, including random spec selection and
-    memoization to avoid repeating randomly generated patterns
+  * Hugely improved SSL support, including dynamic generation of certificates
+    using the mitproxy cacert
 
-    * pathod: Reflected patterns, allowing you to embed a pathod server response specification in a pathoc request, resolving both on client side. This makes fuzzing proxies and other intermediate systems much better.
+  * pathoc -S dumps information on the remote SSL certificate chain
+
+  * Big improvements to fuzzing, including random spec selection and memoization to avoid repeating randomly generated patterns
+
+  * Reflected patterns, allowing you to embed a pathod server response specification in a pathoc request, resolving both on client side. This makes fuzzing proxies and other intermediate systems much better.
+
 
 28 January 2014: mitmproxy 0.10:
 
@@ -271,7 +276,10 @@
 
     * Many other small bugfixes and improvements.
 
-    * pathod: Adapt to interface changes in netlib
+
+25 August 2013: pathod 0.9.2:
+
+    * Adapt to interface changes in netlib
 
 
 16 June 2013: mitmproxy 0.9.1:
@@ -339,6 +347,77 @@
     * pathoc: client certificate support.
 
     * pathod: API improvements, bugfixes.
+
+
+15 May 2013: pathod 0.9 (version synced with mitmproxy):
+
+    * Pathod proxy mode. You can now configure clients to use pathod as an
+      HTTP/S proxy.
+
+    * Pathoc proxy support, including using CONNECT to tunnel directly to
+      targets.
+
+    * Pathoc client certificate support.
+
+    * API improvements, bugfixes.
+
+
+16 November 2012: pathod 0.3:
+
+    A release focusing on shoring up our fuzzing capabilities, especially with
+    pathoc.
+
+    * pathoc -q and -r options, output full request and response text.
+
+    * pathod -q and -r options, add full request and response text to pathod's
+      log buffer.
+
+    * pathoc and pathod -x option, makes -q and -r options log in hex dump
+      format.
+
+    * pathoc -C option, specify response codes to ignore.
+
+    * pathoc -T option, instructs pathoc to ignore timeouts.
+
+    * pathoc -o option, a one-shot mode that exits after the first non-ignored
+      response.
+
+    * pathoc and pathod -e option, which explains the resulting message by
+      expanding random and generated portions, and logging a reproducible
+      specification.
+
+    * Streamline the specification langauge. HTTP response message is now
+      specified using the "r" mnemonic.
+
+    * Add a "u" mnemonic for specifying User-Agent strings. Add a set of
+      standard user-agent strings accessible through shortcuts.
+
+    * Major internal refactoring and cleanup.
+
+    * Many bugfixes.
+
+
+22 August 2012: pathod 0.2:
+
+    * Add pathoc, a pathological HTTP client.
+
+    * Add libpathod.test, a truss for using pathod in unit tests.
+
+    * Add an injection operator to the specification language.
+
+    * Allow Python escape sequences in value literals.
+
+    * Allow execution of requests and responses from file, using the new + operator.
+
+    * Add daemonization to Pathod, and make it more robust for public-facing use.
+
+    * Let pathod pick an arbitrary open port if -p 0 is specified.
+
+    * Move from Tornado to netlib, the network library written for mitmproxy.
+
+    * Move the web application to Flask.
+
+    * Massively expand the documentation.
 
 
 5 April 2012: mitmproxy 0.8:
