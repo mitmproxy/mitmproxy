@@ -1,9 +1,2 @@
-.DS_Store
-MANIFEST
-*.py[cdo]
-*.swp
-*.swo
-
 /build
 /dist
-/mitmproxy_rtool.egg-info
