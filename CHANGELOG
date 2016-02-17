@@ -223,7 +223,15 @@
 
     * Countless bugfixes and other small improvements
 
+    * pathod: Hugely improved SSL support, including dynamic generation of certificates
+    using the mitproxy cacert
 
+    * pathod: pathoc -S dumps information on the remote SSL certificate chain
+
+    * pathod: Big improvements to fuzzing, including random spec selection and
+    memoization to avoid repeating randomly generated patterns
+
+    * pathod: Reflected patterns, allowing you to embed a pathod server response specification in a pathoc request, resolving both on client side. This makes fuzzing proxies and other intermediate systems much better.
 
 28 January 2014: mitmproxy 0.10:
 
@@ -263,7 +271,7 @@
 
     * Many other small bugfixes and improvements.
 
-
+    * pathod: Adapt to interface changes in netlib
 
 
 16 June 2013: mitmproxy 0.9.1:
@@ -321,6 +329,16 @@
       the header editor.
 
     * Proxy authentication to limit access to mitmproxy
+
+    * pathod: Proxy mode. You can now configure clients to use pathod as an
+      HTTP/S proxy.
+
+    * pathoc: Proxy support, including using CONNECT to tunnel directly to
+      targets.
+
+    * pathoc: client certificate support.
+
+    * pathod: API improvements, bugfixes.
 
 
 5 April 2012: mitmproxy 0.8:
