@@ -82,7 +82,7 @@ Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage.
 
 
-Docs
+Documentation
 ----
 
 The mitmproxy documentation is build using Sphinx_, which is installed automatically if you set up a development
@@ -98,6 +98,30 @@ After installation, you can render the documentation like this:
 
 The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory and rebuilds
 the documentation when a change is detected.
+
+
+Contributing
+----
+
+Thank you for your interest in contributing to mitmproxy!
+
+* Bug Reports
+
+Bug Reports are very welcome - please file them on the GitHub issue_tracker_.
+Please make sure to fill out the template and provide as much information as
+possible.
+
+* Feature Requests
+
+We're happy to hear what you'd like to see in mitmproxy. Please file feature
+requests on the GitHub issue_tracker_.
+
+* Patches
+
+We're always happy to accept patches. Please submit them in the form of pull
+requests to the this repository. If you're working on something cool, please do
+not hesitate and get in touch!
+
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
@@ -143,3 +167,4 @@ the documentation when a change is detected.
 .. _.env: https://github.com/mitmproxy/mitmproxy/blob/master/.env
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
+.. _issue_tracker: https://github.com/mitmproxy/mitmproxy/issues

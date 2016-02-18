@@ -69,7 +69,7 @@ def _mkhelp():
          ),
         ("M", "change default body display mode"),
         ("p", "previous flow"),
-        ("P", "copy response(content/headers) to clipboard"),
+        ("P", "copy request/response (content/headers) to clipboard"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
@@ -193,8 +193,11 @@ class FlowView(tabs.Tabs):
     def _get_content_view(self, viewmode, message, max_lines, _):
 
         try:
+            query = None
+            if isinstance(message, HTTPRequest):
+                query = message.query
             description, lines = contentviews.get_content_view(
-                viewmode, message.content, headers=message.headers
+                viewmode, message.content, headers=message.headers, query=query
             )
         except ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()

@@ -250,7 +250,7 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
                             "--clean",
                             "--workpath", PYINSTALLER_TEMP,
                             "--distpath", PYINSTALLER_DIST,
-                            # This is PyInstaller, so setting a 
+                            # This is PyInstaller, so setting a
                             # different log level obviously breaks it :-)
                             # "--log-level", "WARN",
                             spec

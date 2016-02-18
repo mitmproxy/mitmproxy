@@ -1,2 +1,4 @@
 graft mitmproxy
+graft pathod
+graft netlib
 recursive-exclude * *.pyc *.pyo *.swo *.swp *.map

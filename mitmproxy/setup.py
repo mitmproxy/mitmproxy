@@ -54,7 +54,7 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "netlib=={}".format(version.VERSION),
-        "h2>=2.1.0, <2.2",
+        "h2>=2.1.2, <3.0",
         "tornado>=4.3, <4.4",
         "configargparse>=0.10, <0.11",
         "pyperclip>=1.5.22, <1.6",
