@@ -242,7 +242,7 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
         if conf["tools"]:
             with Archive(join(DIST_DIR, archive_name(p))) as archive:
                 for tool in conf["tools"]:
-                    spec = join(RELEASE_DIR, "%s.spec" % tool)
+                    spec = join(RELEASE_DIR, "specs/%s.spec" % tool)
                     print("Building %s binary..." % tool)
                     subprocess.check_call(
                         [

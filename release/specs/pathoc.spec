@@ -2,10 +2,10 @@
 
 from PyInstaller.utils.hooks import collect_data_files
 
-a = Analysis(['../mitmproxy/mitmdump'],
+a = Analysis(['pathoc'],
              binaries=None,
-             datas=collect_data_files("mitmproxy.onboarding"),
-             hiddenimports=[],
+             datas=None,
+             hiddenimports=['_cffi_backend'],
              hookspath=None,
              runtime_hooks=None,
              excludes=None)
@@ -15,7 +15,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='mitmdump',
+          name='pathoc',
           debug=False,
           strip=None,
           upx=True,

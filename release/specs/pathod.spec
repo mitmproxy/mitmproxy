@@ -2,9 +2,9 @@
 
 from PyInstaller.utils.hooks import collect_data_files
 
-a = Analysis(['../pathod/pathoc'],
+a = Analysis(['pathod'],
              binaries=None,
-             datas=None,
+             datas=collect_data_files("pathod"),
              hiddenimports=['_cffi_backend'],
              hookspath=None,
              runtime_hooks=None,
@@ -15,7 +15,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='pathoc',
+          name='pathod',
           debug=False,
           strip=None,
           upx=True,
