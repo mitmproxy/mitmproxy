@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+import re
 import warnings
 
 import six
@@ -12,6 +13,10 @@ from .. import encoding
 from .headers import Headers
 from .message import Message, _native, _always_bytes, MessageData
 
+# This regex extracts & splits the host header into host and port.
+# Handles the edge case of IPv6 addresses containing colons.
+# https://bugzilla.mozilla.org/show_bug.cgi?id=45891
+host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 class RequestData(MessageData):
     def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=None, content=None,
@@ -159,6 +164,18 @@ class Request(Message):
     def url(self, url):
         self.scheme, self.host, self.port, self.path = utils.parse_url(url)
 
+    def _parse_host_header(self):
+        """Extract the host and port from Host header"""
+        if "host" not in self.headers:
+            return None, None
+        host, port = self.headers["host"], None
+        m = host_header_re.match(host)
+        if m:
+            host = m.group("host").strip("[]")
+            if m.group("port"):
+                port = int(m.group("port"))
+        return host, port
+
     @property
     def pretty_host(self):
         """
@@ -166,7 +183,13 @@ class Request(Message):
         This is useful in transparent mode where :py:attr:`host` is only an IP address,
         but may not reflect the actual destination as the Host header could be spoofed.
         """
-        return self.headers.get("host", self.host)
+        host, port = self._parse_host_header()
+        if not host:
+            return self.host
+        if not port:
+            port = 443 if self.scheme == 'https' else 80
+        # Prefer the original address if host header has an unexpected form
+        return host if port == self.port else self.host
 
     @property
     def pretty_url(self):
