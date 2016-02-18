@@ -1035,7 +1035,7 @@ class TestRequest:
         assert r.url == "https://address:22/path"
 
         assert r.pretty_url == "https://address:22/path"
-        r.headers["Host"] = "foo.com"
+        r.headers["Host"] = "foo.com:22"
         assert r.url == "https://address:22/path"
         assert r.pretty_url == "https://foo.com:22/path"
 
