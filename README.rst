@@ -100,29 +100,6 @@ The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory
 the documentation when a change is detected.
 
 
-Contributing
-----
-
-Thank you for your interest in contributing to mitmproxy!
-
-* Bug Reports
-
-Bug Reports are very welcome - please file them on the GitHub issue_tracker_.
-Please make sure to fill out the template and provide as much information as
-possible.
-
-* Feature Requests
-
-We're happy to hear what you'd like to see in mitmproxy. Please file feature
-requests on the GitHub issue_tracker_.
-
-* Patches
-
-We're always happy to accept patches. Please submit them in the form of pull
-requests to the this repository. If you're working on something cool, please do
-not hesitate and get in touch!
-
-
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
