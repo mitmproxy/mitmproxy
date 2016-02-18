@@ -8,6 +8,7 @@ import Cookie
 import cookielib
 import os
 import re
+import time
 import urlparse
 
 from netlib import wsgi
@@ -828,17 +829,24 @@ class FlowMaster(controller.Master):
         """
         c = ClientConnection.from_state(dict(
             address=dict(address=(host, port), use_ipv6=False),
-            clientcert=None
+            clientcert=None,
+            ssl_established=False,
+            timestamp_start=time.time(),
+            timestamp_end=time.time(),
+            timestamp_ssl_setup=time.time()
         ))
 
         s = ServerConnection.from_state(dict(
             address=dict(address=(host, port), use_ipv6=False),
-            state=[],
-            source_address=None,
-            # source_address=dict(address=(host, port), use_ipv6=False),
             cert=None,
             sni=host,
-            ssl_established=True
+            source_address=dict(address=('', 0), use_ipv6=False),
+            ssl_established=True,
+            timestamp_start=time.time(),
+            timestamp_tcp_setup=time.time(),
+            timestamp_ssl_setup=time.time(),
+            timestamp_end=None,
+            via=None
         ))
         f = HTTPFlow(c, s)
         headers = Headers()
@@ -852,10 +860,8 @@ class FlowMaster(controller.Master):
             path,
             b"HTTP/1.1",
             headers,
-            None,
-            None,
-            None,
-            None)
+            b""
+        )
         f.request = req
         return self.load_flow(f)
 
