@@ -188,6 +188,7 @@ class Request(Message):
             return self.host
         if not port:
             port = 443 if self.scheme == 'https' else 80
+        # Prefer the original address if host header has an unexpected form
         return host if port == self.port else self.host
 
     @property
@@ -195,12 +196,9 @@ class Request(Message):
         """
         Like :py:attr:`url`, but using :py:attr:`pretty_host` instead of :py:attr:`host`.
         """
-        host, port = self._parse_host_header()
-        host = host or self.host
-        port = port or self.port
         if self.first_line_format == "authority":
-            return "%s:%d" % (host, port)
-        return utils.unparse_url(self.scheme, host, port, self.path)
+            return "%s:%d" % (self.pretty_host, self.port)
+        return utils.unparse_url(self.scheme, self.pretty_host, self.port, self.path)
 
     @property
     def query(self):
