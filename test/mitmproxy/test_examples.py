@@ -5,7 +5,7 @@ from . import tservers
 
 
 def test_load_scripts():
-    example_dir = utils.Data("mitmproxy").path("../../examples")
+    example_dir = utils.Data(__name__).path("../../examples")
     scripts = glob.glob("%s/*.py" % example_dir)
 
     tmaster = tservers.TestMaster(config.ProxyConfig())
