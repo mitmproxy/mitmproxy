@@ -104,19 +104,23 @@ class TestRequestUtils(object):
 
     def test_pretty_host(self):
         request = treq()
+        # Without host header
         assert request.pretty_host == "address"
         assert request.host == "address"
+        # Same port as self.port (22)
         request.headers["host"] = "other:22"
         assert request.pretty_host == "other"
+        # Different Ports
         request.headers["host"] = "other"
-        assert request.pretty_host == "other"
+        assert request.pretty_host == "address"
         assert request.host == "address"
+        # Empty host
         request.host = None
         assert request.pretty_host is None
         assert request.host is None
 
         # Invalid IDNA
-        request.headers["host"] = ".disqus.com"
+        request.headers["host"] = ".disqus.com:22"
         assert request.pretty_host == ".disqus.com"
 
     def test_pretty_url(self):

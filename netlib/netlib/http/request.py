@@ -183,7 +183,12 @@ class Request(Message):
         This is useful in transparent mode where :py:attr:`host` is only an IP address,
         but may not reflect the actual destination as the Host header could be spoofed.
         """
-        return self._parse_host_header()[0] or self.host
+        host, port = self._parse_host_header()
+        if not host:
+            return self.host
+        if not port:
+            port = 443 if self.scheme == 'https' else 80
+        return host if port == self.port else self.host
 
     @property
     def pretty_url(self):
