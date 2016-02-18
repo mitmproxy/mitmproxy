@@ -1,4 +1,2 @@
--e ./netlib[dev]
--e ./pathod[dev]
--e ./mitmproxy[dev,examples,contentviews]
+-e .[dev,examples,contentviews]
 -e ./release
