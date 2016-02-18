@@ -14,6 +14,8 @@ import traceback
 import urwid
 import weakref
 
+from netlib import tcp
+
 from .. import controller, flow, script, contentviews
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
@@ -452,6 +454,7 @@ class ConsoleMaster(flow.FlowMaster):
             signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
 
+
     def run(self):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
@@ -481,6 +484,14 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         self.loop.set_alarm_in(0.01, self.ticker)
+        if self.server.config.http2 and not tcp.HAS_ALPN:  # pragma: no cover
+            def http2err(*args, **kwargs):
+                signals.status_message.send(
+                    message = "HTTP/2 disabled - OpenSSL 1.0.2+ required."
+                              " Use --no-http2 to silence this warning.",
+                    expire=5
+                )
+            self.loop.set_alarm_in(0.01, http2err)
 
         # It's not clear why we need to handle this explicitly - without this,
         # mitmproxy hangs on keyboard interrupt. Remove if we ever figure it
