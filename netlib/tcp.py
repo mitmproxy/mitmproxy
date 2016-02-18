@@ -355,9 +355,6 @@ class Address(utils.Serializable):
     def __repr__(self):
         return "{}:{}".format(self.host, self.port)
 
-    def __str__(self):
-        return str(self.address)
-
     def __eq__(self, other):
         if not other:
             return False
@@ -698,8 +695,7 @@ class TCPClient(_Connection):
             if self.source_address:
                 connection.bind(self.source_address())
             connection.connect(self.address())
-            if not self.source_address:
-                self.source_address = Address(connection.getsockname())
+            self.source_address = Address(connection.getsockname())
         except (socket.error, IOError) as err:
             raise TcpException(
                 'Error connecting to "%s": %s' %

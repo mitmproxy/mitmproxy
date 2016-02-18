@@ -748,17 +748,15 @@ class TestPeekSSL(TestPeek):
 
 
 class TestAddress:
-
     def test_simple(self):
-        a = tcp.Address("localhost", True)
+        a = tcp.Address(("localhost", 80), True)
         assert a.use_ipv6
-        b = tcp.Address("foo.com", True)
+        b = tcp.Address(("foo.com", 80), True)
         assert not a == b
-        assert str(b) == str(tuple("foo.com"))
-        c = tcp.Address("localhost", True)
+        c = tcp.Address(("localhost", 80), True)
         assert a == c
         assert not a != c
-        assert repr(a)
+        assert repr(a) == "localhost:80"
 
 
 class TestSSLKeyLogger(tservers.ServerTestBase):
