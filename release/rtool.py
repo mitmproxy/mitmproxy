@@ -34,7 +34,7 @@ else:
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
 DIST_DIR = join(RELEASE_DIR, "dist")
 ROOT_DIR = os.path.normpath(join(RELEASE_DIR, ".."))
-VERSION_FILE = join(ROOT_DIR, "netlib/netlib/version.py")
+VERSION_FILE = join(ROOT_DIR, "netlib/version.py")
 
 BUILD_DIR = join(RELEASE_DIR, "build")
 PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
@@ -44,27 +44,14 @@ VENV_DIR = join(BUILD_DIR, "venv")
 VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
 VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 
-ALL_PROJECTS = {
-    "netlib": {
-        "tools": [],
-        "dir": join(ROOT_DIR, "netlib"),
-        "python_version": "py2.py3"  # this is the format in wheel filenames
-    },
-    "pathod": {
-        "tools": ["pathod", "pathoc"],
-        "dir": join(ROOT_DIR, "pathod"),
-        "python_version": "py2"
-    },
-    "mitmproxy": {
-        "tools": ["mitmproxy", "mitmdump", "mitmweb"],
-        "dir": join(ROOT_DIR, "mitmproxy"),
-        "python_version": "py2"
-    }
+project = {
+    "name": "mitmproxy",
+    "tools": ["pathod", "pathoc", "mitmproxy", "mitmdump", "mitmweb"],
+    "dir": ROOT_DIR,
+    "python_version": "py2"
 }
 if platform.system() == "Windows":
-    ALL_PROJECTS["mitmproxy"]["tools"].remove("mitmproxy")
-
-projects = {}
+    project["tools"].remove("mitmproxy")
 
 
 def get_version():
@@ -84,7 +71,7 @@ def get_snapshot_version():
         )
 
 
-def archive_name(project):
+def archive_name():
     platform_tag = {
         "Darwin": "osx",
         "Windows": "win32",
@@ -95,18 +82,18 @@ def archive_name(project):
     else:
         ext = "tar.gz"
     return "{project}-{version}-{platform}.{ext}".format(
-        project=project,
+        project=project["name"],
         version=get_version(),
         platform=platform_tag,
         ext=ext
     )
 
 
-def wheel_name(project):
+def wheel_name():
     return "{project}-{version}-{py_version}-none-any.whl".format(
-        project=project,
+        project=project["name"],
         version=get_version(),
-        py_version=projects[project]["python_version"]
+        py_version=project["python_version"]
     )
 
 
@@ -136,16 +123,11 @@ def git(args):
 
 
 @click.group(chain=True)
-@click.option(
-    '--project', '-p',
-    multiple=True, type=click.Choice(ALL_PROJECTS.keys()), default=ALL_PROJECTS.keys()
-)
-def cli(project):
+def cli():
     """
     mitmproxy build tool
     """
-    for name in project:
-        projects[name] = ALL_PROJECTS[name]
+    pass
 
 
 @cli.command("contributors")
@@ -188,15 +170,15 @@ def wheels():
         print("Building release...")
         if os.path.exists(DIST_DIR):
             shutil.rmtree(DIST_DIR)
-        for project, conf in projects.items():
-            print("Creating wheel for %s ..." % project)
-            subprocess.check_call(
-                [
-                    "python", "./setup.py", "-q",
-                    "bdist_wheel", "--dist-dir", DIST_DIR,
-                ],
-                cwd=conf["dir"]
-            )
+
+        print("Creating wheel for %s ..." % project["name"])
+        subprocess.check_call(
+            [
+                "python", "./setup.py", "-q",
+                "bdist_wheel", "--dist-dir", DIST_DIR,
+            ],
+            cwd=project["dir"]
+        )
 
         print("Creating virtualenv for test install...")
         if os.path.exists(VENV_DIR):
@@ -204,16 +186,14 @@ def wheels():
         subprocess.check_call(["virtualenv", "-q", VENV_DIR])
 
         with chdir(DIST_DIR):
-            for project, conf in projects.items():
-                print("Installing %s..." % project)
-                subprocess.check_call([VENV_PIP, "install", "-q", wheel_name(project)])
+            print("Installing %s..." % project["name"])
+            subprocess.check_call([VENV_PIP, "install", "-q", wheel_name()])
 
             print("Running binaries...")
-            for project, conf in projects.items():
-                for tool in conf["tools"]:
-                    tool = join(VENV_DIR, VENV_BIN, tool)
-                    print("> %s --version" % tool)
-                    print(subprocess.check_output([tool, "--version"]))
+            for tool in project["tools"]:
+                tool = join(VENV_DIR, VENV_BIN, tool)
+                print("> %s --version" % tool)
+                print(subprocess.check_output([tool, "--version"]))
 
             print("Virtualenv available for further testing:")
             print("source %s" % os.path.normpath(join(VENV_DIR, VENV_BIN, "activate")))
@@ -238,34 +218,33 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
     print("Installing PyInstaller...")
     subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version])
 
-    for p, conf in projects.items():
-        if conf["tools"]:
-            with Archive(join(DIST_DIR, archive_name(p))) as archive:
-                for tool in conf["tools"]:
-                    spec = join(RELEASE_DIR, "specs/%s.spec" % tool)
-                    print("Building %s binary..." % tool)
-                    subprocess.check_call(
-                        [
-                            VENV_PYINSTALLER,
-                            "--clean",
-                            "--workpath", PYINSTALLER_TEMP,
-                            "--distpath", PYINSTALLER_DIST,
-                            # This is PyInstaller, so setting a
-                            # different log level obviously breaks it :-)
-                            # "--log-level", "WARN",
-                            spec
-                        ]
-                    )
+    if project["tools"]:
+        with Archive(join(DIST_DIR, archive_name())) as archive:
+            for tool in project["tools"]:
+                spec = join(RELEASE_DIR, "specs/%s.spec" % tool)
+                print("Building %s binary..." % tool)
+                subprocess.check_call(
+                    [
+                        VENV_PYINSTALLER,
+                        "--clean",
+                        "--workpath", PYINSTALLER_TEMP,
+                        "--distpath", PYINSTALLER_DIST,
+                        # This is PyInstaller, so setting a
+                        # different log level obviously breaks it :-)
+                        # "--log-level", "WARN",
+                        spec
+                    ]
+                )
 
-                    # Test if it works at all O:-)
-                    executable = join(PYINSTALLER_DIST, tool)
-                    if platform.system() == "Windows":
-                        executable += ".exe"
-                    print("> %s --version" % executable)
-                    subprocess.check_call([executable, "--version"])
+                # Test if it works at all O:-)
+                executable = join(PYINSTALLER_DIST, tool)
+                if platform.system() == "Windows":
+                    executable += ".exe"
+                print("> %s --version" % executable)
+                subprocess.check_call([executable, "--version"])
 
-                    archive.add(executable, os.path.basename(executable))
-            print("Packed {}.".format(archive_name(p)))
+                archive.add(executable, os.path.basename(executable))
+        print("Packed {}.".format(archive_name()))
 
 
 @cli.command("upload-release")
@@ -277,7 +256,7 @@ def upload_release(username, password, repository):
     Upload wheels to PyPI
     """
     for project in projects.keys():
-        filename = wheel_name(project)
+        filename = wheel_name()
         print("Uploading {} to {}...".format(filename, repository))
         subprocess.check_call([
             "twine",
@@ -312,9 +291,9 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
             with sftp.cd(dir_name):
                 files = []
                 if wheel:
-                    files.append(wheel_name(project))
+                    files.append(wheel_name())
                 if bdist and conf["tools"]:
-                    files.append(archive_name(project))
+                    files.append(archive_name())
 
                 for f in files:
                     local_path = join(DIST_DIR, f)
