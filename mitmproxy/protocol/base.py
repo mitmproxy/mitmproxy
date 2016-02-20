@@ -163,7 +163,7 @@ class ServerConnectionMixin(object):
         self.server_conn.finish()
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
-        self.server_conn = ServerConnection(address, source_address)
+        self.server_conn = ServerConnection(address, (source_address.host, 0))
 
     def connect(self):
         """
