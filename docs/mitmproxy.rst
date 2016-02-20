@@ -4,7 +4,6 @@
 mitmproxy
 =========
 
-
 **mitmproxy** is a console tool that allows interactive examination and
 modification of HTTP traffic. It differs from mitmdump in that all flows are
 kept in memory, which means that it's intended for taking and manipulating

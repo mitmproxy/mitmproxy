@@ -8,6 +8,7 @@ connections both from and to the proxy. Key logging is enabled by setting the en
 :envvar:`SSLKEYLOGFILE` so that it points to a writable text file.
 Recent versions of WireShark can use these log files to decrypt packets.
 You can specify the key file path in WireShark via
+
 :samp:`Edit -> Preferences -> Protocols -> SSL -> (Pre)-Master-Secret log filename`.
 
 Note that :envvar:`SSLKEYLOGFILE` is respected by other programs as well, e.g. Firefox and Chrome.

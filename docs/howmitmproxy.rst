@@ -18,7 +18,7 @@ the client and the server is well defined, and usually reliable. In the
 simplest possible interaction with mitmproxy, a client connects directly to the
 proxy, and makes a request that looks like this:
 
-.. code-block:: http
+.. code-block:: none
 
     GET http://example.com/index.html HTTP/1.1
 
@@ -39,7 +39,7 @@ Explicit HTTPS
 The process for an explicitly proxied HTTPS connection is quite different. The
 client connects to the proxy and makes a request that looks like this:
 
-.. code-block:: http
+.. code-block:: none
 
     CONNECT example.com:443 HTTP/1.1
 
@@ -80,7 +80,7 @@ blush, it seems that the CONNECT request above gives us all we need - in this
 example, both of these values are "example.com".  But what if the client had
 initiated the connection as follows:
 
-.. code-block:: http
+.. code-block:: none
 
     CONNECT 10.1.1.1:443 HTTP/1.1
 
@@ -169,7 +169,7 @@ form of a firewall on the same host as the proxy server - `iptables`_ on Linux o
 pf_ on OSX. Once the client has initiated the connection, it makes a vanilla HTTP request,
 which might look something like this:
 
-.. code-block:: http
+.. code-block:: none
 
     GET /index.html HTTP/1.1
 
