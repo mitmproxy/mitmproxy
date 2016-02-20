@@ -127,11 +127,11 @@ def response(context, flow):
         tz=utc).isoformat()
 
     request_query_string = [{"name": k, "value": v}
-                            for k, v in flow.request.get_query()]
+                            for k, v in flow.request.query]
     request_http_version = flow.request.http_version
     # Cookies are shaped as tuples by MITMProxy.
     request_cookies = [{"name": k.strip(), "value": v[0]}
-                       for k, v in (flow.request.get_cookies() or {}).items()]
+                       for k, v in flow.request.cookies.items()]
     request_headers = [{"name": k, "value": v} for k, v in flow.request.headers]
     request_headers_size = len(str(flow.request.headers))
     request_body_size = len(flow.request.content)
@@ -139,7 +139,7 @@ def response(context, flow):
     response_http_version = flow.response.http_version
     # Cookies are shaped as tuples by MITMProxy.
     response_cookies = [{"name": k.strip(), "value": v[0]}
-                        for k, v in (flow.response.get_cookies() or {}).items()]
+                        for k, v in flow.response.cookies.items()]
     response_headers = [{"name": k, "value": v}
                         for k, v in flow.response.headers]
     response_headers_size = len(str(flow.response.headers))
