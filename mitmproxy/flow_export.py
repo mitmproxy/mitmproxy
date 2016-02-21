@@ -1,6 +1,24 @@
 import urllib
-import netlib.http
 from textwrap import dedent
+
+import netlib.http
+from . import contentviews
+
+
+def prettify(data, headers=None):
+    if not headers:
+        return data
+
+    cv = contentviews.get_content_view(
+        contentviews.get("Auto"),
+        data,
+        headers=headers,
+    )
+
+    if cv[0] == "JSON":
+        return "\n".join(l[0][1] for l in cv[1])
+    else:
+        return data
 
 
 def curl_command(flow):
@@ -53,7 +71,7 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        data = "\ndata = '''%s'''\n" % flow.request.body
+        data = "\ndata = '''%s'''\n" % prettify(flow.request.body, flow.request.headers)
         args += "\n    data=data,"
 
     code = code.format(
