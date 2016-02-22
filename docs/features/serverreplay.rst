@@ -34,6 +34,14 @@ You can turn off response refreshing using the :option:`--norefresh` argument, o
 the :kbd:`o` options shortcut within :program:`mitmproxy`.
 
 ================== =================
-command-line       :option:`-S path`
+command-line       :option:`-S path`,
+                   :option:`--kill`,
+                   :option:`--rheader RHEADERS`,
+                   :option:`--norefresh`,
+                   :option:`--no-pop`,
+                   :option:`--replay-ignore-content`,
+                   :option:`--replay-ignore-payload-param REPLAY_IGNORE_PAYLOAD_PARAMS`,
+                   :option:`--replay-ignore-param REPLAY_IGNORE_PARAMS`,
+                   :option:`--replay-ignore-host`,
 mitmproxy shortcut :kbd:`S`
 ================== =================
