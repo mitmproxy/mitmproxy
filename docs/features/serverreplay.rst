@@ -52,6 +52,6 @@ command-line       :option:`-S path`,
                    :option:`--replay-ignore-content`,
                    :option:`--replay-ignore-payload-param REPLAY_IGNORE_PAYLOAD_PARAMS`,
                    :option:`--replay-ignore-param REPLAY_IGNORE_PARAMS`,
-                   :option:`--replay-ignore-host`,
+                   :option:`--replay-ignore-host`
 mitmproxy shortcut :kbd:`S`
 ================== =================
