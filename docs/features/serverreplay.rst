@@ -33,6 +33,16 @@ updated in a similar way.
 You can turn off response refreshing using the :option:`--norefresh` argument, or using
 the :kbd:`o` options shortcut within :program:`mitmproxy`.
 
+-S PATH, --server-replay PATH   :   Replay server responses from a saved file.
+-k, --kill                      :   Kill extra requests during replay.
+--rheader RHEADERS              :   Request headers to be considered during replay. Can be passed multiple times.
+--norefresh                     :   Disable response refresh, which updates times in cookies and headers for replayed responses.
+--no-pop                        :   Disable response pop from response flow. This makes it possible to replay same response multiple times.
+--replay-ignore-content         :   Ignore request's content while searching for a saved flow to replay
+--replay-ignore-payload-param   :   Request's payload parameters to be ignored while searching for a saved flow to replay. Can be passed multiple times.
+--replay-ignore-param           :   Request's parameters to be ignored while searching for a saved flow to replay. Can be passed multiple times.
+--replay-ignore-host            :   Ignore request's destination host while searching for a saved flow to replay
+
 ================== =================
 command-line       :option:`-S path`,
                    :option:`--kill`,
