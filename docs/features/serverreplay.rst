@@ -39,9 +39,6 @@ the :kbd:`o` options shortcut within :program:`mitmproxy`.
 --norefresh                     :   Disable response refresh, which updates times in cookies and headers for replayed responses.
 --no-pop                        :   Disable response pop from response flow. This makes it possible to replay same response multiple times.
 --replay-ignore-content         :   Ignore request's content while searching for a saved flow to replay
---replay-ignore-payload-param   :   Request's payload parameters to be ignored while searching for a saved flow to replay. Can be passed multiple times.
---replay-ignore-param           :   Request's parameters to be ignored while searching for a saved flow to replay. Can be passed multiple times.
---replay-ignore-host            :   Ignore request's destination host while searching for a saved flow to replay
 
 ================== =================
 command-line       :option:`-S path`,
@@ -50,8 +47,5 @@ command-line       :option:`-S path`,
                    :option:`--norefresh`,
                    :option:`--no-pop`,
                    :option:`--replay-ignore-content`,
-                   :option:`--replay-ignore-payload-param REPLAY_IGNORE_PAYLOAD_PARAMS`,
-                   :option:`--replay-ignore-param REPLAY_IGNORE_PARAMS`,
-                   :option:`--replay-ignore-host`
 mitmproxy shortcut :kbd:`S`
 ================== =================
