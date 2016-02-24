@@ -37,11 +37,13 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python
     fi
-  - "pip install -U pip setuptools"
-  - "pip install -r requirements.txt"
+  - pip install -U virtualenv
+  - ./dev.sh
+  - source ./venv/bin/activate
 
 before_script:
   - "openssl version -a"
+  - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 
 script:
   - "py.test ./test/$SCOPE"
