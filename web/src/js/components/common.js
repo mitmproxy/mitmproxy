@@ -149,7 +149,6 @@ var Splitter = React.createClass({
         }
 
         prev.style.flex = "0 0 " + Math.max(0, flexBasis) + "px";
-        next.style.flex = "1 1 auto";
 
         this.setState({
             applied: true
