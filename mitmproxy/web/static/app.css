@@ -1,11 +1,3 @@
-html {
-  box-sizing: border-box;
-}
-*,
-*:before,
-*:after {
-  box-sizing: inherit;
-}
 .resource-icon {
   width: 32px;
   height: 32px;
@@ -53,25 +45,31 @@ body,
   outline: none;
 }
 #container > header,
-#container > footer,
-#container > .eventlog {
-  flex: 0 0 auto;
+#container > footer {
+  flex: none;
 }
 .main-view {
-  flex: 1 1 auto;
-  height: 0;
+  flex: 1;
   display: flex;
   flex-direction: row;
 }
 .main-view.vertical {
   flex-direction: column;
 }
-.main-view .flow-detail,
-.main-view .flow-table {
-  flex: 1 1 auto;
+#container > .splitter,
+.main-view > .splitter {
+  flex: 0 0 1px;
+}
+.flow-detail,
+.flow-table {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: scroll;
+}
+.eventlog {
+  flex: 1;
 }
 .splitter {
-  flex: 0 0 1px;
   background-color: #aaa;
   position: relative;
 }
@@ -161,10 +159,6 @@ header .menu {
 .filter-input .popover .popover-content {
   max-height: 500px;
   overflow-y: auto;
-}
-.flow-table {
-  width: 100%;
-  overflow: auto;
 }
 .flow-table table {
   width: 100%;
@@ -272,9 +266,6 @@ header .menu {
   text-align: right;
 }
 .flow-detail {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: scroll;
   /*.request .response-line,
     .response .request-line {
         opacity: 0.7;
@@ -378,8 +369,6 @@ header .menu {
   content: ", ";
 }
 .eventlog {
-  height: 200px;
-  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
