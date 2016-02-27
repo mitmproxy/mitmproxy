@@ -4,6 +4,7 @@ VENV=./venv
 
 python -m virtualenv $VENV --always-copy
 . $VENV/bin/activate
+pip install -U pip setuptools
 pip install -r requirements.txt
 
 echo ""

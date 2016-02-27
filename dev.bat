@@ -12,4 +12,3 @@ echo.
 echo * Created virtualenv environment in %VENV%.
 echo * Installed all dependencies into the virtualenv.
 echo * Activated virtualenv environment.
-pause
