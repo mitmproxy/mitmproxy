@@ -12,6 +12,7 @@ from netlib.http import http1, http2
 from pathod import pathoc, test, version, pathod, language
 from netlib.tutils import raises
 import tutils
+from test.mitmproxy.tutils import skip_windows
 
 
 def test_response():
@@ -209,6 +210,7 @@ class TestDaemon(_TestDaemon):
         c.request("ws:/")
         c.stop()
 
+    @skip_windows
     @pytest.mark.xfail
     def test_wait_finish(self):
         c = pathoc.Pathoc(
