@@ -8,7 +8,6 @@ from .. import stateobject, utils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
-
     def __init__(self, client_connection, address, server):
         # Eventually, this object is restored from state. We don't have a
         # connection then.
@@ -65,6 +64,17 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         f.set_state(state)
         return f
 
+    @classmethod
+    def make_dummy(cls, address):
+        return cls.from_state(dict(
+            address=dict(address=address, use_ipv6=False),
+            clientcert=None,
+            ssl_established=False,
+            timestamp_start=None,
+            timestamp_end=None,
+            timestamp_ssl_setup=None
+        ))
+
     def convert_to_ssl(self, *args, **kwargs):
         super(ClientConnection, self).convert_to_ssl(*args, **kwargs)
         self.timestamp_ssl_setup = utils.timestamp()
@@ -75,7 +85,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
-
     def __init__(self, address, source_address=None):
         tcp.TCPClient.__init__(self, address, source_address)
 
@@ -122,6 +131,21 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         f = cls(tuple())
         f.set_state(state)
         return f
+
+    @classmethod
+    def make_dummy(cls, address):
+        return cls.from_state(dict(
+            address=dict(address=address, use_ipv6=False),
+            cert=None,
+            sni=None,
+            source_address=dict(address=('', 0), use_ipv6=False),
+            ssl_established=False,
+            timestamp_start=None,
+            timestamp_tcp_setup=None,
+            timestamp_ssl_setup=None,
+            timestamp_end=None,
+            via=None
+    ))
 
     def copy(self):
         return copy.copy(self)
