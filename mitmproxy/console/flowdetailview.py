@@ -22,7 +22,7 @@ def flowdetails(state, flow):
     if sc is not None:
         text.append(urwid.Text([("head", "Server Connection:")]))
         parts = [
-            ["Address", "%s:%s" % sc.address()],
+            ["Address", repr(sc.address)],
         ]
 
         text.extend(
@@ -79,8 +79,7 @@ def flowdetails(state, flow):
         text.append(urwid.Text([("head", "Client Connection:")]))
 
         parts = [
-            ["Address", "%s:%s" % cc.address()],
-            # ["Requests", "%s"%cc.requestcount],
+            ["Address", repr(cc.address)],
         ]
 
         text.extend(
