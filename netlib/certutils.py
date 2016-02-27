@@ -92,6 +92,8 @@ def dummy_cert(privkey, cacert, commonname, sans):
     """
     ss = []
     for i in sans:
+        if i is None:
+            continue
         try:
             ipaddress.ip_address(i.decode("ascii"))
         except ValueError:
