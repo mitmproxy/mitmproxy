@@ -1,7 +1,5 @@
 .DS_Store
 MANIFEST
-*/build
-*/dist
 */tmp
 /venv
 *.py[cdo]
@@ -11,6 +9,7 @@ MANIFEST
 .coverage
 .idea
 .cache/
+build/
 
 # UI
 

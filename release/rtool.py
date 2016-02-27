@@ -47,11 +47,16 @@ VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 project = {
     "name": "mitmproxy",
     "tools": ["pathod", "pathoc", "mitmproxy", "mitmdump", "mitmweb"],
+    "bdists": {
+        "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
+        "pathod": ["pathoc", "pathod"]
+    },
     "dir": ROOT_DIR,
     "python_version": "py2"
 }
 if platform.system() == "Windows":
     project["tools"].remove("mitmproxy")
+    project["bdists"]["mitmproxy"].remove("mitmproxy")
 
 
 def get_version():
@@ -71,7 +76,7 @@ def get_snapshot_version():
         )
 
 
-def archive_name():
+def archive_name(project):
     platform_tag = {
         "Darwin": "osx",
         "Windows": "win32",
@@ -82,7 +87,7 @@ def archive_name():
     else:
         ext = "tar.gz"
     return "{project}-{version}-{platform}.{ext}".format(
-        project=project["name"],
+        project=project,
         version=get_version(),
         platform=platform_tag,
         ext=ext
@@ -218,9 +223,9 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
     print("Installing PyInstaller...")
     subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version])
 
-    if project["tools"]:
-        with Archive(join(DIST_DIR, archive_name())) as archive:
-            for tool in project["tools"]:
+    for bdist_project, tools in project["bdists"].items():
+        with Archive(join(DIST_DIR, archive_name(bdist_project))) as archive:
+            for tool in tools:
                 spec = join(RELEASE_DIR, "specs/%s.spec" % tool)
                 print("Building %s binary..." % tool)
                 subprocess.check_call(
@@ -244,7 +249,7 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
                 subprocess.check_call([executable, "--version"])
 
                 archive.add(executable, os.path.basename(executable))
-        print("Packed {}.".format(archive_name()))
+        print("Packed {}.".format(archive_name(bdist_project)))
 
 
 @cli.command("upload-release")
@@ -255,17 +260,16 @@ def upload_release(username, password, repository):
     """
     Upload wheels to PyPI
     """
-    for project in projects.keys():
-        filename = wheel_name()
-        print("Uploading {} to {}...".format(filename, repository))
-        subprocess.check_call([
-            "twine",
-            "upload",
-            "-u", username,
-            "-p", password,
-            "-r", repository,
-            join(DIST_DIR, filename)
-        ])
+    filename = wheel_name()
+    print("Uploading {} to {}...".format(filename, repository))
+    subprocess.check_call([
+        "twine",
+        "upload",
+        "-u", username,
+        "-p", password,
+        "-r", repository,
+        join(DIST_DIR, filename)
+    ])
 
 
 @cli.command("upload-snapshot")
@@ -285,15 +289,15 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
                            username=user,
                            private_key=private_key,
                            private_key_pass=private_key_password) as sftp:
-        for project, conf in projects.items():
+
             dir_name = "snapshots/v{}".format(get_version())
             sftp.makedirs(dir_name)
             with sftp.cd(dir_name):
                 files = []
                 if wheel:
                     files.append(wheel_name())
-                if bdist and conf["tools"]:
-                    files.append(archive_name())
+                for bdist in project["bdists"].keys():
+                    files.append(archive_name(bdist))
 
                 for f in files:
                     local_path = join(DIST_DIR, f)
