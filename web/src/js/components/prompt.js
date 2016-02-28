@@ -1,4 +1,5 @@
 var React = require("react");
+var ReactDOM = require('react-dom');
 var _ = require("lodash");
 
 var utils = require("../utils.js");
@@ -12,7 +13,7 @@ var Prompt = React.createClass({
         prompt: React.PropTypes.string
     },
     componentDidMount: function () {
-        React.findDOMNode(this).focus();
+        ReactDOM.findDOMNode(this).focus();
     },
     onKeyDown: function (e) {
         e.stopPropagation();

@@ -1,6 +1,7 @@
-var React = require("react");
+import React from "react";
+import ReactDOM from "react-dom";
 
-var VirtualScrollMixin = {
+export var VirtualScrollMixin = {
     getInitialState: function () {
         return {
             start: 0,
@@ -43,7 +44,7 @@ var VirtualScrollMixin = {
         window.removeEventListener('resize', this.onScroll);
     },
     onScroll: function () {
-        var viewport = this.getDOMNode();
+        var viewport = ReactDOM.findDOMNode(this);
         var top = viewport.scrollTop;
         var height = viewport.offsetHeight;
         var start = Math.floor(top / this.props.rowHeight);
@@ -69,7 +70,7 @@ var VirtualScrollMixin = {
         var row_top = (index * this.props.rowHeight) + head_height;
         var row_bottom = row_top + this.props.rowHeight;
 
-        var viewport = this.getDOMNode();
+        var viewport = ReactDOM.findDOMNode(this);
         var viewport_top = viewport.scrollTop;
         var viewport_bottom = viewport_top + viewport.offsetHeight;
 
@@ -81,5 +82,3 @@ var VirtualScrollMixin = {
         }
     },
 };
-
-module.exports  = VirtualScrollMixin;

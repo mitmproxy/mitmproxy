@@ -42,7 +42,8 @@ var MainView = React.createClass({
     },
     getViewFilt: function () {
         try {
-            var filt = Filt.parse(this.getQuery()[Query.SEARCH] || "");
+            var filtStr = this.getQuery()[Query.SEARCH];
+            var filt = filtStr ? Filt.parse(filtStr) : function(){return true};
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
             var highlight = highlightStr ? Filt.parse(highlightStr) : false;
         } catch (e) {
@@ -90,16 +91,11 @@ var MainView = React.createClass({
     },
     selectFlow: function (flow) {
         if (flow) {
-            this.replaceWith(
-                "flow",
-                {
-                    flowId: flow.id,
-                    detailTab: this.getParams().detailTab || "request"
-                }
-            );
+            var tab = this.getParams().detailTab || "request";
+            this.replaceWith(`/flows/${flow.id}/${tab}`);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            this.replaceWith("flows", {});
+            this.replaceWith("/flows");
         }
     },
     selectFlowRelative: function (shift) {

@@ -1,9 +1,9 @@
-var React = require("react");
-var ReactRouter = require("react-router");
-var $ = require("jquery");
-var Connection = require("./connection");
-var proxyapp = require("./components/proxyapp.js");
-var EventLogActions = require("./actions.js").EventLogActions;
+import React from "react"
+import { render } from 'react-dom'
+import $ from "jquery"
+import Connection from "./connection"
+import {app} from "./components/proxyapp.js"
+import { EventLogActions } from "./actions.js"
 
 $(function () {
     window.ws = new Connection("/updates");
@@ -12,8 +12,6 @@ $(function () {
         EventLogActions.add_event(msg);
     };
 
-    ReactRouter.run(proxyapp.routes, function (Handler, state) {
-        React.render(<Handler/>, document.body);
-    });
+    render(app, document.getElementById("mitmproxy"));
 });
 

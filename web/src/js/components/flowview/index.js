@@ -40,13 +40,7 @@ var FlowView = React.createClass({
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function (panel) {
-        this.replaceWith(
-            "flow",
-            {
-                flowId: this.getParams().flowId,
-                detailTab: panel
-            }
-        );
+        this.replaceWith(`/flows/${this.getParams().flowId}/${panel}`);
     },
     getActive: function(){
         return this.getParams().detailTab;
@@ -93,7 +87,7 @@ var FlowView = React.createClass({
         var tabs = this.getTabs(flow);
         var active = this.getActive();
 
-        if (!_.contains(tabs, active)) {
+        if (tabs.indexOf(active) < 0) {
             if (active === "response" && flow.error) {
                 active = "error";
             } else if (active === "error" && flow.response) {

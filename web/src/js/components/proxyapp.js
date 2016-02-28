@@ -1,4 +1,5 @@
 var React = require("react");
+var ReactDOM = require("react-dom");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
 
@@ -27,6 +28,7 @@ var ProxyAppMain = React.createClass({
         flowStore: React.PropTypes.object.isRequired,
         eventStore: React.PropTypes.object.isRequired,
         returnFocus: React.PropTypes.func.isRequired,
+        routerFoo: React.PropTypes.object,
     },
     componentDidMount: function () {
         this.focus();
@@ -37,6 +39,10 @@ var ProxyAppMain = React.createClass({
             flowStore: this.state.flowStore,
             eventStore: this.state.eventStore,
             returnFocus: this.focus,
+            routerFoo: {
+                location: this.props.location,
+                params: this.props.params
+            }
         };
     },
     getInitialState: function () {
@@ -53,10 +59,10 @@ var ProxyAppMain = React.createClass({
         };
     },
     focus: function () {
-        React.findDOMNode(this).focus();
+        ReactDOM.findDOMNode(this).focus();
     },
     getMainComponent: function () {
-        return this.refs.view.refs.__routeHandler__;
+        return this.refs.view;
     },
     onKeydown: function (e) {
 
@@ -88,7 +94,7 @@ var ProxyAppMain = React.createClass({
     },
     render: function () {
         var eventlog;
-        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
+        if (this.props.location.query[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 <common.Splitter key="splitter" axis="y"/>,
                 <EventLog key="eventlog"/>
@@ -96,10 +102,14 @@ var ProxyAppMain = React.createClass({
         } else {
             eventlog = null;
         }
+        var children = React.cloneElement(
+            this.props.children,
+            { ref: "view", query: this.props.location.query }
+        );
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
                 <header.Header ref="header"/>
-                <RouteHandler ref="view" query={this.getQuery()}/>
+                {children}
                 {eventlog}
                 <Footer/>
             </div>
@@ -108,22 +118,15 @@ var ProxyAppMain = React.createClass({
 });
 
 
-var Route = ReactRouter.Route;
-var RouteHandler = ReactRouter.RouteHandler;
-var Redirect = ReactRouter.Redirect;
-var DefaultRoute = ReactRouter.DefaultRoute;
-var NotFoundRoute = ReactRouter.NotFoundRoute;
+import { Route, Router, hashHistory, Redirect} from "react-router";
 
-
-var routes = (
-    <Route path="/" handler={ProxyAppMain}>
-        <Route name="flows" path="flows" handler={MainView}/>
-        <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
-        <Route name="reports" handler={Reports}/>
-        <Redirect path="/" to="flows" />
+export var app = (
+<Router history={hashHistory}>
+    <Redirect from="/" to="/flows" />
+    <Route path="/" component={ProxyAppMain}>
+        <Route path="flows" component={MainView}/>
+        <Route path="flows/:flowId/:detailTab" component={MainView}/>
+        <Route path="reports" component={Reports}/>
     </Route>
+</Router>
 );
-
-module.exports = {
-    routes: routes
-};

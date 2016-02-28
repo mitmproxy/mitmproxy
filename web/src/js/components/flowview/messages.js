@@ -1,4 +1,5 @@
 var React = require("react");
+var ReactDOM = require('react-dom');
 var _ = require("lodash");
 
 var common = require("../common.js");
@@ -98,7 +99,7 @@ var HeaderEditor = React.createClass({
         return <ValueEditor ref="input" {...this.props} onKeyDown={this.onKeyDown} inline/>;
     },
     focus: function () {
-        this.getDOMNode().focus();
+        ReactDOM.findDOMNode(this).focus();
     },
     onKeyDown: function (e) {
         switch (e.keyCode) {

@@ -7,8 +7,6 @@ var conf = require('./conf.js');
 var babelify = require('babelify');
 var browserify = require('browserify');
 var gulp = require("gulp");
-var concat = require('gulp-concat');
-var connect = require('gulp-connect');
 var eslint = require('gulp-eslint');
 var less = require("gulp-less");
 var livereload = require("gulp-livereload");
@@ -16,18 +14,13 @@ var minifyCSS = require('gulp-minify-css');
 var notify = require("gulp-notify");
 var peg = require("gulp-peg");
 var plumber = require("gulp-plumber");
-var react = require("gulp-react");
 var rename = require("gulp-rename");
-var replace = require('gulp-replace');
 var sourcemaps = require('gulp-sourcemaps');
 var gutil = require("gulp-util");
 var _ = require('lodash');
-var map = require("map-stream");
-var reactify = require('reactify');
 var uglifyify = require('uglifyify');
 var buffer = require('vinyl-buffer');
 var source = require('vinyl-source-stream');
-var transform = require('vinyl-transform');
 var watchify = require('watchify');
 
 var vendor_packages = _.difference(
@@ -116,6 +109,7 @@ function buildScript(bundler, filename, dev) {
     // listen for an update and run rebundle
     bundler.on('update', rebundle);
     bundler.on('log', gutil.log);
+    bundler.on('error', gutil.log);
 
     // run it once the first time buildScript is called
     return rebundle();
@@ -150,7 +144,7 @@ function app_stream(dev) {
     for (var vp of vendor_packages) {
         bundler.external(vp);
     }
-    bundler = bundler.transform(babelify).transform(reactify);
+    bundler = bundler.transform(babelify);
     return buildScript(bundler, "app.js", dev);
 }
 gulp.task('scripts-app-dev', function () {

@@ -1,4 +1,5 @@
 var React = require("react");
+var ReactDOM = require('react-dom');
 var $ = require("jquery");
 
 var Filt = require("../filt/filt.js");
@@ -76,26 +77,24 @@ var FilterInput = React.createClass({
     },
     isValid: function (filt) {
         try {
-            Filt.parse(filt || this.state.value);
+            var str = filt || this.state.value;
+            if(str){
+                Filt.parse(filt || this.state.value);
+            }
             return true;
         } catch (e) {
             return false;
         }
     },
     getDesc: function () {
-        var desc;
-        try {
-            desc = Filt.parse(this.state.value).desc;
-        } catch (e) {
-            desc = "" + e;
+        if(this.state.value) {
+            try {
+                return Filt.parse(this.state.value).desc;
+            } catch (e) {
+                return "" + e;
+            }
         }
-        if (desc !== "true") {
-            return desc;
-        } else {
-            return (
-                <FilterDocs/>
-            );
-        }
+        return <FilterDocs/>;
     },
     onFocus: function () {
         this.setState({focus: true});
@@ -118,11 +117,11 @@ var FilterInput = React.createClass({
         e.stopPropagation();
     },
     blur: function () {
-        this.refs.input.getDOMNode().blur();
+        ReactDOM.findDOMNode(this.refs.input).blur();
         this.returnFocus();
     },
     select: function () {
-        this.refs.input.getDOMNode().select();
+        ReactDOM.findDOMNode(this.refs.input).select();
     },
     render: function () {
         var isValid = this.isValid();

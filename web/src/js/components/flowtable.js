@@ -1,9 +1,10 @@
 var React = require("react");
+var ReactDOM = require('react-dom');
 var common = require("./common.js");
 var utils = require("../utils.js");
 var _ = require("lodash");
 
-var VirtualScrollMixin = require("./virtualscroll.js");
+import { VirtualScrollMixin } from "./virtualscroll.js"
 var flowtable_columns = require("./flowtable-columns.js");
 
 var FlowRow = React.createClass({
@@ -143,7 +144,7 @@ var FlowTable = React.createClass({
     scrollIntoView: function (flow) {
         this.scrollRowIntoView(
             this.context.view.index(flow),
-            this.refs.body.getDOMNode().offsetTop
+            ReactDOM.findDOMNode(this.refs.body).offsetTop
         );
     },
     renderRow: function (flow) {
