@@ -165,7 +165,8 @@ header .menu {
 }
 .flow-table {
   width: 100%;
-  overflow: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 .flow-table table {
   width: 100%;

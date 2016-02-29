@@ -3,10 +3,10 @@ var ReactDOM = require('react-dom');
 var _ = require("lodash");
 
 var utils = require("../utils.js");
-var common = require("./common.js");
+import {ChildFocus} from "./common.js"
 
 var Prompt = React.createClass({
-    mixins: [common.ChildFocus],
+    mixins: [ChildFocus],
     propTypes: {
         options: React.PropTypes.array.isRequired,
         done: React.PropTypes.func.isRequired,

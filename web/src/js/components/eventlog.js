@@ -1,9 +1,9 @@
-var React = require("react");
-var common = require("./common.js");
-var Query = require("../actions.js").Query;
+import React from "react"
+import {AutoScrollMixin, Router} from "./common.js"
+import {Query} from "../actions.js"
 import { VirtualScrollMixin } from "./virtualscroll.js"
-var views = require("../store/view.js");
-var _ = require("lodash");
+import views from "../store/view.js"
+import _ from "lodash"
 
 var LogMessage = React.createClass({
     render: function () {
@@ -34,7 +34,7 @@ var EventLogContents = React.createClass({
     contextTypes: {
         eventStore: React.PropTypes.object.isRequired
     },
-    mixins: [common.AutoScrollMixin, VirtualScrollMixin],
+    mixins: [AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         var filterFn = function (entry) {
             return this.props.filter[entry.level];
@@ -108,7 +108,7 @@ var ToggleFilter = React.createClass({
 });
 
 var EventLog = React.createClass({
-    mixins: [common.Navigation],
+    mixins: [Router],
     getInitialState: function () {
         return {
             filter: {
@@ -121,7 +121,8 @@ var EventLog = React.createClass({
     close: function () {
         var d = {};
         d[Query.SHOW_EVENTLOG] = undefined;
-        this.setQuery(d);
+
+        this.updateLocation(undefined, d);
     },
     toggleLevel: function (level) {
         var filter = _.extend({}, this.state.filter);
@@ -147,4 +148,4 @@ var EventLog = React.createClass({
     }
 });
 
-module.exports = EventLog;
+export default EventLog;

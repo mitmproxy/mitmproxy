@@ -1,7 +1,7 @@
 var React = require("react");
 var _ = require("lodash");
 
-var common = require("../common.js");
+import { Router, StickyHeadMixin } from "../common.js"
 var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
@@ -16,7 +16,7 @@ var allTabs = {
 };
 
 var FlowView = React.createClass({
-    mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    mixins: [StickyHeadMixin, Router],
     getInitialState: function () {
         return {
             prompt: false
@@ -34,20 +34,17 @@ var FlowView = React.createClass({
     },
     nextTab: function (i) {
         var tabs = this.getTabs(this.props.flow);
-        var currentIndex = tabs.indexOf(this.getActive());
+        var currentIndex = tabs.indexOf(this.props.tab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
         var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function (panel) {
-        this.replaceWith(`/flows/${this.getParams().flowId}/${panel}`);
-    },
-    getActive: function(){
-        return this.getParams().detailTab;
+        this.updateLocation(`/flows/${this.getParams().flowId}/${panel}`);
     },
     promptEdit: function () {
         var options;
-        switch(this.getActive()){
+        switch(this.props.tab){
             case "request":
                 options = [
                     "method",
@@ -67,7 +64,7 @@ var FlowView = React.createClass({
             case "details":
                 return;
             default:
-                throw "Unknown tab for edit: " + this.getActive();
+                throw "Unknown tab for edit: " + this.props.tab;
         }
 
         this.setState({
@@ -85,7 +82,7 @@ var FlowView = React.createClass({
     render: function () {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
-        var active = this.getActive();
+        var active = this.props.tab;
 
         if (tabs.indexOf(active) < 0) {
             if (active === "response" && flow.error) {

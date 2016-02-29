@@ -4,7 +4,7 @@ var $ = require("jquery");
 
 var Filt = require("../filt/filt.js");
 var utils = require("../utils.js");
-var common = require("./common.js");
+import {Router, SettingsState, ChildFocus} from "./common.js";
 var actions = require("../actions.js");
 var Query = require("../actions.js").Query;
 
@@ -51,7 +51,7 @@ var FilterDocs = React.createClass({
     }
 });
 var FilterInput = React.createClass({
-    mixins: [common.ChildFocus],
+    mixins: [ChildFocus],
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -159,7 +159,7 @@ var FilterInput = React.createClass({
 });
 
 var MainMenu = React.createClass({
-    mixins: [common.Navigation, common.RouterState, common.SettingsState],
+    mixins: [Router, SettingsState],
     statics: {
         title: "Start",
         route: "flows"
@@ -167,12 +167,12 @@ var MainMenu = React.createClass({
     onSearchChange: function (val) {
         var d = {};
         d[Query.SEARCH] = val;
-        this.setQuery(d);
+        this.updateLocation(undefined, d);
     },
     onHighlightChange: function (val) {
         var d = {};
         d[Query.HIGHLIGHT] = val;
-        this.setQuery(d);
+        this.updateLocation(undefined, d);
     },
     onInterceptChange: function (val) {
         actions.SettingsActions.update({intercept: val});
@@ -219,7 +219,7 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [common.Navigation, common.RouterState],
+    mixins: [Router],
     toggleEventLog: function () {
         var d = {};
 
@@ -229,7 +229,7 @@ var ViewMenu = React.createClass({
             d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
         }
 
-        this.setQuery(d);
+        this.updateLocation(undefined, d);
     },
     render: function () {
         var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
@@ -348,7 +348,7 @@ var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
 
 var Header = React.createClass({
-    mixins: [common.Navigation],
+    mixins: [Router],
     getInitialState: function () {
         return {
             active: header_entries[0]
@@ -356,7 +356,7 @@ var Header = React.createClass({
     },
     handleClick: function (active, e) {
         e.preventDefault();
-        this.replaceWith(active.route);
+        this.updateLocation(active.route);
         this.setState({active: active});
     },
     render: function () {

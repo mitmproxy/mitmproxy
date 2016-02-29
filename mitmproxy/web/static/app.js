@@ -478,20 +478,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-var React = require("react");
-var ReactDOM = require("react-dom");
-var ReactRouter = require("react-router");
-var _ = require("lodash");
+exports.Splitter = exports.Router = exports.ChildFocus = exports.SettingsState = exports.StickyHeadMixin = exports.AutoScrollMixin = undefined;
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
 var AutoScrollMixin = exports.AutoScrollMixin = {
     componentWillUpdate: function componentWillUpdate() {
-        var node = ReactDOM.findDOMNode(this);
+        var node = _reactDom2.default.findDOMNode(this);
         this._shouldScrollBottom = node.scrollTop !== 0 && node.scrollTop + node.clientHeight === node.scrollHeight;
     },
     componentDidUpdate: function componentDidUpdate() {
         if (this._shouldScrollBottom) {
-            var node = ReactDOM.findDOMNode(this);
+            var node = _reactDom2.default.findDOMNode(this);
             node.scrollTop = node.scrollHeight;
         }
     }
@@ -502,13 +513,13 @@ var StickyHeadMixin = exports.StickyHeadMixin = {
         // Abusing CSS transforms to set the element
         // referenced as head into some kind of position:sticky.
         var head = this.refs.head;
-        head.style.transform = "translate(0," + ReactDOM.findDOMNode(this).scrollTop + "px)";
+        head.style.transform = "translate(0," + _reactDom2.default.findDOMNode(this).scrollTop + "px)";
     }
 };
 
 var SettingsState = exports.SettingsState = {
     contextTypes: {
-        settingsStore: React.PropTypes.object.isRequired
+        settingsStore: _react2.default.PropTypes.object.isRequired
     },
     getInitialState: function getInitialState() {
         return {
@@ -530,59 +541,45 @@ var SettingsState = exports.SettingsState = {
 
 var ChildFocus = exports.ChildFocus = {
     contextTypes: {
-        returnFocus: React.PropTypes.func
+        returnFocus: _react2.default.PropTypes.func
     },
     returnFocus: function returnFocus() {
-        ReactDOM.findDOMNode(this).blur();
+        _reactDom2.default.findDOMNode(this).blur();
         window.getSelection().removeAllRanges();
         this.context.returnFocus();
     }
 };
 
-var Navigation = exports.Navigation = {
+var Router = exports.Router = {
     contextTypes: {
-        routerFoo: React.PropTypes.object,
-        router: React.PropTypes.object.isRequired
+        location: _react2.default.PropTypes.object,
+        router: _react2.default.PropTypes.object.isRequired
     },
-    setQuery: function setQuery(dict) {
-        var q = this.context.routerFoo.location.query;
-        for (var i in dict) {
-            if (dict.hasOwnProperty(i)) {
-                q[i] = dict[i] || undefined; //falsey values shall be removed.
+    updateLocation: function updateLocation(pathname, queryUpdate) {
+        if (pathname === undefined) {
+            pathname = this.context.location.pathname;
+        }
+        var query = this.context.location.query;
+        if (queryUpdate !== undefined) {
+            for (var i in queryUpdate) {
+                if (queryUpdate.hasOwnProperty(i)) {
+                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
+                }
             }
         }
-        this.replaceWith(undefined, q);
-    },
-    replaceWith: function replaceWith(pathname, query) {
-        if (pathname === undefined) {
-            pathname = this.context.routerFoo.location.pathname;
-        }
-        if (query === undefined) {
-            query = this.context.routerFoo.query;
-        }
-        console.log({ pathname: pathname, query: query });
         this.context.router.replace({ pathname: pathname, query: query });
-    }
-};
-
-// react-router is fairly good at changing its API regularly.
-// We keep the old method for now - if it should turn out that their changes are permanent,
-// we may remove this mixin and access react-router directly again.
-var RouterState = exports.RouterState = {
-    contextTypes: {
-        routerFoo: React.PropTypes.object
     },
     getQuery: function getQuery() {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _.clone(this.context.routerFoo.location.query);
+        return _lodash2.default.clone(this.context.location.query);
     },
     getParams: function getParams() {
-        return _.clone(this.context.routerFoo.params);
+        return this.props.routeParams;
     }
 };
 
-var Splitter = exports.Splitter = React.createClass({
+var Splitter = exports.Splitter = _react2.default.createClass({
     displayName: "Splitter",
 
     getDefaultProps: function getDefaultProps() {
@@ -608,7 +605,7 @@ var Splitter = exports.Splitter = React.createClass({
         window.addEventListener("dragend", this.onDragEnd);
     },
     onDragEnd: function onDragEnd() {
-        ReactDOM.findDOMNode(this).style.transform = "";
+        _reactDom2.default.findDOMNode(this).style.transform = "";
         window.removeEventListener("dragend", this.onDragEnd);
         window.removeEventListener("mouseup", this.onMouseUp);
         window.removeEventListener("mousemove", this.onMouseMove);
@@ -616,7 +613,7 @@ var Splitter = exports.Splitter = React.createClass({
     onMouseUp: function onMouseUp(e) {
         this.onDragEnd();
 
-        var node = ReactDOM.findDOMNode(this);
+        var node = _reactDom2.default.findDOMNode(this);
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
 
@@ -645,7 +642,7 @@ var Splitter = exports.Splitter = React.createClass({
         } else {
             dY = e.pageY - this.state.startY;
         }
-        ReactDOM.findDOMNode(this).style.transform = "translate(" + dX + "px," + dY + "px)";
+        _reactDom2.default.findDOMNode(this).style.transform = "translate(" + dX + "px," + dY + "px)";
     },
     onResize: function onResize() {
         // Trigger a global resize event. This notifies components that employ virtual scrolling
@@ -658,7 +655,7 @@ var Splitter = exports.Splitter = React.createClass({
         if (!this.state.applied) {
             return;
         }
-        var node = ReactDOM.findDOMNode(this);
+        var node = _reactDom2.default.findDOMNode(this);
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
 
@@ -682,15 +679,15 @@ var Splitter = exports.Splitter = React.createClass({
         } else {
             className += " splitter-y";
         }
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: className },
-            React.createElement("div", { onMouseDown: this.onMouseDown, draggable: "true" })
+            _react2.default.createElement("div", { onMouseDown: this.onMouseDown, draggable: "true" })
         );
     }
 });
 
-},{"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],5:[function(require,module,exports){
+},{"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -941,16 +938,31 @@ module.exports = {
 },{"../utils.js":26,"./common.js":4,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _common = require("./common.js");
+
+var _actions = require("../actions.js");
+
 var _virtualscroll = require("./virtualscroll.js");
 
-var React = require("react");
-var common = require("./common.js");
-var Query = require("../actions.js").Query;
+var _view = require("../store/view.js");
 
-var views = require("../store/view.js");
-var _ = require("lodash");
+var _view2 = _interopRequireDefault(_view);
 
-var LogMessage = React.createClass({
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var LogMessage = _react2.default.createClass({
     displayName: "LogMessage",
 
     render: function render() {
@@ -958,15 +970,15 @@ var LogMessage = React.createClass({
         var indicator;
         switch (entry.level) {
             case "web":
-                indicator = React.createElement("i", { className: "fa fa-fw fa-html5" });
+                indicator = _react2.default.createElement("i", { className: "fa fa-fw fa-html5" });
                 break;
             case "debug":
-                indicator = React.createElement("i", { className: "fa fa-fw fa-bug" });
+                indicator = _react2.default.createElement("i", { className: "fa fa-fw fa-bug" });
                 break;
             default:
-                indicator = React.createElement("i", { className: "fa fa-fw fa-info" });
+                indicator = _react2.default.createElement("i", { className: "fa fa-fw fa-info" });
         }
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
             indicator,
@@ -979,18 +991,18 @@ var LogMessage = React.createClass({
     }
 });
 
-var EventLogContents = React.createClass({
+var EventLogContents = _react2.default.createClass({
     displayName: "EventLogContents",
 
     contextTypes: {
-        eventStore: React.PropTypes.object.isRequired
+        eventStore: _react2.default.PropTypes.object.isRequired
     },
-    mixins: [common.AutoScrollMixin, _virtualscroll.VirtualScrollMixin],
+    mixins: [_common.AutoScrollMixin, _virtualscroll.VirtualScrollMixin],
     getInitialState: function getInitialState() {
         var filterFn = function filterFn(entry) {
             return this.props.filter[entry.level];
         };
-        var view = new views.StoreView(this.context.eventStore, filterFn.bind(this));
+        var view = new _view2.default.StoreView(this.context.eventStore, filterFn.bind(this));
         view.addListener("add", this.onEventLogChange);
         view.addListener("recalculate", this.onEventLogChange);
 
@@ -1021,13 +1033,13 @@ var EventLogContents = React.createClass({
         };
     },
     renderRow: function renderRow(elem) {
-        return React.createElement(LogMessage, { key: elem.id, entry: elem });
+        return _react2.default.createElement(LogMessage, { key: elem.id, entry: elem });
     },
     render: function render() {
         var entries = this.state.view.list;
         var rows = this.renderRows(entries);
 
-        return React.createElement(
+        return _react2.default.createElement(
             "pre",
             { onScroll: this.onScroll },
             this.getPlaceholderTop(entries.length),
@@ -1037,7 +1049,7 @@ var EventLogContents = React.createClass({
     }
 });
 
-var ToggleFilter = React.createClass({
+var ToggleFilter = _react2.default.createClass({
     displayName: "ToggleFilter",
 
     toggle: function toggle(e) {
@@ -1051,7 +1063,7 @@ var ToggleFilter = React.createClass({
         } else {
             className += "label-default";
         }
-        return React.createElement(
+        return _react2.default.createElement(
             "a",
             {
                 href: "#",
@@ -1062,10 +1074,10 @@ var ToggleFilter = React.createClass({
     }
 });
 
-var EventLog = React.createClass({
+var EventLog = _react2.default.createClass({
     displayName: "EventLog",
 
-    mixins: [common.Navigation],
+    mixins: [_common.Router],
     getInitialState: function getInitialState() {
         return {
             filter: {
@@ -1077,37 +1089,38 @@ var EventLog = React.createClass({
     },
     close: function close() {
         var d = {};
-        d[Query.SHOW_EVENTLOG] = undefined;
-        this.setQuery(d);
+        d[_actions.Query.SHOW_EVENTLOG] = undefined;
+
+        this.updateLocation(undefined, d);
     },
     toggleLevel: function toggleLevel(level) {
-        var filter = _.extend({}, this.state.filter);
+        var filter = _lodash2.default.extend({}, this.state.filter);
         filter[level] = !filter[level];
         this.setState({ filter: filter });
     },
     render: function render() {
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "eventlog" },
-            React.createElement(
+            _react2.default.createElement(
                 "div",
                 null,
                 "Eventlog",
-                React.createElement(
+                _react2.default.createElement(
                     "div",
                     { className: "pull-right" },
-                    React.createElement(ToggleFilter, { name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel }),
-                    React.createElement(ToggleFilter, { name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel }),
-                    React.createElement(ToggleFilter, { name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel }),
-                    React.createElement("i", { onClick: this.close, className: "fa fa-close" })
+                    _react2.default.createElement(ToggleFilter, { name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel }),
+                    _react2.default.createElement(ToggleFilter, { name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel }),
+                    _react2.default.createElement(ToggleFilter, { name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel }),
+                    _react2.default.createElement("i", { onClick: this.close, className: "fa fa-close" })
                 )
             ),
-            React.createElement(EventLogContents, { filter: this.state.filter })
+            _react2.default.createElement(EventLogContents, { filter: this.state.filter })
         );
     }
 });
 
-module.exports = EventLog;
+exports.default = EventLog;
 
 },{"../actions.js":2,"../store/view.js":25,"./common.js":4,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
 "use strict";
@@ -2129,10 +2142,11 @@ module.exports = Details;
 },{"../../utils.js":26,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
+var _common = require("../common.js");
+
 var React = require("react");
 var _ = require("lodash");
 
-var common = require("../common.js");
 var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
@@ -2148,7 +2162,7 @@ var allTabs = {
 var FlowView = React.createClass({
     displayName: "FlowView",
 
-    mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    mixins: [_common.StickyHeadMixin, _common.Router],
     getInitialState: function getInitialState() {
         return {
             prompt: false
@@ -2166,20 +2180,17 @@ var FlowView = React.createClass({
     },
     nextTab: function nextTab(i) {
         var tabs = this.getTabs(this.props.flow);
-        var currentIndex = tabs.indexOf(this.getActive());
+        var currentIndex = tabs.indexOf(this.props.tab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
         var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function selectTab(panel) {
-        this.replaceWith("/flows/" + this.getParams().flowId + "/" + panel);
-    },
-    getActive: function getActive() {
-        return this.getParams().detailTab;
+        this.updateLocation("/flows/" + this.getParams().flowId + "/" + panel);
     },
     promptEdit: function promptEdit() {
         var options;
-        switch (this.getActive()) {
+        switch (this.props.tab) {
             case "request":
                 options = ["method", "url", { text: "http version", key: "v" }, "header"
                 /*, "content"*/];
@@ -2191,7 +2202,7 @@ var FlowView = React.createClass({
             case "details":
                 return;
             default:
-                throw "Unknown tab for edit: " + this.getActive();
+                throw "Unknown tab for edit: " + this.props.tab;
         }
 
         this.setState({
@@ -2209,7 +2220,7 @@ var FlowView = React.createClass({
     render: function render() {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
-        var active = this.getActive();
+        var active = this.props.tab;
 
         if (tabs.indexOf(active) < 0) {
             if (active === "response" && flow.error) {
@@ -2706,13 +2717,15 @@ module.exports = Footer;
 },{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
+var _common = require("./common.js");
+
 var React = require("react");
 var ReactDOM = require('react-dom');
 var $ = require("jquery");
 
 var Filt = require("../filt/filt.js");
 var utils = require("../utils.js");
-var common = require("./common.js");
+
 var actions = require("../actions.js");
 var Query = require("../actions.js").Query;
 
@@ -2786,7 +2799,7 @@ var FilterDocs = React.createClass({
 var FilterInput = React.createClass({
     displayName: "FilterInput",
 
-    mixins: [common.ChildFocus],
+    mixins: [_common.ChildFocus],
     getInitialState: function getInitialState() {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -2900,7 +2913,7 @@ var FilterInput = React.createClass({
 var MainMenu = React.createClass({
     displayName: "MainMenu",
 
-    mixins: [common.Navigation, common.RouterState, common.SettingsState],
+    mixins: [_common.Router, _common.SettingsState],
     statics: {
         title: "Start",
         route: "flows"
@@ -2908,12 +2921,12 @@ var MainMenu = React.createClass({
     onSearchChange: function onSearchChange(val) {
         var d = {};
         d[Query.SEARCH] = val;
-        this.setQuery(d);
+        this.updateLocation(undefined, d);
     },
     onHighlightChange: function onHighlightChange(val) {
         var d = {};
         d[Query.HIGHLIGHT] = val;
-        this.setQuery(d);
+        this.updateLocation(undefined, d);
     },
     onInterceptChange: function onInterceptChange(val) {
         actions.SettingsActions.update({ intercept: val });
@@ -2963,7 +2976,7 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [common.Navigation, common.RouterState],
+    mixins: [_common.Router],
     toggleEventLog: function toggleEventLog() {
         var d = {};
 
@@ -2973,7 +2986,7 @@ var ViewMenu = React.createClass({
             d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
         }
 
-        this.setQuery(d);
+        this.updateLocation(undefined, d);
     },
     render: function render() {
         var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
@@ -3098,7 +3111,7 @@ var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 var Header = React.createClass({
     displayName: "Header",
 
-    mixins: [common.Navigation],
+    mixins: [_common.Router],
     getInitialState: function getInitialState() {
         return {
             active: header_entries[0]
@@ -3106,7 +3119,7 @@ var Header = React.createClass({
     },
     handleClick: function handleClick(active, e) {
         e.preventDefault();
-        this.replaceWith(active.route);
+        this.updateLocation(active.route);
         this.setState({ active: active });
     },
     render: function render() {
@@ -3153,6 +3166,8 @@ module.exports = {
 },{"../actions.js":2,"../filt/filt.js":22,"../utils.js":26,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
 "use strict";
 
+var _common = require("./common.js");
+
 var React = require("react");
 
 var actions = require("../actions.js");
@@ -3161,14 +3176,13 @@ var utils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
 
-var common = require("./common.js");
 var FlowTable = require("./flowtable.js");
 var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
     displayName: "MainView",
 
-    mixins: [common.Navigation, common.RouterState],
+    mixins: [_common.Router],
     contextTypes: {
         flowStore: React.PropTypes.object.isRequired
     },
@@ -3204,22 +3218,27 @@ var MainView = React.createClass({
                 return true;
             };
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
-            var highlight = highlightStr ? Filt.parse(highlightStr) : false;
+            var highlight = highlightStr ? Filt.parse(highlightStr) : function () {
+                return false;
+            };
         } catch (e) {
             console.error("Error when processing filter: " + e);
         }
 
-        return function filter_and_highlight(flow) {
+        var fun = function filter_and_highlight(flow) {
             if (!this._highlight) {
                 this._highlight = {};
             }
-            this._highlight[flow.id] = highlight && highlight(flow);
+            this._highlight[flow.id] = highlight(flow);
             return filt(flow);
         };
+        fun.highlightStr = highlightStr;
+        fun.filtStr = filtStr;
+        return fun;
     },
     componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-        var filterChanged = this.props.query[Query.SEARCH] !== nextProps.query[Query.SEARCH];
-        var highlightChanged = this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT];
+        var filterChanged = this.state.view.filt.filtStr !== nextProps.location.query[Query.SEARCH];
+        var highlightChanged = this.state.view.filt.highlightStr !== nextProps.location.query[Query.HIGHLIGHT];
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
@@ -3251,10 +3270,10 @@ var MainView = React.createClass({
     selectFlow: function selectFlow(flow) {
         if (flow) {
             var tab = this.getParams().detailTab || "request";
-            this.replaceWith("/flows/" + flow.id + "/" + tab);
+            this.updateLocation("/flows/" + flow.id + "/" + tab);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            this.replaceWith("/flows");
+            this.updateLocation("/flows");
         }
     },
     selectFlowRelative: function selectFlowRelative(shift) {
@@ -3374,7 +3393,11 @@ var MainView = React.createClass({
 
         var details;
         if (selected) {
-            details = [React.createElement(common.Splitter, { key: "splitter" }), React.createElement(FlowView, { key: "flowDetails", ref: "flowDetails", flow: selected })];
+            details = [React.createElement(_common.Splitter, { key: "splitter" }), React.createElement(FlowView, {
+                key: "flowDetails",
+                ref: "flowDetails",
+                tab: this.getParams().detailTab,
+                flow: selected })];
         } else {
             details = null;
         }
@@ -3396,17 +3419,19 @@ module.exports = MainView;
 },{"../actions.js":2,"../filt/filt.js":22,"../store/view.js":25,"../utils.js":26,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],17:[function(require,module,exports){
 "use strict";
 
+var _common = require("./common.js");
+
 var React = require("react");
 var ReactDOM = require('react-dom');
 var _ = require("lodash");
 
 var utils = require("../utils.js");
-var common = require("./common.js");
+
 
 var Prompt = React.createClass({
     displayName: "Prompt",
 
-    mixins: [common.ChildFocus],
+    mixins: [_common.ChildFocus],
     propTypes: {
         options: React.PropTypes.array.isRequired,
         done: React.PropTypes.func.isRequired,
@@ -3522,18 +3547,25 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.app = undefined;
 
+var _common = require("./common.js");
+
+var _eventlog = require("./eventlog.js");
+
+var _eventlog2 = _interopRequireDefault(_eventlog);
+
 var _reactRouter = require("react-router");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var React = require("react");
 var ReactDOM = require("react-dom");
-var ReactRouter = require("react-router");
 var _ = require("lodash");
 
 var common = require("./common.js");
 var MainView = require("./mainview.js");
 var Footer = require("./footer.js");
 var header = require("./header.js");
-var EventLog = require("./eventlog.js");
+
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
@@ -3554,13 +3586,13 @@ var Reports = React.createClass({
 var ProxyAppMain = React.createClass({
     displayName: "ProxyAppMain",
 
-    mixins: [common.RouterState],
+    mixins: [_common.Router],
     childContextTypes: {
         settingsStore: React.PropTypes.object.isRequired,
         flowStore: React.PropTypes.object.isRequired,
         eventStore: React.PropTypes.object.isRequired,
         returnFocus: React.PropTypes.func.isRequired,
-        routerFoo: React.PropTypes.object
+        location: React.PropTypes.object.isRequired
     },
     componentDidMount: function componentDidMount() {
         this.focus();
@@ -3571,10 +3603,7 @@ var ProxyAppMain = React.createClass({
             flowStore: this.state.flowStore,
             eventStore: this.state.eventStore,
             returnFocus: this.focus,
-            routerFoo: {
-                location: this.props.location,
-                params: this.props.params
-            }
+            location: this.props.location
         };
     },
     getInitialState: function getInitialState() {
@@ -3627,11 +3656,11 @@ var ProxyAppMain = React.createClass({
     render: function render() {
         var eventlog;
         if (this.props.location.query[Query.SHOW_EVENTLOG]) {
-            eventlog = [React.createElement(common.Splitter, { key: "splitter", axis: "y" }), React.createElement(EventLog, { key: "eventlog" })];
+            eventlog = [React.createElement(_common.Splitter, { key: "splitter", axis: "y" }), React.createElement(_eventlog2.default, { key: "eventlog" })];
         } else {
             eventlog = null;
         }
-        var children = React.cloneElement(this.props.children, { ref: "view", query: this.props.location.query });
+        var children = React.cloneElement(this.props.children, { ref: "view", location: this.props.location });
         return React.createElement(
             "div",
             { id: "container", tabIndex: "0", onKeyDown: this.onKeydown },

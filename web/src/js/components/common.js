@@ -1,15 +1,14 @@
-var React = require("react");
-var ReactDOM = require("react-dom");
-var ReactRouter = require("react-router");
-var _ = require("lodash");
+import React from "react"
+import ReactDOM from "react-dom"
+import _ from "lodash"
 
 // http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
 export var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = ReactDOM.findDOMNode(this);
         this._shouldScrollBottom = (
-        node.scrollTop !== 0 &&
-        node.scrollTop + node.clientHeight === node.scrollHeight
+            node.scrollTop !== 0 &&
+            node.scrollTop + node.clientHeight === node.scrollHeight
         );
     },
     componentDidUpdate: function () {
@@ -57,7 +56,7 @@ export var ChildFocus = {
     contextTypes: {
         returnFocus: React.PropTypes.func
     },
-    returnFocus: function(){
+    returnFocus: function () {
         ReactDOM.findDOMNode(this).blur();
         window.getSelection().removeAllRanges();
         this.context.returnFocus();
@@ -65,46 +64,32 @@ export var ChildFocus = {
 };
 
 
-export var Navigation = {
+export var Router = {
     contextTypes: {
-        routerFoo: React.PropTypes.object,
+        location: React.PropTypes.object,
         router: React.PropTypes.object.isRequired
     },
-    setQuery: function (dict) {
-        var q = this.context.routerFoo.location.query;
-        for (var i in dict) {
-            if (dict.hasOwnProperty(i)) {
-                q[i] = dict[i] || undefined; //falsey values shall be removed.
+    updateLocation: function (pathname, queryUpdate) {
+        if (pathname === undefined) {
+            pathname = this.context.location.pathname;
+        }
+        var query = this.context.location.query;
+        if (queryUpdate !== undefined) {
+            for (var i in queryUpdate) {
+                if (queryUpdate.hasOwnProperty(i)) {
+                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
+                }
             }
         }
-        this.replaceWith(undefined, q);
-    },
-    replaceWith: function (pathname, query) {
-        if (pathname === undefined) {
-            pathname = this.context.routerFoo.location.pathname;
-        }
-        if (query === undefined) {
-            query = this.context.routerFoo.query;
-        }
-        console.log({ pathname, query });
-        this.context.router.replace({ pathname, query });
-    }
-};
-
-// react-router is fairly good at changing its API regularly.
-// We keep the old method for now - if it should turn out that their changes are permanent,
-// we may remove this mixin and access react-router directly again.
-export var RouterState = {
-    contextTypes: {
-        routerFoo: React.PropTypes.object,
+        this.context.router.replace({pathname, query});
     },
     getQuery: function () {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _.clone(this.context.routerFoo.location.query);
+        return _.clone(this.context.location.query);
     },
-    getParams: function () {
-        return _.clone(this.context.routerFoo.params);
+    getParams: function() {
+        return this.props.routeParams;
     }
 };
 

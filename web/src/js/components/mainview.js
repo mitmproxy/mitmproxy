@@ -5,13 +5,12 @@ var Query = require("../actions.js").Query;
 var utils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
-
-var common = require("./common.js");
+import { Router, Splitter} from "./common.js"
 var FlowTable = require("./flowtable.js");
 var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
-    mixins: [common.Navigation, common.RouterState],
+    mixins: [Router],
     contextTypes: {
         flowStore: React.PropTypes.object.isRequired,
     },
@@ -43,24 +42,27 @@ var MainView = React.createClass({
     getViewFilt: function () {
         try {
             var filtStr = this.getQuery()[Query.SEARCH];
-            var filt = filtStr ? Filt.parse(filtStr) : function(){return true};
+            var filt = filtStr ? Filt.parse(filtStr) : () => true;
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
-            var highlight = highlightStr ? Filt.parse(highlightStr) : false;
+            var highlight = highlightStr ? Filt.parse(highlightStr) : () => false;
         } catch (e) {
             console.error("Error when processing filter: " + e);
         }
 
-        return function filter_and_highlight(flow) {
+        var fun = function filter_and_highlight(flow) {
             if (!this._highlight) {
                 this._highlight = {};
             }
-            this._highlight[flow.id] = highlight && highlight(flow);
+            this._highlight[flow.id] = highlight(flow);
             return filt(flow);
         };
+        fun.highlightStr = highlightStr;
+        fun.filtStr = filtStr;
+        return fun;
     },
     componentWillReceiveProps: function (nextProps) {
-        var filterChanged = (this.props.query[Query.SEARCH] !== nextProps.query[Query.SEARCH]);
-        var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
+        var filterChanged = this.state.view.filt.filtStr !== nextProps.location.query[Query.SEARCH];
+        var highlightChanged = this.state.view.filt.highlightStr !== nextProps.location.query[Query.HIGHLIGHT];
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
@@ -92,10 +94,10 @@ var MainView = React.createClass({
     selectFlow: function (flow) {
         if (flow) {
             var tab = this.getParams().detailTab || "request";
-            this.replaceWith(`/flows/${flow.id}/${tab}`);
+            this.updateLocation(`/flows/${flow.id}/${tab}`);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            this.replaceWith("/flows");
+            this.updateLocation("/flows");
         }
     },
     selectFlowRelative: function (shift) {
@@ -218,8 +220,12 @@ var MainView = React.createClass({
         var details;
         if (selected) {
             details = [
-                <common.Splitter key="splitter"/>,
-                <FlowView key="flowDetails" ref="flowDetails" flow={selected}/>
+                <Splitter key="splitter"/>,
+                <FlowView
+                    key="flowDetails"
+                    ref="flowDetails"
+                    tab={this.getParams().detailTab}
+                    flow={selected}/>
             ];
         } else {
             details = null;
