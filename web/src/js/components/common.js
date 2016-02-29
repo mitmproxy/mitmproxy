@@ -16,7 +16,7 @@ export var AutoScrollMixin = {
             var node = ReactDOM.findDOMNode(this);
             node.scrollTop = node.scrollHeight;
         }
-    },
+    }
 };
 
 
@@ -24,7 +24,7 @@ export var StickyHeadMixin = {
     adjustHead: function () {
         // Abusing CSS transforms to set the element
         // referenced as head into some kind of position:sticky.
-        var head = this.refs.head;
+        var head = ReactDOM.findDOMNode(this.refs.head);
         head.style.transform = "translate(0," + ReactDOM.findDOMNode(this).scrollTop + "px)";
     }
 };

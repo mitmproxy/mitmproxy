@@ -1,13 +1,13 @@
-var React = require("react");
+import React from "react";
 
-var actions = require("../actions.js");
-var Query = require("../actions.js").Query;
-var utils = require("../utils.js");
-var views = require("../store/view.js");
-var Filt = require("../filt/filt.js");
+import {FlowActions} from "../actions.js";
+import {Query} from "../actions.js";
+import {Key} from "../utils.js";
+import {StoreView} from "../store/view.js";
+import Filt from "../filt/filt.js";
 import { Router, Splitter} from "./common.js"
-var FlowTable = require("./flowtable.js");
-var FlowView = require("./flowview/index.js");
+import FlowTable from "./flowtable.js";
+import FlowView from "./flowview/index.js";
 
 var MainView = React.createClass({
     mixins: [Router],
@@ -24,7 +24,7 @@ var MainView = React.createClass({
     },
     getInitialState: function () {
         var sortKeyFun = false;
-        var view = new views.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
+        var view = new StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
         view.addListener("recalculate", this.onRecalculate);
         view.addListener("add", this.onUpdate);
         view.addListener("update", this.onUpdate);
@@ -130,80 +130,80 @@ var MainView = React.createClass({
             return;
         }
         switch (e.keyCode) {
-            case utils.Key.K:
-            case utils.Key.UP:
+            case Key.K:
+            case Key.UP:
                 this.selectFlowRelative(-1);
                 break;
-            case utils.Key.J:
-            case utils.Key.DOWN:
+            case Key.J:
+            case Key.DOWN:
                 this.selectFlowRelative(+1);
                 break;
-            case utils.Key.SPACE:
-            case utils.Key.PAGE_DOWN:
+            case Key.SPACE:
+            case Key.PAGE_DOWN:
                 this.selectFlowRelative(+10);
                 break;
-            case utils.Key.PAGE_UP:
+            case Key.PAGE_UP:
                 this.selectFlowRelative(-10);
                 break;
-            case utils.Key.END:
+            case Key.END:
                 this.selectFlowRelative(+1e10);
                 break;
-            case utils.Key.HOME:
+            case Key.HOME:
                 this.selectFlowRelative(-1e10);
                 break;
-            case utils.Key.ESC:
+            case Key.ESC:
                 this.selectFlow(null);
                 break;
-            case utils.Key.H:
-            case utils.Key.LEFT:
+            case Key.H:
+            case Key.LEFT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
-            case utils.Key.L:
-            case utils.Key.TAB:
-            case utils.Key.RIGHT:
+            case Key.L:
+            case Key.TAB:
+            case Key.RIGHT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
-            case utils.Key.C:
+            case Key.C:
                 if (e.shiftKey) {
-                    actions.FlowActions.clear();
+                    FlowActions.clear();
                 }
                 break;
-            case utils.Key.D:
+            case Key.D:
                 if (flow) {
                     if (e.shiftKey) {
-                        actions.FlowActions.duplicate(flow);
+                        FlowActions.duplicate(flow);
                     } else {
-                        actions.FlowActions.delete(flow);
+                        FlowActions.delete(flow);
                     }
                 }
                 break;
-            case utils.Key.A:
+            case Key.A:
                 if (e.shiftKey) {
-                    actions.FlowActions.accept_all();
+                    FlowActions.accept_all();
                 } else if (flow && flow.intercepted) {
-                    actions.FlowActions.accept(flow);
+                    FlowActions.accept(flow);
                 }
                 break;
-            case utils.Key.R:
+            case Key.R:
                 if (!e.shiftKey && flow) {
-                    actions.FlowActions.replay(flow);
+                    FlowActions.replay(flow);
                 }
                 break;
-            case utils.Key.V:
+            case Key.V:
                 if (e.shiftKey && flow && flow.modified) {
-                    actions.FlowActions.revert(flow);
+                    FlowActions.revert(flow);
                 }
                 break;
-            case utils.Key.E:
+            case Key.E:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.promptEdit();
                 }
                 break;
-            case utils.Key.SHIFT:
+            case Key.SHIFT:
                 break;
             default:
                 console.debug("keydown", e.keyCode);
@@ -243,4 +243,4 @@ var MainView = React.createClass({
     }
 });
 
-module.exports = MainView;
+export default MainView;

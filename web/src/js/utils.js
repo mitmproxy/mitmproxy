@@ -1,12 +1,12 @@
-var $ = require("jquery");
-var _ = require("lodash");
-var actions = require("./actions.js");
+import $ from "jquery";
+import _ from "lodash";
+import actions from "./actions.js";
 
 window.$ = $;
 window._ = _;
 window.React = require("react");
 
-var Key = {
+export var Key = {
     UP: 38,
     DOWN: 40,
     PAGE_UP: 33,
@@ -28,7 +28,7 @@ for (var i = 65; i <= 90; i++) {
 }
 
 
-var formatSize = function (bytes) {
+export var formatSize = function (bytes) {
     if (bytes === 0)
         return "0";
     var prefix = ["b", "kb", "mb", "gb", "tb"];
@@ -46,7 +46,7 @@ var formatSize = function (bytes) {
 };
 
 
-var formatTimeDelta = function (milliseconds) {
+export var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
     var prefix = ["ms", "s", "min", "h"];
     var div = [1000, 60, 60];
@@ -59,7 +59,7 @@ var formatTimeDelta = function (milliseconds) {
 };
 
 
-var formatTimeStamp = function (seconds) {
+export var formatTimeStamp = function (seconds) {
     var ts = (new Date(seconds * 1000)).toISOString();
     return ts.replace("T", " ").replace("Z", "");
 };
@@ -68,7 +68,7 @@ var formatTimeStamp = function (seconds) {
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.
 var end = String.fromCharCode(0xffff);
-function reverseString(s) {
+export function reverseString(s) {
     return String.fromCharCode.apply(String,
             _.map(s.split(""), function (c) {
                 return 0xffff - c.charCodeAt(0);
@@ -102,11 +102,3 @@ $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
     actions.EventLogActions.add_event(thrownError + ": " + message);
     alert(message);
 });
-
-module.exports = {
-    formatSize: formatSize,
-    formatTimeDelta: formatTimeDelta,
-    formatTimeStamp: formatTimeStamp,
-    reverseString: reverseString,
-    Key: Key,
-};

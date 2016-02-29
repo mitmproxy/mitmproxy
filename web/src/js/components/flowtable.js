@@ -1,11 +1,11 @@
-var React = require("react");
-var ReactDOM = require('react-dom');
-var common = require("./common.js");
-var utils = require("../utils.js");
-var _ = require("lodash");
+import React from "react";
+import ReactDOM from 'react-dom';
+import {StickyHeadMixin, AutoScrollMixin} from "./common.js";
+import {reverseString} from "../utils.js";
+import _ from "lodash";
 
 import { VirtualScrollMixin } from "./virtualscroll.js"
-var flowtable_columns = require("./flowtable-columns.js");
+import flowtable_columns from "./flowtable-columns.js";
 
 var FlowRow = React.createClass({
     render: function () {
@@ -74,7 +74,7 @@ var FlowTableHead = React.createClass({
             sortKeyFun = hasSort && function(){
                 var k = Column.sortKeyFun.apply(this, arguments);
                 if(_.isString(k)){
-                    return utils.reverseString(""+k);
+                    return reverseString(""+k);
                 } else {
                     return -k;
                 }
@@ -108,7 +108,7 @@ var FlowTableHead = React.createClass({
 var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({
-    mixins: [common.StickyHeadMixin, common.AutoScrollMixin, VirtualScrollMixin],
+    mixins: [StickyHeadMixin, AutoScrollMixin, VirtualScrollMixin],
     contextTypes: {
         view: React.PropTypes.object.isRequired
     },
@@ -185,4 +185,4 @@ var FlowTable = React.createClass({
     }
 });
 
-module.exports = FlowTable;
+export default FlowTable;

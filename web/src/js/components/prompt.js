@@ -1,8 +1,8 @@
-var React = require("react");
-var ReactDOM = require('react-dom');
-var _ = require("lodash");
+import React from "react";
+import ReactDOM from 'react-dom';
+import _ from "lodash";
 
-var utils = require("../utils.js");
+import {Key} from "../utils.js";
 import {ChildFocus} from "./common.js"
 
 var Prompt = React.createClass({
@@ -21,12 +21,12 @@ var Prompt = React.createClass({
         var opts = this.getOptions();
         for (var i = 0; i < opts.length; i++) {
             var k = opts[i].key;
-            if (utils.Key[k.toUpperCase()] === e.keyCode) {
+            if (Key[k.toUpperCase()] === e.keyCode) {
                 this.done(k);
                 return;
             }
         }
-        if (e.keyCode === utils.Key.ESC || e.keyCode === utils.Key.ENTER) {
+        if (e.keyCode === Key.ESC || e.keyCode === Key.ENTER) {
             this.done(false);
         }
     },
@@ -98,4 +98,4 @@ var Prompt = React.createClass({
     }
 });
 
-module.exports = Prompt;
+export default Prompt;

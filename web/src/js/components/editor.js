@@ -1,7 +1,7 @@
-var React = require("react");
-var ReactDOM = require('react-dom');
-var common = require("./common.js");
-var utils = require("../utils.js");
+import React from "react";
+import ReactDOM from 'react-dom';
+import {ChildFocus} from "./common.js";
+import {Key} from "../utils.js";
 
 var contentToHtml = function (content) {
     return _.escape(content);
@@ -139,12 +139,12 @@ var EditorBase = React.createClass({
     onKeyDown: function (e) {
         e.stopPropagation();
         switch (e.keyCode) {
-            case utils.Key.ESC:
+            case Key.ESC:
                 e.preventDefault();
                 this.reset();
                 this.stop();
                 break;
-            case utils.Key.ENTER:
+            case Key.ENTER:
                 if (this.props.submitOnEnter && !e.shiftKey) {
                     e.preventDefault();
                     this.stop();
@@ -213,8 +213,8 @@ var ValidateEditor = React.createClass({
 /*
  Text Editor with mitmweb-specific convenience features
  */
-var ValueEditor = React.createClass({
-    mixins: [common.ChildFocus],
+export var ValueEditor = React.createClass({
+    mixins: [ChildFocus],
     propTypes: {
         content: React.PropTypes.string.isRequired,
         onDone: React.PropTypes.func.isRequired,
@@ -235,7 +235,3 @@ var ValueEditor = React.createClass({
         this.returnFocus();
     }
 });
-
-module.exports = {
-    ValueEditor: ValueEditor
-};

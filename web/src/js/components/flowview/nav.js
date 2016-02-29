@@ -1,6 +1,6 @@
-var React = require("react");
+import React from "react";
 
-var actions = require("../../actions.js");
+import {FlowActions} from "../../actions.js";
 
 var NavAction = React.createClass({
     onClick: function (e) {
@@ -38,19 +38,19 @@ var Nav = React.createClass({
 
         var acceptButton = null;
         if(flow.intercepted){
-            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={actions.FlowActions.accept.bind(null, flow)} />;
+            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={FlowActions.accept.bind(null, flow)} />;
         }
         var revertButton = null;
         if(flow.modified){
-            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={actions.FlowActions.revert.bind(null, flow)} />;
+            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={FlowActions.revert.bind(null, flow)} />;
         }
 
         return (
             <nav ref="head" className="nav-tabs nav-tabs-sm">
                 {tabs}
-                <NavAction title="[d]elete flow" icon="fa-trash" onClick={actions.FlowActions.delete.bind(null, flow)} />
-                <NavAction title="[D]uplicate flow" icon="fa-copy" onClick={actions.FlowActions.duplicate.bind(null, flow)} />
-                <NavAction disabled title="[r]eplay flow" icon="fa-repeat" onClick={actions.FlowActions.replay.bind(null, flow)} />
+                <NavAction title="[d]elete flow" icon="fa-trash" onClick={FlowActions.delete.bind(null, flow)} />
+                <NavAction title="[D]uplicate flow" icon="fa-copy" onClick={FlowActions.duplicate.bind(null, flow)} />
+                <NavAction disabled title="[r]eplay flow" icon="fa-repeat" onClick={FlowActions.replay.bind(null, flow)} />
                 {acceptButton}
                 {revertButton}
             </nav>
@@ -58,4 +58,4 @@ var Nav = React.createClass({
     }
 });
 
-module.exports = Nav;
+export default Nav;

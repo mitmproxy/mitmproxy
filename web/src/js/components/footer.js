@@ -1,8 +1,8 @@
-var React = require("react");
-var common = require("./common.js");
+import React from "react";
+import {SettingsState} from "./common.js";
 
 var Footer = React.createClass({
-    mixins: [common.SettingsState],
+    mixins: [SettingsState],
     render: function () {
         var mode = this.state.settings.mode;
         var intercept = this.state.settings.intercept;
@@ -16,4 +16,4 @@ var Footer = React.createClass({
     }
 });
 
-module.exports = Footer;
+export default Footer;

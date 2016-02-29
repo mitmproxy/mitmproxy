@@ -301,11 +301,24 @@ function isUndefined(arg) {
 },{}],2:[function(require,module,exports){
 "use strict";
 
-var $ = require("jquery");
-var _ = require("lodash");
-var AppDispatcher = require("./dispatcher.js").AppDispatcher;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Query = exports.FlowActions = exports.EventLogActions = exports.SettingsActions = exports.ConnectionActions = exports.StoreCmds = exports.ActionTypes = undefined;
 
-var ActionTypes = {
+var _jquery = require("jquery");
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _dispatcher = require("./dispatcher.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ActionTypes = exports.ActionTypes = {
     // Connection
     CONNECTION_OPEN: "connection_open",
     CONNECTION_CLOSE: "connection_close",
@@ -317,35 +330,35 @@ var ActionTypes = {
     FLOW_STORE: "flows"
 };
 
-var StoreCmds = {
+var StoreCmds = exports.StoreCmds = {
     ADD: "add",
     UPDATE: "update",
     REMOVE: "remove",
     RESET: "reset"
 };
 
-var ConnectionActions = {
+var ConnectionActions = exports.ConnectionActions = {
     open: function open() {
-        AppDispatcher.dispatchViewAction({
+        _dispatcher.AppDispatcher.dispatchViewAction({
             type: ActionTypes.CONNECTION_OPEN
         });
     },
     close: function close() {
-        AppDispatcher.dispatchViewAction({
+        _dispatcher.AppDispatcher.dispatchViewAction({
             type: ActionTypes.CONNECTION_CLOSE
         });
     },
     error: function error() {
-        AppDispatcher.dispatchViewAction({
+        _dispatcher.AppDispatcher.dispatchViewAction({
             type: ActionTypes.CONNECTION_ERROR
         });
     }
 };
 
-var SettingsActions = {
+var SettingsActions = exports.SettingsActions = {
     update: function update(settings) {
 
-        $.ajax({
+        _jquery2.default.ajax({
             type: "PUT",
             url: "/settings",
             contentType: 'application/json',
@@ -364,9 +377,9 @@ var SettingsActions = {
 };
 
 var EventLogActions_event_id = 0;
-var EventLogActions = {
+var EventLogActions = exports.EventLogActions = {
     add_event: function add_event(message) {
-        AppDispatcher.dispatchViewAction({
+        _dispatcher.AppDispatcher.dispatchViewAction({
             type: ActionTypes.EVENT_STORE,
             cmd: StoreCmds.ADD,
             data: {
@@ -378,27 +391,27 @@ var EventLogActions = {
     }
 };
 
-var FlowActions = {
+var FlowActions = exports.FlowActions = {
     accept: function accept(flow) {
-        $.post("/flows/" + flow.id + "/accept");
+        _jquery2.default.post("/flows/" + flow.id + "/accept");
     },
     accept_all: function accept_all() {
-        $.post("/flows/accept");
+        _jquery2.default.post("/flows/accept");
     },
     "delete": function _delete(flow) {
-        $.ajax({
+        _jquery2.default.ajax({
             type: "DELETE",
             url: "/flows/" + flow.id
         });
     },
     duplicate: function duplicate(flow) {
-        $.post("/flows/" + flow.id + "/duplicate");
+        _jquery2.default.post("/flows/" + flow.id + "/duplicate");
     },
     replay: function replay(flow) {
-        $.post("/flows/" + flow.id + "/replay");
+        _jquery2.default.post("/flows/" + flow.id + "/replay");
     },
     revert: function revert(flow) {
-        $.post("/flows/" + flow.id + "/revert");
+        _jquery2.default.post("/flows/" + flow.id + "/revert");
     },
     update: function update(flow, nextProps) {
         /*
@@ -411,7 +424,7 @@ var FlowActions = {
             data: nextFlow
         });
         */
-        $.ajax({
+        _jquery2.default.ajax({
             type: "PUT",
             url: "/flows/" + flow.id,
             contentType: 'application/json',
@@ -419,24 +432,14 @@ var FlowActions = {
         });
     },
     clear: function clear() {
-        $.post("/clear");
+        _jquery2.default.post("/clear");
     }
 };
 
-var Query = {
+var Query = exports.Query = {
     SEARCH: "s",
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
-};
-
-module.exports = {
-    ActionTypes: ActionTypes,
-    ConnectionActions: ConnectionActions,
-    FlowActions: FlowActions,
-    StoreCmds: StoreCmds,
-    SettingsActions: SettingsActions,
-    EventLogActions: EventLogActions,
-    Query: Query
 };
 
 },{"./dispatcher.js":21,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
@@ -512,7 +515,7 @@ var StickyHeadMixin = exports.StickyHeadMixin = {
     adjustHead: function adjustHead() {
         // Abusing CSS transforms to set the element
         // referenced as head into some kind of position:sticky.
-        var head = this.refs.head;
+        var head = _reactDom2.default.findDOMNode(this.refs.head);
         head.style.transform = "translate(0," + _reactDom2.default.findDOMNode(this).scrollTop + "px)";
     }
 };
@@ -690,12 +693,26 @@ var Splitter = exports.Splitter = _react2.default.createClass({
 },{"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.ValueEditor = undefined;
+
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var React = require("react");
-var ReactDOM = require('react-dom');
-var common = require("./common.js");
-var utils = require("../utils.js");
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _common = require("./common.js");
+
+var _utils = require("../utils.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var contentToHtml = function contentToHtml(content) {
     return _.escape(content);
@@ -707,18 +724,18 @@ var nodeToContent = function nodeToContent(node) {
 /*
  Basic Editor Functionality
  */
-var EditorBase = React.createClass({
+var EditorBase = _react2.default.createClass({
     displayName: "EditorBase",
 
     propTypes: {
-        content: React.PropTypes.string.isRequired,
-        onDone: React.PropTypes.func.isRequired,
-        contentToHtml: React.PropTypes.func,
-        nodeToContent: React.PropTypes.func, // content === nodeToContent( Node<innerHTML=contentToHtml(content)> )
-        onStop: React.PropTypes.func,
-        submitOnEnter: React.PropTypes.bool,
-        className: React.PropTypes.string,
-        tag: React.PropTypes.string
+        content: _react2.default.PropTypes.string.isRequired,
+        onDone: _react2.default.PropTypes.func.isRequired,
+        contentToHtml: _react2.default.PropTypes.func,
+        nodeToContent: _react2.default.PropTypes.func, // content === nodeToContent( Node<innerHTML=contentToHtml(content)> )
+        onStop: _react2.default.PropTypes.func,
+        submitOnEnter: _react2.default.PropTypes.bool,
+        className: _react2.default.PropTypes.string,
+        tag: _react2.default.PropTypes.string
     },
     getDefaultProps: function getDefaultProps() {
         return {
@@ -738,7 +755,7 @@ var EditorBase = React.createClass({
         var className = "inline-input " + this.props.className;
         var html = { __html: this.props.contentToHtml(this.props.content) };
         var Tag = this.props.tag;
-        return React.createElement(Tag, _extends({}, this.props, {
+        return _react2.default.createElement(Tag, _extends({}, this.props, {
             tabIndex: "0",
             className: className,
             contentEditable: this.state.editable || undefined // workaround: use undef instead of false to remove attr
@@ -794,12 +811,12 @@ var EditorBase = React.createClass({
             range = document.caretRangeFromPoint(e.clientX, e.clientY);
         } else {
             range = document.createRange();
-            range.selectNodeContents(ReactDOM.findDOMNode(this));
+            range.selectNodeContents(_reactDom2.default.findDOMNode(this));
         }
 
         this._ignore_events = true;
         this.setState({ editable: true }, function () {
-            var node = ReactDOM.findDOMNode(this);
+            var node = _reactDom2.default.findDOMNode(this);
             node.blur();
             node.focus();
             this._ignore_events = false;
@@ -811,7 +828,7 @@ var EditorBase = React.createClass({
         // a stop would cause a blur as a side-effect.
         // but a blur event must trigger a stop as well.
         // to fix this, make stop = blur and do the actual stop in the onBlur handler.
-        ReactDOM.findDOMNode(this).blur();
+        _reactDom2.default.findDOMNode(this).blur();
         this.props.onStop && this.props.onStop();
     },
     _stop: function _stop(e) {
@@ -820,24 +837,24 @@ var EditorBase = React.createClass({
         }
         console.log("_stop", _.extend({}, e));
         window.getSelection().removeAllRanges(); //make sure that selection is cleared on blur
-        var node = ReactDOM.findDOMNode(this);
+        var node = _reactDom2.default.findDOMNode(this);
         var content = this.props.nodeToContent(node);
         this.setState({ editable: false });
         this.props.onDone(content);
         this.props.onBlur && this.props.onBlur(e);
     },
     reset: function reset() {
-        ReactDOM.findDOMNode(this).innerHTML = this.props.contentToHtml(this.props.content);
+        _reactDom2.default.findDOMNode(this).innerHTML = this.props.contentToHtml(this.props.content);
     },
     onKeyDown: function onKeyDown(e) {
         e.stopPropagation();
         switch (e.keyCode) {
-            case utils.Key.ESC:
+            case _utils.Key.ESC:
                 e.preventDefault();
                 this.reset();
                 this.stop();
                 break;
-            case utils.Key.ENTER:
+            case _utils.Key.ENTER:
                 if (this.props.submitOnEnter && !e.shiftKey) {
                     e.preventDefault();
                     this.stop();
@@ -848,7 +865,7 @@ var EditorBase = React.createClass({
         }
     },
     onInput: function onInput() {
-        var node = ReactDOM.findDOMNode(this);
+        var node = _reactDom2.default.findDOMNode(this);
         var content = this.props.nodeToContent(node);
         this.props.onInput && this.props.onInput(content);
     }
@@ -857,15 +874,15 @@ var EditorBase = React.createClass({
 /*
  Add Validation to EditorBase
  */
-var ValidateEditor = React.createClass({
+var ValidateEditor = _react2.default.createClass({
     displayName: "ValidateEditor",
 
     propTypes: {
-        content: React.PropTypes.string.isRequired,
-        onDone: React.PropTypes.func.isRequired,
-        onInput: React.PropTypes.func,
-        isValid: React.PropTypes.func,
-        className: React.PropTypes.string
+        content: _react2.default.PropTypes.string.isRequired,
+        onDone: _react2.default.PropTypes.func.isRequired,
+        onInput: _react2.default.PropTypes.func,
+        isValid: _react2.default.PropTypes.func,
+        className: _react2.default.PropTypes.string
     },
     getInitialState: function getInitialState() {
         return {
@@ -888,7 +905,7 @@ var ValidateEditor = React.createClass({
                 className += " has-warning";
             }
         }
-        return React.createElement(EditorBase, _extends({}, this.props, {
+        return _react2.default.createElement(EditorBase, _extends({}, this.props, {
             ref: "editor",
             className: className,
             onDone: this.onDone,
@@ -907,33 +924,29 @@ var ValidateEditor = React.createClass({
 /*
  Text Editor with mitmweb-specific convenience features
  */
-var ValueEditor = React.createClass({
+var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     displayName: "ValueEditor",
 
-    mixins: [common.ChildFocus],
+    mixins: [_common.ChildFocus],
     propTypes: {
-        content: React.PropTypes.string.isRequired,
-        onDone: React.PropTypes.func.isRequired,
-        inline: React.PropTypes.bool
+        content: _react2.default.PropTypes.string.isRequired,
+        onDone: _react2.default.PropTypes.func.isRequired,
+        inline: _react2.default.PropTypes.bool
     },
     render: function render() {
         var tag = this.props.inline ? "span" : "div";
-        return React.createElement(ValidateEditor, _extends({}, this.props, {
+        return _react2.default.createElement(ValidateEditor, _extends({}, this.props, {
             onStop: this.onStop,
             tag: tag
         }));
     },
     focus: function focus() {
-        ReactDOM.findDOMNode(this).focus();
+        _reactDom2.default.findDOMNode(this).focus();
     },
     onStop: function onStop() {
         this.returnFocus();
     }
 });
-
-module.exports = {
-    ValueEditor: ValueEditor
-};
 
 },{"../utils.js":26,"./common.js":4,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
@@ -953,8 +966,6 @@ var _actions = require("../actions.js");
 var _virtualscroll = require("./virtualscroll.js");
 
 var _view = require("../store/view.js");
-
-var _view2 = _interopRequireDefault(_view);
 
 var _lodash = require("lodash");
 
@@ -1002,7 +1013,7 @@ var EventLogContents = _react2.default.createClass({
         var filterFn = function filterFn(entry) {
             return this.props.filter[entry.level];
         };
-        var view = new _view2.default.StoreView(this.context.eventStore, filterFn.bind(this));
+        var view = new _view.StoreView(this.context.eventStore, filterFn.bind(this));
         view.addListener("add", this.onEventLogChange);
         view.addListener("recalculate", this.onEventLogChange);
 
@@ -1125,22 +1136,31 @@ exports.default = EventLog;
 },{"../actions.js":2,"../store/view.js":25,"./common.js":4,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var React = require("react");
-var RequestUtils = require("../flow/utils.js").RequestUtils;
-var ResponseUtils = require("../flow/utils.js").ResponseUtils;
-var utils = require("../utils.js");
+var _react = require("react");
 
-var TLSColumn = React.createClass({
+var _react2 = _interopRequireDefault(_react);
+
+var _utils = require("../flow/utils.js");
+
+var _utils2 = require("../utils.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var TLSColumn = _react2.default.createClass({
     displayName: "TLSColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement("th", _extends({}, this.props, { className: "col-tls " + (this.props.className || "") }));
+                return _react2.default.createElement("th", _extends({}, this.props, { className: "col-tls " + (this.props.className || "") }));
             }
         }),
         sortKeyFun: function sortKeyFun(flow) {
@@ -1156,19 +1176,19 @@ var TLSColumn = React.createClass({
         } else {
             classes = "col-tls col-tls-http";
         }
-        return React.createElement("td", { className: classes });
+        return _react2.default.createElement("td", { className: classes });
     }
 });
 
-var IconColumn = React.createClass({
+var IconColumn = _react2.default.createClass({
     displayName: "IconColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement("th", _extends({}, this.props, { className: "col-icon " + (this.props.className || "") }));
+                return _react2.default.createElement("th", _extends({}, this.props, { className: "col-icon " + (this.props.className || "") }));
             }
         })
     },
@@ -1177,7 +1197,7 @@ var IconColumn = React.createClass({
 
         var icon;
         if (flow.response) {
-            var contentType = ResponseUtils.getContentType(flow.response);
+            var contentType = _utils.ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
             if (flow.response.status_code === 304) {
@@ -1199,23 +1219,23 @@ var IconColumn = React.createClass({
         }
 
         icon += " resource-icon";
-        return React.createElement(
+        return _react2.default.createElement(
             "td",
             { className: "col-icon" },
-            React.createElement("div", { className: icon })
+            _react2.default.createElement("div", { className: icon })
         );
     }
 });
 
-var PathColumn = React.createClass({
+var PathColumn = _react2.default.createClass({
     displayName: "PathColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement(
+                return _react2.default.createElement(
                     "th",
                     _extends({}, this.props, { className: "col-path " + (this.props.className || "") }),
                     "Path"
@@ -1223,30 +1243,30 @@ var PathColumn = React.createClass({
             }
         }),
         sortKeyFun: function sortKeyFun(flow) {
-            return RequestUtils.pretty_url(flow.request);
+            return _utils.RequestUtils.pretty_url(flow.request);
         }
     },
     render: function render() {
         var flow = this.props.flow;
-        return React.createElement(
+        return _react2.default.createElement(
             "td",
             { className: "col-path" },
-            flow.request.is_replay ? React.createElement("i", { className: "fa fa-fw fa-repeat pull-right" }) : null,
-            flow.intercepted ? React.createElement("i", { className: "fa fa-fw fa-pause pull-right" }) : null,
-            RequestUtils.pretty_url(flow.request)
+            flow.request.is_replay ? _react2.default.createElement("i", { className: "fa fa-fw fa-repeat pull-right" }) : null,
+            flow.intercepted ? _react2.default.createElement("i", { className: "fa fa-fw fa-pause pull-right" }) : null,
+            _utils.RequestUtils.pretty_url(flow.request)
         );
     }
 });
 
-var MethodColumn = React.createClass({
+var MethodColumn = _react2.default.createClass({
     displayName: "MethodColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement(
+                return _react2.default.createElement(
                     "th",
                     _extends({}, this.props, { className: "col-method " + (this.props.className || "") }),
                     "Method"
@@ -1259,7 +1279,7 @@ var MethodColumn = React.createClass({
     },
     render: function render() {
         var flow = this.props.flow;
-        return React.createElement(
+        return _react2.default.createElement(
             "td",
             { className: "col-method" },
             flow.request.method
@@ -1267,15 +1287,15 @@ var MethodColumn = React.createClass({
     }
 });
 
-var StatusColumn = React.createClass({
+var StatusColumn = _react2.default.createClass({
     displayName: "StatusColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement(
+                return _react2.default.createElement(
                     "th",
                     _extends({}, this.props, { className: "col-status " + (this.props.className || "") }),
                     "Status"
@@ -1294,7 +1314,7 @@ var StatusColumn = React.createClass({
         } else {
             status = null;
         }
-        return React.createElement(
+        return _react2.default.createElement(
             "td",
             { className: "col-status" },
             status
@@ -1302,15 +1322,15 @@ var StatusColumn = React.createClass({
     }
 });
 
-var SizeColumn = React.createClass({
+var SizeColumn = _react2.default.createClass({
     displayName: "SizeColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement(
+                return _react2.default.createElement(
                     "th",
                     _extends({}, this.props, { className: "col-size " + (this.props.className || "") }),
                     "Size"
@@ -1332,8 +1352,8 @@ var SizeColumn = React.createClass({
         if (flow.response) {
             total += flow.response.contentLength || 0;
         }
-        var size = utils.formatSize(total);
-        return React.createElement(
+        var size = (0, _utils2.formatSize)(total);
+        return _react2.default.createElement(
             "td",
             { className: "col-size" },
             size
@@ -1341,15 +1361,15 @@ var SizeColumn = React.createClass({
     }
 });
 
-var TimeColumn = React.createClass({
+var TimeColumn = _react2.default.createClass({
     displayName: "TimeColumn",
 
     statics: {
-        Title: React.createClass({
+        Title: _react2.default.createClass({
             displayName: "Title",
 
             render: function render() {
-                return React.createElement(
+                return _react2.default.createElement(
                     "th",
                     _extends({}, this.props, { className: "col-time " + (this.props.className || "") }),
                     "Time"
@@ -1366,11 +1386,11 @@ var TimeColumn = React.createClass({
         var flow = this.props.flow;
         var time;
         if (flow.response) {
-            time = utils.formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
+            time = (0, _utils2.formatTimeDelta)(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
         }
-        return React.createElement(
+        return _react2.default.createElement(
             "td",
             { className: "col-time" },
             time
@@ -1380,28 +1400,46 @@ var TimeColumn = React.createClass({
 
 var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, SizeColumn, TimeColumn];
 
-module.exports = all_columns;
+exports.default = all_columns;
 
 },{"../flow/utils.js":23,"../utils.js":26,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _common = require("./common.js");
+
+var _utils = require("../utils.js");
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 var _virtualscroll = require("./virtualscroll.js");
 
-var React = require("react");
-var ReactDOM = require('react-dom');
-var common = require("./common.js");
-var utils = require("../utils.js");
-var _ = require("lodash");
+var _flowtableColumns = require("./flowtable-columns.js");
 
-var flowtable_columns = require("./flowtable-columns.js");
+var _flowtableColumns2 = _interopRequireDefault(_flowtableColumns);
 
-var FlowRow = React.createClass({
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var FlowRow = _react2.default.createClass({
     displayName: "FlowRow",
 
     render: function render() {
         var flow = this.props.flow;
         var columns = this.props.columns.map(function (Column) {
-            return React.createElement(Column, { key: Column.displayName, flow: flow });
+            return _react2.default.createElement(Column, { key: Column.displayName, flow: flow });
         }.bind(this));
         var className = "";
         if (this.props.selected) {
@@ -1420,7 +1458,7 @@ var FlowRow = React.createClass({
             className += " has-response";
         }
 
-        return React.createElement(
+        return _react2.default.createElement(
             "tr",
             { className: className, onClick: this.props.selectFlow.bind(null, flow) },
             columns
@@ -1437,7 +1475,7 @@ var FlowRow = React.createClass({
     }
 });
 
-var FlowTableHead = React.createClass({
+var FlowTableHead = _react2.default.createClass({
     displayName: "FlowTableHead",
 
     getInitialState: function getInitialState() {
@@ -1466,8 +1504,8 @@ var FlowTableHead = React.createClass({
         } else {
             sortKeyFun = hasSort && function () {
                 var k = Column.sortKeyFun.apply(this, arguments);
-                if (_.isString(k)) {
-                    return utils.reverseString("" + k);
+                if (_lodash2.default.isString(k)) {
+                    return (0, _utils.reverseString)("" + k);
                 } else {
                     return -k;
                 }
@@ -1486,15 +1524,15 @@ var FlowTableHead = React.createClass({
                     className = "sort-asc";
                 }
             }
-            return React.createElement(Column.Title, {
+            return _react2.default.createElement(Column.Title, {
                 key: Column.displayName,
                 onClick: onClick,
                 className: className });
         }.bind(this));
-        return React.createElement(
+        return _react2.default.createElement(
             "thead",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "tr",
                 null,
                 columns
@@ -1505,16 +1543,16 @@ var FlowTableHead = React.createClass({
 
 var ROW_HEIGHT = 32;
 
-var FlowTable = React.createClass({
+var FlowTable = _react2.default.createClass({
     displayName: "FlowTable",
 
-    mixins: [common.StickyHeadMixin, common.AutoScrollMixin, _virtualscroll.VirtualScrollMixin],
+    mixins: [_common.StickyHeadMixin, _common.AutoScrollMixin, _virtualscroll.VirtualScrollMixin],
     contextTypes: {
-        view: React.PropTypes.object.isRequired
+        view: _react2.default.PropTypes.object.isRequired
     },
     getInitialState: function getInitialState() {
         return {
-            columns: flowtable_columns
+            columns: _flowtableColumns2.default
         };
     },
     componentWillMount: function componentWillMount() {
@@ -1542,13 +1580,13 @@ var FlowTable = React.createClass({
         this.forceUpdate();
     },
     scrollIntoView: function scrollIntoView(flow) {
-        this.scrollRowIntoView(this.context.view.index(flow), ReactDOM.findDOMNode(this.refs.body).offsetTop);
+        this.scrollRowIntoView(this.context.view.index(flow), _reactDom2.default.findDOMNode(this.refs.body).offsetTop);
     },
     renderRow: function renderRow(flow) {
         var selected = flow === this.props.selected;
         var highlighted = this.context.view._highlight && this.context.view._highlight[flow.id];
 
-        return React.createElement(FlowRow, { key: flow.id,
+        return _react2.default.createElement(FlowRow, { key: flow.id,
             ref: flow.id,
             flow: flow,
             columns: this.state.columns,
@@ -1561,16 +1599,16 @@ var FlowTable = React.createClass({
         var flows = this.context.view.list;
         var rows = this.renderRows(flows);
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "flow-table", onScroll: this.onScrollFlowTable },
-            React.createElement(
+            _react2.default.createElement(
                 "table",
                 null,
-                React.createElement(FlowTableHead, { ref: "head",
+                _react2.default.createElement(FlowTableHead, { ref: "head",
                     columns: this.state.columns,
                     setSortKeyFun: this.props.setSortKeyFun }),
-                React.createElement(
+                _react2.default.createElement(
                     "tbody",
                     { ref: "body" },
                     this.getPlaceholderTop(flows.length),
@@ -1582,34 +1620,46 @@ var FlowTable = React.createClass({
     }
 });
 
-module.exports = FlowTable;
+exports.default = FlowTable;
 
 },{"../utils.js":26,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":19,"lodash":"lodash","react":"react","react-dom":"react-dom"}],9:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var React = require("react");
-var _ = require("lodash");
+var _react = require("react");
 
-var MessageUtils = require("../../flow/utils.js").MessageUtils;
-var utils = require("../../utils.js");
+var _react2 = _interopRequireDefault(_react);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _utils = require("../../flow/utils.js");
+
+var _utils2 = require("../../utils.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
-var ViewImage = React.createClass({
+var ViewImage = _react2.default.createClass({
     displayName: "ViewImage",
 
     statics: {
         matches: function matches(message) {
-            return image_regex.test(MessageUtils.getContentType(message));
+            return image_regex.test(_utils.MessageUtils.getContentType(message));
         }
     },
     render: function render() {
-        var url = MessageUtils.getContentURL(this.props.flow, this.props.message);
-        return React.createElement(
+        var url = _utils.MessageUtils.getContentURL(this.props.flow, this.props.message);
+        return _react2.default.createElement(
             "div",
             { className: "flowview-image" },
-            React.createElement("img", { src: url, alt: "preview", className: "img-thumbnail" })
+            _react2.default.createElement("img", { src: url, alt: "preview", className: "img-thumbnail" })
         );
     }
 });
@@ -1625,7 +1675,7 @@ var RawMixin = {
         if (this.state.request) {
             this.state.request.abort();
         }
-        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        var request = _utils.MessageUtils.getContent(nextProps.flow, nextProps.message);
         this.setState({
             content: undefined,
             request: request
@@ -1656,17 +1706,17 @@ var RawMixin = {
     },
     render: function render() {
         if (!this.state.content) {
-            return React.createElement(
+            return _react2.default.createElement(
                 "div",
                 { className: "text-center" },
-                React.createElement("i", { className: "fa fa-spinner fa-spin" })
+                _react2.default.createElement("i", { className: "fa fa-spinner fa-spin" })
             );
         }
         return this.renderContent();
     }
 };
 
-var ViewRaw = React.createClass({
+var ViewRaw = _react2.default.createClass({
     displayName: "ViewRaw",
 
     mixins: [RawMixin],
@@ -1676,7 +1726,7 @@ var ViewRaw = React.createClass({
         }
     },
     renderContent: function renderContent() {
-        return React.createElement(
+        return _react2.default.createElement(
             "pre",
             null,
             this.state.content
@@ -1685,13 +1735,13 @@ var ViewRaw = React.createClass({
 });
 
 var json_regex = /^application\/json$/i;
-var ViewJSON = React.createClass({
+var ViewJSON = _react2.default.createClass({
     displayName: "ViewJSON",
 
     mixins: [RawMixin],
     statics: {
         matches: function matches(message) {
-            return json_regex.test(MessageUtils.getContentType(message));
+            return json_regex.test(_utils.MessageUtils.getContentType(message));
         }
     },
     renderContent: function renderContent() {
@@ -1699,7 +1749,7 @@ var ViewJSON = React.createClass({
         try {
             json = JSON.stringify(JSON.parse(json), null, 2);
         } catch (e) {}
-        return React.createElement(
+        return _react2.default.createElement(
             "pre",
             null,
             json
@@ -1707,7 +1757,7 @@ var ViewJSON = React.createClass({
     }
 });
 
-var ViewAuto = React.createClass({
+var ViewAuto = _react2.default.createClass({
     displayName: "ViewAuto",
 
     statics: {
@@ -1725,18 +1775,18 @@ var ViewAuto = React.createClass({
     },
     render: function render() {
         var View = ViewAuto.findView(this.props.message);
-        return React.createElement(View, this.props);
+        return _react2.default.createElement(View, this.props);
     }
 });
 
 var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
 
-var ContentEmpty = React.createClass({
+var ContentEmpty = _react2.default.createClass({
     displayName: "ContentEmpty",
 
     render: function render() {
         var message_name = this.props.flow.request === this.props.message ? "request" : "response";
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "alert alert-info" },
             "No ",
@@ -1746,12 +1796,12 @@ var ContentEmpty = React.createClass({
     }
 });
 
-var ContentMissing = React.createClass({
+var ContentMissing = _react2.default.createClass({
     displayName: "ContentMissing",
 
     render: function render() {
         var message_name = this.props.flow.request === this.props.message ? "Request" : "Response";
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "alert alert-info" },
             message_name,
@@ -1760,7 +1810,7 @@ var ContentMissing = React.createClass({
     }
 });
 
-var TooLarge = React.createClass({
+var TooLarge = _react2.default.createClass({
     displayName: "TooLarge",
 
     statics: {
@@ -1770,11 +1820,11 @@ var TooLarge = React.createClass({
         }
     },
     render: function render() {
-        var size = utils.formatSize(this.props.message.contentLength);
-        return React.createElement(
+        var size = (0, _utils2.formatSize)(this.props.message.contentLength);
+        return _react2.default.createElement(
             "div",
             { className: "alert alert-warning" },
-            React.createElement(
+            _react2.default.createElement(
                 "button",
                 { onClick: this.props.onClick, className: "btn btn-xs btn-warning pull-right" },
                 "Display anyway"
@@ -1785,7 +1835,7 @@ var TooLarge = React.createClass({
     }
 });
 
-var ViewSelector = React.createClass({
+var ViewSelector = _react2.default.createClass({
     displayName: "ViewSelector",
 
     render: function render() {
@@ -1802,7 +1852,7 @@ var ViewSelector = React.createClass({
             } else {
                 text = view.displayName.toLowerCase().replace("view", "");
             }
-            views.push(React.createElement(
+            views.push(_react2.default.createElement(
                 "button",
                 {
                     key: view.displayName,
@@ -1812,7 +1862,7 @@ var ViewSelector = React.createClass({
             ));
         }
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "view-selector btn-group btn-group-xs" },
             views
@@ -1820,7 +1870,7 @@ var ViewSelector = React.createClass({
     }
 });
 
-var ContentView = React.createClass({
+var ContentView = _react2.default.createClass({
     displayName: "ContentView",
 
     getInitialState: function getInitialState() {
@@ -1833,8 +1883,8 @@ var ContentView = React.createClass({
         // It may seem a bit weird at the first glance:
         // Every view takes the flow and the message as props, e.g.
         // <Auto flow={flow} message={flow.request}/>
-        flow: React.PropTypes.object.isRequired,
-        message: React.PropTypes.object.isRequired
+        flow: _react2.default.PropTypes.object.isRequired,
+        message: _react2.default.PropTypes.object.isRequired
     },
     selectView: function selectView(view) {
         this.setState({
@@ -1852,60 +1902,71 @@ var ContentView = React.createClass({
     render: function render() {
         var message = this.props.message;
         if (message.contentLength === 0) {
-            return React.createElement(ContentEmpty, this.props);
+            return _react2.default.createElement(ContentEmpty, this.props);
         } else if (message.contentLength === null) {
-            return React.createElement(ContentMissing, this.props);
+            return _react2.default.createElement(ContentMissing, this.props);
         } else if (!this.state.displayLarge && TooLarge.isTooLarge(message)) {
-            return React.createElement(TooLarge, _extends({}, this.props, { onClick: this.displayLarge }));
+            return _react2.default.createElement(TooLarge, _extends({}, this.props, { onClick: this.displayLarge }));
         }
 
-        var downloadUrl = MessageUtils.getContentURL(this.props.flow, message);
+        var downloadUrl = _utils.MessageUtils.getContentURL(this.props.flow, message);
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
-            React.createElement(this.state.View, this.props),
-            React.createElement(
+            _react2.default.createElement(this.state.View, this.props),
+            _react2.default.createElement(
                 "div",
                 { className: "view-options text-center" },
-                React.createElement(ViewSelector, { selectView: this.selectView, active: this.state.View, message: message }),
+                _react2.default.createElement(ViewSelector, { selectView: this.selectView, active: this.state.View, message: message }),
                 " ",
-                React.createElement(
+                _react2.default.createElement(
                     "a",
                     { className: "btn btn-default btn-xs", href: downloadUrl },
-                    React.createElement("i", { className: "fa fa-download" })
+                    _react2.default.createElement("i", { className: "fa fa-download" })
                 )
             )
         );
     }
 });
 
-module.exports = ContentView;
+exports.default = ContentView;
 
 },{"../../flow/utils.js":23,"../../utils.js":26,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
-var React = require("react");
-var _ = require("lodash");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-var utils = require("../../utils.js");
+var _react = require("react");
 
-var TimeStamp = React.createClass({
+var _react2 = _interopRequireDefault(_react);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _utils = require("../../utils.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var TimeStamp = _react2.default.createClass({
     displayName: "TimeStamp",
 
     render: function render() {
 
         if (!this.props.t) {
             //should be return null, but that triggers a React bug.
-            return React.createElement("tr", null);
+            return _react2.default.createElement("tr", null);
         }
 
-        var ts = utils.formatTimeStamp(this.props.t);
+        var ts = (0, _utils.formatTimeStamp)(this.props.t);
 
         var delta;
         if (this.props.deltaTo) {
-            delta = utils.formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
-            delta = React.createElement(
+            delta = (0, _utils.formatTimeDelta)(1000 * (this.props.t - this.props.deltaTo));
+            delta = _react2.default.createElement(
                 "span",
                 { className: "text-muted" },
                 "(" + delta + ")"
@@ -1914,15 +1975,15 @@ var TimeStamp = React.createClass({
             delta = null;
         }
 
-        return React.createElement(
+        return _react2.default.createElement(
             "tr",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "td",
                 null,
                 this.props.title + ":"
             ),
-            React.createElement(
+            _react2.default.createElement(
                 "td",
                 null,
                 ts,
@@ -1933,7 +1994,7 @@ var TimeStamp = React.createClass({
     }
 });
 
-var ConnectionInfo = React.createClass({
+var ConnectionInfo = _react2.default.createClass({
     displayName: "ConnectionInfo",
 
 
@@ -1941,42 +2002,42 @@ var ConnectionInfo = React.createClass({
         var conn = this.props.conn;
         var address = conn.address.address.join(":");
 
-        var sni = React.createElement("tr", { key: "sni" }); //should be null, but that triggers a React bug.
+        var sni = _react2.default.createElement("tr", { key: "sni" }); //should be null, but that triggers a React bug.
         if (conn.sni) {
-            sni = React.createElement(
+            sni = _react2.default.createElement(
                 "tr",
                 { key: "sni" },
-                React.createElement(
+                _react2.default.createElement(
                     "td",
                     null,
-                    React.createElement(
+                    _react2.default.createElement(
                         "abbr",
                         { title: "TLS Server Name Indication" },
                         "TLS SNI:"
                     )
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     "td",
                     null,
                     conn.sni
                 )
             );
         }
-        return React.createElement(
+        return _react2.default.createElement(
             "table",
             { className: "connection-table" },
-            React.createElement(
+            _react2.default.createElement(
                 "tbody",
                 null,
-                React.createElement(
+                _react2.default.createElement(
                     "tr",
                     { key: "address" },
-                    React.createElement(
+                    _react2.default.createElement(
                         "td",
                         null,
                         "Address:"
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         "td",
                         null,
                         address
@@ -1988,7 +2049,7 @@ var ConnectionInfo = React.createClass({
     }
 });
 
-var CertificateInfo = React.createClass({
+var CertificateInfo = _react2.default.createClass({
     displayName: "CertificateInfo",
 
     render: function render() {
@@ -1999,25 +2060,25 @@ var CertificateInfo = React.createClass({
         var server_conn = flow.server_conn;
 
         var preStyle = { maxHeight: 100 };
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
-            client_conn.cert ? React.createElement(
+            client_conn.cert ? _react2.default.createElement(
                 "h4",
                 null,
                 "Client Certificate"
             ) : null,
-            client_conn.cert ? React.createElement(
+            client_conn.cert ? _react2.default.createElement(
                 "pre",
                 { style: preStyle },
                 client_conn.cert
             ) : null,
-            server_conn.cert ? React.createElement(
+            server_conn.cert ? _react2.default.createElement(
                 "h4",
                 null,
                 "Server Certificate"
             ) : null,
-            server_conn.cert ? React.createElement(
+            server_conn.cert ? _react2.default.createElement(
                 "pre",
                 { style: preStyle },
                 server_conn.cert
@@ -2026,7 +2087,7 @@ var CertificateInfo = React.createClass({
     }
 });
 
-var Timing = React.createClass({
+var Timing = _react2.default.createClass({
     displayName: "Timing",
 
     render: function render() {
@@ -2082,24 +2143,24 @@ var Timing = React.createClass({
             e.key = e.title;
         });
 
-        timestamps = _.sortBy(timestamps, 't');
+        timestamps = _lodash2.default.sortBy(timestamps, 't');
 
         var rows = timestamps.map(function (e) {
-            return React.createElement(TimeStamp, e);
+            return _react2.default.createElement(TimeStamp, e);
         });
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "h4",
                 null,
                 "Timing"
             ),
-            React.createElement(
+            _react2.default.createElement(
                 "table",
                 { className: "timing-table" },
-                React.createElement(
+                _react2.default.createElement(
                     "tbody",
                     null,
                     rows
@@ -2109,57 +2170,73 @@ var Timing = React.createClass({
     }
 });
 
-var Details = React.createClass({
+var Details = _react2.default.createClass({
     displayName: "Details",
 
     render: function render() {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
-        return React.createElement(
+        return _react2.default.createElement(
             "section",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "h4",
                 null,
                 "Client Connection"
             ),
-            React.createElement(ConnectionInfo, { conn: client_conn }),
-            React.createElement(
+            _react2.default.createElement(ConnectionInfo, { conn: client_conn }),
+            _react2.default.createElement(
                 "h4",
                 null,
                 "Server Connection"
             ),
-            React.createElement(ConnectionInfo, { conn: server_conn }),
-            React.createElement(CertificateInfo, { flow: flow }),
-            React.createElement(Timing, { flow: flow })
+            _react2.default.createElement(ConnectionInfo, { conn: server_conn }),
+            _react2.default.createElement(CertificateInfo, { flow: flow }),
+            _react2.default.createElement(Timing, { flow: flow })
         );
     }
 });
 
-module.exports = Details;
+exports.default = Details;
 
 },{"../../utils.js":26,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
 var _common = require("../common.js");
 
-var React = require("react");
-var _ = require("lodash");
+var _nav = require("./nav.js");
 
-var Nav = require("./nav.js");
-var Messages = require("./messages.js");
-var Details = require("./details.js");
-var Prompt = require("../prompt.js");
+var _nav2 = _interopRequireDefault(_nav);
+
+var _messages = require("./messages.js");
+
+var _details = require("./details.js");
+
+var _details2 = _interopRequireDefault(_details);
+
+var _prompt = require("../prompt.js");
+
+var _prompt2 = _interopRequireDefault(_prompt);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var allTabs = {
-    request: Messages.Request,
-    response: Messages.Response,
-    error: Messages.Error,
-    details: Details
+    request: _messages.Request,
+    response: _messages.Response,
+    error: _messages.Error,
+    details: _details2.default
 };
 
-var FlowView = React.createClass({
+var FlowView = _react2.default.createClass({
     displayName: "FlowView",
 
     mixins: [_common.StickyHeadMixin, _common.Router],
@@ -2186,7 +2263,7 @@ var FlowView = React.createClass({
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function selectTab(panel) {
-        this.updateLocation("/flows/" + this.getParams().flowId + "/" + panel);
+        this.updateLocation("/flows/" + this.props.flow.id + "/" + panel);
     },
     promptEdit: function promptEdit() {
         var options;
@@ -2235,51 +2312,71 @@ var FlowView = React.createClass({
 
         var prompt = null;
         if (this.state.prompt) {
-            prompt = React.createElement(Prompt, this.state.prompt);
+            prompt = _react2.default.createElement(_prompt2.default, this.state.prompt);
         }
 
         var Tab = allTabs[active];
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "flow-detail", onScroll: this.adjustHead },
-            React.createElement(Nav, { ref: "head",
+            _react2.default.createElement(_nav2.default, { ref: "head",
                 flow: flow,
                 tabs: tabs,
                 active: active,
                 selectTab: this.selectTab }),
-            React.createElement(Tab, { ref: "tab", flow: flow }),
+            _react2.default.createElement(Tab, { ref: "tab", flow: flow }),
             prompt
         );
     }
 });
 
-module.exports = FlowView;
+exports.default = FlowView;
 
-},{"../common.js":4,"../prompt.js":17,"./details.js":10,"./messages.js":12,"./nav.js":13,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
+},{"../common.js":4,"../prompt.js":17,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Error = exports.Response = exports.Request = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var React = require("react");
-var ReactDOM = require('react-dom');
-var _ = require("lodash");
+var _react = require("react");
 
-var common = require("../common.js");
-var actions = require("../../actions.js");
-var flowutils = require("../../flow/utils.js");
-var utils = require("../../utils.js");
-var ContentView = require("./contentview.js");
-var ValueEditor = require("../editor.js").ValueEditor;
+var _react2 = _interopRequireDefault(_react);
 
-var Headers = React.createClass({
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _actions = require("../../actions.js");
+
+var _utils = require("../../flow/utils.js");
+
+var _utils2 = require("../../utils.js");
+
+var _contentview = require("./contentview.js");
+
+var _contentview2 = _interopRequireDefault(_contentview);
+
+var _editor = require("../editor.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Headers = _react2.default.createClass({
     displayName: "Headers",
 
     propTypes: {
-        onChange: React.PropTypes.func.isRequired,
-        message: React.PropTypes.object.isRequired
+        onChange: _react2.default.PropTypes.func.isRequired,
+        message: _react2.default.PropTypes.object.isRequired
     },
     onChange: function onChange(row, col, val) {
-        var nextHeaders = _.cloneDeep(this.props.message.headers);
+        var nextHeaders = _lodash2.default.cloneDeep(this.props.message.headers);
         nextHeaders[row][col] = val;
         if (!nextHeaders[row][0] && !nextHeaders[row][1]) {
             // do not delete last row
@@ -2304,7 +2401,7 @@ var Headers = React.createClass({
         if (row === headers.length - 1 && col === 1) {
             e.preventDefault();
 
-            var nextHeaders = _.cloneDeep(this.props.message.headers);
+            var nextHeaders = _lodash2.default.cloneDeep(this.props.message.headers);
             nextHeaders.push(["Name", "Value"]);
             this.props.onChange(nextHeaders);
             this._nextSel = row + 1 + "-key";
@@ -2329,38 +2426,38 @@ var Headers = React.createClass({
 
         var rows = this.props.message.headers.map(function (header, i) {
 
-            var kEdit = React.createElement(HeaderEditor, {
+            var kEdit = _react2.default.createElement(HeaderEditor, {
                 ref: i + "-key",
                 content: header[0],
                 onDone: this.onChange.bind(null, i, 0),
                 onRemove: this.onRemove.bind(null, i, 0),
                 onTab: this.onTab.bind(null, i, 0) });
-            var vEdit = React.createElement(HeaderEditor, {
+            var vEdit = _react2.default.createElement(HeaderEditor, {
                 ref: i + "-value",
                 content: header[1],
                 onDone: this.onChange.bind(null, i, 1),
                 onRemove: this.onRemove.bind(null, i, 1),
                 onTab: this.onTab.bind(null, i, 1) });
-            return React.createElement(
+            return _react2.default.createElement(
                 "tr",
                 { key: i },
-                React.createElement(
+                _react2.default.createElement(
                     "td",
                     { className: "header-name" },
                     kEdit,
                     ":"
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     "td",
                     { className: "header-value" },
                     vEdit
                 )
             );
         }.bind(this));
-        return React.createElement(
+        return _react2.default.createElement(
             "table",
             { className: "header-table" },
-            React.createElement(
+            _react2.default.createElement(
                 "tbody",
                 null,
                 rows
@@ -2369,24 +2466,24 @@ var Headers = React.createClass({
     }
 });
 
-var HeaderEditor = React.createClass({
+var HeaderEditor = _react2.default.createClass({
     displayName: "HeaderEditor",
 
     render: function render() {
-        return React.createElement(ValueEditor, _extends({ ref: "input" }, this.props, { onKeyDown: this.onKeyDown, inline: true }));
+        return _react2.default.createElement(_editor.ValueEditor, _extends({ ref: "input" }, this.props, { onKeyDown: this.onKeyDown, inline: true }));
     },
     focus: function focus() {
-        ReactDOM.findDOMNode(this).focus();
+        _reactDom2.default.findDOMNode(this).focus();
     },
     onKeyDown: function onKeyDown(e) {
         switch (e.keyCode) {
-            case utils.Key.BACKSPACE:
+            case _utils2.Key.BACKSPACE:
                 var s = window.getSelection().getRangeAt(0);
                 if (s.startOffset === 0 && s.endOffset === 0) {
                     this.props.onRemove(e);
                 }
                 break;
-            case utils.Key.TAB:
+            case _utils2.Key.TAB:
                 if (!e.shiftKey) {
                     this.props.onTab(e);
                 }
@@ -2395,82 +2492,82 @@ var HeaderEditor = React.createClass({
     }
 });
 
-var RequestLine = React.createClass({
+var RequestLine = _react2.default.createClass({
     displayName: "RequestLine",
 
     render: function render() {
         var flow = this.props.flow;
-        var url = flowutils.RequestUtils.pretty_url(flow.request);
+        var url = _utils.RequestUtils.pretty_url(flow.request);
         var httpver = flow.request.http_version;
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "first-line request-line" },
-            React.createElement(ValueEditor, {
+            _react2.default.createElement(_editor.ValueEditor, {
                 ref: "method",
                 content: flow.request.method,
                 onDone: this.onMethodChange,
                 inline: true }),
             " ",
-            React.createElement(ValueEditor, {
+            _react2.default.createElement(_editor.ValueEditor, {
                 ref: "url",
                 content: url,
                 onDone: this.onUrlChange,
                 isValid: this.isValidUrl,
                 inline: true }),
             " ",
-            React.createElement(ValueEditor, {
+            _react2.default.createElement(_editor.ValueEditor, {
                 ref: "httpVersion",
                 content: httpver,
                 onDone: this.onHttpVersionChange,
-                isValid: flowutils.isValidHttpVersion,
+                isValid: _utils.isValidHttpVersion,
                 inline: true })
         );
     },
     isValidUrl: function isValidUrl(url) {
-        var u = flowutils.parseUrl(url);
+        var u = (0, _utils.parseUrl)(url);
         return !!u.host;
     },
     onMethodChange: function onMethodChange(nextMethod) {
-        actions.FlowActions.update(this.props.flow, { request: { method: nextMethod } });
+        _actions.FlowActions.update(this.props.flow, { request: { method: nextMethod } });
     },
     onUrlChange: function onUrlChange(nextUrl) {
-        var props = flowutils.parseUrl(nextUrl);
+        var props = (0, _utils.parseUrl)(nextUrl);
         props.path = props.path || "";
-        actions.FlowActions.update(this.props.flow, { request: props });
+        _actions.FlowActions.update(this.props.flow, { request: props });
     },
     onHttpVersionChange: function onHttpVersionChange(nextVer) {
-        var ver = flowutils.parseHttpVersion(nextVer);
-        actions.FlowActions.update(this.props.flow, { request: { http_version: ver } });
+        var ver = (0, _utils.parseHttpVersion)(nextVer);
+        _actions.FlowActions.update(this.props.flow, { request: { http_version: ver } });
     }
 });
 
-var ResponseLine = React.createClass({
+var ResponseLine = _react2.default.createClass({
     displayName: "ResponseLine",
 
     render: function render() {
         var flow = this.props.flow;
         var httpver = flow.response.http_version;
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "first-line response-line" },
-            React.createElement(ValueEditor, {
+            _react2.default.createElement(_editor.ValueEditor, {
                 ref: "httpVersion",
                 content: httpver,
                 onDone: this.onHttpVersionChange,
-                isValid: flowutils.isValidHttpVersion,
+                isValid: _utils.isValidHttpVersion,
                 inline: true }),
             " ",
-            React.createElement(ValueEditor, {
+            _react2.default.createElement(_editor.ValueEditor, {
                 ref: "code",
                 content: flow.response.status_code + "",
                 onDone: this.onCodeChange,
                 isValid: this.isValidCode,
                 inline: true }),
             " ",
-            React.createElement(ValueEditor, {
+            _react2.default.createElement(_editor.ValueEditor, {
                 ref: "msg",
-                content: flow.response.msg,
+                content: flow.response.reason,
                 onDone: this.onMsgChange,
                 inline: true })
         );
@@ -2480,30 +2577,30 @@ var ResponseLine = React.createClass({
         );
     },
     onHttpVersionChange: function onHttpVersionChange(nextVer) {
-        var ver = flowutils.parseHttpVersion(nextVer);
-        actions.FlowActions.update(this.props.flow, { response: { http_version: ver } });
+        var ver = (0, _utils.parseHttpVersion)(nextVer);
+        _actions.FlowActions.update(this.props.flow, { response: { http_version: ver } });
     },
     onMsgChange: function onMsgChange(nextMsg) {
-        actions.FlowActions.update(this.props.flow, { response: { msg: nextMsg } });
+        _actions.FlowActions.update(this.props.flow, { response: { msg: nextMsg } });
     },
     onCodeChange: function onCodeChange(nextCode) {
         nextCode = parseInt(nextCode);
-        actions.FlowActions.update(this.props.flow, { response: { code: nextCode } });
+        _actions.FlowActions.update(this.props.flow, { response: { code: nextCode } });
     }
 });
 
-var Request = React.createClass({
+var Request = exports.Request = _react2.default.createClass({
     displayName: "Request",
 
     render: function render() {
         var flow = this.props.flow;
-        return React.createElement(
+        return _react2.default.createElement(
             "section",
             { className: "request" },
-            React.createElement(RequestLine, { ref: "requestLine", flow: flow }),
-            React.createElement(Headers, { ref: "headers", message: flow.request, onChange: this.onHeaderChange }),
-            React.createElement("hr", null),
-            React.createElement(ContentView, { flow: flow, message: flow.request })
+            _react2.default.createElement(RequestLine, { ref: "requestLine", flow: flow }),
+            _react2.default.createElement(Headers, { ref: "headers", message: flow.request, onChange: this.onHeaderChange }),
+            _react2.default.createElement("hr", null),
+            _react2.default.createElement(_contentview2.default, { flow: flow, message: flow.request })
         );
     },
     edit: function edit(k) {
@@ -2525,7 +2622,7 @@ var Request = React.createClass({
         }
     },
     onHeaderChange: function onHeaderChange(nextHeaders) {
-        actions.FlowActions.update(this.props.flow, {
+        _actions.FlowActions.update(this.props.flow, {
             request: {
                 headers: nextHeaders
             }
@@ -2533,18 +2630,18 @@ var Request = React.createClass({
     }
 });
 
-var Response = React.createClass({
+var Response = exports.Response = _react2.default.createClass({
     displayName: "Response",
 
     render: function render() {
         var flow = this.props.flow;
-        return React.createElement(
+        return _react2.default.createElement(
             "section",
             { className: "response" },
-            React.createElement(ResponseLine, { ref: "responseLine", flow: flow }),
-            React.createElement(Headers, { ref: "headers", message: flow.response, onChange: this.onHeaderChange }),
-            React.createElement("hr", null),
-            React.createElement(ContentView, { flow: flow, message: flow.response })
+            _react2.default.createElement(ResponseLine, { ref: "responseLine", flow: flow }),
+            _react2.default.createElement(Headers, { ref: "headers", message: flow.response, onChange: this.onHeaderChange }),
+            _react2.default.createElement("hr", null),
+            _react2.default.createElement(_contentview2.default, { flow: flow, message: flow.response })
         );
     },
     edit: function edit(k) {
@@ -2566,7 +2663,7 @@ var Response = React.createClass({
         }
     },
     onHeaderChange: function onHeaderChange(nextHeaders) {
-        actions.FlowActions.update(this.props.flow, {
+        _actions.FlowActions.update(this.props.flow, {
             response: {
                 headers: nextHeaders
             }
@@ -2574,25 +2671,25 @@ var Response = React.createClass({
     }
 });
 
-var Error = React.createClass({
+var Error = exports.Error = _react2.default.createClass({
     displayName: "Error",
 
     render: function render() {
         var flow = this.props.flow;
-        return React.createElement(
+        return _react2.default.createElement(
             "section",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "div",
                 { className: "alert alert-warning" },
                 flow.error.msg,
-                React.createElement(
+                _react2.default.createElement(
                     "div",
                     null,
-                    React.createElement(
+                    _react2.default.createElement(
                         "small",
                         null,
-                        utils.formatTimeStamp(flow.error.timestamp)
+                        (0, _utils2.formatTimeStamp)(flow.error.timestamp)
                     )
                 )
             )
@@ -2600,20 +2697,22 @@ var Error = React.createClass({
     }
 });
 
-module.exports = {
-    Request: Request,
-    Response: Response,
-    Error: Error
-};
-
-},{"../../actions.js":2,"../../flow/utils.js":23,"../../utils.js":26,"../common.js":4,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":23,"../../utils.js":26,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
-var React = require("react");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-var actions = require("../../actions.js");
+var _react = require("react");
 
-var NavAction = React.createClass({
+var _react2 = _interopRequireDefault(_react);
+
+var _actions = require("../../actions.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var NavAction = _react2.default.createClass({
     displayName: "NavAction",
 
     onClick: function onClick(e) {
@@ -2621,18 +2720,18 @@ var NavAction = React.createClass({
         this.props.onClick();
     },
     render: function render() {
-        return React.createElement(
+        return _react2.default.createElement(
             "a",
             { title: this.props.title,
                 href: "#",
                 className: "nav-action",
                 onClick: this.onClick },
-            React.createElement("i", { className: "fa fa-fw " + this.props.icon })
+            _react2.default.createElement("i", { className: "fa fa-fw " + this.props.icon })
         );
     }
 });
 
-var Nav = React.createClass({
+var Nav = _react2.default.createClass({
     displayName: "Nav",
 
     render: function render() {
@@ -2645,7 +2744,7 @@ var Nav = React.createClass({
                 this.props.selectTab(e);
                 event.preventDefault();
             }.bind(this);
-            return React.createElement(
+            return _react2.default.createElement(
                 "a",
                 { key: e,
                     href: "#",
@@ -2657,52 +2756,61 @@ var Nav = React.createClass({
 
         var acceptButton = null;
         if (flow.intercepted) {
-            acceptButton = React.createElement(NavAction, { title: "[a]ccept intercepted flow", icon: "fa-play", onClick: actions.FlowActions.accept.bind(null, flow) });
+            acceptButton = _react2.default.createElement(NavAction, { title: "[a]ccept intercepted flow", icon: "fa-play", onClick: _actions.FlowActions.accept.bind(null, flow) });
         }
         var revertButton = null;
         if (flow.modified) {
-            revertButton = React.createElement(NavAction, { title: "revert changes to flow [V]", icon: "fa-history", onClick: actions.FlowActions.revert.bind(null, flow) });
+            revertButton = _react2.default.createElement(NavAction, { title: "revert changes to flow [V]", icon: "fa-history", onClick: _actions.FlowActions.revert.bind(null, flow) });
         }
 
-        return React.createElement(
+        return _react2.default.createElement(
             "nav",
             { ref: "head", className: "nav-tabs nav-tabs-sm" },
             tabs,
-            React.createElement(NavAction, { title: "[d]elete flow", icon: "fa-trash", onClick: actions.FlowActions.delete.bind(null, flow) }),
-            React.createElement(NavAction, { title: "[D]uplicate flow", icon: "fa-copy", onClick: actions.FlowActions.duplicate.bind(null, flow) }),
-            React.createElement(NavAction, { disabled: true, title: "[r]eplay flow", icon: "fa-repeat", onClick: actions.FlowActions.replay.bind(null, flow) }),
+            _react2.default.createElement(NavAction, { title: "[d]elete flow", icon: "fa-trash", onClick: _actions.FlowActions.delete.bind(null, flow) }),
+            _react2.default.createElement(NavAction, { title: "[D]uplicate flow", icon: "fa-copy", onClick: _actions.FlowActions.duplicate.bind(null, flow) }),
+            _react2.default.createElement(NavAction, { disabled: true, title: "[r]eplay flow", icon: "fa-repeat", onClick: _actions.FlowActions.replay.bind(null, flow) }),
             acceptButton,
             revertButton
         );
     }
 });
 
-module.exports = Nav;
+exports.default = Nav;
 
 },{"../../actions.js":2,"react":"react"}],14:[function(require,module,exports){
 "use strict";
 
-var React = require("react");
-var common = require("./common.js");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-var Footer = React.createClass({
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _common = require("./common.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Footer = _react2.default.createClass({
     displayName: "Footer",
 
-    mixins: [common.SettingsState],
+    mixins: [_common.SettingsState],
     render: function render() {
         var mode = this.state.settings.mode;
         var intercept = this.state.settings.intercept;
-        return React.createElement(
+        return _react2.default.createElement(
             "footer",
             null,
-            mode && mode != "regular" ? React.createElement(
+            mode && mode != "regular" ? _react2.default.createElement(
                 "span",
                 { className: "label label-success" },
                 mode,
                 " mode"
             ) : null,
             " ",
-            intercept ? React.createElement(
+            intercept ? _react2.default.createElement(
                 "span",
                 { className: "label label-success" },
                 "Intercept: ",
@@ -2712,24 +2820,41 @@ var Footer = React.createClass({
     }
 });
 
-module.exports = Footer;
+exports.default = Footer;
 
 },{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Header = exports.MainMenu = undefined;
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _jquery = require("jquery");
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _filt = require("../filt/filt.js");
+
+var _filt2 = _interopRequireDefault(_filt);
+
+var _utils = require("../utils.js");
+
 var _common = require("./common.js");
 
-var React = require("react");
-var ReactDOM = require('react-dom');
-var $ = require("jquery");
+var _actions = require("../actions.js");
 
-var Filt = require("../filt/filt.js");
-var utils = require("../utils.js");
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var actions = require("../actions.js");
-var Query = require("../actions.js").Query;
-
-var FilterDocs = React.createClass({
+var FilterDocs = _react2.default.createClass({
     displayName: "FilterDocs",
 
     statics: {
@@ -2738,7 +2863,7 @@ var FilterDocs = React.createClass({
     },
     componentWillMount: function componentWillMount() {
         if (!FilterDocs.doc) {
-            FilterDocs.xhr = $.getJSON("/filter-help").done(function (doc) {
+            FilterDocs.xhr = _jquery2.default.getJSON("/filter-help").done(function (doc) {
                 FilterDocs.doc = doc;
                 FilterDocs.xhr = false;
             });
@@ -2751,43 +2876,43 @@ var FilterDocs = React.createClass({
     },
     render: function render() {
         if (!FilterDocs.doc) {
-            return React.createElement("i", { className: "fa fa-spinner fa-spin" });
+            return _react2.default.createElement("i", { className: "fa fa-spinner fa-spin" });
         } else {
             var commands = FilterDocs.doc.commands.map(function (c) {
-                return React.createElement(
+                return _react2.default.createElement(
                     "tr",
                     { key: c[1] },
-                    React.createElement(
+                    _react2.default.createElement(
                         "td",
                         null,
                         c[0].replace(" ", " ")
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         "td",
                         null,
                         c[1]
                     )
                 );
             });
-            commands.push(React.createElement(
+            commands.push(_react2.default.createElement(
                 "tr",
                 { key: "docs-link" },
-                React.createElement(
+                _react2.default.createElement(
                     "td",
                     { colSpan: "2" },
-                    React.createElement(
+                    _react2.default.createElement(
                         "a",
                         { href: "https://mitmproxy.org/doc/features/filters.html",
                             target: "_blank" },
-                        React.createElement("i", { className: "fa fa-external-link" }),
+                        _react2.default.createElement("i", { className: "fa fa-external-link" }),
                         "  mitmproxy docs"
                     )
                 )
             ));
-            return React.createElement(
+            return _react2.default.createElement(
                 "table",
                 { className: "table table-condensed" },
-                React.createElement(
+                _react2.default.createElement(
                     "tbody",
                     null,
                     commands
@@ -2796,7 +2921,7 @@ var FilterDocs = React.createClass({
         }
     }
 });
-var FilterInput = React.createClass({
+var FilterInput = _react2.default.createClass({
     displayName: "FilterInput",
 
     mixins: [_common.ChildFocus],
@@ -2827,7 +2952,7 @@ var FilterInput = React.createClass({
         try {
             var str = filt || this.state.value;
             if (str) {
-                Filt.parse(filt || this.state.value);
+                _filt2.default.parse(filt || this.state.value);
             }
             return true;
         } catch (e) {
@@ -2837,12 +2962,12 @@ var FilterInput = React.createClass({
     getDesc: function getDesc() {
         if (this.state.value) {
             try {
-                return Filt.parse(this.state.value).desc;
+                return _filt2.default.parse(this.state.value).desc;
             } catch (e) {
                 return "" + e;
             }
         }
-        return React.createElement(FilterDocs, null);
+        return _react2.default.createElement(FilterDocs, null);
     },
     onFocus: function onFocus() {
         this.setState({ focus: true });
@@ -2857,7 +2982,7 @@ var FilterInput = React.createClass({
         this.setState({ mousefocus: false });
     },
     onKeyDown: function onKeyDown(e) {
-        if (e.keyCode === utils.Key.ESC || e.keyCode === utils.Key.ENTER) {
+        if (e.keyCode === _utils.Key.ESC || e.keyCode === _utils.Key.ENTER) {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({ mousefocus: false });
@@ -2865,11 +2990,11 @@ var FilterInput = React.createClass({
         e.stopPropagation();
     },
     blur: function blur() {
-        ReactDOM.findDOMNode(this.refs.input).blur();
+        _reactDom2.default.findDOMNode(this.refs.input).blur();
         this.returnFocus();
     },
     select: function select() {
-        ReactDOM.findDOMNode(this.refs.input).select();
+        _reactDom2.default.findDOMNode(this.refs.input).select();
     },
     render: function render() {
         var isValid = this.isValid();
@@ -2878,11 +3003,11 @@ var FilterInput = React.createClass({
 
         var popover;
         if (this.state.focus || this.state.mousefocus) {
-            popover = React.createElement(
+            popover = _react2.default.createElement(
                 "div",
                 { className: "popover bottom", onMouseEnter: this.onMouseEnter, onMouseLeave: this.onMouseLeave },
-                React.createElement("div", { className: "arrow" }),
-                React.createElement(
+                _react2.default.createElement("div", { className: "arrow" }),
+                _react2.default.createElement(
                     "div",
                     { className: "popover-content" },
                     this.getDesc()
@@ -2890,15 +3015,15 @@ var FilterInput = React.createClass({
             );
         }
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: groupClassName },
-            React.createElement(
+            _react2.default.createElement(
                 "span",
                 { className: "input-group-addon" },
-                React.createElement("i", { className: icon, style: { color: this.props.color } })
+                _react2.default.createElement("i", { className: icon, style: { color: this.props.color } })
             ),
-            React.createElement("input", { type: "text", placeholder: this.props.placeholder, className: "form-control",
+            _react2.default.createElement("input", { type: "text", placeholder: this.props.placeholder, className: "form-control",
                 ref: "input",
                 onChange: this.onChange,
                 onFocus: this.onFocus,
@@ -2910,7 +3035,7 @@ var FilterInput = React.createClass({
     }
 });
 
-var MainMenu = React.createClass({
+var MainMenu = exports.MainMenu = _react2.default.createClass({
     displayName: "MainMenu",
 
     mixins: [_common.Router, _common.SettingsState],
@@ -2920,43 +3045,43 @@ var MainMenu = React.createClass({
     },
     onSearchChange: function onSearchChange(val) {
         var d = {};
-        d[Query.SEARCH] = val;
+        d[_actions.Query.SEARCH] = val;
         this.updateLocation(undefined, d);
     },
     onHighlightChange: function onHighlightChange(val) {
         var d = {};
-        d[Query.HIGHLIGHT] = val;
+        d[_actions.Query.HIGHLIGHT] = val;
         this.updateLocation(undefined, d);
     },
     onInterceptChange: function onInterceptChange(val) {
-        actions.SettingsActions.update({ intercept: val });
+        _actions.SettingsActions.update({ intercept: val });
     },
     render: function render() {
-        var search = this.getQuery()[Query.SEARCH] || "";
-        var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
+        var search = this.getQuery()[_actions.Query.SEARCH] || "";
+        var highlight = this.getQuery()[_actions.Query.HIGHLIGHT] || "";
         var intercept = this.state.settings.intercept || "";
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "div",
                 { className: "menu-row" },
-                React.createElement(FilterInput, {
+                _react2.default.createElement(FilterInput, {
                     ref: "search",
                     placeholder: "Search",
                     type: "search",
                     color: "black",
                     value: search,
                     onChange: this.onSearchChange }),
-                React.createElement(FilterInput, {
+                _react2.default.createElement(FilterInput, {
                     ref: "highlight",
                     placeholder: "Highlight",
                     type: "tag",
                     color: "hsl(48, 100%, 50%)",
                     value: highlight,
                     onChange: this.onHighlightChange }),
-                React.createElement(FilterInput, {
+                _react2.default.createElement(FilterInput, {
                     ref: "intercept",
                     placeholder: "Intercept",
                     type: "pause",
@@ -2964,12 +3089,12 @@ var MainMenu = React.createClass({
                     value: intercept,
                     onChange: this.onInterceptChange })
             ),
-            React.createElement("div", { className: "clearfix" })
+            _react2.default.createElement("div", { className: "clearfix" })
         );
     }
 });
 
-var ViewMenu = React.createClass({
+var ViewMenu = _react2.default.createClass({
     displayName: "ViewMenu",
 
     statics: {
@@ -2980,28 +3105,28 @@ var ViewMenu = React.createClass({
     toggleEventLog: function toggleEventLog() {
         var d = {};
 
-        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
-            d[Query.SHOW_EVENTLOG] = undefined;
+        if (this.getQuery()[_actions.Query.SHOW_EVENTLOG]) {
+            d[_actions.Query.SHOW_EVENTLOG] = undefined;
         } else {
-            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
+            d[_actions.Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
         }
 
         this.updateLocation(undefined, d);
     },
     render: function render() {
-        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
-        return React.createElement(
+        var showEventLog = this.getQuery()[_actions.Query.SHOW_EVENTLOG];
+        return _react2.default.createElement(
             "div",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "button",
                 {
                     className: "btn " + (showEventLog ? "btn-primary" : "btn-default"),
                     onClick: this.toggleEventLog },
-                React.createElement("i", { className: "fa fa-database" }),
+                _react2.default.createElement("i", { className: "fa fa-database" }),
                 " Show Eventlog"
             ),
-            React.createElement(
+            _react2.default.createElement(
                 "span",
                 null,
                 " "
@@ -3010,7 +3135,7 @@ var ViewMenu = React.createClass({
     }
 });
 
-var ReportsMenu = React.createClass({
+var ReportsMenu = _react2.default.createClass({
     displayName: "ReportsMenu",
 
     statics: {
@@ -3018,7 +3143,7 @@ var ReportsMenu = React.createClass({
         route: "reports"
     },
     render: function render() {
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
             "Reports Menu"
@@ -3026,7 +3151,7 @@ var ReportsMenu = React.createClass({
     }
 });
 
-var FileMenu = React.createClass({
+var FileMenu = _react2.default.createClass({
     displayName: "FileMenu",
 
     getInitialState: function getInitialState() {
@@ -3051,7 +3176,7 @@ var FileMenu = React.createClass({
     handleNewClick: function handleNewClick(e) {
         e.preventDefault();
         if (confirm("Delete all flows?")) {
-            actions.FlowActions.clear();
+            _actions.FlowActions.clear();
         }
     },
     handleOpenClick: function handleOpenClick(e) {
@@ -3069,35 +3194,35 @@ var FileMenu = React.createClass({
     render: function render() {
         var fileMenuClass = "dropdown pull-left" + (this.state.showFileMenu ? " open" : "");
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: fileMenuClass },
-            React.createElement(
+            _react2.default.createElement(
                 "a",
                 { href: "#", className: "special", onClick: this.handleFileClick },
                 " mitmproxy "
             ),
-            React.createElement(
+            _react2.default.createElement(
                 "ul",
                 { className: "dropdown-menu", role: "menu" },
-                React.createElement(
+                _react2.default.createElement(
                     "li",
                     null,
-                    React.createElement(
+                    _react2.default.createElement(
                         "a",
                         { href: "#", onClick: this.handleNewClick },
-                        React.createElement("i", { className: "fa fa-fw fa-file" }),
+                        _react2.default.createElement("i", { className: "fa fa-fw fa-file" }),
                         "New"
                     )
                 ),
-                React.createElement("li", { role: "presentation", className: "divider" }),
-                React.createElement(
+                _react2.default.createElement("li", { role: "presentation", className: "divider" }),
+                _react2.default.createElement(
                     "li",
                     null,
-                    React.createElement(
+                    _react2.default.createElement(
                         "a",
                         { href: "http://mitm.it/", target: "_blank" },
-                        React.createElement("i", { className: "fa fa-fw fa-external-link" }),
+                        _react2.default.createElement("i", { className: "fa fa-fw fa-external-link" }),
                         "Install Certificates..."
                     )
                 )
@@ -3108,7 +3233,7 @@ var FileMenu = React.createClass({
 
 var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
-var Header = React.createClass({
+var Header = exports.Header = _react2.default.createClass({
     displayName: "Header",
 
     mixins: [_common.Router],
@@ -3130,7 +3255,7 @@ var Header = React.createClass({
             } else {
                 className = "";
             }
-            return React.createElement(
+            return _react2.default.createElement(
                 "a",
                 { key: i,
                     href: "#",
@@ -3140,54 +3265,66 @@ var Header = React.createClass({
             );
         }.bind(this));
 
-        return React.createElement(
+        return _react2.default.createElement(
             "header",
             null,
-            React.createElement(
+            _react2.default.createElement(
                 "nav",
                 { className: "nav-tabs nav-tabs-lg" },
-                React.createElement(FileMenu, null),
+                _react2.default.createElement(FileMenu, null),
                 header
             ),
-            React.createElement(
+            _react2.default.createElement(
                 "div",
                 { className: "menu" },
-                React.createElement(this.state.active, { ref: "active" })
+                _react2.default.createElement(this.state.active, { ref: "active" })
             )
         );
     }
 });
 
-module.exports = {
-    Header: Header,
-    MainMenu: MainMenu
-};
-
 },{"../actions.js":2,"../filt/filt.js":22,"../utils.js":26,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _actions = require("../actions.js");
+
+var _utils = require("../utils.js");
+
+var _view = require("../store/view.js");
+
+var _filt = require("../filt/filt.js");
+
+var _filt2 = _interopRequireDefault(_filt);
+
 var _common = require("./common.js");
 
-var React = require("react");
+var _flowtable = require("./flowtable.js");
 
-var actions = require("../actions.js");
-var Query = require("../actions.js").Query;
-var utils = require("../utils.js");
-var views = require("../store/view.js");
-var Filt = require("../filt/filt.js");
+var _flowtable2 = _interopRequireDefault(_flowtable);
 
-var FlowTable = require("./flowtable.js");
-var FlowView = require("./flowview/index.js");
+var _index = require("./flowview/index.js");
 
-var MainView = React.createClass({
+var _index2 = _interopRequireDefault(_index);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MainView = _react2.default.createClass({
     displayName: "MainView",
 
     mixins: [_common.Router],
     contextTypes: {
-        flowStore: React.PropTypes.object.isRequired
+        flowStore: _react2.default.PropTypes.object.isRequired
     },
     childContextTypes: {
-        view: React.PropTypes.object.isRequired
+        view: _react2.default.PropTypes.object.isRequired
     },
     getChildContext: function getChildContext() {
         return {
@@ -3196,7 +3333,7 @@ var MainView = React.createClass({
     },
     getInitialState: function getInitialState() {
         var sortKeyFun = false;
-        var view = new views.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
+        var view = new _view.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
         view.addListener("recalculate", this.onRecalculate);
         view.addListener("add", this.onUpdate);
         view.addListener("update", this.onUpdate);
@@ -3213,12 +3350,12 @@ var MainView = React.createClass({
     },
     getViewFilt: function getViewFilt() {
         try {
-            var filtStr = this.getQuery()[Query.SEARCH];
-            var filt = filtStr ? Filt.parse(filtStr) : function () {
+            var filtStr = this.getQuery()[_actions.Query.SEARCH];
+            var filt = filtStr ? _filt2.default.parse(filtStr) : function () {
                 return true;
             };
-            var highlightStr = this.getQuery()[Query.HIGHLIGHT];
-            var highlight = highlightStr ? Filt.parse(highlightStr) : function () {
+            var highlightStr = this.getQuery()[_actions.Query.HIGHLIGHT];
+            var highlight = highlightStr ? _filt2.default.parse(highlightStr) : function () {
                 return false;
             };
         } catch (e) {
@@ -3237,8 +3374,8 @@ var MainView = React.createClass({
         return fun;
     },
     componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-        var filterChanged = this.state.view.filt.filtStr !== nextProps.location.query[Query.SEARCH];
-        var highlightChanged = this.state.view.filt.highlightStr !== nextProps.location.query[Query.HIGHLIGHT];
+        var filterChanged = this.state.view.filt.filtStr !== nextProps.location.query[_actions.Query.SEARCH];
+        var highlightChanged = this.state.view.filt.highlightStr !== nextProps.location.query[_actions.Query.HIGHLIGHT];
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
@@ -3304,80 +3441,80 @@ var MainView = React.createClass({
             return;
         }
         switch (e.keyCode) {
-            case utils.Key.K:
-            case utils.Key.UP:
+            case _utils.Key.K:
+            case _utils.Key.UP:
                 this.selectFlowRelative(-1);
                 break;
-            case utils.Key.J:
-            case utils.Key.DOWN:
+            case _utils.Key.J:
+            case _utils.Key.DOWN:
                 this.selectFlowRelative(+1);
                 break;
-            case utils.Key.SPACE:
-            case utils.Key.PAGE_DOWN:
+            case _utils.Key.SPACE:
+            case _utils.Key.PAGE_DOWN:
                 this.selectFlowRelative(+10);
                 break;
-            case utils.Key.PAGE_UP:
+            case _utils.Key.PAGE_UP:
                 this.selectFlowRelative(-10);
                 break;
-            case utils.Key.END:
+            case _utils.Key.END:
                 this.selectFlowRelative(+1e10);
                 break;
-            case utils.Key.HOME:
+            case _utils.Key.HOME:
                 this.selectFlowRelative(-1e10);
                 break;
-            case utils.Key.ESC:
+            case _utils.Key.ESC:
                 this.selectFlow(null);
                 break;
-            case utils.Key.H:
-            case utils.Key.LEFT:
+            case _utils.Key.H:
+            case _utils.Key.LEFT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
-            case utils.Key.L:
-            case utils.Key.TAB:
-            case utils.Key.RIGHT:
+            case _utils.Key.L:
+            case _utils.Key.TAB:
+            case _utils.Key.RIGHT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
-            case utils.Key.C:
+            case _utils.Key.C:
                 if (e.shiftKey) {
-                    actions.FlowActions.clear();
+                    _actions.FlowActions.clear();
                 }
                 break;
-            case utils.Key.D:
+            case _utils.Key.D:
                 if (flow) {
                     if (e.shiftKey) {
-                        actions.FlowActions.duplicate(flow);
+                        _actions.FlowActions.duplicate(flow);
                     } else {
-                        actions.FlowActions.delete(flow);
+                        _actions.FlowActions.delete(flow);
                     }
                 }
                 break;
-            case utils.Key.A:
+            case _utils.Key.A:
                 if (e.shiftKey) {
-                    actions.FlowActions.accept_all();
+                    _actions.FlowActions.accept_all();
                 } else if (flow && flow.intercepted) {
-                    actions.FlowActions.accept(flow);
+                    _actions.FlowActions.accept(flow);
                 }
                 break;
-            case utils.Key.R:
+            case _utils.Key.R:
                 if (!e.shiftKey && flow) {
-                    actions.FlowActions.replay(flow);
+                    _actions.FlowActions.replay(flow);
                 }
                 break;
-            case utils.Key.V:
+            case _utils.Key.V:
                 if (e.shiftKey && flow && flow.modified) {
-                    actions.FlowActions.revert(flow);
+                    _actions.FlowActions.revert(flow);
                 }
                 break;
-            case utils.Key.E:
+            case _utils.Key.E:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.promptEdit();
                 }
                 break;
-            case utils.Key.SHIFT:
+            case _utils.Key.SHIFT:
                 break;
             default:
                 console.debug("keydown", e.keyCode);
@@ -3393,7 +3530,7 @@ var MainView = React.createClass({
 
         var details;
         if (selected) {
-            details = [React.createElement(_common.Splitter, { key: "splitter" }), React.createElement(FlowView, {
+            details = [_react2.default.createElement(_common.Splitter, { key: "splitter" }), _react2.default.createElement(_index2.default, {
                 key: "flowDetails",
                 ref: "flowDetails",
                 tab: this.getParams().detailTab,
@@ -3402,10 +3539,10 @@ var MainView = React.createClass({
             details = null;
         }
 
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { className: "main-view" },
-            React.createElement(FlowTable, { ref: "flowTable",
+            _react2.default.createElement(_flowtable2.default, { ref: "flowTable",
                 selectFlow: this.selectFlow,
                 setSortKeyFun: this.setSortKeyFun,
                 selected: selected }),
@@ -3414,31 +3551,44 @@ var MainView = React.createClass({
     }
 });
 
-module.exports = MainView;
+exports.default = MainView;
 
 },{"../actions.js":2,"../filt/filt.js":22,"../store/view.js":25,"../utils.js":26,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],17:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _utils = require("../utils.js");
+
 var _common = require("./common.js");
 
-var React = require("react");
-var ReactDOM = require('react-dom');
-var _ = require("lodash");
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var utils = require("../utils.js");
-
-
-var Prompt = React.createClass({
+var Prompt = _react2.default.createClass({
     displayName: "Prompt",
 
     mixins: [_common.ChildFocus],
     propTypes: {
-        options: React.PropTypes.array.isRequired,
-        done: React.PropTypes.func.isRequired,
-        prompt: React.PropTypes.string
+        options: _react2.default.PropTypes.array.isRequired,
+        done: _react2.default.PropTypes.func.isRequired,
+        prompt: _react2.default.PropTypes.string
     },
     componentDidMount: function componentDidMount() {
-        ReactDOM.findDOMNode(this).focus();
+        _reactDom2.default.findDOMNode(this).focus();
     },
     onKeyDown: function onKeyDown(e) {
         e.stopPropagation();
@@ -3446,12 +3596,12 @@ var Prompt = React.createClass({
         var opts = this.getOptions();
         for (var i = 0; i < opts.length; i++) {
             var k = opts[i].key;
-            if (utils.Key[k.toUpperCase()] === e.keyCode) {
+            if (_utils.Key[k.toUpperCase()] === e.keyCode) {
                 this.done(k);
                 return;
             }
         }
-        if (e.keyCode === utils.Key.ESC || e.keyCode === utils.Key.ENTER) {
+        if (e.keyCode === _utils.Key.ESC || e.keyCode === _utils.Key.ENTER) {
             this.done(false);
         }
     },
@@ -3466,12 +3616,12 @@ var Prompt = React.createClass({
         var opts = [];
 
         var keyTaken = function keyTaken(k) {
-            return _.includes(_.pluck(opts, "key"), k);
+            return _lodash2.default.includes(_lodash2.default.pluck(opts, "key"), k);
         };
 
         for (var i = 0; i < this.props.options.length; i++) {
             var opt = this.props.options[i];
-            if (_.isString(opt)) {
+            if (_lodash2.default.isString(opt)) {
                 var str = opt;
                 while (str.length > 0 && keyTaken(str[0])) {
                     str = str.substr(1);
@@ -3491,7 +3641,7 @@ var Prompt = React.createClass({
     },
     render: function render() {
         var opts = this.getOptions();
-        opts = _.map(opts, function (o) {
+        opts = _lodash2.default.map(opts, function (o) {
             var prefix, suffix;
             var idx = o.text.indexOf(o.key);
             if (idx !== -1) {
@@ -3505,14 +3655,14 @@ var Prompt = React.createClass({
                 this.done(o.key);
                 e.stopPropagation();
             }.bind(this);
-            return React.createElement(
+            return _react2.default.createElement(
                 "span",
                 {
                     key: o.key,
                     className: "option",
                     onClick: onClick },
                 prefix,
-                React.createElement(
+                _react2.default.createElement(
                     "strong",
                     { className: "text-primary" },
                     o.key
@@ -3520,13 +3670,13 @@ var Prompt = React.createClass({
                 suffix
             );
         }.bind(this));
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             { tabIndex: "0", onKeyDown: this.onKeyDown, onClick: this.onClick, className: "prompt-dialog" },
-            React.createElement(
+            _react2.default.createElement(
                 "div",
                 { className: "prompt-content" },
-                this.props.prompt || React.createElement(
+                this.props.prompt || _react2.default.createElement(
                     "strong",
                     null,
                     "Select: "
@@ -3537,7 +3687,7 @@ var Prompt = React.createClass({
     }
 });
 
-module.exports = Prompt;
+exports.default = Prompt;
 
 },{"../utils.js":26,"./common.js":4,"lodash":"lodash","react":"react","react-dom":"react-dom"}],18:[function(require,module,exports){
 "use strict";
@@ -3547,35 +3697,50 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.app = undefined;
 
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 var _common = require("./common.js");
+
+var _mainview = require("./mainview.js");
+
+var _mainview2 = _interopRequireDefault(_mainview);
+
+var _footer = require("./footer.js");
+
+var _footer2 = _interopRequireDefault(_footer);
+
+var _header = require("./header.js");
 
 var _eventlog = require("./eventlog.js");
 
 var _eventlog2 = _interopRequireDefault(_eventlog);
 
+var _store = require("../store/store.js");
+
+var _actions = require("../actions.js");
+
+var _utils = require("../utils.js");
+
 var _reactRouter = require("react-router");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var React = require("react");
-var ReactDOM = require("react-dom");
-var _ = require("lodash");
-
-var common = require("./common.js");
-var MainView = require("./mainview.js");
-var Footer = require("./footer.js");
-var header = require("./header.js");
-
-var store = require("../store/store.js");
-var Query = require("../actions.js").Query;
-var Key = require("../utils.js").Key;
-
 //TODO: Move out of here, just a stub.
-var Reports = React.createClass({
+var Reports = _react2.default.createClass({
     displayName: "Reports",
 
     render: function render() {
-        return React.createElement(
+        return _react2.default.createElement(
             "div",
             null,
             "ReportEditor"
@@ -3583,16 +3748,16 @@ var Reports = React.createClass({
     }
 });
 
-var ProxyAppMain = React.createClass({
+var ProxyAppMain = _react2.default.createClass({
     displayName: "ProxyAppMain",
 
     mixins: [_common.Router],
     childContextTypes: {
-        settingsStore: React.PropTypes.object.isRequired,
-        flowStore: React.PropTypes.object.isRequired,
-        eventStore: React.PropTypes.object.isRequired,
-        returnFocus: React.PropTypes.func.isRequired,
-        location: React.PropTypes.object.isRequired
+        settingsStore: _react2.default.PropTypes.object.isRequired,
+        flowStore: _react2.default.PropTypes.object.isRequired,
+        eventStore: _react2.default.PropTypes.object.isRequired,
+        returnFocus: _react2.default.PropTypes.func.isRequired,
+        location: _react2.default.PropTypes.object.isRequired
     },
     componentDidMount: function componentDidMount() {
         this.focus();
@@ -3607,12 +3772,12 @@ var ProxyAppMain = React.createClass({
         };
     },
     getInitialState: function getInitialState() {
-        var eventStore = new store.EventLogStore();
-        var flowStore = new store.FlowStore();
-        var settingsStore = new store.SettingsStore();
+        var eventStore = new _store.EventLogStore();
+        var flowStore = new _store.FlowStore();
+        var settingsStore = new _store.SettingsStore();
 
         // Default Settings before fetch
-        _.extend(settingsStore.dict, {});
+        _lodash2.default.extend(settingsStore.dict, {});
         return {
             settingsStore: settingsStore,
             flowStore: flowStore,
@@ -3620,7 +3785,7 @@ var ProxyAppMain = React.createClass({
         };
     },
     focus: function focus() {
-        ReactDOM.findDOMNode(this).focus();
+        _reactDom2.default.findDOMNode(this).focus();
     },
     getMainComponent: function getMainComponent() {
         return this.refs.view;
@@ -3629,19 +3794,19 @@ var ProxyAppMain = React.createClass({
 
         var selectFilterInput = function (name) {
             var headerComponent = this.refs.header;
-            headerComponent.setState({ active: header.MainMenu }, function () {
+            headerComponent.setState({ active: _header.MainMenu }, function () {
                 headerComponent.refs.active.refs[name].select();
             });
         }.bind(this);
 
         switch (e.keyCode) {
-            case Key.I:
+            case _utils.Key.I:
                 selectFilterInput("intercept");
                 break;
-            case Key.L:
+            case _utils.Key.L:
                 selectFilterInput("search");
                 break;
-            case Key.H:
+            case _utils.Key.H:
                 selectFilterInput("highlight");
                 break;
             default:
@@ -3655,33 +3820,33 @@ var ProxyAppMain = React.createClass({
     },
     render: function render() {
         var eventlog;
-        if (this.props.location.query[Query.SHOW_EVENTLOG]) {
-            eventlog = [React.createElement(_common.Splitter, { key: "splitter", axis: "y" }), React.createElement(_eventlog2.default, { key: "eventlog" })];
+        if (this.props.location.query[_actions.Query.SHOW_EVENTLOG]) {
+            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog" })];
         } else {
             eventlog = null;
         }
-        var children = React.cloneElement(this.props.children, { ref: "view", location: this.props.location });
-        return React.createElement(
+        var children = _react2.default.cloneElement(this.props.children, { ref: "view", location: this.props.location });
+        return _react2.default.createElement(
             "div",
             { id: "container", tabIndex: "0", onKeyDown: this.onKeydown },
-            React.createElement(header.Header, { ref: "header" }),
+            _react2.default.createElement(_header.Header, { ref: "header" }),
             children,
             eventlog,
-            React.createElement(Footer, null)
+            _react2.default.createElement(_footer2.default, null)
         );
     }
 });
 
-var app = exports.app = React.createElement(
+var app = exports.app = _react2.default.createElement(
     _reactRouter.Router,
     { history: _reactRouter.hashHistory },
-    React.createElement(_reactRouter.Redirect, { from: "/", to: "/flows" }),
-    React.createElement(
+    _react2.default.createElement(_reactRouter.Redirect, { from: "/", to: "/flows" }),
+    _react2.default.createElement(
         _reactRouter.Route,
         { path: "/", component: ProxyAppMain },
-        React.createElement(_reactRouter.Route, { path: "flows", component: MainView }),
-        React.createElement(_reactRouter.Route, { path: "flows/:flowId/:detailTab", component: MainView }),
-        React.createElement(_reactRouter.Route, { path: "reports", component: Reports })
+        _react2.default.createElement(_reactRouter.Route, { path: "flows", component: _mainview2.default }),
+        _react2.default.createElement(_reactRouter.Route, { path: "flows/:flowId/:detailTab", component: _mainview2.default }),
+        _react2.default.createElement(_reactRouter.Route, { path: "reports", component: Reports })
     )
 );
 
@@ -3788,8 +3953,13 @@ var VirtualScrollMixin = exports.VirtualScrollMixin = {
 },{"react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
-var actions = require("./actions.js");
-var AppDispatcher = require("./dispatcher.js").AppDispatcher;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _actions = require("./actions.js");
+
+var _dispatcher = require("./dispatcher.js");
 
 function Connection(url) {
     if (url[0] === "/") {
@@ -3798,36 +3968,45 @@ function Connection(url) {
 
     var ws = new WebSocket(url);
     ws.onopen = function () {
-        actions.ConnectionActions.open();
+        _actions.ConnectionActions.open();
     };
     ws.onmessage = function (message) {
         var m = JSON.parse(message.data);
-        AppDispatcher.dispatchServerAction(m);
+        _dispatcher.AppDispatcher.dispatchServerAction(m);
     };
     ws.onerror = function () {
-        actions.ConnectionActions.error();
-        actions.EventLogActions.add_event("WebSocket connection error.");
+        _actions.ConnectionActions.error();
+        _actions.EventLogActions.add_event("WebSocket connection error.");
     };
     ws.onclose = function () {
-        actions.ConnectionActions.close();
-        actions.EventLogActions.add_event("WebSocket connection closed.");
+        _actions.ConnectionActions.close();
+        _actions.EventLogActions.add_event("WebSocket connection closed.");
     };
     return ws;
 }
 
-module.exports = Connection;
+exports.default = Connection;
 
 },{"./actions.js":2,"./dispatcher.js":21}],21:[function(require,module,exports){
 "use strict";
 
-var flux = require("flux");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.AppDispatcher = undefined;
+
+var _flux = require("flux");
+
+var _flux2 = _interopRequireDefault(_flux);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var PayloadSources = {
     VIEW: "view",
     SERVER: "server"
 };
 
-var AppDispatcher = new flux.Dispatcher();
+var AppDispatcher = exports.AppDispatcher = new _flux2.default.Dispatcher();
 AppDispatcher.dispatchViewAction = function (action) {
     action.source = PayloadSources.VIEW;
     this.dispatch(action);
@@ -3835,10 +4014,6 @@ AppDispatcher.dispatchViewAction = function (action) {
 AppDispatcher.dispatchServerAction = function (action) {
     action.source = PayloadSources.SERVER;
     this.dispatch(action);
-};
-
-module.exports = {
-    AppDispatcher: AppDispatcher
 };
 
 },{"flux":"flux"}],22:[function(require,module,exports){
@@ -5748,15 +5923,27 @@ module.exports = function () {
 },{"../flow/utils.js":23}],23:[function(require,module,exports){
 "use strict";
 
-var _ = require("lodash");
-var $ = require("jquery");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.parseHttpVersion = exports.isValidHttpVersion = exports.parseUrl = exports.ResponseUtils = exports.RequestUtils = exports.MessageUtils = undefined;
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _jquery = require("jquery");
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var defaultPorts = {
     "http": 80,
     "https": 443
 };
 
-var MessageUtils = {
+var MessageUtils = exports.MessageUtils = {
     getContentType: function getContentType(message) {
         var ct = this.get_first_header(message, /^Content-Type$/i);
         if (ct) {
@@ -5803,11 +5990,11 @@ var MessageUtils = {
     },
     getContent: function getContent(flow, message) {
         var url = MessageUtils.getContentURL(flow, message);
-        return $.get(url);
+        return _jquery2.default.get(url);
     }
 };
 
-var RequestUtils = _.extend(MessageUtils, {
+var RequestUtils = exports.RequestUtils = _lodash2.default.extend(MessageUtils, {
     pretty_host: function pretty_host(request) {
         //FIXME: Add hostheader
         return request.host;
@@ -5821,10 +6008,10 @@ var RequestUtils = _.extend(MessageUtils, {
     }
 });
 
-var ResponseUtils = _.extend(MessageUtils, {});
+var ResponseUtils = exports.ResponseUtils = _lodash2.default.extend(MessageUtils, {});
 
 var parseUrl_regex = /^(?:(https?):\/\/)?([^\/:]+)?(?::(\d+))?(\/.*)?$/i;
-var parseUrl = function parseUrl(url) {
+var parseUrl = exports.parseUrl = function parseUrl(url) {
     //there are many correct ways to parse a URL,
     //however, a mitmproxy user may also wish to generate a not-so-correct URL. ;-)
     var parts = parseUrl_regex.exec(url);
@@ -5856,42 +6043,48 @@ var parseUrl = function parseUrl(url) {
 };
 
 var isValidHttpVersion_regex = /^HTTP\/\d+(\.\d+)*$/i;
-var isValidHttpVersion = function isValidHttpVersion(httpVersion) {
+var isValidHttpVersion = exports.isValidHttpVersion = function isValidHttpVersion(httpVersion) {
     return isValidHttpVersion_regex.test(httpVersion);
 };
 
-var parseHttpVersion = function parseHttpVersion(httpVersion) {
+var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(httpVersion) {
     httpVersion = httpVersion.replace("HTTP/", "").split(".");
-    return _.map(httpVersion, function (x) {
+    return _lodash2.default.map(httpVersion, function (x) {
         return parseInt(x);
     });
-};
-
-module.exports = {
-    ResponseUtils: ResponseUtils,
-    RequestUtils: RequestUtils,
-    MessageUtils: MessageUtils,
-    parseUrl: parseUrl,
-    parseHttpVersion: parseHttpVersion,
-    isValidHttpVersion: isValidHttpVersion
 };
 
 },{"jquery":"jquery","lodash":"lodash"}],24:[function(require,module,exports){
 "use strict";
 
-var _ = require("lodash");
-var $ = require("jquery");
-var EventEmitter = require('events').EventEmitter;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.FlowStore = FlowStore;
+exports.SettingsStore = SettingsStore;
+exports.EventLogStore = EventLogStore;
 
-var utils = require("../utils.js");
-var actions = require("../actions.js");
-var dispatcher = require("../dispatcher.js");
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _jquery = require("jquery");
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _events = require("events");
+
+var _actions = require("../actions.js");
+
+var _dispatcher = require("../dispatcher.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function ListStore() {
-    EventEmitter.call(this);
+    _events.EventEmitter.call(this);
     this.reset();
 }
-_.extend(ListStore.prototype, EventEmitter.prototype, {
+_lodash2.default.extend(ListStore.prototype, _events.EventEmitter.prototype, {
     add: function add(elem) {
         if (elem.id in this._pos_map) {
             return;
@@ -5936,12 +6129,12 @@ _.extend(ListStore.prototype, EventEmitter.prototype, {
 });
 
 function DictStore() {
-    EventEmitter.call(this);
+    _events.EventEmitter.call(this);
     this.reset();
 }
-_.extend(DictStore.prototype, EventEmitter.prototype, {
+_lodash2.default.extend(DictStore.prototype, _events.EventEmitter.prototype, {
     update: function update(dict) {
-        _.merge(this.dict, dict);
+        _lodash2.default.merge(this.dict, dict);
         this.emit("recalculate");
     },
     reset: function reset(dict) {
@@ -5957,20 +6150,20 @@ function LiveStoreMixin(type) {
     this._fetchxhr = false;
 
     this.handle = this.handle.bind(this);
-    dispatcher.AppDispatcher.register(this.handle);
+    _dispatcher.AppDispatcher.register(this.handle);
 
     // Avoid double-fetch on startup.
     if (!(window.ws && window.ws.readyState === WebSocket.CONNECTING)) {
         this.fetch();
     }
 }
-_.extend(LiveStoreMixin.prototype, {
+_lodash2.default.extend(LiveStoreMixin.prototype, {
     handle: function handle(event) {
-        if (event.type === actions.ActionTypes.CONNECTION_OPEN) {
+        if (event.type === _actions.ActionTypes.CONNECTION_OPEN) {
             return this.fetch();
         }
         if (event.type === this.type) {
-            if (event.cmd === actions.StoreCmds.RESET) {
+            if (event.cmd === _actions.StoreCmds.RESET) {
                 this.fetch(event.data);
             } else if (this._updates_before_fetch) {
                 console.log("defer update", event);
@@ -5981,7 +6174,7 @@ _.extend(LiveStoreMixin.prototype, {
         }
     },
     close: function close() {
-        dispatcher.AppDispatcher.unregister(this.handle);
+        _dispatcher.AppDispatcher.unregister(this.handle);
     },
     fetch: function fetch(data) {
         console.log("fetch " + this.type);
@@ -5992,7 +6185,7 @@ _.extend(LiveStoreMixin.prototype, {
         if (data) {
             this.handle_fetch(data);
         } else {
-            this._fetchxhr = $.getJSON("/" + this.type).done(function (message) {
+            this._fetchxhr = _jquery2.default.getJSON("/" + this.type).done(function (message) {
                 this.handle_fetch(message.data);
             }.bind(this)).fail(function () {
                 EventLogActions.add_event("Could not fetch " + this.type);
@@ -6015,26 +6208,26 @@ function LiveListStore(type) {
     ListStore.call(this);
     LiveStoreMixin.call(this, type);
 }
-_.extend(LiveListStore.prototype, ListStore.prototype, LiveStoreMixin.prototype);
+_lodash2.default.extend(LiveListStore.prototype, ListStore.prototype, LiveStoreMixin.prototype);
 
 function LiveDictStore(type) {
     DictStore.call(this);
     LiveStoreMixin.call(this, type);
 }
-_.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
+_lodash2.default.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
 
 function FlowStore() {
-    return new LiveListStore(actions.ActionTypes.FLOW_STORE);
+    return new LiveListStore(_actions.ActionTypes.FLOW_STORE);
 }
 
 function SettingsStore() {
-    return new LiveDictStore(actions.ActionTypes.SETTINGS_STORE);
+    return new LiveDictStore(_actions.ActionTypes.SETTINGS_STORE);
 }
 
 function EventLogStore() {
-    LiveListStore.call(this, actions.ActionTypes.EVENT_STORE);
+    LiveListStore.call(this, _actions.ActionTypes.EVENT_STORE);
 }
-_.extend(EventLogStore.prototype, LiveListStore.prototype, {
+_lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     fetch: function fetch() {
         LiveListStore.prototype.fetch.apply(this, arguments);
 
@@ -6048,19 +6241,25 @@ _.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-module.exports = {
-    EventLogStore: EventLogStore,
-    SettingsStore: SettingsStore,
-    FlowStore: FlowStore
-};
-
-},{"../actions.js":2,"../dispatcher.js":21,"../utils.js":26,"events":1,"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":21,"events":1,"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
 "use strict";
 
-var EventEmitter = require('events').EventEmitter;
-var _ = require("lodash");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.StoreView = StoreView;
 
-var utils = require("../utils.js");
+var _events = require("events");
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _utils = require("../utils.js");
+
+var _utils2 = _interopRequireDefault(_utils);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function SortByStoreOrder(elem) {
     return this.store.index(elem.id);
@@ -6072,7 +6271,7 @@ var default_filt = function default_filt(elem) {
 };
 
 function StoreView(store, filt, sortfun) {
-    EventEmitter.call(this);
+    _events.EventEmitter.call(this);
 
     this.store = store;
 
@@ -6088,7 +6287,7 @@ function StoreView(store, filt, sortfun) {
     this.recalculate(filt, sortfun);
 }
 
-_.extend(StoreView.prototype, EventEmitter.prototype, {
+_lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     close: function close() {
         this.store.removeListener("add", this.add);
         this.store.removeListener("update", this.update);
@@ -6119,7 +6318,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.emit("recalculate");
     },
     index: function index(elem) {
-        return _.sortedIndex(this.list, elem, this.sortfun);
+        return _lodash2.default.sortedIndex(this.list, elem, this.sortfun);
     },
     add: function add(elem) {
         if (this.filt(elem)) {
@@ -6172,22 +6371,34 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
     }
 });
 
-module.exports = {
-    StoreView: StoreView
-};
-
 },{"../utils.js":26,"events":1,"lodash":"lodash"}],26:[function(require,module,exports){
 "use strict";
 
-var $ = require("jquery");
-var _ = require("lodash");
-var actions = require("./actions.js");
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.formatTimeStamp = exports.formatTimeDelta = exports.formatSize = exports.Key = undefined;
+exports.reverseString = reverseString;
 
-window.$ = $;
-window._ = _;
+var _jquery = require("jquery");
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _actions = require("./actions.js");
+
+var _actions2 = _interopRequireDefault(_actions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+window.$ = _jquery2.default;
+window._ = _lodash2.default;
 window.React = require("react");
 
-var Key = {
+var Key = exports.Key = {
     UP: 38,
     DOWN: 40,
     PAGE_UP: 33,
@@ -6208,7 +6419,7 @@ for (var i = 65; i <= 90; i++) {
     Key[String.fromCharCode(i)] = i;
 }
 
-var formatSize = function formatSize(bytes) {
+var formatSize = exports.formatSize = function formatSize(bytes) {
     if (bytes === 0) return "0";
     var prefix = ["b", "kb", "mb", "gb", "tb"];
     for (var i = 0; i < prefix.length; i++) {
@@ -6221,7 +6432,7 @@ var formatSize = function formatSize(bytes) {
     return (bytes / Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
 
-var formatTimeDelta = function formatTimeDelta(milliseconds) {
+var formatTimeDelta = exports.formatTimeDelta = function formatTimeDelta(milliseconds) {
     var time = milliseconds;
     var prefix = ["ms", "s", "min", "h"];
     var div = [1000, 60, 60];
@@ -6233,7 +6444,7 @@ var formatTimeDelta = function formatTimeDelta(milliseconds) {
     return Math.round(time) + prefix[i];
 };
 
-var formatTimeStamp = function formatTimeStamp(seconds) {
+var formatTimeStamp = exports.formatTimeStamp = function formatTimeStamp(seconds) {
     var ts = new Date(seconds * 1000).toISOString();
     return ts.replace("T", " ").replace("Z", "");
 };
@@ -6243,7 +6454,7 @@ var formatTimeStamp = function formatTimeStamp(seconds) {
 // This beauty "reverses" a JS string.
 var end = String.fromCharCode(0xffff);
 function reverseString(s) {
-    return String.fromCharCode.apply(String, _.map(s.split(""), function (c) {
+    return String.fromCharCode.apply(String, _lodash2.default.map(s.split(""), function (c) {
         return 0xffff - c.charCodeAt(0);
     })) + end;
 }
@@ -6252,10 +6463,10 @@ function getCookie(name) {
     var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
-var xsrf = $.param({ _xsrf: getCookie("_xsrf") });
+var xsrf = _jquery2.default.param({ _xsrf: getCookie("_xsrf") });
 
 //Tornado XSRF Protection.
-$.ajaxPrefilter(function (options) {
+_jquery2.default.ajaxPrefilter(function (options) {
     if (["post", "put", "delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
         if (options.url.indexOf("?") === -1) {
             options.url += "?" + xsrf;
@@ -6265,23 +6476,15 @@ $.ajaxPrefilter(function (options) {
     }
 });
 // Log AJAX Errors
-$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+(0, _jquery2.default)(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
     if (thrownError === "abort") {
         return;
     }
     var message = jqXHR.responseText;
     console.error(thrownError, message, arguments);
-    actions.EventLogActions.add_event(thrownError + ": " + message);
+    _actions2.default.EventLogActions.add_event(thrownError + ": " + message);
     alert(message);
 });
-
-module.exports = {
-    formatSize: formatSize,
-    formatTimeDelta: formatTimeDelta,
-    formatTimeStamp: formatTimeStamp,
-    reverseString: reverseString,
-    Key: Key
-};
 
 },{"./actions.js":2,"jquery":"jquery","lodash":"lodash","react":"react"}]},{},[3])
 

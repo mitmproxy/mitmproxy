@@ -1,17 +1,16 @@
-var React = require("react");
-var _ = require("lodash");
+import React from "react";
 
-import { Router, StickyHeadMixin } from "../common.js"
-var Nav = require("./nav.js");
-var Messages = require("./messages.js");
-var Details = require("./details.js");
-var Prompt = require("../prompt.js");
+import {Router, StickyHeadMixin} from "../common.js"
+import Nav from "./nav.js";
+import {Request, Response, Error} from "./messages.js";
+import Details from "./details.js";
+import Prompt from "../prompt.js";
 
 
 var allTabs = {
-    request: Messages.Request,
-    response: Messages.Response,
-    error: Messages.Error,
+    request: Request,
+    response: Response,
+    error: Error,
     details: Details
 };
 
@@ -40,22 +39,22 @@ var FlowView = React.createClass({
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function (panel) {
-        this.updateLocation(`/flows/${this.getParams().flowId}/${panel}`);
+        this.updateLocation(`/flows/${this.props.flow.id}/${panel}`);
     },
     promptEdit: function () {
         var options;
-        switch(this.props.tab){
+        switch (this.props.tab) {
             case "request":
                 options = [
                     "method",
                     "url",
-                    {text:"http version", key:"v"},
+                    {text: "http version", key: "v"},
                     "header"
                     /*, "content"*/];
                 break;
             case "response":
                 options = [
-                    {text:"http version", key:"v"},
+                    {text: "http version", key: "v"},
                     "code",
                     "message",
                     "header"
@@ -71,7 +70,7 @@ var FlowView = React.createClass({
             prompt: {
                 done: function (k) {
                     this.setState({prompt: false});
-                    if(k){
+                    if (k) {
                         this.refs.tab.edit(k);
                     }
                 }.bind(this),
@@ -104,10 +103,10 @@ var FlowView = React.createClass({
         return (
             <div className="flow-detail" onScroll={this.adjustHead}>
                 <Nav ref="head"
-                    flow={flow}
-                    tabs={tabs}
-                    active={active}
-                    selectTab={this.selectTab}/>
+                     flow={flow}
+                     tabs={tabs}
+                     active={active}
+                     selectTab={this.selectTab}/>
                 <Tab ref="tab" flow={flow}/>
                 {prompt}
             </div>
@@ -115,4 +114,4 @@ var FlowView = React.createClass({
     }
 });
 
-module.exports = FlowView;
+export default FlowView;

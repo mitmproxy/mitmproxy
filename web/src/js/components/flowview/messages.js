@@ -1,13 +1,12 @@
-var React = require("react");
-var ReactDOM = require('react-dom');
-var _ = require("lodash");
+import React from "react";
+import ReactDOM from 'react-dom';
+import _ from "lodash";
 
-var common = require("../common.js");
-var actions = require("../../actions.js");
-var flowutils = require("../../flow/utils.js");
-var utils = require("../../utils.js");
-var ContentView = require("./contentview.js");
-var ValueEditor = require("../editor.js").ValueEditor;
+import {FlowActions} from "../../actions.js";
+import {RequestUtils, isValidHttpVersion, parseUrl, parseHttpVersion} from "../../flow/utils.js";
+import {Key, formatTimeStamp} from "../../utils.js";
+import ContentView from "./contentview.js";
+import {ValueEditor} from "../editor.js";
 
 var Headers = React.createClass({
     propTypes: {
@@ -103,13 +102,13 @@ var HeaderEditor = React.createClass({
     },
     onKeyDown: function (e) {
         switch (e.keyCode) {
-            case utils.Key.BACKSPACE:
+            case Key.BACKSPACE:
                 var s = window.getSelection().getRangeAt(0);
                 if (s.startOffset === 0 && s.endOffset === 0) {
                     this.props.onRemove(e);
                 }
                 break;
-            case utils.Key.TAB:
+            case Key.TAB:
                 if (!e.shiftKey) {
                     this.props.onTab(e);
                 }
@@ -121,7 +120,7 @@ var HeaderEditor = React.createClass({
 var RequestLine = React.createClass({
     render: function () {
         var flow = this.props.flow;
-        var url = flowutils.RequestUtils.pretty_url(flow.request);
+        var url = RequestUtils.pretty_url(flow.request);
         var httpver = flow.request.http_version;
 
         return <div className="first-line request-line">
@@ -142,31 +141,31 @@ var RequestLine = React.createClass({
                 ref="httpVersion"
                 content={httpver}
                 onDone={this.onHttpVersionChange}
-                isValid={flowutils.isValidHttpVersion}
+                isValid={isValidHttpVersion}
                 inline/>
         </div>
     },
     isValidUrl: function (url) {
-        var u = flowutils.parseUrl(url);
+        var u = parseUrl(url);
         return !!u.host;
     },
     onMethodChange: function (nextMethod) {
-        actions.FlowActions.update(
+        FlowActions.update(
             this.props.flow,
             {request: {method: nextMethod}}
         );
     },
     onUrlChange: function (nextUrl) {
-        var props = flowutils.parseUrl(nextUrl);
+        var props = parseUrl(nextUrl);
         props.path = props.path || "";
-        actions.FlowActions.update(
+        FlowActions.update(
             this.props.flow,
             {request: props}
         );
     },
     onHttpVersionChange: function (nextVer) {
-        var ver = flowutils.parseHttpVersion(nextVer);
-        actions.FlowActions.update(
+        var ver = parseHttpVersion(nextVer);
+        FlowActions.update(
             this.props.flow,
             {request: {http_version: ver}}
         );
@@ -182,7 +181,7 @@ var ResponseLine = React.createClass({
                 ref="httpVersion"
                 content={httpver}
                 onDone={this.onHttpVersionChange}
-                isValid={flowutils.isValidHttpVersion}
+                isValid={isValidHttpVersion}
                 inline/>
         &nbsp;
             <ValueEditor
@@ -194,7 +193,7 @@ var ResponseLine = React.createClass({
         &nbsp;
             <ValueEditor
                 ref="msg"
-                content={flow.response.msg}
+                content={flow.response.reason}
                 onDone={this.onMsgChange}
                 inline/>
         </div>;
@@ -203,28 +202,28 @@ var ResponseLine = React.createClass({
         return /^\d+$/.test(code);
     },
     onHttpVersionChange: function (nextVer) {
-        var ver = flowutils.parseHttpVersion(nextVer);
-        actions.FlowActions.update(
+        var ver = parseHttpVersion(nextVer);
+        FlowActions.update(
             this.props.flow,
             {response: {http_version: ver}}
         );
     },
     onMsgChange: function (nextMsg) {
-        actions.FlowActions.update(
+        FlowActions.update(
             this.props.flow,
             {response: {msg: nextMsg}}
         );
     },
     onCodeChange: function (nextCode) {
         nextCode = parseInt(nextCode);
-        actions.FlowActions.update(
+        FlowActions.update(
             this.props.flow,
             {response: {code: nextCode}}
         );
     }
 });
 
-var Request = React.createClass({
+export var Request = React.createClass({
     render: function () {
         var flow = this.props.flow;
         return (
@@ -256,7 +255,7 @@ var Request = React.createClass({
         }
     },
     onHeaderChange: function (nextHeaders) {
-        actions.FlowActions.update(this.props.flow, {
+        FlowActions.update(this.props.flow, {
             request: {
                 headers: nextHeaders
             }
@@ -264,7 +263,7 @@ var Request = React.createClass({
     }
 });
 
-var Response = React.createClass({
+export var Response = React.createClass({
     render: function () {
         var flow = this.props.flow;
         return (
@@ -296,7 +295,7 @@ var Response = React.createClass({
         }
     },
     onHeaderChange: function (nextHeaders) {
-        actions.FlowActions.update(this.props.flow, {
+        FlowActions.update(this.props.flow, {
             response: {
                 headers: nextHeaders
             }
@@ -304,7 +303,7 @@ var Response = React.createClass({
     }
 });
 
-var Error = React.createClass({
+export var Error = React.createClass({
     render: function () {
         var flow = this.props.flow;
         return (
@@ -312,16 +311,10 @@ var Error = React.createClass({
                 <div className="alert alert-warning">
                 {flow.error.msg}
                     <div>
-                        <small>{ utils.formatTimeStamp(flow.error.timestamp) }</small>
+                        <small>{ formatTimeStamp(flow.error.timestamp) }</small>
                     </div>
                 </div>
             </section>
         );
     }
 });
-
-module.exports = {
-    Request: Request,
-    Response: Response,
-    Error: Error
-};

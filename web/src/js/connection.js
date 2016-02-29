@@ -1,6 +1,6 @@
 
-var actions = require("./actions.js");
-var AppDispatcher = require("./dispatcher.js").AppDispatcher;
+import {ConnectionActions, EventLogActions} from "./actions.js";
+import {AppDispatcher} from "./dispatcher.js";
 
 function Connection(url) {
     if (url[0] === "/") {
@@ -9,21 +9,21 @@ function Connection(url) {
 
     var ws = new WebSocket(url);
     ws.onopen = function () {
-        actions.ConnectionActions.open();
+        ConnectionActions.open();
     };
     ws.onmessage = function (message) {
         var m = JSON.parse(message.data);
         AppDispatcher.dispatchServerAction(m);
     };
     ws.onerror = function () {
-        actions.ConnectionActions.error();
-        actions.EventLogActions.add_event("WebSocket connection error.");
+        ConnectionActions.error();
+        EventLogActions.add_event("WebSocket connection error.");
     };
     ws.onclose = function () {
-        actions.ConnectionActions.close();
-        actions.EventLogActions.add_event("WebSocket connection closed.");
+        ConnectionActions.close();
+        EventLogActions.add_event("WebSocket connection closed.");
     };
     return ws;
 }
 
-module.exports = Connection;
+export default Connection;

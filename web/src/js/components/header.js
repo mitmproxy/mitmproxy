@@ -1,12 +1,12 @@
-var React = require("react");
-var ReactDOM = require('react-dom');
-var $ = require("jquery");
+import React from "react";
+import ReactDOM from 'react-dom';
+import $ from "jquery";
 
-var Filt = require("../filt/filt.js");
-var utils = require("../utils.js");
+import Filt from "../filt/filt.js";
+import {Key} from "../utils.js";
 import {Router, SettingsState, ChildFocus} from "./common.js";
-var actions = require("../actions.js");
-var Query = require("../actions.js").Query;
+import {SettingsActions, FlowActions} from "../actions.js";
+import {Query} from "../actions.js";
 
 var FilterDocs = React.createClass({
     statics: {
@@ -109,7 +109,7 @@ var FilterInput = React.createClass({
         this.setState({mousefocus: false});
     },
     onKeyDown: function (e) {
-        if (e.keyCode === utils.Key.ESC || e.keyCode === utils.Key.ENTER) {
+        if (e.keyCode === Key.ESC || e.keyCode === Key.ENTER) {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({mousefocus: false});
@@ -158,7 +158,7 @@ var FilterInput = React.createClass({
     }
 });
 
-var MainMenu = React.createClass({
+export var MainMenu = React.createClass({
     mixins: [Router, SettingsState],
     statics: {
         title: "Start",
@@ -175,7 +175,7 @@ var MainMenu = React.createClass({
         this.updateLocation(undefined, d);
     },
     onInterceptChange: function (val) {
-        actions.SettingsActions.update({intercept: val});
+        SettingsActions.update({intercept: val});
     },
     render: function () {
         var search = this.getQuery()[Query.SEARCH] || "";
@@ -281,7 +281,7 @@ var FileMenu = React.createClass({
     handleNewClick: function (e) {
         e.preventDefault();
         if (confirm("Delete all flows?")) {
-            actions.FlowActions.clear();
+            FlowActions.clear();
         }
     },
     handleOpenClick: function (e) {
@@ -347,7 +347,7 @@ var FileMenu = React.createClass({
 var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
 
-var Header = React.createClass({
+export var Header = React.createClass({
     mixins: [Router],
     getInitialState: function () {
         return {
@@ -390,9 +390,3 @@ var Header = React.createClass({
         );
     }
 });
-
-
-module.exports = {
-    Header: Header,
-    MainMenu: MainMenu
-};

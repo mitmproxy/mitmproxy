@@ -1,7 +1,7 @@
-var React = require("react");
-var _ = require("lodash");
+import React from "react";
+import _ from "lodash";
 
-var utils = require("../../utils.js");
+import {formatTimeStamp, formatTimeDelta} from "../../utils.js";
 
 var TimeStamp = React.createClass({
     render: function () {
@@ -11,11 +11,11 @@ var TimeStamp = React.createClass({
             return <tr></tr>;
         }
 
-        var ts = utils.formatTimeStamp(this.props.t);
+        var ts = formatTimeStamp(this.props.t);
 
         var delta;
         if (this.props.deltaTo) {
-            delta = utils.formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
+            delta = formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
             delta = <span className="text-muted">{"(" + delta + ")"}</span>;
         } else {
             delta = null;
@@ -178,4 +178,4 @@ var Details = React.createClass({
     }
 });
 
-module.exports = Details;
+export default Details;

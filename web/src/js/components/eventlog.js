@@ -2,7 +2,7 @@ import React from "react"
 import {AutoScrollMixin, Router} from "./common.js"
 import {Query} from "../actions.js"
 import { VirtualScrollMixin } from "./virtualscroll.js"
-import views from "../store/view.js"
+import {StoreView} from "../store/view.js"
 import _ from "lodash"
 
 var LogMessage = React.createClass({
@@ -39,7 +39,7 @@ var EventLogContents = React.createClass({
         var filterFn = function (entry) {
             return this.props.filter[entry.level];
         };
-        var view = new views.StoreView(this.context.eventStore, filterFn.bind(this));
+        var view = new StoreView(this.context.eventStore, filterFn.bind(this));
         view.addListener("add", this.onEventLogChange);
         view.addListener("recalculate", this.onEventLogChange);
 

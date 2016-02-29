@@ -1,11 +1,10 @@
 
-var _ = require("lodash");
-var $ = require("jquery");
-var EventEmitter = require('events').EventEmitter;
+import _ from "lodash";
+import $ from "jquery";
+import {EventEmitter} from 'events';
 
-var utils = require("../utils.js");
-var actions = require("../actions.js");
-var dispatcher = require("../dispatcher.js");
+import {ActionTypes, StoreCmds} from "../actions.js";
+import {AppDispatcher} from "../dispatcher.js";
 
 
 function ListStore() {
@@ -79,7 +78,7 @@ function LiveStoreMixin(type) {
     this._fetchxhr = false;
 
     this.handle = this.handle.bind(this);
-    dispatcher.AppDispatcher.register(this.handle);
+    AppDispatcher.register(this.handle);
 
     // Avoid double-fetch on startup.
     if (!(window.ws && window.ws.readyState === WebSocket.CONNECTING)) {
@@ -88,11 +87,11 @@ function LiveStoreMixin(type) {
 }
 _.extend(LiveStoreMixin.prototype, {
     handle: function (event) {
-        if (event.type === actions.ActionTypes.CONNECTION_OPEN) {
+        if (event.type === ActionTypes.CONNECTION_OPEN) {
             return this.fetch();
         }
         if (event.type === this.type) {
-            if (event.cmd === actions.StoreCmds.RESET) {
+            if (event.cmd === StoreCmds.RESET) {
                 this.fetch(event.data);
             } else if (this._updates_before_fetch) {
                 console.log("defer update", event);
@@ -103,7 +102,7 @@ _.extend(LiveStoreMixin.prototype, {
         }
     },
     close: function () {
-        dispatcher.AppDispatcher.unregister(this.handle);
+        AppDispatcher.unregister(this.handle);
     },
     fetch: function (data) {
         console.log("fetch " + this.type);
@@ -148,16 +147,16 @@ function LiveDictStore(type) {
 _.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
 
 
-function FlowStore() {
-    return new LiveListStore(actions.ActionTypes.FLOW_STORE);
+export function FlowStore() {
+    return new LiveListStore(ActionTypes.FLOW_STORE);
 }
 
-function SettingsStore() {
-    return new LiveDictStore(actions.ActionTypes.SETTINGS_STORE);
+export function SettingsStore() {
+    return new LiveDictStore(ActionTypes.SETTINGS_STORE);
 }
 
-function EventLogStore() {
-    LiveListStore.call(this, actions.ActionTypes.EVENT_STORE);
+export function EventLogStore() {
+    LiveListStore.call(this, ActionTypes.EVENT_STORE);
 }
 _.extend(EventLogStore.prototype, LiveListStore.prototype, {
     fetch: function(){
@@ -172,10 +171,3 @@ _.extend(EventLogStore.prototype, LiveListStore.prototype, {
         }
     }
 });
-
-
-module.exports = {
-    EventLogStore: EventLogStore,
-    SettingsStore: SettingsStore,
-    FlowStore: FlowStore
-};

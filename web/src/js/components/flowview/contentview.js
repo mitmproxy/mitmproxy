@@ -1,8 +1,8 @@
-var React = require("react");
-var _ = require("lodash");
+import React from "react";
+import _ from "lodash";
 
-var MessageUtils = require("../../flow/utils.js").MessageUtils;
-var utils = require("../../utils.js");
+import {MessageUtils} from "../../flow/utils.js";
+import {formatSize} from "../../utils.js";
 
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
 var ViewImage = React.createClass({
@@ -145,7 +145,7 @@ var TooLarge = React.createClass({
         }
     },
     render: function () {
-        var size = utils.formatSize(this.props.message.contentLength);
+        var size = formatSize(this.props.message.contentLength);
         return <div className="alert alert-warning">
             <button onClick={this.props.onClick} className="btn btn-xs btn-warning pull-right">Display anyway</button>
             {size} content size.
@@ -234,4 +234,4 @@ var ContentView = React.createClass({
     }
 });
 
-module.exports = ContentView;
+export default ContentView;

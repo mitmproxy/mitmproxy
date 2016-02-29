@@ -1,7 +1,6 @@
-var React = require("react");
-var RequestUtils = require("../flow/utils.js").RequestUtils;
-var ResponseUtils = require("../flow/utils.js").ResponseUtils;
-var utils = require("../utils.js");
+import React from "react";
+import {RequestUtils, ResponseUtils} from "../flow/utils.js";
+import {formatSize, formatTimeDelta} from "../utils.js";
 
 var TLSColumn = React.createClass({
     statics: {
@@ -156,7 +155,7 @@ var SizeColumn = React.createClass({
         if (flow.response) {
             total += flow.response.contentLength || 0;
         }
-        var size = utils.formatSize(total);
+        var size = formatSize(total);
         return <td className="col-size">{size}</td>;
     }
 });
@@ -179,7 +178,7 @@ var TimeColumn = React.createClass({
         var flow = this.props.flow;
         var time;
         if (flow.response) {
-            time = utils.formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
+            time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
         }
@@ -198,4 +197,4 @@ var all_columns = [
     TimeColumn
 ];
 
-module.exports = all_columns;
+export default all_columns;

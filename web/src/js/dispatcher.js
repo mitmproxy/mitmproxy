@@ -1,5 +1,5 @@
 
-var flux = require("flux");
+import flux from "flux";
 
 const PayloadSources = {
     VIEW: "view",
@@ -7,7 +7,7 @@ const PayloadSources = {
 };
 
 
-var AppDispatcher = new flux.Dispatcher();
+export var AppDispatcher = new flux.Dispatcher();
 AppDispatcher.dispatchViewAction = function (action) {
     action.source = PayloadSources.VIEW;
     this.dispatch(action);
@@ -15,8 +15,4 @@ AppDispatcher.dispatchViewAction = function (action) {
 AppDispatcher.dispatchServerAction = function (action) {
     action.source = PayloadSources.SERVER;
     this.dispatch(action);
-};
-
-module.exports = {
-    AppDispatcher: AppDispatcher
 };

@@ -1,16 +1,15 @@
-var React = require("react");
-var ReactDOM = require("react-dom");
-var _ = require("lodash");
+import React from "react";
+import ReactDOM from "react-dom";
+import _ from "lodash";
 
 import {Router, Splitter} from "./common.js"
-var common = require("./common.js");
-var MainView = require("./mainview.js");
-var Footer = require("./footer.js");
-var header = require("./header.js");
+import MainView from "./mainview.js";
+import Footer from "./footer.js";
+import {Header, MainMenu} from "./header.js";
 import EventLog from "./eventlog.js"
-var store = require("../store/store.js");
-var Query = require("../actions.js").Query;
-var Key = require("../utils.js").Key;
+import {EventLogStore, FlowStore, SettingsStore} from "../store/store.js";
+import {Query} from "../actions.js";
+import {Key} from "../utils.js";
 
 
 //TODO: Move out of here, just a stub.
@@ -43,9 +42,9 @@ var ProxyAppMain = React.createClass({
         };
     },
     getInitialState: function () {
-        var eventStore = new store.EventLogStore();
-        var flowStore = new store.FlowStore();
-        var settingsStore = new store.SettingsStore();
+        var eventStore = new EventLogStore();
+        var flowStore = new FlowStore();
+        var settingsStore = new SettingsStore();
 
         // Default Settings before fetch
         _.extend(settingsStore.dict, {});
@@ -65,7 +64,7 @@ var ProxyAppMain = React.createClass({
 
         var selectFilterInput = function (name) {
             var headerComponent = this.refs.header;
-            headerComponent.setState({active: header.MainMenu}, function () {
+            headerComponent.setState({active: MainMenu}, function () {
                 headerComponent.refs.active.refs[name].select();
             });
         }.bind(this);
@@ -105,7 +104,7 @@ var ProxyAppMain = React.createClass({
         );
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
-                <header.Header ref="header"/>
+                <Header ref="header"/>
                 {children}
                 {eventlog}
                 <Footer/>

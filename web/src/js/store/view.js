@@ -1,7 +1,7 @@
-var EventEmitter = require('events').EventEmitter;
-var _ = require("lodash");
+import {EventEmitter} from 'events';
+import _ from "lodash";
 
-var utils = require("../utils.js");
+import utils from "../utils.js";
 
 function SortByStoreOrder(elem) {
     return this.store.index(elem.id);
@@ -12,7 +12,7 @@ var default_filt = function (elem) {
     return true;
 };
 
-function StoreView(store, filt, sortfun) {
+export function StoreView(store, filt, sortfun) {
     EventEmitter.call(this);
 
     this.store = store;
@@ -109,7 +109,3 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         }
     }
 });
-
-module.exports = {
-    StoreView: StoreView
-};

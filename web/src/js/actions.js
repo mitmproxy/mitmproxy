@@ -1,8 +1,8 @@
-var $ = require("jquery");
-var _ = require("lodash");
-var AppDispatcher = require("./dispatcher.js").AppDispatcher;
+import $ from "jquery";
+import _ from "lodash";
+import {AppDispatcher} from "./dispatcher.js";
 
-var ActionTypes = {
+export var ActionTypes = {
     // Connection
     CONNECTION_OPEN: "connection_open",
     CONNECTION_CLOSE: "connection_close",
@@ -11,17 +11,17 @@ var ActionTypes = {
     // Stores
     SETTINGS_STORE: "settings",
     EVENT_STORE: "events",
-    FLOW_STORE: "flows",
+    FLOW_STORE: "flows"
 };
 
-var StoreCmds = {
+export var StoreCmds = {
     ADD: "add",
     UPDATE: "update",
     REMOVE: "remove",
     RESET: "reset"
 };
 
-var ConnectionActions = {
+export var ConnectionActions = {
     open: function () {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.CONNECTION_OPEN
@@ -39,7 +39,7 @@ var ConnectionActions = {
     }
 };
 
-var SettingsActions = {
+export var SettingsActions = {
     update: function (settings) {
 
         $.ajax({
@@ -61,7 +61,7 @@ var SettingsActions = {
 };
 
 var EventLogActions_event_id = 0;
-var EventLogActions = {
+export var EventLogActions = {
     add_event: function (message) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.EVENT_STORE,
@@ -75,7 +75,7 @@ var EventLogActions = {
     }
 };
 
-var FlowActions = {
+export var FlowActions = {
     accept: function (flow) {
         $.post("/flows/" + flow.id + "/accept");
     },
@@ -120,18 +120,8 @@ var FlowActions = {
     }
 };
 
-var Query = {
+export var Query = {
     SEARCH: "s",
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
-};
-
-module.exports = {
-    ActionTypes: ActionTypes,
-    ConnectionActions: ConnectionActions,
-    FlowActions: FlowActions,
-    StoreCmds: StoreCmds,
-    SettingsActions: SettingsActions,
-    EventLogActions: EventLogActions,
-    Query: Query
 };
