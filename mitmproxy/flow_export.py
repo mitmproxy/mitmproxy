@@ -5,22 +5,6 @@ import netlib.http
 from . import contentviews
 
 
-def prettify(data, headers=None):
-    if not headers:
-        return data
-
-    cv = contentviews.get_content_view(
-        contentviews.get("Auto"),
-        data,
-        headers=headers,
-    )
-
-    if cv[0] == "JSON":
-        return "\n".join(l[0][1] for l in cv[1])
-    else:
-        return data
-
-
 def curl_command(flow):
     data = "curl "
 
@@ -71,8 +55,18 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        data = "\ndata = '''%s'''\n" % prettify(flow.request.body, flow.request.headers)
-        args += "\n    data=data,"
+        cv = contentviews.get_content_view(
+            viewmode=contentviews.get("Auto"),
+            data=flow.request.body,
+            headers=flow.request.headers,
+        )
+
+        if cv[0] == "JSON":
+            data = "\njson = %s\n" % "\n".join(l[0][1] for l in cv[1])
+            args += "\n    json=json,"
+        else:
+            data = "\ndata = '''%s'''\n" % flow.request.body
+            args += "\n    data=data,"
 
     code = code.format(
         url=url,
