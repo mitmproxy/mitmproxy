@@ -370,6 +370,14 @@ def proxy_options(parser):
             If your OpenSSL version supports ALPN, HTTP/2 is enabled by default.
         """
     )
+    parser.add_argument(
+        "--upstream-auth",
+        action="store", dest="upstream_auth", default=None,
+        help="""
+            Proxy Authentication:
+            username:password
+        """
+    )
     rawtcp = group.add_mutually_exclusive_group()
     rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
     rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
