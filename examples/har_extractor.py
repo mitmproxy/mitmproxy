@@ -1,5 +1,4 @@
 """
-
     This inline script utilizes harparser.HAR from
     https://github.com/JustusW/harparser to generate a HAR log object.
 """
@@ -122,26 +121,38 @@ def response(context, flow):
         if item > -1:
             full_time += item
 
-    started_date_time = datetime.fromtimestamp(
-        flow.request.timestamp_start,
-        tz=utc).isoformat()
+    started_date_time = datetime.utcfromtimestamp(
+        flow.request.timestamp_start).isoformat()
 
-    request_query_string = [{"name": k, "value": v}
-                            for k, v in flow.request.query]
+    request_query_string = ""
+    if flow.request.query:
+        request_query_string = [{"name": k, "value": v}
+                                for k, v in flow.request.query]
+
     request_http_version = flow.request.http_version
     # Cookies are shaped as tuples by MITMProxy.
     request_cookies = [{"name": k.strip(), "value": v[0]}
                        for k, v in flow.request.cookies.items()]
-    request_headers = [{"name": k, "value": v} for k, v in flow.request.headers]
+
+    request_headers = ""
+    if flow.request.headers:
+        request_headers = [{"name": k, "value": v}
+                           for k, v in flow.request.headers.fields]
+
     request_headers_size = len(str(flow.request.headers))
     request_body_size = len(flow.request.content)
 
     response_http_version = flow.response.http_version
+
     # Cookies are shaped as tuples by MITMProxy.
     response_cookies = [{"name": k.strip(), "value": v[0]}
                         for k, v in flow.response.cookies.items()]
-    response_headers = [{"name": k, "value": v}
-                        for k, v in flow.response.headers]
+
+    response_headers = ""
+    if flow.response.headers:
+        response_headers = [{"name": k, "value": v}
+                            for k, v in flow.response.headers.fields]
+
     response_headers_size = len(str(flow.response.headers))
     response_body_size = len(flow.response.content)
     response_body_decoded_size = len(flow.response.get_decoded_content())
