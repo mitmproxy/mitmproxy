@@ -60,7 +60,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.emit("recalculate");
     },
     index: function (elem) {
-        return _.sortedIndex(this.list, elem, this.sortfun);
+        return _.sortedIndexBy(this.list, elem, this.sortfun);
     },
     add: function (elem) {
         if (this.filt(elem)) {
