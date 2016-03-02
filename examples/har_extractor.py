@@ -82,17 +82,17 @@ def response(context, flow):
         # Calculate the connect_time for this server_conn. Afterwards add it to
         # seen list, in order to avoid the connect_time being present in entries
         # that use an existing connection.
-        connect_time = flow.server_conn.timestamp_tcp_setup - \
-            flow.server_conn.timestamp_start
+        connect_time = (flow.server_conn.timestamp_tcp_setup -
+                        flow.server_conn.timestamp_start)
         context.seen_server.add(flow.server_conn)
 
         if flow.server_conn.timestamp_ssl_setup is not None:
             # Get the ssl_time for this server_conn as the difference between
             # the start of the successful tcp setup and the successful ssl
-            # setup. If  no ssl setup has been made it is left as -1 since it
+            # setup. If no ssl setup has been made it is left as -1 since it
             # doesn't apply to this connection.
-            ssl_time = flow.server_conn.timestamp_ssl_setup - \
-                flow.server_conn.timestamp_tcp_setup
+            ssl_time = (flow.server_conn.timestamp_ssl_setup -
+                        flow.server_conn.timestamp_tcp_setup)
 
     # Calculate the raw timings from the different timestamps present in the
     # request and response object. For lack of a way to measure it dns timings
@@ -111,92 +111,58 @@ def response(context, flow):
 
     # HAR timings are integers in ms, so we have to re-encode the raw timings to
     # that format.
-    timings = dict([(key, int(1000 * value))
-                    for key, value in timings_raw.iteritems()])
+    timings = dict([(k, int(1000 * v)) for k, v in timings_raw.iteritems()])
 
-    # The full_time is the sum of all timings. Timings set to -1 will be ignored
-    # as per spec.
-    full_time = 0
-    for item in timings.values():
-        if item > -1:
-            full_time += item
+    # The full_time is the sum of all timings.
+    # Timings set to -1 will be ignored as per spec.
+    full_time = sum(v for v in timings.values() if v > -1)
 
     started_date_time = datetime.utcfromtimestamp(
         flow.request.timestamp_start).isoformat()
 
-    request_query_string = ""
-    if flow.request.query:
-        request_query_string = [{"name": k, "value": v}
-                                for k, v in flow.request.query]
+    request_query_string = [{"name": k, "value": v}
+                            for k, v in flow.request.query or {}]
 
-    request_http_version = flow.request.http_version
-    # Cookies are shaped as tuples by MITMProxy.
-    request_cookies = [{"name": k.strip(), "value": v[0]}
-                       for k, v in flow.request.cookies.items()]
-
-    request_headers = ""
-    if flow.request.headers:
-        request_headers = [{"name": k, "value": v}
-                           for k, v in flow.request.headers.fields]
-
-    request_headers_size = len(str(flow.request.headers))
-    request_body_size = len(flow.request.content)
-
-    response_http_version = flow.response.http_version
-
-    # Cookies are shaped as tuples by MITMProxy.
-    response_cookies = [{"name": k.strip(), "value": v[0]}
-                        for k, v in flow.response.cookies.items()]
-
-    response_headers = ""
-    if flow.response.headers:
-        response_headers = [{"name": k, "value": v}
-                            for k, v in flow.response.headers.fields]
-
-    response_headers_size = len(str(flow.response.headers))
     response_body_size = len(flow.response.content)
     response_body_decoded_size = len(flow.response.get_decoded_content())
     response_body_compression = response_body_decoded_size - response_body_size
-    response_mime_type = flow.response.headers.get('Content-Type', '')
-    response_redirect_url = flow.response.headers.get('Location', '')
 
-    entry = HAR.entries(
-        {
-            "startedDateTime": started_date_time,
-            "time": full_time,
-            "request": {
-                "method": flow.request.method,
-                "url": flow.request.url,
-                "httpVersion": request_http_version,
-                "cookies": request_cookies,
-                "headers": request_headers,
-                "queryString": request_query_string,
-                "headersSize": request_headers_size,
-                "bodySize": request_body_size,
+    entry = HAR.entries({
+        "startedDateTime": started_date_time,
+        "time": full_time,
+        "request": {
+            "method": flow.request.method,
+            "url": flow.request.url,
+            "httpVersion": flow.request.http_version,
+            "cookies": format_cookies(flow.request.cookies),
+            "headers": format_headers(flow.request.headers),
+            "queryString": request_query_string,
+            "headersSize": len(str(flow.request.headers)),
+            "bodySize": len(flow.request.content),
+        },
+        "response": {
+            "status": flow.response.status_code,
+            "statusText": flow.response.msg,
+            "httpVersion": flow.response.http_version,
+            "cookies": format_cookies(flow.response.cookies),
+            "headers": format_headers(flow.response.headers),
+            "content": {
+                "size": response_body_size,
+                "compression": response_body_compression,
+                "mimeType": flow.response.headers.get('Content-Type', '')
             },
-            "response": {
-                "status": flow.response.status_code,
-                "statusText": flow.response.msg,
-                "httpVersion": response_http_version,
-                "cookies": response_cookies,
-                "headers": response_headers,
-                "content": {
-                    "size": response_body_size,
-                    "compression": response_body_compression,
-                    "mimeType": response_mime_type},
-                "redirectURL": response_redirect_url,
-                "headersSize": response_headers_size,
-                "bodySize": response_body_size,
-            },
-            "cache": {},
-            "timings": timings,
-        })
+            "redirectURL": flow.response.headers.get('Location', ''),
+            "headersSize": len(str(flow.response.headers)),
+            "bodySize": response_body_size,
+        },
+        "cache": {},
+        "timings": timings,
+    })
 
-    # If the current url is in the page list of context.HARLog or does not have
-    # a referrer we add it as a new pages object.
-    if flow.request.url in context.HARLog.get_page_list() or flow.request.headers.get(
-            'Referer',
-            None) is None:
+    # If the current url is in the page list of context.HARLog or
+    # does not have a referrer, we add it as a new pages object.
+    if (flow.request.url in context.HARLog.get_page_list() or
+            flow.request.headers.get('Referer') is None):
         page_id = context.HARLog.create_page_id()
         context.HARLog.add(
             HAR.pages({
@@ -248,6 +214,18 @@ def done(context):
             100. * len(compressed_json_dump) / len(json_dump)
         )
     )
+
+
+def format_cookies(obj):
+    if obj:
+        return [{"name": k.strip(), "value": v[0]} for k, v in obj.items()]
+    return ""
+
+
+def format_headers(obj):
+    if obj:
+        return [{"name": k, "value": v} for k, v in obj.fields]
+    return ""
 
 
 def print_attributes(obj, filter_string=None, hide_privates=False):
