@@ -59,12 +59,12 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         });
         this.emit("recalculate");
     },
-    index: function (elem) {
-        return _.sortedIndexBy(this.list, elem, this.sortfun);
+    indexOf: function (elem) {
+        return this.list.indexOf(elem, _.sortedIndexBy(this.list, elem, this.sortfun));
     },
     add: function (elem) {
         if (this.filt(elem)) {
-            var idx = this.index(elem);
+            var idx = _.sortedIndexBy(this.list, elem, this.sortfun);
             if (idx === this.list.length) { //happens often, .push is way faster.
                 this.list.push(elem);
             } else {
