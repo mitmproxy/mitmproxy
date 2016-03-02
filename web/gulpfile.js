@@ -96,6 +96,10 @@ function buildScript(bundler, filename, dev) {
 
     function rebundle() {
         return bundler.bundle()
+            .on('error', function(error) {
+                gutil.log(error + '\n' + error.codeFrame);
+                this.emit('end');
+            })
             .pipe(dev ? plumber(handleError) : gutil.noop())
             .pipe(source('bundle.js'))
             .pipe(buffer())
