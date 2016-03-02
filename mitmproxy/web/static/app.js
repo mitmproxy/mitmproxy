@@ -6318,7 +6318,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
         this.emit("recalculate");
     },
     index: function index(elem) {
-        return _lodash2.default.sortedIndex(this.list, elem, this.sortfun);
+        return _lodash2.default.sortedIndexBy(this.list, elem, this.sortfun);
     },
     add: function add(elem) {
         if (this.filt(elem)) {
