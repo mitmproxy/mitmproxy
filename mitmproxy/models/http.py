@@ -2,7 +2,6 @@ from __future__ import (absolute_import, print_function, division)
 import Cookie
 import copy
 import warnings
-import base64
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
@@ -194,8 +193,7 @@ class HTTPRequest(MessageMixin, Request):
         return id(self)
 
     def set_auth(self, auth):
-        auth_str = "Basic" + " " + base64.b64encode(auth)
-        self.data.headers.set_all("Proxy-Authorization", (auth_str,))
+        self.data.headers.set_all("Proxy-Authorization", (auth,))
 
     def replace(self, pattern, repl, *args, **kwargs):
         """

@@ -1,4 +1,5 @@
 import argparse
+import base64
 from mitmproxy import cmdline
 from . import tutils
 
@@ -51,6 +52,12 @@ def test_parse_server_spec():
         "Invalid server specification",
         cmdline.parse_server_spec,
         "http://")
+
+
+def test_parse_upstream_auth():
+    tutils.raises("Invalid upstream auth specification", cmdline.parse_upstream_auth, "")
+    assert cmdline.parse_upstream_auth(
+        "test:test") == "Basic" + " " + base64.b64encode("test:test")
 
 
 def test_parse_setheaders():
