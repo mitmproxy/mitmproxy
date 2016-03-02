@@ -1,8 +1,9 @@
 jest.dontMock("jquery");
 jest.dontMock("../utils");
 
+import {formatSize} from "../utils.js"
+
 describe("utils", function () {
-    import {formatSize} from "../utils.js"
     it("formatSize", function(){
         expect(formatSize(1024)).toEqual("1kb");
         expect(formatSize(0)).toEqual("0");
