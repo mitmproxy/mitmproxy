@@ -481,7 +481,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Splitter = exports.Router = exports.ChildFocus = exports.SettingsState = exports.StickyHeadMixin = exports.AutoScrollMixin = undefined;
+exports.Splitter = exports.Router = exports.SettingsState = exports.StickyHeadMixin = exports.AutoScrollMixin = undefined;
 
 var _react = require("react");
 
@@ -539,17 +539,6 @@ var SettingsState = exports.SettingsState = {
         this.setState({
             settings: this.context.settingsStore.dict
         });
-    }
-};
-
-var ChildFocus = exports.ChildFocus = {
-    contextTypes: {
-        returnFocus: _react2.default.PropTypes.func
-    },
-    returnFocus: function returnFocus() {
-        _reactDom2.default.findDOMNode(this).blur();
-        window.getSelection().removeAllRanges();
-        this.context.returnFocus();
     }
 };
 
@@ -707,8 +696,6 @@ var _react2 = _interopRequireDefault(_react);
 var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
-
-var _common = require("./common.js");
 
 var _utils = require("../utils.js");
 
@@ -927,7 +914,9 @@ var ValidateEditor = _react2.default.createClass({
 var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     displayName: "ValueEditor",
 
-    mixins: [_common.ChildFocus],
+    contextTypes: {
+        returnFocus: _react2.default.PropTypes.func
+    },
     propTypes: {
         content: _react2.default.PropTypes.string.isRequired,
         onDone: _react2.default.PropTypes.func.isRequired,
@@ -944,11 +933,11 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
         _reactDom2.default.findDOMNode(this).focus();
     },
     onStop: function onStop() {
-        this.returnFocus();
+        this.context.returnFocus();
     }
 });
 
-},{"../utils.js":26,"./common.js":4,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":26,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2924,7 +2913,9 @@ var FilterDocs = _react2.default.createClass({
 var FilterInput = _react2.default.createClass({
     displayName: "FilterInput",
 
-    mixins: [_common.ChildFocus],
+    contextTypes: {
+        returnFocus: _react2.default.PropTypes.func
+    },
     getInitialState: function getInitialState() {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -2991,7 +2982,7 @@ var FilterInput = _react2.default.createClass({
     },
     blur: function blur() {
         _reactDom2.default.findDOMNode(this.refs.input).blur();
-        this.returnFocus();
+        this.context.returnFocus();
     },
     select: function select() {
         _reactDom2.default.findDOMNode(this.refs.input).select();
@@ -3574,14 +3565,14 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 var _utils = require("../utils.js");
 
-var _common = require("./common.js");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var Prompt = _react2.default.createClass({
     displayName: "Prompt",
 
-    mixins: [_common.ChildFocus],
+    contextTypes: {
+        returnFocus: _react2.default.PropTypes.func
+    },
     propTypes: {
         options: _react2.default.PropTypes.array.isRequired,
         done: _react2.default.PropTypes.func.isRequired,
@@ -3610,7 +3601,7 @@ var Prompt = _react2.default.createClass({
     },
     done: function done(ret) {
         this.props.done(ret);
-        this.returnFocus();
+        this.context.returnFocus();
     },
     getOptions: function getOptions() {
         var opts = [];
@@ -3689,7 +3680,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":26,"./common.js":4,"lodash":"lodash","react":"react","react-dom":"react-dom"}],18:[function(require,module,exports){
+},{"../utils.js":26,"lodash":"lodash","react":"react","react-dom":"react-dom"}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3785,6 +3776,8 @@ var ProxyAppMain = _react2.default.createClass({
         };
     },
     focus: function focus() {
+        document.activeElement.blur();
+        window.getSelection().removeAllRanges();
         _reactDom2.default.findDOMNode(this).focus();
     },
     getMainComponent: function getMainComponent() {

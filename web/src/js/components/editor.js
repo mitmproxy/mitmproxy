@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from 'react-dom';
-import {ChildFocus} from "./common.js";
 import {Key} from "../utils.js";
 
 var contentToHtml = function (content) {
@@ -214,7 +213,9 @@ var ValidateEditor = React.createClass({
  Text Editor with mitmweb-specific convenience features
  */
 export var ValueEditor = React.createClass({
-    mixins: [ChildFocus],
+    contextTypes: {
+        returnFocus: React.PropTypes.func
+    },
     propTypes: {
         content: React.PropTypes.string.isRequired,
         onDone: React.PropTypes.func.isRequired,
@@ -232,6 +233,6 @@ export var ValueEditor = React.createClass({
         ReactDOM.findDOMNode(this).focus();
     },
     onStop: function () {
-        this.returnFocus();
+        this.context.returnFocus();
     }
 });

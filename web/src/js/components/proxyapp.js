@@ -55,6 +55,8 @@ var ProxyAppMain = React.createClass({
         };
     },
     focus: function () {
+        document.activeElement.blur();
+        window.getSelection().removeAllRanges();
         ReactDOM.findDOMNode(this).focus();
     },
     getMainComponent: function () {
