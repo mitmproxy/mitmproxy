@@ -67,6 +67,7 @@ class ProxyConfig:
             ssl_verify_upstream_cert=False,
             ssl_verify_upstream_trusted_cadir=None,
             ssl_verify_upstream_trusted_ca=None,
+            add_server_certs_to_client_chain=False,
     ):
         self.host = host
         self.port = port
@@ -107,6 +108,7 @@ class ProxyConfig:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
         self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
         self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
+        self.add_server_certs_to_client_chain = add_server_certs_to_client_chain
 
 
 def process_proxy_options(parser, options):
@@ -206,5 +208,6 @@ def process_proxy_options(parser, options):
         ssl_version_server=options.ssl_version_server,
         ssl_verify_upstream_cert=options.ssl_verify_upstream_cert,
         ssl_verify_upstream_trusted_cadir=options.ssl_verify_upstream_trusted_cadir,
-        ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca
+        ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca,
+        add_server_certs_to_client_chain=options.add_server_certs_to_client_chain,
     )
