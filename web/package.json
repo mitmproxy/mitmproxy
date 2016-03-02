@@ -5,6 +5,7 @@
     "test": "jest ./src/js"
   },
   "jest": {
+    "scriptPreprocessor": "<rootDir>/node_modules/babel-jest",
     "testPathDirs": [
       "./src/js"
     ],
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "babel-core": "^6.5.2",
+    "babel-jest": "^6.0.1",
     "babel-preset-es2015": "^6.5.0",
     "babel-preset-react": "^6.5.0",
     "babelify": "^7.2.0",
@@ -41,6 +43,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-util": "^3.0.7",
+    "jest": "^0.1.40",
     "lodash": "^4.5.1",
     "uglifyify": "^3.0.1",
     "vinyl-buffer": "^1.0.0",
