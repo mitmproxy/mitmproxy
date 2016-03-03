@@ -16,7 +16,7 @@ class _HARLog(HAR.log):
     __page_count__ = 0
     __page_ref__ = {}
 
-    def __init__(self, page_list):
+    def __init__(self, page_list=[]):
         self.__page_list__ = page_list
         self.__page_count__ = 0
         self.__page_ref__ = {}
@@ -66,7 +66,7 @@ def start(context, argv):
             '(- will output to stdout, filenames ending with .zhar '
             'will result in compressed har)'
         )
-    context.HARLog = _HARLog(['https://github.com'])
+    context.HARLog = _HARLog()
     context.seen_server = set()
 
 
