@@ -192,7 +192,7 @@ def done(context):
     """
         Called once on script shutdown, after any other events.
     """
-    from pprint import pprint
+    import pprint
     import json
 
     json_dump = context.HARLog.json()
