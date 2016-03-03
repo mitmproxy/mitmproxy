@@ -114,7 +114,7 @@ def locust_code(flow):
     args = ""
     headers = ""
     if flow.request.headers:
-        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower()!="host"]
+        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
         headers += "\n        headers = {\n%s        }\n" % "".join(lines)
         args += "\n            headers=headers,"
 
@@ -167,7 +167,7 @@ def locust_task(flow):
     args = ""
     headers = ""
     if flow.request.headers:
-        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower()!="host"]
+        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
         headers += "\n        headers = {\n%s        }\n" % "".join(lines)
         args += "\n            headers=headers,"
 
