@@ -143,7 +143,7 @@ var FlowTable = React.createClass({
     },
     scrollIntoView: function (flow) {
         this.scrollRowIntoView(
-            this.context.view.index(flow),
+            this.context.view.indexOf(flow),
             ReactDOM.findDOMNode(this.refs.body).offsetTop
         );
     },

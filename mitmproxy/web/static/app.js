@@ -1580,7 +1580,7 @@ var FlowTable = _react2.default.createClass({
         this.forceUpdate();
     },
     scrollIntoView: function scrollIntoView(flow) {
-        this.scrollRowIntoView(this.context.view.index(flow), _reactDom2.default.findDOMNode(this.refs.body).offsetTop);
+        this.scrollRowIntoView(this.context.view.indexOf(flow), _reactDom2.default.findDOMNode(this.refs.body).offsetTop);
     },
     renderRow: function renderRow(flow) {
         var selected = flow === this.props.selected;
@@ -6317,12 +6317,12 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
         });
         this.emit("recalculate");
     },
-    index: function index(elem) {
-        return _lodash2.default.sortedIndex(this.list, elem, this.sortfun);
+    indexOf: function indexOf(elem) {
+        return this.list.indexOf(elem, _lodash2.default.sortedIndexBy(this.list, elem, this.sortfun));
     },
     add: function add(elem) {
         if (this.filt(elem)) {
-            var idx = this.index(elem);
+            var idx = _lodash2.default.sortedIndexBy(this.list, elem, this.sortfun);
             if (idx === this.list.length) {
                 //happens often, .push is way faster.
                 this.list.push(elem);
