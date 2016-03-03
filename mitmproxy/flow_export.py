@@ -56,8 +56,9 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        if is_json(flow.request.headers):
-            data = json.dumps(json.loads(flow.request.body), indent=4)
+        json_obj = is_json(flow.request.headers, flow.request.body)
+        if json_obj:
+            data = json.dumps(json_obj, indent=4)
             data = "\njson = %s\n" % data
             args += "\n    json=json,"
         else:
@@ -81,8 +82,12 @@ def raw_request(flow):
     return data
 
 
-def is_json(headers):
+def is_json(headers, content):
     if headers:
         ct = parse_content_type(headers.get("content-type", ""))
-        return ct and "%s/%s" % (ct[0], ct[1]) == "application/json"
+        if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
+            try:
+                return json.loads(content)
+            except ValueError:
+                return False
     return False
