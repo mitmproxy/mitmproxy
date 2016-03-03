@@ -1,8 +1,9 @@
+import json
 import urllib
 from textwrap import dedent
 
 import netlib.http
-from . import contentviews
+from netlib.utils import parse_content_type
 
 
 def curl_command(flow):
@@ -55,14 +56,9 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        cv = contentviews.get_content_view(
-            viewmode=contentviews.get("Auto"),
-            data=flow.request.body,
-            headers=flow.request.headers,
-        )
-
-        if cv[0] == "JSON":
-            data = "\njson = %s\n" % "\n".join(l[0][1] for l in cv[1])
+        if is_json(flow.request.headers):
+            data = json.dumps(json.loads(flow.request.body), indent=4)
+            data = "\njson = %s\n" % data
             args += "\n    json=json,"
         else:
             data = "\ndata = '''%s'''\n" % flow.request.body
@@ -83,3 +79,10 @@ def python_code(flow):
 def raw_request(flow):
     data = netlib.http.http1.assemble_request(flow.request)
     return data
+
+
+def is_json(headers):
+    if headers:
+        ct = parse_content_type(headers.get("content-type", ""))
+        return ct and "%s/%s" % (ct[0], ct[1]) == "application/json"
+    return False
