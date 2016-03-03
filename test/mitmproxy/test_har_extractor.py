@@ -2,8 +2,11 @@ import json
 import netlib.tutils
 from . import tutils
 
-from mitmproxy import script, flow
 from examples import har_extractor
+
+
+class Context(object):
+    pass
 
 
 trequest = netlib.tutils.treq(
@@ -18,14 +21,11 @@ tresponse = netlib.tutils.tresp(
 
 
 def test_start():
-    fm = flow.FlowMaster(None, flow.State())
-    ctx = script.ScriptContext(fm)
-    tutils.raises(ValueError, har_extractor.start, ctx, [])
+    tutils.raises(ValueError, har_extractor.start, Context(), [])
 
 
 def test_response():
-    fm = flow.FlowMaster(None, flow.State())
-    ctx = script.ScriptContext(fm)
+    ctx = Context()
     ctx.HARLog = har_extractor._HARLog([])
     ctx.seen_server = set()
 
