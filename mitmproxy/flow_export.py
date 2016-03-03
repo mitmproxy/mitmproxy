@@ -58,7 +58,9 @@ def python_code(flow):
     if flow.request.body:
         json_obj = is_json(flow.request.headers, flow.request.body)
         if json_obj:
-            data = json.dumps(json_obj, indent=4)
+            # Without the separators field json.dumps() produces
+            # trailing white spaces: https://bugs.python.org/issue16333
+            data = json.dumps(json_obj, indent=4, separators=(',', ': '))
             data = "\njson = %s\n" % data
             args += "\n    json=json,"
         else:
