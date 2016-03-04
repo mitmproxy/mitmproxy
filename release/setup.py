@@ -17,10 +17,4 @@ setup(
             "rtool=rtool:cli",
         ],
     },
-    options={
-        "build_exe": {
-            "icon": "/mitmproxy/docs/favicon.ico"
-        }
-    },
-
 )
