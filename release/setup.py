@@ -21,6 +21,6 @@ setup(
         "build_exe": {
             "icon": "/mitmproxy/docs/favicon.ico"
         }
-    }
+    },
 
 )
