@@ -179,6 +179,9 @@ class HttpLayer(Layer):
             try:
                 flow = HTTPFlow(self.client_conn, self.server_conn, live=self)
                 flow.request = request
+                # set upstream auth
+                if self.mode == "upstream" and self.config.upstream_auth is not None:
+                    flow.request.set_auth(self.config.upstream_auth)
                 self.process_request_hook(flow)
 
                 if not flow.response:

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import re
+import base64
 
 import configargparse
 
@@ -115,6 +116,15 @@ def parse_server_spec(url):
     address = Address(p[1:3])
     scheme = p[0].lower()
     return config.ServerSpec(scheme, address)
+
+
+def parse_upstream_auth(auth):
+    pattern = re.compile(".+:")
+    if pattern.search(auth) is None:
+        raise configargparse.ArgumentTypeError(
+            "Invalid upstream auth specification: %s" % auth
+        )
+    return "Basic" + " " + base64.b64encode(auth)
 
 
 def get_common_options(options):
@@ -368,6 +378,15 @@ def proxy_options(parser):
         help="""
             Explicitly disable HTTP/2 support.
             If your OpenSSL version supports ALPN, HTTP/2 is enabled by default.
+        """
+    )
+    parser.add_argument(
+        "--upstream-auth",
+        action="store", dest="upstream_auth", default=None,
+        type=parse_upstream_auth,
+        help="""
+            Proxy Authentication:
+            username:password
         """
     )
     rawtcp = group.add_mutually_exclusive_group()
