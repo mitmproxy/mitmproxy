@@ -119,7 +119,7 @@ def parse_server_spec(url):
 
 
 def parse_upstream_auth(auth):
-    pattern = re.compile(":")
+    pattern = re.compile(".+:")
     if pattern.search(auth) is None:
         raise configargparse.ArgumentTypeError(
             "Invalid upstream auth specification: %s" % auth

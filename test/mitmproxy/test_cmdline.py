@@ -56,8 +56,12 @@ def test_parse_server_spec():
 
 def test_parse_upstream_auth():
     tutils.raises("Invalid upstream auth specification", cmdline.parse_upstream_auth, "")
+    tutils.raises("Invalid upstream auth specification", cmdline.parse_upstream_auth, ":")
+    tutils.raises("Invalid upstream auth specification", cmdline.parse_upstream_auth, ":test")
     assert cmdline.parse_upstream_auth(
         "test:test") == "Basic" + " " + base64.b64encode("test:test")
+    assert cmdline.parse_upstream_auth(
+        "test:") == "Basic" + " " + base64.b64encode("test:")
 
 
 def test_parse_setheaders():
