@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
-import {Router, SettingsState, ChildFocus} from "./common.js";
+import {Router, SettingsState} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 
@@ -51,7 +51,9 @@ var FilterDocs = React.createClass({
     }
 });
 var FilterInput = React.createClass({
-    mixins: [ChildFocus],
+    contextTypes: {
+        returnFocus: React.PropTypes.func
+    },
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -118,7 +120,7 @@ var FilterInput = React.createClass({
     },
     blur: function () {
         ReactDOM.findDOMNode(this.refs.input).blur();
-        this.returnFocus();
+        this.context.returnFocus();
     },
     select: function () {
         ReactDOM.findDOMNode(this.refs.input).select();

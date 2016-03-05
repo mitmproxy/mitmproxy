@@ -52,18 +52,6 @@ export var SettingsState = {
 };
 
 
-export var ChildFocus = {
-    contextTypes: {
-        returnFocus: React.PropTypes.func
-    },
-    returnFocus: function () {
-        ReactDOM.findDOMNode(this).blur();
-        window.getSelection().removeAllRanges();
-        this.context.returnFocus();
-    }
-};
-
-
 export var Router = {
     contextTypes: {
         location: React.PropTypes.object,
