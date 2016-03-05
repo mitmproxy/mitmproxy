@@ -20,4 +20,4 @@ exe = EXE(pyz,
           strip=None,
           upx=True,
           console=True,
-          icon='\\mitmproxy\\docs\\favicon.ico' )
+          icon='..//..//docs//favicon.ico' )
