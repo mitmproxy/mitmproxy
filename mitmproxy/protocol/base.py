@@ -3,7 +3,7 @@ import sys
 
 import six
 
-from ..models import ServerConnection
+from ..models import ServerConnection, SocksServerConnection
 from ..exceptions import ProtocolException
 from netlib.exceptions import TcpException
 
@@ -113,7 +113,17 @@ class ServerConnectionMixin(object):
 
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
-        self.server_conn = ServerConnection(server_address, (self.config.host, 0))
+        if self.config.upstream_socks is None:
+            self.server_conn = ServerConnection(server_address, (self.config.host, 0))
+        else:
+            upstream_socks = self.config.upstream_socks
+            self.server_conn = SocksServerConnection(server_address, (self.config.host, 0))
+            self.server_conn.set_proxy(
+                upstream_socks.address,
+                upstream_socks.port,
+                upstream_socks.username,
+                upstream_socks.password
+            )
         self.__check_self_connect()
 
     def __check_self_connect(self):

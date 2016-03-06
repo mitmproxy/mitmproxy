@@ -4,7 +4,7 @@ from .http import (
     HTTPFlow, HTTPRequest, HTTPResponse, Headers, decoded,
     make_error_response, make_connect_request, make_connect_response, expect_continue_response
 )
-from .connections import ClientConnection, ServerConnection
+from .connections import ClientConnection, ServerConnection, SocksServerConnection
 from .flow import Flow, Error
 
 __all__ = [

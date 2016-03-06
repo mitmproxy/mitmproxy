@@ -589,6 +589,14 @@ class TestTCPClient:
         tutils.raises(TcpException, c.connect)
 
 
+class TestSocksTCPClient:
+
+    def test_conerr(self):
+        c = tcp.SocksTCPClient(("127.0.0.1", 0))
+        c.set_proxy("127.0.0.1", 0)
+        tutils.raises(TcpException, c.connect)
+
+
 class TestFileLike:
 
     def test_blocksize(self):

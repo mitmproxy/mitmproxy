@@ -1,5 +1,6 @@
 import os
 import mock
+import socket
 from OpenSSL import SSL
 
 from mitmproxy import cmdline
@@ -10,6 +11,7 @@ from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from netlib.exceptions import TcpDisconnect
 from pathod import test
 from netlib.http import http1
+from netlib import socks
 from . import tutils
 
 
@@ -51,6 +53,55 @@ class TestServerConnection(object):
         assert "ssl" in repr(sc)
         sc.sni = "foo"
         assert "foo" in repr(sc)
+
+
+class MockSocksSocket(mock.MagicMock, socket.socket):
+    def __init__(self, address, port = None, username = None, password = None, proto = 0, fileno = None):
+        mock.MagicMock.__init__(self)
+        socket.socket.__init__(self)
+
+
+@mock.patch('netlib.socks.SocksSocket', MockSocksSocket)
+class TestSocksServerConnection(object):
+
+    def test_simple(self):
+        self.d = test.Daemon()
+        sc = ServerConnection((self.d.IFACE, self.d.port))
+        sc.connect()
+        f = tutils.tflow()
+        f.server_conn = sc
+        f.request.path = "/p/200:da"
+
+        # use this protocol just to assemble - not for actual sending
+        sc.wfile.write(http1.assemble_request(f.request))
+        sc.wfile.flush()
+
+        assert http1.read_response(sc.rfile, f.request, 1000)
+        assert self.d.last_log()
+
+        sc.finish()
+        self.d.shutdown()
+
+    def test_terminate_error(self):
+        self.d = test.Daemon()
+        sc = ServerConnection((self.d.IFACE, self.d.port))
+        sc.connect()
+        sc.connection = mock.Mock()
+        sc.connection.recv = mock.Mock(return_value=False)
+        sc.connection.flush = mock.Mock(side_effect=TcpDisconnect)
+        sc.finish()
+        self.d.shutdown()
+
+    def test_repr(self):
+        sc = tutils.tserver_conn()
+        assert "address:22" in repr(sc)
+        assert "ssl" not in repr(sc)
+        sc.ssl_established = True
+        assert "ssl" in repr(sc)
+        sc.sni = "foo"
+        assert "foo" in repr(sc)
+
+
 
 
 class TestProcessProxyOptions:
@@ -95,6 +146,10 @@ class TestProcessProxyOptions:
         self.assert_noerr("--upstream-auth", "test:test")
         self.assert_err("expected one argument", "--upstream-auth")
         self.assert_err("Invalid upstream auth specification", "--upstream-auth", "test")
+
+        self.assert_noerr("-US", "test:test@foo.com")
+        self.assert_err("expected one argument", "-US")
+        self.assert_err("Invalid upstream socks specification", "-US", "@")
 
         self.assert_err("not allowed with", "-R", "http://localhost", "-T")
 

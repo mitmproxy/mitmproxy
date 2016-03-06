@@ -64,6 +64,18 @@ def test_parse_upstream_auth():
         "test:") == "Basic" + " " + base64.b64encode("test:")
 
 
+def test_parse_upstream_socks_spec():
+    tutils.raises("Invalid upstream socks specification", cmdline.parse_upstream_socks_spec, "")
+    tutils.raises("Invalid upstream socks specification", cmdline.parse_upstream_socks_spec, "@")
+    tutils.raises("Invalid upstream socks specification", cmdline.parse_upstream_socks_spec, "test:@")
+    assert cmdline.parse_upstream_socks_spec(
+        "foo.com:1080") == ("foo.com", 1080, None, None)
+    assert cmdline.parse_upstream_socks_spec(
+        "test:test@foo.com:1080") == ("foo.com", 1080, "test", "test")
+    assert cmdline.parse_upstream_socks_spec(
+        "foo.com") == ("foo.com", None, None, None)
+
+
 def test_parse_setheaders():
     x = cmdline.parse_setheader("/foo/bar/voing")
     assert x == ("foo", "bar", "voing")

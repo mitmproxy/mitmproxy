@@ -127,6 +127,37 @@ def parse_upstream_auth(auth):
     return "Basic" + " " + base64.b64encode(auth)
 
 
+def parse_upstream_socks_spec(url):
+    address, port, username, password = None, None, None, None
+    pattern = re.compile("^.+:.+@")
+    str_usr_psd = pattern.search(url)
+    if str_usr_psd is not None:
+        str_usr_psd = str_usr_psd.group()
+        usr_psd = str_usr_psd.split(":", 2)
+        username = usr_psd[0]
+        password = usr_psd[1]
+        password = password[:-1]
+        url = url[len(str_usr_psd):]
+    pattern = re.compile(":\\d+$")
+    str_port = pattern.search(url)
+    if str_port is not None:
+        str_port = str_port.group()
+        port = int(str_port[1:])
+        address = url[:-len(str_port)]
+    else:
+        address = url
+    if len(address) == 0 or not netlib.utils.is_valid_host(address):
+        raise configargparse.ArgumentTypeError(
+            "Invalid upstream socks specification: %s" % url
+        )
+    if port is not None and not netlib.utils.is_valid_port(port):
+        raise configargparse.ArgumentTypeError(
+            "Invalid upstream socks specification: %s" % url
+        )
+
+    return config.UpstreamSocksSpec(address, port, username, password)
+
+
 def get_common_options(options):
     stickycookie, stickyauth = None, None
     if options.stickycookie_filt:
@@ -389,6 +420,20 @@ def proxy_options(parser):
             username:password
         """
     )
+    group.add_argument(
+        "-US", "--upstream-socks",
+        action="store",
+        type=parse_upstream_socks_spec,
+        dest="upstream_socks",
+        default=None,
+        help="""
+            Forward all requests to upstream socks proxy server.
+            upstream socks mode and other proxy mode can be used simultaneously:
+            [username:password@]host[:port]
+        """
+    )
+
+
     rawtcp = group.add_mutually_exclusive_group()
     rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
     rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
