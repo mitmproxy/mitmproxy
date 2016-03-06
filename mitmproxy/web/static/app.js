@@ -481,7 +481,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Splitter = exports.Router = exports.SettingsState = exports.StickyHeadMixin = exports.AutoScrollMixin = undefined;
+exports.Splitter = exports.Router = exports.StickyHeadMixin = exports.AutoScrollMixin = undefined;
 
 var _react = require("react");
 
@@ -517,28 +517,6 @@ var StickyHeadMixin = exports.StickyHeadMixin = {
         // referenced as head into some kind of position:sticky.
         var head = _reactDom2.default.findDOMNode(this.refs.head);
         head.style.transform = "translate(0," + _reactDom2.default.findDOMNode(this).scrollTop + "px)";
-    }
-};
-
-var SettingsState = exports.SettingsState = {
-    contextTypes: {
-        settingsStore: _react2.default.PropTypes.object.isRequired
-    },
-    getInitialState: function getInitialState() {
-        return {
-            settings: this.context.settingsStore.dict
-        };
-    },
-    componentDidMount: function componentDidMount() {
-        this.context.settingsStore.addListener("recalculate", this.onSettingsChange);
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        this.context.settingsStore.removeListener("recalculate", this.onSettingsChange);
-    },
-    onSettingsChange: function onSettingsChange() {
-        this.setState({
-            settings: this.context.settingsStore.dict
-        });
     }
 };
 
@@ -2773,6 +2751,7 @@ exports.default = Nav;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.default = Footer;
 
 var _react = require("react");
 
@@ -2782,34 +2761,33 @@ var _common = require("./common.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Footer = _react2.default.createClass({
-    displayName: "Footer",
+Footer.propTypes = {
+    settings: _react2.default.PropTypes.object.isRequired
+};
 
-    mixins: [_common.SettingsState],
-    render: function render() {
-        var mode = this.state.settings.mode;
-        var intercept = this.state.settings.intercept;
-        return _react2.default.createElement(
-            "footer",
-            null,
-            mode && mode != "regular" ? _react2.default.createElement(
-                "span",
-                { className: "label label-success" },
-                mode,
-                " mode"
-            ) : null,
-            " ",
-            intercept ? _react2.default.createElement(
-                "span",
-                { className: "label label-success" },
-                "Intercept: ",
-                intercept
-            ) : null
-        );
-    }
-});
+function Footer(_ref) {
+    var settings = _ref.settings;
 
-exports.default = Footer;
+    var mode = settings.mode;
+    var intercept = settings.intercept;
+    return _react2.default.createElement(
+        "footer",
+        null,
+        mode && mode != "regular" ? _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            mode,
+            " mode"
+        ) : null,
+        " ",
+        intercept ? _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "Intercept: ",
+            intercept
+        ) : null
+    );
+}
 
 },{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
@@ -3029,7 +3007,10 @@ var FilterInput = _react2.default.createClass({
 var MainMenu = exports.MainMenu = _react2.default.createClass({
     displayName: "MainMenu",
 
-    mixins: [_common.Router, _common.SettingsState],
+    mixins: [_common.Router],
+    propTypes: {
+        settings: _react2.default.PropTypes.object.isRequired
+    },
     statics: {
         title: "Start",
         route: "flows"
@@ -3050,7 +3031,7 @@ var MainMenu = exports.MainMenu = _react2.default.createClass({
     render: function render() {
         var search = this.getQuery()[_actions.Query.SEARCH] || "";
         var highlight = this.getQuery()[_actions.Query.HIGHLIGHT] || "";
-        var intercept = this.state.settings.intercept || "";
+        var intercept = this.props.settings.intercept || "";
 
         return _react2.default.createElement(
             "div",
@@ -3228,6 +3209,9 @@ var Header = exports.Header = _react2.default.createClass({
     displayName: "Header",
 
     mixins: [_common.Router],
+    propTypes: {
+        settings: _react2.default.PropTypes.object.isRequired
+    },
     getInitialState: function getInitialState() {
         return {
             active: header_entries[0]
@@ -3268,7 +3252,7 @@ var Header = exports.Header = _react2.default.createClass({
             _react2.default.createElement(
                 "div",
                 { className: "menu" },
-                _react2.default.createElement(this.state.active, { ref: "active" })
+                _react2.default.createElement(this.state.active, { ref: "active", settings: this.props.settings })
             )
         );
     }
@@ -3744,7 +3728,6 @@ var ProxyAppMain = _react2.default.createClass({
 
     mixins: [_common.Router],
     childContextTypes: {
-        settingsStore: _react2.default.PropTypes.object.isRequired,
         flowStore: _react2.default.PropTypes.object.isRequired,
         eventStore: _react2.default.PropTypes.object.isRequired,
         returnFocus: _react2.default.PropTypes.func.isRequired,
@@ -3752,10 +3735,16 @@ var ProxyAppMain = _react2.default.createClass({
     },
     componentDidMount: function componentDidMount() {
         this.focus();
+        this.settingsStore.addListener("recalculate", this.onSettingsChange);
+    },
+    componentWillUnmount: function componentWillUnmount() {
+        this.settingsStore.removeListener("recalculate", this.onSettingsChange);
+    },
+    onSettingsChange: function onSettingsChange() {
+        this.setState({ settings: this.settingsStore.dict });
     },
     getChildContext: function getChildContext() {
         return {
-            settingsStore: this.state.settingsStore,
             flowStore: this.state.flowStore,
             eventStore: this.state.eventStore,
             returnFocus: this.focus,
@@ -3767,10 +3756,11 @@ var ProxyAppMain = _react2.default.createClass({
         var flowStore = new _store.FlowStore();
         var settingsStore = new _store.SettingsStore();
 
+        this.settingsStore = settingsStore;
         // Default Settings before fetch
         _lodash2.default.extend(settingsStore.dict, {});
         return {
-            settingsStore: settingsStore,
+            settings: settingsStore.dict,
             flowStore: flowStore,
             eventStore: eventStore
         };
@@ -3822,10 +3812,10 @@ var ProxyAppMain = _react2.default.createClass({
         return _react2.default.createElement(
             "div",
             { id: "container", tabIndex: "0", onKeyDown: this.onKeydown },
-            _react2.default.createElement(_header.Header, { ref: "header" }),
+            _react2.default.createElement(_header.Header, { ref: "header", settings: this.state.settings }),
             children,
             eventlog,
-            _react2.default.createElement(_footer2.default, null)
+            _react2.default.createElement(_footer2.default, { settings: this.state.settings })
         );
     }
 });

@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
-import {Router, SettingsState} from "./common.js";
+import {Router} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 
@@ -161,7 +161,10 @@ var FilterInput = React.createClass({
 });
 
 export var MainMenu = React.createClass({
-    mixins: [Router, SettingsState],
+    mixins: [Router],
+    propTypes: {
+        settings: React.PropTypes.object.isRequired,
+    },
     statics: {
         title: "Start",
         route: "flows"
@@ -182,7 +185,7 @@ export var MainMenu = React.createClass({
     render: function () {
         var search = this.getQuery()[Query.SEARCH] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
-        var intercept = this.state.settings.intercept || "";
+        var intercept = this.props.settings.intercept || "";
 
         return (
             <div>
@@ -351,6 +354,9 @@ var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
 export var Header = React.createClass({
     mixins: [Router],
+    propTypes: {
+        settings: React.PropTypes.object.isRequired,
+    },
     getInitialState: function () {
         return {
             active: header_entries[0]
@@ -386,7 +392,7 @@ export var Header = React.createClass({
                     {header}
                 </nav>
                 <div className="menu">
-                    <this.state.active ref="active"/>
+                    <this.state.active ref="active" settings={this.props.settings}/>
                 </div>
             </header>
         );
