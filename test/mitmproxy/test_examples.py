@@ -9,7 +9,7 @@ from . import tservers, tutils
 from examples import (
     add_header,
     modify_form,
-
+    modify_querystring,
 )
 
 
@@ -50,4 +50,10 @@ def test_modify_form():
     flow = tutils.tflow(req=netutils.treq(headers=form_header))
     modify_form.request({}, flow)
     assert flow.request.urlencoded_form["mitmproxy"] == ["rocks"]
+
+
+def test_modify_querystring():
+    flow = tutils.tflow(req=netutils.treq(path="/search?q=term"))
+    modify_querystring.request({}, flow)
+    assert flow.request.query["mitmproxy"] == ["rocks"]
 
