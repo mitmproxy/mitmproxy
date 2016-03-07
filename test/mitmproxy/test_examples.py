@@ -8,6 +8,7 @@ from . import tservers, tutils
 
 from examples import (
     add_header,
+    custom_contentviews,
     modify_form,
     modify_querystring,
     modify_response_body,
@@ -73,3 +74,10 @@ def test_modify_response_body():
     flow = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
     modify_response_body.response(ctx, flow)
     assert flow.response.content == "I <3 rocks"
+
+
+def test_custom_contentviews():
+    pig = custom_contentviews.ViewPigLatin()
+    _, fmt = pig("<html>test!</html>")
+    assert any('esttay!' in val[0][1] for val in fmt)
+    assert not pig("gobbledygook")
