@@ -13,6 +13,7 @@ from examples import (
     modify_form,
     modify_querystring,
     modify_response_body,
+    redirect_requests,
 )
 
 
@@ -96,3 +97,9 @@ def test_iframe_injector():
 
     content = flow.response.content
     assert 'iframe' in content and ctx.iframe_url in content
+
+
+def test_redirect_requests():
+    flow = tutils.tflow(req=netutils.treq(host="example.org"))
+    redirect_requests.request({}, flow)
+    assert flow.request.host == "mitmproxy.org"
