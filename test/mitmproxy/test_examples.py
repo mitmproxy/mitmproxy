@@ -9,6 +9,7 @@ from . import tservers, tutils
 from examples import (
     add_header,
     custom_contentviews,
+    iframe_injector,
     modify_form,
     modify_querystring,
     modify_response_body,
@@ -16,7 +17,9 @@ from examples import (
 
 
 class DummyContext(object):
-    pass
+
+    def log(self, *args, **kwargs):
+        pass
 
 
 def test_load_scripts():
@@ -81,3 +84,15 @@ def test_custom_contentviews():
     _, fmt = pig("<html>test!</html>")
     assert any('esttay!' in val[0][1] for val in fmt)
     assert not pig("gobbledygook")
+
+
+def test_iframe_injector():
+    ctx = DummyContext()
+    tutils.raises(ValueError, iframe_injector.start, ctx, [])
+
+    flow = tutils.tflow(resp=netutils.tresp(content="<html>Kungfu Panda 3</html>"))
+    ctx.iframe_url = "http://example.org/evil_iframe"
+    iframe_injector.response(ctx, flow)
+
+    content = flow.response.content
+    assert 'iframe' in content and ctx.iframe_url in content
