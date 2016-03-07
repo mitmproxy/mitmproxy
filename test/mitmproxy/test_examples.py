@@ -7,6 +7,7 @@ from netlib.http import Headers
 from . import tservers, tutils
 
 from examples import (
+    add_header,
     modify_form,
 
 )
@@ -36,6 +37,12 @@ def test_load_scripts():
                 raise
         else:
             s.unload()
+
+
+def test_add_header():
+    flow = tutils.tflow(resp=netutils.tresp())
+    add_header.response({}, flow)
+    assert flow.response.headers["newheader"] == "foo"
 
 
 def test_modify_form():
