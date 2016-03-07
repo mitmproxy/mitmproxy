@@ -1,4 +1,6 @@
 import glob
+import os
+from contextlib import contextmanager
 
 from mitmproxy import utils, script
 from mitmproxy.proxy import config
@@ -6,25 +8,28 @@ from netlib import tutils as netutils
 from netlib.http import Headers
 from . import tservers, tutils
 
-from examples import (
-    add_header,
-    custom_contentviews,
-    iframe_injector,
-    modify_form,
-    modify_querystring,
-    modify_response_body,
-    redirect_requests,
-)
+example_dir = utils.Data(__name__).path("../../examples")
+
+
+@contextmanager
+def example(command):
+    command = os.path.join(example_dir, command)
+    # tmaster = tservers.TestMaster(config.ProxyConfig())
+    # ctx = script.ScriptContext(tmaster)
+    ctx = DummyContext()
+    s = script.Script(command, ctx)
+    yield s
+    s.unload()
 
 
 class DummyContext(object):
+    """Emulate script.ScriptContext() functionality."""
 
     def log(self, *args, **kwargs):
         pass
 
 
 def test_load_scripts():
-    example_dir = utils.Data(__name__).path("../../examples")
     scripts = glob.glob("%s/*.py" % example_dir)
 
     tmaster = tservers.TestMaster(config.ProxyConfig())
