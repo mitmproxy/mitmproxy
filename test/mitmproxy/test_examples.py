@@ -1,7 +1,15 @@
 import glob
+
 from mitmproxy import utils, script
 from mitmproxy.proxy import config
-from . import tservers
+from netlib import tutils as netutils
+from netlib.http import Headers
+from . import tservers, tutils
+
+from examples import (
+    modify_form,
+
+)
 
 
 def test_load_scripts():
@@ -28,3 +36,11 @@ def test_load_scripts():
                 raise
         else:
             s.unload()
+
+
+def test_modify_form():
+    form_header = Headers(content_type="application/x-www-form-urlencoded")
+    flow = tutils.tflow(req=netutils.treq(headers=form_header))
+    modify_form.request({}, flow)
+    assert flow.request.urlencoded_form["mitmproxy"] == ["rocks"]
+
