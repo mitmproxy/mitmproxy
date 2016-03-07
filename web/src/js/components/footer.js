@@ -6,13 +6,15 @@ Footer.propTypes = {
 };
 
 export default function Footer({ settings }) {
-    const mode = settings.mode;
-    const intercept = settings.intercept;
+    const {mode, intercept} = settings;
     return (
         <footer>
-            {mode && mode != "regular" ? <span className="label label-success">{mode} mode</span> : null}
-            &nbsp;
-            {intercept ? <span className="label label-success">Intercept: {intercept}</span> : null}
+            {mode && mode != "regular" && (
+                <span className="label label-success">{mode} mode</span>
+            )}
+            {intercept && (
+                <span className="label label-success">Intercept: {intercept}</span>
+            )}
         </footer>
     );
 }

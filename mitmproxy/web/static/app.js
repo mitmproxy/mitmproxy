@@ -2767,25 +2767,24 @@ Footer.propTypes = {
 
 function Footer(_ref) {
     var settings = _ref.settings;
-
     var mode = settings.mode;
     var intercept = settings.intercept;
+
     return _react2.default.createElement(
         "footer",
         null,
-        mode && mode != "regular" ? _react2.default.createElement(
+        mode && mode != "regular" && _react2.default.createElement(
             "span",
             { className: "label label-success" },
             mode,
             " mode"
-        ) : null,
-        " ",
-        intercept ? _react2.default.createElement(
+        ),
+        intercept && _react2.default.createElement(
             "span",
             { className: "label label-success" },
             "Intercept: ",
             intercept
-        ) : null
+        )
     );
 }
 
