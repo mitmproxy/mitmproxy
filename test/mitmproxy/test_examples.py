@@ -10,7 +10,12 @@ from examples import (
     add_header,
     modify_form,
     modify_querystring,
+    modify_response_body,
 )
+
+
+class DummyContext(object):
+    pass
 
 
 def test_load_scripts():
@@ -57,3 +62,14 @@ def test_modify_querystring():
     modify_querystring.request({}, flow)
     assert flow.request.query["mitmproxy"] == ["rocks"]
 
+
+def test_modify_response_body():
+    ctx = DummyContext()
+    tutils.raises(ValueError, modify_response_body.start, ctx, [])
+
+    modify_response_body.start(ctx, ["modify-response-body.py", "mitmproxy", "rocks"])
+    assert ctx.old == "mitmproxy" and ctx.new == "rocks"
+
+    flow = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
+    modify_response_body.response(ctx, flow)
+    assert flow.response.content == "I <3 rocks"
