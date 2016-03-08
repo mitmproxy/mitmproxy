@@ -23,7 +23,6 @@ var Reports = React.createClass({
 var ProxyAppMain = React.createClass({
     mixins: [Router],
     childContextTypes: {
-        settingsStore: React.PropTypes.object.isRequired,
         flowStore: React.PropTypes.object.isRequired,
         eventStore: React.PropTypes.object.isRequired,
         returnFocus: React.PropTypes.func.isRequired,
@@ -31,10 +30,16 @@ var ProxyAppMain = React.createClass({
     },
     componentDidMount: function () {
         this.focus();
+        this.settingsStore.addListener("recalculate", this.onSettingsChange);
+    },
+    componentWillUnmount: function () {
+        this.settingsStore.removeListener("recalculate", this.onSettingsChange);
+    },
+    onSettingsChange: function () {
+        this.setState({ settings: this.settingsStore.dict });
     },
     getChildContext: function () {
         return {
-            settingsStore: this.state.settingsStore,
             flowStore: this.state.flowStore,
             eventStore: this.state.eventStore,
             returnFocus: this.focus,
@@ -46,15 +51,18 @@ var ProxyAppMain = React.createClass({
         var flowStore = new FlowStore();
         var settingsStore = new SettingsStore();
 
+        this.settingsStore = settingsStore;
         // Default Settings before fetch
         _.extend(settingsStore.dict, {});
         return {
-            settingsStore: settingsStore,
+            settings: settingsStore.dict,
             flowStore: flowStore,
             eventStore: eventStore
         };
     },
     focus: function () {
+        document.activeElement.blur();
+        window.getSelection().removeAllRanges();
         ReactDOM.findDOMNode(this).focus();
     },
     getMainComponent: function () {
@@ -104,10 +112,10 @@ var ProxyAppMain = React.createClass({
         );
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
-                <Header ref="header"/>
+                <Header ref="header" settings={this.state.settings}/>
                 {children}
                 {eventlog}
-                <Footer/>
+                <Footer settings={this.state.settings}/>
             </div>
         );
     }

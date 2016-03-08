@@ -192,6 +192,9 @@ class HTTPRequest(MessageMixin, Request):
     def __hash__(self):
         return id(self)
 
+    def set_auth(self, auth):
+        self.data.headers.set_all("Proxy-Authorization", (auth,))
+
     def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in the headers, the

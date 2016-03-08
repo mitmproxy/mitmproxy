@@ -29,40 +29,6 @@ export var StickyHeadMixin = {
     }
 };
 
-export var SettingsState = {
-    contextTypes: {
-        settingsStore: React.PropTypes.object.isRequired
-    },
-    getInitialState: function () {
-        return {
-            settings: this.context.settingsStore.dict
-        };
-    },
-    componentDidMount: function () {
-        this.context.settingsStore.addListener("recalculate", this.onSettingsChange);
-    },
-    componentWillUnmount: function () {
-        this.context.settingsStore.removeListener("recalculate", this.onSettingsChange);
-    },
-    onSettingsChange: function () {
-        this.setState({
-            settings: this.context.settingsStore.dict
-        });
-    },
-};
-
-
-export var ChildFocus = {
-    contextTypes: {
-        returnFocus: React.PropTypes.func
-    },
-    returnFocus: function () {
-        ReactDOM.findDOMNode(this).blur();
-        window.getSelection().removeAllRanges();
-        this.context.returnFocus();
-    }
-};
-
 
 export var Router = {
     contextTypes: {

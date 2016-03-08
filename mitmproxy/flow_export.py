@@ -1,6 +1,9 @@
+import json
 import urllib
-import netlib.http
 from textwrap import dedent
+
+import netlib.http
+from netlib.utils import parse_content_type
 
 
 def curl_command(flow):
@@ -53,8 +56,16 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        data = "\ndata = '''%s'''\n" % flow.request.body
-        args += "\n    data=data,"
+        json_obj = is_json(flow.request.headers, flow.request.body)
+        if json_obj:
+            # Without the separators field json.dumps() produces
+            # trailing white spaces: https://bugs.python.org/issue16333
+            data = json.dumps(json_obj, indent=4, separators=(',', ': '))
+            data = "\njson = %s\n" % data
+            args += "\n    json=json,"
+        else:
+            data = "\ndata = '''%s'''\n" % flow.request.body
+            args += "\n    data=data,"
 
     code = code.format(
         url=url,
@@ -71,3 +82,14 @@ def python_code(flow):
 def raw_request(flow):
     data = netlib.http.http1.assemble_request(flow.request)
     return data
+
+
+def is_json(headers, content):
+    if headers:
+        ct = parse_content_type(headers.get("content-type", ""))
+        if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
+            try:
+                return json.loads(content)
+            except ValueError:
+                return False
+    return False

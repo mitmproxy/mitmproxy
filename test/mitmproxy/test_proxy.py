@@ -92,6 +92,10 @@ class TestProcessProxyOptions:
         self.assert_err("expected one argument", "-U")
         self.assert_err("Invalid server specification", "-U", "upstream")
 
+        self.assert_noerr("--upstream-auth", "test:test")
+        self.assert_err("expected one argument", "--upstream-auth")
+        self.assert_err("Invalid upstream auth specification", "--upstream-auth", "test")
+
         self.assert_err("not allowed with", "-R", "http://localhost", "-T")
 
     def test_socks_auth(self):

@@ -53,6 +53,7 @@ class ProxyConfig:
             body_size_limit=None,
             mode="regular",
             upstream_server=None,
+            upstream_auth = None,
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
@@ -77,8 +78,10 @@ class ProxyConfig:
         self.mode = mode
         if upstream_server:
             self.upstream_server = ServerSpec(upstream_server[0], Address.wrap(upstream_server[1]))
+            self.upstream_auth = upstream_auth
         else:
             self.upstream_server = None
+            self.upstream_auth = None
 
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
@@ -110,7 +113,7 @@ def process_proxy_options(parser, options):
     body_size_limit = utils.parse_size(options.body_size_limit)
 
     c = 0
-    mode, upstream_server = "regular", None
+    mode, upstream_server, upstream_auth  = "regular", None, None
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
@@ -127,6 +130,7 @@ def process_proxy_options(parser, options):
         c += 1
         mode = "upstream"
         upstream_server = options.upstream_proxy
+        upstream_auth = options.upstream_auth
     if c > 1:
         return parser.error(
             "Transparent, SOCKS5, reverse and upstream proxy mode "
@@ -189,6 +193,7 @@ def process_proxy_options(parser, options):
         body_size_limit=body_size_limit,
         mode=mode,
         upstream_server=upstream_server,
+        upstream_auth=upstream_auth,
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
         http2=options.http2,
