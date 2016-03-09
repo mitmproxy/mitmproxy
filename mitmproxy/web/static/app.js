@@ -543,9 +543,6 @@ var Router = exports.Router = {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _lodash2.default.clone(this.context.location.query);
-    },
-    getParams: function getParams() {
-        return this.props.routeParams;
     }
 };
 
@@ -3363,12 +3360,12 @@ var MainView = _react2.default.createClass({
         }
     },
     onUpdate: function onUpdate(flow) {
-        if (flow.id === this.getParams().flowId) {
+        if (flow.id === this.props.routeParams.flowId) {
             this.forceUpdate();
         }
     },
     onRemove: function onRemove(flow_id, index) {
-        if (flow_id === this.getParams().flowId) {
+        if (flow_id === this.props.routeParams.flowId) {
             var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
             this.selectFlow(flow_to_select);
         }
@@ -3381,7 +3378,7 @@ var MainView = _react2.default.createClass({
     },
     selectFlow: function selectFlow(flow) {
         if (flow) {
-            var tab = this.getParams().detailTab || "request";
+            var tab = this.props.routeParams.detailTab || "request";
             this.updateLocation("/flows/" + flow.id + "/" + tab);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
@@ -3391,14 +3388,14 @@ var MainView = _react2.default.createClass({
     selectFlowRelative: function selectFlowRelative(shift) {
         var flows = this.state.view.list;
         var index;
-        if (!this.getParams().flowId) {
+        if (!this.props.routeParams.flowId) {
             if (shift < 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            var currFlowId = this.getParams().flowId;
+            var currFlowId = this.props.routeParams.flowId;
             var i = flows.length;
             while (i--) {
                 if (flows[i].id === currFlowId) {
@@ -3498,7 +3495,7 @@ var MainView = _react2.default.createClass({
         e.preventDefault();
     },
     getSelected: function getSelected() {
-        return this.context.flowStore.get(this.getParams().flowId);
+        return this.context.flowStore.get(this.props.routeParams.flowId);
     },
     render: function render() {
         var selected = this.getSelected();
@@ -3508,7 +3505,7 @@ var MainView = _react2.default.createClass({
             details = [_react2.default.createElement(_common.Splitter, { key: "splitter" }), _react2.default.createElement(_index2.default, {
                 key: "flowDetails",
                 ref: "flowDetails",
-                tab: this.getParams().detailTab,
+                tab: this.props.routeParams.detailTab,
                 flow: selected })];
         } else {
             details = null;

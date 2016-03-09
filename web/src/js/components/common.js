@@ -53,9 +53,6 @@ export var Router = {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _.clone(this.context.location.query);
-    },
-    getParams: function() {
-        return this.props.routeParams;
     }
 };
 
