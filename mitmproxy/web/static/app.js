@@ -999,8 +999,9 @@ var EventLogContents = _react2.default.createClass({
     },
     componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
         if (nextProps.filter !== this.props.filter) {
-            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
-            this.state.view.recalculate();
+            this.state.view.recalculate(function (entry) {
+                return nextProps.filter[entry.level];
+            });
         }
     },
     getDefaultProps: function getDefaultProps() {
