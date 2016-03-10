@@ -458,9 +458,11 @@ class _Connection(object):
     def __init__(self, connection):
         if connection:
             self.connection = connection
+            self.sock_address = Address(connection.getpeername())
             self._makefile()
         else:
             self.connection = None
+            self.sock_address = None
             self.rfile = None
             self.wfile = None
 
@@ -701,6 +703,7 @@ class TCPClient(_Connection):
                 'Error connecting to "%s": %s' %
                 (self.address.host, err))
         self.connection = connection
+        self.sock_address = Address(connection.getpeername())
         self._makefile()
 
     def settimeout(self, n):

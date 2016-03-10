@@ -23,6 +23,7 @@ def flowdetails(state, flow):
         text.append(urwid.Text([("head", "Server Connection:")]))
         parts = [
             ["Address", repr(sc.address)],
+            ["Resolved", repr(sc.sock_address)],
         ]
 
         text.extend(
