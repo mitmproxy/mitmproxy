@@ -1,188 +1,216 @@
 import React from "react";
-import ReactDOM from 'react-dom';
-import {StickyHeadMixin, AutoScrollMixin} from "./common.js";
+import ReactDOM from "react-dom";
+import classNames from "classnames";
 import {reverseString} from "../utils.js";
 import _ from "lodash";
-
-import { VirtualScrollMixin } from "./virtualscroll.js"
+import shallowEqual from "shallowequal";
+import AutoScroll from "./helpers/AutoScroll";
+import {calcVScroll} from "./helpers/VirtualScroll";
 import flowtable_columns from "./flowtable-columns.js";
 
-var FlowRow = React.createClass({
-    render: function () {
-        var flow = this.props.flow;
-        var columns = this.props.columns.map(function (Column) {
-            return <Column key={Column.displayName} flow={flow}/>;
-        }.bind(this));
-        var className = "";
-        if (this.props.selected) {
-            className += " selected";
-        }
-        if (this.props.highlighted) {
-            className += " highlighted";
-        }
-        if (flow.intercepted) {
-            className += " intercepted";
-        }
-        if (flow.request) {
-            className += " has-request";
-        }
-        if (flow.response) {
-            className += " has-response";
-        }
+FlowRow.propTypes = {
+    selectFlow: React.PropTypes.func.isRequired,
+    columns: React.PropTypes.array.isRequired,
+    flow: React.PropTypes.object.isRequired,
+    highlighted: React.PropTypes.bool,
+    selected: React.PropTypes.bool,
+};
 
-        return (
-            <tr className={className} onClick={this.props.selectFlow.bind(null, flow)}>
-                {columns}
-            </tr>);
-    },
-    shouldComponentUpdate: function (nextProps) {
-        return true;
-        // Further optimization could be done here
-        // by calling forceUpdate on flow updates, selection changes and column changes.
-        //return (
-        //(this.props.columns.length !== nextProps.columns.length) ||
-        //(this.props.selected !== nextProps.selected)
-        //);
+function FlowRow(props) {
+    const flow = props.flow;
+
+    const className = classNames({
+        "selected": props.selected,
+        "highlighted": props.highlighted,
+        "intercepted": flow.intercepted,
+        "has-request": flow.request,
+        "has-response": flow.response,
+    });
+
+    return (
+        <tr className={className} onClick={() => props.selectFlow(flow)}>
+            {props.columns.map(Column => (
+                <Column key={Column.displayName} flow={flow}/>
+            ))}
+        </tr>
+    );
+}
+
+class FlowTableHead extends React.Component {
+
+    static propTypes = {
+        setSortKeyFun: React.PropTypes.func.isRequired,
+        columns: React.PropTypes.array.isRequired,
+    };
+
+    constructor(props, context) {
+        super(props, context);
+        this.state = { sortColumn: undefined, sortDesc: false };
     }
-});
 
-var FlowTableHead = React.createClass({
-    getInitialState: function(){
-        return {
-            sortColumn: undefined,
-            sortDesc: false
-        };
-    },
-    onClick: function(Column){
-        var sortDesc = this.state.sortDesc;
-        var hasSort = Column.sortKeyFun;
-        if(Column === this.state.sortColumn){
+    onClick(Column) {
+        const hasSort = Column.sortKeyFun;
+
+        let sortDesc = this.state.sortDesc;
+
+        if (Column === this.state.sortColumn) {
             sortDesc = !sortDesc;
-            this.setState({
-                sortDesc: sortDesc
-            });
+            this.setState({ sortDesc });
         } else {
-            this.setState({
-                sortColumn: hasSort && Column,
-                sortDesc: false
-            })
+            this.setState({ sortColumn: hasSort && Column, sortDesc: false });
         }
-        var sortKeyFun;
-        if(!sortDesc){
-            sortKeyFun = Column.sortKeyFun;
-        } else {
-            sortKeyFun = hasSort && function(){
-                var k = Column.sortKeyFun.apply(this, arguments);
-                if(_.isString(k)){
-                    return reverseString(""+k);
-                } else {
-                    return -k;
+
+        let sortKeyFun = Column.sortKeyFun;
+        if (sortDesc) {
+            sortKeyFun = hasSort && function() {
+                const k = Column.sortKeyFun.apply(this, arguments);
+                if (_.isString(k)) {
+                    return reverseString("" + k);
                 }
-            }
+                return -k;
+            };
         }
+
         this.props.setSortKeyFun(sortKeyFun);
-    },
-    render: function () {
-        var columns = this.props.columns.map(function (Column) {
-            var onClick = this.onClick.bind(this, Column);
-            var className;
-            if(this.state.sortColumn === Column) {
-                if(this.state.sortDesc){
-                    className = "sort-desc";
-                } else {
-                    className = "sort-asc";
-                }
-            }
-            return <Column.Title
-                        key={Column.displayName}
-                        onClick={onClick}
-                        className={className} />;
-        }.bind(this));
-        return <thead>
-            <tr>{columns}</tr>
-        </thead>;
     }
-});
 
+    render() {
+        const sortColumn = this.state.sortColumn;
+        const sortType = this.state.sortDesc ? "sort-desc" : "sort-asc";
+        return (
+            <tr>
+                {this.props.columns.map(Column => (
+                    <Column.Title
+                        key={Column.displayName}
+                        onClick={() => this.onClick(Column)}
+                        className={sortColumn === Column && sortType}
+                    />
+                ))}
+            </tr>
+        );
+    }
+}
 
-var ROW_HEIGHT = 32;
+class FlowTable extends React.Component {
 
-var FlowTable = React.createClass({
-    mixins: [StickyHeadMixin, AutoScrollMixin, VirtualScrollMixin],
-    contextTypes: {
-        view: React.PropTypes.object.isRequired
-    },
-    getInitialState: function () {
-        return {
-            columns: flowtable_columns
-        };
-    },
-    componentWillMount: function () {
+    static contextTypes = {
+        view: React.PropTypes.object.isRequired,
+    };
+
+    static propTypes = {
+        rowHeight: React.PropTypes.number,
+    };
+
+    static defaultProps = {
+        rowHeight: 32,
+    };
+
+    constructor(props, context) {
+        super(props, context);
+
+        this.state = { flows: [], vScroll: calcVScroll() };
+
+        this.onChange = this.onChange.bind(this);
+        this.onViewportUpdate = this.onViewportUpdate.bind(this);
+    }
+
+    componentWillMount() {
+        window.addEventListener("resize", this.onViewportUpdate);
         this.context.view.addListener("add", this.onChange);
         this.context.view.addListener("update", this.onChange);
         this.context.view.addListener("remove", this.onChange);
         this.context.view.addListener("recalculate", this.onChange);
-    },
-    componentWillUnmount: function(){
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.onViewportUpdate);
         this.context.view.removeListener("add", this.onChange);
         this.context.view.removeListener("update", this.onChange);
         this.context.view.removeListener("remove", this.onChange);
         this.context.view.removeListener("recalculate", this.onChange);
-    },
-    getDefaultProps: function () {
-        return {
-            rowHeight: ROW_HEIGHT
-        };
-    },
-    onScrollFlowTable: function () {
-        this.adjustHead();
-        this.onScroll();
-    },
-    onChange: function () {
-        this.forceUpdate();
-    },
-    scrollIntoView: function (flow) {
-        this.scrollRowIntoView(
-            this.context.view.indexOf(flow),
-            ReactDOM.findDOMNode(this.refs.body).offsetTop
-        );
-    },
-    renderRow: function (flow) {
-        var selected = (flow === this.props.selected);
-        var highlighted =
-            (
-            this.context.view._highlight &&
-            this.context.view._highlight[flow.id]
-            );
+    }
 
-        return <FlowRow key={flow.id}
-            ref={flow.id}
-            flow={flow}
-            columns={this.state.columns}
-            selected={selected}
-            highlighted={highlighted}
-            selectFlow={this.props.selectFlow}
-        />;
-    },
-    render: function () {
-        var flows = this.context.view.list;
-        var rows = this.renderRows(flows);
+    componentDidUpdate() {
+        this.onViewportUpdate();
+    }
+
+    onViewportUpdate() {
+        const viewport = ReactDOM.findDOMNode(this);
+        const viewportTop = viewport.scrollTop;
+
+        const vScroll = calcVScroll({
+            viewportTop,
+            viewportHeight: viewport.offsetHeight,
+            itemCount: this.state.flows.length,
+            rowHeight: this.props.rowHeight,
+        });
+
+        if (!shallowEqual(this.state.vScroll, vScroll) ||
+            this.state.viewportTop !== viewportTop) {
+            this.setState({ vScroll, viewportTop });
+        }
+    }
+
+    onChange() {
+        this.setState({ flows: this.context.view.list });
+    }
+
+    scrollIntoView(flow) {
+        const viewport = ReactDOM.findDOMNode(this);
+        const index = this.context.view.indexOf(flow);
+        const rowHeight = this.props.rowHeight;
+        const head = ReactDOM.findDOMNode(this.refs.head);
+
+        const headHeight = head ? head.offsetHeight : 0;
+
+        const rowTop = (index * rowHeight) + headHeight;
+        const rowBottom = rowTop + rowHeight;
+
+        const viewportTop = viewport.scrollTop;
+        const viewportHeight = viewport.offsetHeight;
+
+        // Account for pinned thead
+        if (rowTop - headHeight < viewportTop) {
+            viewport.scrollTop = rowTop - headHeight;
+        } else if (rowBottom > viewportTop + viewportHeight) {
+            viewport.scrollTop = rowBottom - viewportHeight;
+        }
+    }
+
+    render() {
+        const vScroll = this.state.vScroll;
+        const highlight = this.context.view._highlight;
+        const flows = this.state.flows.slice(vScroll.start, vScroll.end);
+
+        const transform = `translate(0,${this.state.viewportTop}px)`;
 
         return (
-            <div className="flow-table" onScroll={this.onScrollFlowTable}>
+            <div className="flow-table" onScroll={this.onViewportUpdate}>
                 <table>
-                    <FlowTableHead ref="head"
-                        columns={this.state.columns}
-                        setSortKeyFun={this.props.setSortKeyFun}/>
-                    <tbody ref="body">
-                        { this.getPlaceholderTop(flows.length) }
-                        {rows}
-                        { this.getPlaceholderBottom(flows.length) }
+                    <thead ref="head" style={{ transform }}>
+                        <FlowTableHead
+                            columns={flowtable_columns}
+                            setSortKeyFun={this.props.setSortKeyFun}
+                        />
+                    </thead>
+                    <tbody>
+                        <tr style={{ height: vScroll.paddingTop }}></tr>
+                        {flows.map(flow => (
+                            <FlowRow
+                                key={flow.id}
+                                flow={flow}
+                                columns={flowtable_columns}
+                                selected={flow === this.props.selected}
+                                highlighted={highlight && highlight[flow.id]}
+                                selectFlow={this.props.selectFlow}
+                            />
+                        ))}
+                        <tr style={{ height: vScroll.paddingBottom }}></tr>
                     </tbody>
                 </table>
             </div>
         );
     }
-});
+}
 
-export default FlowTable;
+export default AutoScroll(FlowTable);

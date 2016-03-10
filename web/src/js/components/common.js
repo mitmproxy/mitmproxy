@@ -2,34 +2,6 @@ import React from "react"
 import ReactDOM from "react-dom"
 import _ from "lodash"
 
-// http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
-export var AutoScrollMixin = {
-    componentWillUpdate: function () {
-        var node = ReactDOM.findDOMNode(this);
-        this._shouldScrollBottom = (
-            node.scrollTop !== 0 &&
-            node.scrollTop + node.clientHeight === node.scrollHeight
-        );
-    },
-    componentDidUpdate: function () {
-        if (this._shouldScrollBottom) {
-            var node = ReactDOM.findDOMNode(this);
-            node.scrollTop = node.scrollHeight;
-        }
-    }
-};
-
-
-export var StickyHeadMixin = {
-    adjustHead: function () {
-        // Abusing CSS transforms to set the element
-        // referenced as head into some kind of position:sticky.
-        var head = ReactDOM.findDOMNode(this.refs.head);
-        head.style.transform = "translate(0," + ReactDOM.findDOMNode(this).scrollTop + "px)";
-    }
-};
-
-
 export var Router = {
     contextTypes: {
         location: React.PropTypes.object,
@@ -53,9 +25,6 @@ export var Router = {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _.clone(this.context.location.query);
-    },
-    getParams: function() {
-        return this.props.routeParams;
     }
 };
 

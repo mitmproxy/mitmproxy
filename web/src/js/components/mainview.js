@@ -75,12 +75,12 @@ var MainView = React.createClass({
         }
     },
     onUpdate: function (flow) {
-        if (flow.id === this.getParams().flowId) {
+        if (flow.id === this.props.routeParams.flowId) {
             this.forceUpdate();
         }
     },
     onRemove: function (flow_id, index) {
-        if (flow_id === this.getParams().flowId) {
+        if (flow_id === this.props.routeParams.flowId) {
             var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
             this.selectFlow(flow_to_select);
         }
@@ -93,7 +93,7 @@ var MainView = React.createClass({
     },
     selectFlow: function (flow) {
         if (flow) {
-            var tab = this.getParams().detailTab || "request";
+            var tab = this.props.routeParams.detailTab || "request";
             this.updateLocation(`/flows/${flow.id}/${tab}`);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
@@ -103,14 +103,14 @@ var MainView = React.createClass({
     selectFlowRelative: function (shift) {
         var flows = this.state.view.list;
         var index;
-        if (!this.getParams().flowId) {
+        if (!this.props.routeParams.flowId) {
             if (shift < 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            var currFlowId = this.getParams().flowId;
+            var currFlowId = this.props.routeParams.flowId;
             var i = flows.length;
             while (i--) {
                 if (flows[i].id === currFlowId) {
@@ -212,7 +212,7 @@ var MainView = React.createClass({
         e.preventDefault();
     },
     getSelected: function () {
-        return this.context.flowStore.get(this.getParams().flowId);
+        return this.context.flowStore.get(this.props.routeParams.flowId);
     },
     render: function () {
         var selected = this.getSelected();
@@ -224,7 +224,7 @@ var MainView = React.createClass({
                 <FlowView
                     key="flowDetails"
                     ref="flowDetails"
-                    tab={this.getParams().detailTab}
+                    tab={this.props.routeParams.detailTab}
                     flow={selected}/>
             ];
         } else {

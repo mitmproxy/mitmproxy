@@ -1,115 +1,151 @@
 import React from "react"
-import {AutoScrollMixin, Router} from "./common.js"
+import ReactDOM from "react-dom"
+import shallowEqual from "shallowequal"
+import {Router} from "./common.js"
 import {Query} from "../actions.js"
-import { VirtualScrollMixin } from "./virtualscroll.js"
+import AutoScroll from "./helpers/AutoScroll";
+import {calcVScroll} from "./helpers/VirtualScroll"
 import {StoreView} from "../store/view.js"
 import _ from "lodash"
 
-var LogMessage = React.createClass({
-    render: function () {
-        var entry = this.props.entry;
-        var indicator;
-        switch (entry.level) {
-            case "web":
-                indicator = <i className="fa fa-fw fa-html5"></i>;
-                break;
-            case "debug":
-                indicator = <i className="fa fa-fw fa-bug"></i>;
-                break;
-            default:
-                indicator = <i className="fa fa-fw fa-info"></i>;
-        }
-        return (
-            <div>
-                { indicator } {entry.message}
-            </div>
+class EventLogContents extends React.Component {
+
+    static contextTypes = {
+        eventStore: React.PropTypes.object.isRequired,
+    };
+
+    static defaultProps = {
+        rowHeight: 18,
+    };
+
+    constructor(props, context) {
+        super(props, context);
+
+        this.view = new StoreView(
+            this.context.eventStore,
+            entry => this.props.filter[entry.level]
         );
-    },
-    shouldComponentUpdate: function () {
-        return false; // log entries are immutable.
+
+        this.heights = {};
+        this.state = { entries: this.view.list, vScroll: calcVScroll() };
+
+        this.onChange = this.onChange.bind(this);
+        this.onViewportUpdate = this.onViewportUpdate.bind(this);
     }
-});
 
-var EventLogContents = React.createClass({
-    contextTypes: {
-        eventStore: React.PropTypes.object.isRequired
-    },
-    mixins: [AutoScrollMixin, VirtualScrollMixin],
-    getInitialState: function () {
-        var filterFn = function (entry) {
-            return this.props.filter[entry.level];
-        };
-        var view = new StoreView(this.context.eventStore, filterFn.bind(this));
-        view.addListener("add", this.onEventLogChange);
-        view.addListener("recalculate", this.onEventLogChange);
+    componentDidMount() {
+        window.addEventListener("resize", this.onViewportUpdate);
+        this.view.addListener("add", this.onChange);
+        this.view.addListener("recalculate", this.onChange);
+        this.onViewportUpdate();
+    }
 
-        return {
-            view: view
-        };
-    },
-    componentWillUnmount: function () {
-        this.state.view.close();
-    },
-    filter: function (entry) {
-        return this.props.filter[entry.level];
-    },
-    onEventLogChange: function () {
-        this.forceUpdate();
-    },
-    componentWillReceiveProps: function (nextProps) {
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.onViewportUpdate);
+        this.view.removeListener("add", this.onChange);
+        this.view.removeListener("recalculate", this.onChange);
+        this.view.close();
+    }
+
+    componentDidUpdate() {
+        this.onViewportUpdate();
+    }
+
+    componentWillReceiveProps(nextProps) {
         if (nextProps.filter !== this.props.filter) {
-            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
-            this.state.view.recalculate();
+            this.view.recalculate(
+                entry => nextProps.filter[entry.level]
+            );
         }
-    },
-    getDefaultProps: function () {
-        return {
-            rowHeight: 45,
-            rowHeightMin: 15,
-            placeholderTagName: "div"
-        };
-    },
-    renderRow: function (elem) {
-        return <LogMessage key={elem.id} entry={elem}/>;
-    },
-    render: function () {
-        var entries = this.state.view.list;
-        var rows = this.renderRows(entries);
-
-        return <pre onScroll={this.onScroll}>
-            { this.getPlaceholderTop(entries.length) }
-            {rows}
-            { this.getPlaceholderBottom(entries.length) }
-        </pre>;
     }
-});
 
-var ToggleFilter = React.createClass({
-    toggle: function (e) {
-        e.preventDefault();
-        return this.props.toggleLevel(this.props.name);
-    },
-    render: function () {
-        var className = "label ";
-        if (this.props.active) {
-            className += "label-primary";
-        } else {
-            className += "label-default";
+    onViewportUpdate() {
+        const viewport = ReactDOM.findDOMNode(this);
+
+        const vScroll = calcVScroll({
+            itemCount: this.state.entries.length,
+            rowHeight: this.props.rowHeight,
+            viewportTop: viewport.scrollTop,
+            viewportHeight: viewport.offsetHeight,
+            itemHeights: this.state.entries.map(entry => this.heights[entry.id]),
+        });
+
+        if (!shallowEqual(this.state.vScroll, vScroll)) {
+            this.setState({ vScroll });
         }
+    }
+
+    onChange() {
+        this.setState({ entries: this.view.list });
+    }
+
+    setHeight(id, ref) {
+        if (ref && !this.heights[id]) {
+            const height = ReactDOM.findDOMNode(ref).offsetHeight;
+            if (this.heights[id] !== height) {
+                this.heights[id] = height;
+                this.onViewportUpdate();
+            }
+        }
+    }
+
+    getIcon(level) {
+        return { web: "html5", debug: "bug" }[level] || "info";
+    }
+
+    render() {
+        const vScroll = this.state.vScroll;
+        const entries = this.state.entries.slice(vScroll.start, vScroll.end);
+
         return (
-            <a
-                href="#"
-                className={className}
-                onClick={this.toggle}>
-                {this.props.name}
-            </a>
+            <pre onScroll={this.onViewportUpdate}>
+                <div style={{ height: vScroll.paddingTop }}></div>
+                {entries.map((entry, index) => (
+                    <div key={entry.id} ref={this.setHeight.bind(this, entry.id)}>
+                        <i className={`fa fa-fw fa-${this.getIcon(entry.level)}`}></i>
+                        {entry.message}
+                    </div>
+                ))}
+                <div style={{ height: vScroll.paddingBottom }}></div>
+            </pre>
         );
     }
-});
+}
+
+ToggleFilter.propTypes = {
+    name: React.PropTypes.string.isRequired,
+    toggleLevel: React.PropTypes.func.isRequired,
+    active: React.PropTypes.bool,
+};
+
+function ToggleFilter ({ name, active, toggleLevel }) {
+    let className = "label ";
+    if (active) {
+        className += "label-primary";
+    } else {
+        className += "label-default";
+    }
+
+    function onClick(event) {
+        event.preventDefault();
+        toggleLevel(name);
+    }
+
+    return (
+        <a
+            href="#"
+            className={className}
+            onClick={onClick}>
+            {name}
+        </a>
+    );
+}
+
+const AutoScrollEventLog = AutoScroll(EventLogContents);
 
 var EventLog = React.createClass({
     mixins: [Router],
-    getInitialState: function () {
+    getInitialState() {
         return {
             filter: {
                 "debug": false,
@@ -118,18 +154,17 @@ var EventLog = React.createClass({
             }
         };
     },
-    close: function () {
+    close() {
         var d = {};
         d[Query.SHOW_EVENTLOG] = undefined;
-
         this.updateLocation(undefined, d);
     },
-    toggleLevel: function (level) {
+    toggleLevel(level) {
         var filter = _.extend({}, this.state.filter);
         filter[level] = !filter[level];
         this.setState({filter: filter});
     },
-    render: function () {
+    render() {
         return (
             <div className="eventlog">
                 <div>
@@ -142,7 +177,7 @@ var EventLog = React.createClass({
                     </div>
 
                 </div>
-                <EventLogContents filter={this.state.filter}/>
+                <AutoScrollEventLog filter={this.state.filter}/>
             </div>
         );
     }
