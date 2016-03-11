@@ -20,4 +20,4 @@ exe = EXE(pyz,
           strip=None,
           upx=True,
           console=True,
-          icon='..//..//docs//favicon.ico' )
+          icon='icon.ico' )
