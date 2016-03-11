@@ -6,7 +6,7 @@ import os
 import urwid
 
 from netlib import odict
-from netlib.http import user_agents
+from netlib.http import user_agents, cookies
 
 from . import common, signals
 from .. import utils, filt, script
@@ -69,7 +69,7 @@ class SubgridColumn:
         self.subeditor = subeditor
 
     def text(self, obj):
-        p = http_cookies._format_pairs(obj, sep="\n")
+        p = cookies._format_pairs(obj, sep="\n")
         return urwid.Text(p)
 
     def blank(self):
