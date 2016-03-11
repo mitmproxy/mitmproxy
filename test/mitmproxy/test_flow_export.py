@@ -1,4 +1,3 @@
-import json
 from textwrap import dedent
 
 import netlib.tutils
