@@ -3,7 +3,7 @@ import json
 import os
 from contextlib import contextmanager
 
-from mitmproxy import utils, script, contentviews
+from mitmproxy import utils, script
 from mitmproxy.proxy import config
 from netlib import tutils as netutils
 from netlib.http import Headers
@@ -15,11 +15,16 @@ example_dir = utils.Data(__name__).path("../../examples")
 class DummyContext(object):
     """Emulate script.ScriptContext() functionality."""
 
+    contentview = None
+
     def log(self, *args, **kwargs):
         pass
 
     def add_contentview(self, view_obj):
-        pass
+        self.contentview = view_obj
+
+    def remove_contentview(self, view_obj):
+        self.contentview = None
 
 
 @contextmanager
@@ -64,8 +69,8 @@ def test_add_header():
 
 
 def test_custom_contentviews():
-    with example("custom_contentviews.py"):
-        pig = contentviews.get_by_shortcut("l")
+    with example("custom_contentviews.py") as ex:
+        pig = ex.ctx.contentview
         _, fmt = pig("<html>test!</html>")
         assert any('esttay!' in val[0][1] for val in fmt)
         assert not pig("gobbledygook")
