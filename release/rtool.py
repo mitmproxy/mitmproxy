@@ -34,6 +34,7 @@ else:
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
 DIST_DIR = join(RELEASE_DIR, "dist")
 ROOT_DIR = os.path.normpath(join(RELEASE_DIR, ".."))
+RELEASE_SPEC_DIR = join(RELEASE_DIR, "specs")
 VERSION_FILE = join(ROOT_DIR, "netlib/version.py")
 
 BUILD_DIR = join(RELEASE_DIR, "build")
@@ -226,20 +227,22 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
     for bdist_project, tools in project["bdists"].items():
         with Archive(join(DIST_DIR, archive_name(bdist_project))) as archive:
             for tool in tools:
-                spec = join(RELEASE_DIR, "specs/%s.spec" % tool)
-                print("Building %s binary..." % tool)
-                subprocess.check_call(
-                    [
-                        VENV_PYINSTALLER,
-                        "--clean",
-                        "--workpath", PYINSTALLER_TEMP,
-                        "--distpath", PYINSTALLER_DIST,
-                        # This is PyInstaller, so setting a
-                        # different log level obviously breaks it :-)
-                        # "--log-level", "WARN",
-                        spec
-                    ]
-                )
+                # This is PyInstaller, so it messes up paths.
+                # We need to make sure that we are in the spec folder.
+                with chdir(RELEASE_SPEC_DIR):
+                    print("Building %s binary..." % tool)
+                    subprocess.check_call(
+                        [
+                            VENV_PYINSTALLER,
+                            "--clean",
+                            "--workpath", PYINSTALLER_TEMP,
+                            "--distpath", PYINSTALLER_DIST,
+                            # This is PyInstaller, so setting a
+                            # different log level obviously breaks it :-)
+                            # "--log-level", "WARN",
+                            "%s.spec" % tool
+                        ]
+                    )
 
                 # Test if it works at all O:-)
                 executable = join(PYINSTALLER_DIST, tool)
