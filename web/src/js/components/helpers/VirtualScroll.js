@@ -57,7 +57,7 @@ export function calcVScroll(opts) {
         start = Math.max(0, Math.floor(viewportTop / rowHeight) - 1) & ~1;
         end = Math.min(
             itemCount,
-            start + Math.ceil(viewportHeight / rowHeight) + 1
+            start + Math.ceil(viewportHeight / rowHeight) + 2
         );
 
         // When a large trunk of elements is removed from the button, start may be far off the viewport.
