@@ -2873,6 +2873,8 @@ var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
+var _common = require("./common.js");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 Footer.propTypes = {
@@ -2902,7 +2904,7 @@ function Footer(_ref) {
     );
 }
 
-},{"react":"react"}],15:[function(require,module,exports){
+},{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3505,7 +3507,7 @@ function calcVScroll(opts) {
 
         // Make sure that we start at an even row so that CSS `:nth-child(even)` is preserved
         start = Math.max(0, Math.floor(viewportTop / rowHeight) - 1) & ~1;
-        end = Math.min(itemCount, start + Math.ceil(viewportHeight / rowHeight) + 1);
+        end = Math.min(itemCount, start + Math.ceil(viewportHeight / rowHeight) + 2);
 
         // When a large trunk of elements is removed from the button, start may be far off the viewport.
         // To make this issue less severe, limit the top placeholder to the total number of rows.
