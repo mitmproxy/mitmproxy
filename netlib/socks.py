@@ -10,7 +10,6 @@ class SocksError(Exception):
         super(SocksError, self).__init__(message)
         self.code = code
 
-
 VERSION = utils.BiDi(
     SOCKS4=0x04,
     SOCKS5=0x05
@@ -45,6 +44,10 @@ METHOD = utils.BiDi(
     GSSAPI=0x01,
     USERNAME_PASSWORD=0x02,
     NO_ACCEPTABLE_METHODS=0xFF
+)
+
+USERNAME_PASSWORD_VERSION = utils.BiDi(
+    DEFAULT=0x01
 )
 
 
@@ -111,6 +114,59 @@ class ServerGreeting(object):
 
     def to_file(self, f):
         f.write(struct.pack("!BB", self.ver, self.method))
+
+
+class UsernamePasswordAuth(object):
+    __slots__ = ("ver", "username", "password")
+
+    def __init__(self, ver, username, password):
+        self.ver = ver
+        self.username = username
+        self.password = password
+
+    def assert_authver1(self):
+        if self.ver != USERNAME_PASSWORD_VERSION.DEFAULT:
+            raise SocksError(
+                0,
+                "Invalid auth version. Expected 0x01, got 0x%x" % self.ver
+            )
+
+    @classmethod
+    def from_file(cls, f):
+        ver, ulen = struct.unpack("!BB", f.safe_read(2))
+        username = f.safe_read(ulen)
+        plen, = struct.unpack("!B", f.safe_read(1))
+        password = f.safe_read(plen)
+        return cls(ver, username.decode(), password.decode())
+
+    def to_file(self, f):
+        f.write(struct.pack("!BB", self.ver, len(self.username)))
+        f.write(self.username.encode())
+        f.write(struct.pack("!B", len(self.password)))
+        f.write(self.password.encode())
+
+
+class UsernamePasswordAuthResponse(object):
+    __slots__  = ("ver", "status")
+
+    def __init__(self, ver, status):
+        self.ver = ver
+        self.status = status
+
+    def assert_authver1(self):
+        if self.ver != USERNAME_PASSWORD_VERSION.DEFAULT:
+            raise SocksError(
+                0,
+                "Invalid auth version. Expected 0x01, got 0x%x" % self.ver
+            )
+
+    @classmethod
+    def from_file(cls, f):
+        ver, status = struct.unpack("!BB", f.safe_read(2))
+        return cls(ver, status)
+
+    def to_file(self, f):
+        f.write(struct.pack("!BB", self.ver, self.status))
 
 
 class Message(object):
