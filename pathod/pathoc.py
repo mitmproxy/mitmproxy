@@ -42,7 +42,8 @@ class SSLInfo(object):
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
-        for i in self.certchain:
+        for n,i in enumerate(self.certchain):
+            parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
                 parts.append("\t\t%s=%s" % cn)
@@ -69,7 +70,7 @@ class SSLInfo(object):
             s = certutils.SSLCert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
-            return "\n".join(parts)
+        return "\n".join(parts)
 
 
 
