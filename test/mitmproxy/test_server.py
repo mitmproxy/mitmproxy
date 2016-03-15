@@ -999,3 +999,63 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         # (both terminated)
         # nothing happened here
         assert self.chain[1].tmaster.state.flow_count() == 2
+
+
+class TestHTTPSAddServerCertsToClientChainTrue(tservers.HTTPProxyTest):
+    ssl = True
+    add_server_certs_to_client_chain = True
+    servercert = tutils.test_data.path("data/trusted-server.crt")
+    ssloptions = pathod.SSLOptions(
+            cn="trusted-cert",
+            certs=[
+                ("trusted-cert", servercert)
+            ]
+    )
+
+    def test_add_server_certs_to_client_chain_true(self):
+        """
+        If --add-server-certs-to-client-chain is True, then the client should receive the server's certificates
+        """
+        with open(self.servercert, "rb") as f:
+            d = f.read()
+        c1 = SSLCert.from_pem(d)
+        p = self.pathoc()
+        print("digest of p.cert[1]: %s"%p.server_certs[1].digest('sha256'))
+        print("digest of c1.cert[1]: %s"%c1.digest('sha256'))
+        server_cert_found_in_client_chain = False
+
+        for cert in p.server_certs:
+            if cert.digest('sha256') == c1.digest('sha256'):
+                server_cert_found_in_client_chain = True
+                break
+
+        assert(server_cert_found_in_client_chain == True)
+
+
+class TestHTTPSAddServerCertsToClientChainFalse(tservers.HTTPProxyTest):
+    ssl = True
+    add_server_certs_to_client_chain = False
+    servercert = tutils.test_data.path("data/trusted-server.crt")
+    ssloptions = pathod.SSLOptions(
+            cn="trusted-cert",
+            certs=[
+                ("trusted-cert", servercert)
+            ]
+    )
+
+    def test_add_server_certs_to_client_chain_false(self):
+        """
+        If --add-server-certs-to-client-chain is False, then the client should not receive the server's certificates
+        """
+        with open(self.servercert, "rb") as f:
+            d = f.read()
+        c1 = SSLCert.from_pem(d)
+        p = self.pathoc()
+        server_cert_found_in_client_chain = False
+
+        for cert in p.server_certs:
+            if cert.digest('sha256') == c1.digest('sha256'):
+                server_cert_found_in_client_chain = True
+                break
+
+        assert(server_cert_found_in_client_chain == False)
