@@ -120,7 +120,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         timestamp_tcp_setup=float,
         timestamp_ssl_setup=float,
         address=tcp.Address,
-        sock_address=tcp.Address,
+        peer_address=tcp.Address,
         source_address=tcp.Address,
         cert=certutils.SSLCert,
         ssl_established=bool,

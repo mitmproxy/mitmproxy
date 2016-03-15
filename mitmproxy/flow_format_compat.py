@@ -35,7 +35,7 @@ def convert_015_016(data):
 
 
 def convert_016_017(data):
-    data["server_conn"]["sock_address"] = None
+    data["server_conn"]["peer_address"] = None
     data["version"] = (0, 17)
     return data
 

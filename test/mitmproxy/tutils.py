@@ -93,7 +93,7 @@ def tserver_conn():
     c = ServerConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=dict(address=("address", 22), use_ipv6=True),
-        sock_address=None,
+        peer_address=None,
         cert=None,
         timestamp_start=1,
         timestamp_tcp_setup=2,
