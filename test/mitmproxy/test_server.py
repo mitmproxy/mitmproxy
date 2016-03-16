@@ -1003,6 +1003,15 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 
 class AddServerCertsToClientChainMixin:
 
+    ssl = True
+    servercert = tutils.test_data.path("data/trusted-server.crt")
+    ssloptions = pathod.SSLOptions(
+            cn="trusted-cert",
+            certs=[
+                ("trusted-cert", servercert)
+            ]
+    )
+
     def test_add_server_certs_to_client_chain(self):
         with open(self.servercert, "rb") as f:
             d = f.read()
@@ -1016,33 +1025,17 @@ class AddServerCertsToClientChainMixin:
         assert(server_cert_found_in_client_chain == self.add_server_certs_to_client_chain)
 
 
-class TestHTTPSAddServerCertsToClientChainTrue(tservers.HTTPProxyTest, AddServerCertsToClientChainMixin):
+class TestHTTPSAddServerCertsToClientChainTrue(AddServerCertsToClientChainMixin, tservers.HTTPProxyTest):
 
     """
-    If --add-server-certs-to-client-chain is True, then the client should receive the server's certificates
+    If --add-server-certs-to-client-chain is True, then the client should receive the upstream server's certificates
     """
     add_server_certs_to_client_chain = True
-    ssl = True
-    servercert = tutils.test_data.path("data/trusted-server.crt")
-    ssloptions = pathod.SSLOptions(
-        cn="trusted-cert",
-        certs=[
-            ("trusted-cert", servercert)
-        ]
-    )
 
 
-class TestHTTPSAddServerCertsToClientChainFalse(tservers.HTTPProxyTest, AddServerCertsToClientChainMixin):
+class TestHTTPSAddServerCertsToClientChainFalse(AddServerCertsToClientChainMixin, tservers.HTTPProxyTest):
 
     """
-    If --add-server-certs-to-client-chain is False, then the client should not receive the server's certificates
+    If --add-server-certs-to-client-chain is False, then the client should not receive the upstream server's certificates
     """
     add_server_certs_to_client_chain = False
-    ssl = True
-    servercert = tutils.test_data.path("data/trusted-server.crt")
-    ssloptions = pathod.SSLOptions(
-        cn="trusted-cert",
-        certs=[
-            ("trusted-cert", servercert)
-        ]
-    )
