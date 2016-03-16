@@ -434,13 +434,14 @@ def proxy_ssl_options(parser):
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
     )
-    group.add_argument(
+    subgroup = group.add_mutually_exclusive_group()
+    subgroup.add_argument(
         "--add-server-certs-to-client-chain", default=False,
         action="store_true", dest="add_server_certs_to_client_chain",
         help="Add all the certificates of the server to the certificate chain "
              "that will be served to the client, as extras."
     )
-    group.add_argument(
+    subgroup.add_argument(
         "--verify-upstream-cert", default=False,
         action="store_true", dest="ssl_verify_upstream_cert",
         help="Verify upstream server SSL/TLS certificates and fail if invalid "
