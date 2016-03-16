@@ -436,10 +436,10 @@ def proxy_ssl_options(parser):
     )
     subgroup = group.add_mutually_exclusive_group()
     subgroup.add_argument(
-        "--add-server-certs-to-client-chain", default=False,
-        action="store_true", dest="add_server_certs_to_client_chain",
-        help="Add all the certificates of the server to the certificate chain "
-             "that will be served to the client, as extras."
+        "--add-upstream-certs-to-client-chain", default=False,
+        action="store_true", dest="add_upstream_certs_to_client_chain",
+        help="Add all certificates of the upstream server to the certificate chain "
+             "that will be served to the proxy client, as extras."
     )
     subgroup.add_argument(
         "--verify-upstream-cert", default=False,

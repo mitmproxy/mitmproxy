@@ -1001,7 +1001,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         assert self.chain[1].tmaster.state.flow_count() == 2
 
 
-class AddServerCertsToClientChainMixin:
+class AddUpstreamCertsToClientChainMixin:
 
     ssl = True
     servercert = tutils.test_data.path("data/trusted-server.crt")
@@ -1012,30 +1012,30 @@ class AddServerCertsToClientChainMixin:
             ]
     )
 
-    def test_add_server_certs_to_client_chain(self):
+    def test_add_upstream_certs_to_client_chain(self):
         with open(self.servercert, "rb") as f:
             d = f.read()
-        c1 = SSLCert.from_pem(d)
+        upstreamCert = SSLCert.from_pem(d)
         p = self.pathoc()
-        server_cert_found_in_client_chain = False
-        for cert in p.server_certs:
-            if cert.digest('sha256') == c1.digest('sha256'):
-                server_cert_found_in_client_chain = True
+        upstream_cert_found_in_client_chain = False
+        for receivedCert in p.server_certs:
+            if receivedCert.digest('sha256') == upstreamCert.digest('sha256'):
+                upstream_cert_found_in_client_chain = True
                 break
-        assert(server_cert_found_in_client_chain == self.add_server_certs_to_client_chain)
+        assert(upstream_cert_found_in_client_chain == self.add_upstream_certs_to_client_chain)
 
 
-class TestHTTPSAddServerCertsToClientChainTrue(AddServerCertsToClientChainMixin, tservers.HTTPProxyTest):
+class TestHTTPSAddUpstreamCertsToClientChainTrue(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
 
     """
     If --add-server-certs-to-client-chain is True, then the client should receive the upstream server's certificates
     """
-    add_server_certs_to_client_chain = True
+    add_upstream_certs_to_client_chain = True
 
 
-class TestHTTPSAddServerCertsToClientChainFalse(AddServerCertsToClientChainMixin, tservers.HTTPProxyTest):
+class TestHTTPSAddUpstreamCertsToClientChainFalse(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
 
     """
     If --add-server-certs-to-client-chain is False, then the client should not receive the upstream server's certificates
     """
-    add_server_certs_to_client_chain = False
+    add_upstream_certs_to_client_chain = False

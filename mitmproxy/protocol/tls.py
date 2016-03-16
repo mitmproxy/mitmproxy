@@ -432,7 +432,7 @@ class TlsLayer(Layer):
         self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self._find_cert()
 
-        if self.config.add_server_certs_to_client_chain:
+        if self.config.add_upstream_certs_to_client_chain:
            extra_certs = self.server_conn.server_certs
         else:
            extra_certs = None
