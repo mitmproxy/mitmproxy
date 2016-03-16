@@ -138,14 +138,26 @@ def process_proxy_options(parser, options):
             "Transparent, SOCKS5, reverse and upstream proxy mode "
             "are mutually exclusive. Read the docs on proxy modes to understand why."
         )
-
+    if options.add_upstream_certs_to_client_chain and options.no_upstream_cert:
+        return parser.error(
+            "The no-upstream-cert and add-upstream-certs-to-client-chain "
+            "options are mutually exclusive. If no-upstream-cert is enabled "
+            "then the upstream certificate is not retrieved before generating "
+            "the client certificate chain."
+        )
+    if options.add_upstream_certs_to_client_chain and options.ssl_verify_upstream_cert:
+        return parser.error(
+            "The verify-upstream-cert and add-upstream-certs-to-client-chain "
+            "options are mutually exclusive. If upstream certificates are verified "
+            "then extra upstream certificates are not available for inclusion "
+            "to the client chain."
+        )
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts):
             return parser.error(
-                "Client certificate path does not exist: %s" % options.clientcerts
+                    "Client certificate path does not exist: %s" % options.clientcerts
             )
-
     if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
 
         if options.transparent_proxy:
