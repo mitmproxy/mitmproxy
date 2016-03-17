@@ -724,6 +724,53 @@ class TCPClient(_Connection):
             return b""
 
 
+class SocksTCPClient(TCPClient):
+
+    def set_proxy(self, addr = None, port = None, username = None, password = None):
+        self._socks_addr = addr
+        self._socks_port = port
+        self._socks_username = username
+        self._socks_password = password
+
+    def connect(self):
+        from . import socks
+        try:
+            connection = socks.SocksSocket(
+                self._socks_addr,
+                self._socks_port,
+                self._socks_username,
+                self._socks_password
+            )
+            if self.source_address:
+                connection.bind(self.source_address())
+            connection.connect(self.address())
+            self.source_address = Address(connection.getsockname())
+        except (socket.error, IOError) as err:
+            raise TcpException(
+                'Error connecting to "%s": %s' %
+                (self.address.host, err))
+        except socks.SocksError as err:
+            if self._socks_port is None:
+                sport = "1080"
+            else:
+                sport = str(self._socks_port)
+            if self._socks_username is None or self._socks_password is None:
+                proxy_str = "%s:%s" % (self._socks_addr, sport)
+            else:
+                proxy_str = "%s:%s@%s:%s" % (
+                    self._socks_username,
+                    self._socks_password,
+                    self._socks_addr,
+                    sport
+                )
+            raise TcpException(
+                "Error connecting to socks-proxy %s : %s" % (proxy_str, err))
+        self.connection = connection
+        self._makefile()
+
+
+
+
 class BaseHandler(_Connection):
 
     """

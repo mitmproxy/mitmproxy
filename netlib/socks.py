@@ -2,6 +2,7 @@ from __future__ import (absolute_import, print_function, division)
 import struct
 import array
 import ipaddress
+import socket
 from . import tcp, utils
 
 
@@ -230,3 +231,72 @@ class Message(object):
                 "Unknown ATYP: %s" % self.atyp
             )
         f.write(struct.pack("!H", self.addr.port))
+
+
+class SocksSocket(socket.socket):
+    __slots__ = ("conn_atype", "socks_address", "socks_port", "socks_username", "socks_password")
+
+    def __init__(self, address, port = None, username = None, password = None, proto = 0, fileno = None):
+        socks_addr_info = socket.getaddrinfo(address, port)
+        socket.socket.__init__(self, socks_addr_info[0][0], socket.SOCK_STREAM, 0, fileno)
+        self._set_proxy(address, port, username, password)
+
+    def _set_proxy(self, address, port = None, username = None, password = None):
+        self.socks_address = address
+        if port is None:
+            self.socks_port = 1080
+        else:
+            self.socks_port = port
+        self.socks_username = username
+        self.socks_password = password
+
+    def _socks_username_password_auth(self, rfile, wfile):
+        if self.socks_username is None or self.socks_password is None:
+            raise SocksError(0, "authentication failed")
+        cauth = UsernamePasswordAuth(USERNAME_PASSWORD_VERSION.DEFAULT, self.socks_username, self.socks_password)
+        cauth.to_file(wfile)
+        wfile.flush()
+        sauth = UsernamePasswordAuthResponse.from_file(rfile)
+        if sauth.status != 0:
+            raise SocksError(0, "authentication failed")
+
+    def _get_address(slef, destpair):
+        if (type(destpair) not in (list,tuple)) or (len(destpair) < 2) or (type(destpair[0]) is not str) or (type(destpair[1]) is not int):
+            raise SocksError(0, "invalid data")
+        try:
+            taddr = socket.inet_aton(destpair[0])
+            destpair = (taddr, destpair[1])
+            return tcp.Address(destpair, False), ATYP.IPV4_ADDRESS
+        except:
+            try:
+                taddr = socket.inet_pton(socket.AF_INET6, destpair[0])
+                destpair = (taddr, destpair[1])
+                return tcp.Address(destpair, True), ATYP.IPV6_ADDRESS
+            except:
+                return tcp.Address(destpair, False), ATYP.DOMAINNAME
+
+    def connect(self, destpair):
+        try:
+            socket.socket.connect(self, (self.socks_address, self.socks_port))
+        except socket.error as err:
+            raise SocksError(0, repr(err))
+        rfile = tcp.Reader(self.makefile("rb", -1))
+        wfile = tcp.Writer(self.makefile("wb", -1))
+        method = (METHOD.NO_AUTHENTICATION_REQUIRED,)
+        if self.socks_username is not None and self.socks_password is not None:
+            method = (METHOD.NO_AUTHENTICATION_REQUIRED, METHOD.USERNAME_PASSWORD)
+        cgreeting = ClientGreeting(VERSION.SOCKS5, method)
+        cgreeting.to_file(wfile)
+        wfile.flush()
+        sgreeting = ServerGreeting.from_file(rfile)
+        if sgreeting.method == METHOD.NO_ACCEPTABLE_METHODS:
+            raise SocksError(sgreeting.method, "no acceptable methods")
+        if sgreeting.method == METHOD.USERNAME_PASSWORD:
+            self._socks_username_password_auth(rfile, wfile)
+        dst_addr, atype = self._get_address(destpair)
+        cmsg = Message(VERSION.SOCKS5, CMD.CONNECT, atype, dst_addr)
+        cmsg.to_file(wfile)
+        wfile.flush()
+        smsg = Message.from_file(rfile)
+        if smsg.msg != REP.SUCCEEDED:
+            raise SocksError(smsg.msg, "connect fail")

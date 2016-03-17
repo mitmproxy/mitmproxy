@@ -1,11 +1,18 @@
-from io import BytesIO
 import tempfile
+from io import BytesIO
+import mock
 import os
 import time
 import shutil
 from contextlib import contextmanager
 import six
 import sys
+import struct
+
+if sys.version_info.major == 2:
+    import Queue
+else:
+    import queue as Queue
 
 from . import utils, tcp
 from .http import Request, Response, Headers
@@ -131,3 +138,94 @@ def tresp(**kwargs):
     )
     default.update(kwargs)
     return Response(**default)
+
+
+class MockSocketFile(object):
+
+    def __init__(self):
+        self.q = Queue.Queue()
+        self.closed = False
+
+    def _try_read(self, rlen):
+        rs = b''
+        while len(rs) < rlen:
+            try:
+                rs = rs + self.q.get(timeout = 1)
+            except Queue.Empty:
+                break
+        return rs
+
+    def read(self, rlen):
+        rs = b''
+        while len(rs) < rlen:
+            if self.closed and self.q.empty():
+                break
+            rs = rs + self._try_read(rlen - len(rs))
+        return rs
+
+    def write(self, v):
+        for i in range(0, len(v)):
+            self.q.put(v[i:i + 1])
+
+    def close(self):
+        self.closed = True
+
+
+class MockSocket(object):
+    listenMap = {}
+
+    def __init__(self, *args, **kwargs):
+        self.wfile = MockSocketFile()
+        self.rfile = None
+        self.port = 0
+        self.llen = 0
+        self.targets = []
+
+    def _get_random_port(self):
+        i = 1
+        while True:
+            if i in MockSocket.listenMap.keys():
+                i = i + 1
+            else:
+                break
+        return i
+
+    def listen(self, llen):
+        self.llen = llen
+        if self.port == 0:
+            self.port = self._get_random_port()
+        MockSocket.listenMap[self.port] = self
+
+    def getsockname(self):
+        return ("127.0.0.1", self.port)
+
+    def bind(self, port):
+        self.port = port
+
+    def accept(self):
+        while len(self.targets) == 0:
+            pass
+        rs = self.targets[:self.llen]
+        self.targets = self.targets[len(rs):]
+        return rs
+
+    def connect(self, distaddr):
+        if self.port == 0:
+            self.port = self._get_random_port()
+        if distaddr[1] not in MockSocket.listenMap.keys() or MockSocket.listenMap[distaddr[1]] is None:
+            raise OSError()
+        s = MockSocket()
+        self.rfile = s.wfile
+        s.rfile = self.wfile
+        MockSocket.listenMap[distaddr[1]].targets.append(s)
+
+    def close(self):
+        self.wfile.close()
+        if self.rfile is not None:
+            self.rfile.close()
+
+    def makefile(self, method, *args):
+        if method == "r" or method == "rb":
+            return self.rfile
+        else:
+            return self.wfile

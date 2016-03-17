@@ -1,6 +1,11 @@
 import ipaddress
+import sys
+if sys.version_info.major == 3:
+    from imp import reload
+import mock
 from io import BytesIO
 import socket
+import threading
 from netlib import socks, tcp, tutils
 
 
@@ -186,3 +191,153 @@ def test_message_unknown_atyp():
 
     m = socks.Message(5, 1, 0x02, tcp.Address(("example.com", 5050)))
     tutils.raises(socks.SocksError, m.to_file, BytesIO())
+
+class SocksServer(threading.Thread):
+
+    def __init__(self, username = None, password = None, succ = True):
+        threading.Thread.__init__(self)
+        self.username = username
+        self.password = password
+        self.succ = succ
+        self.mutex = threading.Lock()
+        self.mutex.acquire()
+        self.mutex2 = threading.Lock()
+        self.mutex2.acquire()
+
+    def run(self):
+        svr = socket.socket()
+        svr.listen(1)
+        self.port = svr.getsockname()[1]
+        self.mutex.release()
+        s = svr.accept()[0]
+        rfile = tcp.Reader(s.makefile("rb"))
+        wfile = tcp.Writer(s.makefile("wb"))
+        cgreeting = socks.ClientGreeting.from_file(rfile)
+        assert cgreeting.ver == socks.VERSION.SOCKS5
+        assert len(cgreeting.methods) == 2 or len(cgreeting.methods) == 1
+        if len(cgreeting.methods) == 1:
+            assert cgreeting.methods[0] == socks.METHOD.NO_AUTHENTICATION_REQUIRED
+        else:
+            assert cgreeting.methods[0] == socks.METHOD.NO_AUTHENTICATION_REQUIRED
+            assert cgreeting.methods[1] == socks.METHOD.USERNAME_PASSWORD
+
+        need_auth = False
+        if self.username is None or self.password is None:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.NO_AUTHENTICATION_REQUIRED)
+        elif len(cgreeting.methods) == 1:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.NO_ACCEPTABLE_METHODS)
+        else:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.USERNAME_PASSWORD)
+            need_auth = True
+        sgreeting.to_file(wfile)
+        wfile.flush()
+        if need_auth:
+            cauth = socks.UsernamePasswordAuth.from_file(rfile)
+            assert cauth.ver == socks.USERNAME_PASSWORD_VERSION.DEFAULT
+            if cauth.username == self.username and cauth.password == self.password:
+                sauth = socks.UsernamePasswordAuthResponse(socks.USERNAME_PASSWORD_VERSION.DEFAULT, 0)
+                sauth.to_file(wfile)
+                wfile.flush()
+            else:
+                sauth = socks.UsernamePasswordAuthResponse(socks.USERNAME_PASSWORD_VERSION.DEFAULT, 1)
+                sauth.to_file(wfile)
+                wfile.flush()
+                s.close()
+                svr.close()
+                return
+        cmsg = socks.Message.from_file(rfile)
+        cmsg.assert_socks5()
+        if self.succ:
+            rep = socks.REP.SUCCEEDED
+        else:
+            rep = socks.REP.CONNECTION_NOT_ALLOWED_BY_RULESET
+        connect_reply = socks.Message(
+            socks.VERSION.SOCKS5,
+            rep,
+            cmsg.atyp,
+            cmsg.addr
+        )
+        connect_reply.to_file(wfile)
+        wfile.flush()
+        s.close()
+        svr.close()
+        self.cmsg = cmsg
+        self.mutex2.release()
+
+
+@mock.patch('socket.socket', tutils.MockSocket)
+def test_socks_socket_without_auth():
+    reload(socks)
+    test_addrs = [
+        ("example.com", 12345, socks.ATYP.DOMAINNAME),
+        ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+    ]
+    if hasattr(socket, 'inet_pton'):
+        test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+    for addr in test_addrs:
+        server = SocksServer()
+        server.start()
+        server.mutex.acquire()
+        ss = socks.SocksSocket("127.0.0.1", port = server.port)
+        ss.connect((addr[0], addr[1]))
+        server.mutex2.acquire()
+        assert addr[0] == server.cmsg.addr.host
+        assert addr[1] == server.cmsg.addr.port
+        assert addr[2] == server.cmsg.atyp
+
+
+@mock.patch('socket.socket', tutils.MockSocket)
+def test_socks_socket_with_auth():
+    reload(socks)
+    test_addrs = [
+        ("example.com", 12345, socks.ATYP.DOMAINNAME),
+        ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+    ]
+    if hasattr(socket, 'inet_pton'):
+        test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+ 
+    for addr in test_addrs:
+        server = SocksServer("usr", "psd")
+        server.start()
+        server.mutex.acquire()
+        ss = socks.SocksSocket("127.0.0.1", port = server.port, username = "usr", password = "psd")
+        ss.connect((addr[0], addr[1]))
+        server.mutex2.acquire()
+        assert addr[0] == server.cmsg.addr.host
+        assert addr[1] == server.cmsg.addr.port
+        assert addr[2] == server.cmsg.atyp
+
+@mock.patch('socket.socket', tutils.MockSocket)
+def test_socks_socket_auth_failed():
+    reload(socks)
+    test_addrs = [
+        ("example.com", 12345, socks.ATYP.DOMAINNAME),
+        ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+    ]
+    if hasattr(socket, 'inet_pton'):
+        test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+    for addr in test_addrs:
+        server = SocksServer("usr", "psd")
+        server.start()
+        server.mutex.acquire()
+        ss = socks.SocksSocket("127.0.0.1", port = server.port, username = "u", password = "p")
+        tutils.raises(socks.SocksError, ss.connect, (addr[0], addr[1]))
+
+@mock.patch('socket.socket', tutils.MockSocket)
+def test_socks_socket_conn_failed():
+    reload(socks)
+    test_addrs = [
+        ("example.com", 12345, socks.ATYP.DOMAINNAME),
+        ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+    ]
+    if hasattr(socket, 'inet_pton'):
+        test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+    for addr in test_addrs:
+        server = SocksServer(succ = False)
+        server.start()
+        server.mutex.acquire()
+        ss = socks.SocksSocket("127.0.0.1", port = server.port)
+        tutils.raises(socks.SocksError, ss.connect, (addr[0], addr[1]))
+
+def test_clear():
+    reload(socks)

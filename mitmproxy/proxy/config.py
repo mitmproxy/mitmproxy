@@ -39,6 +39,7 @@ class HostMatcher(object):
 
 
 ServerSpec = collections.namedtuple("ServerSpec", "scheme address")
+UpstreamSocksSpec = collections.namedtuple("UpstreamSocksSpec", "address, port, username, password")
 
 
 class ProxyConfig:
@@ -54,6 +55,7 @@ class ProxyConfig:
             mode="regular",
             upstream_server=None,
             upstream_auth = None,
+            upstream_socks = None,
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
@@ -84,6 +86,7 @@ class ProxyConfig:
             self.upstream_server = None
             self.upstream_auth = None
 
+        self.upstream_socks = upstream_socks
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
         self.http2 = http2
@@ -208,6 +211,7 @@ def process_proxy_options(parser, options):
         mode=mode,
         upstream_server=upstream_server,
         upstream_auth=upstream_auth,
+        upstream_socks = options.upstream_socks,
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
         http2=options.http2,

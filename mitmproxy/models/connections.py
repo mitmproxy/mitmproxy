@@ -3,7 +3,7 @@ from __future__ import (absolute_import, print_function, division)
 import copy
 import os
 
-from netlib import tcp, certutils
+from netlib import tcp, certutils, socks
 from .. import stateobject, utils
 
 
@@ -94,6 +94,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_tcp_setup = None
         self.timestamp_ssl_setup = None
         self.protocol = None
+        self.tcp_cls = tcp.TCPClient
 
     def __nonzero__(self):
         return bool(self.connection) and not self.finished
@@ -153,7 +154,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
     def connect(self):
         self.timestamp_start = utils.timestamp()
-        tcp.TCPClient.connect(self)
+        self.tcp_cls.connect(self)
         self.timestamp_tcp_setup = utils.timestamp()
 
     def send(self, message):
@@ -179,8 +180,21 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_ssl_setup = utils.timestamp()
 
     def finish(self):
-        tcp.TCPClient.finish(self)
+        self.tcp_cls.finish(self)
         self.timestamp_end = utils.timestamp()
+
+
+class SocksServerConnection(ServerConnection, tcp.SocksTCPClient, stateobject.StateObject):
+    def __init__(self, address, source_address=None):
+        tcp.SocksTCPClient.__init__(self, address, source_address)
+
+        self.via = None
+        self.timestamp_start = None
+        self.timestamp_end = None
+        self.timestamp_tcp_setup = None
+        self.timestamp_ssl_setup = None
+        self.protocol = None
+        self.tcp_cls = tcp.SocksTCPClient
 
 
 ServerConnection._stateobject_attributes["via"] = ServerConnection
