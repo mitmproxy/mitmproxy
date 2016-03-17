@@ -586,6 +586,7 @@ class TCPClient(_Connection):
         self.address = address
         self.source_address = source_address
         self.cert = None
+        self.server_certs = []
         self.ssl_verification_error = None
         self.sni = None
 
@@ -670,6 +671,10 @@ class TCPClient(_Connection):
 
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
 
+        # Keep all server certificates in a list
+        for i in self.connection.get_peer_cert_chain():
+            self.server_certs.append(certutils.SSLCert(i))
+
         # Validate TLS Hostname
         try:
             crt = dict(
@@ -737,6 +742,7 @@ class BaseHandler(_Connection):
                            request_client_cert=None,
                            chain_file=None,
                            dhparams=None,
+                           extra_chain_certs=None,
                            **sslctx_kwargs):
         """
             cert: A certutils.SSLCert object or the path to a certificate
@@ -771,6 +777,10 @@ class BaseHandler(_Connection):
             context.use_certificate(cert.x509)
         else:
             context.use_certificate_chain_file(cert)
+
+        if extra_chain_certs:
+            for i in extra_chain_certs:
+                context.add_extra_chain_cert(i.x509)
 
         if handle_sni:
             # SNI callback happens during do_handshake()
