@@ -2,6 +2,7 @@ import ipaddress
 from io import BytesIO
 import socket
 from netlib import socks, tcp, tutils
+from . import tservers
 
 
 def test_client_greeting():
@@ -186,3 +187,126 @@ def test_message_unknown_atyp():
 
     m = socks.Message(5, 1, 0x02, tcp.Address(("example.com", 5050)))
     tutils.raises(socks.SocksError, m.to_file, BytesIO())
+
+
+class SocksHandler(tcp.BaseHandler):
+    socksConfig = (None, None, True)
+
+    @classmethod
+    def getSocksConfig(cls):
+        return cls.socksConfig
+
+    def handle(self):
+        username, password, succ = self.getSocksConfig()
+        cgreeting = socks.ClientGreeting.from_file(self.rfile)
+        assert cgreeting.ver == socks.VERSION.SOCKS5
+        assert len(cgreeting.methods) == 2 or len(cgreeting.methods) == 1
+        if len(cgreeting.methods) == 1:
+            assert cgreeting.methods[0] == socks.METHOD.NO_AUTHENTICATION_REQUIRED
+        else:
+            assert cgreeting.methods[0] == socks.METHOD.NO_AUTHENTICATION_REQUIRED
+            assert cgreeting.methods[1] == socks.METHOD.USERNAME_PASSWORD
+
+        need_auth = False
+        if username is None or password is None:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.NO_AUTHENTICATION_REQUIRED)
+        elif len(cgreeting.methods) == 1:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.NO_ACCEPTABLE_METHODS)
+        else:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.USERNAME_PASSWORD)
+            need_auth = True
+        sgreeting.to_file(self.wfile)
+        self.wfile.flush()
+        if need_auth:
+            cauth = socks.UsernamePasswordAuth.from_file(self.rfile)
+            assert cauth.ver == socks.USERNAME_PASSWORD_VERSION.DEFAULT
+            if cauth.username == username and cauth.password == password:
+                sauth = socks.UsernamePasswordAuthResponse(socks.USERNAME_PASSWORD_VERSION.DEFAULT, 0)
+                sauth.to_file(self.wfile)
+                self.wfile.flush()
+            else:
+                sauth = socks.UsernamePasswordAuthResponse(socks.USERNAME_PASSWORD_VERSION.DEFAULT, 1)
+                sauth.to_file(self.wfile)
+                self.wfile.flush()
+                return
+        cmsg = socks.Message.from_file(self.rfile)
+        cmsg.assert_socks5()
+        if succ:
+            rep = socks.REP.SUCCEEDED
+        else:
+            rep = socks.REP.CONNECTION_NOT_ALLOWED_BY_RULESET
+        connect_reply = socks.Message(
+            socks.VERSION.SOCKS5,
+            rep,
+            cmsg.atyp,
+            cmsg.addr
+        )
+        connect_reply.to_file(self.wfile)
+        cmsg.to_file(self.wfile)
+
+
+class TestSocksServerWithoutAuth(tservers.ServerTestBase):
+    handler = SocksHandler
+
+    def test_conn(self):
+        test_addrs = [
+            ("example.com", 12345, socks.ATYP.DOMAINNAME),
+            ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+        ]
+        if hasattr(socket, 'inet_pton'):
+            test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+        for addr in test_addrs:
+            ss = socks.SocksSocket("127.0.0.1", port = self.port)
+            ss.connect((addr[0], addr[1]))
+            rfile = tcp.Reader(ss.makefile("rb", False))
+            cmsg = socks.Message.from_file(rfile)
+
+            assert addr[0] == cmsg.addr.host
+            assert addr[1] == cmsg.addr.port
+            assert addr[2] == cmsg.atyp
+
+    def test_conn_fail(self):
+        self.handler.socksConfig = (None, None, False)
+        test_addrs = [
+            ("example.com", 12345, socks.ATYP.DOMAINNAME),
+            ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+        ]
+        if hasattr(socket, 'inet_pton'):
+            test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+        for addr in test_addrs:
+            ss = socks.SocksSocket("127.0.0.1", port = self.port)
+            tutils.raises(socks.SocksError, ss.connect, (addr[0], addr[1]))
+
+
+class TestSocksServerWithAuth(tservers.ServerTestBase):
+    handler = SocksHandler
+
+    def test_conn(self):
+        self.handler.socksConfig = ("usr", "pwd", True)
+        test_addrs = [
+            ("example.com", 12345, socks.ATYP.DOMAINNAME),
+            ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+        ]
+        if hasattr(socket, 'inet_pton'):
+            test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+        for addr in test_addrs:
+            ss = socks.SocksSocket("127.0.0.1", port = self.port, username = "usr", password = "pwd")
+            ss.connect((addr[0], addr[1]))
+            rfile = tcp.Reader(ss.makefile("rb", False))
+            cmsg = socks.Message.from_file(rfile)
+
+            assert addr[0] == cmsg.addr.host
+            assert addr[1] == cmsg.addr.port
+            assert addr[2] == cmsg.atyp
+
+    def test_auth_fail(self):
+        self.handler.socksConfig = ("usr", "pwd", True)
+        test_addrs = [
+            ("example.com", 12345, socks.ATYP.DOMAINNAME),
+            ("127.0.0.1", 12345, socks.ATYP.IPV4_ADDRESS)
+        ]
+        if hasattr(socket, 'inet_pton'):
+            test_addrs.append(("5aef:2b::8", 12345, socks.ATYP.IPV6_ADDRESS))
+        for addr in test_addrs:
+            ss = socks.SocksSocket("127.0.0.1", port = self.port)
+            tutils.raises(socks.SocksError, ss.connect, (addr[0], addr[1]))
