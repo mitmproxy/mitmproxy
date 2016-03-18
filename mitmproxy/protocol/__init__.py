@@ -34,6 +34,7 @@ from .http import UpstreamConnectLayer
 from .http1 import Http1Layer
 from .http2 import Http2Layer
 from .rawtcp import RawTCPLayer
+from .socks_client import SocksClientLayer
 
 __all__ = [
     "Layer", "ServerConnectionMixin", "Kill",
