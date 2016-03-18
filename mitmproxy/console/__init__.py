@@ -47,19 +47,13 @@ class ConsoleState(flow.State):
 
     def add_flow(self, f):
         super(ConsoleState, self).add_flow(f)
-        if self.focus is None:
-            self.set_focus(0)
-        elif self.follow_focus:
-            self.update_focus()
+        self.update_focus()
         self.set_flow_marked(f, False)
         return f
 
     def update_flow(self, f):
         super(ConsoleState, self).update_flow(f)
-        if self.focus is None:
-            self.set_focus(0)
-        elif self.follow_focus:
-            self.update_focus()
+        self.update_focus()
         return f
 
     def set_limit(self, limit):
@@ -83,7 +77,10 @@ class ConsoleState(flow.State):
             self.focus = None
 
     def update_focus(self):
-        self.set_focus(len(self.view) - 1)
+        if self.focus is None:
+            self.set_focus(0)
+        elif self.follow_focus:
+            self.set_focus(len(self.view) - 1)
 
     def set_focus_flow(self, f):
         self.set_focus(self.view.index(f))
