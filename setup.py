@@ -65,7 +65,7 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
-        "cryptography>=1.3,<1.4",
+        "cryptography>=1.2.2,<1.4",
         "Flask>=0.10.1, <0.11",
         "h2>=2.1.2, <3.0",
         "hpack>=2.1.0, <3.0",
@@ -85,7 +85,7 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "lxml==3.6.0",  # there are no Windows wheels for newer versions, so we pin this.
+            "lxml==3.5.0",  # there are no Windows wheels for newer versions, so we pin this.
             "pydivert>=0.0.7, <0.1",
         ],
         ':sys_platform != "win32"': [
@@ -100,7 +100,7 @@ setup(
         'dev': [
             "coveralls>=1.1, <1.2",
             "mock>=1.3.0, <1.4",
-            "pytest>=2.9,<2.10",
+            "pytest>=2.8.7,<2.10",
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",
             "pytest-xdist>=1.14, <1.15",
@@ -116,7 +116,7 @@ setup(
         'examples': [
             "beautifulsoup4>=4.4.1, <4.5",
             "harparser>=0.2, <0.3",
-            "pytz==2016.1",
+            "pytz>=2015.07.0, <=2016.1",
         ]
     }
 )
