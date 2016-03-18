@@ -89,7 +89,7 @@ setup(
             "pydivert>=0.0.7, <0.1",
         ],
         ':sys_platform != "win32"': [
-            "lxml>=3.5.0, <3.6",
+            "lxml>=3.5.0, <3.7",
         ],
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
