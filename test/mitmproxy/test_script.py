@@ -1,25 +1,7 @@
-import os
 import time
 import mock
 from mitmproxy import script, flow
 from . import tutils
-
-
-def test_simple():
-    s = flow.State()
-    fm = flow.FlowMaster(None, s)
-    sp = tutils.test_data.path("scripts/a.py")
-    p = script.Script("%s --var 40" % sp, script.ScriptContext(fm))
-
-    assert "here" in p.ns
-    assert p.run("here") == 41
-    assert p.run("here") == 42
-
-    tutils.raises(script.ScriptException, p.run, "errargs")
-
-    # Check reload
-    p.load()
-    assert p.run("here") == 41
 
 
 def test_duplicate_flow():
@@ -31,35 +13,6 @@ def test_duplicate_flow():
     assert fm.state.flow_count() == 2
     assert not fm.state.view[0].request.is_replay
     assert fm.state.view[1].request.is_replay
-
-
-def test_err():
-    s = flow.State()
-    fm = flow.FlowMaster(None, s)
-    sc = script.ScriptContext(fm)
-
-    tutils.raises(
-        "not found",
-        script.Script, "nonexistent", sc
-    )
-
-    tutils.raises(
-        "not a file",
-        script.Script, tutils.test_data.path("scripts"), sc
-    )
-
-    tutils.raises(
-        script.ScriptException,
-        script.Script, tutils.test_data.path("scripts/syntaxerr.py"), sc
-    )
-
-    tutils.raises(
-        script.ScriptException,
-        script.Script, tutils.test_data.path("scripts/loaderr.py"), sc
-    )
-
-    scr = script.Script(tutils.test_data.path("scripts/unloaderr.py"), sc)
-    tutils.raises(script.ScriptException, scr.unload)
 
 
 @tutils.skip_appveyor
@@ -117,16 +70,6 @@ def test_concurrent2():
 def test_concurrent_err():
     s = flow.State()
     fm = flow.FlowMaster(None, s)
-    tutils.raises(
-        "Concurrent decorator not supported for 'start' method",
-        script.Script,
-        tutils.test_data.path("scripts/concurrent_decorator_err.py"),
-        fm)
-
-
-def test_command_parsing():
-    s = flow.State()
-    fm = flow.FlowMaster(None, s)
-    absfilepath = os.path.normcase(tutils.test_data.path("scripts/a.py"))
-    s = script.Script(absfilepath, script.ScriptContext(fm))
-    assert os.path.isfile(s.args[0])
+    with tutils.raises("Concurrent decorator not supported for 'start' method"):
+        s = script.Script(tutils.test_data.path("scripts/concurrent_decorator_err.py"), fm)
+        s.load()

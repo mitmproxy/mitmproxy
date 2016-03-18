@@ -685,6 +685,7 @@ class FlowMaster(controller.Master):
         """
         try:
             s = script.Script(command, script.ScriptContext(self))
+            s.load()
         except script.ScriptException as v:
             return v.args[0]
         if use_reloader:
