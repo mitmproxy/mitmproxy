@@ -65,14 +65,17 @@ class _HttpTransmissionLayer(Layer):
         raise NotImplementedError()
 
 
-class ConnectServerConnection(object):
+class ProxyServerConnection(object):
 
     """
-    "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.
+    "Fake" ServerConnection to represent state after a CONNECT request to an proxy.
     """
 
     def __init__(self, address, ctx):
-        self.address = tcp.Address.wrap(address)
+        if address is None:
+            self.address = None
+        else:
+            self.address = tcp.Address.wrap(address)
         self._ctx = ctx
 
     @property
@@ -91,7 +94,7 @@ class UpstreamConnectLayer(Layer):
     def __init__(self, ctx, connect_request):
         super(UpstreamConnectLayer, self).__init__(ctx)
         self.connect_request = connect_request
-        self.server_conn = ConnectServerConnection(
+        self.server_conn = ProxyServerConnection(
             (connect_request.host, connect_request.port),
             self.ctx
         )

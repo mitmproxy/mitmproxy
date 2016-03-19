@@ -230,3 +230,18 @@ class Message(object):
                 "Unknown ATYP: %s" % self.atyp
             )
         f.write(struct.pack("!H", self.addr.port))
+
+
+def get_address_atyp(address):
+    try:
+        if address.use_ipv6:
+            ipaddress.IPv6Address(address.host)
+            return ATYP.IPV6_ADDRESS
+        else:
+            ipaddress.IPv4Address(address.host)
+            return ATYP.IPV4_ADDRESS
+    except ipaddress.AddressValueError:
+        # As the address is neither valid IPv4 address nor valid IPv6 address,
+        # we take it as a domain name.
+        # The SOCKS server will not return REP.SUCCESS if it's an invalid domain name.
+        return ATYP.DOMAINNAME
