@@ -6,7 +6,7 @@ from threading import Event
 
 def test_simple():
     with tutils.tmpdir():
-        with open("foo.py", "wb"):
+        with open("foo.py", "w"):
             pass
 
         script = mock.Mock()
@@ -21,9 +21,14 @@ def test_simple():
         with tutils.raises("already observed"):
             watch(script, _onchange)
 
-        with open("foo.py", "ab") as f:
-            f.write(".")
-
-        assert e.wait(10)
+        # Some reloaders don't register a change directly after watching, because they first need to initialize.
+        # To test if watching works at all, we do repeated writes every 100ms.
+        for _ in range(100):
+            with open("foo.py", "a") as f:
+                f.write(".")
+            if e.wait(0.1):
+                break
+        else:
+            raise AssertionError("No change detected.")
 
         unwatch(script)
