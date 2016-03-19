@@ -74,7 +74,7 @@ setup(
         "Pillow>=3.1, <3.2",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
-        "pyOpenSSL>=0.16, <0.17",
+        "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1,<2.2",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.10",
