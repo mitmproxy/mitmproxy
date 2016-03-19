@@ -10,8 +10,7 @@ from netlib.socks import (
     ClientGreeting, ServerGreeting, Message, SocksError
 )
 
-from .http import ProxyServerConnection
-from .base import Layer
+from .base import (Layer, ProxyServerConnection)
 from ..exceptions import ProtocolException
 
 class SocksClientLayer(Layer):

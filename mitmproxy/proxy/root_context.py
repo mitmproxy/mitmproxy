@@ -7,7 +7,7 @@ import six
 from mitmproxy.exceptions import ProtocolException, TlsProtocolException
 from netlib.exceptions import TcpException
 from ..protocol import (
-    RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, SocksClientLayer, is_tls_record_magic, ServerConnectionMixin,
+    RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin,
     UpstreamConnectLayer, TlsClientHello
 )
 from .modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
@@ -68,27 +68,19 @@ class RootContext(object):
             if ignore:
                 return RawTCPLayer(top_layer, logging=False)
 
-        # hardcode for SocksClientLayer
-        if isinstance(top_layer, ReverseProxy):
-            return SocksClientLayer(top_layer, top_layer.server_tls)
-        if isinstance(top_layer, ServerConnectionMixin) or isinstance(top_layer, UpstreamConnectLayer):
-            return SocksClientLayer(top_layer, client_tls)
-
         # 2. Always insert a TLS layer, even if there's neither client nor server tls.
         # An inline script may upgrade from http to https,
         # in which case we need some form of TLS layer.
-        if isinstance(top_layer, SocksClientLayer):
+        if isinstance(top_layer, ReverseProxy):
             return TlsLayer(top_layer, client_tls, top_layer.server_tls)
-        #if isinstance(top_layer, ReverseProxy):
-        #    return TlsLayer(top_layer, client_tls, top_layer.server_tls)
-        #if isinstance(top_layer, ServerConnectionMixin) or isinstance(top_layer, UpstreamConnectLayer):
-        #    return TlsLayer(top_layer, client_tls, client_tls)
+        if isinstance(top_layer, ServerConnectionMixin) or isinstance(top_layer, UpstreamConnectLayer):
+            return TlsLayer(top_layer, client_tls, client_tls)
 
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if isinstance(top_layer, TlsLayer):
-            if isinstance(top_layer.ctx.ctx, HttpProxy):
+            if isinstance(top_layer.ctx, HttpProxy):
                 return Http1Layer(top_layer, "regular")
-            if isinstance(top_layer.ctx.ctx, HttpUpstreamProxy):
+            if isinstance(top_layer.ctx, HttpUpstreamProxy):
                 return Http1Layer(top_layer, "upstream")
 
         # 4. Check for other TLS cases (e.g. after CONNECT).
