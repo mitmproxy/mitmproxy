@@ -31,9 +31,8 @@ class DummyContext(object):
 def example(command):
     command = os.path.join(example_dir, command)
     ctx = DummyContext()
-    s = script.Script(command, ctx)
-    yield s
-    s.unload()
+    with script.Script(command, ctx) as s:
+        yield s
 
 
 def test_load_scripts():
@@ -52,8 +51,10 @@ def test_load_scripts():
             f += " ~a"
         if "modify_response_body" in f:
             f += " foo bar"  # two arguments required
+
+        s = script.Script(f, script.ScriptContext(tmaster))
         try:
-            s = script.Script(f, script.ScriptContext(tmaster))  # Loads the script file.
+            s.load()
         except Exception as v:
             if "ImportError" not in str(v):
                 raise

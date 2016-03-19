@@ -318,6 +318,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         try:
             s = script.Script(command, script.ScriptContext(self))
+            s.load()
         except script.ScriptException as v:
             signals.status_message.send(
                 message = "Error loading script."
