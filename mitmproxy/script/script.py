@@ -8,6 +8,9 @@ import os
 import shlex
 import traceback
 import sys
+
+import six
+
 from ..exceptions import ScriptException
 
 
@@ -40,7 +43,8 @@ class Script(object):
     def parse_command(command):
         if not command or not command.strip():
             raise ScriptException("Empty script command.")
-        if os.name == "nt":  # Windows: escape all backslashes in the path.
+        # Windows: escape all backslashes in the path.
+        if os.name == "nt":  # pragma: no cover
             backslashes = shlex.split(command, posix=False)[0].count("\\")
             command = command.replace("\\", "\\\\", backslashes)
         args = shlex.split(command)  # pragma: nocover
@@ -71,10 +75,15 @@ class Script(object):
         self.ns = {'__file__': os.path.abspath(self.args[0])}
         sys.path.append(script_dir)
         try:
-            execfile(self.args[0], self.ns, self.ns)
+            with open(self.filename) as f:
+                code = compile(f.read(), self.filename, 'exec')
+                exec (code, self.ns, self.ns)
         except Exception as e:
-            # Python 3: use exception chaining, https://www.python.org/dev/peps/pep-3134/
-            raise ScriptException(traceback.format_exc(e))
+            six.reraise(
+                ScriptException,
+                ScriptException(str(e)),
+                sys.exc_info()[2]
+            )
         finally:
             sys.path.pop()
         return self.run("start", self.args)
@@ -103,6 +112,10 @@ class Script(object):
             try:
                 return f(self.ctx, *args, **kwargs)
             except Exception as e:
-                raise ScriptException(traceback.format_exc(e))
+                six.reraise(
+                    ScriptException,
+                    ScriptException(str(e)),
+                    sys.exc_info()[2]
+                )
         else:
             return None

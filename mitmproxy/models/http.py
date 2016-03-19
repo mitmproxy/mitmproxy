@@ -1,5 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
-import Cookie
+from six.moves import http_cookies as Cookie
 import copy
 import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
