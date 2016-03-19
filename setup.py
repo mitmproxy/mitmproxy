@@ -65,7 +65,7 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
-        "cryptography>=1.2.2,<1.3",
+        "cryptography>=1.3,<1.4",
         "Flask>=0.10.1, <0.11",
         "h2>=2.1.2, <3.0",
         "hpack>=2.1.0, <3.0",
@@ -74,7 +74,7 @@ setup(
         "Pillow>=3.1, <3.2",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
-        "pyOpenSSL>=0.15.1, <0.16",
+        "pyOpenSSL>=0.16, <0.17",
         "pyparsing>=2.1,<2.2",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.10",
