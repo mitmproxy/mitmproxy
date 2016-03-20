@@ -164,17 +164,17 @@ class HTTPRequest(MessageMixin, Request):
     @classmethod
     def wrap(self, request):
         req = HTTPRequest(
-            first_line_format=request.form_in,
-            method=request.method,
-            scheme=request.scheme,
-            host=request.host,
-            port=request.port,
-            path=request.path,
-            http_version=request.http_version,
-            headers=request.headers,
-            content=request.content,
-            timestamp_start=request.timestamp_start,
-            timestamp_end=request.timestamp_end,
+            first_line_format=request.data.first_line_format,
+            method=request.data.method,
+            scheme=request.data.scheme,
+            host=request.data.host,
+            port=request.data.port,
+            path=request.data.path,
+            http_version=request.data.http_version,
+            headers=request.data.headers,
+            content=request.data.content,
+            timestamp_start=request.data.timestamp_start,
+            timestamp_end=request.data.timestamp_end,
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
         return req
@@ -264,13 +264,13 @@ class HTTPResponse(MessageMixin, Response):
     @classmethod
     def wrap(self, response):
         resp = HTTPResponse(
-            http_version=response.http_version,
-            status_code=response.status_code,
-            reason=response.reason,
-            headers=response.headers,
-            content=response.content,
-            timestamp_start=response.timestamp_start,
-            timestamp_end=response.timestamp_end,
+            http_version=response.data.http_version,
+            status_code=response.data.status_code,
+            reason=response.data.reason,
+            headers=response.data.headers,
+            content=response.data.content,
+            timestamp_start=response.data.timestamp_start,
+            timestamp_end=response.data.timestamp_end,
         )
         return resp
 

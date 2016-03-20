@@ -6,6 +6,8 @@ from __future__ import absolute_import
 import traceback
 from abc import abstractmethod, ABCMeta
 import hashlib
+
+import six
 from six.moves import http_cookies, http_cookiejar
 import os
 import re
@@ -384,8 +386,11 @@ class FlowList(object):
     def __getitem__(self, item):
         return self._list[item]
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self._list)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
     def __len__(self):
         return len(self._list)

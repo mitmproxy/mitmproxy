@@ -2,6 +2,8 @@ from __future__ import (absolute_import, print_function, division)
 import collections
 import os
 import re
+
+import six
 from OpenSSL import SSL
 
 from netlib import certutils, tcp
@@ -34,8 +36,11 @@ class HostMatcher(object):
         else:
             return False
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.patterns)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
 
 ServerSpec = collections.namedtuple("ServerSpec", "scheme address")

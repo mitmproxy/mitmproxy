@@ -82,8 +82,11 @@ class ConnectServerConnection(object):
     def __getattr__(self, item):
         return getattr(self.via, item)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.via)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
 
 class UpstreamConnectLayer(Layer):
