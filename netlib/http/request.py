@@ -147,7 +147,10 @@ class Request(Message):
         HTTP request path, e.g. "/index.html".
         Guaranteed to start with a slash.
         """
-        return _native(self.data.path)
+        if self.data.path is None:
+            return None
+        else:
+            return _native(self.data.path)
 
     @path.setter
     def path(self, path):
