@@ -17,7 +17,7 @@ install:
   - "dev.bat"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 test_script:
-  - "py.test"
+  - "py.test --cov netlib --cov mitmproxy --cov pathod"
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
 deploy_script:
