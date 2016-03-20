@@ -1,4 +1,4 @@
-import cStringIO
+from six.moves import cStringIO as StringIO
 import threading
 import Queue
 
@@ -14,7 +14,7 @@ class Daemon:
 
     def __init__(self, ssl=None, **daemonargs):
         self.q = Queue.Queue()
-        self.logfp = cStringIO.StringIO()
+        self.logfp = StringIO()
         daemonargs["logfp"] = self.logfp
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()

@@ -1,7 +1,7 @@
 import Queue
 import time
 import os.path
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 import email.utils
 
 import mock

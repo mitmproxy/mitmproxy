@@ -1,4 +1,4 @@
-import cStringIO
+from six.moves import cStringIO as StringIO
 
 import netlib
 from netlib import tcp
@@ -25,7 +25,7 @@ def default_settings():
 
 
 def test_make_error_response():
-    d = cStringIO.StringIO()
+    d = StringIO()
     s = http2.make_error_response("foo", "bar")
     language.serve(s, d, default_settings())
 
@@ -84,7 +84,7 @@ class TestRequest:
         assert r[1].method.string() == "GET"
 
     def test_render_simple(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         r = parse_request("GET:'/foo'")
         assert language.serve(
             r,
@@ -126,7 +126,7 @@ class TestRequest:
         assert r.headers[0].values(default_settings()) == ("user-agent", user_agents.get_by_shortcut('a')[2])
 
     def test_render_with_headers(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         r = parse_request('GET:/foo:h"foo"="bar"')
         assert language.serve(
             r,
@@ -143,7 +143,7 @@ class TestRequest:
 
 
     def test_render_with_body(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         r = parse_request("GET:'/foo':bfoobar")
         assert language.serve(
             r,
@@ -200,7 +200,7 @@ class TestResponse:
         assert r.body.string() == "foobar"
 
     def test_render_simple(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         r = parse_response('200')
         assert language.serve(
             r,
@@ -209,7 +209,7 @@ class TestResponse:
         )
 
     def test_render_with_headers(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         r = parse_response('200:h"foo"="bar"')
         assert language.serve(
             r,
@@ -218,7 +218,7 @@ class TestResponse:
         )
 
     def test_render_with_body(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         r = parse_response('200:bfoobar')
         assert language.serve(
             r,

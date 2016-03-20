@@ -1,4 +1,4 @@
-import cStringIO
+from six.moves import cStringIO as StringIO
 from mitmproxy import filt
 from mitmproxy.models import Error
 from mitmproxy.models import http
@@ -9,7 +9,7 @@ from . import tutils
 class TestParsing:
 
     def _dump(self, x):
-        c = cStringIO.StringIO()
+        c = StringIO()
         x.dump(fp=c)
         assert c.getvalue()
 
