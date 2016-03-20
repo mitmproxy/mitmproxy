@@ -22,7 +22,7 @@ class SocksClientLayer(Layer):
             self.ctx
         )
         self.server_tls = server_tls
-        self.socks_address = tcp.Address(("127.0.0.1", 1080))
+        self.socks_address = tcp.Address((u"127.0.0.1", 1080))
         self.ctx.set_server(self.socks_address)
         self.socks_username = "test"
         self.socks_password = "test"
