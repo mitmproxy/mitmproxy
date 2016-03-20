@@ -6,12 +6,11 @@ from __future__ import absolute_import
 import traceback
 from abc import abstractmethod, ABCMeta
 import hashlib
-import Cookie
-import cookielib
+from six.moves import http_cookies, http_cookiejar
 import os
 import re
 import time
-import urlparse
+from six.moves import urllib
 
 from netlib import wsgi
 from netlib.exceptions import HttpException
@@ -248,8 +247,8 @@ class ServerPlaybackState:
         """
         r = flow.request
 
-        _, _, path, _, query, _ = urlparse.urlparse(r.url)
-        queriesArray = urlparse.parse_qsl(query, keep_blank_values=True)
+        _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
+        queriesArray = urllib.parse_qsl(query, keep_blank_values=True)
 
         key = [
             str(r.port),
@@ -323,9 +322,9 @@ class StickyCookieState:
         )
 
     def domain_match(self, a, b):
-        if cookielib.domain_match(a, b):
+        if http_cookiejar.domain_match(a, b):
             return True
-        elif cookielib.domain_match(a, b.strip(".")):
+        elif http_cookiejar.domain_match(a, b.strip(".")):
             return True
         return False
 
@@ -333,7 +332,7 @@ class StickyCookieState:
         for i in f.response.headers.get_all("set-cookie"):
             # FIXME: We now know that Cookie.py screws up some cookies with
             # valid RFC 822/1123 datetime specifications for expiry. Sigh.
-            c = Cookie.SimpleCookie(str(i))
+            c = http_cookies.SimpleCookie(str(i))
             for m in c.values():
                 k = self.ckey(m, f)
                 if self.domain_match(f.request.host, k[0]):

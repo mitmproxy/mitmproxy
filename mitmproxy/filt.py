@@ -152,9 +152,9 @@ class FHead(_Rex):
     flags = re.MULTILINE
 
     def __call__(self, f):
-        if f.request and self.re.search(str(f.request.headers)):
+        if f.request and self.re.search(bytes(f.request.headers)):
             return True
-        if f.response and self.re.search(str(f.response.headers)):
+        if f.response and self.re.search(bytes(f.response.headers)):
             return True
         return False
 
@@ -165,7 +165,7 @@ class FHeadRequest(_Rex):
     flags = re.MULTILINE
 
     def __call__(self, f):
-        if f.request and self.re.search(str(f.request.headers)):
+        if f.request and self.re.search(bytes(f.request.headers)):
             return True
 
 
@@ -175,7 +175,7 @@ class FHeadResponse(_Rex):
     flags = re.MULTILINE
 
     def __call__(self, f):
-        if f.response and self.re.search(str(f.response.headers)):
+        if f.response and self.re.search(bytes(f.response.headers)):
             return True
 
 

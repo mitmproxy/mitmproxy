@@ -2,7 +2,7 @@ from __future__ import (absolute_import, print_function, division)
 
 import threading
 import time
-import Queue
+from six.moves import queue
 
 import h2
 import six
@@ -252,12 +252,12 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         self.response_headers = None
         self.pushed = False
 
-        self.request_data_queue = Queue.Queue()
+        self.request_data_queue = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
 
         self.response_arrived = threading.Event()
-        self.response_data_queue = Queue.Queue()
+        self.response_data_queue = queue.Queue()
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
 
@@ -382,7 +382,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         while True:
             try:
                 yield self.response_data_queue.get(timeout=1)
-            except Queue.Empty:
+            except queue.Empty:
                 pass
             if self.response_data_finished.is_set():
                 while self.response_data_queue.qsize() > 0:
