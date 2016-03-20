@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import argparse
 import sys
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 from contextlib import contextmanager
 
 from unittest.case import SkipTest

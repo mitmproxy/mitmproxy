@@ -2,6 +2,8 @@
     This module provides more sophisticated flow tracking and provides filtering and interception facilities.
 """
 from __future__ import absolute_import
+
+import traceback
 from abc import abstractmethod, ABCMeta
 import hashlib
 import Cookie
@@ -686,8 +688,8 @@ class FlowMaster(controller.Master):
         try:
             s = script.Script(command, script.ScriptContext(self))
             s.load()
-        except script.ScriptException as v:
-            return v.args[0]
+        except script.ScriptException as e:
+            return traceback.format_exc(e)
         if use_reloader:
             script.reloader.watch(s, lambda: self.masterq.put(("script_change", s)))
         self.scripts.append(s)

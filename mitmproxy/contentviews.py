@@ -13,7 +13,7 @@ requests, the query parameters are passed as the ``query`` keyword argument.
 
 """
 from __future__ import (absolute_import, print_function, division)
-import cStringIO
+from six.moves import cStringIO as StringIO
 import json
 import logging
 import subprocess
@@ -397,7 +397,7 @@ class ViewImage(View):
 
     def __call__(self, data, **metadata):
         try:
-            img = Image.open(cStringIO.StringIO(data))
+            img = Image.open(StringIO(data))
         except IOError:
             return None
         parts = [

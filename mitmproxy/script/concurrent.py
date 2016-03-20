@@ -47,7 +47,7 @@ class ScriptThread(threading.Thread):
 
 
 def concurrent(fn):
-    if fn.func_name in (
+    if fn.__name__ in (
             "request",
             "response",
             "error",
@@ -60,4 +60,4 @@ def concurrent(fn):
 
         return _concurrent
     raise NotImplementedError(
-        "Concurrent decorator not supported for '%s' method." % fn.func_name)
+        "Concurrent decorator not supported for '%s' method." % fn.__name__)
