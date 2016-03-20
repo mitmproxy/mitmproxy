@@ -5,6 +5,7 @@ import time
 import Queue
 
 import h2
+import six
 from h2.connection import H2Connection
 
 from netlib.tcp import ssl_read_select
@@ -172,7 +173,7 @@ class Http2Layer(Layer):
                 if other_stream_id is not None:
                     other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
         elif isinstance(event, h2.events.RemoteSettingsChanged):
-            new_settings = dict([(id, cs.new_value) for (id, cs) in event.changed_settings.iteritems()])
+            new_settings = dict([(id, cs.new_value) for (id, cs) in six.iteritems(event.changed_settings)])
             other_conn.h2.safe_update_settings(new_settings)
         elif isinstance(event, h2.events.ConnectionTerminated):
             # Do not immediately terminate the other connection.
