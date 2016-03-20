@@ -116,7 +116,7 @@ class TestClientPlaybackState:
         c.clear(c.current)
         assert c.done()
 
-        q = Queue.Queue()
+        q = queue.Queue()
         fm.state.clear()
         fm.tick(q, timeout=0)
 
