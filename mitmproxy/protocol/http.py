@@ -257,7 +257,7 @@ class HttpLayer(Layer):
 
     def handle_regular_mode_connect(self, request):
         self.set_server((request.host, request.port))
-        self.send_response(make_connect_response(request.http_version))
+        self.send_response(make_connect_response(request.data.http_version))
         layer = self.ctx.next_layer(self)
         layer()
 

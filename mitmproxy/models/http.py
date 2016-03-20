@@ -423,7 +423,7 @@ class HTTPFlow(Flow):
 
 
 def make_error_response(status_code, message, headers=None):
-    response = status_codes.RESPONSES.get(status_code, "Unknown")
+    response = status_codes.RESPONSES.get(status_code, "Unknown").encode()
     body = """
         <html>
             <head>
@@ -432,6 +432,7 @@ def make_error_response(status_code, message, headers=None):
             <body>%s</body>
         </html>
     """.strip() % (status_code, response, message)
+    body = body.encode("utf8", "replace")
 
     if not headers:
         headers = Headers(
@@ -453,8 +454,8 @@ def make_error_response(status_code, message, headers=None):
 def make_connect_request(address):
     address = Address.wrap(address)
     return HTTPRequest(
-        "authority", "CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
-        Headers(), ""
+        "authority", b"CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
+        Headers(), b""
     )
 
 
@@ -464,9 +465,9 @@ def make_connect_response(http_version):
     return HTTPResponse(
         http_version,
         200,
-        "Connection established",
+        b"Connection established",
         Headers(),
-        "",
+        b"",
     )
 
-expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, "Continue", Headers(), b"")
+expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, b"Continue", Headers(), b"")

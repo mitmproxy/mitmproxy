@@ -1,5 +1,4 @@
 from __future__ import (absolute_import, print_function, division)
-import string
 import sys
 
 import six
@@ -102,8 +101,8 @@ class RootContext(object):
         # 6. Check for raw tcp mode
         is_ascii = (
             len(d) == 3 and
-            # better be safe here and don't expect uppercase...
-            all(x in string.ascii_letters for x in d)
+            # expect A-Za-z
+            all(65 <= x <= 90 and 97 <= x <= 122 for x in six.iterbytes(d))
         )
         if self.config.rawtcp and not is_ascii:
             return RawTCPLayer(top_layer)
