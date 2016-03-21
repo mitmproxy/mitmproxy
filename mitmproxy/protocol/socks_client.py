@@ -18,7 +18,7 @@ class SocksClientLayer(Layer):
     def __init__(self, ctx, server_tls):
         super(SocksClientLayer, self).__init__(ctx)
         self.server_conn = ProxyServerConnection(
-            self.ctx.server_conn.address,
+            None,
             self.ctx
         )
         self.server_tls = server_tls
@@ -40,9 +40,15 @@ class SocksClientLayer(Layer):
         if sauth.status != 0:
             raise SocksError(0, "authentication failed")
 
+    def change_socks_proxy_server(self, address, username = None, password = None):
+        if address != self.server_conn.via.address or self.socks_username != username or self.socks_password != password:
+            self.ctx.set_server(address)
+            self.socks_username = username
+            self.socks_password = password
+
     def set_server(self, address, server_tls=None, sni=None):
         self.server_conn = ProxyServerConnection(address, self.ctx)
-        self.ctx.set_server(self.socks_address, server_tls, sni)
+        self.ctx.set_server(self.server_conn.via.address, server_tls, sni)
 
     def connect(self):
         if self.server_conn.address is None:

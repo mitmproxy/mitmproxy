@@ -7,6 +7,7 @@ import OpenSSL
 
 from netlib import tcp
 from netlib import tutils
+from netlib import socks
 
 
 class _ServerThread(threading.Thread):
@@ -107,3 +108,67 @@ class ServerTestBase(object):
     @property
     def last_handler(self):
         return self.server.server.last_handler
+
+
+class SocksHandler(tcp.BaseHandler):
+    socksConfig = (None, None, True)
+
+    @classmethod
+    def getSocksConfig(cls):
+        return cls.socksConfig
+
+    def handle(self):
+        username, password, succ = self.getSocksConfig()
+        cgreeting = socks.ClientGreeting.from_file(self.rfile)
+        assert cgreeting.ver == socks.VERSION.SOCKS5
+        assert len(cgreeting.methods) == 2 or len(cgreeting.methods) == 1
+        if len(cgreeting.methods) == 1:
+            assert cgreeting.methods[0] == socks.METHOD.NO_AUTHENTICATION_REQUIRED
+        else:
+            assert cgreeting.methods[0] == socks.METHOD.NO_AUTHENTICATION_REQUIRED
+            assert cgreeting.methods[1] == socks.METHOD.USERNAME_PASSWORD
+
+        need_auth = False
+        if username is None or password is None:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.NO_AUTHENTICATION_REQUIRED)
+        elif len(cgreeting.methods) == 1:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.NO_ACCEPTABLE_METHODS)
+        else:
+            sgreeting = socks.ServerGreeting(socks.VERSION.SOCKS5, socks.METHOD.USERNAME_PASSWORD)
+            need_auth = True
+        sgreeting.to_file(self.wfile)
+        self.wfile.flush()
+        if need_auth:
+            cauth = socks.UsernamePasswordAuth.from_file(self.rfile)
+            assert cauth.ver == socks.USERNAME_PASSWORD_VERSION.DEFAULT
+            if cauth.username == username and cauth.password == password:
+                sauth = socks.UsernamePasswordAuthResponse(socks.USERNAME_PASSWORD_VERSION.DEFAULT, 0)
+                sauth.to_file(self.wfile)
+                self.wfile.flush()
+            else:
+                sauth = socks.UsernamePasswordAuthResponse(socks.USERNAME_PASSWORD_VERSION.DEFAULT, 1)
+                sauth.to_file(self.wfile)
+                self.wfile.flush()
+                return
+        cmsg = socks.Message.from_file(self.rfile)
+        cmsg.assert_socks5()
+        if succ:
+            rep = socks.REP.SUCCEEDED
+        else:
+            rep = socks.REP.CONNECTION_NOT_ALLOWED_BY_RULESET
+        connect_reply = socks.Message(
+            socks.VERSION.SOCKS5,
+            rep,
+            cmsg.atyp,
+            cmsg.addr
+        )
+        connect_reply.to_file(self.wfile)
+        cmsg.to_file(self.wfile)
+
+
+class SocksServerTestBase(ServerTestBase):
+    handler = SocksHandler
+
+    @classmethod
+    def setSocksConfig(cls, config):
+        cls.handler.socksConfig = config
