@@ -3,6 +3,8 @@ from __future__ import (absolute_import, print_function, division)
 import copy
 import os
 
+import six
+
 from netlib import tcp, certutils
 from .. import stateobject, utils
 
@@ -27,8 +29,11 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.protocol = None
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.connection) and not self.finished
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
     def __repr__(self):
         return "<ClientConnection: {ssl}{address}>".format(
@@ -95,8 +100,11 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.protocol = None
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.connection) and not self.finished
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
     def __repr__(self):
         if self.ssl_established and self.sni:

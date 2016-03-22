@@ -99,9 +99,6 @@ class Flow(stateobject.StateObject):
             self._backup = state.pop("backup")
         super(Flow, self).set_state(state)
 
-    def __eq__(self, other):
-        return self is other
-
     def copy(self):
         f = copy.copy(self)
 

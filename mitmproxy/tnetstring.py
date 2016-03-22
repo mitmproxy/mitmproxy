@@ -67,6 +67,7 @@ like so::
     u'\u03b1'
 
 """
+import six
 
 __ver_major__ = 0
 __ver_minor__ = 2
@@ -172,7 +173,7 @@ def _rdumpq(q, size, value, encoding=None):
     if isinstance(value, dict):
         write("}")
         init_size = size = size + 1
-        for (k, v) in value.iteritems():
+        for (k, v) in six.iteritems(value):
             size = _rdumpq(q, size, v, encoding)
             size = _rdumpq(q, size, k, encoding)
         span = str(size - init_size)
@@ -236,7 +237,7 @@ def _gdumps(value, encoding):
         yield "]"
     elif isinstance(value, (dict,)):
         sub = []
-        for (k, v) in value.iteritems():
+        for (k, v) in six.iteritems(value):
             sub.extend(_gdumps(k))
             sub.extend(_gdumps(v))
         sub = "".join(sub)

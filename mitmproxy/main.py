@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 import os
 import signal
 import sys
-import thread
+from six.moves import _thread  # PY3: We only need _thread.error, which is an alias of RuntimeError in 3.3+
 from netlib.version_check import check_pyopenssl_version, check_mitmproxy_version
 from . import version, cmdline
 from .exceptions import ServerException
@@ -68,7 +68,7 @@ def mitmproxy(args=None):  # pragma: no cover
     m = console.ConsoleMaster(server, console_options)
     try:
         m.run()
-    except (KeyboardInterrupt, thread.error):
+    except (KeyboardInterrupt, _thread.error):
         pass
 
 
@@ -103,7 +103,7 @@ def mitmdump(args=None):  # pragma: no cover
     except dump.DumpError as e:
         print("mitmdump: %s" % e, file=sys.stderr)
         sys.exit(1)
-    except (KeyboardInterrupt, thread.error):
+    except (KeyboardInterrupt, _thread.error):
         pass
 
 
@@ -134,5 +134,5 @@ def mitmweb(args=None):  # pragma: no cover
     m = web.WebMaster(server, web_options)
     try:
         m.run()
-    except (KeyboardInterrupt, thread.error):
+    except (KeyboardInterrupt, _thread.error):
         pass

@@ -65,7 +65,7 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
-        "cryptography>=1.2.2, <1.3",
+        "cryptography>=1.3,<1.4",
         "Flask>=0.10.1, <0.11",
         "h2>=2.1.2, <3.0",
         "hpack>=2.1.0, <3.0",
@@ -74,7 +74,7 @@ setup(
         "Pillow>=3.1, <3.2",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
-        "pyOpenSSL>=0.15.1, <0.16",
+        "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1,<2.2",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.10",
@@ -85,11 +85,11 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
+            "lxml==3.5.0",  # there are no Windows wheels for newer versions, so we pin this.
             "pydivert>=0.0.7, <0.1",
         ],
         ':sys_platform != "win32"': [
-            "lxml>=3.5.0, <3.6",
+            "lxml>=3.5.0, <3.7",
         ],
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
@@ -100,7 +100,7 @@ setup(
         'dev': [
             "coveralls>=1.1, <1.2",
             "mock>=1.3.0, <1.4",
-            "pytest>=2.8.7, <2.9",
+            "pytest>=2.8.7,<2.10",
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",
             "pytest-xdist>=1.14, <1.15",
@@ -116,7 +116,7 @@ setup(
         'examples': [
             "beautifulsoup4>=4.4.1, <4.5",
             "harparser>=0.2, <0.3",
-            "pytz==2015.7.0",
+            "pytz>=2015.07.0, <=2016.1",
         ]
     }
 )

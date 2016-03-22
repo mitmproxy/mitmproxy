@@ -1,5 +1,7 @@
 import os.path
 import re
+
+import six
 import tornado.web
 import tornado.websocket
 import logging
@@ -185,11 +187,11 @@ class FlowHandler(RequestHandler):
     def put(self, flow_id):
         flow = self.flow
         flow.backup()
-        for a, b in self.json.iteritems():
+        for a, b in six.iteritems(self.json):
 
             if a == "request":
                 request = flow.request
-                for k, v in b.iteritems():
+                for k, v in six.iteritems(b):
                     if k in ["method", "scheme", "host", "path", "http_version"]:
                         setattr(request, k, str(v))
                     elif k == "port":
@@ -201,7 +203,7 @@ class FlowHandler(RequestHandler):
 
             elif a == "response":
                 response = flow.response
-                for k, v in b.iteritems():
+                for k, v in six.iteritems(b):
                     if k == "msg":
                         response.msg = str(v)
                     elif k == "code":
@@ -293,7 +295,7 @@ class Settings(RequestHandler):
 
     def put(self):
         update = {}
-        for k, v in self.json.iteritems():
+        for k, v in six.iteritems(self.json):
             if k == "intercept":
                 self.state.set_intercept(v)
                 update[k] = v

@@ -20,9 +20,9 @@ matrix:
       os: osx
       osx_image: xcode7.1
     - python: 3.5
-      env: SCOPE="netlib"
+      env: SCOPE="netlib ./test/mitmproxy/script"
     - python: 3.5
-      env: SCOPE="netlib" NO_ALPN=1
+      env: SCOPE="netlib ./test/mitmproxy/script" NO_ALPN=1
     - python: 2.7
       env: DOCS=1
       script: 'cd docs && make html'
@@ -46,7 +46,7 @@ before_script:
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 
 script:
-  - "py.test ./test/$SCOPE"
+  - "py.test --cov netlib --cov mitmproxy --cov pathod ./test/$SCOPE"
 
 after_success:
   - coveralls
