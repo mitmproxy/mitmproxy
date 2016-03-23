@@ -159,9 +159,10 @@ class TestRawRequest():
         flow = tutils.tflow(req=req_post)
         result = dedent("""
             POST /path HTTP/1.1\r
+            content-type: application/json\r
             host: address:22\r
             \r
-            content
+            {"name": "example", "email": "example@example.com"}
         """).strip()
         assert flow_export.raw_request(flow) == result
 
@@ -176,7 +177,7 @@ class TestRawRequest():
             content
         """).strip()
         assert flow_export.raw_request(flow) == result
-
+        
 
 class TestExportLocustCode():
 
@@ -214,6 +215,8 @@ class WebsiteUser(HttpLocust):
         assert flow_export.locust_code(flow) == result
 
     def test_post(self):
+        req_post.content = '''content'''
+        req_post.headers = ''
         flow = tutils.tflow(req=req_post)
         result = """
 from locust import HttpLocust, TaskSet, task

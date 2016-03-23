@@ -1,13 +1,11 @@
-import urllib
-import netlib.http
+import json
 from textwrap import dedent
 
-import sys, re
-if (sys.version_info > (3, 0)):
-    from urllib.parse import urlparse
-else:
-    import urlparse
+import netlib.http
+from netlib.utils import parse_content_type
 
+import re
+from six.moves.urllib.parse import urlparse, quote, quote_plus
 
 def curl_command(flow):
     data = "curl "
@@ -41,7 +39,7 @@ def python_code(flow):
         print(response.text)
     """).strip()
 
-    components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
+    components = map(lambda x: quote(x, safe=""), flow.request.path_components)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
 
     args = ""
@@ -59,8 +57,16 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        data = "\ndata = '''%s'''\n" % flow.request.body
-        args += "\n    data=data,"
+        json_obj = is_json(flow.request.headers, flow.request.body)
+        if json_obj:
+            # Without the separators field json.dumps() produces
+            # trailing white spaces: https://bugs.python.org/issue16333
+            data = json.dumps(json_obj, indent=4, separators=(',', ': '))
+            data = "\njson = %s\n" % data
+            args += "\n    json=json,"
+        else:
+            data = "\ndata = '''%s'''\n" % flow.request.body
+            args += "\n    data=data,"
 
     code = code.format(
         url=url,
@@ -77,6 +83,17 @@ def python_code(flow):
 def raw_request(flow):
     data = netlib.http.http1.assemble_request(flow.request)
     return data
+
+
+def is_json(headers, content):
+    if headers:
+        ct = parse_content_type(headers.get("content-type", ""))
+        if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
+            try:
+                return json.loads(content)
+            except ValueError:
+                return False
+    return False
 
 
 def locust_code(flow):
@@ -104,7 +121,7 @@ def locust_code(flow):
 
     """).strip()
 
-    components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
+    components = map(lambda x: quote(x, safe=""), flow.request.path_components)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
 
     args = ""
@@ -136,8 +153,8 @@ def locust_code(flow):
 
     host = flow.request.scheme + "://" + flow.request.host
     code = code.replace(host, "' + self.locust.host +'")
-    code = code.replace(urllib.quote_plus(host), "' + urllib.quote_plus(self.locust.host) +'")
-    code = code.replace(urllib.quote(host), "' + urllib.quote(self.locust.host) +'")
+    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) +'")
+    code = code.replace(quote(host), "' + quote(self.locust.host) +'")
 
     return code
 
@@ -154,7 +171,7 @@ def locust_task(flow):
         )
     """).strip()
 
-    components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
+    components = map(lambda x: quote(x, safe=""), flow.request.path_components)
     file_name = "_".join(components)
     name = re.sub('\W|^(?=\d)','_', file_name)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
@@ -189,8 +206,8 @@ def locust_task(flow):
 
     host = flow.request.scheme + "://" + flow.request.host
     code = code.replace(host, "' + self.locust.host +'")
-    code = code.replace(urllib.quote_plus(host), "' + urllib.quote_plus(self.locust.host) +'")
-    code = code.replace(urllib.quote(host), "' + urllib.quote(self.locust.host) +'")
+    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) +'")
+    code = code.replace(quote(host), "' + quote(self.locust.host) +'")
 
     code = "\n".join("    " + i for i in code.splitlines())
 
