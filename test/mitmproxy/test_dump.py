@@ -1,5 +1,5 @@
 import os
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 from mitmproxy.exceptions import ContentViewException
 from mitmproxy.models import HTTPResponse
 

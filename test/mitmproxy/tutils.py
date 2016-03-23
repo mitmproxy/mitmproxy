@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import argparse
 import sys
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 from contextlib import contextmanager
 
 from unittest.case import SkipTest
@@ -24,6 +24,13 @@ def skip_windows(fn):
         return _skip_windows
     else:
         return fn
+
+
+def skip_not_windows(fn):
+    if os.name == "nt":
+        return fn
+    else:
+        return _skip_windows
 
 
 def _skip_appveyor(*args):
@@ -93,6 +100,7 @@ def tserver_conn():
     c = ServerConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=dict(address=("address", 22), use_ipv6=True),
+        peer_address=None,
         cert=None,
         timestamp_start=1,
         timestamp_tcp_setup=2,
@@ -119,14 +127,17 @@ def get_body_line(last_displayed_body, line_nb):
 
 
 @contextmanager
+def chdir(dir):
+    orig_dir = os.getcwd()
+    os.chdir(dir)
+    yield
+    os.chdir(orig_dir)
+
+@contextmanager
 def tmpdir(*args, **kwargs):
-    orig_workdir = os.getcwd()
     temp_workdir = tempfile.mkdtemp(*args, **kwargs)
-    os.chdir(temp_workdir)
-
-    yield temp_workdir
-
-    os.chdir(orig_workdir)
+    with chdir(temp_workdir):
+        yield temp_workdir
     shutil.rmtree(temp_workdir)
 
 

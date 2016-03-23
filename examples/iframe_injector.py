@@ -14,7 +14,7 @@ def response(context, flow):
     if flow.request.host in context.iframe_url:
         return
     with decoded(flow.response):  # Remove content encoding (gzip, ...)
-        html = BeautifulSoup(flow.response.content)
+        html = BeautifulSoup(flow.response.content, "lxml")
         if html.body:
             iframe = html.new_tag(
                 "iframe",

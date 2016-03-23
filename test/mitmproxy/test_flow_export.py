@@ -1,6 +1,7 @@
 from textwrap import dedent
 
 import netlib.tutils
+from netlib.http import Headers
 from mitmproxy import flow_export
 from . import tutils
 
@@ -75,6 +76,35 @@ class TestExportPythonCode():
                 method='POST',
                 url=url,
                 data=data,
+            )
+
+            print(response.text)
+        """).strip()
+        assert flow_export.python_code(flow) == result
+
+    def test_post_json(self):
+        req_post.content = '{"name": "example", "email": "example@example.com"}'
+        req_post.headers = Headers(content_type="application/json")
+        flow = tutils.tflow(req=req_post)
+        result = dedent("""
+            import requests
+
+            url = 'http://address/path'
+
+            headers = {
+                'content-type': 'application/json',
+            }
+
+            json = {
+                "name": "example",
+                "email": "example@example.com"
+            }
+
+            response = requests.request(
+                method='POST',
+                url=url,
+                headers=headers,
+                json=json,
             )
 
             print(response.text)

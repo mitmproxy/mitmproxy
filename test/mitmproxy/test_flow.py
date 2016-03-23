@@ -1,7 +1,7 @@
-import Queue
+from six.moves import queue
 import time
 import os.path
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 import email.utils
 
 import mock
@@ -116,7 +116,7 @@ class TestClientPlaybackState:
         c.clear(c.current)
         assert c.done()
 
-        q = Queue.Queue()
+        q = queue.Queue()
         fm.state.clear()
         fm.tick(q, timeout=0)
 
@@ -853,7 +853,7 @@ class TestFlowMaster:
         assert not fm.start_client_playback(pb, False)
         fm.client_playback.testing = True
 
-        q = Queue.Queue()
+        q = queue.Queue()
         assert not fm.state.flow_count()
         fm.tick(q, 0)
         assert fm.state.flow_count()
@@ -909,7 +909,7 @@ class TestFlowMaster:
             False,
             None,
             False)
-        q = Queue.Queue()
+        q = queue.Queue()
         fm.tick(q, 0)
         assert fm.should_exit.is_set()
 

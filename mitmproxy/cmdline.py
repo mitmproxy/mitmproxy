@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import re
+import base64
 
 import configargparse
 
@@ -115,6 +116,15 @@ def parse_server_spec(url):
     address = Address(p[1:3])
     scheme = p[0].lower()
     return config.ServerSpec(scheme, address)
+
+
+def parse_upstream_auth(auth):
+    pattern = re.compile(".+:")
+    if pattern.search(auth) is None:
+        raise configargparse.ArgumentTypeError(
+            "Invalid upstream auth specification: %s" % auth
+        )
+    return "Basic" + " " + base64.b64encode(auth)
 
 
 def get_common_options(options):
@@ -370,6 +380,15 @@ def proxy_options(parser):
             If your OpenSSL version supports ALPN, HTTP/2 is enabled by default.
         """
     )
+    parser.add_argument(
+        "--upstream-auth",
+        action="store", dest="upstream_auth", default=None,
+        type=parse_upstream_auth,
+        help="""
+            Proxy Authentication:
+            username:password
+        """
+    )
     rawtcp = group.add_mutually_exclusive_group()
     rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
     rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
@@ -414,6 +433,12 @@ def proxy_ssl_options(parser):
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
+    )
+    group.add_argument(
+        "--add-upstream-certs-to-client-chain", default=False,
+        action="store_true", dest="add_upstream_certs_to_client_chain",
+        help="Add all certificates of the upstream server to the certificate chain "
+             "that will be served to the proxy client, as extras."
     )
     group.add_argument(
         "--verify-upstream-cert", default=False,

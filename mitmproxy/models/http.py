@@ -1,5 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
-import Cookie
+from six.moves import http_cookies as Cookie
 import copy
 import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
@@ -164,17 +164,17 @@ class HTTPRequest(MessageMixin, Request):
     @classmethod
     def wrap(self, request):
         req = HTTPRequest(
-            first_line_format=request.form_in,
-            method=request.method,
-            scheme=request.scheme,
-            host=request.host,
-            port=request.port,
-            path=request.path,
-            http_version=request.http_version,
-            headers=request.headers,
-            content=request.content,
-            timestamp_start=request.timestamp_start,
-            timestamp_end=request.timestamp_end,
+            first_line_format=request.data.first_line_format,
+            method=request.data.method,
+            scheme=request.data.scheme,
+            host=request.data.host,
+            port=request.data.port,
+            path=request.data.path,
+            http_version=request.data.http_version,
+            headers=request.data.headers,
+            content=request.data.content,
+            timestamp_start=request.data.timestamp_start,
+            timestamp_end=request.data.timestamp_end,
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
         return req
@@ -191,6 +191,9 @@ class HTTPRequest(MessageMixin, Request):
 
     def __hash__(self):
         return id(self)
+
+    def set_auth(self, auth):
+        self.data.headers.set_all("Proxy-Authorization", (auth,))
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -261,13 +264,13 @@ class HTTPResponse(MessageMixin, Response):
     @classmethod
     def wrap(self, response):
         resp = HTTPResponse(
-            http_version=response.http_version,
-            status_code=response.status_code,
-            reason=response.reason,
-            headers=response.headers,
-            content=response.content,
-            timestamp_start=response.timestamp_start,
-            timestamp_end=response.timestamp_end,
+            http_version=response.data.http_version,
+            status_code=response.data.status_code,
+            reason=response.data.reason,
+            headers=response.data.headers,
+            content=response.data.content,
+            timestamp_start=response.data.timestamp_start,
+            timestamp_end=response.data.timestamp_end,
         )
         return resp
 
@@ -420,7 +423,7 @@ class HTTPFlow(Flow):
 
 
 def make_error_response(status_code, message, headers=None):
-    response = status_codes.RESPONSES.get(status_code, "Unknown")
+    response = status_codes.RESPONSES.get(status_code, "Unknown").encode()
     body = """
         <html>
             <head>
@@ -429,6 +432,7 @@ def make_error_response(status_code, message, headers=None):
             <body>%s</body>
         </html>
     """.strip() % (status_code, response, message)
+    body = body.encode("utf8", "replace")
 
     if not headers:
         headers = Headers(
@@ -450,8 +454,8 @@ def make_error_response(status_code, message, headers=None):
 def make_connect_request(address):
     address = Address.wrap(address)
     return HTTPRequest(
-        "authority", "CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
-        Headers(), ""
+        "authority", b"CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
+        Headers(), b""
     )
 
 
@@ -461,9 +465,9 @@ def make_connect_response(http_version):
     return HTTPResponse(
         http_version,
         200,
-        "Connection established",
+        b"Connection established",
         Headers(),
-        "",
+        b"",
     )
 
-expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, "Continue", Headers(), b"")
+expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, b"Continue", Headers(), b"")

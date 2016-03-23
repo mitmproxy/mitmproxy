@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+
+import six
+
 from netlib.utils import Serializable
 
 
@@ -23,7 +26,7 @@ class StateObject(Serializable):
         Retrieve object state.
         """
         state = {}
-        for attr, cls in self._stateobject_attributes.iteritems():
+        for attr, cls in six.iteritems(self._stateobject_attributes):
             val = getattr(self, attr)
             if hasattr(val, "get_state"):
                 state[attr] = val.get_state()
@@ -36,7 +39,7 @@ class StateObject(Serializable):
         Load object state from data returned by a get_state call.
         """
         state = state.copy()
-        for attr, cls in self._stateobject_attributes.iteritems():
+        for attr, cls in six.iteritems(self._stateobject_attributes):
             if state.get(attr) is None:
                 setattr(self, attr, state.pop(attr))
             else:

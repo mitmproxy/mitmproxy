@@ -442,7 +442,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":21,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
 "use strict";
 
 var _react = require("react");
@@ -475,13 +475,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     (0, _reactDom.render)(_proxyapp.app, document.getElementById("mitmproxy"));
 });
 
-},{"./actions.js":2,"./components/proxyapp.js":18,"./connection":20,"jquery":"jquery","react":"react","react-dom":"react-dom"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"jquery":"jquery","react":"react","react-dom":"react-dom"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Splitter = exports.Router = exports.ChildFocus = exports.SettingsState = exports.StickyHeadMixin = exports.AutoScrollMixin = undefined;
+exports.Splitter = exports.Router = undefined;
 
 var _react = require("react");
 
@@ -496,62 +496,6 @@ var _lodash = require("lodash");
 var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
-var AutoScrollMixin = exports.AutoScrollMixin = {
-    componentWillUpdate: function componentWillUpdate() {
-        var node = _reactDom2.default.findDOMNode(this);
-        this._shouldScrollBottom = node.scrollTop !== 0 && node.scrollTop + node.clientHeight === node.scrollHeight;
-    },
-    componentDidUpdate: function componentDidUpdate() {
-        if (this._shouldScrollBottom) {
-            var node = _reactDom2.default.findDOMNode(this);
-            node.scrollTop = node.scrollHeight;
-        }
-    }
-};
-
-var StickyHeadMixin = exports.StickyHeadMixin = {
-    adjustHead: function adjustHead() {
-        // Abusing CSS transforms to set the element
-        // referenced as head into some kind of position:sticky.
-        var head = _reactDom2.default.findDOMNode(this.refs.head);
-        head.style.transform = "translate(0," + _reactDom2.default.findDOMNode(this).scrollTop + "px)";
-    }
-};
-
-var SettingsState = exports.SettingsState = {
-    contextTypes: {
-        settingsStore: _react2.default.PropTypes.object.isRequired
-    },
-    getInitialState: function getInitialState() {
-        return {
-            settings: this.context.settingsStore.dict
-        };
-    },
-    componentDidMount: function componentDidMount() {
-        this.context.settingsStore.addListener("recalculate", this.onSettingsChange);
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        this.context.settingsStore.removeListener("recalculate", this.onSettingsChange);
-    },
-    onSettingsChange: function onSettingsChange() {
-        this.setState({
-            settings: this.context.settingsStore.dict
-        });
-    }
-};
-
-var ChildFocus = exports.ChildFocus = {
-    contextTypes: {
-        returnFocus: _react2.default.PropTypes.func
-    },
-    returnFocus: function returnFocus() {
-        _reactDom2.default.findDOMNode(this).blur();
-        window.getSelection().removeAllRanges();
-        this.context.returnFocus();
-    }
-};
 
 var Router = exports.Router = {
     contextTypes: {
@@ -576,9 +520,6 @@ var Router = exports.Router = {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _lodash2.default.clone(this.context.location.query);
-    },
-    getParams: function getParams() {
-        return this.props.routeParams;
     }
 };
 
@@ -707,8 +648,6 @@ var _react2 = _interopRequireDefault(_react);
 var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
-
-var _common = require("./common.js");
 
 var _utils = require("../utils.js");
 
@@ -927,7 +866,9 @@ var ValidateEditor = _react2.default.createClass({
 var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     displayName: "ValueEditor",
 
-    mixins: [_common.ChildFocus],
+    contextTypes: {
+        returnFocus: _react2.default.PropTypes.func
+    },
     propTypes: {
         content: _react2.default.PropTypes.string.isRequired,
         onDone: _react2.default.PropTypes.func.isRequired,
@@ -944,26 +885,40 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
         _reactDom2.default.findDOMNode(this).focus();
     },
     onStop: function onStop() {
-        this.returnFocus();
+        this.context.returnFocus();
     }
 });
 
-},{"../utils.js":26,"./common.js":4,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":27,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _shallowequal = require("shallowequal");
+
+var _shallowequal2 = _interopRequireDefault(_shallowequal);
 
 var _common = require("./common.js");
 
 var _actions = require("../actions.js");
 
-var _virtualscroll = require("./virtualscroll.js");
+var _AutoScroll = require("./helpers/AutoScroll");
+
+var _AutoScroll2 = _interopRequireDefault(_AutoScroll);
+
+var _VirtualScroll = require("./helpers/VirtualScroll");
 
 var _view = require("../store/view.js");
 
@@ -973,117 +928,174 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var LogMessage = _react2.default.createClass({
-    displayName: "LogMessage",
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    render: function render() {
-        var entry = this.props.entry;
-        var indicator;
-        switch (entry.level) {
-            case "web":
-                indicator = _react2.default.createElement("i", { className: "fa fa-fw fa-html5" });
-                break;
-            case "debug":
-                indicator = _react2.default.createElement("i", { className: "fa fa-fw fa-bug" });
-                break;
-            default:
-                indicator = _react2.default.createElement("i", { className: "fa fa-fw fa-info" });
-        }
-        return _react2.default.createElement(
-            "div",
-            null,
-            indicator,
-            " ",
-            entry.message
-        );
-    },
-    shouldComponentUpdate: function shouldComponentUpdate() {
-        return false; // log entries are immutable.
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var EventLogContents = function (_React$Component) {
+    _inherits(EventLogContents, _React$Component);
+
+    function EventLogContents(props, context) {
+        _classCallCheck(this, EventLogContents);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLogContents).call(this, props, context));
+
+        _this.view = new _view.StoreView(_this.context.eventStore, function (entry) {
+            return _this.props.filter[entry.level];
+        });
+
+        _this.heights = {};
+        _this.state = { entries: _this.view.list, vScroll: (0, _VirtualScroll.calcVScroll)() };
+
+        _this.onChange = _this.onChange.bind(_this);
+        _this.onViewportUpdate = _this.onViewportUpdate.bind(_this);
+        return _this;
     }
-});
 
-var EventLogContents = _react2.default.createClass({
-    displayName: "EventLogContents",
-
-    contextTypes: {
-        eventStore: _react2.default.PropTypes.object.isRequired
-    },
-    mixins: [_common.AutoScrollMixin, _virtualscroll.VirtualScrollMixin],
-    getInitialState: function getInitialState() {
-        var filterFn = function filterFn(entry) {
-            return this.props.filter[entry.level];
-        };
-        var view = new _view.StoreView(this.context.eventStore, filterFn.bind(this));
-        view.addListener("add", this.onEventLogChange);
-        view.addListener("recalculate", this.onEventLogChange);
-
-        return {
-            view: view
-        };
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        this.state.view.close();
-    },
-    filter: function filter(entry) {
-        return this.props.filter[entry.level];
-    },
-    onEventLogChange: function onEventLogChange() {
-        this.forceUpdate();
-    },
-    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-        if (nextProps.filter !== this.props.filter) {
-            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
-            this.state.view.recalculate();
+    _createClass(EventLogContents, [{
+        key: "componentDidMount",
+        value: function componentDidMount() {
+            window.addEventListener("resize", this.onViewportUpdate);
+            this.view.addListener("add", this.onChange);
+            this.view.addListener("recalculate", this.onChange);
+            this.onViewportUpdate();
         }
-    },
-    getDefaultProps: function getDefaultProps() {
-        return {
-            rowHeight: 45,
-            rowHeightMin: 15,
-            placeholderTagName: "div"
-        };
-    },
-    renderRow: function renderRow(elem) {
-        return _react2.default.createElement(LogMessage, { key: elem.id, entry: elem });
-    },
-    render: function render() {
-        var entries = this.state.view.list;
-        var rows = this.renderRows(entries);
-
-        return _react2.default.createElement(
-            "pre",
-            { onScroll: this.onScroll },
-            this.getPlaceholderTop(entries.length),
-            rows,
-            this.getPlaceholderBottom(entries.length)
-        );
-    }
-});
-
-var ToggleFilter = _react2.default.createClass({
-    displayName: "ToggleFilter",
-
-    toggle: function toggle(e) {
-        e.preventDefault();
-        return this.props.toggleLevel(this.props.name);
-    },
-    render: function render() {
-        var className = "label ";
-        if (this.props.active) {
-            className += "label-primary";
-        } else {
-            className += "label-default";
+    }, {
+        key: "componentWillUnmount",
+        value: function componentWillUnmount() {
+            window.removeEventListener("resize", this.onViewportUpdate);
+            this.view.removeListener("add", this.onChange);
+            this.view.removeListener("recalculate", this.onChange);
+            this.view.close();
         }
-        return _react2.default.createElement(
-            "a",
-            {
-                href: "#",
-                className: className,
-                onClick: this.toggle },
-            this.props.name
-        );
+    }, {
+        key: "componentDidUpdate",
+        value: function componentDidUpdate() {
+            this.onViewportUpdate();
+        }
+    }, {
+        key: "componentWillReceiveProps",
+        value: function componentWillReceiveProps(nextProps) {
+            if (nextProps.filter !== this.props.filter) {
+                this.view.recalculate(function (entry) {
+                    return nextProps.filter[entry.level];
+                });
+            }
+        }
+    }, {
+        key: "onViewportUpdate",
+        value: function onViewportUpdate() {
+            var _this2 = this;
+
+            var viewport = _reactDom2.default.findDOMNode(this);
+
+            var vScroll = (0, _VirtualScroll.calcVScroll)({
+                itemCount: this.state.entries.length,
+                rowHeight: this.props.rowHeight,
+                viewportTop: viewport.scrollTop,
+                viewportHeight: viewport.offsetHeight,
+                itemHeights: this.state.entries.map(function (entry) {
+                    return _this2.heights[entry.id];
+                })
+            });
+
+            if (!(0, _shallowequal2.default)(this.state.vScroll, vScroll)) {
+                this.setState({ vScroll: vScroll });
+            }
+        }
+    }, {
+        key: "onChange",
+        value: function onChange() {
+            this.setState({ entries: this.view.list });
+        }
+    }, {
+        key: "setHeight",
+        value: function setHeight(id, ref) {
+            if (ref && !this.heights[id]) {
+                var height = _reactDom2.default.findDOMNode(ref).offsetHeight;
+                if (this.heights[id] !== height) {
+                    this.heights[id] = height;
+                    this.onViewportUpdate();
+                }
+            }
+        }
+    }, {
+        key: "getIcon",
+        value: function getIcon(level) {
+            return { web: "html5", debug: "bug" }[level] || "info";
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var _this3 = this;
+
+            var vScroll = this.state.vScroll;
+            var entries = this.state.entries.slice(vScroll.start, vScroll.end);
+
+            return _react2.default.createElement(
+                "pre",
+                { onScroll: this.onViewportUpdate },
+                _react2.default.createElement("div", { style: { height: vScroll.paddingTop } }),
+                entries.map(function (entry, index) {
+                    return _react2.default.createElement(
+                        "div",
+                        { key: entry.id, ref: _this3.setHeight.bind(_this3, entry.id) },
+                        _react2.default.createElement("i", { className: "fa fa-fw fa-" + _this3.getIcon(entry.level) }),
+                        entry.message
+                    );
+                }),
+                _react2.default.createElement("div", { style: { height: vScroll.paddingBottom } })
+            );
+        }
+    }]);
+
+    return EventLogContents;
+}(_react2.default.Component);
+
+EventLogContents.contextTypes = {
+    eventStore: _react2.default.PropTypes.object.isRequired
+};
+EventLogContents.defaultProps = {
+    rowHeight: 18
+};
+
+
+ToggleFilter.propTypes = {
+    name: _react2.default.PropTypes.string.isRequired,
+    toggleLevel: _react2.default.PropTypes.func.isRequired,
+    active: _react2.default.PropTypes.bool
+};
+
+function ToggleFilter(_ref) {
+    var name = _ref.name;
+    var active = _ref.active;
+    var toggleLevel = _ref.toggleLevel;
+
+    var className = "label ";
+    if (active) {
+        className += "label-primary";
+    } else {
+        className += "label-default";
     }
-});
+
+    function onClick(event) {
+        event.preventDefault();
+        toggleLevel(name);
+    }
+
+    return _react2.default.createElement(
+        "a",
+        {
+            href: "#",
+            className: className,
+            onClick: onClick },
+        name
+    );
+}
+
+var AutoScrollEventLog = (0, _AutoScroll2.default)(EventLogContents);
 
 var EventLog = _react2.default.createClass({
     displayName: "EventLog",
@@ -1101,7 +1113,6 @@ var EventLog = _react2.default.createClass({
     close: function close() {
         var d = {};
         d[_actions.Query.SHOW_EVENTLOG] = undefined;
-
         this.updateLocation(undefined, d);
     },
     toggleLevel: function toggleLevel(level) {
@@ -1126,14 +1137,14 @@ var EventLog = _react2.default.createClass({
                     _react2.default.createElement("i", { onClick: this.close, className: "fa fa-close" })
                 )
             ),
-            _react2.default.createElement(EventLogContents, { filter: this.state.filter })
+            _react2.default.createElement(AutoScrollEventLog, { filter: this.state.filter })
         );
     }
 });
 
 exports.default = EventLog;
 
-},{"../actions.js":2,"../store/view.js":25,"./common.js":4,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":26,"./common.js":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1402,12 +1413,14 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":23,"../utils.js":26,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":24,"../utils.js":27,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require("react");
 
@@ -1417,7 +1430,9 @@ var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _common = require("./common.js");
+var _classnames = require("classnames");
+
+var _classnames2 = _interopRequireDefault(_classnames);
 
 var _utils = require("../utils.js");
 
@@ -1425,7 +1440,15 @@ var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _virtualscroll = require("./virtualscroll.js");
+var _shallowequal = require("shallowequal");
+
+var _shallowequal2 = _interopRequireDefault(_shallowequal);
+
+var _AutoScroll = require("./helpers/AutoScroll");
+
+var _AutoScroll2 = _interopRequireDefault(_AutoScroll);
+
+var _VirtualScroll = require("./helpers/VirtualScroll");
 
 var _flowtableColumns = require("./flowtable-columns.js");
 
@@ -1433,196 +1456,256 @@ var _flowtableColumns2 = _interopRequireDefault(_flowtableColumns);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var FlowRow = _react2.default.createClass({
-    displayName: "FlowRow",
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    render: function render() {
-        var flow = this.props.flow;
-        var columns = this.props.columns.map(function (Column) {
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+FlowRow.propTypes = {
+    selectFlow: _react2.default.PropTypes.func.isRequired,
+    columns: _react2.default.PropTypes.array.isRequired,
+    flow: _react2.default.PropTypes.object.isRequired,
+    highlighted: _react2.default.PropTypes.bool,
+    selected: _react2.default.PropTypes.bool
+};
+
+function FlowRow(props) {
+    var flow = props.flow;
+
+    var className = (0, _classnames2.default)({
+        "selected": props.selected,
+        "highlighted": props.highlighted,
+        "intercepted": flow.intercepted,
+        "has-request": flow.request,
+        "has-response": flow.response
+    });
+
+    return _react2.default.createElement(
+        "tr",
+        { className: className, onClick: function onClick() {
+                return props.selectFlow(flow);
+            } },
+        props.columns.map(function (Column) {
             return _react2.default.createElement(Column, { key: Column.displayName, flow: flow });
-        }.bind(this));
-        var className = "";
-        if (this.props.selected) {
-            className += " selected";
-        }
-        if (this.props.highlighted) {
-            className += " highlighted";
-        }
-        if (flow.intercepted) {
-            className += " intercepted";
-        }
-        if (flow.request) {
-            className += " has-request";
-        }
-        if (flow.response) {
-            className += " has-response";
-        }
+        })
+    );
+}
 
-        return _react2.default.createElement(
-            "tr",
-            { className: className, onClick: this.props.selectFlow.bind(null, flow) },
-            columns
-        );
-    },
-    shouldComponentUpdate: function shouldComponentUpdate(nextProps) {
-        return true;
-        // Further optimization could be done here
-        // by calling forceUpdate on flow updates, selection changes and column changes.
-        //return (
-        //(this.props.columns.length !== nextProps.columns.length) ||
-        //(this.props.selected !== nextProps.selected)
-        //);
+var FlowTableHead = function (_React$Component) {
+    _inherits(FlowTableHead, _React$Component);
+
+    function FlowTableHead(props, context) {
+        _classCallCheck(this, FlowTableHead);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTableHead).call(this, props, context));
+
+        _this.state = { sortColumn: undefined, sortDesc: false };
+        return _this;
     }
-});
 
-var FlowTableHead = _react2.default.createClass({
-    displayName: "FlowTableHead",
+    _createClass(FlowTableHead, [{
+        key: "onClick",
+        value: function onClick(Column) {
+            var hasSort = Column.sortKeyFun;
 
-    getInitialState: function getInitialState() {
-        return {
-            sortColumn: undefined,
-            sortDesc: false
-        };
-    },
-    onClick: function onClick(Column) {
-        var sortDesc = this.state.sortDesc;
-        var hasSort = Column.sortKeyFun;
-        if (Column === this.state.sortColumn) {
-            sortDesc = !sortDesc;
-            this.setState({
-                sortDesc: sortDesc
-            });
-        } else {
-            this.setState({
-                sortColumn: hasSort && Column,
-                sortDesc: false
-            });
-        }
-        var sortKeyFun;
-        if (!sortDesc) {
-            sortKeyFun = Column.sortKeyFun;
-        } else {
-            sortKeyFun = hasSort && function () {
-                var k = Column.sortKeyFun.apply(this, arguments);
-                if (_lodash2.default.isString(k)) {
-                    return (0, _utils.reverseString)("" + k);
-                } else {
-                    return -k;
-                }
-            };
-        }
-        this.props.setSortKeyFun(sortKeyFun);
-    },
-    render: function render() {
-        var columns = this.props.columns.map(function (Column) {
-            var onClick = this.onClick.bind(this, Column);
-            var className;
-            if (this.state.sortColumn === Column) {
-                if (this.state.sortDesc) {
-                    className = "sort-desc";
-                } else {
-                    className = "sort-asc";
-                }
+            var sortDesc = this.state.sortDesc;
+
+            if (Column === this.state.sortColumn) {
+                sortDesc = !sortDesc;
+                this.setState({ sortDesc: sortDesc });
+            } else {
+                this.setState({ sortColumn: hasSort && Column, sortDesc: false });
             }
-            return _react2.default.createElement(Column.Title, {
-                key: Column.displayName,
-                onClick: onClick,
-                className: className });
-        }.bind(this));
-        return _react2.default.createElement(
-            "thead",
-            null,
-            _react2.default.createElement(
+
+            var sortKeyFun = Column.sortKeyFun;
+            if (sortDesc) {
+                sortKeyFun = hasSort && function () {
+                    var k = Column.sortKeyFun.apply(this, arguments);
+                    if (_lodash2.default.isString(k)) {
+                        return (0, _utils.reverseString)("" + k);
+                    }
+                    return -k;
+                };
+            }
+
+            this.props.setSortKeyFun(sortKeyFun);
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var _this2 = this;
+
+            var sortColumn = this.state.sortColumn;
+            var sortType = this.state.sortDesc ? "sort-desc" : "sort-asc";
+            return _react2.default.createElement(
                 "tr",
                 null,
-                columns
-            )
-        );
+                this.props.columns.map(function (Column) {
+                    return _react2.default.createElement(Column.Title, {
+                        key: Column.displayName,
+                        onClick: function onClick() {
+                            return _this2.onClick(Column);
+                        },
+                        className: sortColumn === Column && sortType
+                    });
+                })
+            );
+        }
+    }]);
+
+    return FlowTableHead;
+}(_react2.default.Component);
+
+FlowTableHead.propTypes = {
+    setSortKeyFun: _react2.default.PropTypes.func.isRequired,
+    columns: _react2.default.PropTypes.array.isRequired
+};
+
+var FlowTable = function (_React$Component2) {
+    _inherits(FlowTable, _React$Component2);
+
+    function FlowTable(props, context) {
+        _classCallCheck(this, FlowTable);
+
+        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTable).call(this, props, context));
+
+        _this3.state = { flows: [], vScroll: (0, _VirtualScroll.calcVScroll)() };
+
+        _this3.onChange = _this3.onChange.bind(_this3);
+        _this3.onViewportUpdate = _this3.onViewportUpdate.bind(_this3);
+        return _this3;
     }
-});
 
-var ROW_HEIGHT = 32;
+    _createClass(FlowTable, [{
+        key: "componentWillMount",
+        value: function componentWillMount() {
+            window.addEventListener("resize", this.onViewportUpdate);
+            this.context.view.addListener("add", this.onChange);
+            this.context.view.addListener("update", this.onChange);
+            this.context.view.addListener("remove", this.onChange);
+            this.context.view.addListener("recalculate", this.onChange);
+        }
+    }, {
+        key: "componentWillUnmount",
+        value: function componentWillUnmount() {
+            window.removeEventListener("resize", this.onViewportUpdate);
+            this.context.view.removeListener("add", this.onChange);
+            this.context.view.removeListener("update", this.onChange);
+            this.context.view.removeListener("remove", this.onChange);
+            this.context.view.removeListener("recalculate", this.onChange);
+        }
+    }, {
+        key: "componentDidUpdate",
+        value: function componentDidUpdate() {
+            this.onViewportUpdate();
+        }
+    }, {
+        key: "onViewportUpdate",
+        value: function onViewportUpdate() {
+            var viewport = _reactDom2.default.findDOMNode(this);
+            var viewportTop = viewport.scrollTop;
 
-var FlowTable = _react2.default.createClass({
-    displayName: "FlowTable",
+            var vScroll = (0, _VirtualScroll.calcVScroll)({
+                viewportTop: viewportTop,
+                viewportHeight: viewport.offsetHeight,
+                itemCount: this.state.flows.length,
+                rowHeight: this.props.rowHeight
+            });
 
-    mixins: [_common.StickyHeadMixin, _common.AutoScrollMixin, _virtualscroll.VirtualScrollMixin],
-    contextTypes: {
-        view: _react2.default.PropTypes.object.isRequired
-    },
-    getInitialState: function getInitialState() {
-        return {
-            columns: _flowtableColumns2.default
-        };
-    },
-    componentWillMount: function componentWillMount() {
-        this.context.view.addListener("add", this.onChange);
-        this.context.view.addListener("update", this.onChange);
-        this.context.view.addListener("remove", this.onChange);
-        this.context.view.addListener("recalculate", this.onChange);
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        this.context.view.removeListener("add", this.onChange);
-        this.context.view.removeListener("update", this.onChange);
-        this.context.view.removeListener("remove", this.onChange);
-        this.context.view.removeListener("recalculate", this.onChange);
-    },
-    getDefaultProps: function getDefaultProps() {
-        return {
-            rowHeight: ROW_HEIGHT
-        };
-    },
-    onScrollFlowTable: function onScrollFlowTable() {
-        this.adjustHead();
-        this.onScroll();
-    },
-    onChange: function onChange() {
-        this.forceUpdate();
-    },
-    scrollIntoView: function scrollIntoView(flow) {
-        this.scrollRowIntoView(this.context.view.indexOf(flow), _reactDom2.default.findDOMNode(this.refs.body).offsetTop);
-    },
-    renderRow: function renderRow(flow) {
-        var selected = flow === this.props.selected;
-        var highlighted = this.context.view._highlight && this.context.view._highlight[flow.id];
+            if (!(0, _shallowequal2.default)(this.state.vScroll, vScroll) || this.state.viewportTop !== viewportTop) {
+                this.setState({ vScroll: vScroll, viewportTop: viewportTop });
+            }
+        }
+    }, {
+        key: "onChange",
+        value: function onChange() {
+            this.setState({ flows: this.context.view.list });
+        }
+    }, {
+        key: "scrollIntoView",
+        value: function scrollIntoView(flow) {
+            var viewport = _reactDom2.default.findDOMNode(this);
+            var index = this.context.view.indexOf(flow);
+            var rowHeight = this.props.rowHeight;
+            var head = _reactDom2.default.findDOMNode(this.refs.head);
 
-        return _react2.default.createElement(FlowRow, { key: flow.id,
-            ref: flow.id,
-            flow: flow,
-            columns: this.state.columns,
-            selected: selected,
-            highlighted: highlighted,
-            selectFlow: this.props.selectFlow
-        });
-    },
-    render: function render() {
-        var flows = this.context.view.list;
-        var rows = this.renderRows(flows);
+            var headHeight = head ? head.offsetHeight : 0;
 
-        return _react2.default.createElement(
-            "div",
-            { className: "flow-table", onScroll: this.onScrollFlowTable },
-            _react2.default.createElement(
-                "table",
-                null,
-                _react2.default.createElement(FlowTableHead, { ref: "head",
-                    columns: this.state.columns,
-                    setSortKeyFun: this.props.setSortKeyFun }),
+            var rowTop = index * rowHeight + headHeight;
+            var rowBottom = rowTop + rowHeight;
+
+            var viewportTop = viewport.scrollTop;
+            var viewportHeight = viewport.offsetHeight;
+
+            // Account for pinned thead
+            if (rowTop - headHeight < viewportTop) {
+                viewport.scrollTop = rowTop - headHeight;
+            } else if (rowBottom > viewportTop + viewportHeight) {
+                viewport.scrollTop = rowBottom - viewportHeight;
+            }
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var _this4 = this;
+
+            var vScroll = this.state.vScroll;
+            var highlight = this.context.view._highlight;
+            var flows = this.state.flows.slice(vScroll.start, vScroll.end);
+
+            var transform = "translate(0," + this.state.viewportTop + "px)";
+
+            return _react2.default.createElement(
+                "div",
+                { className: "flow-table", onScroll: this.onViewportUpdate },
                 _react2.default.createElement(
-                    "tbody",
-                    { ref: "body" },
-                    this.getPlaceholderTop(flows.length),
-                    rows,
-                    this.getPlaceholderBottom(flows.length)
+                    "table",
+                    null,
+                    _react2.default.createElement(
+                        "thead",
+                        { ref: "head", style: { transform: transform } },
+                        _react2.default.createElement(FlowTableHead, {
+                            columns: _flowtableColumns2.default,
+                            setSortKeyFun: this.props.setSortKeyFun
+                        })
+                    ),
+                    _react2.default.createElement(
+                        "tbody",
+                        null,
+                        _react2.default.createElement("tr", { style: { height: vScroll.paddingTop } }),
+                        flows.map(function (flow) {
+                            return _react2.default.createElement(FlowRow, {
+                                key: flow.id,
+                                flow: flow,
+                                columns: _flowtableColumns2.default,
+                                selected: flow === _this4.props.selected,
+                                highlighted: highlight && highlight[flow.id],
+                                selectFlow: _this4.props.selectFlow
+                            });
+                        }),
+                        _react2.default.createElement("tr", { style: { height: vScroll.paddingBottom } })
+                    )
                 )
-            )
-        );
-    }
-});
+            );
+        }
+    }]);
 
-exports.default = FlowTable;
+    return FlowTable;
+}(_react2.default.Component);
 
-},{"../utils.js":26,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":19,"lodash":"lodash","react":"react","react-dom":"react-dom"}],9:[function(require,module,exports){
+FlowTable.contextTypes = {
+    view: _react2.default.PropTypes.object.isRequired
+};
+FlowTable.propTypes = {
+    rowHeight: _react2.default.PropTypes.number
+};
+FlowTable.defaultProps = {
+    rowHeight: 32
+};
+exports.default = (0, _AutoScroll2.default)(FlowTable);
+
+},{"../utils.js":27,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1932,7 +2015,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":23,"../../utils.js":26,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2200,7 +2283,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":26,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":27,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2332,7 +2415,7 @@ var FlowView = _react2.default.createClass({
 
 exports.default = FlowView;
 
-},{"../common.js":4,"../prompt.js":17,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
+},{"../common.js":4,"../prompt.js":19,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2697,7 +2780,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":23,"../../utils.js":26,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":27,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2784,6 +2867,7 @@ exports.default = Nav;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.default = Footer;
 
 var _react = require("react");
 
@@ -2793,34 +2877,32 @@ var _common = require("./common.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Footer = _react2.default.createClass({
-    displayName: "Footer",
+Footer.propTypes = {
+    settings: _react2.default.PropTypes.object.isRequired
+};
 
-    mixins: [_common.SettingsState],
-    render: function render() {
-        var mode = this.state.settings.mode;
-        var intercept = this.state.settings.intercept;
-        return _react2.default.createElement(
-            "footer",
-            null,
-            mode && mode != "regular" ? _react2.default.createElement(
-                "span",
-                { className: "label label-success" },
-                mode,
-                " mode"
-            ) : null,
-            " ",
-            intercept ? _react2.default.createElement(
-                "span",
-                { className: "label label-success" },
-                "Intercept: ",
-                intercept
-            ) : null
-        );
-    }
-});
+function Footer(_ref) {
+    var settings = _ref.settings;
+    var mode = settings.mode;
+    var intercept = settings.intercept;
 
-exports.default = Footer;
+    return _react2.default.createElement(
+        "footer",
+        null,
+        mode && mode != "regular" && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            mode,
+            " mode"
+        ),
+        intercept && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "Intercept: ",
+            intercept
+        )
+    );
+}
 
 },{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
@@ -2924,7 +3006,9 @@ var FilterDocs = _react2.default.createClass({
 var FilterInput = _react2.default.createClass({
     displayName: "FilterInput",
 
-    mixins: [_common.ChildFocus],
+    contextTypes: {
+        returnFocus: _react2.default.PropTypes.func
+    },
     getInitialState: function getInitialState() {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -2991,7 +3075,7 @@ var FilterInput = _react2.default.createClass({
     },
     blur: function blur() {
         _reactDom2.default.findDOMNode(this.refs.input).blur();
-        this.returnFocus();
+        this.context.returnFocus();
     },
     select: function select() {
         _reactDom2.default.findDOMNode(this.refs.input).select();
@@ -3038,7 +3122,10 @@ var FilterInput = _react2.default.createClass({
 var MainMenu = exports.MainMenu = _react2.default.createClass({
     displayName: "MainMenu",
 
-    mixins: [_common.Router, _common.SettingsState],
+    mixins: [_common.Router],
+    propTypes: {
+        settings: _react2.default.PropTypes.object.isRequired
+    },
     statics: {
         title: "Start",
         route: "flows"
@@ -3059,7 +3146,7 @@ var MainMenu = exports.MainMenu = _react2.default.createClass({
     render: function render() {
         var search = this.getQuery()[_actions.Query.SEARCH] || "";
         var highlight = this.getQuery()[_actions.Query.HIGHLIGHT] || "";
-        var intercept = this.state.settings.intercept || "";
+        var intercept = this.props.settings.intercept || "";
 
         return _react2.default.createElement(
             "div",
@@ -3237,6 +3324,9 @@ var Header = exports.Header = _react2.default.createClass({
     displayName: "Header",
 
     mixins: [_common.Router],
+    propTypes: {
+        settings: _react2.default.PropTypes.object.isRequired
+    },
     getInitialState: function getInitialState() {
         return {
             active: header_entries[0]
@@ -3277,13 +3367,158 @@ var Header = exports.Header = _react2.default.createClass({
             _react2.default.createElement(
                 "div",
                 { className: "menu" },
-                _react2.default.createElement(this.state.active, { ref: "active" })
+                _react2.default.createElement(this.state.active, { ref: "active", settings: this.props.settings })
             )
         );
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":22,"../utils.js":26,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":27,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var symShouldStick = Symbol("shouldStick");
+var isAtBottom = function isAtBottom(v) {
+    return v.scrollTop + v.clientHeight === v.scrollHeight;
+};
+
+exports.default = function (Component) {
+    var _class, _temp;
+
+    return Object.assign((_temp = _class = function (_Component) {
+        _inherits(AutoScrollWrapper, _Component);
+
+        function AutoScrollWrapper() {
+            _classCallCheck(this, AutoScrollWrapper);
+
+            return _possibleConstructorReturn(this, Object.getPrototypeOf(AutoScrollWrapper).apply(this, arguments));
+        }
+
+        _createClass(AutoScrollWrapper, [{
+            key: "componentWillUpdate",
+            value: function componentWillUpdate() {
+                var viewport = _reactDom2.default.findDOMNode(this);
+                this[symShouldStick] = viewport.scrollTop && isAtBottom(viewport);
+                _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentWillUpdate", this) && _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentWillUpdate", this).call(this);
+            }
+        }, {
+            key: "componentDidUpdate",
+            value: function componentDidUpdate() {
+                var viewport = _reactDom2.default.findDOMNode(this);
+                if (this[symShouldStick] && !isAtBottom(viewport)) {
+                    viewport.scrollTop = viewport.scrollHeight;
+                }
+                _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentDidUpdate", this) && _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentDidUpdate", this).call(this);
+            }
+        }]);
+
+        return AutoScrollWrapper;
+    }(Component), _class.displayName = Component.name, _temp), Component);
+};
+
+},{"react":"react","react-dom":"react-dom"}],17:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.calcVScroll = calcVScroll;
+/**
+ * Calculate virtual scroll stuffs
+ *
+ * @param {?Object} opts Options for calculation
+ *
+ * @returns {Object} result
+ *
+ * __opts__ should have following properties:
+ * - {number}         itemCount
+ * - {number}         rowHeight
+ * - {number}         viewportTop
+ * - {number}         viewportHeight
+ * - {Array<?number>} [itemHeights]
+ *
+ * __result__ have following properties:
+ * - {number} start
+ * - {number} end
+ * - {number} paddingTop
+ * - {number} paddingBottom
+ */
+function calcVScroll(opts) {
+    if (!opts) {
+        return { start: 0, end: 0, paddingTop: 0, paddingBottom: 0 };
+    }
+
+    var itemCount = opts.itemCount;
+    var rowHeight = opts.rowHeight;
+    var viewportTop = opts.viewportTop;
+    var viewportHeight = opts.viewportHeight;
+    var itemHeights = opts.itemHeights;
+
+    var viewportBottom = viewportTop + viewportHeight;
+
+    var start = 0;
+    var end = 0;
+
+    var paddingTop = 0;
+    var paddingBottom = 0;
+
+    if (itemHeights) {
+
+        for (var i = 0, pos = 0; i < itemCount; i++) {
+            var height = itemHeights[i] || rowHeight;
+
+            if (pos <= viewportTop && i % 2 === 0) {
+                paddingTop = pos;
+                start = i;
+            }
+
+            if (pos <= viewportBottom) {
+                end = i + 1;
+            } else {
+                paddingBottom += height;
+            }
+
+            pos += height;
+        }
+    } else {
+
+        // Make sure that we start at an even row so that CSS `:nth-child(even)` is preserved
+        start = Math.max(0, Math.floor(viewportTop / rowHeight) - 1) & ~1;
+        end = Math.min(itemCount, start + Math.ceil(viewportHeight / rowHeight) + 2);
+
+        // When a large trunk of elements is removed from the button, start may be far off the viewport.
+        // To make this issue less severe, limit the top placeholder to the total number of rows.
+        paddingTop = Math.min(start, itemCount) * rowHeight;
+        paddingBottom = Math.max(0, itemCount - end) * rowHeight;
+    }
+
+    return { start: start, end: end, paddingTop: paddingTop, paddingBottom: paddingBottom };
+}
+
+},{}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3388,12 +3623,12 @@ var MainView = _react2.default.createClass({
         }
     },
     onUpdate: function onUpdate(flow) {
-        if (flow.id === this.getParams().flowId) {
+        if (flow.id === this.props.routeParams.flowId) {
             this.forceUpdate();
         }
     },
     onRemove: function onRemove(flow_id, index) {
-        if (flow_id === this.getParams().flowId) {
+        if (flow_id === this.props.routeParams.flowId) {
             var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
             this.selectFlow(flow_to_select);
         }
@@ -3406,7 +3641,7 @@ var MainView = _react2.default.createClass({
     },
     selectFlow: function selectFlow(flow) {
         if (flow) {
-            var tab = this.getParams().detailTab || "request";
+            var tab = this.props.routeParams.detailTab || "request";
             this.updateLocation("/flows/" + flow.id + "/" + tab);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
@@ -3416,14 +3651,14 @@ var MainView = _react2.default.createClass({
     selectFlowRelative: function selectFlowRelative(shift) {
         var flows = this.state.view.list;
         var index;
-        if (!this.getParams().flowId) {
+        if (!this.props.routeParams.flowId) {
             if (shift < 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            var currFlowId = this.getParams().flowId;
+            var currFlowId = this.props.routeParams.flowId;
             var i = flows.length;
             while (i--) {
                 if (flows[i].id === currFlowId) {
@@ -3523,7 +3758,7 @@ var MainView = _react2.default.createClass({
         e.preventDefault();
     },
     getSelected: function getSelected() {
-        return this.context.flowStore.get(this.getParams().flowId);
+        return this.context.flowStore.get(this.props.routeParams.flowId);
     },
     render: function render() {
         var selected = this.getSelected();
@@ -3533,7 +3768,7 @@ var MainView = _react2.default.createClass({
             details = [_react2.default.createElement(_common.Splitter, { key: "splitter" }), _react2.default.createElement(_index2.default, {
                 key: "flowDetails",
                 ref: "flowDetails",
-                tab: this.getParams().detailTab,
+                tab: this.props.routeParams.detailTab,
                 flow: selected })];
         } else {
             details = null;
@@ -3553,7 +3788,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":22,"../store/view.js":25,"../utils.js":26,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],17:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":26,"../utils.js":27,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3574,14 +3809,14 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 var _utils = require("../utils.js");
 
-var _common = require("./common.js");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var Prompt = _react2.default.createClass({
     displayName: "Prompt",
 
-    mixins: [_common.ChildFocus],
+    contextTypes: {
+        returnFocus: _react2.default.PropTypes.func
+    },
     propTypes: {
         options: _react2.default.PropTypes.array.isRequired,
         done: _react2.default.PropTypes.func.isRequired,
@@ -3610,7 +3845,7 @@ var Prompt = _react2.default.createClass({
     },
     done: function done(ret) {
         this.props.done(ret);
-        this.returnFocus();
+        this.context.returnFocus();
     },
     getOptions: function getOptions() {
         var opts = [];
@@ -3689,7 +3924,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":26,"./common.js":4,"lodash":"lodash","react":"react","react-dom":"react-dom"}],18:[function(require,module,exports){
+},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3753,7 +3988,6 @@ var ProxyAppMain = _react2.default.createClass({
 
     mixins: [_common.Router],
     childContextTypes: {
-        settingsStore: _react2.default.PropTypes.object.isRequired,
         flowStore: _react2.default.PropTypes.object.isRequired,
         eventStore: _react2.default.PropTypes.object.isRequired,
         returnFocus: _react2.default.PropTypes.func.isRequired,
@@ -3761,10 +3995,16 @@ var ProxyAppMain = _react2.default.createClass({
     },
     componentDidMount: function componentDidMount() {
         this.focus();
+        this.settingsStore.addListener("recalculate", this.onSettingsChange);
+    },
+    componentWillUnmount: function componentWillUnmount() {
+        this.settingsStore.removeListener("recalculate", this.onSettingsChange);
+    },
+    onSettingsChange: function onSettingsChange() {
+        this.setState({ settings: this.settingsStore.dict });
     },
     getChildContext: function getChildContext() {
         return {
-            settingsStore: this.state.settingsStore,
             flowStore: this.state.flowStore,
             eventStore: this.state.eventStore,
             returnFocus: this.focus,
@@ -3776,15 +4016,18 @@ var ProxyAppMain = _react2.default.createClass({
         var flowStore = new _store.FlowStore();
         var settingsStore = new _store.SettingsStore();
 
+        this.settingsStore = settingsStore;
         // Default Settings before fetch
         _lodash2.default.extend(settingsStore.dict, {});
         return {
-            settingsStore: settingsStore,
+            settings: settingsStore.dict,
             flowStore: flowStore,
             eventStore: eventStore
         };
     },
     focus: function focus() {
+        document.activeElement.blur();
+        window.getSelection().removeAllRanges();
         _reactDom2.default.findDOMNode(this).focus();
     },
     getMainComponent: function getMainComponent() {
@@ -3829,10 +4072,10 @@ var ProxyAppMain = _react2.default.createClass({
         return _react2.default.createElement(
             "div",
             { id: "container", tabIndex: "0", onKeyDown: this.onKeydown },
-            _react2.default.createElement(_header.Header, { ref: "header" }),
+            _react2.default.createElement(_header.Header, { ref: "header", settings: this.state.settings }),
             children,
             eventlog,
-            _react2.default.createElement(_footer2.default, null)
+            _react2.default.createElement(_footer2.default, { settings: this.state.settings })
         );
     }
 });
@@ -3850,107 +4093,7 @@ var app = exports.app = _react2.default.createElement(
     )
 );
 
-},{"../actions.js":2,"../store/store.js":24,"../utils.js":26,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":16,"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],19:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.VirtualScrollMixin = undefined;
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactDom = require("react-dom");
-
-var _reactDom2 = _interopRequireDefault(_reactDom);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var VirtualScrollMixin = exports.VirtualScrollMixin = {
-    getInitialState: function getInitialState() {
-        return {
-            start: 0,
-            stop: 0
-        };
-    },
-    componentWillMount: function componentWillMount() {
-        if (!this.props.rowHeight) {
-            console.warn("VirtualScrollMixin: No rowHeight specified", this);
-        }
-    },
-    getPlaceholderTop: function getPlaceholderTop(total) {
-        var Tag = this.props.placeholderTagName || "tr";
-        // When a large trunk of elements is removed from the button, start may be far off the viewport.
-        // To make this issue less severe, limit the top placeholder to the total number of rows.
-        var style = {
-            height: Math.min(this.state.start, total) * this.props.rowHeight
-        };
-        var spacer = _react2.default.createElement(Tag, { key: "placeholder-top", style: style });
-
-        if (this.state.start % 2 === 1) {
-            // fix even/odd rows
-            return [spacer, _react2.default.createElement(Tag, { key: "placeholder-top-2" })];
-        } else {
-            return spacer;
-        }
-    },
-    getPlaceholderBottom: function getPlaceholderBottom(total) {
-        var Tag = this.props.placeholderTagName || "tr";
-        var style = {
-            height: Math.max(0, total - this.state.stop) * this.props.rowHeight
-        };
-        return _react2.default.createElement(Tag, { key: "placeholder-bottom", style: style });
-    },
-    componentDidMount: function componentDidMount() {
-        this.onScroll();
-        window.addEventListener('resize', this.onScroll);
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        window.removeEventListener('resize', this.onScroll);
-    },
-    onScroll: function onScroll() {
-        var viewport = _reactDom2.default.findDOMNode(this);
-        var top = viewport.scrollTop;
-        var height = viewport.offsetHeight;
-        var start = Math.floor(top / this.props.rowHeight);
-        var stop = start + Math.ceil(height / (this.props.rowHeightMin || this.props.rowHeight));
-
-        this.setState({
-            start: start,
-            stop: stop
-        });
-    },
-    renderRows: function renderRows(elems) {
-        var rows = [];
-        var max = Math.min(elems.length, this.state.stop);
-
-        for (var i = this.state.start; i < max; i++) {
-            var elem = elems[i];
-            rows.push(this.renderRow(elem));
-        }
-        return rows;
-    },
-    scrollRowIntoView: function scrollRowIntoView(index, head_height) {
-
-        var row_top = index * this.props.rowHeight + head_height;
-        var row_bottom = row_top + this.props.rowHeight;
-
-        var viewport = _reactDom2.default.findDOMNode(this);
-        var viewport_top = viewport.scrollTop;
-        var viewport_bottom = viewport_top + viewport.offsetHeight;
-
-        // Account for pinned thead
-        if (row_top - head_height < viewport_top) {
-            viewport.scrollTop = row_top - head_height;
-        } else if (row_bottom > viewport_bottom) {
-            viewport.scrollTop = row_bottom - viewport.offsetHeight;
-        }
-    }
-};
-
-},{"react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3987,7 +4130,7 @@ function Connection(url) {
 
 exports.default = Connection;
 
-},{"./actions.js":2,"./dispatcher.js":21}],21:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4016,7 +4159,7 @@ AppDispatcher.dispatchServerAction = function (action) {
     this.dispatch(action);
 };
 
-},{"flux":"flux"}],22:[function(require,module,exports){
+},{"flux":"flux"}],23:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -5920,7 +6063,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":23}],23:[function(require,module,exports){
+},{"../flow/utils.js":24}],24:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6054,7 +6197,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],24:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6241,7 +6384,7 @@ _lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-},{"../actions.js":2,"../dispatcher.js":21,"events":1,"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],26:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6371,7 +6514,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":26,"events":1,"lodash":"lodash"}],26:[function(require,module,exports){
+},{"../utils.js":27,"events":1,"lodash":"lodash"}],27:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

@@ -2,6 +2,8 @@ from __future__ import (absolute_import, print_function, division)
 import collections
 import os
 import re
+
+import six
 from OpenSSL import SSL
 
 from netlib import certutils, tcp
@@ -34,8 +36,11 @@ class HostMatcher(object):
         else:
             return False
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.patterns)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
 
 ServerSpec = collections.namedtuple("ServerSpec", "scheme address")
@@ -53,6 +58,7 @@ class ProxyConfig:
             body_size_limit=None,
             mode="regular",
             upstream_server=None,
+            upstream_auth = None,
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
@@ -66,6 +72,7 @@ class ProxyConfig:
             ssl_verify_upstream_cert=False,
             ssl_verify_upstream_trusted_cadir=None,
             ssl_verify_upstream_trusted_ca=None,
+            add_upstream_certs_to_client_chain=False,
     ):
         self.host = host
         self.port = port
@@ -77,8 +84,10 @@ class ProxyConfig:
         self.mode = mode
         if upstream_server:
             self.upstream_server = ServerSpec(upstream_server[0], Address.wrap(upstream_server[1]))
+            self.upstream_auth = upstream_auth
         else:
             self.upstream_server = None
+            self.upstream_auth = None
 
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
@@ -104,13 +113,14 @@ class ProxyConfig:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
         self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
         self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
+        self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
 
 
 def process_proxy_options(parser, options):
     body_size_limit = utils.parse_size(options.body_size_limit)
 
     c = 0
-    mode, upstream_server = "regular", None
+    mode, upstream_server, upstream_auth  = "regular", None, None
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
@@ -127,19 +137,32 @@ def process_proxy_options(parser, options):
         c += 1
         mode = "upstream"
         upstream_server = options.upstream_proxy
+        upstream_auth = options.upstream_auth
     if c > 1:
         return parser.error(
             "Transparent, SOCKS5, reverse and upstream proxy mode "
             "are mutually exclusive. Read the docs on proxy modes to understand why."
         )
-
+    if options.add_upstream_certs_to_client_chain and options.no_upstream_cert:
+        return parser.error(
+            "The no-upstream-cert and add-upstream-certs-to-client-chain "
+            "options are mutually exclusive. If no-upstream-cert is enabled "
+            "then the upstream certificate is not retrieved before generating "
+            "the client certificate chain."
+        )
+    if options.add_upstream_certs_to_client_chain and options.ssl_verify_upstream_cert:
+        return parser.error(
+            "The verify-upstream-cert and add-upstream-certs-to-client-chain "
+            "options are mutually exclusive. If upstream certificates are verified "
+            "then extra upstream certificates are not available for inclusion "
+            "to the client chain."
+        )
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts):
             return parser.error(
-                "Client certificate path does not exist: %s" % options.clientcerts
+                    "Client certificate path does not exist: %s" % options.clientcerts
             )
-
     if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
 
         if options.transparent_proxy:
@@ -189,6 +212,7 @@ def process_proxy_options(parser, options):
         body_size_limit=body_size_limit,
         mode=mode,
         upstream_server=upstream_server,
+        upstream_auth=upstream_auth,
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
         http2=options.http2,
@@ -201,5 +225,6 @@ def process_proxy_options(parser, options):
         ssl_version_server=options.ssl_version_server,
         ssl_verify_upstream_cert=options.ssl_verify_upstream_cert,
         ssl_verify_upstream_trusted_cadir=options.ssl_verify_upstream_trusted_cadir,
-        ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca
+        ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca,
+        add_upstream_certs_to_client_chain=options.add_upstream_certs_to_client_chain,
     )

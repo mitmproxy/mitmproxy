@@ -1,10 +1,10 @@
 import configargparse
-import cPickle as pickle
+from six.moves import cPickle as pickle
 from ctypes import byref, windll, Structure
 from ctypes.wintypes import DWORD
 import os
 import socket
-import SocketServer
+from six.moves import socketserver
 import struct
 import threading
 import time
@@ -53,7 +53,7 @@ class Resolver(object):
                 return self.original_addr(csock)
 
 
-class APIRequestHandler(SocketServer.StreamRequestHandler):
+class APIRequestHandler(socketserver.StreamRequestHandler):
 
     """
     TransparentProxy API: Returns the pickled server address, port tuple
@@ -78,10 +78,10 @@ class APIRequestHandler(SocketServer.StreamRequestHandler):
             proxifier.trusted_pids.discard(pid)
 
 
-class APIServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+class APIServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     def __init__(self, proxifier, *args, **kwargs):
-        SocketServer.TCPServer.__init__(self, *args, **kwargs)
+        socketserver.TCPServer.__init__(self, *args, **kwargs)
         self.proxifier = proxifier
         self.daemon_threads = True
 

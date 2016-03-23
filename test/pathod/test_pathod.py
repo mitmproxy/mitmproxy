@@ -1,6 +1,4 @@
-import sys
-import cStringIO
-import OpenSSL
+from six.moves import cStringIO as StringIO
 import pytest
 
 from pathod import pathod, version
@@ -12,7 +10,7 @@ import tutils
 class TestPathod(object):
 
     def test_logging(self):
-        s = cStringIO.StringIO()
+        s = StringIO()
         p = pathod.Pathod(("127.0.0.1", 0), logfp=s)
         assert len(p.get_log()) == 0
         id = p.add_log(dict(s="foo"))

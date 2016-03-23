@@ -82,8 +82,11 @@ class ConnectServerConnection(object):
     def __getattr__(self, item):
         return getattr(self.via, item)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.via)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
 
 class UpstreamConnectLayer(Layer):
@@ -179,6 +182,9 @@ class HttpLayer(Layer):
             try:
                 flow = HTTPFlow(self.client_conn, self.server_conn, live=self)
                 flow.request = request
+                # set upstream auth
+                if self.mode == "upstream" and self.config.upstream_auth is not None:
+                    flow.request.set_auth(self.config.upstream_auth)
                 self.process_request_hook(flow)
 
                 if not flow.response:
@@ -251,7 +257,7 @@ class HttpLayer(Layer):
 
     def handle_regular_mode_connect(self, request):
         self.set_server((request.host, request.port))
-        self.send_response(make_connect_response(request.http_version))
+        self.send_response(make_connect_response(request.data.http_version))
         layer = self.ctx.next_layer(self)
         layer()
 

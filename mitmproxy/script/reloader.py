@@ -1,7 +1,7 @@
 import os
 import sys
 from watchdog.events import RegexMatchingEventHandler
-if sys.platform == 'darwin':
+if sys.platform == 'darwin':  # pragma: no cover
     from watchdog.observers.polling import PollingObserver as Observer
 else:
     from watchdog.observers import Observer
@@ -14,8 +14,8 @@ _observers = {}
 def watch(script, callback):
     if script in _observers:
         raise RuntimeError("Script already observed")
-    script_dir = os.path.dirname(os.path.abspath(script.args[0]))
-    script_name = os.path.basename(script.args[0])
+    script_dir = os.path.dirname(os.path.abspath(script.filename))
+    script_name = os.path.basename(script.filename)
     event_handler = _ScriptModificationHandler(callback, filename=script_name)
     observer = Observer()
     observer.schedule(event_handler, script_dir)

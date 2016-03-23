@@ -64,5 +64,5 @@ def start(context, argv):
     context.add_contentview(pig_view)
 
 
-def stop(context):
+def done(context):
     context.remove_contentview(pig_view)

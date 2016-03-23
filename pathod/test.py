@@ -1,6 +1,6 @@
-import cStringIO
+from six.moves import cStringIO as StringIO
 import threading
-import Queue
+from six.moves import queue
 
 import requests
 import requests.packages.urllib3
@@ -13,8 +13,8 @@ class Daemon:
     IFACE = "127.0.0.1"
 
     def __init__(self, ssl=None, **daemonargs):
-        self.q = Queue.Queue()
-        self.logfp = cStringIO.StringIO()
+        self.q = queue.Queue()
+        self.logfp = StringIO()
         daemonargs["logfp"] = self.logfp
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()

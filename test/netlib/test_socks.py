@@ -85,6 +85,45 @@ def test_server_greeting_assert_socks5():
         assert False
 
 
+def test_username_password_auth():
+    raw = tutils.treader(b"\x01\x03usr\x03psd\xBE\xEF")
+    out = BytesIO()
+    auth = socks.UsernamePasswordAuth.from_file(raw)
+    auth.assert_authver1()
+    assert raw.read(2) == b"\xBE\xEF"
+    auth.to_file(out)
+
+    assert out.getvalue() == raw.getvalue()[:-2]
+    assert auth.ver == socks.USERNAME_PASSWORD_VERSION.DEFAULT
+    assert auth.username == "usr"
+    assert auth.password == "psd"
+
+
+def test_username_password_auth_assert_ver1():
+    raw = tutils.treader(b"\x02\x03usr\x03psd\xBE\xEF")
+    auth = socks.UsernamePasswordAuth.from_file(raw)
+    tutils.raises(socks.SocksError, auth.assert_authver1)
+
+
+def test_username_password_auth_response():
+    raw = tutils.treader(b"\x01\x00\xBE\xEF")
+    out = BytesIO()
+    auth = socks.UsernamePasswordAuthResponse.from_file(raw)
+    auth.assert_authver1()
+    assert raw.read(2) == b"\xBE\xEF"
+    auth.to_file(out)
+
+    assert out.getvalue() == raw.getvalue()[:-2]
+    assert auth.ver == socks.USERNAME_PASSWORD_VERSION.DEFAULT
+    assert auth.status == 0
+
+
+def test_username_password_auth_response_auth_assert_ver1():
+    raw = tutils.treader(b"\x02\x00\xBE\xEF")
+    auth = socks.UsernamePasswordAuthResponse.from_file(raw)
+    tutils.raises(socks.SocksError, auth.assert_authver1)
+
+
 def test_message():
     raw = tutils.treader(b"\x05\x01\x00\x03\x0bexample.com\xDE\xAD\xBE\xEF")
     out = BytesIO()

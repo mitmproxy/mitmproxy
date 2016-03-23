@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom';
 import _ from "lodash";
 
 import {Key} from "../utils.js";
-import {ChildFocus} from "./common.js"
 
 var Prompt = React.createClass({
-    mixins: [ChildFocus],
+    contextTypes: {
+        returnFocus: React.PropTypes.func
+    },
     propTypes: {
         options: React.PropTypes.array.isRequired,
         done: React.PropTypes.func.isRequired,
@@ -35,7 +36,7 @@ var Prompt = React.createClass({
     },
     done: function (ret) {
         this.props.done(ret);
-        this.returnFocus();
+        this.context.returnFocus();
     },
     getOptions: function () {
         var opts = [];

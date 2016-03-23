@@ -3,7 +3,7 @@ import sys
 import os
 import itertools
 import hashlib
-import Queue
+from six.moves import queue
 import random
 import select
 import time
@@ -42,7 +42,8 @@ class SSLInfo(object):
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
-        for i in self.certchain:
+        for n,i in enumerate(self.certchain):
+            parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
                 parts.append("\t\t%s=%s" % cn)
@@ -69,7 +70,7 @@ class SSLInfo(object):
             s = certutils.SSLCert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
-            return "\n".join(parts)
+        return "\n".join(parts)
 
 
 
@@ -91,8 +92,8 @@ class WebsocketFrameReader(threading.Thread):
         self.showresp = showresp
         self.hexdump = hexdump
         self.rfile = rfile
-        self.terminate = Queue.Queue()
-        self.frames_queue = Queue.Queue()
+        self.terminate = queue.Queue()
+        self.frames_queue = queue.Queue()
         self.logger = log.ConnectionLogger(
             self.logfp,
             self.hexdump,
@@ -118,7 +119,7 @@ class WebsocketFrameReader(threading.Thread):
                 try:
                     self.terminate.get_nowait()
                     return
-                except Queue.Empty:
+                except queue.Empty:
                     pass
                 for rfile in r:
                     with self.logger.ctx() as log:
@@ -343,7 +344,7 @@ class Pathoc(tcp.TCPClient):
                         timeout=timeout,
                         block=True if timeout != 0 else False
                     )
-                except Queue.Empty:
+                except queue.Empty:
                     if finish:
                         continue
                     else:

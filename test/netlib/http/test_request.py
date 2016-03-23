@@ -41,7 +41,12 @@ class TestRequestCore(object):
         _test_passthrough_attr(treq(), "port")
 
     def test_path(self):
-        _test_decoded_attr(treq(), "path")
+        req = treq()
+        _test_decoded_attr(req, "path")
+        # path can also be None.
+        req.path = None
+        assert req.path is None
+        assert req.data.path is None
 
     def test_host(self):
         if six.PY2:

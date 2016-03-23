@@ -214,12 +214,20 @@ def is_tls_record_magic(d):
 
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
-    return (
-        len(d) == 3 and
-        d[0] == '\x16' and
-        d[1] == '\x03' and
-        d[2] in ('\x00', '\x01', '\x02', '\x03')
-    )
+    if six.PY2:
+        return (
+            len(d) == 3 and
+            d[0] == '\x16' and
+            d[1] == '\x03' and
+            d[2] in ('\x00', '\x01', '\x02', '\x03')
+        )
+    else:
+        return (
+            len(d) == 3 and
+            d[0] == 0x16 and
+            d[1] == 0x03 and
+            0x0 <= d[2] <= 0x03
+        )
 
 
 def get_client_hello(client_conn):
@@ -232,7 +240,7 @@ def get_client_hello(client_conn):
     Returns:
         The raw handshake packet bytes, without TLS record header(s).
     """
-    client_hello = ""
+    client_hello = b""
     client_hello_size = 1
     offset = 0
     while len(client_hello) < client_hello_size:
@@ -245,7 +253,7 @@ def get_client_hello(client_conn):
             raise TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
         client_hello += record_body
         offset += record_size
-        client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
+        client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
     return client_hello
 
 
@@ -432,6 +440,11 @@ class TlsLayer(Layer):
         self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self._find_cert()
 
+        if self.config.add_upstream_certs_to_client_chain:
+           extra_certs = self.server_conn.server_certs
+        else:
+           extra_certs = None
+
         try:
             self.client_conn.convert_to_ssl(
                 cert, key,
@@ -441,6 +454,7 @@ class TlsLayer(Layer):
                 dhparams=self.config.certstore.dhparams,
                 chain_file=chain_file,
                 alpn_select_callback=self.__alpn_select_callback,
+                extra_chain_certs = extra_certs,
             )
             # Some TLS clients will not fail the handshake,
             # but will immediately throw an "unexpected eof" error on the first read.
@@ -465,13 +479,13 @@ class TlsLayer(Layer):
             # We only support http/1.1 and h2.
             # If the server only supports spdy (next to http/1.1), it may select that
             # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
-            deprecated_http2_variant = lambda x: x.startswith("h2-") or x.startswith("spdy")
+            deprecated_http2_variant = lambda x: x.startswith(b"h2-") or x.startswith(b"spdy")
             if self.client_alpn_protocols:
                 alpn = [x for x in self.client_alpn_protocols if not deprecated_http2_variant(x)]
             else:
                 alpn = None
-            if alpn and "h2" in alpn and not self.config.http2:
-                alpn.remove("h2")
+            if alpn and b"h2" in alpn and not self.config.http2:
+                alpn.remove(b"h2")
 
             ciphers_server = self.config.ciphers_server
             if not ciphers_server:
@@ -540,7 +554,7 @@ class TlsLayer(Layer):
         # However, we may just want to establish TLS so that we can send an error message to the client,
         # in which case the address can be None.
         if self.server_conn.address:
-            host = self.server_conn.address.host
+            host = self.server_conn.address.host.encode("idna")
 
         # Should we incorporate information from the server certificate?
         use_upstream_cert = (
@@ -562,5 +576,6 @@ class TlsLayer(Layer):
 
         # Some applications don't consider the CN and expect the hostname to be in the SANs.
         # For example, Thunderbird 38 will display a warning if the remote host is only the CN.
-        sans.add(host)
+        if host:
+            sans.add(host)
         return self.config.certstore.get_cert(host, list(sans))

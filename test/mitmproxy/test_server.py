@@ -999,3 +999,43 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         # (both terminated)
         # nothing happened here
         assert self.chain[1].tmaster.state.flow_count() == 2
+
+
+class AddUpstreamCertsToClientChainMixin:
+
+    ssl = True
+    servercert = tutils.test_data.path("data/trusted-server.crt")
+    ssloptions = pathod.SSLOptions(
+            cn="trusted-cert",
+            certs=[
+                ("trusted-cert", servercert)
+            ]
+    )
+
+    def test_add_upstream_certs_to_client_chain(self):
+        with open(self.servercert, "rb") as f:
+            d = f.read()
+        upstreamCert = SSLCert.from_pem(d)
+        p = self.pathoc()
+        upstream_cert_found_in_client_chain = False
+        for receivedCert in p.server_certs:
+            if receivedCert.digest('sha256') == upstreamCert.digest('sha256'):
+                upstream_cert_found_in_client_chain = True
+                break
+        assert(upstream_cert_found_in_client_chain == self.add_upstream_certs_to_client_chain)
+
+
+class TestHTTPSAddUpstreamCertsToClientChainTrue(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
+
+    """
+    If --add-server-certs-to-client-chain is True, then the client should receive the upstream server's certificates
+    """
+    add_upstream_certs_to_client_chain = True
+
+
+class TestHTTPSAddUpstreamCertsToClientChainFalse(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
+
+    """
+    If --add-server-certs-to-client-chain is False, then the client should not receive the upstream server's certificates
+    """
+    add_upstream_certs_to_client_chain = False

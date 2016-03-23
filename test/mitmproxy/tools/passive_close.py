@@ -1,8 +1,8 @@
-import SocketServer
+from six.moves import socketserver
 from time import sleep
 
 
-class service(SocketServer.BaseRequestHandler):
+class service(socketserver.BaseRequestHandler):
 
     def handle(self):
         data = 'dummy'
@@ -16,7 +16,7 @@ class service(SocketServer.BaseRequestHandler):
                 sleep(3600)
 
 
-class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 server = ThreadedTCPServer(('', 1520), service)
