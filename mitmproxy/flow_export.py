@@ -82,17 +82,13 @@ def raw_request(flow):
 def locust_code(flow):
     code = dedent("""
         from locust import HttpLocust, TaskSet, task
-        import sys
-        if (sys.version_info > (3, 0)):
-            from urllib.parse import urlparse
-        else:
-            import urlparse
 
         class UserBehavior(TaskSet):
             def on_start(self):
                 ''' on_start is called when a Locust start before any task is scheduled '''
                 self.flow()
 
+            @task()
             def flow(self):
                 url = '{url}'
                 {headers}{params}{data}
@@ -147,7 +143,7 @@ def locust_code(flow):
 
 
 def locust_task(flow):
-    code = """
+    code = dedent("""
     @task()
     def {name}(self):
         url = '{url}'
@@ -156,8 +152,7 @@ def locust_task(flow):
             method='{method}',
             url=url,{args}
         )
-
-"""
+    """).strip()
 
     components = map(lambda x: urllib.quote(x, safe=""), flow.request.path_components)
     file_name = "_".join(components)
@@ -167,20 +162,20 @@ def locust_task(flow):
     args = ""
     headers = ""
     if flow.request.headers:
-        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
-        headers += "\n        headers = {\n%s        }\n" % "".join(lines)
-        args += "\n            headers=headers,"
+        lines = ["        '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
+        headers += "\n    headers = {\n%s    }\n" % "".join(lines)
+        args += "\n        headers=headers,"
 
     params = ""
     if flow.request.query:
-        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.query]
-        params = "\n        params = {\n%s        }\n" % "".join(lines)
-        args += "\n            params=params,"
+        lines = ["        '%s': '%s',\n" % (k, v) for k, v in flow.request.query]
+        params = "\n    params = {\n%s    }\n" % "".join(lines)
+        args += "\n        params=params,"
 
     data = ""
     if flow.request.body:
-        data = "\n        data = '''%s'''\n" % flow.request.body
-        args += "\n            data=data,"
+        data = "\n    data = '''%s'''\n" % flow.request.body
+        args += "\n        data=data,"
 
     code = code.format(
         name=name,
@@ -196,5 +191,7 @@ def locust_task(flow):
     code = code.replace(host, "' + self.locust.host +'")
     code = code.replace(urllib.quote_plus(host), "' + urllib.quote_plus(self.locust.host) +'")
     code = code.replace(urllib.quote(host), "' + urllib.quote(self.locust.host) +'")
+
+    code = "\n".join("    " + i for i in code.splitlines())
 
     return code
