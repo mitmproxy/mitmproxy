@@ -114,6 +114,9 @@ def locust_code(flow):
                     url=url,{args}
                 )
 
+            ### Additional tasks can go here ###
+
+
         class WebsiteUser(HttpLocust):
             task_set = UserBehavior
             min_wait=1000

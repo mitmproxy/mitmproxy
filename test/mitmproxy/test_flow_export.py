@@ -205,6 +205,9 @@ class UserBehavior(TaskSet):
             headers=headers,
         )
 
+    ### Additional tasks can go here ###
+
+
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
     min_wait=1000
@@ -236,6 +239,9 @@ class UserBehavior(TaskSet):
             url=url,
             data=data,
         )
+
+    ### Additional tasks can go here ###
+
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
@@ -279,6 +285,9 @@ class UserBehavior(TaskSet):
             params=params,
             data=data,
         )
+
+    ### Additional tasks can go here ###
+
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior

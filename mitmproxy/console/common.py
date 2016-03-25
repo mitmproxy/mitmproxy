@@ -286,6 +286,8 @@ def export_prompt(k, flow):
         "c": flow_export.curl_command,
         "p": flow_export.python_code,
         "r": flow_export.raw_request,
+        "l": flow_export.locust_code,
+        "t": flow_export.locust_task,
     }
     if k in exporters:
         copy_to_clipboard_or_prompt(exporters[k](flow))
