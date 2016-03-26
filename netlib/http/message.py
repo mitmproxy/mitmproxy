@@ -7,8 +7,6 @@ import six
 from .headers import Headers
 from .. import encoding, utils
 
-CONTENT_MISSING = None 
-
 if six.PY2:  # pragma: nocover
     _native = lambda x: x
     _always_bytes = lambda x: x

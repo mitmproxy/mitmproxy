@@ -8,7 +8,6 @@ import logging
 import json
 import base64
 
-from netlib.http import CONTENT_MISSING
 from .. import version, filt
 
 
@@ -26,7 +25,7 @@ def _strip_content(flow_state):
                 continue
             if message["content"]:
                 message["contentLength"] = len(message["content"])
-            elif message["content"] == CONTENT_MISSING:
+            elif message["content"] is None:
                 message["contentLength"] = None
             else:
                 message["contentLength"] = 0

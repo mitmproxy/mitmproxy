@@ -3,12 +3,10 @@ from __future__ import absolute_import, print_function, division
 from ... import utils
 import itertools
 from ...exceptions import HttpException
-from .. import CONTENT_MISSING
-
 
 def assemble_request(request):
-    if request.content == CONTENT_MISSING:
-        raise HttpException("Cannot assemble flow with CONTENT_MISSING")
+    if request.content == None:
+        raise HttpException("Cannot assemble flow with None content")
     head = assemble_request_head(request)
     body = b"".join(assemble_body(request.data.headers, [request.data.content]))
     return head + body
@@ -21,8 +19,8 @@ def assemble_request_head(request):
 
 
 def assemble_response(response):
-    if response.content == CONTENT_MISSING:
-        raise HttpException("Cannot assemble flow with CONTENT_MISSING")
+    if response.content == None:
+        raise HttpException("Cannot assemble flow with None content")
     head = assemble_response_head(response)
     body = b"".join(assemble_body(response.data.headers, [response.data.content]))
     return head + body
