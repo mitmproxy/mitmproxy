@@ -5,8 +5,8 @@ import itertools
 from ...exceptions import HttpException
 
 def assemble_request(request):
-    if request.content == None:
-        raise HttpException("Cannot assemble flow with None content")
+    if request.content is None:
+        raise HttpException("Cannot assemble flow with missing content")
     head = assemble_request_head(request)
     body = b"".join(assemble_body(request.data.headers, [request.data.content]))
     return head + body
@@ -19,8 +19,8 @@ def assemble_request_head(request):
 
 
 def assemble_response(response):
-    if response.content == None:
-        raise HttpException("Cannot assemble flow with None content")
+    if response.content is None:
+        raise HttpException("Cannot assemble flow with missing content")
     head = assemble_response_head(response)
     body = b"".join(assemble_body(response.data.headers, [response.data.content]))
     return head + body

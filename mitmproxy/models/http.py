@@ -225,7 +225,7 @@ class HTTPResponse(MessageMixin, Response):
 
         headers: Headers object
 
-        content: Content of the request, the value is None if there is content
+        content: Content of the response, the value is None if there is content
         associated, but not present.
 
         timestamp_start: Timestamp indicating when request transmission started
