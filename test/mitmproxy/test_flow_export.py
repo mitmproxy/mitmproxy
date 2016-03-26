@@ -192,7 +192,7 @@ class UserBehavior(TaskSet):
 
     @task()
     def flow(self):
-        url = '' + self.locust.host +'/path'
+        url = '' + self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',
@@ -210,8 +210,8 @@ class UserBehavior(TaskSet):
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
-    min_wait=1000
-    max_wait=3000
+    min_wait = 1000
+    max_wait = 3000
         """.strip()
 
         assert flow_export.locust_code(flow) == result
@@ -230,7 +230,7 @@ class UserBehavior(TaskSet):
 
     @task()
     def flow(self):
-        url = '' + self.locust.host +'/path'
+        url = '' + self.locust.host + '/path'
         
         data = '''content'''
 
@@ -245,8 +245,8 @@ class UserBehavior(TaskSet):
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
-    min_wait=1000
-    max_wait=3000
+    min_wait = 1000
+    max_wait = 3000
 
         """.strip()
 
@@ -265,7 +265,7 @@ class UserBehavior(TaskSet):
 
     @task()
     def flow(self):
-        url = '' + self.locust.host +'/path'
+        url = '' + self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',
@@ -291,8 +291,8 @@ class UserBehavior(TaskSet):
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
-    min_wait=1000
-    max_wait=3000
+    min_wait = 1000
+    max_wait = 3000
 
         """.strip()
 
@@ -306,7 +306,7 @@ class TestExportLocustTask():
         result = '    ' + """
     @task()
     def path(self):
-        url = '' + self.locust.host +'/path'
+        url = '' + self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',
@@ -327,7 +327,7 @@ class TestExportLocustTask():
         result = '    ' + """
     @task()
     def path(self):
-        url = '' + self.locust.host +'/path'
+        url = '' + self.locust.host + '/path'
         
         data = '''content'''
     
@@ -347,7 +347,7 @@ class TestExportLocustTask():
         result = '    ' + """
     @task()
     def path(self):
-        url = '' + self.locust.host +'/path'
+        url = '' + self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',

@@ -119,8 +119,8 @@ def locust_code(flow):
 
         class WebsiteUser(HttpLocust):
             task_set = UserBehavior
-            min_wait=1000
-            max_wait=3000
+            min_wait = 1000
+            max_wait = 3000
 
     """).strip()
 
@@ -155,9 +155,9 @@ def locust_code(flow):
     )
 
     host = flow.request.scheme + "://" + flow.request.host
-    code = code.replace(host, "' + self.locust.host +'")
-    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) +'")
-    code = code.replace(quote(host), "' + quote(self.locust.host) +'")
+    code = code.replace(host, "' + self.locust.host + '")
+    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) + '")
+    code = code.replace(quote(host), "' + quote(self.locust.host) + '")
 
     return code
 
@@ -208,9 +208,9 @@ def locust_task(flow):
     )
 
     host = flow.request.scheme + "://" + flow.request.host
-    code = code.replace(host, "' + self.locust.host +'")
-    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) +'")
-    code = code.replace(quote(host), "' + quote(self.locust.host) +'")
+    code = code.replace(host, "' + self.locust.host + '")
+    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) + '")
+    code = code.replace(quote(host), "' + quote(self.locust.host) + '")
 
     code = "\n".join("    " + i for i in code.splitlines())
 
