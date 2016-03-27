@@ -84,9 +84,8 @@ class HTTPRequest(MessageMixin, Request):
 
         headers: Headers object
 
-        content: Content of the request, None, or CONTENT_MISSING if there
-        is content associated, but not present. CONTENT_MISSING evaluates
-        to False to make checking for the presence of content natural.
+        content: Content of the request, the value is None if there is content
+        associated, but not present.
 
         form_in: The request form which mitmproxy has received. The following
         values are possible:
@@ -226,9 +225,8 @@ class HTTPResponse(MessageMixin, Response):
 
         headers: Headers object
 
-        content: Content of the request, None, or CONTENT_MISSING if there
-        is content associated, but not present. CONTENT_MISSING evaluates
-        to False to make checking for the presence of content natural.
+        content: Content of the response, the value is None if there is content
+        associated, but not present.
 
         timestamp_start: Timestamp indicating when request transmission started
 

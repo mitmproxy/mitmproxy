@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, division
 from netlib.exceptions import HttpException
-from netlib.http import CONTENT_MISSING, Headers
+from netlib.http import Headers
 from netlib.http.http1.assemble import (
     assemble_request, assemble_request_head, assemble_response,
     assemble_response_head, _assemble_request_line, _assemble_request_headers,
@@ -20,7 +20,7 @@ def test_assemble_request():
     )
 
     with raises(HttpException):
-        assemble_request(treq(content=CONTENT_MISSING))
+        assemble_request(treq(content=None))
 
 
 def test_assemble_request_head():
@@ -41,7 +41,7 @@ def test_assemble_response():
     )
 
     with raises(HttpException):
-        assemble_response(tresp(content=CONTENT_MISSING))
+        assemble_response(tresp(content=None))
 
 
 def test_assemble_response_head():

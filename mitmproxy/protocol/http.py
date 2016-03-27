@@ -6,7 +6,7 @@ import six
 
 from netlib import tcp
 from netlib.exceptions import HttpException, HttpReadDisconnect, NetlibException
-from netlib.http import Headers, CONTENT_MISSING
+from netlib.http import Headers
 
 from h2.exceptions import H2Error
 
@@ -50,8 +50,8 @@ class _HttpTransmissionLayer(Layer):
         yield "this is a generator"  # pragma: no cover
 
     def send_response(self, response):
-        if response.content == CONTENT_MISSING:
-            raise HttpException("Cannot assemble flow with CONTENT_MISSING")
+        if response.content is None:
+            raise HttpException("Cannot assemble flow with missing content")
         self.send_response_headers(response)
         self.send_response_body(response, [response.content])
 
@@ -318,7 +318,7 @@ class HttpLayer(Layer):
             raise Kill()
 
         if flow.response.stream:
-            flow.response.data.content = CONTENT_MISSING
+            flow.response.data.content = None
         else:
             flow.response.data.content = b"".join(self.read_response_body(
                 flow.request,
