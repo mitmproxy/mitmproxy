@@ -7,7 +7,7 @@ import six
 from .headers import Headers
 from .. import encoding, utils
 
-if six.PY2:  # pragma: nocover
+if six.PY2:  # pragma: no cover
     _native = lambda x: x
     _always_bytes = lambda x: x
 else:
@@ -180,12 +180,12 @@ class Message(utils.Serializable):
     # Legacy
 
     @property
-    def body(self):  # pragma: nocover
+    def body(self):  # pragma: no cover
         warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
         return self.content
 
     @body.setter
-    def body(self, body):  # pragma: nocover
+    def body(self, body):  # pragma: no cover
         warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
         self.content = body
 

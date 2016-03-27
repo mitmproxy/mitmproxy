@@ -98,7 +98,7 @@ class Data(object):
 data = Data(__name__)
 
 
-def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):  # pragma: nocover
+def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):  # pragma: no cover
     try:
         pid = os.fork()
         if pid > 0:
