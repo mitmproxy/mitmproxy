@@ -25,10 +25,8 @@ def _strip_content(flow_state):
                 continue
             if message["content"]:
                 message["contentLength"] = len(message["content"])
-            elif message["content"] is None:
-                message["contentLength"] = None
             else:
-                message["contentLength"] = 0
+                message["contentLength"] = None
             del message["content"]
 
     if "backup" in flow_state:
