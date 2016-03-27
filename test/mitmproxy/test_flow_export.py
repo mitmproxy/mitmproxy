@@ -1,3 +1,4 @@
+import json
 from textwrap import dedent
 
 import netlib.tutils
@@ -142,7 +143,7 @@ class TestExportPythonCode():
         assert flow_export.python_code(flow) == result
 
 
-def TestRawRequest():
+class TestRawRequest():
 
     def test_get(self):
         flow = tutils.tflow(req=req_get)
@@ -159,9 +160,10 @@ def TestRawRequest():
         flow = tutils.tflow(req=req_post)
         result = dedent("""
             POST /path HTTP/1.1\r
+            content-type: application/json\r
             host: address:22\r
             \r
-            content
+            {"name": "example", "email": "example@example.com"}
         """).strip()
         assert flow_export.raw_request(flow) == result
 
@@ -176,3 +178,22 @@ def TestRawRequest():
             content
         """).strip()
         assert flow_export.raw_request(flow) == result
+
+class TestIsJson():
+
+    def test_empty(self):
+        assert flow_export.is_json(None, None) == False
+
+    def test_json_type(self):
+        headers = Headers(content_type="application/json")
+        assert flow_export.is_json(headers, "foobar") == False
+
+    def test_valid(self):
+        headers = Headers(content_type="application/foobar")
+        j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        assert j == False
+
+    def test_valid(self):
+        headers = Headers(content_type="application/json")
+        j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        assert isinstance(j, dict)
