@@ -231,7 +231,8 @@ class HttpLayer(Layer):
                     six.reraise(ProtocolException, ProtocolException(
                         "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
-                flow.live = False
+                if flow:
+                    flow.live = False
 
     def get_request_from_client(self):
         request = self.read_request()
