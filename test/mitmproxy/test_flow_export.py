@@ -179,7 +179,6 @@ class TestRawRequest():
         """).strip()
         assert flow_export.raw_request(flow) == result
 
-
 class TestExportLocustCode():
 
     def test_get(self):
