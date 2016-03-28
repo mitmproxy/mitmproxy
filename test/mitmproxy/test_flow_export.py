@@ -192,7 +192,7 @@ class UserBehavior(TaskSet):
 
     @task()
     def path(self):
-        url = '' + self.locust.host + '/path'
+        url = self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',
@@ -230,7 +230,7 @@ class UserBehavior(TaskSet):
 
     @task()
     def path(self):
-        url = '' + self.locust.host + '/path'
+        url = self.locust.host + '/path'
         
         data = '''content'''
 
@@ -265,7 +265,7 @@ class UserBehavior(TaskSet):
 
     @task()
     def path(self):
-        url = '' + self.locust.host + '/path'
+        url = self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',
@@ -306,7 +306,7 @@ class TestExportLocustTask():
         result = '    ' + """
     @task()
     def path(self):
-        url = '' + self.locust.host + '/path'
+        url = self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',
@@ -327,7 +327,7 @@ class TestExportLocustTask():
         result = '    ' + """
     @task()
     def path(self):
-        url = '' + self.locust.host + '/path'
+        url = self.locust.host + '/path'
         
         data = '''content'''
 
@@ -346,7 +346,7 @@ class TestExportLocustTask():
         result = '    ' + """
     @task()
     def path(self):
-        url = '' + self.locust.host + '/path'
+        url = self.locust.host + '/path'
         
         headers = {
             'header': 'qvalue',

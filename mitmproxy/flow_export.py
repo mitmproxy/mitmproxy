@@ -161,6 +161,7 @@ def locust_code(flow):
     code = code.replace(host, "' + self.locust.host + '")
     code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) + '")
     code = code.replace(quote(host), "' + quote(self.locust.host) + '")
+    code = code.replace("'' + ", "")
 
     return code
 
