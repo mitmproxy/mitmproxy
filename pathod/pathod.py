@@ -430,7 +430,7 @@ class Pathod(tcp.TCPServer):
         return self.log
 
 
-def main(args):  # pragma: nocover
+def main(args):  # pragma: no cover
     ssloptions = SSLOptions(
         cn=args.cn,
         confdir=args.confdir,

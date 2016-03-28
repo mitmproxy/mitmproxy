@@ -8,7 +8,7 @@ import mock
 
 import netlib.utils
 from netlib import odict
-from netlib.http import CONTENT_MISSING, Headers
+from netlib.http import Headers
 from mitmproxy import filt, controller, tnetstring, flow
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
@@ -465,7 +465,7 @@ class TestFlow(object):
 
     def test_replace_no_content(self):
         f = tutils.tflow()
-        f.request.content = CONTENT_MISSING
+        f.request.content = None
         assert f.replace("foo", "bar") == 0
 
     def test_replace(self):
@@ -751,7 +751,7 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow(resp=True)
-        f.request.content = CONTENT_MISSING
+        f.request.content = None
         assert "missing" in fm.replay_request(f)
 
         f.intercepted = True

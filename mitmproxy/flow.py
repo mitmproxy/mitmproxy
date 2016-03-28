@@ -16,7 +16,7 @@ from six.moves import urllib
 
 from netlib import wsgi
 from netlib.exceptions import HttpException
-from netlib.http import CONTENT_MISSING, Headers, http1
+from netlib.http import Headers, http1
 from . import controller, tnetstring, filt, script, version, flow_format_compat
 from .onboarding import app
 from .proxy.config import HostMatcher
@@ -942,7 +942,7 @@ class FlowMaster(controller.Master):
             return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
-        if f.request.content == CONTENT_MISSING:
+        if f.request.content is None:
             return "Can't replay request with missing content..."
         if f.request:
             f.backup()

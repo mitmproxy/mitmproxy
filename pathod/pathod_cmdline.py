@@ -226,6 +226,6 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
     return args
 
 
-def go_pathod():  # pragma: nocover
+def go_pathod():  # pragma: no cover
     args = args_pathod(sys.argv)
     pathod.main(args)

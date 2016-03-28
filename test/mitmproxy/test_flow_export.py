@@ -1,3 +1,4 @@
+import json
 from textwrap import dedent
 
 import netlib.tutils
@@ -177,6 +178,7 @@ class TestRawRequest():
             content
         """).strip()
         assert flow_export.raw_request(flow) == result
+
 
 class TestExportLocustCode():
 
@@ -369,3 +371,24 @@ class TestExportLocustTask():
         """.strip() + '\n'
 
         assert flow_export.locust_task(flow) == result
+
+
+class TestIsJson():
+
+    def test_empty(self):
+        assert flow_export.is_json(None, None) == False
+
+    def test_json_type(self):
+        headers = Headers(content_type="application/json")
+        assert flow_export.is_json(headers, "foobar") == False
+
+    def test_valid(self):
+        headers = Headers(content_type="application/foobar")
+        j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        assert j == False
+
+    def test_valid(self):
+        headers = Headers(content_type="application/json")
+        j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        assert isinstance(j, dict)
+

@@ -100,7 +100,7 @@ class Request(Message):
         Setting the host attribute also updates the host header, if present.
         """
 
-        if six.PY2:  # pragma: nocover
+        if six.PY2:  # pragma: no cover
             return self.data.host
 
         if not self.data.host:
@@ -324,59 +324,59 @@ class Request(Message):
 
     # Legacy
 
-    def get_cookies(self):  # pragma: nocover
+    def get_cookies(self):  # pragma: no cover
         warnings.warn(".get_cookies is deprecated, use .cookies instead.", DeprecationWarning)
         return self.cookies
 
-    def set_cookies(self, odict):  # pragma: nocover
+    def set_cookies(self, odict):  # pragma: no cover
         warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
         self.cookies = odict
 
-    def get_query(self):  # pragma: nocover
+    def get_query(self):  # pragma: no cover
         warnings.warn(".get_query is deprecated, use .query instead.", DeprecationWarning)
         return self.query or ODict([])
 
-    def set_query(self, odict):  # pragma: nocover
+    def set_query(self, odict):  # pragma: no cover
         warnings.warn(".set_query is deprecated, use .query instead.", DeprecationWarning)
         self.query = odict
 
-    def get_path_components(self):  # pragma: nocover
+    def get_path_components(self):  # pragma: no cover
         warnings.warn(".get_path_components is deprecated, use .path_components instead.", DeprecationWarning)
         return self.path_components
 
-    def set_path_components(self, lst):  # pragma: nocover
+    def set_path_components(self, lst):  # pragma: no cover
         warnings.warn(".set_path_components is deprecated, use .path_components instead.", DeprecationWarning)
         self.path_components = lst
 
-    def get_form_urlencoded(self):  # pragma: nocover
+    def get_form_urlencoded(self):  # pragma: no cover
         warnings.warn(".get_form_urlencoded is deprecated, use .urlencoded_form instead.", DeprecationWarning)
         return self.urlencoded_form or ODict([])
 
-    def set_form_urlencoded(self, odict):  # pragma: nocover
+    def set_form_urlencoded(self, odict):  # pragma: no cover
         warnings.warn(".set_form_urlencoded is deprecated, use .urlencoded_form instead.", DeprecationWarning)
         self.urlencoded_form = odict
 
-    def get_form_multipart(self):  # pragma: nocover
+    def get_form_multipart(self):  # pragma: no cover
         warnings.warn(".get_form_multipart is deprecated, use .multipart_form instead.", DeprecationWarning)
         return self.multipart_form or ODict([])
 
     @property
-    def form_in(self):  # pragma: nocover
+    def form_in(self):  # pragma: no cover
         warnings.warn(".form_in is deprecated, use .first_line_format instead.", DeprecationWarning)
         return self.first_line_format
 
     @form_in.setter
-    def form_in(self, form_in):  # pragma: nocover
+    def form_in(self, form_in):  # pragma: no cover
         warnings.warn(".form_in is deprecated, use .first_line_format instead.", DeprecationWarning)
         self.first_line_format = form_in
 
     @property
-    def form_out(self):  # pragma: nocover
+    def form_out(self):  # pragma: no cover
         warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
         return self.first_line_format
 
     @form_out.setter
-    def form_out(self, form_out):  # pragma: nocover
+    def form_out(self, form_out):  # pragma: no cover
         warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
         self.first_line_format = form_out
 

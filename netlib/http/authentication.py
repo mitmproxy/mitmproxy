@@ -140,7 +140,7 @@ class AuthAction(Action):
         authenticator = BasicProxyAuth(passman, "mitmproxy")
         setattr(namespace, self.dest, authenticator)
 
-    def getPasswordManager(self, s):  # pragma: nocover
+    def getPasswordManager(self, s):  # pragma: no cover
         raise NotImplementedError()
 
 

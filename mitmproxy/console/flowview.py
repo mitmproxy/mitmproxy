@@ -7,7 +7,7 @@ import math
 import urwid
 
 from netlib import odict
-from netlib.http import CONTENT_MISSING, Headers
+from netlib.http import Headers
 from . import common, grideditor, signals, searchable, tabs
 from . import flowdetailview
 from .. import utils, controller, contentviews
@@ -169,7 +169,7 @@ class FlowView(tabs.Tabs):
             self.show()
 
     def content_view(self, viewmode, message):
-        if message.content == CONTENT_MISSING:
+        if message.content is None:
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
@@ -510,7 +510,7 @@ class FlowView(tabs.Tabs):
 
     def delete_body(self, t):
         if t == "m":
-            val = CONTENT_MISSING
+            val = None
         else:
             val = None
         if self.tab_offset == TAB_REQ:

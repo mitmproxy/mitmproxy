@@ -8,7 +8,7 @@ from netlib.tcp import Address
 import netlib.tutils
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
-from netlib.http import authentication, CONTENT_MISSING, http1
+from netlib.http import authentication, http1
 from netlib.tutils import raises
 from pathod import pathoc, pathod
 
@@ -281,7 +281,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
 
         self.pathod("200:b@3k")
         assert self.master.state.view[-1].response.stream
-        assert self.master.state.view[-1].response.content == CONTENT_MISSING
+        assert self.master.state.view[-1].response.content is None
         self.master.set_stream_large_bodies(None)
 
     def test_stream_modify(self):
@@ -816,7 +816,7 @@ class MasterIncomplete(tservers.TestMaster):
 
     def handle_request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
-        resp.content = CONTENT_MISSING
+        resp.content = None
         f.reply(resp)
 
 

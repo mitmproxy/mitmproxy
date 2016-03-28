@@ -5,7 +5,6 @@ import click
 import itertools
 
 from netlib import tcp
-from netlib.http import CONTENT_MISSING
 import netlib.utils
 from . import flow, filt, contentviews
 from .exceptions import ContentViewException
@@ -180,7 +179,7 @@ class DumpMaster(flow.FlowMaster):
             )
             self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
-            if message.content == CONTENT_MISSING:
+            if message.content is None:
                 self.echo("(content missing)", indent=4)
             elif message.content:
                 self.echo("")
@@ -283,7 +282,7 @@ class DumpMaster(flow.FlowMaster):
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
         reason = click.style(flow.response.reason, fg=code_color, bold=True)
 
-        if flow.response.content == CONTENT_MISSING:
+        if flow.response.content is None:
             size = "(content missing)"
         else:
             size = netlib.utils.pretty_size(len(flow.response.content))
