@@ -391,4 +391,3 @@ class TestIsJson():
         headers = Headers(content_type="application/json")
         j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
         assert isinstance(j, dict)
-
