@@ -188,10 +188,10 @@ from locust import HttpLocust, TaskSet, task
 class UserBehavior(TaskSet):
     def on_start(self):
         ''' on_start is called when a Locust start before any task is scheduled '''
-        self.flow()
+        self.path()
 
     @task()
-    def flow(self):
+    def path(self):
         url = '' + self.locust.host + '/path'
         
         headers = {
@@ -226,10 +226,10 @@ from locust import HttpLocust, TaskSet, task
 class UserBehavior(TaskSet):
     def on_start(self):
         ''' on_start is called when a Locust start before any task is scheduled '''
-        self.flow()
+        self.path()
 
     @task()
-    def flow(self):
+    def path(self):
         url = '' + self.locust.host + '/path'
         
         data = '''content'''
@@ -261,10 +261,10 @@ from locust import HttpLocust, TaskSet, task
 class UserBehavior(TaskSet):
     def on_start(self):
         ''' on_start is called when a Locust start before any task is scheduled '''
-        self.flow()
+        self.path()
 
     @task()
-    def flow(self):
+    def path(self):
         url = '' + self.locust.host + '/path'
         
         headers = {
@@ -312,13 +312,13 @@ class TestExportLocustTask():
             'header': 'qvalue',
             'content-length': '7',
         }
-    
+
         self.response = self.client.request(
             method='GET',
             url=url,
             headers=headers,
         )
-        """.strip()
+        """.strip() + '\n'
 
         assert flow_export.locust_task(flow) == result
 
@@ -330,14 +330,13 @@ class TestExportLocustTask():
         url = '' + self.locust.host + '/path'
         
         data = '''content'''
-    
+
         self.response = self.client.request(
             method='POST',
             url=url,
             data=data,
         )
-    
-        """.strip()
+        """.strip() + '\n'
 
         assert flow_export.locust_task(flow) == result
 
@@ -353,13 +352,13 @@ class TestExportLocustTask():
             'header': 'qvalue',
             'content-length': '7',
         }
-    
+
         params = {
             'query': 'param',
         }
-    
+
         data = '''content'''
-    
+
         self.response = self.client.request(
             method='PATCH',
             url=url,
@@ -367,6 +366,6 @@ class TestExportLocustTask():
             params=params,
             data=data,
         )
-        """.strip()
+        """.strip() + '\n'
 
         assert flow_export.locust_task(flow) == result
