@@ -585,6 +585,8 @@ class FlowView(tabs.Tabs):
                     ("as curl command", "c"),
                     ("as python code", "p"),
                     ("as raw request", "r"),
+                    ("as locust code", "l"),
+                    ("as locust task", "t"),
                 ),
                 callback = common.export_prompt,
                 args = (self.flow,)
