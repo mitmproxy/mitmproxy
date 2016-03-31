@@ -208,7 +208,7 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
         if self.use_http2:
-            if not tcp.HAS_ALPN:  # pragma: nocover
+            if not tcp.HAS_ALPN:  # pragma: no cover
                 log.write_raw(
                     self.fp,
                     "HTTP/2 requires ALPN support. "
@@ -458,7 +458,7 @@ class Pathoc(tcp.TCPClient):
             # TODO: do something
 
 
-def main(args):  # pragma: nocover
+def main(args):  # pragma: no cover
     memo = set([])
     trycount = 0
     p = None

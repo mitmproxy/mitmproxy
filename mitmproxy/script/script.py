@@ -47,7 +47,7 @@ class Script(object):
         if os.name == "nt":  # pragma: no cover
             backslashes = shlex.split(command, posix=False)[0].count("\\")
             command = command.replace("\\", "\\\\", backslashes)
-        args = shlex.split(command)  # pragma: nocover
+        args = shlex.split(command)  # pragma: no cover
         args[0] = os.path.expanduser(args[0])
         if not os.path.exists(args[0]):
             raise ScriptException(

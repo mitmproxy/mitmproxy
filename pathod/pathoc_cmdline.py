@@ -221,6 +221,6 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     return args
 
 
-def go_pathoc():  # pragma: nocover
+def go_pathoc():  # pragma: no cover
     args = args_pathoc(sys.argv)
     pathoc.main(args)

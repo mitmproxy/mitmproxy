@@ -4,7 +4,6 @@ import urwid
 import urwid.util
 import os
 
-from netlib.http import CONTENT_MISSING
 import netlib.utils
 
 from .. import utils
@@ -256,7 +255,7 @@ def copy_flow_format_data(part, scope, flow):
     else:
         data = ""
         if scope in ("q", "a"):
-            if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+            if flow.request.content is None:
                 return None, "Request content is missing"
             with decoded(flow.request):
                 if part == "h":
@@ -269,7 +268,7 @@ def copy_flow_format_data(part, scope, flow):
             # Add padding between request and response
             data += "\r\n" * 2
         if scope in ("s", "a") and flow.response:
-            if flow.response.content is None or flow.response.content == CONTENT_MISSING:
+            if flow.response.content is None:
                 return None, "Response content is missing"
             with decoded(flow.response):
                 if part == "h":
@@ -286,6 +285,8 @@ def export_prompt(k, flow):
         "c": flow_export.curl_command,
         "p": flow_export.python_code,
         "r": flow_export.raw_request,
+        "l": flow_export.locust_code,
+        "t": flow_export.locust_task,
     }
     if k in exporters:
         copy_to_clipboard_or_prompt(exporters[k](flow))
@@ -418,7 +419,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
     if f.response:
         if f.response.content:
             contentdesc = netlib.utils.pretty_size(len(f.response.content))
-        elif f.response.content == CONTENT_MISSING:
+        elif f.response.content is None:
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"
