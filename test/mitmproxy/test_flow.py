@@ -809,6 +809,11 @@ class TestFlowMaster:
         assert s.flow_count() == 2
         assert s.index(f2) == 1
 
+    def test_create_flow(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert fm.create_request("GET", "http", "example.com", 80, "/")
+
     def test_all(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)

@@ -845,6 +845,7 @@ class FlowMaster(controller.Master):
 
         s = ServerConnection.from_state(dict(
             address=dict(address=(host, port), use_ipv6=False),
+            peer_address=None,
             cert=None,
             sni=host,
             source_address=dict(address=('', 0), use_ipv6=False),
