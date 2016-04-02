@@ -26,30 +26,6 @@ class MessageMixin(object):
             return self.content
         return encoding.decode(ce, self.content)
 
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in both the headers
-            and the body of the message. Encoded body will be decoded
-            before replacement, and re-encoded afterwards.
-
-            Returns the number of replacements made.
-        """
-        count = 0
-        if self.content:
-            with decoded(self):
-                self.content, count = utils.safe_subn(
-                    pattern, repl, self.content, *args, **kwargs
-                )
-        fields = []
-        for name, value in self.headers.fields:
-            name, c = utils.safe_subn(pattern, repl, name, *args, **kwargs)
-            count += c
-            value, c = utils.safe_subn(pattern, repl, value, *args, **kwargs)
-            count += c
-            fields.append([name, value])
-        self.headers.fields = fields
-        return count
-
 
 class HTTPRequest(MessageMixin, Request):
 
@@ -185,22 +161,6 @@ class HTTPRequest(MessageMixin, Request):
 
     def set_auth(self, auth):
         self.data.headers.set_all("Proxy-Authorization", (auth,))
-
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in the headers, the
-            request path and the body of the request. Encoded content will be
-            decoded before replacement, and re-encoded afterwards.
-
-            Returns the number of replacements made.
-        """
-        c = MessageMixin.replace(self, pattern, repl, *args, **kwargs)
-        self.path, pc = utils.safe_subn(
-            pattern, repl, self.path, *args, **kwargs
-        )
-        c += pc
-        return c
-
 
 class HTTPResponse(MessageMixin, Response):
 

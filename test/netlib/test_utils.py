@@ -166,3 +166,7 @@ class TestSerializable:
         a.set_state(1)
         assert a.i == 1
         assert b.i == 42
+
+
+def test_safe_subn():
+    assert utils.safe_subn("foo", u"bar", "\xc2foo")

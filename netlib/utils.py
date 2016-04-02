@@ -414,8 +414,18 @@ def http2_read_raw_frame(rfile):
     body = rfile.safe_read(length)
     return [header, body]
 
+
 def http2_read_frame(rfile):
     header, body = http2_read_raw_frame(rfile)
     frame, length = hyperframe.frame.Frame.parse_frame_header(header)
     frame.parse_body(memoryview(body))
     return frame
+
+
+def safe_subn(pattern, repl, target, *args, **kwargs):
+    """
+        There are Unicode conversion problems with re.subn. We try to smooth
+        that over by casting the pattern and replacement to strings. We really
+        need a better solution that is aware of the actual content ecoding.
+    """
+    return re.subn(str(pattern), str(repl), target, *args, **kwargs)

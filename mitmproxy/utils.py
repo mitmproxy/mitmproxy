@@ -165,12 +165,3 @@ def parse_size(s):
         return int(s) * mult
     except ValueError:
         raise ValueError("Invalid size specification: %s" % s)
-
-
-def safe_subn(pattern, repl, target, *args, **kwargs):
-    """
-        There are Unicode conversion problems with re.subn. We try to smooth
-        that over by casting the pattern and replacement to strings. We really
-        need a better solution that is aware of the actual content ecoding.
-    """
-    return re.subn(str(pattern), str(repl), target, *args, **kwargs)

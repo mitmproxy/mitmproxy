@@ -1,18 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
-import re
 import copy
 import six
 
-from .utils import Serializable
-
-
-def safe_subn(pattern, repl, target, *args, **kwargs):
-    """
-        There are Unicode conversion problems with re.subn. We try to smooth
-        that over by casting the pattern and replacement to strings. We really
-        need a better solution that is aware of the actual content ecoding.
-    """
-    return re.subn(str(pattern), str(repl), target, *args, **kwargs)
+from .utils import Serializable, safe_subn
 
 
 class ODict(Serializable):

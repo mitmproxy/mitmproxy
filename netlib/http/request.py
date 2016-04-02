@@ -54,6 +54,23 @@ class Request(Message):
             self.method, hostport, path
         )
 
+    def replace(self, pattern, repl, flags=0):
+        """
+            Replaces a regular expression pattern with repl in the headers, the
+            request path and the body of the request. Encoded content will be
+            decoded before replacement, and re-encoded afterwards.
+
+            Returns:
+                The number of replacements made.
+        """
+        # TODO: Proper distinction between text and bytes.
+        c = super(Request, self).replace(pattern, repl, flags)
+        self.path, pc = utils.safe_subn(
+            pattern, repl, self.path, flags=flags
+        )
+        c += pc
+        return c
+
     @property
     def first_line_format(self):
         """
