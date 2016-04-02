@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 from six.moves import http_cookies as Cookie
+import cgi
 import copy
 import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
@@ -421,7 +422,7 @@ def make_error_response(status_code, message, headers=None):
             </head>
             <body>%s</body>
         </html>
-    """.strip() % (status_code, response, message)
+    """.strip() % (status_code, response, cgi.escape(message))
     body = body.encode("utf8", "replace")
 
     if not headers:
