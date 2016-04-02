@@ -806,7 +806,7 @@ class FlowMaster(controller.Master):
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
-            flow.reply(response)
+            flow.response = response
             if self.server_playback.count() == 0:
                 self.stop_server_playback()
             return True
@@ -905,11 +905,11 @@ class FlowMaster(controller.Master):
     def load_flows_file(self, path):
         path = os.path.expanduser(path)
         try:
-            f = file(path, "rb")
-            freader = FlowReader(f)
+            with open(path, "rb") as f:
+                freader = FlowReader(f)
+                return self.load_flows(freader)
         except IOError as v:
             raise FlowReadError(v.strerror)
-        return self.load_flows(freader)
 
     def process_new_request(self, f):
         if self.stickycookie_state:
@@ -924,11 +924,8 @@ class FlowMaster(controller.Master):
 
         if self.server_playback:
             pb = self.do_server_playback(f)
-            if not pb:
-                if self.kill_nonreplay:
+            if not pb and self.kill_nonreplay:
                     f.kill(self)
-                else:
-                    f.reply()
 
     def process_new_response(self, f):
         if self.stickycookie_state:

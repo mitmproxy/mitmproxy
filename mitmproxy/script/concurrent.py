@@ -8,22 +8,23 @@ import threading
 
 class ReplyProxy(object):
 
-    def __init__(self, original_reply, script_thread):
-        self.original_reply = original_reply
+    def __init__(self, reply_func, script_thread):
+        self.reply_func = reply_func
         self.script_thread = script_thread
-        self._ignore_call = True
-        self.lock = threading.Lock()
+        self.master_reply = None
 
-    def __call__(self, *args, **kwargs):
-        with self.lock:
-            if self._ignore_call:
-                self.script_thread.start()
-                self._ignore_call = False
-                return
-        self.original_reply(*args, **kwargs)
+    def __call__(self, *args):
+        if self.master_reply is None:
+            self.master_reply = args
+            self.script_thread.start()
+            return
+        self.reply_func(*args)
+
+    def done(self):
+        self.reply_func(*self.master_reply)
 
     def __getattr__(self, k):
-        return getattr(self.original_reply, k)
+        return getattr(self.reply_func, k)
 
 
 def _handle_concurrent_reply(fn, o, *args, **kwargs):
@@ -34,7 +35,7 @@ def _handle_concurrent_reply(fn, o, *args, **kwargs):
     def run():
         fn(*args, **kwargs)
         # If the script did not call .reply(), we have to do it now.
-        reply_proxy()
+        reply_proxy.done()
 
     script_thread = ScriptThread(target=run)
 
