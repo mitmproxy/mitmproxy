@@ -42,8 +42,7 @@ class Request(Message):
     An HTTP request.
     """
     def __init__(self, *args, **kwargs):
-        data = RequestData(*args, **kwargs)
-        super(Request, self).__init__(data)
+        self.data = RequestData(*args, **kwargs)
 
     def __repr__(self):
         if self.host and self.port:

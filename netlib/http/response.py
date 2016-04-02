@@ -29,8 +29,7 @@ class Response(Message):
     An HTTP response.
     """
     def __init__(self, *args, **kwargs):
-        data = ResponseData(*args, **kwargs)
-        super(Response, self).__init__(data)
+        self.data = ResponseData(*args, **kwargs)
 
     def __repr__(self):
         if self.content:

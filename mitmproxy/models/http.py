@@ -26,14 +26,6 @@ class MessageMixin(object):
             return self.content
         return encoding.decode(ce, self.content)
 
-    def copy(self):
-        c = copy.copy(self)
-        if hasattr(self, "data"):  # FIXME remove condition
-            c.data = copy.copy(self.data)
-
-        c.headers = self.headers.copy()
-        return c
-
     def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both the headers

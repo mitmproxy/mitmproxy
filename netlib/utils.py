@@ -41,6 +41,9 @@ class Serializable(object):
         """
         raise NotImplementedError()
 
+    def copy(self):
+        return self.from_state(self.get_state())
+
 
 def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):

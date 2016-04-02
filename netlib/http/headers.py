@@ -5,7 +5,7 @@ Unicode Handling
 See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 """
 from __future__ import absolute_import, print_function, division
-import copy
+
 try:
     from collections.abc import MutableMapping
 except ImportError:  # pragma: no cover
@@ -189,9 +189,6 @@ class Headers(MutableMapping, Serializable):
         self.fields.extend(
             [name, value] for value in values
         )
-
-    def copy(self):
-        return Headers(copy.copy(self.fields))
 
     def get_state(self):
         return tuple(tuple(field) for field in self.fields)

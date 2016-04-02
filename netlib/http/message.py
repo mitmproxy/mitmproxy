@@ -43,9 +43,6 @@ class MessageData(utils.Serializable):
 
 
 class Message(utils.Serializable):
-    def __init__(self, data):
-        self.data = data
-
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
@@ -62,6 +59,7 @@ class Message(utils.Serializable):
 
     @classmethod
     def from_state(cls, state):
+        state["headers"] = Headers.from_state(state["headers"])
         return cls(**state)
 
     @property
