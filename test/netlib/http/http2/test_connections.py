@@ -417,7 +417,7 @@ class TestReadResponse(tservers.ServerTestBase):
 
         assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
-        assert resp.msg == ''
+        assert resp.reason == ''
         assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
         assert resp.content == b'foobar'
         assert resp.timestamp_end
@@ -444,7 +444,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.stream_id == 42
         assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
-        assert resp.msg == ''
+        assert resp.reason == ''
         assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
         assert resp.content == b''
 
