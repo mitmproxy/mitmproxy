@@ -1,5 +1,4 @@
 from __future__ import (absolute_import, print_function, division)
-from six.moves import http_cookies as Cookie
 import cgi
 import copy
 import warnings
@@ -261,66 +260,6 @@ class HTTPResponse(MessageMixin, Response):
             timestamp_end=response.data.timestamp_end,
         )
         return resp
-
-    def _refresh_cookie(self, c, delta):
-        """
-            Takes a cookie string c and a time delta in seconds, and returns
-            a refreshed cookie string.
-        """
-        try:
-            c = Cookie.SimpleCookie(str(c))
-        except Cookie.CookieError:
-            raise ValueError("Invalid Cookie")
-        for i in c.values():
-            if "expires" in i:
-                d = parsedate_tz(i["expires"])
-                if d:
-                    d = mktime_tz(d) + delta
-                    i["expires"] = formatdate(d)
-                else:
-                    # This can happen when the expires tag is invalid.
-                    # reddit.com sends a an expires tag like this: "Thu, 31 Dec
-                    # 2037 23:59:59 GMT", which is valid RFC 1123, but not
-                    # strictly correct according to the cookie spec. Browsers
-                    # appear to parse this tolerantly - maybe we should too.
-                    # For now, we just ignore this.
-                    del i["expires"]
-        ret = c.output(header="").strip()
-        if not ret:
-            raise ValueError("Invalid Cookie")
-        return ret
-
-    def refresh(self, now=None):
-        """
-            This fairly complex and heuristic function refreshes a server
-            response for replay.
-
-                - It adjusts date, expires and last-modified headers.
-                - It adjusts cookie expiration.
-        """
-        if not now:
-            now = time.time()
-        delta = now - self.timestamp_start
-        refresh_headers = [
-            "date",
-            "expires",
-            "last-modified",
-        ]
-        for i in refresh_headers:
-            if i in self.headers:
-                d = parsedate_tz(self.headers[i])
-                if d:
-                    new = mktime_tz(d) + delta
-                    self.headers[i] = formatdate(new)
-        c = []
-        for set_cookie_header in self.headers.get_all("set-cookie"):
-            try:
-                refreshed = self._refresh_cookie(set_cookie_header, delta)
-            except ValueError:
-                refreshed = set_cookie_header
-            c.append(refreshed)
-        if c:
-            self.headers.set_all("set-cookie", c)
 
 
 class HTTPFlow(Flow):

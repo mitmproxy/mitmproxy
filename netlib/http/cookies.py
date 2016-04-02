@@ -1,4 +1,6 @@
+from six.moves import http_cookies as Cookie
 import re
+from email.utils import parsedate_tz, formatdate, mktime_tz
 
 from .. import odict
 
@@ -191,3 +193,35 @@ def format_cookie_header(od):
         Formats a Cookie header value.
     """
     return _format_pairs(od.lst)
+
+
+def refresh_set_cookie_header(c, delta):
+    """
+    Args:
+        c: A Set-Cookie string
+        delta: Time delta in seconds
+    Returns:
+        A refreshed Set-Cookie string
+    """
+    try:
+        c = Cookie.SimpleCookie(str(c))
+    except Cookie.CookieError:
+        raise ValueError("Invalid Cookie")
+    for i in c.values():
+        if "expires" in i:
+            d = parsedate_tz(i["expires"])
+            if d:
+                d = mktime_tz(d) + delta
+                i["expires"] = formatdate(d)
+            else:
+                # This can happen when the expires tag is invalid.
+                # reddit.com sends a an expires tag like this: "Thu, 31 Dec
+                # 2037 23:59:59 GMT", which is valid RFC 1123, but not
+                # strictly correct according to the cookie spec. Browsers
+                # appear to parse this tolerantly - maybe we should too.
+                # For now, we just ignore this.
+                del i["expires"]
+    ret = c.output(header="").strip()
+    if not ret:
+        raise ValueError("Invalid Cookie")
+    return ret

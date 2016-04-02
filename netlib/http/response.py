@@ -1,6 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 import warnings
+from email.utils import parsedate_tz, formatdate, mktime_tz
+import time
 
 from . import cookies
 from .headers import Headers
@@ -93,6 +95,38 @@ class Response(Message):
             header = cookies.format_set_cookie_header(i[0], i[1][0], i[1][1])
             values.append(header)
         self.headers.set_all("set-cookie", values)
+
+    def refresh(self, now=None):
+        """
+        This fairly complex and heuristic function refreshes a server
+        response for replay.
+
+            - It adjusts date, expires and last-modified headers.
+            - It adjusts cookie expiration.
+        """
+        if not now:
+            now = time.time()
+        delta = now - self.timestamp_start
+        refresh_headers = [
+            "date",
+            "expires",
+            "last-modified",
+        ]
+        for i in refresh_headers:
+            if i in self.headers:
+                d = parsedate_tz(self.headers[i])
+                if d:
+                    new = mktime_tz(d) + delta
+                    self.headers[i] = formatdate(new)
+        c = []
+        for set_cookie_header in self.headers.get_all("set-cookie"):
+            try:
+                refreshed = cookies.refresh_set_cookie_header(set_cookie_header, delta)
+            except ValueError:
+                refreshed = set_cookie_header
+            c.append(refreshed)
+        if c:
+            self.headers.set_all("set-cookie", c)
 
     # Legacy
 
