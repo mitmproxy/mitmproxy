@@ -303,7 +303,7 @@ def copy_to_clipboard_or_prompt(data):
 
     try:
         pyperclip.copy(toclip)
-    except (RuntimeError, UnicodeDecodeError, AttributeError):
+    except (RuntimeError, UnicodeDecodeError, AttributeError, TypeError):
         def save(k):
             if k == "y":
                 ask_save_path("Save data", data)
