@@ -303,11 +303,11 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         port = None
 
         if path == '*' or path.startswith("/"):
-            form_in = "relative"
+            first_line_format = "relative"
         elif method == 'CONNECT':  # pragma: no cover
             raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
         else:  # pragma: no cover
-            form_in = "absolute"
+            first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
 
@@ -326,7 +326,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         data = b"".join(data)
 
         return HTTPRequest(
-            form_in,
+            first_line_format,
             method,
             scheme,
             host,

@@ -973,22 +973,22 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         assert not self.chain[1].tmaster.state.flows[0].response  # killed
         assert self.chain[1].tmaster.state.flows[1].response
 
-        assert self.proxy.tmaster.state.flows[0].request.form_in == "authority"
-        assert self.proxy.tmaster.state.flows[1].request.form_in == "relative"
+        assert self.proxy.tmaster.state.flows[0].request.first_line_format == "authority"
+        assert self.proxy.tmaster.state.flows[1].request.first_line_format == "relative"
 
         assert self.chain[0].tmaster.state.flows[
-            0].request.form_in == "authority"
+            0].request.first_line_format == "authority"
         assert self.chain[0].tmaster.state.flows[
-            1].request.form_in == "relative"
+            1].request.first_line_format == "relative"
         assert self.chain[0].tmaster.state.flows[
-            2].request.form_in == "authority"
+            2].request.first_line_format == "authority"
         assert self.chain[0].tmaster.state.flows[
-            3].request.form_in == "relative"
+            3].request.first_line_format == "relative"
 
         assert self.chain[1].tmaster.state.flows[
-            0].request.form_in == "relative"
+            0].request.first_line_format == "relative"
         assert self.chain[1].tmaster.state.flows[
-            1].request.form_in == "relative"
+            1].request.first_line_format == "relative"
 
         req = p.request("get:'/p/418:b\"content2\"'")
 

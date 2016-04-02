@@ -167,7 +167,7 @@ class HttpLayer(Layer):
                 self.validate_request(request)
 
                 # Regular Proxy Mode: Handle CONNECT
-                if self.mode == "regular" and request.form_in == "authority":
+                if self.mode == "regular" and request.first_line_format == "authority":
                     self.handle_regular_mode_connect(request)
                     return
 
@@ -215,7 +215,7 @@ class HttpLayer(Layer):
                     return
 
                 # Upstream Proxy Mode: Handle CONNECT
-                if flow.request.form_in == "authority" and flow.response.status_code == 200:
+                if flow.request.first_line_format == "authority" and flow.response.status_code == 200:
                     self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
@@ -340,7 +340,7 @@ class HttpLayer(Layer):
         if self.mode == "regular":
             pass  # only absolute-form at this point, nothing to do here.
         elif self.mode == "upstream":
-            if flow.request.form_in == "authority":
+            if flow.request.first_line_format == "authority":
                 flow.request.scheme = "http"  # pseudo value
         else:
             # Setting request.host also updates the host header, which we want to preserve
@@ -390,7 +390,7 @@ class HttpLayer(Layer):
             """
 
     def validate_request(self, request):
-        if request.form_in == "absolute" and request.scheme != "http":
+        if request.first_line_format == "absolute" and request.scheme != "http":
             raise HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {
@@ -400,14 +400,14 @@ class HttpLayer(Layer):
         }
 
         allowed_request_forms = expected_request_forms[self.mode]
-        if request.form_in not in allowed_request_forms:
+        if request.first_line_format not in allowed_request_forms:
             err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
-                " or ".join(allowed_request_forms), request.form_in
+                " or ".join(allowed_request_forms), request.first_line_format
             )
             raise HttpException(err_message)
 
-        if self.mode == "regular" and request.form_in == "absolute":
-            request.form_out = "relative"
+        if self.mode == "regular" and request.first_line_format == "absolute":
+            request.first_line_format = "relative"
 
     def authenticate(self, request):
         if self.config.authenticator:

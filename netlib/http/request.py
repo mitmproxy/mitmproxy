@@ -358,24 +358,3 @@ class Request(Message):
     def get_form_multipart(self):  # pragma: no cover
         warnings.warn(".get_form_multipart is deprecated, use .multipart_form instead.", DeprecationWarning)
         return self.multipart_form or ODict([])
-
-    @property
-    def form_in(self):  # pragma: no cover
-        warnings.warn(".form_in is deprecated, use .first_line_format instead.", DeprecationWarning)
-        return self.first_line_format
-
-    @form_in.setter
-    def form_in(self, form_in):  # pragma: no cover
-        warnings.warn(".form_in is deprecated, use .first_line_format instead.", DeprecationWarning)
-        self.first_line_format = form_in
-
-    @property
-    def form_out(self):  # pragma: no cover
-        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
-        return self.first_line_format
-
-    @form_out.setter
-    def form_out(self, form_out):  # pragma: no cover
-        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
-        self.first_line_format = form_out
-
