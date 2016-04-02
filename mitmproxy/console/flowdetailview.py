@@ -5,7 +5,7 @@ from .. import utils
 
 
 def maybe_timestamp(base, attr):
-    if base and getattr(base, attr):
+    if base is not None and getattr(base, attr):
         return utils.format_timestamp_with_milli(getattr(base, attr))
     else:
         return "active"
@@ -89,65 +89,71 @@ def flowdetails(state, flow):
 
     parts = []
 
-    parts.append(
-        [
-            "Client conn. established",
-            maybe_timestamp(cc, "timestamp_start")
-        ]
-    )
-    parts.append(
-        [
-            "Server conn. initiated",
-            maybe_timestamp(sc, "timestamp_start")
-        ]
-    )
-    parts.append(
-        [
-            "Server conn. TCP handshake",
-            maybe_timestamp(sc, "timestamp_tcp_setup")
-        ]
-    )
-    if sc.ssl_established:
+    if cc is not None and cc.timestamp_start:
         parts.append(
             [
-                "Server conn. SSL handshake",
-                maybe_timestamp(sc, "timestamp_ssl_setup")
+                "Client conn. established",
+                maybe_timestamp(cc, "timestamp_start")
+            ]
+        )
+        if cc.ssl_established:
+            parts.append(
+                [
+                    "Client conn. TLS handshake",
+                    maybe_timestamp(cc, "timestamp_ssl_setup")
+                ]
+            )
+    if sc is not None and sc.timestamp_start:
+        parts.append(
+            [
+                "Server conn. initiated",
+                maybe_timestamp(sc, "timestamp_start")
             ]
         )
         parts.append(
             [
-                "Client conn. SSL handshake",
-                maybe_timestamp(cc, "timestamp_ssl_setup")
+                "Server conn. TCP handshake",
+                maybe_timestamp(sc, "timestamp_tcp_setup")
             ]
         )
-    parts.append(
-        [
-            "First request byte",
-            maybe_timestamp(req, "timestamp_start")
-        ]
-    )
-    parts.append(
-        [
-            "Request complete",
-            maybe_timestamp(req, "timestamp_end")
-        ]
-    )
-    parts.append(
-        [
-            "First response byte",
-            maybe_timestamp(resp, "timestamp_start")
-        ]
-    )
-    parts.append(
-        [
-            "Response complete",
-            maybe_timestamp(resp, "timestamp_end")
-        ]
-    )
+        if sc.ssl_established:
+            parts.append(
+                [
+                    "Server conn. TLS handshake",
+                    maybe_timestamp(sc, "timestamp_ssl_setup")
+                ]
+            )
+    if req is not None and req.timestamp_start:
+        parts.append(
+            [
+                "First request byte",
+                maybe_timestamp(req, "timestamp_start")
+            ]
+        )
+        parts.append(
+            [
+                "Request complete",
+                maybe_timestamp(req, "timestamp_end")
+            ]
+        )
+    if resp is not None and resp.timestamp_start:
+        parts.append(
+            [
+                "First response byte",
+                maybe_timestamp(resp, "timestamp_start")
+            ]
+        )
+        parts.append(
+            [
+                "Response complete",
+                maybe_timestamp(resp, "timestamp_end")
+            ]
+        )
 
-    # sort operations by timestamp
-    parts = sorted(parts, key=lambda p: p[1])
+    if parts:
+        # sort operations by timestamp
+        parts = sorted(parts, key=lambda p: p[1])
 
-    text.append(urwid.Text([("head", "Timing:")]))
-    text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
+        text.append(urwid.Text([("head", "Timing:")]))
+        text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
     return searchable.Searchable(state, text)

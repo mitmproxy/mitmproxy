@@ -838,9 +838,9 @@ class FlowMaster(controller.Master):
             address=dict(address=(host, port), use_ipv6=False),
             clientcert=None,
             ssl_established=False,
-            timestamp_start=time.time(),
-            timestamp_end=time.time(),
-            timestamp_ssl_setup=time.time()
+            timestamp_start=None,
+            timestamp_end=None,
+            timestamp_ssl_setup=None
         ))
 
         s = ServerConnection.from_state(dict(
@@ -850,9 +850,9 @@ class FlowMaster(controller.Master):
             sni=host,
             source_address=dict(address=('', 0), use_ipv6=False),
             ssl_established=True,
-            timestamp_start=time.time(),
-            timestamp_tcp_setup=time.time(),
-            timestamp_ssl_setup=time.time(),
+            timestamp_start=None,
+            timestamp_tcp_setup=None,
+            timestamp_ssl_setup=None,
             timestamp_end=None,
             via=None
         ))
