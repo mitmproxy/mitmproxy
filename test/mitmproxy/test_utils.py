@@ -99,7 +99,3 @@ def test_parse_size():
     assert utils.parse_size("1g") == 1024**3
     tutils.raises(ValueError, utils.parse_size, "1f")
     tutils.raises(ValueError, utils.parse_size, "ak")
-
-
-def test_safe_subn():
-    assert utils.safe_subn("foo", u"bar", "\xc2foo")

@@ -175,6 +175,25 @@ class Message(utils.Serializable):
         self.headers["content-encoding"] = e
         return True
 
+    def replace(self, pattern, repl, flags=0):
+        """
+        Replaces a regular expression pattern with repl in both the headers
+        and the body of the message. Encoded body will be decoded
+        before replacement, and re-encoded afterwards.
+
+        Returns:
+            The number of replacements made.
+        """
+        # TODO: Proper distinction between text and bytes.
+        replacements = 0
+        if self.content:
+            with decoded(self):
+                self.content, replacements = utils.safe_subn(
+                    pattern, repl, self.content, flags=flags
+                )
+        replacements += self.headers.replace(pattern, repl, flags)
+        return replacements
+
     # Legacy
 
     @property

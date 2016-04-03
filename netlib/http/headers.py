@@ -6,6 +6,8 @@ See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 """
 from __future__ import absolute_import, print_function, division
 
+import re
+
 try:
     from collections.abc import MutableMapping
 except ImportError:  # pragma: no cover
@@ -199,3 +201,30 @@ class Headers(MutableMapping, Serializable):
     @classmethod
     def from_state(cls, state):
         return cls([list(field) for field in state])
+
+    @_always_byte_args
+    def replace(self, pattern, repl, flags=0):
+        """
+        Replaces a regular expression pattern with repl in each "name: value"
+        header line.
+
+        Returns:
+            The number of replacements made.
+        """
+        pattern = re.compile(pattern, flags)
+        replacements = 0
+
+        fields = []
+        for name, value in self.fields:
+            line, n = pattern.subn(repl, name + b": " + value)
+            try:
+                name, value = line.split(b": ", 1)
+            except ValueError:
+                # We get a ValueError if the replacement removed the ": "
+                # There's not much we can do about this, so we just keep the header as-is.
+                pass
+            else:
+                replacements += n
+            fields.append([name, value])
+        self.fields = fields
+        return replacements
