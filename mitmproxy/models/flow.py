@@ -28,7 +28,6 @@ class Error(stateobject.StateObject):
         @type msg: str
         @type timestamp: float
         """
-        self.flow = None  # will usually be set by the flow backref mixin
         self.msg = msg
         self.timestamp = timestamp or utils.timestamp()
 

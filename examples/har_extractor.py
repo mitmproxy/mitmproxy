@@ -143,7 +143,7 @@ def response(context, flow):
         },
         "response": {
             "status": flow.response.status_code,
-            "statusText": flow.response.msg,
+            "statusText": flow.response.reason,
             "httpVersion": flow.response.http_version,
             "cookies": format_cookies(flow.response.cookies),
             "headers": format_headers(flow.response.headers),

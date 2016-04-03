@@ -103,13 +103,3 @@ class Response(Message):
     def set_cookies(self, odict):  # pragma: no cover
         warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
         self.cookies = odict
-
-    @property
-    def msg(self):  # pragma: no cover
-        warnings.warn(".msg is deprecated, use .reason instead.", DeprecationWarning)
-        return self.reason
-
-    @msg.setter
-    def msg(self, reason):  # pragma: no cover
-        warnings.warn(".msg is deprecated, use .reason instead.", DeprecationWarning)
-        self.reason = reason
