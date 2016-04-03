@@ -69,9 +69,10 @@ setup(
         "Flask>=0.10.1, <0.11",
         "h2>=2.1.2, <3.0",
         "hpack>=2.1.0, <3.0",
-        "html2text==2016.1.8",
+        "html2text>=2016.1.8, <=2016.4.2",
         "hyperframe>=3.2.0, <4.0",
-        "Pillow>=3.1, <3.2",
+        "lxml>=3.5.0, <3.7",
+        "Pillow>=3.2, <3.3",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
@@ -85,11 +86,9 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "lxml==3.5.0",  # there are no Windows wheels for newer versions, so we pin this.
             "pydivert>=0.0.7, <0.1",
         ],
         ':sys_platform != "win32"': [
-            "lxml>=3.5.0, <3.7",
         ],
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
@@ -104,7 +103,7 @@ setup(
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",
             "pytest-xdist>=1.14, <1.15",
-            "sphinx>=1.3.5, <1.4",
+            "sphinx>=1.3.5, <1.5",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.3.0, <0.4",
         ],
@@ -116,7 +115,7 @@ setup(
         'examples': [
             "beautifulsoup4>=4.4.1, <4.5",
             "harparser>=0.2, <0.3",
-            "pytz>=2015.07.0, <=2016.1",
+            "pytz>=2015.07.0, <=2016.3",
         ]
     }
 )
