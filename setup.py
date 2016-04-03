@@ -106,6 +106,7 @@ setup(
             "sphinx>=1.3.5, <1.5",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.3.0, <0.4",
+            "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
             "cssutils>=1.0.1, <1.1",
