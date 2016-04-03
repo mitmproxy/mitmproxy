@@ -1151,38 +1151,6 @@ class TestResponse:
         resp2 = resp.copy()
         assert resp2.get_state() == resp.get_state()
 
-    def test_refresh(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        n = time.time()
-        r.headers["date"] = email.utils.formatdate(n)
-        pre = r.headers["date"]
-        r.refresh(n)
-        assert pre == r.headers["date"]
-        r.refresh(n + 60)
-
-        d = email.utils.parsedate_tz(r.headers["date"])
-        d = email.utils.mktime_tz(d)
-        # Weird that this is not exact...
-        assert abs(60 - (d - n)) <= 1
-
-        r.headers["set-cookie"] = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
-        r.refresh()
-
-    def test_refresh_cookie(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-
-        # Invalid expires format, sent to us by Reddit.
-        c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/"
-        assert r._refresh_cookie(c, 60)
-
-        c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
-        assert "00:21:38" in r._refresh_cookie(c, 60)
-
-        # https://github.com/mitmproxy/mitmproxy/issues/773
-        c = ">=A"
-        with tutils.raises(ValueError):
-            r._refresh_cookie(c, 60)
-
     def test_replace(self):
         r = HTTPResponse.wrap(netlib.tutils.tresp())
         r.headers["Foo"] = "fOo"

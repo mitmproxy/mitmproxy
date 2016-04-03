@@ -1,4 +1,5 @@
 from netlib.http import cookies
+from netlib.tutils import raises
 
 
 def test_read_token():
@@ -216,3 +217,18 @@ def test_parse_set_cookie_header():
             assert ret2[2].lst == expected[2]
         else:
             assert ret is None
+
+
+def test_refresh_cookie():
+
+    # Invalid expires format, sent to us by Reddit.
+    c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/"
+    assert cookies.refresh_set_cookie_header(c, 60)
+
+    c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
+    assert "00:21:38" in cookies.refresh_set_cookie_header(c, 60)
+
+    # https://github.com/mitmproxy/mitmproxy/issues/773
+    c = ">=A"
+    with raises(ValueError):
+        cookies.refresh_set_cookie_header(c, 60)
