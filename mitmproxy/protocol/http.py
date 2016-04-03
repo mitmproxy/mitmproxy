@@ -21,7 +21,7 @@ from ..models import (
     expect_continue_response
 )
 
-from .base import Layer, Kill
+from .base import Layer, Kill, ProxyServerConnection
 
 
 class _HttpTransmissionLayer(Layer):
@@ -65,36 +65,12 @@ class _HttpTransmissionLayer(Layer):
         raise NotImplementedError()
 
 
-class ConnectServerConnection(object):
-
-    """
-    "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.
-    """
-
-    def __init__(self, address, ctx):
-        self.address = tcp.Address.wrap(address)
-        self._ctx = ctx
-
-    @property
-    def via(self):
-        return self._ctx.server_conn
-
-    def __getattr__(self, item):
-        return getattr(self.via, item)
-
-    def __bool__(self):
-        return bool(self.via)
-
-    if six.PY2:
-        __nonzero__ = __bool__
-
-
 class UpstreamConnectLayer(Layer):
 
     def __init__(self, ctx, connect_request):
         super(UpstreamConnectLayer, self).__init__(ctx)
         self.connect_request = connect_request
-        self.server_conn = ConnectServerConnection(
+        self.server_conn = ProxyServerConnection(
             (connect_request.host, connect_request.port),
             self.ctx
         )

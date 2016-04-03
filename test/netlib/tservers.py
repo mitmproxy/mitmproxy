@@ -7,6 +7,7 @@ import OpenSSL
 
 from netlib import tcp
 from netlib import tutils
+from netlib import socks
 
 
 class _ServerThread(threading.Thread):

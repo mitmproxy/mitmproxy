@@ -186,3 +186,14 @@ def test_message_unknown_atyp():
 
     m = socks.Message(5, 1, 0x02, tcp.Address(("example.com", 5050)))
     tutils.raises(socks.SocksError, m.to_file, BytesIO())
+
+
+def test_get_address_atyp():
+    address = tcp.Address((u"127.0.0.1", 0))
+    assert socks.get_address_atyp(address) == socks.ATYP.IPV4_ADDRESS
+    address = tcp.Address((u"::1", 0), True)
+    assert socks.get_address_atyp(address) == socks.ATYP.IPV6_ADDRESS
+    address = tcp.Address((u"www.example.com", 0), True)
+    assert socks.get_address_atyp(address) == socks.ATYP.DOMAINNAME
+    address = tcp.Address((u"www.example.com", 0))
+    assert socks.get_address_atyp(address) == socks.ATYP.DOMAINNAME

@@ -107,6 +107,7 @@ setup(
             "sphinx>=1.3.5, <1.4",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.3.0, <0.4",
+            "twunnel>=0.14.0, <0.16"
         ],
         'contentviews': [
             "cssutils>=1.0.1, <1.1",

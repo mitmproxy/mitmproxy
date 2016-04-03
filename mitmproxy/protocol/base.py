@@ -6,6 +6,7 @@ import six
 from ..models import ServerConnection
 from ..exceptions import ProtocolException
 from netlib.exceptions import TcpException
+from netlib import tcp
 
 
 class _LayerCodeCompletion(object):
@@ -89,6 +90,30 @@ class Layer(_LayerCodeCompletion):
 
     def __repr__(self):
         return type(self).__name__
+
+
+class ProxyServerConnection(object):
+
+    """
+    "Fake" ServerConnection to represent state after a CONNECT request to an proxy.
+    """
+
+    def __init__(self, address, ctx):
+        if address is None:
+            self.address = None
+        else:
+            self.address = tcp.Address.wrap(address)
+        self._ctx = ctx
+
+    @property
+    def via(self):
+        return self._ctx.server_conn
+
+    def __getattr__(self, item):
+        return getattr(self.via, item)
+
+    def __nonzero__(self):
+        return bool(self.via)
 
 
 class ServerConnectionMixin(object):

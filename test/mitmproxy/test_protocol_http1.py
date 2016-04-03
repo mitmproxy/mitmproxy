@@ -3,6 +3,16 @@ from netlib.tcp import TCPClient
 from netlib.tutils import treq
 from . import tutils, tservers
 
+from mitmproxy.protocol import base
+
+class TestProxyServerConnection(object):
+
+    def test_create(self):
+        p = base.ProxyServerConnection(None, None)
+        assert p.address == None
+        p = base.ProxyServerConnection(("127.0.0.1", 0), None)
+        assert p.address.host == "127.0.0.1"
+
 
 class TestHTTPFlow(object):
 
