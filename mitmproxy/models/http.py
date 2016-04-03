@@ -80,17 +80,12 @@ class HTTPRequest(MessageMixin, Request):
         content: Content of the request, the value is None if there is content
         associated, but not present.
 
-        form_in: The request form which mitmproxy has received. The following
-        values are possible:
+        first_line_format: The request form. The following values are possible:
 
-             - relative (GET /index.html, OPTIONS *) (covers origin form and
-               asterisk form)
+             - relative (GET /index.html, OPTIONS *) (origin form or asterisk form)
              - absolute (GET http://example.com:80/index.html)
              - authority-form (CONNECT example.com:443)
              Details: http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-25#section-5.3
-
-        form_out: The request form which mitmproxy will send out to the
-        destination
 
         timestamp_start: Timestamp indicating when request transmission started
 
@@ -110,7 +105,6 @@ class HTTPRequest(MessageMixin, Request):
             content,
             timestamp_start=None,
             timestamp_end=None,
-            form_out=None,
             is_replay=False,
             stickycookie=False,
             stickyauth=False,
@@ -129,7 +123,6 @@ class HTTPRequest(MessageMixin, Request):
             timestamp_start,
             timestamp_end,
         )
-        self.form_out = form_out or first_line_format  # FIXME remove
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = stickycookie
@@ -167,19 +160,8 @@ class HTTPRequest(MessageMixin, Request):
             content=request.data.content,
             timestamp_start=request.data.timestamp_start,
             timestamp_end=request.data.timestamp_end,
-            form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
         return req
-
-    @property
-    def form_out(self):
-        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
-        return self.first_line_format
-
-    @form_out.setter
-    def form_out(self, value):
-        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
-        self.first_line_format = value
 
     def __hash__(self):
         return id(self)

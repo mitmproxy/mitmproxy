@@ -30,7 +30,7 @@ class RequestReplayThread(threading.Thread):
 
     def run(self):
         r = self.flow.request
-        form_out_backup = r.form_out
+        first_line_format_backup = r.first_line_format
         try:
             self.flow.response = None
 
@@ -63,9 +63,9 @@ class RequestReplayThread(threading.Thread):
                             self.config.clientcerts,
                             sni=self.flow.server_conn.sni
                         )
-                        r.form_out = "relative"
+                        r.first_line_format = "relative"
                     else:
-                        r.form_out = "absolute"
+                        r.first_line_format= "absolute"
                 else:
                     server_address = (r.host, r.port)
                     server = ServerConnection(server_address, (self.config.host, 0))
@@ -75,7 +75,7 @@ class RequestReplayThread(threading.Thread):
                             self.config.clientcerts,
                             sni=self.flow.server_conn.sni
                         )
-                    r.form_out = "relative"
+                    r.first_line_format = "relative"
 
                 server.wfile.write(http1.assemble_request(r))
                 server.wfile.flush()
@@ -102,4 +102,4 @@ class RequestReplayThread(threading.Thread):
             from ..proxy.root_context import Log
             self.channel.tell("log", Log(traceback.format_exc(), "error"))
         finally:
-            r.form_out = form_out_backup
+            r.first_line_format = first_line_format_backup

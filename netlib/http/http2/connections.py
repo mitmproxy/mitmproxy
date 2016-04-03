@@ -102,15 +102,15 @@ class HTTP2Protocol(object):
         port = None
 
         if path == '*' or path.startswith("/"):
-            form_in = "relative"
+            first_line_format = "relative"
         elif method == 'CONNECT':
-            form_in = "authority"
+            first_line_format = "authority"
             if ":" in authority:
                 host, port = authority.split(":", 1)
             else:
                 host = authority
         else:
-            form_in = "absolute"
+            first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
             scheme = scheme.decode('ascii')
@@ -123,7 +123,7 @@ class HTTP2Protocol(object):
         port = int(port)
 
         request = Request(
-            form_in,
+            first_line_format,
             method.encode('ascii'),
             scheme.encode('ascii'),
             host.encode('ascii'),
