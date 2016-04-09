@@ -802,29 +802,37 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            response = HTTPResponse.from_state(rflow.response.get_state())
+            response = rflow.response.copy()
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
             flow.response = response
-            if self.server_playback.count() == 0:
-                self.stop_server_playback()
             return True
         return None
 
     def tick(self, q, timeout):
         if self.client_playback:
-            e = [
-                self.client_playback.done(),
-                self.client_playback.exit,
+            stop = (
+                self.client_playback.done() and
                 self.state.active_flow_count() == 0
-            ]
-            if all(e):
+            )
+            exit = stop and self.client_playback.exit
+            if stop:
+                self.stop_client_playback()
+            if exit:
                 self.shutdown()
             self.client_playback.tick(self)
-            if self.client_playback.done():
-                self.client_playback = None
 
+        if self.server_playback:
+            stop = (
+                self.server_playback.count() == 0 and
+                self.state.active_flow_count() == 0
+            )
+            exit = stop and self.server_playback.exit
+            if stop:
+                self.stop_server_playback()
+            if exit:
+                self.shutdown()
         return super(FlowMaster, self).tick(q, timeout)
 
     def duplicate_flow(self, f):
@@ -1114,7 +1122,7 @@ def read_flows_from_paths(paths):
         flows = []
         for path in paths:
             path = os.path.expanduser(path)
-            with file(path, "rb") as f:
+            with open(path, "rb") as f:
                 flows.extend(FlowReader(f).stream())
     except IOError as e:
         raise FlowReadError(e.strerror)
