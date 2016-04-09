@@ -789,8 +789,6 @@ class FlowMaster(controller.Master):
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
-        if self.server_playback.exit:
-            self.shutdown()
         self.server_playback = None
 
     def do_server_playback(self, flow):
@@ -827,7 +825,8 @@ class FlowMaster(controller.Master):
         if self.server_playback:
             stop = (
                 self.server_playback.count() == 0 and
-                self.state.active_flow_count() == 0
+                self.state.active_flow_count() == 0 and
+                not self.kill_nonreplay
             )
             exit = self.server_playback.exit
             if stop:
@@ -935,7 +934,7 @@ class FlowMaster(controller.Master):
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb and self.kill_nonreplay:
-                    f.kill(self)
+                f.kill(self)
 
     def process_new_response(self, f):
         if self.stickycookie_state:

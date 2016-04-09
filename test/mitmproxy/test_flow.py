@@ -904,16 +904,6 @@ class TestFlowMaster:
         assert not fm.do_server_playback(r)
         assert fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(
-            pb,
-            False,
-            [],
-            True,
-            False,
-            None,
-            False,
-            None,
-            False)
         q = queue.Queue()
         fm.tick(q, 0)
         assert fm.should_exit.is_set()

@@ -68,8 +68,9 @@ class TestDumpMaster:
         m.handle_clientconnect(f.client_conn)
         m.handle_serverconnect(f.server_conn)
         m.handle_request(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
-        f = m.handle_response(f)
+        if not f.error:
+            f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
+            f = m.handle_response(f)
         m.handle_clientdisconnect(f.client_conn)
         return f
 
