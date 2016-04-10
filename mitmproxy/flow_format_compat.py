@@ -40,11 +40,17 @@ def convert_016_017(data):
     return data
 
 
+def convert_017_018(data):
+    data["version"] = (0, 18)
+    return data
+
+
 converters = {
     (0, 13): convert_013_014,
     (0, 14): convert_014_015,
     (0, 15): convert_015_016,
     (0, 16): convert_016_017,
+    (0, 17): convert_017_018,
 }
 
 
