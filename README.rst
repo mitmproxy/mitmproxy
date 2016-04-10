@@ -83,7 +83,7 @@ suite. The project tries to maintain 100% test coverage.
 
 
 Documentation
-----
+-------------
 
 The mitmproxy documentation is build using Sphinx_, which is installed automatically if you set up a development
 environment as described above.
