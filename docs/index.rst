@@ -52,6 +52,7 @@
     :caption: Scripting
 
     scripting/inlinescripts
+    dev/models
     scripting/mitmproxy
 
 
@@ -73,7 +74,6 @@
     dev/protocols
     dev/proxy
     dev/exceptions
-    dev/models
 
 ..  Indices and tables
     ==================

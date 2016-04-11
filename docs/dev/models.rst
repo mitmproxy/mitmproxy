@@ -1,7 +1,11 @@
 .. _models:
 
-Models
-======
+Datastructures
+==============
+
+.. automodule:: mitmproxy.models
+    :members: HTTPFlow, HTTPRequest, HTTPResponse
+
 
 .. automodule:: netlib.http
 
@@ -56,4 +60,4 @@ Models
 
 .. automodule:: mitmproxy.models
     :show-inheritance:
-    :members: HTTPFlow, Error, ClientConnection, ServerConnection
+    :members: Error, ServerConnection, ClientConnection

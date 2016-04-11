@@ -1,10 +1,10 @@
 
-mitmproxy
-=========
+FlowMaster
+==========
 
 .. note::
 
-    We strongly encourage you to use :ref:`inlinescripts` rather than mitmproxy.
+    We strongly encourage you to use :ref:`inlinescripts` rather than subclassing mitmproxy's FlowMaster.
         - Inline Scripts are equally powerful and provide an easier syntax.
         - Most examples are written as inline scripts.
         - Multiple inline scripts can be used together.

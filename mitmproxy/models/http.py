@@ -30,41 +30,9 @@ class MessageMixin(object):
 class HTTPRequest(MessageMixin, Request):
 
     """
-    An HTTP request.
-
-    Exposes the following attributes:
-
-        method: HTTP method
-
-        scheme: URL scheme (http/https)
-
-        host: Target hostname of the request. This is not neccessarily the
-        directy upstream server (which could be another proxy), but it's always
-        the target server we want to reach at the end. This attribute is either
-        inferred from the request itself (absolute-form, authority-form) or from
-        the connection metadata (e.g. the host in reverse proxy mode).
-
-        port: Destination port
-
-        path: Path portion of the URL (not present in authority-form)
-
-        http_version: HTTP version, e.g. "HTTP/1.1"
-
-        headers: Headers object
-
-        content: Content of the request, the value is None if there is content
-        associated, but not present.
-
-        first_line_format: The request form. The following values are possible:
-
-             - relative (GET /index.html, OPTIONS *) (origin form or asterisk form)
-             - absolute (GET http://example.com:80/index.html)
-             - authority-form (CONNECT example.com:443)
-             Details: http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-25#section-5.3
-
-        timestamp_start: Timestamp indicating when request transmission started
-
-        timestamp_end: Timestamp indicating when request transmission ended
+    A mitmproxy HTTP request.
+    This is a very thin wrapper on top of :py:class:`netlib.http.Request` and
+    may be removed in the future.
     """
 
     def __init__(
@@ -123,6 +91,9 @@ class HTTPRequest(MessageMixin, Request):
 
     @classmethod
     def wrap(self, request):
+        """
+        Wraps an existing :py:class:`netlib.http.Request`.
+        """
         req = HTTPRequest(
             first_line_format=request.data.first_line_format,
             method=request.data.method,
@@ -141,27 +112,12 @@ class HTTPRequest(MessageMixin, Request):
     def __hash__(self):
         return id(self)
 
+
 class HTTPResponse(MessageMixin, Response):
-
     """
-    An HTTP response.
-
-    Exposes the following attributes:
-
-        http_version: HTTP version, e.g. "HTTP/1.1"
-
-        status_code: HTTP response status code
-
-        msg: HTTP response message
-
-        headers: Headers object
-
-        content: Content of the response, the value is None if there is content
-        associated, but not present.
-
-        timestamp_start: Timestamp indicating when request transmission started
-
-        timestamp_end: Timestamp indicating when request transmission ended
+    A mitmproxy HTTP response.
+    This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
+    may be removed in the future.
     """
 
     def __init__(
@@ -192,6 +148,9 @@ class HTTPResponse(MessageMixin, Response):
 
     @classmethod
     def wrap(self, response):
+        """
+        Wraps an existing :py:class:`netlib.http.Response`.
+        """
         resp = HTTPResponse(
             http_version=response.data.http_version,
             status_code=response.data.status_code,
@@ -211,11 +170,11 @@ class HTTPFlow(Flow):
     transaction.
 
     Attributes:
-        request: HTTPRequest object
-        response: HTTPResponse object
-        error: Error object
-        server_conn: ServerConnection object
-        client_conn: ClientConnection object
+        request: :py:class:`HTTPRequest` object
+        response: :py:class:`HTTPResponse` object
+        error: :py:class:`Error` object
+        server_conn: :py:class:`ServerConnection` object
+        client_conn: :py:class:`ClientConnection` object
         intercepted: Is this flow currently being intercepted?
         live: Does this flow have a live client connection?
 
