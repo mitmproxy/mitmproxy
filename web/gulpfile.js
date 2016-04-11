@@ -10,7 +10,7 @@ var gulp = require("gulp");
 var eslint = require('gulp-eslint');
 var less = require("gulp-less");
 var livereload = require("gulp-livereload");
-var minifyCSS = require('gulp-minify-css');
+var cleanCSS = require('gulp-clean-css');
 var notify = require("gulp-notify");
 var peg = require("gulp-peg");
 var plumber = require("gulp-plumber");
@@ -68,7 +68,7 @@ function styles(files, dev){
         .pipe(dev ? plumber(handleError) : gutil.noop())
         .pipe(sourcemaps.init())
         .pipe(less())
-        .pipe(dev ? gutil.noop() : minifyCSS())
+        .pipe(dev ? gutil.noop() : cleanCSS())
         .pipe(sourcemaps.write(".", {sourceRoot: fixLessSourceMaps}))
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({auto: false}));
