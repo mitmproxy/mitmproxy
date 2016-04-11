@@ -1,9 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
 
 from .http import (
-    HTTPFlow, HTTPRequest, HTTPResponse, Headers, decoded,
+    HTTPFlow, HTTPRequest, HTTPResponse, Headers,
     make_error_response, make_connect_request, make_connect_response, expect_continue_response
 )
+from netlib.http import decoded
 from .connections import ClientConnection, ServerConnection
 from .flow import Flow, Error
 

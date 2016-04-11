@@ -41,6 +41,7 @@ def convert_016_017(data):
 
 
 def convert_017_018(data):
+    data["server_conn"]["ip_address"] = data["server_conn"].pop("peer_address")
     data["version"] = (0, 18)
     return data
 

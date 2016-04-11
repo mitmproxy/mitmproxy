@@ -151,7 +151,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
     _stateobject_attributes = dict(
         address=tcp.Address,
-        peer_address=tcp.Address,
+        ip_address=tcp.Address,
         source_address=tcp.Address,
         ssl_established=bool,
         cert=certutils.SSLCert,
@@ -172,6 +172,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def make_dummy(cls, address):
         return cls.from_state(dict(
             address=dict(address=address, use_ipv6=False),
+            ip_address=dict(address=address, use_ipv6=False),
             cert=None,
             sni=None,
             source_address=dict(address=('', 0), use_ipv6=False),

@@ -842,21 +842,15 @@ class FlowMaster(controller.Master):
         """
             this method creates a new artificial and minimalist request also adds it to flowlist
         """
-        c = ClientConnection.from_state(dict(
-            address=dict(address=(host, port), use_ipv6=False),
-            clientcert=None,
-            ssl_established=False,
-            timestamp_start=None,
-            timestamp_end=None,
-            timestamp_ssl_setup=None
-        ))
+        c = ClientConnection.make_dummy(("", 0))
+        s = ServerConnection.make_dummy((host, port))
 
         s = ServerConnection.from_state(dict(
             address=dict(address=(host, port), use_ipv6=False),
-            peer_address=None,
+            ip_address=None,
             cert=None,
             sni=host,
-            source_address=dict(address=('', 0), use_ipv6=False),
+            source_address=dict(address=("", 0), use_ipv6=False),
             ssl_established=True,
             timestamp_start=None,
             timestamp_tcp_setup=None,
