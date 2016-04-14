@@ -998,8 +998,8 @@ class FlowMaster(controller.Master):
             self.state.add_flow(f)
         self.replacehooks.run(f)
         self.setheaders.run(f)
-        self.run_script_hook("request", f)
         self.process_new_request(f)
+        self.run_script_hook("request", f)
         return f
 
     def handle_responseheaders(self, f):
