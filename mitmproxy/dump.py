@@ -343,15 +343,8 @@ class DumpMaster(flow.FlowMaster):
             self._process_flow(f)
         return f
 
-    def shutdown(self):  # pragma: no cover
-        return flow.FlowMaster.shutdown(self)
-
     def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
             self.shutdown()
             return
-        try:
-            return super(DumpMaster, self).run()
-        except BaseException:
-            self.shutdown()
-            raise
+        super(DumpMaster, self).run()

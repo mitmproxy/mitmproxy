@@ -4,6 +4,7 @@ import uuid
 
 from .. import stateobject, utils, version
 from .connections import ClientConnection, ServerConnection
+from ..exceptions import Kill
 
 
 class Error(stateobject.StateObject):
@@ -139,8 +140,6 @@ class Flow(stateobject.StateObject):
         """
             Kill this request.
         """
-        from ..protocol import Kill
-
         self.error = Error("Connection killed")
         self.intercepted = False
         self.reply(Kill)

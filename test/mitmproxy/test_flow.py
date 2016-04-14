@@ -116,9 +116,8 @@ class TestClientPlaybackState:
         c.clear(c.current)
         assert c.done()
 
-        q = queue.Queue()
         fm.state.clear()
-        fm.tick(q, timeout=0)
+        fm.tick(timeout=0)
 
         fm.stop_client_playback()
         assert not fm.client_playback
@@ -858,9 +857,8 @@ class TestFlowMaster:
         assert not fm.start_client_playback(pb, False)
         fm.client_playback.testing = True
 
-        q = queue.Queue()
         assert not fm.state.flow_count()
-        fm.tick(q, 0)
+        fm.tick(0)
         assert fm.state.flow_count()
 
         f.error = Error("error")
@@ -904,8 +902,7 @@ class TestFlowMaster:
         assert not fm.do_server_playback(r)
         assert fm.do_server_playback(tutils.tflow())
 
-        q = queue.Queue()
-        fm.tick(q, 0)
+        fm.tick(0)
         assert fm.should_exit.is_set()
 
         fm.stop_server_playback()

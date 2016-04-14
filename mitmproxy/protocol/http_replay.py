@@ -7,8 +7,7 @@ from netlib.http import http1
 
 from ..controller import Channel
 from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
-from .base import Kill
-
+from ..exceptions import Kill
 
 # TODO: Doesn't really belong into mitmproxy.protocol...
 
@@ -16,14 +15,14 @@ from .base import Kill
 class RequestReplayThread(threading.Thread):
     name = "RequestReplayThread"
 
-    def __init__(self, config, flow, masterq, should_exit):
+    def __init__(self, config, flow, event_queue, should_exit):
         """
-            masterqueue can be a queue or None, if no scripthooks should be
+            event_queue can be a queue or None, if no scripthooks should be
             processed.
         """
         self.config, self.flow = config, flow
-        if masterq:
-            self.channel = Channel(masterq, should_exit)
+        if event_queue:
+            self.channel = Channel(event_queue, should_exit)
         else:
             self.channel = None
         super(RequestReplayThread, self).__init__()
@@ -37,9 +36,7 @@ class RequestReplayThread(threading.Thread):
             # If we have a channel, run script hooks.
             if self.channel:
                 request_reply = self.channel.ask("request", self.flow)
-                if request_reply == Kill:
-                    raise Kill()
-                elif isinstance(request_reply, HTTPResponse):
+                if isinstance(request_reply, HTTPResponse):
                     self.flow.response = request_reply
 
             if not self.flow.response:

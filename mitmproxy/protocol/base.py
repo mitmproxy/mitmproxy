@@ -189,10 +189,3 @@ class ServerConnectionMixin(object):
                 ),
                 sys.exc_info()[2]
             )
-
-
-class Kill(Exception):
-
-    """
-    Signal that both client and server connection(s) should be killed immediately.
-    """

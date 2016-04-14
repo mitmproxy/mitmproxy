@@ -21,7 +21,7 @@ from ..models import (
     expect_continue_response
 )
 
-from .base import Layer, Kill
+from .base import Layer
 
 
 class _HttpTransmissionLayer(Layer):
@@ -194,13 +194,9 @@ class HttpLayer(Layer):
                     # response was set by an inline script.
                     # we now need to emulate the responseheaders hook.
                     flow = self.channel.ask("responseheaders", flow)
-                    if flow == Kill:
-                        raise Kill()
 
                 self.log("response", "debug", [repr(flow.response)])
                 flow = self.channel.ask("response", flow)
-                if flow == Kill:
-                    raise Kill()
                 self.send_response_to_client(flow)
 
                 if self.check_close_connection(flow):
@@ -315,8 +311,6 @@ class HttpLayer(Layer):
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.channel.ask("responseheaders", flow)
-        if flow == Kill:
-            raise Kill()
 
         if flow.response.stream:
             flow.response.data.content = None
@@ -352,8 +346,6 @@ class HttpLayer(Layer):
             flow.request.scheme = "https" if self.__initial_server_tls else "http"
 
         request_reply = self.channel.ask("request", flow)
-        if request_reply == Kill:
-            raise Kill()
         if isinstance(request_reply, HTTPResponse):
             flow.response = request_reply
             return

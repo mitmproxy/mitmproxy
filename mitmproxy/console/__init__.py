@@ -451,7 +451,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.clear()
 
     def ticker(self, *userdata):
-        changed = self.tick(self.masterq, timeout=0)
+        changed = self.tick(timeout=0)
         if changed:
             self.loop.draw_screen()
             signals.update_settings.send()
@@ -465,11 +465,6 @@ class ConsoleMaster(flow.FlowMaster):
             urwid.SolidFill("x"),
             screen = self.ui,
             handle_mouse = not self.options.no_mouse,
-        )
-
-        self.server.start_slave(
-            controller.Slave,
-            controller.Channel(self.masterq, self.should_exit)
         )
 
         if self.options.rfile:
@@ -507,6 +502,7 @@ class ConsoleMaster(flow.FlowMaster):
             lambda *args: self.view_flowlist()
         )
 
+        self.start()
         try:
             self.loop.run()
         except Exception:

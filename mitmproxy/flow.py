@@ -8,11 +8,9 @@ from abc import abstractmethod, ABCMeta
 import hashlib
 
 import six
-from six.moves import http_cookies, http_cookiejar
+from six.moves import http_cookies, http_cookiejar, urllib
 import os
 import re
-import time
-from six.moves import urllib
 
 from netlib import wsgi
 from netlib.exceptions import HttpException
@@ -21,8 +19,8 @@ from . import controller, tnetstring, filt, script, version, flow_format_compat
 from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
-from .protocol import Kill
-from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, HTTPRequest
+from .exceptions import Kill
+from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest
 
 
 class AppRegistry:
@@ -630,10 +628,19 @@ class State(object):
         self.flows.kill_all(master)
 
 
-class FlowMaster(controller.Master):
+class FlowMaster(controller.ServerMaster):
+
+    @property
+    def server(self):
+        # At some point, we may want to have support for multiple servers.
+        # For now, this suffices.
+        if len(self.servers) > 0:
+            return self.servers[0]
 
     def __init__(self, server, state):
-        controller.Master.__init__(self, server)
+        super(FlowMaster, self).__init__()
+        if server:
+            self.add_server(server)
         self.state = state
         self.server_playback = None
         self.client_playback = None
@@ -695,7 +702,7 @@ class FlowMaster(controller.Master):
         except script.ScriptException as e:
             return traceback.format_exc(e)
         if use_reloader:
-            script.reloader.watch(s, lambda: self.masterq.put(("script_change", s)))
+            script.reloader.watch(s, lambda: self.event_queue.put(("script_change", s)))
         self.scripts.append(s)
 
     def _run_single_script_hook(self, script_obj, name, *args, **kwargs):
@@ -808,7 +815,7 @@ class FlowMaster(controller.Master):
             return True
         return None
 
-    def tick(self, q, timeout):
+    def tick(self, timeout):
         if self.client_playback:
             stop = (
                 self.client_playback.done() and
@@ -833,7 +840,7 @@ class FlowMaster(controller.Master):
                 self.stop_server_playback()
                 if exit:
                     self.shutdown()
-        return super(FlowMaster, self).tick(q, timeout)
+        return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
         return self.load_flow(f.copy())
@@ -942,7 +949,7 @@ class FlowMaster(controller.Master):
             rt = RequestReplayThread(
                 self.server.config,
                 f,
-                self.masterq if run_scripthooks else False,
+                self.event_queue if run_scripthooks else False,
                 self.should_exit
             )
             rt.start()  # pragma: no cover
@@ -1066,7 +1073,6 @@ class FlowMaster(controller.Master):
         m.reply()
 
     def shutdown(self):
-        self.unload_scripts()
         super(FlowMaster, self).shutdown()
 
         # Add all flows that are still active
@@ -1075,6 +1081,8 @@ class FlowMaster(controller.Master):
                 if not i.response:
                     self.stream.add(i)
             self.stop_stream()
+
+        self.unload_scripts()
 
     def start_stream(self, fp, filt):
         self.stream = FilteredFlowWriter(fp, filt)
