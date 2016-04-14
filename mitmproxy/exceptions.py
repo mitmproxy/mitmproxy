@@ -9,7 +9,6 @@ from __future__ import (absolute_import, print_function, division)
 
 
 class ProxyException(Exception):
-
     """
     Base class for all exceptions thrown by mitmproxy.
     """
@@ -27,7 +26,6 @@ class TlsProtocolException(ProtocolException):
 
 
 class ClientHandshakeException(TlsProtocolException):
-
     def __init__(self, message, server):
         super(ClientHandshakeException, self).__init__(message)
         self.server = server

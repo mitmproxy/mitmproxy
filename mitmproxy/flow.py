@@ -845,19 +845,6 @@ class FlowMaster(controller.Master):
         c = ClientConnection.make_dummy(("", 0))
         s = ServerConnection.make_dummy((host, port))
 
-        s = ServerConnection.from_state(dict(
-            address=dict(address=(host, port), use_ipv6=False),
-            ip_address=None,
-            cert=None,
-            sni=host,
-            source_address=dict(address=("", 0), use_ipv6=False),
-            ssl_established=True,
-            timestamp_start=None,
-            timestamp_tcp_setup=None,
-            timestamp_ssl_setup=None,
-            timestamp_end=None,
-            via=None
-        ))
         f = HTTPFlow(c, s)
         headers = Headers()
 
@@ -883,7 +870,7 @@ class FlowMaster(controller.Master):
         if self.server and self.server.config.mode == "reverse":
             f.request.host = self.server.config.upstream_server.address.host
             f.request.port = self.server.config.upstream_server.address.port
-            f.request.scheme = re.sub("^https?2", "", self.server.config.upstream_server.scheme)
+            f.request.scheme = self.server.config.upstream_server.scheme
 
         f.reply = controller.DummyReply()
         if f.request:
@@ -1080,7 +1067,9 @@ class FlowMaster(controller.Master):
 
     def shutdown(self):
         self.unload_scripts()
-        controller.Master.shutdown(self)
+        super(FlowMaster, self).shutdown()
+
+        # Add all flows that are still active
         if self.stream:
             for i in self.state.flows:
                 if not i.response:

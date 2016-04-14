@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import mailcap
 import mimetypes
@@ -457,7 +457,6 @@ class ConsoleMaster(flow.FlowMaster):
             signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
 
-
     def run(self):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
@@ -513,11 +512,11 @@ class ConsoleMaster(flow.FlowMaster):
         except Exception:
             self.loop.stop()
             sys.stdout.flush()
-            print >> sys.stderr, traceback.format_exc()
-            print >> sys.stderr, "mitmproxy has crashed!"
-            print >> sys.stderr, "Please lodge a bug report at:"
-            print >> sys.stderr, "\thttps://github.com/mitmproxy/mitmproxy"
-            print >> sys.stderr, "Shutting down..."
+            print(traceback.format_exc(), file=sys.stderr)
+            print("mitmproxy has crashed!", file=sys.stderr)
+            print("Please lodge a bug report at:", file=sys.stderr)
+            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+            print("Shutting down...", file=sys.stderr)
         sys.stderr.flush()
         self.shutdown()
 
@@ -717,8 +716,7 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def process_flow(self, f):
-        if self.state.intercept and f.match(
-                self.state.intercept) and not f.request.is_replay:
+        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
             f.intercept(self)
         else:
             # check if flow was intercepted within an inline script by flow.intercept()

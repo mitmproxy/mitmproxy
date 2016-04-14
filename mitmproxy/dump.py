@@ -351,7 +351,7 @@ class DumpMaster(flow.FlowMaster):
             self.shutdown()
             return
         try:
-            return flow.FlowMaster.run(self)
+            return super(DumpMaster, self).run()
         except BaseException:
             self.shutdown()
             raise
