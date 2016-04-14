@@ -17,6 +17,13 @@ class ProxyException(Exception):
         super(ProxyException, self).__init__(message)
 
 
+class Kill(ProxyException):
+    """
+    Signal that both client and server connection(s) should be killed immediately.
+    """
+    pass
+
+
 class ProtocolException(ProxyException):
     pass
 

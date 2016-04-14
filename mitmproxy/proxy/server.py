@@ -8,8 +8,7 @@ import six
 from netlib import tcp
 from netlib.exceptions import TcpException
 from netlib.http.http1 import assemble_response
-from ..exceptions import ProtocolException, ServerException, ClientHandshakeException
-from ..protocol import Kill
+from ..exceptions import ProtocolException, ServerException, ClientHandshakeException, Kill
 from ..models import ClientConnection, make_error_response
 from .modes import HttpUpstreamProxy, HttpProxy, ReverseProxy, TransparentProxy, Socks5Proxy
 from .root_context import RootContext, Log
@@ -21,7 +20,10 @@ class DummyServer:
     def __init__(self, config):
         self.config = config
 
-    def start_slave(self, *args):
+    def set_channel(self, channel):
+        pass
+
+    def serve_forever(self):
         pass
 
     def shutdown(self):
@@ -46,10 +48,6 @@ class ProxyServer(tcp.TCPServer):
                 sys.exc_info()[2]
             )
         self.channel = None
-
-    def start_slave(self, klass, channel):
-        slave = klass(channel, self)
-        slave.start()
 
     def set_channel(self, channel):
         self.channel = channel
@@ -112,12 +110,9 @@ class ConnectionHandler(object):
         self.log("clientconnect", "info")
 
         root_layer = self._create_root_layer()
-        root_layer = self.channel.ask("clientconnect", root_layer)
-        if root_layer == Kill:
-            def root_layer():
-                raise Kill()
 
         try:
+            root_layer = self.channel.ask("clientconnect", root_layer)
             root_layer()
         except Kill:
             self.log("Connection killed", "info")

@@ -175,7 +175,7 @@ class TestDummyServer:
 
     def test_simple(self):
         d = DummyServer(None)
-        d.start_slave()
+        d.set_channel(None)
         d.shutdown()
 
 

@@ -173,20 +173,15 @@ class WebMaster(flow.FlowMaster):
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)
 
-    def tick(self):
-        flow.FlowMaster.tick(self, self.masterq, timeout=0)
-
     def run(self):  # pragma: no cover
-        self.server.start_slave(
-            controller.Slave,
-            controller.Channel(self.masterq, self.should_exit)
-        )
+
         iol = tornado.ioloop.IOLoop.instance()
 
         http_server = tornado.httpserver.HTTPServer(self.app)
         http_server.listen(self.options.wport)
 
-        tornado.ioloop.PeriodicCallback(self.tick, 5).start()
+        iol.add_callback(self.start)
+        tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
         try:
             iol.start()
         except (Stop, KeyboardInterrupt):

@@ -13,7 +13,7 @@ from netlib.tutils import raises
 from pathod import pathoc, pathod
 
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.protocol import Kill
+from mitmproxy.exceptions import Kill
 from mitmproxy.models import Error, HTTPResponse
 
 from . import tutils, tservers
@@ -126,7 +126,7 @@ class TcpMixin:
         i2 = self.pathod("306")
         self._ignore_off()
 
-        self.master.masterq.join()
+        self.master.event_queue.join()
 
         assert n.status_code == 304
         assert i.status_code == 305
@@ -172,7 +172,7 @@ class TcpMixin:
         i2 = self.pathod("306")
         self._tcpproxy_off()
 
-        self.master.masterq.join()
+        self.master.event_queue.join()
 
         assert n.status_code == 304
         assert i.status_code == 305
