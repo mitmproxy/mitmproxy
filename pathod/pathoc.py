@@ -1,3 +1,4 @@
+from __future__ import print_function
 import contextlib
 import sys
 import os
@@ -312,7 +313,7 @@ class Pathoc(tcp.TCPClient):
                 self.get_alpn_proto_negotiated()
             )
             if showssl:
-                print >> fp, str(self.sslinfo)
+                print(str(self.sslinfo), file=fp)
 
             if self.use_http2:
                 self.protocol.check_alpn()
@@ -498,10 +499,10 @@ def main(args):  # pragma: no cover
             try:
                 p.connect(args.connect_to, args.showssl)
             except TcpException as v:
-                print >> sys.stderr, str(v)
+                print(str(v), file=sys.stderr)
                 continue
             except PathocError as v:
-                print >> sys.stderr, str(v)
+                print(str(v), file=sys.stderr)
                 sys.exit(1)
             for spec in playlist:
                 if args.explain or args.memo:
@@ -514,7 +515,7 @@ def main(args):  # pragma: no cover
                     else:
                         trycount += 1
                         if trycount > args.memolimit:
-                            print >> sys.stderr, "Memo limit exceeded..."
+                            print("Memo limit exceeded...", file=sys.stderr)
                             return
                         else:
                             continue

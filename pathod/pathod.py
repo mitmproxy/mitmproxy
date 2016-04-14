@@ -1,3 +1,4 @@
+from __future__ import print_function
 import copy
 import logging
 import os
@@ -484,20 +485,19 @@ def main(args):  # pragma: no cover
             webdebug=args.webdebug
         )
     except PathodError as v:
-        print >> sys.stderr, "Error: %s" % v
+        print("Error: %s" % v, file=sys.stderr)
         sys.exit(1)
     except language.FileAccessDenied as v:
-        print >> sys.stderr, "Error: %s" % v
+        print("Error: %s" % v, file=sys.stderr)
 
     if args.daemonize:
         utils.daemonize()
 
     try:
-        print "%s listening on %s:%s" % (
+        print("%s listening on %s" % (
             version.NAMEVERSION,
-            pd.address.host,
-            pd.address.port
-        )
+            repr(pd.address)
+        ))
         pd.serve_forever()
     except KeyboardInterrupt:
         pass

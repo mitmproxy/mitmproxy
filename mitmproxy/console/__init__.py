@@ -188,7 +188,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         r = self.set_intercept(options.intercept)
         if r:
-            print >> sys.stderr, "Intercept error:", r
+            print("Intercept error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
         if options.limit:
@@ -196,12 +196,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         r = self.set_stickycookie(options.stickycookie)
         if r:
-            print >> sys.stderr, "Sticky cookies error:", r
+            print("Sticky cookies error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
         r = self.set_stickyauth(options.stickyauth)
         if r:
-            print >> sys.stderr, "Sticky auth error:", r
+            print("Sticky auth error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
         self.set_stream_large_bodies(options.stream_large_bodies)
@@ -230,7 +230,7 @@ class ConsoleMaster(flow.FlowMaster):
             for i in options.scripts:
                 err = self.load_script(i)
                 if err:
-                    print >> sys.stderr, "Script load error:", err
+                    print("Script load error: {}".format(err), file=sys.stderr)
                     sys.exit(1)
 
         if options.outfile:
@@ -239,7 +239,7 @@ class ConsoleMaster(flow.FlowMaster):
                 options.outfile[1]
             )
             if err:
-                print >> sys.stderr, "Stream file error:", err
+                print("Stream file error: {}".format(err), file=sys.stderr)
                 sys.exit(1)
 
         self.view_stack = []
@@ -482,7 +482,7 @@ class ConsoleMaster(flow.FlowMaster):
                 )
             elif ret and not self.state.flow_count():
                 self.shutdown()
-                print >> sys.stderr, "Could not load file:", ret
+                print("Could not load file: {}".format(ret), file=sys.stderr)
                 sys.exit(1)
 
         self.loop.set_alarm_in(0.01, self.ticker)

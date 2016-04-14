@@ -196,7 +196,7 @@ class FlowHandler(RequestHandler):
                     elif k == "headers":
                         request.headers.set_state(v)
                     else:
-                        print "Warning: Unknown update {}.{}: {}".format(a, k, v)
+                        print("Warning: Unknown update {}.{}: {}".format(a, k, v))
 
             elif a == "response":
                 response = flow.response
@@ -210,9 +210,9 @@ class FlowHandler(RequestHandler):
                     elif k == "headers":
                         response.headers.set_state(v)
                     else:
-                        print "Warning: Unknown update {}.{}: {}".format(a, k, v)
+                        print("Warning: Unknown update {}.{}: {}".format(a, k, v))
             else:
-                print "Warning: Unknown update {}: {}".format(a, b)
+                print("Warning: Unknown update {}: {}".format(a, b))
         self.state.update_flow(flow)
 
 

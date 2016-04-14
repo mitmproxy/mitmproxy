@@ -6,13 +6,13 @@ class service(socketserver.BaseRequestHandler):
 
     def handle(self):
         data = 'dummy'
-        print "Client connected with ", self.client_address
+        print("Client connected with ", self.client_address)
         while True:
             self.request.send(
                 "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 7\r\n\r\ncontent")
             data = self.request.recv(1024)
             if not len(data):
-                print "Connection closed by remote: ", self.client_address
+                print("Connection closed by remote: ", self.client_address)
                 sleep(3600)
 
 

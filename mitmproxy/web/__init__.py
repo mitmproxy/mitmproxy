@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 import collections
 import tornado.ioloop
 import tornado.httpserver
+import sys
 
 from netlib.http import authentication
 
@@ -166,7 +167,7 @@ class WebMaster(flow.FlowMaster):
                 options.outfile[1]
             )
             if err:
-                print >> sys.stderr, "Stream file error:", err
+                print("Stream file error: {}".format(err), file=sys.stderr)
                 sys.exit(1)
 
         if self.options.app:

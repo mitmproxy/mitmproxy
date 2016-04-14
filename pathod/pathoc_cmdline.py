@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import argparse
 import os
@@ -16,9 +17,9 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     )
     pa = preparser.parse_known_args(argv)[0]
     if pa.showua:
-        print >> stdout, "User agent strings:"
+        print("User agent strings:", file=stdout)
         for i in user_agents.UASTRINGS:
-            print >> stdout, "  ", i[1], i[0]
+            print("  ", i[1], i[0], file=stdout)
         sys.exit(0)
 
     parser = argparse.ArgumentParser(
@@ -213,8 +214,8 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
         try:
             reqs.append(language.parse_pathoc(r, args.use_http2))
         except language.ParseException as v:
-            print >> stderr, "Error parsing request spec: %s" % v.msg
-            print >> stderr, v.marked()
+            print("Error parsing request spec: %s" % v.msg, file=stderr)
+            print(v.marked(), file=stderr)
             sys.exit(1)
     args.requests = reqs
 

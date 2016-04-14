@@ -17,4 +17,4 @@ with open(sys.argv[1], "rb") as logfile:
             pp.pprint(f.get_state())
             print("")
     except flow.FlowReadError as v:
-        print "Flow file corrupted. Stopped loading."
+        print("Flow file corrupted. Stopped loading.")
