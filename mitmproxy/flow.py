@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import traceback
 from abc import abstractmethod, ABCMeta
 import hashlib
+import sys
 
 import six
 from six.moves import http_cookies, http_cookiejar, urllib
@@ -902,9 +903,14 @@ class FlowMaster(controller.ServerMaster):
     def load_flows_file(self, path):
         path = os.path.expanduser(path)
         try:
-            with open(path, "rb") as f:
-                freader = FlowReader(f)
+            if path == "-":
+                # This is incompatible with Python 3 - maybe we can use click?
+                freader = FlowReader(sys.stdin)
                 return self.load_flows(freader)
+            else:
+                with open(path, "rb") as f:
+                    freader = FlowReader(f)
+                    return self.load_flows(freader)
         except IOError as v:
             raise FlowReadError(v.strerror)
 
@@ -1146,6 +1152,15 @@ class FlowReader:
         """
             Yields Flow objects from the dump.
         """
+
+        # There is a weird mingw bug that breaks .tell() when reading from stdin.
+        try:
+            self.fo.tell()
+        except IOError:  # pragma: no cover
+            can_tell = False
+        else:
+            can_tell = True
+
         off = 0
         try:
             while True:
@@ -1154,11 +1169,12 @@ class FlowReader:
                     data = flow_format_compat.migrate_flow(data)
                 except ValueError as e:
                     raise FlowReadError(str(e))
-                off = self.fo.tell()
+                if can_tell:
+                    off = self.fo.tell()
                 yield HTTPFlow.from_state(data)
         except ValueError:
             # Error is due to EOF
-            if self.fo.tell() == off and self.fo.read() == '':
+            if can_tell and self.fo.tell() == off and self.fo.read() == '':
                 return
             raise FlowReadError("Invalid data format.")
 
