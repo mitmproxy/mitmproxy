@@ -334,8 +334,7 @@ class HttpLayer(Layer):
         if self.mode == "regular":
             pass  # only absolute-form at this point, nothing to do here.
         elif self.mode == "upstream":
-            if flow.request.first_line_format == "authority":
-                flow.request.scheme = "http"  # pseudo value
+            pass
         else:
             # Setting request.host also updates the host header, which we want to preserve
             host_header = flow.request.headers.get("host", None)

@@ -178,6 +178,8 @@ class Request(Message):
         """
         The URL string, constructed from the request's URL components
         """
+        if self.first_line_format == "authority":
+            return "%s:%d" % (self.host, self.port)
         return utils.unparse_url(self.scheme, self.host, self.port, self.path)
 
     @url.setter
