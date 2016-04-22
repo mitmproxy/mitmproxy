@@ -1,8 +1,6 @@
 from six.moves import cStringIO as StringIO
 from mitmproxy import filt
-from mitmproxy.models import Error
-from mitmproxy.models import http
-from netlib.http import Headers
+from mock import patch
 from . import tutils
 
 
@@ -247,3 +245,11 @@ class TestMatching:
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
+
+
+@patch('traceback.extract_tb')
+def test_pyparsing_bug(extract_tb):
+    """https://github.com/mitmproxy/mitmproxy/issues/1087"""
+    # The text is a string with leading and trailing whitespace stripped; if the source is not available it is None.
+    extract_tb.return_value = [("", 1, "test", None)]
+    assert filt.parse("test")
