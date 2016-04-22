@@ -22,6 +22,7 @@ from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
 from .exceptions import Kill
 from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest
+from collections import defaultdict
 
 
 class AppRegistry:
@@ -309,7 +310,7 @@ class StickyCookieState:
         """
             flt: Compiled filter.
         """
-        self.jar = {}
+        self.jar = defaultdict(dict)
         self.flt = flt
 
     def ckey(self, m, f):
@@ -337,7 +338,7 @@ class StickyCookieState:
             for m in c.values():
                 k = self.ckey(m, f)
                 if self.domain_match(f.request.host, k[0]):
-                    self.jar[k] = m
+                    self.jar[k][m.key] = m
 
     def handle_request(self, f):
         l = []
@@ -349,10 +350,10 @@ class StickyCookieState:
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
-                    l.append(self.jar[i].output(header="").strip())
+                    l.extend([m.output(header="").strip() for m in self.jar[i].values()])
         if l:
             f.request.stickycookie = True
-            f.request.headers.set_all("cookie", l)
+            f.request.headers["cookie"] = "; ".join(l)
 
 
 class StickyAuthState:
