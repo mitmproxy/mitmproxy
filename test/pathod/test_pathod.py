@@ -129,6 +129,7 @@ class CommonTests(tutils.DaemonTests):
         l = self.d.last_log()
         # FIXME: Other binary data elements
 
+    @pytest.mark.xfail
     def test_sizelimit(self):
         r = self.get("200:b@1g")
         assert r.status_code == 800
