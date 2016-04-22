@@ -309,7 +309,9 @@ def proxy_modes(parser):
         default=None,
         help="""
             Forward all requests to upstream HTTP server:
-            http[s][2http[s]]://host[:port]
+            http[s]://host[:port]. Clients can always connect both
+            via HTTPS and HTTP, the connection to the server is
+            determined by the specified scheme.
         """
     )
     group.add_argument(
