@@ -53,7 +53,7 @@ script:
 after_success:
   - coveralls
   - |
-    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]
+    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
         pip install -e ./release
         python ./release/rtool.py bdist

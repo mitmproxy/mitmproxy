@@ -311,7 +311,8 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
                     # Delete old versions
                     old_version = f.replace(get_version(), "*")
                     for f_old in sftp.listdir():
-                        if fnmatch.fnmatch(f_old, old_version):
+                        not_a_tag = "-0x" in f_old
+                        if fnmatch.fnmatch(f_old, old_version) and not_a_tag:
                             print("Removing {}...".format(f_old))
                             sftp.remove(f_old)
 
