@@ -113,6 +113,8 @@ accepted by these applications without modifying them. It is recommended to use 
 :ref:`passthrough` feature in order to prevent **mitmproxy** and **mitmdump** from intercepting
 traffic to these specific domains. If you want to intercept the pinned connections, you need to patch the application manually. For Android and (jailbroken) iOS devices, various tools exist to accomplish this.
 
+For Chrome/Chromium, as long as the mitmproxy CA is added to the *system* (or _public_) trust store, then pin validation on the certificate will *not* be performed (i.e. certificate pinning will not be enforced and mitmproxy will work as expected). Note that if you add the certificate to your personal user store, then it will be enforced, and mitmproxy will not work. There is more information on this on the `Chromium Security FAQ`_ (tl;dr this is intended behaviour).
+
 
 CA and cert files
 -----------------
@@ -193,3 +195,4 @@ directory and uses this as the client cert.
 
 
 .. _Certificate Pinning: http://security.stackexchange.com/questions/29988/what-is-certificate-pinning/
+.. _Chromium Security FAQ: https://www.chromium.org/Home/chromium-security/security-faq#TOC-How-does-key-pinning-interact-with-local-proxies-and-filters-
