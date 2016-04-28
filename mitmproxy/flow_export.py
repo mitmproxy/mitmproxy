@@ -128,7 +128,9 @@ def locust_code(flow):
     file_name = "_".join(components)
     name = re.sub('\W|^(?=\d)', '_', file_name)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
-
+    if name == "" or name is None:
+        new_name = "_".join([str(flow.request.host) , str(flow.request.timestamp_start)])
+        name = re.sub('\W|^(?=\d)', '_', new_name)
     args = ""
     headers = ""
     if flow.request.headers:
