@@ -91,7 +91,8 @@ class DumpMaster(flow.FlowMaster):
         if options.outfile:
             err = self.start_stream_to_path(
                 options.outfile[0],
-                options.outfile[1]
+                options.outfile[1],
+                self.filt
             )
             if err:
                 raise DumpError(err)

@@ -1098,11 +1098,11 @@ class FlowMaster(controller.ServerMaster):
         self.stream.fo.close()
         self.stream = None
 
-    def start_stream_to_path(self, path, mode="wb"):
+    def start_stream_to_path(self, path, mode="wb", filt=None):
         path = os.path.expanduser(path)
         try:
-            f = file(path, mode)
-            self.start_stream(f, None)
+            f = open(path, mode)
+            self.start_stream(f, filt)
         except IOError as v:
             return str(v)
         self.stream_path = path
