@@ -3,8 +3,8 @@ import os
 import signal
 import sys
 from six.moves import _thread  # PY3: We only need _thread.error, which is an alias of RuntimeError in 3.3+
-from netlib.version_check import check_pyopenssl_version, check_mitmproxy_version
-from . import version, cmdline
+from netlib.version_check import check_pyopenssl_version
+from . import cmdline
 from .exceptions import ServerException
 from .proxy.server import DummyServer, ProxyServer
 from .proxy.config import process_proxy_options
@@ -45,7 +45,6 @@ def mitmproxy(args=None):  # pragma: no cover
     from . import console
 
     check_pyopenssl_version()
-    check_mitmproxy_version(version.IVERSION)
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
@@ -76,7 +75,6 @@ def mitmdump(args=None):  # pragma: no cover
     from . import dump
 
     check_pyopenssl_version()
-    check_mitmproxy_version(version.IVERSION)
 
     parser = cmdline.mitmdump()
     options = parser.parse_args(args)
@@ -111,7 +109,6 @@ def mitmweb(args=None):  # pragma: no cover
     from . import web
 
     check_pyopenssl_version()
-    check_mitmproxy_version(version.IVERSION)
 
     parser = cmdline.mitmweb()
 
