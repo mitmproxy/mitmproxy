@@ -147,7 +147,7 @@ class DumpMaster(flow.FlowMaster):
         try:
             return flow.read_flows_from_paths(paths)
         except FlowReadException as e:
-            raise DumpError(e.strerror)
+            raise DumpError(str(e))
 
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
