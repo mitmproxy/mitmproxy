@@ -60,3 +60,7 @@ class ReplayException(ProxyException):
 
 class ScriptException(ProxyException):
     pass
+
+
+class FlowReadException(ProxyException):
+    pass

@@ -1,4 +1,4 @@
-from mitmproxy.flow import FlowReader, FlowReadError
+from mitmproxy.flow import FlowReader, FlowReadException
 from . import tutils
 
 
@@ -13,5 +13,5 @@ def test_load():
 def test_cannot_convert():
     with open(tutils.test_data.path("data/dumpfile-012"), "rb") as f:
         flow_reader = FlowReader(f)
-        with tutils.raises(FlowReadError):
+        with tutils.raises(FlowReadException):
             list(flow_reader.stream())

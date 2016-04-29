@@ -6,7 +6,8 @@ import sys
 
 from netlib.http import authentication
 
-from .. import controller, flow
+from .. import flow
+from ..exceptions import FlowReadException
 from . import app
 
 
@@ -155,7 +156,7 @@ class WebMaster(flow.FlowMaster):
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except flow.FlowReadError as v:
+            except FlowReadException as v:
                 self.add_event(
                     "Could not read flow file: %s" % v,
                     "error"

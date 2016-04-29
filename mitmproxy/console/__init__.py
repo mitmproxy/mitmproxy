@@ -16,9 +16,10 @@ import weakref
 
 from netlib import tcp
 
-from .. import controller, flow, script, contentviews
+from .. import flow, script, contentviews
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
+from ..exceptions import FlowReadException
 
 EVENTLOG_SIZE = 500
 
@@ -357,7 +358,7 @@ class ConsoleMaster(flow.FlowMaster):
         """
         try:
             return flow.read_flows_from_paths(path)
-        except flow.FlowReadError as e:
+        except FlowReadException as e:
             signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
@@ -641,8 +642,8 @@ class ConsoleMaster(flow.FlowMaster):
         reterr = None
         try:
             flow.FlowMaster.load_flows_file(self, path)
-        except flow.FlowReadError as v:
-            reterr = str(v)
+        except FlowReadException as e:
+            reterr = str(e)
         signals.flowlist_change.send(self)
         return reterr
 

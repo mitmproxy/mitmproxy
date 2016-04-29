@@ -1,8 +1,5 @@
-from six.moves import queue
-import time
 import os.path
 from six.moves import cStringIO as StringIO
-import email.utils
 
 import mock
 
@@ -10,6 +7,7 @@ import netlib.utils
 from netlib import odict
 from netlib.http import Headers
 from mitmproxy import filt, controller, tnetstring, flow
+from mitmproxy.exceptions import FlowReadException
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
@@ -727,10 +725,10 @@ class TestSerialize:
         sio.write("bogus")
         sio.seek(0)
         r = flow.FlowReader(sio)
-        tutils.raises(flow.FlowReadError, list, r.stream())
+        tutils.raises(FlowReadException, list, r.stream())
 
-        f = flow.FlowReadError("foo")
-        assert f.strerror == "foo"
+        f = FlowReadException("foo")
+        assert str(f) == "foo"
 
     def test_versioncheck(self):
         f = tutils.tflow()

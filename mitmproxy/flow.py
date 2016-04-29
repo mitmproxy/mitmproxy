@@ -20,7 +20,7 @@ from . import controller, tnetstring, filt, script, version, flow_format_compat
 from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
-from .exceptions import Kill
+from .exceptions import Kill, FlowReadException
 from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest
 from collections import defaultdict
 
@@ -913,7 +913,7 @@ class FlowMaster(controller.ServerMaster):
                     freader = FlowReader(f)
                     return self.load_flows(freader)
         except IOError as v:
-            raise FlowReadError(v.strerror)
+            raise FlowReadException(v.strerror)
 
     def process_new_request(self, f):
         if self.stickycookie_state:
@@ -1114,7 +1114,8 @@ def read_flows_from_paths(paths):
     From a performance perspective, streaming would be advisable -
     however, if there's an error with one of the files, we want it to be raised immediately.
 
-    If an error occurs, a FlowReadError will be raised.
+    Raises:
+        FlowReadException, if any error occurs.
     """
     try:
         flows = []
@@ -1123,7 +1124,7 @@ def read_flows_from_paths(paths):
             with open(path, "rb") as f:
                 flows.extend(FlowReader(f).stream())
     except IOError as e:
-        raise FlowReadError(e.strerror)
+        raise FlowReadException(e.strerror)
     return flows
 
 
@@ -1135,13 +1136,6 @@ class FlowWriter:
     def add(self, flow):
         d = flow.get_state()
         tnetstring.dump(d, self.fo)
-
-
-class FlowReadError(Exception):
-
-    @property
-    def strerror(self):
-        return self.args[0]
 
 
 class FlowReader:
@@ -1169,7 +1163,7 @@ class FlowReader:
                 try:
                     data = flow_format_compat.migrate_flow(data)
                 except ValueError as e:
-                    raise FlowReadError(str(e))
+                    raise FlowReadException(str(e))
                 if can_tell:
                     off = self.fo.tell()
                 yield HTTPFlow.from_state(data)
@@ -1177,7 +1171,7 @@ class FlowReader:
             # Error is due to EOF
             if can_tell and self.fo.tell() == off and self.fo.read() == '':
                 return
-            raise FlowReadError("Invalid data format.")
+            raise FlowReadException("Invalid data format.")
 
 
 class FilteredFlowWriter:

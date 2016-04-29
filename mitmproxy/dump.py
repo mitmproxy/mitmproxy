@@ -7,7 +7,7 @@ import itertools
 from netlib import tcp
 import netlib.utils
 from . import flow, filt, contentviews
-from .exceptions import ContentViewException
+from .exceptions import ContentViewException, FlowReadException
 
 
 class DumpError(Exception):
@@ -132,7 +132,7 @@ class DumpMaster(flow.FlowMaster):
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except flow.FlowReadError as v:
+            except FlowReadException as v:
                 self.add_event("Flow file corrupted.", "error")
                 raise DumpError(v)
 
@@ -146,7 +146,7 @@ class DumpMaster(flow.FlowMaster):
         """
         try:
             return flow.read_flows_from_paths(paths)
-        except flow.FlowReadError as e:
+        except FlowReadException as e:
             raise DumpError(e.strerror)
 
     def add_event(self, e, level="info"):
