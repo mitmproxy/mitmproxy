@@ -845,7 +845,9 @@ class FlowMaster(controller.ServerMaster):
         return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
-        return self.load_flow(f.copy())
+        f2 = f.copy()
+        self.load_flow(f2)
+        return f2
 
     def create_request(self, method, scheme, host, port, path):
         """
@@ -869,7 +871,8 @@ class FlowMaster(controller.ServerMaster):
             b""
         )
         f.request = req
-        return self.load_flow(f)
+        self.load_flow(f)
+        return f
 
     def load_flow(self, f):
         """
