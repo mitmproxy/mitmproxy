@@ -60,4 +60,5 @@ Datastructures
 
 .. automodule:: mitmproxy.models
     :show-inheritance:
+    :noindex:
     :members: Error, ServerConnection, ClientConnection

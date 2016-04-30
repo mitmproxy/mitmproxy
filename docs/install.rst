@@ -32,7 +32,7 @@ Then see the Hacking_ section of the README on GitHub.
 .. _install-arch:
 
 Installation On Arch Linux
-----------------------
+--------------------------
 
 mitmproxy has been added into the [community] repository. Use pacman to install it:
 

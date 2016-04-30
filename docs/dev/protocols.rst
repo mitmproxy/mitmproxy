@@ -12,4 +12,6 @@ Protocols
     .. autoclass:: ServerConnectionMixin
         :members:
 
-    .. autoexception:: Kill
+.. seealso::
+
+    The :py:exc:`Kill <mitmproxy.exceptions.Kill>` exception to terminate connections.
