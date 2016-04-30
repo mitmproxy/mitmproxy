@@ -818,7 +818,7 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow(resp=True)
-        f = fm.load_flow(f)
+        fm.load_flow(f)
         assert s.flow_count() == 1
         f2 = fm.duplicate_flow(f)
         assert f2.response

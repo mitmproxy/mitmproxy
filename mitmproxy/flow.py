@@ -21,7 +21,7 @@ from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
 from .exceptions import Kill, FlowReadException
-from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest
+from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest, FLOW_TYPES
 from collections import defaultdict
 
 
@@ -873,23 +873,24 @@ class FlowMaster(controller.ServerMaster):
 
     def load_flow(self, f):
         """
-            Loads a flow, and returns a new flow object.
+        Loads a flow
         """
+        if isinstance(f, HTTPFlow):
+            if self.server and self.server.config.mode == "reverse":
+                f.request.host = self.server.config.upstream_server.address.host
+                f.request.port = self.server.config.upstream_server.address.port
+                f.request.scheme = self.server.config.upstream_server.scheme
 
-        if self.server and self.server.config.mode == "reverse":
-            f.request.host = self.server.config.upstream_server.address.host
-            f.request.port = self.server.config.upstream_server.address.port
-            f.request.scheme = self.server.config.upstream_server.scheme
-
-        f.reply = controller.DummyReply()
-        if f.request:
-            self.handle_request(f)
-        if f.response:
-            self.handle_responseheaders(f)
-            self.handle_response(f)
-        if f.error:
-            self.handle_error(f)
-        return f
+            f.reply = controller.DummyReply()
+            if f.request:
+                self.handle_request(f)
+            if f.response:
+                self.handle_responseheaders(f)
+                self.handle_response(f)
+            if f.error:
+                self.handle_error(f)
+        else:
+            raise NotImplementedError()
 
     def load_flows(self, fr):
         """
@@ -1166,7 +1167,9 @@ class FlowReader:
                     raise FlowReadException(str(e))
                 if can_tell:
                     off = self.fo.tell()
-                yield HTTPFlow.from_state(data)
+                if data["type"] not in FLOW_TYPES:
+                    raise FlowReadException("Unknown flow type: {}".format(data["type"]))
+                yield FLOW_TYPES[data["type"]].from_state(data)
         except ValueError:
             # Error is due to EOF
             if can_tell and self.fo.tell() == off and self.fo.read() == '':

@@ -8,10 +8,15 @@ from netlib.http import decoded
 from .connections import ClientConnection, ServerConnection
 from .flow import Flow, Error
 
+FLOW_TYPES = dict(
+    http=HTTPFlow
+)
+
 __all__ = [
     "HTTPFlow", "HTTPRequest", "HTTPResponse", "Headers", "decoded",
     "make_error_response", "make_connect_request",
     "make_connect_response", "expect_continue_response",
     "ClientConnection", "ServerConnection",
     "Flow", "Error",
+    "FLOW_TYPES"
 ]
