@@ -1,8 +1,16 @@
 from __future__ import absolute_import
 
 import six
+from typing import List, Any
 
 from netlib.utils import Serializable
+
+
+def _is_list(cls):
+    # The typing module backport is somewhat broken.
+    # Python 3.5 or 3.6 should fix this.
+    is_list_bugfix = getattr(cls, "__origin__", False) == getattr(List[Any], "__origin__", True)
+    return issubclass(cls, List) or is_list_bugfix
 
 
 class StateObject(Serializable):
@@ -28,8 +36,12 @@ class StateObject(Serializable):
         state = {}
         for attr, cls in six.iteritems(self._stateobject_attributes):
             val = getattr(self, attr)
-            if hasattr(val, "get_state"):
+            if val is None:
+                state[attr] = None
+            elif hasattr(val, "get_state"):
                 state[attr] = val.get_state()
+            elif _is_list(cls):
+                state[attr] = [x.get_state() for x in val]
             else:
                 state[attr] = val
         return state
@@ -49,6 +61,9 @@ class StateObject(Serializable):
                 elif hasattr(cls, "from_state"):
                     obj = cls.from_state(state.pop(attr))
                     setattr(self, attr, obj)
+                elif _is_list(cls):
+                    cls = cls.__parameters__[0]
+                    setattr(self, attr, [cls.from_state(x) for x in state.pop(attr)])
                 else:  # primitive types such as int, str, ...
                     setattr(self, attr, cls(state.pop(attr)))
         if state:
