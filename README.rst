@@ -39,7 +39,7 @@ Then do the following:
 
     git clone https://github.com/mitmproxy/mitmproxy.git
     cd mitmproxy
-    ./dev
+    ./dev.sh
 
 
 The *dev* script will create a virtualenv environment in a directory called "venv",
