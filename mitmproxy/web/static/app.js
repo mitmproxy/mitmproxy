@@ -2984,7 +2984,7 @@ var FilterDocs = _react2.default.createClass({
                     { colSpan: "2" },
                     _react2.default.createElement(
                         "a",
-                        { href: "https://mitmproxy.org/doc/features/filters.html",
+                        { href: "http://docs.mitmproxy.org/en/stable/features/filters.html",
                             target: "_blank" },
                         _react2.default.createElement("i", { className: "fa fa-external-link" }),
                         "  mitmproxy docs"
