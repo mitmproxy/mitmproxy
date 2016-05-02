@@ -341,13 +341,15 @@ class TlsLayer(Layer):
               https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_cb.html
             - The original mitmproxy issue is https://github.com/mitmproxy/mitmproxy/issues/427
         """
-
-        client_tls_requires_server_cert = (
-            self._client_tls and self._server_tls and not self.config.no_upstream_cert
-        )
-
         if self._client_tls:
             self._parse_client_hello()
+
+        # First, this requires that we have TLS on both the client and the server connection.
+        # Second, this must be disabled if the user specified --no-upstream-cert
+        # Third, if the client sends a SNI value, we can be reasonably sure that this is the actual target host.
+        client_tls_requires_server_cert = (
+            self._client_tls and self._server_tls and not self.config.no_upstream_cert and not self.client_sni
+        )
 
         if client_tls_requires_server_cert:
             self._establish_tls_with_client_and_server()
