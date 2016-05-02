@@ -48,7 +48,7 @@ before_script:
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 
 script:
-  - "py.test --cov netlib --cov mitmproxy --cov pathod ./test/$SCOPE"
+  - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod ./test/$SCOPE"
 
 after_success:
   - coveralls
