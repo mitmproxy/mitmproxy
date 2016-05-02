@@ -308,6 +308,15 @@ class TlsClientHello(object):
 
 
 class TlsLayer(Layer):
+    """
+    The TLS layer implements transparent TLS connections.
+
+    It exposes the following API to child layers:
+
+        - :py:meth:`set_server_tls` to modify TLS settings for the server connection.
+        - :py:attr:`server_tls`, :py:attr:`server_sni` as read-only attributes describing the current TLS settings for
+          the server connection.
+    """
 
     def __init__(self, ctx, client_tls, server_tls):
         self.client_sni = None
@@ -318,40 +327,46 @@ class TlsLayer(Layer):
         self._client_tls = client_tls
         self._server_tls = server_tls
 
-        self._sni_from_server_change = None
+        self._custom_server_sni = None
 
     def __call__(self):
         """
-        The strategy for establishing SSL is as follows:
+        The strategy for establishing TLS is as follows:
             First, we determine whether we need the server cert to establish ssl with the client.
             If so, we first connect to the server and then to the client.
-            If not, we only connect to the client and do the server_ssl lazily on a Connect message.
+            If not, we only connect to the client and do the server handshake lazily.
 
-        An additional complexity is that establish ssl with the server may require a SNI value from
-        the client. In an ideal world, we'd do the following:
-            1. Start the SSL handshake with the client
-            2. Check if the client sends a SNI.
-            3. Pause the client handshake, establish SSL with the server.
-            4. Finish the client handshake with the certificate from the server.
-        There's just one issue: We cannot get a callback from OpenSSL if the client doesn't send a SNI. :(
-        Thus, we manually peek into the connection and parse the ClientHello message to obtain both SNI and ALPN values.
-
-        Further notes:
-            - OpenSSL 1.0.2 introduces a callback that would help here:
-              https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_cb.html
-            - The original mitmproxy issue is https://github.com/mitmproxy/mitmproxy/issues/427
+        An additional complexity is that we need to mirror SNI and ALPN from the client when connecting to the server.
+        We manually peek into the connection and parse the ClientHello message to obtain these values.
         """
         if self._client_tls:
-            self._parse_client_hello()
+            # Peek into the connection, read the initial client hello and parse it to obtain SNI and ALPN values.
+            try:
+                parsed = TlsClientHello.from_client_conn(self.client_conn)
+                self.client_sni = parsed.client_sni
+                self.client_alpn_protocols = parsed.client_alpn_protocols
+                self.client_ciphers = parsed.client_cipher_suites
+            except TlsProtocolException as e:
+                self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
+        # Do we need the server certificate to establish TLS with the client?
         # First, this requires that we have TLS on both the client and the server connection.
         # Second, this must be disabled if the user specified --no-upstream-cert
-        # Third, if the client sends a SNI value, we can be reasonably sure that this is the actual target host.
-        client_tls_requires_server_cert = (
-            self._client_tls and self._server_tls and not self.config.no_upstream_cert and not self.client_sni
+        # Third, we need to connect if add_upstream_certs_to_client_chain is on.
+        # Fourth, we need to connect if the client wants to negotiate an alternate protocol using ALPN.
+        # Fifth, we need to connect if the client did not send a SNI value.
+        client_tls_requires_server_connection = (
+            self._client_tls and self._server_tls
+            and not self.config.no_upstream_cert
+            and
+            (
+                self.config.add_upstream_certs_to_client_chain
+                or self.client_alpn_protocols
+                or not self.client_sni
+            )
         )
 
-        if client_tls_requires_server_cert:
+        if client_tls_requires_server_connection:
             self._establish_tls_with_client_and_server()
         elif self._client_tls:
             self._establish_tls_with_client()
@@ -369,47 +384,48 @@ class TlsLayer(Layer):
         else:
             return "TlsLayer(inactive)"
 
-    def _parse_client_hello(self):
-        """
-        Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
-        """
-        try:
-            parsed = TlsClientHello.from_client_conn(self.client_conn)
-            self.client_sni = parsed.client_sni
-            self.client_alpn_protocols = parsed.client_alpn_protocols
-            self.client_ciphers = parsed.client_cipher_suites
-        except TlsProtocolException as e:
-            self.log("Cannot parse Client Hello: %s" % repr(e), "error")
-
     def connect(self):
         if not self.server_conn:
             self.ctx.connect()
         if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
-    def set_server(self, address, server_tls=None, sni=None):
-        if server_tls is not None:
-            self._sni_from_server_change = sni
-            self._server_tls = server_tls
-        self.ctx.set_server(address, None, None)
+    def set_server_tls(self, server_tls, sni=None):
+        """
+        Set the TLS settings for the next server connection that will be established.
+        This function will not alter an existing connection.
+
+        Args:
+            server_tls: Shall we establish TLS with the server?
+            sni: ``bytes`` for a custom SNI value,
+                ``None`` for the client SNI value,
+                ``False`` if no SNI value should be sent.
+        """
+        self._server_tls = server_tls
+        self._custom_server_sni = sni
 
     @property
-    def sni_for_server_connection(self):
-        if self._sni_from_server_change is False:
+    def server_tls(self):
+        """
+        ``True``, if the next server connection that will be established should be upgraded to TLS.
+        """
+        return self._server_tls
+
+    @property
+    def server_sni(self):
+        """
+        The Server Name Indication we want to send with the next server TLS handshake.
+        """
+        if self._custom_server_sni is False:
             return None
         else:
-            return self._sni_from_server_change or self.client_sni
+            return self._custom_server_sni or self.client_sni
 
     @property
     def alpn_for_client_connection(self):
         return self.server_conn.get_alpn_proto_negotiated()
 
     def __alpn_select_callback(self, conn_, options):
-        """
-        Once the client signals the alternate protocols it supports,
-        we reconnect upstream with the same list and pass the server's choice down to the client.
-        """
-
         # This gets triggered if we haven't established an upstream connection yet.
         default_alpn = b'http/1.1'
         # alpn_preference = b'h2'
@@ -424,12 +440,12 @@ class TlsLayer(Layer):
         return choice
 
     def _establish_tls_with_client_and_server(self):
-        # If establishing TLS with the server fails, we try to establish TLS with the client nonetheless
-        # to send an error message over TLS.
         try:
             self.ctx.connect()
             self._establish_tls_with_server()
         except Exception:
+            # If establishing TLS with the server fails, we try to establish TLS with the client nonetheless
+            # to send an error message over TLS.
             try:
                 self._establish_tls_with_client()
             except:
@@ -499,7 +515,7 @@ class TlsLayer(Layer):
 
             self.server_conn.establish_ssl(
                 self.config.clientcerts,
-                self.sni_for_server_connection,
+                self.server_sni,
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,
                 verify_options=self.config.openssl_verification_mode_server,
@@ -526,7 +542,7 @@ class TlsLayer(Layer):
                 TlsProtocolException,
                 TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
-                    sni=self.sni_for_server_connection,
+                    sni=self.server_sni,
                     e=repr(e),
                 )),
                 sys.exc_info()[2]
@@ -536,7 +552,7 @@ class TlsLayer(Layer):
                 TlsProtocolException,
                 TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
-                    sni=self.sni_for_server_connection,
+                    sni=self.server_sni,
                     e=repr(e),
                 )),
                 sys.exc_info()[2]
@@ -573,11 +589,11 @@ class TlsLayer(Layer):
         # Also add SNI values.
         if self.client_sni:
             sans.add(self.client_sni)
-        if self._sni_from_server_change:
-            sans.add(self._sni_from_server_change)
+        if self._custom_server_sni:
+            sans.add(self._custom_server_sni)
 
-        # Some applications don't consider the CN and expect the hostname to be in the SANs.
-        # For example, Thunderbird 38 will display a warning if the remote host is only the CN.
+        # RFC 2818: If a subjectAltName extension of type dNSName is present, that MUST be used as the identity.
+        # In other words, the Common Name is irrelevant then.
         if host:
             sans.add(host)
         return self.config.certstore.get_cert(host, list(sans))
