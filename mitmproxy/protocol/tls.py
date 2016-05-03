@@ -308,7 +308,7 @@ class TlsClientHello(object):
 
     def __repr__(self):
         return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
-            (self._client_hello.sni, self.alpn_protocols, self.cipher_suites)
+            (self.sni, self.alpn_protocols, self.cipher_suites)
 
 
 class TlsLayer(Layer):
