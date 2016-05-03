@@ -347,27 +347,39 @@ class TlsLayer(Layer):
             except TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
-        # Do we need the server certificate to establish TLS with the client?
-        # First, this requires that we have TLS on both the client and the server connection.
-        # Second, this must be disabled if the user specified --no-upstream-cert
-        # Third, we need to connect if add_upstream_certs_to_client_chain is on.
-        # Fourth, we need to connect if the client wants to negotiate an alternate protocol using ALPN.
-        # Fifth, we need to connect if the client did not send a SNI value.
+        # Do we need to do a server handshake now?
+        # There are two reasons why we would want to establish TLS with the server now:
+        #  1. If we already have an existing server connection and server_tls is True,
+        #     we need to establish TLS now because .connect() will not be called anymore.
+        #  2. We may need information from the server connection for the client handshake.
+        #
+        # A couple of factors influence (2):
+        #  2.1 There actually is (or will be) a TLS-enabled upstream connection
+        #  2.2 An upstream connection is not wanted by the user if --no-upstream-cert is passed.
+        #  2.3 An upstream connection is implied by add_upstream_certs_to_client_chain
+        #  2.4 The client wants to negotiate an alternative protocol in its handshake, we need to find out
+        #      what is supported by the server
+        #  2.5 The client did not sent a SNI value, we don't know the certificate subject.
         client_tls_requires_server_connection = (
-            self._client_tls and self._server_tls
+            self._server_tls
             and not self.config.no_upstream_cert
-            and
-            (
+            and (
                 self.config.add_upstream_certs_to_client_chain
                 or self._client_hello.alpn_protocols
                 or not self._client_hello.sni
             )
         )
+        establish_server_tls_now = (
+            (self.server_conn and self._server_tls)
+            or client_tls_requires_server_connection
+        )
 
-        if client_tls_requires_server_connection:
+        if self._client_tls and establish_server_tls_now:
             self._establish_tls_with_client_and_server()
         elif self._client_tls:
             self._establish_tls_with_client()
+        elif establish_server_tls_now:
+            self._establish_tls_with_server()
 
         layer = self.ctx.next_layer(self)
         layer()

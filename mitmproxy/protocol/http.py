@@ -144,7 +144,7 @@ class HttpLayer(Layer):
 
     def __call__(self):
         if self.mode == "transparent":
-            self.__initial_server_tls = self._server_tls
+            self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
             try:
