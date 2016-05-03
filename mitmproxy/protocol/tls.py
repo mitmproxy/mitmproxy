@@ -266,18 +266,22 @@ class TlsClientHello(object):
         return self._client_hello
 
     @property
-    def client_cipher_suites(self):
+    def cipher_suites(self):
         return self._client_hello.cipher_suites.cipher_suites
 
     @property
-    def client_sni(self):
+    def sni(self):
         for extension in self._client_hello.extensions:
-            if (extension.type == 0x00 and len(extension.server_names) == 1
-                    and extension.server_names[0].type == 0):
+            is_valid_sni_extension = (
+                extension.type == 0x00
+                and len(extension.server_names) == 1
+                and extension.server_names[0].type == 0
+            )
+            if is_valid_sni_extension:
                 return extension.server_names[0].name
 
     @property
-    def client_alpn_protocols(self):
+    def alpn_protocols(self):
         for extension in self._client_hello.extensions:
             if extension.type == 0x10:
                 return list(extension.alpn_protocols)
@@ -304,7 +308,7 @@ class TlsClientHello(object):
 
     def __repr__(self):
         return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
-            (self.client_sni, self.client_alpn_protocols, self.client_cipher_suites)
+            (self._client_hello.sni, self.alpn_protocols, self.cipher_suites)
 
 
 class TlsLayer(Layer):
@@ -319,15 +323,12 @@ class TlsLayer(Layer):
     """
 
     def __init__(self, ctx, client_tls, server_tls):
-        self.client_sni = None
-        self.client_alpn_protocols = None
-        self.client_ciphers = []
-
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
 
         self._custom_server_sni = None
+        self._client_hello = None  # type: TlsClientHello
 
     def __call__(self):
         """
@@ -342,10 +343,7 @@ class TlsLayer(Layer):
         if self._client_tls:
             # Peek into the connection, read the initial client hello and parse it to obtain SNI and ALPN values.
             try:
-                parsed = TlsClientHello.from_client_conn(self.client_conn)
-                self.client_sni = parsed.client_sni
-                self.client_alpn_protocols = parsed.client_alpn_protocols
-                self.client_ciphers = parsed.client_cipher_suites
+                self._client_hello = TlsClientHello.from_client_conn(self.client_conn)
             except TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
@@ -361,8 +359,8 @@ class TlsLayer(Layer):
             and
             (
                 self.config.add_upstream_certs_to_client_chain
-                or self.client_alpn_protocols
-                or not self.client_sni
+                or self._client_hello.alpn_protocols
+                or not self._client_hello.sni
             )
         )
 
@@ -419,7 +417,7 @@ class TlsLayer(Layer):
         if self._custom_server_sni is False:
             return None
         else:
-            return self._custom_server_sni or self.client_sni
+            return self._custom_server_sni or self._client_hello.sni
 
     @property
     def alpn_for_client_connection(self):
@@ -484,9 +482,9 @@ class TlsLayer(Layer):
                 ClientHandshakeException,
                 ClientHandshakeException(
                     "Cannot establish TLS with client (sni: {sni}): {e}".format(
-                        sni=self.client_sni, e=repr(e)
+                        sni=self._client_hello.sni, e=repr(e)
                     ),
-                    self.client_sni or repr(self.server_conn.address)
+                    self._client_hello.sni or repr(self.server_conn.address)
                 ),
                 sys.exc_info()[2]
             )
@@ -498,8 +496,8 @@ class TlsLayer(Layer):
             # If the server only supports spdy (next to http/1.1), it may select that
             # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
             deprecated_http2_variant = lambda x: x.startswith(b"h2-") or x.startswith(b"spdy")
-            if self.client_alpn_protocols:
-                alpn = [x for x in self.client_alpn_protocols if not deprecated_http2_variant(x)]
+            if self._client_hello.alpn_protocols:
+                alpn = [x for x in self._client_hello.alpn_protocols if not deprecated_http2_variant(x)]
             else:
                 alpn = None
             if alpn and b"h2" in alpn and not self.config.http2:
@@ -508,7 +506,7 @@ class TlsLayer(Layer):
             ciphers_server = self.config.ciphers_server
             if not ciphers_server:
                 ciphers_server = []
-                for id in self.client_ciphers:
+                for id in self._client_hello.cipher_suites:
                     if id in CIPHER_ID_NAME_MAP.keys():
                         ciphers_server.append(CIPHER_ID_NAME_MAP[id])
                 ciphers_server = ':'.join(ciphers_server)
@@ -587,8 +585,8 @@ class TlsLayer(Layer):
                 sans.add(host)
                 host = upstream_cert.cn.decode("utf8").encode("idna")
         # Also add SNI values.
-        if self.client_sni:
-            sans.add(self.client_sni)
+        if self._client_hello.sni:
+            sans.add(self._client_hello.sni)
         if self._custom_server_sni:
             sans.add(self._custom_server_sni)
 
