@@ -74,6 +74,7 @@ class Script(object):
         script_dir = os.path.dirname(os.path.abspath(self.args[0]))
         self.ns = {'__file__': os.path.abspath(self.args[0])}
         sys.path.append(script_dir)
+        sys.path.append(os.path.join(script_dir, ".."))
         try:
             with open(self.filename) as f:
                 code = compile(f.read(), self.filename, 'exec')
@@ -85,6 +86,7 @@ class Script(object):
                 sys.exc_info()[2]
             )
         finally:
+            sys.path.pop()
             sys.path.pop()
         return self.run("start", self.args)
 
