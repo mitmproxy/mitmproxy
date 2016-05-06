@@ -1021,14 +1021,14 @@ class FlowMaster(controller.ServerMaster):
         return f
 
     def handle_responseheaders(self, f):
-        self.run_script_hook("responseheaders", f)
-
         try:
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
         except HttpException:
             f.reply(Kill)
             return
+
+        self.run_script_hook("responseheaders", f)
 
         f.reply()
         return f
