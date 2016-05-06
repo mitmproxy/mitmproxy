@@ -171,7 +171,7 @@ class StreamLargeBodies(object):
         expected_size = http1.expected_http_body_size(
             flow.request, flow.response if not is_request else None
         )
-        if not (0 <= expected_size <= self.max_size):
+        if not r.content and not (0 <= expected_size <= self.max_size):
             # r.stream may already be a callable, which we want to preserve.
             r.stream = r.stream or True
 
