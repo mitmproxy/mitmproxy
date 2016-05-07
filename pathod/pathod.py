@@ -6,15 +6,11 @@ import sys
 import threading
 import urllib
 
-from netlib import tcp, http, certutils, websockets
+from netlib import tcp, certutils, websockets
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
     TlsException
 
 from . import version, app, language, utils, log, protocols
-import language.http
-import language.actions
-import language.exceptions
-import language.websockets
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"

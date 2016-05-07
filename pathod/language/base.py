@@ -3,8 +3,11 @@ import os
 import abc
 import pyparsing as pp
 
+from six.moves import reduce
+
 from .. import utils
 from . import generators, exceptions
+
 
 class Settings(object):
 
@@ -105,7 +108,7 @@ class Token(object):
 class _TokValueLiteral(Token):
 
     def __init__(self, val):
-        self.val = val.decode("string_escape")
+        self.val = val
 
     def get_generator(self, settings_):
         return self.val

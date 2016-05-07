@@ -13,14 +13,12 @@ import threading
 import OpenSSL.crypto
 import six
 
-from netlib import tcp, http, certutils, websockets, socks
+from netlib import tcp, certutils, websockets, socks
 from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsException, TcpException, \
     NetlibException
 from netlib.http import http1, http2
 
-import language.http
-import language.websockets
-from . import utils, log
+from . import utils, log, language
 
 import logging
 from netlib.tutils import treq
