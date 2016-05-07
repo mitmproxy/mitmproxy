@@ -2,6 +2,8 @@ import os
 import sys
 import netlib.utils
 
+import six
+
 
 SIZE_UNITS = dict(
     b=1024 ** 0,
@@ -58,7 +60,7 @@ def inner_repr(s):
         Returns the inner portion of a string or unicode repr (i.e. without the
         quotes)
     """
-    if isinstance(s, unicode):
+    if six.PY2 and isinstance(s, unicode):
         return repr(s)[2:-1]
     else:
         return repr(s)[1:-1]
@@ -70,7 +72,10 @@ def escape_unprintables(s):
     """
     s = s.replace("\r\n", "PATHOD_MARKER_RN")
     s = s.replace("\n", "PATHOD_MARKER_N")
-    s = inner_repr(s)
+    if six.PY2:
+        s = inner_repr(s)
+    else:
+        s = s.encode('unicode_escape').decode('ascii')
     s = s.replace("PATHOD_MARKER_RN", "\n")
     s = s.replace("PATHOD_MARKER_N", "\n")
     return s
