@@ -30,6 +30,7 @@ def test_data_path():
 def test_inner_repr():
     assert utils.inner_repr("\x66") == "\x66"
     assert utils.inner_repr(u"foo") == "foo"
+    assert utils.inner_repr(b"foo") == "foo"
 
 
 def test_escape_unprintables():
