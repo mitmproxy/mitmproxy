@@ -228,7 +228,16 @@ def test_refresh_cookie():
     c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
     assert "00:21:38" in cookies.refresh_set_cookie_header(c, 60)
 
-    # https://github.com/mitmproxy/mitmproxy/issues/773
-    c = ">=A"
+    c = "foo,bar"
     with raises(ValueError):
         cookies.refresh_set_cookie_header(c, 60)
+
+    # https://github.com/mitmproxy/mitmproxy/issues/773
+    c = ">=A"
+    assert cookies.refresh_set_cookie_header(c, 60)
+
+    # https://github.com/mitmproxy/mitmproxy/issues/1118
+    c = "foo:bar=bla"
+    assert cookies.refresh_set_cookie_header(c, 0)
+    c = "foo/bar=bla"
+    assert cookies.refresh_set_cookie_header(c, 0)

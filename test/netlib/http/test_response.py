@@ -98,7 +98,7 @@ class TestResponseUtils(object):
         resp = tresp()
         v = resp.cookies
         v.add("foo", ["bar", ODictCaseless()])
-        resp.set_cookies(v)
+        resp.cookies = v
 
         v = resp.cookies
         assert len(v) == 1
