@@ -346,5 +346,6 @@ class DumpMaster(flow.FlowMaster):
 
     def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
+            self.shutdown()  # We need to manually call .shutdown() here, e.g. to trigger script unload events.
             return
         super(DumpMaster, self).run()
