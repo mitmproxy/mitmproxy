@@ -330,6 +330,8 @@ def unparse_url(scheme, host, port, path=""):
     Args:
         All args must be str.
     """
+    if path == "*":
+        path = ""
     return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 

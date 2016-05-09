@@ -162,7 +162,7 @@ class Request(Message):
     def path(self):
         """
         HTTP request path, e.g. "/index.html".
-        Guaranteed to start with a slash.
+        Guaranteed to start with a slash, except for OPTIONS requests, which may just be "*".
         """
         if self.data.path is None:
             return None
