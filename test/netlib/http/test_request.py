@@ -107,6 +107,14 @@ class TestRequestUtils(object):
         with raises(ValueError):
             request.url = "not-a-url"
 
+    def test_url_options(self):
+        request = treq(method=b"OPTIONS", path=b"*")
+        assert request.url == "*"
+
+    def test_url_authority(self):
+        request = treq(first_line_format="authority")
+        assert request.url == "address:22"
+
     def test_pretty_host(self):
         request = treq()
         # Without host header
@@ -139,6 +147,10 @@ class TestRequestUtils(object):
         # Different ports
         request.headers["host"] = "other"
         assert request.pretty_url == "http://address:22/path"
+
+    def test_pretty_url_options(self):
+        request = treq(method=b"OPTIONS", path=b"*")
+        assert request.pretty_url == "*"
 
     def test_pretty_url_authority(self):
         request = treq(first_line_format="authority")

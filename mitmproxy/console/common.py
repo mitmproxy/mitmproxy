@@ -401,6 +401,15 @@ flowcache = utils.LRUCache(800)
 
 
 def format_flow(f, focus, extended=False, hostheader=False, marked=False):
+    if hostheader:
+        url = f.request.pretty_url
+        if url == "*":
+            url = "* ({})".format(f.request.pretty_host)
+    else:
+        url = f.request.url
+        if url == "*":
+            url = "* ({})".format(f.request.host)
+
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.acked,
@@ -408,7 +417,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
         req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay,
         req_method = f.request.method,
-        req_url = f.request.pretty_url if hostheader else f.request.url,
+        req_url = url,
         req_http_version = f.request.http_version,
 
         err_msg = f.error.msg if f.error else None,
