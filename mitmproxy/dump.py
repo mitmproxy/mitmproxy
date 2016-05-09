@@ -249,8 +249,13 @@ class DumpMaster(flow.FlowMaster):
         method = click.style(method, fg=method_color, bold=True)
         if self.showhost:
             url = flow.request.pretty_url
+            if url == "*":
+                url = "* ({})".format(flow.request.pretty_host)
         else:
             url = flow.request.url
+            if url == "*":
+                url = "* ({})".format(flow.request.host)
+
         url = click.style(url, bold=True)
 
         httpversion = ""

@@ -162,7 +162,7 @@ class Request(Message):
     def path(self):
         """
         HTTP request path, e.g. "/index.html".
-        Guaranteed to start with a slash.
+        Guaranteed to start with a slash, except for OPTIONS requests, which may just be "*".
         """
         if self.data.path is None:
             return None
@@ -180,6 +180,8 @@ class Request(Message):
         """
         if self.first_line_format == "authority":
             return "%s:%d" % (self.host, self.port)
+        if self.first_line_format == "relative" and self.path == "*":
+            return "*"
         return utils.unparse_url(self.scheme, self.host, self.port, self.path)
 
     @url.setter
@@ -220,6 +222,8 @@ class Request(Message):
         """
         if self.first_line_format == "authority":
             return "%s:%d" % (self.pretty_host, self.port)
+        if self.first_line_format == "relative" and self.path == "*":
+            return "*"
         return utils.unparse_url(self.scheme, self.pretty_host, self.port, self.path)
 
     @property
