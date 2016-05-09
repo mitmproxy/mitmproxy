@@ -209,7 +209,7 @@ def refresh_set_cookie_header(c, delta):
         raise ValueError("Invalid Cookie")
 
     if "expires" in attrs:
-        e = parsedate_tz(attrs["expires"][0])
+        e = parsedate_tz(attrs["expires"][-1])
         if e:
             f = mktime_tz(e) + delta
             attrs["expires"] = [formatdate(f)]

@@ -76,6 +76,21 @@ class TestStickyCookieState:
         googlekey = s.jar.keys()[0]
         assert len(s.jar[googlekey].keys()) == 2
 
+        # Test setting of weird cookie keys
+        s = flow.StickyCookieState(filt.parse(".*"))
+        f = tutils.tflow(req=netlib.tutils.treq(host="www.google.com", port=80), resp=True)
+        cs = [
+            "foo/bar=hello",
+            "foo:bar=world",
+            "foo@bar=fizz",
+            "foo,bar=buzz",
+        ]
+        for c in cs:
+            f.response.headers["Set-Cookie"] = c
+            s.handle_response(f)
+        googlekey = s.jar.keys()[0]
+        assert len(s.jar[googlekey].keys()) == len(cs)
+
         # Test overwriting of a cookie value
         c1 = "somecookie=helloworld; Path=/"
         c2 = "somecookie=newvalue; Path=/"
@@ -84,7 +99,7 @@ class TestStickyCookieState:
         s.handle_response(f)
         googlekey = s.jar.keys()[0]
         assert len(s.jar[googlekey].keys()) == 1
-        assert s.jar[googlekey]["somecookie"].value == "newvalue"
+        assert s.jar[googlekey]["somecookie"].items()[0][1] == "newvalue"
 
     def test_handle_request(self):
         s, f = self._response("SSID=mooo", "www.google.com")
