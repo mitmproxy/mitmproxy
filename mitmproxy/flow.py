@@ -16,12 +16,13 @@ import re
 from netlib import wsgi
 from netlib.exceptions import HttpException
 from netlib.http import Headers, http1
+from netlib.utils import clean_bin
 from . import controller, tnetstring, filt, script, version, flow_format_compat
 from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
 from .exceptions import Kill, FlowReadException
-from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest, FLOW_TYPES
+from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest, FLOW_TYPES, TCPFlow
 from collections import defaultdict
 
 
@@ -892,6 +893,17 @@ class FlowMaster(controller.ServerMaster):
                 self.handle_response(f)
             if f.error:
                 self.handle_error(f)
+        elif isinstance(f, TCPFlow):
+            messages = f.messages
+            f.messages = []
+            f.reply = controller.DummyReply()
+            self.handle_tcp_open(f)
+            while messages:
+                f.messages.append(messages.pop(0))
+                self.handle_tcp_message(f)
+            if f.error:
+                self.handle_tcp_error(f)
+            self.handle_tcp_close(f)
         else:
             raise NotImplementedError()
 
@@ -1079,9 +1091,39 @@ class FlowMaster(controller.ServerMaster):
             self.add_event('"{}" reloaded.'.format(s.filename), 'info')
         return ok
 
-    def handle_tcp_message(self, m):
-        self.run_script_hook("tcp_message", m)
-        m.reply()
+    def handle_tcp_open(self, flow):
+        self.state.add_flow(flow)
+        self.run_script_hook("tcp_open", flow)
+        flow.reply()
+
+    def handle_tcp_message(self, flow):
+        self.run_script_hook("tcp_message", flow)
+        message = flow.messages[-1]
+        direction = "->" if message.from_client else "<-"
+        self.add_event("{client} {direction} tcp {direction} {server}".format(
+            client=repr(flow.client_conn.address),
+            server=repr(flow.server_conn.address),
+            direction=direction,
+        ), "info")
+        self.add_event(clean_bin(message.content), "debug")
+        flow.reply()
+
+    def handle_tcp_error(self, flow):
+        if self.stream:
+            self.stream.add(flow)
+        self.add_event("Error in TCP connection to {}: {}".format(
+            repr(flow.server_conn.address),
+            flow.error
+        ), "info")
+        self.run_script_hook("tcp_error", flow)
+        flow.reply()
+
+    def handle_tcp_close(self, flow):
+        self.state.delete_flow(flow)
+        if self.stream:
+            self.stream.add(flow)
+        self.run_script_hook("tcp_close", flow)
+        flow.reply()
 
     def shutdown(self):
         super(FlowMaster, self).shutdown()

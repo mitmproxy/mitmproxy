@@ -108,7 +108,7 @@ class TestRequestUtils(object):
             request.url = "not-a-url"
 
     def test_url_options(self):
-        request = treq(method="OPTIONS", path="*")
+        request = treq(method=b"OPTIONS", path=b"*")
         assert request.url == "http://address:22"
 
     def test_url_authority(self):
@@ -149,7 +149,7 @@ class TestRequestUtils(object):
         assert request.pretty_url == "http://address:22/path"
 
     def test_pretty_url_options(self):
-        request = treq(method="OPTIONS", path="*")
+        request = treq(method=b"OPTIONS", path=b"*")
         assert request.pretty_url == "http://address:22"
 
     def test_pretty_url_authority(self):
