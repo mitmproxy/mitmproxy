@@ -175,8 +175,8 @@ class DumpMaster(flow.FlowMaster):
         if self.o.flow_detail >= 2:
             headers = "\r\n".join(
                 "{}: {}".format(
-                    click.style(k, fg="blue", bold=True),
-                    click.style(v, fg="blue"))
+                    click.style(netlib.utils.bin_safe(k), fg="blue", bold=True),
+                    click.style(netlib.utils.bin_safe(v), fg="blue"))
                 for k, v in message.headers.fields
             )
             self.echo(headers, indent=4)
@@ -238,7 +238,7 @@ class DumpMaster(flow.FlowMaster):
             stickycookie = ""
 
         if flow.client_conn:
-            client = click.style(flow.client_conn.address.host, bold=True)
+            client = click.style(netlib.utils.bin_safe(flow.client_conn.address.host), bold=True)
         else:
             client = click.style("[replay]", fg="yellow", bold=True)
 
@@ -247,12 +247,12 @@ class DumpMaster(flow.FlowMaster):
             GET="green",
             DELETE="red"
         ).get(method.upper(), "magenta")
-        method = click.style(method, fg=method_color, bold=True)
+        method = click.style(netlib.utils.bin_safe(method), fg=method_color, bold=True)
         if self.showhost:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        url = click.style(url, bold=True)
+        url = click.style(netlib.utils.bin_safe(url), bold=True)
 
         httpversion = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
@@ -282,7 +282,7 @@ class DumpMaster(flow.FlowMaster):
         elif 400 <= code < 600:
             code_color = "red"
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        reason = click.style(flow.response.reason, fg=code_color, bold=True)
+        reason = click.style(netlib.utils.bin_safe(flow.response.reason), fg=code_color, bold=True)
 
         if flow.response.content is None:
             size = "(content missing)"

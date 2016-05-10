@@ -170,3 +170,9 @@ class TestSerializable:
 
 def test_safe_subn():
     assert utils.safe_subn("foo", u"bar", "\xc2foo")
+
+def test_bin_safe():
+    assert utils.bin_safe("foobar") == 'foobar'
+    assert utils.bin_safe("foo\bbar") == 'foo\\x08bar'
+    assert utils.bin_safe("'foo\bbar'") == "'foo\\x08bar'"
+    assert utils.bin_safe("u'foo\bbar'") == "u'foo\\x08bar'"
