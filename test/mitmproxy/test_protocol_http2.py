@@ -425,3 +425,51 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
+
+@requires_alpn
+class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
+
+    @classmethod
+    def setup_class(self):
+        _Http2TestBase.setup_class()
+        _Http2ServerBase.setup_class()
+
+    @classmethod
+    def teardown_class(self):
+        _Http2TestBase.teardown_class()
+        _Http2ServerBase.teardown_class()
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.RequestReceived):
+            h2_conn.send_headers(1, [(':status', '200')])
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+            return False
+
+    def test_connection_lost(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
+            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':method', 'GET'),
+            (':scheme', 'https'),
+            (':path', '/'),
+            ('foo', 'bar')
+        ])
+
+        done = False
+        ended_streams = 0
+        pushed_streams = 0
+        responses = 0
+        while not done:
+            try:
+                raw = b''.join(http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except:
+                break
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+        if len(self.master.state.flows) == 1:
+            assert self.master.state.flows[0].response is None

@@ -187,8 +187,7 @@ class HttpLayer(Layer):
                     flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
                 self.process_request_hook(flow)
 
-                if not flow.response:
-                    self.establish_server_connection(flow)
+                if not flow.response and self.establish_server_connection(flow):
                     self.get_response_from_server(flow)
                 else:
                     # response was set by an inline script.
@@ -197,6 +196,9 @@ class HttpLayer(Layer):
 
                 self.log("response", "debug", [repr(flow.response)])
                 flow = self.channel.ask("response", flow)
+
+                if not flow.response:
+                    return
                 self.send_response_to_client(flow)
 
                 if self.check_close_connection(flow):
@@ -304,9 +306,12 @@ class HttpLayer(Layer):
             # > server detects timeout, disconnects
             # > read (100-n)% of large request
             # > send large request upstream
-            self.disconnect()
-            self.connect()
-            get_response()
+            try:
+                self.disconnect()
+                self.connect()
+                get_response()
+            except NotImplementedError:
+                return
 
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
@@ -359,7 +364,10 @@ class HttpLayer(Layer):
                 self.set_server(address, tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
-                self.connect()
+                try:
+                    self.connect()
+                except:
+                    return False
         else:
             if not self.server_conn:
                 self.connect()
@@ -379,6 +387,7 @@ class HttpLayer(Layer):
                 tls_layer = TlsLayer(self, False, True)
                 tls_layer._establish_tls_with_server()
             """
+        return True
 
     def validate_request(self, request):
         if request.first_line_format == "absolute" and request.scheme != "http":
