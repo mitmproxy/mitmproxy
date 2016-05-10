@@ -9,28 +9,25 @@ from netlib.exceptions import TcpException
 from netlib.tcp import ssl_read_select
 from netlib.utils import clean_bin
 from ..exceptions import ProtocolException
+from ..models import Error
+from ..models.tcp import TCPFlow, TCPMessage
+
 from .base import Layer
-
-
-class TcpMessage(object):
-
-    def __init__(self, client_conn, server_conn, sender, receiver, message):
-        self.client_conn = client_conn
-        self.server_conn = server_conn
-        self.sender = sender
-        self.receiver = receiver
-        self.message = message
 
 
 class RawTCPLayer(Layer):
     chunk_size = 4096
 
-    def __init__(self, ctx, logging=True):
-        self.logging = logging
+    def __init__(self, ctx, ignore=False):
+        self.ignore = ignore
         super(RawTCPLayer, self).__init__(ctx)
 
     def __call__(self):
         self.connect()
+
+        if not self.ignore:
+            flow = TCPFlow(self.client_conn, self.server_conn, self)
+            self.channel.ask("tcp_open", flow)
 
         buf = memoryview(bytearray(self.chunk_size))
 
@@ -51,38 +48,24 @@ class RawTCPLayer(Layer):
                         if isinstance(conn, SSL.Connection):
                             # We can't half-close a connection, so we just close everything here.
                             # Sockets will be cleaned up on a higher level.
-                            return
+                            break
                         else:
                             dst.shutdown(socket.SHUT_WR)
 
                         if len(conns) == 0:
-                            return
+                            break
                         continue
 
-                    tcp_message = TcpMessage(
-                        self.client_conn, self.server_conn,
-                        self.client_conn if dst == server else self.server_conn,
-                        self.server_conn if dst == server else self.client_conn,
-                        buf[:size].tobytes())
-                    self.channel.ask("tcp_message", tcp_message)
-                    dst.sendall(tcp_message.message)
-
-                    if self.logging:
-                        # log messages are prepended with the client address,
-                        # hence the "weird" direction string.
-                        if dst == server:
-                            direction = "-> tcp -> {}".format(repr(self.server_conn.address))
-                        else:
-                            direction = "<- tcp <- {}".format(repr(self.server_conn.address))
-                        data = clean_bin(tcp_message.message)
-                        self.log(
-                            "{}\r\n{}".format(direction, data),
-                            "info"
-                        )
+                    tcp_message = TCPMessage(dst == server, buf[:size].tobytes())
+                    if not self.ignore:
+                        flow.messages.append(tcp_message)
+                        self.channel.ask("tcp_message", flow)
+                    dst.sendall(tcp_message.content)
 
         except (socket.error, TcpException, SSL.Error) as e:
-            six.reraise(
-                ProtocolException,
-                ProtocolException("TCP connection closed unexpectedly: {}".format(repr(e))),
-                sys.exc_info()[2]
-            )
+            if not self.ignore:
+                flow.error = Error("TCP connection closed unexpectedly: {}".format(repr(e)))
+                self.channel.tell("tcp_error", flow)
+        finally:
+            if not self.ignore:
+                self.channel.tell("tcp_close", flow)
