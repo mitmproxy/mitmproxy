@@ -431,3 +431,6 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
         need a better solution that is aware of the actual content ecoding.
     """
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
+
+def bin_safe(s):
+    return ''.join(["\\x{:02x}".format(ord(i)) if ord(i) < 32 else i for i in s])
