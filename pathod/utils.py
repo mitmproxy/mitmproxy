@@ -60,8 +60,7 @@ def inner_repr(s):
         Returns the inner portion of a string or unicode repr (i.e. without the
         quotes)
     """
-    if (six.PY2 and isinstance(s, unicode)) or \
-            (six.PY3 and isinstance(s, bytes)):
+    if (six.PY2 and isinstance(s, unicode)) or isinstance(s, bytes):
         return repr(s)[2:-1]
     else:
         return repr(s)[1:-1]
