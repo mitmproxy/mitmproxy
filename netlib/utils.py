@@ -432,5 +432,26 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
     """
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
 
-def bin_safe(s):
-    return ''.join(["\\x{:02x}".format(ord(i)) if ord(i) < 32 else i for i in s])
+
+def bytes_to_escaped_str(data):
+    """
+    Take bytes and return a safe string that can be displayed to the user.
+    """
+    if not isinstance(data, bytes):
+        raise ValueError("data must be bytes")
+    return repr(data).lstrip("b")[1:-1]
+
+
+def escaped_str_to_bytes(data):
+    """
+    Take an escaped string and return the unescaped bytes equivalent.
+    """
+    if not isinstance(data, str):
+        raise ValueError("data must be str")
+
+    if six.PY2:
+        return data.decode("string-escape")
+
+    # This one is difficult - we use an undocumented Python API here
+    # as per http://stackoverflow.com/a/23151714/934719
+    return codecs.escape_decode(data)[0]
