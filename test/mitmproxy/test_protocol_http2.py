@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from __future__ import (absolute_import, print_function, division)
 
 import OpenSSL
@@ -36,7 +38,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
     class handler(netlib.tcp.BaseHandler):
 
         def handle(self):
-            h2_conn = h2.connection.H2Connection(client_side=False)
+            h2_conn = h2.connection.H2Connection(client_side=False, header_encoding=False)
 
             preamble = self.rfile.read(24)
             h2_conn.initiate_connection()
@@ -122,7 +124,7 @@ class _Http2TestBase(object):
 
         client.convert_to_ssl(alpn_protos=[b'h2'])
 
-        h2_conn = h2.connection.H2Connection(client_side=True)
+        h2_conn = h2.connection.H2Connection(client_side=True, header_encoding=False)
         h2_conn.initiate_connection()
         client.wfile.write(h2_conn.data_to_send())
         client.wfile.flush()
@@ -163,6 +165,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
             h2_conn.send_headers(1, [
                 (':status', '200'),
                 ('foo', 'bar'),
+                ('föo', 'bär'),
             ])
             h2_conn.send_data(1, b'foobar')
             h2_conn.end_stream(1)
@@ -201,6 +204,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         assert len(self.master.state.flows) == 1
         assert self.master.state.flows[0].response.status_code == 200
         assert self.master.state.flows[0].response.headers['foo'] == 'bar'
+        assert self.master.state.flows[0].response.headers['föo'] == 'bär'
         assert self.master.state.flows[0].response.body == b'foobar'
 
 
