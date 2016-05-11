@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
-import {Router} from "./common.js";
+import {Router, ToggleComponent} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 
@@ -227,7 +227,6 @@ var ViewMenu = React.createClass({
     mixins: [Router],
     toggleEventLog: function () {
         var d = {};
-
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             d[Query.SHOW_EVENTLOG] = undefined;
         } else {
@@ -235,22 +234,65 @@ var ViewMenu = React.createClass({
         }
 
         this.updateLocation(undefined, d);
+        console.log('toggleevent');
     },
     render: function () {
-        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
-        return (
-            <div>
-                <button
-                    className={"btn " + (showEventLog ? "btn-primary" : "btn-default")}
-                    onClick={this.toggleEventLog}>
-                    <i className="fa fa-database"></i>
-                &nbsp;Show Eventlog
-                </button>
-                <span> </span>
-            </div>
-        );
+      var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
+      return (
+        <div>
+          <ToggleComponent
+            checked={showEventLog}
+            name = "Show Eventlog"
+            onToggleChanged={this.toggleEventLog}
+            icon = "fa fa-database"/>
+        </div>
+      );
     }
 });
+
+
+class OptionMenu extends React.Component{
+    static title = "Options";
+
+    constructor(props){
+      super(props);
+      this.state = {
+        options :
+        [
+          {name: "--host", checked: true},
+          {name: "--no-upstream-cert", checked: false},
+          {name: "--http2", checked: false},
+          {name: "--anticache", checked: false},
+          {name: "--anticomp", checked: false},
+          {name: "--stickycookie", checked: true},
+          {name: "--stickyauth", checked: false},
+          {name: "--stream", checked: false}
+        ]
+      }
+    }
+
+    setOption(entry){
+      console.log(entry.name);//TODO: send options to server 
+      entry.checked = !entry.checked;
+      this.setState({options: this.state.options});
+    }
+
+    render() {
+      return (
+        <div>
+          {this.state.options.map(function(entry, i) {
+            return (
+              <ToggleComponent
+                key={i}
+                checked={entry.checked}
+                name = {entry.name}
+                onToggleChanged={() => this.setOption(entry)}/>
+            );
+          }.bind(this))}
+        </div>
+      );
+    }
+}
 
 
 var ReportsMenu = React.createClass({
@@ -349,7 +391,7 @@ var FileMenu = React.createClass({
 });
 
 
-var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
+var header_entries = [MainMenu, ViewMenu, OptionMenu /*, ReportsMenu */];
 
 
 export var Header = React.createClass({
@@ -380,7 +422,7 @@ export var Header = React.createClass({
                     href="#"
                     className={className}
                     onClick={this.handleClick.bind(this, entry)}>
-                    { entry.title}
+                    {entry.title}
                 </a>
             );
         }.bind(this));

@@ -132,3 +132,19 @@ export var Splitter = React.createClass({
         );
     }
 });
+
+export class ToggleComponent extends React.Component{
+    render(){
+      return (<button
+        className={"btn-option btn " + (this.props.checked ? "btn-primary" : "btn-default")}
+        onClick={this.props.onToggleChanged}>
+        {(this.props.icon) ? <i className={this.props.icon}/> : false}
+        {this.props.name}
+      </button>);
+    }
+}
+ToggleComponent.propTypes = {
+    name: React.PropTypes.string.isRequired,
+    onToggleChanged: React.PropTypes.func.isRequired,
+    icon: React.PropTypes.string
+}

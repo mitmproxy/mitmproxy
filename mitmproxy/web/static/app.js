@@ -481,7 +481,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Splitter = exports.Router = undefined;
+exports.ToggleComponent = exports.Splitter = exports.Router = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require("react");
 
@@ -496,6 +498,12 @@ var _lodash = require("lodash");
 var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Router = exports.Router = {
     contextTypes: {
@@ -630,6 +638,38 @@ var Splitter = exports.Splitter = _react2.default.createClass({
         );
     }
 });
+
+var ToggleComponent = exports.ToggleComponent = function (_React$Component) {
+    _inherits(ToggleComponent, _React$Component);
+
+    function ToggleComponent() {
+        _classCallCheck(this, ToggleComponent);
+
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(ToggleComponent).apply(this, arguments));
+    }
+
+    _createClass(ToggleComponent, [{
+        key: "render",
+        value: function render() {
+            return _react2.default.createElement(
+                "button",
+                {
+                    className: "btn-option btn " + (this.props.checked ? "btn-primary" : "btn-default"),
+                    onClick: this.props.onToggleChanged },
+                this.props.icon ? _react2.default.createElement("i", { className: this.props.icon }) : false,
+                this.props.name
+            );
+        }
+    }]);
+
+    return ToggleComponent;
+}(_react2.default.Component);
+
+ToggleComponent.propTypes = {
+    name: _react2.default.PropTypes.string.isRequired,
+    onToggleChanged: _react2.default.PropTypes.func.isRequired,
+    icon: _react2.default.PropTypes.string
+};
 
 },{"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
@@ -2912,6 +2952,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Header = exports.MainMenu = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
@@ -2935,6 +2977,12 @@ var _common = require("./common.js");
 var _actions = require("../actions.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var FilterDocs = _react2.default.createClass({
     displayName: "FilterDocs",
@@ -3191,7 +3239,6 @@ var ViewMenu = _react2.default.createClass({
     mixins: [_common.Router],
     toggleEventLog: function toggleEventLog() {
         var d = {};
-
         if (this.getQuery()[_actions.Query.SHOW_EVENTLOG]) {
             d[_actions.Query.SHOW_EVENTLOG] = undefined;
         } else {
@@ -3199,28 +3246,69 @@ var ViewMenu = _react2.default.createClass({
         }
 
         this.updateLocation(undefined, d);
+        console.log('toggleevent');
     },
     render: function render() {
         var showEventLog = this.getQuery()[_actions.Query.SHOW_EVENTLOG];
         return _react2.default.createElement(
             "div",
             null,
-            _react2.default.createElement(
-                "button",
-                {
-                    className: "btn " + (showEventLog ? "btn-primary" : "btn-default"),
-                    onClick: this.toggleEventLog },
-                _react2.default.createElement("i", { className: "fa fa-database" }),
-                " Show Eventlog"
-            ),
-            _react2.default.createElement(
-                "span",
-                null,
-                " "
-            )
+            _react2.default.createElement(_common.ToggleComponent, {
+                checked: showEventLog,
+                name: "Show Eventlog",
+                onToggleChanged: this.toggleEventLog,
+                icon: "fa fa-database" })
         );
     }
 });
+
+var OptionMenu = function (_React$Component) {
+    _inherits(OptionMenu, _React$Component);
+
+    function OptionMenu(props) {
+        _classCallCheck(this, OptionMenu);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(OptionMenu).call(this, props));
+
+        _this.state = {
+            options: [{ name: "--host", checked: true }, { name: "--no-upstream-cert", checked: false }, { name: "--http2", checked: false }, { name: "--anticache", checked: false }, { name: "--anticomp", checked: false }, { name: "--stickycookie", checked: true }, { name: "--stickyauth", checked: false }, { name: "--stream", checked: false }]
+        };
+        return _this;
+    }
+
+    _createClass(OptionMenu, [{
+        key: "setOption",
+        value: function setOption(entry) {
+            console.log(entry.name);
+            entry.checked = !entry.checked;
+            this.setState({ options: this.state.options });
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            return _react2.default.createElement(
+                "div",
+                null,
+                this.state.options.map(function (entry, i) {
+                    var _this2 = this;
+
+                    return _react2.default.createElement(_common.ToggleComponent, {
+                        key: i,
+                        checked: entry.checked,
+                        name: entry.name,
+                        onToggleChanged: function onToggleChanged() {
+                            return _this2.setOption(entry);
+                        } });
+                }.bind(this))
+            );
+        }
+    }]);
+
+    return OptionMenu;
+}(_react2.default.Component);
+
+OptionMenu.title = "Options";
+
 
 var ReportsMenu = _react2.default.createClass({
     displayName: "ReportsMenu",
@@ -3318,7 +3406,7 @@ var FileMenu = _react2.default.createClass({
     }
 });
 
-var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
+var header_entries = [MainMenu, ViewMenu, OptionMenu /*, ReportsMenu */];
 
 var Header = exports.Header = _react2.default.createClass({
     displayName: "Header",
