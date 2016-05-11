@@ -1,5 +1,5 @@
 """
-Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
+Having installed a wrong version of pyOpenSSL or mitmproxy is unfortunately a
 very common source of error. Check before every start that both versions
 are somewhat okay.
 """
@@ -10,7 +10,6 @@ import os.path
 import six
 
 import OpenSSL
-from . import version
 
 PYOPENSSL_MIN_VERSION = (0, 15)
 
