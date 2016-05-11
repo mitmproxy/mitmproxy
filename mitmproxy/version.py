@@ -1,3 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
-from netlib.version import *
+IVERSION = (0, 18)
+VERSION = ".".join(str(i) for i in IVERSION)
+NAME = "mitmproxy"
+NAMEVERSION = NAME + " " + VERSION
