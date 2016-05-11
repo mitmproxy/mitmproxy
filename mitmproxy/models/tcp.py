@@ -34,7 +34,7 @@ class TCPMessage(Serializable):
 
 class TCPFlow(Flow):
     """
-    A SSHFlow is a simplified representation of an SSH session.
+    A TCPFlow is a simplified representation of a TCP session.
     """
 
     def __init__(self, client_conn, server_conn, live=None):

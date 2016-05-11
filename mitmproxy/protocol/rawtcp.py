@@ -48,12 +48,12 @@ class RawTCPLayer(Layer):
                         if isinstance(conn, SSL.Connection):
                             # We can't half-close a connection, so we just close everything here.
                             # Sockets will be cleaned up on a higher level.
-                            break
+                            return
                         else:
                             dst.shutdown(socket.SHUT_WR)
 
                         if len(conns) == 0:
-                            break
+                            return
                         continue
 
                     tcp_message = TCPMessage(dst == server, buf[:size].tobytes())
