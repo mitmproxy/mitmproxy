@@ -243,8 +243,7 @@ var ViewMenu = React.createClass({
           <ToggleComponent
             checked={showEventLog}
             name = "Show Eventlog"
-            onToggleChanged={this.toggleEventLog}
-            icon = "fa fa-database"/>
+            onToggleChanged={this.toggleEventLog}/>
         </div>
       );
     }
@@ -272,7 +271,7 @@ class OptionMenu extends React.Component{
     }
 
     setOption(entry){
-      console.log(entry.name);//TODO: send options to server 
+      console.log(entry.name);//TODO: get options from outside and remove state
       entry.checked = !entry.checked;
       this.setState({options: this.state.options});
     }
@@ -280,7 +279,7 @@ class OptionMenu extends React.Component{
     render() {
       return (
         <div>
-          {this.state.options.map(function(entry, i) {
+          {this.state.options.map((entry, i) => {
             return (
               <ToggleComponent
                 key={i}
@@ -288,7 +287,7 @@ class OptionMenu extends React.Component{
                 name = {entry.name}
                 onToggleChanged={() => this.setOption(entry)}/>
             );
-          }.bind(this))}
+          })}
         </div>
       );
     }

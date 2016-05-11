@@ -483,8 +483,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ToggleComponent = exports.Splitter = exports.Router = undefined;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
@@ -498,12 +496,6 @@ var _lodash = require("lodash");
 var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Router = exports.Router = {
     contextTypes: {
@@ -639,46 +631,25 @@ var Splitter = exports.Splitter = _react2.default.createClass({
     }
 });
 
-var ToggleComponent = exports.ToggleComponent = function (_React$Component) {
-    _inherits(ToggleComponent, _React$Component);
-
-    function ToggleComponent() {
-        _classCallCheck(this, ToggleComponent);
-
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(ToggleComponent).apply(this, arguments));
-    }
-
-    _createClass(ToggleComponent, [{
-        key: "render",
-        value: function render() {
-            var toggleIconClass = this.props.checked ? "fa-check-square-o" : "fa-square-o";
-            var toggleButtonClass = this.props.checked ? "btn-primary" : "btn-default";
-            return _react2.default.createElement(
-                "div",
-                {
-                    className: "btn-option btn " + toggleButtonClass,
-                    onClick: this.props.onToggleChanged },
-                _react2.default.createElement(
-                    "i",
-                    { className: "fa " + toggleIconClass },
-                    _react2.default.createElement(
-                        "span",
-                        { className: "text-padding" },
-                        this.props.name
-                    )
-                ),
-                this.props.icon ? _react2.default.createElement("i", { className: this.props.icon }) : false
-            );
-        }
-    }]);
-
-    return ToggleComponent;
-}(_react2.default.Component);
+var ToggleComponent = exports.ToggleComponent = function ToggleComponent(props) {
+    return _react2.default.createElement(
+        "div",
+        {
+            className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
+            onClick: props.onToggleChanged },
+        _react2.default.createElement(
+            "span",
+            null,
+            _react2.default.createElement("i", { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") }),
+            " ",
+            props.name
+        )
+    );
+};
 
 ToggleComponent.propTypes = {
     name: _react2.default.PropTypes.string.isRequired,
-    onToggleChanged: _react2.default.PropTypes.func.isRequired,
-    icon: _react2.default.PropTypes.string
+    onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
 },{"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
@@ -3266,8 +3237,7 @@ var ViewMenu = _react2.default.createClass({
             _react2.default.createElement(_common.ToggleComponent, {
                 checked: showEventLog,
                 name: "Show Eventlog",
-                onToggleChanged: this.toggleEventLog,
-                icon: "fa fa-database" })
+                onToggleChanged: this.toggleEventLog })
         );
     }
 });
@@ -3289,19 +3259,19 @@ var OptionMenu = function (_React$Component) {
     _createClass(OptionMenu, [{
         key: "setOption",
         value: function setOption(entry) {
-            console.log(entry.name); //TODO: send options to server
+            console.log(entry.name); //TODO: get options from outside and remove state
             entry.checked = !entry.checked;
             this.setState({ options: this.state.options });
         }
     }, {
         key: "render",
         value: function render() {
+            var _this2 = this;
+
             return _react2.default.createElement(
                 "div",
                 null,
                 this.state.options.map(function (entry, i) {
-                    var _this2 = this;
-
                     return _react2.default.createElement(_common.ToggleComponent, {
                         key: i,
                         checked: entry.checked,
@@ -3309,7 +3279,7 @@ var OptionMenu = function (_React$Component) {
                         onToggleChanged: function onToggleChanged() {
                             return _this2.setOption(entry);
                         } });
-                }.bind(this))
+                })
             );
         }
     }]);
