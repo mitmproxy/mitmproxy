@@ -651,13 +651,23 @@ var ToggleComponent = exports.ToggleComponent = function (_React$Component) {
     _createClass(ToggleComponent, [{
         key: "render",
         value: function render() {
+            var toggleIconClass = this.props.checked ? "fa-check-square-o" : "fa-square-o";
+            var toggleButtonClass = this.props.checked ? "btn-primary" : "btn-default";
             return _react2.default.createElement(
-                "button",
+                "div",
                 {
-                    className: "btn-option btn " + (this.props.checked ? "btn-primary" : "btn-default"),
+                    className: "btn-option btn " + toggleButtonClass,
                     onClick: this.props.onToggleChanged },
-                this.props.icon ? _react2.default.createElement("i", { className: this.props.icon }) : false,
-                this.props.name
+                _react2.default.createElement(
+                    "i",
+                    { className: "fa " + toggleIconClass },
+                    _react2.default.createElement(
+                        "span",
+                        { className: "text-padding" },
+                        this.props.name
+                    )
+                ),
+                this.props.icon ? _react2.default.createElement("i", { className: this.props.icon }) : false
             );
         }
     }]);
@@ -3279,7 +3289,7 @@ var OptionMenu = function (_React$Component) {
     _createClass(OptionMenu, [{
         key: "setOption",
         value: function setOption(entry) {
-            console.log(entry.name);
+            console.log(entry.name); //TODO: send options to server
             entry.checked = !entry.checked;
             this.setState({ options: this.state.options });
         }
