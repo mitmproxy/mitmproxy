@@ -343,14 +343,6 @@ class Request(Message):
 
     # Legacy
 
-    def get_cookies(self):  # pragma: no cover
-        warnings.warn(".get_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        return self.cookies
-
-    def set_cookies(self, odict):  # pragma: no cover
-        warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        self.cookies = odict
-
     def get_query(self):  # pragma: no cover
         warnings.warn(".get_query is deprecated, use .query instead.", DeprecationWarning)
         return self.query or ODict([])

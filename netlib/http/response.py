@@ -127,13 +127,3 @@ class Response(Message):
             c.append(refreshed)
         if c:
             self.headers.set_all("set-cookie", c)
-
-    # Legacy
-
-    def get_cookies(self):  # pragma: no cover
-        warnings.warn(".get_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        return self.cookies
-
-    def set_cookies(self, odict):  # pragma: no cover
-        warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        self.cookies = odict

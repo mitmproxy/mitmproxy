@@ -172,7 +172,7 @@ class TestRequestUtils(object):
     def test_get_cookies_none(self):
         request = treq()
         request.headers = Headers()
-        assert len(request.cookies) == 0
+        assert not request.cookies
 
     def test_get_cookies_single(self):
         request = treq()

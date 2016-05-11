@@ -364,12 +364,11 @@ class FlowView(tabs.Tabs):
             self.edit_form(conn)
 
     def set_cookies(self, lst, conn):
-        od = odict.ODict(lst)
-        conn.set_cookies(od)
+        conn.cookies = odict.ODict(lst)
         signals.flow_change.send(self, flow = self.flow)
 
     def set_setcookies(self, data, conn):
-        conn.set_cookies(data)
+        conn.cookies = data
         signals.flow_change.send(self, flow = self.flow)
 
     def edit(self, part):
@@ -389,7 +388,7 @@ class FlowView(tabs.Tabs):
             self.master.view_grideditor(
                 grideditor.CookieEditor(
                     self.master,
-                    message.get_cookies().lst,
+                    message.cookies.lst,
                     self.set_cookies,
                     message
                 )
@@ -398,7 +397,7 @@ class FlowView(tabs.Tabs):
             self.master.view_grideditor(
                 grideditor.SetCookieEditor(
                     self.master,
-                    message.get_cookies(),
+                    message.cookies,
                     self.set_setcookies,
                     message
                 )
