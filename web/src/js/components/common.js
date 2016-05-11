@@ -142,5 +142,5 @@ export const ToggleComponent = (props) =>
 
 ToggleComponent.propTypes = {
     name: React.PropTypes.string.isRequired,
-    onToggleChanged: React.PropTypes.func.isRequired,
+    onToggleChanged: React.PropTypes.func.isRequired
 }
