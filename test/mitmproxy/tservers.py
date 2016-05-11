@@ -161,7 +161,9 @@ class HTTPProxyTest(ProxyTestBase):
             q = "get:'/p/%s'" % spec
         else:
             q = "get:'%s/p/%s'" % (self.server.urlbase, spec)
-        return p.request(q)
+        resp = p.request(q)
+        p.close()
+        return resp
 
     def app(self, page):
         if self.ssl:

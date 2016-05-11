@@ -1116,8 +1116,6 @@ class FlowMaster(controller.ServerMaster):
         flow.reply()
 
     def handle_tcp_error(self, flow):
-        if self.stream:
-            self.stream.add(flow)
         self.add_event("Error in TCP connection to {}: {}".format(
             repr(flow.server_conn.address),
             flow.error
