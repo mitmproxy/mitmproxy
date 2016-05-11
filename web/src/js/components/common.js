@@ -133,24 +133,14 @@ export var Splitter = React.createClass({
     }
 });
 
-export class ToggleComponent extends React.Component{
-  render(){
-    let toggleIconClass = this.props.checked ? "fa-check-square-o" : "fa-square-o";
-    let toggleButtonClass = this.props.checked ? "btn-primary" : "btn-default";
-    return (
+export const ToggleComponent = (props) =>
     <div
-      className={"btn-option btn " + toggleButtonClass}
-      onClick={this.props.onToggleChanged}>
-      <i className={"fa " + toggleIconClass}> 
-        <span className="text-padding">
-          {this.props.name}
-        </span>
-      </i>
-      {(this.props.icon) ? <i className={this.props.icon}/> : false}
-    </div>);}
-}
+      className={"btn " + (props.checked ? "btn-primary" : "btn-default")}
+      onClick={props.onToggleChanged}>
+      <span><i className={"fa " + (props.checked ? "fa-check-square-o" : "fa-square-o")}></i> {props.name}</span>
+    </div>
+
 ToggleComponent.propTypes = {
     name: React.PropTypes.string.isRequired,
     onToggleChanged: React.PropTypes.func.isRequired,
-    icon: React.PropTypes.string
 }
