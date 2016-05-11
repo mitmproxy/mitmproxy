@@ -642,8 +642,8 @@ class ScriptEditor(GridEditor):
     def is_error(self, col, val):
         try:
             script.Script.parse_command(val)
-        except script.ScriptException as v:
-            return str(v)
+        except script.ScriptException as e:
+            return str(e)
 
 
 class HostPatternEditor(GridEditor):

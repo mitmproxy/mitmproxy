@@ -79,10 +79,10 @@ class Script(object):
             with open(self.filename) as f:
                 code = compile(f.read(), self.filename, 'exec')
                 exec (code, self.ns, self.ns)
-        except Exception as e:
+        except Exception:
             six.reraise(
                 ScriptException,
-                ScriptException(str(e)),
+                ScriptException.from_exception_context(),
                 sys.exc_info()[2]
             )
         finally:
@@ -113,10 +113,10 @@ class Script(object):
         if f:
             try:
                 return f(self.ctx, *args, **kwargs)
-            except Exception as e:
+            except Exception:
                 six.reraise(
                     ScriptException,
-                    ScriptException(str(e)),
+                    ScriptException.from_exception_context(),
                     sys.exc_info()[2]
                 )
         else:

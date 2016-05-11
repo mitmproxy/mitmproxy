@@ -7,7 +7,7 @@ import itertools
 from netlib import tcp
 import netlib.utils
 from . import flow, filt, contentviews
-from .exceptions import ContentViewException, FlowReadException
+from .exceptions import ContentViewException, FlowReadException, ScriptException
 
 
 class DumpError(Exception):
@@ -125,9 +125,10 @@ class DumpMaster(flow.FlowMaster):
 
         scripts = options.scripts or []
         for command in scripts:
-            err = self.load_script(command, use_reloader=True)
-            if err:
-                raise DumpError(err)
+            try:
+                self.load_script(command, use_reloader=True)
+            except ScriptException as e:
+                raise DumpError(str(e))
 
         if options.rfile:
             try:

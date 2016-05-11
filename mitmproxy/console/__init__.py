@@ -19,7 +19,7 @@ from netlib import tcp
 from .. import flow, script, contentviews
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
-from ..exceptions import FlowReadException
+from ..exceptions import FlowReadException, ScriptException
 
 EVENTLOG_SIZE = 500
 
@@ -229,9 +229,10 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.scripts:
             for i in options.scripts:
-                err = self.load_script(i)
-                if err:
-                    print("Script load error: {}".format(err), file=sys.stderr)
+                try:
+                    self.load_script(i)
+                except ScriptException as e:
+                    print("Script load error: {}".format(e), file=sys.stderr)
                     sys.exit(1)
 
         if options.outfile:
@@ -320,11 +321,11 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             s = script.Script(command, script.ScriptContext(self))
             s.load()
-        except script.ScriptException as v:
+        except script.ScriptException as e:
             signals.status_message.send(
-                message = "Error loading script."
+                message='Error loading "{}".'.format(command)
             )
-            signals.add_event("Error loading script:\n%s" % v.args[0], "error")
+            signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
             return
 
         if f.request:
@@ -335,13 +336,6 @@ class ConsoleMaster(flow.FlowMaster):
             self._run_script_method("error", s, f)
         s.unload()
         signals.flow_change.send(self, flow = f)
-
-    def set_script(self, command):
-        if not command:
-            return
-        ret = self.load_script(command)
-        if ret:
-            signals.status_message.send(message=ret)
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
@@ -670,7 +664,13 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.unload_scripts()
         for command in commands:
-            self.load_script(command)
+            try:
+                self.load_script(command)
+            except ScriptException as e:
+                signals.status_message.send(
+                    message='Error loading "{}".'.format(command)
+                )
+                signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
         signals.update_settings.send(self)
 
     def stop_client_playback_prompt(self, a):
