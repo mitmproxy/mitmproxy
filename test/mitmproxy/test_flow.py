@@ -7,7 +7,7 @@ import netlib.utils
 from netlib import odict
 from netlib.http import Headers
 from mitmproxy import filt, controller, tnetstring, flow
-from mitmproxy.exceptions import FlowReadException
+from mitmproxy.exceptions import FlowReadException, ScriptException
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
@@ -747,12 +747,16 @@ class TestFlowMaster:
     def test_load_script(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
-        assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
-        assert not fm.unload_scripts()
-        assert fm.load_script("nonexistent")
-        assert "ValueError" in fm.load_script(
-            tutils.test_data.path("scripts/starterr.py"))
+
+        fm.load_script(tutils.test_data.path("scripts/a.py"))
+        fm.load_script(tutils.test_data.path("scripts/a.py"))
+        fm.unload_scripts()
+        with tutils.raises(ScriptException):
+            fm.load_script("nonexistent")
+        try:
+            fm.load_script(tutils.test_data.path("scripts/starterr.py"))
+        except ScriptException as e:
+            assert "ValueError" in str(e)
         assert len(fm.scripts) == 0
 
     def test_getset_ignore(self):
@@ -779,7 +783,7 @@ class TestFlowMaster:
     def test_script_reqerr(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
+        fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
         f = tutils.tflow()
         fm.handle_clientconnect(f.client_conn)
         assert fm.handle_request(f)
@@ -787,7 +791,7 @@ class TestFlowMaster:
     def test_script(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("scripts/all.py"))
         f = tutils.tflow(resp=True)
 
         fm.handle_clientconnect(f.client_conn)
@@ -799,7 +803,7 @@ class TestFlowMaster:
         fm.handle_response(f)
         assert fm.scripts[0].ns["log"][-1] == "response"
         # load second script
-        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("scripts/all.py"))
         assert len(fm.scripts) == 2
         fm.handle_clientdisconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
@@ -808,7 +812,7 @@ class TestFlowMaster:
         # unload first script
         fm.unload_scripts()
         assert len(fm.scripts) == 0
-        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("scripts/all.py"))
 
         f.error = tutils.terr()
         fm.handle_error(f)

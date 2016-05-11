@@ -106,8 +106,8 @@ def test_modify_querystring():
 
 def test_modify_response_body():
     with tutils.raises(script.ScriptException):
-        with example("modify_response_body.py") as ex:
-            pass
+        with example("modify_response_body.py"):
+            assert True
 
     flow = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
     with example("modify_response_body.py mitmproxy rocks") as ex:
@@ -125,7 +125,7 @@ def test_redirect_requests():
 
 def test_har_extractor():
     with tutils.raises(script.ScriptException):
-        with example("har_extractor.py") as ex:
+        with example("har_extractor.py"):
             pass
 
     times = dict(
