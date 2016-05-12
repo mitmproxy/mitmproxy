@@ -162,6 +162,7 @@ class HTTPProxyTest(ProxyTestBase):
         else:
             q = "get:'%s/p/%s'" % (self.server.urlbase, spec)
         resp = p.request(q)
+        p.finish()
         p.close()
         return resp
 
