@@ -91,14 +91,14 @@ class Http2Layer(Layer):
         self.mode = mode
         self.streams = dict()
         self.server_to_client_stream_ids = dict([(0, 0)])
-        self.client_conn.h2 = SafeH2Connection(self.client_conn, client_side=False)
+        self.client_conn.h2 = SafeH2Connection(self.client_conn, client_side=False, header_encoding=False)
 
         # make sure that we only pass actual SSL.Connection objects in here,
         # because otherwise ssl_read_select fails!
         self.active_conns = [self.client_conn.connection]
 
     def _initiate_server_conn(self):
-        self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True)
+        self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True, header_encoding=False)
         self.server_conn.h2.initiate_connection()
         self.server_conn.send(self.server_conn.h2.data_to_send())
         self.active_conns.append(self.server_conn.connection)
@@ -131,12 +131,12 @@ class Http2Layer(Layer):
                 eid = event.stream_id
 
         if isinstance(event, h2.events.RequestReceived):
-            headers = Headers([[str(k), str(v)] for k, v in event.headers])
+            headers = Headers([[k, v] for k, v in event.headers])
             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].start()
         elif isinstance(event, h2.events.ResponseReceived):
-            headers = Headers([[str(k), str(v)] for k, v in event.headers])
+            headers = Headers([[k, v] for k, v in event.headers])
             self.streams[eid].queued_data_length = 0
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].response_headers = headers
