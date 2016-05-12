@@ -437,6 +437,10 @@ def bytes_to_escaped_str(data):
     """
     Take bytes and return a safe string that can be displayed to the user.
     """
+    # TODO: We may want to support multi-byte characters without escaping them.
+    # One way to do would be calling .decode("utf8", "backslashreplace") first
+    # and then escaping UTF8 control chars (see clean_bin).
+
     if not isinstance(data, bytes):
         raise ValueError("data must be bytes")
     return repr(data).lstrip("b")[1:-1]
