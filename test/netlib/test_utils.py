@@ -1,3 +1,4 @@
+# coding=utf-8
 from netlib import utils, tutils
 from netlib.http import Headers
 
@@ -170,3 +171,17 @@ class TestSerializable:
 
 def test_safe_subn():
     assert utils.safe_subn("foo", u"bar", "\xc2foo")
+
+
+def test_bytes_to_escaped_str():
+    assert utils.bytes_to_escaped_str(b"foo") == "foo"
+    assert utils.bytes_to_escaped_str(b"\b") == r"\x08"
+    assert utils.bytes_to_escaped_str(br"&!?=\)") == r"&!?=\\)"
+    assert utils.bytes_to_escaped_str(b'\xc3\xbc') == r"\xc3\xbc"
+
+
+def test_escaped_str_to_bytes():
+    assert utils.escaped_str_to_bytes("foo") == b"foo"
+    assert utils.escaped_str_to_bytes(r"\x08") == b"\b"
+    assert utils.escaped_str_to_bytes(r"&!?=\\)") == br"&!?=\)"
+    assert utils.escaped_str_to_bytes(r"ü") == b'\xc3\xbc'
