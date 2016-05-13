@@ -4,6 +4,7 @@ import threading
 import time
 from six.moves import queue
 
+import traceback
 import h2
 import six
 from h2.connection import H2Connection
@@ -15,6 +16,7 @@ from netlib.utils import http2_read_raw_frame
 
 from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
+from ..exceptions import ProtocolException, Http2ProtocolException
 from .. import utils
 from ..models import HTTPRequest, HTTPResponse
 
@@ -55,7 +57,7 @@ class SafeH2Connection(H2Connection):
     def safe_send_headers(self, is_zombie, stream_id, headers):
         with self.lock:
             if is_zombie():  # pragma: no cover
-                return
+                raise Http2ProtocolException("Zombie Stream")
             self.send_headers(stream_id, headers.fields)
             self.conn.send(self.data_to_send())
 
@@ -66,7 +68,7 @@ class SafeH2Connection(H2Connection):
                 self.lock.acquire()
                 if is_zombie():  # pragma: no cover
                     self.lock.release()
-                    return
+                    raise Http2ProtocolException("Zombie Stream")
                 max_outbound_frame_size = self.max_outbound_frame_size
                 frame_chunk = chunk[position:position + max_outbound_frame_size]
                 if self.local_flow_control_window(stream_id) < len(frame_chunk):
@@ -79,7 +81,7 @@ class SafeH2Connection(H2Connection):
                 position += max_outbound_frame_size
         with self.lock:
             if is_zombie():  # pragma: no cover
-                return
+                raise Http2ProtocolException("Zombie Stream")
             self.end_stream(stream_id)
             self.conn.send(self.data_to_send())
 
@@ -104,7 +106,7 @@ class Http2Layer(Layer):
         self.active_conns.append(self.server_conn.connection)
 
     def connect(self):  # pragma: no cover
-        raise ValueError("CONNECT inside an HTTP2 stream is not supported.")
+        raise Http2ProtocolException("HTTP2 layer should already have a connection.")
 
     def set_server(self):  # pragma: no cover
         raise NotImplementedError("Cannot change server for HTTP2 connections.")
@@ -215,6 +217,7 @@ class Http2Layer(Layer):
                         raw_frame = b''.join(http2_read_raw_frame(source_conn.rfile))
                     except:
                         # read frame failed: connection closed
+                        # kill all streams
                         for stream in self.streams.values():
                             stream.zombie = time.time()
                         return
@@ -232,7 +235,7 @@ class Http2Layer(Layer):
 class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
 
     def __init__(self, ctx, stream_id, request_headers):
-        super(Http2SingleStreamLayer, self).__init__(ctx)
+        super(Http2SingleStreamLayer, self).__init__(ctx, name="Thread-Http2SingleStreamLayer-{}".format(stream_id))
         self.zombie = None
         self.client_stream_id = stream_id
         self.server_stream_id = None
@@ -335,7 +338,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         with self.server_conn.h2.lock:
             # We must not assign a stream id if we are already a zombie.
             if self.zombie:  # pragma: no cover
-                return
+                raise Http2ProtocolException("Zombie Stream")
 
             self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
             self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
@@ -350,6 +353,8 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             self.server_stream_id,
             message.body
         )
+        if self.zombie:  # pragma: no cover
+            raise Http2ProtocolException("Zombie Stream")
 
     def read_response_headers(self):
         self.response_arrived.wait()
@@ -377,7 +382,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
                     yield self.response_data_queue.get()
                 return
             if self.zombie:  # pragma: no cover
-                return
+                raise Http2ProtocolException("Zombie Stream")
 
     def send_response_headers(self, response):
         self.client_conn.h2.safe_send_headers(
@@ -385,6 +390,8 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             self.client_stream_id,
             response.headers
         )
+        if self.zombie:  # pragma: no cover
+            raise Http2ProtocolException("Zombie Stream")
 
     def send_response_body(self, _response, chunks):
         self.client_conn.h2.safe_send_body(
@@ -392,6 +399,8 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             self.client_stream_id,
             chunks
         )
+        if self.zombie:  # pragma: no cover
+            raise Http2ProtocolException("Zombie Stream")
 
     def check_close_connection(self, flow):
         # This layer only handles a single stream.
@@ -404,5 +413,11 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
 
     def run(self):
         layer = HttpLayer(self, self.mode)
-        layer()
+
+        try:
+            layer()
+        except ProtocolException as e:
+            self.log(repr(e), "info")
+            self.log(traceback.format_exc(), "debug")
+
         self.zombie = time.time()

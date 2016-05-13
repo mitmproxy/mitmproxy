@@ -50,6 +50,10 @@ class HttpProtocolException(ProtocolException):
     pass
 
 
+class Http2ProtocolException(ProtocolException):
+    pass
+
+
 class ServerException(ProxyException):
     pass
 
