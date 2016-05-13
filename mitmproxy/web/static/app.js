@@ -635,7 +635,7 @@ var ToggleComponent = exports.ToggleComponent = function ToggleComponent(props) 
     return _react2.default.createElement(
         "div",
         {
-            className: "toggle-btn btn " + (props.checked ? "btn-primary" : "btn-default"),
+            className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
             onClick: props.onToggleChanged },
         _react2.default.createElement(
             "span",

@@ -163,7 +163,7 @@ header .menu {
   max-height: 500px;
   overflow-y: auto;
 }
-.toggle-btn {
+.menu .btn {
   margin: 2px 2px 2px 2px;
 }
 .flow-table {
