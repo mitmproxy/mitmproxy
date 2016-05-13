@@ -255,7 +255,6 @@ class OptionMenu extends React.Component{
     constructor(props){
       super(props);
       this.state = {
-        
         options :
         [
           {name: "--host", checked: true},
