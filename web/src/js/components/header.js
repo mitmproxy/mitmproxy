@@ -273,7 +273,6 @@ class OptionMenu extends React.Component{
       entry.checked = !entry.checked;
       this.setState({options: this.state.options});
     }
-
     render() {
       return (
         <div>
