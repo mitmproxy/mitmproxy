@@ -252,7 +252,6 @@ var ViewMenu = React.createClass({
 
 class OptionMenu extends React.Component{
     static title = "Options";
-
     constructor(props){
       super(props);
       this.state = {
@@ -269,7 +268,6 @@ class OptionMenu extends React.Component{
         ]
       }
     }
-
     setOption(entry){
       console.log(entry.name);//TODO: get options from outside and remove state
       entry.checked = !entry.checked;
