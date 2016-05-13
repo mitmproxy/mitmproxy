@@ -41,7 +41,12 @@ class TestRequestCore(object):
         _test_passthrough_attr(treq(), "port")
 
     def test_path(self):
-        _test_decoded_attr(treq(), "path")
+        req = treq()
+        _test_decoded_attr(req, "path")
+        # path can also be None.
+        req.path = None
+        assert req.path is None
+        assert req.data.path is None
 
     def test_host(self):
         if six.PY2:
@@ -102,6 +107,14 @@ class TestRequestUtils(object):
         with raises(ValueError):
             request.url = "not-a-url"
 
+    def test_url_options(self):
+        request = treq(method=b"OPTIONS", path=b"*")
+        assert request.url == "http://address:22"
+
+    def test_url_authority(self):
+        request = treq(first_line_format="authority")
+        assert request.url == "address:22"
+
     def test_pretty_host(self):
         request = treq()
         # Without host header
@@ -135,6 +148,10 @@ class TestRequestUtils(object):
         request.headers["host"] = "other"
         assert request.pretty_url == "http://address:22/path"
 
+    def test_pretty_url_options(self):
+        request = treq(method=b"OPTIONS", path=b"*")
+        assert request.pretty_url == "http://address:22"
+
     def test_pretty_url_authority(self):
         request = treq(first_line_format="authority")
         assert request.pretty_url == "address:22"
@@ -155,7 +172,7 @@ class TestRequestUtils(object):
     def test_get_cookies_none(self):
         request = treq()
         request.headers = Headers()
-        assert len(request.cookies) == 0
+        assert not request.cookies
 
     def test_get_cookies_single(self):
         request = treq()

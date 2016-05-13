@@ -86,6 +86,7 @@ class ProxyTestBase(object):
     no_upstream_cert = False
     authenticator = None
     masterclass = TestMaster
+    add_upstream_certs_to_client_chain = False
 
     @classmethod
     def setup_class(cls):
@@ -129,6 +130,7 @@ class ProxyTestBase(object):
             no_upstream_cert = cls.no_upstream_cert,
             cadir = cls.cadir,
             authenticator = cls.authenticator,
+            add_upstream_certs_to_client_chain = cls.add_upstream_certs_to_client_chain,
         )
 
 

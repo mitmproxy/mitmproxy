@@ -309,7 +309,9 @@ def proxy_modes(parser):
         default=None,
         help="""
             Forward all requests to upstream HTTP server:
-            http[s][2http[s]]://host[:port]
+            http[s]://host[:port]. Clients can always connect both
+            via HTTPS and HTTP, the connection to the server is
+            determined by the specified scheme.
         """
     )
     group.add_argument(
@@ -433,6 +435,12 @@ def proxy_ssl_options(parser):
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
+    )
+    group.add_argument(
+        "--add-upstream-certs-to-client-chain", default=False,
+        action="store_true", dest="add_upstream_certs_to_client_chain",
+        help="Add all certificates of the upstream server to the certificate chain "
+             "that will be served to the proxy client, as extras."
     )
     group.add_argument(
         "--verify-upstream-cert", default=False,

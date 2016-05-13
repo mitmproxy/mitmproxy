@@ -5,10 +5,9 @@ import click
 import itertools
 
 from netlib import tcp
-from netlib.http import CONTENT_MISSING
-import netlib.utils
+from netlib.utils import bytes_to_escaped_str, pretty_size
 from . import flow, filt, contentviews
-from .exceptions import ContentViewException
+from .exceptions import ContentViewException, FlowReadException, ScriptException
 
 
 class DumpError(Exception):
@@ -92,7 +91,8 @@ class DumpMaster(flow.FlowMaster):
         if options.outfile:
             err = self.start_stream_to_path(
                 options.outfile[0],
-                options.outfile[1]
+                options.outfile[1],
+                self.filt
             )
             if err:
                 raise DumpError(err)
@@ -125,14 +125,15 @@ class DumpMaster(flow.FlowMaster):
 
         scripts = options.scripts or []
         for command in scripts:
-            err = self.load_script(command, use_reloader=True)
-            if err:
-                raise DumpError(err)
+            try:
+                self.load_script(command, use_reloader=True)
+            except ScriptException as e:
+                raise DumpError(str(e))
 
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except flow.FlowReadError as v:
+            except FlowReadException as v:
                 self.add_event("Flow file corrupted.", "error")
                 raise DumpError(v)
 
@@ -146,8 +147,8 @@ class DumpMaster(flow.FlowMaster):
         """
         try:
             return flow.read_flows_from_paths(paths)
-        except flow.FlowReadError as e:
-            raise DumpError(e.strerror)
+        except FlowReadException as e:
+            raise DumpError(str(e))
 
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
@@ -174,13 +175,13 @@ class DumpMaster(flow.FlowMaster):
         if self.o.flow_detail >= 2:
             headers = "\r\n".join(
                 "{}: {}".format(
-                    click.style(k, fg="blue", bold=True),
-                    click.style(v, fg="blue"))
+                    click.style(bytes_to_escaped_str(k), fg="blue", bold=True),
+                    click.style(bytes_to_escaped_str(v), fg="blue"))
                 for k, v in message.headers.fields
             )
             self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
-            if message.content == CONTENT_MISSING:
+            if message.content is None:
                 self.echo("(content missing)", indent=4)
             elif message.content:
                 self.echo("")
@@ -237,7 +238,7 @@ class DumpMaster(flow.FlowMaster):
             stickycookie = ""
 
         if flow.client_conn:
-            client = click.style(flow.client_conn.address.host, bold=True)
+            client = click.style(bytes_to_escaped_str(flow.client_conn.address.host), bold=True)
         else:
             client = click.style("[replay]", fg="yellow", bold=True)
 
@@ -246,12 +247,12 @@ class DumpMaster(flow.FlowMaster):
             GET="green",
             DELETE="red"
         ).get(method.upper(), "magenta")
-        method = click.style(method, fg=method_color, bold=True)
+        method = click.style(bytes_to_escaped_str(method), fg=method_color, bold=True)
         if self.showhost:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        url = click.style(url, bold=True)
+        url = click.style(bytes_to_escaped_str(url), bold=True)
 
         httpversion = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
@@ -281,12 +282,12 @@ class DumpMaster(flow.FlowMaster):
         elif 400 <= code < 600:
             code_color = "red"
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        reason = click.style(flow.response.reason, fg=code_color, bold=True)
+        reason = click.style(bytes_to_escaped_str(flow.response.reason), fg=code_color, bold=True)
 
-        if flow.response.content == CONTENT_MISSING:
+        if flow.response.content is None:
             size = "(content missing)"
         else:
-            size = netlib.utils.pretty_size(len(flow.response.content))
+            size = pretty_size(len(flow.response.content))
         size = click.style(size, bold=True)
 
         arrows = click.style("<<", bold=True)
@@ -344,15 +345,8 @@ class DumpMaster(flow.FlowMaster):
             self._process_flow(f)
         return f
 
-    def shutdown(self):  # pragma: no cover
-        return flow.FlowMaster.shutdown(self)
-
     def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
-            self.shutdown()
+            self.unload_scripts()  # make sure to trigger script unload events.
             return
-        try:
-            return flow.FlowMaster.run(self)
-        except BaseException:
-            self.shutdown()
-            raise
+        super(DumpMaster, self).run()

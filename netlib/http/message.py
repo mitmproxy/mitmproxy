@@ -7,9 +7,7 @@ import six
 from .headers import Headers
 from .. import encoding, utils
 
-CONTENT_MISSING = 0
-
-if six.PY2:  # pragma: nocover
+if six.PY2:  # pragma: no cover
     _native = lambda x: x
     _always_bytes = lambda x: x
 else:
@@ -45,9 +43,6 @@ class MessageData(utils.Serializable):
 
 
 class Message(utils.Serializable):
-    def __init__(self, data):
-        self.data = data
-
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
@@ -64,6 +59,7 @@ class Message(utils.Serializable):
 
     @classmethod
     def from_state(cls, state):
+        state["headers"] = Headers.from_state(state["headers"])
         return cls(**state)
 
     @property
@@ -179,15 +175,34 @@ class Message(utils.Serializable):
         self.headers["content-encoding"] = e
         return True
 
+    def replace(self, pattern, repl, flags=0):
+        """
+        Replaces a regular expression pattern with repl in both the headers
+        and the body of the message. Encoded body will be decoded
+        before replacement, and re-encoded afterwards.
+
+        Returns:
+            The number of replacements made.
+        """
+        # TODO: Proper distinction between text and bytes.
+        replacements = 0
+        if self.content:
+            with decoded(self):
+                self.content, replacements = utils.safe_subn(
+                    pattern, repl, self.content, flags=flags
+                )
+        replacements += self.headers.replace(pattern, repl, flags)
+        return replacements
+
     # Legacy
 
     @property
-    def body(self):  # pragma: nocover
+    def body(self):  # pragma: no cover
         warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
         return self.content
 
     @body.setter
-    def body(self, body):  # pragma: nocover
+    def body(self, body):  # pragma: no cover
         warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
         self.content = body
 

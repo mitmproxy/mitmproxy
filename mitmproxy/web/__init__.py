@@ -2,10 +2,12 @@ from __future__ import absolute_import, print_function
 import collections
 import tornado.ioloop
 import tornado.httpserver
+import sys
 
 from netlib.http import authentication
 
-from .. import controller, flow
+from .. import flow
+from ..exceptions import FlowReadException
 from . import app
 
 
@@ -154,7 +156,7 @@ class WebMaster(flow.FlowMaster):
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except flow.FlowReadError as v:
+            except FlowReadException as v:
                 self.add_event(
                     "Could not read flow file: %s" % v,
                     "error"
@@ -166,26 +168,21 @@ class WebMaster(flow.FlowMaster):
                 options.outfile[1]
             )
             if err:
-                print >> sys.stderr, "Stream file error:", err
+                print("Stream file error: {}".format(err), file=sys.stderr)
                 sys.exit(1)
 
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)
 
-    def tick(self):
-        flow.FlowMaster.tick(self, self.masterq, timeout=0)
-
     def run(self):  # pragma: no cover
-        self.server.start_slave(
-            controller.Slave,
-            controller.Channel(self.masterq, self.should_exit)
-        )
+
         iol = tornado.ioloop.IOLoop.instance()
 
         http_server = tornado.httpserver.HTTPServer(self.app)
         http_server.listen(self.options.wport)
 
-        tornado.ioloop.PeriodicCallback(self.tick, 5).start()
+        iol.add_callback(self.start)
+        tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
         try:
             iol.start()
         except (Stop, KeyboardInterrupt):

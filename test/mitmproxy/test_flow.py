@@ -1,15 +1,13 @@
-import Queue
-import time
 import os.path
-from cStringIO import StringIO
-import email.utils
+from six.moves import cStringIO as StringIO
 
 import mock
 
 import netlib.utils
 from netlib import odict
-from netlib.http import CONTENT_MISSING, Headers
+from netlib.http import Headers
 from mitmproxy import filt, controller, tnetstring, flow
+from mitmproxy.exceptions import FlowReadException, ScriptException
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
@@ -69,6 +67,40 @@ class TestStickyCookieState:
         s, f = self._response("SSID=mooo", "www.google.com")
         assert s.jar.keys()[0] == ('www.google.com', 80, '/')
 
+        # Test setting of multiple cookies
+        c1 = "somecookie=test; Path=/"
+        c2 = "othercookie=helloworld; Path=/"
+        s, f = self._response(c1, "www.google.com")
+        f.response.headers["Set-Cookie"] = c2
+        s.handle_response(f)
+        googlekey = s.jar.keys()[0]
+        assert len(s.jar[googlekey].keys()) == 2
+
+        # Test setting of weird cookie keys
+        s = flow.StickyCookieState(filt.parse(".*"))
+        f = tutils.tflow(req=netlib.tutils.treq(host="www.google.com", port=80), resp=True)
+        cs = [
+            "foo/bar=hello",
+            "foo:bar=world",
+            "foo@bar=fizz",
+            "foo,bar=buzz",
+        ]
+        for c in cs:
+            f.response.headers["Set-Cookie"] = c
+            s.handle_response(f)
+        googlekey = s.jar.keys()[0]
+        assert len(s.jar[googlekey].keys()) == len(cs)
+
+        # Test overwriting of a cookie value
+        c1 = "somecookie=helloworld; Path=/"
+        c2 = "somecookie=newvalue; Path=/"
+        s, f = self._response(c1, "www.google.com")
+        f.response.headers["Set-Cookie"] = c2
+        s.handle_response(f)
+        googlekey = s.jar.keys()[0]
+        assert len(s.jar[googlekey].keys()) == 1
+        assert s.jar[googlekey]["somecookie"].items()[0][1] == "newvalue"
+
     def test_handle_request(self):
         s, f = self._response("SSID=mooo", "www.google.com")
         assert "cookie" not in f.request.headers
@@ -116,9 +148,8 @@ class TestClientPlaybackState:
         c.clear(c.current)
         assert c.done()
 
-        q = Queue.Queue()
         fm.state.clear()
-        fm.tick(q, timeout=0)
+        fm.tick(timeout=0)
 
         fm.stop_client_playback()
         assert not fm.client_playback
@@ -465,7 +496,7 @@ class TestFlow(object):
 
     def test_replace_no_content(self):
         f = tutils.tflow()
-        f.request.content = CONTENT_MISSING
+        f.request.content = None
         assert f.replace("foo", "bar") == 0
 
     def test_replace(self):
@@ -709,10 +740,10 @@ class TestSerialize:
         sio.write("bogus")
         sio.seek(0)
         r = flow.FlowReader(sio)
-        tutils.raises(flow.FlowReadError, list, r.stream())
+        tutils.raises(FlowReadException, list, r.stream())
 
-        f = flow.FlowReadError("foo")
-        assert f.strerror == "foo"
+        f = FlowReadException("foo")
+        assert str(f) == "foo"
 
     def test_versioncheck(self):
         f = tutils.tflow()
@@ -731,12 +762,16 @@ class TestFlowMaster:
     def test_load_script(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
-        assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
-        assert not fm.unload_scripts()
-        assert fm.load_script("nonexistent")
-        assert "ValueError" in fm.load_script(
-            tutils.test_data.path("scripts/starterr.py"))
+
+        fm.load_script(tutils.test_data.path("scripts/a.py"))
+        fm.load_script(tutils.test_data.path("scripts/a.py"))
+        fm.unload_scripts()
+        with tutils.raises(ScriptException):
+            fm.load_script("nonexistent")
+        try:
+            fm.load_script(tutils.test_data.path("scripts/starterr.py"))
+        except ScriptException as e:
+            assert "ValueError" in str(e)
         assert len(fm.scripts) == 0
 
     def test_getset_ignore(self):
@@ -751,7 +786,7 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow(resp=True)
-        f.request.content = CONTENT_MISSING
+        f.request.content = None
         assert "missing" in fm.replay_request(f)
 
         f.intercepted = True
@@ -763,7 +798,7 @@ class TestFlowMaster:
     def test_script_reqerr(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
+        fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
         f = tutils.tflow()
         fm.handle_clientconnect(f.client_conn)
         assert fm.handle_request(f)
@@ -771,7 +806,7 @@ class TestFlowMaster:
     def test_script(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("scripts/all.py"))
         f = tutils.tflow(resp=True)
 
         fm.handle_clientconnect(f.client_conn)
@@ -783,7 +818,7 @@ class TestFlowMaster:
         fm.handle_response(f)
         assert fm.scripts[0].ns["log"][-1] == "response"
         # load second script
-        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("scripts/all.py"))
         assert len(fm.scripts) == 2
         fm.handle_clientdisconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
@@ -792,7 +827,7 @@ class TestFlowMaster:
         # unload first script
         fm.unload_scripts()
         assert len(fm.scripts) == 0
-        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("scripts/all.py"))
 
         f.error = tutils.terr()
         fm.handle_error(f)
@@ -802,12 +837,17 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow(resp=True)
-        f = fm.load_flow(f)
+        fm.load_flow(f)
         assert s.flow_count() == 1
         f2 = fm.duplicate_flow(f)
         assert f2.response
         assert s.flow_count() == 2
         assert s.index(f2) == 1
+
+    def test_create_flow(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = flow.State()
@@ -853,9 +893,8 @@ class TestFlowMaster:
         assert not fm.start_client_playback(pb, False)
         fm.client_playback.testing = True
 
-        q = Queue.Queue()
         assert not fm.state.flow_count()
-        fm.tick(q, 0)
+        fm.tick(0)
         assert fm.state.flow_count()
 
         f.error = Error("error")
@@ -899,18 +938,7 @@ class TestFlowMaster:
         assert not fm.do_server_playback(r)
         assert fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(
-            pb,
-            False,
-            [],
-            True,
-            False,
-            None,
-            False,
-            None,
-            False)
-        q = Queue.Queue()
-        fm.tick(q, 0)
+        fm.tick(0)
         assert fm.should_exit.is_set()
 
         fm.stop_server_playback()
@@ -1145,38 +1173,6 @@ class TestResponse:
         resp = f.response
         resp2 = resp.copy()
         assert resp2.get_state() == resp.get_state()
-
-    def test_refresh(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-        n = time.time()
-        r.headers["date"] = email.utils.formatdate(n)
-        pre = r.headers["date"]
-        r.refresh(n)
-        assert pre == r.headers["date"]
-        r.refresh(n + 60)
-
-        d = email.utils.parsedate_tz(r.headers["date"])
-        d = email.utils.mktime_tz(d)
-        # Weird that this is not exact...
-        assert abs(60 - (d - n)) <= 1
-
-        r.headers["set-cookie"] = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
-        r.refresh()
-
-    def test_refresh_cookie(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
-
-        # Invalid expires format, sent to us by Reddit.
-        c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/"
-        assert r._refresh_cookie(c, 60)
-
-        c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
-        assert "00:21:38" in r._refresh_cookie(c, 60)
-
-        # https://github.com/mitmproxy/mitmproxy/issues/773
-        c = ">=A"
-        with tutils.raises(ValueError):
-            r._refresh_cookie(c, 60)
 
     def test_replace(self):
         r = HTTPResponse.wrap(netlib.tutils.tresp())

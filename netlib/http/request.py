@@ -18,6 +18,7 @@ from .message import Message, _native, _always_bytes, MessageData
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891
 host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
+
 class RequestData(MessageData):
     def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=None, content=None,
                  timestamp_start=None, timestamp_end=None):
@@ -42,8 +43,7 @@ class Request(Message):
     An HTTP request.
     """
     def __init__(self, *args, **kwargs):
-        data = RequestData(*args, **kwargs)
-        super(Request, self).__init__(data)
+        self.data = RequestData(*args, **kwargs)
 
     def __repr__(self):
         if self.host and self.port:
@@ -54,6 +54,23 @@ class Request(Message):
         return "Request({} {}{})".format(
             self.method, hostport, path
         )
+
+    def replace(self, pattern, repl, flags=0):
+        """
+            Replaces a regular expression pattern with repl in the headers, the
+            request path and the body of the request. Encoded content will be
+            decoded before replacement, and re-encoded afterwards.
+
+            Returns:
+                The number of replacements made.
+        """
+        # TODO: Proper distinction between text and bytes.
+        c = super(Request, self).replace(pattern, repl, flags)
+        self.path, pc = utils.safe_subn(
+            pattern, repl, self.path, flags=flags
+        )
+        c += pc
+        return c
 
     @property
     def first_line_format(self):
@@ -100,7 +117,7 @@ class Request(Message):
         Setting the host attribute also updates the host header, if present.
         """
 
-        if six.PY2:  # pragma: nocover
+        if six.PY2:  # pragma: no cover
             return self.data.host
 
         if not self.data.host:
@@ -145,9 +162,12 @@ class Request(Message):
     def path(self):
         """
         HTTP request path, e.g. "/index.html".
-        Guaranteed to start with a slash.
+        Guaranteed to start with a slash, except for OPTIONS requests, which may just be "*".
         """
-        return _native(self.data.path)
+        if self.data.path is None:
+            return None
+        else:
+            return _native(self.data.path)
 
     @path.setter
     def path(self, path):
@@ -158,6 +178,8 @@ class Request(Message):
         """
         The URL string, constructed from the request's URL components
         """
+        if self.first_line_format == "authority":
+            return "%s:%d" % (self.host, self.port)
         return utils.unparse_url(self.scheme, self.host, self.port, self.path)
 
     @url.setter
@@ -321,59 +343,30 @@ class Request(Message):
 
     # Legacy
 
-    def get_cookies(self):  # pragma: nocover
-        warnings.warn(".get_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        return self.cookies
-
-    def set_cookies(self, odict):  # pragma: nocover
-        warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        self.cookies = odict
-
-    def get_query(self):  # pragma: nocover
+    def get_query(self):  # pragma: no cover
         warnings.warn(".get_query is deprecated, use .query instead.", DeprecationWarning)
         return self.query or ODict([])
 
-    def set_query(self, odict):  # pragma: nocover
+    def set_query(self, odict):  # pragma: no cover
         warnings.warn(".set_query is deprecated, use .query instead.", DeprecationWarning)
         self.query = odict
 
-    def get_path_components(self):  # pragma: nocover
+    def get_path_components(self):  # pragma: no cover
         warnings.warn(".get_path_components is deprecated, use .path_components instead.", DeprecationWarning)
         return self.path_components
 
-    def set_path_components(self, lst):  # pragma: nocover
+    def set_path_components(self, lst):  # pragma: no cover
         warnings.warn(".set_path_components is deprecated, use .path_components instead.", DeprecationWarning)
         self.path_components = lst
 
-    def get_form_urlencoded(self):  # pragma: nocover
+    def get_form_urlencoded(self):  # pragma: no cover
         warnings.warn(".get_form_urlencoded is deprecated, use .urlencoded_form instead.", DeprecationWarning)
         return self.urlencoded_form or ODict([])
 
-    def set_form_urlencoded(self, odict):  # pragma: nocover
+    def set_form_urlencoded(self, odict):  # pragma: no cover
         warnings.warn(".set_form_urlencoded is deprecated, use .urlencoded_form instead.", DeprecationWarning)
         self.urlencoded_form = odict
 
-    def get_form_multipart(self):  # pragma: nocover
+    def get_form_multipart(self):  # pragma: no cover
         warnings.warn(".get_form_multipart is deprecated, use .multipart_form instead.", DeprecationWarning)
         return self.multipart_form or ODict([])
-
-    @property
-    def form_in(self):  # pragma: nocover
-        warnings.warn(".form_in is deprecated, use .first_line_format instead.", DeprecationWarning)
-        return self.first_line_format
-
-    @form_in.setter
-    def form_in(self, form_in):  # pragma: nocover
-        warnings.warn(".form_in is deprecated, use .first_line_format instead.", DeprecationWarning)
-        self.first_line_format = form_in
-
-    @property
-    def form_out(self):  # pragma: nocover
-        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
-        return self.first_line_format
-
-    @form_out.setter
-    def form_out(self, form_out):  # pragma: nocover
-        warnings.warn(".form_out is deprecated, use .first_line_format instead.", DeprecationWarning)
-        self.first_line_format = form_out
-

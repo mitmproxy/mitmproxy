@@ -65,31 +65,30 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
-        "cryptography>=1.2.2, <1.3",
+        "cryptography>=1.3,<1.4",
         "Flask>=0.10.1, <0.11",
-        "h2>=2.1.2, <3.0",
-        "hpack>=2.1.0, <3.0",
-        "html2text==2016.1.8",
-        "hyperframe>=3.2.0, <4.0",
-        "Pillow>=3.1, <3.2",
+        "h2>=2.3.1, <3",
+        "html2text>=2016.1.8, <=2016.4.2",
+        "hyperframe>=4.0.1, <5",
+        "lxml>=3.5.0, <3.7",
+        "Pillow>=3.2, <3.3",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
-        "pyOpenSSL>=0.15.1, <0.16",
-        "pyparsing>=2.1,<2.2",
+        "pyOpenSSL>=16.0, <17.0",
+        "pyparsing>=2.0,<2.1",  # 2.1.1 breaks our binaries, see https://sourceforge.net/p/pyparsing/bugs/93/
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.10",
         "six>=1.10, <1.11",
         "tornado>=4.3, <4.4",
+        "typing==3.5.1.0",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "lxml==3.4.4",  # there are no Windows wheels for newer versions, so we pin this.
             "pydivert>=0.0.7, <0.1",
         ],
         ':sys_platform != "win32"': [
-            "lxml>=3.5.0, <3.6",
         ],
         # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
         # Ubuntu Trusty and other still ship with setuptools < 17.1
@@ -99,14 +98,15 @@ setup(
         ],
         'dev': [
             "coveralls>=1.1, <1.2",
-            "mock>=1.3.0, <1.4",
-            "pytest>=2.8.7, <2.9",
+            "mock>=2.0,<2.1",
+            "pytest>=2.8.7,<2.10",
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",
             "pytest-xdist>=1.14, <1.15",
-            "sphinx>=1.3.5, <1.4",
+            "sphinx>=1.3.5, <1.5",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.3.0, <0.4",
+            "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
             "cssutils>=1.0.1, <1.1",
@@ -116,7 +116,7 @@ setup(
         'examples': [
             "beautifulsoup4>=4.4.1, <4.5",
             "harparser>=0.2, <0.3",
-            "pytz==2015.7.0",
+            "pytz>=2015.07.0, <=2016.3",
         ]
     }
 )

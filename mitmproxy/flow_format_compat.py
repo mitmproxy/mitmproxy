@@ -35,7 +35,14 @@ def convert_015_016(data):
 
 
 def convert_016_017(data):
+    data["server_conn"]["peer_address"] = None
     data["version"] = (0, 17)
+    return data
+
+
+def convert_017_018(data):
+    data["server_conn"]["ip_address"] = data["server_conn"].pop("peer_address")
+    data["version"] = (0, 18)
     return data
 
 
@@ -44,6 +51,7 @@ converters = {
     (0, 14): convert_014_015,
     (0, 15): convert_015_016,
     (0, 16): convert_016_017,
+    (0, 17): convert_017_018,
 }
 
 

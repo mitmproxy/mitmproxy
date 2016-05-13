@@ -212,7 +212,7 @@ Running scripts on saved flows
 
 Sometimes, we want to run a script on :py:class:`~mitmproxy.models.Flow` objects that are already
 complete.  This happens when you start a script, and then load a saved set of flows from a file
-(see the "scripted data transformation" example `here <https://mitmproxy.org/doc/mitmdump.html>`_).
+(see the "scripted data transformation" example :ref:`here <mitmdump>`).
 It also happens when you run a one-shot script on a single flow through the ``|`` (pipe) shortcut
 in mitmproxy.
 

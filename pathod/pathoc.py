@@ -1,9 +1,10 @@
+from __future__ import print_function
 import contextlib
 import sys
 import os
 import itertools
 import hashlib
-import Queue
+from six.moves import queue
 import random
 import select
 import time
@@ -42,7 +43,8 @@ class SSLInfo(object):
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
-        for i in self.certchain:
+        for n,i in enumerate(self.certchain):
+            parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
                 parts.append("\t\t%s=%s" % cn)
@@ -69,7 +71,7 @@ class SSLInfo(object):
             s = certutils.SSLCert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
-            return "\n".join(parts)
+        return "\n".join(parts)
 
 
 
@@ -91,8 +93,8 @@ class WebsocketFrameReader(threading.Thread):
         self.showresp = showresp
         self.hexdump = hexdump
         self.rfile = rfile
-        self.terminate = Queue.Queue()
-        self.frames_queue = Queue.Queue()
+        self.terminate = queue.Queue()
+        self.frames_queue = queue.Queue()
         self.logger = log.ConnectionLogger(
             self.logfp,
             self.hexdump,
@@ -118,7 +120,7 @@ class WebsocketFrameReader(threading.Thread):
                 try:
                     self.terminate.get_nowait()
                     return
-                except Queue.Empty:
+                except queue.Empty:
                     pass
                 for rfile in r:
                     with self.logger.ctx() as log:
@@ -207,7 +209,7 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
         if self.use_http2:
-            if not tcp.HAS_ALPN:  # pragma: nocover
+            if not tcp.HAS_ALPN:  # pragma: no cover
                 log.write_raw(
                     self.fp,
                     "HTTP/2 requires ALPN support. "
@@ -311,7 +313,7 @@ class Pathoc(tcp.TCPClient):
                 self.get_alpn_proto_negotiated()
             )
             if showssl:
-                print >> fp, str(self.sslinfo)
+                print(str(self.sslinfo), file=fp)
 
             if self.use_http2:
                 self.protocol.check_alpn()
@@ -343,7 +345,7 @@ class Pathoc(tcp.TCPClient):
                         timeout=timeout,
                         block=True if timeout != 0 else False
                     )
-                except Queue.Empty:
+                except queue.Empty:
                     if finish:
                         continue
                     else:
@@ -424,7 +426,7 @@ class Pathoc(tcp.TCPClient):
             finally:
                 if resp:
                     lg("<< %s %s: %s bytes" % (
-                        resp.status_code, utils.xrepr(resp.msg), len(resp.content)
+                        resp.status_code, utils.xrepr(resp.reason), len(resp.content)
                     ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()
@@ -457,7 +459,7 @@ class Pathoc(tcp.TCPClient):
             # TODO: do something
 
 
-def main(args):  # pragma: nocover
+def main(args):  # pragma: no cover
     memo = set([])
     trycount = 0
     p = None
@@ -497,10 +499,10 @@ def main(args):  # pragma: nocover
             try:
                 p.connect(args.connect_to, args.showssl)
             except TcpException as v:
-                print >> sys.stderr, str(v)
+                print(str(v), file=sys.stderr)
                 continue
             except PathocError as v:
-                print >> sys.stderr, str(v)
+                print(str(v), file=sys.stderr)
                 sys.exit(1)
             for spec in playlist:
                 if args.explain or args.memo:
@@ -513,7 +515,7 @@ def main(args):  # pragma: nocover
                     else:
                         trycount += 1
                         if trycount > args.memolimit:
-                            print >> sys.stderr, "Memo limit exceeded..."
+                            print("Memo limit exceeded...", file=sys.stderr)
                             return
                         else:
                             continue

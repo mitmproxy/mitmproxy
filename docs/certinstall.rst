@@ -65,7 +65,7 @@ See http://windows.microsoft.com/en-ca/windows/import-export-certificates-privat
 Windows (automated)
 ^^^^^^^^^^^^^^^^^^^
 
->>> certutil.exe -importpfx mitmproxy-ca-cert.p12
+>>> certutil.exe -importpfx Root mitmproxy-ca-cert.p12
 
 See also: https://technet.microsoft.com/en-us/library/cc732443.aspx
 

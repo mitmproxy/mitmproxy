@@ -6,7 +6,7 @@ import six
 
 from netlib import tcp
 from netlib.exceptions import HttpException, HttpReadDisconnect, NetlibException
-from netlib.http import Headers, CONTENT_MISSING
+from netlib.http import Headers
 
 from h2.exceptions import H2Error
 
@@ -21,7 +21,7 @@ from ..models import (
     expect_continue_response
 )
 
-from .base import Layer, Kill
+from .base import Layer
 
 
 class _HttpTransmissionLayer(Layer):
@@ -50,8 +50,8 @@ class _HttpTransmissionLayer(Layer):
         yield "this is a generator"  # pragma: no cover
 
     def send_response(self, response):
-        if response.content == CONTENT_MISSING:
-            raise HttpException("Cannot assemble flow with CONTENT_MISSING")
+        if response.content is None:
+            raise HttpException("Cannot assemble flow with missing content")
         self.send_response_headers(response)
         self.send_response_body(response, [response.content])
 
@@ -82,8 +82,11 @@ class ConnectServerConnection(object):
     def __getattr__(self, item):
         return getattr(self.via, item)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.via)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
 
 class UpstreamConnectLayer(Layer):
@@ -164,7 +167,7 @@ class HttpLayer(Layer):
                 self.validate_request(request)
 
                 # Regular Proxy Mode: Handle CONNECT
-                if self.mode == "regular" and request.form_in == "authority":
+                if self.mode == "regular" and request.first_line_format == "authority":
                     self.handle_regular_mode_connect(request)
                     return
 
@@ -181,7 +184,7 @@ class HttpLayer(Layer):
                 flow.request = request
                 # set upstream auth
                 if self.mode == "upstream" and self.config.upstream_auth is not None:
-                    flow.request.set_auth(self.config.upstream_auth)
+                    flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
                 self.process_request_hook(flow)
 
                 if not flow.response:
@@ -191,13 +194,9 @@ class HttpLayer(Layer):
                     # response was set by an inline script.
                     # we now need to emulate the responseheaders hook.
                     flow = self.channel.ask("responseheaders", flow)
-                    if flow == Kill:
-                        raise Kill()
 
                 self.log("response", "debug", [repr(flow.response)])
                 flow = self.channel.ask("response", flow)
-                if flow == Kill:
-                    raise Kill()
                 self.send_response_to_client(flow)
 
                 if self.check_close_connection(flow):
@@ -212,7 +211,7 @@ class HttpLayer(Layer):
                     return
 
                 # Upstream Proxy Mode: Handle CONNECT
-                if flow.request.form_in == "authority" and flow.response.status_code == 200:
+                if flow.request.first_line_format == "authority" and flow.response.status_code == 200:
                     self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
@@ -228,7 +227,8 @@ class HttpLayer(Layer):
                     six.reraise(ProtocolException, ProtocolException(
                         "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
             finally:
-                flow.live = False
+                if flow:
+                    flow.live = False
 
     def get_request_from_client(self):
         request = self.read_request()
@@ -254,7 +254,7 @@ class HttpLayer(Layer):
 
     def handle_regular_mode_connect(self, request):
         self.set_server((request.host, request.port))
-        self.send_response(make_connect_response(request.http_version))
+        self.send_response(make_connect_response(request.data.http_version))
         layer = self.ctx.next_layer(self)
         layer()
 
@@ -311,11 +311,9 @@ class HttpLayer(Layer):
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.channel.ask("responseheaders", flow)
-        if flow == Kill:
-            raise Kill()
 
         if flow.response.stream:
-            flow.response.data.content = CONTENT_MISSING
+            flow.response.data.content = None
         else:
             flow.response.data.content = b"".join(self.read_response_body(
                 flow.request,
@@ -336,8 +334,7 @@ class HttpLayer(Layer):
         if self.mode == "regular":
             pass  # only absolute-form at this point, nothing to do here.
         elif self.mode == "upstream":
-            if flow.request.form_in == "authority":
-                flow.request.scheme = "http"  # pseudo value
+            pass
         else:
             # Setting request.host also updates the host header, which we want to preserve
             host_header = flow.request.headers.get("host", None)
@@ -348,8 +345,6 @@ class HttpLayer(Layer):
             flow.request.scheme = "https" if self.__initial_server_tls else "http"
 
         request_reply = self.channel.ask("request", flow)
-        if request_reply == Kill:
-            raise Kill()
         if isinstance(request_reply, HTTPResponse):
             flow.response = request_reply
             return
@@ -386,7 +381,7 @@ class HttpLayer(Layer):
             """
 
     def validate_request(self, request):
-        if request.form_in == "absolute" and request.scheme != "http":
+        if request.first_line_format == "absolute" and request.scheme != "http":
             raise HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {
@@ -396,14 +391,14 @@ class HttpLayer(Layer):
         }
 
         allowed_request_forms = expected_request_forms[self.mode]
-        if request.form_in not in allowed_request_forms:
+        if request.first_line_format not in allowed_request_forms:
             err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
-                " or ".join(allowed_request_forms), request.form_in
+                " or ".join(allowed_request_forms), request.first_line_format
             )
             raise HttpException(err_message)
 
-        if self.mode == "regular" and request.form_in == "absolute":
-            request.form_out = "relative"
+        if self.mode == "regular" and request.first_line_format == "absolute":
+            request.first_line_format = "relative"
 
     def authenticate(self, request):
         if self.config.authenticator:

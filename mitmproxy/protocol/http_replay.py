@@ -7,8 +7,7 @@ from netlib.http import http1
 
 from ..controller import Channel
 from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
-from .base import Kill
-
+from ..exceptions import Kill
 
 # TODO: Doesn't really belong into mitmproxy.protocol...
 
@@ -16,30 +15,28 @@ from .base import Kill
 class RequestReplayThread(threading.Thread):
     name = "RequestReplayThread"
 
-    def __init__(self, config, flow, masterq, should_exit):
+    def __init__(self, config, flow, event_queue, should_exit):
         """
-            masterqueue can be a queue or None, if no scripthooks should be
+            event_queue can be a queue or None, if no scripthooks should be
             processed.
         """
         self.config, self.flow = config, flow
-        if masterq:
-            self.channel = Channel(masterq, should_exit)
+        if event_queue:
+            self.channel = Channel(event_queue, should_exit)
         else:
             self.channel = None
         super(RequestReplayThread, self).__init__()
 
     def run(self):
         r = self.flow.request
-        form_out_backup = r.form_out
+        first_line_format_backup = r.first_line_format
         try:
             self.flow.response = None
 
             # If we have a channel, run script hooks.
             if self.channel:
                 request_reply = self.channel.ask("request", self.flow)
-                if request_reply == Kill:
-                    raise Kill()
-                elif isinstance(request_reply, HTTPResponse):
+                if isinstance(request_reply, HTTPResponse):
                     self.flow.response = request_reply
 
             if not self.flow.response:
@@ -63,9 +60,9 @@ class RequestReplayThread(threading.Thread):
                             self.config.clientcerts,
                             sni=self.flow.server_conn.sni
                         )
-                        r.form_out = "relative"
+                        r.first_line_format = "relative"
                     else:
-                        r.form_out = "absolute"
+                        r.first_line_format= "absolute"
                 else:
                     server_address = (r.host, r.port)
                     server = ServerConnection(server_address, (self.config.host, 0))
@@ -75,7 +72,7 @@ class RequestReplayThread(threading.Thread):
                             self.config.clientcerts,
                             sni=self.flow.server_conn.sni
                         )
-                    r.form_out = "relative"
+                    r.first_line_format = "relative"
 
                 server.wfile.write(http1.assemble_request(r))
                 server.wfile.flush()
@@ -102,4 +99,4 @@ class RequestReplayThread(threading.Thread):
             from ..proxy.root_context import Log
             self.channel.tell("log", Log(traceback.format_exc(), "error"))
         finally:
-            r.form_out = form_out_backup
+            r.first_line_format = first_line_format_backup

@@ -386,7 +386,7 @@ class SSLCert(Serializable):
 
     @classmethod
     def from_state(cls, state):
-        cls.from_pem(state)
+        return cls.from_pem(state)
 
     @classmethod
     def from_pem(cls, txt):

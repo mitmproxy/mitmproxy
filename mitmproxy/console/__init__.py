@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import mailcap
 import mimetypes
@@ -16,9 +16,10 @@ import weakref
 
 from netlib import tcp
 
-from .. import controller, flow, script, contentviews
+from .. import flow, script, contentviews
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
+from ..exceptions import FlowReadException, ScriptException
 
 EVENTLOG_SIZE = 500
 
@@ -47,19 +48,13 @@ class ConsoleState(flow.State):
 
     def add_flow(self, f):
         super(ConsoleState, self).add_flow(f)
-        if self.focus is None:
-            self.set_focus(0)
-        elif self.follow_focus:
-            self.update_focus()
+        self.update_focus()
         self.set_flow_marked(f, False)
         return f
 
     def update_flow(self, f):
         super(ConsoleState, self).update_flow(f)
-        if self.focus is None:
-            self.set_focus(0)
-        elif self.follow_focus:
-            self.update_focus()
+        self.update_focus()
         return f
 
     def set_limit(self, limit):
@@ -83,7 +78,10 @@ class ConsoleState(flow.State):
             self.focus = None
 
     def update_focus(self):
-        self.set_focus(len(self.view) - 1)
+        if self.focus is None:
+            self.set_focus(0)
+        elif self.follow_focus:
+            self.set_focus(len(self.view) - 1)
 
     def set_focus_flow(self, f):
         self.set_focus(self.view.index(f))
@@ -191,7 +189,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         r = self.set_intercept(options.intercept)
         if r:
-            print >> sys.stderr, "Intercept error:", r
+            print("Intercept error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
         if options.limit:
@@ -199,12 +197,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         r = self.set_stickycookie(options.stickycookie)
         if r:
-            print >> sys.stderr, "Sticky cookies error:", r
+            print("Sticky cookies error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
         r = self.set_stickyauth(options.stickyauth)
         if r:
-            print >> sys.stderr, "Sticky auth error:", r
+            print("Sticky auth error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
         self.set_stream_large_bodies(options.stream_large_bodies)
@@ -231,9 +229,10 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.scripts:
             for i in options.scripts:
-                err = self.load_script(i)
-                if err:
-                    print >> sys.stderr, "Script load error:", err
+                try:
+                    self.load_script(i)
+                except ScriptException as e:
+                    print("Script load error: {}".format(e), file=sys.stderr)
                     sys.exit(1)
 
         if options.outfile:
@@ -242,7 +241,7 @@ class ConsoleMaster(flow.FlowMaster):
                 options.outfile[1]
             )
             if err:
-                print >> sys.stderr, "Stream file error:", err
+                print("Stream file error: {}".format(err), file=sys.stderr)
                 sys.exit(1)
 
         self.view_stack = []
@@ -260,7 +259,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def load_script(self, command, use_reloader=True):
         # We default to using the reloader in the console ui.
-        super(ConsoleMaster, self).load_script(command, use_reloader)
+        return super(ConsoleMaster, self).load_script(command, use_reloader)
 
     def sig_add_event(self, sender, e, level):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
@@ -321,11 +320,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         try:
             s = script.Script(command, script.ScriptContext(self))
-        except script.ScriptException as v:
+            s.load()
+        except script.ScriptException as e:
             signals.status_message.send(
-                message = "Error loading script."
+                message='Error loading "{}".'.format(command)
             )
-            signals.add_event("Error loading script:\n%s" % v.args[0], "error")
+            signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
             return
 
         if f.request:
@@ -336,13 +336,6 @@ class ConsoleMaster(flow.FlowMaster):
             self._run_script_method("error", s, f)
         s.unload()
         signals.flow_change.send(self, flow = f)
-
-    def set_script(self, command):
-        if not command:
-            return
-        ret = self.load_script(command)
-        if ret:
-            signals.status_message.send(message=ret)
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
@@ -359,7 +352,7 @@ class ConsoleMaster(flow.FlowMaster):
         """
         try:
             return flow.read_flows_from_paths(path)
-        except flow.FlowReadError as e:
+        except FlowReadException as e:
             signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
@@ -453,12 +446,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.clear()
 
     def ticker(self, *userdata):
-        changed = self.tick(self.masterq, timeout=0)
+        changed = self.tick(timeout=0)
         if changed:
             self.loop.draw_screen()
             signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
-
 
     def run(self):
         self.ui = urwid.raw_display.Screen()
@@ -468,11 +460,6 @@ class ConsoleMaster(flow.FlowMaster):
             urwid.SolidFill("x"),
             screen = self.ui,
             handle_mouse = not self.options.no_mouse,
-        )
-
-        self.server.start_slave(
-            controller.Slave,
-            controller.Channel(self.masterq, self.should_exit)
         )
 
         if self.options.rfile:
@@ -485,7 +472,7 @@ class ConsoleMaster(flow.FlowMaster):
                 )
             elif ret and not self.state.flow_count():
                 self.shutdown()
-                print >> sys.stderr, "Could not load file:", ret
+                print("Could not load file: {}".format(ret), file=sys.stderr)
                 sys.exit(1)
 
         self.loop.set_alarm_in(0.01, self.ticker)
@@ -510,16 +497,17 @@ class ConsoleMaster(flow.FlowMaster):
             lambda *args: self.view_flowlist()
         )
 
+        self.start()
         try:
             self.loop.run()
         except Exception:
             self.loop.stop()
             sys.stdout.flush()
-            print >> sys.stderr, traceback.format_exc()
-            print >> sys.stderr, "mitmproxy has crashed!"
-            print >> sys.stderr, "Please lodge a bug report at:"
-            print >> sys.stderr, "\thttps://github.com/mitmproxy/mitmproxy"
-            print >> sys.stderr, "Shutting down..."
+            print(traceback.format_exc(), file=sys.stderr)
+            print("mitmproxy has crashed!", file=sys.stderr)
+            print("Please lodge a bug report at:", file=sys.stderr)
+            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+            print("Shutting down...", file=sys.stderr)
         sys.stderr.flush()
         self.shutdown()
 
@@ -648,8 +636,8 @@ class ConsoleMaster(flow.FlowMaster):
         reterr = None
         try:
             flow.FlowMaster.load_flows_file(self, path)
-        except flow.FlowReadError as v:
-            reterr = str(v)
+        except FlowReadException as e:
+            reterr = str(e)
         signals.flowlist_change.send(self)
         return reterr
 
@@ -676,7 +664,13 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.unload_scripts()
         for command in commands:
-            self.load_script(command)
+            try:
+                self.load_script(command)
+            except ScriptException as e:
+                signals.status_message.send(
+                    message='Error loading "{}".'.format(command)
+                )
+                signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
         signals.update_settings.send(self)
 
     def stop_client_playback_prompt(self, a):
@@ -719,8 +713,7 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def process_flow(self, f):
-        if self.state.intercept and f.match(
-                self.state.intercept) and not f.request.is_replay:
+        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
             f.intercept(self)
         else:
             # check if flow was intercepted within an inline script by flow.intercept()

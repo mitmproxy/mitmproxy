@@ -10,7 +10,7 @@ suitable extension to the test suite.
 Our tests are written for the `py.test`_ or nose_ test frameworks.
 At the point where you send your pull request, a command like this:
 
->>> py.test -n 4 --cov mitmproxy
+>>> py.test --cov mitmproxy --cov netlib
 
 Should give output something like this:
 

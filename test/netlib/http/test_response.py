@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, division
 
+import email
+
 import six
+import time
 
 from netlib.http import Headers
 from netlib.odict import ODict, ODictCaseless
@@ -95,8 +98,28 @@ class TestResponseUtils(object):
         resp = tresp()
         v = resp.cookies
         v.add("foo", ["bar", ODictCaseless()])
-        resp.set_cookies(v)
+        resp.cookies = v
 
         v = resp.cookies
         assert len(v) == 1
         assert v["foo"] == [["bar", ODictCaseless()]]
+
+    def test_refresh(self):
+        r = tresp()
+        n = time.time()
+        r.headers["date"] = email.utils.formatdate(n)
+        pre = r.headers["date"]
+        r.refresh(n)
+        assert pre == r.headers["date"]
+        r.refresh(n + 60)
+
+        d = email.utils.parsedate_tz(r.headers["date"])
+        d = email.utils.mktime_tz(d)
+        # Weird that this is not exact...
+        assert abs(60 - (d - n)) <= 1
+
+        cookie = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
+        r.headers["set-cookie"] = cookie
+        r.refresh()
+        # Cookie refreshing is tested in test_cookies, we just make sure that it's triggered here.
+        assert cookie != r.headers["set-cookie"]

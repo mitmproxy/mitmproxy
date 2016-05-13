@@ -17,12 +17,12 @@ install:
   - "dev.bat"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 test_script:
-  - "py.test"
+  - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod"
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
 deploy_script:
   ps: |
-    if($Env:APPVEYOR_REPO_BRANCH -match "master") {
+    if(($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true")) {
     python .\release\rtool.py bdist
     python .\release\rtool.py upload-snapshot --bdist
     }

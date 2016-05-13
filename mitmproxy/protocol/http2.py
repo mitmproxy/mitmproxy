@@ -2,9 +2,10 @@ from __future__ import (absolute_import, print_function, division)
 
 import threading
 import time
-import Queue
+from six.moves import queue
 
 import h2
+import six
 from h2.connection import H2Connection
 
 from netlib.tcp import ssl_read_select
@@ -25,11 +26,6 @@ class SafeH2Connection(H2Connection):
         self.conn = conn
         self.lock = threading.RLock()
 
-    def safe_close_connection(self, error_code):
-        with self.lock:
-            self.close_connection(error_code)
-            self.conn.send(self.data_to_send())
-
     def safe_increment_flow_control(self, stream_id, length):
         if length == 0:
             return
@@ -46,7 +42,7 @@ class SafeH2Connection(H2Connection):
         with self.lock:
             try:
                 self.reset_stream(stream_id, error_code)
-            except h2.exceptions.StreamClosedError:
+            except h2.exceptions.StreamClosedError:  # pragma: no cover
                 # stream is already closed - good
                 pass
             self.conn.send(self.data_to_send())
@@ -58,7 +54,7 @@ class SafeH2Connection(H2Connection):
 
     def safe_send_headers(self, is_zombie, stream_id, headers):
         with self.lock:
-            if is_zombie():
+            if is_zombie():  # pragma: no cover
                 return
             self.send_headers(stream_id, headers)
             self.conn.send(self.data_to_send())
@@ -68,7 +64,7 @@ class SafeH2Connection(H2Connection):
             position = 0
             while position < len(chunk):
                 self.lock.acquire()
-                if is_zombie():
+                if is_zombie():  # pragma: no cover
                     self.lock.release()
                     return
                 max_outbound_frame_size = self.max_outbound_frame_size
@@ -82,7 +78,7 @@ class SafeH2Connection(H2Connection):
                 self.lock.release()
                 position += max_outbound_frame_size
         with self.lock:
-            if is_zombie():
+            if is_zombie():  # pragma: no cover
                 return
             self.end_stream(stream_id)
             self.conn.send(self.data_to_send())
@@ -94,26 +90,21 @@ class Http2Layer(Layer):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
         self.streams = dict()
-        self.client_reset_streams = []
-        self.server_reset_streams = []
         self.server_to_client_stream_ids = dict([(0, 0)])
-        self.client_conn.h2 = SafeH2Connection(self.client_conn, client_side=False)
+        self.client_conn.h2 = SafeH2Connection(self.client_conn, client_side=False, header_encoding=False)
 
         # make sure that we only pass actual SSL.Connection objects in here,
         # because otherwise ssl_read_select fails!
         self.active_conns = [self.client_conn.connection]
 
     def _initiate_server_conn(self):
-        self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True)
+        self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True, header_encoding=False)
         self.server_conn.h2.initiate_connection()
         self.server_conn.send(self.server_conn.h2.data_to_send())
         self.active_conns.append(self.server_conn.connection)
 
     def connect(self):  # pragma: no cover
         raise ValueError("CONNECT inside an HTTP2 stream is not supported.")
-        # self.ctx.connect()
-        # self.server_conn.connect()
-        # self._initiate_server_conn()
 
     def set_server(self):  # pragma: no cover
         raise NotImplementedError("Cannot change server for HTTP2 connections.")
@@ -140,12 +131,12 @@ class Http2Layer(Layer):
                 eid = event.stream_id
 
         if isinstance(event, h2.events.RequestReceived):
-            headers = Headers([[str(k), str(v)] for k, v in event.headers])
+            headers = Headers([[k, v] for k, v in event.headers])
             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].start()
         elif isinstance(event, h2.events.ResponseReceived):
-            headers = Headers([[str(k), str(v)] for k, v in event.headers])
+            headers = Headers([[k, v] for k, v in event.headers])
             self.streams[eid].queued_data_length = 0
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].response_headers = headers
@@ -161,9 +152,6 @@ class Http2Layer(Layer):
             self.streams[eid].data_finished.set()
         elif isinstance(event, h2.events.StreamReset):
             self.streams[eid].zombie = time.time()
-            self.client_reset_streams.append(self.streams[eid].client_stream_id)
-            if self.streams[eid].server_stream_id:
-                self.server_reset_streams.append(self.streams[eid].server_stream_id)
             if eid in self.streams and event.error_code == 0x8:
                 if is_server:
                     other_stream_id = self.streams[eid].client_stream_id
@@ -172,7 +160,7 @@ class Http2Layer(Layer):
                 if other_stream_id is not None:
                     other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
         elif isinstance(event, h2.events.RemoteSettingsChanged):
-            new_settings = dict([(id, cs.new_value) for (id, cs) in event.changed_settings.iteritems()])
+            new_settings = dict([(id, cs.new_value) for (id, cs) in six.iteritems(event.changed_settings)])
             other_conn.h2.safe_update_settings(new_settings)
         elif isinstance(event, h2.events.ConnectionTerminated):
             # Do not immediately terminate the other connection.
@@ -226,6 +214,7 @@ class Http2Layer(Layer):
                     try:
                         raw_frame = b''.join(http2_read_raw_frame(source_conn.rfile))
                     except:
+                        # read frame failed: connection closed
                         for stream in self.streams.values():
                             stream.zombie = time.time()
                         return
@@ -251,12 +240,12 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         self.response_headers = None
         self.pushed = False
 
-        self.request_data_queue = Queue.Queue()
+        self.request_data_queue = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
 
         self.response_arrived = threading.Event()
-        self.response_data_queue = Queue.Queue()
+        self.response_data_queue = queue.Queue()
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
 
@@ -302,11 +291,11 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         port = None
 
         if path == '*' or path.startswith("/"):
-            form_in = "relative"
+            first_line_format = "relative"
         elif method == 'CONNECT':  # pragma: no cover
             raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
         else:  # pragma: no cover
-            form_in = "absolute"
+            first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
             scheme, host, port, _ = utils.parse_url(path)
 
@@ -325,7 +314,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         data = b"".join(data)
 
         return HTTPRequest(
-            form_in,
+            first_line_format,
             method,
             scheme,
             host,
@@ -345,7 +334,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
 
         with self.server_conn.h2.lock:
             # We must not assign a stream id if we are already a zombie.
-            if self.zombie:
+            if self.zombie:  # pragma: no cover
                 return
 
             self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
@@ -381,13 +370,13 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         while True:
             try:
                 yield self.response_data_queue.get(timeout=1)
-            except Queue.Empty:
+            except queue.Empty:
                 pass
             if self.response_data_finished.is_set():
                 while self.response_data_queue.qsize() > 0:
                     yield self.response_data_queue.get()
                 return
-            if self.zombie:
+            if self.zombie:  # pragma: no cover
                 return
 
     def send_response_headers(self, response):
@@ -408,9 +397,6 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         # This layer only handles a single stream.
         # RFC 7540 8.1: An HTTP request/response exchange fully consumes a single stream.
         return True
-
-    def connect(self):  # pragma: no cover
-        raise ValueError("CONNECT inside an HTTP2 stream is not supported.")
 
     def set_server(self, *args, **kwargs):  # pragma: no cover
         # do not mess with the server connection - all streams share it.

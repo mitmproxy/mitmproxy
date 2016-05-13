@@ -4,6 +4,7 @@ import uuid
 
 from .. import stateobject, utils, version
 from .connections import ClientConnection, ServerConnection
+from ..exceptions import Kill
 
 
 class Error(stateobject.StateObject):
@@ -28,7 +29,6 @@ class Error(stateobject.StateObject):
         @type msg: str
         @type timestamp: float
         """
-        self.flow = None  # will usually be set by the flow backref mixin
         self.msg = msg
         self.timestamp = timestamp or utils.timestamp()
 
@@ -99,9 +99,6 @@ class Flow(stateobject.StateObject):
             self._backup = state.pop("backup")
         super(Flow, self).set_state(state)
 
-    def __eq__(self, other):
-        return self is other
-
     def copy(self):
         f = copy.copy(self)
 
@@ -143,8 +140,6 @@ class Flow(stateobject.StateObject):
         """
             Kill this request.
         """
-        from ..protocol import Kill
-
         self.error = Error("Connection killed")
         self.intercepted = False
         self.reply(Kill)

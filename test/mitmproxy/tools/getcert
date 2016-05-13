@@ -7,4 +7,4 @@ import ssl
 import subprocess
 
 addr = socket.gethostbyname(sys.argv[1])
-print ssl.get_server_certificate((addr, 443))
+print(ssl.get_server_certificate((addr, 443)))

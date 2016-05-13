@@ -1,6 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 import warnings
+from email.utils import parsedate_tz, formatdate, mktime_tz
+import time
 
 from . import cookies
 from .headers import Headers
@@ -29,8 +31,7 @@ class Response(Message):
     An HTTP response.
     """
     def __init__(self, *args, **kwargs):
-        data = ResponseData(*args, **kwargs)
-        super(Response, self).__init__(data)
+        self.data = ResponseData(*args, **kwargs)
 
     def __repr__(self):
         if self.content:
@@ -95,22 +96,34 @@ class Response(Message):
             values.append(header)
         self.headers.set_all("set-cookie", values)
 
-    # Legacy
+    def refresh(self, now=None):
+        """
+        This fairly complex and heuristic function refreshes a server
+        response for replay.
 
-    def get_cookies(self):  # pragma: nocover
-        warnings.warn(".get_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        return self.cookies
-
-    def set_cookies(self, odict):  # pragma: nocover
-        warnings.warn(".set_cookies is deprecated, use .cookies instead.", DeprecationWarning)
-        self.cookies = odict
-
-    @property
-    def msg(self):  # pragma: nocover
-        warnings.warn(".msg is deprecated, use .reason instead.", DeprecationWarning)
-        return self.reason
-
-    @msg.setter
-    def msg(self, reason):  # pragma: nocover
-        warnings.warn(".msg is deprecated, use .reason instead.", DeprecationWarning)
-        self.reason = reason
+            - It adjusts date, expires and last-modified headers.
+            - It adjusts cookie expiration.
+        """
+        if not now:
+            now = time.time()
+        delta = now - self.timestamp_start
+        refresh_headers = [
+            "date",
+            "expires",
+            "last-modified",
+        ]
+        for i in refresh_headers:
+            if i in self.headers:
+                d = parsedate_tz(self.headers[i])
+                if d:
+                    new = mktime_tz(d) + delta
+                    self.headers[i] = formatdate(new)
+        c = []
+        for set_cookie_header in self.headers.get_all("set-cookie"):
+            try:
+                refreshed = cookies.refresh_set_cookie_header(set_cookie_header, delta)
+            except ValueError:
+                refreshed = set_cookie_header
+            c.append(refreshed)
+        if c:
+            self.headers.set_all("set-cookie", c)

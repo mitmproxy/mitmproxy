@@ -2,24 +2,27 @@
     This module provides more sophisticated flow tracking and provides filtering and interception facilities.
 """
 from __future__ import absolute_import
+
+import traceback
 from abc import abstractmethod, ABCMeta
 import hashlib
-import Cookie
-import cookielib
+import sys
+
+import six
+from six.moves import http_cookies, http_cookiejar, urllib
 import os
 import re
-import time
-import urlparse
 
-from netlib import wsgi
+from netlib import wsgi, odict
 from netlib.exceptions import HttpException
-from netlib.http import CONTENT_MISSING, Headers, http1
+from netlib.http import Headers, http1, cookies
 from . import controller, tnetstring, filt, script, version, flow_format_compat
 from .onboarding import app
 from .proxy.config import HostMatcher
 from .protocol.http_replay import RequestReplayThread
-from .protocol import Kill
-from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, HTTPRequest
+from .exceptions import Kill, FlowReadException
+from .models import ClientConnection, ServerConnection, HTTPFlow, HTTPRequest, FLOW_TYPES
+from collections import defaultdict
 
 
 class AppRegistry:
@@ -168,7 +171,7 @@ class StreamLargeBodies(object):
         expected_size = http1.expected_http_body_size(
             flow.request, flow.response if not is_request else None
         )
-        if not (0 <= expected_size <= self.max_size):
+        if not r.content and not (0 <= expected_size <= self.max_size):
             # r.stream may already be a callable, which we want to preserve.
             r.stream = r.stream or True
 
@@ -246,8 +249,8 @@ class ServerPlaybackState:
         """
         r = flow.request
 
-        _, _, path, _, query, _ = urlparse.urlparse(r.url)
-        queriesArray = urlparse.parse_qsl(query, keep_blank_values=True)
+        _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
+        queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
         key = [
             str(r.port),
@@ -307,23 +310,25 @@ class StickyCookieState:
         """
             flt: Compiled filter.
         """
-        self.jar = {}
+        self.jar = defaultdict(dict)
         self.flt = flt
 
-    def ckey(self, m, f):
+    def ckey(self, attrs, f):
         """
             Returns a (domain, port, path) tuple.
         """
-        return (
-            m["domain"] or f.request.host,
-            f.request.port,
-            m["path"] or "/"
-        )
+        domain = f.request.host
+        path = "/"
+        if attrs["domain"]:
+            domain = attrs["domain"][-1]
+        if attrs["path"]:
+            path = attrs["path"][-1]
+        return (domain, f.request.port, path)
 
     def domain_match(self, a, b):
-        if cookielib.domain_match(a, b):
+        if http_cookiejar.domain_match(a, b):
             return True
-        elif cookielib.domain_match(a, b.strip(".")):
+        elif http_cookiejar.domain_match(a, b.strip(".")):
             return True
         return False
 
@@ -331,11 +336,12 @@ class StickyCookieState:
         for i in f.response.headers.get_all("set-cookie"):
             # FIXME: We now know that Cookie.py screws up some cookies with
             # valid RFC 822/1123 datetime specifications for expiry. Sigh.
-            c = Cookie.SimpleCookie(str(i))
-            for m in c.values():
-                k = self.ckey(m, f)
-                if self.domain_match(f.request.host, k[0]):
-                    self.jar[k] = m
+            name, value, attrs = cookies.parse_set_cookie_header(str(i))
+            a = self.ckey(attrs, f)
+            if self.domain_match(f.request.host, a[0]):
+                b = attrs.lst
+                b.insert(0, [name, value])
+                self.jar[a][name] = odict.ODictCaseless(b)
 
     def handle_request(self, f):
         l = []
@@ -347,10 +353,11 @@ class StickyCookieState:
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
-                    l.append(self.jar[i].output(header="").strip())
+                    c = self.jar[i]
+                    l.extend([cookies.format_cookie_header(c[name]) for name in c.keys()])
         if l:
             f.request.stickycookie = True
-            f.request.headers.set_all("cookie", l)
+            f.request.headers["cookie"] = "; ".join(l)
 
 
 class StickyAuthState:
@@ -383,8 +390,11 @@ class FlowList(object):
     def __getitem__(self, item):
         return self._list[item]
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self._list)
+
+    if six.PY2:
+        __nonzero__ = __bool__
 
     def __len__(self):
         return len(self._list)
@@ -624,10 +634,19 @@ class State(object):
         self.flows.kill_all(master)
 
 
-class FlowMaster(controller.Master):
+class FlowMaster(controller.ServerMaster):
+
+    @property
+    def server(self):
+        # At some point, we may want to have support for multiple servers.
+        # For now, this suffices.
+        if len(self.servers) > 0:
+            return self.servers[0]
 
     def __init__(self, server, state):
-        controller.Master.__init__(self, server)
+        super(FlowMaster, self).__init__()
+        if server:
+            self.add_server(server)
         self.state = state
         self.server_playback = None
         self.client_playback = None
@@ -680,15 +699,15 @@ class FlowMaster(controller.Master):
 
     def load_script(self, command, use_reloader=False):
         """
-            Loads a script. Returns an error description if something went
-            wrong.
+            Loads a script.
+
+            Raises:
+                ScriptException
         """
-        try:
-            s = script.Script(command, script.ScriptContext(self))
-        except script.ScriptException as v:
-            return v.args[0]
+        s = script.Script(command, script.ScriptContext(self))
+        s.load()
         if use_reloader:
-            script.reloader.watch(s, lambda: self.masterq.put(("script_change", s)))
+            script.reloader.watch(s, lambda: self.event_queue.put(("script_change", s)))
         self.scripts.append(s)
 
     def _run_single_script_hook(self, script_obj, name, *args, **kwargs):
@@ -696,7 +715,7 @@ class FlowMaster(controller.Master):
             try:
                 script_obj.run(name, *args, **kwargs)
             except script.ScriptException as e:
-                self.add_event("Script error:\n" + str(e), "error")
+                self.add_event("Script error:\n{}".format(e), "error")
 
     def run_script_hook(self, name, *args, **kwargs):
         for script_obj in self.scripts:
@@ -782,8 +801,6 @@ class FlowMaster(controller.Master):
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
-        if self.server_playback.exit:
-            self.shutdown()
         self.server_playback = None
 
     def do_server_playback(self, flow):
@@ -795,59 +812,53 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            response = HTTPResponse.from_state(rflow.response.get_state())
+            response = rflow.response.copy()
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
-            flow.reply(response)
-            if self.server_playback.count() == 0:
-                self.stop_server_playback()
+            flow.response = response
             return True
         return None
 
-    def tick(self, q, timeout):
+    def tick(self, timeout):
         if self.client_playback:
-            e = [
-                self.client_playback.done(),
-                self.client_playback.exit,
+            stop = (
+                self.client_playback.done() and
                 self.state.active_flow_count() == 0
-            ]
-            if all(e):
-                self.shutdown()
-            self.client_playback.tick(self)
-            if self.client_playback.done():
-                self.client_playback = None
+            )
+            exit = self.client_playback.exit
+            if stop:
+                self.stop_client_playback()
+                if exit:
+                    self.shutdown()
+            else:
+                self.client_playback.tick(self)
 
-        return super(FlowMaster, self).tick(q, timeout)
+        if self.server_playback:
+            stop = (
+                self.server_playback.count() == 0 and
+                self.state.active_flow_count() == 0 and
+                not self.kill_nonreplay
+            )
+            exit = self.server_playback.exit
+            if stop:
+                self.stop_server_playback()
+                if exit:
+                    self.shutdown()
+        return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
-        return self.load_flow(f.copy())
+        f2 = f.copy()
+        self.load_flow(f2)
+        return f2
 
     def create_request(self, method, scheme, host, port, path):
         """
             this method creates a new artificial and minimalist request also adds it to flowlist
         """
-        c = ClientConnection.from_state(dict(
-            address=dict(address=(host, port), use_ipv6=False),
-            clientcert=None,
-            ssl_established=False,
-            timestamp_start=time.time(),
-            timestamp_end=time.time(),
-            timestamp_ssl_setup=time.time()
-        ))
+        c = ClientConnection.make_dummy(("", 0))
+        s = ServerConnection.make_dummy((host, port))
 
-        s = ServerConnection.from_state(dict(
-            address=dict(address=(host, port), use_ipv6=False),
-            cert=None,
-            sni=host,
-            source_address=dict(address=('', 0), use_ipv6=False),
-            ssl_established=True,
-            timestamp_start=time.time(),
-            timestamp_tcp_setup=time.time(),
-            timestamp_ssl_setup=time.time(),
-            timestamp_end=None,
-            via=None
-        ))
         f = HTTPFlow(c, s)
         headers = Headers()
 
@@ -863,27 +874,29 @@ class FlowMaster(controller.Master):
             b""
         )
         f.request = req
-        return self.load_flow(f)
+        self.load_flow(f)
+        return f
 
     def load_flow(self, f):
         """
-            Loads a flow, and returns a new flow object.
+        Loads a flow
         """
+        if isinstance(f, HTTPFlow):
+            if self.server and self.server.config.mode == "reverse":
+                f.request.host = self.server.config.upstream_server.address.host
+                f.request.port = self.server.config.upstream_server.address.port
+                f.request.scheme = self.server.config.upstream_server.scheme
 
-        if self.server and self.server.config.mode == "reverse":
-            f.request.host = self.server.config.upstream_server.address.host
-            f.request.port = self.server.config.upstream_server.address.port
-            f.request.scheme = re.sub("^https?2", "", self.server.config.upstream_server.scheme)
-
-        f.reply = controller.DummyReply()
-        if f.request:
-            self.handle_request(f)
-        if f.response:
-            self.handle_responseheaders(f)
-            self.handle_response(f)
-        if f.error:
-            self.handle_error(f)
-        return f
+            f.reply = controller.DummyReply()
+            if f.request:
+                self.handle_request(f)
+            if f.response:
+                self.handle_responseheaders(f)
+                self.handle_response(f)
+            if f.error:
+                self.handle_error(f)
+        else:
+            raise NotImplementedError()
 
     def load_flows(self, fr):
         """
@@ -898,11 +911,16 @@ class FlowMaster(controller.Master):
     def load_flows_file(self, path):
         path = os.path.expanduser(path)
         try:
-            f = file(path, "rb")
-            freader = FlowReader(f)
+            if path == "-":
+                # This is incompatible with Python 3 - maybe we can use click?
+                freader = FlowReader(sys.stdin)
+                return self.load_flows(freader)
+            else:
+                with open(path, "rb") as f:
+                    freader = FlowReader(f)
+                    return self.load_flows(freader)
         except IOError as v:
-            raise FlowReadError(v.strerror)
-        return self.load_flows(freader)
+            raise FlowReadException(v.strerror)
 
     def process_new_request(self, f):
         if self.stickycookie_state:
@@ -917,11 +935,8 @@ class FlowMaster(controller.Master):
 
         if self.server_playback:
             pb = self.do_server_playback(f)
-            if not pb:
-                if self.kill_nonreplay:
-                    f.kill(self)
-                else:
-                    f.reply()
+            if not pb and self.kill_nonreplay:
+                f.kill(self)
 
     def process_new_response(self, f):
         if self.stickycookie_state:
@@ -935,7 +950,7 @@ class FlowMaster(controller.Master):
             return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
-        if f.request.content == CONTENT_MISSING:
+        if f.request.content is None:
             return "Can't replay request with missing content..."
         if f.request:
             f.backup()
@@ -948,7 +963,7 @@ class FlowMaster(controller.Master):
             rt = RequestReplayThread(
                 self.server.config,
                 f,
-                self.masterq if run_scripthooks else False,
+                self.event_queue if run_scripthooks else False,
                 self.should_exit
             )
             rt.start()  # pragma: no cover
@@ -1004,19 +1019,19 @@ class FlowMaster(controller.Master):
             self.state.add_flow(f)
         self.replacehooks.run(f)
         self.setheaders.run(f)
-        self.run_script_hook("request", f)
         self.process_new_request(f)
+        self.run_script_hook("request", f)
         return f
 
     def handle_responseheaders(self, f):
-        self.run_script_hook("responseheaders", f)
-
         try:
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
         except HttpException:
             f.reply(Kill)
             return
+
+        self.run_script_hook("responseheaders", f)
 
         f.reply()
         return f
@@ -1057,12 +1072,12 @@ class FlowMaster(controller.Master):
             s.unload()
         except script.ScriptException as e:
             ok = False
-            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)), 'error')
+            self.add_event('Error reloading "{}":\n{}'.format(s.filename, e), 'error')
         try:
             s.load()
         except script.ScriptException as e:
             ok = False
-            self.add_event('Error reloading "{}": {}'.format(s.filename, str(e)), 'error')
+            self.add_event('Error reloading "{}":\n{}'.format(s.filename, e), 'error')
         else:
             self.add_event('"{}" reloaded.'.format(s.filename), 'info')
         return ok
@@ -1072,13 +1087,16 @@ class FlowMaster(controller.Master):
         m.reply()
 
     def shutdown(self):
-        self.unload_scripts()
-        controller.Master.shutdown(self)
+        super(FlowMaster, self).shutdown()
+
+        # Add all flows that are still active
         if self.stream:
             for i in self.state.flows:
                 if not i.response:
                     self.stream.add(i)
             self.stop_stream()
+
+        self.unload_scripts()
 
     def start_stream(self, fp, filt):
         self.stream = FilteredFlowWriter(fp, filt)
@@ -1087,11 +1105,11 @@ class FlowMaster(controller.Master):
         self.stream.fo.close()
         self.stream = None
 
-    def start_stream_to_path(self, path, mode="wb"):
+    def start_stream_to_path(self, path, mode="wb", filt=None):
         path = os.path.expanduser(path)
         try:
-            f = file(path, mode)
-            self.start_stream(f, None)
+            f = open(path, mode)
+            self.start_stream(f, filt)
         except IOError as v:
             return str(v)
         self.stream_path = path
@@ -1103,16 +1121,17 @@ def read_flows_from_paths(paths):
     From a performance perspective, streaming would be advisable -
     however, if there's an error with one of the files, we want it to be raised immediately.
 
-    If an error occurs, a FlowReadError will be raised.
+    Raises:
+        FlowReadException, if any error occurs.
     """
     try:
         flows = []
         for path in paths:
             path = os.path.expanduser(path)
-            with file(path, "rb") as f:
+            with open(path, "rb") as f:
                 flows.extend(FlowReader(f).stream())
     except IOError as e:
-        raise FlowReadError(e.strerror)
+        raise FlowReadException(e.strerror)
     return flows
 
 
@@ -1126,13 +1145,6 @@ class FlowWriter:
         tnetstring.dump(d, self.fo)
 
 
-class FlowReadError(Exception):
-
-    @property
-    def strerror(self):
-        return self.args[0]
-
-
 class FlowReader:
 
     def __init__(self, fo):
@@ -1142,6 +1154,15 @@ class FlowReader:
         """
             Yields Flow objects from the dump.
         """
+
+        # There is a weird mingw bug that breaks .tell() when reading from stdin.
+        try:
+            self.fo.tell()
+        except IOError:  # pragma: no cover
+            can_tell = False
+        else:
+            can_tell = True
+
         off = 0
         try:
             while True:
@@ -1149,14 +1170,17 @@ class FlowReader:
                 try:
                     data = flow_format_compat.migrate_flow(data)
                 except ValueError as e:
-                    raise FlowReadError(str(e))
-                off = self.fo.tell()
-                yield HTTPFlow.from_state(data)
+                    raise FlowReadException(str(e))
+                if can_tell:
+                    off = self.fo.tell()
+                if data["type"] not in FLOW_TYPES:
+                    raise FlowReadException("Unknown flow type: {}".format(data["type"]))
+                yield FLOW_TYPES[data["type"]].from_state(data)
         except ValueError:
             # Error is due to EOF
-            if self.fo.tell() == off and self.fo.read() == '':
+            if can_tell and self.fo.tell() == off and self.fo.read() == '':
                 return
-            raise FlowReadError("Invalid data format.")
+            raise FlowReadException("Invalid data format.")
 
 
 class FilteredFlowWriter:

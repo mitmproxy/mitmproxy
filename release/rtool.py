@@ -70,7 +70,8 @@ def get_snapshot_version():
     if tag_dist == 0:
         return get_version()
     else:
-        return "{version}dev{tag_dist:04}-{commit}".format(
+        # The wheel build tag (we use the commit) must start with a digit, so we include "0x"
+        return "{version}dev{tag_dist:04}-0x{commit}".format(
             version=get_version(),  # this should already be the next version
             tag_dist=tag_dist,
             commit=commit

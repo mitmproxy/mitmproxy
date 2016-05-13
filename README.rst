@@ -39,7 +39,7 @@ Then do the following:
 
     git clone https://github.com/mitmproxy/mitmproxy.git
     cd mitmproxy
-    ./dev
+    ./dev.sh
 
 
 The *dev* script will create a virtualenv environment in a directory called "venv",
@@ -83,7 +83,7 @@ suite. The project tries to maintain 100% test coverage.
 
 
 Documentation
-----
+-------------
 
 The mitmproxy documentation is build using Sphinx_, which is installed automatically if you set up a development
 environment as described above.

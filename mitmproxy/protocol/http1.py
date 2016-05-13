@@ -54,7 +54,7 @@ class Http1Layer(_HttpTransmissionLayer):
         )
         read_until_eof = http1.expected_http_body_size(flow.request, flow.response) == -1
         close_connection = request_close or response_close or read_until_eof
-        if flow.request.form_in == "authority" and flow.response.status_code == 200:
+        if flow.request.first_line_format == "authority" and flow.response.status_code == 200:
             # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
             # Charles Proxy sends a CONNECT response with HTTP/1.0
             # and no Content-Length header

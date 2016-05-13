@@ -325,7 +325,7 @@ class TestReadRequestRelative(tservers.ServerTestBase):
 
     ssl = True
 
-    def test_asterisk_form_in(self):
+    def test_asterisk_form(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl()
@@ -334,7 +334,7 @@ class TestReadRequestRelative(tservers.ServerTestBase):
 
         req = protocol.read_request(NotImplemented)
 
-        assert req.form_in == "relative"
+        assert req.first_line_format == "relative"
         assert req.method == "OPTIONS"
         assert req.path == "*"
 
@@ -348,7 +348,7 @@ class TestReadRequestAbsolute(tservers.ServerTestBase):
 
     ssl = True
 
-    def test_absolute_form_in(self):
+    def test_absolute_form(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl()
@@ -357,7 +357,7 @@ class TestReadRequestAbsolute(tservers.ServerTestBase):
 
         req = protocol.read_request(NotImplemented)
 
-        assert req.form_in == "absolute"
+        assert req.first_line_format == "absolute"
         assert req.scheme == "http"
         assert req.host == "address"
         assert req.port == 22
@@ -382,13 +382,13 @@ class TestReadRequestConnect(tservers.ServerTestBase):
         protocol.connection_preface_performed = True
 
         req = protocol.read_request(NotImplemented)
-        assert req.form_in == "authority"
+        assert req.first_line_format == "authority"
         assert req.method == "CONNECT"
         assert req.host == "address"
         assert req.port == 22
 
         req = protocol.read_request(NotImplemented)
-        assert req.form_in == "authority"
+        assert req.first_line_format == "authority"
         assert req.method == "CONNECT"
         assert req.host == "example.com"
         assert req.port == 443
@@ -417,7 +417,7 @@ class TestReadResponse(tservers.ServerTestBase):
 
         assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
-        assert resp.msg == ''
+        assert resp.reason == ''
         assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
         assert resp.content == b'foobar'
         assert resp.timestamp_end
@@ -444,7 +444,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.stream_id == 42
         assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
-        assert resp.msg == ''
+        assert resp.reason == ''
         assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
         assert resp.content == b''
 

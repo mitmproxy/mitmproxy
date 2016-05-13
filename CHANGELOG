@@ -1,4 +1,29 @@
-15 January 2016: mitmproxy 0.16
+9 April 2016: mitmproxy 0.17
+
+    * Simplify repository and release structure. mitmproxy now comes as a single package, including netlib and pathod.
+
+    * Rename the Python package from libmproxy to mitmproxy.
+
+    * New option to add server certs to client chain (CVE-2016-2402, John Kozyrakis)
+
+    * Enable HTTP/2 by default (Thomas Kriechbaumer)
+
+    * Improved HAR extractor (Shadab Zafar)
+
+    * Add icon for OSX and Windows binaries
+
+    * Add content view for query parameters (Will Coster)
+
+    * Initial work on Python 3 compatibility
+
+    * locust.io export (Zohar Lorberbaum)
+
+    * Fix XSS vulnerability in HTTP errors (Will Coster)
+
+    * Numerous bugfixes and minor improvements
+
+
+15 February 2016: mitmproxy 0.16
 
     * Completely revised HTTP2 implementation based on hyper-h2 (Thomas Kriechbaumer)
 

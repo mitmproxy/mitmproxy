@@ -2,6 +2,7 @@
     This inline script utilizes harparser.HAR from
     https://github.com/JustusW/harparser to generate a HAR log object.
 """
+import six
 from harparser import HAR
 
 from datetime import datetime
@@ -111,7 +112,7 @@ def response(context, flow):
 
     # HAR timings are integers in ms, so we have to re-encode the raw timings to
     # that format.
-    timings = dict([(k, int(1000 * v)) for k, v in timings_raw.iteritems()])
+    timings = dict([(k, int(1000 * v)) for k, v in six.iteritems(timings_raw)])
 
     # The full_time is the sum of all timings.
     # Timings set to -1 will be ignored as per spec.
@@ -142,7 +143,7 @@ def response(context, flow):
         },
         "response": {
             "status": flow.response.status_code,
-            "statusText": flow.response.msg,
+            "statusText": flow.response.reason,
             "httpVersion": flow.response.http_version,
             "cookies": format_cookies(flow.response.cookies),
             "headers": format_headers(flow.response.headers),

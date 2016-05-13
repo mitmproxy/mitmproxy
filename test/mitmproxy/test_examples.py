@@ -31,9 +31,8 @@ class DummyContext(object):
 def example(command):
     command = os.path.join(example_dir, command)
     ctx = DummyContext()
-    s = script.Script(command, ctx)
-    yield s
-    s.unload()
+    with script.Script(command, ctx) as s:
+        yield s
 
 
 def test_load_scripts():
@@ -52,8 +51,10 @@ def test_load_scripts():
             f += " ~a"
         if "modify_response_body" in f:
             f += " foo bar"  # two arguments required
+
+        s = script.Script(f, script.ScriptContext(tmaster))
         try:
-            s = script.Script(f, script.ScriptContext(tmaster))  # Loads the script file.
+            s.load()
         except Exception as v:
             if "ImportError" not in str(v):
                 raise
@@ -105,8 +106,8 @@ def test_modify_querystring():
 
 def test_modify_response_body():
     with tutils.raises(script.ScriptException):
-        with example("modify_response_body.py") as ex:
-            pass
+        with example("modify_response_body.py"):
+            assert True
 
     flow = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
     with example("modify_response_body.py mitmproxy rocks") as ex:
@@ -124,7 +125,7 @@ def test_redirect_requests():
 
 def test_har_extractor():
     with tutils.raises(script.ScriptException):
-        with example("har_extractor.py") as ex:
+        with example("har_extractor.py"):
             pass
 
     times = dict(

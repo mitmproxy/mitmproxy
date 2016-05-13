@@ -38,7 +38,7 @@ var FilterDocs = React.createClass({
             });
             commands.push(<tr key="docs-link">
                 <td colSpan="2">
-                    <a href="https://mitmproxy.org/doc/features/filters.html"
+                    <a href="http://docs.mitmproxy.org/en/stable/features/filters.html"
                         target="_blank">
                         <i className="fa fa-external-link"></i>
                     &nbsp; mitmproxy docs</a>

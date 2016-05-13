@@ -1,9 +1,7 @@
 import tempfile
-import os
 import re
 import shutil
-import cStringIO
-from contextlib import contextmanager
+from six.moves import cStringIO as StringIO
 
 import netlib
 from pathod import utils, test, pathoc, pathod, language
@@ -14,7 +12,7 @@ def treader(bytes):
     """
         Construct a tcp.Read object from bytes.
     """
-    fp = cStringIO.StringIO(bytes)
+    fp = StringIO(bytes)
     return tcp.Reader(fp)
 
 
@@ -93,7 +91,7 @@ class DaemonTests(object):
         """
         if ssl is None:
             ssl = self.ssl
-        logfp = cStringIO.StringIO()
+        logfp = StringIO()
         c = pathoc.Pathoc(
             ("localhost", self.d.port),
             ssl=ssl,
@@ -123,6 +121,6 @@ test_data = utils.Data(__name__)
 
 def render(r, settings=language.Settings()):
     r = r.resolve(settings)
-    s = cStringIO.StringIO()
+    s = StringIO()
     assert language.serve(r, s, settings)
     return s.getvalue()

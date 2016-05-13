@@ -8,12 +8,12 @@ from netlib.tcp import Address
 import netlib.tutils
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
-from netlib.http import authentication, CONTENT_MISSING, http1
+from netlib.http import authentication, http1
 from netlib.tutils import raises
 from pathod import pathoc, pathod
 
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.protocol import Kill
+from mitmproxy.exceptions import Kill
 from mitmproxy.models import Error, HTTPResponse
 
 from . import tutils, tservers
@@ -126,7 +126,7 @@ class TcpMixin:
         i2 = self.pathod("306")
         self._ignore_off()
 
-        self.master.masterq.join()
+        self.master.event_queue.join()
 
         assert n.status_code == 304
         assert i.status_code == 305
@@ -172,7 +172,7 @@ class TcpMixin:
         i2 = self.pathod("306")
         self._tcpproxy_off()
 
-        self.master.masterq.join()
+        self.master.event_queue.join()
 
         assert n.status_code == 304
         assert i.status_code == 305
@@ -281,12 +281,11 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
 
         self.pathod("200:b@3k")
         assert self.master.state.view[-1].response.stream
-        assert self.master.state.view[-1].response.content == CONTENT_MISSING
+        assert self.master.state.view[-1].response.content is None
         self.master.set_stream_large_bodies(None)
 
     def test_stream_modify(self):
-        self.master.load_script(
-            tutils.test_data.path("scripts/stream_modify.py"))
+        self.master.load_script(tutils.test_data.path("scripts/stream_modify.py"))
         d = self.pathod('200:b"foo"')
         assert d.content == "bar"
         self.master.unload_scripts()
@@ -511,8 +510,7 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
     def test_tcp_stream_modify(self):
-        self.master.load_script(
-            tutils.test_data.path("scripts/tcp_stream_modify.py"))
+        self.master.load_script(tutils.test_data.path("scripts/tcp_stream_modify.py"))
 
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
@@ -816,7 +814,7 @@ class MasterIncomplete(tservers.TestMaster):
 
     def handle_request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
-        resp.content = CONTENT_MISSING
+        resp.content = None
         f.reply(resp)
 
 
@@ -973,22 +971,22 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         assert not self.chain[1].tmaster.state.flows[0].response  # killed
         assert self.chain[1].tmaster.state.flows[1].response
 
-        assert self.proxy.tmaster.state.flows[0].request.form_in == "authority"
-        assert self.proxy.tmaster.state.flows[1].request.form_in == "relative"
+        assert self.proxy.tmaster.state.flows[0].request.first_line_format == "authority"
+        assert self.proxy.tmaster.state.flows[1].request.first_line_format == "relative"
 
         assert self.chain[0].tmaster.state.flows[
-            0].request.form_in == "authority"
+            0].request.first_line_format == "authority"
         assert self.chain[0].tmaster.state.flows[
-            1].request.form_in == "relative"
+            1].request.first_line_format == "relative"
         assert self.chain[0].tmaster.state.flows[
-            2].request.form_in == "authority"
+            2].request.first_line_format == "authority"
         assert self.chain[0].tmaster.state.flows[
-            3].request.form_in == "relative"
+            3].request.first_line_format == "relative"
 
         assert self.chain[1].tmaster.state.flows[
-            0].request.form_in == "relative"
+            0].request.first_line_format == "relative"
         assert self.chain[1].tmaster.state.flows[
-            1].request.form_in == "relative"
+            1].request.first_line_format == "relative"
 
         req = p.request("get:'/p/418:b\"content2\"'")
 
@@ -999,3 +997,43 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         # (both terminated)
         # nothing happened here
         assert self.chain[1].tmaster.state.flow_count() == 2
+
+
+class AddUpstreamCertsToClientChainMixin:
+
+    ssl = True
+    servercert = tutils.test_data.path("data/trusted-server.crt")
+    ssloptions = pathod.SSLOptions(
+            cn="trusted-cert",
+            certs=[
+                ("trusted-cert", servercert)
+            ]
+    )
+
+    def test_add_upstream_certs_to_client_chain(self):
+        with open(self.servercert, "rb") as f:
+            d = f.read()
+        upstreamCert = SSLCert.from_pem(d)
+        p = self.pathoc()
+        upstream_cert_found_in_client_chain = False
+        for receivedCert in p.server_certs:
+            if receivedCert.digest('sha256') == upstreamCert.digest('sha256'):
+                upstream_cert_found_in_client_chain = True
+                break
+        assert(upstream_cert_found_in_client_chain == self.add_upstream_certs_to_client_chain)
+
+
+class TestHTTPSAddUpstreamCertsToClientChainTrue(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
+
+    """
+    If --add-server-certs-to-client-chain is True, then the client should receive the upstream server's certificates
+    """
+    add_upstream_certs_to_client_chain = True
+
+
+class TestHTTPSAddUpstreamCertsToClientChainFalse(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
+
+    """
+    If --add-server-certs-to-client-chain is False, then the client should not receive the upstream server's certificates
+    """
+    add_upstream_certs_to_client_chain = False

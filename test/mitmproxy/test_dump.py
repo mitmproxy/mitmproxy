@@ -1,10 +1,9 @@
 import os
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 from mitmproxy.exceptions import ContentViewException
 from mitmproxy.models import HTTPResponse
 
 import netlib.tutils
-from netlib.http import CONTENT_MISSING
 
 from mitmproxy import dump, flow
 from mitmproxy.proxy import Log
@@ -38,7 +37,7 @@ def test_strfuncs():
     flow.request.stickycookie = True
     flow.client_conn = mock.MagicMock()
     flow.client_conn.address.host = "foo"
-    flow.response = netlib.tutils.tresp(content=CONTENT_MISSING)
+    flow.response = netlib.tutils.tresp(content=None)
     flow.response.is_replay = True
     flow.response.status_code = 300
     m.echo_flow(flow)
@@ -69,8 +68,9 @@ class TestDumpMaster:
         m.handle_clientconnect(f.client_conn)
         m.handle_serverconnect(f.server_conn)
         m.handle_request(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
-        f = m.handle_response(f)
+        if not f.error:
+            f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
+            f = m.handle_response(f)
         m.handle_clientdisconnect(f.client_conn)
         return f
 
@@ -104,10 +104,10 @@ class TestDumpMaster:
         o = dump.Options(flow_detail=3)
         m = dump.DumpMaster(None, o, outfile=cs)
         f = tutils.tflow()
-        f.request.content = CONTENT_MISSING
+        f.request.content = None
         m.handle_request(f)
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
-        f.response.content = CONTENT_MISSING
+        f.response.content = None
         m.handle_response(f)
         assert "content missing" in cs.getvalue()
 

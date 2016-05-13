@@ -1,15 +1,13 @@
-import cStringIO
+from six.moves import cStringIO as StringIO
 from mitmproxy import filt
-from mitmproxy.models import Error
-from mitmproxy.models import http
-from netlib.http import Headers
+from mock import patch
 from . import tutils
 
 
 class TestParsing:
 
     def _dump(self, x):
-        c = cStringIO.StringIO()
+        c = StringIO()
         x.dump(fp=c)
         assert c.getvalue()
 
@@ -78,43 +76,13 @@ class TestParsing:
 class TestMatching:
 
     def req(self):
-        headers = Headers(header="qvalue")
-        req = http.HTTPRequest(
-            "absolute",
-            "GET",
-            "http",
-            "host",
-            80,
-            "/path",
-            b"HTTP/1.1",
-            headers,
-            "content_request",
-            None,
-            None
-        )
-        f = http.HTTPFlow(tutils.tclient_conn(), None)
-        f.request = req
-        return f
+        return tutils.tflow()
 
     def resp(self):
-        f = self.req()
-
-        headers = Headers([["header_response", "svalue"]])
-        f.response = http.HTTPResponse(
-            b"HTTP/1.1",
-            200,
-            "OK",
-            headers,
-            "content_response",
-            None,
-            None)
-
-        return f
+        return tutils.tflow(resp=True)
 
     def err(self):
-        f = self.req()
-        f.error = Error("msg")
-        return f
+        return tutils.tflow(err=True)
 
     def q(self, q, o):
         return filt.parse(q)(o)
@@ -168,34 +136,34 @@ class TestMatching:
         assert self.q("~h 'header: qvalue'", q)
 
         assert self.q("~h 'header: qvalue'", s)
-        assert self.q("~h 'header_response: svalue'", s)
+        assert self.q("~h 'header-response: svalue'", s)
 
         assert self.q("~hq 'header: qvalue'", s)
-        assert not self.q("~hq 'header_response: svalue'", s)
+        assert not self.q("~hq 'header-response: svalue'", s)
 
         assert self.q("~hq 'header: qvalue'", q)
-        assert not self.q("~hq 'header_request: svalue'", q)
+        assert not self.q("~hq 'header-request: svalue'", q)
 
         assert not self.q("~hs 'header: qvalue'", s)
-        assert self.q("~hs 'header_response: svalue'", s)
+        assert self.q("~hs 'header-response: svalue'", s)
         assert not self.q("~hs 'header: qvalue'", q)
 
     def match_body(self, q, s):
         assert not self.q("~b nonexistent", q)
         assert self.q("~b content", q)
-        assert self.q("~b response", s)
-        assert self.q("~b content_request", s)
+        assert self.q("~b message", s)
 
+        assert not self.q("~bq nomatch", s)
         assert self.q("~bq content", q)
         assert self.q("~bq content", s)
-        assert not self.q("~bq response", q)
-        assert not self.q("~bq response", s)
+        assert not self.q("~bq message", q)
+        assert not self.q("~bq message", s)
 
-        assert not self.q("~bs content", q)
-        assert self.q("~bs content", s)
         assert not self.q("~bs nomatch", s)
-        assert not self.q("~bs response", q)
-        assert self.q("~bs response", s)
+        assert not self.q("~bs content", q)
+        assert not self.q("~bs content", s)
+        assert not self.q("~bs message", q)
+        assert self.q("~bs message", s)
 
     def test_body(self):
         q = self.req()
@@ -217,18 +185,18 @@ class TestMatching:
 
     def test_domain(self):
         q = self.req()
-        assert self.q("~d host", q)
+        assert self.q("~d address", q)
         assert not self.q("~d none", q)
 
     def test_url(self):
         q = self.req()
         s = self.resp()
-        assert self.q("~u host", q)
-        assert self.q("~u host/path", q)
+        assert self.q("~u address", q)
+        assert self.q("~u address:22/path", q)
         assert not self.q("~u moo/path", q)
 
-        assert self.q("~u host", s)
-        assert self.q("~u host/path", s)
+        assert self.q("~u address", s)
+        assert self.q("~u address:22/path", s)
         assert not self.q("~u moo/path", s)
 
     def test_code(self):
@@ -277,3 +245,11 @@ class TestMatching:
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
+
+
+@patch('traceback.extract_tb')
+def test_pyparsing_bug(extract_tb):
+    """https://github.com/mitmproxy/mitmproxy/issues/1087"""
+    # The text is a string with leading and trailing whitespace stripped; if the source is not available it is None.
+    extract_tb.return_value = [("", 1, "test", None)]
+    assert filt.parse("test")

@@ -39,7 +39,7 @@ class RawTCPLayer(Layer):
         conns = [client, server]
 
         try:
-            while True:
+            while not self.channel.should_exit.is_set():
                 r = ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client

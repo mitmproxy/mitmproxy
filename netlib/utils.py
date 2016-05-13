@@ -41,6 +41,9 @@ class Serializable(object):
         """
         raise NotImplementedError()
 
+    def copy(self):
+        return self.from_state(self.get_state())
+
 
 def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):
@@ -327,6 +330,8 @@ def unparse_url(scheme, host, port, path=""):
     Args:
         All args must be str.
     """
+    if path == "*":
+        path = ""
     return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
@@ -411,8 +416,46 @@ def http2_read_raw_frame(rfile):
     body = rfile.safe_read(length)
     return [header, body]
 
+
 def http2_read_frame(rfile):
     header, body = http2_read_raw_frame(rfile)
     frame, length = hyperframe.frame.Frame.parse_frame_header(header)
     frame.parse_body(memoryview(body))
     return frame
+
+
+def safe_subn(pattern, repl, target, *args, **kwargs):
+    """
+        There are Unicode conversion problems with re.subn. We try to smooth
+        that over by casting the pattern and replacement to strings. We really
+        need a better solution that is aware of the actual content ecoding.
+    """
+    return re.subn(str(pattern), str(repl), target, *args, **kwargs)
+
+
+def bytes_to_escaped_str(data):
+    """
+    Take bytes and return a safe string that can be displayed to the user.
+    """
+    # TODO: We may want to support multi-byte characters without escaping them.
+    # One way to do would be calling .decode("utf8", "backslashreplace") first
+    # and then escaping UTF8 control chars (see clean_bin).
+
+    if not isinstance(data, bytes):
+        raise ValueError("data must be bytes")
+    return repr(data).lstrip("b")[1:-1]
+
+
+def escaped_str_to_bytes(data):
+    """
+    Take an escaped string and return the unescaped bytes equivalent.
+    """
+    if not isinstance(data, str):
+        raise ValueError("data must be str")
+
+    if six.PY2:
+        return data.decode("string-escape")
+
+    # This one is difficult - we use an undocumented Python API here
+    # as per http://stackoverflow.com/a/23151714/934719
+    return codecs.escape_decode(data)[0]

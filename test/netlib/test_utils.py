@@ -1,3 +1,4 @@
+# coding=utf-8
 from netlib import utils, tutils
 from netlib.http import Headers
 
@@ -139,3 +140,48 @@ def test_parse_content_type():
 
     v = p("text/html; charset=UTF-8")
     assert v == ('text', 'html', {'charset': 'UTF-8'})
+
+
+class SerializableDummy(utils.Serializable):
+    def __init__(self, i):
+        self.i = i
+
+    def get_state(self):
+        return self.i
+
+    def set_state(self, i):
+        self.i = i
+
+    def from_state(self, state):
+        return type(self)(state)
+
+
+class TestSerializable:
+
+    def test_copy(self):
+        a = SerializableDummy(42)
+        assert a.i == 42
+        b = a.copy()
+        assert b.i == 42
+
+        a.set_state(1)
+        assert a.i == 1
+        assert b.i == 42
+
+
+def test_safe_subn():
+    assert utils.safe_subn("foo", u"bar", "\xc2foo")
+
+
+def test_bytes_to_escaped_str():
+    assert utils.bytes_to_escaped_str(b"foo") == "foo"
+    assert utils.bytes_to_escaped_str(b"\b") == r"\x08"
+    assert utils.bytes_to_escaped_str(br"&!?=\)") == r"&!?=\\)"
+    assert utils.bytes_to_escaped_str(b'\xc3\xbc') == r"\xc3\xbc"
+
+
+def test_escaped_str_to_bytes():
+    assert utils.escaped_str_to_bytes("foo") == b"foo"
+    assert utils.escaped_str_to_bytes(r"\x08") == b"\b"
+    assert utils.escaped_str_to_bytes(r"&!?=\\)") == br"&!?=\)"
+    assert utils.escaped_str_to_bytes(r"ü") == b'\xc3\xbc'

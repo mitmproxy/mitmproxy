@@ -1,5 +1,5 @@
 import json
-import cStringIO
+from six.moves import cStringIO as StringIO
 import re
 import OpenSSL
 import pytest
@@ -64,7 +64,7 @@ class _TestDaemon:
         ignoretimeout=None,
         showsummary=True
     ):
-        s = cStringIO.StringIO()
+        s = StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             ssl=self.ssl,
@@ -129,7 +129,7 @@ class TestDaemonSSL(_TestDaemon):
         assert d["log"][0]["request"]["clientcert"]["keyinfo"]
 
     def test_http2_without_ssl(self):
-        fp = cStringIO.StringIO()
+        fp = StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             use_http2=True,
@@ -227,15 +227,15 @@ class TestDaemon(_TestDaemon):
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = cStringIO.StringIO(), cStringIO.StringIO()
+        c.rfile, c.wfile = StringIO(), StringIO()
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = cStringIO.StringIO(
+        c.rfile = StringIO(
             "HTTP/1.1 500 OK\r\n"
         )
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = cStringIO.StringIO(
+        c.rfile = StringIO(
             "HTTP/1.1 200 OK\r\n"
         )
         c.http_connect(to)
@@ -243,7 +243,7 @@ class TestDaemon(_TestDaemon):
     def test_socks_connect(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = tutils.treader(""), cStringIO.StringIO()
+        c.rfile, c.wfile = tutils.treader(""), StringIO()
         tutils.raises(pathoc.PathocError, c.socks_connect, to)
 
         c.rfile = tutils.treader(
