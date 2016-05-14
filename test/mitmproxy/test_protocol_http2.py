@@ -162,16 +162,19 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
-            h2_conn.send_headers(1, [
+            assert ('client-foo', 'client-bar-1') in event.headers
+            assert ('client-foo', 'client-bar-2') in event.headers
+
+            h2_conn.send_headers(event.stream_id, [
                 (':status', '200'),
-                ('foo', 'bar'),
+                ('server-foo', 'server-bar'),
                 ('föo', 'bär'),
+                ('X-Stream-ID', str(event.stream_id)),
             ])
-            h2_conn.send_data(1, b'foobar')
-            h2_conn.end_stream(1)
+            h2_conn.send_data(event.stream_id, b'foobar')
+            h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
-
         return True
 
     def test_simple(self):
@@ -182,6 +185,8 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
+            ('ClIeNt-FoO', 'client-bar-1'),
+            ('ClIeNt-FoO', 'client-bar-2'),
         ], body='my request body echoed back to me')
 
         done = False
@@ -203,7 +208,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
 
         assert len(self.master.state.flows) == 1
         assert self.master.state.flows[0].response.status_code == 200
-        assert self.master.state.flows[0].response.headers['foo'] == 'bar'
+        assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
         assert self.master.state.flows[0].response.headers['föo'] == 'bär'
         assert self.master.state.flows[0].response.body == b'foobar'
 
