@@ -163,6 +163,9 @@ header .menu {
   max-height: 500px;
   overflow-y: auto;
 }
+.menu .btn {
+  margin: 2px 2px 2px 2px;
+}
 .flow-table {
   width: 100%;
   overflow-y: scroll;
