@@ -56,7 +56,7 @@ class SafeH2Connection(H2Connection):
         with self.lock:
             if is_zombie():  # pragma: no cover
                 return
-            self.send_headers(stream_id, headers)
+            self.send_headers(stream_id, headers.fields)
             self.conn.send(self.data_to_send())
 
     def safe_send_body(self, is_zombie, stream_id, chunks):
