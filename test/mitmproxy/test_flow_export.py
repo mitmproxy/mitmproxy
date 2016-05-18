@@ -108,7 +108,6 @@ class TestExportLocustCode():
 
     def test_post(self):
         p = req_post()
-        print p
         p.content = '''content'''
         p.headers = ''
         flow = tutils.tflow(req=p)
