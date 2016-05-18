@@ -5,19 +5,19 @@ import time
 from six.moves import queue
 
 import traceback
-import h2
 import six
 from h2.connection import H2Connection
+from h2.exceptions import StreamClosedError
+from h2 import events
 
 from netlib.tcp import ssl_read_select
 from netlib.exceptions import HttpException
 from netlib.http import Headers
-from netlib.utils import http2_read_raw_frame
+from netlib.utils import http2_read_raw_frame, parse_url
 
 from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
 from ..exceptions import ProtocolException, Http2ProtocolException
-from .. import utils
 from ..models import HTTPRequest, HTTPResponse
 
 
@@ -44,7 +44,7 @@ class SafeH2Connection(H2Connection):
         with self.lock:
             try:
                 self.reset_stream(stream_id, error_code)
-            except h2.exceptions.StreamClosedError:  # pragma: no cover
+            except StreamClosedError:  # pragma: no cover
                 # stream is already closed - good
                 pass
             self.conn.send(self.data_to_send())
@@ -109,10 +109,10 @@ class Http2Layer(Layer):
         raise Http2ProtocolException("HTTP2 layer should already have a connection.")
 
     def set_server(self):  # pragma: no cover
-        raise NotImplementedError("Cannot change server for HTTP2 connections.")
+        raise Http2ProtocolException("Cannot change server for HTTP2 connections.")
 
     def disconnect(self):  # pragma: no cover
-        raise NotImplementedError("Cannot dis- or reconnect in HTTP2 connections.")
+        raise Http2ProtocolException("Cannot dis- or reconnect in HTTP2 connections.")
 
     def next_layer(self):  # pragma: no cover
         # WebSockets over HTTP/2?
@@ -132,27 +132,27 @@ class Http2Layer(Layer):
             else:
                 eid = event.stream_id
 
-        if isinstance(event, h2.events.RequestReceived):
+        if isinstance(event, events.RequestReceived):
             headers = Headers([[k, v] for k, v in event.headers])
             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].start()
-        elif isinstance(event, h2.events.ResponseReceived):
+        elif isinstance(event, events.ResponseReceived):
             headers = Headers([[k, v] for k, v in event.headers])
             self.streams[eid].queued_data_length = 0
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].response_headers = headers
             self.streams[eid].response_arrived.set()
-        elif isinstance(event, h2.events.DataReceived):
+        elif isinstance(event, events.DataReceived):
             if self.config.body_size_limit and self.streams[eid].queued_data_length > self.config.body_size_limit:
                 raise HttpException("HTTP body too large. Limit is {}.".format(self.config.body_size_limit))
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
             source_conn.h2.safe_increment_flow_control(event.stream_id, event.flow_controlled_length)
-        elif isinstance(event, h2.events.StreamEnded):
+        elif isinstance(event, events.StreamEnded):
             self.streams[eid].timestamp_end = time.time()
             self.streams[eid].data_finished.set()
-        elif isinstance(event, h2.events.StreamReset):
+        elif isinstance(event, events.StreamReset):
             self.streams[eid].zombie = time.time()
             if eid in self.streams and event.error_code == 0x8:
                 if is_server:
@@ -161,14 +161,14 @@ class Http2Layer(Layer):
                     other_stream_id = self.streams[eid].server_stream_id
                 if other_stream_id is not None:
                     other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
-        elif isinstance(event, h2.events.RemoteSettingsChanged):
+        elif isinstance(event, events.RemoteSettingsChanged):
             new_settings = dict([(id, cs.new_value) for (id, cs) in six.iteritems(event.changed_settings)])
             other_conn.h2.safe_update_settings(new_settings)
-        elif isinstance(event, h2.events.ConnectionTerminated):
+        elif isinstance(event, events.ConnectionTerminated):
             # Do not immediately terminate the other connection.
             # Some streams might be still sending data to the client.
             return False
-        elif isinstance(event, h2.events.PushedStreamReceived):
+        elif isinstance(event, events.PushedStreamReceived):
             # pushed stream ids should be uniq and not dependent on race conditions
             # only the parent stream id must be looked up first
             parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
@@ -184,7 +184,7 @@ class Http2Layer(Layer):
             self.streams[event.pushed_stream_id].timestamp_end = time.time()
             self.streams[event.pushed_stream_id].request_data_finished.set()
             self.streams[event.pushed_stream_id].start()
-        elif isinstance(event, h2.events.TrailersReceived):
+        elif isinstance(event, events.TrailersReceived):
             raise NotImplementedError()
 
         return True
@@ -222,10 +222,10 @@ class Http2Layer(Layer):
                             stream.zombie = time.time()
                         return
 
-                    events = source_conn.h2.receive_data(raw_frame)
+                    incoming_events = source_conn.h2.receive_data(raw_frame)
                     source_conn.send(source_conn.h2.data_to_send())
 
-                    for event in events:
+                    for event in incoming_events:
                         if not self._handle_event(event, source_conn, other_conn, is_server):
                             return
 
@@ -275,10 +275,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
 
     @queued_data_length.setter
     def queued_data_length(self, v):
-        if self.response_arrived.is_set():
-            return self.response_queued_data_length
-        else:
-            return self.request_queued_data_length
+        self.request_queued_data_length = v
 
     def is_zombie(self):
         return self.zombie is not None
@@ -300,7 +297,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         else:  # pragma: no cover
             first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
-            scheme, host, port, _ = utils.parse_url(path)
+            scheme, host, port, _ = parse_url(path)
 
         if authority:
             host, _, port = authority.partition(':')
@@ -329,6 +326,9 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
         )
+
+    def read_request_body(self, request):  # pragma: no cover
+        raise NotImplementedError()
 
     def send_request(self, message):
         if self.pushed:
@@ -412,6 +412,9 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         pass
 
     def run(self):
+        self()
+
+    def __call__(self):
         layer = HttpLayer(self, self.mode)
 
         try:
