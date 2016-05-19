@@ -27,16 +27,6 @@ class TestODict(object):
         b.set_state(state)
         assert b == od
 
-    def test_in_any(self):
-        od = odict.ODict()
-        od["one"] = ["atwoa", "athreea"]
-        assert od.in_any("one", "two")
-        assert od.in_any("one", "three")
-        assert not od.in_any("one", "four")
-        assert not od.in_any("nonexistent", "foo")
-        assert not od.in_any("one", "TWO")
-        assert od.in_any("one", "TWO", True)
-
     def test_iter(self):
         od = odict.ODict()
         assert not [i for i in od]
