@@ -305,6 +305,18 @@ class Settings(RequestHandler):
             data=update
         )
 
+class Options(RequestHandler):
+    def post(self, option):
+        #if option == "anticache":
+        self.master.anticache = not self.master.anticache
+        #debugging
+        print("anticache toogle", self.master.anticache)
+
+        #ClientConnection.broadcast(
+        #    type="options",
+        #    cmd="update",
+        #    data=#options array
+        #)
 
 class Application(tornado.web.Application):
 
@@ -325,6 +337,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
+            (r"/options/(?P<option>[0-9a-f\-]+)", Options),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
