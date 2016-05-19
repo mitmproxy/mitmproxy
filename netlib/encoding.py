@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from io import BytesIO
 import gzip
 import zlib
-from .utils import always_byte_args
 
 
 ENCODINGS = {"identity", "gzip", "deflate"}

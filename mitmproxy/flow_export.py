@@ -51,7 +51,7 @@ def python_code(flow):
 
     params = ""
     if flow.request.query:
-        lines = ["    '%s': '%s',\n" % (k, v) for k, v in flow.request.query]
+        lines = ["    %s: %s,\n" % (repr(k), repr(v)) for k, v in flow.request.query.to_dict().items()]
         params = "\nparams = {\n%s}\n" % "".join(lines)
         args += "\n    params=params,"
 
@@ -140,7 +140,7 @@ def locust_code(flow):
 
     params = ""
     if flow.request.query:
-        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.query]
+        lines = ["            %s: %s,\n" % (repr(k), repr(v)) for k, v in flow.request.query.to_dict().items()]
         params = "\n        params = {\n%s        }\n" % "".join(lines)
         args += "\n            params=params,"
 

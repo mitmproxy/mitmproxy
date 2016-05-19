@@ -128,10 +128,10 @@ def test_cookie_roundtrips():
     ]
     for s, lst in pairs:
         ret = cookies.parse_cookie_header(s)
-        assert ret.lst == lst
+        assert ret == lst
         s2 = cookies.format_cookie_header(ret)
         ret = cookies.parse_cookie_header(s2)
-        assert ret.lst == lst
+        assert ret == lst
 
 
 def test_parse_set_cookie_pairs():

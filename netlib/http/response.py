@@ -70,6 +70,7 @@ class Response(Message):
     def reason(self, reason):
         self.data.reason = _always_bytes(reason)
 
+    # FIXME
     @property
     def cookies(self):
         """
@@ -88,6 +89,7 @@ class Response(Message):
                 ret.append([name, [value, attrs]])
         return ODict(ret)
 
+    # FIXME
     @cookies.setter
     def cookies(self, odict):
         values = []

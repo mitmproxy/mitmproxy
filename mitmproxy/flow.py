@@ -156,9 +156,9 @@ class SetHeaders:
         for _, header, value, cpatt in self.lst:
             if cpatt(f):
                 if f.response:
-                    f.response.headers.fields.append((header, value))
+                    f.response.headers.add(header, value)
                 else:
-                    f.request.headers.fields.append((header, value))
+                    f.request.headers.add(header, value)
 
 
 class StreamLargeBodies(object):
@@ -263,7 +263,7 @@ class ServerPlaybackState:
             form_contents = r.urlencoded_form or r.multipart_form
             if self.ignore_payload_params and form_contents:
                 key.extend(
-                    p for p in form_contents
+                    p for p in form_contents.items(multi=True)
                     if p[0] not in self.ignore_payload_params
                 )
             else:
@@ -354,7 +354,7 @@ class StickyCookieState:
                 ]
                 if all(match):
                     c = self.jar[i]
-                    l.extend([cookies.format_cookie_header(c[name]) for name in c.keys()])
+                    l.extend([cookies.format_cookie_header(c[name].lst) for name in c.keys()])
         if l:
             f.request.stickycookie = True
             f.request.headers["cookie"] = "; ".join(l)

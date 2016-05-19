@@ -4,6 +4,7 @@ import warnings
 
 import six
 
+from ..multidict import MultiDict
 from .headers import Headers
 from .. import encoding, utils
 
@@ -235,3 +236,37 @@ class decoded(object):
     def __exit__(self, type, value, tb):
         if self.ce:
             self.message.encode(self.ce)
+
+
+class MessageMultiDict(MultiDict):
+    """
+    A MultiDict that provides a proxy view to the underlying message.
+    """
+
+    def __init__(self, attr, message):
+        if False:
+            # We do not want to call the parent constructor here as that
+            # would cause an unnecessary parse/unparse pass.
+            # This is here to silence linters. Message
+            super(MessageMultiDict, self).__init__(None)
+        self._attr = attr
+        self._message = message  # type: Message
+
+    @staticmethod
+    def _kconv(key):
+        # All request-attributes are case-sensitive.
+        return key
+
+    @staticmethod
+    def _reduce_values(values):
+        # We just return the first element if
+        # multiple elements exist with the same key.
+        return values[0]
+
+    @property
+    def fields(self):
+        return getattr(self._message, "_" + self._attr)
+
+    @fields.setter
+    def fields(self, value):
+        setattr(self._message, self._attr, value)

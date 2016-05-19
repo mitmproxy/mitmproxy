@@ -1,6 +1,4 @@
-from six.moves import http_cookies as Cookie
 import re
-import string
 from email.utils import parsedate_tz, formatdate, mktime_tz
 
 from .. import odict
@@ -179,20 +177,27 @@ def format_set_cookie_header(name, value, attrs):
     return _format_set_cookie_pairs(pairs)
 
 
+def parse_cookie_headers(cookie_headers):
+    cookie_list = []
+    for header in cookie_headers:
+        cookie_list.extend(parse_cookie_header(header))
+    return cookie_list
+
+
 def parse_cookie_header(line):
     """
         Parse a Cookie header value.
-        Returns a (possibly empty) ODict object.
+        Returns a list of (lhs, rhs) tuples.
     """
     pairs, off_ = _read_pairs(line)
-    return odict.ODict(pairs)
+    return pairs
 
 
-def format_cookie_header(od):
+def format_cookie_header(lst):
     """
         Formats a Cookie header value.
     """
-    return _format_pairs(od.lst)
+    return _format_pairs(lst)
 
 
 def refresh_set_cookie_header(c, delta):

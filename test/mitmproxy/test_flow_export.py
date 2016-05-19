@@ -21,7 +21,7 @@ def python_equals(testdata, text):
     assert clean_blanks(text).rstrip() == clean_blanks(d).rstrip()
 
 
-req_get = lambda: netlib.tutils.treq(method='GET', content='')
+req_get = lambda: netlib.tutils.treq(method='GET', content='', path=b"/")
 
 req_post = lambda: netlib.tutils.treq(method='POST', headers=None)
 

@@ -11,7 +11,7 @@ from netlib.http import cookies
 from netlib.odict import ODict
 from .. import encoding
 from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData
+from .message import Message, _native, _always_bytes, MessageData, MessageMultiDict
 
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
@@ -224,45 +224,54 @@ class Request(Message):
 
     @property
     def query(self):
+        # type: () -> MessageMultiDict
         """
-        The request query string as an :py:class:`ODict` object.
-        None, if there is no query.
+        The request query string as an :py:class:`MessageMultiDict` object.
         """
+        return MessageMultiDict("query", self)
+
+    @property
+    def _query(self):
         _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
-        if query:
-            return ODict(utils.urldecode(query))
-        return None
+        return tuple(utils.urldecode(query))
 
     @query.setter
-    def query(self, odict):
-        query = utils.urlencode(odict.lst)
+    def query(self, value):
+        query = utils.urlencode(value)
         scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
         _, _, _, self.path = utils.parse_url(
                 urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     @property
     def cookies(self):
+        # type: () -> MessageMultiDict
         """
         The request cookies.
-        An empty :py:class:`ODict` object if the cookie monster ate them all.
+
+        An empty :py:class:`MessageMultiDict` object if the cookie monster ate them all.
         """
-        ret = ODict()
-        for i in self.headers.get_all("Cookie"):
-            ret.extend(cookies.parse_cookie_header(i))
-        return ret
+        return MessageMultiDict("cookies", self)
+
+    @property
+    def _cookies(self):
+        h = self.headers.get_all("Cookie")
+        return tuple(cookies.parse_cookie_headers(h))
 
     @cookies.setter
-    def cookies(self, odict):
-        self.headers["cookie"] = cookies.format_cookie_header(odict)
+    def cookies(self, value):
+        self.headers["cookie"] = cookies.format_cookie_header(value)
 
     @property
     def path_components(self):
         """
-        The URL's path components as a list of strings.
+        The URL's path components as a tuple of strings.
         Components are unquoted.
         """
         _, _, path, _, _, _ = urllib.parse.urlparse(self.url)
-        return [urllib.parse.unquote(i) for i in path.split("/") if i]
+        # This needs to be a tuple so that it's immutable.
+        # Otherwise, this would fail silently:
+        #   request.path_components.append("foo")
+        return tuple(urllib.parse.unquote(i) for i in path.split("/") if i)
 
     @path_components.setter
     def path_components(self, components):
@@ -309,33 +318,41 @@ class Request(Message):
     @property
     def urlencoded_form(self):
         """
-        The URL-encoded form data as an :py:class:`ODict` object.
-        None if there is no data or the content-type indicates non-form data.
+        The URL-encoded form data as an :py:class:`MessageMultiDict` object.
+        None if the content-type indicates non-form data.
         """
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
-        if self.content and is_valid_content_type:
-            return ODict(utils.urldecode(self.content))
+        if is_valid_content_type:
+            return MessageMultiDict("urlencoded_form", self)
         return None
 
+    @property
+    def _urlencoded_form(self):
+        return tuple(utils.urldecode(self.content))
+
     @urlencoded_form.setter
-    def urlencoded_form(self, odict):
+    def urlencoded_form(self, value):
         """
         Sets the body to the URL-encoded form data, and adds the appropriate content-type header.
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = utils.urlencode(odict.lst)
+        self.content = utils.urlencode(value)
 
     @property
     def multipart_form(self):
         """
-        The multipart form data as an :py:class:`ODict` object.
-        None if there is no data or the content-type indicates non-form data.
+        The multipart form data as an :py:class:`MultipartFormDict` object.
+        None if the content-type indicates non-form data.
         """
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
-        if self.content and is_valid_content_type:
-            return ODict(utils.multipartdecode(self.headers,self.content))
+        if is_valid_content_type:
+            return MessageMultiDict("multipart_form", self)
         return None
+
+    @property
+    def _multipart_form(self):
+        return utils.multipartdecode(self.headers, self.content)
 
     @multipart_form.setter
     def multipart_form(self, value):

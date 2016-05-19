@@ -312,7 +312,7 @@ class TestReadRequest(tservers.ServerTestBase):
         req = protocol.read_request(NotImplemented)
 
         assert req.stream_id
-        assert req.headers.fields == [[b':method', b'GET'], [b':path', b'/'], [b':scheme', b'https']]
+        assert req.headers.fields == ((b':method', b'GET'), (b':path', b'/'), (b':scheme', b'https'))
         assert req.content == b'foobar'
 
 
@@ -418,7 +418,7 @@ class TestReadResponse(tservers.ServerTestBase):
         assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
         assert resp.reason == ''
-        assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
+        assert resp.headers.fields == ((b':status', b'200'), (b'etag', b'foobar'))
         assert resp.content == b'foobar'
         assert resp.timestamp_end
 
@@ -445,7 +445,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.http_version == "HTTP/2.0"
         assert resp.status_code == 200
         assert resp.reason == ''
-        assert resp.headers.fields == [[b':status', b'200'], [b'etag', b'foobar']]
+        assert resp.headers.fields == ((b':status', b'200'), (b'etag', b'foobar'))
         assert resp.content == b''
 
 

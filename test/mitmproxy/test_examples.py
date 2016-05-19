@@ -94,14 +94,22 @@ def test_modify_form():
     flow = tutils.tflow(req=netutils.treq(headers=form_header))
     with example("modify_form.py") as ex:
         ex.run("request", flow)
-        assert flow.request.urlencoded_form["mitmproxy"] == ["rocks"]
+        assert flow.request.urlencoded_form["mitmproxy"] == "rocks"
+
+        flow.request.headers["content-type"] = ""
+        ex.run("request", flow)
+        assert list(flow.request.urlencoded_form.items()) == [("foo","bar")]
 
 
 def test_modify_querystring():
     flow = tutils.tflow(req=netutils.treq(path="/search?q=term"))
     with example("modify_querystring.py") as ex:
         ex.run("request", flow)
-        assert flow.request.query["mitmproxy"] == ["rocks"]
+        assert flow.request.query["mitmproxy"] == "rocks"
+
+        flow.request.path = "/"
+        ex.run("request", flow)
+        assert flow.request.query["mitmproxy"] == "rocks"
 
 
 def test_modify_response_body():

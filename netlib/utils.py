@@ -51,17 +51,6 @@ def always_bytes(unicode_or_bytes, *encode_args):
     return unicode_or_bytes
 
 
-def always_byte_args(*encode_args):
-    """Decorator that transparently encodes all arguments passed as unicode"""
-    def decorator(fun):
-        def _fun(*args, **kwargs):
-            args = [always_bytes(arg, *encode_args) for arg in args]
-            kwargs = {k: always_bytes(v, *encode_args) for k, v in six.iteritems(kwargs)}
-            return fun(*args, **kwargs)
-        return _fun
-    return decorator
-
-
 def native(s, *encoding_opts):
     """
     Convert :py:class:`bytes` or :py:class:`unicode` to the native

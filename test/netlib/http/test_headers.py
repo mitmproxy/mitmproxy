@@ -5,10 +5,10 @@ from netlib.tutils import raises
 class TestHeaders(object):
     def _2host(self):
         return Headers(
-            [
-                [b"Host", b"example.com"],
-                [b"host", b"example.org"]
-            ]
+            (
+                (b"Host", b"example.com"),
+                (b"host", b"example.org")
+            )
         )
 
     def test_init(self):
@@ -38,7 +38,7 @@ class TestHeaders(object):
         assert headers["Host"] == "example.com"
         assert headers["Accept"] == "text/plain"
 
-        with raises(ValueError):
+        with raises(TypeError):
             Headers([[b"Host", u"not-bytes"]])
 
     def test_getitem(self):

@@ -261,7 +261,7 @@ class TestReadHeaders(object):
             b"\r\n"
         )
         headers = self._read(data)
-        assert headers.fields == [[b"Header", b"one"], [b"Header2", b"two"]]
+        assert headers.fields == ((b"Header", b"one"), (b"Header2", b"two"))
 
     def test_read_multi(self):
         data = (
@@ -270,7 +270,7 @@ class TestReadHeaders(object):
             b"\r\n"
         )
         headers = self._read(data)
-        assert headers.fields == [[b"Header", b"one"], [b"Header", b"two"]]
+        assert headers.fields == ((b"Header", b"one"), (b"Header", b"two"))
 
     def test_read_continued(self):
         data = (
@@ -280,7 +280,7 @@ class TestReadHeaders(object):
             b"\r\n"
         )
         headers = self._read(data)
-        assert headers.fields == [[b"Header", b"one\r\n two"], [b"Header2", b"three"]]
+        assert headers.fields == ((b"Header", b"one\r\n two"), (b"Header2", b"three"))
 
     def test_read_continued_err(self):
         data = b"\tfoo: bar\r\n"
@@ -300,7 +300,7 @@ class TestReadHeaders(object):
     def test_read_empty_value(self):
         data = b"bar:"
         headers = self._read(data)
-        assert headers.fields == [[b"bar", b""]]
+        assert headers.fields == ((b"bar", b""),)
 
 def test_read_chunked():
     req = treq(content=None)
