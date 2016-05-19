@@ -211,7 +211,7 @@ class TestDaemon(_TestDaemon):
         c.stop()
 
     @skip_windows
-    @pytest.mark.xfail
+    @pytest.mark.skip(reason="race condition")
     def test_wait_finish(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
