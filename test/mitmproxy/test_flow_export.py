@@ -21,7 +21,7 @@ def python_equals(testdata, text):
     assert clean_blanks(text).rstrip() == clean_blanks(d).rstrip()
 
 
-req_get = lambda: netlib.tutils.treq(method='GET', content='', path=b"/")
+req_get = lambda: netlib.tutils.treq(method='GET', content='', path=b"/path?a=foo&a=bar&b=baz")
 
 req_post = lambda: netlib.tutils.treq(method='POST', headers=None)
 
@@ -31,7 +31,7 @@ req_patch = lambda: netlib.tutils.treq(method='PATCH', path=b"/path?query=param"
 class TestExportCurlCommand():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
-        result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address/path'"""
+        result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address/path?a=foo&a=bar&b=baz'"""
         assert flow_export.curl_command(flow) == result
 
     def test_post(self):
@@ -70,7 +70,7 @@ class TestRawRequest():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
         result = dedent("""
-            GET /path HTTP/1.1\r
+            GET /path?a=foo&a=bar&b=baz HTTP/1.1\r
             header: qvalue\r
             content-length: 7\r
             host: address:22\r
