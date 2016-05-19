@@ -251,7 +251,7 @@ class TestRequestUtils(object):
 
     def test_get_urlencoded_form(self):
         request = treq(content="foobar=baz")
-        assert request.urlencoded_form is None
+        assert not request.urlencoded_form
 
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         assert list(request.urlencoded_form.items()) == [("foobar", "baz")]
@@ -264,7 +264,7 @@ class TestRequestUtils(object):
 
     def test_get_multipart_form(self):
         request = treq(content="foobar")
-        assert request.multipart_form is None
+        assert not request.multipart_form
 
         request.headers["Content-Type"] = "multipart/form-data"
         assert list(request.multipart_form.items()) == []

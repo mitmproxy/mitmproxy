@@ -98,7 +98,7 @@ def test_modify_form():
 
         flow.request.headers["content-type"] = ""
         ex.run("request", flow)
-        assert list(flow.request.urlencoded_form.items()) == [("foo","bar")]
+        assert list(flow.request.urlencoded_form.items()) == [("foo", "bar")]
 
 
 def test_modify_querystring():

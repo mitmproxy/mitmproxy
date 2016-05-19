@@ -83,6 +83,10 @@ class Headers(MultiDict):
         """
         super(Headers, self).__init__(fields)
 
+        for key, value in self.fields:
+            if not isinstance(key, bytes) or not isinstance(value, bytes):
+                raise TypeError("Header fields must be bytes.")
+
         # content_type -> content-type
         headers = {
             _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)

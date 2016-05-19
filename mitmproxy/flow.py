@@ -319,10 +319,10 @@ class StickyCookieState:
         """
         domain = f.request.host
         path = "/"
-        if attrs["domain"]:
-            domain = attrs["domain"][-1]
-        if attrs["path"]:
-            path = attrs["path"][-1]
+        if "domain" in attrs:
+            domain = attrs["domain"]
+        if "path" in attrs:
+            path = attrs["path"]
         return (domain, f.request.port, path)
 
     def domain_match(self, a, b):
@@ -333,28 +333,26 @@ class StickyCookieState:
         return False
 
     def handle_response(self, f):
-        for i in f.response.headers.get_all("set-cookie"):
+        for name, (value, attrs) in f.response.cookies.items(multi=True):
             # FIXME: We now know that Cookie.py screws up some cookies with
             # valid RFC 822/1123 datetime specifications for expiry. Sigh.
-            name, value, attrs = cookies.parse_set_cookie_header(str(i))
             a = self.ckey(attrs, f)
             if self.domain_match(f.request.host, a[0]):
-                b = attrs.lst
-                b.insert(0, [name, value])
-                self.jar[a][name] = odict.ODictCaseless(b)
+                b = attrs.with_insert(0, name, value)
+                self.jar[a][name] = b
 
     def handle_request(self, f):
         l = []
         if f.match(self.flt):
-            for i in self.jar.keys():
+            for domain, port, path in self.jar.keys():
                 match = [
-                    self.domain_match(f.request.host, i[0]),
-                    f.request.port == i[1],
-                    f.request.path.startswith(i[2])
+                    self.domain_match(f.request.host, domain),
+                    f.request.port == port,
+                    f.request.path.startswith(path)
                 ]
                 if all(match):
-                    c = self.jar[i]
-                    l.extend([cookies.format_cookie_header(c[name].lst) for name in c.keys()])
+                    c = self.jar[(domain, port, path)]
+                    l.extend([cookies.format_cookie_header(c[name].items(multi=True)) for name in c.keys()])
         if l:
             f.request.stickycookie = True
             f.request.headers["cookie"] = "; ".join(l)

@@ -11,7 +11,7 @@ from netlib.http import cookies
 from netlib.odict import ODict
 from .. import encoding
 from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData, MessageMultiDict
+from .message import Message, _native, _always_bytes, MessageData, MultiDictView
 
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
@@ -224,11 +224,11 @@ class Request(Message):
 
     @property
     def query(self):
-        # type: () -> MessageMultiDict
+        # type: () -> MultiDictView
         """
-        The request query string as an :py:class:`MessageMultiDict` object.
+        The request query string as an :py:class:`MultiDictView` object.
         """
-        return MessageMultiDict("query", self)
+        return MultiDictView("query", self)
 
     @property
     def _query(self):
@@ -244,13 +244,13 @@ class Request(Message):
 
     @property
     def cookies(self):
-        # type: () -> MessageMultiDict
+        # type: () -> MultiDictView
         """
         The request cookies.
 
-        An empty :py:class:`MessageMultiDict` object if the cookie monster ate them all.
+        An empty :py:class:`MultiDictView` object if the cookie monster ate them all.
         """
-        return MessageMultiDict("cookies", self)
+        return MultiDictView("cookies", self)
 
     @property
     def _cookies(self):
@@ -318,17 +318,18 @@ class Request(Message):
     @property
     def urlencoded_form(self):
         """
-        The URL-encoded form data as an :py:class:`MessageMultiDict` object.
-        None if the content-type indicates non-form data.
+        The URL-encoded form data as an :py:class:`MultiDictView` object.
+        An empty MultiDictView if the content-type indicates non-form data
+        or the content could not be parsed.
         """
-        is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
-        if is_valid_content_type:
-            return MessageMultiDict("urlencoded_form", self)
-        return None
+        return MultiDictView("urlencoded_form", self)
 
     @property
     def _urlencoded_form(self):
-        return tuple(utils.urldecode(self.content))
+        is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
+        if is_valid_content_type:
+            return tuple(utils.urldecode(self.content))
+        return ()
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):
@@ -345,45 +346,15 @@ class Request(Message):
         The multipart form data as an :py:class:`MultipartFormDict` object.
         None if the content-type indicates non-form data.
         """
-        is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
-        if is_valid_content_type:
-            return MessageMultiDict("multipart_form", self)
-        return None
+        return MultiDictView("multipart_form", self)
 
     @property
     def _multipart_form(self):
-        return utils.multipartdecode(self.headers, self.content)
+        is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
+        if is_valid_content_type:
+            return utils.multipartdecode(self.headers, self.content)
+        return ()
 
     @multipart_form.setter
     def multipart_form(self, value):
         raise NotImplementedError()
-
-    # Legacy
-
-    def get_query(self):  # pragma: no cover
-        warnings.warn(".get_query is deprecated, use .query instead.", DeprecationWarning)
-        return self.query or ODict([])
-
-    def set_query(self, odict):  # pragma: no cover
-        warnings.warn(".set_query is deprecated, use .query instead.", DeprecationWarning)
-        self.query = odict
-
-    def get_path_components(self):  # pragma: no cover
-        warnings.warn(".get_path_components is deprecated, use .path_components instead.", DeprecationWarning)
-        return self.path_components
-
-    def set_path_components(self, lst):  # pragma: no cover
-        warnings.warn(".set_path_components is deprecated, use .path_components instead.", DeprecationWarning)
-        self.path_components = lst
-
-    def get_form_urlencoded(self):  # pragma: no cover
-        warnings.warn(".get_form_urlencoded is deprecated, use .urlencoded_form instead.", DeprecationWarning)
-        return self.urlencoded_form or ODict([])
-
-    def set_form_urlencoded(self, odict):  # pragma: no cover
-        warnings.warn(".set_form_urlencoded is deprecated, use .urlencoded_form instead.", DeprecationWarning)
-        self.urlencoded_form = odict
-
-    def get_form_multipart(self):  # pragma: no cover
-        warnings.warn(".get_form_multipart is deprecated, use .multipart_form instead.", DeprecationWarning)
-        return self.multipart_form or ODict([])

@@ -238,9 +238,44 @@ class decoded(object):
             self.message.encode(self.ce)
 
 
-class MessageMultiDict(MultiDict):
+class MultiDictView(MultiDict):
     """
-    A MultiDict that provides a proxy view to the underlying message.
+    Some parts in HTTP (Cookies, URL query strings, ...) require a specific data structure: A MultiDict.
+    It behaves mostly like an ordered dict but it can have several values for the same key.
+
+    The MultiDictView provides a MultiDict *view* on an :py:class:`Request` or :py:class:`Response`.
+    That is, it represents a part of the request as a MultiDict, but doesn't contain state/data themselves.
+
+    For example, ``request.cookies`` provides a view on the ``Cookie: ...`` header.
+    Any change to ``request.cookies`` will also modify the ``Cookie`` header.
+    Any change to the ``Cookie`` header will also modify ``request.cookies``.
+
+    Example:
+
+    .. code-block:: python
+
+        # Cookies are represented as a MultiDict.
+        >>> request.cookies
+        MultiDictView[("name", "value"), ("a", "false"), ("a", "42")]
+
+        # MultiDicts mostly behave like a normal dict.
+        >>> request.cookies["name"]
+        "value"
+
+        # If there is more than one value, only the first value is returned.
+        >>> request.cookies["a"]
+        "false"
+
+        # `.get_all(key)` returns a list of all values.
+        >>> request.cookies.get_all("a")
+        ["false", "42"]
+
+        # Changes to the headers are immediately reflected in the cookies.
+        >>> request.cookies
+        MultiDictView[("name", "value"), ...]
+        >>> del request.headers["Cookie"]
+        >>> request.cookies
+        MultiDictView[]  # empty now
     """
 
     def __init__(self, attr, message):
@@ -248,7 +283,7 @@ class MessageMultiDict(MultiDict):
             # We do not want to call the parent constructor here as that
             # would cause an unnecessary parse/unparse pass.
             # This is here to silence linters. Message
-            super(MessageMultiDict, self).__init__(None)
+            super(MultiDictView, self).__init__(None)
         self._attr = attr
         self._message = message  # type: Message
 

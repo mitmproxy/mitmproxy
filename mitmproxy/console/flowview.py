@@ -6,8 +6,7 @@ import sys
 import math
 import urwid
 
-from netlib import odict
-from netlib.http import Headers
+from netlib.http import Headers, status_codes
 from . import common, grideditor, signals, searchable, tabs
 from . import flowdetailview
 from .. import utils, controller, contentviews
@@ -316,21 +315,18 @@ class FlowView(tabs.Tabs):
             return "Invalid URL."
         signals.flow_change.send(self, flow = self.flow)
 
-    def set_resp_code(self, code):
-        response = self.flow.response
+    def set_resp_status_code(self, status_code):
         try:
-            response.status_code = int(code)
+            status_code = int(status_code)
         except ValueError:
             return None
-        import BaseHTTPServer
-        if int(code) in BaseHTTPServer.BaseHTTPRequestHandler.responses:
-            response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[
-                int(code)][0]
+        self.flow.response.status_code = status_code
+        if status_code in status_codes.RESPONSES:
+            self.flow.response.reason = status_codes.RESPONSES[status_code]
         signals.flow_change.send(self, flow = self.flow)
 
-    def set_resp_msg(self, msg):
-        response = self.flow.response
-        response.msg = msg
+    def set_resp_reason(self, reason):
+        self.flow.response.reason = reason
         signals.flow_change.send(self, flow = self.flow)
 
     def set_headers(self, fields, conn):
@@ -338,22 +334,22 @@ class FlowView(tabs.Tabs):
         signals.flow_change.send(self, flow = self.flow)
 
     def set_query(self, lst, conn):
-        conn.set_query(odict.ODict(lst))
+        conn.query = lst
         signals.flow_change.send(self, flow = self.flow)
 
     def set_path_components(self, lst, conn):
-        conn.set_path_components(lst)
+        conn.path_components = lst
         signals.flow_change.send(self, flow = self.flow)
 
     def set_form(self, lst, conn):
-        conn.set_form_urlencoded(odict.ODict(lst))
+        conn.urlencoded_form = lst
         signals.flow_change.send(self, flow = self.flow)
 
     def edit_form(self, conn):
         self.master.view_grideditor(
             grideditor.URLEncodedFormEditor(
                 self.master,
-                conn.get_form_urlencoded().lst,
+                conn.urlencoded_form.items(multi=True),
                 self.set_form,
                 conn
             )
@@ -364,7 +360,7 @@ class FlowView(tabs.Tabs):
             self.edit_form(conn)
 
     def set_cookies(self, lst, conn):
-        conn.cookies = odict.ODict(lst)
+        conn.cookies = lst
         signals.flow_change.send(self, flow = self.flow)
 
     def set_setcookies(self, data, conn):
@@ -388,7 +384,7 @@ class FlowView(tabs.Tabs):
             self.master.view_grideditor(
                 grideditor.CookieEditor(
                     self.master,
-                    message.cookies.lst,
+                    message.cookies.items(multi=True),
                     self.set_cookies,
                     message
                 )
@@ -397,7 +393,7 @@ class FlowView(tabs.Tabs):
             self.master.view_grideditor(
                 grideditor.SetCookieEditor(
                     self.master,
-                    message.cookies,
+                    message.cookies.items(multi=True),
                     self.set_setcookies,
                     message
                 )
@@ -413,7 +409,7 @@ class FlowView(tabs.Tabs):
                 c = self.master.spawn_editor(message.content or "")
                 message.content = c.rstrip("\n")
         elif part == "f":
-            if not message.get_form_urlencoded() and message.content:
+            if not message.urlencoded_form and message.content:
                 signals.status_prompt_onekey.send(
                     prompt = "Existing body is not a URL-encoded form. Clear and edit?",
                     keys = [
@@ -435,7 +431,7 @@ class FlowView(tabs.Tabs):
                 )
             )
         elif part == "p":
-            p = message.get_path_components()
+            p = message.path_components
             self.master.view_grideditor(
                 grideditor.PathEditor(
                     self.master,
@@ -448,7 +444,7 @@ class FlowView(tabs.Tabs):
             self.master.view_grideditor(
                 grideditor.QueryEditor(
                     self.master,
-                    message.get_query().lst,
+                    message.query.items(multi=True),
                     self.set_query, message
                 )
             )
@@ -458,7 +454,7 @@ class FlowView(tabs.Tabs):
                 text = message.url,
                 callback = self.set_url
             )
-        elif part == "m":
+        elif part == "m" and message == self.flow.request:
             signals.status_prompt_onekey.send(
                 prompt = "Method",
                 keys = common.METHOD_OPTIONS,
@@ -468,13 +464,13 @@ class FlowView(tabs.Tabs):
             signals.status_prompt.send(
                 prompt = "Code",
                 text = str(message.status_code),
-                callback = self.set_resp_code
+                callback = self.set_resp_status_code
             )
-        elif part == "m":
+        elif part == "m" and message == self.flow.response:
             signals.status_prompt.send(
                 prompt = "Message",
-                text = message.msg,
-                callback = self.set_resp_msg
+                text = message.reason,
+                callback = self.set_resp_reason
             )
         signals.flow_change.send(self, flow = self.flow)
 
