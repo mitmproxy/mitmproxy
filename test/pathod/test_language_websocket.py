@@ -97,7 +97,7 @@ class TestWebsocketFrame:
 
         assert self.fr("wf:r'foo'").payload == "foo"
 
-    def test_construction(self):
+    def test_construction_2(self):
         # Simple server frame
         frm = self.fr("wf:b'foo'")
         assert not frm.header.mask

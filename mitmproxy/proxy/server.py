@@ -36,7 +36,7 @@ class ProxyServer(tcp.TCPServer):
 
     def __init__(self, config):
         """
-            Raises ProxyServerError if there's a startup problem.
+            Raises ServerException if there's a startup problem.
         """
         self.config = config
         try:

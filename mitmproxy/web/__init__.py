@@ -184,6 +184,8 @@ class WebMaster(flow.FlowMaster):
         iol.add_callback(self.start)
         tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
         try:
+            print("Server listening at http://{}:{}".format(
+                self.options.wiface, self.options.wport), file=sys.stderr)
             iol.start()
         except (Stop, KeyboardInterrupt):
             self.shutdown()

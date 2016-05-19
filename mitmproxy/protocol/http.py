@@ -11,7 +11,7 @@ from netlib.http import Headers
 from h2.exceptions import H2Error
 
 from .. import utils
-from ..exceptions import HttpProtocolException, ProtocolException
+from ..exceptions import HttpProtocolException, Http2ProtocolException, ProtocolException
 from ..models import (
     HTTPFlow,
     HTTPResponse,
@@ -243,7 +243,7 @@ class HttpLayer(Layer):
         try:
             response = make_error_response(code, message)
             self.send_response(response)
-        except (NetlibException, H2Error):
+        except (NetlibException, H2Error, Http2ProtocolException):
             self.log(traceback.format_exc(), "debug")
 
     def change_upstream_proxy_server(self, address):
@@ -288,9 +288,9 @@ class HttpLayer(Layer):
 
         try:
             get_response()
-        except NetlibException as v:
+        except NetlibException as e:
             self.log(
-                "server communication error: %s" % repr(v),
+                "server communication error: %s" % repr(e),
                 level="debug"
             )
             # In any case, we try to reconnect at least once. This is
@@ -304,6 +304,11 @@ class HttpLayer(Layer):
             # > server detects timeout, disconnects
             # > read (100-n)% of large request
             # > send large request upstream
+
+            if isinstance(e, Http2ProtocolException):
+                # do not try to reconnect for HTTP2
+                raise ProtocolException("First and only attempt to get response via HTTP2 failed.")
+
             self.disconnect()
             self.connect()
             get_response()

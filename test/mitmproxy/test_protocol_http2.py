@@ -162,16 +162,19 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
-            h2_conn.send_headers(1, [
+            assert ('client-foo', 'client-bar-1') in event.headers
+            assert ('client-foo', 'client-bar-2') in event.headers
+
+            h2_conn.send_headers(event.stream_id, [
                 (':status', '200'),
-                ('foo', 'bar'),
+                ('server-foo', 'server-bar'),
                 ('föo', 'bär'),
+                ('X-Stream-ID', str(event.stream_id)),
             ])
-            h2_conn.send_data(1, b'foobar')
-            h2_conn.end_stream(1)
+            h2_conn.send_data(event.stream_id, b'foobar')
+            h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
-
         return True
 
     def test_simple(self):
@@ -182,6 +185,8 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
+            ('ClIeNt-FoO', 'client-bar-1'),
+            ('ClIeNt-FoO', 'client-bar-2'),
         ], body='my request body echoed back to me')
 
         done = False
@@ -203,7 +208,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
 
         assert len(self.master.state.flows) == 1
         assert self.master.state.flows[0].response.status_code == 200
-        assert self.master.state.flows[0].response.headers['foo'] == 'bar'
+        assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
         assert self.master.state.flows[0].response.headers['föo'] == 'bär'
         assert self.master.state.flows[0].response.body == b'foobar'
 
@@ -429,3 +434,51 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
+
+@requires_alpn
+class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
+
+    @classmethod
+    def setup_class(self):
+        _Http2TestBase.setup_class()
+        _Http2ServerBase.setup_class()
+
+    @classmethod
+    def teardown_class(self):
+        _Http2TestBase.teardown_class()
+        _Http2ServerBase.teardown_class()
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.RequestReceived):
+            h2_conn.send_headers(1, [(':status', '200')])
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+            return False
+
+    def test_connection_lost(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
+            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':method', 'GET'),
+            (':scheme', 'https'),
+            (':path', '/'),
+            ('foo', 'bar')
+        ])
+
+        done = False
+        ended_streams = 0
+        pushed_streams = 0
+        responses = 0
+        while not done:
+            try:
+                raw = b''.join(http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except:
+                break
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+        if len(self.master.state.flows) == 1:
+            assert self.master.state.flows[0].response is None

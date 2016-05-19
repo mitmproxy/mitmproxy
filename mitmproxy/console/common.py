@@ -154,7 +154,7 @@ def raw_format_flow(f, focus, extended):
 
     if f["intercepted"] and not f["acked"]:
         uc = "intercept"
-    elif f["resp_code"] or f["err_msg"]:
+    elif "resp_code" in f or "err_msg" in f:
         uc = "text"
     else:
         uc = "title"
@@ -173,7 +173,7 @@ def raw_format_flow(f, focus, extended):
         ("fixed", preamble, urwid.Text(""))
     )
 
-    if f["resp_code"]:
+    if "resp_code" in f:
         codes = {
             2: "code_200",
             3: "code_300",
@@ -185,6 +185,8 @@ def raw_format_flow(f, focus, extended):
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
         resp.append(fcol(f["resp_code"], ccol))
+        if extended:
+            resp.append(fcol(f["resp_reason"], ccol))
         if f["intercepted"] and f["resp_code"] and not f["acked"]:
             rc = "intercept"
         else:
@@ -412,7 +414,6 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
         req_http_version = f.request.http_version,
 
         err_msg = f.error.msg if f.error else None,
-        resp_code = f.response.status_code if f.response else None,
 
         marked = marked,
     )
@@ -430,6 +431,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
 
         d.update(dict(
             resp_code = f.response.status_code,
+            resp_reason = f.response.reason,
             resp_is_replay = f.response.is_replay,
             resp_clen = contentdesc,
             roundtrip = roundtrip,

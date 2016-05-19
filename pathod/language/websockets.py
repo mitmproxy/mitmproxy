@@ -1,4 +1,6 @@
 import os
+import random
+import string
 import netlib.websockets
 import pyparsing as pp
 from . import base, generators, actions, message
@@ -175,8 +177,10 @@ class WebsocketFrame(message.Message):
                 Mask(True)
             )
         if not self.knone and self.mask and self.mask.value and not self.key:
+            allowed_chars = string.ascii_letters + string.digits
+            k = ''.join([allowed_chars[random.randrange(0, len(allowed_chars))] for i in range(4)])
             tokens.append(
-                Key(base.TokValueLiteral(os.urandom(4)))
+                Key(base.TokValueLiteral(k))
             )
         return self.__class__(
             [i.resolve(settings, self) for i in tokens]
