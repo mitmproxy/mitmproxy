@@ -44,9 +44,9 @@ class Headers(MultiDict):
 
         # Headers can also be created from a list of raw (header_name, header_value) byte tuples
         >>> h = Headers([
-            [b"Host",b"example.com"],
-            [b"Accept",b"text/html"],
-            [b"accept",b"application/xml"]
+            (b"Host",b"example.com"),
+            (b"Accept",b"text/html"),
+            (b"accept",b"application/xml")
         ])
 
         # Multiple headers are folded into a single header as per RFC7230
