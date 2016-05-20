@@ -680,6 +680,10 @@ class TestSerialize:
         for i in range(3):
             f = tutils.tflow(err=True)
             w.add(f)
+        f = tutils.ttcpflow()
+        w.add(f)
+        f = tutils.ttcpflow(err=True)
+        w.add(f)
 
         sio.seek(0)
         return flow.FlowReader(sio)
@@ -1204,6 +1208,10 @@ class TestError:
 
         e3 = e.copy()
         assert e3.get_state() == e.get_state()
+
+    def test_repr(self):
+        e = Error("yay")
+        assert repr(e)
 
 
 class TestClientConnection:

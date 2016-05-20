@@ -3,6 +3,8 @@ import shutil
 import tempfile
 import argparse
 import sys
+
+from mitmproxy.models.tcp import TCPMessage
 from six.moves import cStringIO as StringIO
 from contextlib import contextmanager
 
@@ -11,7 +13,7 @@ from unittest.case import SkipTest
 import netlib.tutils
 from mitmproxy import utils, controller
 from mitmproxy.models import (
-    ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow
+    ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow, TCPFlow
 )
 
 
@@ -44,6 +46,26 @@ def skip_appveyor(fn):
         return fn
 
 
+def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    if messages is True:
+        messages = [
+            TCPMessage(True, b"hello"),
+            TCPMessage(False, b"it's me"),
+        ]
+    if err is True:
+        err = terr()
+
+    f = TCPFlow(client_conn, server_conn)
+    f.messages = messages
+    f.error = err
+    f.reply = controller.DummyReply()
+    return f
+
+
 def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     """
     @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
@@ -51,7 +73,7 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     @type req:         bool | None | mitmproxy.protocol.http.HTTPRequest
     @type resp:        bool | None | mitmproxy.protocol.http.HTTPResponse
     @type err:         bool | None | mitmproxy.protocol.primitives.Error
-    @return:           bool | None | mitmproxy.protocol.http.HTTPFlow
+    @return:           mitmproxy.protocol.http.HTTPFlow
     """
     if client_conn is True:
         client_conn = tclient_conn()
