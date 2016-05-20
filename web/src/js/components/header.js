@@ -7,6 +7,7 @@ import {Key} from "../utils.js";
 import {Router, ToggleComponent} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
+import {SettingsState} from "./common.js";
 
 var FilterDocs = React.createClass({
     statics: {
@@ -250,43 +251,41 @@ var ViewMenu = React.createClass({
 });
 
 
-class OptionMenu extends React.Component{
+// If I make a stateless function out of the option menu i got the following warning message:
+// Warning: Stateless function components cannot be given refs (See ref "active" in OptionMenu created by Header). Attempts to access this ref will fail.
+class OptionMenu extends React.Component {
+
+    onOptionChange(name, checked) {
+        SettingsActions.update(JSON.parse("{\"" + name + "\": " + !checked + "}"));
+    }
     static title = "Options";
-    constructor(props){
-      super(props);
-      this.state = {
-        options :
-        [
-          {name: "--host", checked: true},
-          {name: "--no-upstream-cert", checked: false},
-          {name: "--http2", checked: false},
-          {name: "--anticache", checked: false},
-          {name: "--anticomp", checked: false},
-          {name: "--stickycookie", checked: true},
-          {name: "--stickyauth", checked: false},
-          {name: "--stream", checked: false}
-        ]
-      }
-    }
-    setOption(entry){
-      console.log(entry.name);//TODO: get options from outside and remove state
-      entry.checked = !entry.checked;
-      this.setState({options: this.state.options});
-    }
+
     render() {
-      return (
-        <div>
-          {this.state.options.map((entry, i) => {
-            return (
-              <ToggleComponent
-                key={i}
-                checked={entry.checked}
-                name = {entry.name}
-                onToggleChanged={() => this.setOption(entry)}/>
-            );
-          })}
-        </div>
-      );
+        const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp} = this.props.settings;
+        const options = [
+            {name: "showhost",           checked: showhost},
+            {name: "no_upstream_cert",   checked: no_upstream_cert},
+            {name: "rawtcp",             checked: rawtcp},
+            {name: "http2",              checked: http2},
+            {name: "anticache",          checked: anticache},
+            {name: "anticomp",           checked: anticomp},
+            {name: "stickycookie",       checked: false},
+            {name: "stickyauth",         checked: false},
+            {name: "stream",             checked: false}
+        ];
+        return (
+            <div>
+                {options.map((entry, i) => {
+                    return (
+                        <ToggleComponent
+                            key={i}
+                            checked={entry.checked}
+                            name={entry.name}
+                            onToggleChanged={() => this.onOptionChange(entry.name, entry.checked)}/>
+                    );
+                })}
+            </div>
+        );
     }
 }
 

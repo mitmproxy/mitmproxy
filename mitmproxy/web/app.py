@@ -286,7 +286,13 @@ class Settings(RequestHandler):
             data=dict(
                 version=version.VERSION,
                 mode=str(self.master.server.config.mode),
-                intercept=self.state.intercept_txt
+                intercept=self.state.intercept_txt,
+                showhost=self.master.options.showhost,
+                no_upstream_cert=self.master.server.config.no_upstream_cert,
+                rawtcp=self.master.server.config.rawtcp,
+                http2=self.master.server.config.http2,
+                anticache=self.master.options.anticache,
+                anticomp=self.master.options.anticomp
             )
         ))
 
@@ -295,6 +301,24 @@ class Settings(RequestHandler):
         for k, v in six.iteritems(self.json):
             if k == "intercept":
                 self.state.set_intercept(v)
+                update[k] = v
+            elif k == "showhost":
+                self.master.options.showhost = v
+                update[k] = v
+            elif k == "no_upstream_cert":
+                self.master.server.config.no_upstream_cert = v
+                update[k] = v
+            elif k == "rawtcp":
+                self.master.server.config.rawtcp = v
+                update[k] = v
+            elif k == "http2":
+                self.master.server.config.http2 = v
+                update[k] = v
+            elif k == "anticache":
+                self.master.anticache = v
+                update[k] = v
+            elif k == "anticomp":
+                self.master.anticomp = v
                 update[k] = v
             else:
                 print("Warning: Unknown setting {}: {}".format(k, v))
@@ -305,18 +329,6 @@ class Settings(RequestHandler):
             data=update
         )
 
-class Options(RequestHandler):
-    def post(self, option):
-        #if option == "anticache":
-        self.master.anticache = not self.master.anticache
-        #debugging
-        print("anticache toogle", self.master.anticache)
-
-        #ClientConnection.broadcast(
-        #    type="options",
-        #    cmd="update",
-        #    data=#options array
-        #)
 
 class Application(tornado.web.Application):
 
@@ -337,7 +349,6 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
-            (r"/options/(?P<option>[0-9a-f\-]+)", Options),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

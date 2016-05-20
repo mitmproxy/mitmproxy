@@ -2906,6 +2906,12 @@ function Footer(_ref) {
     var settings = _ref.settings;
     var mode = settings.mode;
     var intercept = settings.intercept;
+    var showhost = settings.showhost;
+    var no_upstream_cert = settings.no_upstream_cert;
+    var rawtcp = settings.rawtcp;
+    var http2 = settings.http2;
+    var anticache = settings.anticache;
+    var anticomp = settings.anticomp;
 
     return _react2.default.createElement(
         "footer",
@@ -2921,6 +2927,36 @@ function Footer(_ref) {
             { className: "label label-success" },
             "Intercept: ",
             intercept
+        ),
+        showhost && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "showhost"
+        ),
+        no_upstream_cert && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "no-upstream-cert"
+        ),
+        rawtcp && rawtcp != "False" && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "raw-tcp"
+        ),
+        !http2 && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "no-http2"
+        ),
+        anticache && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "anticache"
+        ),
+        anticomp && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "anticomp"
         )
     );
 }
@@ -3242,42 +3278,48 @@ var ViewMenu = _react2.default.createClass({
     }
 });
 
+//Warning: Stateless function components cannot be given refs (See ref "active" in OptionMenu created by Header). Attempts to access this ref will fail.
+
 var OptionMenu = function (_React$Component) {
     _inherits(OptionMenu, _React$Component);
 
-    function OptionMenu(props) {
+    function OptionMenu() {
         _classCallCheck(this, OptionMenu);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(OptionMenu).call(this, props));
-
-        _this.state = {
-            options: [{ name: "--host", checked: true }, { name: "--no-upstream-cert", checked: false }, { name: "--http2", checked: false }, { name: "--anticache", checked: false }, { name: "--anticomp", checked: false }, { name: "--stickycookie", checked: true }, { name: "--stickyauth", checked: false }, { name: "--stream", checked: false }]
-        };
-        return _this;
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(OptionMenu).apply(this, arguments));
     }
 
     _createClass(OptionMenu, [{
-        key: "setOption",
-        value: function setOption(entry) {
-            console.log(entry.name); //TODO: get options from outside and remove state
-            entry.checked = !entry.checked;
-            this.setState({ options: this.state.options });
+        key: "onOptionChange",
+        value: function onOptionChange(name, checked) {
+            _actions.SettingsActions.update(JSON.parse("{\"" + name + "\": " + !checked + "}"));
         }
     }, {
         key: "render",
         value: function render() {
             var _this2 = this;
 
+            var _props$settings = this.props.settings;
+            var mode = _props$settings.mode;
+            var intercept = _props$settings.intercept;
+            var showhost = _props$settings.showhost;
+            var no_upstream_cert = _props$settings.no_upstream_cert;
+            var rawtcp = _props$settings.rawtcp;
+            var http2 = _props$settings.http2;
+            var anticache = _props$settings.anticache;
+            var anticomp = _props$settings.anticomp;
+
+            var options = [{ name: "showhost", checked: showhost }, { name: "no_upstream_cert", checked: no_upstream_cert }, { name: "rawtcp", checked: rawtcp }, { name: "http2", checked: http2 }, { name: "anticache", checked: anticache }, { name: "anticomp", checked: anticomp }, { name: "stickycookie", checked: false }, { name: "stickyauth", checked: false }, { name: "stream", checked: false }];
             return _react2.default.createElement(
                 "div",
                 null,
-                this.state.options.map(function (entry, i) {
+                options.map(function (entry, i) {
                     return _react2.default.createElement(_common.ToggleComponent, {
                         key: i,
                         checked: entry.checked,
                         name: entry.name,
                         onToggleChanged: function onToggleChanged() {
-                            return _this2.setOption(entry);
+                            return _this2.onOptionChange(entry.name, entry.checked);
                         } });
                 })
             );
