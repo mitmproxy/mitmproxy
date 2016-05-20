@@ -35,12 +35,20 @@ class MultiDict(MutableMapping, Serializable):
     @staticmethod
     @abstractmethod
     def _reduce_values(values):
-        pass
+        """
+        If a user accesses multidict["foo"], this method
+        reduces all values for "foo" to a single value that is returned.
+        For example, HTTP headers are folded, whereas we will just take
+        the first cookie we found with that name.
+        """
 
     @staticmethod
     @abstractmethod
-    def _kconv(v):
-        pass
+    def _kconv(key):
+        """
+        This method converts a key to its canonical representation.
+        For example, HTTP headers are case-insensitive, so this method returns key.lower().
+        """
 
     def __getitem__(self, key):
         values = self.get_all(key)

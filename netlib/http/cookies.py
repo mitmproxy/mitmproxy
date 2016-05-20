@@ -169,8 +169,8 @@ def parse_set_cookie_headers(headers):
 
 class CookieAttrs(ImmutableMultiDict):
     @staticmethod
-    def _kconv(v):
-        return v.lower()
+    def _kconv(key):
+        return key.lower()
 
     @staticmethod
     def _reduce_values(values):

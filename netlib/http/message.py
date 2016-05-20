@@ -279,7 +279,7 @@ class MultiDictView(MultiDict):
     """
 
     def __init__(self, attr, message):
-        if False:
+        if False:  # pragma: no cover
             # We do not want to call the parent constructor here as that
             # would cause an unnecessary parse/unparse pass.
             # This is here to silence linters. Message
