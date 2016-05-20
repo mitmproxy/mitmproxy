@@ -233,6 +233,7 @@ class CommonTests(tutils.DaemonTests):
         # FIXME: Race Condition?
         assert "Parse error" in self.d.text_log()
 
+    @pytest.mark.skip(reason="race condition")
     def test_websocket_frame_disconnect_error(self):
         self.pathoc(["ws:/p/", "wf:b@10:d3"], ws_read_limit=0)
         assert self.d.last_log()
