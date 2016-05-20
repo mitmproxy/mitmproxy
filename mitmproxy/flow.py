@@ -653,8 +653,9 @@ class FlowMaster(controller.ServerMaster):
         if server:
             self.add_server(server)
         self.state = state
-        self.server_playback = None
-        self.client_playback = None
+        self.active_flows = set()  # type: Set[Flow]
+        self.server_playback = None  # type: Optional[ServerPlaybackState]
+        self.client_playback = None  # type: Optional[ClientPlaybackState]
         self.kill_nonreplay = False
         self.scripts = []  # type: List[script.Script]
         self.pause_scripts = False
@@ -1033,6 +1034,7 @@ class FlowMaster(controller.ServerMaster):
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
+        self.active_flows.add(f)
         self.replacehooks.run(f)
         self.setheaders.run(f)
         self.process_new_request(f)
@@ -1053,6 +1055,7 @@ class FlowMaster(controller.ServerMaster):
         return f
 
     def handle_response(self, f):
+        self.active_flows.discard(f)
         self.state.update_flow(f)
         self.replacehooks.run(f)
         self.setheaders.run(f)
@@ -1099,7 +1102,9 @@ class FlowMaster(controller.ServerMaster):
         return ok
 
     def handle_tcp_open(self, flow):
-        self.state.add_flow(flow)
+        # TODO: This would break mitmproxy currently.
+        # self.state.add_flow(flow)
+        self.active_flows.add(flow)
         self.run_script_hook("tcp_open", flow)
         flow.reply()
 
@@ -1124,7 +1129,7 @@ class FlowMaster(controller.ServerMaster):
         flow.reply()
 
     def handle_tcp_close(self, flow):
-        self.state.delete_flow(flow)
+        self.active_flows.discard(flow)
         if self.stream:
             self.stream.add(flow)
         self.run_script_hook("tcp_close", flow)
@@ -1135,13 +1140,8 @@ class FlowMaster(controller.ServerMaster):
 
         # Add all flows that are still active
         if self.stream:
-            for flow in self.state.flows:
-                # FIXME: We actually need to keep track of which flows are still active.
-                if isinstance(flow, HTTPFlow) and not flow.response:
-                    self.stream.add(flow)
-                if isinstance(flow, TCPFlow):
-                    # (assuming mitmdump only, this must be still active)
-                    self.stream.add(flow)
+            for flow in self.active_flows:
+                self.stream.add(flow)
             self.stop_stream()
 
         self.unload_scripts()
