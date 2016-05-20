@@ -13,6 +13,8 @@ from six.moves import http_cookies, http_cookiejar, urllib
 import os
 import re
 
+from typing import List, Optional, Set
+
 from netlib import wsgi, odict
 from netlib.exceptions import HttpException
 from netlib.http import Headers, http1, cookies
@@ -378,8 +380,11 @@ class StickyAuthState:
                 f.request.headers["authorization"] = self.hosts[host]
 
 
+@six.add_metaclass(ABCMeta)
 class FlowList(object):
-    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        self._list = []  # type: List[Flow]
 
     def __iter__(self):
         return iter(self._list)
@@ -418,7 +423,7 @@ class FlowList(object):
 class FlowView(FlowList):
 
     def __init__(self, store, filt=None):
-        self._list = []
+        super(FlowView, self).__init__()
         if not filt:
             filt = lambda flow: True
         self._build(store, filt)
@@ -460,7 +465,7 @@ class FlowStore(FlowList):
     """
 
     def __init__(self):
-        self._list = []
+        super(FlowStore, self).__init__()
         self._set = set()  # Used for O(1) lookups
         self.views = []
         self._recalculate_views()
@@ -651,18 +656,18 @@ class FlowMaster(controller.ServerMaster):
         self.server_playback = None
         self.client_playback = None
         self.kill_nonreplay = False
-        self.scripts = []
+        self.scripts = []  # type: List[script.Script]
         self.pause_scripts = False
 
-        self.stickycookie_state = False
+        self.stickycookie_state = None  # type: Optional[StickyCookieState]
         self.stickycookie_txt = None
 
-        self.stickyauth_state = False
+        self.stickyauth_state = False  # type: Optional[StickyAuthState]
         self.stickyauth_txt = None
 
         self.anticache = False
         self.anticomp = False
-        self.stream_large_bodies = False
+        self.stream_large_bodies = None  # type: Optional[StreamLargeBodies]
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
         self.setheaders = SetHeaders()
