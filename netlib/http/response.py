@@ -1,14 +1,12 @@
 from __future__ import absolute_import, print_function, division
 
-import warnings
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
 from . import cookies
 from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData
+from .message import Message, _native, _always_bytes, MessageData, MultiDictView
 from .. import utils
-from ..odict import ODict
 
 
 class ResponseData(MessageData):
@@ -72,29 +70,30 @@ class Response(Message):
 
     @property
     def cookies(self):
+        # type: () -> MultiDictView
         """
-        Get the contents of all Set-Cookie headers.
+        The response cookies. A possibly empty :py:class:`MultiDictView`, where the keys are
+        cookie name strings, and values are (value, attr) tuples. Value is a string, and attr is
+        an ODictCaseless containing cookie attributes. Within attrs, unary attributes (e.g. HTTPOnly)
+        are indicated by a Null value.
 
-        A possibly empty :py:class:`ODict`, where keys are cookie name strings,
-        and values are [value, attr] lists. Value is a string, and attr is
-        an ODictCaseless containing cookie attributes. Within attrs, unary
-        attributes (e.g. HTTPOnly) are indicated by a Null value.
+        Caveats:
+            Updating the attr
         """
-        ret = []
-        for header in self.headers.get_all("set-cookie"):
-            v = cookies.parse_set_cookie_header(header)
-            if v:
-                name, value, attrs = v
-                ret.append([name, [value, attrs]])
-        return ODict(ret)
+        return MultiDictView("cookies", self)
+
+    @property
+    def _cookies(self):
+        h = self.headers.get_all("set-cookie")
+        return tuple(cookies.parse_set_cookie_headers(h))
 
     @cookies.setter
-    def cookies(self, odict):
-        values = []
-        for i in odict.lst:
-            header = cookies.format_set_cookie_header(i[0], i[1][0], i[1][1])
-            values.append(header)
-        self.headers.set_all("set-cookie", values)
+    def cookies(self, all_cookies):
+        cookie_headers = []
+        for k, v in all_cookies:
+            header = cookies.format_set_cookie_header(k, v[0], v[1])
+            cookie_headers.append(header)
+        self.headers.set_all("set-cookie", cookie_headers)
 
     def refresh(self, now=None):
         """

@@ -316,14 +316,14 @@ def _read_headers(rfile):
             if not ret:
                 raise HttpSyntaxException("Invalid headers")
             # continued header
-            ret[-1][1] = ret[-1][1] + b'\r\n ' + line.strip()
+            ret[-1] = (ret[-1][0], ret[-1][1] + b'\r\n ' + line.strip())
         else:
             try:
                 name, value = line.split(b":", 1)
                 value = value.strip()
                 if not name:
                     raise ValueError()
-                ret.append([name, value])
+                ret.append((name, value))
             except ValueError:
                 raise HttpSyntaxException("Invalid headers")
     return Headers(ret)

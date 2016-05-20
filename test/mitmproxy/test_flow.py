@@ -1067,60 +1067,6 @@ class TestRequest:
         assert r.url == "https://address:22/path"
         assert r.pretty_url == "https://foo.com:22/path"
 
-    def test_path_components(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.path = "/"
-        assert r.get_path_components() == []
-        r.path = "/foo/bar"
-        assert r.get_path_components() == ["foo", "bar"]
-        q = odict.ODict()
-        q["test"] = ["123"]
-        r.set_query(q)
-        assert r.get_path_components() == ["foo", "bar"]
-
-        r.set_path_components([])
-        assert r.get_path_components() == []
-        r.set_path_components(["foo"])
-        assert r.get_path_components() == ["foo"]
-        r.set_path_components(["/oo"])
-        assert r.get_path_components() == ["/oo"]
-        assert "%2F" in r.path
-
-    def test_getset_form_urlencoded(self):
-        d = odict.ODict([("one", "two"), ("three", "four")])
-        r = HTTPRequest.wrap(netlib.tutils.treq(content=netlib.utils.urlencode(d.lst)))
-        r.headers["content-type"] = "application/x-www-form-urlencoded"
-        assert r.get_form_urlencoded() == d
-
-        d = odict.ODict([("x", "y")])
-        r.set_form_urlencoded(d)
-        assert r.get_form_urlencoded() == d
-
-        r.headers["content-type"] = "foo"
-        assert not r.get_form_urlencoded()
-
-    def test_getset_query(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.path = "/foo?x=y&a=b"
-        q = r.get_query()
-        assert q.lst == [("x", "y"), ("a", "b")]
-
-        r.path = "/"
-        q = r.get_query()
-        assert not q
-
-        r.path = "/?adsfa"
-        q = r.get_query()
-        assert q.lst == [("adsfa", "")]
-
-        r.path = "/foo?x=y&a=b"
-        assert r.get_query()
-        r.set_query(odict.ODict([]))
-        assert not r.get_query()
-        qv = odict.ODict([("a", "b"), ("c", "d")])
-        r.set_query(qv)
-        assert r.get_query() == qv
-
     def test_anticache(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
         r.headers = Headers()

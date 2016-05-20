@@ -12,7 +12,7 @@ from .test_message import _test_decoded_attr, _test_passthrough_attr
 
 class TestRequestData(object):
     def test_init(self):
-        with raises(ValueError if six.PY2 else TypeError):
+        with raises(ValueError):
             treq(headers="foobar")
 
         assert isinstance(treq(headers=None).headers, Headers)
@@ -158,16 +158,17 @@ class TestRequestUtils(object):
 
     def test_get_query(self):
         request = treq()
-        assert request.query is None
+        assert not request.query
 
         request.url = "http://localhost:80/foo?bar=42"
-        assert request.query.lst == [("bar", "42")]
+        assert dict(request.query) == {"bar": "42"}
 
     def test_set_query(self):
-        request = treq(host=b"foo", headers = Headers(host=b"bar"))
-        request.query = ODict([])
-        assert request.host == "foo"
-        assert request.headers["host"] == "bar"
+        request = treq()
+        assert not request.query
+        request.query["foo"] = "bar"
+        assert request.query["foo"] == "bar"
+        assert request.path == "/path?foo=bar"
 
     def test_get_cookies_none(self):
         request = treq()
@@ -177,47 +178,50 @@ class TestRequestUtils(object):
     def test_get_cookies_single(self):
         request = treq()
         request.headers = Headers(cookie="cookiename=cookievalue")
-        result = request.cookies
-        assert len(result) == 1
-        assert result['cookiename'] == ['cookievalue']
+        assert len(request.cookies) == 1
+        assert request.cookies['cookiename'] == 'cookievalue'
 
     def test_get_cookies_double(self):
         request = treq()
         request.headers = Headers(cookie="cookiename=cookievalue;othercookiename=othercookievalue")
         result = request.cookies
         assert len(result) == 2
-        assert result['cookiename'] == ['cookievalue']
-        assert result['othercookiename'] == ['othercookievalue']
+        assert result['cookiename'] == 'cookievalue'
+        assert result['othercookiename'] == 'othercookievalue'
 
     def test_get_cookies_withequalsign(self):
         request = treq()
         request.headers = Headers(cookie="cookiename=coo=kievalue;othercookiename=othercookievalue")
         result = request.cookies
         assert len(result) == 2
-        assert result['cookiename'] == ['coo=kievalue']
-        assert result['othercookiename'] == ['othercookievalue']
+        assert result['cookiename'] == 'coo=kievalue'
+        assert result['othercookiename'] == 'othercookievalue'
 
     def test_set_cookies(self):
         request = treq()
         request.headers = Headers(cookie="cookiename=cookievalue")
         result = request.cookies
-        result["cookiename"] = ["foo"]
-        request.cookies = result
-        assert request.cookies["cookiename"] == ["foo"]
+        result["cookiename"] = "foo"
+        assert request.cookies["cookiename"] == "foo"
 
     def test_get_path_components(self):
         request = treq(path=b"/foo/bar")
-        assert request.path_components == ["foo", "bar"]
+        assert request.path_components == ("foo", "bar")
 
     def test_set_path_components(self):
-        request = treq(host=b"foo", headers = Headers(host=b"bar"))
+        request = treq()
         request.path_components = ["foo", "baz"]
         assert request.path == "/foo/baz"
+
         request.path_components = []
         assert request.path == "/"
-        request.query = ODict([])
-        assert request.host == "foo"
-        assert request.headers["host"] == "bar"
+
+        request.path_components = ["foo", "baz"]
+        request.query["hello"] = "hello"
+        assert request.path_components == ("foo", "baz")
+
+        request.path_components = ["abc"]
+        assert request.path == "/abc?hello=hello"
 
     def test_anticache(self):
         request = treq()
@@ -246,26 +250,21 @@ class TestRequestUtils(object):
         assert "gzip" in request.headers["Accept-Encoding"]
 
     def test_get_urlencoded_form(self):
-        request = treq(content="foobar")
-        assert request.urlencoded_form is None
+        request = treq(content="foobar=baz")
+        assert not request.urlencoded_form
 
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        assert request.urlencoded_form == ODict(utils.urldecode(request.content))
+        assert list(request.urlencoded_form.items()) == [("foobar", "baz")]
 
     def test_set_urlencoded_form(self):
         request = treq()
-        request.urlencoded_form = ODict([('foo', 'bar'), ('rab', 'oof')])
+        request.urlencoded_form = [('foo', 'bar'), ('rab', 'oof')]
         assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
         assert request.content
 
     def test_get_multipart_form(self):
         request = treq(content="foobar")
-        assert request.multipart_form is None
+        assert not request.multipart_form
 
         request.headers["Content-Type"] = "multipart/form-data"
-        assert request.multipart_form == ODict(
-            utils.multipartdecode(
-                request.headers,
-                request.content
-            )
-        )
+        assert list(request.multipart_form.items()) == []
