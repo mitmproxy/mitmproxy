@@ -8,6 +8,7 @@ from contextlib import contextmanager
 
 from unittest.case import SkipTest
 
+import netlib.utils
 import netlib.tutils
 from mitmproxy import utils, controller
 from mitmproxy.models import (
@@ -163,4 +164,4 @@ def capture_stderr(command, *args, **kwargs):
     sys.stderr = out
 
 
-test_data = utils.Data(__name__)
+test_data = netlib.utils.Data(__name__)

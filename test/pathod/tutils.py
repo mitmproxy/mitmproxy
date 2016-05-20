@@ -116,7 +116,7 @@ tmpdir = netlib.tutils.tmpdir
 
 raises = netlib.tutils.raises
 
-test_data = utils.Data(__name__)
+test_data = netlib.utils.Data(__name__)
 
 
 def render(r, settings=language.Settings()):

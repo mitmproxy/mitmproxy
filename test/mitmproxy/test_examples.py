@@ -5,11 +5,12 @@ from contextlib import contextmanager
 
 from mitmproxy import utils, script
 from mitmproxy.proxy import config
+import netlib.utils
 from netlib import tutils as netutils
 from netlib.http import Headers
 from . import tservers, tutils
 
-example_dir = utils.Data(__name__).path("../../examples")
+example_dir = netlib.utils.Data(__name__).path("../../examples")
 
 
 class DummyContext(object):
