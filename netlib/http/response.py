@@ -5,7 +5,8 @@ import time
 
 from . import cookies
 from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData, MultiDictView
+from .message import Message, _native, _always_bytes, MessageData
+from ..multidict import MultiDictView
 from .. import utils
 
 
@@ -80,20 +81,25 @@ class Response(Message):
         Caveats:
             Updating the attr
         """
-        return MultiDictView("cookies", self)
+        return MultiDictView(
+            self._get_cookies,
+            self._set_cookies
+        )
 
-    @property
-    def _cookies(self):
+    def _get_cookies(self):
         h = self.headers.get_all("set-cookie")
         return tuple(cookies.parse_set_cookie_headers(h))
 
-    @cookies.setter
-    def cookies(self, all_cookies):
+    def _set_cookies(self, value):
         cookie_headers = []
-        for k, v in all_cookies:
+        for k, v in value:
             header = cookies.format_set_cookie_header(k, v[0], v[1])
             cookie_headers.append(header)
         self.headers.set_all("set-cookie", cookie_headers)
+
+    @cookies.setter
+    def cookies(self, value):
+        self._set_cookies(value)
 
     def refresh(self, now=None):
         """

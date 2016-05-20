@@ -15,13 +15,7 @@ from .utils import Serializable
 
 
 @six.add_metaclass(ABCMeta)
-class MultiDict(MutableMapping, Serializable):
-    def __init__(self, fields=None):
-
-        # it is important for us that .fields is immutable, so that we can easily
-        # detect changes to it.
-        self.fields = tuple(fields) if fields else tuple()  # type: Tuple[Tuple[bytes, bytes], ...]
-
+class _MultiDict(MutableMapping, Serializable):
     def __repr__(self):
         fields = tuple(
             repr(field)
@@ -97,7 +91,7 @@ class MultiDict(MutableMapping, Serializable):
             value
             for k, value in self.fields
             if self._kconv(k) == key
-            ]
+        ]
 
     def set_all(self, key, values):
         """
@@ -173,7 +167,7 @@ class MultiDict(MutableMapping, Serializable):
         if multi:
             return self.fields
         else:
-            return super(MultiDict, self).items()
+            return super(_MultiDict, self).items()
 
     def to_dict(self):
         """
@@ -213,6 +207,12 @@ class MultiDict(MutableMapping, Serializable):
         return cls(tuple(x) for x in state)
 
 
+class MultiDict(_MultiDict):
+    def __init__(self, fields=None):
+        super(MultiDict, self).__init__()
+        self.fields = tuple(fields) if fields else tuple()  # type: Tuple[Tuple[bytes, bytes], ...]
+
+
 @six.add_metaclass(ABCMeta)
 class ImmutableMultiDict(MultiDict):
     def _immutable(self, *_):
@@ -246,3 +246,34 @@ class ImmutableMultiDict(MultiDict):
         ret = self.copy()
         super(ImmutableMultiDict, ret).insert(index, key, value)
         return ret
+
+
+class MultiDictView(_MultiDict):
+    """
+    The MultiDictView provides the MultiDict interface over calculated data.
+    The view itself contains no state - data is retrieved from the parent on
+    request, and stored back to the parent on change.
+    """
+    def __init__(self, getter, setter):
+        self._getter = getter
+        self._setter = setter
+        super(MultiDictView, self).__init__()
+
+    @staticmethod
+    def _kconv(key):
+        # All request-attributes are case-sensitive.
+        return key
+
+    @staticmethod
+    def _reduce_values(values):
+        # We just return the first element if
+        # multiple elements exist with the same key.
+        return values[0]
+
+    @property
+    def fields(self):
+        return self._getter()
+
+    @fields.setter
+    def fields(self, value):
+        return self._setter(value)

@@ -10,8 +10,9 @@ from netlib import utils
 from netlib.http import cookies
 from netlib.odict import ODict
 from .. import encoding
+from ..multidict import MultiDictView
 from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData, MultiDictView
+from .message import Message, _native, _always_bytes, MessageData
 
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
@@ -228,19 +229,24 @@ class Request(Message):
         """
         The request query string as an :py:class:`MultiDictView` object.
         """
-        return MultiDictView("query", self)
+        return MultiDictView(
+            self._get_query,
+            self._set_query
+        )
 
-    @property
-    def _query(self):
+    def _get_query(self):
         _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
         return tuple(utils.urldecode(query))
 
-    @query.setter
-    def query(self, value):
+    def _set_query(self, value):
         query = utils.urlencode(value)
         scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
         _, _, _, self.path = utils.parse_url(
                 urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
+
+    @query.setter
+    def query(self, value):
+        self._set_query(value)
 
     @property
     def cookies(self):
@@ -250,16 +256,21 @@ class Request(Message):
 
         An empty :py:class:`MultiDictView` object if the cookie monster ate them all.
         """
-        return MultiDictView("cookies", self)
+        return MultiDictView(
+            self._get_cookies,
+            self._set_cookies
+        )
 
-    @property
-    def _cookies(self):
+    def _get_cookies(self):
         h = self.headers.get_all("Cookie")
         return tuple(cookies.parse_cookie_headers(h))
 
+    def _set_cookies(self, value):
+        self.headers["cookie"] = cookies.format_cookie_header(value)
+
     @cookies.setter
     def cookies(self, value):
-        self.headers["cookie"] = cookies.format_cookie_header(value)
+        self._set_cookies(value)
 
     @property
     def path_components(self):
@@ -322,17 +333,18 @@ class Request(Message):
         An empty MultiDictView if the content-type indicates non-form data
         or the content could not be parsed.
         """
-        return MultiDictView("urlencoded_form", self)
+        return MultiDictView(
+            self._get_urlencoded_form,
+            self._set_urlencoded_form
+        )
 
-    @property
-    def _urlencoded_form(self):
+    def _get_urlencoded_form(self):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             return tuple(utils.urldecode(self.content))
         return ()
 
-    @urlencoded_form.setter
-    def urlencoded_form(self, value):
+    def _set_urlencoded_form(self, value):
         """
         Sets the body to the URL-encoded form data, and adds the appropriate content-type header.
         This will overwrite the existing content if there is one.
@@ -340,21 +352,30 @@ class Request(Message):
         self.headers["content-type"] = "application/x-www-form-urlencoded"
         self.content = utils.urlencode(value)
 
+    @urlencoded_form.setter
+    def urlencoded_form(self, value):
+        self._set_urlencoded_form(value)
+
     @property
     def multipart_form(self):
         """
         The multipart form data as an :py:class:`MultipartFormDict` object.
         None if the content-type indicates non-form data.
         """
-        return MultiDictView("multipart_form", self)
+        return MultiDictView(
+            self._get_multipart_form,
+            self._set_multipart_form
+        )
 
-    @property
-    def _multipart_form(self):
+    def _get_multipart_form(self):
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             return utils.multipartdecode(self.headers, self.content)
         return ()
 
+    def _set_multipart_form(self, value):
+        raise NotImplementedError()
+
     @multipart_form.setter
     def multipart_form(self, value):
-        raise NotImplementedError()
+        self._set_multipart_form(value)

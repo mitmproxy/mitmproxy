@@ -1,5 +1,5 @@
 from netlib import tutils
-from netlib.multidict import MultiDict, ImmutableMultiDict
+from netlib.multidict import MultiDict, ImmutableMultiDict, MultiDictView
 
 
 class _TMulti(object):
@@ -214,4 +214,26 @@ class TestImmutableMultiDict(object):
     def test_with_insert(self):
         md = TImmutableMultiDict()
         assert md.with_insert(0, "foo", "bar").fields == (("foo", "bar"),)
-        assert md.fields == ()
+
+
+class TParent(object):
+    def __init__(self):
+        self.vals = tuple()
+
+    def setter(self, vals):
+        self.vals = vals
+
+    def getter(self):
+        return self.vals
+
+
+class TestMultiDictView(object):
+    def test_modify(self):
+        p = TParent()
+        tv = MultiDictView(p.getter, p.setter)
+        assert len(tv) == 0
+        tv["a"] = "b"
+        assert p.vals == (("a", "b"),)
+        tv["c"] = "b"
+        assert p.vals == (("a", "b"), ("c", "b"))
+        assert tv["a"] == "b"
