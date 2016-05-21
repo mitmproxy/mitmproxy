@@ -209,6 +209,11 @@ class Http2Layer(Layer):
             if zombie and zombie <= death_time:
                 self.streams.pop(stream_id, None)
 
+    def _kill_all_streams(self):
+        for stream in self.streams.values():
+            if not stream.zombie:
+                stream.zombie = time.time()
+
     def __call__(self):
         if self.server_conn:
             self._initiate_server_conn()
@@ -230,9 +235,7 @@ class Http2Layer(Layer):
                         raw_frame = b''.join(http2_read_raw_frame(source_conn.rfile))
                     except:
                         # read frame failed: connection closed
-                        # kill all streams
-                        for stream in self.streams.values():
-                            stream.zombie = time.time()
+                        self._kill_all_streams()
                         return
 
                     incoming_events = source_conn.h2.receive_data(raw_frame)
@@ -240,6 +243,8 @@ class Http2Layer(Layer):
 
                     for event in incoming_events:
                         if not self._handle_event(event, source_conn, other_conn, is_server):
+                            # connection terminated: GoAway
+                            self._kill_all_streams()
                             return
 
             self._cleanup_streams()
