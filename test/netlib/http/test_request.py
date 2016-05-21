@@ -3,9 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import six
 
-from netlib import utils
 from netlib.http import Headers
-from netlib.odict import ODict
 from netlib.tutils import treq, raises
 from .test_message import _test_decoded_attr, _test_passthrough_attr
 
