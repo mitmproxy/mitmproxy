@@ -9,6 +9,7 @@ import six
 from h2.connection import H2Connection
 from h2.exceptions import StreamClosedError
 from h2 import events
+from hyperframe.frame import PriorityFrame
 
 from netlib.tcp import ssl_read_select
 from netlib.exceptions import HttpException
@@ -185,6 +186,17 @@ class Http2Layer(Layer):
             self.streams[event.pushed_stream_id].timestamp_end = time.time()
             self.streams[event.pushed_stream_id].request_data_finished.set()
             self.streams[event.pushed_stream_id].start()
+        elif isinstance(event, events.PriorityUpdated):
+            stream_id = event.stream_id
+            if stream_id in self.streams.keys() and self.streams[stream_id].server_stream_id:
+                stream_id = self.streams[stream_id].server_stream_id
+
+            depends_on = event.depends_on
+            if depends_on in self.streams.keys() and self.streams[depends_on].server_stream_id:
+                depends_on = self.streams[depends_on].server_stream_id
+
+            frame = PriorityFrame(stream_id, depends_on, event.weight, event.exclusive)
+            self.server_conn.send(frame.serialize())
         elif isinstance(event, events.TrailersReceived):
             raise NotImplementedError()
 
