@@ -195,7 +195,8 @@ class Http2Layer(Layer):
             if depends_on in self.streams.keys() and self.streams[depends_on].server_stream_id:
                 depends_on = self.streams[depends_on].server_stream_id
 
-            frame = PriorityFrame(stream_id, depends_on, event.weight, event.exclusive)
+            # weight is between 1 and 256 (inclusive), but represented as uint8 (0 to 255)
+            frame = PriorityFrame(stream_id, depends_on, event.weight - 1, event.exclusive)
             self.server_conn.send(frame.serialize())
         elif isinstance(event, events.TrailersReceived):
             raise NotImplementedError()
