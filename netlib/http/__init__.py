@@ -3,12 +3,12 @@ from .request import Request
 from .response import Response
 from .headers import Headers
 from .message import decoded
-from . import http1, http2
+from . import http1, http2, status_codes
 
 __all__ = [
     "Request",
     "Response",
     "Headers",
     "decoded",
-    "http1", "http2",
+    "http1", "http2", "status_codes",
 ]

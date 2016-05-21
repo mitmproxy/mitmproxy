@@ -1,8 +1,8 @@
-from six.moves import http_cookies as Cookie
+import collections
 import re
-import string
 from email.utils import parsedate_tz, formatdate, mktime_tz
 
+from netlib.multidict import ImmutableMultiDict
 from .. import odict
 
 """
@@ -157,42 +157,76 @@ def _parse_set_cookie_pairs(s):
     return pairs
 
 
+def parse_set_cookie_headers(headers):
+    ret = []
+    for header in headers:
+        v = parse_set_cookie_header(header)
+        if v:
+            name, value, attrs = v
+            ret.append((name, SetCookie(value, attrs)))
+    return ret
+
+
+class CookieAttrs(ImmutableMultiDict):
+    @staticmethod
+    def _kconv(key):
+        return key.lower()
+
+    @staticmethod
+    def _reduce_values(values):
+        # See the StickyCookieTest for a weird cookie that only makes sense
+        # if we take the last part.
+        return values[-1]
+
+
+SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
+
+
 def parse_set_cookie_header(line):
     """
         Parse a Set-Cookie header value
 
         Returns a (name, value, attrs) tuple, or None, where attrs is an
-        ODictCaseless set of attributes. No attempt is made to parse attribute
+        CookieAttrs dict of attributes. No attempt is made to parse attribute
         values - they are treated purely as strings.
     """
     pairs = _parse_set_cookie_pairs(line)
     if pairs:
-        return pairs[0][0], pairs[0][1], odict.ODictCaseless(pairs[1:])
+        return pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:])
 
 
 def format_set_cookie_header(name, value, attrs):
     """
         Formats a Set-Cookie header value.
     """
-    pairs = [[name, value]]
-    pairs.extend(attrs.lst)
+    pairs = [(name, value)]
+    pairs.extend(
+        attrs.fields if hasattr(attrs, "fields") else attrs
+    )
     return _format_set_cookie_pairs(pairs)
+
+
+def parse_cookie_headers(cookie_headers):
+    cookie_list = []
+    for header in cookie_headers:
+        cookie_list.extend(parse_cookie_header(header))
+    return cookie_list
 
 
 def parse_cookie_header(line):
     """
         Parse a Cookie header value.
-        Returns a (possibly empty) ODict object.
+        Returns a list of (lhs, rhs) tuples.
     """
     pairs, off_ = _read_pairs(line)
-    return odict.ODict(pairs)
+    return pairs
 
 
-def format_cookie_header(od):
+def format_cookie_header(lst):
     """
         Formats a Cookie header value.
     """
-    return _format_pairs(od.lst)
+    return _format_pairs(lst)
 
 
 def refresh_set_cookie_header(c, delta):
@@ -209,10 +243,10 @@ def refresh_set_cookie_header(c, delta):
         raise ValueError("Invalid Cookie")
 
     if "expires" in attrs:
-        e = parsedate_tz(attrs["expires"][-1])
+        e = parsedate_tz(attrs["expires"])
         if e:
             f = mktime_tz(e) + delta
-            attrs["expires"] = [formatdate(f)]
+            attrs = attrs.with_set_all("expires", [formatdate(f)])
         else:
             # This can happen when the expires tag is invalid.
             # reddit.com sends a an expires tag like this: "Thu, 31 Dec
@@ -220,7 +254,7 @@ def refresh_set_cookie_header(c, delta):
             # strictly correct according to the cookie spec. Browsers
             # appear to parse this tolerantly - maybe we should too.
             # For now, we just ignore this.
-            del attrs["expires"]
+            attrs = attrs.with_delitem("expires")
 
     ret = format_set_cookie_header(name, value, attrs)
     if not ret:

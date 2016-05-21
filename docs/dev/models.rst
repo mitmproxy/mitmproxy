@@ -56,6 +56,17 @@ Datastructures
         :special-members:
         :no-undoc-members:
 
+    .. autoclass:: MultiDictView
+
+        .. automethod:: get_all
+        .. automethod:: set_all
+        .. automethod:: add
+        .. automethod:: insert
+        .. automethod:: keys
+        .. automethod:: values
+        .. automethod:: items
+        .. automethod:: to_dict
+
     .. autoclass:: decoded
 
 .. automodule:: mitmproxy.models
