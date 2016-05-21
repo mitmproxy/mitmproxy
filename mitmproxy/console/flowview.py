@@ -186,7 +186,7 @@ class FlowView(tabs.Tabs):
                 viewmode,
                 message,
                 limit,
-                (bytes(message.headers), message.content)  # Cache invalidation
+                message  # Cache invalidation
             )
 
     def _get_content_view(self, viewmode, message, max_lines, _):

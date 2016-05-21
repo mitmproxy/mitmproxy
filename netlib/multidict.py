@@ -81,6 +81,9 @@ class _MultiDict(MutableMapping, Serializable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash(self.fields)
+
     def get_all(self, key):
         """
         Return the list of all values for a given key.
