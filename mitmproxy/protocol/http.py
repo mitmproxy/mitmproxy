@@ -120,18 +120,13 @@ class UpstreamConnectLayer(Layer):
         if address != self.server_conn.via.address:
             self.ctx.set_server(address)
 
-    def set_server(self, address, server_tls=None, sni=None):
+    def set_server(self, address):
         if self.ctx.server_conn:
             self.ctx.disconnect()
         address = tcp.Address.wrap(address)
         self.connect_request.host = address.host
         self.connect_request.port = address.port
         self.server_conn.address = address
-
-        if server_tls:
-            raise ProtocolException(
-                "Cannot upgrade to TLS, no TLS layer on the protocol stack."
-            )
 
 
 class HttpLayer(Layer):
@@ -149,7 +144,7 @@ class HttpLayer(Layer):
 
     def __call__(self):
         if self.mode == "transparent":
-            self.__initial_server_tls = self._server_tls
+            self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
             try:
@@ -360,8 +355,9 @@ class HttpLayer(Layer):
 
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
-            if address != self.server_conn.address or tls != self.server_conn.tls_established:
-                self.set_server(address, tls, address.host)
+            if address != self.server_conn.address or tls != self.server_tls:
+                self.set_server(address)
+                self.set_server_tls(tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
                 self.connect()
