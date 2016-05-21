@@ -169,7 +169,7 @@ class Http2Layer(Layer):
             # Some streams might be still sending data to the client.
             return False
         elif isinstance(event, events.PushedStreamReceived):
-            # pushed stream ids should be uniq and not dependent on race conditions
+            # pushed stream ids should be unique and not dependent on race conditions
             # only the parent stream id must be looked up first
             parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
             with self.client_conn.h2.lock:
