@@ -174,6 +174,7 @@ class Http2Layer(Layer):
             parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
             with self.client_conn.h2.lock:
                 self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
+                self.client_conn.send(self.client_conn.h2.data_to_send())
 
             headers = Headers([[str(k), str(v)] for k, v in event.headers])
             headers['x-mitmproxy-pushed'] = 'true'
