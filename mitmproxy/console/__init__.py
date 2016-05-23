@@ -58,7 +58,7 @@ class ConsoleState(flow.State):
         return f
 
     def set_limit(self, limit):
-        ret = flow.State.set_limit(self, limit)
+        ret = super(ConsoleState, self).set_limit(limit)
         self.set_focus(self.focus)
         return ret
 
@@ -102,7 +102,7 @@ class ConsoleState(flow.State):
             self.focus -= 1
         if self.focus < 0:
             self.focus = None
-        ret = flow.State.delete_flow(self, f)
+        ret = super(ConsoleState, self).delete_flow(f)
         self.set_focus(self.focus)
         return ret
 
