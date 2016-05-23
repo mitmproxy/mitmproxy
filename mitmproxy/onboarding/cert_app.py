@@ -90,4 +90,4 @@ application = tornado.web.Application(
     ],
     # debug=True
 )
-mapp = Adapter(application)
+app = Adapter(application)

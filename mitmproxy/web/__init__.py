@@ -52,7 +52,7 @@ class WebFlowView(flow.FlowView):
         )
 
 
-class WebState(flow.State):
+class WebState(flow.FlowState):
 
     def __init__(self):
         super(WebState, self).__init__()

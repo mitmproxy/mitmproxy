@@ -7,7 +7,7 @@ import os
 import netlib.utils
 
 from .. import utils
-from .. import flow_export
+from ..flow import export as flow_export
 from ..models import decoded
 from . import signals
 

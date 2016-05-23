@@ -24,7 +24,7 @@ from ..exceptions import FlowReadException, ScriptException
 EVENTLOG_SIZE = 500
 
 
-class ConsoleState(flow.State):
+class ConsoleState(flow.FlowState):
 
     def __init__(self):
         flow.State.__init__(self)

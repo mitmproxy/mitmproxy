@@ -58,7 +58,7 @@ class Options(object):
 class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options, outfile=None):
-        flow.FlowMaster.__init__(self, server, flow.State())
+        flow.FlowMaster.__init__(self, server, flow.FlowState())
         self.outfile = outfile
         self.o = options
         self.anticache = options.anticache
