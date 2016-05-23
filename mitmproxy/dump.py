@@ -320,7 +320,6 @@ class DumpMaster(flow.FlowMaster):
             self.outfile.flush()
 
     def _process_flow(self, f):
-        self.state.delete_flow(f)
         if self.filt and not f.match(self.filt):
             return
 
@@ -328,6 +327,7 @@ class DumpMaster(flow.FlowMaster):
 
     def handle_request(self, f):
         flow.FlowMaster.handle_request(self, f)
+        self.state.delete_flow(f)
         if f:
             f.reply()
         return f
