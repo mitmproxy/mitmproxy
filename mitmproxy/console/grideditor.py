@@ -5,7 +5,6 @@ import re
 import os
 import urwid
 
-from netlib import odict
 from netlib.http import user_agents, cookies
 
 from . import common, signals
