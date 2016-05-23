@@ -292,7 +292,10 @@ class Settings(RequestHandler):
                 rawtcp=self.master.server.config.rawtcp,
                 http2=self.master.server.config.http2,
                 anticache=self.master.options.anticache,
-                anticomp=self.master.options.anticomp
+                anticomp=self.master.options.anticomp,
+                stickyauth=self.master.stickyauth_txt,
+                stickycookie=self.master.stickycookie_txt#,
+                #stream=self.master.stream
             )
         ))
 
@@ -315,10 +318,19 @@ class Settings(RequestHandler):
                 self.master.server.config.http2 = v
                 update[k] = v
             elif k == "anticache":
-                self.master.anticache = v
+                self.master.options.anticache = v
                 update[k] = v
             elif k == "anticomp":
-                self.master.anticomp = v
+                self.master.options.anticomp = v
+                update[k] = v
+            elif k == "stickycookie":
+                self.master.set_stickycookie(v)
+                update[k] = v
+            elif k == "stickyauth":
+                self.master.set_stickyauth(v)
+                update[k] = v
+            elif k == "stream":
+                #self.master.set_stream_large_bodies(v) todo: ask
                 update[k] = v
             else:
                 print("Warning: Unknown setting {}: {}".format(k, v))

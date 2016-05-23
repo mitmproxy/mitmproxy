@@ -481,7 +481,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ToggleComponent = exports.Splitter = exports.Router = undefined;
+exports.ToggleInputButton = exports.ToggleButton = exports.Splitter = exports.Router = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require("react");
 
@@ -495,7 +497,15 @@ var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+var _utils = require("../utils.js");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Router = exports.Router = {
     contextTypes: {
@@ -631,28 +641,91 @@ var Splitter = exports.Splitter = _react2.default.createClass({
     }
 });
 
-var ToggleComponent = exports.ToggleComponent = function ToggleComponent(props) {
+var ToggleButton = exports.ToggleButton = function ToggleButton(props) {
     return _react2.default.createElement(
         "div",
-        {
-            className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
-            onClick: props.onToggleChanged },
+        { className: "input-group toggle-btn" },
         _react2.default.createElement(
-            "span",
-            null,
-            _react2.default.createElement("i", { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") }),
-            " ",
-            props.name
+            "div",
+            {
+                className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
+                onClick: props.onToggleChanged },
+            _react2.default.createElement(
+                "span",
+                { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") },
+                " ",
+                props.name
+            )
         )
     );
 };
 
-ToggleComponent.propTypes = {
+ToggleButton.propTypes = {
     name: _react2.default.PropTypes.string.isRequired,
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+var ToggleInputButton = exports.ToggleInputButton = function (_React$Component) {
+    _inherits(ToggleInputButton, _React$Component);
+
+    function ToggleInputButton(props) {
+        _classCallCheck(this, ToggleInputButton);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ToggleInputButton).call(this, props));
+
+        _this.state = { txt: props.txt };
+        return _this;
+    }
+
+    _createClass(ToggleInputButton, [{
+        key: "render",
+        value: function render() {
+            var _this2 = this;
+
+            return _react2.default.createElement(
+                "div",
+                { className: "input-group toggle-input-btn" },
+                _react2.default.createElement(
+                    "span",
+                    {
+                        className: "input-group-btn",
+                        onClick: function onClick() {
+                            return _this2.props.onToggleChanged(_this2.state.txt);
+                        } },
+                    _react2.default.createElement(
+                        "div",
+                        { className: "btn  " + (this.props.checked ? "btn-primary" : "btn-default") },
+                        _react2.default.createElement("span", { className: "fa " + (this.props.checked ? "fa-check-square-o" : "fa-square-o") }),
+                        " ",
+                        this.props.name
+                    )
+                ),
+                _react2.default.createElement("input", {
+                    className: "form-control",
+                    placeholder: this.props.placeholder,
+                    disabled: this.props.checked,
+                    value: this.state.txt,
+                    onChange: function onChange(e) {
+                        return _this2.setState({ txt: e.target.value });
+                    },
+                    onKeyDown: function onKeyDown(e) {
+                        if (e.keyCode === _utils.Key.ENTER) _this2.props.onToggleChanged(_this2.state.txt);e.stopPropagation();
+                    } })
+            );
+        }
+    }]);
+
+    return ToggleInputButton;
+}(_react2.default.Component);
+
+;
+ToggleInputButton.propTypes = {
+    name: _react2.default.PropTypes.string.isRequired,
+    txt: _react2.default.PropTypes.string.isRequired,
+    onToggleChanged: _react2.default.PropTypes.func.isRequired
+};
+
+},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2912,6 +2985,9 @@ function Footer(_ref) {
     var http2 = settings.http2;
     var anticache = settings.anticache;
     var anticomp = settings.anticomp;
+    var stickyauth = settings.stickyauth;
+    var stickycookie = settings.stickycookie;
+    var stream = settings.stream;
 
     return _react2.default.createElement(
         "footer",
@@ -2938,7 +3014,7 @@ function Footer(_ref) {
             { className: "label label-success" },
             "no-upstream-cert"
         ),
-        rawtcp && rawtcp != "False" && _react2.default.createElement(
+        rawtcp && _react2.default.createElement(
             "span",
             { className: "label label-success" },
             "raw-tcp"
@@ -2957,6 +3033,24 @@ function Footer(_ref) {
             "span",
             { className: "label label-success" },
             "anticomp"
+        ),
+        stickyauth && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "stickyauth: ",
+            stickyauth
+        ),
+        stickycookie && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "stickycookie: ",
+            stickycookie
+        ),
+        stream && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "stream: ",
+            stream
         )
     );
 }
@@ -2967,9 +3061,7 @@ function Footer(_ref) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Header = exports.MainMenu = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+exports.Header = exports.OptionMenu = exports.MainMenu = undefined;
 
 var _react = require("react");
 
@@ -2995,11 +3087,7 @@ var _actions = require("../actions.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var FilterDocs = _react2.default.createClass({
     displayName: "FilterDocs",
@@ -3270,67 +3358,70 @@ var ViewMenu = _react2.default.createClass({
         return _react2.default.createElement(
             "div",
             null,
-            _react2.default.createElement(_common.ToggleComponent, {
-                checked: showEventLog,
-                name: "Show Eventlog",
-                onToggleChanged: this.toggleEventLog })
+            _react2.default.createElement(
+                "div",
+                { className: "menu-row" },
+                _react2.default.createElement(_common.ToggleButton, {
+                    checked: showEventLog,
+                    name: "Show Eventlog",
+                    onToggleChanged: this.toggleEventLog })
+            ),
+            _react2.default.createElement("div", { className: "clearfix" })
         );
     }
 });
 
-//Warning: Stateless function components cannot be given refs (See ref "active" in OptionMenu created by Header). Attempts to access this ref will fail.
+var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
+    var _props$settings = props.settings;
+    var mode = _props$settings.mode;
+    var intercept = _props$settings.intercept;
+    var showhost = _props$settings.showhost;
+    var no_upstream_cert = _props$settings.no_upstream_cert;
+    var rawtcp = _props$settings.rawtcp;
+    var http2 = _props$settings.http2;
+    var anticache = _props$settings.anticache;
+    var anticomp = _props$settings.anticomp;
+    var stickycookie = _props$settings.stickycookie;
+    var stickyauth = _props$settings.stickyauth;
+    var stream = _props$settings.stream;
 
-var OptionMenu = function (_React$Component) {
-    _inherits(OptionMenu, _React$Component);
-
-    function OptionMenu() {
-        _classCallCheck(this, OptionMenu);
-
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(OptionMenu).apply(this, arguments));
-    }
-
-    _createClass(OptionMenu, [{
-        key: "onOptionChange",
-        value: function onOptionChange(name, checked) {
-            _actions.SettingsActions.update(JSON.parse("{\"" + name + "\": " + !checked + "}"));
-        }
-    }, {
-        key: "render",
-        value: function render() {
-            var _this2 = this;
-
-            var _props$settings = this.props.settings;
-            var mode = _props$settings.mode;
-            var intercept = _props$settings.intercept;
-            var showhost = _props$settings.showhost;
-            var no_upstream_cert = _props$settings.no_upstream_cert;
-            var rawtcp = _props$settings.rawtcp;
-            var http2 = _props$settings.http2;
-            var anticache = _props$settings.anticache;
-            var anticomp = _props$settings.anticomp;
-
-            var options = [{ name: "showhost", checked: showhost }, { name: "no_upstream_cert", checked: no_upstream_cert }, { name: "rawtcp", checked: rawtcp }, { name: "http2", checked: http2 }, { name: "anticache", checked: anticache }, { name: "anticomp", checked: anticomp }, { name: "stickycookie", checked: false }, { name: "stickyauth", checked: false }, { name: "stream", checked: false }];
-            return _react2.default.createElement(
-                "div",
-                null,
-                options.map(function (entry, i) {
-                    return _react2.default.createElement(_common.ToggleComponent, {
+    var options = [{ name: "showhost", checked: showhost }, { name: "no_upstream_cert", checked: no_upstream_cert }, { name: "rawtcp", checked: rawtcp }, { name: "http2", checked: http2 }, { name: "anticache", checked: anticache }, { name: "anticomp", checked: anticomp }, { name: "stickyauth", checked: Boolean(stickyauth), txt: stickyauth || "", placeholder: "Sticky auth filter" }, { name: "stickycookie", checked: Boolean(stickycookie), txt: stickycookie || "", placeholder: "Sticky cookie filter" }, { name: "stream", checked: Boolean(stream), txt: stream || "", placeholder: "stream..." }];
+    return _react2.default.createElement(
+        "div",
+        null,
+        _react2.default.createElement(
+            "div",
+            { className: "menu-row" },
+            options.map(function (entry, i) {
+                if (typeof entry.txt !== 'undefined') {
+                    return _react2.default.createElement(_common.ToggleInputButton, {
+                        key: i,
+                        name: entry.name,
+                        checked: entry.checked,
+                        txt: entry.txt,
+                        placeholder: entry.placeholder,
+                        onToggleChanged: function onToggleChanged(txt) {
+                            return _actions.SettingsActions.update(_defineProperty({}, entry.name, !entry.checked ? txt : null));
+                        } });
+                } else {
+                    return _react2.default.createElement(_common.ToggleButton, {
                         key: i,
                         checked: entry.checked,
                         name: entry.name,
                         onToggleChanged: function onToggleChanged() {
-                            return _this2.onOptionChange(entry.name, entry.checked);
+                            return _actions.SettingsActions.update(_defineProperty({}, entry.name, !entry.checked));
                         } });
-                })
-            );
-        }
-    }]);
-
-    return OptionMenu;
-}(_react2.default.Component);
-
+                }
+            })
+        ),
+        _react2.default.createElement("div", { className: "clearfix" })
+    );
+};
 OptionMenu.title = "Options";
 
+OptionMenu.propTypes = {
+    settings: _react2.default.PropTypes.object.isRequired
+};
 
 var ReportsMenu = _react2.default.createClass({
     displayName: "ReportsMenu",
@@ -3477,7 +3568,7 @@ var Header = exports.Header = _react2.default.createClass({
             _react2.default.createElement(
                 "div",
                 { className: "menu" },
-                _react2.default.createElement(this.state.active, { ref: "active", settings: this.props.settings })
+                _react2.default.createElement(this.state.active, { settings: this.props.settings })
             )
         );
     }

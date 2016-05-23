@@ -1,6 +1,8 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import _ from "lodash"
+import {Key} from "../utils.js";
+
 
 export var Router = {
     contextTypes: {
@@ -133,14 +135,53 @@ export var Splitter = React.createClass({
     }
 });
 
-export const ToggleComponent = (props) =>
-    <div
-      className={"btn " + (props.checked ? "btn-primary" : "btn-default")}
-      onClick={props.onToggleChanged}>
-      <span><i className={"fa " + (props.checked ? "fa-check-square-o" : "fa-square-o")}></i> {props.name}</span>
-    </div>
+export const ToggleButton = (props) =>
+    <div className="input-group toggle-btn">
+        <div
+        className={"btn " + (props.checked ? "btn-primary" : "btn-default")}
+        onClick={props.onToggleChanged}>
+        <span className={"fa " + (props.checked ? "fa-check-square-o" : "fa-square-o")}>&nbsp;{props.name}</span>
+        </div>
+    </div>;
 
-ToggleComponent.propTypes = {
+ToggleButton.propTypes = {
     name: React.PropTypes.string.isRequired,
     onToggleChanged: React.PropTypes.func.isRequired
-}
+};
+
+export class ToggleInputButton extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {txt: props.txt};
+    }
+
+    render() {
+        return (
+            <div className="input-group toggle-input-btn">
+                <span
+                    className="input-group-btn"
+                    onClick={() => this.props.onToggleChanged(this.state.txt)}>
+                    <div className={"btn  " + (this.props.checked ? "btn-primary" : "btn-default")}>
+                        <span className={"fa " + (this.props.checked ? "fa-check-square-o" : "fa-square-o")}/>
+                        &nbsp;{this.props.name}
+                    </div>
+                </span>
+                <input
+                    className="form-control"
+                    placeholder={this.props.placeholder}
+                    disabled={this.props.checked}
+                    value={this.state.txt}
+                    onChange={e => this.setState({txt: e.target.value})}
+                    onKeyDown={e => {if (e.keyCode === Key.ENTER) this.props.onToggleChanged(this.state.txt); e.stopPropagation()}}/>
+            </div>
+        );
+    }
+};
+ToggleInputButton.propTypes = {
+    name: React.PropTypes.string.isRequired,
+    txt: React.PropTypes.string.isRequired,
+    onToggleChanged: React.PropTypes.func.isRequired
+};
+
+
+

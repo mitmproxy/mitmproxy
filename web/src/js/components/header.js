@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
-import {Router, ToggleComponent} from "./common.js";
+import {Router, ToggleInputButton, ToggleButton} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 import {SettingsState} from "./common.js";
@@ -240,55 +240,66 @@ var ViewMenu = React.createClass({
     render: function () {
       var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
       return (
-        <div>
-          <ToggleComponent
-            checked={showEventLog}
-            name = "Show Eventlog"
-            onToggleChanged={this.toggleEventLog}/>
-        </div>
+          <div>
+            <div className="menu-row">
+              <ToggleButton
+                checked={showEventLog}
+                name = "Show Eventlog"
+                onToggleChanged={this.toggleEventLog}/>
+            </div>
+            <div className="clearfix"></div>
+          </div>
       );
     }
 });
 
-
-// If I make a stateless function out of the option menu i got the following warning message:
-// Warning: Stateless function components cannot be given refs (See ref "active" in OptionMenu created by Header). Attempts to access this ref will fail.
-class OptionMenu extends React.Component {
-
-    onOptionChange(name, checked) {
-        SettingsActions.update(JSON.parse("{\"" + name + "\": " + !checked + "}"));
-    }
-    static title = "Options";
-
-    render() {
-        const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp} = this.props.settings;
-        const options = [
-            {name: "showhost",           checked: showhost},
-            {name: "no_upstream_cert",   checked: no_upstream_cert},
-            {name: "rawtcp",             checked: rawtcp},
-            {name: "http2",              checked: http2},
-            {name: "anticache",          checked: anticache},
-            {name: "anticomp",           checked: anticomp},
-            {name: "stickycookie",       checked: false},
-            {name: "stickyauth",         checked: false},
-            {name: "stream",             checked: false}
-        ];
-        return (
-            <div>
+export const OptionMenu = (props) => {
+    const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp, stickycookie, stickyauth, stream} = props.settings;
+    const options = [
+        {name: "showhost",           checked: showhost},
+        {name: "no_upstream_cert",   checked: no_upstream_cert},
+        {name: "rawtcp",             checked: rawtcp},
+        {name: "http2",              checked: http2},
+        {name: "anticache",          checked: anticache},
+        {name: "anticomp",           checked: anticomp},
+        {name: "stickyauth",         checked: Boolean(stickyauth), txt: stickyauth || "",     placeholder: "Sticky auth filter"},
+        {name: "stickycookie",       checked: Boolean(stickycookie), txt: stickycookie || "", placeholder: "Sticky cookie filter"},
+        {name: "stream",             checked: Boolean(stream), txt: stream || "",             placeholder: "stream..."      }
+    ];
+    return (
+        <div>
+            <div className="menu-row">
                 {options.map((entry, i) => {
-                    return (
-                        <ToggleComponent
-                            key={i}
-                            checked={entry.checked}
-                            name={entry.name}
-                            onToggleChanged={() => this.onOptionChange(entry.name, entry.checked)}/>
-                    );
+                    if (typeof entry.txt !== 'undefined') {
+                        return (
+                            <ToggleInputButton
+                                key={i}
+                                name={entry.name}
+                                checked={entry.checked}
+                                txt={entry.txt}
+                                placeholder={entry.placeholder}
+                                onToggleChanged={txt => SettingsActions.update({[entry.name]: (!entry.checked ? txt : null)})}/>
+                        );
+                    }else{
+                        return (
+                            <ToggleButton
+                                key={i}
+                                checked={entry.checked}
+                                name={entry.name}
+                                onToggleChanged={() => SettingsActions.update({[entry.name]: !entry.checked})}/>
+                        );
+                    }
                 })}
             </div>
-        );
-    }
-}
+             <div className="clearfix"></div>
+        </div>
+    );
+};
+OptionMenu.title = "Options";
 
+OptionMenu.propTypes = {
+    settings: React.PropTypes.object.isRequired
+};
 
 var ReportsMenu = React.createClass({
     statics: {
@@ -429,7 +440,7 @@ export var Header = React.createClass({
                     {header}
                 </nav>
                 <div className="menu">
-                    <this.state.active ref="active" settings={this.props.settings}/>
+                    <this.state.active settings={this.props.settings}/>
                 </div>
             </header>
         );

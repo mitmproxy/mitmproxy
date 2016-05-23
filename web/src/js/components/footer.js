@@ -6,7 +6,7 @@ Footer.propTypes = {
 };
 
 export default function Footer({ settings }) {
-    const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp} = settings;
+    const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp, stickyauth, stickycookie, stream} = settings;
     return (
         <footer>
             {mode && mode != "regular" && (
@@ -21,7 +21,7 @@ export default function Footer({ settings }) {
             {no_upstream_cert && (
                 <span className="label label-success">no-upstream-cert</span>
             )}
-             {rawtcp && rawtcp != "False" && (
+             {rawtcp && (
                 <span className="label label-success">raw-tcp</span>
             )}
             {!http2 && (
@@ -32,6 +32,15 @@ export default function Footer({ settings }) {
             )}
             {anticomp  && (
                 <span className="label label-success">anticomp</span>
+            )}
+            {stickyauth && (
+                <span className="label label-success">stickyauth: {stickyauth}</span>
+            )}
+            {stickycookie && (
+                <span className="label label-success">stickycookie: {stickycookie}</span>
+            )}
+            {stream && (
+                <span className="label label-success">stream: {stream}</span>
             )}
 
 
