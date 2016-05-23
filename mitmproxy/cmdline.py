@@ -165,6 +165,18 @@ def get_common_options(options):
             raise configargparse.ArgumentTypeError(e.message)
         setheaders.append(p)
 
+    if options.outfile and options.outfile[0] == options.rfile:
+        if options.outfile[1] == "wb":
+            raise configargparse.ArgumentTypeError(
+                "Cannot use '{}' for both reading and writing flows. "
+                "Are you looking for --afile?".format(options.rfile)
+            )
+        else:
+            raise configargparse.ArgumentTypeError(
+                "Cannot use '{}' for both reading and appending flows. "
+                "That would trigger an infinite loop."
+            )
+
     return dict(
         app=options.app,
         app_host=options.app_host,

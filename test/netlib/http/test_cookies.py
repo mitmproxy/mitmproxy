@@ -128,10 +128,10 @@ def test_cookie_roundtrips():
     ]
     for s, lst in pairs:
         ret = cookies.parse_cookie_header(s)
-        assert ret.lst == lst
+        assert ret == lst
         s2 = cookies.format_cookie_header(ret)
         ret = cookies.parse_cookie_header(s2)
-        assert ret.lst == lst
+        assert ret == lst
 
 
 def test_parse_set_cookie_pairs():
@@ -197,24 +197,28 @@ def test_parse_set_cookie_header():
         ],
         [
             "one=uno",
-            ("one", "uno", [])
+            ("one", "uno", ())
         ],
         [
             "one=uno; foo=bar",
-            ("one", "uno", [["foo", "bar"]])
-        ]
+            ("one", "uno", (("foo", "bar"),))
+        ],
+        [
+            "one=uno; foo=bar; foo=baz",
+            ("one", "uno", (("foo", "bar"), ("foo", "baz")))
+        ],
     ]
     for s, expected in vals:
         ret = cookies.parse_set_cookie_header(s)
         if expected:
             assert ret[0] == expected[0]
             assert ret[1] == expected[1]
-            assert ret[2].lst == expected[2]
+            assert ret[2].items(multi=True) == expected[2]
             s2 = cookies.format_set_cookie_header(*ret)
             ret2 = cookies.parse_set_cookie_header(s2)
             assert ret2[0] == expected[0]
             assert ret2[1] == expected[1]
-            assert ret2[2].lst == expected[2]
+            assert ret2[2].items(multi=True) == expected[2]
         else:
             assert ret is None
 

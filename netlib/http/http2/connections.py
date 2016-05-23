@@ -201,13 +201,13 @@ class HTTP2Protocol(object):
         headers = request.headers.copy()
 
         if ':authority' not in headers:
-            headers.fields.insert(0, (b':authority', authority.encode('ascii')))
+            headers.insert(0, b':authority', authority.encode('ascii'))
         if ':scheme' not in headers:
-            headers.fields.insert(0, (b':scheme', request.scheme.encode('ascii')))
+            headers.insert(0, b':scheme', request.scheme.encode('ascii'))
         if ':path' not in headers:
-            headers.fields.insert(0, (b':path', request.path.encode('ascii')))
+            headers.insert(0, b':path', request.path.encode('ascii'))
         if ':method' not in headers:
-            headers.fields.insert(0, (b':method', request.method.encode('ascii')))
+            headers.insert(0, b':method', request.method.encode('ascii'))
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id
@@ -224,7 +224,7 @@ class HTTP2Protocol(object):
         headers = response.headers.copy()
 
         if ':status' not in headers:
-            headers.fields.insert(0, (b':status', str(response.status_code).encode('ascii')))
+            headers.insert(0, b':status', str(response.status_code).encode('ascii'))
 
         if hasattr(response, 'stream_id'):
             stream_id = response.stream_id
@@ -420,7 +420,7 @@ class HTTP2Protocol(object):
                 self._handle_unexpected_frame(frm)
 
         headers = Headers(
-            [[k.encode('ascii'), v.encode('ascii')] for k, v in self.decoder.decode(header_blocks)]
+            (k.encode('ascii'), v.encode('ascii')) for k, v in self.decoder.decode(header_blocks)
         )
 
         return stream_id, headers, body

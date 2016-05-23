@@ -133,24 +133,15 @@ class ServerConnectionMixin(object):
                     "The proxy shall not connect to itself.".format(repr(address))
                 )
 
-    def set_server(self, address, server_tls=None, sni=None):
+    def set_server(self, address):
         """
         Sets a new server address. If there is an existing connection, it will be closed.
-
-        Raises:
-            ~mitmproxy.exceptions.ProtocolException:
-                if ``server_tls`` is ``True``, but there was no TLS layer on the
-                protocol stack which could have processed this.
         """
         if self.server_conn:
             self.disconnect()
         self.log("Set new server address: " + repr(address), "debug")
         self.server_conn.address = address
         self.__check_self_connect()
-        if server_tls:
-            raise ProtocolException(
-                "Cannot upgrade to TLS, no TLS layer on the protocol stack."
-            )
 
     def disconnect(self):
         """

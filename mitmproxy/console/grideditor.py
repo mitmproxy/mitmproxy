@@ -700,17 +700,17 @@ class SetCookieEditor(GridEditor):
 
     def data_in(self, data):
         flattened = []
-        for k, v in data.items():
-            flattened.append([k, v[0], v[1].lst])
+        for key, (value, attrs) in data:
+            flattened.append([key, value, attrs.items(multi=True)])
         return flattened
 
     def data_out(self, data):
         vals = []
-        for i in data:
+        for key, value, attrs in data:
             vals.append(
                 [
-                    i[0],
-                    [i[1], odict.ODictCaseless(i[2])]
+                    key,
+                    (value, attrs)
                 ]
             )
-        return odict.ODict(vals)
+        return vals
