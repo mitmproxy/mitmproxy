@@ -3087,8 +3087,6 @@ var _actions = require("../actions.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 var FilterDocs = _react2.default.createClass({
     displayName: "FilterDocs",
 
@@ -3392,30 +3390,94 @@ var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
         _react2.default.createElement(
             "div",
             { className: "menu-row" },
-            options.map(function (entry, i) {
-                if (typeof entry.txt !== 'undefined') {
-                    return _react2.default.createElement(_common.ToggleInputButton, {
-                        key: i,
-                        name: entry.name,
-                        checked: entry.checked,
-                        txt: entry.txt,
-                        placeholder: entry.placeholder,
-                        onToggleChanged: function onToggleChanged(txt) {
-                            return _actions.SettingsActions.update(_defineProperty({}, entry.name, !entry.checked ? txt : null));
-                        } });
-                } else {
-                    return _react2.default.createElement(_common.ToggleButton, {
-                        key: i,
-                        checked: entry.checked,
-                        name: entry.name,
-                        onToggleChanged: function onToggleChanged() {
-                            return _actions.SettingsActions.update(_defineProperty({}, entry.name, !entry.checked));
-                        } });
+            _react2.default.createElement(_common.ToggleButton, { name: "showhost",
+                checked: showhost,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ showhost: !showhost });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "no_upstream_cert",
+                checked: no_upstream_cert,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ no_upstream_cert: !no_upstream_cert });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "rawtcp",
+                checked: rawtcp,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ rawtcp: !rawtcp });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "http2",
+                checked: http2,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ http2: !http2 });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "anticache",
+                checked: anticache,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ anticache: !anticache });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "anticomp",
+                checked: anticomp,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ anticomp: !anticomp });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleInputButton, { name: "stickyauth", placeholder: "Sticky auth filter",
+                checked: Boolean(stickyauth),
+                txt: stickyauth || "",
+                onToggleChanged: function onToggleChanged(txt) {
+                    return _actions.SettingsActions.update({ stickyauth: !stickyauth ? txt : null });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleInputButton, { name: "stickycookie", placeholder: "Sticky cookie filter",
+                checked: Boolean(stickycookie),
+                txt: stickycookie || "",
+                onToggleChanged: function onToggleChanged(txt) {
+                    return _actions.SettingsActions.update({ stickycookie: !stickycookie ? txt : null });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleInputButton, { name: "stream", placeholder: "stream...",
+                checked: Boolean(stream),
+                txt: stream || "",
+                onToggleChanged: function onToggleChanged(txt) {
+                    return _actions.SettingsActions.update({ stream: !stream ? txt : null });
                 }
             })
         ),
         _react2.default.createElement("div", { className: "clearfix" })
     );
+    /*    return (
+            <div>
+                <div className="menu-row">
+                    {options.map((entry, i) => {
+                        if (typeof entry.txt !== 'undefined') {
+                            return (
+                                <ToggleInputButton
+                                    key={i}
+                                    name={entry.name}
+                                    checked={entry.checked}
+                                    txt={entry.txt}
+                                    placeholder={entry.placeholder}
+                                    onToggleChanged={txt => SettingsActions.update({[entry.name]: (!entry.checked ? txt : null)})}/>
+                            );
+                        }else{
+                            return (
+                                <ToggleButton
+                                    key={i}
+                                    checked={entry.checked}
+                                    name={entry.name}
+                                    onToggleChanged={() => SettingsActions.update({[entry.name]: !entry.checked})}/>
+                            );
+                        }
+                    })}
+                </div>
+                 <div className="clearfix"></div>
+            </div>
+        );*/
 };
 OptionMenu.title = "Options";
 

@@ -255,43 +255,50 @@ var ViewMenu = React.createClass({
 
 export const OptionMenu = (props) => {
     const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp, stickycookie, stickyauth, stream} = props.settings;
-    const options = [
-        {name: "showhost",           checked: showhost},
-        {name: "no_upstream_cert",   checked: no_upstream_cert},
-        {name: "rawtcp",             checked: rawtcp},
-        {name: "http2",              checked: http2},
-        {name: "anticache",          checked: anticache},
-        {name: "anticomp",           checked: anticomp},
-        {name: "stickyauth",         checked: Boolean(stickyauth), txt: stickyauth || "",     placeholder: "Sticky auth filter"},
-        {name: "stickycookie",       checked: Boolean(stickycookie), txt: stickycookie || "", placeholder: "Sticky cookie filter"},
-        {name: "stream",             checked: Boolean(stream), txt: stream || "",             placeholder: "stream..."      }
-    ];
     return (
         <div>
             <div className="menu-row">
-                {options.map((entry, i) => {
-                    if (typeof entry.txt !== 'undefined') {
-                        return (
-                            <ToggleInputButton
-                                key={i}
-                                name={entry.name}
-                                checked={entry.checked}
-                                txt={entry.txt}
-                                placeholder={entry.placeholder}
-                                onToggleChanged={txt => SettingsActions.update({[entry.name]: (!entry.checked ? txt : null)})}/>
-                        );
-                    }else{
-                        return (
-                            <ToggleButton
-                                key={i}
-                                checked={entry.checked}
-                                name={entry.name}
-                                onToggleChanged={() => SettingsActions.update({[entry.name]: !entry.checked})}/>
-                        );
-                    }
-                })}
+                <ToggleButton name="showhost"
+                              checked={showhost}
+                              onToggleChanged={() => SettingsActions.update({showhost: !showhost})}
+                />
+                <ToggleButton name="no_upstream_cert"
+                              checked={no_upstream_cert}
+                              onToggleChanged={() => SettingsActions.update({no_upstream_cert: !no_upstream_cert})}
+                />
+                <ToggleButton name="rawtcp"
+                              checked={rawtcp}
+                              onToggleChanged={() => SettingsActions.update({rawtcp: !rawtcp})}
+                />
+                <ToggleButton name="http2"
+                              checked={http2}
+                              onToggleChanged={() => SettingsActions.update({http2: !http2})}
+                />
+                <ToggleButton name="anticache"
+                              checked={anticache}
+                              onToggleChanged={() => SettingsActions.update({anticache: !anticache})}
+                />
+                <ToggleButton name="anticomp"
+                              checked={anticomp}
+                              onToggleChanged={() => SettingsActions.update({anticomp: !anticomp})}
+                />
+                <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
+                    checked={Boolean(stickyauth)}
+                    txt={stickyauth || ""}
+                    onToggleChanged={txt => SettingsActions.update({stickyauth: (!stickyauth ? txt : null)})}
+                />
+                <ToggleInputButton name="stickycookie" placeholder="Sticky cookie filter"
+                    checked={Boolean(stickycookie)}
+                    txt={stickycookie || ""}
+                    onToggleChanged={txt => SettingsActions.update({stickycookie: (!stickycookie ? txt : null)})}
+                />
+                <ToggleInputButton name="stream" placeholder="stream..."
+                    checked={Boolean(stream)}
+                    txt={stream || ""}
+                    onToggleChanged={txt => SettingsActions.update({stream: (!stream ? txt : null)})}
+                />
             </div>
-             <div className="clearfix"></div>
+            <div className="clearfix"/>
         </div>
     );
 };
