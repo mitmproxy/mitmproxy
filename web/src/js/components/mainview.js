@@ -5,12 +5,11 @@ import {Query} from "../actions.js";
 import {Key} from "../utils.js";
 import {StoreView} from "../store/view.js";
 import Filt from "../filt/filt.js";
-import { Router, Splitter} from "./common.js"
+import {Splitter} from "./common.js"
 import FlowTable from "./flowtable.js";
 import FlowView from "./flowview/index.js";
 
 var MainView = React.createClass({
-    mixins: [Router],
     contextTypes: {
         flowStore: React.PropTypes.object.isRequired,
     },
@@ -41,9 +40,9 @@ var MainView = React.createClass({
     },
     getViewFilt: function () {
         try {
-            var filtStr = this.getQuery()[Query.SEARCH];
+            var filtStr = this.props.query[Query.SEARCH];
             var filt = filtStr ? Filt.parse(filtStr) : () => true;
-            var highlightStr = this.getQuery()[Query.HIGHLIGHT];
+            var highlightStr = this.props.query[Query.HIGHLIGHT];
             var highlight = highlightStr ? Filt.parse(highlightStr) : () => false;
         } catch (e) {
             console.error("Error when processing filter: " + e);
@@ -94,10 +93,10 @@ var MainView = React.createClass({
     selectFlow: function (flow) {
         if (flow) {
             var tab = this.props.routeParams.detailTab || "request";
-            this.updateLocation(`/flows/${flow.id}/${tab}`);
+            this.props.updateLocation(`/flows/${flow.id}/${tab}`);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            this.updateLocation("/flows");
+            this.props.updateLocation("/flows");
         }
     },
     selectFlowRelative: function (shift) {
@@ -225,6 +224,8 @@ var MainView = React.createClass({
                     key="flowDetails"
                     ref="flowDetails"
                     tab={this.props.routeParams.detailTab}
+                    query={this.props.query}
+                    updateLocation={this.props.updateLocation}
                     flow={selected}/>
             ];
         } else {

@@ -1,7 +1,6 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import shallowEqual from "shallowequal"
-import {Router} from "./common.js"
 import {Query} from "../actions.js"
 import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll"
@@ -144,7 +143,6 @@ function ToggleFilter ({ name, active, toggleLevel }) {
 const AutoScrollEventLog = AutoScroll(EventLogContents);
 
 var EventLog = React.createClass({
-    mixins: [Router],
     getInitialState() {
         return {
             filter: {
@@ -157,7 +155,7 @@ var EventLog = React.createClass({
     close() {
         var d = {};
         d[Query.SHOW_EVENTLOG] = undefined;
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
     },
     toggleLevel(level) {
         var filter = _.extend({}, this.state.filter);
