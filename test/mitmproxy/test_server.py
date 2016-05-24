@@ -14,7 +14,7 @@ from pathod import pathoc, pathod
 
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.exceptions import Kill
-from mitmproxy.models import Error, HTTPResponse
+from mitmproxy.models import Error, HTTPResponse, HTTPFlow
 
 from . import tutils, tservers
 
@@ -177,9 +177,9 @@ class TcpMixin:
         assert n.status_code == 304
         assert i.status_code == 305
         assert i2.status_code == 306
-        assert any(f.response.status_code == 304 for f in self.master.state.flows)
-        assert not any(f.response.status_code == 305 for f in self.master.state.flows)
-        assert not any(f.response.status_code == 306 for f in self.master.state.flows)
+        assert any(f.response.status_code == 304 for f in self.master.state.flows if isinstance(f, HTTPFlow))
+        assert not any(f.response.status_code == 305 for f in self.master.state.flows if isinstance(f, HTTPFlow))
+        assert not any(f.response.status_code == 306 for f in self.master.state.flows if isinstance(f, HTTPFlow))
 
         # Test that we get the original SSL cert
         if self.ssl:

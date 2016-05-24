@@ -1,3 +1,4 @@
-def tcp_message(ctx, tm):
-    if tm.sender == tm.server_conn:
-        tm.message = tm.message.replace("foo", "bar")
+def tcp_message(ctx, flow):
+    message = flow.messages[-1]
+    if not message.from_client:
+        message.content = message.content.replace("foo", "bar")
