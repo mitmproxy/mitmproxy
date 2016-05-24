@@ -28,14 +28,13 @@ var ProxyAppMain = React.createClass({
         location: React.PropTypes.object.isRequired,
     },
     contextTypes: {
-        location: React.PropTypes.object,
         router: React.PropTypes.object.isRequired
     },
     updateLocation: function (pathname, queryUpdate) {
         if (pathname === undefined) {
-            pathname = this.context.location.pathname;
+            pathname = this.props.location.pathname;
         }
-        var query = this.context.location.query;
+        var query = this.props.location.query;
         if (queryUpdate !== undefined) {
             for (var i in queryUpdate) {
                 if (queryUpdate.hasOwnProperty(i)) {
@@ -48,7 +47,7 @@ var ProxyAppMain = React.createClass({
     getQuery: function () {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _.clone(this.context.location.query);
+        return _.clone(this.props.location.query);
     },
     componentDidMount: function () {
         this.focus();
