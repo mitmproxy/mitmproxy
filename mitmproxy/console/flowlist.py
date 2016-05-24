@@ -21,6 +21,7 @@ def _mkhelp():
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("m", "toggle flow mark"),
+        ("M", "toggle marked flow view"),
         ("n", "create a new request"),
         ("P", "copy flow to clipboard"),
         ("r", "replay request"),
@@ -196,6 +197,12 @@ class ConnectionItem(urwid.WidgetWrap):
                 self.state.set_flow_marked(self.flow, False)
             else:
                 self.state.set_flow_marked(self.flow, True)
+            signals.flowlist_change.send(self)
+        elif key == "M":
+            if self.state.mark_filter:
+                self.state.disable_marked_filter()
+            else:
+                self.state.enable_marked_filter()
             signals.flowlist_change.send(self)
         elif key == "r":
             r = self.master.replay_request(self.flow)
