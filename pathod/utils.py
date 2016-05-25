@@ -2,7 +2,7 @@ import os
 import sys
 import netlib.utils
 
-import six
+from netlib.utils import bytes_to_escaped_str
 
 
 SIZE_UNITS = dict(
@@ -55,27 +55,13 @@ def xrepr(s):
     return repr(s)[1:-1]
 
 
-def inner_repr(s):
-    """
-        Returns the inner portion of a string or unicode repr (i.e. without the
-        quotes)
-    """
-    if (six.PY2 and isinstance(s, unicode)) or isinstance(s, bytes):
-        return repr(s)[2:-1]
-    else:
-        return repr(s)[1:-1]
-
-
 def escape_unprintables(s):
     """
         Like inner_repr, but preserves line breaks.
     """
-    s = s.replace("\r\n", "PATHOD_MARKER_RN")
-    s = s.replace("\n", "PATHOD_MARKER_N")
-    if six.PY2:
-        s = inner_repr(s)
-    else:
-        s = s.encode('unicode_escape').decode('ascii')
+    s = s.replace(b"\r\n", b"PATHOD_MARKER_RN")
+    s = s.replace(b"\n", b"PATHOD_MARKER_N")
+    s = bytes_to_escaped_str(s)
     s = s.replace("PATHOD_MARKER_RN", "\n")
     s = s.replace("PATHOD_MARKER_N", "\n")
     return s
