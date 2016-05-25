@@ -109,7 +109,7 @@ class Token(object):
 class _TokValueLiteral(Token):
 
     def __init__(self, val):
-        self.val = escaped_str_to_bytes(str(val))
+        self.val = escaped_str_to_bytes(val)
 
     def get_generator(self, settings_):
         return self.val
