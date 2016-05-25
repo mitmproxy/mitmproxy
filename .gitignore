@@ -2,6 +2,7 @@
 MANIFEST
 */tmp
 /venv
+/venv3
 *.py[cdo]
 *.swp
 *.swo
