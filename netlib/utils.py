@@ -439,10 +439,14 @@ def escaped_str_to_bytes(data):
     """
     Take an escaped string and return the unescaped bytes equivalent.
     """
-    if not isinstance(data, str):
+    if not isinstance(data, six.string_types):
+        if six.PY2:
+            raise ValueError("data must be str or unicode")
         raise ValueError("data must be str")
 
     if six.PY2:
+        if isinstance(data, unicode):
+            data = data.encode("utf8")
         return data.decode("string-escape")
 
     # This one is difficult - we use an undocumented Python API here
