@@ -30,7 +30,9 @@ def test_data_path():
 
 
 def test_escape_unprintables():
-    s = "".join([chr(i) for i in range(255)])
-    e = utils.escape_unprintables(six.b(s))
+    s = bytes(range(256))
+    if six.PY2:
+        s = "".join([chr(i) for i in range(255)])
+    e = utils.escape_unprintables(s)
     assert e.encode('ascii')
     assert "PATHOD_MARKER" not in e
