@@ -165,9 +165,21 @@ class Http2Layer(base.Layer):
             new_settings = dict([(id, cs.new_value) for (id, cs) in six.iteritems(event.changed_settings)])
             other_conn.h2.safe_update_settings(new_settings)
         elif isinstance(event, events.ConnectionTerminated):
-            # Do not immediately terminate the other connection.
-            # Some streams might be still sending data to the client.
-            return False
+            if event.error_code == h2.errors.NO_ERROR:
+                # Do not immediately terminate the other connection.
+                # Some streams might be still sending data to the client.
+                return False
+            else:
+                # Something terrible has happened - kill everything!
+                self.client_conn.h2.close_connection(
+                    error_code=event.error_code,
+                    last_stream_id=event.last_stream_id,
+                    additional_data=event.additional_data
+                )
+                self.client_conn.send(self.client_conn.h2.data_to_send())
+                self._kill_all_streams()
+                return False
+
         elif isinstance(event, events.PushedStreamReceived):
             # pushed stream ids should be unique and not dependent on race conditions
             # only the parent stream id must be looked up first
