@@ -178,6 +178,8 @@ def test_bytes_to_escaped_str():
     assert utils.bytes_to_escaped_str(b"\b") == r"\x08"
     assert utils.bytes_to_escaped_str(br"&!?=\)") == r"&!?=\\)"
     assert utils.bytes_to_escaped_str(b'\xc3\xbc') == r"\xc3\xbc"
+    assert utils.bytes_to_escaped_str(b"'") == r"\'"
+    assert utils.bytes_to_escaped_str(b'"') == r'"'
 
 
 def test_escaped_str_to_bytes():

@@ -425,6 +425,10 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
 def bytes_to_escaped_str(data):
     """
     Take bytes and return a safe string that can be displayed to the user.
+
+    Single quotes are always escaped, double quotes are never escaped:
+        "'" + bytes_to_escaped_str(...) + "'"
+    gives a valid Python string.
     """
     # TODO: We may want to support multi-byte characters without escaping them.
     # One way to do would be calling .decode("utf8", "backslashreplace") first
@@ -432,7 +436,9 @@ def bytes_to_escaped_str(data):
 
     if not isinstance(data, bytes):
         raise ValueError("data must be bytes")
-    return repr(data).lstrip("b")[1:-1]
+    # We always insert a double-quote here so that we get a single-quoted string back
+    # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
+    return repr('"' + data).lstrip("b")[2:-1]
 
 
 def escaped_str_to_bytes(data):
