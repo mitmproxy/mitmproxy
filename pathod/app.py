@@ -1,6 +1,6 @@
 import logging
 import pprint
-from six.moves import cStringIO as StringIO
+import io
 import copy
 from flask import Flask, jsonify, render_template, request, abort, make_response
 from . import version, language, utils
@@ -145,7 +145,7 @@ def make_app(noapi, debug):
             args["marked"] = v.marked()
             return render(template, False, **args)
 
-        s = StringIO()
+        s = io.BytesIO()
 
         settings = copy.copy(app.config["pathod"].settings)
         settings.request_host = EXAMPLE_HOST
