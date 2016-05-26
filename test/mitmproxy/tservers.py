@@ -39,13 +39,13 @@ class TestMaster(flow.FlowMaster):
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
 
+    @controller.handler
     def handle_request(self, f):
         flow.FlowMaster.handle_request(self, f)
-        f.reply()
 
+    @controller.handler
     def handle_response(self, f):
         flow.FlowMaster.handle_response(self, f)
-        f.reply()
 
     def clear_log(self):
         self.log = []

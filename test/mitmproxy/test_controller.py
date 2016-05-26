@@ -2,7 +2,7 @@ from threading import Thread, Event
 
 from mock import Mock
 
-from mitmproxy.controller import Reply, DummyReply, Channel, ServerThread, ServerMaster, Master
+from mitmproxy import controller
 from six.moves import queue
 
 from mitmproxy.exceptions import Kill
@@ -10,10 +10,15 @@ from mitmproxy.proxy import DummyServer
 from netlib.tutils import raises
 
 
+class TMsg:
+    pass
+
+
 class TestMaster(object):
     def test_simple(self):
 
-        class DummyMaster(Master):
+        class DummyMaster(controller.Master):
+            @controller.handler
             def handle_panic(self, _):
                 m.should_exit.set()
 
@@ -23,14 +28,16 @@ class TestMaster(object):
 
         m = DummyMaster()
         assert not m.should_exit.is_set()
-        m.event_queue.put(("panic", 42))
+        msg = TMsg()
+        msg.reply = controller.DummyReply()
+        m.event_queue.put(("panic", msg))
         m.run()
         assert m.should_exit.is_set()
 
 
 class TestServerMaster(object):
     def test_simple(self):
-        m = ServerMaster()
+        m = controller.ServerMaster()
         s = DummyServer(None)
         m.add_server(s)
         m.start()
@@ -42,7 +49,7 @@ class TestServerMaster(object):
 class TestServerThread(object):
     def test_simple(self):
         m = Mock()
-        t = ServerThread(m)
+        t = controller.ServerThread(m)
         t.run()
         assert m.serve_forever.called
 
@@ -50,7 +57,7 @@ class TestServerThread(object):
 class TestChannel(object):
     def test_tell(self):
         q = queue.Queue()
-        channel = Channel(q, Event())
+        channel = controller.Channel(q, Event())
         m = Mock()
         channel.tell("test", m)
         assert q.get() == ("test", m)
@@ -66,21 +73,21 @@ class TestChannel(object):
 
         Thread(target=reply).start()
 
-        channel = Channel(q, Event())
+        channel = controller.Channel(q, Event())
         assert channel.ask("test", Mock()) == 42
 
     def test_ask_shutdown(self):
         q = queue.Queue()
         done = Event()
         done.set()
-        channel = Channel(q, done)
+        channel = controller.Channel(q, done)
         with raises(Kill):
             channel.ask("test", Mock())
 
 
 class TestDummyReply(object):
     def test_simple(self):
-        reply = DummyReply()
+        reply = controller.DummyReply()
         assert not reply.acked
         reply()
         assert reply.acked
@@ -88,18 +95,18 @@ class TestDummyReply(object):
 
 class TestReply(object):
     def test_simple(self):
-        reply = Reply(42)
+        reply = controller.Reply(42)
         assert not reply.acked
         reply("foo")
         assert reply.acked
         assert reply.q.get() == "foo"
 
     def test_default(self):
-        reply = Reply(42)
+        reply = controller.Reply(42)
         reply()
         assert reply.q.get() == 42
 
     def test_reply_none(self):
-        reply = Reply(42)
+        reply = controller.Reply(42)
         reply(None)
         assert reply.q.get() is None

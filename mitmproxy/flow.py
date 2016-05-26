@@ -985,36 +985,36 @@ class FlowMaster(controller.ServerMaster):
             if block:
                 rt.join()
 
+    @controller.handler
     def handle_log(self, l):
         self.add_event(l.msg, l.level)
-        l.reply()
 
+    @controller.handler
     def handle_clientconnect(self, root_layer):
         self.run_script_hook("clientconnect", root_layer)
-        root_layer.reply()
 
+    @controller.handler
     def handle_clientdisconnect(self, root_layer):
         self.run_script_hook("clientdisconnect", root_layer)
-        root_layer.reply()
 
+    @controller.handler
     def handle_serverconnect(self, server_conn):
         self.run_script_hook("serverconnect", server_conn)
-        server_conn.reply()
 
+    @controller.handler
     def handle_serverdisconnect(self, server_conn):
         self.run_script_hook("serverdisconnect", server_conn)
-        server_conn.reply()
 
+    @controller.handler
     def handle_next_layer(self, top_layer):
         self.run_script_hook("next_layer", top_layer)
-        top_layer.reply()
 
+    @controller.handler
     def handle_error(self, f):
         self.state.update_flow(f)
         self.run_script_hook("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
-        f.reply()
         return f
 
     def handle_request(self, f):
