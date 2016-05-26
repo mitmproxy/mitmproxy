@@ -189,7 +189,6 @@ class Http2Layer(base.Layer):
                 self.client_conn.send(self.client_conn.h2.data_to_send())
 
             headers = netlib.http.Headers([[str(k), str(v)] for k, v in event.headers])
-            headers['x-mitmproxy-pushed'] = 'true'
             self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
             self.streams[event.pushed_stream_id].timestamp_start = time.time()
             self.streams[event.pushed_stream_id].pushed = True
