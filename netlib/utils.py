@@ -438,7 +438,7 @@ def bytes_to_escaped_str(data):
         raise ValueError("data must be bytes")
     # We always insert a double-quote here so that we get a single-quoted string back
     # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
-    return repr('"' + data).lstrip("b")[2:-1]
+    return repr(b'"' + data).lstrip("b")[2:-1]
 
 
 def escaped_str_to_bytes(data):
