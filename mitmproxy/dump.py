@@ -6,8 +6,9 @@ import itertools
 
 from netlib import tcp
 from netlib.utils import bytes_to_escaped_str, pretty_size
-from . import flow, filt, contentviews
+from . import flow, filt, contentviews, controller
 from .exceptions import ContentViewException, FlowReadException, ScriptException
+
 
 
 class DumpError(Exception):

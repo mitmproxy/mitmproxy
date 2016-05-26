@@ -42,12 +42,12 @@ class Master(object):
             while True:
                 mtype, obj = self.event_queue.get(timeout=timeout)
                 handle_func = getattr(self, "handle_" + mtype)
-                # if not handle_func.func_dict.get("handler"):
-                #     raise ControlError(
-                #         "Handler function %s is not decorated with controller.handler"%(
-                #             handle_func
-                #         )
-                #     )
+                if not handle_func.func_dict.get("handler"):
+                    raise ControlError(
+                        "Handler function %s is not decorated with controller.handler"%(
+                            handle_func
+                        )
+                    )
                 handle_func(obj)
                 self.event_queue.task_done()
                 changed = True
@@ -160,10 +160,11 @@ NO_REPLY = object()
 
 def handler(f):
     @functools.wraps(f)
-    def wrapper(obj, message, *args, **kwargs):
+    def wrapper(*args, **kwargs):
+        message = args[-1]
         if not hasattr(message, "reply"):
             raise ControlError("Message %s has no reply attribute"%message)
-        ret = f(obj, message, *args, **kwargs)
+        ret = f(*args, **kwargs)
         if not message.reply.acked and not message.reply.taken:
             message.reply()
         return ret

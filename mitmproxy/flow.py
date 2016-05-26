@@ -1017,6 +1017,7 @@ class FlowMaster(controller.ServerMaster):
             self.client_playback.clear(f)
         return f
 
+    @controller.handler
     def handle_request(self, f):
         if f.live:
             app = self.apps.get(f.request)
@@ -1039,6 +1040,7 @@ class FlowMaster(controller.ServerMaster):
         self.run_script_hook("request", f)
         return f
 
+    @controller.handler
     def handle_responseheaders(self, f):
         try:
             if self.stream_large_bodies:
@@ -1046,12 +1048,10 @@ class FlowMaster(controller.ServerMaster):
         except HttpException:
             f.reply(Kill)
             return
-
         self.run_script_hook("responseheaders", f)
-
-        f.reply()
         return f
 
+    @controller.handler
     def handle_response(self, f):
         self.active_flows.discard(f)
         self.state.update_flow(f)
@@ -1099,13 +1099,14 @@ class FlowMaster(controller.ServerMaster):
             self.add_event('"{}" reloaded.'.format(s.filename), 'info')
         return ok
 
+    @controller.handler
     def handle_tcp_open(self, flow):
         # TODO: This would break mitmproxy currently.
         # self.state.add_flow(flow)
         self.active_flows.add(flow)
         self.run_script_hook("tcp_open", flow)
-        flow.reply()
 
+    @controller.handler
     def handle_tcp_message(self, flow):
         self.run_script_hook("tcp_message", flow)
         message = flow.messages[-1]
@@ -1116,22 +1117,21 @@ class FlowMaster(controller.ServerMaster):
             direction=direction,
         ), "info")
         self.add_event(clean_bin(message.content), "debug")
-        flow.reply()
 
+    @controller.handler
     def handle_tcp_error(self, flow):
         self.add_event("Error in TCP connection to {}: {}".format(
             repr(flow.server_conn.address),
             flow.error
         ), "info")
         self.run_script_hook("tcp_error", flow)
-        flow.reply()
 
+    @controller.handler
     def handle_tcp_close(self, flow):
         self.active_flows.discard(flow)
         if self.stream:
             self.stream.add(flow)
         self.run_script_hook("tcp_close", flow)
-        flow.reply()
 
     def shutdown(self):
         super(FlowMaster, self).shutdown()
