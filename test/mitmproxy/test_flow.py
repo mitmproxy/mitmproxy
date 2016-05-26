@@ -461,9 +461,9 @@ class TestFlow(object):
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow()
         f.intercept(mock.Mock())
-        assert not f.reply.acked
         f.kill(fm)
-        assert f.reply.acked
+        for i in s.view:
+            assert "killed" in str(i.error)
 
     def test_killall(self):
         s = flow.State()
@@ -475,11 +475,9 @@ class TestFlow(object):
         f = tutils.tflow()
         fm.handle_request(f)
 
-        for i in s.view:
-            assert not i.reply.acked
         s.killall(fm)
         for i in s.view:
-            assert i.reply.acked
+            assert "killed" in str(i.error)
 
     def test_accept_intercept(self):
         f = tutils.tflow()

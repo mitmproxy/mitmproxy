@@ -12,6 +12,7 @@ from netlib.http import authentication, http1
 from netlib.tutils import raises
 from pathod import pathoc, pathod
 
+from mitmproxy import controller
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.exceptions import Kill
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
@@ -623,6 +624,7 @@ class TestProxySSL(tservers.HTTPProxyTest):
 class MasterRedirectRequest(tservers.TestMaster):
     redirect_port = None  # Set by TestRedirectRequest
 
+    @controller.handler
     def handle_request(self, f):
         if f.request.path == "/p/201":
 
@@ -636,6 +638,7 @@ class MasterRedirectRequest(tservers.TestMaster):
             f.request.port = self.redirect_port
         super(MasterRedirectRequest, self).handle_request(f)
 
+    @controller.handler
     def handle_response(self, f):
         f.response.content = str(f.client_conn.address.port)
         f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
@@ -689,10 +692,9 @@ class MasterStreamRequest(tservers.TestMaster):
     """
         Enables the stream flag on the flow for all requests
     """
-
+    @controller.handler
     def handle_responseheaders(self, f):
         f.response.stream = True
-        f.reply()
 
 
 class TestStreamRequest(tservers.HTTPProxyTest):
@@ -739,7 +741,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 
 
 class MasterFakeResponse(tservers.TestMaster):
-
+    @controller.handler
     def handle_request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         f.reply(resp)
@@ -767,6 +769,7 @@ class TestServerConnect(tservers.HTTPProxyTest):
 
 class MasterKillRequest(tservers.TestMaster):
 
+    @controller.handler
     def handle_request(self, f):
         f.reply(Kill)
 
@@ -783,6 +786,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
 
 class MasterKillResponse(tservers.TestMaster):
 
+    @controller.handler
     def handle_response(self, f):
         f.reply(Kill)
 
@@ -812,6 +816,7 @@ class TestTransparentResolveError(tservers.TransparentProxyTest):
 
 class MasterIncomplete(tservers.TestMaster):
 
+    @controller.handler
     def handle_request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = None
@@ -930,7 +935,9 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             k = [0]  # variable scope workaround: put into array
             _func = getattr(master, attr)
 
-            def handler(f):
+            @controller.handler
+            def handler(*args):
+                f = args[-1]
                 k[0] += 1
                 if not (k[0] in exclude):
                     f.client_conn.finish()
@@ -940,11 +947,14 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 
             setattr(master, attr, handler)
 
-        kill_requests(self.chain[1].tmaster, "handle_request",
-                      exclude=[
-                          # fail first request
-                          2,  # allow second request
-        ])
+        kill_requests(
+            self.chain[1].tmaster,
+            "handle_request",
+            exclude = [
+                # fail first request
+                2,  # allow second request
+            ]
+        )
 
         kill_requests(self.chain[0].tmaster, "handle_request",
                       exclude=[
@@ -1004,10 +1014,10 @@ class AddUpstreamCertsToClientChainMixin:
     ssl = True
     servercert = tutils.test_data.path("data/trusted-server.crt")
     ssloptions = pathod.SSLOptions(
-            cn="trusted-cert",
-            certs=[
-                ("trusted-cert", servercert)
-            ]
+        cn="trusted-cert",
+        certs=[
+            ("trusted-cert", servercert)
+        ]
     )
 
     def test_add_upstream_certs_to_client_chain(self):
