@@ -1,8 +1,14 @@
 from __future__ import absolute_import
 from six.moves import queue
 import threading
+import functools
+import sys
 
-from .exceptions import Kill
+from . import exceptions
+
+
+class ControlError(Exception):
+    pass
 
 
 class Master(object):
@@ -36,6 +42,12 @@ class Master(object):
             while True:
                 mtype, obj = self.event_queue.get(timeout=timeout)
                 handle_func = getattr(self, "handle_" + mtype)
+                # if not handle_func.func_dict.get("handler"):
+                #     raise ControlError(
+                #         "Handler function %s is not decorated with controller.handler"%(
+                #             handle_func
+                #         )
+                #     )
                 handle_func(obj)
                 self.event_queue.task_done()
                 changed = True
@@ -100,7 +112,7 @@ class Channel(object):
         master. Then wait for a response.
 
         Raises:
-            Kill: All connections should be closed immediately.
+            exceptions.Kill: All connections should be closed immediately.
         """
         m.reply = Reply(m)
         self.q.put((mtype, m))
@@ -110,11 +122,11 @@ class Channel(object):
                 g = m.reply.q.get(timeout=0.5)
             except queue.Empty:  # pragma: no cover
                 continue
-            if g == Kill:
-                raise Kill()
+            if g == exceptions.Kill:
+                raise exceptions.Kill()
             return g
 
-        raise Kill()
+        raise exceptions.Kill()
 
     def tell(self, mtype, m):
         """
@@ -133,6 +145,10 @@ class DummyReply(object):
 
     def __init__(self):
         self.acked = False
+        self.taken = False
+
+    def take(self):
+        self.taken = True
 
     def __call__(self, msg=False):
         self.acked = True
@@ -142,22 +158,44 @@ class DummyReply(object):
 NO_REPLY = object()
 
 
+def handler(f):
+    @functools.wraps(f)
+    def wrapper(obj, message, *args, **kwargs):
+        if not hasattr(message, "reply"):
+            raise ControlError("Message %s has no reply attribute"%message)
+        ret = f(obj, message, *args, **kwargs)
+        if not message.reply.acked and not message.reply.taken:
+            message.reply()
+        return ret
+    wrapper.func_dict["handler"] = True
+    return wrapper
+
+
 class Reply(object):
     """
     Messages sent through a channel are decorated with a "reply" attribute.
     This object is used to respond to the message through the return
     channel.
     """
-
     def __init__(self, obj):
         self.obj = obj
         self.q = queue.Queue()
         self.acked = False
+        self.taken = False
+
+    def take(self):
+        self.taken = True
 
     def __call__(self, msg=NO_REPLY):
+        if self.acked:
+            raise ControlError("Message already acked.")
+        self.acked = True
+        if msg is NO_REPLY:
+            self.q.put(self.obj)
+        else:
+            self.q.put(msg)
+
+    def __del__(self):
         if not self.acked:
-            self.acked = True
-            if msg is NO_REPLY:
-                self.q.put(self.obj)
-            else:
-                self.q.put(msg)
+            # This will be ignored by the interpreter, but emit a warning
+            raise ControlError("Un-acked message")

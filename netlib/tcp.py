@@ -900,7 +900,7 @@ class TCPServer(object):
         """
         # If a thread has persisted after interpreter exit, the module might be
         # none.
-        if traceback:
+        if traceback and six:
             exc = six.text_type(traceback.format_exc())
             print(u'-' * 40, file=fp)
             print(

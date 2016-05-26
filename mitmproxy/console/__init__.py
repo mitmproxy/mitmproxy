@@ -16,7 +16,7 @@ import weakref
 
 from netlib import tcp
 
-from .. import flow, script, contentviews
+from .. import flow, script, contentviews, controller
 from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, statusbar, palettepicker
 from ..exceptions import FlowReadException, ScriptException

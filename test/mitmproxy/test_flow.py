@@ -866,7 +866,6 @@ class TestFlowMaster:
 
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
         fm.handle_response(f)
-        assert not fm.handle_response(None)
         assert s.flow_count() == 1
 
         fm.handle_clientdisconnect(f.client_conn)
