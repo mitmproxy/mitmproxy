@@ -139,7 +139,7 @@ var ViewAuto = React.createClass({
         var { message, flow } = this.props
         var View = ViewAuto.findView(this.props.message);
         if (View.textView) {
-            return <ContentLoader message={message} flow={flow}><View /></ContentLoader>
+            return <ContentLoader message={message} flow={flow}><View content="" /></ContentLoader>
         } else {
             return <View message={message} flow={flow} />
         }
@@ -249,7 +249,7 @@ var ContentView = React.createClass({
 
         return <div>
             {this.state.View.textView ? (
-                <ContentLoader flow={flow} message={message}><this.state.View /></ContentLoader>
+                <ContentLoader flow={flow} message={message}><this.state.View content="" /></ContentLoader>
             ) : (
                 <this.state.View flow={flow} message={message} />
             )}
