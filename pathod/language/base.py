@@ -3,8 +3,12 @@ import os
 import abc
 import pyparsing as pp
 
+from six.moves import reduce
+from netlib.utils import escaped_str_to_bytes, bytes_to_escaped_str
+
 from .. import utils
 from . import generators, exceptions
+
 
 class Settings(object):
 
@@ -105,7 +109,7 @@ class Token(object):
 class _TokValueLiteral(Token):
 
     def __init__(self, val):
-        self.val = val.decode("string_escape")
+        self.val = escaped_str_to_bytes(val)
 
     def get_generator(self, settings_):
         return self.val
@@ -130,7 +134,7 @@ class TokValueLiteral(_TokValueLiteral):
         return v
 
     def spec(self):
-        inner = self.val.encode("string_escape")
+        inner = bytes_to_escaped_str(self.val)
         inner = inner.replace(r"\'", r"\x27")
         return "'" + inner + "'"
 
@@ -143,7 +147,7 @@ class TokValueNakedLiteral(_TokValueLiteral):
         return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
-        return self.val.encode("string_escape")
+        return bytes_to_escaped_str(self.val)
 
 
 class TokValueGenerate(Token):
@@ -161,7 +165,7 @@ class TokValueGenerate(Token):
 
     def freeze(self, settings):
         g = self.get_generator(settings)
-        return TokValueLiteral(g[:].encode("string_escape"))
+        return TokValueLiteral(bytes_to_escaped_str(g[:]))
 
     @classmethod
     def expr(cls):
@@ -221,7 +225,7 @@ class TokValueFile(Token):
         return generators.FileGenerator(s)
 
     def spec(self):
-        return "<'%s'" % self.path.encode("string_escape")
+        return "<'%s'" % bytes_to_escaped_str(self.path)
 
 
 TokValue = pp.MatchFirst(
@@ -573,4 +577,4 @@ class NestedMessage(Token):
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
-        return self.__class__(TokValueLiteral(f.encode("string_escape")))
+        return self.__class__(TokValueLiteral(bytes_to_escaped_str(f)))

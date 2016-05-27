@@ -40,6 +40,9 @@ class Error(stateobject.StateObject):
     def __str__(self):
         return self.msg
 
+    def __repr__(self):
+        return self.msg
+
     @classmethod
     def from_state(cls, state):
         # the default implementation assumes an empty constructor. Override
@@ -98,6 +101,12 @@ class Flow(stateobject.StateObject):
         if "backup" in state:
             self._backup = state.pop("backup")
         super(Flow, self).set_state(state)
+
+    @classmethod
+    def from_state(cls, state):
+        f = cls(None, None)
+        f.set_state(state)
+        return f
 
     def copy(self):
         f = copy.copy(self)

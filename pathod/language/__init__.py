@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import itertools
 import time
 
@@ -5,8 +7,8 @@ import pyparsing as pp
 
 from . import http, http2, websockets, writer, exceptions
 
-from exceptions import *
-from base import Settings
+from .exceptions import *
+from .base import Settings
 assert Settings  # prevent pyflakes from messing with this
 
 

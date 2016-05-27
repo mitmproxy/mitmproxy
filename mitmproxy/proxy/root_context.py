@@ -65,7 +65,7 @@ class RootContext(object):
                 else:
                     ignore = self.config.check_ignore((client_hello.sni, 443))
             if ignore:
-                return RawTCPLayer(top_layer, logging=False)
+                return RawTCPLayer(top_layer, ignore=True)
 
         # 2. Always insert a TLS layer, even if there's neither client nor server tls.
         # An inline script may upgrade from http to https,

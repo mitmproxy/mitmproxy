@@ -50,9 +50,8 @@ class TestMaster(flow.FlowMaster):
     def clear_log(self):
         self.log = []
 
-    def handle_log(self, l):
-        self.log.append(l.msg)
-        l.reply()
+    def add_event(self, message, level=None):
+        self.log.append(message)
 
 
 class ProxyThread(threading.Thread):

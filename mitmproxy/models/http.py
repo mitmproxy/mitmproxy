@@ -191,12 +191,6 @@ class HTTPFlow(Flow):
         response=HTTPResponse
     )
 
-    @classmethod
-    def from_state(cls, state):
-        f = cls(None, None)
-        f.set_state(state)
-        return f
-
     def __repr__(self):
         s = "<HTTPFlow"
         for a in ("request", "response", "error", "client_conn", "server_conn"):

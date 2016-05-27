@@ -67,7 +67,7 @@ class TestTokValueLiteral:
 
     def test_roundtrip(self):
         self.roundtrip("'")
-        self.roundtrip('\'')
+        self.roundtrip(r"\'")
         self.roundtrip("a")
         self.roundtrip("\"")
         # self.roundtrip("\\")
