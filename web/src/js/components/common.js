@@ -2,32 +2,6 @@ import React from "react"
 import ReactDOM from "react-dom"
 import _ from "lodash"
 
-export var Router = {
-    contextTypes: {
-        location: React.PropTypes.object,
-        router: React.PropTypes.object.isRequired
-    },
-    updateLocation: function (pathname, queryUpdate) {
-        if (pathname === undefined) {
-            pathname = this.context.location.pathname;
-        }
-        var query = this.context.location.query;
-        if (queryUpdate !== undefined) {
-            for (var i in queryUpdate) {
-                if (queryUpdate.hasOwnProperty(i)) {
-                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
-                }
-            }
-        }
-        this.context.router.replace({pathname, query});
-    },
-    getQuery: function () {
-        // For whatever reason, react-router always returns the same object, which makes comparing
-        // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _.clone(this.context.location.query);
-    }
-};
-
 export var Splitter = React.createClass({
     getDefaultProps: function () {
         return {

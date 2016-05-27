@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import {Router, Splitter} from "./common.js"
+import {Splitter} from "./common.js"
 import MainView from "./mainview.js";
 import Footer from "./footer.js";
 import {Header, MainMenu} from "./header.js";
@@ -21,12 +21,33 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
-    mixins: [Router],
     childContextTypes: {
         flowStore: React.PropTypes.object.isRequired,
         eventStore: React.PropTypes.object.isRequired,
         returnFocus: React.PropTypes.func.isRequired,
         location: React.PropTypes.object.isRequired,
+    },
+    contextTypes: {
+        router: React.PropTypes.object.isRequired
+    },
+    updateLocation: function (pathname, queryUpdate) {
+        if (pathname === undefined) {
+            pathname = this.props.location.pathname;
+        }
+        var query = this.props.location.query;
+        if (queryUpdate !== undefined) {
+            for (var i in queryUpdate) {
+                if (queryUpdate.hasOwnProperty(i)) {
+                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
+                }
+            }
+        }
+        this.context.router.replace({pathname, query});
+    },
+    getQuery: function () {
+        // For whatever reason, react-router always returns the same object, which makes comparing
+        // the current props with nextProps impossible. As a workaround, we just clone the query object.
+        return _.clone(this.props.location.query);
     },
     componentDidMount: function () {
         this.focus();
@@ -97,23 +118,23 @@ var ProxyAppMain = React.createClass({
         e.preventDefault();
     },
     render: function () {
+        var query = this.getQuery();
         var eventlog;
         if (this.props.location.query[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 <Splitter key="splitter" axis="y"/>,
-                <EventLog key="eventlog"/>
+                <EventLog key="eventlog" updateLocation={this.updateLocation}/>
             ];
         } else {
             eventlog = null;
         }
-        var children = React.cloneElement(
-            this.props.children,
-            { ref: "view", location: this.props.location }
-        );
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
-                <Header ref="header" settings={this.state.settings}/>
-                {children}
+                <Header ref="header" settings={this.state.settings} updateLocation={this.updateLocation} query={query} />
+                {React.cloneElement(
+                    this.props.children,
+                    { ref: "view", location: this.props.location , updateLocation: this.updateLocation, query }
+                )}
                 {eventlog}
                 <Footer settings={this.state.settings}/>
             </div>
@@ -125,12 +146,12 @@ var ProxyAppMain = React.createClass({
 import { Route, Router as ReactRouter, hashHistory, Redirect} from "react-router";
 
 export var app = (
-<ReactRouter history={hashHistory}>
-    <Redirect from="/" to="/flows" />
-    <Route path="/" component={ProxyAppMain}>
-        <Route path="flows" component={MainView}/>
-        <Route path="flows/:flowId/:detailTab" component={MainView}/>
-        <Route path="reports" component={Reports}/>
-    </Route>
-</ReactRouter>
+    <ReactRouter history={hashHistory}>
+        <Redirect from="/" to="/flows" />
+        <Route path="/" component={ProxyAppMain}>
+            <Route path="flows" component={MainView}/>
+            <Route path="flows/:flowId/:detailTab" component={MainView}/>
+            <Route path="reports" component={Reports}/>
+        </Route>
+    </ReactRouter>
 );

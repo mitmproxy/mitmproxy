@@ -1,6 +1,5 @@
 import React from "react";
 
-import {Router, StickyHeadMixin} from "../common.js"
 import Nav from "./nav.js";
 import {Request, Response, Error} from "./messages.js";
 import Details from "./details.js";
@@ -15,7 +14,6 @@ var allTabs = {
 };
 
 var FlowView = React.createClass({
-    mixins: [StickyHeadMixin, Router],
     getInitialState: function () {
         return {
             prompt: false
@@ -39,7 +37,7 @@ var FlowView = React.createClass({
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function (panel) {
-        this.updateLocation(`/flows/${this.props.flow.id}/${panel}`);
+        this.props.updateLocation(`/flows/${this.props.flow.id}/${panel}`);
     },
     promptEdit: function () {
         var options;
