@@ -91,8 +91,7 @@ class RaisesContext(object):
 
 test_data = utils.Data(__name__)
 # FIXME: Temporary workaround during repo merge.
-import os
-test_data.dirname = os.path.join(test_data.dirname,"..","test","netlib")
+test_data.dirname = os.path.join(test_data.dirname, "..", "test", "netlib")
 
 
 def treq(**kwargs):

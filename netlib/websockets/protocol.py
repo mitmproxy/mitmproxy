@@ -1,18 +1,18 @@
+"""
+Colleciton of utility functions that implement small portions of the RFC6455
+WebSockets Protocol Useful for building WebSocket clients and servers.
 
+Emphassis is on readabilty, simplicity and modularity, not performance or
+completeness
 
+This is a work in progress and does not yet contain all the utilites need to
+create fully complient client/servers #
+Spec: https://tools.ietf.org/html/rfc6455
 
-# Colleciton of utility functions that implement small portions of the RFC6455
-# WebSockets Protocol Useful for building WebSocket clients and servers.
-#
-# Emphassis is on readabilty, simplicity and modularity, not performance or
-# completeness
-#
-# This is a work in progress and does not yet contain all the utilites need to
-# create fully complient client/servers #
-# Spec: https://tools.ietf.org/html/rfc6455
+The magic sha that websocket servers must know to prove they understand
+RFC6455
+"""
 
-# The magic sha that websocket servers must know to prove they understand
-# RFC6455
 from __future__ import absolute_import
 import base64
 import hashlib
@@ -94,20 +94,17 @@ class WebsocketsProtocol(object):
             upgrade="websocket"
         )
 
-
     @classmethod
     def check_client_handshake(self, headers):
         if headers.get("upgrade") != "websocket":
             return
         return headers.get("sec-websocket-key")
 
-
     @classmethod
     def check_server_handshake(self, headers):
         if headers.get("upgrade") != "websocket":
             return
         return headers.get("sec-websocket-accept")
-
 
     @classmethod
     def create_server_nonce(self, client_nonce):
