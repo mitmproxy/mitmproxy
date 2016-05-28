@@ -739,7 +739,6 @@ class ConsoleMaster(flow.FlowMaster):
     @controller.handler
     def handle_request(self, f):
         f = flow.FlowMaster.handle_request(self, f)
-        self.add_event(f.reply.acked, "info")
         if f:
             self.process_flow(f)
         return f
