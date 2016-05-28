@@ -125,7 +125,6 @@ class Channel(object):
             if g == exceptions.Kill:
                 raise exceptions.Kill()
             return g
-
         raise exceptions.Kill()
 
     def tell(self, mtype, m):
@@ -146,6 +145,7 @@ class DummyReply(object):
     def __init__(self):
         self.acked = False
         self.taken = False
+        self.handled = False
 
     def take(self):
         self.taken = True
@@ -164,8 +164,16 @@ def handler(f):
         message = args[-1]
         if not hasattr(message, "reply"):
             raise ControlError("Message %s has no reply attribute"%message)
+
+        handling = False
+        # We're the first handler - ack responsibility is ours
+        if not message.reply.handled:
+            handling = True
+            message.reply.handled = True
+
         ret = f(*args, **kwargs)
-        if not message.reply.acked and not message.reply.taken:
+
+        if handling and not message.reply.acked and not message.reply.taken:
             message.reply()
         return ret
     wrapper.func_dict["handler"] = True
@@ -181,8 +189,12 @@ class Reply(object):
     def __init__(self, obj):
         self.obj = obj
         self.q = queue.Queue()
+        # Has this message been acked?
         self.acked = False
+        # Has the user taken responsibility for ack-ing?
         self.taken = False
+        # Has a handler taken responsibility for ack-ing?
+        self.handled = False
 
     def take(self):
         self.taken = True

@@ -470,10 +470,7 @@ class TestFlow(object):
         fm = flow.FlowMaster(None, s)
 
         f = tutils.tflow()
-        fm.handle_request(f)
-
-        f = tutils.tflow()
-        fm.handle_request(f)
+        f.intercept(fm)
 
         s.killall(fm)
         for i in s.view:

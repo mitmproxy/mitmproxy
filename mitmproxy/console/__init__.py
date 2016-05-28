@@ -713,14 +713,15 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def process_flow(self, f):
-        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
+        should_intercept = any(
+            [
+                self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay,
+                f.intercepted,
+            ]
+        )
+        if should_intercept:
             f.intercept(self)
-        else:
-            # check if flow was intercepted within an inline script by flow.intercept()
-            if f.intercepted:
-                f.intercept(self)
-            else:
-                f.reply()
+            f.reply.take()
         signals.flowlist_change.send(self)
         signals.flow_change.send(self, flow = f)
 
@@ -728,24 +729,29 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist[:] = []
 
     # Handlers
+    @controller.handler
     def handle_error(self, f):
         f = flow.FlowMaster.handle_error(self, f)
         if f:
             self.process_flow(f)
         return f
 
+    @controller.handler
     def handle_request(self, f):
         f = flow.FlowMaster.handle_request(self, f)
+        self.add_event(f.reply.acked, "info")
         if f:
             self.process_flow(f)
         return f
 
+    @controller.handler
     def handle_response(self, f):
         f = flow.FlowMaster.handle_response(self, f)
         if f:
             self.process_flow(f)
         return f
 
+    @controller.handler
     def handle_script_change(self, script):
         if super(ConsoleMaster, self).handle_script_change(script):
             signals.status_message.send(message='"{}" reloaded.'.format(script.filename))

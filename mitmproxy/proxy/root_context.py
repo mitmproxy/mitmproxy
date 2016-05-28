@@ -132,7 +132,6 @@ class RootContext(object):
 
 
 class Log(object):
-
     def __init__(self, msg, level="info"):
         self.msg = msg
         self.level = level

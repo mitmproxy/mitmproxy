@@ -6,7 +6,7 @@ import sys
 
 from netlib.http import authentication
 
-from .. import flow
+from .. import flow, controller
 from ..exceptions import FlowReadException
 from . import app
 
@@ -194,21 +194,24 @@ class WebMaster(flow.FlowMaster):
         if self.state.intercept and self.state.intercept(
                 f) and not f.request.is_replay:
             f.intercept(self)
-        else:
-            f.reply()
+            f.reply.take()
 
+    @controller.handler
     def handle_request(self, f):
         super(WebMaster, self).handle_request(f)
         self._process_flow(f)
 
+    @controller.handler
     def handle_response(self, f):
         super(WebMaster, self).handle_response(f)
         self._process_flow(f)
 
+    @controller.handler
     def handle_error(self, f):
         super(WebMaster, self).handle_error(f)
         self._process_flow(f)
 
+    @controller.handler
     def add_event(self, e, level="info"):
         super(WebMaster, self).add_event(e, level)
         self.state.add_event(e, level)
