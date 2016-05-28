@@ -31,7 +31,7 @@ def parse_pathod(s, use_http2=False):
         May raise ParseException
     """
     try:
-        s = s.decode("ascii")
+        s.encode("ascii")
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
@@ -53,7 +53,7 @@ def parse_pathod(s, use_http2=False):
 
 def parse_pathoc(s, use_http2=False):
     try:
-        s = s.decode("ascii")
+        s.encode("ascii")
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
