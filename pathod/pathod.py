@@ -112,7 +112,6 @@ class PathodHandler(tcp.BaseHandler):
             return None, response_log
         return self.handle_http_request, response_log
 
-
     def handle_http_request(self, logger):
         """
             Returns a (handler, log) tuple.

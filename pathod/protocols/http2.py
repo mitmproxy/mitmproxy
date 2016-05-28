@@ -1,6 +1,7 @@
 from netlib.http import http2
 from .. import language
 
+
 class HTTP2Protocol:
 
     def __init__(self, pathod_handler):

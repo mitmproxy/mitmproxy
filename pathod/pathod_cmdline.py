@@ -49,12 +49,12 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
         help="""
             URL path specifying prefix for URL crafting
             commands. (%s)
-        """%pathod.DEFAULT_CRAFT_ANCHOR
+        """ % pathod.DEFAULT_CRAFT_ANCHOR
     )
     parser.add_argument(
         "--confdir",
-        action="store", type = str, dest="confdir", default='~/.mitmproxy',
-        help = "Configuration directory. (~/.mitmproxy)"
+        action="store", type=str, dest="confdir", default='~/.mitmproxy',
+        help="Configuration directory. (~/.mitmproxy)"
     )
     parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,
@@ -117,8 +117,8 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
     )
     group.add_argument(
         "--cert", dest='ssl_certs', default=[], type=str,
-        metavar = "SPEC", action="append",
-        help = """
+        metavar="SPEC", action="append",
+        help="""
         Add an SSL certificate. SPEC is of the form "[domain=]path". The domain
         may include a wildcard, and is equal to "*" if not specified. The file
         at path is a certificate in PEM format. If a private key is included in
@@ -176,7 +176,6 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
         "--http2-framedump", dest="http2_framedump", action="store_true", default=False,
         help="Output all received & sent HTTP/2 frames"
     )
-
 
     args = parser.parse_args(argv[1:])
 

@@ -27,6 +27,7 @@ from . import base, message
         h2f:42:DATA:END_STREAM,PADDED:0x1234567:'content body payload'
 """
 
+
 def get_header(val, headers):
     """
         Header keys may be Values, so we have to "generate" them as we try the
@@ -47,6 +48,7 @@ class _HeaderMixin(object):
             self.key.get_generator(settings),
             self.value.get_generator(settings),
         )
+
 
 class _HTTP2Message(message.Message):
     @property
@@ -287,13 +289,10 @@ class Request(_HTTP2Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
+
 def make_error_response(reason, body=None):
     tokens = [
         StatusCode("800"),
         Body(base.TokValueLiteral("pathod error: " + (body or reason))),
     ]
     return Response(tokens)
-
-
-# class Frame(message.Message):
-#     pass
