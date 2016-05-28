@@ -1,10 +1,10 @@
 from pathod import log
 from netlib.exceptions import TcpDisconnect
 
-from six.moves import cStringIO
+import six
 
 
-class DummyIO(cStringIO):
+class DummyIO(six.StringIO):
 
     def start_log(self, *args, **kwargs):
         pass
