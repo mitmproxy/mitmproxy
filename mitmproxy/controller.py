@@ -161,7 +161,13 @@ NO_REPLY = object()
 def handler(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        message = args[-1]
+        if len(args) == 1:
+            message = args[0]
+        elif len(args) == 2:
+            message = args[1]
+        else:
+            raise ControlError("Handler takes one argument: a message")
+
         if not hasattr(message, "reply"):
             raise ControlError("Message %s has no reply attribute"%message)
 

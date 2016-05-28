@@ -211,7 +211,6 @@ class WebMaster(flow.FlowMaster):
         super(WebMaster, self).handle_error(f)
         self._process_flow(f)
 
-    @controller.handler
     def add_event(self, e, level="info"):
         super(WebMaster, self).add_event(e, level)
         self.state.add_event(e, level)
