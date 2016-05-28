@@ -3,7 +3,7 @@ import json
 import os
 from contextlib import contextmanager
 
-from mitmproxy import utils, script
+from mitmproxy import script
 from mitmproxy.proxy import config
 import netlib.utils
 from netlib import tutils as netutils

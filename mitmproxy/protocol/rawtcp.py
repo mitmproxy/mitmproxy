@@ -1,14 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
 import socket
-import six
-import sys
 
 from OpenSSL import SSL
 from netlib.exceptions import TcpException
 
 from netlib.tcp import ssl_read_select
-from netlib.utils import clean_bin
-from ..exceptions import ProtocolException
 from ..models import Error
 from ..models.tcp import TCPFlow, TCPMessage
 

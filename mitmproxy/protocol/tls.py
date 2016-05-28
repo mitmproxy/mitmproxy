@@ -312,6 +312,7 @@ class TlsClientHello(object):
 
 
 class TlsLayer(Layer):
+
     """
     The TLS layer implements transparent TLS connections.
 
@@ -469,9 +470,9 @@ class TlsLayer(Layer):
         cert, key, chain_file = self._find_cert()
 
         if self.config.add_upstream_certs_to_client_chain:
-           extra_certs = self.server_conn.server_certs
+            extra_certs = self.server_conn.server_certs
         else:
-           extra_certs = None
+            extra_certs = None
 
         try:
             self.client_conn.convert_to_ssl(
@@ -482,7 +483,7 @@ class TlsLayer(Layer):
                 dhparams=self.config.certstore.dhparams,
                 chain_file=chain_file,
                 alpn_select_callback=self.__alpn_select_callback,
-                extra_chain_certs = extra_certs,
+                extra_chain_certs=extra_certs,
             )
             # Some TLS clients will not fail the handshake,
             # but will immediately throw an "unexpected eof" error on the first read.

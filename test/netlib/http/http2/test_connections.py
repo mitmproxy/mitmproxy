@@ -1,4 +1,3 @@
-import OpenSSL
 import mock
 import codecs
 

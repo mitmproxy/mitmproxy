@@ -1,14 +1,14 @@
 from __future__ import (absolute_import, print_function, division)
-from io import BytesIO, StringIO
-import urllib
+
 import time
 import traceback
-
 import six
+from io import BytesIO
 from six.moves import urllib
 
 from netlib.utils import always_bytes, native
 from . import http, tcp
+
 
 class ClientConn(object):
 
@@ -140,7 +140,7 @@ class WSGIAdaptor(object):
             elif state["status"]:
                 raise AssertionError('Response already started')
             state["status"] = status
-            state["headers"] = http.Headers([[always_bytes(k), always_bytes(v)] for k,v in headers])
+            state["headers"] = http.Headers([[always_bytes(k), always_bytes(v)] for k, v in headers])
             if exc_info:
                 self.error_page(soc, state["headers_sent"], traceback.format_tb(exc_info[2]))
                 state["headers_sent"] = True
@@ -154,7 +154,7 @@ class WSGIAdaptor(object):
                 write(i)
             if not state["headers_sent"]:
                 write(b"")
-        except Exception as e:
+        except Exception:
             try:
                 s = traceback.format_exc()
                 errs.write(s.encode("utf-8", "replace"))

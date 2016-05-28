@@ -11,6 +11,7 @@ from . import base, exceptions, actions, message
 # instead of duplicating the HTTP on-the-wire representation here.
 # see http2 language for an example
 
+
 class WS(base.CaselessLiteral):
     TOK = "ws"
 

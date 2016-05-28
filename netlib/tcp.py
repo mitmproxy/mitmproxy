@@ -71,6 +71,7 @@ sslversion_choices = {
     "TLSv1_2": (SSL.TLSv1_2_METHOD, SSL_BASIC_OPTIONS),
 }
 
+
 class SSLKeyLogger(object):
 
     def __init__(self, filename):

@@ -4,7 +4,6 @@ from six.moves import cStringIO as StringIO
 import mock
 
 import netlib.utils
-from netlib import odict
 from netlib.http import Headers
 from mitmproxy import filt, controller, tnetstring, flow
 from mitmproxy.exceptions import FlowReadException, ScriptException

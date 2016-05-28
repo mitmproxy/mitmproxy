@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 from ... import utils
-import itertools
 from ...exceptions import HttpException
+
 
 def assemble_request(request):
     if request.content is None:

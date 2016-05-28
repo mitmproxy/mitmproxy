@@ -5,7 +5,7 @@ from netlib import tcp
 from netlib.http import user_agents
 
 from pathod import language
-from pathod.language import http2, base
+from pathod.language import http2
 import tutils
 
 

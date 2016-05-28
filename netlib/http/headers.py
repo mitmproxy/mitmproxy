@@ -14,12 +14,18 @@ from ..utils import always_bytes
 # See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 
 if six.PY2:  # pragma: no cover
-    _native = lambda x: x
-    _always_bytes = lambda x: x
+    def _native(x):
+        return x
+
+    def _always_bytes(x):
+        return x
 else:
     # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-    _native = lambda x: x.decode("utf-8", "surrogateescape")
-    _always_bytes = lambda x: always_bytes(x, "utf-8", "surrogateescape")
+    def _native(x):
+        return x.decode("utf-8", "surrogateescape")
+
+    def _always_bytes(x):
+        return always_bytes(x, "utf-8", "surrogateescape")
 
 
 class Headers(MultiDict):

@@ -58,7 +58,7 @@ class ProxyConfig:
             body_size_limit=None,
             mode="regular",
             upstream_server=None,
-            upstream_auth = None,
+            upstream_auth=None,
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
@@ -120,7 +120,7 @@ def process_proxy_options(parser, options):
     body_size_limit = utils.parse_size(options.body_size_limit)
 
     c = 0
-    mode, upstream_server, upstream_auth  = "regular", None, None
+    mode, upstream_server, upstream_auth = "regular", None, None
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
@@ -161,7 +161,7 @@ def process_proxy_options(parser, options):
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts):
             return parser.error(
-                    "Client certificate path does not exist: %s" % options.clientcerts
+                "Client certificate path does not exist: %s" % options.clientcerts
             )
     if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
 

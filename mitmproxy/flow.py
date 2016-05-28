@@ -8,13 +8,13 @@ import hashlib
 import sys
 
 import six
-from six.moves import http_cookies, http_cookiejar, urllib
+from six.moves import http_cookiejar
+from six.moves import urllib
 import os
 import re
 
-from typing import List, Optional, Set
 
-from netlib import wsgi, odict
+from netlib import wsgi
 from netlib.exceptions import HttpException
 from netlib.http import Headers, http1, cookies
 from netlib.utils import clean_bin

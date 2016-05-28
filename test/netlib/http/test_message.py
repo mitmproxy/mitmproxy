@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-from netlib.http import decoded, Headers
-from netlib.tutils import tresp, raises
+from netlib.http import decoded
+from netlib.tutils import tresp
 
 
 def _test_passthrough_attr(message, attr):

@@ -41,7 +41,7 @@ class SSLInfo(object):
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
-        for n,i in enumerate(self.certchain):
+        for n, i in enumerate(self.certchain):
             parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
@@ -70,7 +70,6 @@ class SSLInfo(object):
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
         return "\n".join(parts)
-
 
 
 class WebsocketFrameReader(threading.Thread):

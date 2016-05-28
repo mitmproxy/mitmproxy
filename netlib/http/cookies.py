@@ -3,7 +3,6 @@ import re
 from email.utils import parsedate_tz, formatdate, mktime_tz
 
 from netlib.multidict import ImmutableMultiDict
-from .. import odict
 
 """
 A flexible module for cookie parsing and manipulation.
@@ -27,6 +26,7 @@ variants. Serialization follows RFC6265.
 """
 
 # TODO: Disallow LHS-only Cookie values
+
 
 def _read_until(s, start, term):
     """

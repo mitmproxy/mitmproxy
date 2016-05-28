@@ -1,6 +1,6 @@
 from io import StringIO
 import mock
-from netlib import version_check, version
+from netlib import version_check
 
 
 @mock.patch("sys.exit")

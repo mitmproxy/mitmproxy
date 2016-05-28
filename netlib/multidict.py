@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 from abc import ABCMeta, abstractmethod
 
-from typing import Tuple, TypeVar
 
 try:
     from collections.abc import MutableMapping

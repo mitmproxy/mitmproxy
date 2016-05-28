@@ -1,6 +1,5 @@
 import time
 from netlib.exceptions import TcpDisconnect
-import netlib.tcp
 
 BLOCKSIZE = 1024
 # It's not clear what the upper limit for time.sleep is. It's lower than the

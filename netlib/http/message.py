@@ -4,17 +4,23 @@ import warnings
 
 import six
 
-from ..multidict import MultiDict
 from .headers import Headers
 from .. import encoding, utils
+from ..utils import always_bytes
 
 if six.PY2:  # pragma: no cover
-    _native = lambda x: x
-    _always_bytes = lambda x: x
+    def _native(x):
+        return x
+
+    def _always_bytes(x):
+        return x
 else:
-    # While the HTTP head _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-    _native = lambda x: x.decode("utf-8", "surrogateescape")
-    _always_bytes = lambda x: utils.always_bytes(x, "utf-8", "surrogateescape")
+    # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
+    def _native(x):
+        return x.decode("utf-8", "surrogateescape")
+
+    def _always_bytes(x):
+        return always_bytes(x, "utf-8", "surrogateescape")
 
 
 class MessageData(utils.Serializable):

@@ -38,6 +38,7 @@ import pyparsing as pp
 
 
 class _Token(object):
+
     def dump(self, indent=0, fp=sys.stdout):
         print("{spacing}{name}{expr}".format(
             spacing="\t" * indent,

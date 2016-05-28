@@ -72,9 +72,9 @@ class HTTPRequest(MessageMixin, Request):
     def get_state(self):
         state = super(HTTPRequest, self).get_state()
         state.update(
-            stickycookie = self.stickycookie,
-            stickyauth = self.stickyauth,
-            is_replay = self.is_replay,
+            stickycookie=self.stickycookie,
+            stickyauth=self.stickyauth,
+            is_replay=self.is_replay,
         )
         return state
 
@@ -109,6 +109,7 @@ class HTTPRequest(MessageMixin, Request):
 
 
 class HTTPResponse(MessageMixin, Response):
+
     """
     A mitmproxy HTTP response.
     This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
@@ -124,7 +125,7 @@ class HTTPResponse(MessageMixin, Response):
             content,
             timestamp_start=None,
             timestamp_end=None,
-            is_replay = False
+            is_replay=False
     ):
         Response.__init__(
             self,
