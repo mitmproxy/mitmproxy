@@ -213,7 +213,9 @@ class _MultiDict(MutableMapping, Serializable):
 class MultiDict(_MultiDict):
     def __init__(self, fields=None):
         super(MultiDict, self).__init__()
-        self.fields = tuple(fields) if fields else tuple()  # type: Tuple[Tuple[bytes, bytes], ...]
+        self.fields = tuple(
+            [tuple(i) for i in fields or ()]
+        )
 
 
 @six.add_metaclass(ABCMeta)
