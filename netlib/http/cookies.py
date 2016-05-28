@@ -3,7 +3,6 @@ import re
 from email.utils import parsedate_tz, formatdate, mktime_tz
 
 from netlib.multidict import ImmutableMultiDict
-from .. import odict
 
 """
 A flexible module for cookie parsing and manipulation.

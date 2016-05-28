@@ -2,7 +2,6 @@
 
 from __future__ import (absolute_import, print_function, division)
 
-import OpenSSL
 import pytest
 import traceback
 import os
@@ -468,13 +467,10 @@ class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
         ])
 
         done = False
-        ended_streams = 0
-        pushed_streams = 0
-        responses = 0
         while not done:
             try:
                 raw = b''.join(http2_read_raw_frame(client.rfile))
-                events = h2_conn.receive_data(raw)
+                h2_conn.receive_data(raw)
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())

@@ -1,5 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
-from io import BytesIO, StringIO
+from io import BytesIO
 import urllib
 import time
 import traceback
@@ -154,7 +154,7 @@ class WSGIAdaptor(object):
                 write(i)
             if not state["headers_sent"]:
                 write(b"")
-        except Exception as e:
+        except Exception:
             try:
                 s = traceback.format_exc()
                 errs.write(s.encode("utf-8", "replace"))

@@ -1,12 +1,12 @@
 import json
 from six.moves import cStringIO as StringIO
 import re
-import OpenSSL
 import pytest
 from mock import Mock
 
-from netlib import tcp, http, socks
-from netlib.exceptions import HttpException, TcpException, NetlibException
+from netlib import http
+from netlib import tcp
+from netlib.exceptions import NetlibException
 from netlib.http import http1, http2
 
 from pathod import pathoc, test, version, pathod, language

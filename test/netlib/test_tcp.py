@@ -8,7 +8,6 @@ import threading
 import mock
 
 from OpenSSL import SSL
-import OpenSSL
 
 from netlib import tcp, certutils, tutils
 from netlib.exceptions import InvalidCertificateException, TcpReadIncomplete, TlsException, \

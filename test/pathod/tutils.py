@@ -4,7 +4,10 @@ import shutil
 from six.moves import cStringIO as StringIO
 
 import netlib
-from pathod import utils, test, pathoc, pathod, language
+from pathod import language
+from pathod import pathoc
+from pathod import pathod
+from pathod import test
 from netlib import tcp
 import requests
 

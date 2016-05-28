@@ -2,7 +2,7 @@ from six.moves import cStringIO as StringIO
 import pytest
 
 from pathod import pathod, version
-from netlib import tcp, http
+from netlib import tcp
 from netlib.exceptions import HttpException, TlsException
 import tutils
 

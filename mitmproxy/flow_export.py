@@ -5,7 +5,8 @@ import netlib.http
 from netlib.utils import parse_content_type
 
 import re
-from six.moves.urllib.parse import urlparse, quote, quote_plus
+from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import quote_plus
 
 def curl_command(flow):
     data = "curl "

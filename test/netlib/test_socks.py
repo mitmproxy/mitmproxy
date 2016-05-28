@@ -1,6 +1,5 @@
 import ipaddress
 from io import BytesIO
-import socket
 from netlib import socks, tcp, tutils
 
 

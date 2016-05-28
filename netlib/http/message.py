@@ -4,7 +4,6 @@ import warnings
 
 import six
 
-from ..multidict import MultiDict
 from .headers import Headers
 from .. import encoding, utils
 

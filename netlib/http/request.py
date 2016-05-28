@@ -1,14 +1,12 @@
 from __future__ import absolute_import, print_function, division
 
 import re
-import warnings
 
 import six
 from six.moves import urllib
 
 from netlib import utils
 from netlib.http import cookies
-from netlib.odict import ODict
 from .. import encoding
 from ..multidict import MultiDictView
 from .headers import Headers
