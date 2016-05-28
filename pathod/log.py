@@ -12,11 +12,11 @@ TIMEFMT = '%d-%m-%y %H:%M:%S'
 def write_raw(fp, lines):
     if fp:
         fp.write(
-            "%s: " % datetime.datetime.now().strftime(TIMEFMT)
+            b"%s: " % datetime.datetime.now().strftime(TIMEFMT).encode()
         )
         for i in lines:
             fp.write(i)
-        fp.write("\n")
+        fp.write(b"\n")
         fp.flush()
 
 
@@ -51,7 +51,7 @@ class LogCtx(object):
             write_raw(
                 self.fp,
                 [
-                    "\n".join(self.lines),
+                    b"\n".join(self.lines),
                 ]
             )
         if exc_value:

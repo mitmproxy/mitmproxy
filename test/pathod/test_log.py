@@ -1,10 +1,10 @@
-import StringIO
 from pathod import log
 from netlib.exceptions import TcpDisconnect
-import netlib.tcp
+
+from io import BytesIO
 
 
-class DummyIO(StringIO.StringIO):
+class DummyIO(BytesIO):
 
     def start_log(self, *args, **kwargs):
         pass
@@ -19,7 +19,7 @@ def test_disconnect():
     l = log.ConnectionLogger(outf, False, rw, rw)
     try:
         with l.ctx() as lg:
-            lg("Test")
+            lg(b"Test")
     except TcpDisconnect:
         pass
-    assert "Test" in outf.getvalue()
+    assert b"Test" in outf.getvalue()
