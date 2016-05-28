@@ -13,6 +13,7 @@ import sys
 
 
 class ProxyException(Exception):
+
     """
     Base class for all exceptions thrown by mitmproxy.
     """
@@ -22,6 +23,7 @@ class ProxyException(Exception):
 
 
 class Kill(ProxyException):
+
     """
     Signal that both client and server connection(s) should be killed immediately.
     """
@@ -37,6 +39,7 @@ class TlsProtocolException(ProtocolException):
 
 
 class ClientHandshakeException(TlsProtocolException):
+
     def __init__(self, message, server):
         super(ClientHandshakeException, self).__init__(message)
         self.server = server
@@ -67,6 +70,7 @@ class ReplayException(ProxyException):
 
 
 class ScriptException(ProxyException):
+
     @classmethod
     def from_exception_context(cls, cut_tb=1):
         """

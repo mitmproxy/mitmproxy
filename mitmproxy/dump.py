@@ -74,8 +74,8 @@ class DumpMaster(flow.FlowMaster):
 
         if self.server and self.server.config.http2 and not tcp.HAS_ALPN:  # pragma: no cover
             print("ALPN support missing (OpenSSL 1.0.2+ required)!\n"
-                "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
-                file=sys.stderr)
+                  "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
+                  file=sys.stderr)
 
         if options.filtstr:
             self.filt = filt.parse(options.filtstr)

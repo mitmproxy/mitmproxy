@@ -6,6 +6,7 @@ from .exceptions import Kill
 
 
 class Master(object):
+
     """
     The master handles mitmproxy's main event loop.
     """
@@ -48,6 +49,7 @@ class Master(object):
 
 
 class ServerMaster(Master):
+
     """
     The ServerMaster adds server thread support to the master.
     """
@@ -74,6 +76,7 @@ class ServerMaster(Master):
 
 
 class ServerThread(threading.Thread):
+
     def __init__(self, server):
         self.server = server
         super(ServerThread, self).__init__()
@@ -85,6 +88,7 @@ class ServerThread(threading.Thread):
 
 
 class Channel(object):
+
     """
     The only way for the proxy server to communicate with the master
     is to use the channel it has been given.
@@ -126,6 +130,7 @@ class Channel(object):
 
 
 class DummyReply(object):
+
     """
     A reply object that does nothing. Useful when we need an object to seem
     like it has a channel, and during testing.
@@ -143,6 +148,7 @@ NO_REPLY = object()
 
 
 class Reply(object):
+
     """
     Messages sent through a channel are decorated with a "reply" attribute.
     This object is used to respond to the message through the return

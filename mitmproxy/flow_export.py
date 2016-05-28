@@ -8,6 +8,7 @@ import re
 from six.moves.urllib.parse import quote
 from six.moves.urllib.parse import quote_plus
 
+
 def curl_command(flow):
     data = "curl "
 
@@ -124,13 +125,12 @@ def locust_code(flow):
             max_wait = 3000
 """).strip()
 
-
     components = map(lambda x: quote(x, safe=""), flow.request.path_components)
     file_name = "_".join(components)
     name = re.sub('\W|^(?=\d)', '_', file_name)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
     if name == "" or name is None:
-        new_name = "_".join([str(flow.request.host) , str(flow.request.timestamp_start)])
+        new_name = "_".join([str(flow.request.host), str(flow.request.timestamp_start)])
         name = re.sub('\W|^(?=\d)', '_', new_name)
     args = ""
     headers = ""

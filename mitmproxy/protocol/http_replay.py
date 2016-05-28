@@ -62,7 +62,7 @@ class RequestReplayThread(threading.Thread):
                         )
                         r.first_line_format = "relative"
                     else:
-                        r.first_line_format= "absolute"
+                        r.first_line_format = "absolute"
                 else:
                     server_address = (r.host, r.port)
                     server = ServerConnection(server_address, (self.config.host, 0))
