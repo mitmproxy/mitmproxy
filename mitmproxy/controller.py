@@ -36,10 +36,18 @@ class Master(object):
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self):
+    def __init__(self, *servers):
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.servers = []
+        for i in servers:
+            self.add_server(i)
+
+    def add_server(self, server):
+        # We give a Channel to the server which can be used to communicate with the master
+        channel = Channel(self.event_queue, self.should_exit)
+        server.set_channel(channel)
+        self.servers.append(server)
 
     def start(self):
         self.should_exit.clear()
@@ -86,12 +94,6 @@ class Master(object):
         for server in self.servers:
             server.shutdown()
         self.should_exit.set()
-
-    def add_server(self, server):
-        # We give a Channel to the server which can be used to communicate with the master
-        channel = Channel(self.event_queue, self.should_exit)
-        server.set_channel(channel)
-        self.servers.append(server)
 
 
 class ServerThread(threading.Thread):
