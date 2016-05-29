@@ -483,8 +483,11 @@ class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
                 h2_conn.receive_data(raw)
             except:
                 break
-            client.wfile.write(h2_conn.data_to_send())
-            client.wfile.flush()
+            try:
+                client.wfile.write(h2_conn.data_to_send())
+                client.wfile.flush()
+            except:
+                break
 
         if len(self.master.state.flows) == 1:
             assert self.master.state.flows[0].response is None
