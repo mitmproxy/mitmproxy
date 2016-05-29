@@ -16,7 +16,7 @@ from .utils import Serializable
 @six.add_metaclass(ABCMeta)
 class _MultiDict(MutableMapping, Serializable):
     def __repr__(self):
-        fields = tuple(
+        fields = (
             repr(field)
             for field in self.fields
         )
@@ -206,14 +206,14 @@ class _MultiDict(MutableMapping, Serializable):
 
     @classmethod
     def from_state(cls, state):
-        return cls(tuple(x) for x in state)
+        return cls(state)
 
 
 class MultiDict(_MultiDict):
-    def __init__(self, fields=None):
+    def __init__(self, fields=()):
         super(MultiDict, self).__init__()
         self.fields = tuple(
-            [tuple(i) for i in fields or ()]
+            tuple(i) for i in fields
         )
 
 
