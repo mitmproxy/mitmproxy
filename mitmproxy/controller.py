@@ -170,6 +170,7 @@ NO_REPLY = object()
 def handler(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
+        # We can either be called as a method, or as a wrapped solo function
         if len(args) == 1:
             message = args[0]
         elif len(args) == 2:
@@ -180,6 +181,9 @@ def handler(f):
         if not hasattr(message, "reply"):
             raise ControlError("Message %s has no reply attribute"%message)
 
+        # The following ensures that inheritance with wrapped handlers in the
+        # base class works. If we're the first handler, then responsibility for
+        # acking is ours. If not, it's someone else's and we ignore it.
         handling = False
         # We're the first handler - ack responsibility is ours
         if not message.reply.handled:
@@ -191,6 +195,7 @@ def handler(f):
         if handling and not message.reply.acked and not message.reply.taken:
             message.reply()
         return ret
+    # Mark this function as a handler wrapper
     wrapper.func_dict["__handler"] = True
     return wrapper
 
