@@ -20,12 +20,12 @@ class MyMaster(flow.FlowMaster):
             self.shutdown()
 
     @controller.handler
-    def handle_request(self, f):
+    def request(self, f):
         f = flow.FlowMaster.handle_request(self, f)
         print(f)
 
     @controller.handler
-    def handle_response(self, f):
+    def response(self, f):
         f = flow.FlowMaster.handle_response(self, f)
         print(f)
 
