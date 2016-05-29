@@ -6,6 +6,27 @@ import sys
 
 from . import exceptions
 
+Events = frozenset([
+    "clientconnect",
+    "clientdisconnect",
+    "serverconnect",
+    "serverdisconnect",
+
+    "tcp_open",
+    "tcp_message",
+    "tcp_error",
+    "tcp_close",
+
+    "request",
+    "response",
+    "responseheaders",
+
+    "next_layer",
+
+    "error",
+    "log",
+])
+
 
 class ControlError(Exception):
     pass
@@ -43,6 +64,8 @@ class Master(object):
             # exception is thrown.
             while True:
                 mtype, obj = self.event_queue.get(timeout=timeout)
+                if mtype not in Events:
+                    raise ControlError("Unknown event %s"%repr(mtype))
                 handle_func = getattr(self, "handle_" + mtype)
                 if not handle_func.func_dict.get("handler"):
                     raise ControlError(

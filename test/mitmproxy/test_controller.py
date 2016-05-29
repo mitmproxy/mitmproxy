@@ -18,7 +18,7 @@ class TestMaster(object):
     def test_simple(self):
         class DummyMaster(controller.Master):
             @controller.handler
-            def handle_panic(self, _):
+            def handle_log(self, _):
                 m.should_exit.set()
 
             def tick(self, timeout):
@@ -29,7 +29,7 @@ class TestMaster(object):
         assert not m.should_exit.is_set()
         msg = TMsg()
         msg.reply = controller.DummyReply()
-        m.event_queue.put(("panic", msg))
+        m.event_queue.put(("log", msg))
         m.run()
         assert m.should_exit.is_set()
 
