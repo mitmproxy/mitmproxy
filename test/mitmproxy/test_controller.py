@@ -16,7 +16,6 @@ class TMsg:
 
 class TestMaster(object):
     def test_simple(self):
-
         class DummyMaster(controller.Master):
             @controller.handler
             def handle_panic(self, _):
@@ -34,10 +33,8 @@ class TestMaster(object):
         m.run()
         assert m.should_exit.is_set()
 
-
-class TestServerMaster(object):
-    def test_simple(self):
-        m = controller.ServerMaster()
+    def test_server_simple(self):
+        m = controller.Master()
         s = DummyServer(None)
         m.add_server(s)
         m.start()

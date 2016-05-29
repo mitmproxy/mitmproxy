@@ -12,17 +12,18 @@ class ControlError(Exception):
 
 
 class Master(object):
-
     """
-    The master handles mitmproxy's main event loop.
+        The master handles mitmproxy's main event loop.
     """
-
     def __init__(self):
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
+        self.servers = []
 
     def start(self):
         self.should_exit.clear()
+        for server in self.servers:
+            ServerThread(server).start()
 
     def run(self):
         self.start()
@@ -57,18 +58,9 @@ class Master(object):
         return changed
 
     def shutdown(self):
+        for server in self.servers:
+            server.shutdown()
         self.should_exit.set()
-
-
-class ServerMaster(Master):
-
-    """
-    The ServerMaster adds server thread support to the master.
-    """
-
-    def __init__(self):
-        super(ServerMaster, self).__init__()
-        self.servers = []
 
     def add_server(self, server):
         # We give a Channel to the server which can be used to communicate with the master
@@ -76,19 +68,8 @@ class ServerMaster(Master):
         server.set_channel(channel)
         self.servers.append(server)
 
-    def start(self):
-        super(ServerMaster, self).start()
-        for server in self.servers:
-            ServerThread(server).start()
-
-    def shutdown(self):
-        for server in self.servers:
-            server.shutdown()
-        super(ServerMaster, self).shutdown()
-
 
 class ServerThread(threading.Thread):
-
     def __init__(self, server):
         self.server = server
         super(ServerThread, self).__init__()
@@ -100,12 +81,10 @@ class ServerThread(threading.Thread):
 
 
 class Channel(object):
-
     """
-    The only way for the proxy server to communicate with the master
-    is to use the channel it has been given.
+        The only way for the proxy server to communicate with the master
+        is to use the channel it has been given.
     """
-
     def __init__(self, q, should_exit):
         self.q = q
         self.should_exit = should_exit
@@ -141,12 +120,10 @@ class Channel(object):
 
 
 class DummyReply(object):
-
     """
     A reply object that does nothing. Useful when we need an object to seem
     like it has a channel, and during testing.
     """
-
     def __init__(self):
         self.acked = False
         self.taken = False
@@ -192,7 +169,6 @@ def handler(f):
 
 
 class Reply(object):
-
     """
     Messages sent through a channel are decorated with a "reply" attribute.
     This object is used to respond to the message through the return

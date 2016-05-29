@@ -638,7 +638,7 @@ class State(object):
         self.flows.kill_all(master)
 
 
-class FlowMaster(controller.ServerMaster):
+class FlowMaster(controller.Master):
 
     @property
     def server(self):
