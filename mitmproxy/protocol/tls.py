@@ -273,9 +273,9 @@ class TlsClientHello(object):
     def sni(self):
         for extension in self._client_hello.extensions:
             is_valid_sni_extension = (
-                extension.type == 0x00
-                and len(extension.server_names) == 1
-                and extension.server_names[0].type == 0
+                extension.type == 0x00 and
+                len(extension.server_names) == 1 and
+                extension.server_names[0].type == 0
             )
             if is_valid_sni_extension:
                 return extension.server_names[0].name
@@ -362,17 +362,17 @@ class TlsLayer(Layer):
         #      what is supported by the server
         #  2.5 The client did not sent a SNI value, we don't know the certificate subject.
         client_tls_requires_server_connection = (
-            self._server_tls
-            and not self.config.no_upstream_cert
-            and (
-                self.config.add_upstream_certs_to_client_chain
-                or self._client_hello.alpn_protocols
-                or not self._client_hello.sni
+            self._server_tls and
+            not self.config.no_upstream_cert and
+            (
+                self.config.add_upstream_certs_to_client_chain or
+                self._client_hello.alpn_protocols or
+                not self._client_hello.sni
             )
         )
         establish_server_tls_now = (
-            (self.server_conn and self._server_tls)
-            or client_tls_requires_server_connection
+            (self.server_conn and self._server_tls) or
+            client_tls_requires_server_connection
         )
 
         if self._client_tls and establish_server_tls_now:
@@ -508,7 +508,9 @@ class TlsLayer(Layer):
             # We only support http/1.1 and h2.
             # If the server only supports spdy (next to http/1.1), it may select that
             # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
-            deprecated_http2_variant = lambda x: x.startswith(b"h2-") or x.startswith(b"spdy")
+            def deprecated_http2_variant(x):
+                return x.startswith(b"h2-") or x.startswith(b"spdy")
+
             if self._client_hello.alpn_protocols:
                 alpn = [x for x in self._client_hello.alpn_protocols if not deprecated_http2_variant(x)]
             else:
