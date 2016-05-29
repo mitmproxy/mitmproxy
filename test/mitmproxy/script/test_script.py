@@ -28,7 +28,7 @@ class TestParseCommand:
     @tutils.skip_not_windows
     def test_parse_windows(self):
         with tutils.chdir(tutils.test_data.dirname):
-            assert Script.parse_command("data\\scripts\\a.py") == ["scripts\\a.py"]
+            assert Script.parse_command("data\\scripts\\a.py") == ["data\\scripts\\a.py"]
             assert Script.parse_command("data\\scripts\\a.py 'foo \\ bar'") == ["data\\scripts\\a.py", 'foo \\ bar']
 
 
