@@ -198,17 +198,17 @@ class WebMaster(flow.FlowMaster):
 
     @controller.handler
     def request(self, f):
-        super(WebMaster, self).handle_request(f)
+        super(WebMaster, self).request(f)
         self._process_flow(f)
 
     @controller.handler
     def response(self, f):
-        super(WebMaster, self).handle_response(f)
+        super(WebMaster, self).response(f)
         self._process_flow(f)
 
     @controller.handler
     def error(self, f):
-        super(WebMaster, self).handle_error(f)
+        super(WebMaster, self).error(f)
         self._process_flow(f)
 
     def add_event(self, e, level="info"):

@@ -21,12 +21,12 @@ class MyMaster(flow.FlowMaster):
 
     @controller.handler
     def request(self, f):
-        f = flow.FlowMaster.handle_request(self, f)
+        f = flow.FlowMaster.request(self, f)
         print(f)
 
     @controller.handler
     def response(self, f):
-        f = flow.FlowMaster.handle_response(self, f)
+        f = flow.FlowMaster.response(self, f)
         print(f)
 
 

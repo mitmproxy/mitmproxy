@@ -810,7 +810,7 @@ class FlowMaster(controller.Master):
 
     def do_server_playback(self, flow):
         """
-            This method should be called by child classes in the handle_request
+            This method should be called by child classes in the request
             handler. Returns True if playback has taken place, None if not.
         """
         if self.server_playback:
@@ -1072,7 +1072,8 @@ class FlowMaster(controller.Master):
     def handle_accept_intercept(self, f):
         self.state.update_flow(f)
 
-    def handle_script_change(self, s):
+    @controller.handler
+    def script_change(self, s):
         """
         Handle a script whose contents have been changed on the file system.
 

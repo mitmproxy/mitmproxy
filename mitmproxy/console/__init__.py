@@ -731,28 +731,28 @@ class ConsoleMaster(flow.FlowMaster):
     # Handlers
     @controller.handler
     def error(self, f):
-        f = flow.FlowMaster.handle_error(self, f)
+        f = flow.FlowMaster.error(self, f)
         if f:
             self.process_flow(f)
         return f
 
     @controller.handler
     def request(self, f):
-        f = flow.FlowMaster.handle_request(self, f)
+        f = flow.FlowMaster.request(self, f)
         if f:
             self.process_flow(f)
         return f
 
     @controller.handler
     def response(self, f):
-        f = flow.FlowMaster.handle_response(self, f)
+        f = flow.FlowMaster.response(self, f)
         if f:
             self.process_flow(f)
         return f
 
     @controller.handler
     def script_change(self, script):
-        if super(ConsoleMaster, self).handle_script_change(script):
+        if super(ConsoleMaster, self).script_change(script):
             signals.status_message.send(message='"{}" reloaded.'.format(script.filename))
         else:
             signals.status_message.send(message='Error reloading "{}".'.format(script.filename))
