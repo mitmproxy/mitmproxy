@@ -65,7 +65,7 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
-        "cryptography>=1.3,<1.4",
+        "cryptography>=1.3, <1.4",
         "Flask>=0.10.1, <0.11",
         "h2>=2.3.1, <3",
         "html2text>=2016.1.8, <=2016.4.2",
@@ -75,7 +75,7 @@ setup(
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
-        "pyparsing>=2.0,<2.1",  # 2.1.1 breaks our binaries, see https://sourceforge.net/p/pyparsing/bugs/93/
+        "pyparsing>=2.0, <2.1",  # 2.1.1 breaks our binaries, see https://sourceforge.net/p/pyparsing/bugs/93/
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.10",
         "six>=1.10, <1.11",
@@ -98,8 +98,9 @@ setup(
         ],
         'dev': [
             "coveralls>=1.1, <1.2",
-            "mock>=2.0,<2.1",
-            "pytest>=2.8.7,<2.10",
+            "mock>=2.0, <2.1",
+            "flake8>=2.5.4, <3",
+            "pytest>=2.8.7, <2.10",
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",
             "pytest-xdist>=1.14, <1.15",
