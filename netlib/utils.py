@@ -435,7 +435,7 @@ def bytes_to_escaped_str(data):
     # and then escaping UTF8 control chars (see clean_bin).
 
     if not isinstance(data, bytes):
-        raise ValueError("data must be bytes")
+        raise ValueError("data must be bytes, but is {}".format(data.__class__.__name__))
     # We always insert a double-quote here so that we get a single-quoted string back
     # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
     return repr(b'"' + data).lstrip("b")[2:-1]
@@ -447,8 +447,8 @@ def escaped_str_to_bytes(data):
     """
     if not isinstance(data, six.string_types):
         if six.PY2:
-            raise ValueError("data must be str or unicode")
-        raise ValueError("data must be str")
+            raise ValueError("data must be str or unicode, but is {}".format(data.__class__.__name__))
+        raise ValueError("data must be str, but is {}".format(data.__class__.__name__))
 
     if six.PY2:
         if isinstance(data, unicode):
