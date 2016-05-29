@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from six.moves import queue
 import threading
 import functools
-import sys
 
 from . import exceptions
 
@@ -26,10 +25,6 @@ Events = frozenset([
     "error",
     "log",
 ])
-
-
-class ControlError(Exception):
-    pass
 
 
 class Master(object):
@@ -73,12 +68,12 @@ class Master(object):
             while True:
                 mtype, obj = self.event_queue.get(timeout=timeout)
                 if mtype not in Events:
-                    raise ControlError("Unknown event %s"%repr(mtype))
+                    raise exceptions.ControlException("Unknown event %s"%repr(mtype))
                 handle_func = getattr(self, mtype)
                 if not hasattr(handle_func, "func_dict"):
-                    raise ControlError("Handler %s not a function"%mtype)
+                    raise exceptions.ControlException("Handler %s not a function"%mtype)
                 if not handle_func.func_dict.get("__handler"):
-                    raise ControlError(
+                    raise exceptions.ControlException(
                         "Handler function %s is not decorated with controller.handler"%(
                             handle_func
                         )
@@ -176,10 +171,10 @@ def handler(f):
         elif len(args) == 2:
             message = args[1]
         else:
-            raise ControlError("Handler takes one argument: a message")
+            raise exceptions.ControlException("Handler takes one argument: a message")
 
         if not hasattr(message, "reply"):
-            raise ControlError("Message %s has no reply attribute"%message)
+            raise exceptions.ControlException("Message %s has no reply attribute"%message)
 
         # The following ensures that inheritance with wrapped handlers in the
         # base class works. If we're the first handler, then responsibility for
@@ -221,7 +216,7 @@ class Reply(object):
 
     def __call__(self, msg=NO_REPLY):
         if self.acked:
-            raise ControlError("Message already acked.")
+            raise exceptions.ControlException("Message already acked.")
         self.acked = True
         if msg is NO_REPLY:
             self.q.put(self.obj)
@@ -231,4 +226,4 @@ class Reply(object):
     def __del__(self):
         if not self.acked:
             # This will be ignored by the interpreter, but emit a warning
-            raise ControlError("Un-acked message")
+            raise exceptions.ControlException("Un-acked message")

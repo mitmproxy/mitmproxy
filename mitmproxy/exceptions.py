@@ -92,3 +92,7 @@ class ScriptException(ProxyException):
 
 class FlowReadException(ProxyException):
     pass
+
+
+class ControlException(Exception):
+    pass
