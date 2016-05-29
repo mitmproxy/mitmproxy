@@ -3383,7 +3383,6 @@ var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
     var stickyauth = _props$settings.stickyauth;
     var stream = _props$settings.stream;
 
-    var options = [{ name: "showhost", checked: showhost }, { name: "no_upstream_cert", checked: no_upstream_cert }, { name: "rawtcp", checked: rawtcp }, { name: "http2", checked: http2 }, { name: "anticache", checked: anticache }, { name: "anticomp", checked: anticomp }, { name: "stickyauth", checked: Boolean(stickyauth), txt: stickyauth || "", placeholder: "Sticky auth filter" }, { name: "stickycookie", checked: Boolean(stickycookie), txt: stickycookie || "", placeholder: "Sticky cookie filter" }, { name: "stream", checked: Boolean(stream), txt: stream || "", placeholder: "stream..." }];
     return _react2.default.createElement(
         "div",
         null,
@@ -3450,34 +3449,6 @@ var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
         ),
         _react2.default.createElement("div", { className: "clearfix" })
     );
-    /*    return (
-            <div>
-                <div className="menu-row">
-                    {options.map((entry, i) => {
-                        if (typeof entry.txt !== 'undefined') {
-                            return (
-                                <ToggleInputButton
-                                    key={i}
-                                    name={entry.name}
-                                    checked={entry.checked}
-                                    txt={entry.txt}
-                                    placeholder={entry.placeholder}
-                                    onToggleChanged={txt => SettingsActions.update({[entry.name]: (!entry.checked ? txt : null)})}/>
-                            );
-                        }else{
-                            return (
-                                <ToggleButton
-                                    key={i}
-                                    checked={entry.checked}
-                                    name={entry.name}
-                                    onToggleChanged={() => SettingsActions.update({[entry.name]: !entry.checked})}/>
-                            );
-                        }
-                    })}
-                </div>
-                 <div className="clearfix"></div>
-            </div>
-        );*/
 };
 OptionMenu.title = "Options";
 

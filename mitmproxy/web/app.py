@@ -282,6 +282,9 @@ class Events(RequestHandler):
 class Settings(RequestHandler):
 
     def get(self):
+
+        print(self.master.stream_large_bodies[1])
+
         self.write(dict(
             data=dict(
                 version=version.VERSION,
@@ -294,8 +297,8 @@ class Settings(RequestHandler):
                 anticache=self.master.options.anticache,
                 anticomp=self.master.options.anticomp,
                 stickyauth=self.master.stickyauth_txt,
-                stickycookie=self.master.stickycookie_txt#,
-                #stream=self.master.stream
+                stickycookie=self.master.stickycookie_txt,
+                stream=self.master.stream_large_bodies
             )
         ))
 
@@ -330,7 +333,7 @@ class Settings(RequestHandler):
                 self.master.set_stickyauth(v)
                 update[k] = v
             elif k == "stream":
-                #self.master.set_stream_large_bodies(v) todo: ask
+                self.master.set_stream_large_bodies(v)
                 update[k] = v
             else:
                 print("Warning: Unknown setting {}: {}".format(k, v))
