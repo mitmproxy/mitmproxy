@@ -22,7 +22,6 @@ Usage:
 """
 import re
 
-
 # This regex extracts splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891

@@ -40,6 +40,7 @@ class _TlsStrategy(object):
     """
     Abstract base class for interception strategies.
     """
+
     def __init__(self):
         # A server_address -> interception results mapping
         self.history = collections.defaultdict(lambda: collections.deque(maxlen=200))
@@ -78,6 +79,7 @@ class ProbabilisticStrategy(_TlsStrategy):
     """
     Fixed probability that we intercept a given connection.
     """
+
     def __init__(self, p):
         self.p = p
         super(ProbabilisticStrategy, self).__init__()

@@ -162,8 +162,11 @@ def response(context, flow):
 
     # If the current url is in the page list of context.HARLog or
     # does not have a referrer, we add it as a new pages object.
-    if (flow.request.url in context.HARLog.get_page_list() or
-            flow.request.headers.get('Referer') is None):
+    is_new_page = (
+        flow.request.url in context.HARLog.get_page_list() or
+        flow.request.headers.get('Referer') is None
+    )
+    if is_new_page:
         page_id = context.HARLog.create_page_id()
         context.HARLog.add(
             HAR.pages({
