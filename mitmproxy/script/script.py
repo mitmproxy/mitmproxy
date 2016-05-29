@@ -77,7 +77,7 @@ class Script(object):
         try:
             with open(self.filename) as f:
                 code = compile(f.read(), self.filename, 'exec')
-                exec (code, self.ns, self.ns)
+                exec(code, self.ns, self.ns)
         except Exception:
             six.reraise(
                 ScriptException,

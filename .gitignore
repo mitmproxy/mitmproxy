@@ -9,6 +9,7 @@ MANIFEST
 .coverage
 .idea
 .cache/
+.tox/
 build/
 
 # UI
