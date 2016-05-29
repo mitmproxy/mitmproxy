@@ -6,9 +6,16 @@ import pytest
 import traceback
 import os
 import tempfile
+import h2
 
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.cmdline import APP_HOST, APP_PORT
+
+import netlib
+from ..netlib import tservers as netlib_tservers
+from netlib.utils import http2_read_raw_frame
+
+from . import tservers
 
 import logging
 logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)
@@ -18,13 +25,6 @@ logging.getLogger("passlib.registry").setLevel(logging.WARNING)
 logging.getLogger("PIL.Image").setLevel(logging.WARNING)
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
-import netlib
-from ..netlib import tservers as netlib_tservers
-from netlib.utils import http2_read_raw_frame
-
-import h2
-
-from . import tservers
 
 requires_alpn = pytest.mark.skipif(
     not netlib.tcp.HAS_ALPN,

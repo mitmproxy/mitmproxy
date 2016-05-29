@@ -141,7 +141,7 @@ class Wrapper(object):
             '--toggle',
             action='store_true',
             help='just toggle the proxy configuration')
-            # parser.add_argument('--honeyproxy', action='store_true', help='run honeyproxy instead of mitmproxy')
+        # parser.add_argument('--honeyproxy', action='store_true', help='run honeyproxy instead of mitmproxy')
         parser.add_argument(
             '-p',
             '--port',

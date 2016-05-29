@@ -1,15 +1,18 @@
 import tempfile
 import re
 import shutil
+import requests
 from six.moves import cStringIO as StringIO
 
-import netlib
+from netlib import tcp
+from netlib import utils
+from netlib import tutils
+
 from pathod import language
 from pathod import pathoc
 from pathod import pathod
 from pathod import test
-from netlib import tcp
-import requests
+
 
 def treader(bytes):
     """
@@ -115,11 +118,11 @@ class DaemonTests(object):
         return ret, logfp.getvalue()
 
 
-tmpdir = netlib.tutils.tmpdir
+tmpdir = tutils.tmpdir
 
-raises = netlib.tutils.raises
+raises = tutils.raises
 
-test_data = netlib.utils.Data(__name__)
+test_data = utils.Data(__name__)
 
 
 def render(r, settings=language.Settings()):

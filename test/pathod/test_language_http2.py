@@ -141,7 +141,6 @@ class TestRequest:
         assert isinstance(r.tokens[2], http2.NestedResponse)
         assert r.values(default_settings())
 
-
     def test_render_with_body(self):
         s = StringIO()
         r = parse_request("GET:'/foo':bfoobar")

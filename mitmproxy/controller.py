@@ -68,13 +68,13 @@ class Master(object):
             while True:
                 mtype, obj = self.event_queue.get(timeout=timeout)
                 if mtype not in Events:
-                    raise exceptions.ControlException("Unknown event %s"%repr(mtype))
+                    raise exceptions.ControlException("Unknown event %s" % repr(mtype))
                 handle_func = getattr(self, mtype)
                 if not hasattr(handle_func, "func_dict"):
-                    raise exceptions.ControlException("Handler %s not a function"%mtype)
+                    raise exceptions.ControlException("Handler %s not a function" % mtype)
                 if not handle_func.func_dict.get("__handler"):
                     raise exceptions.ControlException(
-                        "Handler function %s is not decorated with controller.handler"%(
+                        "Handler function %s is not decorated with controller.handler" % (
                             handle_func
                         )
                     )

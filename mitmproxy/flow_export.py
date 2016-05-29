@@ -135,7 +135,8 @@ def locust_code(flow):
     args = ""
     headers = ""
     if flow.request.headers:
-        lines = ["            '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
+        lines = [(k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
+        lines = ["            '%s': '%s',\n" % (k, v) for k, v in lines]
         headers += "\n        headers = {\n%s        }\n" % "".join(lines)
         args += "\n            headers=headers,"
 

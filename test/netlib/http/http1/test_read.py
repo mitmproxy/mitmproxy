@@ -105,6 +105,7 @@ class TestReadBody(object):
         rfile = BytesIO(b"123456")
         assert list(read_body(rfile, -1, max_chunk_size=1)) == [b"1", b"2", b"3", b"4", b"5", b"6"]
 
+
 def test_connection_close():
     headers = Headers()
     assert connection_close(b"HTTP/1.0", headers)
@@ -119,6 +120,7 @@ def test_connection_close():
     headers["connection"] = "foobar"
     assert connection_close(b"HTTP/1.0", headers)
     assert not connection_close(b"HTTP/1.1", headers)
+
 
 def test_expected_http_body_size():
     # Expect: 100-continue
@@ -201,6 +203,7 @@ def test_read_request_line():
         t(b"this is not http")
     with raises(HttpReadDisconnect):
         t(b"")
+
 
 def test_parse_authority_form():
     assert _parse_authority_form(b"foo:42") == (b"foo", 42)
@@ -300,6 +303,7 @@ class TestReadHeaders(object):
         data = b"bar:"
         headers = self._read(data)
         assert headers.fields == ((b"bar", b""),)
+
 
 def test_read_chunked():
     req = treq(content=None)

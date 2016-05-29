@@ -1,7 +1,7 @@
 import mock
 import codecs
 
-from hyperframe.frame import *
+from hyperframe import frame
 
 from netlib import tcp, http, utils
 from netlib.tutils import raises
@@ -9,6 +9,7 @@ from netlib.exceptions import TcpDisconnect
 from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 
 from ... import tservers
+
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
@@ -213,19 +214,19 @@ class TestApplySettings(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
 
         protocol._apply_settings({
-            SettingsFrame.ENABLE_PUSH: 'foo',
-            SettingsFrame.MAX_CONCURRENT_STREAMS: 'bar',
-            SettingsFrame.INITIAL_WINDOW_SIZE: 'deadbeef',
+            frame.SettingsFrame.ENABLE_PUSH: 'foo',
+            frame.SettingsFrame.MAX_CONCURRENT_STREAMS: 'bar',
+            frame.SettingsFrame.INITIAL_WINDOW_SIZE: 'deadbeef',
         })
 
         assert c.rfile.safe_read(2) == b"OK"
 
         assert protocol.http2_settings[
-            SettingsFrame.ENABLE_PUSH] == 'foo'
+            frame.SettingsFrame.ENABLE_PUSH] == 'foo'
         assert protocol.http2_settings[
-            SettingsFrame.MAX_CONCURRENT_STREAMS] == 'bar'
+            frame.SettingsFrame.MAX_CONCURRENT_STREAMS] == 'bar'
         assert protocol.http2_settings[
-            SettingsFrame.INITIAL_WINDOW_SIZE] == 'deadbeef'
+            frame.SettingsFrame.INITIAL_WINDOW_SIZE] == 'deadbeef'
 
 
 class TestCreateHeaders(object):
@@ -257,7 +258,7 @@ class TestCreateHeaders(object):
             (b'server', b'version')])
 
         protocol = HTTP2Protocol(self.c)
-        protocol.http2_settings[SettingsFrame.MAX_FRAME_SIZE] = 8
+        protocol.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE] = 8
         bytes = protocol._create_headers(headers, 1, end_stream=True)
         assert len(bytes) == 3
         assert bytes[0] == codecs.decode('000008010100000001828487408294e783', 'hex_codec')
@@ -280,7 +281,7 @@ class TestCreateBody(object):
 
     def test_create_body_multiple_frames(self):
         protocol = HTTP2Protocol(self.c)
-        protocol.http2_settings[SettingsFrame.MAX_FRAME_SIZE] = 5
+        protocol.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE] = 5
         bytes = protocol._create_body(b'foobarmehm42', 1)
         assert len(bytes) == 3
         assert bytes[0] == codecs.decode('000005000000000001666f6f6261', 'hex_codec')

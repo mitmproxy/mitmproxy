@@ -147,7 +147,7 @@ class TestDaemon(_TestDaemon):
         tutils.raises("ssl handshake", c.connect)
 
     def test_showssl(self):
-        assert not "certificate chain" in self.tval(
+        assert "certificate chain" not in self.tval(
             ["get:/p/200"],
             showssl=True)
 
@@ -170,7 +170,7 @@ class TestDaemon(_TestDaemon):
             showresp=True,
             timeout=1
         )
-        assert not "HTTP" in self.tval(
+        assert "HTTP" not in self.tval(
             ["get:'/p/200:p3,100'"],
             showresp=True,
             timeout=1,

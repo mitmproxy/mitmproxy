@@ -10,11 +10,11 @@ from netlib.tutils import treq, raises, tresp
 
 
 def test_assemble_request():
-    c = assemble_request(treq()) == (
+    assert assemble_request(treq()) == (
         b"GET /path HTTP/1.1\r\n"
         b"header: qvalue\r\n"
-        b"Host: address:22\r\n"
-        b"Content-Length: 7\r\n"
+        b"content-length: 7\r\n"
+        b"host: address:22\r\n"
         b"\r\n"
         b"content"
     )
@@ -32,10 +32,10 @@ def test_assemble_request_head():
 
 
 def test_assemble_response():
-    c = assemble_response(tresp()) == (
+    assert assemble_response(tresp()) == (
         b"HTTP/1.1 200 OK\r\n"
+        b"content-length: 7\r\n"
         b"header-response: svalue\r\n"
-        b"Content-Length: 7\r\n"
         b"\r\n"
         b"message"
     )

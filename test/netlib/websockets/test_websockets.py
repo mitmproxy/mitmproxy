@@ -7,9 +7,10 @@ from netlib import tutils
 from netlib import websockets
 from netlib.http import status_codes
 from netlib.tutils import treq
-from netlib.exceptions import *
+from netlib import exceptions
 
 from .. import tservers
+
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
 
@@ -176,7 +177,7 @@ class TestBadHandshake(tservers.ServerTestBase):
     handler = BadHandshakeHandler
 
     def test(self):
-        with tutils.raises(TcpDisconnect):
+        with tutils.raises(exceptions.TcpDisconnect):
             client = WebSocketsClient(("127.0.0.1", self.port))
             client.connect()
             client.send_message(b"hello")

@@ -54,7 +54,7 @@ class TestStickyCookieState:
         assert s.domain_match("google.com", ".google.com")
 
     def test_response(self):
-        c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; "\
+        c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; " \
             "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
 
         s, f = self._response(c, "host")
@@ -388,22 +388,22 @@ class TestFlow(object):
         del b["id"]
         assert a == b
         assert not f == f2
-        assert not f is f2
+        assert f is not f2
         assert f.request.get_state() == f2.request.get_state()
-        assert not f.request is f2.request
+        assert f.request is not f2.request
         assert f.request.headers == f2.request.headers
-        assert not f.request.headers is f2.request.headers
+        assert f.request.headers is not f2.request.headers
         assert f.response.get_state() == f2.response.get_state()
-        assert not f.response is f2.response
+        assert f.response is not f2.response
 
         f = tutils.tflow(err=True)
         f2 = f.copy()
-        assert not f is f2
-        assert not f.request is f2.request
+        assert f is not f2
+        assert f.request is not f2.request
         assert f.request.headers == f2.request.headers
-        assert not f.request.headers is f2.request.headers
+        assert f.request.headers is not f2.request.headers
         assert f.error.get_state() == f2.error.get_state()
-        assert not f.error is f2.error
+        assert f.error is not f2.error
 
     def test_match(self):
         f = tutils.tflow(resp=True)
@@ -979,7 +979,7 @@ class TestFlowMaster:
         fm.request(f)
         fm.response(f)
         assert fm.stickycookie_state.jar
-        assert not "cookie" in f.request.headers
+        assert "cookie" not in f.request.headers
         f = f.copy()
         fm.request(f)
         assert f.request.headers["cookie"] == "foo=bar"
@@ -1000,7 +1000,7 @@ class TestFlowMaster:
 
         f = tutils.tflow(resp=True)
         assert fm.stickyauth_state.hosts
-        assert not "authorization" in f.request.headers
+        assert "authorization" not in f.request.headers
         fm.request(f)
         assert f.request.headers["authorization"] == "foo"
 
@@ -1070,8 +1070,8 @@ class TestRequest:
         r.headers["if-modified-since"] = "test"
         r.headers["if-none-match"] = "test"
         r.anticache()
-        assert not "if-modified-since" in r.headers
-        assert not "if-none-match" in r.headers
+        assert "if-modified-since" not in r.headers
+        assert "if-none-match" not in r.headers
 
     def test_replace(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
@@ -1080,7 +1080,7 @@ class TestRequest:
         r.content = "afoob"
         assert r.replace("foo(?i)", "boo") == 4
         assert r.path == "path/boo"
-        assert not "foo" in r.content
+        assert "foo" not in r.content
         assert r.headers["boo"] == "boo"
 
     def test_constrain_encoding(self):
@@ -1122,7 +1122,7 @@ class TestResponse:
         r.headers["Foo"] = "fOo"
         r.content = "afoob"
         assert r.replace("foo(?i)", "boo") == 3
-        assert not "foo" in r.content
+        assert "foo" not in r.content
         assert r.headers["boo"] == "boo"
 
     def test_get_content_type(self):
@@ -1154,11 +1154,9 @@ class TestError:
 
 
 class TestClientConnection:
-
     def test_state(self):
-
         c = tutils.tclient_conn()
-        assert ClientConnection.from_state(c.get_state()).get_state() ==\
+        assert ClientConnection.from_state(c.get_state()).get_state() == \
             c.get_state()
 
         c2 = tutils.tclient_conn()

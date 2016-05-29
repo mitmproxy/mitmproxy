@@ -29,13 +29,13 @@ def test_pathoc(perror):
     assert a.connect_to == ["foo", 10]
 
     a = cmdline.args_pathoc(["pathoc", "foo.com", "get:/", "--http2"])
-    assert a.use_http2 == True
-    assert a.ssl == True
+    assert a.use_http2 is True
+    assert a.ssl is True
 
     a = cmdline.args_pathoc(["pathoc", "foo.com", "get:/", "--http2-skip-connection-preface"])
-    assert a.use_http2 == True
-    assert a.ssl == True
-    assert a.http2_skip_connection_preface == True
+    assert a.use_http2 is True
+    assert a.ssl is True
+    assert a.http2_skip_connection_preface is True
 
     a = cmdline.args_pathoc(["pathoc", "-c", "foo", "foo.com:8888", "get:/"])
     assert perror.called

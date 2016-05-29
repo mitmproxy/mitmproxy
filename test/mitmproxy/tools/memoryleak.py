@@ -3,8 +3,8 @@ import threading
 from pympler import muppy, refbrowser
 from OpenSSL import SSL
 # import os
-#os.environ["TK_LIBRARY"] = r"C:\Python27\tcl\tcl8.5"
-#os.environ["TCL_LIBRARY"] = r"C:\Python27\tcl\tcl8.5"
+# os.environ["TK_LIBRARY"] = r"C:\Python27\tcl\tcl8.5"
+# os.environ["TCL_LIBRARY"] = r"C:\Python27\tcl\tcl8.5"
 
 # Also noteworthy: guppy, objgraph
 

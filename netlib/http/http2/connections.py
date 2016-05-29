@@ -356,7 +356,7 @@ class HTTP2Protocol(object):
         frms = [frm_cls(
             flags=[],
             stream_id=stream_id,
-            data=header_block_fragment[i:i+chunk_size]) for frm_cls, i in frame_cls(chunks)]
+            data=header_block_fragment[i:i + chunk_size]) for frm_cls, i in frame_cls(chunks)]
 
         frms[-1].flags.add('END_HEADERS')
         if end_stream:
@@ -377,7 +377,7 @@ class HTTP2Protocol(object):
         frms = [frame.DataFrame(
             flags=[],
             stream_id=stream_id,
-            data=body[i:i+chunk_size]) for i in chunks]
+            data=body[i:i + chunk_size]) for i in chunks]
         frms[-1].flags.add('END_STREAM')
 
         if self.dump_frames:  # pragma no cover
