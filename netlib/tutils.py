@@ -107,7 +107,7 @@ def treq(**kwargs):
         port=22,
         path=b"/path",
         http_version=b"HTTP/1.1",
-        headers=Headers((("header", "qvalue"), ("content-length", "7"))),
+        headers=Headers(((b"header", b"qvalue"), (b"content-length", b"7"))),
         content=b"content"
     )
     default.update(kwargs)
@@ -123,7 +123,7 @@ def tresp(**kwargs):
         http_version=b"HTTP/1.1",
         status_code=200,
         reason=b"OK",
-        headers=Headers((("header-response", "svalue"), ("content-length", "7"))),
+        headers=Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
         content=b"message",
         timestamp_start=time.time(),
         timestamp_end=time.time(),
