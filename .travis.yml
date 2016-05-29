@@ -46,7 +46,7 @@ install:
 before_script:
   - "openssl version -a"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
-  - "[[ $(flake8 --count --exit-zero mitmproxy netlib pathod examples test | wc -l) -le 72 ]]"
+  - "[[ $(flake8 -qq --count --exit-zero mitmproxy netlib pathod examples test) -le 71 ]]"
 
 script:
   - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod ./test/$SCOPE"
