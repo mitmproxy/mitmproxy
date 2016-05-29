@@ -208,9 +208,9 @@ class ClientPlaybackState:
                 master.replay_request(self.current)
             else:
                 self.current.reply = controller.DummyReply()
-                master.handle_request(self.current)
+                master.request(self.current)
                 if self.current.response:
-                    master.handle_response(self.current)
+                    master.response(self.current)
 
 
 class ServerPlaybackState:
@@ -546,7 +546,8 @@ class FlowStore(FlowList):
 
     def kill_all(self, master):
         for f in self._list:
-            f.kill(master)
+            if not f.reply.acked:
+                f.kill(master)
 
 
 class State(object):
@@ -637,7 +638,7 @@ class State(object):
         self.flows.kill_all(master)
 
 
-class FlowMaster(controller.ServerMaster):
+class FlowMaster(controller.Master):
 
     @property
     def server(self):
@@ -893,23 +894,23 @@ class FlowMaster(controller.ServerMaster):
 
             f.reply = controller.DummyReply()
             if f.request:
-                self.handle_request(f)
+                self.request(f)
             if f.response:
-                self.handle_responseheaders(f)
-                self.handle_response(f)
+                self.responseheaders(f)
+                self.response(f)
             if f.error:
-                self.handle_error(f)
+                self.error(f)
         elif isinstance(f, TCPFlow):
             messages = f.messages
             f.messages = []
             f.reply = controller.DummyReply()
-            self.handle_tcp_open(f)
+            self.tcp_open(f)
             while messages:
                 f.messages.append(messages.pop(0))
-                self.handle_tcp_message(f)
+                self.tcp_message(f)
             if f.error:
-                self.handle_tcp_error(f)
-            self.handle_tcp_close(f)
+                self.tcp_error(f)
+            self.tcp_close(f)
         else:
             raise NotImplementedError()
 
@@ -985,39 +986,40 @@ class FlowMaster(controller.ServerMaster):
             if block:
                 rt.join()
 
-    def handle_log(self, l):
+    @controller.handler
+    def log(self, l):
         self.add_event(l.msg, l.level)
-        l.reply()
 
-    def handle_clientconnect(self, root_layer):
+    @controller.handler
+    def clientconnect(self, root_layer):
         self.run_script_hook("clientconnect", root_layer)
-        root_layer.reply()
 
-    def handle_clientdisconnect(self, root_layer):
+    @controller.handler
+    def clientdisconnect(self, root_layer):
         self.run_script_hook("clientdisconnect", root_layer)
-        root_layer.reply()
 
-    def handle_serverconnect(self, server_conn):
+    @controller.handler
+    def serverconnect(self, server_conn):
         self.run_script_hook("serverconnect", server_conn)
-        server_conn.reply()
 
-    def handle_serverdisconnect(self, server_conn):
+    @controller.handler
+    def serverdisconnect(self, server_conn):
         self.run_script_hook("serverdisconnect", server_conn)
-        server_conn.reply()
 
-    def handle_next_layer(self, top_layer):
+    @controller.handler
+    def next_layer(self, top_layer):
         self.run_script_hook("next_layer", top_layer)
-        top_layer.reply()
 
-    def handle_error(self, f):
+    @controller.handler
+    def error(self, f):
         self.state.update_flow(f)
         self.run_script_hook("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
-        f.reply()
         return f
 
-    def handle_request(self, f):
+    @controller.handler
+    def request(self, f):
         if f.live:
             app = self.apps.get(f.request)
             if app:
@@ -1039,20 +1041,19 @@ class FlowMaster(controller.ServerMaster):
         self.run_script_hook("request", f)
         return f
 
-    def handle_responseheaders(self, f):
+    @controller.handler
+    def responseheaders(self, f):
         try:
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
         except HttpException:
             f.reply(Kill)
             return
-
         self.run_script_hook("responseheaders", f)
-
-        f.reply()
         return f
 
-    def handle_response(self, f):
+    @controller.handler
+    def response(self, f):
         self.active_flows.discard(f)
         self.state.update_flow(f)
         self.replacehooks.run(f)
@@ -1099,14 +1100,15 @@ class FlowMaster(controller.ServerMaster):
             self.add_event('"{}" reloaded.'.format(s.filename), 'info')
         return ok
 
-    def handle_tcp_open(self, flow):
+    @controller.handler
+    def tcp_open(self, flow):
         # TODO: This would break mitmproxy currently.
         # self.state.add_flow(flow)
         self.active_flows.add(flow)
         self.run_script_hook("tcp_open", flow)
-        flow.reply()
 
-    def handle_tcp_message(self, flow):
+    @controller.handler
+    def tcp_message(self, flow):
         self.run_script_hook("tcp_message", flow)
         message = flow.messages[-1]
         direction = "->" if message.from_client else "<-"
@@ -1116,22 +1118,21 @@ class FlowMaster(controller.ServerMaster):
             direction=direction,
         ), "info")
         self.add_event(clean_bin(message.content), "debug")
-        flow.reply()
 
-    def handle_tcp_error(self, flow):
+    @controller.handler
+    def tcp_error(self, flow):
         self.add_event("Error in TCP connection to {}: {}".format(
             repr(flow.server_conn.address),
             flow.error
         ), "info")
         self.run_script_hook("tcp_error", flow)
-        flow.reply()
 
-    def handle_tcp_close(self, flow):
+    @controller.handler
+    def tcp_close(self, flow):
         self.active_flows.discard(flow)
         if self.stream:
             self.stream.add(flow)
         self.run_script_hook("tcp_close", flow)
-        flow.reply()
 
     def shutdown(self):
         super(FlowMaster, self).shutdown()

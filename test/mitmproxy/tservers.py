@@ -39,19 +39,11 @@ class TestMaster(flow.FlowMaster):
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
 
-    def handle_request(self, f):
-        flow.FlowMaster.handle_request(self, f)
-        f.reply()
-
-    def handle_response(self, f):
-        flow.FlowMaster.handle_response(self, f)
-        f.reply()
-
     def clear_log(self):
-        self.log = []
+        self.tlog = []
 
     def add_event(self, message, level=None):
-        self.log.append(message)
+        self.tlog.append(message)
 
 
 class ProxyThread(threading.Thread):
@@ -68,8 +60,8 @@ class ProxyThread(threading.Thread):
         return self.tmaster.server.address.port
 
     @property
-    def log(self):
-        return self.tmaster.log
+    def tlog(self):
+        return self.tmaster.tlog
 
     def run(self):
         self.tmaster.run()

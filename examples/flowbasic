@@ -8,7 +8,7 @@
     Note that request and response messages are not automatically replied to,
     so we need to implement handlers to do this.
 """
-from mitmproxy import flow
+from mitmproxy import flow, controller
 from mitmproxy.proxy import ProxyServer, ProxyConfig
 
 
@@ -19,18 +19,15 @@ class MyMaster(flow.FlowMaster):
         except KeyboardInterrupt:
             self.shutdown()
 
+    @controller.handler
     def handle_request(self, f):
         f = flow.FlowMaster.handle_request(self, f)
-        if f:
-            f.reply()
-        return f
+        print(f)
 
+    @controller.handler
     def handle_response(self, f):
         f = flow.FlowMaster.handle_response(self, f)
-        if f:
-            f.reply()
         print(f)
-        return f
 
 
 config = ProxyConfig(

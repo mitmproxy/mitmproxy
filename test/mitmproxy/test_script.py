@@ -7,7 +7,7 @@ def test_duplicate_flow():
     fm = flow.FlowMaster(None, s)
     fm.load_script(tutils.test_data.path("scripts/duplicate_flow.py"))
     f = tutils.tflow()
-    fm.handle_request(f)
+    fm.request(f)
     assert fm.state.flow_count() == 2
     assert not fm.state.view[0].request.is_replay
     assert fm.state.view[1].request.is_replay
