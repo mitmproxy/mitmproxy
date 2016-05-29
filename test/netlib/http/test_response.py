@@ -15,7 +15,7 @@ class TestResponseData(object):
         with raises(ValueError):
             tresp(headers="foobar")
 
-        assert isinstance(tresp(headers=None).headers, Headers)
+        assert isinstance(tresp(headers=()).headers, Headers)
 
 
 class TestResponseCore(object):

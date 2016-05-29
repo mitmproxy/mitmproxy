@@ -460,7 +460,7 @@ class TestAssembleRequest(object):
             b'',
             b'/',
             b"HTTP/2.0",
-            None,
+            (),
             None,
         ))
         assert len(bytes) == 1
@@ -475,7 +475,7 @@ class TestAssembleRequest(object):
             b'',
             b'/',
             b"HTTP/2.0",
-            None,
+            (),
             None,
         )
         req.stream_id = 0x42

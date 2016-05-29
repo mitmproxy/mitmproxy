@@ -76,7 +76,7 @@ class Headers(MultiDict):
         For use with the "Set-Cookie" header, see :py:meth:`get_all`.
     """
 
-    def __init__(self, fields=None, **headers):
+    def __init__(self, fields=(), **headers):
         """
         Args:
             fields: (optional) list of ``(name, value)`` header byte tuples,

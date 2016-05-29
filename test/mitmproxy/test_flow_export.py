@@ -22,7 +22,7 @@ def python_equals(testdata, text):
 
 req_get = lambda: netlib.tutils.treq(method='GET', content='', path=b"/path?a=foo&a=bar&b=baz")
 
-req_post = lambda: netlib.tutils.treq(method='POST', headers=None)
+req_post = lambda: netlib.tutils.treq(method='POST', headers=())
 
 req_patch = lambda: netlib.tutils.treq(method='PATCH', path=b"/path?query=param")
 

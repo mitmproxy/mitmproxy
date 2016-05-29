@@ -11,7 +11,7 @@ from .. import utils
 
 
 class ResponseData(MessageData):
-    def __init__(self, http_version, status_code, reason=None, headers=None, content=None,
+    def __init__(self, http_version, status_code, reason=None, headers=(), content=None,
                  timestamp_start=None, timestamp_end=None):
         if not isinstance(headers, Headers):
             headers = Headers(headers)

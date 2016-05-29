@@ -19,7 +19,7 @@ host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
 class RequestData(MessageData):
-    def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=None, content=None,
+    def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=(), content=None,
                  timestamp_start=None, timestamp_end=None):
         if not isinstance(headers, Headers):
             headers = Headers(headers)

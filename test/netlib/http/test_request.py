@@ -13,7 +13,7 @@ class TestRequestData(object):
         with raises(ValueError):
             treq(headers="foobar")
 
-        assert isinstance(treq(headers=None).headers, Headers)
+        assert isinstance(treq(headers=()).headers, Headers)
 
 
 class TestRequestCore(object):
