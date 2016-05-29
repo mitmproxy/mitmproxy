@@ -34,8 +34,8 @@ def test_assemble_request_head():
 def test_assemble_response():
     assert assemble_response(tresp()) == (
         b"HTTP/1.1 200 OK\r\n"
-        b"content-length: 7\r\n"
         b"header-response: svalue\r\n"
+        b"content-length: 7\r\n"
         b"\r\n"
         b"message"
     )
