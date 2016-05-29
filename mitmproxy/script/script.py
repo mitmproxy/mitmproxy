@@ -6,7 +6,6 @@ by the mitmproxy-specific ScriptContext.
 # Do not import __future__ here, this would apply transitively to the inline scripts.
 import os
 import shlex
-import traceback
 import sys
 
 import six

@@ -1,5 +1,6 @@
 from netlib.http import http2
-from .. import version, app, language, utils, log
+from .. import language
+
 
 class HTTP2Protocol:
 

@@ -1,6 +1,6 @@
-from netlib import tcp, wsgi
-from netlib.exceptions import HttpReadDisconnect, TlsException
-from netlib.http import http1, Request
+from netlib import wsgi
+from netlib.exceptions import TlsException
+from netlib.http import http1
 from .. import version, language
 
 

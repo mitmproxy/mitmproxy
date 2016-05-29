@@ -22,9 +22,9 @@ matrix:
       git:
         depth: 9999999
     - python: 3.5
-      env: SCOPE="netlib ./test/mitmproxy/script"
+      env: SCOPE="netlib ./test/mitmproxy/script ./test/pathod/test_utils.py ./test/pathod/test_log.py"
     - python: 3.5
-      env: SCOPE="netlib ./test/mitmproxy/script" NO_ALPN=1
+      env: SCOPE="netlib ./test/mitmproxy/script ./test/pathod/test_utils.py ./test/pathod/test_log.py" NO_ALPN=1
     - python: 2.7
       env: DOCS=1
       script: 'cd docs && make html'
@@ -46,6 +46,7 @@ install:
 before_script:
   - "openssl version -a"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
+  - "[[ $(flake8 --exclude=mitmproxy/contrib,mitmproxy/console --ignore E251,C901 --count --exit-zero mitmproxy netlib pathod examples test | wc -l) -le 159 ]]"
 
 script:
   - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod ./test/$SCOPE"

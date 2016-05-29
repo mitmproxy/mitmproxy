@@ -13,14 +13,12 @@ import threading
 import OpenSSL.crypto
 import six
 
-from netlib import tcp, http, certutils, websockets, socks
+from netlib import tcp, certutils, websockets, socks
 from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsException, TcpException, \
     NetlibException
 from netlib.http import http1, http2
 
-import language.http
-import language.websockets
-from . import utils, log
+from . import utils, log, language
 
 import logging
 from netlib.tutils import treq
@@ -43,7 +41,7 @@ class SSLInfo(object):
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
-        for n,i in enumerate(self.certchain):
+        for n, i in enumerate(self.certchain):
             parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
@@ -72,7 +70,6 @@ class SSLInfo(object):
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
         return "\n".join(parts)
-
 
 
 class WebsocketFrameReader(threading.Thread):

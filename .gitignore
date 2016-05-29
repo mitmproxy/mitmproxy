@@ -1,7 +1,7 @@
 .DS_Store
 MANIFEST
 */tmp
-/venv
+/venv*
 *.py[cdo]
 *.swp
 *.swo
@@ -16,3 +16,4 @@ build/
 node_modules
 bower_components
 *.map
+sslkeylogfile.log

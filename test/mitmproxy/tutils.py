@@ -12,7 +12,7 @@ from unittest.case import SkipTest
 
 import netlib.utils
 import netlib.tutils
-from mitmproxy import utils, controller
+from mitmproxy import controller
 from mitmproxy.models import (
     ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow, TCPFlow
 )

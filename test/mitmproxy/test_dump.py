@@ -64,14 +64,14 @@ class TestDumpMaster:
         f = tutils.tflow(req=netlib.tutils.treq(content=content))
         l = Log("connect")
         l.reply = mock.MagicMock()
-        m.handle_log(l)
-        m.handle_clientconnect(f.client_conn)
-        m.handle_serverconnect(f.server_conn)
-        m.handle_request(f)
+        m.log(l)
+        m.clientconnect(f.client_conn)
+        m.serverconnect(f.server_conn)
+        m.request(f)
         if not f.error:
             f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
-            f = m.handle_response(f)
-        m.handle_clientdisconnect(f.client_conn)
+            f = m.response(f)
+        m.clientdisconnect(f.client_conn)
         return f
 
     def _dummy_cycle(self, n, filt, content, **options):
@@ -95,8 +95,8 @@ class TestDumpMaster:
         o = dump.Options(flow_detail=1)
         m = dump.DumpMaster(None, o, outfile=cs)
         f = tutils.tflow(err=True)
-        m.handle_request(f)
-        assert m.handle_error(f)
+        m.request(f)
+        assert m.error(f)
         assert "error" in cs.getvalue()
 
     def test_missing_content(self):
@@ -105,10 +105,10 @@ class TestDumpMaster:
         m = dump.DumpMaster(None, o, outfile=cs)
         f = tutils.tflow()
         f.request.content = None
-        m.handle_request(f)
+        m.request(f)
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
         f.response.content = None
-        m.handle_response(f)
+        m.response(f)
         assert "content missing" in cs.getvalue()
 
     def test_replay(self):
@@ -160,7 +160,7 @@ class TestDumpMaster:
         assert o.verbosity == 2
 
     def test_filter(self):
-        assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)
+        assert "GET" not in self._dummy_cycle(1, "~u foo", "", verbosity=1)
 
     def test_app(self):
         o = dump.Options(app=True)

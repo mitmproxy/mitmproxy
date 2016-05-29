@@ -1,5 +1,7 @@
 import datetime
 
+import six
+
 import netlib.utils
 import netlib.tcp
 import netlib.http
@@ -53,7 +55,7 @@ class LogCtx(object):
                 ]
             )
         if exc_value:
-            raise exc_type, exc_value, traceback
+            six.reraise(exc_type, exc_value, traceback)
 
     def suppress(self):
         self.suppressed = True

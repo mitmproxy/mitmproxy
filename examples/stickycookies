@@ -21,19 +21,19 @@ class StickyMaster(controller.Master):
         except KeyboardInterrupt:
             self.shutdown()
 
-    def handle_request(self, flow):
+    @controller.handler
+    def request(self, flow):
         hid = (flow.request.host, flow.request.port)
         if "cookie" in flow.request.headers:
             self.stickyhosts[hid] = flow.request.headers.get_all("cookie")
         elif hid in self.stickyhosts:
             flow.request.headers.set_all("cookie", self.stickyhosts[hid])
-        flow.reply()
 
-    def handle_response(self, flow):
+    @controller.handler
+    def response(self, flow):
         hid = (flow.request.host, flow.request.port)
         if "set-cookie" in flow.response.headers:
             self.stickyhosts[hid] = flow.response.headers.get_all("set-cookie")
-        flow.reply()
 
 
 config = proxy.ProxyConfig(port=8080)

@@ -2,12 +2,10 @@ from __future__ import absolute_import, print_function, division
 
 import email
 
-import six
 import time
 
 from netlib.http import Headers
 from netlib.http.cookies import CookieAttrs
-from netlib.odict import ODict, ODictCaseless
 from netlib.tutils import raises, tresp
 from .test_message import _test_passthrough_attr, _test_decoded_attr
 
@@ -17,7 +15,7 @@ class TestResponseData(object):
         with raises(ValueError):
             tresp(headers="foobar")
 
-        assert isinstance(tresp(headers=None).headers, Headers)
+        assert isinstance(tresp(headers=()).headers, Headers)
 
 
 class TestResponseCore(object):

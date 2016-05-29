@@ -6,6 +6,7 @@ from .flow import Flow
 
 
 class TCPMessage(Serializable):
+
     def __init__(self, from_client, content, timestamp=None):
         self.content = content
         self.from_client = from_client
@@ -33,6 +34,7 @@ class TCPMessage(Serializable):
 
 
 class TCPFlow(Flow):
+
     """
     A TCPFlow is a simplified representation of a TCP session.
     """

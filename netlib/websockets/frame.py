@@ -14,7 +14,7 @@ from netlib import utils
 MAX_16_BIT_INT = (1 << 16)
 MAX_64_BIT_INT = (1 << 64)
 
-DEFAULT=object()
+DEFAULT = object()
 
 OPCODE = utils.BiDi(
     CONTINUE=0x00,

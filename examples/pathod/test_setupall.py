@@ -3,12 +3,12 @@ from pathod import test
 
 
 class Test:
-
     """
         Testing the requests module with
         a single pathod instance started
         for the test suite.
     """
+
     @classmethod
     def setup_class(cls):
         cls.d = test.Daemon()

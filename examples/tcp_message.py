@@ -10,6 +10,7 @@ mitmdump -T --host --tcp ".*" -q -s examples/tcp_message.py
 '''
 from netlib.utils import clean_bin
 
+
 def tcp_message(ctx, tcp_msg):
     modified_msg = tcp_msg.message.replace("foo", "bar")
 

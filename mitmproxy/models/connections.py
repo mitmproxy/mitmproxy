@@ -10,6 +10,7 @@ from .. import stateobject, utils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
+
     """
     A client connection
 
@@ -21,6 +22,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_ssl_setup: TLS established timestamp
         timestamp_end: Connection end timestamp
     """
+
     def __init__(self, client_connection, address, server):
         # Eventually, this object is restored from state. We don't have a
         # connection then.
@@ -101,6 +103,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
+
     """
     A server connection
 
@@ -117,6 +120,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         timestamp_ssl_setup: TLS established timestamp
         timestamp_end: Connection end timestamp
     """
+
     def __init__(self, address, source_address=None):
         tcp.TCPClient.__init__(self, address, source_address)
 
@@ -182,7 +186,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             timestamp_ssl_setup=None,
             timestamp_end=None,
             via=None
-    ))
+        ))
 
     def copy(self):
         return copy.copy(self)

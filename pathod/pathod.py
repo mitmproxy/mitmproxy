@@ -6,15 +6,11 @@ import sys
 import threading
 import urllib
 
-from netlib import tcp, http, certutils, websockets
+from netlib import tcp, certutils, websockets
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
     TlsException
 
 from . import version, app, language, utils, log, protocols
-import language.http
-import language.actions
-import language.exceptions
-import language.websockets
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -115,7 +111,6 @@ class PathodHandler(tcp.BaseHandler):
         if response_log["disconnect"]:
             return None, response_log
         return self.handle_http_request, response_log
-
 
     def handle_http_request(self, logger):
         """

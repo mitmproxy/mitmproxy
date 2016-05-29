@@ -23,7 +23,8 @@ class ViewPigLatin(contentviews.View):
                 ret = ''
                 for word in words:
                     idx = -1
-                    while word[idx] in string.punctuation and (idx * -1) != len(word): idx -= 1
+                    while word[idx] in string.punctuation and (idx * -1) != len(word):
+                        idx -= 1
                     if word[0].lower() in 'aeiou':
                         if idx == -1:
                             ret += word[0:] + "hay"

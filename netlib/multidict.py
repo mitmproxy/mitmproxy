@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 from abc import ABCMeta, abstractmethod
 
-from typing import Tuple, TypeVar
 
 try:
     from collections.abc import MutableMapping
@@ -17,7 +16,7 @@ from .utils import Serializable
 @six.add_metaclass(ABCMeta)
 class _MultiDict(MutableMapping, Serializable):
     def __repr__(self):
-        fields = tuple(
+        fields = (
             repr(field)
             for field in self.fields
         )
@@ -207,13 +206,15 @@ class _MultiDict(MutableMapping, Serializable):
 
     @classmethod
     def from_state(cls, state):
-        return cls(tuple(x) for x in state)
+        return cls(state)
 
 
 class MultiDict(_MultiDict):
-    def __init__(self, fields=None):
+    def __init__(self, fields=()):
         super(MultiDict, self).__init__()
-        self.fields = tuple(fields) if fields else tuple()  # type: Tuple[Tuple[bytes, bytes], ...]
+        self.fields = tuple(
+            tuple(i) for i in fields
+        )
 
 
 @six.add_metaclass(ABCMeta)

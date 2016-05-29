@@ -1,34 +1,7 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import _ from "lodash"
 import {Key} from "../utils.js";
-
-
-export var Router = {
-    contextTypes: {
-        location: React.PropTypes.object,
-        router: React.PropTypes.object.isRequired
-    },
-    updateLocation: function (pathname, queryUpdate) {
-        if (pathname === undefined) {
-            pathname = this.context.location.pathname;
-        }
-        var query = this.context.location.query;
-        if (queryUpdate !== undefined) {
-            for (var i in queryUpdate) {
-                if (queryUpdate.hasOwnProperty(i)) {
-                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
-                }
-            }
-        }
-        this.context.router.replace({pathname, query});
-    },
-    getQuery: function () {
-        // For whatever reason, react-router always returns the same object, which makes comparing
-        // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _.clone(this.context.location.query);
-    }
-};
+import _ from "lodash"
 
 export var Splitter = React.createClass({
     getDefaultProps: function () {
@@ -171,12 +144,14 @@ export class ToggleInputButton extends React.Component {
                     placeholder={this.props.placeholder}
                     disabled={this.props.checked}
                     value={this.state.txt}
+                    type={this.props.inputType}
                     onChange={e => this.setState({txt: e.target.value})}
                     onKeyDown={e => {if (e.keyCode === Key.ENTER) this.props.onToggleChanged(this.state.txt); e.stopPropagation()}}/>
             </div>
         );
     }
-};
+}
+
 ToggleInputButton.propTypes = {
     name: React.PropTypes.string.isRequired,
     txt: React.PropTypes.string.isRequired,

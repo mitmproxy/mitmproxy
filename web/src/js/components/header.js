@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
-import {Router, ToggleInputButton, ToggleButton} from "./common.js";
+import {ToggleInputButton, ToggleButton} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 import {SettingsState} from "./common.js";
@@ -162,7 +162,6 @@ var FilterInput = React.createClass({
 });
 
 export var MainMenu = React.createClass({
-    mixins: [Router],
     propTypes: {
         settings: React.PropTypes.object.isRequired,
     },
@@ -173,19 +172,19 @@ export var MainMenu = React.createClass({
     onSearchChange: function (val) {
         var d = {};
         d[Query.SEARCH] = val;
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
     },
     onHighlightChange: function (val) {
         var d = {};
         d[Query.HIGHLIGHT] = val;
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
     },
     onInterceptChange: function (val) {
         SettingsActions.update({intercept: val});
     },
     render: function () {
-        var search = this.getQuery()[Query.SEARCH] || "";
-        var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
+        var search = this.props.query[Query.SEARCH] || "";
+        var highlight = this.props.query[Query.HIGHLIGHT] || "";
         var intercept = this.props.settings.intercept || "";
 
         return (
@@ -225,20 +224,19 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [Router],
     toggleEventLog: function () {
         var d = {};
-        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
+        if (this.props.query[Query.SHOW_EVENTLOG]) {
             d[Query.SHOW_EVENTLOG] = undefined;
         } else {
             d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
         }
 
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
         console.log('toggleevent');
     },
     render: function () {
-      var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
+      var showEventLog = this.props.query[Query.SHOW_EVENTLOG];
       return (
           <div>
             <div className="menu-row">
@@ -295,6 +293,7 @@ export const OptionMenu = (props) => {
                 <ToggleInputButton name="stream" placeholder="stream..."
                     checked={Boolean(stream)}
                     txt={stream || ""}
+                    inputType = "number"
                     onToggleChanged={txt => SettingsActions.update({stream: (!stream ? txt : null)})}
                 />
             </div>
@@ -408,7 +407,6 @@ var header_entries = [MainMenu, ViewMenu, OptionMenu /*, ReportsMenu */];
 
 
 export var Header = React.createClass({
-    mixins: [Router],
     propTypes: {
         settings: React.PropTypes.object.isRequired,
     },
@@ -419,7 +417,7 @@ export var Header = React.createClass({
     },
     handleClick: function (active, e) {
         e.preventDefault();
-        this.updateLocation(active.route);
+        this.props.updateLocation(active.route);
         this.setState({active: active});
     },
     render: function () {
@@ -447,7 +445,11 @@ export var Header = React.createClass({
                     {header}
                 </nav>
                 <div className="menu">
-                    <this.state.active settings={this.props.settings}/>
+                    <this.state.active
+                        settings={this.props.settings}
+                        updateLocation={this.props.updateLocation}
+                        query={this.props.query}
+                    />
                 </div>
             </header>
         );

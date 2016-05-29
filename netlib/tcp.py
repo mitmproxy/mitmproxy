@@ -71,6 +71,7 @@ sslversion_choices = {
     "TLSv1_2": (SSL.TLSv1_2_METHOD, SSL_BASIC_OPTIONS),
 }
 
+
 class SSLKeyLogger(object):
 
     def __init__(self, filename):
@@ -900,7 +901,7 @@ class TCPServer(object):
         """
         # If a thread has persisted after interpreter exit, the module might be
         # none.
-        if traceback:
+        if traceback and six:
             exc = six.text_type(traceback.format_exc())
             print(u'-' * 40, file=fp)
             print(

@@ -2,7 +2,9 @@ import os
 
 from netlib.http.http1 import read_response, read_request
 
-from netlib import tcp, websockets, http, tutils
+from netlib import tcp
+from netlib import tutils
+from netlib import websockets
 from netlib.http import status_codes
 from netlib.tutils import treq
 from netlib.exceptions import *

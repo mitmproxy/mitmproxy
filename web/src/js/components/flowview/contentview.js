@@ -4,11 +4,15 @@ import _ from "lodash";
 import {MessageUtils} from "../../flow/utils.js";
 import {formatSize} from "../../utils.js";
 
-var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
 var ViewImage = React.createClass({
+    propTypes: {
+        flow: React.PropTypes.object.isRequired,
+        message: React.PropTypes.object.isRequired,
+    },
     statics: {
+        regex: /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i,
         matches: function (message) {
-            return image_regex.test(MessageUtils.getContentType(message));
+            return ViewImage.regex.test(MessageUtils.getContentType(message));
         }
     },
     render: function () {
@@ -19,7 +23,11 @@ var ViewImage = React.createClass({
     }
 });
 
-var RawMixin = {
+var ContentLoader = React.createClass({
+    propTypes: {
+        flow: React.PropTypes.object.isRequired,
+        message: React.PropTypes.object.isRequired,
+    },
     getInitialState: function () {
         return {
             content: undefined,
@@ -66,41 +74,54 @@ var RawMixin = {
                 <i className="fa fa-spinner fa-spin"></i>
             </div>;
         }
-        return this.renderContent();
+        return React.cloneElement(this.props.children, {
+            content: this.state.content
+        })
     }
-};
+});
 
 var ViewRaw = React.createClass({
-    mixins: [RawMixin],
+    propTypes: {
+        content: React.PropTypes.string.isRequired,
+    },
     statics: {
+        textView: true,
         matches: function (message) {
             return true;
         }
     },
-    renderContent: function () {
-        return <pre>{this.state.content}</pre>;
+    render: function () {
+        return <pre>{this.props.content}</pre>;
     }
 });
 
-var json_regex = /^application\/json$/i;
 var ViewJSON = React.createClass({
-    mixins: [RawMixin],
+    propTypes: {
+        content: React.PropTypes.string.isRequired,
+    },
     statics: {
+        textView: true,
+        regex: /^application\/json$/i,
         matches: function (message) {
-            return json_regex.test(MessageUtils.getContentType(message));
+            return ViewJSON.regex.test(MessageUtils.getContentType(message));
         }
     },
-    renderContent: function () {
-        var json = this.state.content;
+    render: function () {
+        var json = this.props.content;
         try {
             json = JSON.stringify(JSON.parse(json), null, 2);
         } catch (e) {
+            // @noop
         }
         return <pre>{json}</pre>;
     }
 });
 
 var ViewAuto = React.createClass({
+    propTypes: {
+        message: React.PropTypes.object.isRequired,
+        flow: React.PropTypes.object.isRequired,
+    },
     statics: {
         matches: function () {
             return false; // don't match itself
@@ -115,13 +136,17 @@ var ViewAuto = React.createClass({
         }
     },
     render: function () {
+        var { message, flow } = this.props
         var View = ViewAuto.findView(this.props.message);
-        return <View {...this.props}/>;
+        if (View.textView) {
+            return <ContentLoader message={message} flow={flow}><View content="" /></ContentLoader>
+        } else {
+            return <View message={message} flow={flow} />
+        }
     }
 });
 
 var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
-
 
 var ContentEmpty = React.createClass({
     render: function () {
@@ -210,6 +235,7 @@ var ContentView = React.createClass({
         }
     },
     render: function () {
+        var { flow, message } = this.props
         var message = this.props.message;
         if (message.contentLength === 0) {
             return <ContentEmpty {...this.props}/>;
@@ -222,7 +248,11 @@ var ContentView = React.createClass({
         var downloadUrl = MessageUtils.getContentURL(this.props.flow, message);
 
         return <div>
-            <this.state.View {...this.props} />
+            {this.state.View.textView ? (
+                <ContentLoader flow={flow} message={message}><this.state.View content="" /></ContentLoader>
+            ) : (
+                <this.state.View flow={flow} message={message} />
+            )}
             <div className="view-options text-center">
                 <ViewSelector selectView={this.selectView} active={this.state.View} message={message}/>
             &nbsp;

@@ -10,7 +10,6 @@ import os.path
 import six
 
 import OpenSSL
-from . import version
 
 PYOPENSSL_MIN_VERSION = (0, 15)
 

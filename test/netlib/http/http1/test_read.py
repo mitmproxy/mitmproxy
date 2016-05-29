@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, division
 from io import BytesIO
-import textwrap
 from mock import Mock
 from netlib.exceptions import HttpException, HttpSyntaxException, HttpReadDisconnect, TcpDisconnect
 from netlib.http import Headers

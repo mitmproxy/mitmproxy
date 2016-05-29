@@ -147,7 +147,7 @@ class UsernamePasswordAuth(object):
 
 
 class UsernamePasswordAuthResponse(object):
-    __slots__  = ("ver", "status")
+    __slots__ = ("ver", "status")
 
     def __init__(self, ver, status):
         self.ver = ver

@@ -4,7 +4,6 @@ from six.moves import cStringIO as StringIO
 import mock
 
 import netlib.utils
-from netlib import odict
 from netlib.http import Headers
 from mitmproxy import filt, controller, tnetstring, flow
 from mitmproxy.exceptions import FlowReadException, ScriptException
@@ -54,7 +53,7 @@ class TestStickyCookieState:
         assert s.domain_match("www.google.com", ".google.com")
         assert s.domain_match("google.com", ".google.com")
 
-    def test_handle_response(self):
+    def test_response(self):
         c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; "\
             "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
 
@@ -101,7 +100,7 @@ class TestStickyCookieState:
         assert len(s.jar[googlekey].keys()) == 1
         assert s.jar[googlekey]["somecookie"].items()[0][1] == "newvalue"
 
-    def test_handle_request(self):
+    def test_request(self):
         s, f = self._response("SSID=mooo", "www.google.com")
         assert "cookie" not in f.request.headers
         s.handle_request(f)
@@ -110,7 +109,7 @@ class TestStickyCookieState:
 
 class TestStickyAuthState:
 
-    def test_handle_response(self):
+    def test_response(self):
         s = flow.StickyAuthState(filt.parse(".*"))
         f = tutils.tflow(resp=True)
         f.request.headers["authorization"] = "foo"
@@ -461,25 +460,20 @@ class TestFlow(object):
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow()
         f.intercept(mock.Mock())
-        assert not f.reply.acked
         f.kill(fm)
-        assert f.reply.acked
+        for i in s.view:
+            assert "killed" in str(i.error)
 
     def test_killall(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
 
         f = tutils.tflow()
-        fm.handle_request(f)
+        f.intercept(fm)
 
-        f = tutils.tflow()
-        fm.handle_request(f)
-
-        for i in s.view:
-            assert not i.reply.acked
         s.killall(fm)
         for i in s.view:
-            assert i.reply.acked
+            assert "killed" in str(i.error)
 
     def test_accept_intercept(self):
         f = tutils.tflow()
@@ -804,8 +798,8 @@ class TestFlowMaster:
         fm = flow.FlowMaster(None, s)
         fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
         f = tutils.tflow()
-        fm.handle_clientconnect(f.client_conn)
-        assert fm.handle_request(f)
+        fm.clientconnect(f.client_conn)
+        assert fm.request(f)
 
     def test_script(self):
         s = flow.State()
@@ -813,18 +807,18 @@ class TestFlowMaster:
         fm.load_script(tutils.test_data.path("scripts/all.py"))
         f = tutils.tflow(resp=True)
 
-        fm.handle_clientconnect(f.client_conn)
+        fm.clientconnect(f.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        fm.handle_serverconnect(f.server_conn)
+        fm.serverconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"
-        fm.handle_request(f)
+        fm.request(f)
         assert fm.scripts[0].ns["log"][-1] == "request"
-        fm.handle_response(f)
+        fm.response(f)
         assert fm.scripts[0].ns["log"][-1] == "response"
         # load second script
         fm.load_script(tutils.test_data.path("scripts/all.py"))
         assert len(fm.scripts) == 2
-        fm.handle_clientdisconnect(f.server_conn)
+        fm.clientdisconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
         assert fm.scripts[1].ns["log"][-1] == "clientdisconnect"
 
@@ -834,7 +828,7 @@ class TestFlowMaster:
         fm.load_script(tutils.test_data.path("scripts/all.py"))
 
         f.error = tutils.terr()
-        fm.handle_error(f)
+        fm.error(f)
         assert fm.scripts[0].ns["log"][-1] == "error"
 
     def test_duplicate_flow(self):
@@ -859,21 +853,20 @@ class TestFlowMaster:
         fm.anticache = True
         fm.anticomp = True
         f = tutils.tflow(req=None)
-        fm.handle_clientconnect(f.client_conn)
+        fm.clientconnect(f.client_conn)
         f.request = HTTPRequest.wrap(netlib.tutils.treq())
-        fm.handle_request(f)
+        fm.request(f)
         assert s.flow_count() == 1
 
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
-        fm.handle_response(f)
-        assert not fm.handle_response(None)
+        fm.response(f)
         assert s.flow_count() == 1
 
-        fm.handle_clientdisconnect(f.client_conn)
+        fm.clientdisconnect(f.client_conn)
 
         f.error = Error("msg")
         f.error.reply = controller.DummyReply()
-        fm.handle_error(f)
+        fm.error(f)
 
         fm.load_script(tutils.test_data.path("scripts/a.py"))
         fm.shutdown()
@@ -902,7 +895,7 @@ class TestFlowMaster:
         assert fm.state.flow_count()
 
         f.error = Error("error")
-        fm.handle_error(f)
+        fm.error(f)
 
     def test_server_playback(self):
         s = flow.State()
@@ -983,12 +976,12 @@ class TestFlowMaster:
         fm.set_stickycookie(".*")
         f = tutils.tflow(resp=True)
         f.response.headers["set-cookie"] = "foo=bar"
-        fm.handle_request(f)
-        fm.handle_response(f)
+        fm.request(f)
+        fm.response(f)
         assert fm.stickycookie_state.jar
         assert not "cookie" in f.request.headers
         f = f.copy()
-        fm.handle_request(f)
+        fm.request(f)
         assert f.request.headers["cookie"] == "foo=bar"
 
     def test_stickyauth(self):
@@ -1003,12 +996,12 @@ class TestFlowMaster:
         fm.set_stickyauth(".*")
         f = tutils.tflow(resp=True)
         f.request.headers["authorization"] = "foo"
-        fm.handle_request(f)
+        fm.request(f)
 
         f = tutils.tflow(resp=True)
         assert fm.stickyauth_state.hosts
         assert not "authorization" in f.request.headers
-        fm.handle_request(f)
+        fm.request(f)
         assert f.request.headers["authorization"] == "foo"
 
     def test_stream(self):
@@ -1024,15 +1017,15 @@ class TestFlowMaster:
             f = tutils.tflow(resp=True)
 
             fm.start_stream(file(p, "ab"), None)
-            fm.handle_request(f)
-            fm.handle_response(f)
+            fm.request(f)
+            fm.response(f)
             fm.stop_stream()
 
             assert r()[0].response
 
             f = tutils.tflow()
             fm.start_stream(file(p, "ab"), None)
-            fm.handle_request(f)
+            fm.request(f)
             fm.shutdown()
 
             assert not r()[1].response
