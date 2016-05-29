@@ -152,7 +152,7 @@ class Flow(stateobject.StateObject):
         self.error = Error("Connection killed")
         self.intercepted = False
         self.reply(Kill)
-        master.handle_error(self)
+        master.error(self)
 
     def intercept(self, master):
         """

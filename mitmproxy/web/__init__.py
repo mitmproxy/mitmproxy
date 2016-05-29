@@ -197,17 +197,17 @@ class WebMaster(flow.FlowMaster):
             f.reply.take()
 
     @controller.handler
-    def handle_request(self, f):
+    def request(self, f):
         super(WebMaster, self).handle_request(f)
         self._process_flow(f)
 
     @controller.handler
-    def handle_response(self, f):
+    def response(self, f):
         super(WebMaster, self).handle_response(f)
         self._process_flow(f)
 
     @controller.handler
-    def handle_error(self, f):
+    def error(self, f):
         super(WebMaster, self).handle_error(f)
         self._process_flow(f)
 

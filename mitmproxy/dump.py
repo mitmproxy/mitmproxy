@@ -10,7 +10,6 @@ from . import flow, filt, contentviews, controller
 from .exceptions import ContentViewException, FlowReadException, ScriptException
 
 
-
 class DumpError(Exception):
     pass
 
@@ -326,22 +325,25 @@ class DumpMaster(flow.FlowMaster):
 
         self.echo_flow(f)
 
-    def handle_request(self, f):
-        flow.FlowMaster.handle_request(self, f)
+    @controller.handler
+    def request(self, f):
+        flow.FlowMaster.request(self, f)
         self.state.delete_flow(f)
         if f:
             f.reply()
         return f
 
-    def handle_response(self, f):
-        flow.FlowMaster.handle_response(self, f)
+    @controller.handler
+    def response(self, f):
+        flow.FlowMaster.response(self, f)
         if f:
             f.reply()
             self._process_flow(f)
         return f
 
-    def handle_error(self, f):
-        flow.FlowMaster.handle_error(self, f)
+    @controller.handler
+    def error(self, f):
+        flow.FlowMaster.error(self, f)
         if f:
             self._process_flow(f)
         return f

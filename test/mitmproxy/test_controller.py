@@ -18,7 +18,7 @@ class TestMaster(object):
     def test_simple(self):
         class DummyMaster(controller.Master):
             @controller.handler
-            def handle_log(self, _):
+            def log(self, _):
                 m.should_exit.set()
 
             def tick(self, timeout):

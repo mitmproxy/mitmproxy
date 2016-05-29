@@ -191,8 +191,8 @@ class TcpMixin:
             assert i_cert == i2_cert == n_cert
 
         # Make sure that TCP messages are in the event log.
-        assert any("305" in m for m in self.master.log)
-        assert any("306" in m for m in self.master.log)
+        assert any("305" in m for m in self.master.tlog)
+        assert any("306" in m for m in self.master.tlog)
 
 
 class AppMixin:
@@ -261,7 +261,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         p = self.pathoc()
         assert p.request(req % self.server.urlbase)
         assert p.request(req % self.server2.urlbase)
-        assert switched(self.proxy.log)
+        assert switched(self.proxy.tlog)
 
     def test_blank_leading_line(self):
         p = self.pathoc()
@@ -500,7 +500,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     def test_sni(self):
         p = self.pathoc(ssl=True, sni="example.com")
         assert p.request("get:'/p/200'").status_code == 200
-        assert all("Error in handle_sni" not in msg for msg in self.proxy.log)
+        assert all("Error in handle_sni" not in msg for msg in self.proxy.tlog)
 
     def test_http(self):
         p = self.pathoc(ssl=False)
@@ -625,7 +625,7 @@ class MasterRedirectRequest(tservers.TestMaster):
     redirect_port = None  # Set by TestRedirectRequest
 
     @controller.handler
-    def handle_request(self, f):
+    def request(self, f):
         if f.request.path == "/p/201":
 
             # This part should have no impact, but it should also not cause any exceptions.
@@ -636,13 +636,13 @@ class MasterRedirectRequest(tservers.TestMaster):
 
             # This is the actual redirection.
             f.request.port = self.redirect_port
-        super(MasterRedirectRequest, self).handle_request(f)
+        super(MasterRedirectRequest, self).request(f)
 
     @controller.handler
-    def handle_response(self, f):
+    def response(self, f):
         f.response.content = str(f.client_conn.address.port)
         f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
-        super(MasterRedirectRequest, self).handle_response(f)
+        super(MasterRedirectRequest, self).response(f)
 
 
 class TestRedirectRequest(tservers.HTTPProxyTest):
@@ -693,7 +693,7 @@ class MasterStreamRequest(tservers.TestMaster):
         Enables the stream flag on the flow for all requests
     """
     @controller.handler
-    def handle_responseheaders(self, f):
+    def responseheaders(self, f):
         f.response.stream = True
 
 
@@ -742,7 +742,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 
 class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
-    def handle_request(self, f):
+    def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         f.reply(resp)
 
@@ -763,14 +763,14 @@ class TestServerConnect(tservers.HTTPProxyTest):
     def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no_upstream_cert should not connect to an upstream server"""
         assert self.pathod("200").status_code == 200
-        for msg in self.proxy.tmaster.log:
+        for msg in self.proxy.tmaster.tlog:
             assert "serverconnect" not in msg
 
 
 class MasterKillRequest(tservers.TestMaster):
 
     @controller.handler
-    def handle_request(self, f):
+    def request(self, f):
         f.reply(Kill)
 
 
@@ -787,7 +787,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
 class MasterKillResponse(tservers.TestMaster):
 
     @controller.handler
-    def handle_response(self, f):
+    def response(self, f):
         f.reply(Kill)
 
 
@@ -817,7 +817,7 @@ class TestTransparentResolveError(tservers.TransparentProxyTest):
 class MasterIncomplete(tservers.TestMaster):
 
     @controller.handler
-    def handle_request(self, f):
+    def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = None
         f.reply(resp)
@@ -949,14 +949,14 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 
         kill_requests(
             self.chain[1].tmaster,
-            "handle_request",
+            "request",
             exclude = [
                 # fail first request
                 2,  # allow second request
             ]
         )
 
-        kill_requests(self.chain[0].tmaster, "handle_request",
+        kill_requests(self.chain[0].tmaster, "request",
                       exclude=[
                           1,  # CONNECT
                           # fail first request
