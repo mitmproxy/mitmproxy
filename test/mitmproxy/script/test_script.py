@@ -21,9 +21,9 @@ class TestParseCommand:
 
     def test_parse_args(self):
         with tutils.chdir(tutils.test_data.dirname):
-            assert Script.parse_command("scripts/a.py") == ["scripts/a.py"]
-            assert Script.parse_command("scripts/a.py foo bar") == ["scripts/a.py", "foo", "bar"]
-            assert Script.parse_command("scripts/a.py 'foo bar'") == ["scripts/a.py", "foo bar"]
+            assert Script.parse_command("data/scripts/a.py") == ["data/scripts/a.py"]
+            assert Script.parse_command("data/scripts/a.py foo bar") == ["data/scripts/a.py", "foo", "bar"]
+            assert Script.parse_command("data/scripts/a.py 'foo bar'") == ["data/scripts/a.py", "foo bar"]
 
     @tutils.skip_not_windows
     def test_parse_windows(self):
@@ -33,7 +33,7 @@ class TestParseCommand:
 
 
 def test_simple():
-    with tutils.chdir(tutils.test_data.path("scripts")):
+    with tutils.chdir(tutils.test_data.path("data/scripts")):
         s = Script("a.py --var 42", None)
         assert s.filename == "a.py"
         assert s.ns is None
@@ -55,7 +55,7 @@ def test_simple():
 
 
 def test_script_exception():
-    with tutils.chdir(tutils.test_data.path("scripts")):
+    with tutils.chdir(tutils.test_data.path("data/scripts")):
         s = Script("syntaxerr.py", None)
         with tutils.raises(ScriptException):
             s.load()

@@ -7,9 +7,13 @@ import pyparsing as pp
 
 from . import http, http2, websockets, writer, exceptions
 
-from .exceptions import *
+from .exceptions import RenderError, FileAccessDenied, ParseException
 from .base import Settings
-assert Settings  # prevent pyflakes from messing with this
+
+__all__ = [
+    "RenderError", "FileAccessDenied", "ParseException",
+    "Settings",
+]
 
 
 def expand(msg):

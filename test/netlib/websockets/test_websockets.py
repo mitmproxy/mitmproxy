@@ -120,8 +120,8 @@ class TestWebSockets(tservers.ServerTestBase):
           default builder should always generate valid frames
         """
         msg = self.random_bytes()
-        client_frame = websockets.Frame.default(msg, from_client=True)
-        server_frame = websockets.Frame.default(msg, from_client=False)
+        assert websockets.Frame.default(msg, from_client=True)
+        assert websockets.Frame.default(msg, from_client=False)
 
     def test_serialization_bijection(self):
         """

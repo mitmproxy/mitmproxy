@@ -113,11 +113,10 @@ class TestProcessProxyOptions:
                 "nonexistent")
 
     def test_certs(self):
-        with tutils.tmpdir() as cadir:
-            self.assert_noerr(
-                "--cert",
-                tutils.test_data.path("data/testkey.pem"))
-            self.assert_err("does not exist", "--cert", "nonexistent")
+        self.assert_noerr(
+            "--cert",
+            tutils.test_data.path("data/testkey.pem"))
+        self.assert_err("does not exist", "--cert", "nonexistent")
 
     def test_auth(self):
         p = self.assert_noerr("--nonanonymous")

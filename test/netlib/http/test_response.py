@@ -59,7 +59,8 @@ class TestResponseUtils(object):
 
     def test_get_cookies_with_parameters(self):
         resp = tresp()
-        resp.headers = Headers(set_cookie="cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly")
+        cookie = "cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly"
+        resp.headers = Headers(set_cookie=cookie)
         result = resp.cookies
         assert len(result) == 1
         assert "cookiename" in result

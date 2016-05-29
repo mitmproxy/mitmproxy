@@ -4,7 +4,7 @@ import netlib.tutils
 from mitmproxy import console
 from mitmproxy.console import common
 
-from . import tutils
+from .. import tutils
 
 
 class TestConsoleState:

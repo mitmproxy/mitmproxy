@@ -240,7 +240,7 @@ class Request(Message):
         query = utils.urlencode(value)
         scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
         _, _, _, self.path = utils.parse_url(
-                urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
+            urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     @query.setter
     def query(self, value):
@@ -288,7 +288,7 @@ class Request(Message):
         path = "/" + "/".join(components)
         scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
         _, _, _, self.path = utils.parse_url(
-                urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
+            urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def anticache(self):
         """

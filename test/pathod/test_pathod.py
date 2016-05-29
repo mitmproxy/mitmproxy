@@ -51,7 +51,7 @@ class TestNoApi(tutils.DaemonTests):
         assert self.getpath("/log").status_code == 404
         r = self.getpath("/")
         assert r.status_code == 200
-        assert not "Log" in r.content
+        assert "Log" not in r.content
 
 
 class TestNotAfterConnect(tutils.DaemonTests):
@@ -110,7 +110,7 @@ class TestHexdump(tutils.DaemonTests):
     hexdump = True
 
     def test_hexdump(self):
-        r = self.get(r"200:b'\xf0'")
+        assert self.get(r"200:b'\xf0'")
 
 
 class TestNocraft(tutils.DaemonTests):
@@ -125,8 +125,8 @@ class TestNocraft(tutils.DaemonTests):
 class CommonTests(tutils.DaemonTests):
 
     def test_binarydata(self):
-        r = self.get(r"200:b'\xf0'")
-        l = self.d.last_log()
+        assert self.get(r"200:b'\xf0'")
+        assert self.d.last_log()
         # FIXME: Other binary data elements
 
     @pytest.mark.skip(reason="race condition")
@@ -147,7 +147,7 @@ class CommonTests(tutils.DaemonTests):
     def test_logs(self):
         assert self.d.clear_log()
         assert not self.d.last_log()
-        rsp = self.get("202:da")
+        assert self.get("202:da")
         assert len(self.d.log()) == 1
         assert self.d.clear_log()
         assert len(self.d.log()) == 0

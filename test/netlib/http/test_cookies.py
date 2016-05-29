@@ -184,7 +184,7 @@ def test_parse_set_cookie_pairs():
         assert ret == lst
         s2 = cookies._format_set_cookie_pairs(ret)
         ret2 = cookies._parse_set_cookie_pairs(s2)
-        assert  ret2 == lst
+        assert ret2 == lst
 
 
 def test_parse_set_cookie_header():

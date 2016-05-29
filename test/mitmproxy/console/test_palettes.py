@@ -1,10 +1,8 @@
-import os
-from unittest.case import SkipTest
-if os.name == "nt":
-    raise SkipTest("Skipped on Windows.")
 import mitmproxy.console.palettes as palettes
+from .. import tutils
 
 
+@tutils.skip_appveyor
 class TestPalette:
 
     def test_helptext(self):

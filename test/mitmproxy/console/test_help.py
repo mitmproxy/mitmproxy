@@ -1,11 +1,8 @@
-import os
-from unittest.case import SkipTest
-if os.name == "nt":
-    raise SkipTest("Skipped on Windows.")
-
 import mitmproxy.console.help as help
+from .. import tutils
 
 
+@tutils.skip_appveyor
 class TestHelp:
 
     def test_helptext(self):

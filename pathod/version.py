@@ -4,3 +4,10 @@ from netlib.version import VERSION, IVERSION
 
 NAME = "pathod"
 NAMEVERSION = NAME + " " + VERSION
+
+__all__ = [
+    "NAME",
+    "NAMEVERSION",
+    "VERSION",
+    "IVERSION",
+]

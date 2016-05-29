@@ -174,7 +174,7 @@ def handler(f):
             raise exceptions.ControlException("Handler takes one argument: a message")
 
         if not hasattr(message, "reply"):
-            raise exceptions.ControlException("Message %s has no reply attribute"%message)
+            raise exceptions.ControlException("Message %s has no reply attribute" % message)
 
         # The following ensures that inheritance with wrapped handlers in the
         # base class works. If we're the first handler, then responsibility for

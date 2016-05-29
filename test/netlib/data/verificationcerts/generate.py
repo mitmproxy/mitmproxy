@@ -64,5 +64,3 @@ do("openssl req -x509 -new -nodes -batch "
    "-days 1024 "
    "-out self-signed.crt".format(SUBJECT)
    )
-
-

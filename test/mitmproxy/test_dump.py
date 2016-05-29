@@ -218,7 +218,7 @@ class TestDumpMaster:
     def test_script(self):
         ret = self._dummy_cycle(
             1, None, "",
-            scripts=[tutils.test_data.path("scripts/all.py")], verbosity=1
+            scripts=[tutils.test_data.path("data/scripts/all.py")], verbosity=1
         )
         assert "XCLIENTCONNECT" in ret
         assert "XSERVERCONNECT" in ret

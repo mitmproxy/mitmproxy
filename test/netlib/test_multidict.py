@@ -49,7 +49,7 @@ class TestMultiDict(object):
         assert md["foo"] == "bar"
 
         with tutils.raises(KeyError):
-            _ = md["bar"]
+            md["bar"]
 
         md_multi = TMultiDict(
             [("foo", "a"), ("foo", "b")]

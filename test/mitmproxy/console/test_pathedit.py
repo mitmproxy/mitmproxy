@@ -2,7 +2,7 @@ import os
 from os.path import normpath
 from mitmproxy.console import pathedit
 
-from . import tutils
+from .. import tutils
 
 
 class TestPathCompleter:

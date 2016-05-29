@@ -4,3 +4,10 @@ from netlib.version import VERSION, IVERSION
 
 NAME = "mitmproxy"
 NAMEVERSION = NAME + " " + VERSION
+
+__all__ = [
+    "NAME",
+    "NAMEVERSION",
+    "VERSION",
+    "IVERSION",
+]

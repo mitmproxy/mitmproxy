@@ -1,6 +1,8 @@
 # coding=utf-8
+
 from netlib import utils, tutils
 from netlib.http import Headers
+
 
 def test_bidi():
     b = utils.BiDi(a=1, b=2)

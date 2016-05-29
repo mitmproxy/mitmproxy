@@ -68,9 +68,9 @@ class TestInject:
     def test_spec(self):
         e = actions.InjectAt.expr()
         v = e.parseString("i0,'foo'")[0]
-        assert v.spec() == 'i0,"foo"'
+        assert v.spec() == "i0,'foo'"
 
-    def test_spec(self):
+    def test_spec2(self):
         e = actions.InjectAt.expr()
         v = e.parseString("i0,@100")[0]
         v2 = v.freeze({})

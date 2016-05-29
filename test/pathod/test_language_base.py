@@ -178,7 +178,7 @@ class TestMisc:
         assert base.TokValue.parseString('"val"')[0].val == "val"
         assert base.TokValue.parseString('"\'val\'"')[0].val == "'val'"
 
-    def test_value(self):
+    def test_value2(self):
         class TT(base.Value):
             preamble = "m"
         e = TT.expr()

@@ -78,7 +78,7 @@ class TestBasicProxyAuth:
         assert ba.authenticate(headers)
 
         ba.clean(headers)
-        assert not ba.AUTH_HEADER in headers
+        assert ba.AUTH_HEADER not in headers
 
         headers[ba.AUTH_HEADER] = ""
         assert not ba.authenticate(headers)

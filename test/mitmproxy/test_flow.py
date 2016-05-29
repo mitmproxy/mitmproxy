@@ -761,13 +761,13 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
 
-        fm.load_script(tutils.test_data.path("scripts/a.py"))
-        fm.load_script(tutils.test_data.path("scripts/a.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
         fm.unload_scripts()
         with tutils.raises(ScriptException):
             fm.load_script("nonexistent")
         try:
-            fm.load_script(tutils.test_data.path("scripts/starterr.py"))
+            fm.load_script(tutils.test_data.path("data/scripts/starterr.py"))
         except ScriptException as e:
             assert "ValueError" in str(e)
         assert len(fm.scripts) == 0
@@ -796,7 +796,7 @@ class TestFlowMaster:
     def test_script_reqerr(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/reqerr.py"))
         f = tutils.tflow()
         fm.clientconnect(f.client_conn)
         assert fm.request(f)
@@ -804,7 +804,7 @@ class TestFlowMaster:
     def test_script(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
         f = tutils.tflow(resp=True)
 
         fm.clientconnect(f.client_conn)
@@ -816,7 +816,7 @@ class TestFlowMaster:
         fm.response(f)
         assert fm.scripts[0].ns["log"][-1] == "response"
         # load second script
-        fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
         assert len(fm.scripts) == 2
         fm.clientdisconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
@@ -825,7 +825,7 @@ class TestFlowMaster:
         # unload first script
         fm.unload_scripts()
         assert len(fm.scripts) == 0
-        fm.load_script(tutils.test_data.path("scripts/all.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
 
         f.error = tutils.terr()
         fm.error(f)
@@ -868,7 +868,7 @@ class TestFlowMaster:
         f.error.reply = controller.DummyReply()
         fm.error(f)
 
-        fm.load_script(tutils.test_data.path("scripts/a.py"))
+        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
         fm.shutdown()
 
     def test_client_playback(self):

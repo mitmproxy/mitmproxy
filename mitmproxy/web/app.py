@@ -112,7 +112,8 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 class IndexHandler(RequestHandler):
 
     def get(self):
-        _ = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
+        token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
+        assert token
         self.render("index.html")
 
 

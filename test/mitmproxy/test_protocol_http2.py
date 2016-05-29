@@ -164,12 +164,21 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
             assert ('client-foo', 'client-bar-1') in event.headers
             assert ('client-foo', 'client-bar-2') in event.headers
 
-            h2_conn.send_headers(event.stream_id, [
-                (':status', '200'),
-                ('server-foo', 'server-bar'),
-                ('föo', 'bär'),
-                ('X-Stream-ID', str(event.stream_id)),
-            ])
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+                h2_conn.send_headers(event.stream_id, [
+                    (':status', '200'),
+                    ('server-foo', 'server-bar'),
+                    ('föo', 'bär'),
+                    ('X-Stream-ID', str(event.stream_id)),
+                ])
             h2_conn.send_data(event.stream_id, b'foobar')
             h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
@@ -433,6 +442,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
+
 
 @requires_alpn
 class TestConnectionLost(_Http2TestBase, _Http2ServerBase):

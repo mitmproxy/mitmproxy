@@ -286,7 +286,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         self.master.set_stream_large_bodies(None)
 
     def test_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("scripts/stream_modify.py"))
+        self.master.load_script(tutils.test_data.path("data/scripts/stream_modify.py"))
         d = self.pathod('200:b"foo"')
         assert d.content == "bar"
         self.master.unload_scripts()
@@ -511,7 +511,7 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
     def test_tcp_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("scripts/tcp_stream_modify.py"))
+        self.master.load_script(tutils.test_data.path("data/scripts/tcp_stream_modify.py"))
 
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')

@@ -97,7 +97,7 @@ class Headers(MultiDict):
         headers = {
             _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)
             for name, value in six.iteritems(headers)
-            }
+        }
         self.update(headers)
 
     @staticmethod
