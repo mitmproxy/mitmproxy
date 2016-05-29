@@ -283,8 +283,6 @@ class Settings(RequestHandler):
 
     def get(self):
 
-        print(self.master.stream_large_bodies[1])
-
         self.write(dict(
             data=dict(
                 version=version.VERSION,
@@ -298,7 +296,7 @@ class Settings(RequestHandler):
                 anticomp=self.master.options.anticomp,
                 stickyauth=self.master.stickyauth_txt,
                 stickycookie=self.master.stickycookie_txt,
-                stream=self.master.stream_large_bodies
+                stream= self.master.stream_large_bodies.max_size if self.master.stream_large_bodies else False
             )
         ))
 

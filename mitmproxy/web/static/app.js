@@ -2967,6 +2967,8 @@ var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
+var _utils = require("../utils.js");
+
 var _common = require("./common.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -3050,12 +3052,12 @@ function Footer(_ref) {
             "span",
             { className: "label label-success" },
             "stream: ",
-            stream
+            (0, _utils.formatSize)(stream)
         )
     );
 }
 
-},{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

@@ -1,4 +1,5 @@
 import React from "react";
+import {formatSize} from "../utils.js"
 import {SettingsState} from "./common.js";
 
 Footer.propTypes = {
@@ -40,7 +41,7 @@ export default function Footer({ settings }) {
                 <span className="label label-success">stickycookie: {stickycookie}</span>
             )}
             {stream && (
-                <span className="label label-success">stream: {stream}</span>
+                <span className="label label-success">stream: {formatSize(stream)}</span>
             )}
 
 
