@@ -368,6 +368,18 @@ var FileMenu = React.createClass({
                             New
                         </a>
                     </li>
+                    <li>
+                        <a href="#" onClick={this.handleOpenClick}>
+                            <i className="fa fa-fw fa-folder-open"></i>
+                            Open...
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onClick={this.handleSaveClick}>
+                            <i className="fa fa-fw fa-floppy-o"></i>
+                            Save...
+                        </a>
+                    </li>
                     <li role="presentation" className="divider"></li>
                     <li>
                         <a href="http://mitm.it/" target="_blank">
