@@ -3,7 +3,7 @@ import re
 
 import netlib.tutils
 from netlib.http import Headers
-from mitmproxy import flow_export
+from mitmproxy.flow import export  # heh
 from . import tutils
 
 
@@ -36,38 +36,38 @@ class TestExportCurlCommand():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
         result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address/path?a=foo&a=bar&b=baz'"""
-        assert flow_export.curl_command(flow) == result
+        assert export.curl_command(flow) == result
 
     def test_post(self):
         flow = tutils.tflow(req=req_post())
         result = """curl -X POST 'http://address/path' --data-binary 'content'"""
-        assert flow_export.curl_command(flow) == result
+        assert export.curl_command(flow) == result
 
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
         result = """curl -H 'header:qvalue' -H 'content-length:7' -X PATCH 'http://address/path?query=param' --data-binary 'content'"""
-        assert flow_export.curl_command(flow) == result
+        assert export.curl_command(flow) == result
 
 
 class TestExportPythonCode():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
-        python_equals("data/test_flow_export/python_get.py", flow_export.python_code(flow))
+        python_equals("data/test_flow_export/python_get.py", export.python_code(flow))
 
     def test_post(self):
         flow = tutils.tflow(req=req_post())
-        python_equals("data/test_flow_export/python_post.py", flow_export.python_code(flow))
+        python_equals("data/test_flow_export/python_post.py", export.python_code(flow))
 
     def test_post_json(self):
         p = req_post()
         p.content = '{"name": "example", "email": "example@example.com"}'
         p.headers = Headers(content_type="application/json")
         flow = tutils.tflow(req=p)
-        python_equals("data/test_flow_export/python_post_json.py", flow_export.python_code(flow))
+        python_equals("data/test_flow_export/python_post_json.py", export.python_code(flow))
 
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
-        python_equals("data/test_flow_export/python_patch.py", flow_export.python_code(flow))
+        python_equals("data/test_flow_export/python_patch.py", export.python_code(flow))
 
 
 class TestRawRequest():
@@ -80,7 +80,7 @@ class TestRawRequest():
             host: address:22\r
             \r
         """).strip(" ").lstrip()
-        assert flow_export.raw_request(flow) == result
+        assert export.raw_request(flow) == result
 
     def test_post(self):
         flow = tutils.tflow(req=req_post())
@@ -90,7 +90,7 @@ class TestRawRequest():
             \r
             content
         """).strip()
-        assert flow_export.raw_request(flow) == result
+        assert export.raw_request(flow) == result
 
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
@@ -102,54 +102,54 @@ class TestRawRequest():
             \r
             content
         """).strip()
-        assert flow_export.raw_request(flow) == result
+        assert export.raw_request(flow) == result
 
 
 class TestExportLocustCode():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
-        python_equals("data/test_flow_export/locust_get.py", flow_export.locust_code(flow))
+        python_equals("data/test_flow_export/locust_get.py", export.locust_code(flow))
 
     def test_post(self):
         p = req_post()
         p.content = '''content'''
         p.headers = ''
         flow = tutils.tflow(req=p)
-        python_equals("data/test_flow_export/locust_post.py", flow_export.locust_code(flow))
+        python_equals("data/test_flow_export/locust_post.py", export.locust_code(flow))
 
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
-        python_equals("data/test_flow_export/locust_patch.py", flow_export.locust_code(flow))
+        python_equals("data/test_flow_export/locust_patch.py", export.locust_code(flow))
 
 
 class TestExportLocustTask():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
-        python_equals("data/test_flow_export/locust_task_get.py", flow_export.locust_task(flow))
+        python_equals("data/test_flow_export/locust_task_get.py", export.locust_task(flow))
 
     def test_post(self):
         flow = tutils.tflow(req=req_post())
-        python_equals("data/test_flow_export/locust_task_post.py", flow_export.locust_task(flow))
+        python_equals("data/test_flow_export/locust_task_post.py", export.locust_task(flow))
 
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
-        python_equals("data/test_flow_export/locust_task_patch.py", flow_export.locust_task(flow))
+        python_equals("data/test_flow_export/locust_task_patch.py", export.locust_task(flow))
 
 
 class TestIsJson():
     def test_empty(self):
-        assert flow_export.is_json(None, None) is False
+        assert export.is_json(None, None) is False
 
     def test_json_type(self):
         headers = Headers(content_type="application/json")
-        assert flow_export.is_json(headers, "foobar") is False
+        assert export.is_json(headers, "foobar") is False
 
     def test_valid(self):
         headers = Headers(content_type="application/foobar")
-        j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        j = export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
         assert j is False
 
     def test_valid2(self):
         headers = Headers(content_type="application/json")
-        j = flow_export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        j = export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
         assert isinstance(j, dict)
