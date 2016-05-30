@@ -1,4 +1,5 @@
-from mitmproxy.flow import FlowReader, FlowReadException
+from mitmproxy.flow import FlowReader
+from mitmproxy.exceptions import FlowReadException
 from . import tutils
 
 
