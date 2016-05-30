@@ -1,9 +1,9 @@
 from abc import abstractmethod, ABCMeta
 
 import six
-from typing import List
+from typing import List  # noqa
 
-from mitmproxy import models, filt
+from mitmproxy import models, filt  # noqa
 
 
 @six.add_metaclass(ABCMeta)

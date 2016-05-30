@@ -1,7 +1,7 @@
 import os
 import sys
 
-from typing import List, Optional, Set
+from typing import List, Optional, Set  # noqa
 
 from mitmproxy import controller, script, filt, models
 from mitmproxy.exceptions import FlowReadException, Kill
