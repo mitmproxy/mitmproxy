@@ -2,11 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 import re
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:  # pragma: no cover
-    from collections import MutableMapping  # Workaround for Python < 3.3
-
 import six
 from ..multidict import MultiDict
 from ..utils import always_bytes

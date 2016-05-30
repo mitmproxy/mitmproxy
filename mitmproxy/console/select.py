@@ -72,7 +72,8 @@ class Heading:
         return opt
 
 
-_neg = lambda: False
+def _neg(*args):
+    return False
 
 
 class Option:

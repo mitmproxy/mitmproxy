@@ -418,12 +418,16 @@ class FlowList(object):
         return
 
 
+def _pos(*args):
+    return True
+
+
 class FlowView(FlowList):
 
     def __init__(self, store, filt=None):
         super(FlowView, self).__init__()
         if not filt:
-            filt = lambda flow: True
+            filt = _pos
         self._build(store, filt)
 
         self.store = store
