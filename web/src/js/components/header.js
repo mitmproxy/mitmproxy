@@ -4,9 +4,10 @@ import $ from "jquery";
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
-import {ToggleComponent} from "./common.js";
+import {ToggleInputButton, ToggleButton} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
+import {SettingsState} from "./common.js";
 
 var FilterDocs = React.createClass({
     statics: {
@@ -237,57 +238,74 @@ var ViewMenu = React.createClass({
     render: function () {
       var showEventLog = this.props.query[Query.SHOW_EVENTLOG];
       return (
-        <div>
-          <ToggleComponent
-            checked={showEventLog}
-            name = "Show Eventlog"
-            onToggleChanged={this.toggleEventLog}/>
-        </div>
+          <div>
+            <div className="menu-row">
+              <ToggleButton
+                checked={showEventLog}
+                name = "Show Eventlog"
+                onToggleChanged={this.toggleEventLog}/>
+            </div>
+            <div className="clearfix"></div>
+          </div>
       );
     }
 });
 
-
-class OptionMenu extends React.Component{
-    static title = "Options";
-    constructor(props){
-      super(props);
-      this.state = {
-        options :
-        [
-          {name: "--host", checked: true},
-          {name: "--no-upstream-cert", checked: false},
-          {name: "--http2", checked: false},
-          {name: "--anticache", checked: false},
-          {name: "--anticomp", checked: false},
-          {name: "--stickycookie", checked: true},
-          {name: "--stickyauth", checked: false},
-          {name: "--stream", checked: false}
-        ]
-      }
-    }
-    setOption(entry){
-      console.log(entry.name);//TODO: get options from outside and remove state
-      entry.checked = !entry.checked;
-      this.setState({options: this.state.options});
-    }
-    render() {
-      return (
+export const OptionMenu = (props) => {
+    const {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp, stickycookie, stickyauth, stream} = props.settings;
+    return (
         <div>
-          {this.state.options.map((entry, i) => {
-            return (
-              <ToggleComponent
-                key={i}
-                checked={entry.checked}
-                name = {entry.name}
-                onToggleChanged={() => this.setOption(entry)}/>
-            );
-          })}
+            <div className="menu-row">
+                <ToggleButton name="showhost"
+                              checked={showhost}
+                              onToggleChanged={() => SettingsActions.update({showhost: !showhost})}
+                />
+                <ToggleButton name="no_upstream_cert"
+                              checked={no_upstream_cert}
+                              onToggleChanged={() => SettingsActions.update({no_upstream_cert: !no_upstream_cert})}
+                />
+                <ToggleButton name="rawtcp"
+                              checked={rawtcp}
+                              onToggleChanged={() => SettingsActions.update({rawtcp: !rawtcp})}
+                />
+                <ToggleButton name="http2"
+                              checked={http2}
+                              onToggleChanged={() => SettingsActions.update({http2: !http2})}
+                />
+                <ToggleButton name="anticache"
+                              checked={anticache}
+                              onToggleChanged={() => SettingsActions.update({anticache: !anticache})}
+                />
+                <ToggleButton name="anticomp"
+                              checked={anticomp}
+                              onToggleChanged={() => SettingsActions.update({anticomp: !anticomp})}
+                />
+                <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
+                    checked={Boolean(stickyauth)}
+                    txt={stickyauth || ""}
+                    onToggleChanged={txt => SettingsActions.update({stickyauth: (!stickyauth ? txt : null)})}
+                />
+                <ToggleInputButton name="stickycookie" placeholder="Sticky cookie filter"
+                    checked={Boolean(stickycookie)}
+                    txt={stickycookie || ""}
+                    onToggleChanged={txt => SettingsActions.update({stickycookie: (!stickycookie ? txt : null)})}
+                />
+                <ToggleInputButton name="stream" placeholder="stream..."
+                    checked={Boolean(stream)}
+                    txt={stream || ""}
+                    inputType = "number"
+                    onToggleChanged={txt => SettingsActions.update({stream: (!stream ? txt : null)})}
+                />
+            </div>
+            <div className="clearfix"/>
         </div>
-      );
-    }
-}
+    );
+};
+OptionMenu.title = "Options";
 
+OptionMenu.propTypes = {
+    settings: React.PropTypes.object.isRequired
+};
 
 var ReportsMenu = React.createClass({
     statics: {
@@ -428,7 +446,6 @@ export var Header = React.createClass({
                 </nav>
                 <div className="menu">
                     <this.state.active
-                        ref="active"
                         settings={this.props.settings}
                         updateLocation={this.props.updateLocation}
                         query={this.props.query}

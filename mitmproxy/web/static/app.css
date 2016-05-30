@@ -146,6 +146,7 @@ header .menu {
   min-height: 1px;
   padding-left: 2.5px;
   padding-right: 2.5px;
+  margin-bottom: 5px;
 }
 @media (min-width: 768px) {
   .filter-input {
@@ -163,8 +164,48 @@ header .menu {
   max-height: 500px;
   overflow-y: auto;
 }
-.menu .btn {
-  margin: 2px 2px 2px 2px;
+.menu .toggle-btn {
+  float: left;
+  width: 33.33333333%;
+  position: relative;
+  min-height: 1px;
+  padding-left: 2.5px;
+  padding-right: 2.5px;
+  margin-bottom: 5px;
+}
+@media (min-width: 768px) {
+  .menu .toggle-btn {
+    float: left;
+    width: 25%;
+  }
+}
+@media (min-width: 1200px) {
+  .menu .toggle-btn {
+    float: left;
+    width: 16.66666667%;
+  }
+}
+.menu .toggle-btn .btn {
+  width: 100%;
+}
+.menu .toggle-input-btn {
+  position: relative;
+  min-height: 1px;
+  padding-left: 2.5px;
+  padding-right: 2.5px;
+  margin-bottom: 5px;
+}
+@media (min-width: 768px) {
+  .menu .toggle-input-btn {
+    float: left;
+    width: 50%;
+  }
+}
+@media (min-width: 1200px) {
+  .menu .toggle-input-btn {
+    float: left;
+    width: 33.33333333%;
+  }
 }
 .flow-table {
   width: 100%;

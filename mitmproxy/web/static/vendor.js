@@ -3894,6 +3894,7 @@ function compilePattern(pattern) {
  * - **             Consumes (greedy) all characters up to the next character
  *                  in the pattern, or to the end of the URL if there is none
  *
+ *  The function calls callback(error, matched) when finished.
  * The return value is an object with the following properties:
  *
  * - remainingPathname
@@ -6093,13 +6094,17 @@ function matchRouteDeep(route, location, remainingPathname, paramNames, paramVal
   // Only try to match the path if the route actually has a pattern, and if
   // we're not just searching for potential nested absolute paths.
   if (remainingPathname !== null && pattern) {
-    var matched = (0, _PatternUtils.matchPattern)(pattern, remainingPathname);
-    if (matched) {
-      remainingPathname = matched.remainingPathname;
-      paramNames = [].concat(paramNames, matched.paramNames);
-      paramValues = [].concat(paramValues, matched.paramValues);
-    } else {
-      remainingPathname = null;
+    try {
+      var matched = (0, _PatternUtils.matchPattern)(pattern, remainingPathname);
+      if (matched) {
+        remainingPathname = matched.remainingPathname;
+        paramNames = [].concat(paramNames, matched.paramNames);
+        paramValues = [].concat(paramValues, matched.paramValues);
+      } else {
+        remainingPathname = null;
+      }
+    } catch (error) {
+      callback(error);
     }
 
     // By assumption, pattern is non-empty here, which is the prerequisite for

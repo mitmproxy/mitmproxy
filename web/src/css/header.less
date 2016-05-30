@@ -18,6 +18,7 @@ header {
 
 .filter-input {
     .make-sm-column(3, @menu-row-gutter-width);
+    margin-bottom:5px;
 }
 
 .filter-input .popover {
@@ -32,6 +33,19 @@ header {
     }
 }
 
-.menu .btn {
-    margin: 2px 2px 2px 2px;
+.menu .toggle-btn {
+    .make-xs-column(4, @menu-row-gutter-width);
+    .make-sm-column(3, @menu-row-gutter-width);
+    .make-lg-column(2, @menu-row-gutter-width);
+    margin-bottom:5px;
+}
+
+.menu .toggle-btn .btn {
+    width: 100%;
+}
+
+.menu .toggle-input-btn {
+    .make-sm-column(6, @menu-row-gutter-width);
+    .make-lg-column(4, @menu-row-gutter-width);
+    margin-bottom:5px;
 }

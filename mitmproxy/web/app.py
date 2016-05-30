@@ -283,11 +283,21 @@ class Events(RequestHandler):
 class Settings(RequestHandler):
 
     def get(self):
+
         self.write(dict(
             data=dict(
                 version=version.VERSION,
                 mode=str(self.master.server.config.mode),
-                intercept=self.state.intercept_txt
+                intercept=self.state.intercept_txt,
+                showhost=self.master.options.showhost,
+                no_upstream_cert=self.master.server.config.no_upstream_cert,
+                rawtcp=self.master.server.config.rawtcp,
+                http2=self.master.server.config.http2,
+                anticache=self.master.options.anticache,
+                anticomp=self.master.options.anticomp,
+                stickyauth=self.master.stickyauth_txt,
+                stickycookie=self.master.stickycookie_txt,
+                stream= self.master.stream_large_bodies.max_size if self.master.stream_large_bodies else False
             )
         ))
 
@@ -296,6 +306,33 @@ class Settings(RequestHandler):
         for k, v in six.iteritems(self.json):
             if k == "intercept":
                 self.state.set_intercept(v)
+                update[k] = v
+            elif k == "showhost":
+                self.master.options.showhost = v
+                update[k] = v
+            elif k == "no_upstream_cert":
+                self.master.server.config.no_upstream_cert = v
+                update[k] = v
+            elif k == "rawtcp":
+                self.master.server.config.rawtcp = v
+                update[k] = v
+            elif k == "http2":
+                self.master.server.config.http2 = v
+                update[k] = v
+            elif k == "anticache":
+                self.master.options.anticache = v
+                update[k] = v
+            elif k == "anticomp":
+                self.master.options.anticomp = v
+                update[k] = v
+            elif k == "stickycookie":
+                self.master.set_stickycookie(v)
+                update[k] = v
+            elif k == "stickyauth":
+                self.master.set_stickyauth(v)
+                update[k] = v
+            elif k == "stream":
+                self.master.set_stream_large_bodies(v)
                 update[k] = v
             else:
                 print("Warning: Unknown setting {}: {}".format(k, v))

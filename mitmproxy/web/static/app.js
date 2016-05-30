@@ -481,7 +481,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ToggleComponent = exports.Splitter = exports.Router = undefined;
+exports.ToggleInputButton = exports.ToggleButton = exports.Splitter = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require("react");
 
@@ -491,37 +493,19 @@ var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
+var _utils = require("../utils.js");
+
 var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Router = exports.Router = {
-    contextTypes: {
-        location: _react2.default.PropTypes.object,
-        router: _react2.default.PropTypes.object.isRequired
-    },
-    updateLocation: function updateLocation(pathname, queryUpdate) {
-        if (pathname === undefined) {
-            pathname = this.context.location.pathname;
-        }
-        var query = this.context.location.query;
-        if (queryUpdate !== undefined) {
-            for (var i in queryUpdate) {
-                if (queryUpdate.hasOwnProperty(i)) {
-                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
-                }
-            }
-        }
-        this.context.router.replace({ pathname: pathname, query: query });
-    },
-    getQuery: function getQuery() {
-        // For whatever reason, react-router always returns the same object, which makes comparing
-        // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _lodash2.default.clone(this.context.location.query);
-    }
-};
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Splitter = exports.Splitter = _react2.default.createClass({
     displayName: "Splitter",
@@ -631,28 +615,91 @@ var Splitter = exports.Splitter = _react2.default.createClass({
     }
 });
 
-var ToggleComponent = exports.ToggleComponent = function ToggleComponent(props) {
+var ToggleButton = exports.ToggleButton = function ToggleButton(props) {
     return _react2.default.createElement(
         "div",
-        {
-            className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
-            onClick: props.onToggleChanged },
+        { className: "input-group toggle-btn" },
         _react2.default.createElement(
-            "span",
-            null,
-            _react2.default.createElement("i", { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") }),
-            " ",
-            props.name
+            "div",
+            {
+                className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
+                onClick: props.onToggleChanged },
+            _react2.default.createElement(
+                "span",
+                { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") },
+                " ",
+                props.name
+            )
         )
     );
 };
 
-ToggleComponent.propTypes = {
+ToggleButton.propTypes = {
     name: _react2.default.PropTypes.string.isRequired,
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+var ToggleInputButton = exports.ToggleInputButton = function (_React$Component) {
+    _inherits(ToggleInputButton, _React$Component);
+
+    function ToggleInputButton(props) {
+        _classCallCheck(this, ToggleInputButton);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ToggleInputButton).call(this, props));
+
+        _this.state = { txt: props.txt };
+        return _this;
+    }
+
+    _createClass(ToggleInputButton, [{
+        key: "render",
+        value: function render() {
+            var _this2 = this;
+
+            return _react2.default.createElement(
+                "div",
+                { className: "input-group toggle-input-btn" },
+                _react2.default.createElement(
+                    "span",
+                    {
+                        className: "input-group-btn",
+                        onClick: function onClick() {
+                            return _this2.props.onToggleChanged(_this2.state.txt);
+                        } },
+                    _react2.default.createElement(
+                        "div",
+                        { className: "btn  " + (this.props.checked ? "btn-primary" : "btn-default") },
+                        _react2.default.createElement("span", { className: "fa " + (this.props.checked ? "fa-check-square-o" : "fa-square-o") }),
+                        " ",
+                        this.props.name
+                    )
+                ),
+                _react2.default.createElement("input", {
+                    className: "form-control",
+                    placeholder: this.props.placeholder,
+                    disabled: this.props.checked,
+                    value: this.state.txt,
+                    type: this.props.inputType,
+                    onChange: function onChange(e) {
+                        return _this2.setState({ txt: e.target.value });
+                    },
+                    onKeyDown: function onKeyDown(e) {
+                        if (e.keyCode === _utils.Key.ENTER) _this2.props.onToggleChanged(_this2.state.txt);e.stopPropagation();
+                    } })
+            );
+        }
+    }]);
+
+    return ToggleInputButton;
+}(_react2.default.Component);
+
+ToggleInputButton.propTypes = {
+    name: _react2.default.PropTypes.string.isRequired,
+    txt: _react2.default.PropTypes.string.isRequired,
+    onToggleChanged: _react2.default.PropTypes.func.isRequired
+};
+
+},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -931,8 +978,6 @@ var _shallowequal = require("shallowequal");
 
 var _shallowequal2 = _interopRequireDefault(_shallowequal);
 
-var _common = require("./common.js");
-
 var _actions = require("../actions.js");
 
 var _AutoScroll = require("./helpers/AutoScroll");
@@ -1120,8 +1165,6 @@ var AutoScrollEventLog = (0, _AutoScroll2.default)(EventLogContents);
 
 var EventLog = _react2.default.createClass({
     displayName: "EventLog",
-
-    mixins: [_common.Router],
     getInitialState: function getInitialState() {
         return {
             filter: {
@@ -1134,7 +1177,7 @@ var EventLog = _react2.default.createClass({
     close: function close() {
         var d = {};
         d[_actions.Query.SHOW_EVENTLOG] = undefined;
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
     },
     toggleLevel: function toggleLevel(level) {
         var filter = _lodash2.default.extend({}, this.state.filter);
@@ -1165,7 +1208,7 @@ var EventLog = _react2.default.createClass({
 
 exports.default = EventLog;
 
-},{"../actions.js":2,"../store/view.js":26,"./common.js":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":26,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1749,13 +1792,17 @@ var _utils2 = require("../../utils.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
 var ViewImage = _react2.default.createClass({
     displayName: "ViewImage",
 
+    propTypes: {
+        flow: _react2.default.PropTypes.object.isRequired,
+        message: _react2.default.PropTypes.object.isRequired
+    },
     statics: {
+        regex: /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i,
         matches: function matches(message) {
-            return image_regex.test(_utils.MessageUtils.getContentType(message));
+            return ViewImage.regex.test(_utils.MessageUtils.getContentType(message));
         }
     },
     render: function render() {
@@ -1768,7 +1815,13 @@ var ViewImage = _react2.default.createClass({
     }
 });
 
-var RawMixin = {
+var ContentLoader = _react2.default.createClass({
+    displayName: "ContentLoader",
+
+    propTypes: {
+        flow: _react2.default.PropTypes.object.isRequired,
+        message: _react2.default.PropTypes.object.isRequired
+    },
     getInitialState: function getInitialState() {
         return {
             content: undefined,
@@ -1816,43 +1869,53 @@ var RawMixin = {
                 _react2.default.createElement("i", { className: "fa fa-spinner fa-spin" })
             );
         }
-        return this.renderContent();
+        return _react2.default.cloneElement(this.props.children, {
+            content: this.state.content
+        });
     }
-};
+});
 
 var ViewRaw = _react2.default.createClass({
     displayName: "ViewRaw",
 
-    mixins: [RawMixin],
+    propTypes: {
+        content: _react2.default.PropTypes.string.isRequired
+    },
     statics: {
+        textView: true,
         matches: function matches(message) {
             return true;
         }
     },
-    renderContent: function renderContent() {
+    render: function render() {
         return _react2.default.createElement(
             "pre",
             null,
-            this.state.content
+            this.props.content
         );
     }
 });
 
-var json_regex = /^application\/json$/i;
 var ViewJSON = _react2.default.createClass({
     displayName: "ViewJSON",
 
-    mixins: [RawMixin],
+    propTypes: {
+        content: _react2.default.PropTypes.string.isRequired
+    },
     statics: {
+        textView: true,
+        regex: /^application\/json$/i,
         matches: function matches(message) {
-            return json_regex.test(_utils.MessageUtils.getContentType(message));
+            return ViewJSON.regex.test(_utils.MessageUtils.getContentType(message));
         }
     },
-    renderContent: function renderContent() {
-        var json = this.state.content;
+    render: function render() {
+        var json = this.props.content;
         try {
             json = JSON.stringify(JSON.parse(json), null, 2);
-        } catch (e) {}
+        } catch (e) {
+            // @noop
+        }
         return _react2.default.createElement(
             "pre",
             null,
@@ -1864,6 +1927,10 @@ var ViewJSON = _react2.default.createClass({
 var ViewAuto = _react2.default.createClass({
     displayName: "ViewAuto",
 
+    propTypes: {
+        message: _react2.default.PropTypes.object.isRequired,
+        flow: _react2.default.PropTypes.object.isRequired
+    },
     statics: {
         matches: function matches() {
             return false; // don't match itself
@@ -1878,8 +1945,20 @@ var ViewAuto = _react2.default.createClass({
         }
     },
     render: function render() {
+        var _props = this.props;
+        var message = _props.message;
+        var flow = _props.flow;
+
         var View = ViewAuto.findView(this.props.message);
-        return _react2.default.createElement(View, this.props);
+        if (View.textView) {
+            return _react2.default.createElement(
+                ContentLoader,
+                { message: message, flow: flow },
+                _react2.default.createElement(View, { content: "" })
+            );
+        } else {
+            return _react2.default.createElement(View, { message: message, flow: flow });
+        }
     }
 });
 
@@ -2004,6 +2083,10 @@ var ContentView = _react2.default.createClass({
         }
     },
     render: function render() {
+        var _props2 = this.props;
+        var flow = _props2.flow;
+        var message = _props2.message;
+
         var message = this.props.message;
         if (message.contentLength === 0) {
             return _react2.default.createElement(ContentEmpty, this.props);
@@ -2018,7 +2101,11 @@ var ContentView = _react2.default.createClass({
         return _react2.default.createElement(
             "div",
             null,
-            _react2.default.createElement(this.state.View, this.props),
+            this.state.View.textView ? _react2.default.createElement(
+                ContentLoader,
+                { flow: flow, message: message },
+                _react2.default.createElement(this.state.View, { content: "" })
+            ) : _react2.default.createElement(this.state.View, { flow: flow, message: message }),
             _react2.default.createElement(
                 "div",
                 { className: "view-options text-center" },
@@ -2315,8 +2402,6 @@ var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
-var _common = require("../common.js");
-
 var _nav = require("./nav.js");
 
 var _nav2 = _interopRequireDefault(_nav);
@@ -2343,7 +2428,6 @@ var allTabs = {
 var FlowView = _react2.default.createClass({
     displayName: "FlowView",
 
-    mixins: [_common.StickyHeadMixin, _common.Router],
     getInitialState: function getInitialState() {
         return {
             prompt: false
@@ -2367,7 +2451,7 @@ var FlowView = _react2.default.createClass({
         this.selectTab(tabs[nextIndex]);
     },
     selectTab: function selectTab(panel) {
-        this.updateLocation("/flows/" + this.props.flow.id + "/" + panel);
+        this.props.updateLocation("/flows/" + this.props.flow.id + "/" + panel);
     },
     promptEdit: function promptEdit() {
         var options;
@@ -2436,7 +2520,7 @@ var FlowView = _react2.default.createClass({
 
 exports.default = FlowView;
 
-},{"../common.js":4,"../prompt.js":19,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
+},{"../prompt.js":19,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2894,6 +2978,8 @@ var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
+var _utils = require("../utils.js");
+
 var _common = require("./common.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -2906,6 +2992,15 @@ function Footer(_ref) {
     var settings = _ref.settings;
     var mode = settings.mode;
     var intercept = settings.intercept;
+    var showhost = settings.showhost;
+    var no_upstream_cert = settings.no_upstream_cert;
+    var rawtcp = settings.rawtcp;
+    var http2 = settings.http2;
+    var anticache = settings.anticache;
+    var anticomp = settings.anticomp;
+    var stickyauth = settings.stickyauth;
+    var stickycookie = settings.stickycookie;
+    var stream = settings.stream;
 
     return _react2.default.createElement(
         "footer",
@@ -2921,19 +3016,65 @@ function Footer(_ref) {
             { className: "label label-success" },
             "Intercept: ",
             intercept
+        ),
+        showhost && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "showhost"
+        ),
+        no_upstream_cert && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "no-upstream-cert"
+        ),
+        rawtcp && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "raw-tcp"
+        ),
+        !http2 && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "no-http2"
+        ),
+        anticache && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "anticache"
+        ),
+        anticomp && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "anticomp"
+        ),
+        stickyauth && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "stickyauth: ",
+            stickyauth
+        ),
+        stickycookie && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "stickycookie: ",
+            stickycookie
+        ),
+        stream && _react2.default.createElement(
+            "span",
+            { className: "label label-success" },
+            "stream: ",
+            (0, _utils.formatSize)(stream)
         )
     );
 }
 
-},{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Header = exports.MainMenu = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+exports.Header = exports.OptionMenu = exports.MainMenu = undefined;
 
 var _react = require("react");
 
@@ -2958,12 +3099,6 @@ var _common = require("./common.js");
 var _actions = require("../actions.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var FilterDocs = _react2.default.createClass({
     displayName: "FilterDocs",
@@ -3151,7 +3286,6 @@ var FilterInput = _react2.default.createClass({
 var MainMenu = exports.MainMenu = _react2.default.createClass({
     displayName: "MainMenu",
 
-    mixins: [_common.Router],
     propTypes: {
         settings: _react2.default.PropTypes.object.isRequired
     },
@@ -3162,19 +3296,19 @@ var MainMenu = exports.MainMenu = _react2.default.createClass({
     onSearchChange: function onSearchChange(val) {
         var d = {};
         d[_actions.Query.SEARCH] = val;
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
     },
     onHighlightChange: function onHighlightChange(val) {
         var d = {};
         d[_actions.Query.HIGHLIGHT] = val;
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
     },
     onInterceptChange: function onInterceptChange(val) {
         _actions.SettingsActions.update({ intercept: val });
     },
     render: function render() {
-        var search = this.getQuery()[_actions.Query.SEARCH] || "";
-        var highlight = this.getQuery()[_actions.Query.HIGHLIGHT] || "";
+        var search = this.props.query[_actions.Query.SEARCH] || "";
+        var highlight = this.props.query[_actions.Query.HIGHLIGHT] || "";
         var intercept = this.props.settings.intercept || "";
 
         return _react2.default.createElement(
@@ -3217,78 +3351,122 @@ var ViewMenu = _react2.default.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [_common.Router],
     toggleEventLog: function toggleEventLog() {
         var d = {};
-        if (this.getQuery()[_actions.Query.SHOW_EVENTLOG]) {
+        if (this.props.query[_actions.Query.SHOW_EVENTLOG]) {
             d[_actions.Query.SHOW_EVENTLOG] = undefined;
         } else {
             d[_actions.Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
         }
 
-        this.updateLocation(undefined, d);
+        this.props.updateLocation(undefined, d);
         console.log('toggleevent');
     },
     render: function render() {
-        var showEventLog = this.getQuery()[_actions.Query.SHOW_EVENTLOG];
+        var showEventLog = this.props.query[_actions.Query.SHOW_EVENTLOG];
         return _react2.default.createElement(
             "div",
             null,
-            _react2.default.createElement(_common.ToggleComponent, {
-                checked: showEventLog,
-                name: "Show Eventlog",
-                onToggleChanged: this.toggleEventLog })
+            _react2.default.createElement(
+                "div",
+                { className: "menu-row" },
+                _react2.default.createElement(_common.ToggleButton, {
+                    checked: showEventLog,
+                    name: "Show Eventlog",
+                    onToggleChanged: this.toggleEventLog })
+            ),
+            _react2.default.createElement("div", { className: "clearfix" })
         );
     }
 });
 
-var OptionMenu = function (_React$Component) {
-    _inherits(OptionMenu, _React$Component);
+var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
+    var _props$settings = props.settings;
+    var mode = _props$settings.mode;
+    var intercept = _props$settings.intercept;
+    var showhost = _props$settings.showhost;
+    var no_upstream_cert = _props$settings.no_upstream_cert;
+    var rawtcp = _props$settings.rawtcp;
+    var http2 = _props$settings.http2;
+    var anticache = _props$settings.anticache;
+    var anticomp = _props$settings.anticomp;
+    var stickycookie = _props$settings.stickycookie;
+    var stickyauth = _props$settings.stickyauth;
+    var stream = _props$settings.stream;
 
-    function OptionMenu(props) {
-        _classCallCheck(this, OptionMenu);
-
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(OptionMenu).call(this, props));
-
-        _this.state = {
-            options: [{ name: "--host", checked: true }, { name: "--no-upstream-cert", checked: false }, { name: "--http2", checked: false }, { name: "--anticache", checked: false }, { name: "--anticomp", checked: false }, { name: "--stickycookie", checked: true }, { name: "--stickyauth", checked: false }, { name: "--stream", checked: false }]
-        };
-        return _this;
-    }
-
-    _createClass(OptionMenu, [{
-        key: "setOption",
-        value: function setOption(entry) {
-            console.log(entry.name); //TODO: get options from outside and remove state
-            entry.checked = !entry.checked;
-            this.setState({ options: this.state.options });
-        }
-    }, {
-        key: "render",
-        value: function render() {
-            var _this2 = this;
-
-            return _react2.default.createElement(
-                "div",
-                null,
-                this.state.options.map(function (entry, i) {
-                    return _react2.default.createElement(_common.ToggleComponent, {
-                        key: i,
-                        checked: entry.checked,
-                        name: entry.name,
-                        onToggleChanged: function onToggleChanged() {
-                            return _this2.setOption(entry);
-                        } });
-                })
-            );
-        }
-    }]);
-
-    return OptionMenu;
-}(_react2.default.Component);
-
+    return _react2.default.createElement(
+        "div",
+        null,
+        _react2.default.createElement(
+            "div",
+            { className: "menu-row" },
+            _react2.default.createElement(_common.ToggleButton, { name: "showhost",
+                checked: showhost,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ showhost: !showhost });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "no_upstream_cert",
+                checked: no_upstream_cert,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ no_upstream_cert: !no_upstream_cert });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "rawtcp",
+                checked: rawtcp,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ rawtcp: !rawtcp });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "http2",
+                checked: http2,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ http2: !http2 });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "anticache",
+                checked: anticache,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ anticache: !anticache });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleButton, { name: "anticomp",
+                checked: anticomp,
+                onToggleChanged: function onToggleChanged() {
+                    return _actions.SettingsActions.update({ anticomp: !anticomp });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleInputButton, { name: "stickyauth", placeholder: "Sticky auth filter",
+                checked: Boolean(stickyauth),
+                txt: stickyauth || "",
+                onToggleChanged: function onToggleChanged(txt) {
+                    return _actions.SettingsActions.update({ stickyauth: !stickyauth ? txt : null });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleInputButton, { name: "stickycookie", placeholder: "Sticky cookie filter",
+                checked: Boolean(stickycookie),
+                txt: stickycookie || "",
+                onToggleChanged: function onToggleChanged(txt) {
+                    return _actions.SettingsActions.update({ stickycookie: !stickycookie ? txt : null });
+                }
+            }),
+            _react2.default.createElement(_common.ToggleInputButton, { name: "stream", placeholder: "stream...",
+                checked: Boolean(stream),
+                txt: stream || "",
+                inputType: "number",
+                onToggleChanged: function onToggleChanged(txt) {
+                    return _actions.SettingsActions.update({ stream: !stream ? txt : null });
+                }
+            })
+        ),
+        _react2.default.createElement("div", { className: "clearfix" })
+    );
+};
 OptionMenu.title = "Options";
 
+OptionMenu.propTypes = {
+    settings: _react2.default.PropTypes.object.isRequired
+};
 
 var ReportsMenu = _react2.default.createClass({
     displayName: "ReportsMenu",
@@ -3391,7 +3569,6 @@ var header_entries = [MainMenu, ViewMenu, OptionMenu /*, ReportsMenu */];
 var Header = exports.Header = _react2.default.createClass({
     displayName: "Header",
 
-    mixins: [_common.Router],
     propTypes: {
         settings: _react2.default.PropTypes.object.isRequired
     },
@@ -3402,7 +3579,7 @@ var Header = exports.Header = _react2.default.createClass({
     },
     handleClick: function handleClick(active, e) {
         e.preventDefault();
-        this.updateLocation(active.route);
+        this.props.updateLocation(active.route);
         this.setState({ active: active });
     },
     render: function render() {
@@ -3435,7 +3612,11 @@ var Header = exports.Header = _react2.default.createClass({
             _react2.default.createElement(
                 "div",
                 { className: "menu" },
-                _react2.default.createElement(this.state.active, { ref: "active", settings: this.props.settings })
+                _react2.default.createElement(this.state.active, {
+                    settings: this.props.settings,
+                    updateLocation: this.props.updateLocation,
+                    query: this.props.query
+                })
             )
         );
     }
@@ -3622,7 +3803,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var MainView = _react2.default.createClass({
     displayName: "MainView",
 
-    mixins: [_common.Router],
     contextTypes: {
         flowStore: _react2.default.PropTypes.object.isRequired
     },
@@ -3653,11 +3833,11 @@ var MainView = _react2.default.createClass({
     },
     getViewFilt: function getViewFilt() {
         try {
-            var filtStr = this.getQuery()[_actions.Query.SEARCH];
+            var filtStr = this.props.query[_actions.Query.SEARCH];
             var filt = filtStr ? _filt2.default.parse(filtStr) : function () {
                 return true;
             };
-            var highlightStr = this.getQuery()[_actions.Query.HIGHLIGHT];
+            var highlightStr = this.props.query[_actions.Query.HIGHLIGHT];
             var highlight = highlightStr ? _filt2.default.parse(highlightStr) : function () {
                 return false;
             };
@@ -3710,10 +3890,10 @@ var MainView = _react2.default.createClass({
     selectFlow: function selectFlow(flow) {
         if (flow) {
             var tab = this.props.routeParams.detailTab || "request";
-            this.updateLocation("/flows/" + flow.id + "/" + tab);
+            this.props.updateLocation("/flows/" + flow.id + "/" + tab);
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            this.updateLocation("/flows");
+            this.props.updateLocation("/flows");
         }
     },
     selectFlowRelative: function selectFlowRelative(shift) {
@@ -3837,6 +4017,8 @@ var MainView = _react2.default.createClass({
                 key: "flowDetails",
                 ref: "flowDetails",
                 tab: this.props.routeParams.detailTab,
+                query: this.props.query,
+                updateLocation: this.props.updateLocation,
                 flow: selected })];
         } else {
             details = null;
@@ -4054,12 +4236,33 @@ var Reports = _react2.default.createClass({
 var ProxyAppMain = _react2.default.createClass({
     displayName: "ProxyAppMain",
 
-    mixins: [_common.Router],
     childContextTypes: {
         flowStore: _react2.default.PropTypes.object.isRequired,
         eventStore: _react2.default.PropTypes.object.isRequired,
         returnFocus: _react2.default.PropTypes.func.isRequired,
         location: _react2.default.PropTypes.object.isRequired
+    },
+    contextTypes: {
+        router: _react2.default.PropTypes.object.isRequired
+    },
+    updateLocation: function updateLocation(pathname, queryUpdate) {
+        if (pathname === undefined) {
+            pathname = this.props.location.pathname;
+        }
+        var query = this.props.location.query;
+        if (queryUpdate !== undefined) {
+            for (var i in queryUpdate) {
+                if (queryUpdate.hasOwnProperty(i)) {
+                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
+                }
+            }
+        }
+        this.context.router.replace({ pathname: pathname, query: query });
+    },
+    getQuery: function getQuery() {
+        // For whatever reason, react-router always returns the same object, which makes comparing
+        // the current props with nextProps impossible. As a workaround, we just clone the query object.
+        return _lodash2.default.clone(this.props.location.query);
     },
     componentDidMount: function componentDidMount() {
         this.focus();
@@ -4130,18 +4333,18 @@ var ProxyAppMain = _react2.default.createClass({
         e.preventDefault();
     },
     render: function render() {
+        var query = this.getQuery();
         var eventlog;
         if (this.props.location.query[_actions.Query.SHOW_EVENTLOG]) {
-            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog" })];
+            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog", updateLocation: this.updateLocation })];
         } else {
             eventlog = null;
         }
-        var children = _react2.default.cloneElement(this.props.children, { ref: "view", location: this.props.location });
         return _react2.default.createElement(
             "div",
             { id: "container", tabIndex: "0", onKeyDown: this.onKeydown },
-            _react2.default.createElement(_header.Header, { ref: "header", settings: this.state.settings }),
-            children,
+            _react2.default.createElement(_header.Header, { ref: "header", settings: this.state.settings, updateLocation: this.updateLocation, query: query }),
+            _react2.default.cloneElement(this.props.children, { ref: "view", location: this.props.location, updateLocation: this.updateLocation, query: query }),
             eventlog,
             _react2.default.createElement(_footer2.default, { settings: this.state.settings })
         );
