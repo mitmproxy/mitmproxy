@@ -7,7 +7,7 @@ import os
 import netlib.utils
 
 from .. import utils
-from .. import flow_export
+from .. import flow
 from ..models import decoded
 from . import signals
 
@@ -282,16 +282,16 @@ def copy_flow_format_data(part, scope, flow):
     return data, False
 
 
-def export_prompt(k, flow):
+def export_prompt(k, f):
     exporters = {
-        "c": flow_export.curl_command,
-        "p": flow_export.python_code,
-        "r": flow_export.raw_request,
-        "l": flow_export.locust_code,
-        "t": flow_export.locust_task,
+        "c": flow.export.curl_command,
+        "p": flow.export.python_code,
+        "r": flow.export.raw_request,
+        "l": flow.export.locust_code,
+        "t": flow.export.locust_task,
     }
     if k in exporters:
-        copy_to_clipboard_or_prompt(exporters[k](flow))
+        copy_to_clipboard_or_prompt(exporters[k](f))
 
 
 def copy_to_clipboard_or_prompt(data):

@@ -1,12 +1,11 @@
 import json
+import re
 from textwrap import dedent
+
+from six.moves.urllib.parse import quote, quote_plus
 
 import netlib.http
 from netlib.utils import parse_content_type
-
-import re
-from six.moves.urllib.parse import quote
-from six.moves.urllib.parse import quote_plus
 
 
 def curl_command(flow):
