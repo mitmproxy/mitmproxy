@@ -1,26 +1,25 @@
-SIZE_UNITS = dict(
-    b=1024 ** 0,
-    k=1024 ** 1,
-    m=1024 ** 2,
-    g=1024 ** 3,
-    t=1024 ** 4,
-)
+
+SIZE_TABLE = [
+    ("b", 1024 ** 0),
+    ("k", 1024 ** 1),
+    ("m", 1024 ** 2),
+    ("g", 1024 ** 3),
+    ("t", 1024 ** 4),
+]
+
+SIZE_UNITS = dict(SIZE_TABLE)
 
 
 def pretty_size(size):
-    suffixes = [
-        ("B", 2 ** 10),
-        ("kB", 2 ** 20),
-        ("MB", 2 ** 30),
-    ]
-    for suf, lim in suffixes:
-        if size >= lim:
-            continue
-        else:
-            x = round(size / float(lim / 2 ** 10), 2)
+    for bottom, top in zip(SIZE_TABLE, SIZE_TABLE[1:]):
+        if bottom[1] <= size < top[1]:
+            suf = bottom[0]
+            lim = bottom[1]
+            x = round(size / lim, 2)
             if x == int(x):
                 x = int(x)
             return str(x) + suf
+    return "%s%s"%(size, SIZE_TABLE[0][0])
 
 
 def parse_size(s):
