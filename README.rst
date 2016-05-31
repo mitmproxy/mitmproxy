@@ -104,10 +104,8 @@ Style
 
 Keeping to a consistent code style throughout the project makes it easier to
 contribute and collaborate. Please stick to the guidelines in
-[PEP8](https://www.python.org/dev/peps/pep-0008/p) and the [Google Python Style
-Guide](https://google.github.io/styleguide/pyguide.html) unless there's a very
+`PEP8`_ and the `Google Style Guide`_ unless there's a very
 good reason not to.
-
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
@@ -154,3 +152,5 @@ good reason not to.
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
 .. _issue_tracker: https://github.com/mitmproxy/mitmproxy/issues
+.. _PEP8: https://www.python.org/dev/peps/pep-0008
+.. _Google Style Guide: https://google.github.io/styleguide/pyguide.html
