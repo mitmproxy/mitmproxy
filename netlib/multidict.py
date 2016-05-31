@@ -171,6 +171,14 @@ class _MultiDict(MutableMapping, Serializable):
         else:
             return super(_MultiDict, self).items()
 
+    def clear(self, key):
+        """
+            Removes all items with the specified key, and does not raise an
+            exception if the key does not exist.
+        """
+        if key in self:
+            del self[key]
+
     def to_dict(self):
         """
         Get the MultiDict as a plain Python dict.

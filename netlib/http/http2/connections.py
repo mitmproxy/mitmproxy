@@ -98,6 +98,11 @@ class HTTP2Protocol(object):
         method = headers.get(':method', 'GET')
         scheme = headers.get(':scheme', 'https')
         path = headers.get(':path', '/')
+
+        headers.clear(":method")
+        headers.clear(":scheme")
+        headers.clear(":path")
+
         host = None
         port = None
 
@@ -202,12 +207,9 @@ class HTTP2Protocol(object):
 
         if ':authority' not in headers:
             headers.insert(0, b':authority', authority.encode('ascii'))
-        if ':scheme' not in headers:
-            headers.insert(0, b':scheme', request.scheme.encode('ascii'))
-        if ':path' not in headers:
-            headers.insert(0, b':path', request.path.encode('ascii'))
-        if ':method' not in headers:
-            headers.insert(0, b':method', request.method.encode('ascii'))
+        headers.insert(0, b':scheme', request.scheme.encode('ascii'))
+        headers.insert(0, b':path', request.path.encode('ascii'))
+        headers.insert(0, b':method', request.method.encode('ascii'))
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id

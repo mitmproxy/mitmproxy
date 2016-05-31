@@ -306,6 +306,9 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         method = self.request_headers.get(':method', 'GET')
         scheme = self.request_headers.get(':scheme', 'https')
         path = self.request_headers.get(':path', '/')
+        self.request_headers.clear(":method")
+        self.request_headers.clear(":scheme")
+        self.request_headers.clear(":path")
         host = None
         port = None
 
@@ -362,10 +365,15 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
             self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
 
+            headers = message.headers.copy()
+            headers.insert(0, ":path", message.path)
+            headers.insert(0, ":method", message.method)
+            headers.insert(0, ":scheme", message.scheme)
+
             self.server_conn.h2.safe_send_headers(
                 self.is_zombie,
                 self.server_stream_id,
-                message.headers
+                headers
             )
         self.server_conn.h2.safe_send_body(
             self.is_zombie,
