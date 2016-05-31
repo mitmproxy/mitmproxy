@@ -27,8 +27,9 @@ import html2text
 import six
 from netlib.odict import ODict
 from netlib import encoding
-from netlib.http import url
-from netlib.utils import clean_bin, hexdump, multipartdecode, parse_content_type
+import netlib.http.headers
+from netlib.http import url, multipart
+from netlib.utils import clean_bin, hexdump
 from . import utils
 from .exceptions import ContentViewException
 from .contrib import jsbeautifier
@@ -121,7 +122,7 @@ class ViewAuto(View):
         headers = metadata.get("headers", {})
         ctype = headers.get("content-type")
         if data and ctype:
-            ct = parse_content_type(ctype) if ctype else None
+            ct = netlib.http.headers.parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
@@ -275,7 +276,7 @@ class ViewMultipart(View):
 
     def __call__(self, data, **metadata):
         headers = metadata.get("headers", {})
-        v = multipartdecode(headers, data)
+        v = multipart.decode(headers, data)
         if v:
             return "Multipart form", self._format(v)
 

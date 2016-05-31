@@ -7,6 +7,7 @@ from six.moves import urllib
 
 from netlib import utils
 import netlib.http.url
+from netlib.http import multipart
 from . import cookies
 from .. import encoding
 from ..multidict import MultiDictView
@@ -369,7 +370,7 @@ class Request(Message):
     def _get_multipart_form(self):
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return utils.multipartdecode(self.headers, self.content)
+            return multipart.decode(self.headers, self.content)
         return ()
 
     def _set_multipart_form(self, value):

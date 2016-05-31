@@ -190,62 +190,6 @@ def hostport(scheme, host, port):
             return "%s:%d" % (host, port)
 
 
-def parse_content_type(c):
-    """
-        A simple parser for content-type values. Returns a (type, subtype,
-        parameters) tuple, where type and subtype are strings, and parameters
-        is a dict. If the string could not be parsed, return None.
-
-        E.g. the following string:
-
-            text/html; charset=UTF-8
-
-        Returns:
-
-            ("text", "html", {"charset": "UTF-8"})
-    """
-    parts = c.split(";", 1)
-    ts = parts[0].split("/", 1)
-    if len(ts) != 2:
-        return None
-    d = {}
-    if len(parts) == 2:
-        for i in parts[1].split(";"):
-            clause = i.split("=", 1)
-            if len(clause) == 2:
-                d[clause[0].strip()] = clause[1].strip()
-    return ts[0].lower(), ts[1].lower(), d
-
-
-def multipartdecode(headers, content):
-    """
-        Takes a multipart boundary encoded string and returns list of (key, value) tuples.
-    """
-    v = headers.get("content-type")
-    if v:
-        v = parse_content_type(v)
-        if not v:
-            return []
-        try:
-            boundary = v[2]["boundary"].encode("ascii")
-        except (KeyError, UnicodeError):
-            return []
-
-        rx = re.compile(br'\bname="([^"]+)"')
-        r = []
-
-        for i in content.split(b"--" + boundary):
-            parts = i.splitlines()
-            if len(parts) > 1 and parts[0][0:2] != b"--":
-                match = rx.search(parts[1])
-                if match:
-                    key = match.group(1)
-                    value = b"".join(parts[3 + parts[2:].index(b""):])
-                    r.append((key, value))
-        return r
-    return []
-
-
 def safe_subn(pattern, repl, target, *args, **kwargs):
     """
         There are Unicode conversion problems with re.subn. We try to smooth

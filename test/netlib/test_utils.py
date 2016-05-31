@@ -1,7 +1,6 @@
 # coding=utf-8
 
 from netlib import utils, tutils
-from netlib.http import Headers
 
 
 def test_bidi():
@@ -36,37 +35,6 @@ def test_pretty_size():
     assert utils.pretty_size(1024) == "1kB"
     assert utils.pretty_size(1024 + (1024 / 2.0)) == "1.5kB"
     assert utils.pretty_size(1024 * 1024) == "1MB"
-
-
-def test_multipartdecode():
-    boundary = 'somefancyboundary'
-    headers = Headers(
-        content_type='multipart/form-data; boundary=' + boundary
-    )
-    content = (
-        "--{0}\n"
-        "Content-Disposition: form-data; name=\"field1\"\n\n"
-        "value1\n"
-        "--{0}\n"
-        "Content-Disposition: form-data; name=\"field2\"\n\n"
-        "value2\n"
-        "--{0}--".format(boundary).encode()
-    )
-
-    form = utils.multipartdecode(headers, content)
-
-    assert len(form) == 2
-    assert form[0] == (b"field1", b"value1")
-    assert form[1] == (b"field2", b"value2")
-
-
-def test_parse_content_type():
-    p = utils.parse_content_type
-    assert p("text/html") == ("text", "html", {})
-    assert p("text") is None
-
-    v = p("text/html; charset=UTF-8")
-    assert v == ('text', 'html', {'charset': 'UTF-8'})
 
 
 def test_safe_subn():
