@@ -7,7 +7,8 @@ import configargparse
 
 from netlib.tcp import Address, sslversion_choices
 import netlib.http.url
-from . import filt, utils, version
+from netlib import human
+from . import filt, version
 from .proxy import config
 
 APP_HOST = "mitm.it"
@@ -135,7 +136,9 @@ def get_common_options(options):
     if options.stickyauth_filt:
         stickyauth = options.stickyauth_filt
 
-    stream_large_bodies = utils.parse_size(options.stream_large_bodies)
+    stream_large_bodies = options.stream_large_bodies
+    if stream_large_bodies:
+        stream_large_bodies = human.parse_size(stream_large_bodies)
 
     reps = []
     for i in options.replace:

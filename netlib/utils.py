@@ -116,22 +116,6 @@ class BiDi(object):
         return self.values.get(n, default)
 
 
-def pretty_size(size):
-    suffixes = [
-        ("B", 2 ** 10),
-        ("kB", 2 ** 20),
-        ("MB", 2 ** 30),
-    ]
-    for suf, lim in suffixes:
-        if size >= lim:
-            continue
-        else:
-            x = round(size / float(lim / 2 ** 10), 2)
-            if x == int(x):
-                x = int(x)
-            return str(x) + suf
-
-
 class Data(object):
 
     def __init__(self, name):

@@ -30,13 +30,6 @@ def test_clean_bin():
     assert utils.clean_bin(u"\u2605") == u"\u2605"
 
 
-def test_pretty_size():
-    assert utils.pretty_size(100) == "100B"
-    assert utils.pretty_size(1024) == "1kB"
-    assert utils.pretty_size(1024 + (1024 / 2.0)) == "1.5kB"
-    assert utils.pretty_size(1024 * 1024) == "1MB"
-
-
 def test_safe_subn():
     assert utils.safe_subn("foo", u"bar", "\xc2foo")
 

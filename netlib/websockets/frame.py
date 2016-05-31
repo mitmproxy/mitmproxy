@@ -9,6 +9,7 @@ import six
 from .protocol import Masker
 from netlib import tcp
 from netlib import utils
+from netlib import human
 
 
 MAX_16_BIT_INT = (1 << 16)
@@ -98,7 +99,7 @@ class FrameHeader(object):
         if self.masking_key:
             vals.append(":key=%s" % repr(self.masking_key))
         if self.payload_length:
-            vals.append(" %s" % utils.pretty_size(self.payload_length))
+            vals.append(" %s" % human.pretty_size(self.payload_length))
         return "".join(vals)
 
     def human_readable(self):

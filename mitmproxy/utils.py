@@ -58,20 +58,6 @@ def pretty_json(s):
     return json.dumps(p, sort_keys=True, indent=4)
 
 
-def pretty_duration(secs):
-    formatters = [
-        (100, "{:.0f}s"),
-        (10, "{:2.1f}s"),
-        (1, "{:1.2f}s"),
-    ]
-
-    for limit, formatter in formatters:
-        if secs >= limit:
-            return formatter.format(secs)
-    # less than 1 sec
-    return "{:.0f}ms".format(secs * 1000)
-
-
 pkg_data = netlib.utils.Data(__name__)
 
 
@@ -117,32 +103,3 @@ def clean_hanging_newline(t):
     if t and t[-1] == "\n":
         return t[:-1]
     return t
-
-
-def parse_size(s):
-    """
-        Parses a size specification. Valid specifications are:
-
-            123: bytes
-            123k: kilobytes
-            123m: megabytes
-            123g: gigabytes
-    """
-    if not s:
-        return None
-    mult = None
-    if s[-1].lower() == "k":
-        mult = 1024**1
-    elif s[-1].lower() == "m":
-        mult = 1024**2
-    elif s[-1].lower() == "g":
-        mult = 1024**3
-
-    if mult:
-        s = s[:-1]
-    else:
-        mult = 1
-    try:
-        return int(s) * mult
-    except ValueError:
-        raise ValueError("Invalid size specification: %s" % s)
