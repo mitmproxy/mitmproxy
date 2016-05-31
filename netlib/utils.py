@@ -32,14 +32,6 @@ def native(s, *encoding_opts):
     return s
 
 
-def isascii(bytes):
-    try:
-        bytes.decode("ascii")
-    except ValueError:
-        return False
-    return True
-
-
 def clean_bin(s, keep_spacing=True):
     """
         Cleans binary data to make it safe to display.
