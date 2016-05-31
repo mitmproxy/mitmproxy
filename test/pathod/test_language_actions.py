@@ -53,7 +53,7 @@ class TestInject:
     def test_at(self):
         e = actions.InjectAt.expr()
         v = e.parseString("i0,'foo'")[0]
-        assert v.value.val == "foo"
+        assert v.value.val == b"foo"
         assert v.offset == 0
         assert isinstance(v, actions.InjectAt)
 
