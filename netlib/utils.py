@@ -3,46 +3,10 @@ import os.path
 import re
 import codecs
 import unicodedata
-from abc import ABCMeta, abstractmethod
 import importlib
 import inspect
 
 import six
-
-from six.moves import urllib
-import hyperframe
-
-
-@six.add_metaclass(ABCMeta)
-class Serializable(object):
-    """
-    Abstract Base Class that defines an API to save an object's state and restore it later on.
-    """
-
-    @classmethod
-    @abstractmethod
-    def from_state(cls, state):
-        """
-        Create a new object from the given state.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_state(self):
-        """
-        Retrieve object state.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def set_state(self, state):
-        """
-        Set object state to the given state.
-        """
-        raise NotImplementedError()
-
-    def copy(self):
-        return self.from_state(self.get_state())
 
 
 def always_bytes(unicode_or_bytes, *encode_args):
@@ -67,14 +31,6 @@ def native(s, *encoding_opts):
         if isinstance(s, six.text_type):
             return s.encode(*encoding_opts)
     return s
-
-
-def isascii(bytes):
-    try:
-        bytes.decode("ascii")
-    except ValueError:
-        return False
-    return True
 
 
 def clean_bin(s, keep_spacing=True):
@@ -161,22 +117,6 @@ class BiDi(object):
         return self.values.get(n, default)
 
 
-def pretty_size(size):
-    suffixes = [
-        ("B", 2 ** 10),
-        ("kB", 2 ** 20),
-        ("MB", 2 ** 30),
-    ]
-    for suf, lim in suffixes:
-        if size >= lim:
-            continue
-        else:
-            x = round(size / float(lim / 2 ** 10), 2)
-            if x == int(x):
-                x = int(x)
-            return str(x) + suf
-
-
 class Data(object):
 
     def __init__(self, name):
@@ -222,83 +162,6 @@ def is_valid_port(port):
     return 0 <= port <= 65535
 
 
-# PY2 workaround
-def decode_parse_result(result, enc):
-    if hasattr(result, "decode"):
-        return result.decode(enc)
-    else:
-        return urllib.parse.ParseResult(*[x.decode(enc) for x in result])
-
-
-# PY2 workaround
-def encode_parse_result(result, enc):
-    if hasattr(result, "encode"):
-        return result.encode(enc)
-    else:
-        return urllib.parse.ParseResult(*[x.encode(enc) for x in result])
-
-
-def parse_url(url):
-    """
-        URL-parsing function that checks that
-            - port is an integer 0-65535
-            - host is a valid IDNA-encoded hostname with no null-bytes
-            - path is valid ASCII
-
-        Args:
-            A URL (as bytes or as unicode)
-
-        Returns:
-            A (scheme, host, port, path) tuple
-
-        Raises:
-            ValueError, if the URL is not properly formatted.
-    """
-    parsed = urllib.parse.urlparse(url)
-
-    if not parsed.hostname:
-        raise ValueError("No hostname given")
-
-    if isinstance(url, six.binary_type):
-        host = parsed.hostname
-
-        # this should not raise a ValueError,
-        # but we try to be very forgiving here and accept just everything.
-        # decode_parse_result(parsed, "ascii")
-    else:
-        host = parsed.hostname.encode("idna")
-        parsed = encode_parse_result(parsed, "ascii")
-
-    port = parsed.port
-    if not port:
-        port = 443 if parsed.scheme == b"https" else 80
-
-    full_path = urllib.parse.urlunparse(
-        (b"", b"", parsed.path, parsed.params, parsed.query, parsed.fragment)
-    )
-    if not full_path.startswith(b"/"):
-        full_path = b"/" + full_path
-
-    if not is_valid_host(host):
-        raise ValueError("Invalid Host")
-    if not is_valid_port(port):
-        raise ValueError("Invalid Port")
-
-    return parsed.scheme, host, port, full_path
-
-
-def get_header_tokens(headers, key):
-    """
-        Retrieve all tokens for a header key. A number of different headers
-        follow a pattern where each header line can containe comma-separated
-        tokens, and headers can be set multiple times.
-    """
-    if key not in headers:
-        return []
-    tokens = headers[key].split(",")
-    return [token.strip() for token in tokens]
-
-
 def hostport(scheme, host, port):
     """
         Returns the host component, with a port specifcation if needed.
@@ -310,107 +173,6 @@ def hostport(scheme, host, port):
             return b"%s:%d" % (host, port)
         else:
             return "%s:%d" % (host, port)
-
-
-def unparse_url(scheme, host, port, path=""):
-    """
-    Returns a URL string, constructed from the specified components.
-
-    Args:
-        All args must be str.
-    """
-    if path == "*":
-        path = ""
-    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
-
-
-def urlencode(s):
-    """
-        Takes a list of (key, value) tuples and returns a urlencoded string.
-    """
-    s = [tuple(i) for i in s]
-    return urllib.parse.urlencode(s, False)
-
-
-def urldecode(s):
-    """
-        Takes a urlencoded string and returns a list of (key, value) tuples.
-    """
-    return urllib.parse.parse_qsl(s, keep_blank_values=True)
-
-
-def parse_content_type(c):
-    """
-        A simple parser for content-type values. Returns a (type, subtype,
-        parameters) tuple, where type and subtype are strings, and parameters
-        is a dict. If the string could not be parsed, return None.
-
-        E.g. the following string:
-
-            text/html; charset=UTF-8
-
-        Returns:
-
-            ("text", "html", {"charset": "UTF-8"})
-    """
-    parts = c.split(";", 1)
-    ts = parts[0].split("/", 1)
-    if len(ts) != 2:
-        return None
-    d = {}
-    if len(parts) == 2:
-        for i in parts[1].split(";"):
-            clause = i.split("=", 1)
-            if len(clause) == 2:
-                d[clause[0].strip()] = clause[1].strip()
-    return ts[0].lower(), ts[1].lower(), d
-
-
-def multipartdecode(headers, content):
-    """
-        Takes a multipart boundary encoded string and returns list of (key, value) tuples.
-    """
-    v = headers.get("content-type")
-    if v:
-        v = parse_content_type(v)
-        if not v:
-            return []
-        try:
-            boundary = v[2]["boundary"].encode("ascii")
-        except (KeyError, UnicodeError):
-            return []
-
-        rx = re.compile(br'\bname="([^"]+)"')
-        r = []
-
-        for i in content.split(b"--" + boundary):
-            parts = i.splitlines()
-            if len(parts) > 1 and parts[0][0:2] != b"--":
-                match = rx.search(parts[1])
-                if match:
-                    key = match.group(1)
-                    value = b"".join(parts[3 + parts[2:].index(b""):])
-                    r.append((key, value))
-        return r
-    return []
-
-
-def http2_read_raw_frame(rfile):
-    header = rfile.safe_read(9)
-    length = int(codecs.encode(header[:3], 'hex_codec'), 16)
-
-    if length == 4740180:
-        raise ValueError("Length field looks more like HTTP/1.1: %s" % rfile.peek(20))
-
-    body = rfile.safe_read(length)
-    return [header, body]
-
-
-def http2_read_frame(rfile):
-    header, body = http2_read_raw_frame(rfile)
-    frame, length = hyperframe.frame.Frame.parse_frame_header(header)
-    frame.parse_body(memoryview(body))
-    return frame
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):

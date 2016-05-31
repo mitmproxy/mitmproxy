@@ -4,7 +4,7 @@ import os
 import os.path
 import re
 
-from netlib import tcp
+from netlib import tcp, human
 from . import pathod, version, utils
 
 
@@ -205,7 +205,7 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
     sizelimit = None
     if args.sizelimit:
         try:
-            sizelimit = utils.parse_size(args.sizelimit)
+            sizelimit = human.parse_size(args.sizelimit)
         except ValueError as v:
             return parser.error(v)
     args.sizelimit = sizelimit

@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import six
 from typing import List, Any
 
-from netlib.utils import Serializable
+import netlib.basetypes
 
 
 def _is_list(cls):
@@ -13,7 +13,7 @@ def _is_list(cls):
     return issubclass(cls, List) or is_list_bugfix
 
 
-class StateObject(Serializable):
+class StateObject(netlib.basetypes.Serializable):
 
     """
     An object with serializable state.

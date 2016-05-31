@@ -24,7 +24,7 @@ class TestResponseCore(object):
     """
     def test_repr(self):
         response = tresp()
-        assert repr(response) == "Response(200 OK, unknown content type, 7B)"
+        assert repr(response) == "Response(200 OK, unknown content type, 7b)"
         response.content = None
         assert repr(response) == "Response(200 OK, no content)"
 

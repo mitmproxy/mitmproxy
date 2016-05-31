@@ -6,8 +6,9 @@ import base64
 import configargparse
 
 from netlib.tcp import Address, sslversion_choices
-import netlib.utils
-from . import filt, utils, version
+import netlib.http.url
+from netlib import human
+from . import filt, version
 from .proxy import config
 
 APP_HOST = "mitm.it"
@@ -105,7 +106,7 @@ def parse_setheader(s):
 
 def parse_server_spec(url):
     try:
-        p = netlib.utils.parse_url(url)
+        p = netlib.http.url.parse(url)
         if p[0] not in ("http", "https"):
             raise ValueError()
     except ValueError:
@@ -135,7 +136,9 @@ def get_common_options(options):
     if options.stickyauth_filt:
         stickyauth = options.stickyauth_filt
 
-    stream_large_bodies = utils.parse_size(options.stream_large_bodies)
+    stream_large_bodies = options.stream_large_bodies
+    if stream_large_bodies:
+        stream_large_bodies = human.parse_size(stream_large_bodies)
 
     reps = []
     for i in options.replace:

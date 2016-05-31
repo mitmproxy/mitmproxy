@@ -3,10 +3,10 @@ import copy
 
 import six
 
-from .utils import Serializable, safe_subn
+from . import basetypes, utils
 
 
-class ODict(Serializable):
+class ODict(basetypes.Serializable):
 
     """
         A dictionary-like object for managing ordered (key, value) data. Think
@@ -139,9 +139,9 @@ class ODict(Serializable):
         """
         new, count = [], 0
         for k, v in self.lst:
-            k, c = safe_subn(pattern, repl, k, *args, **kwargs)
+            k, c = utils.safe_subn(pattern, repl, k, *args, **kwargs)
             count += c
-            v, c = safe_subn(pattern, repl, v, *args, **kwargs)
+            v, c = utils.safe_subn(pattern, repl, v, *args, **kwargs)
             count += c
             new.append([k, v])
         self.lst = new

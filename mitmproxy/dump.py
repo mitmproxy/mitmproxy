@@ -4,8 +4,8 @@ import sys
 import click
 import itertools
 
-from netlib import tcp
-from netlib.utils import bytes_to_escaped_str, pretty_size
+from netlib import tcp, human
+from netlib.utils import bytes_to_escaped_str
 from . import flow, filt, contentviews, controller
 from .exceptions import ContentViewException, FlowReadException, ScriptException
 
@@ -287,7 +287,7 @@ class DumpMaster(flow.FlowMaster):
         if flow.response.content is None:
             size = "(content missing)"
         else:
-            size = pretty_size(len(flow.response.content))
+            size = human.pretty_size(len(flow.response.content))
         size = click.style(size, bold=True)
 
         arrows = click.style("<<", bold=True)

@@ -7,7 +7,7 @@ from . import cookies
 from .headers import Headers
 from .message import Message, _native, _always_bytes, MessageData
 from ..multidict import MultiDictView
-from .. import utils
+from .. import human
 
 
 class ResponseData(MessageData):
@@ -36,7 +36,7 @@ class Response(Message):
         if self.content:
             details = "{}, {}".format(
                 self.headers.get("content-type", "unknown content type"),
-                utils.pretty_size(len(self.content))
+                human.pretty_size(len(self.content))
             )
         else:
             details = "no content"

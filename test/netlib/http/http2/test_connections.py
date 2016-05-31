@@ -1,12 +1,12 @@
 import mock
 import codecs
 
-from hyperframe import frame
-
-from netlib import tcp, http, utils
+import hyperframe
+from netlib import tcp, http
 from netlib.tutils import raises
 from netlib.exceptions import TcpDisconnect
 from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
+from netlib.http.http2 import framereader
 
 from ... import tservers
 
@@ -111,11 +111,11 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
             self.wfile.flush()
 
             # check empty settings frame
-            raw = utils.http2_read_raw_frame(self.rfile)
+            raw = framereader.http2_read_raw_frame(self.rfile)
             assert raw == codecs.decode('00000c040000000000000200000000000300000001', 'hex_codec')
 
             # check settings acknowledgement
-            raw = utils.http2_read_raw_frame(self.rfile)
+            raw = framereader.http2_read_raw_frame(self.rfile)
             assert raw == codecs.decode('000000040100000000', 'hex_codec')
 
             # send settings acknowledgement
@@ -214,19 +214,19 @@ class TestApplySettings(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
 
         protocol._apply_settings({
-            frame.SettingsFrame.ENABLE_PUSH: 'foo',
-            frame.SettingsFrame.MAX_CONCURRENT_STREAMS: 'bar',
-            frame.SettingsFrame.INITIAL_WINDOW_SIZE: 'deadbeef',
+            hyperframe.frame.SettingsFrame.ENABLE_PUSH: 'foo',
+            hyperframe.frame.SettingsFrame.MAX_CONCURRENT_STREAMS: 'bar',
+            hyperframe.frame.SettingsFrame.INITIAL_WINDOW_SIZE: 'deadbeef',
         })
 
         assert c.rfile.safe_read(2) == b"OK"
 
         assert protocol.http2_settings[
-            frame.SettingsFrame.ENABLE_PUSH] == 'foo'
+            hyperframe.frame.SettingsFrame.ENABLE_PUSH] == 'foo'
         assert protocol.http2_settings[
-            frame.SettingsFrame.MAX_CONCURRENT_STREAMS] == 'bar'
+            hyperframe.frame.SettingsFrame.MAX_CONCURRENT_STREAMS] == 'bar'
         assert protocol.http2_settings[
-            frame.SettingsFrame.INITIAL_WINDOW_SIZE] == 'deadbeef'
+            hyperframe.frame.SettingsFrame.INITIAL_WINDOW_SIZE] == 'deadbeef'
 
 
 class TestCreateHeaders(object):
@@ -258,7 +258,7 @@ class TestCreateHeaders(object):
             (b'server', b'version')])
 
         protocol = HTTP2Protocol(self.c)
-        protocol.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE] = 8
+        protocol.http2_settings[hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE] = 8
         bytes = protocol._create_headers(headers, 1, end_stream=True)
         assert len(bytes) == 3
         assert bytes[0] == codecs.decode('000008010100000001828487408294e783', 'hex_codec')
@@ -281,7 +281,7 @@ class TestCreateBody(object):
 
     def test_create_body_multiple_frames(self):
         protocol = HTTP2Protocol(self.c)
-        protocol.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE] = 5
+        protocol.http2_settings[hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE] = 5
         bytes = protocol._create_body(b'foobarmehm42', 1)
         assert len(bytes) == 3
         assert bytes[0] == codecs.decode('000005000000000001666f6f6261', 'hex_codec')

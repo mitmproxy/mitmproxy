@@ -5,8 +5,8 @@ import pyparsing as pp
 
 from six.moves import reduce
 from netlib.utils import escaped_str_to_bytes, bytes_to_escaped_str
+from netlib import human
 
-from .. import utils
 from . import generators, exceptions
 
 
@@ -158,7 +158,7 @@ class TokValueGenerate(Token):
         self.usize, self.unit, self.datatype = usize, unit, datatype
 
     def bytes(self):
-        return self.usize * utils.SIZE_UNITS[self.unit]
+        return self.usize * human.SIZE_UNITS[self.unit]
 
     def get_generator(self, settings_):
         return generators.RandomGenerator(self.datatype, self.bytes())
@@ -173,7 +173,7 @@ class TokValueGenerate(Token):
 
         u = reduce(
             operator.or_,
-            [pp.Literal(i) for i in utils.SIZE_UNITS.keys()]
+            [pp.Literal(i) for i in human.SIZE_UNITS.keys()]
         ).leaveWhitespace()
         e = e + pp.Optional(u, default=None)
 

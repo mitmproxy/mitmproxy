@@ -1,11 +1,11 @@
 import time
 from typing import List
 
-from netlib.utils import Serializable
+import netlib.basetypes
 from .flow import Flow
 
 
-class TCPMessage(Serializable):
+class TCPMessage(netlib.basetypes.Serializable):
 
     def __init__(self, from_client, content, timestamp=None):
         self.content = content
