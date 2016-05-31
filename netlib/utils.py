@@ -3,46 +3,12 @@ import os.path
 import re
 import codecs
 import unicodedata
-from abc import ABCMeta, abstractmethod
 import importlib
 import inspect
 
 import six
 
 from six.moves import urllib
-import hyperframe
-
-
-@six.add_metaclass(ABCMeta)
-class Serializable(object):
-    """
-    Abstract Base Class that defines an API to save an object's state and restore it later on.
-    """
-
-    @classmethod
-    @abstractmethod
-    def from_state(cls, state):
-        """
-        Create a new object from the given state.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_state(self):
-        """
-        Retrieve object state.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def set_state(self, state):
-        """
-        Set object state to the given state.
-        """
-        raise NotImplementedError()
-
-    def copy(self):
-        return self.from_state(self.get_state())
 
 
 def always_bytes(unicode_or_bytes, *encode_args):
@@ -393,24 +359,6 @@ def multipartdecode(headers, content):
                     r.append((key, value))
         return r
     return []
-
-
-def http2_read_raw_frame(rfile):
-    header = rfile.safe_read(9)
-    length = int(codecs.encode(header[:3], 'hex_codec'), 16)
-
-    if length == 4740180:
-        raise ValueError("Length field looks more like HTTP/1.1: %s" % rfile.peek(20))
-
-    body = rfile.safe_read(length)
-    return [header, body]
-
-
-def http2_read_frame(rfile):
-    header, body = http2_read_raw_frame(rfile)
-    frame, length = hyperframe.frame.Frame.parse_frame_header(header)
-    frame.parse_body(memoryview(body))
-    return frame
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):

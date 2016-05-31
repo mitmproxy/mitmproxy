@@ -2,11 +2,12 @@ from __future__ import (absolute_import, print_function, division)
 import itertools
 import time
 
+import hyperframe.frame
+
 from hpack.hpack import Encoder, Decoder
 from ... import utils
 from .. import Headers, Response, Request
-
-from hyperframe import frame
+from . import frame
 
 
 class TCPHandler(object):
@@ -38,12 +39,12 @@ class HTTP2Protocol(object):
     CLIENT_CONNECTION_PREFACE = b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n'
 
     HTTP2_DEFAULT_SETTINGS = {
-        frame.SettingsFrame.HEADER_TABLE_SIZE: 4096,
-        frame.SettingsFrame.ENABLE_PUSH: 1,
-        frame.SettingsFrame.MAX_CONCURRENT_STREAMS: None,
-        frame.SettingsFrame.INITIAL_WINDOW_SIZE: 2 ** 16 - 1,
-        frame.SettingsFrame.MAX_FRAME_SIZE: 2 ** 14,
-        frame.SettingsFrame.MAX_HEADER_LIST_SIZE: None,
+        hyperframe.frame.SettingsFrame.HEADER_TABLE_SIZE: 4096,
+        hyperframe.frame.SettingsFrame.ENABLE_PUSH: 1,
+        hyperframe.frame.SettingsFrame.MAX_CONCURRENT_STREAMS: None,
+        hyperframe.frame.SettingsFrame.INITIAL_WINDOW_SIZE: 2 ** 16 - 1,
+        hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE: 2 ** 14,
+        hyperframe.frame.SettingsFrame.MAX_HEADER_LIST_SIZE: None,
     }
 
     def __init__(
@@ -253,9 +254,9 @@ class HTTP2Protocol(object):
             magic = self.tcp_handler.rfile.safe_read(magic_length)
             assert magic == self.CLIENT_CONNECTION_PREFACE
 
-            frm = frame.SettingsFrame(settings={
-                frame.SettingsFrame.ENABLE_PUSH: 0,
-                frame.SettingsFrame.MAX_CONCURRENT_STREAMS: 1,
+            frm = hyperframe.frame.SettingsFrame(settings={
+                hyperframe.frame.SettingsFrame.ENABLE_PUSH: 0,
+                hyperframe.frame.SettingsFrame.MAX_CONCURRENT_STREAMS: 1,
             })
             self.send_frame(frm, hide=True)
             self._receive_settings(hide=True)
@@ -266,7 +267,7 @@ class HTTP2Protocol(object):
 
             self.tcp_handler.wfile.write(self.CLIENT_CONNECTION_PREFACE)
 
-            self.send_frame(frame.SettingsFrame(), hide=True)
+            self.send_frame(hyperframe.frame.SettingsFrame(), hide=True)
             self._receive_settings(hide=True)  # server announces own settings
             self._receive_settings(hide=True)  # server acks my settings
 
@@ -279,18 +280,18 @@ class HTTP2Protocol(object):
 
     def read_frame(self, hide=False):
         while True:
-            frm = utils.http2_read_frame(self.tcp_handler.rfile)
+            frm = frame.http2_read_frame(self.tcp_handler.rfile)
             if not hide and self.dump_frames:  # pragma no cover
                 print(frm.human_readable("<<"))
 
-            if isinstance(frm, frame.PingFrame):
-                raw_bytes = frame.PingFrame(flags=['ACK'], payload=frm.payload).serialize()
+            if isinstance(frm, hyperframe.frame.PingFrame):
+                raw_bytes = hyperframe.frame.PingFrame(flags=['ACK'], payload=frm.payload).serialize()
                 self.tcp_handler.wfile.write(raw_bytes)
                 self.tcp_handler.wfile.flush()
                 continue
-            if isinstance(frm, frame.SettingsFrame) and 'ACK' not in frm.flags:
+            if isinstance(frm, hyperframe.frame.SettingsFrame) and 'ACK' not in frm.flags:
                 self._apply_settings(frm.settings, hide)
-            if isinstance(frm, frame.DataFrame) and frm.flow_controlled_length > 0:
+            if isinstance(frm, hyperframe.frame.DataFrame) and frm.flow_controlled_length > 0:
                 self._update_flow_control_window(frm.stream_id, frm.flow_controlled_length)
             return frm
 
@@ -302,7 +303,7 @@ class HTTP2Protocol(object):
         return True
 
     def _handle_unexpected_frame(self, frm):
-        if isinstance(frm, frame.SettingsFrame):
+        if isinstance(frm, hyperframe.frame.SettingsFrame):
             return
         if self.unhandled_frame_cb:
             self.unhandled_frame_cb(frm)
@@ -310,7 +311,7 @@ class HTTP2Protocol(object):
     def _receive_settings(self, hide=False):
         while True:
             frm = self.read_frame(hide)
-            if isinstance(frm, frame.SettingsFrame):
+            if isinstance(frm, hyperframe.frame.SettingsFrame):
                 break
             else:
                 self._handle_unexpected_frame(frm)
@@ -334,26 +335,26 @@ class HTTP2Protocol(object):
                 old_value = '-'
             self.http2_settings[setting] = value
 
-        frm = frame.SettingsFrame(flags=['ACK'])
+        frm = hyperframe.frame.SettingsFrame(flags=['ACK'])
         self.send_frame(frm, hide)
 
     def _update_flow_control_window(self, stream_id, increment):
-        frm = frame.WindowUpdateFrame(stream_id=0, window_increment=increment)
+        frm = hyperframe.frame.WindowUpdateFrame(stream_id=0, window_increment=increment)
         self.send_frame(frm)
-        frm = frame.WindowUpdateFrame(stream_id=stream_id, window_increment=increment)
+        frm = hyperframe.frame.WindowUpdateFrame(stream_id=stream_id, window_increment=increment)
         self.send_frame(frm)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         def frame_cls(chunks):
             for i in chunks:
                 if i == 0:
-                    yield frame.HeadersFrame, i
+                    yield hyperframe.frame.HeadersFrame, i
                 else:
-                    yield frame.ContinuationFrame, i
+                    yield hyperframe.frame.ContinuationFrame, i
 
         header_block_fragment = self.encoder.encode(headers.fields)
 
-        chunk_size = self.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE]
+        chunk_size = self.http2_settings[hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE]
         chunks = range(0, len(header_block_fragment), chunk_size)
         frms = [frm_cls(
             flags=[],
@@ -374,9 +375,9 @@ class HTTP2Protocol(object):
         if body is None or len(body) == 0:
             return b''
 
-        chunk_size = self.http2_settings[frame.SettingsFrame.MAX_FRAME_SIZE]
+        chunk_size = self.http2_settings[hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE]
         chunks = range(0, len(body), chunk_size)
-        frms = [frame.DataFrame(
+        frms = [hyperframe.frame.DataFrame(
             flags=[],
             stream_id=stream_id,
             data=body[i:i + chunk_size]) for i in chunks]
@@ -400,7 +401,7 @@ class HTTP2Protocol(object):
         while True:
             frm = self.read_frame()
             if (
-                (isinstance(frm, frame.HeadersFrame) or isinstance(frm, frame.ContinuationFrame)) and
+                (isinstance(frm, hyperframe.frame.HeadersFrame) or isinstance(frm, hyperframe.frame.ContinuationFrame)) and
                 (stream_id is None or frm.stream_id == stream_id)
             ):
                 stream_id = frm.stream_id
@@ -414,7 +415,7 @@ class HTTP2Protocol(object):
 
         while body_expected:
             frm = self.read_frame()
-            if isinstance(frm, frame.DataFrame) and frm.stream_id == stream_id:
+            if isinstance(frm, hyperframe.frame.DataFrame) and frm.stream_id == stream_id:
                 body += frm.data
                 if 'END_STREAM' in frm.flags:
                     break

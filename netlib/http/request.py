@@ -6,7 +6,7 @@ import six
 from six.moves import urllib
 
 from netlib import utils
-from netlib.http import cookies
+from . import cookies
 from .. import encoding
 from ..multidict import MultiDictView
 from .headers import Headers

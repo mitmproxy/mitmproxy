@@ -9,12 +9,11 @@ except ImportError:  # pragma: no cover
     from collections import MutableMapping  # Workaround for Python < 3.3
 
 import six
-
-from .utils import Serializable
+from . import basetypes
 
 
 @six.add_metaclass(ABCMeta)
-class _MultiDict(MutableMapping, Serializable):
+class _MultiDict(MutableMapping, basetypes.Serializable):
     def __repr__(self):
         fields = (
             repr(field)
