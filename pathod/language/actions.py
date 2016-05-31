@@ -31,8 +31,11 @@ class _Action(base.Token):
             c.offset = l + 1
         return c
 
-    def __cmp__(self, other):
-        return cmp(self.offset, other.offset)
+    def __lt__(self, other):
+        return self.offset < other.offset
+
+    def __eq__(self, other):
+        return self.offset == other.offset
 
     def __repr__(self):
         return self.spec()
