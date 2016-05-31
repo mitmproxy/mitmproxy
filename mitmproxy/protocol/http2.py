@@ -14,7 +14,7 @@ from hyperframe.frame import PriorityFrame
 from netlib.tcp import ssl_read_select
 from netlib.exceptions import HttpException
 from netlib.http import Headers
-from netlib.http.http2 import frame
+from netlib.http.http2 import framereader
 import netlib.http.url
 
 from .base import Layer
@@ -234,7 +234,7 @@ class Http2Layer(Layer):
 
                 with source_conn.h2.lock:
                     try:
-                        raw_frame = b''.join(frame.http2_read_raw_frame(source_conn.rfile))
+                        raw_frame = b''.join(framereader.http2_read_raw_frame(source_conn.rfile))
                     except:
                         # read frame failed: connection closed
                         self._kill_all_streams()
