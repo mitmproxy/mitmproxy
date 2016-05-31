@@ -306,6 +306,9 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         method = self.request_headers.get(':method', 'GET')
         scheme = self.request_headers.get(':scheme', 'https')
         path = self.request_headers.get(':path', '/')
+        self.request_headers.clear(":method")
+        self.request_headers.clear(":scheme")
+        self.request_headers.clear(":path")
         host = None
         port = None
 
@@ -362,10 +365,15 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
             self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
             self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
 
+            headers = message.headers.copy()
+            headers.insert(0, ":path", message.path)
+            headers.insert(0, ":method", message.method)
+            headers.insert(0, ":scheme", message.scheme)
+
             self.server_conn.h2.safe_send_headers(
                 self.is_zombie,
                 self.server_stream_id,
-                message.headers
+                headers
             )
         self.server_conn.h2.safe_send_body(
             self.is_zombie,
@@ -379,12 +387,14 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         self.response_arrived.wait()
 
         status_code = int(self.response_headers.get(':status', 502))
+        headers = self.response_headers.copy()
+        headers.clear(":status")
 
         return HTTPResponse(
             http_version=b"HTTP/2.0",
             status_code=status_code,
             reason='',
-            headers=self.response_headers,
+            headers=headers,
             content=None,
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
@@ -404,10 +414,12 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
                 raise Http2ProtocolException("Zombie Stream")
 
     def send_response_headers(self, response):
+        headers = response.headers.copy()
+        headers.insert(0, ":status", str(response.status_code))
         self.client_conn.h2.safe_send_headers(
             self.is_zombie,
             self.client_stream_id,
-            response.headers
+            headers
         )
         if self.zombie:  # pragma: no cover
             raise Http2ProtocolException("Zombie Stream")

@@ -312,7 +312,10 @@ class TestReadRequest(tservers.ServerTestBase):
         req = protocol.read_request(NotImplemented)
 
         assert req.stream_id
-        assert req.headers.fields == ((b':method', b'GET'), (b':path', b'/'), (b':scheme', b'https'))
+        assert req.headers.fields == ()
+        assert req.method == "GET"
+        assert req.path == "/"
+        assert req.scheme == "https"
         assert req.content == b'foobar'
 
 
