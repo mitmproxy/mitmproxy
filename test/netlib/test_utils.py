@@ -38,17 +38,6 @@ def test_pretty_size():
     assert utils.pretty_size(1024 * 1024) == "1MB"
 
 
-def test_get_header_tokens():
-    headers = Headers()
-    assert utils.get_header_tokens(headers, "foo") == []
-    headers["foo"] = "bar"
-    assert utils.get_header_tokens(headers, "foo") == ["bar"]
-    headers["foo"] = "bar, voing"
-    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing"]
-    headers.set_all("foo", ["bar, voing", "oink"])
-    assert utils.get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
-
-
 def test_multipartdecode():
     boundary = 'somefancyboundary'
     headers = Headers(

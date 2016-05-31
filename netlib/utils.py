@@ -177,18 +177,6 @@ def is_valid_port(port):
     return 0 <= port <= 65535
 
 
-def get_header_tokens(headers, key):
-    """
-        Retrieve all tokens for a header key. A number of different headers
-        follow a pattern where each header line can containe comma-separated
-        tokens, and headers can be set multiple times.
-    """
-    if key not in headers:
-        return []
-    tokens = headers[key].split(",")
-    return [token.strip() for token in tokens]
-
-
 def hostport(scheme, host, port):
     """
         Returns the host component, with a port specifcation if needed.
