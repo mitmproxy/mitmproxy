@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import urwid
 
-import netlib.utils
+import netlib.http.url
 
 from . import common, signals
 
@@ -343,7 +343,7 @@ class FlowListBox(urwid.ListBox):
         )
 
     def new_request(self, url, method):
-        parts = netlib.utils.parse_url(str(url))
+        parts = netlib.http.url.parse_url(str(url))
         if not parts:
             signals.status_message.send(message="Invalid Url")
             return

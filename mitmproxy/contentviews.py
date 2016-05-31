@@ -27,7 +27,8 @@ import html2text
 import six
 from netlib.odict import ODict
 from netlib import encoding
-from netlib.utils import clean_bin, hexdump, urldecode, multipartdecode, parse_content_type
+from netlib.http import url
+from netlib.utils import clean_bin, hexdump, multipartdecode, parse_content_type
 from . import utils
 from .exceptions import ContentViewException
 from .contrib import jsbeautifier
@@ -257,7 +258,7 @@ class ViewURLEncoded(View):
     content_types = ["application/x-www-form-urlencoded"]
 
     def __call__(self, data, **metadata):
-        d = urldecode(data)
+        d = url.urldecode(data)
         return "URLEncoded form", format_dict(ODict(d))
 
 

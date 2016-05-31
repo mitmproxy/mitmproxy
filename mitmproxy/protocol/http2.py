@@ -14,8 +14,8 @@ from hyperframe.frame import PriorityFrame
 from netlib.tcp import ssl_read_select
 from netlib.exceptions import HttpException
 from netlib.http import Headers
-from netlib.utils import parse_url
 from netlib.http.http2 import frame
+import netlib.http.url
 
 from .base import Layer
 from .http import _HttpTransmissionLayer, HttpLayer
@@ -320,7 +320,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         else:  # pragma: no cover
             first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
-            scheme, host, port, _ = parse_url(path)
+            scheme, host, port, _ = netlib.http.url.parse_url(path)
 
         if authority:
             host, _, port = authority.partition(':')

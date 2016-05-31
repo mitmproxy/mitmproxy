@@ -6,6 +6,7 @@ import re
 from ... import utils
 from ...exceptions import HttpReadDisconnect, HttpSyntaxException, HttpException, TcpDisconnect
 from .. import Request, Response, Headers
+from .. import url
 
 
 def read_request(rfile, body_size_limit=None):
@@ -240,7 +241,7 @@ def _read_request_line(rfile):
             scheme, path = None, None
         else:
             form = "absolute"
-            scheme, host, port, path = utils.parse_url(path)
+            scheme, host, port, path = url.parse_url(path)
 
         _check_http_version(http_version)
     except ValueError:

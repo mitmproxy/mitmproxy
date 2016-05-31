@@ -1,8 +1,8 @@
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 from netlib.odict import ODict
-import netlib.utils
 from netlib import encoding
+from netlib.http import url
 
 import mitmproxy.contentviews as cv
 from . import tutils
@@ -60,10 +60,10 @@ class TestContentView:
         assert f[0] == "Query"
 
     def test_view_urlencoded(self):
-        d = netlib.utils.urlencode([("one", "two"), ("three", "four")])
+        d = url.urlencode([("one", "two"), ("three", "four")])
         v = cv.ViewURLEncoded()
         assert v(d)
-        d = netlib.utils.urlencode([("adsfa", "")])
+        d = url.urlencode([("adsfa", "")])
         v = cv.ViewURLEncoded()
         assert v(d)
 

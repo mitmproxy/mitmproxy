@@ -6,7 +6,7 @@ import base64
 import configargparse
 
 from netlib.tcp import Address, sslversion_choices
-import netlib.utils
+import netlib.http.url
 from . import filt, utils, version
 from .proxy import config
 
@@ -105,7 +105,7 @@ def parse_setheader(s):
 
 def parse_server_spec(url):
     try:
-        p = netlib.utils.parse_url(url)
+        p = netlib.http.url.parse_url(url)
         if p[0] not in ("http", "https"):
             raise ValueError()
     except ValueError:
