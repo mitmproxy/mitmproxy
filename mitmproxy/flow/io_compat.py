@@ -65,5 +65,7 @@ def migrate_flow(flow_data):
             flow_data = converters[flow_version](flow_data)
         else:
             v = ".".join(str(i) for i in flow_data["version"])
-            raise ValueError("Incompatible serialized data version: {}".format(v))
+            raise ValueError(
+                "{} cannot read files serialized with version {}.".format(version.NAMEVERSION, v)
+            )
     return flow_data

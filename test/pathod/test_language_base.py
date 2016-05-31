@@ -41,11 +41,11 @@ class TestTokValueLiteral:
     def test_espr(self):
         v = base.TokValueLiteral("foo")
         assert v.expr()
-        assert v.val == "foo"
+        assert v.val == b"foo"
 
         v = base.TokValueLiteral("foo\n")
         assert v.expr()
-        assert v.val == "foo\n"
+        assert v.val == b"foo\n"
         assert repr(v)
 
     def test_spec(self):
@@ -171,19 +171,19 @@ class TestMisc:
     def test_generators(self):
         v = base.TokValue.parseString("'val'")[0]
         g = v.get_generator({})
-        assert g[:] == "val"
+        assert g[:] == b"val"
 
     def test_value(self):
-        assert base.TokValue.parseString("'val'")[0].val == "val"
-        assert base.TokValue.parseString('"val"')[0].val == "val"
-        assert base.TokValue.parseString('"\'val\'"')[0].val == "'val'"
+        assert base.TokValue.parseString("'val'")[0].val == b"val"
+        assert base.TokValue.parseString('"val"')[0].val == b"val"
+        assert base.TokValue.parseString('"\'val\'"')[0].val == b"'val'"
 
     def test_value2(self):
         class TT(base.Value):
             preamble = "m"
         e = TT.expr()
         v = e.parseString("m'msg'")[0]
-        assert v.value.val == "msg"
+        assert v.value.val == b"msg"
 
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
@@ -235,8 +235,8 @@ class TestKeyValue:
     def test_simple(self):
         e = TKeyValue.expr()
         v = e.parseString("h'foo'='bar'")[0]
-        assert v.key.val == "foo"
-        assert v.value.val == "bar"
+        assert v.key.val == b"foo"
+        assert v.value.val == b"bar"
 
         v2 = e.parseString(v.spec())[0]
         assert v2.key.val == v.key.val
@@ -289,9 +289,9 @@ def test_options_or_value():
             "three"
         ]
     e = TT.expr()
-    assert e.parseString("one")[0].value.val == "one"
-    assert e.parseString("'foo'")[0].value.val == "foo"
-    assert e.parseString("'get'")[0].value.val == "get"
+    assert e.parseString("one")[0].value.val == b"one"
+    assert e.parseString("'foo'")[0].value.val == b"foo"
+    assert e.parseString("'get'")[0].value.val == b"get"
 
     assert e.parseString("one")[0].spec() == "one"
     assert e.parseString("'foo'")[0].spec() == "'foo'"

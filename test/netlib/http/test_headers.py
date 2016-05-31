@@ -1,5 +1,4 @@
-from netlib.http import Headers
-from netlib.http.headers import parse_content_type
+from netlib.http import Headers, parse_content_type
 from netlib.tutils import raises
 
 

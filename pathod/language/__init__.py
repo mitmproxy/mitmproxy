@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import itertools
 import time
 
+from six.moves import range
 import pyparsing as pp
 
 from . import http, http2, websockets, writer, exceptions
@@ -19,7 +20,7 @@ __all__ = [
 def expand(msg):
     times = getattr(msg, "times", None)
     if times:
-        for j_ in xrange(int(times.value)):
+        for j_ in range(int(times.value)):
             yield msg.strike_token("times")
     else:
         yield msg
