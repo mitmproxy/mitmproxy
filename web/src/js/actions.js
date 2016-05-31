@@ -117,6 +117,13 @@ export var FlowActions = {
     },
     clear: function(){
         $.post("/clear");
+    },
+    download: () => window.location = "/flows/dump",
+    upload: (file) => {
+        var filereader = new FileReader();
+        filereader.file = file;
+        filereader.onload = (e) => $.post("/flows/dump", e.target.result);
+        filereader.readAsBinaryString(file);
     }
 };
 

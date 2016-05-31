@@ -345,11 +345,14 @@ var FileMenu = React.createClass({
     },
     handleOpenClick: function (e) {
         e.preventDefault();
-        console.error("unimplemented: handleOpenClick");
+    },
+    handleOpenChange: function (e) {
+        e.preventDefault();
+         FlowActions.upload(e.target.files[0]);
     },
     handleSaveClick: function (e) {
         e.preventDefault();
-        console.error("unimplemented: handleSaveClick");
+        FlowActions.download();
     },
     handleShutdownClick: function (e) {
         e.preventDefault();
@@ -369,10 +372,7 @@ var FileMenu = React.createClass({
                         </a>
                     </li>
                     <li>
-                        <a href="#" onClick={this.handleOpenClick}>
-                            <i className="fa fa-fw fa-folder-open"></i>
-                            Open...
-                        </a>
+                         <input type="file" onChange={this.handleOpenChange}/>
                     </li>
                     <li>
                         <a href="#" onClick={this.handleSaveClick}>
@@ -388,18 +388,6 @@ var FileMenu = React.createClass({
                         </a>
                     </li>
                 {/*
-                 <li>
-                 <a href="#" onClick={this.handleOpenClick}>
-                 <i className="fa fa-fw fa-folder-open"></i>
-                 Open
-                 </a>
-                 </li>
-                 <li>
-                 <a href="#" onClick={this.handleSaveClick}>
-                 <i className="fa fa-fw fa-save"></i>
-                 Save
-                 </a>
-                 </li>
                  <li role="presentation" className="divider"></li>
                  <li>
                  <a href="#" onClick={this.handleShutdownClick}>

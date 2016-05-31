@@ -87,6 +87,9 @@ class WebState(flow.State):
             data=[]
         )
 
+    def load_flows(self, flows):
+        super(WebState, self).load_flows(flows)
+
 
 class Options(object):
     attributes = [
