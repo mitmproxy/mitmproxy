@@ -5,7 +5,7 @@ from textwrap import dedent
 from six.moves.urllib.parse import quote, quote_plus
 
 import netlib.http
-from netlib.utils import parse_content_type
+import netlib.http.headers
 
 
 def curl_command(flow):
@@ -88,7 +88,7 @@ def raw_request(flow):
 
 def is_json(headers, content):
     if headers:
-        ct = parse_content_type(headers.get("content-type", ""))
+        ct = netlib.http.headers.parse_content_type(headers.get("content-type", ""))
         if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
             try:
                 return json.loads(content)

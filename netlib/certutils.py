@@ -12,7 +12,7 @@ from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 
-from .utils import Serializable
+from . import basetypes
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 
@@ -364,7 +364,7 @@ class _GeneralNames(univ.SequenceOf):
         constraint.ValueSizeConstraint(1, 1024)
 
 
-class SSLCert(Serializable):
+class SSLCert(basetypes.Serializable):
 
     def __init__(self, cert):
         """

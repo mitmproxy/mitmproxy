@@ -16,7 +16,7 @@ import six
 import OpenSSL
 from OpenSSL import SSL
 
-from . import certutils, version_check, utils
+from . import certutils, version_check, basetypes
 
 # This is a rather hackish way to make sure that
 # the latest version of pyOpenSSL is actually installed.
@@ -302,7 +302,7 @@ class Reader(_FileLike):
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
 
-class Address(utils.Serializable):
+class Address(basetypes.Serializable):
 
     """
         This class wraps an IPv4/IPv6 tuple to provide named attributes and

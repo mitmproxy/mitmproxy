@@ -4,7 +4,8 @@ import urwid
 import urwid.util
 import os
 
-import netlib.utils
+import netlib
+from netlib import human
 
 from .. import utils
 from .. import flow
@@ -419,7 +420,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
     )
     if f.response:
         if f.response.content:
-            contentdesc = netlib.utils.pretty_size(len(f.response.content))
+            contentdesc = human.pretty_size(len(f.response.content))
         elif f.response.content is None:
             contentdesc = "[content missing]"
         else:
@@ -427,7 +428,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
         duration = 0
         if f.response.timestamp_end and f.request.timestamp_start:
             duration = f.response.timestamp_end - f.request.timestamp_start
-        roundtrip = utils.pretty_duration(duration)
+        roundtrip = human.pretty_duration(duration)
 
         d.update(dict(
             resp_code = f.response.status_code,

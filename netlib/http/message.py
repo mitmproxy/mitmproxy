@@ -4,9 +4,8 @@ import warnings
 
 import six
 
-from .headers import Headers
-from .. import encoding, utils
-from ..utils import always_bytes
+from .. import encoding, utils, basetypes
+from . import headers
 
 if six.PY2:  # pragma: no cover
     def _native(x):
@@ -20,10 +19,10 @@ else:
         return x.decode("utf-8", "surrogateescape")
 
     def _always_bytes(x):
-        return always_bytes(x, "utf-8", "surrogateescape")
+        return utils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class MessageData(utils.Serializable):
+class MessageData(basetypes.Serializable):
     def __eq__(self, other):
         if isinstance(other, MessageData):
             return self.__dict__ == other.__dict__
@@ -38,7 +37,7 @@ class MessageData(utils.Serializable):
     def set_state(self, state):
         for k, v in state.items():
             if k == "headers":
-                v = Headers.from_state(v)
+                v = headers.Headers.from_state(v)
             setattr(self, k, v)
 
     def get_state(self):
@@ -48,11 +47,11 @@ class MessageData(utils.Serializable):
 
     @classmethod
     def from_state(cls, state):
-        state["headers"] = Headers.from_state(state["headers"])
+        state["headers"] = headers.Headers.from_state(state["headers"])
         return cls(**state)
 
 
-class Message(utils.Serializable):
+class Message(basetypes.Serializable):
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
@@ -72,7 +71,7 @@ class Message(utils.Serializable):
 
     @classmethod
     def from_state(cls, state):
-        state["headers"] = Headers.from_state(state["headers"])
+        state["headers"] = headers.Headers.from_state(state["headers"])
         return cls(**state)
 
     @property

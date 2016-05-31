@@ -6,7 +6,9 @@ import six
 from six.moves import urllib
 
 from netlib import utils
-from netlib.http import cookies
+import netlib.http.url
+from netlib.http import multipart
+from . import cookies
 from .. import encoding
 from ..multidict import MultiDictView
 from .headers import Headers
@@ -179,11 +181,11 @@ class Request(Message):
         """
         if self.first_line_format == "authority":
             return "%s:%d" % (self.host, self.port)
-        return utils.unparse_url(self.scheme, self.host, self.port, self.path)
+        return netlib.http.url.unparse(self.scheme, self.host, self.port, self.path)
 
     @url.setter
     def url(self, url):
-        self.scheme, self.host, self.port, self.path = utils.parse_url(url)
+        self.scheme, self.host, self.port, self.path = netlib.http.url.parse(url)
 
     def _parse_host_header(self):
         """Extract the host and port from Host header"""
@@ -219,7 +221,7 @@ class Request(Message):
         """
         if self.first_line_format == "authority":
             return "%s:%d" % (self.pretty_host, self.port)
-        return utils.unparse_url(self.scheme, self.pretty_host, self.port, self.path)
+        return netlib.http.url.unparse(self.scheme, self.pretty_host, self.port, self.path)
 
     @property
     def query(self):
@@ -234,12 +236,12 @@ class Request(Message):
 
     def _get_query(self):
         _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
-        return tuple(utils.urldecode(query))
+        return tuple(netlib.http.url.decode(query))
 
     def _set_query(self, value):
-        query = utils.urlencode(value)
+        query = netlib.http.url.encode(value)
         scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
-        _, _, _, self.path = utils.parse_url(
+        _, _, _, self.path = netlib.http.url.parse(
             urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     @query.setter
@@ -287,7 +289,7 @@ class Request(Message):
         components = map(lambda x: urllib.parse.quote(x, safe=""), components)
         path = "/" + "/".join(components)
         scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
-        _, _, _, self.path = utils.parse_url(
+        _, _, _, self.path = netlib.http.url.parse(
             urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def anticache(self):
@@ -339,7 +341,7 @@ class Request(Message):
     def _get_urlencoded_form(self):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return tuple(utils.urldecode(self.content))
+            return tuple(netlib.http.url.decode(self.content))
         return ()
 
     def _set_urlencoded_form(self, value):
@@ -348,7 +350,7 @@ class Request(Message):
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = utils.urlencode(value)
+        self.content = netlib.http.url.encode(value)
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):
@@ -368,7 +370,7 @@ class Request(Message):
     def _get_multipart_form(self):
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return utils.multipartdecode(self.headers, self.content)
+            return multipart.decode(self.headers, self.content)
         return ()
 
     def _set_multipart_form(self, value):

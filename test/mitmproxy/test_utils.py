@@ -43,21 +43,6 @@ def test_pretty_json():
     assert not utils.pretty_json("moo")
 
 
-def test_pretty_duration():
-    assert utils.pretty_duration(0.00001) == "0ms"
-    assert utils.pretty_duration(0.0001) == "0ms"
-    assert utils.pretty_duration(0.001) == "1ms"
-    assert utils.pretty_duration(0.01) == "10ms"
-    assert utils.pretty_duration(0.1) == "100ms"
-    assert utils.pretty_duration(1) == "1.00s"
-    assert utils.pretty_duration(10) == "10.0s"
-    assert utils.pretty_duration(100) == "100s"
-    assert utils.pretty_duration(1000) == "1000s"
-    assert utils.pretty_duration(10000) == "10000s"
-    assert utils.pretty_duration(1.123) == "1.12s"
-    assert utils.pretty_duration(0.123) == "123ms"
-
-
 def test_LRUCache():
     cache = utils.LRUCache(2)
 
@@ -89,13 +74,3 @@ def test_LRUCache():
 
     assert len(cache.cacheList) == 2
     assert len(cache.cache) == 2
-
-
-def test_parse_size():
-    assert not utils.parse_size("")
-    assert utils.parse_size("1") == 1
-    assert utils.parse_size("1k") == 1024
-    assert utils.parse_size("1m") == 1024**2
-    assert utils.parse_size("1g") == 1024**3
-    tutils.raises(ValueError, utils.parse_size, "1f")
-    tutils.raises(ValueError, utils.parse_size, "ak")

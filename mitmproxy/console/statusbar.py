@@ -3,6 +3,7 @@ import os.path
 import urwid
 
 import netlib.utils
+from netlib import human
 from . import pathedit, signals, common
 
 
@@ -193,7 +194,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("following")
         if self.master.stream_large_bodies:
             opts.append(
-                "stream:%s" % netlib.utils.pretty_size(
+                "stream:%s" % human.pretty_size(
                     self.master.stream_large_bodies.max_size
                 )
             )
@@ -203,7 +204,7 @@ class StatusBar(urwid.WidgetWrap):
 
         if self.master.server.config.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
-            r.append("[dest:%s]" % netlib.utils.unparse_url(
+            r.append("[dest:%s]" % netlib.utils.unparse(
                 dst.scheme,
                 dst.address.host,
                 dst.address.port

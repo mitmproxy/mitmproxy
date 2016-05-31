@@ -6,11 +6,11 @@ import re
 import six
 from OpenSSL import SSL
 
-from netlib import certutils, tcp
+from netlib import certutils, tcp, human
 from netlib.http import authentication
 from netlib.tcp import Address, sslversion_choices
 
-from .. import utils, platform
+from .. import platform
 
 CONF_BASENAME = "mitmproxy"
 CA_DIR = "~/.mitmproxy"
@@ -125,7 +125,9 @@ class ProxyConfig:
 
 
 def process_proxy_options(parser, options):
-    body_size_limit = utils.parse_size(options.body_size_limit)
+    body_size_limit = options.body_size_limit
+    if body_size_limit:
+        body_size_limit = human.parse_size(body_size_limit)
 
     c = 0
     mode, upstream_server, upstream_auth = "regular", None, None

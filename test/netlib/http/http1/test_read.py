@@ -7,9 +7,20 @@ from netlib.http.http1.read import (
     read_request, read_response, read_request_head,
     read_response_head, read_body, connection_close, expected_http_body_size, _get_first_line,
     _read_request_line, _parse_authority_form, _read_response_line, _check_http_version,
-    _read_headers, _read_chunked
+    _read_headers, _read_chunked, get_header_tokens
 )
 from netlib.tutils import treq, tresp, raises
+
+
+def test_get_header_tokens():
+    headers = Headers()
+    assert get_header_tokens(headers, "foo") == []
+    headers["foo"] = "bar"
+    assert get_header_tokens(headers, "foo") == ["bar"]
+    headers["foo"] = "bar, voing"
+    assert get_header_tokens(headers, "foo") == ["bar", "voing"]
+    headers.set_all("foo", ["bar, voing", "oink"])
+    assert get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
 
 
 def test_read_request():

@@ -6,6 +6,19 @@ import re
 from ... import utils
 from ...exceptions import HttpReadDisconnect, HttpSyntaxException, HttpException, TcpDisconnect
 from .. import Request, Response, Headers
+from .. import url
+
+
+def get_header_tokens(headers, key):
+    """
+        Retrieve all tokens for a header key. A number of different headers
+        follow a pattern where each header line can containe comma-separated
+        tokens, and headers can be set multiple times.
+    """
+    if key not in headers:
+        return []
+    tokens = headers[key].split(",")
+    return [token.strip() for token in tokens]
 
 
 def read_request(rfile, body_size_limit=None):
@@ -147,7 +160,7 @@ def connection_close(http_version, headers):
     """
     # At first, check if we have an explicit Connection header.
     if "connection" in headers:
-        tokens = utils.get_header_tokens(headers, "connection")
+        tokens = get_header_tokens(headers, "connection")
         if "close" in tokens:
             return True
         elif "keep-alive" in tokens:
@@ -240,7 +253,7 @@ def _read_request_line(rfile):
             scheme, path = None, None
         else:
             form = "absolute"
-            scheme, host, port, path = utils.parse_url(path)
+            scheme, host, port, path = url.parse(path)
 
         _check_http_version(http_version)
     except ValueError:

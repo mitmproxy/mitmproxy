@@ -1,4 +1,5 @@
 from netlib.http import Headers
+from netlib.http.headers import parse_content_type
 from netlib.tutils import raises
 
 
@@ -72,3 +73,12 @@ class TestHeaders(object):
         replacements = headers.replace(r"Host: ", "X-Host ")
         assert replacements == 0
         assert headers["Host"] == "example.com"
+
+
+def test_parse_content_type():
+    p = parse_content_type
+    assert p("text/html") == ("text", "html", {})
+    assert p("text") is None
+
+    v = p("text/html; charset=UTF-8")
+    assert v == ('text', 'html', {'charset': 'UTF-8'})

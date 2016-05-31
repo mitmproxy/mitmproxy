@@ -13,7 +13,7 @@ from mitmproxy.cmdline import APP_HOST, APP_PORT
 
 import netlib
 from ..netlib import tservers as netlib_tservers
-from netlib.utils import http2_read_raw_frame
+from netlib.http.http2 import framereader
 
 from . import tservers
 
@@ -48,7 +48,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
             done = False
             while not done:
                 try:
-                    raw = b''.join(http2_read_raw_frame(self.rfile))
+                    raw = b''.join(framereader.http2_read_raw_frame(self.rfile))
                     events = h2_conn.receive_data(raw)
                 except:
                     break
@@ -200,7 +200,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         done = False
         while not done:
             try:
-                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+                events = h2_conn.receive_data(b''.join(framereader.http2_read_raw_frame(client.rfile)))
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())
@@ -270,7 +270,7 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
         done = False
         while not done:
             try:
-                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+                events = h2_conn.receive_data(b''.join(framereader.http2_read_raw_frame(client.rfile)))
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())
@@ -362,7 +362,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         responses = 0
         while not done:
             try:
-                raw = b''.join(http2_read_raw_frame(client.rfile))
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except:
                 break
@@ -412,7 +412,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
         responses = 0
         while not done:
             try:
-                events = h2_conn.receive_data(b''.join(http2_read_raw_frame(client.rfile)))
+                events = h2_conn.receive_data(b''.join(framereader.http2_read_raw_frame(client.rfile)))
             except:
                 break
             client.wfile.write(h2_conn.data_to_send())
@@ -479,7 +479,7 @@ class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
         done = False
         while not done:
             try:
-                raw = b''.join(http2_read_raw_frame(client.rfile))
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
                 h2_conn.receive_data(raw)
             except:
                 break
