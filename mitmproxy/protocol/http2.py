@@ -387,12 +387,14 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         self.response_arrived.wait()
 
         status_code = int(self.response_headers.get(':status', 502))
+        headers = self.response_headers.copy()
+        headers.clear(":status")
 
         return HTTPResponse(
             http_version=b"HTTP/2.0",
             status_code=status_code,
             reason='',
-            headers=self.response_headers,
+            headers=headers,
             content=None,
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
@@ -412,10 +414,12 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
                 raise Http2ProtocolException("Zombie Stream")
 
     def send_response_headers(self, response):
+        headers = response.headers.copy()
+        headers.insert(0, ":status", str(response.status_code))
         self.client_conn.h2.safe_send_headers(
             self.is_zombie,
             self.client_stream_id,
-            response.headers
+            headers
         )
         if self.zombie:  # pragma: no cover
             raise Http2ProtocolException("Zombie Stream")
