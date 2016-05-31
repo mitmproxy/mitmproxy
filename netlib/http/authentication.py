@@ -1,5 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
-from argparse import Action, ArgumentTypeError
+import argparse
 import binascii
 
 
@@ -124,7 +124,7 @@ class PassManSingleUser(PassMan):
         return self.username == username and self.password == password_token
 
 
-class AuthAction(Action):
+class AuthAction(argparse.Action):
 
     """
     Helper class to allow seamless integration int argparse. Example usage:
@@ -148,7 +148,7 @@ class SingleuserAuthAction(AuthAction):
 
     def getPasswordManager(self, s):
         if len(s.split(':')) != 2:
-            raise ArgumentTypeError(
+            raise argparse.ArgumentTypeError(
                 "Invalid single-user specification. Please use the format username:password"
             )
         username, password = s.split(':')

@@ -3,18 +3,18 @@ from __future__ import absolute_import, print_function, division
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
 
-from . import cookies
-from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData
-from ..multidict import MultiDictView
-from .. import human
+from netlib.http import cookies
+from netlib.http import headers as nheaders
+from netlib.http import message
+from netlib import multidict
+from netlib import human
 
 
-class ResponseData(MessageData):
+class ResponseData(message.MessageData):
     def __init__(self, http_version, status_code, reason=None, headers=(), content=None,
                  timestamp_start=None, timestamp_end=None):
-        if not isinstance(headers, Headers):
-            headers = Headers(headers)
+        if not isinstance(headers, nheaders.Headers):
+            headers = nheaders.Headers(headers)
 
         self.http_version = http_version
         self.status_code = status_code
@@ -25,7 +25,7 @@ class ResponseData(MessageData):
         self.timestamp_end = timestamp_end
 
 
-class Response(Message):
+class Response(message.Message):
     """
     An HTTP response.
     """
@@ -63,17 +63,17 @@ class Response(Message):
         HTTP Reason Phrase, e.g. "Not Found".
         This is always :py:obj:`None` for HTTP2 requests, because HTTP2 responses do not contain a reason phrase.
         """
-        return _native(self.data.reason)
+        return message._native(self.data.reason)
 
     @reason.setter
     def reason(self, reason):
-        self.data.reason = _always_bytes(reason)
+        self.data.reason = message._always_bytes(reason)
 
     @property
     def cookies(self):
-        # type: () -> MultiDictView
+        # type: () -> multidict.MultiDictView
         """
-        The response cookies. A possibly empty :py:class:`MultiDictView`, where the keys are
+        The response cookies. A possibly empty :py:class:`multidict.MultiDictView`, where the keys are
         cookie name strings, and values are (value, attr) tuples. Value is a string, and attr is
         an ODictCaseless containing cookie attributes. Within attrs, unary attributes (e.g. HTTPOnly)
         are indicated by a Null value.
@@ -81,7 +81,7 @@ class Response(Message):
         Caveats:
             Updating the attr
         """
-        return MultiDictView(
+        return multidict.MultiDictView(
             self._get_cookies,
             self._set_cookies
         )

@@ -2,7 +2,8 @@ from __future__ import (absolute_import, print_function, division)
 import struct
 import array
 import ipaddress
-from . import tcp, utils
+
+from netlib import tcp, utils
 
 
 class SocksError(Exception):

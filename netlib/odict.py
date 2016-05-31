@@ -3,7 +3,7 @@ import copy
 
 import six
 
-from . import basetypes, utils
+from netlib import basetypes, utils
 
 
 class ODict(basetypes.Serializable):

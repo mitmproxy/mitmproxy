@@ -4,8 +4,8 @@ import warnings
 
 import six
 
-from .. import encoding, utils, basetypes
-from . import headers
+from netlib import encoding, utils, basetypes
+from netlib.http import headers
 
 if six.PY2:  # pragma: no cover
     def _native(x):

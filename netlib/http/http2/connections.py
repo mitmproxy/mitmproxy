@@ -5,9 +5,12 @@ import time
 import hyperframe.frame
 
 from hpack.hpack import Encoder, Decoder
-from ... import utils
-from .. import Headers, Response, Request, url
-from . import framereader
+from netlib import utils
+from netlib.http import url
+import netlib.http.headers
+import netlib.http.response
+import netlib.http.request
+from netlib.http.http2 import framereader
 
 
 class TCPHandler(object):
@@ -128,7 +131,7 @@ class HTTP2Protocol(object):
             port = 80 if scheme == 'http' else 443
         port = int(port)
 
-        request = Request(
+        request = netlib.http.request.Request(
             first_line_format,
             method.encode('ascii'),
             scheme.encode('ascii'),
@@ -176,7 +179,7 @@ class HTTP2Protocol(object):
         else:
             timestamp_end = None
 
-        response = Response(
+        response = netlib.http.response.Response(
             b"HTTP/2.0",
             int(headers.get(':status', 502)),
             b'',
@@ -190,15 +193,15 @@ class HTTP2Protocol(object):
         return response
 
     def assemble(self, message):
-        if isinstance(message, Request):
+        if isinstance(message, netlib.http.request.Request):
             return self.assemble_request(message)
-        elif isinstance(message, Response):
+        elif isinstance(message, netlib.http.response.Response):
             return self.assemble_response(message)
         else:
             raise ValueError("HTTP message not supported.")
 
     def assemble_request(self, request):
-        assert isinstance(request, Request)
+        assert isinstance(request, netlib.http.request.Request)
 
         authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
         if self.tcp_handler.address.port != 443:
@@ -222,7 +225,7 @@ class HTTP2Protocol(object):
             self._create_body(request.body, stream_id)))
 
     def assemble_response(self, response):
-        assert isinstance(response, Response)
+        assert isinstance(response, netlib.http.response.Response)
 
         headers = response.headers.copy()
 
@@ -422,7 +425,7 @@ class HTTP2Protocol(object):
             else:
                 self._handle_unexpected_frame(frm)
 
-        headers = Headers(
+        headers = netlib.http.headers.Headers(
             (k.encode('ascii'), v.encode('ascii')) for k, v in self.decoder.decode(header_blocks)
         )
 

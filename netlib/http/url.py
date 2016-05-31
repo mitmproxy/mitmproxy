@@ -1,7 +1,7 @@
 import six
 from six.moves import urllib
 
-from .. import utils
+from netlib import utils
 
 
 # PY2 workaround

@@ -19,7 +19,8 @@ import hashlib
 import os
 
 import six
-from ..http import Headers
+
+from netlib import http
 
 websockets_magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 VERSION = "13"
@@ -72,11 +73,11 @@ class WebsocketsProtocol(object):
             specified, it is generated, and can be found in sec-websocket-key in
             the returned header set.
 
-            Returns an instance of Headers
+            Returns an instance of http.Headers
         """
         if not key:
             key = base64.b64encode(os.urandom(16)).decode('ascii')
-        return Headers(
+        return http.Headers(
             sec_websocket_key=key,
             sec_websocket_version=version,
             connection="Upgrade",
@@ -88,7 +89,7 @@ class WebsocketsProtocol(object):
         """
           The server response is a valid HTTP 101 response.
         """
-        return Headers(
+        return http.Headers(
             sec_websocket_accept=self.create_server_nonce(key),
             connection="Upgrade",
             upgrade="websocket"

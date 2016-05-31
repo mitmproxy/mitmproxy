@@ -3,8 +3,8 @@ from __future__ import absolute_import, print_function, division
 import re
 
 import six
-from ..multidict import MultiDict
-from ..utils import always_bytes
+from netlib import multidict
+from netlib import utils
 
 # See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 
@@ -20,10 +20,10 @@ else:
         return x.decode("utf-8", "surrogateescape")
 
     def _always_bytes(x):
-        return always_bytes(x, "utf-8", "surrogateescape")
+        return utils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class Headers(MultiDict):
+class Headers(multidict.MultiDict):
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.

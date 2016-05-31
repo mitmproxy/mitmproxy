@@ -1,8 +1,8 @@
 import collections
 import re
-from email.utils import parsedate_tz, formatdate, mktime_tz
 
-from netlib.multidict import ImmutableMultiDict
+import email.utils
+from netlib import multidict
 
 """
 A flexible module for cookie parsing and manipulation.
@@ -167,7 +167,7 @@ def parse_set_cookie_headers(headers):
     return ret
 
 
-class CookieAttrs(ImmutableMultiDict):
+class CookieAttrs(multidict.ImmutableMultiDict):
     @staticmethod
     def _kconv(key):
         return key.lower()
@@ -243,10 +243,10 @@ def refresh_set_cookie_header(c, delta):
         raise ValueError("Invalid Cookie")
 
     if "expires" in attrs:
-        e = parsedate_tz(attrs["expires"])
+        e = email.utils.parsedate_tz(attrs["expires"])
         if e:
-            f = mktime_tz(e) + delta
-            attrs = attrs.with_set_all("expires", [formatdate(f)])
+            f = email.utils.mktime_tz(e) + delta
+            attrs = attrs.with_set_all("expires", [email.utils.formatdate(f)])
         else:
             # This can happen when the expires tag is invalid.
             # reddit.com sends a an expires tag like this: "Thu, 31 Dec
