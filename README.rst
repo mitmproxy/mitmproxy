@@ -99,6 +99,15 @@ After installation, you can render the documentation like this:
 The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory and rebuilds
 the documentation when a change is detected.
 
+Style
+-----
+
+Keeping to a consistent code style throughout the project makes it easier to
+contribute and collaborate. Please stick to the guidelines in
+[PEP8](https://www.python.org/dev/peps/pep-0008/p) and the [Google Python Style
+Guide](https://google.github.io/styleguide/pyguide.html) unless there's a very
+good reason not to.
+
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
