@@ -1,6 +1,7 @@
 from netlib.http import Headers
 from netlib.http import multipart
 
+
 def test_decode():
     boundary = 'somefancyboundary'
     headers = Headers(

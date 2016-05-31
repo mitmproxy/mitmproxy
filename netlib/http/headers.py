@@ -176,7 +176,7 @@ class Headers(MultiDict):
         self.fields = fields
         return replacements
 
-        
+
 def parse_content_type(c):
     """
         A simple parser for content-type values. Returns a (type, subtype,

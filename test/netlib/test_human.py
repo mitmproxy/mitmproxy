@@ -1,5 +1,6 @@
 from netlib import human, tutils
 
+
 def test_parse_size():
     assert human.parse_size("0") == 0
     assert human.parse_size("0b") == 0

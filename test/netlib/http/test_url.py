@@ -1,6 +1,7 @@
 from netlib import tutils
 from netlib.http import url
 
+
 def test_parse():
     with tutils.raises(ValueError):
         url.parse("")

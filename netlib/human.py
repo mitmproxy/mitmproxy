@@ -19,7 +19,7 @@ def pretty_size(size):
             if x == int(x):
                 x = int(x)
             return str(x) + suf
-    return "%s%s"%(size, SIZE_TABLE[0][0])
+    return "%s%s" % (size, SIZE_TABLE[0][0])
 
 
 def parse_size(s):

@@ -1,6 +1,7 @@
 import six
 import abc
 
+
 @six.add_metaclass(abc.ABCMeta)
 class Serializable(object):
     """

@@ -1,5 +1,6 @@
 from netlib import basetypes
 
+
 class SerializableDummy(basetypes.Serializable):
     def __init__(self, i):
         self.i = i

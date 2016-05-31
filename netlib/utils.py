@@ -8,6 +8,7 @@ import inspect
 
 import six
 
+
 def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):
         return unicode_or_bytes.encode(*encode_args)

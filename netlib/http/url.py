@@ -3,6 +3,7 @@ from six.moves import urllib
 
 from .. import utils
 
+
 # PY2 workaround
 def decode_parse_result(result, enc):
     if hasattr(result, "decode"):
