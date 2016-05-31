@@ -7,7 +7,7 @@ import hyperframe.frame
 from hpack.hpack import Encoder, Decoder
 from ... import utils
 from .. import Headers, Response, Request, url
-from . import frame
+from . import framereader
 
 
 class TCPHandler(object):
@@ -280,7 +280,7 @@ class HTTP2Protocol(object):
 
     def read_frame(self, hide=False):
         while True:
-            frm = frame.http2_read_frame(self.tcp_handler.rfile)
+            frm = framereader.http2_read_frame(self.tcp_handler.rfile)
             if not hide and self.dump_frames:  # pragma no cover
                 print(frm.human_readable("<<"))
 
