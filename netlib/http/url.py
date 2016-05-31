@@ -19,7 +19,7 @@ def encode_parse_result(result, enc):
         return urllib.parse.ParseResult(*[x.encode(enc) for x in result])
 
 
-def parse_url(url):
+def parse(url):
     """
         URL-parsing function that checks that
             - port is an integer 0-65535
@@ -68,7 +68,7 @@ def parse_url(url):
     return parsed.scheme, host, port, full_path
 
 
-def unparse_url(scheme, host, port, path=""):
+def unparse(scheme, host, port, path=""):
     """
     Returns a URL string, constructed from the specified components.
 
@@ -80,7 +80,7 @@ def unparse_url(scheme, host, port, path=""):
     return "%s://%s%s" % (scheme, utils.hostport(scheme, host, port), path)
 
 
-def urlencode(s):
+def encode(s):
     """
         Takes a list of (key, value) tuples and returns a urlencoded string.
     """
@@ -88,7 +88,7 @@ def urlencode(s):
     return urllib.parse.urlencode(s, False)
 
 
-def urldecode(s):
+def decode(s):
     """
         Takes a urlencoded string and returns a list of (key, value) tuples.
     """

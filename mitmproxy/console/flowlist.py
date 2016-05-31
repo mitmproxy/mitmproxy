@@ -343,7 +343,7 @@ class FlowListBox(urwid.ListBox):
         )
 
     def new_request(self, url, method):
-        parts = netlib.http.url.parse_url(str(url))
+        parts = netlib.http.url.parse(str(url))
         if not parts:
             signals.status_message.send(message="Invalid Url")
             return

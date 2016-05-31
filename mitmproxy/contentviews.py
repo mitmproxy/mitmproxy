@@ -258,7 +258,7 @@ class ViewURLEncoded(View):
     content_types = ["application/x-www-form-urlencoded"]
 
     def __call__(self, data, **metadata):
-        d = url.urldecode(data)
+        d = url.decode(data)
         return "URLEncoded form", format_dict(ODict(d))
 
 

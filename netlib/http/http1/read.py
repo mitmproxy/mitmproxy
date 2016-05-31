@@ -241,7 +241,7 @@ def _read_request_line(rfile):
             scheme, path = None, None
         else:
             form = "absolute"
-            scheme, host, port, path = url.parse_url(path)
+            scheme, host, port, path = url.parse(path)
 
         _check_http_version(http_version)
     except ValueError:

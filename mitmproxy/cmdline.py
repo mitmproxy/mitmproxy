@@ -105,7 +105,7 @@ def parse_setheader(s):
 
 def parse_server_spec(url):
     try:
-        p = netlib.http.url.parse_url(url)
+        p = netlib.http.url.parse(url)
         if p[0] not in ("http", "https"):
             raise ValueError()
     except ValueError:

@@ -320,7 +320,7 @@ class Http2SingleStreamLayer(_HttpTransmissionLayer, threading.Thread):
         else:  # pragma: no cover
             first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
-            scheme, host, port, _ = netlib.http.url.parse_url(path)
+            scheme, host, port, _ = netlib.http.url.parse(path)
 
         if authority:
             host, _, port = authority.partition(':')

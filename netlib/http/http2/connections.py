@@ -118,7 +118,7 @@ class HTTP2Protocol(object):
         else:
             first_line_format = "absolute"
             # FIXME: verify if path or :host contains what we need
-            scheme, host, port, _ = url.parse_url(path)
+            scheme, host, port, _ = url.parse(path)
             scheme = scheme.decode('ascii')
             host = host.decode('ascii')
 

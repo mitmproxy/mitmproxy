@@ -203,7 +203,7 @@ class StatusBar(urwid.WidgetWrap):
 
         if self.master.server.config.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
-            r.append("[dest:%s]" % netlib.utils.unparse_url(
+            r.append("[dest:%s]" % netlib.utils.unparse(
                 dst.scheme,
                 dst.address.host,
                 dst.address.port
