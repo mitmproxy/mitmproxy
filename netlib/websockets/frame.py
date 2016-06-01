@@ -6,10 +6,10 @@ import warnings
 
 import six
 
-from .protocol import Masker
 from netlib import tcp
 from netlib import utils
 from netlib import human
+from netlib.websockets import protocol
 
 
 MAX_16_BIT_INT = (1 << 16)
@@ -267,7 +267,7 @@ class Frame(object):
         """
         b = bytes(self.header)
         if self.header.masking_key:
-            b += Masker(self.header.masking_key)(self.payload)
+            b += protocol.Masker(self.header.masking_key)(self.payload)
         else:
             b += self.payload
         return b
@@ -296,7 +296,7 @@ class Frame(object):
         payload = fp.safe_read(header.payload_length)
 
         if header.mask == 1 and header.masking_key:
-            payload = Masker(header.masking_key)(payload)
+            payload = protocol.Masker(header.masking_key)(payload)
 
         return cls(
             payload,

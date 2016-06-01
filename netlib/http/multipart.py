@@ -1,6 +1,6 @@
 import re
 
-from . import headers
+from netlib.http import headers
 
 
 def decode(hdrs, content):

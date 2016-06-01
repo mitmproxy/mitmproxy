@@ -3,10 +3,12 @@ import time
 import sys
 import re
 
-from ... import utils
-from ...exceptions import HttpReadDisconnect, HttpSyntaxException, HttpException, TcpDisconnect
-from .. import Request, Response, Headers
-from .. import url
+from netlib.http import request
+from netlib.http import response
+from netlib.http import headers
+from netlib.http import url
+from netlib import utils
+from netlib import exceptions
 
 
 def get_header_tokens(headers, key):
@@ -40,9 +42,9 @@ def read_request_head(rfile):
         The HTTP request object (without body)
 
     Raises:
-        HttpReadDisconnect: No bytes can be read from rfile.
-        HttpSyntaxException: The input is malformed HTTP.
-        HttpException: Any other error occured.
+        exceptions.HttpReadDisconnect: No bytes can be read from rfile.
+        exceptions.HttpSyntaxException: The input is malformed HTTP.
+        exceptions.HttpException: Any other error occured.
     """
     timestamp_start = time.time()
     if hasattr(rfile, "reset_timestamps"):
@@ -55,7 +57,7 @@ def read_request_head(rfile):
         # more accurate timestamp_start
         timestamp_start = rfile.first_byte_timestamp
 
-    return Request(
+    return request.Request(
         form, method, scheme, host, port, path, http_version, headers, None, timestamp_start
     )
 
@@ -79,9 +81,9 @@ def read_response_head(rfile):
         The HTTP request object (without body)
 
     Raises:
-        HttpReadDisconnect: No bytes can be read from rfile.
-        HttpSyntaxException: The input is malformed HTTP.
-        HttpException: Any other error occured.
+        exceptions.HttpReadDisconnect: No bytes can be read from rfile.
+        exceptions.HttpSyntaxException: The input is malformed HTTP.
+        exceptions.HttpException: Any other error occured.
     """
 
     timestamp_start = time.time()
@@ -95,7 +97,7 @@ def read_response_head(rfile):
         # more accurate timestamp_start
         timestamp_start = rfile.first_byte_timestamp
 
-    return Response(http_version, status_code, message, headers, None, timestamp_start)
+    return response.Response(http_version, status_code, message, headers, None, timestamp_start)
 
 
 def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
@@ -112,7 +114,7 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
             A generator that yields byte chunks of the content.
 
         Raises:
-            HttpException, if an error occurs
+            exceptions.HttpException, if an error occurs
 
         Caveats:
             max_chunk_size is not considered if the transfer encoding is chunked.
@@ -127,7 +129,7 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
             yield x
     elif expected_size >= 0:
         if limit is not None and expected_size > limit:
-            raise HttpException(
+            raise exceptions.HttpException(
                 "HTTP Body too large. "
                 "Limit is {}, content length was advertised as {}".format(limit, expected_size)
             )
@@ -136,7 +138,7 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
             chunk_size = min(bytes_left, max_chunk_size)
             content = rfile.read(chunk_size)
             if len(content) < chunk_size:
-                raise HttpException("Unexpected EOF")
+                raise exceptions.HttpException("Unexpected EOF")
             yield content
             bytes_left -= chunk_size
     else:
@@ -150,7 +152,7 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
             bytes_left -= chunk_size
         not_done = rfile.read(1)
         if not_done:
-            raise HttpException("HTTP body too large. Limit is {}.".format(limit))
+            raise exceptions.HttpException("HTTP body too large. Limit is {}.".format(limit))
 
 
 def connection_close(http_version, headers):
@@ -180,7 +182,7 @@ def expected_http_body_size(request, response=None):
             - -1, if all data should be read until end of stream.
 
         Raises:
-            HttpSyntaxException, if the content length header is invalid
+            exceptions.HttpSyntaxException, if the content length header is invalid
     """
     # Determine response size according to
     # http://tools.ietf.org/html/rfc7230#section-3.3
@@ -215,7 +217,7 @@ def expected_http_body_size(request, response=None):
                 raise ValueError()
             return size
         except ValueError:
-            raise HttpSyntaxException("Unparseable Content Length")
+            raise exceptions.HttpSyntaxException("Unparseable Content Length")
     if is_request:
         return 0
     return -1
@@ -227,19 +229,19 @@ def _get_first_line(rfile):
         if line == b"\r\n" or line == b"\n":
             # Possible leftover from previous message
             line = rfile.readline()
-    except TcpDisconnect:
-        raise HttpReadDisconnect("Remote disconnected")
+    except exceptions.TcpDisconnect:
+        raise exceptions.HttpReadDisconnect("Remote disconnected")
     if not line:
-        raise HttpReadDisconnect("Remote disconnected")
+        raise exceptions.HttpReadDisconnect("Remote disconnected")
     return line.strip()
 
 
 def _read_request_line(rfile):
     try:
         line = _get_first_line(rfile)
-    except HttpReadDisconnect:
+    except exceptions.HttpReadDisconnect:
         # We want to provide a better error message.
-        raise HttpReadDisconnect("Client disconnected")
+        raise exceptions.HttpReadDisconnect("Client disconnected")
 
     try:
         method, path, http_version = line.split(b" ")
@@ -257,7 +259,7 @@ def _read_request_line(rfile):
 
         _check_http_version(http_version)
     except ValueError:
-        raise HttpSyntaxException("Bad HTTP request line: {}".format(line))
+        raise exceptions.HttpSyntaxException("Bad HTTP request line: {}".format(line))
 
     return form, method, scheme, host, port, path, http_version
 
@@ -276,7 +278,7 @@ def _parse_authority_form(hostport):
         if not utils.is_valid_host(host) or not utils.is_valid_port(port):
             raise ValueError()
     except ValueError:
-        raise HttpSyntaxException("Invalid host specification: {}".format(hostport))
+        raise exceptions.HttpSyntaxException("Invalid host specification: {}".format(hostport))
 
     return host, port
 
@@ -284,9 +286,9 @@ def _parse_authority_form(hostport):
 def _read_response_line(rfile):
     try:
         line = _get_first_line(rfile)
-    except HttpReadDisconnect:
+    except exceptions.HttpReadDisconnect:
         # We want to provide a better error message.
-        raise HttpReadDisconnect("Server disconnected")
+        raise exceptions.HttpReadDisconnect("Server disconnected")
 
     try:
 
@@ -299,14 +301,14 @@ def _read_response_line(rfile):
         _check_http_version(http_version)
 
     except ValueError:
-        raise HttpSyntaxException("Bad HTTP response line: {}".format(line))
+        raise exceptions.HttpSyntaxException("Bad HTTP response line: {}".format(line))
 
     return http_version, status_code, message
 
 
 def _check_http_version(http_version):
     if not re.match(br"^HTTP/\d\.\d$", http_version):
-        raise HttpSyntaxException("Unknown HTTP version: {}".format(http_version))
+        raise exceptions.HttpSyntaxException("Unknown HTTP version: {}".format(http_version))
 
 
 def _read_headers(rfile):
@@ -318,7 +320,7 @@ def _read_headers(rfile):
             A headers object
 
         Raises:
-            HttpSyntaxException
+            exceptions.HttpSyntaxException
     """
     ret = []
     while True:
@@ -327,7 +329,7 @@ def _read_headers(rfile):
             break
         if line[0] in b" \t":
             if not ret:
-                raise HttpSyntaxException("Invalid headers")
+                raise exceptions.HttpSyntaxException("Invalid headers")
             # continued header
             ret[-1] = (ret[-1][0], ret[-1][1] + b'\r\n ' + line.strip())
         else:
@@ -338,8 +340,8 @@ def _read_headers(rfile):
                     raise ValueError()
                 ret.append((name, value))
             except ValueError:
-                raise HttpSyntaxException("Invalid headers")
-    return Headers(ret)
+                raise exceptions.HttpSyntaxException("Invalid headers")
+    return headers.Headers(ret)
 
 
 def _read_chunked(rfile, limit=sys.maxsize):
@@ -354,22 +356,22 @@ def _read_chunked(rfile, limit=sys.maxsize):
     while True:
         line = rfile.readline(128)
         if line == b"":
-            raise HttpException("Connection closed prematurely")
+            raise exceptions.HttpException("Connection closed prematurely")
         if line != b"\r\n" and line != b"\n":
             try:
                 length = int(line, 16)
             except ValueError:
-                raise HttpSyntaxException("Invalid chunked encoding length: {}".format(line))
+                raise exceptions.HttpSyntaxException("Invalid chunked encoding length: {}".format(line))
             total += length
             if total > limit:
-                raise HttpException(
+                raise exceptions.HttpException(
                     "HTTP Body too large. Limit is {}, "
                     "chunked content longer than {}".format(limit, total)
                 )
             chunk = rfile.read(length)
             suffix = rfile.readline(5)
             if suffix != b"\r\n":
-                raise HttpSyntaxException("Malformed chunked body")
+                raise exceptions.HttpSyntaxException("Malformed chunked body")
             if length == 0:
                 return
             yield chunk

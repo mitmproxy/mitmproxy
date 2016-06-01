@@ -9,7 +9,7 @@ except ImportError:  # pragma: no cover
     from collections import MutableMapping  # Workaround for Python < 3.3
 
 import six
-from . import basetypes
+from netlib import basetypes
 
 
 @six.add_metaclass(ABCMeta)

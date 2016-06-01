@@ -12,7 +12,7 @@ from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 
-from . import basetypes
+from netlib import basetypes
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 

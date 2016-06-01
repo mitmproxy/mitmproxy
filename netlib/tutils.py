@@ -7,8 +7,7 @@ from contextlib import contextmanager
 import six
 import sys
 
-from . import utils, tcp
-from .http import Request, Response, Headers
+from netlib import utils, tcp, http
 
 
 def treader(bytes):
@@ -107,11 +106,11 @@ def treq(**kwargs):
         port=22,
         path=b"/path",
         http_version=b"HTTP/1.1",
-        headers=Headers(((b"header", b"qvalue"), (b"content-length", b"7"))),
+        headers=http.Headers(((b"header", b"qvalue"), (b"content-length", b"7"))),
         content=b"content"
     )
     default.update(kwargs)
-    return Request(**default)
+    return http.Request(**default)
 
 
 def tresp(**kwargs):
@@ -123,10 +122,10 @@ def tresp(**kwargs):
         http_version=b"HTTP/1.1",
         status_code=200,
         reason=b"OK",
-        headers=Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
+        headers=http.Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
         content=b"message",
         timestamp_start=time.time(),
         timestamp_end=time.time(),
     )
     default.update(kwargs)
-    return Response(**default)
+    return http.Response(**default)

@@ -5,14 +5,14 @@ import re
 import six
 from six.moves import urllib
 
+from netlib import encoding
+from netlib import multidict
 from netlib import utils
-import netlib.http.url
 from netlib.http import multipart
-from . import cookies
-from .. import encoding
-from ..multidict import MultiDictView
-from .headers import Headers
-from .message import Message, _native, _always_bytes, MessageData
+from netlib.http import cookies
+from netlib.http import headers as nheaders
+from netlib.http import message
+import netlib.http.url
 
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
@@ -20,11 +20,11 @@ from .message import Message, _native, _always_bytes, MessageData
 host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
-class RequestData(MessageData):
+class RequestData(message.MessageData):
     def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=(), content=None,
                  timestamp_start=None, timestamp_end=None):
-        if not isinstance(headers, Headers):
-            headers = Headers(headers)
+        if not isinstance(headers, nheaders.Headers):
+            headers = nheaders.Headers(headers)
 
         self.first_line_format = first_line_format
         self.method = method
@@ -39,7 +39,7 @@ class RequestData(MessageData):
         self.timestamp_end = timestamp_end
 
 
-class Request(Message):
+class Request(message.Message):
     """
     An HTTP request.
     """
@@ -91,22 +91,22 @@ class Request(Message):
         """
         HTTP request method, e.g. "GET".
         """
-        return _native(self.data.method).upper()
+        return message._native(self.data.method).upper()
 
     @method.setter
     def method(self, method):
-        self.data.method = _always_bytes(method)
+        self.data.method = message._always_bytes(method)
 
     @property
     def scheme(self):
         """
         HTTP request scheme, which should be "http" or "https".
         """
-        return _native(self.data.scheme)
+        return message._native(self.data.scheme)
 
     @scheme.setter
     def scheme(self, scheme):
-        self.data.scheme = _always_bytes(scheme)
+        self.data.scheme = message._always_bytes(scheme)
 
     @property
     def host(self):
@@ -168,11 +168,11 @@ class Request(Message):
         if self.data.path is None:
             return None
         else:
-            return _native(self.data.path)
+            return message._native(self.data.path)
 
     @path.setter
     def path(self, path):
-        self.data.path = _always_bytes(path)
+        self.data.path = message._always_bytes(path)
 
     @property
     def url(self):
@@ -225,11 +225,11 @@ class Request(Message):
 
     @property
     def query(self):
-        # type: () -> MultiDictView
+        # type: () -> multidict.MultiDictView
         """
         The request query string as an :py:class:`MultiDictView` object.
         """
-        return MultiDictView(
+        return multidict.MultiDictView(
             self._get_query,
             self._set_query
         )
@@ -250,13 +250,13 @@ class Request(Message):
 
     @property
     def cookies(self):
-        # type: () -> MultiDictView
+        # type: () -> multidict.MultiDictView
         """
         The request cookies.
 
-        An empty :py:class:`MultiDictView` object if the cookie monster ate them all.
+        An empty :py:class:`multidict.MultiDictView` object if the cookie monster ate them all.
         """
-        return MultiDictView(
+        return multidict.MultiDictView(
             self._get_cookies,
             self._set_cookies
         )
@@ -329,11 +329,11 @@ class Request(Message):
     @property
     def urlencoded_form(self):
         """
-        The URL-encoded form data as an :py:class:`MultiDictView` object.
-        An empty MultiDictView if the content-type indicates non-form data
+        The URL-encoded form data as an :py:class:`multidict.MultiDictView` object.
+        An empty multidict.MultiDictView if the content-type indicates non-form data
         or the content could not be parsed.
         """
-        return MultiDictView(
+        return multidict.MultiDictView(
             self._get_urlencoded_form,
             self._set_urlencoded_form
         )
@@ -362,7 +362,7 @@ class Request(Message):
         The multipart form data as an :py:class:`MultipartFormDict` object.
         None if the content-type indicates non-form data.
         """
-        return MultiDictView(
+        return multidict.MultiDictView(
             self._get_multipart_form,
             self._set_multipart_form
         )
