@@ -5,9 +5,10 @@ import socket
 from OpenSSL import SSL
 
 import netlib.exceptions
+import netlib.tcp
 from mitmproxy import models
+from mitmproxy.models import tcp
 from mitmproxy.protocol import base
-from netlib import tcp
 
 
 class RawTCPLayer(base.Layer):
@@ -32,7 +33,7 @@ class RawTCPLayer(base.Layer):
 
         try:
             while not self.channel.should_exit.is_set():
-                r = tcp.ssl_read_select(conns, 10)
+                r = netlib.tcp.ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client
 
@@ -51,7 +52,7 @@ class RawTCPLayer(base.Layer):
                             return
                         continue
 
-                    tcp_message = models.TCPMessage(dst == server, buf[:size].tobytes())
+                    tcp_message = tcp.TCPMessage(dst == server, buf[:size].tobytes())
                     if not self.ignore:
                         flow.messages.append(tcp_message)
                         self.channel.ask("tcp_message", flow)

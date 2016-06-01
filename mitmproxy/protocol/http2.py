@@ -14,8 +14,9 @@ from six.moves import queue
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
-from mitmproxy import protocol
-from netlib import http
+from mitmproxy.protocol import base
+from mitmproxy.protocol import http
+import netlib.http
 from netlib import tcp
 from netlib.http import http2
 
@@ -85,7 +86,7 @@ class SafeH2Connection(connection.H2Connection):
             self.conn.send(self.data_to_send())
 
 
-class Http2Layer(protocol.base.Layer):
+class Http2Layer(base.Layer):
 
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
@@ -132,12 +133,12 @@ class Http2Layer(protocol.base.Layer):
                 eid = event.stream_id
 
         if isinstance(event, events.RequestReceived):
-            headers = http.Headers([[k, v] for k, v in event.headers])
+            headers = netlib.http.Headers([[k, v] for k, v in event.headers])
             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].start()
         elif isinstance(event, events.ResponseReceived):
-            headers = http.Headers([[k, v] for k, v in event.headers])
+            headers = netlib.http.Headers([[k, v] for k, v in event.headers])
             self.streams[eid].queued_data_length = 0
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].response_headers = headers
@@ -175,7 +176,7 @@ class Http2Layer(protocol.base.Layer):
                 self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
                 self.client_conn.send(self.client_conn.h2.data_to_send())
 
-            headers = http.Headers([[str(k), str(v)] for k, v in event.headers])
+            headers = netlib.http.Headers([[str(k), str(v)] for k, v in event.headers])
             headers['x-mitmproxy-pushed'] = 'true'
             self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
             self.streams[event.pushed_stream_id].timestamp_start = time.time()
@@ -249,7 +250,7 @@ class Http2Layer(protocol.base.Layer):
             self._cleanup_streams()
 
 
-class Http2SingleStreamLayer(protocol.http._HttpTransmissionLayer, threading.Thread):
+class Http2SingleStreamLayer(http._HttpTransmissionLayer, threading.Thread):
 
     def __init__(self, ctx, stream_id, request_headers):
         super(Http2SingleStreamLayer, self).__init__(ctx, name="Thread-Http2SingleStreamLayer-{}".format(stream_id))
@@ -444,7 +445,7 @@ class Http2SingleStreamLayer(protocol.http._HttpTransmissionLayer, threading.Thr
         self()
 
     def __call__(self):
-        layer = protocol.http.HttpLayer(self, self.mode)
+        layer = http.HttpLayer(self, self.mode)
 
         try:
             layer()
