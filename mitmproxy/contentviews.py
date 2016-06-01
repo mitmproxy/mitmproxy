@@ -20,12 +20,12 @@ import logging
 import subprocess
 import sys
 
-import PIL
 import html2text
 import lxml.etree
 import lxml.html
 import six
 from PIL import ExifTags
+from PIL import Image
 from six.moves import cStringIO as StringIO
 
 from mitmproxy import exceptions
@@ -36,8 +36,7 @@ from netlib import encoding
 from netlib import http
 from netlib import odict
 from netlib.http import url
-from netlib.utils import clean_bin
-from netlib.utils import hexdump
+from netlib import utils
 
 try:
     import pyamf
@@ -157,7 +156,7 @@ class ViewHex(View):
 
     @staticmethod
     def _format(data):
-        for offset, hexa, s in hexdump(data):
+        for offset, hexa, s in utils.hexdump(data):
             yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
@@ -403,7 +402,7 @@ class ViewImage(View):
 
     def __call__(self, data, **metadata):
         try:
-            img = PIL.Image.open(StringIO(data))
+            img = Image.open(StringIO(data))
         except IOError:
             return None
         parts = [
@@ -582,9 +581,9 @@ def safe_to_print(lines, encoding="utf8"):
         clean_line = []
         for (style, text) in line:
             try:
-                text = clean_bin(text.decode(encoding, "strict"))
+                text = utils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = clean_bin(text).decode(encoding, "strict")
+                text = utils.clean_bin(text).decode(encoding, "strict")
             clean_line.append((style, text))
         yield clean_line
 
