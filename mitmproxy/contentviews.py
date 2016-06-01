@@ -36,8 +36,7 @@ from netlib import encoding
 from netlib import http
 from netlib import odict
 from netlib.http import url
-from netlib.utils import clean_bin
-from netlib.utils import hexdump
+from netlib import utils
 
 try:
     import pyamf
@@ -157,7 +156,7 @@ class ViewHex(View):
 
     @staticmethod
     def _format(data):
-        for offset, hexa, s in hexdump(data):
+        for offset, hexa, s in utils.hexdump(data):
             yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
@@ -582,9 +581,9 @@ def safe_to_print(lines, encoding="utf8"):
         clean_line = []
         for (style, text) in line:
             try:
-                text = clean_bin(text.decode(encoding, "strict"))
+                text = utils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = clean_bin(text).decode(encoding, "strict")
+                text = utils.clean_bin(text).decode(encoding, "strict")
             clean_line.append((style, text))
         yield clean_line
 

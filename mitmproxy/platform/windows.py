@@ -8,10 +8,8 @@ import threading
 import time
 
 import configargparse
-from pydivert.enum import Direction
-from pydivert.enum import Flag
-from pydivert.enum import Layer
-from pydivert.windivert import WinDivert
+from pydivert import enum
+from pydivert import windivert
 from six.moves import cPickle as pickle
 from six.moves import socketserver
 
@@ -199,7 +197,7 @@ class TransparentProxy(object):
         self.api_thread = threading.Thread(target=self.api.serve_forever)
         self.api_thread.daemon = True
 
-        self.driver = WinDivert()
+        self.driver = windivert.WinDivert()
         self.driver.register()
 
         self.request_filter = custom_filter or " or ".join(
@@ -245,23 +243,23 @@ class TransparentProxy(object):
         # real gateway if they are on the same network.
         self.icmp_handle = self.driver.open_handle(
             filter="icmp",
-            layer=Layer.NETWORK,
-            flags=Flag.DROP)
+            layer=enum.Layer.NETWORK,
+            flags=enum.Flag.DROP)
 
         self.response_handle = self.driver.open_handle(
             filter=self.response_filter,
-            layer=Layer.NETWORK)
+            layer=enum.Layer.NETWORK)
         self.response_thread.start()
 
         if self.mode == "forward" or self.mode == "both":
             self.request_forward_handle = self.driver.open_handle(
                 filter=self.request_filter,
-                layer=Layer.NETWORK_FORWARD)
+                layer=enum.Layer.NETWORK_FORWARD)
             self.request_forward_thread.start()
         if self.mode == "local" or self.mode == "both":
             self.request_local_handle = self.driver.open_handle(
                 filter=self.request_filter,
-                layer=Layer.NETWORK)
+                layer=enum.Layer.NETWORK)
             self.request_local_thread.start()
 
     def shutdown(self):
@@ -353,7 +351,7 @@ class TransparentProxy(object):
         self.client_server_map[client] = server
 
         packet.dst_addr, packet.dst_port = self.proxy_addr, self.proxy_port
-        metadata.direction = Direction.INBOUND
+        metadata.direction = enum.Direction.INBOUND
 
         packet = self.driver.update_packet_checksums(packet)
         # Use any handle thats on the NETWORK layer - request_local may be
