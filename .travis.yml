@@ -62,7 +62,12 @@ after_success:
     fi
 
 notifications:
-  slack: mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+  slack:
+      -rooms:
+          mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+      on_success: change
+      on_failure: change
+      on_start: never
 
 cache:
   directories:
