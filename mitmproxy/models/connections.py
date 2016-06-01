@@ -1,12 +1,14 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
 import copy
 import os
 
 import six
 
-from netlib import tcp, certutils
-from .. import stateobject, utils
+from mitmproxy import stateobject
+from mitmproxy import utils
+from netlib import certutils
+from netlib import tcp
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):

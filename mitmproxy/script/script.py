@@ -4,13 +4,15 @@ Script objects know nothing about mitmproxy or mitmproxy's API - this knowledge 
 by the mitmproxy-specific ScriptContext.
 """
 # Do not import __future__ here, this would apply transitively to the inline scripts.
+from __future__ import absolute_import, print_function, division
+
 import os
 import shlex
 import sys
 
 import six
 
-from ..exceptions import ScriptException
+from mitmproxy import exceptions
 
 
 class Script(object):
@@ -41,7 +43,7 @@ class Script(object):
     @staticmethod
     def parse_command(command):
         if not command or not command.strip():
-            raise ScriptException("Empty script command.")
+            raise exceptions.ScriptException("Empty script command.")
         # Windows: escape all backslashes in the path.
         if os.name == "nt":  # pragma: no cover
             backslashes = shlex.split(command, posix=False)[0].count("\\")
@@ -49,13 +51,13 @@ class Script(object):
         args = shlex.split(command)  # pragma: no cover
         args[0] = os.path.expanduser(args[0])
         if not os.path.exists(args[0]):
-            raise ScriptException(
+            raise exceptions.ScriptException(
                 ("Script file not found: %s.\r\n"
                  "If your script path contains spaces, "
                  "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") %
                 args[0])
         elif os.path.isdir(args[0]):
-            raise ScriptException("Not a file: %s" % args[0])
+            raise exceptions.ScriptException("Not a file: %s" % args[0])
         return args
 
     def load(self):
@@ -69,7 +71,7 @@ class Script(object):
                 ScriptException on failure
         """
         if self.ns is not None:
-            raise ScriptException("Script is already loaded")
+            raise exceptions.ScriptException("Script is already loaded")
         script_dir = os.path.dirname(os.path.abspath(self.args[0]))
         self.ns = {'__file__': os.path.abspath(self.args[0])}
         sys.path.append(script_dir)
@@ -80,8 +82,8 @@ class Script(object):
                 exec(code, self.ns, self.ns)
         except Exception:
             six.reraise(
-                ScriptException,
-                ScriptException.from_exception_context(),
+                exceptions.ScriptException,
+                exceptions.ScriptException.from_exception_context(),
                 sys.exc_info()[2]
             )
         finally:
@@ -107,15 +109,15 @@ class Script(object):
                 ScriptException if there was an exception.
         """
         if self.ns is None:
-            raise ScriptException("Script not loaded.")
+            raise exceptions.ScriptException("Script not loaded.")
         f = self.ns.get(name)
         if f:
             try:
                 return f(self.ctx, *args, **kwargs)
             except Exception:
                 six.reraise(
-                    ScriptException,
-                    ScriptException.from_exception_context(),
+                    exceptions.ScriptException,
+                    exceptions.ScriptException.from_exception_context(),
                     sys.exc_info()[2]
                 )
         else:

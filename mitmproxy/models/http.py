@@ -1,11 +1,15 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 import cgi
 
+from mitmproxy import version
+from mitmproxy.models.flow import Flow
 from netlib import encoding
-from netlib.http import status_codes, Headers, Request, Response
+from netlib.http import Headers
+from netlib.http import Request
+from netlib.http import Response
+from netlib.http import status_codes
 from netlib.tcp import Address
-from .. import version
-from .flow import Flow
 
 
 class MessageMixin(object):

@@ -1,9 +1,11 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
 
 import urwid
 
-from . import common, signals
-from .. import filt, version
+from mitmproxy import filt
+from mitmproxy import version
+from mitmproxy.console import common
+from mitmproxy.console import signals
 
 footer = [
     ("heading", 'mitmproxy v%s ' % version.VERSION),

@@ -1,11 +1,11 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
-from ... import platform
-from ...exceptions import ProtocolException
-from ...protocol import Layer, ServerConnectionMixin
+from mitmproxy import exceptions
+from mitmproxy import platform
+from mitmproxy import protocol
 
 
-class TransparentProxy(Layer, ServerConnectionMixin):
+class TransparentProxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __init__(self, ctx):
         super(TransparentProxy, self).__init__(ctx)
@@ -15,7 +15,7 @@ class TransparentProxy(Layer, ServerConnectionMixin):
         try:
             self.server_conn.address = self.resolver.original_addr(self.client_conn.connection)
         except Exception as e:
-            raise ProtocolException("Transparent mode failure: %s" % repr(e))
+            raise exceptions.ProtocolException("Transparent mode failure: %s" % repr(e))
 
         layer = self.ctx.next_layer(self)
         try:

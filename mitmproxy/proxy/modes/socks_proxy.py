@@ -1,13 +1,13 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
-from netlib import socks, tcp
-from netlib.exceptions import TcpException
+import netlib.exceptions
+from mitmproxy import exceptions
+from mitmproxy import protocol
+from netlib import socks
+from netlib import tcp
 
-from ...exceptions import Socks5ProtocolException
-from ...protocol import Layer, ServerConnectionMixin
 
-
-class Socks5Proxy(Layer, ServerConnectionMixin):
+class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __init__(self, ctx):
         super(Socks5Proxy, self).__init__(ctx)
@@ -51,8 +51,8 @@ class Socks5Proxy(Layer, ServerConnectionMixin):
             connect_reply.to_file(self.client_conn.wfile)
             self.client_conn.wfile.flush()
 
-        except (socks.SocksError, TcpException) as e:
-            raise Socks5ProtocolException("SOCKS5 mode failure: %s" % repr(e))
+        except (socks.SocksError, netlib.exceptions.TcpException) as e:
+            raise exceptions.Socks5ProtocolException("SOCKS5 mode failure: %s" % repr(e))
 
         # https://github.com/mitmproxy/mitmproxy/issues/839
         address_bytes = (connect_request.addr.host.encode("idna"), connect_request.addr.port)

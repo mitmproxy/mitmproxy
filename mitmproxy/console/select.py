@@ -1,6 +1,8 @@
+from __future__ import absolute_import, print_function, division
+
 import urwid
 
-from . import common
+from mitmproxy.console import common
 
 
 class _OptionWidget(urwid.WidgetWrap):

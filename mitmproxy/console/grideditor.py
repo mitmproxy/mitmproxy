@@ -1,15 +1,18 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
 
 import copy
-import re
 import os
+import re
+
 import urwid
 
-from netlib.http import user_agents, cookies
-
-from . import common, signals
-from .. import utils, filt, script
-
+from mitmproxy import filt
+from mitmproxy import script
+from mitmproxy import utils
+from mitmproxy.console import common
+from mitmproxy.console import signals
+from netlib.http import cookies
+from netlib.http import user_agents
 
 FOOTER = [
     ('heading_key', "enter"), ":edit ",

@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 from .http_proxy import HttpProxy, HttpUpstreamProxy
 from .reverse_proxy import ReverseProxy
 from .socks_proxy import Socks5Proxy

@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 import collections
 import os
 import re
@@ -6,11 +7,11 @@ import re
 import six
 from OpenSSL import SSL
 
-from netlib import certutils, tcp, human
+from mitmproxy import platform
+from netlib import certutils
+from netlib import human
+from netlib import tcp
 from netlib.http import authentication
-from netlib.tcp import Address, sslversion_choices
-
-from .. import platform
 
 CONF_BASENAME = "mitmproxy"
 CA_DIR = "~/.mitmproxy"
@@ -91,7 +92,7 @@ class ProxyConfig:
         self.body_size_limit = body_size_limit
         self.mode = mode
         if upstream_server:
-            self.upstream_server = ServerSpec(upstream_server[0], Address.wrap(upstream_server[1]))
+            self.upstream_server = ServerSpec(upstream_server[0], tcp.Address.wrap(upstream_server[1]))
             self.upstream_auth = upstream_auth
         else:
             self.upstream_server = None
@@ -111,9 +112,9 @@ class ProxyConfig:
             self.certstore.add_cert_file(spec, cert)
 
         self.openssl_method_client, self.openssl_options_client = \
-            sslversion_choices[ssl_version_client]
+            tcp.sslversion_choices[ssl_version_client]
         self.openssl_method_server, self.openssl_options_server = \
-            sslversion_choices[ssl_version_server]
+            tcp.sslversion_choices[ssl_version_server]
 
         if ssl_verify_upstream_cert:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER

@@ -1,15 +1,17 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
+
+import base64
 import os
 import re
-import base64
 
 import configargparse
 
-from netlib.tcp import Address, sslversion_choices
-import netlib.http.url
+from mitmproxy import filt
+from mitmproxy import version
+from mitmproxy.proxy import config
 from netlib import human
-from . import filt, version
-from .proxy import config
+from netlib import tcp
+from netlib.http import url
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -104,17 +106,17 @@ def parse_setheader(s):
     return _parse_hook(s)
 
 
-def parse_server_spec(url):
+def parse_server_spec(spec):
     try:
-        p = netlib.http.url.parse(url)
+        p = url.parse(spec)
         if p[0] not in ("http", "https"):
             raise ValueError()
     except ValueError:
         raise configargparse.ArgumentTypeError(
-            "Invalid server specification: %s" % url
+            "Invalid server specification: %s" % spec
         )
 
-    address = Address(p[1:3])
+    address = tcp.Address(p[1:3])
     scheme = p[0].lower()
     return config.ServerSpec(scheme, address)
 
@@ -477,14 +479,14 @@ def proxy_ssl_options(parser):
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client",
         default="secure", action="store",
-        choices=sslversion_choices.keys(),
+        choices=tcp.sslversion_choices.keys(),
         help="Set supported SSL/TLS versions for client connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )
     group.add_argument(
         "--ssl-version-server", dest="ssl_version_server",
         default="secure", action="store",
-        choices=sslversion_choices.keys(),
+        choices=tcp.sslversion_choices.keys(),
         help="Set supported SSL/TLS versions for server connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )

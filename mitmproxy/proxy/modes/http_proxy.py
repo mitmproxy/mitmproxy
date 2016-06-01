@@ -1,9 +1,9 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
-from ...protocol import Layer, ServerConnectionMixin
+from mitmproxy import protocol
 
 
-class HttpProxy(Layer, ServerConnectionMixin):
+class HttpProxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __call__(self):
         layer = self.ctx.next_layer(self)
@@ -14,7 +14,7 @@ class HttpProxy(Layer, ServerConnectionMixin):
                 self.disconnect()
 
 
-class HttpUpstreamProxy(Layer, ServerConnectionMixin):
+class HttpUpstreamProxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __init__(self, ctx, server_address):
         super(HttpUpstreamProxy, self).__init__(ctx, server_address=server_address)

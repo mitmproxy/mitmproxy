@@ -1,7 +1,9 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
+
 import urwid
-from . import common, searchable
-from .. import utils
+
+from mitmproxy import utils
+from mitmproxy.console import common, searchable
 
 
 def maybe_timestamp(base, attr):

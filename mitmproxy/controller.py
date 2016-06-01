@@ -1,9 +1,11 @@
-from __future__ import absolute_import
-from six.moves import queue
-import threading
-import functools
+from __future__ import absolute_import, print_function, division
 
-from . import exceptions
+import functools
+import threading
+
+from six.moves import queue
+
+from mitmproxy import exceptions
 
 Events = frozenset([
     "clientconnect",

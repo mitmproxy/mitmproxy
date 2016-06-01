@@ -1,12 +1,13 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
+
 import os
+
+import tornado.template
 import tornado.web
 import tornado.wsgi
-import tornado.template
 
-from .. import utils
-from ..proxy import config
-
+from mitmproxy import utils
+from mitmproxy.proxy import config
 
 loader = tornado.template.Loader(utils.pkg_data.path("onboarding/templates"))
 

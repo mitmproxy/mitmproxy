@@ -1,8 +1,11 @@
+from __future__ import absolute_import, print_function, division
+
 import time
+
 from typing import List
 
 import netlib.basetypes
-from .flow import Flow
+from mitmproxy.models.flow import Flow
 
 
 class TCPMessage(netlib.basetypes.Serializable):

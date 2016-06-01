@@ -1,9 +1,12 @@
+from __future__ import absolute_import, print_function, division
+
 from abc import abstractmethod, ABCMeta
 
 import six
 from typing import List  # noqa
 
-from mitmproxy import models, filt  # noqa
+from mitmproxy import filt
+from mitmproxy import models  # noqa
 
 
 @six.add_metaclass(ABCMeta)

@@ -1,5 +1,8 @@
+from __future__ import absolute_import, print_function, division
+
 import urwid
-from . import signals
+
+from mitmproxy.console import signals
 
 
 class Window(urwid.Frame):

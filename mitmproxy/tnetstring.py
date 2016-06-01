@@ -67,8 +67,9 @@ like so::
     u'\u03b1'
 
 """
-import six
 from collections import deque
+
+import six
 
 __ver_major__ = 0
 __ver_minor__ = 2

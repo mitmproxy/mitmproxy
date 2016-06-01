@@ -1,13 +1,11 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
-
+from mitmproxy import models
+from mitmproxy.protocol import http
 from netlib.http import http1
 
-from .http import _HttpTransmissionLayer, HttpLayer
-from ..models import HTTPRequest, HTTPResponse
 
-
-class Http1Layer(_HttpTransmissionLayer):
+class Http1Layer(http._HttpTransmissionLayer):
 
     def __init__(self, ctx, mode):
         super(Http1Layer, self).__init__(ctx)
@@ -15,7 +13,7 @@ class Http1Layer(_HttpTransmissionLayer):
 
     def read_request(self):
         req = http1.read_request(self.client_conn.rfile, body_size_limit=self.config.body_size_limit)
-        return HTTPRequest.wrap(req)
+        return models.HTTPRequest.wrap(req)
 
     def read_request_body(self, request):
         expected_size = http1.expected_http_body_size(request)
@@ -27,7 +25,7 @@ class Http1Layer(_HttpTransmissionLayer):
 
     def read_response_headers(self):
         resp = http1.read_response_head(self.server_conn.rfile)
-        return HTTPResponse.wrap(resp)
+        return models.HTTPResponse.wrap(resp)
 
     def read_response_body(self, request, response):
         expected_size = http1.expected_http_body_size(request, response)
@@ -63,5 +61,5 @@ class Http1Layer(_HttpTransmissionLayer):
         return close_connection
 
     def __call__(self):
-        layer = HttpLayer(self, self.mode)
+        layer = http.HttpLayer(self, self.mode)
         layer()

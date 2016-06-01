@@ -1,11 +1,12 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 import sys
 
 import six
 
-from ..models import ServerConnection
-from ..exceptions import ProtocolException
-from netlib.exceptions import TcpException
+import netlib.exceptions
+from mitmproxy import exceptions
+from mitmproxy import models
 
 
 class _LayerCodeCompletion(object):
@@ -113,7 +114,7 @@ class ServerConnectionMixin(object):
 
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
-        self.server_conn = ServerConnection(server_address, (self.config.host, 0))
+        self.server_conn = models.ServerConnection(server_address, (self.config.host, 0))
         self.__check_self_connect()
 
     def __check_self_connect(self):
@@ -128,7 +129,7 @@ class ServerConnectionMixin(object):
                 address.host in ("localhost", "127.0.0.1", "::1")
             )
             if self_connect:
-                raise ProtocolException(
+                raise exceptions.ProtocolException(
                     "Invalid server address: {}\r\n"
                     "The proxy shall not connect to itself.".format(repr(address))
                 )
@@ -154,7 +155,7 @@ class ServerConnectionMixin(object):
         self.server_conn.finish()
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
-        self.server_conn = ServerConnection(address, (source_address.host, 0))
+        self.server_conn = models.ServerConnection(address, (source_address.host, 0))
 
     def connect(self):
         """
@@ -165,15 +166,15 @@ class ServerConnectionMixin(object):
             ~mitmproxy.exceptions.ProtocolException: if the connection could not be established.
         """
         if not self.server_conn.address:
-            raise ProtocolException("Cannot connect to server, no server address given.")
+            raise exceptions.ProtocolException("Cannot connect to server, no server address given.")
         self.log("serverconnect", "debug", [repr(self.server_conn.address)])
         self.channel.ask("serverconnect", self.server_conn)
         try:
             self.server_conn.connect()
-        except TcpException as e:
+        except netlib.exceptions.TcpException as e:
             six.reraise(
-                ProtocolException,
-                ProtocolException(
+                exceptions.ProtocolException,
+                exceptions.ProtocolException(
                     "Server connection to {} failed: {}".format(
                         repr(self.server_conn.address), str(e)
                     )

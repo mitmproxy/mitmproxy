@@ -1,18 +1,19 @@
-import configargparse
-from six.moves import cPickle as pickle
-from ctypes import byref, windll, Structure
-from ctypes.wintypes import DWORD
+import collections
+import ctypes
+import ctypes.wintypes
 import os
 import socket
-from six.moves import socketserver
 import struct
 import threading
 import time
-from collections import OrderedDict
 
+import configargparse
+from pydivert.enum import Direction
+from pydivert.enum import Flag
+from pydivert.enum import Layer
 from pydivert.windivert import WinDivert
-from pydivert.enum import Direction, Layer, Flag
-
+from six.moves import cPickle as pickle
+from six.moves import socketserver
 
 PROXY_API_PORT = 8085
 
@@ -91,22 +92,22 @@ ERROR_INSUFFICIENT_BUFFER = 0x7A
 
 
 # http://msdn.microsoft.com/en-us/library/windows/desktop/bb485761(v=vs.85).aspx
-class MIB_TCPROW2(Structure):
+class MIB_TCPROW2(ctypes.Structure):
     _fields_ = [
-        ('dwState', DWORD),
-        ('dwLocalAddr', DWORD),
-        ('dwLocalPort', DWORD),
-        ('dwRemoteAddr', DWORD),
-        ('dwRemotePort', DWORD),
-        ('dwOwningPid', DWORD),
-        ('dwOffloadState', DWORD)
+        ('dwState', ctypes.wintypes.DWORD),
+        ('dwLocalAddr', ctypes.wintypes.DWORD),
+        ('dwLocalPort', ctypes.wintypes.DWORD),
+        ('dwRemoteAddr', ctypes.wintypes.DWORD),
+        ('dwRemotePort', ctypes.wintypes.DWORD),
+        ('dwOwningPid', ctypes.wintypes.DWORD),
+        ('dwOffloadState', ctypes.wintypes.DWORD)
     ]
 
 
 # http://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
 def MIB_TCPTABLE2(size):
-    class _MIB_TCPTABLE2(Structure):
-        _fields_ = [('dwNumEntries', DWORD),
+    class _MIB_TCPTABLE2(ctypes.Structure):
+        _fields_ = [('dwNumEntries', ctypes.wintypes.DWORD),
                     ('table', MIB_TCPROW2 * size)]
 
     return _MIB_TCPTABLE2()
@@ -192,7 +193,7 @@ class TransparentProxy(object):
         self.proxy_addr, self.proxy_port = proxy_addr, proxy_port
         self.connection_cache_size = cache_size
 
-        self.client_server_map = OrderedDict()
+        self.client_server_map = collections.OrderedDict()
 
         self.api = APIServer(self, (api_host, api_port), APIRequestHandler)
         self.api_thread = threading.Thread(target=self.api.serve_forever)
@@ -212,7 +213,7 @@ class TransparentProxy(object):
         self.addr_pid_map = dict()
         self.trusted_pids = set()
         self.tcptable2 = MIB_TCPTABLE2(0)
-        self.tcptable2_size = DWORD(0)
+        self.tcptable2_size = ctypes.wintypes.DWORD(0)
         self.request_local_handle = None
         self.request_local_thread = threading.Thread(target=self.request_local)
         self.request_local_thread.daemon = True
@@ -288,9 +289,9 @@ class TransparentProxy(object):
                 raise
 
     def fetch_pids(self):
-        ret = windll.iphlpapi.GetTcpTable2(
-            byref(
-                self.tcptable2), byref(
+        ret = ctypes.windll.iphlpapi.GetTcpTable2(
+            ctypes.byref(
+                self.tcptable2), ctypes.byref(
                 self.tcptable2_size), 0)
         if ret == ERROR_INSUFFICIENT_BUFFER:
             self.tcptable2 = MIB_TCPTABLE2(self.tcptable2_size.value)

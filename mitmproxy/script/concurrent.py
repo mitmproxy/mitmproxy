@@ -3,6 +3,7 @@ This module provides a @concurrent decorator primitive to
 offload computations from mitmproxy's main master thread.
 """
 from __future__ import absolute_import, print_function, division
+
 import threading
 
 

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, division
+
 import collections
 import hashlib
 import re
@@ -5,9 +7,12 @@ import re
 from six.moves import http_cookiejar
 from six.moves import urllib
 
-from mitmproxy import version, filt, controller
+from mitmproxy import controller
+from mitmproxy import filt
+from mitmproxy import version
 from netlib import wsgi
-from netlib.http import http1, cookies
+from netlib.http import cookies
+from netlib.http import http1
 
 
 class AppRegistry:

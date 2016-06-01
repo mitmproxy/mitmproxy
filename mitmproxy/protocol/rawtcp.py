@@ -1,17 +1,16 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 import socket
 
 from OpenSSL import SSL
-from netlib.exceptions import TcpException
 
-from netlib.tcp import ssl_read_select
-from ..models import Error
-from ..models.tcp import TCPFlow, TCPMessage
-
-from .base import Layer
+import netlib.exceptions
+from mitmproxy import models
+from mitmproxy.protocol import base
+from netlib import tcp
 
 
-class RawTCPLayer(Layer):
+class RawTCPLayer(base.Layer):
     chunk_size = 4096
 
     def __init__(self, ctx, ignore=False):
@@ -22,7 +21,7 @@ class RawTCPLayer(Layer):
         self.connect()
 
         if not self.ignore:
-            flow = TCPFlow(self.client_conn, self.server_conn, self)
+            flow = models.TCPFlow(self.client_conn, self.server_conn, self)
             self.channel.ask("tcp_open", flow)
 
         buf = memoryview(bytearray(self.chunk_size))
@@ -33,7 +32,7 @@ class RawTCPLayer(Layer):
 
         try:
             while not self.channel.should_exit.is_set():
-                r = ssl_read_select(conns, 10)
+                r = tcp.ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client
 
@@ -52,15 +51,15 @@ class RawTCPLayer(Layer):
                             return
                         continue
 
-                    tcp_message = TCPMessage(dst == server, buf[:size].tobytes())
+                    tcp_message = models.TCPMessage(dst == server, buf[:size].tobytes())
                     if not self.ignore:
                         flow.messages.append(tcp_message)
                         self.channel.ask("tcp_message", flow)
                     dst.sendall(tcp_message.content)
 
-        except (socket.error, TcpException, SSL.Error) as e:
+        except (socket.error, netlib.exceptions.TcpException, SSL.Error) as e:
             if not self.ignore:
-                flow.error = Error("TCP connection closed unexpectedly: {}".format(repr(e)))
+                flow.error = models.Error("TCP connection closed unexpectedly: {}".format(repr(e)))
                 self.channel.tell("tcp_error", flow)
         finally:
             if not self.ignore:

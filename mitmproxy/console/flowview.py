@@ -1,17 +1,25 @@
-from __future__ import absolute_import, division
-import os
-import traceback
-import sys
+from __future__ import absolute_import, print_function, division
 
 import math
+import os
+import sys
+import traceback
+
 import urwid
 
-from netlib.http import Headers, status_codes
-from . import common, grideditor, signals, searchable, tabs
-from . import flowdetailview
-from .. import utils, controller, contentviews
-from ..models import HTTPRequest, HTTPResponse, decoded
-from ..exceptions import ContentViewException
+from mitmproxy import contentviews
+from mitmproxy import controller
+from mitmproxy import exceptions
+from mitmproxy import models
+from mitmproxy import utils
+from mitmproxy.console import common
+from mitmproxy.console import flowdetailview
+from mitmproxy.console import grideditor
+from mitmproxy.console import searchable
+from mitmproxy.console import signals
+from mitmproxy.console import tabs
+from netlib.http import Headers
+from netlib.http import status_codes
 
 
 class SearchError(Exception):
@@ -193,12 +201,12 @@ class FlowView(tabs.Tabs):
 
         try:
             query = None
-            if isinstance(message, HTTPRequest):
+            if isinstance(message, models.HTTPRequest):
                 query = message.query
             description, lines = contentviews.get_content_view(
                 viewmode, message.content, headers=message.headers, query=query
             )
-        except ContentViewException:
+        except exceptions.ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()
             signals.add_event(s, "error")
             description, lines = contentviews.get_content_view(
@@ -207,7 +215,7 @@ class FlowView(tabs.Tabs):
             description = description.replace("Raw", "Couldn't parse: falling back to Raw")
 
         # Give hint that you have to tab for the response.
-        if description == "No content" and isinstance(message, HTTPRequest):
+        if description == "No content" and isinstance(message, models.HTTPRequest):
             description = "No request content (press tab to view response)"
 
         # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
@@ -372,7 +380,7 @@ class FlowView(tabs.Tabs):
             message = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = HTTPResponse(
+                self.flow.response = models.HTTPResponse(
                     self.flow.request.http_version,
                     200, "OK", Headers(), ""
                 )
@@ -399,7 +407,7 @@ class FlowView(tabs.Tabs):
                 )
             )
         if part == "r":
-            with decoded(message):
+            with models.decoded(message):
                 # Fix an issue caused by some editors when editing a
                 # request/response body. Many editors make it hard to save a
                 # file without a terminating newline on the last line. When

@@ -25,15 +25,16 @@ Another subtle design goal of this architecture is that upstream connections sho
 as late as possible; this makes server replay without any outgoing connections possible.
 """
 
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 from .base import Layer, ServerConnectionMixin
-from .tls import TlsLayer
-from .tls import is_tls_record_magic
-from .tls import TlsClientHello
 from .http import UpstreamConnectLayer
 from .http1 import Http1Layer
 from .http2 import Http2Layer
 from .rawtcp import RawTCPLayer
+from .tls import TlsClientHello
+from .tls import TlsLayer
+from .tls import is_tls_record_magic
 
 __all__ = [
     "Layer", "ServerConnectionMixin",

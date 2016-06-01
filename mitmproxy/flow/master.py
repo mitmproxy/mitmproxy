@@ -1,16 +1,22 @@
+from __future__ import absolute_import, print_function, division
+
 import os
 import sys
 
 from typing import List, Optional, Set  # noqa
 
-from mitmproxy import controller, script, filt, models
-from mitmproxy.exceptions import FlowReadException, Kill
-from mitmproxy.flow import io, modules
+import netlib.exceptions
+from mitmproxy import controller
+from mitmproxy import exceptions
+from mitmproxy import filt
+from mitmproxy import models
+from mitmproxy import script
+from mitmproxy.flow import io
+from mitmproxy.flow import modules
 from mitmproxy.onboarding import app
-from mitmproxy.protocol.http_replay import RequestReplayThread
+from mitmproxy.protocol import http_replay
 from mitmproxy.proxy.config import HostMatcher
 from netlib import utils
-from netlib.exceptions import HttpException
 
 
 class FlowMaster(controller.Master):
@@ -311,7 +317,7 @@ class FlowMaster(controller.Master):
                     freader = io.FlowReader(f)
                     return self.load_flows(freader)
         except IOError as v:
-            raise FlowReadException(v.strerror)
+            raise exceptions.FlowReadException(v.strerror)
 
     def process_new_request(self, f):
         if self.stickycookie_state:
@@ -351,7 +357,7 @@ class FlowMaster(controller.Master):
             f.response = None
             f.error = None
             self.process_new_request(f)
-            rt = RequestReplayThread(
+            rt = http_replay.RequestReplayThread(
                 self.server.config,
                 f,
                 self.event_queue if run_scripthooks else False,
@@ -405,7 +411,7 @@ class FlowMaster(controller.Master):
                 )
                 if err:
                     self.add_event("Error in wsgi app. %s" % err, "error")
-                f.reply(Kill)
+                f.reply(exceptions.Kill)
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
@@ -421,8 +427,8 @@ class FlowMaster(controller.Master):
         try:
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
-        except HttpException:
-            f.reply(Kill)
+        except netlib.exceptions.HttpException:
+            f.reply(exceptions.Kill)
             return
         self.run_script_hook("responseheaders", f)
         return f
