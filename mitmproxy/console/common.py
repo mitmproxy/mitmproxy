@@ -1,17 +1,16 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
+
+import os
 
 import urwid
 import urwid.util
-import os
 
 import netlib
+from mitmproxy import flow
+from mitmproxy import models
+from mitmproxy import utils
+from mitmproxy.console import signals
 from netlib import human
-
-from .. import utils
-from .. import flow
-from ..models import decoded
-from . import signals
-
 
 try:
     import pyperclip
@@ -260,7 +259,7 @@ def copy_flow_format_data(part, scope, flow):
         if scope in ("q", "a"):
             if flow.request.content is None:
                 return None, "Request content is missing"
-            with decoded(flow.request):
+            with models.decoded(flow.request):
                 if part == "h":
                     data += netlib.http.http1.assemble_request(flow.request)
                 elif part == "c":
@@ -273,7 +272,7 @@ def copy_flow_format_data(part, scope, flow):
         if scope in ("s", "a") and flow.response:
             if flow.response.content is None:
                 return None, "Response content is missing"
-            with decoded(flow.response):
+            with models.decoded(flow.response):
                 if part == "h":
                     data += netlib.http.http1.assemble_response(flow.response)
                 elif part == "c":

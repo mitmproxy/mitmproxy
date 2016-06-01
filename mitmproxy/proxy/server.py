@@ -1,17 +1,18 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
-import traceback
-import sys
 import socket
+import sys
+import traceback
+
 import six
 
+import netlib.exceptions
+from mitmproxy import exceptions
+from mitmproxy import models
+from mitmproxy.proxy import modes
+from mitmproxy.proxy import root_context
 from netlib import tcp
-from netlib.exceptions import TcpException
-from netlib.http.http1 import assemble_response
-from ..exceptions import ProtocolException, ServerException, ClientHandshakeException, Kill
-from ..models import ClientConnection, make_error_response
-from .modes import HttpUpstreamProxy, HttpProxy, ReverseProxy, TransparentProxy, Socks5Proxy
-from .root_context import RootContext, Log
+from netlib.http import http1
 
 
 class DummyServer:
@@ -43,8 +44,8 @@ class ProxyServer(tcp.TCPServer):
             super(ProxyServer, self).__init__((config.host, config.port))
         except socket.error as e:
             six.reraise(
-                ServerException,
-                ServerException('Error starting proxy server: ' + repr(e)),
+                exceptions.ServerException,
+                exceptions.ServerException('Error starting proxy server: ' + repr(e)),
                 sys.exc_info()[2]
             )
         self.channel = None
@@ -67,7 +68,7 @@ class ConnectionHandler(object):
     def __init__(self, client_conn, client_address, config, channel):
         self.config = config
         """@type: mitmproxy.proxy.config.ProxyConfig"""
-        self.client_conn = ClientConnection(
+        self.client_conn = models.ClientConnection(
             client_conn,
             client_address,
             None)
@@ -76,7 +77,7 @@ class ConnectionHandler(object):
         """@type: mitmproxy.controller.Channel"""
 
     def _create_root_layer(self):
-        root_context = RootContext(
+        root_ctx = root_context.RootContext(
             self.client_conn,
             self.config,
             self.channel
@@ -84,25 +85,25 @@ class ConnectionHandler(object):
 
         mode = self.config.mode
         if mode == "upstream":
-            return HttpUpstreamProxy(
-                root_context,
+            return modes.HttpUpstreamProxy(
+                root_ctx,
                 self.config.upstream_server.address
             )
         elif mode == "transparent":
-            return TransparentProxy(root_context)
+            return modes.TransparentProxy(root_ctx)
         elif mode == "reverse":
             server_tls = self.config.upstream_server.scheme == "https"
-            return ReverseProxy(
-                root_context,
+            return modes.ReverseProxy(
+                root_ctx,
                 self.config.upstream_server.address,
                 server_tls
             )
         elif mode == "socks5":
-            return Socks5Proxy(root_context)
+            return modes.Socks5Proxy(root_ctx)
         elif mode == "regular":
-            return HttpProxy(root_context)
+            return modes.HttpProxy(root_ctx)
         elif callable(mode):  # pragma: no cover
-            return mode(root_context)
+            return mode(root_ctx)
         else:  # pragma: no cover
             raise ValueError("Unknown proxy mode: %s" % mode)
 
@@ -114,11 +115,11 @@ class ConnectionHandler(object):
         try:
             root_layer = self.channel.ask("clientconnect", root_layer)
             root_layer()
-        except Kill:
+        except exceptions.Kill:
             self.log("Connection killed", "info")
-        except ProtocolException as e:
+        except exceptions.ProtocolException as e:
 
-            if isinstance(e, ClientHandshakeException):
+            if isinstance(e, exceptions.ClientHandshakeException):
                 self.log(
                     "Client Handshake failed. "
                     "The client may not trust the proxy's certificate for {}.".format(e.server),
@@ -133,9 +134,9 @@ class ConnectionHandler(object):
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.
             try:
-                error_response = make_error_response(502, repr(e))
-                self.client_conn.send(assemble_response(error_response))
-            except TcpException:
+                error_response = models.make_error_response(502, repr(e))
+                self.client_conn.send(http1.assemble_response(error_response))
+            except netlib.exceptions.TcpException:
                 pass
         except Exception:
             self.log(traceback.format_exc(), "error")
@@ -149,4 +150,4 @@ class ConnectionHandler(object):
 
     def log(self, msg, level):
         msg = "{}: {}".format(repr(self.client_conn.address), msg)
-        self.channel.tell("log", Log(msg, level))
+        self.channel.tell("log", root_context.Log(msg, level))

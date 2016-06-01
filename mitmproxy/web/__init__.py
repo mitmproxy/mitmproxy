@@ -1,14 +1,16 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
+
 import collections
-import tornado.ioloop
-import tornado.httpserver
 import sys
 
-from netlib.http import authentication
+import tornado.httpserver
+import tornado.ioloop
 
-from .. import flow, controller
-from ..exceptions import FlowReadException
-from . import app
+from mitmproxy import controller
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy.web import app
+from netlib.http import authentication
 
 
 class Stop(Exception):
@@ -156,7 +158,7 @@ class WebMaster(flow.FlowMaster):
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except FlowReadException as v:
+            except exceptions.FlowReadException as v:
                 self.add_event(
                     "Could not read flow file: %s" % v,
                     "error"

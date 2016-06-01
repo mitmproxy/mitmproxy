@@ -1,13 +1,16 @@
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function, division
+
 import os
 import signal
 import sys
+
 from six.moves import _thread  # PY3: We only need _thread.error, which is an alias of RuntimeError in 3.3+
-from netlib.version_check import check_pyopenssl_version
-from . import cmdline
-from .exceptions import ServerException
-from .proxy.server import DummyServer, ProxyServer
-from .proxy.config import process_proxy_options
+
+from mitmproxy import cmdline
+from mitmproxy import exceptions
+from mitmproxy.proxy import config
+from mitmproxy.proxy import server
+from netlib import version_check
 
 
 def assert_utf8_env():
@@ -28,11 +31,11 @@ def assert_utf8_env():
 
 def get_server(dummy_server, options):
     if dummy_server:
-        return DummyServer(options)
+        return server.DummyServer(options)
     else:
         try:
-            return ProxyServer(options)
-        except ServerException as v:
+            return server.ProxyServer(options)
+        except exceptions.ServerException as v:
             print(str(v), file=sys.stderr)
             sys.exit(1)
 
@@ -44,7 +47,7 @@ def mitmproxy(args=None):  # pragma: no cover
         sys.exit(1)
     from . import console
 
-    check_pyopenssl_version()
+    version_check.check_pyopenssl_version()
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
@@ -52,7 +55,7 @@ def mitmproxy(args=None):  # pragma: no cover
     if options.quiet:
         options.verbose = 0
 
-    proxy_config = process_proxy_options(parser, options)
+    proxy_config = cmdline.process_proxy_options(parser, options)
     console_options = console.Options(**cmdline.get_common_options(options))
     console_options.palette = options.palette
     console_options.palette_transparent = options.palette_transparent
@@ -74,7 +77,7 @@ def mitmproxy(args=None):  # pragma: no cover
 def mitmdump(args=None):  # pragma: no cover
     from . import dump
 
-    check_pyopenssl_version()
+    version_check.check_pyopenssl_version()
 
     parser = cmdline.mitmdump()
     options = parser.parse_args(args)
@@ -82,7 +85,7 @@ def mitmdump(args=None):  # pragma: no cover
         options.verbose = 0
         options.flow_detail = 0
 
-    proxy_config = process_proxy_options(parser, options)
+    proxy_config = config.process_proxy_options(parser, options)
     dump_options = dump.Options(**cmdline.get_common_options(options))
     dump_options.flow_detail = options.flow_detail
     dump_options.keepserving = options.keepserving
@@ -108,7 +111,7 @@ def mitmdump(args=None):  # pragma: no cover
 def mitmweb(args=None):  # pragma: no cover
     from . import web
 
-    check_pyopenssl_version()
+    version_check.check_pyopenssl_version()
 
     parser = cmdline.mitmweb()
 
@@ -116,7 +119,7 @@ def mitmweb(args=None):  # pragma: no cover
     if options.quiet:
         options.verbose = 0
 
-    proxy_config = process_proxy_options(parser, options)
+    proxy_config = config.process_proxy_options(parser, options)
     web_options = web.Options(**cmdline.get_common_options(options))
     web_options.intercept = options.intercept
     web_options.wdebug = options.wdebug

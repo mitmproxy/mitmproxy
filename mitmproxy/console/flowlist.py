@@ -1,9 +1,10 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
+
 import urwid
 
 import netlib.http.url
-
-from . import common, signals
+from mitmproxy.console import common
+from mitmproxy.console import signals
 
 
 def _mkhelp():

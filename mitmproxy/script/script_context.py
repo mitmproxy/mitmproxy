@@ -2,7 +2,8 @@
 The mitmproxy script context provides an API to inline scripts.
 """
 from __future__ import absolute_import, print_function, division
-from .. import contentviews
+
+from mitmproxy import contentviews
 
 
 class ScriptContext(object):

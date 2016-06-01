@@ -1,14 +1,16 @@
+from __future__ import absolute_import, print_function, division
+
+import base64
+import json
+import logging
 import os.path
 import re
 
 import six
-import tornado.web
 import tornado.websocket
-import logging
-import json
-import base64
 
-from .. import version, filt
+from mitmproxy import filt
+from mitmproxy import version
 
 
 def _strip_content(flow_state):

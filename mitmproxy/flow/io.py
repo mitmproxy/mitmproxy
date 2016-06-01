@@ -1,7 +1,10 @@
+from __future__ import absolute_import, print_function, division
+
 import os
 
-from mitmproxy import tnetstring, models
-from mitmproxy.exceptions import FlowReadException
+from mitmproxy import exceptions
+from mitmproxy import models
+from mitmproxy import tnetstring
 from mitmproxy.flow import io_compat
 
 
@@ -38,17 +41,17 @@ class FlowReader:
                 try:
                     data = io_compat.migrate_flow(data)
                 except ValueError as e:
-                    raise FlowReadException(str(e))
+                    raise exceptions.FlowReadException(str(e))
                 if can_tell:
                     off = self.fo.tell()
                 if data["type"] not in models.FLOW_TYPES:
-                    raise FlowReadException("Unknown flow type: {}".format(data["type"]))
+                    raise exceptions.FlowReadException("Unknown flow type: {}".format(data["type"]))
                 yield models.FLOW_TYPES[data["type"]].from_state(data)
         except ValueError:
             # Error is due to EOF
             if can_tell and self.fo.tell() == off and self.fo.read() == '':
                 return
-            raise FlowReadException("Invalid data format.")
+            raise exceptions.FlowReadException("Invalid data format.")
 
 
 class FilteredFlowWriter:
@@ -79,5 +82,5 @@ def read_flows_from_paths(paths):
             with open(path, "rb") as f:
                 flows.extend(FlowReader(f).stream())
     except IOError as e:
-        raise FlowReadException(e.strerror)
+        raise exceptions.FlowReadException(e.strerror)
     return flows

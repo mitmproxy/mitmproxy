@@ -1,7 +1,8 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
 
 import six
-from typing import List, Any
+from typing import Any
+from typing import List
 
 import netlib.basetypes
 

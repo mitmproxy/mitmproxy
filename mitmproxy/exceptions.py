@@ -5,11 +5,10 @@ Every Exception mitmproxy raises shall be a subclass of ProxyException.
 
 See also: http://lucumr.pocoo.org/2014/10/16/on-error-handling/
 """
-from __future__ import (absolute_import, print_function, division)
-
-import traceback
+from __future__ import absolute_import, print_function, division
 
 import sys
+import traceback
 
 
 class ProxyException(Exception):

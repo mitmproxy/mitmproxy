@@ -1,7 +1,8 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 import datetime
-import time
 import json
+import time
 
 import netlib.utils
 

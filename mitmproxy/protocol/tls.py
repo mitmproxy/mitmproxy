@@ -1,16 +1,15 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
 import struct
 import sys
 
-from construct import ConstructError
+import construct
 import six
-from netlib.exceptions import InvalidCertificateException
-from netlib.exceptions import TlsException
 
-from ..contrib.tls._constructs import ClientHello
-from ..exceptions import ProtocolException, TlsProtocolException, ClientHandshakeException
-from .base import Layer
+import netlib.exceptions
+from mitmproxy import exceptions
+from mitmproxy.contrib.tls import _constructs
+from mitmproxy.protocol import base
 
 
 # taken from https://testssl.sh/openssl-rfc.mappping.html
@@ -246,11 +245,11 @@ def get_client_hello(client_conn):
     while len(client_hello) < client_hello_size:
         record_header = client_conn.rfile.peek(offset + 5)[offset:]
         if not is_tls_record_magic(record_header) or len(record_header) != 5:
-            raise TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
+            raise exceptions.TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
         record_size = struct.unpack("!H", record_header[3:])[0] + 5
         record_body = client_conn.rfile.peek(offset + record_size)[offset + 5:]
         if len(record_body) != record_size - 5:
-            raise TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
+            raise exceptions.TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
         client_hello += record_body
         offset += record_size
         client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
@@ -260,7 +259,7 @@ def get_client_hello(client_conn):
 class TlsClientHello(object):
 
     def __init__(self, raw_client_hello):
-        self._client_hello = ClientHello.parse(raw_client_hello)
+        self._client_hello = _constructs.ClientHello.parse(raw_client_hello)
 
     def raw(self):
         return self._client_hello
@@ -297,21 +296,23 @@ class TlsClientHello(object):
         """
         try:
             raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.
-        except ProtocolException as e:
-            raise TlsProtocolException('Cannot read raw Client Hello: %s' % repr(e))
+        except exceptions.ProtocolException as e:
+            raise exceptions.TlsProtocolException('Cannot read raw Client Hello: %s' % repr(e))
 
         try:
             return cls(raw_client_hello)
-        except ConstructError as e:
-            raise TlsProtocolException('Cannot parse Client Hello: %s, Raw Client Hello: %s' %
-                                       (repr(e), raw_client_hello.encode("hex")))
+        except construct.ConstructError as e:
+            raise exceptions.TlsProtocolException(
+                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
+                (repr(e), raw_client_hello.encode("hex"))
+            )
 
     def __repr__(self):
         return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
             (self.sni, self.alpn_protocols, self.cipher_suites)
 
 
-class TlsLayer(Layer):
+class TlsLayer(base.Layer):
 
     """
     The TLS layer implements transparent TLS connections.
@@ -345,7 +346,7 @@ class TlsLayer(Layer):
             # Peek into the connection, read the initial client hello and parse it to obtain SNI and ALPN values.
             try:
                 self._client_hello = TlsClientHello.from_client_conn(self.client_conn)
-            except TlsProtocolException as e:
+            except exceptions.TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
         # Do we need to do a server handshake now?
@@ -490,10 +491,10 @@ class TlsLayer(Layer):
             # The reason for this might be difficult to find, so we try to peek here to see if it
             # raises ann error.
             self.client_conn.rfile.peek(1)
-        except TlsException as e:
+        except netlib.exceptions.TlsException as e:
             six.reraise(
-                ClientHandshakeException,
-                ClientHandshakeException(
+                exceptions.ClientHandshakeException,
+                exceptions.ClientHandshakeException(
                     "Cannot establish TLS with client (sni: {sni}): {e}".format(
                         sni=self._client_hello.sni, e=repr(e)
                     ),
@@ -544,7 +545,7 @@ class TlsLayer(Layer):
                     (tls_cert_err['depth'], tls_cert_err['errno']),
                     "error")
                 self.log("Ignoring server verification error, continuing with connection", "error")
-        except InvalidCertificateException as e:
+        except netlib.exceptions.InvalidCertificateException as e:
             tls_cert_err = self.server_conn.ssl_verification_error
             self.log(
                 "TLS verification failed for upstream server at depth %s with error: %s" %
@@ -552,18 +553,18 @@ class TlsLayer(Layer):
                 "error")
             self.log("Aborting connection attempt", "error")
             six.reraise(
-                TlsProtocolException,
-                TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                exceptions.TlsProtocolException,
+                exceptions.TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
                     sni=self.server_sni,
                     e=repr(e),
                 )),
                 sys.exc_info()[2]
             )
-        except TlsException as e:
+        except netlib.exceptions.TlsException as e:
             six.reraise(
-                TlsProtocolException,
-                TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+                exceptions.TlsProtocolException,
+                exceptions.TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
                     sni=self.server_sni,
                     e=repr(e),

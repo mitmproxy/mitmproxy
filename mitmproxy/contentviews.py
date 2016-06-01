@@ -12,27 +12,31 @@ use. For HTTP, the message headers are passed as the ``headers`` keyword argumen
 requests, the query parameters are passed as the ``query`` keyword argument.
 
 """
-from __future__ import (absolute_import, print_function, division)
-from six.moves import cStringIO as StringIO
+from __future__ import absolute_import, print_function, division
+
+import datetime
 import json
 import logging
 import subprocess
 import sys
-import lxml.html
-import lxml.etree
-import datetime
-from PIL import Image
-from PIL.ExifTags import TAGS
+
 import html2text
+import lxml.etree
+import lxml.html
 import six
-from netlib.odict import ODict
-from netlib import encoding, http
+from PIL import ExifTags
+from PIL import Image
+from six.moves import cStringIO as StringIO
+
+import mitmproxy.utils
+from mitmproxy import exceptions
+from mitmproxy.contrib import jsbeautifier
+from mitmproxy.contrib.wbxml import ASCommandResponse
+from netlib import encoding
+from netlib import http
+from netlib import odict
 from netlib.http import url
-from netlib.utils import clean_bin, hexdump
-from . import utils
-from .exceptions import ContentViewException
-from .contrib import jsbeautifier
-from .contrib.wbxml.ASCommandResponse import ASCommandResponse
+import netlib.utils
 
 try:
     import pyamf
@@ -125,11 +129,11 @@ class ViewAuto(View):
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
-            elif utils.isXML(data):
+            elif mitmproxy.utils.isXML(data):
                 return get("XML")(data, **metadata)
         if metadata.get("query"):
             return get("Query")(data, **metadata)
-        if data and utils.isMostlyBin(data):
+        if data and mitmproxy.utils.isMostlyBin(data):
             return get("Hex")(data)
         if not data:
             return "No content", []
@@ -152,7 +156,7 @@ class ViewHex(View):
 
     @staticmethod
     def _format(data):
-        for offset, hexa, s in hexdump(data):
+        for offset, hexa, s in netlib.utils.hexdump(data):
             yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
@@ -211,7 +215,7 @@ class ViewJSON(View):
     content_types = ["application/json"]
 
     def __call__(self, data, **metadata):
-        pretty_json = utils.pretty_json(data)
+        pretty_json = mitmproxy.utils.pretty_json(data)
         if pretty_json:
             return "JSON", format_text(pretty_json)
 
@@ -222,7 +226,7 @@ class ViewHTML(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if utils.isXML(data):
+        if mitmproxy.utils.isXML(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -259,7 +263,7 @@ class ViewURLEncoded(View):
 
     def __call__(self, data, **metadata):
         d = url.decode(data)
-        return "URLEncoded form", format_dict(ODict(d))
+        return "URLEncoded form", format_dict(odict.ODict(d))
 
 
 class ViewMultipart(View):
@@ -270,7 +274,7 @@ class ViewMultipart(View):
     @staticmethod
     def _format(v):
         yield [("highlight", "Form data:\n")]
-        for message in format_dict(ODict(v)):
+        for message in format_dict(odict.ODict(v)):
             yield message
 
     def __call__(self, data, **metadata):
@@ -415,11 +419,11 @@ class ViewImage(View):
             ex = img._getexif()
             if ex:
                 for i in sorted(ex.keys()):
-                    tag = TAGS.get(i, i)
+                    tag = ExifTags.TAGS.get(i, i)
                     parts.append(
                         (str(tag), str(ex[i]))
                     )
-        fmt = format_dict(ODict(parts))
+        fmt = format_dict(odict.ODict(parts))
         return "%s image" % img.format, fmt
 
 
@@ -490,7 +494,7 @@ class ViewWBXML(View):
     def __call__(self, data, **metadata):
 
         try:
-            parser = ASCommandResponse(data)
+            parser = ASCommandResponse.ASCommandResponse(data)
             parsedContent = parser.xmlString
             if parsedContent:
                 return "WBXML", format_text(parsedContent)
@@ -519,12 +523,12 @@ def add(view):
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
-            raise ContentViewException("Duplicate view: " + view.name)
+            raise exceptions.ContentViewException("Duplicate view: " + view.name)
 
     # TODO: the UI should auto-prompt for a replacement shortcut
     for prompt in view_prompts:
         if prompt[1] == view.prompt[1]:
-            raise ContentViewException("Duplicate view shortcut: " + view.prompt[1])
+            raise exceptions.ContentViewException("Duplicate view shortcut: " + view.prompt[1])
 
     views.append(view)
 
@@ -577,9 +581,9 @@ def safe_to_print(lines, encoding="utf8"):
         clean_line = []
         for (style, text) in line:
             try:
-                text = clean_bin(text.decode(encoding, "strict"))
+                text = netlib.utils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = clean_bin(text).decode(encoding, "strict")
+                text = netlib.utils.clean_bin(text).decode(encoding, "strict")
             clean_line.append((style, text))
         yield clean_line
 
@@ -611,8 +615,8 @@ def get_content_view(viewmode, data, **metadata):
     # Third-party viewers can fail in unexpected ways...
     except Exception as e:
         six.reraise(
-            ContentViewException,
-            ContentViewException(str(e)),
+            exceptions.ContentViewException,
+            exceptions.ContentViewException(str(e)),
             sys.exc_info()[2]
         )
     if not ret:

@@ -1,10 +1,14 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
+
 import copy
 import uuid
 
-from .. import stateobject, utils, version
-from .connections import ClientConnection, ServerConnection
-from ..exceptions import Kill
+from mitmproxy import exceptions
+from mitmproxy import stateobject
+from mitmproxy import utils
+from mitmproxy import version
+from mitmproxy.models.connections import ClientConnection
+from mitmproxy.models.connections import ServerConnection
 
 
 class Error(stateobject.StateObject):
@@ -151,7 +155,7 @@ class Flow(stateobject.StateObject):
         """
         self.error = Error("Connection killed")
         self.intercepted = False
-        self.reply(Kill)
+        self.reply(exceptions.Kill)
         master.error(self)
 
     def intercept(self, master):

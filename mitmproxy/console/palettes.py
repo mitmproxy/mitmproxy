@@ -3,6 +3,7 @@
 #
 # http://urwid.org/manual/displayattributes.html
 #
+from __future__ import absolute_import, print_function, division
 
 
 class Palette:

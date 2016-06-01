@@ -1,18 +1,17 @@
-import configargparse
-from six.moves import cPickle as pickle
-from ctypes import byref, windll, Structure
-from ctypes.wintypes import DWORD
+import collections
+import ctypes
+import ctypes.wintypes
 import os
 import socket
-from six.moves import socketserver
 import struct
 import threading
 import time
-from collections import OrderedDict
 
-from pydivert.windivert import WinDivert
-from pydivert.enum import Direction, Layer, Flag
-
+import configargparse
+from pydivert import enum
+from pydivert import windivert
+from six.moves import cPickle as pickle
+from six.moves import socketserver
 
 PROXY_API_PORT = 8085
 
@@ -91,22 +90,22 @@ ERROR_INSUFFICIENT_BUFFER = 0x7A
 
 
 # http://msdn.microsoft.com/en-us/library/windows/desktop/bb485761(v=vs.85).aspx
-class MIB_TCPROW2(Structure):
+class MIB_TCPROW2(ctypes.Structure):
     _fields_ = [
-        ('dwState', DWORD),
-        ('dwLocalAddr', DWORD),
-        ('dwLocalPort', DWORD),
-        ('dwRemoteAddr', DWORD),
-        ('dwRemotePort', DWORD),
-        ('dwOwningPid', DWORD),
-        ('dwOffloadState', DWORD)
+        ('dwState', ctypes.wintypes.DWORD),
+        ('dwLocalAddr', ctypes.wintypes.DWORD),
+        ('dwLocalPort', ctypes.wintypes.DWORD),
+        ('dwRemoteAddr', ctypes.wintypes.DWORD),
+        ('dwRemotePort', ctypes.wintypes.DWORD),
+        ('dwOwningPid', ctypes.wintypes.DWORD),
+        ('dwOffloadState', ctypes.wintypes.DWORD)
     ]
 
 
 # http://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
 def MIB_TCPTABLE2(size):
-    class _MIB_TCPTABLE2(Structure):
-        _fields_ = [('dwNumEntries', DWORD),
+    class _MIB_TCPTABLE2(ctypes.Structure):
+        _fields_ = [('dwNumEntries', ctypes.wintypes.DWORD),
                     ('table', MIB_TCPROW2 * size)]
 
     return _MIB_TCPTABLE2()
@@ -192,13 +191,13 @@ class TransparentProxy(object):
         self.proxy_addr, self.proxy_port = proxy_addr, proxy_port
         self.connection_cache_size = cache_size
 
-        self.client_server_map = OrderedDict()
+        self.client_server_map = collections.OrderedDict()
 
         self.api = APIServer(self, (api_host, api_port), APIRequestHandler)
         self.api_thread = threading.Thread(target=self.api.serve_forever)
         self.api_thread.daemon = True
 
-        self.driver = WinDivert()
+        self.driver = windivert.WinDivert()
         self.driver.register()
 
         self.request_filter = custom_filter or " or ".join(
@@ -212,7 +211,7 @@ class TransparentProxy(object):
         self.addr_pid_map = dict()
         self.trusted_pids = set()
         self.tcptable2 = MIB_TCPTABLE2(0)
-        self.tcptable2_size = DWORD(0)
+        self.tcptable2_size = ctypes.wintypes.DWORD(0)
         self.request_local_handle = None
         self.request_local_thread = threading.Thread(target=self.request_local)
         self.request_local_thread.daemon = True
@@ -244,23 +243,23 @@ class TransparentProxy(object):
         # real gateway if they are on the same network.
         self.icmp_handle = self.driver.open_handle(
             filter="icmp",
-            layer=Layer.NETWORK,
-            flags=Flag.DROP)
+            layer=enum.Layer.NETWORK,
+            flags=enum.Flag.DROP)
 
         self.response_handle = self.driver.open_handle(
             filter=self.response_filter,
-            layer=Layer.NETWORK)
+            layer=enum.Layer.NETWORK)
         self.response_thread.start()
 
         if self.mode == "forward" or self.mode == "both":
             self.request_forward_handle = self.driver.open_handle(
                 filter=self.request_filter,
-                layer=Layer.NETWORK_FORWARD)
+                layer=enum.Layer.NETWORK_FORWARD)
             self.request_forward_thread.start()
         if self.mode == "local" or self.mode == "both":
             self.request_local_handle = self.driver.open_handle(
                 filter=self.request_filter,
-                layer=Layer.NETWORK)
+                layer=enum.Layer.NETWORK)
             self.request_local_thread.start()
 
     def shutdown(self):
@@ -288,9 +287,9 @@ class TransparentProxy(object):
                 raise
 
     def fetch_pids(self):
-        ret = windll.iphlpapi.GetTcpTable2(
-            byref(
-                self.tcptable2), byref(
+        ret = ctypes.windll.iphlpapi.GetTcpTable2(
+            ctypes.byref(
+                self.tcptable2), ctypes.byref(
                 self.tcptable2_size), 0)
         if ret == ERROR_INSUFFICIENT_BUFFER:
             self.tcptable2 = MIB_TCPTABLE2(self.tcptable2_size.value)
@@ -352,7 +351,7 @@ class TransparentProxy(object):
         self.client_server_map[client] = server
 
         packet.dst_addr, packet.dst_port = self.proxy_addr, self.proxy_port
-        metadata.direction = Direction.INBOUND
+        metadata.direction = enum.Direction.INBOUND
 
         packet = self.driver.update_packet_checksums(packet)
         # Use any handle thats on the NETWORK layer - request_local may be

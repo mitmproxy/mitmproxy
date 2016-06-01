@@ -1,10 +1,14 @@
+from __future__ import absolute_import, print_function, division
+
 import os.path
 
 import urwid
 
 import netlib.utils
+from mitmproxy.console import common
+from mitmproxy.console import pathedit
+from mitmproxy.console import signals
 from netlib import human
-from . import pathedit, signals, common
 
 
 class ActionBar(urwid.WidgetWrap):

@@ -1,9 +1,9 @@
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 
-from ...protocol import Layer, ServerConnectionMixin
+from mitmproxy import protocol
 
 
-class ReverseProxy(Layer, ServerConnectionMixin):
+class ReverseProxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __init__(self, ctx, server_address, server_tls):
         super(ReverseProxy, self).__init__(ctx, server_address=server_address)

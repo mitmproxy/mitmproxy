@@ -1,6 +1,10 @@
+from __future__ import absolute_import, print_function, division
+
 import os
 import sys
+
 from watchdog.events import RegexMatchingEventHandler
+
 if sys.platform == 'darwin':  # pragma: no cover
     from watchdog.observers.polling import PollingObserver as Observer
 else:

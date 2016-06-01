@@ -1,6 +1,11 @@
+from __future__ import absolute_import, print_function, division
+
 import urwid
 
-from . import select, common, palettes, signals
+from mitmproxy.console import common
+from mitmproxy.console import palettes
+from mitmproxy.console import select
+from mitmproxy.console import signals
 
 footer = [
     ('heading_key', "enter/space"), ":select",

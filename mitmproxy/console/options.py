@@ -1,8 +1,13 @@
+from __future__ import absolute_import, print_function, division
+
 import urwid
 
-from .. import contentviews
-from . import common, signals, grideditor
-from . import select, palettes
+from mitmproxy import contentviews
+from mitmproxy.console import common
+from mitmproxy.console import grideditor
+from mitmproxy.console import palettes
+from mitmproxy.console import select
+from mitmproxy.console import signals
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",

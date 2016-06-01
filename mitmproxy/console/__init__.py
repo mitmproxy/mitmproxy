@@ -1,8 +1,7 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
 import mailcap
 import mimetypes
-import tempfile
 import os
 import os.path
 import shlex
@@ -10,16 +9,28 @@ import signal
 import stat
 import subprocess
 import sys
+import tempfile
 import traceback
-import urwid
 import weakref
 
-from netlib import tcp
+import urwid
 
-from .. import flow, script, contentviews, controller
-from . import flowlist, flowview, help, window, signals, options
-from . import grideditor, palettes, statusbar, palettepicker
-from ..exceptions import FlowReadException, ScriptException
+from mitmproxy import contentviews
+from mitmproxy import controller
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import script
+from mitmproxy.console import flowlist
+from mitmproxy.console import flowview
+from mitmproxy.console import grideditor
+from mitmproxy.console import help
+from mitmproxy.console import options
+from mitmproxy.console import palettepicker
+from mitmproxy.console import palettes
+from mitmproxy.console import signals
+from mitmproxy.console import statusbar
+from mitmproxy.console import window
+from netlib import tcp
 
 EVENTLOG_SIZE = 500
 
@@ -231,7 +242,7 @@ class ConsoleMaster(flow.FlowMaster):
             for i in options.scripts:
                 try:
                     self.load_script(i)
-                except ScriptException as e:
+                except exceptions.ScriptException as e:
                     print("Script load error: {}".format(e), file=sys.stderr)
                     sys.exit(1)
 
@@ -352,7 +363,7 @@ class ConsoleMaster(flow.FlowMaster):
         """
         try:
             return flow.read_flows_from_paths(path)
-        except FlowReadException as e:
+        except exceptions.FlowReadException as e:
             signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
@@ -636,7 +647,7 @@ class ConsoleMaster(flow.FlowMaster):
         reterr = None
         try:
             flow.FlowMaster.load_flows_file(self, path)
-        except FlowReadException as e:
+        except exceptions.FlowReadException as e:
             reterr = str(e)
         signals.flowlist_change.send(self)
         return reterr
@@ -666,7 +677,7 @@ class ConsoleMaster(flow.FlowMaster):
         for command in commands:
             try:
                 self.load_script(command)
-            except ScriptException as e:
+            except exceptions.ScriptException as e:
                 signals.status_message.send(
                     message='Error loading "{}".'.format(command)
                 )
