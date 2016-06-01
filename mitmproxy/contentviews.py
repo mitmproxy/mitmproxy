@@ -28,15 +28,15 @@ from PIL import ExifTags
 from PIL import Image
 from six.moves import cStringIO as StringIO
 
+import mitmproxy.utils
 from mitmproxy import exceptions
-from mitmproxy import utils
 from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import encoding
 from netlib import http
 from netlib import odict
 from netlib.http import url
-from netlib import utils
+import netlib.utils
 
 try:
     import pyamf
@@ -129,11 +129,11 @@ class ViewAuto(View):
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
-            elif utils.isXML(data):
+            elif mitmproxy.utils.isXML(data):
                 return get("XML")(data, **metadata)
         if metadata.get("query"):
             return get("Query")(data, **metadata)
-        if data and utils.isMostlyBin(data):
+        if data and mitmproxy.utils.isMostlyBin(data):
             return get("Hex")(data)
         if not data:
             return "No content", []
@@ -156,7 +156,7 @@ class ViewHex(View):
 
     @staticmethod
     def _format(data):
-        for offset, hexa, s in utils.hexdump(data):
+        for offset, hexa, s in netlib.utils.hexdump(data):
             yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
@@ -215,7 +215,7 @@ class ViewJSON(View):
     content_types = ["application/json"]
 
     def __call__(self, data, **metadata):
-        pretty_json = utils.pretty_json(data)
+        pretty_json = mitmproxy.utils.pretty_json(data)
         if pretty_json:
             return "JSON", format_text(pretty_json)
 
@@ -226,7 +226,7 @@ class ViewHTML(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if utils.isXML(data):
+        if netlib.utils.isXML(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -581,9 +581,9 @@ def safe_to_print(lines, encoding="utf8"):
         clean_line = []
         for (style, text) in line:
             try:
-                text = utils.clean_bin(text.decode(encoding, "strict"))
+                text = netlib.utils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = utils.clean_bin(text).decode(encoding, "strict")
+                text = netlib.utils.clean_bin(text).decode(encoding, "strict")
             clean_line.append((style, text))
         yield clean_line
 
