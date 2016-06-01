@@ -143,14 +143,8 @@ function ToggleFilter ({ name, active, toggleLevel }) {
 const AutoScrollEventLog = AutoScroll(EventLogContents);
 
 var EventLog = React.createClass({
-    getInitialState() {
-        return {
-            filter: {
-                "debug": false,
-                "info": true,
-                "web": true
-            }
-        };
+    propTypes: {
+        updateLocation: React.PropTypes.func.isRequired,
     },
     close() {
         var d = {};
@@ -160,7 +154,7 @@ var EventLog = React.createClass({
     toggleLevel(level) {
         var filter = _.extend({}, this.state.filter);
         filter[level] = !filter[level];
-        this.setState({filter: filter});
+        this.props.onChangeFilter(filter);
     },
     render() {
         return (
@@ -168,14 +162,14 @@ var EventLog = React.createClass({
                 <div>
                     Eventlog
                     <div className="pull-right">
-                        <ToggleFilter name="debug" active={this.state.filter.debug} toggleLevel={this.toggleLevel}/>
-                        <ToggleFilter name="info" active={this.state.filter.info} toggleLevel={this.toggleLevel}/>
-                        <ToggleFilter name="web" active={this.state.filter.web} toggleLevel={this.toggleLevel}/>
+                        <ToggleFilter name="debug" active={this.props.filters.debug} toggleLevel={this.toggleLevel}/>
+                        <ToggleFilter name="info" active={this.props.filters.info} toggleLevel={this.toggleLevel}/>
+                        <ToggleFilter name="web" active={this.props.filters.web} toggleLevel={this.toggleLevel}/>
                         <i onClick={this.close} className="fa fa-close"></i>
                     </div>
 
                 </div>
-                <AutoScrollEventLog filter={this.state.filter}/>
+                <AutoScrollEventLog filter={this.props.filters}/>
             </div>
         );
     }

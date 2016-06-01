@@ -41,6 +41,9 @@ class FlowTableHead extends React.Component {
     static propTypes = {
         setSortKeyFun: React.PropTypes.func.isRequired,
         columns: React.PropTypes.array.isRequired,
+        onChangeSortMethod: React.PropTypes.array.isRequired,
+        sortDesc: React.PropTypes.array.isRequired,
+        sortColumn: React.PropTypes.array.isRequired
     };
 
     constructor(props, context) {
@@ -51,13 +54,13 @@ class FlowTableHead extends React.Component {
     onClick(Column) {
         const hasSort = Column.sortKeyFun;
 
-        let sortDesc = this.state.sortDesc;
+        var sortDesc = this.props.sortDesc;
 
-        if (Column === this.state.sortColumn) {
+        if (Column === this.props.sortColumn) {
             sortDesc = !sortDesc;
-            this.setState({ sortDesc });
+            this.props.onChangeSortMethod(undefined, !sortDesc);
         } else {
-            this.setState({ sortColumn: hasSort && Column, sortDesc: false });
+            this.props.onChangeSortMethod(hasSort && Column, false);
         }
 
         let sortKeyFun = Column.sortKeyFun;
@@ -75,8 +78,8 @@ class FlowTableHead extends React.Component {
     }
 
     render() {
-        const sortColumn = this.state.sortColumn;
-        const sortType = this.state.sortDesc ? "sort-desc" : "sort-asc";
+        const sortColumn = this.props.sortColumn;
+        const sortType = this.props.sortDesc ? "sort-desc" : "sort-asc";
         return (
             <tr>
                 {this.props.columns.map(Column => (
@@ -99,6 +102,8 @@ class FlowTable extends React.Component {
 
     static propTypes = {
         rowHeight: React.PropTypes.number,
+        flows: React.PropTypes.array.isRequired,
+        vScroll: React.PropTypes.array.isRequired
     };
 
     static defaultProps = {
@@ -107,8 +112,6 @@ class FlowTable extends React.Component {
 
     constructor(props, context) {
         super(props, context);
-
-        this.state = { flows: [], vScroll: calcVScroll() };
 
         this.onChange = this.onChange.bind(this);
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
@@ -141,18 +144,18 @@ class FlowTable extends React.Component {
         const vScroll = calcVScroll({
             viewportTop,
             viewportHeight: viewport.offsetHeight,
-            itemCount: this.state.flows.length,
+            itemCount: this.props.flows.length,
             rowHeight: this.props.rowHeight,
         });
 
-        if (!shallowEqual(this.state.vScroll, vScroll) ||
-            this.state.viewportTop !== viewportTop) {
-            this.setState({ vScroll, viewportTop });
+        if (!shallowEqual(this.props.vScroll, vScroll) ||
+            this.props.viewportTop !== viewportTop) {
+            this.props.onViewportUpdate(vScroll, viewportTop);
         }
     }
 
     onChange() {
-        this.setState({ flows: this.context.view.list });
+        this.props.onChange(this.context.view.list);
     }
 
     scrollIntoView(flow) {
@@ -178,11 +181,11 @@ class FlowTable extends React.Component {
     }
 
     render() {
-        const vScroll = this.state.vScroll;
+        const vScroll = this.props.vScroll;
         const highlight = this.context.view._highlight;
-        const flows = this.state.flows.slice(vScroll.start, vScroll.end);
+        const flows = this.props.flows.slice(vScroll.start, vScroll.end);
 
-        const transform = `translate(0,${this.state.viewportTop}px)`;
+        const transform = `translate(0,${this.props.viewportTop}px)`;
 
         return (
             <div className="flow-table" onScroll={this.onViewportUpdate}>
@@ -191,6 +194,9 @@ class FlowTable extends React.Component {
                         <FlowTableHead
                             columns={flowtable_columns}
                             setSortKeyFun={this.props.setSortKeyFun}
+                            onChangeSortMethod={this.props.onChangeSortMethod}
+                            sortColumn={this.props.sortColumn}
+                            sortDesc={this.props.sortDesc}
                         />
                     </thead>
                     <tbody>

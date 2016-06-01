@@ -11,6 +11,7 @@ import {EventLogStore, FlowStore, SettingsStore} from "../store/store.js";
 import {Query} from "../actions.js";
 import {Key} from "../utils.js";
 
+import {calcVScroll} from "./helpers/VirtualScroll";
 
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({
@@ -59,6 +60,18 @@ var ProxyAppMain = React.createClass({
     onSettingsChange: function () {
         this.setState({ settings: this.settingsStore.dict });
     },
+    onChangeSortMethod: function(sortColumn, sortDesc) {
+        if(sortColumn === undefined)
+            this.setState({ flowTableHeadSortDesc: sortDesc} );
+        else
+            this.setState({ flowTableHeadSortColumn: sortColumn, flowTableHeadSortDesc: sortDesc });
+    },
+    onViewportUpdate: function(vScroll, viewportTop) {
+        this.setState({flowTableVScroll:vScroll, flowTableViewportTop: viewportTop});
+    },
+    onFlowTableChange: function(flows) {
+        this.setState({ flowTableFlows: flow });
+    },
     getChildContext: function () {
         return {
             flowStore: this.state.flowStore,
@@ -79,6 +92,15 @@ var ProxyAppMain = React.createClass({
             settings: settingsStore.dict,
             flowStore: flowStore,
             eventStore: eventStore
+            flowTableHeadSortDesc: false,
+            flowTableHeadSortColumn: undefined,
+            flowTableFlows: [],
+            flowTableVScroll: calcVScroll()
+            eventLogFilters: {
+                "debug": false,
+                "info": true,
+                "web": true
+            }
         };
     },
     focus: function () {
@@ -117,13 +139,16 @@ var ProxyAppMain = React.createClass({
         }
         e.preventDefault();
     },
+    onChangeFilter: function(filter) {
+        this.setState({ eventLogFilters: filter });
+    },
     render: function () {
         var query = this.getQuery();
         var eventlog;
         if (this.props.location.query[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 <Splitter key="splitter" axis="y"/>,
-                <EventLog key="eventlog" updateLocation={this.updateLocation}/>
+                <EventLog key="eventlog" updateLocation={this.updateLocation} onChangeFilter={this.onChangeFilter} filters={this.state.eventLogFilters}/>
             ];
         } else {
             eventlog = null;
@@ -132,8 +157,26 @@ var ProxyAppMain = React.createClass({
             <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
                 <Header ref="header" settings={this.state.settings} updateLocation={this.updateLocation} query={query} />
                 {React.cloneElement(
-                    this.props.children,
-                    { ref: "view", location: this.props.location , updateLocation: this.updateLocation, query }
+                    this.props.children, {
+                        query,
+                        ref: "view",
+                        location: this.props.location,
+
+                        // @todo package with actions
+                        updateLocation: this.updateLocation,
+
+                        // @todo use `connect` directly
+                        onViewportUpdate: this.onViewportUpdate,
+                        onFlowTableChange: this.onFlowTableChange,
+                        onChangeSortMethod: this.onChangeSortMethod,
+
+                        // @todo pass with context and obtain with `connect`
+                        flowTableHeadSortColumn: this.state.flowTableHeadSortColumn,
+                        flowTableHeadSortDesc: this.state.flowTableHeadSortDesc,
+                        flowTableVScroll: this.state.flowTableVScroll,
+                        flowTableViewportTop: this.state.flowTableViewportTop,
+                        flowTableFlows: this.state.flowTableFlows,
+                    }
                 )}
                 {eventlog}
                 <Footer settings={this.state.settings}/>

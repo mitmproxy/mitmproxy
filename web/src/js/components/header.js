@@ -164,6 +164,8 @@ var FilterInput = React.createClass({
 export var MainMenu = React.createClass({
     propTypes: {
         settings: React.PropTypes.object.isRequired,
+        updateLocation: React.PropTypes.func.isRequired,
+        query: React.PropTypes.object.isRequired,
     },
     statics: {
         title: "Start",

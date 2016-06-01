@@ -10,6 +10,10 @@ import FlowTable from "./flowtable.js";
 import FlowView from "./flowview/index.js";
 
 var MainView = React.createClass({
+    propTypes: {
+        updateLocation: React.PropTypes.func.isRequired,
+        query: React.PropTypes.object.isRequired,
+    },
     contextTypes: {
         flowStore: React.PropTypes.object.isRequired,
     },
@@ -237,7 +241,15 @@ var MainView = React.createClass({
                 <FlowTable ref="flowTable"
                     selectFlow={this.selectFlow}
                     setSortKeyFun={this.setSortKeyFun}
-                    selected={selected} />
+                    selected={selected}
+                    onViewportUpdate={this.props.onViewportUpdate}
+                    onChange{this.props.onFlowTableChange}
+                    onChangeSortMethod={this.props.onChangeSortMethod}
+                    sortColumn={this.props.flowTableHeadSortColumn}
+                    sortDesc={this.props.flowTableHeadSortDesc}
+                    vScroll={this.props.flowTableVScroll}
+                    viewportTop={this.props.flowTableViewportTop}
+                    flows={this.props.flowTableFlows} />
                 {details}
             </div>
         );

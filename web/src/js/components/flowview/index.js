@@ -14,6 +14,9 @@ var allTabs = {
 };
 
 var FlowView = React.createClass({
+    propTypes: {
+        updateLocation: React.PropTypes.func.isRequired,
+    },
     getInitialState: function () {
         return {
             prompt: false

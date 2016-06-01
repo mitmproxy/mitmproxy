@@ -117,6 +117,7 @@ var ViewJSON = React.createClass({
     }
 });
 
+
 var ViewAuto = React.createClass({
     propTypes: {
         message: React.PropTypes.object.isRequired,
@@ -236,7 +237,7 @@ var ContentView = React.createClass({
     },
     render: function () {
         var { flow, message } = this.props
-        var message = this.props.message;
+
         if (message.contentLength === 0) {
             return <ContentEmpty {...this.props}/>;
         } else if (message.contentLength === null) {
