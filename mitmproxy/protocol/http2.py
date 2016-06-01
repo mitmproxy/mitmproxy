@@ -18,7 +18,6 @@ from mitmproxy import protocol
 from netlib import http
 from netlib import tcp
 from netlib.http import http2
-from netlib.http import url
 
 
 class SafeH2Connection(connection.H2Connection):

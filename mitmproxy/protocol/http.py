@@ -80,7 +80,7 @@ class ConnectServerConnection(object):
         __nonzero__ = __bool__
 
 
-class UpstreamConnectLayer(Layer):
+class UpstreamConnectLayer(base.Layer):
 
     def __init__(self, ctx, connect_request):
         super(UpstreamConnectLayer, self).__init__(ctx)
@@ -120,7 +120,7 @@ class UpstreamConnectLayer(Layer):
         self.server_conn.address = address
 
 
-class HttpLayer(Layer):
+class HttpLayer(base.Layer):
 
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)

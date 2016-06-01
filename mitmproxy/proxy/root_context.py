@@ -48,7 +48,7 @@ class RootContext(object):
     def _next_layer(self, top_layer):
         try:
             d = top_layer.client_conn.rfile.peek(3)
-        except  netlib.exceptions.TcpException as e:
+        except netlib.exceptions.TcpException as e:
             six.reraise(exceptions.ProtocolException, exceptions.ProtocolException(str(e)), sys.exc_info()[2])
         client_tls = protocol.is_tls_record_magic(d)
 

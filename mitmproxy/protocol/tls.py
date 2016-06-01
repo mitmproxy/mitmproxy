@@ -302,8 +302,10 @@ class TlsClientHello(object):
         try:
             return cls(raw_client_hello)
         except construct.ConstructError as e:
-            raise exceptions.TlsProtocolException('Cannot parse Client Hello: %s, Raw Client Hello: %s' %
-                                       (repr(e), raw_client_hello.encode("hex")))
+            raise exceptions.TlsProtocolException(
+                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
+                (repr(e), raw_client_hello.encode("hex"))
+            )
 
     def __repr__(self):
         return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \

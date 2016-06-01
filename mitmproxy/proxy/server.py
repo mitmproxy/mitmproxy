@@ -14,6 +14,7 @@ from mitmproxy.proxy import root_context
 from netlib import tcp
 from netlib.http import http1
 
+
 class DummyServer:
     bound = False
 
