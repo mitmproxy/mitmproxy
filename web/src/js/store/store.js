@@ -118,7 +118,8 @@ _.extend(LiveStoreMixin.prototype, {
                     this.handle_fetch(message.data);
                 }.bind(this))
                 .fail(function () {
-                    EventLogActions.add_event("Could not fetch " + this.type);
+                    //EventLogActions.add_event("Could not fetch " + this.type);
+                    console.log("Could not fetch " + this.type); // store.js:121 Uncaught ReferenceError: EventLogActions is not defined
                 }.bind(this));
         }
     },
