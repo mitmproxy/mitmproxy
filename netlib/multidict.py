@@ -178,6 +178,22 @@ class _MultiDict(MutableMapping, basetypes.Serializable):
         if key in self:
             del self[key]
 
+    def collect(self):
+        """
+            Returns a list of (key, value) tuples, where values are either
+            singular if threre is only one matching item for a key, or a list
+            if there are more than one. The order of the keys matches the order
+            in the underlying fields list.
+        """
+        coll = []
+        for key in self:
+            values = self.get_all(key)
+            if len(values) == 1:
+                coll.append([key, values[0]])
+            else:
+                coll.append([key, values])
+        return coll
+
     def to_dict(self):
         """
         Get the MultiDict as a plain Python dict.
@@ -197,12 +213,8 @@ class _MultiDict(MutableMapping, basetypes.Serializable):
             }
         """
         d = {}
-        for key in self:
-            values = self.get_all(key)
-            if len(values) == 1:
-                d[key] = values[0]
-            else:
-                d[key] = values
+        for k, v in self.collect():
+            d[k] = v
         return d
 
     def get_state(self):

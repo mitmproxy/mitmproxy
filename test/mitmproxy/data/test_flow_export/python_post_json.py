@@ -6,10 +6,12 @@ headers = {
     'content-type': 'application/json',
 }
 
+
 json = {
-    "name": "example",
-    "email": "example@example.com"
+    u'email': u'example@example.com',
+    u'name': u'example',
 }
+
 
 response = requests.request(
     method='POST',

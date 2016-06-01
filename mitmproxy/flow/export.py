@@ -9,6 +9,13 @@ from six.moves.urllib.parse import quote, quote_plus
 import netlib.http
 
 
+def dictstr(items, indent):
+    lines = []
+    for k, v in items:
+        lines.append(indent + "%s: %s,\n" % (repr(k), repr(v)))
+    return "{\n%s}\n" % "".join(lines)
+
+
 def curl_command(flow):
     data = "curl "
 
@@ -47,24 +54,19 @@ def python_code(flow):
     args = ""
     headers = ""
     if flow.request.headers:
-        lines = ["    '%s': '%s',\n" % (k, v) for k, v in flow.request.headers.fields]
-        headers += "\nheaders = {\n%s}\n" % "".join(lines)
+        headers += "\nheaders = %s\n" % dictstr(flow.request.headers.fields, "    ")
         args += "\n    headers=headers,"
 
     params = ""
     if flow.request.query:
-        lines = ["    %s: %s,\n" % (repr(k), repr(v)) for k, v in flow.request.query.to_dict().items()]
-        params = "\nparams = {\n%s}\n" % "".join(lines)
+        params = "\nparams = %s\n" % dictstr(flow.request.query.collect(), "    ")
         args += "\n    params=params,"
 
     data = ""
     if flow.request.body:
         json_obj = is_json(flow.request.headers, flow.request.body)
         if json_obj:
-            # Without the separators field json.dumps() produces
-            # trailing white spaces: https://bugs.python.org/issue16333
-            data = json.dumps(json_obj, indent=4, separators=(',', ': '))
-            data = "\njson = %s\n" % data
+            data = "\njson = %s\n" % dictstr(sorted(json_obj.items()), "    ")
             args += "\n    json=json,"
         else:
             data = "\ndata = '''%s'''\n" % flow.request.body
@@ -78,7 +80,6 @@ def python_code(flow):
         method=flow.request.method,
         args=args,
     )
-
     return code
 
 
@@ -142,7 +143,7 @@ def locust_code(flow):
 
     params = ""
     if flow.request.query:
-        lines = ["            %s: %s,\n" % (repr(k), repr(v)) for k, v in flow.request.query.to_dict().items()]
+        lines = ["            %s: %s,\n" % (repr(k), repr(v)) for k, v in flow.request.query.collect()]
         params = "\n        params = {\n%s        }\n" % "".join(lines)
         args += "\n            params=params,"
 
