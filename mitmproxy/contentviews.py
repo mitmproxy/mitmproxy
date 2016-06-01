@@ -20,12 +20,12 @@ import logging
 import subprocess
 import sys
 
-import PIL
 import html2text
 import lxml.etree
 import lxml.html
 import six
 from PIL import ExifTags
+from PIL import Image
 from six.moves import cStringIO as StringIO
 
 from mitmproxy import exceptions
@@ -403,7 +403,7 @@ class ViewImage(View):
 
     def __call__(self, data, **metadata):
         try:
-            img = PIL.Image.open(StringIO(data))
+            img = Image.open(StringIO(data))
         except IOError:
             return None
         parts = [
