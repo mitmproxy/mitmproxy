@@ -55,7 +55,7 @@ def mitmproxy(args=None):  # pragma: no cover
     if options.quiet:
         options.verbose = 0
 
-    proxy_config = cmdline.process_proxy_options(parser, options)
+    proxy_config = config.process_proxy_options(parser, options)
     console_options = console.Options(**cmdline.get_common_options(options))
     console_options.palette = options.palette
     console_options.palette_transparent = options.palette_transparent
