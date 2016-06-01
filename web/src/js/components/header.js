@@ -344,11 +344,15 @@ var FileMenu = React.createClass({
         }
     },
     handleOpenClick: function (e) {
+        $('#uploadFileInput').trigger('click');
         e.preventDefault();
     },
-    handleOpenChange: function (e) {
+    handleOpenFile: function (e) {
+        if (e.target.files.length > 0) {
+            FlowActions.upload(e.target.files[0]);
+            $('#uploadFileInput').val("");
+        }
         e.preventDefault();
-         FlowActions.upload(e.target.files[0]);
     },
     handleSaveClick: function (e) {
         e.preventDefault();
@@ -372,7 +376,12 @@ var FileMenu = React.createClass({
                         </a>
                     </li>
                     <li>
-                         <input type="file" onChange={this.handleOpenChange}/>
+                        <a href="#" onClick={this.handleOpenClick}>
+                         <i className="fa fa-fw fa-folder-open"></i>
+                            Open...
+                        </a>
+                         <input id="uploadFileInput" className="hidden" type="file" onChange={this.handleOpenFile}/>
+
                     </li>
                     <li>
                         <a href="#" onClick={this.handleSaveClick}>

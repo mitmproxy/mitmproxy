@@ -178,6 +178,7 @@ class DumpFlows(RequestHandler):
         sio.close()
 
     def post(self):
+        # self.state.clear()
         sio = StringIO(self.request.body)
         self.state.load_flows(FlowReader(sio).stream())
         sio.close()

@@ -122,7 +122,7 @@ export var FlowActions = {
     upload: (file) => {
         var filereader = new FileReader();
         filereader.file = file;
-        filereader.onload = (e) => $.post("/flows/dump", e.target.result);
+        filereader.onload = (e) => {$.post("/flows/dump", e.target.result); e.preventDefault();};
         filereader.readAsBinaryString(file);
     }
 };
