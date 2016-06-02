@@ -77,17 +77,17 @@ class FileGenerator(object):
 
     def __init__(self, path):
         self.path = path
-        self.fp = file(path, "rb")
+        self.fp = open(path, "rb")
         self.map = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)
 
     def __len__(self):
         return len(self.map)
 
     def __getitem__(self, x):
-        return self.map.__getitem__(x)
-
-    def __getslice__(self, a, b):
-        return self.map.__getslice__(a, b)
+        if isinstance(x, slice):
+            return self.map.__getitem__(x)
+        # A slice of length 1 returns a byte object (not an integer)
+        return self.map.__getitem__(slice(x, x+1 or self.map.size()))
 
     def __repr__(self):
         return "<%s" % self.path

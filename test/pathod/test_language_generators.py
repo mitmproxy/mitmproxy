@@ -19,13 +19,15 @@ def test_filegenerator():
     with tutils.tmpdir() as t:
         path = os.path.join(t, "foo")
         f = open(path, "wb")
-        f.write("x" * 10000)
+        f.write(b"x" * 10000)
         f.close()
         g = generators.FileGenerator(path)
         assert len(g) == 10000
-        assert g[0] == "x"
-        assert g[-1] == "x"
-        assert g[0:5] == "xxxxx"
+        assert g[0] == b"x"
+        assert g[-1] == b"x"
+        assert g[0:5] == b"xxxxx"
+        assert len(g[1:10]) == 9
+        assert len(g[10000:10001]) == 0
         assert repr(g)
         # remove all references to FileGenerator instance to close the file
         # handle.
