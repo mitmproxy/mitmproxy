@@ -1,5 +1,4 @@
 from six.moves import cStringIO as StringIO
-import pytest
 
 from pathod import pathod, version
 from netlib import tcp
@@ -129,7 +128,6 @@ class CommonTests(tutils.DaemonTests):
         assert self.d.last_log()
         # FIXME: Other binary data elements
 
-    @pytest.mark.skip(reason="race condition")
     def test_sizelimit(self):
         r = self.get("200:b@1g")
         assert r.status_code == 800
@@ -143,7 +141,6 @@ class CommonTests(tutils.DaemonTests):
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
 
-    @pytest.mark.skip(reason="race condition")
     def test_logs(self):
         assert self.d.clear_log()
         assert not self.d.last_log()
@@ -223,7 +220,6 @@ class CommonTests(tutils.DaemonTests):
         )
         assert r[1].payload == "test"
 
-    @pytest.mark.skip(reason="race condition")
     def test_websocket_frame_reflect_error(self):
         r, _ = self.pathoc(
             ["ws:/p/", "wf:-mask:knone:f'wf:b@10':i13,'a'"],
@@ -233,7 +229,6 @@ class CommonTests(tutils.DaemonTests):
         # FIXME: Race Condition?
         assert "Parse error" in self.d.text_log()
 
-    @pytest.mark.skip(reason="race condition")
     def test_websocket_frame_disconnect_error(self):
         self.pathoc(["ws:/p/", "wf:b@10:d3"], ws_read_limit=0)
         assert self.d.last_log()
