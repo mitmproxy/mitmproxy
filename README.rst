@@ -28,6 +28,13 @@ You can join our developer chat on Slack.
 |slack|
 
 
+Installation
+------------
+
+The installation instructions are `here <http://docs.mitmproxy.org/en/stable/install.html>`_.
+If you want to contribute changes, see the section on hacking.
+
+
 Hacking
 -------
 
