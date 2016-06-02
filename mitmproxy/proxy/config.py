@@ -78,7 +78,7 @@ class ProxyConfig:
             certs=tuple(),
             ssl_version_client="secure",
             ssl_version_server="secure",
-            ssl_verify_upstream_cert=False,
+            ssl_insecure=False,
             ssl_verify_upstream_trusted_cadir=None,
             ssl_verify_upstream_trusted_ca=None,
             add_upstream_certs_to_client_chain=False,
@@ -116,10 +116,10 @@ class ProxyConfig:
         self.openssl_method_server, self.openssl_options_server = \
             tcp.sslversion_choices[ssl_version_server]
 
-        if ssl_verify_upstream_cert:
-            self.openssl_verification_mode_server = SSL.VERIFY_PEER
-        else:
+        if ssl_insecure:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
+        else:
+            self.openssl_verification_mode_server = SSL.VERIFY_PEER
         self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
         self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
         self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
@@ -161,12 +161,12 @@ def process_proxy_options(parser, options):
             "then the upstream certificate is not retrieved before generating "
             "the client certificate chain."
         )
-    if options.add_upstream_certs_to_client_chain and options.ssl_verify_upstream_cert:
+    if options.add_upstream_certs_to_client_chain and not options.ssl_insecure:
         return parser.error(
-            "The verify-upstream-cert and add-upstream-certs-to-client-chain "
-            "options are mutually exclusive. If upstream certificates are verified "
-            "then extra upstream certificates are not available for inclusion "
-            "to the client chain."
+            "Extra upstream certificates are not available for inclusion to the "
+            "client chain as upstream certificates are verified by default. "
+            "Please use the insecure option with the add-upstream-certs-to-client-chain "
+            "option to stop verifying the upstream certificates. "
         )
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
@@ -234,7 +234,7 @@ def process_proxy_options(parser, options):
         certs=tuple(certs),
         ssl_version_client=options.ssl_version_client,
         ssl_version_server=options.ssl_version_server,
-        ssl_verify_upstream_cert=options.ssl_verify_upstream_cert,
+        ssl_insecure=options.ssl_insecure,
         ssl_verify_upstream_trusted_cadir=options.ssl_verify_upstream_trusted_cadir,
         ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca,
         add_upstream_certs_to_client_chain=options.add_upstream_certs_to_client_chain,
