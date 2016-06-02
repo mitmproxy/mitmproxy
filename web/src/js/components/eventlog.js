@@ -1,11 +1,12 @@
 import React from "react"
 import ReactDOM from "react-dom"
+import { connect } from 'react-redux'
 import shallowEqual from "shallowequal"
 import {Query} from "../actions.js"
+import {toggleEventLogFilter} from "../reduxActions"
 import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll"
 import {StoreView} from "../store/view.js"
-import _ from "lodash"
 
 class EventLogContents extends React.Component {
 
@@ -127,7 +128,7 @@ function ToggleFilter ({ name, active, toggleLevel }) {
 
     function onClick(event) {
         event.preventDefault();
-        toggleLevel(name);
+        toggleLevel();
     }
 
     return (
@@ -140,27 +141,40 @@ function ToggleFilter ({ name, active, toggleLevel }) {
     );
 }
 
+const mapStateToProps = (state, ownProps) => {
+  return {
+    active: state.eventLog.visibilityFilter[ownProps.name]
+  }
+};
+
+const mapDispatchToProps = (dispatch, ownProps) => {
+  return {
+    toggleLevel: () => {
+      dispatch(toggleEventLogFilter(ownProps.name))
+    }
+  }
+};
+
+const ToggleEventLogFilter = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ToggleFilter);
+
+
 const AutoScrollEventLog = AutoScroll(EventLogContents);
 
+
+const VisibleAutoScrollEventLog = connect(
+    function mapStateToProps(state, ownProps) {
+        return {filter: state.eventLog.visibilityFilter}
+    })(AutoScrollEventLog);
+
+
 var EventLog = React.createClass({
-    getInitialState() {
-        return {
-            filter: {
-                "debug": false,
-                "info": true,
-                "web": true
-            }
-        };
-    },
     close() {
         var d = {};
         d[Query.SHOW_EVENTLOG] = undefined;
         this.props.updateLocation(undefined, d);
-    },
-    toggleLevel(level) {
-        var filter = _.extend({}, this.state.filter);
-        filter[level] = !filter[level];
-        this.setState({filter: filter});
     },
     render() {
         return (
@@ -168,14 +182,14 @@ var EventLog = React.createClass({
                 <div>
                     Eventlog
                     <div className="pull-right">
-                        <ToggleFilter name="debug" active={this.state.filter.debug} toggleLevel={this.toggleLevel}/>
-                        <ToggleFilter name="info" active={this.state.filter.info} toggleLevel={this.toggleLevel}/>
-                        <ToggleFilter name="web" active={this.state.filter.web} toggleLevel={this.toggleLevel}/>
+                        <ToggleEventLogFilter name="debug"/>
+                        <ToggleEventLogFilter name="info"/>
+                        <ToggleEventLogFilter name="web"/>
                         <i onClick={this.close} className="fa fa-close"></i>
                     </div>
 
                 </div>
-                <AutoScrollEventLog filter={this.state.filter}/>
+                <VisibleAutoScrollEventLog/>
             </div>
         );
     }
