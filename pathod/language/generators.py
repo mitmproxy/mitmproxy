@@ -2,17 +2,19 @@ import string
 import random
 import mmap
 
+import six
+
 DATATYPES = dict(
-    ascii_letters=string.ascii_letters,
-    ascii_lowercase=string.ascii_lowercase,
-    ascii_uppercase=string.ascii_uppercase,
-    digits=string.digits,
-    hexdigits=string.hexdigits,
-    octdigits=string.octdigits,
-    punctuation=string.punctuation,
-    whitespace=string.whitespace,
-    ascii=string.printable,
-    bytes="".join(chr(i) for i in range(256))
+    ascii_letters=string.ascii_letters.encode(),
+    ascii_lowercase=string.ascii_lowercase.encode(),
+    ascii_uppercase=string.ascii_uppercase.encode(),
+    digits=string.digits.encode(),
+    hexdigits=string.hexdigits.encode(),
+    octdigits=string.octdigits.encode(),
+    punctuation=string.punctuation.encode(),
+    whitespace=string.whitespace.encode(),
+    ascii=string.printable.encode(),
+    bytes=bytes(bytearray(range(256)))
 )
 
 
@@ -37,12 +39,19 @@ class TransformGenerator(object):
         d = self.gen.__getitem__(x)
         return self.transform(x, d)
 
-    def __getslice__(self, a, b):
-        d = self.gen.__getslice__(a, b)
-        return self.transform(a, d)
-
     def __repr__(self):
         return "'transform(%s)'" % self.gen
+
+
+def rand_byte(chars):
+    """
+        Return a random character as byte from a charset.
+    """
+    # bytearray has consistent behaviour on both Python 2 and 3
+    # while bytes does not
+    if six.PY2:
+        return random.choice(chars)
+    return bytes([random.choice(chars)])
 
 
 class RandomGenerator(object):
@@ -55,12 +64,10 @@ class RandomGenerator(object):
         return self.length
 
     def __getitem__(self, x):
-        return random.choice(DATATYPES[self.dtype])
-
-    def __getslice__(self, a, b):
-        b = min(b, self.length)
         chars = DATATYPES[self.dtype]
-        return "".join(random.choice(chars) for x in range(a, b))
+        if isinstance(x, slice):
+            return b"".join(rand_byte(chars) for _ in range(*x.indices(self.length)))
+        return rand_byte(chars)
 
     def __repr__(self):
         return "%s random from %s" % (self.length, self.dtype)
@@ -70,17 +77,17 @@ class FileGenerator(object):
 
     def __init__(self, path):
         self.path = path
-        self.fp = file(path, "rb")
+        self.fp = open(path, "rb")
         self.map = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)
 
     def __len__(self):
         return len(self.map)
 
     def __getitem__(self, x):
-        return self.map.__getitem__(x)
-
-    def __getslice__(self, a, b):
-        return self.map.__getslice__(a, b)
+        if isinstance(x, slice):
+            return self.map.__getitem__(x)
+        # A slice of length 1 returns a byte object (not an integer)
+        return self.map.__getitem__(slice(x, x+1 or self.map.size()))
 
     def __repr__(self):
         return "<%s" % self.path
