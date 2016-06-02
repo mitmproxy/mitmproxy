@@ -1,9 +1,13 @@
 from six.moves import cStringIO as StringIO
 
-from pathod import pathod, version
+from pathod import pathod
 from netlib import tcp
 from netlib.exceptions import HttpException, TlsException
 import tutils
+
+
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
 
 
 class TestPathod(object):
@@ -137,9 +141,6 @@ class CommonTests(tutils.DaemonTests):
     def test_preline(self):
         r, _ = self.pathoc([r"get:'/p/200':i0,'\r\n'"])
         assert r[0].status_code == 200
-
-    def test_info(self):
-        assert tuple(self.d.info()["version"]) == version.IVERSION
 
     def test_logs(self):
         self.d.clear_log()

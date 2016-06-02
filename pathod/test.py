@@ -4,11 +4,7 @@ import time
 
 from six.moves import queue
 
-import requests
-import requests.packages.urllib3
 from . import pathod
-
-requests.packages.urllib3.disable_warnings()
 
 
 class Daemon:
@@ -40,13 +36,6 @@ class Daemon:
             Return a URL that will render the response in spec.
         """
         return "%s/p/%s" % (self.urlbase, spec)
-
-    def info(self):
-        """
-            Return some basic info about the remote daemon.
-        """
-        resp = requests.get("%s/api/info" % self.urlbase, verify=False)
-        return resp.json()
 
     def text_log(self):
         return self.logfp.getvalue()
