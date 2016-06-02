@@ -833,6 +833,25 @@ class BaseHandler(_Connection):
             return b""
 
 
+class Counter:
+    def __init__(self):
+        self._count = 0
+        self._lock = threading.Lock()
+
+    @property
+    def count(self):
+        with self._lock:
+            return self._count
+
+    def __enter__(self):
+        with self._lock:
+            self._count += 1
+
+    def __exit__(self, *args):
+        with self._lock:
+            self._count -= 1
+
+
 class TCPServer(object):
     request_queue_size = 20
 
@@ -845,15 +864,17 @@ class TCPServer(object):
         self.socket.bind(self.address())
         self.address = Address.wrap(self.socket.getsockname())
         self.socket.listen(self.request_queue_size)
+        self.counter = Counter()
 
     def connection_thread(self, connection, client_address):
-        client_address = Address(client_address)
-        try:
-            self.handle_client_connection(connection, client_address)
-        except:
-            self.handle_error(connection, client_address)
-        finally:
-            close_socket(connection)
+        with self.counter:
+            client_address = Address(client_address)
+            try:
+                self.handle_client_connection(connection, client_address)
+            except:
+                self.handle_error(connection, client_address)
+            finally:
+                close_socket(connection)
 
     def serve_forever(self, poll_interval=0.1):
         self.__is_shut_down.clear()

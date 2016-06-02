@@ -7,6 +7,10 @@ from six.moves import queue
 from . import pathod
 
 
+class TimeoutError(Exception):
+    pass
+
+
 class Daemon:
     IFACE = "127.0.0.1"
 
@@ -39,6 +43,17 @@ class Daemon:
 
     def text_log(self):
         return self.logfp.getvalue()
+
+    def wait_for_silence(self, timeout=5):
+        start = time.time()
+        while 1:
+            if time.time() - start >= timeout:
+                raise TimeoutError(
+                    "%s service threads still alive" %
+                    self.thread.server.counter.count
+                )
+            if self.thread.server.counter.count == 0:
+                return
 
     def expect_log(self, n, timeout=5):
         l = []

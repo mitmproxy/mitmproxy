@@ -64,6 +64,7 @@ class DaemonTests(object):
         shutil.rmtree(cls.confdir)
 
     def teardown(self):
+        self.d.wait_for_silence()
         if not (self.noweb or self.noapi):
             self.d.clear_log()
 
