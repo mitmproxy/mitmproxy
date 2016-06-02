@@ -6,10 +6,6 @@ from netlib.exceptions import HttpException, TlsException
 import tutils
 
 
-import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
-
-
 class TestPathod(object):
 
     def test_logging(self):
@@ -150,8 +146,7 @@ class CommonTests(tutils.DaemonTests):
         assert len(self.d.log()) == 0
 
     def test_disconnect(self):
-        rsp = self.get("202:b@100k:d200")
-        assert len(rsp.content) < 200
+        tutils.raises("unexpected eof", self.get, "202:b@100k:d200")
 
     def test_parserr(self):
         rsp = self.get("400:msg,b:")
@@ -163,7 +158,7 @@ class CommonTests(tutils.DaemonTests):
         assert rsp.content.strip() == "testfile"
 
     def test_anchor(self):
-        rsp = self.getpath("anchor/foo")
+        rsp = self.getpath("/anchor/foo")
         assert rsp.status_code == 202
 
     def test_invalid_first_line(self):

@@ -11,11 +11,11 @@ class TestApp(tutils.DaemonTests):
 
     def test_about(self):
         r = self.getpath("/about")
-        assert r.ok
+        assert r.status_code == 200
 
     def test_download(self):
         r = self.getpath("/download")
-        assert r.ok
+        assert r.status_code == 200
 
     def test_docs(self):
         assert self.getpath("/docs/pathod").status_code == 200

@@ -3,6 +3,7 @@ import re
 import shutil
 import requests
 from six.moves import cStringIO as StringIO
+import urllib
 
 from netlib import tcp
 from netlib import utils
@@ -66,7 +67,7 @@ class DaemonTests(object):
         if not (self.noweb or self.noapi):
             self.d.clear_log()
 
-    def getpath(self, path, params=None):
+    def _getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
         resp = requests.get(
             "%s://localhost:%s/%s" % (
@@ -79,8 +80,28 @@ class DaemonTests(object):
         )
         return resp
 
+    def getpath(self, path, params=None):
+        logfp = StringIO()
+        c = pathoc.Pathoc(
+            ("localhost", self.d.port),
+            ssl=self.ssl,
+            fp=logfp,
+        )
+        c.connect()
+        if params:
+            path = path + "?" + urllib.urlencode(params)
+        resp = c.request("get:%s" % path)
+        return resp
+
     def get(self, spec):
-        resp = requests.get(self.d.p(spec), verify=False)
+        logfp = StringIO()
+        c = pathoc.Pathoc(
+            ("localhost", self.d.port),
+            ssl=self.ssl,
+            fp=logfp,
+        )
+        c.connect()
+        resp = c.request("get:/p/%s" % urllib.quote(spec).encode("string_escape"))
         return resp
 
     def pathoc(
