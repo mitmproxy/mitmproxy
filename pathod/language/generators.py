@@ -87,7 +87,7 @@ class FileGenerator(object):
         if isinstance(x, slice):
             return self.map.__getitem__(x)
         # A slice of length 1 returns a byte object (not an integer)
-        return self.map.__getitem__(slice(x, x+1 or self.map.size()))
+        return self.map.__getitem__(slice(x, x + 1 or self.map.size()))
 
     def __repr__(self):
         return "<%s" % self.path
