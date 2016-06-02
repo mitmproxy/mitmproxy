@@ -142,11 +142,10 @@ class CommonTests(tutils.DaemonTests):
         assert tuple(self.d.info()["version"]) == version.IVERSION
 
     def test_logs(self):
-        assert self.d.clear_log()
-        assert not self.d.last_log()
+        self.d.clear_log()
         assert self.get("202:da")
-        assert len(self.d.log()) == 1
-        assert self.d.clear_log()
+        assert self.d.expect_log(1)
+        self.d.clear_log()
         assert len(self.d.log()) == 0
 
     def test_disconnect(self):

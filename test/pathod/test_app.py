@@ -27,7 +27,7 @@ class TestApp(tutils.DaemonTests):
     def test_log(self):
         assert self.getpath("/log").status_code == 200
         assert self.get("200:da").status_code == 200
-        id = self.d.log()[0]["id"]
+        id = self.d.expect_log(1)[0]["id"]
         assert self.getpath("/log").status_code == 200
         assert self.getpath("/log/%s" % id).status_code == 200
         assert self.getpath("/log/9999999").status_code == 404

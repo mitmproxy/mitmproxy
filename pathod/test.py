@@ -75,16 +75,13 @@ class Daemon:
         """
             Return the log buffer as a list of dictionaries.
         """
-        resp = requests.get("%s/api/log" % self.urlbase, verify=False)
-        return resp.json()["log"]
+        return self.thread.server.get_log()
 
     def clear_log(self):
         """
             Clear the log.
         """
-        self.logfp.truncate(0)
-        resp = requests.get("%s/api/clear_log" % self.urlbase, verify=False)
-        return resp.ok
+        return self.thread.server.clear_log()
 
     def shutdown(self):
         """
@@ -101,6 +98,7 @@ class _PaThread(threading.Thread):
         self.name = "PathodThread"
         self.iface, self.q, self.ssl = iface, q, ssl
         self.daemonargs = daemonargs
+        self.server = None
 
     def run(self):
         self.server = pathod.Pathod(
