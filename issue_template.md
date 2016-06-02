@@ -1,4 +1,3 @@
-<!-- Please use the mitmproxy forums (https://discourse.mitmproxy.org/) for support/how-to questions. Thanks! :) -->
 ##### Steps to reproduce the problem:
 
 1. 
@@ -18,3 +17,6 @@
 
 Mitmproxy Version:
 Operating System:
+
+
+<!-- Please use the mitmproxy forums (https://discourse.mitmproxy.org/) for support/how-to questions. Thanks! :) -->
