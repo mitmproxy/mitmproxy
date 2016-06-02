@@ -176,7 +176,8 @@ class DumpFlows(RequestHandler):
 
     def post(self):
         self.state.clear()
-        bio = BytesIO(self.request.body)
+        content = self.request.files.values()[0][0]["body"]
+        bio = BytesIO(content)
         self.state.load_flows(FlowReader(bio).stream())
         bio.close()
 

@@ -121,15 +121,12 @@ export var FlowActions = {
     download: () => window.location = "/flows/dump",
 
     upload: (file) => {
-        var filereader = new FileReader();
-        filereader.file = file;
-        filereader.onload = (e) => {
-            fetchApi("/flows/dump",  {
-                method: 'post',
-                body: e.currentTarget.result
-            })
-        };
-        filereader.readAsBinaryString(file);
+        let data = new FormData();
+        data.append('file', file);
+        fetchApi("/flows/dump",  {
+            method: 'post',
+            body: data
+        })
     }
 };
 

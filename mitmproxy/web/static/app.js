@@ -310,11 +310,9 @@ var _jquery = require("jquery");
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _lodash = require("lodash");
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
 var _dispatcher = require("./dispatcher.js");
+
+var _utils = require("./utils.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -433,6 +431,18 @@ var FlowActions = exports.FlowActions = {
     },
     clear: function clear() {
         _jquery2.default.post("/clear");
+    },
+    download: function download() {
+        return window.location = "/flows/dump";
+    },
+
+    upload: function upload(file) {
+        var data = new FormData();
+        data.append('file', file);
+        (0, _utils.fetchApi)("/flows/dump", {
+            method: 'post',
+            body: data
+        });
     }
 };
 
@@ -442,7 +452,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":22,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"./utils.js":27,"jquery":"jquery"}],3:[function(require,module,exports){
 "use strict";
 
 var _react = require("react");
@@ -3513,18 +3523,27 @@ var FileMenu = _react2.default.createClass({
         }
     },
     handleOpenClick: function handleOpenClick(e) {
+        this.fileInput.click();
         e.preventDefault();
-        console.error("unimplemented: handleOpenClick");
+    },
+    handleOpenFile: function handleOpenFile(e) {
+        if (e.target.files.length > 0) {
+            _actions.FlowActions.upload(e.target.files[0]);
+            this.fileInput.value = "";
+        }
+        e.preventDefault();
     },
     handleSaveClick: function handleSaveClick(e) {
         e.preventDefault();
-        console.error("unimplemented: handleSaveClick");
+        _actions.FlowActions.download();
     },
     handleShutdownClick: function handleShutdownClick(e) {
         e.preventDefault();
         console.error("unimplemented: handleShutdownClick");
     },
     render: function render() {
+        var _this = this;
+
         var fileMenuClass = "dropdown pull-left" + (this.state.showFileMenu ? " open" : "");
 
         return _react2.default.createElement(
@@ -3546,6 +3565,29 @@ var FileMenu = _react2.default.createClass({
                         { href: "#", onClick: this.handleNewClick },
                         _react2.default.createElement("i", { className: "fa fa-fw fa-file" }),
                         "New"
+                    )
+                ),
+                _react2.default.createElement(
+                    "li",
+                    null,
+                    _react2.default.createElement(
+                        "a",
+                        { href: "#", onClick: this.handleOpenClick },
+                        _react2.default.createElement("i", { className: "fa fa-fw fa-folder-open" }),
+                        "Open..."
+                    ),
+                    _react2.default.createElement("input", { ref: function ref(_ref) {
+                            return _this.fileInput = _ref;
+                        }, className: "hidden", type: "file", onChange: this.handleOpenFile })
+                ),
+                _react2.default.createElement(
+                    "li",
+                    null,
+                    _react2.default.createElement(
+                        "a",
+                        { href: "#", onClick: this.handleSaveClick },
+                        _react2.default.createElement("i", { className: "fa fa-fw fa-floppy-o" }),
+                        "Save..."
                     )
                 ),
                 _react2.default.createElement("li", { role: "presentation", className: "divider" }),
@@ -6602,7 +6644,7 @@ _lodash2.default.extend(LiveStoreMixin.prototype, {
             this._fetchxhr = _jquery2.default.getJSON("/" + this.type).done(function (message) {
                 this.handle_fetch(message.data);
             }.bind(this)).fail(function () {
-                EventLogActions.add_event("Could not fetch " + this.type);
+                _actions.EventLogActions.add_event("Could not fetch " + this.type);
             }.bind(this));
         }
     },
@@ -6792,7 +6834,11 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.formatTimeStamp = exports.formatTimeDelta = exports.formatSize = exports.Key = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 exports.reverseString = reverseString;
+exports.fetchApi = fetchApi;
 
 var _jquery = require("jquery");
 
@@ -6877,7 +6923,7 @@ function getCookie(name) {
     var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
-var xsrf = _jquery2.default.param({ _xsrf: getCookie("_xsrf") });
+var xsrf = "_xsrf=" + getCookie("_xsrf");
 
 //Tornado XSRF Protection.
 _jquery2.default.ajaxPrefilter(function (options) {
@@ -6899,6 +6945,17 @@ _jquery2.default.ajaxPrefilter(function (options) {
     _actions2.default.EventLogActions.add_event(thrownError + ": " + message);
     alert(message);
 });
+
+function fetchApi(url, options) {
+    if (url.indexOf("?") === -1) {
+        url += "?" + xsrf;
+    } else {
+        url += "&" + xsrf;
+    }
+    return fetch(url, _extends({}, options, {
+        credentials: 'same-origin'
+    }));
+}
 
 },{"./actions.js":2,"jquery":"jquery","lodash":"lodash","react":"react"}]},{},[3])
 
