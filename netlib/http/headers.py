@@ -4,7 +4,7 @@ import re
 
 import six
 from netlib import multidict
-from netlib import utils
+from netlib import strutils
 
 # See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 
@@ -20,7 +20,7 @@ else:
         return x.decode("utf-8", "surrogateescape")
 
     def _always_bytes(x):
-        return utils.always_bytes(x, "utf-8", "surrogateescape")
+        return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
 class Headers(multidict.MultiDict):

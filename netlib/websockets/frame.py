@@ -7,6 +7,7 @@ import warnings
 import six
 
 from netlib import tcp
+from netlib import strutils
 from netlib import utils
 from netlib import human
 from netlib.websockets import protocol
@@ -254,7 +255,7 @@ class Frame(object):
     def __repr__(self):
         ret = repr(self.header)
         if self.payload:
-            ret = ret + "\nPayload:\n" + utils.clean_bin(self.payload).decode("ascii")
+            ret = ret + "\nPayload:\n" + strutils.clean_bin(self.payload).decode("ascii")
         return ret
 
     def human_readable(self):

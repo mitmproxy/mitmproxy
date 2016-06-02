@@ -8,7 +8,7 @@ tcp_message Inline Script Hook API Demonstration
 example cmdline invocation:
 mitmdump -T --host --tcp ".*" -q -s examples/tcp_message.py
 '''
-from netlib.utils import clean_bin
+from netlib import strutils
 
 
 def tcp_message(ctx, tcp_msg):
@@ -22,4 +22,4 @@ def tcp_message(ctx, tcp_msg):
         "client" if tcp_msg.sender == tcp_msg.client_conn else "server",
         tcp_msg.sender.address,
         "server" if tcp_msg.receiver == tcp_msg.server_conn else "client",
-        tcp_msg.receiver.address, clean_bin(tcp_msg.message)))
+        tcp_msg.receiver.address, strutils.clean_bin(tcp_msg.message)))

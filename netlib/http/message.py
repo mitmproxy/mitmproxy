@@ -4,7 +4,7 @@ import warnings
 
 import six
 
-from netlib import encoding, utils, basetypes
+from netlib import encoding, strutils, basetypes
 from netlib.http import headers
 
 if six.PY2:  # pragma: no cover
@@ -19,7 +19,7 @@ else:
         return x.decode("utf-8", "surrogateescape")
 
     def _always_bytes(x):
-        return utils.always_bytes(x, "utf-8", "surrogateescape")
+        return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
 class MessageData(basetypes.Serializable):
@@ -200,7 +200,7 @@ class Message(basetypes.Serializable):
         replacements = 0
         if self.content:
             with decoded(self):
-                self.content, replacements = utils.safe_subn(
+                self.content, replacements = strutils.safe_subn(
                     pattern, repl, self.content, flags=flags
                 )
         replacements += self.headers.replace(pattern, repl, flags)

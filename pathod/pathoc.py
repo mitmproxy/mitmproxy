@@ -18,12 +18,17 @@ from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsExcep
     NetlibException
 from netlib.http import http1, http2
 
-from . import utils, log, language
+from . import log, language
 
 import logging
 from netlib.tutils import treq
+from netlib import strutils
 
 logging.getLogger("hpack").setLevel(logging.WARNING)
+
+
+def xrepr(s):
+    return repr(s)[1:-1]
 
 
 class PathocError(Exception):
@@ -423,7 +428,7 @@ class Pathoc(tcp.TCPClient):
             finally:
                 if resp:
                     lg("<< %s %s: %s bytes" % (
-                        resp.status_code, utils.xrepr(resp.reason), len(resp.content)
+                        resp.status_code, strutils.bytes_to_escaped_str(resp.reason), len(resp.content)
                     ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()

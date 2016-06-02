@@ -3,8 +3,9 @@ import pprint
 import io
 import copy
 from flask import Flask, jsonify, render_template, request, abort, make_response
-from . import version, language, utils
+from . import version, language
 from netlib.http import user_agents
+from netlib import strutils
 
 logging.basicConfig(level="DEBUG")
 EXAMPLE_HOST = "example.com"
@@ -166,7 +167,7 @@ def make_app(noapi, debug):
             settings.websocket_key = EXAMPLE_WEBSOCKET_KEY
             language.serve(safe, s, settings)
 
-        args["output"] = utils.escape_unprintables(s.getvalue())
+        args["output"] = strutils.bytes_to_escaped_str(s.getvalue())
         return render(template, False, **args)
 
     @app.route('/response_preview')

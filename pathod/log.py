@@ -2,9 +2,7 @@ import datetime
 
 import six
 
-import netlib.utils
-import netlib.tcp
-import netlib.http
+from netlib import strutils
 
 TIMEFMT = '%d-%m-%y %H:%M:%S'
 
@@ -62,10 +60,10 @@ class LogCtx(object):
 
     def dump(self, data, hexdump):
         if hexdump:
-            for line in netlib.utils.hexdump(data):
+            for line in strutils.hexdump(data):
                 self("\t%s %s %s" % line)
         else:
-            for i in netlib.utils.clean_bin(data).split("\n"):
+            for i in strutils.clean_bin(data).split("\n"):
                 self("\t%s" % i)
 
     def __call__(self, line):

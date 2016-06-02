@@ -36,7 +36,7 @@ from netlib import encoding
 from netlib import http
 from netlib import odict
 from netlib.http import url
-import netlib.utils
+from netlib import strutils
 
 try:
     import pyamf
@@ -129,11 +129,11 @@ class ViewAuto(View):
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
-            elif mitmproxy.utils.isXML(data):
+            elif strutils.isXML(data):
                 return get("XML")(data, **metadata)
         if metadata.get("query"):
             return get("Query")(data, **metadata)
-        if data and mitmproxy.utils.isMostlyBin(data):
+        if data and strutils.isMostlyBin(data):
             return get("Hex")(data)
         if not data:
             return "No content", []
@@ -156,7 +156,7 @@ class ViewHex(View):
 
     @staticmethod
     def _format(data):
-        for offset, hexa, s in netlib.utils.hexdump(data):
+        for offset, hexa, s in strutils.hexdump(data):
             yield [
                 ("offset", offset + " "),
                 ("text", hexa + "   "),
@@ -226,7 +226,7 @@ class ViewHTML(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if mitmproxy.utils.isXML(data):
+        if strutils.isXML(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -581,9 +581,9 @@ def safe_to_print(lines, encoding="utf8"):
         clean_line = []
         for (style, text) in line:
             try:
-                text = netlib.utils.clean_bin(text.decode(encoding, "strict"))
+                text = strutils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = netlib.utils.clean_bin(text).decode(encoding, "strict")
+                text = strutils.clean_bin(text).decode(encoding, "strict")
             clean_line.append((style, text))
         yield clean_line
 

@@ -7,7 +7,7 @@ from six.moves import urllib
 
 from netlib import encoding
 from netlib import multidict
-from netlib import utils
+from netlib import strutils
 from netlib.http import multipart
 from netlib.http import cookies
 from netlib.http import headers as nheaders
@@ -67,7 +67,7 @@ class Request(message.Message):
         """
         # TODO: Proper distinction between text and bytes.
         c = super(Request, self).replace(pattern, repl, flags)
-        self.path, pc = utils.safe_subn(
+        self.path, pc = strutils.safe_subn(
             pattern, repl, self.path, flags=flags
         )
         c += pc

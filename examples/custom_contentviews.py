@@ -1,7 +1,8 @@
 import string
 import lxml.html
 import lxml.etree
-from mitmproxy import utils, contentviews
+from mitmproxy import contentviews
+from netlib import strutils
 
 
 class ViewPigLatin(contentviews.View):
@@ -10,7 +11,7 @@ class ViewPigLatin(contentviews.View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if utils.isXML(data):
+        if strutils.isXML(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True

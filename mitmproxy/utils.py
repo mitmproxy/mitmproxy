@@ -25,32 +25,6 @@ def format_timestamp_with_milli(s):
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
-def isBin(s):
-    """
-        Does this string have any non-ASCII characters?
-    """
-    for i in s:
-        i = ord(i)
-        if i < 9 or 13 < i < 32 or 126 < i:
-            return True
-    return False
-
-
-def isMostlyBin(s):
-    s = s[:100]
-    return sum(isBin(ch) for ch in s) / len(s) > 0.3
-
-
-def isXML(s):
-    for i in s:
-        if i in "\n \t":
-            continue
-        elif i == "<":
-            return True
-        else:
-            return False
-
-
 def pretty_json(s):
     try:
         p = json.loads(s)
@@ -92,15 +66,3 @@ class LRUCache:
                 d = self.cacheList.pop()
                 self.cache.pop(d)
             return ret
-
-
-def clean_hanging_newline(t):
-    """
-        Many editors will silently add a newline to the final line of a
-        document (I'm looking at you, Vim). This function fixes this common
-        problem at the risk of removing a hanging newline in the rare cases
-        where the user actually intends it.
-    """
-    if t and t[-1] == "\n":
-        return t[:-1]
-    return t
