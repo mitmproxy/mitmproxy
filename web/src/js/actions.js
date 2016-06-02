@@ -1,7 +1,6 @@
 import $ from "jquery";
-import _ from "lodash";
 import {AppDispatcher} from "./dispatcher.js";
-import {getCookie} from "./utils.js";
+import {fetchApi} from "./utils.js";
 
 export var ActionTypes = {
     // Connection
@@ -122,12 +121,10 @@ export var FlowActions = {
     download: () => window.location = "/flows/dump",
 
     upload: (file) => {
-        var xsrf = $.param({_xsrf: getCookie("_xsrf")});
-        //console.log(xsrf);
         var filereader = new FileReader();
         filereader.file = file;
         filereader.onload = (e) => {
-            fetch("/flows/dump?"+xsrf,  {
+            fetchApi("/flows/dump",  {
                 method: 'post',
                 body: e.currentTarget.result
             })

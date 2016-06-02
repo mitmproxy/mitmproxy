@@ -390,7 +390,7 @@ class Application(tornado.web.Application):
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            xsrf_cookies=False,
+            xsrf_cookies=True,
             cookie_secret=os.urandom(256),
             debug=debug,
             wauthenticator=wauthenticator,
