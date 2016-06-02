@@ -51,7 +51,7 @@ class Daemon:
     def text_log(self):
         return self.logfp.getvalue()
 
-    def expect_log(self, n, timeout=1):
+    def expect_log(self, n, timeout=5):
         l = []
         start = time.time()
         while True:
