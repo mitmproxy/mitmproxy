@@ -3,16 +3,16 @@ import random
 import mmap
 
 DATATYPES = dict(
-    ascii_letters=string.ascii_letters,
-    ascii_lowercase=string.ascii_lowercase,
-    ascii_uppercase=string.ascii_uppercase,
-    digits=string.digits,
-    hexdigits=string.hexdigits,
-    octdigits=string.octdigits,
-    punctuation=string.punctuation,
-    whitespace=string.whitespace,
-    ascii=string.printable,
-    bytes="".join(chr(i) for i in range(256))
+    ascii_letters=string.ascii_letters.encode(),
+    ascii_lowercase=string.ascii_lowercase.encode(),
+    ascii_uppercase=string.ascii_uppercase.encode(),
+    digits=string.digits.encode(),
+    hexdigits=string.hexdigits.encode(),
+    octdigits=string.octdigits.encode(),
+    punctuation=string.punctuation.encode(),
+    whitespace=string.whitespace.encode(),
+    ascii=string.printable.encode(),
+    bytes=bytes(bytearray(range(256)))
 )
 
 
@@ -45,6 +45,15 @@ class TransformGenerator(object):
         return "'transform(%s)'" % self.gen
 
 
+def rand_byte(chars):
+    """
+        Return a random character as byte from a charset.
+    """
+    # bytearray has consistent behaviour on both Python 2 and 3
+    # while bytes does not
+    return bytes(bytearray([random.choice(chars)]))
+
+
 class RandomGenerator(object):
 
     def __init__(self, dtype, length):
@@ -55,12 +64,10 @@ class RandomGenerator(object):
         return self.length
 
     def __getitem__(self, x):
-        return random.choice(DATATYPES[self.dtype])
-
-    def __getslice__(self, a, b):
-        b = min(b, self.length)
         chars = DATATYPES[self.dtype]
-        return "".join(random.choice(chars) for x in range(a, b))
+        if isinstance(x, slice):
+            return b"".join(rand_byte(chars) for _ in range(*x.indices(self.length)))
+        return rand_byte(chars)
 
     def __repr__(self):
         return "%s random from %s" % (self.length, self.dtype)

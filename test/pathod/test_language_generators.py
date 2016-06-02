@@ -7,11 +7,12 @@ import tutils
 def test_randomgenerator():
     g = generators.RandomGenerator("bytes", 100)
     assert repr(g)
+    assert g[0]
+    assert len(g[0]) == 1
     assert len(g[:10]) == 10
     assert len(g[1:10]) == 9
     assert len(g[:1000]) == 100
     assert len(g[1000:1001]) == 0
-    assert g[0]
 
 
 def test_filegenerator():
