@@ -1175,27 +1175,7 @@ function ToggleFilter(_ref) {
     );
 }
 
-var mapStateToProps = function mapStateToProps(state, ownProps) {
-    return {
-        active: state.eventLog.visibilityFilter[ownProps.name]
-    };
-};
-
-var mapDispatchToProps = function mapDispatchToProps(dispatch, ownProps) {
-    return {
-        toggleLevel: function toggleLevel() {
-            dispatch((0, _reduxActions.toggleEventLogFilter)(ownProps.name));
-        }
-    };
-};
-
-var ToggleEventLogFilter = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(ToggleFilter);
-
 var AutoScrollEventLog = (0, _AutoScroll2.default)(EventLogContents);
-
-var VisibleAutoScrollEventLog = (0, _reactRedux.connect)(function mapStateToProps(state, ownProps) {
-    return { filter: state.eventLog.visibilityFilter };
-})(AutoScrollEventLog);
 
 var EventLog = _react2.default.createClass({
     displayName: "EventLog",
@@ -1205,6 +1185,8 @@ var EventLog = _react2.default.createClass({
         this.props.updateLocation(undefined, d);
     },
     render: function render() {
+        var _this4 = this;
+
         return _react2.default.createElement(
             "div",
             { className: "eventlog" },
@@ -1215,18 +1197,44 @@ var EventLog = _react2.default.createClass({
                 _react2.default.createElement(
                     "div",
                     { className: "pull-right" },
-                    _react2.default.createElement(ToggleEventLogFilter, { name: "debug" }),
-                    _react2.default.createElement(ToggleEventLogFilter, { name: "info" }),
-                    _react2.default.createElement(ToggleEventLogFilter, { name: "web" }),
+                    _react2.default.createElement(ToggleFilter, { name: "debug",
+                        active: this.props.visibilityFilter.debug,
+                        toggleLevel: function toggleLevel() {
+                            return _this4.props.toggleFilter("debug");
+                        } }),
+                    _react2.default.createElement(ToggleFilter, { name: "info",
+                        active: this.props.visibilityFilter.info,
+                        toggleLevel: function toggleLevel() {
+                            return _this4.props.toggleFilter("info");
+                        } }),
+                    _react2.default.createElement(ToggleFilter, { name: "web",
+                        active: this.props.visibilityFilter.web,
+                        toggleLevel: function toggleLevel() {
+                            return _this4.props.toggleFilter("web");
+                        } }),
                     _react2.default.createElement("i", { onClick: this.close, className: "fa fa-close" })
                 )
             ),
-            _react2.default.createElement(VisibleAutoScrollEventLog, null)
+            _react2.default.createElement(AutoScrollEventLog, { filter: this.props.visibilityFilter })
         );
     }
 });
 
-exports.default = EventLog;
+var mapStateToProps = function mapStateToProps(state) {
+    return state.eventLog;
+};
+
+var mapDispatchToProps = function mapDispatchToProps(dispatch) {
+    return {
+        toggleFilter: function toggleFilter(filter) {
+            dispatch((0, _reduxActions.toggleEventLogFilter)(filter));
+        }
+    };
+};
+
+var VisibleEventLog = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(EventLog);
+
+exports.default = VisibleEventLog;
 
 },{"../actions.js":2,"../reduxActions":27,"../store/view.js":29,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";

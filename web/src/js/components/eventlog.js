@@ -141,34 +141,7 @@ function ToggleFilter ({ name, active, toggleLevel }) {
     );
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    active: state.eventLog.visibilityFilter[ownProps.name]
-  }
-};
-
-const mapDispatchToProps = (dispatch, ownProps) => {
-  return {
-    toggleLevel: () => {
-      dispatch(toggleEventLogFilter(ownProps.name))
-    }
-  }
-};
-
-const ToggleEventLogFilter = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ToggleFilter);
-
-
 const AutoScrollEventLog = AutoScroll(EventLogContents);
-
-
-const VisibleAutoScrollEventLog = connect(
-    function mapStateToProps(state, ownProps) {
-        return {filter: state.eventLog.visibilityFilter}
-    })(AutoScrollEventLog);
-
 
 var EventLog = React.createClass({
     close() {
@@ -182,17 +155,41 @@ var EventLog = React.createClass({
                 <div>
                     Eventlog
                     <div className="pull-right">
-                        <ToggleEventLogFilter name="debug"/>
-                        <ToggleEventLogFilter name="info"/>
-                        <ToggleEventLogFilter name="web"/>
+                        <ToggleFilter name="debug"
+                                      active={this.props.visibilityFilter.debug}
+                                      toggleLevel={() => this.props.toggleFilter("debug")}/>
+                        <ToggleFilter name="info"
+                                      active={this.props.visibilityFilter.info}
+                                      toggleLevel={() => this.props.toggleFilter("info")}/>
+                        <ToggleFilter name="web"
+                                      active={this.props.visibilityFilter.web}
+                                      toggleLevel={() => this.props.toggleFilter("web")}/>
                         <i onClick={this.close} className="fa fa-close"></i>
                     </div>
 
                 </div>
-                <VisibleAutoScrollEventLog/>
+                <AutoScrollEventLog filter={this.props.visibilityFilter}/>
             </div>
         );
     }
 });
 
-export default EventLog;
+
+const mapStateToProps = (state) => {
+  return state.eventLog;
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    toggleFilter: (filter) => {
+      dispatch(toggleEventLogFilter(filter))
+    }
+  }
+};
+
+const VisibleEventLog = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(EventLog);
+
+export default VisibleEventLog;
