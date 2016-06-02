@@ -6495,6 +6495,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _redux = require("redux");
 
 var _reduxActions = require("../reduxActions");
@@ -6513,7 +6515,7 @@ var visibilityFilter = function visibilityFilter() {
 
     switch (action.type) {
         case _reduxActions.TOGGLE_EVENTLOG_FILTER:
-            return Object.assign({}, state, _defineProperty({}, action.filter, !state[action.filter]));
+            return _extends({}, state, _defineProperty({}, action.filter, !state[action.filter]));
         default:
             return state;
     }

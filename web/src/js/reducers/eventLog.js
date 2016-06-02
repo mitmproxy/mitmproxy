@@ -10,9 +10,10 @@ const defaultVisibility = {
 const visibilityFilter = (state = defaultVisibility, action) => {
     switch (action.type) {
         case TOGGLE_EVENTLOG_FILTER:
-            return Object.assign({}, state, {
+            return {
+                ...state,
                 [action.filter]: !state[action.filter]
-            });
+            };
         default:
             return state;
     }
