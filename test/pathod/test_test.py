@@ -4,6 +4,9 @@ from pathod import test
 import tutils
 logging.disable(logging.CRITICAL)
 
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
+
 
 class TestDaemonManual:
 
