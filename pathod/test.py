@@ -58,7 +58,7 @@ class Daemon:
         l = self.expect_log(1)
         if not l:
             return None
-        return l[0]
+        return l[-1]
 
     def log(self):
         """
