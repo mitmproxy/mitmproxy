@@ -13,25 +13,6 @@ def test_format_timestamp_with_milli():
     assert utils.format_timestamp_with_milli(utils.timestamp())
 
 
-def test_isBin():
-    assert not utils.isBin("testing\n\r")
-    assert utils.isBin("testing\x01")
-    assert utils.isBin("testing\x0e")
-    assert utils.isBin("testing\x7f")
-
-
-def test_isXml():
-    assert not utils.isXML("foo")
-    assert utils.isXML("<foo")
-    assert utils.isXML("  \n<foo")
-
-
-def test_clean_hanging_newline():
-    s = "foo\n"
-    assert utils.clean_hanging_newline(s) == "foo"
-    assert utils.clean_hanging_newline("foo") == "foo"
-
-
 def test_pkg_data():
     assert utils.pkg_data.path("console")
     tutils.raises("does not exist", utils.pkg_data.path, "nonexistent")

@@ -101,3 +101,54 @@ def escaped_str_to_bytes(data):
     # This one is difficult - we use an undocumented Python API here
     # as per http://stackoverflow.com/a/23151714/934719
     return codecs.escape_decode(data)[0]
+
+
+def isBin(s):
+    """
+        Does this string have any non-ASCII characters?
+    """
+    for i in s:
+        i = ord(i)
+        if i < 9 or 13 < i < 32 or 126 < i:
+            return True
+    return False
+
+
+def isMostlyBin(s):
+    s = s[:100]
+    return sum(isBin(ch) for ch in s) / len(s) > 0.3
+
+
+def isXML(s):
+    for i in s:
+        if i in "\n \t":
+            continue
+        elif i == "<":
+            return True
+        else:
+            return False
+
+
+def clean_hanging_newline(t):
+    """
+        Many editors will silently add a newline to the final line of a
+        document (I'm looking at you, Vim). This function fixes this common
+        problem at the risk of removing a hanging newline in the rare cases
+        where the user actually intends it.
+    """
+    if t and t[-1] == "\n":
+        return t[:-1]
+    return t
+
+
+def hexdump(s):
+    """
+        Returns:
+            A generator of (offset, hex, str) tuples
+    """
+    for i in range(0, len(s), 16):
+        offset = "{:0=10x}".format(i).encode()
+        part = s[i:i + 16]
+        x = b" ".join("{:0=2x}".format(i).encode() for i in six.iterbytes(part))
+        x = x.ljust(47)  # 16*2 + 15
+        yield (offset, x, clean_bin(part, False))

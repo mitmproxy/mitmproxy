@@ -10,7 +10,3 @@ def test_bidi():
     assert b.get_name(5) is None
     tutils.raises(AttributeError, getattr, b, "c")
     tutils.raises(ValueError, utils.BiDi, one=1, two=1)
-
-
-def test_hexdump():
-    assert list(utils.hexdump(b"one\0" * 10))

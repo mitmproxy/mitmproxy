@@ -6,21 +6,6 @@ import inspect
 
 import six
 
-from netlib import strutils
-
-
-def hexdump(s):
-    """
-        Returns:
-            A generator of (offset, hex, str) tuples
-    """
-    for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i).encode()
-        part = s[i:i + 16]
-        x = b" ".join("{:0=2x}".format(i).encode() for i in six.iterbytes(part))
-        x = x.ljust(47)  # 16*2 + 15
-        yield (offset, x, strutils.clean_bin(part, False))
-
 
 def setbit(byte, offset, value):
     """
