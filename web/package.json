@@ -23,7 +23,9 @@
     "lodash": "^4.11.2",
     "react": "^15.0.2",
     "react-dom": "^15.0.2",
+    "react-redux": "^4.4.5",
     "react-router": "^2.4.0",
+    "redux": "^3.5.2",
     "shallowequal": "^0.2.2"
   },
   "devDependencies": {
