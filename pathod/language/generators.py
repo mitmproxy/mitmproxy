@@ -37,10 +37,6 @@ class TransformGenerator(object):
         d = self.gen.__getitem__(x)
         return self.transform(x, d)
 
-    def __getslice__(self, a, b):
-        d = self.gen.__getslice__(a, b)
-        return self.transform(a, d)
-
     def __repr__(self):
         return "'transform(%s)'" % self.gen
 
