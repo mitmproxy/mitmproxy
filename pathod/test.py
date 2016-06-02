@@ -56,7 +56,6 @@ class Daemon:
         start = time.time()
         while True:
             l = self.log()
-            print l
             if time.time() - start >= timeout:
                 return None
             if len(l) >= n:
