@@ -5,7 +5,7 @@ import os
 import sys
 import threading
 
-from six.moves.urllib.parse import unquote
+from six.moves import urllib
 
 from netlib import tcp, certutils, websockets
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
@@ -184,7 +184,7 @@ class PathodHandler(tcp.BaseHandler):
                     break
             else:
                 if m(path.startswith(self.server.craftanchor)):
-                    spec = unquote(path)[len(self.server.craftanchor):]
+                    spec = urllib.parse.unquote(path)[len(self.server.craftanchor):]
                     if spec:
                         try:
                             anchor_gen = language.parse_pathod(spec, self.use_http2)
