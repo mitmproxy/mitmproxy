@@ -2,7 +2,7 @@
 import _ from "lodash";
 import $ from "jquery";
 import {EventEmitter} from 'events';
-
+import { EventLogActions } from "../actions.js"
 import {ActionTypes, StoreCmds} from "../actions.js";
 import {AppDispatcher} from "../dispatcher.js";
 
@@ -118,8 +118,7 @@ _.extend(LiveStoreMixin.prototype, {
                     this.handle_fetch(message.data);
                 }.bind(this))
                 .fail(function () {
-                    //EventLogActions.add_event("Could not fetch " + this.type);
-                    console.log("Could not fetch " + this.type); // store.js:121 Uncaught ReferenceError: EventLogActions is not defined
+                    EventLogActions.add_event("Could not fetch " + this.type);
                 }.bind(this));
         }
     },

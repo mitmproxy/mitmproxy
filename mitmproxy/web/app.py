@@ -8,7 +8,7 @@ import re
 
 import six
 import tornado.websocket
-from six.moves import cStringIO as StringIO
+from io import BytesIO
 from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import filt
@@ -163,25 +163,22 @@ class Flows(RequestHandler):
 
 class DumpFlows(RequestHandler):
     def get(self):
-        self.set_header("Content-Description", "File Transfer")
-        self.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.set_header("Content-Disposition", "attachment; filename=flows")
         self.set_header("Content-Type", "application/octet-stream")
-        self.set_header("Content-Transfer-Encoding", "binary")
 
-        sio = StringIO()
-        fw = FlowWriter(sio)
+        bio = BytesIO()
+        fw = FlowWriter(bio)
         for f in self.state.flows:
             fw.add(f)
-        self.write(sio.getvalue())
+        self.write(bio.getvalue())
 
-        sio.close()
+        bio.close()
 
     def post(self):
-        # self.state.clear()
-        sio = StringIO(self.request.body)
-        self.state.load_flows(FlowReader(sio).stream())
-        sio.close()
+        self.state.clear()
+        bio = BytesIO(self.request.body)
+        self.state.load_flows(FlowReader(bio).stream())
+        bio.close()
 
 class ClearAll(RequestHandler):
 
@@ -393,7 +390,7 @@ class Application(tornado.web.Application):
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            xsrf_cookies=True,
+            xsrf_cookies=False,
             cookie_secret=os.urandom(256),
             debug=debug,
             wauthenticator=wauthenticator,

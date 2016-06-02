@@ -76,7 +76,7 @@ export function reverseString(s) {
         ) + end;
 }
 
-function getCookie(name) {
+export function getCookie(name) {
     var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
