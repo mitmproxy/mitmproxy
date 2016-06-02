@@ -170,12 +170,13 @@ class DumpFlows(RequestHandler):
         fw = FlowWriter(bio)
         for f in self.state.flows:
             fw.add(f)
-        self.write(bio.getvalue())
 
+        self.write(bio.getvalue())
         bio.close()
 
     def post(self):
         self.state.clear()
+
         content = self.request.files.values()[0][0]["body"]
         bio = BytesIO(content)
         self.state.load_flows(FlowReader(bio).stream())
