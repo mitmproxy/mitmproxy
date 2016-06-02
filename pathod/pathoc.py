@@ -26,6 +26,10 @@ from netlib.tutils import treq
 logging.getLogger("hpack").setLevel(logging.WARNING)
 
 
+def xrepr(s):
+    return repr(s)[1:-1]
+
+
 class PathocError(Exception):
     pass
 
@@ -423,7 +427,7 @@ class Pathoc(tcp.TCPClient):
             finally:
                 if resp:
                     lg("<< %s %s: %s bytes" % (
-                        resp.status_code, utils.xrepr(resp.reason), len(resp.content)
+                        resp.status_code, xrepr(resp.reason), len(resp.content)
                     ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()

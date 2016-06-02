@@ -28,10 +28,6 @@ def parse_anchor_spec(s):
     return tuple(s.split("=", 1))
 
 
-def xrepr(s):
-    return repr(s)[1:-1]
-
-
 def escape_unprintables(s):
     """
         Like inner_repr, but preserves line breaks.
