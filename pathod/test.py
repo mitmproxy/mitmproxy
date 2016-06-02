@@ -1,5 +1,7 @@
 from six.moves import cStringIO as StringIO
 import threading
+import time
+
 from six.moves import queue
 
 import requests
@@ -49,11 +51,23 @@ class Daemon:
     def text_log(self):
         return self.logfp.getvalue()
 
+    def expect_log(self, n, timeout=1):
+        l = []
+        start = time.time()
+        while True:
+            l = self.log()
+            print l
+            if time.time() - start >= timeout:
+                return None
+            if len(l) >= n:
+                break
+        return l
+
     def last_log(self):
         """
             Returns the last logged request, or None.
         """
-        l = self.log()
+        l = self.expect_log(1)
         if not l:
             return None
         return l[0]
