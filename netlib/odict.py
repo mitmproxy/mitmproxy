@@ -3,7 +3,7 @@ import copy
 
 import six
 
-from netlib import basetypes, utils
+from netlib import basetypes, strutils
 
 
 class ODict(basetypes.Serializable):
@@ -139,9 +139,9 @@ class ODict(basetypes.Serializable):
         """
         new, count = [], 0
         for k, v in self.lst:
-            k, c = utils.safe_subn(pattern, repl, k, *args, **kwargs)
+            k, c = strutils.safe_subn(pattern, repl, k, *args, **kwargs)
             count += c
-            v, c = utils.safe_subn(pattern, repl, v, *args, **kwargs)
+            v, c = strutils.safe_subn(pattern, repl, v, *args, **kwargs)
             count += c
             new.append([k, v])
         self.lst = new

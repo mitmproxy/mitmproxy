@@ -2,7 +2,7 @@ import os
 import sys
 import netlib.utils
 
-from netlib.utils import bytes_to_escaped_str
+from netlib import strutils
 
 
 class MemBool(object):
@@ -38,7 +38,7 @@ def escape_unprintables(s):
     """
     s = s.replace(b"\r\n", b"PATHOD_MARKER_RN")
     s = s.replace(b"\n", b"PATHOD_MARKER_N")
-    s = bytes_to_escaped_str(s)
+    s = strutils.bytes_to_escaped_str(s)
     s = s.replace("PATHOD_MARKER_RN", "\n")
     s = s.replace("PATHOD_MARKER_N", "\n")
     return s

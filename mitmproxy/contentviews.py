@@ -36,6 +36,7 @@ from netlib import encoding
 from netlib import http
 from netlib import odict
 from netlib.http import url
+from netlib import strutils
 import netlib.utils
 
 try:
@@ -581,9 +582,9 @@ def safe_to_print(lines, encoding="utf8"):
         clean_line = []
         for (style, text) in line:
             try:
-                text = netlib.utils.clean_bin(text.decode(encoding, "strict"))
+                text = strutils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = netlib.utils.clean_bin(text).decode(encoding, "strict")
+                text = strutils.clean_bin(text).decode(encoding, "strict")
             clean_line.append((style, text))
         yield clean_line
 

@@ -16,7 +16,7 @@ from mitmproxy.flow import modules
 from mitmproxy.onboarding import app
 from mitmproxy.protocol import http_replay
 from mitmproxy.proxy.config import HostMatcher
-from netlib import utils
+from netlib import strutils
 
 
 class FlowMaster(controller.Master):
@@ -499,7 +499,7 @@ class FlowMaster(controller.Master):
             server=repr(flow.server_conn.address),
             direction=direction,
         ), "info")
-        self.add_event(utils.clean_bin(message.content), "debug")
+        self.add_event(strutils.clean_bin(message.content), "debug")
 
     @controller.handler
     def tcp_error(self, flow):
