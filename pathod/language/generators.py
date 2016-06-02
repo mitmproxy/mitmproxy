@@ -2,6 +2,8 @@ import string
 import random
 import mmap
 
+import six
+
 DATATYPES = dict(
     ascii_letters=string.ascii_letters.encode(),
     ascii_lowercase=string.ascii_lowercase.encode(),
@@ -47,7 +49,9 @@ def rand_byte(chars):
     """
     # bytearray has consistent behaviour on both Python 2 and 3
     # while bytes does not
-    return bytes(bytearray([random.choice(chars)]))
+    if six.PY2:
+        return random.choice(chars)
+    return bytes([random.choice(chars)])
 
 
 class RandomGenerator(object):
