@@ -50,9 +50,9 @@ class Daemon:
             if time.time() - start >= timeout:
                 raise TimeoutError(
                     "%s service threads still alive" %
-                    self.thread.server.counter.count
+                    self.thread.server.handler_counter.count
                 )
-            if self.thread.server.counter.count == 0:
+            if self.thread.server.handler_counter.count == 0:
                 return
 
     def expect_log(self, n, timeout=5):

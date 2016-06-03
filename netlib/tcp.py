@@ -872,10 +872,10 @@ class TCPServer(object):
         self.socket.bind(self.address())
         self.address = Address.wrap(self.socket.getsockname())
         self.socket.listen(self.request_queue_size)
-        self.counter = Counter()
+        self.handler_counter = Counter()
 
     def connection_thread(self, connection, client_address):
-        with self.counter:
+        with self.handler_counter:
             client_address = Address(client_address)
             try:
                 self.handle_client_connection(connection, client_address)
