@@ -344,12 +344,19 @@ var FileMenu = React.createClass({
         }
     },
     handleOpenClick: function (e) {
+        this.fileInput.click();
         e.preventDefault();
-        console.error("unimplemented: handleOpenClick");
+    },
+    handleOpenFile: function (e) {
+        if (e.target.files.length > 0) {
+            FlowActions.upload(e.target.files[0]);
+            this.fileInput.value = "";
+        }
+        e.preventDefault();
     },
     handleSaveClick: function (e) {
         e.preventDefault();
-        console.error("unimplemented: handleSaveClick");
+        FlowActions.download();
     },
     handleShutdownClick: function (e) {
         e.preventDefault();
@@ -368,6 +375,20 @@ var FileMenu = React.createClass({
                             New
                         </a>
                     </li>
+                    <li>
+                        <a href="#" onClick={this.handleOpenClick}>
+                         <i className="fa fa-fw fa-folder-open"></i>
+                            Open...
+                        </a>
+                         <input ref={(ref) => this.fileInput = ref}  className="hidden" type="file" onChange={this.handleOpenFile}/>
+
+                    </li>
+                    <li>
+                        <a href="#" onClick={this.handleSaveClick}>
+                            <i className="fa fa-fw fa-floppy-o"></i>
+                            Save...
+                        </a>
+                    </li>
                     <li role="presentation" className="divider"></li>
                     <li>
                         <a href="http://mitm.it/" target="_blank">
@@ -376,18 +397,6 @@ var FileMenu = React.createClass({
                         </a>
                     </li>
                 {/*
-                 <li>
-                 <a href="#" onClick={this.handleOpenClick}>
-                 <i className="fa fa-fw fa-folder-open"></i>
-                 Open
-                 </a>
-                 </li>
-                 <li>
-                 <a href="#" onClick={this.handleSaveClick}>
-                 <i className="fa fa-fw fa-save"></i>
-                 Save
-                 </a>
-                 </li>
                  <li role="presentation" className="divider"></li>
                  <li>
                  <a href="#" onClick={this.handleShutdownClick}>

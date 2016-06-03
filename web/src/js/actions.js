@@ -1,6 +1,6 @@
 import $ from "jquery";
-import _ from "lodash";
 import {AppDispatcher} from "./dispatcher.js";
+import {fetchApi} from "./utils.js";
 
 export var ActionTypes = {
     // Connection
@@ -117,6 +117,16 @@ export var FlowActions = {
     },
     clear: function(){
         $.post("/clear");
+    },
+    download: () => window.location = "/flows/dump",
+
+    upload: (file) => {
+        let data = new FormData();
+        data.append('file', file);
+        fetchApi("/flows/dump",  {
+            method: 'post',
+            body: data
+        })
     }
 };
 

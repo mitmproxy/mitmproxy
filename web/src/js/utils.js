@@ -80,7 +80,7 @@ function getCookie(name) {
     var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
-var xsrf = $.param({_xsrf: getCookie("_xsrf")});
+const xsrf = `_xsrf=${getCookie("_xsrf")}`;
 
 //Tornado XSRF Protection.
 $.ajaxPrefilter(function (options) {
@@ -102,3 +102,15 @@ $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
     actions.EventLogActions.add_event(thrownError + ": " + message);
     alert(message);
 });
+
+export function fetchApi(url, options) {
+    if(url.indexOf("?") === -1){
+        url += "?" + xsrf;
+    } else {
+        url += "&" + xsrf;
+    }
+    return fetch(url, {
+        ...options,
+        credentials: 'same-origin'
+    });
+}

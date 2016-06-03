@@ -2,7 +2,7 @@
 import _ from "lodash";
 import $ from "jquery";
 import {EventEmitter} from 'events';
-
+import { EventLogActions } from "../actions.js"
 import {ActionTypes, StoreCmds} from "../actions.js";
 import {AppDispatcher} from "../dispatcher.js";
 

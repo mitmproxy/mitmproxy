@@ -8,6 +8,8 @@ import re
 
 import six
 import tornado.websocket
+from io import BytesIO
+from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import filt
 from mitmproxy import version
@@ -159,6 +161,26 @@ class Flows(RequestHandler):
             data=[_strip_content(f.get_state()) for f in self.state.flows]
         ))
 
+class DumpFlows(RequestHandler):
+    def get(self):
+        self.set_header("Content-Disposition", "attachment; filename=flows")
+        self.set_header("Content-Type", "application/octet-stream")
+
+        bio = BytesIO()
+        fw = FlowWriter(bio)
+        for f in self.state.flows:
+            fw.add(f)
+
+        self.write(bio.getvalue())
+        bio.close()
+
+    def post(self):
+        self.state.clear()
+
+        content = self.request.files.values()[0][0]["body"]
+        bio = BytesIO(content)
+        self.state.load_flows(FlowReader(bio).stream())
+        bio.close()
 
 class ClearAll(RequestHandler):
 
@@ -356,6 +378,7 @@ class Application(tornado.web.Application):
             (r"/updates", ClientConnection),
             (r"/events", Events),
             (r"/flows", Flows),
+            (r"/flows/dump", DumpFlows),
             (r"/flows/accept", AcceptFlows),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/accept", AcceptFlow),
