@@ -88,11 +88,11 @@ class DaemonTests(object):
             ssl=self.ssl,
             fp=logfp,
         )
-        c.connect()
-        if params:
-            path = path + "?" + urllib.urlencode(params)
-        resp = c.request("get:%s" % path)
-        return resp
+        with c.connect():
+            if params:
+                path = path + "?" + urllib.urlencode(params)
+            resp = c.request("get:%s" % path)
+            return resp
 
     def get(self, spec):
         logfp = StringIO()
@@ -101,9 +101,9 @@ class DaemonTests(object):
             ssl=self.ssl,
             fp=logfp,
         )
-        c.connect()
-        resp = c.request("get:/p/%s" % urllib.quote(spec).encode("string_escape"))
-        return resp
+        with c.connect():
+            resp = c.request("get:/p/%s" % urllib.quote(spec).encode("string_escape"))
+            return resp
 
     def pathoc(
         self,
@@ -128,16 +128,16 @@ class DaemonTests(object):
             fp=logfp,
             use_http2=use_http2,
         )
-        c.connect(connect_to)
-        ret = []
-        for i in specs:
-            resp = c.request(i)
-            if resp:
-                ret.append(resp)
-        for frm in c.wait():
-            ret.append(frm)
-        c.stop()
-        return ret, logfp.getvalue()
+        with c.connect(connect_to):
+            ret = []
+            for i in specs:
+                resp = c.request(i)
+                if resp:
+                    ret.append(resp)
+            for frm in c.wait():
+                ret.append(frm)
+            c.stop()
+            return ret, logfp.getvalue()
 
 
 tmpdir = tutils.tmpdir

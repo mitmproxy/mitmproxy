@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import traceback
+import contextlib
 
 import binascii
 from six.moves import range
@@ -577,6 +578,12 @@ class _Connection(object):
         return context
 
 
+@contextlib.contextmanager
+def _closer(client):
+    yield
+    client.close()
+
+
 class TCPClient(_Connection):
 
     def __init__(self, address, source_address=None):
@@ -708,6 +715,7 @@ class TCPClient(_Connection):
         self.connection = connection
         self.ip_address = Address(connection.getpeername())
         self._makefile()
+        return _closer(self)
 
     def settimeout(self, n):
         self.connection.settimeout(n)
