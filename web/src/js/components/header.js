@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from 'react-dom';
 import $ from "jquery";
+import {connect} from 'react-redux'
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
@@ -8,6 +9,7 @@ import {ToggleInputButton, ToggleButton} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 import {SettingsState} from "./common.js";
+import {ToggleEventLog} from "./eventlog"
 
 var FilterDocs = React.createClass({
     statics: {
@@ -224,26 +226,11 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    toggleEventLog: function () {
-        var d = {};
-        if (this.props.query[Query.SHOW_EVENTLOG]) {
-            d[Query.SHOW_EVENTLOG] = undefined;
-        } else {
-            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
-        }
-
-        this.props.updateLocation(undefined, d);
-        console.log('toggleevent');
-    },
     render: function () {
-      var showEventLog = this.props.query[Query.SHOW_EVENTLOG];
       return (
           <div>
             <div className="menu-row">
-              <ToggleButton
-                checked={showEventLog}
-                name = "Show Eventlog"
-                onToggleChanged={this.toggleEventLog}/>
+                <ToggleEventLog text="Show Event Log"/>
             </div>
             <div className="clearfix"></div>
           </div>
@@ -256,29 +243,29 @@ export const OptionMenu = (props) => {
     return (
         <div>
             <div className="menu-row">
-                <ToggleButton name="showhost"
+                <ToggleButton text="showhost"
                               checked={showhost}
-                              onToggleChanged={() => SettingsActions.update({showhost: !showhost})}
+                              onToggle={() => SettingsActions.update({showhost: !showhost})}
                 />
-                <ToggleButton name="no_upstream_cert"
+                <ToggleButton text="no_upstream_cert"
                               checked={no_upstream_cert}
-                              onToggleChanged={() => SettingsActions.update({no_upstream_cert: !no_upstream_cert})}
+                              onToggle={() => SettingsActions.update({no_upstream_cert: !no_upstream_cert})}
                 />
-                <ToggleButton name="rawtcp"
+                <ToggleButton text="rawtcp"
                               checked={rawtcp}
-                              onToggleChanged={() => SettingsActions.update({rawtcp: !rawtcp})}
+                              onToggle={() => SettingsActions.update({rawtcp: !rawtcp})}
                 />
-                <ToggleButton name="http2"
+                <ToggleButton text="http2"
                               checked={http2}
-                              onToggleChanged={() => SettingsActions.update({http2: !http2})}
+                              onToggle={() => SettingsActions.update({http2: !http2})}
                 />
-                <ToggleButton name="anticache"
+                <ToggleButton text="anticache"
                               checked={anticache}
-                              onToggleChanged={() => SettingsActions.update({anticache: !anticache})}
+                              onToggle={() => SettingsActions.update({anticache: !anticache})}
                 />
-                <ToggleButton name="anticomp"
+                <ToggleButton text="anticomp"
                               checked={anticomp}
-                              onToggleChanged={() => SettingsActions.update({anticomp: !anticomp})}
+                              onToggle={() => SettingsActions.update({anticomp: !anticomp})}
                 />
                 <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
                     checked={Boolean(stickyauth)}

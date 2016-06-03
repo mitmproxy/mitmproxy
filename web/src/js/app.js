@@ -1,17 +1,28 @@
 import React from "react"
-import { render } from 'react-dom'
-import $ from "jquery"
+import {render} from 'react-dom'
+import {applyMiddleware, createStore} from 'redux'
+import {Provider} from 'react-redux'
+import createLogger from 'redux-logger';
+
 import Connection from "./connection"
-import {app} from "./components/proxyapp.js"
-import { EventLogActions } from "./actions.js"
+import {App} from "./components/proxyapp.js"
+import rootReducer from './ducks/index';
+import {addLogEntry} from "./ducks/eventLog";
 
-$(function () {
-    window.ws = new Connection("/updates");
+// logger must be last
+const logger = createLogger();
+const store = createStore(rootReducer, applyMiddleware(logger));
 
-    window.onerror = function (msg) {
-        EventLogActions.add_event(msg);
-    };
+window.onerror = function (msg) {
+    store.dispatch(addLogEntry(msg));
+};
 
-    render(app, document.getElementById("mitmproxy"));
+document.addEventListener('DOMContentLoaded', () => {
+    window.ws = new Connection("/updates", store.dispatch);
+
+    render(
+        <Provider store={store}>{App}</Provider>,
+        document.getElementById("mitmproxy")
+    );
+
 });
-

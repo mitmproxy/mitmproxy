@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
+import {connect} from 'react-redux'
+import { Route, Router as ReactRouter, hashHistory, Redirect} from "react-router"
 
 import {Splitter} from "./common.js"
 import MainView from "./mainview.js";
@@ -8,7 +10,6 @@ import Footer from "./footer.js";
 import {Header, MainMenu} from "./header.js";
 import EventLog from "./eventlog.js"
 import {EventLogStore, FlowStore, SettingsStore} from "../store/store.js";
-import {Query} from "../actions.js";
 import {Key} from "../utils.js";
 
 
@@ -120,10 +121,10 @@ var ProxyAppMain = React.createClass({
     render: function () {
         var query = this.getQuery();
         var eventlog;
-        if (this.props.location.query[Query.SHOW_EVENTLOG]) {
+        if (this.props.showEventLog) {
             eventlog = [
                 <Splitter key="splitter" axis="y"/>,
-                <EventLog key="eventlog" updateLocation={this.updateLocation}/>
+                <EventLog key="eventlog"/>
             ];
         } else {
             eventlog = null;
@@ -142,13 +143,17 @@ var ProxyAppMain = React.createClass({
     }
 });
 
+const AppContainer = connect(
+    state => ({
+        showEventLog: state.eventLog.visible
+    })
+)(ProxyAppMain);
 
-import { Route, Router as ReactRouter, hashHistory, Redirect} from "react-router";
 
-export var app = (
+export var App = (
     <ReactRouter history={hashHistory}>
         <Redirect from="/" to="/flows" />
-        <Route path="/" component={ProxyAppMain}>
+        <Route path="/" component={AppContainer}>
             <Route path="flows" component={MainView}/>
             <Route path="flows/:flowId/:detailTab" component={MainView}/>
             <Route path="reports" component={Reports}/>

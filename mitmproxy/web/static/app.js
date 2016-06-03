@@ -452,40 +452,56 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":22,"./utils.js":27,"jquery":"jquery"}],3:[function(require,module,exports){
-"use strict";
+},{"./dispatcher.js":22,"./utils.js":31,"jquery":"jquery"}],3:[function(require,module,exports){
+'use strict';
 
-var _react = require("react");
+var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = require("react-dom");
+var _reactDom = require('react-dom');
 
-var _jquery = require("jquery");
+var _redux = require('redux');
 
-var _jquery2 = _interopRequireDefault(_jquery);
+var _reactRedux = require('react-redux');
 
-var _connection = require("./connection");
+var _reduxLogger = require('redux-logger');
+
+var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
+
+var _connection = require('./connection');
 
 var _connection2 = _interopRequireDefault(_connection);
 
-var _proxyapp = require("./components/proxyapp.js");
+var _proxyapp = require('./components/proxyapp.js');
 
-var _actions = require("./actions.js");
+var _index = require('./ducks/index');
+
+var _index2 = _interopRequireDefault(_index);
+
+var _eventLog = require('./ducks/eventLog');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-(0, _jquery2.default)(function () {
-    window.ws = new _connection2.default("/updates");
+// logger must be last
+var logger = (0, _reduxLogger2.default)();
+var store = (0, _redux.createStore)(_index2.default, (0, _redux.applyMiddleware)(logger));
 
-    window.onerror = function (msg) {
-        _actions.EventLogActions.add_event(msg);
-    };
+window.onerror = function (msg) {
+    store.dispatch((0, _eventLog.addLogEntry)(msg));
+};
 
-    (0, _reactDom.render)(_proxyapp.app, document.getElementById("mitmproxy"));
+document.addEventListener('DOMContentLoaded', function () {
+    window.ws = new _connection2.default("/updates", store.dispatch);
+
+    (0, _reactDom.render)(_react2.default.createElement(
+        _reactRedux.Provider,
+        { store: store },
+        _proxyapp.App
+    ), document.getElementById("mitmproxy"));
 });
 
-},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"jquery":"jquery","react":"react","react-dom":"react-dom"}],4:[function(require,module,exports){
+},{"./components/proxyapp.js":20,"./connection":21,"./ducks/eventLog":23,"./ducks/index":24,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -625,28 +641,23 @@ var Splitter = exports.Splitter = _react2.default.createClass({
     }
 });
 
-var ToggleButton = exports.ToggleButton = function ToggleButton(props) {
+var ToggleButton = exports.ToggleButton = function ToggleButton(_ref) {
+    var checked = _ref.checked;
+    var onToggle = _ref.onToggle;
+    var text = _ref.text;
     return _react2.default.createElement(
         "div",
-        { className: "input-group toggle-btn" },
-        _react2.default.createElement(
-            "div",
-            {
-                className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
-                onClick: props.onToggleChanged },
-            _react2.default.createElement(
-                "span",
-                { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") },
-                " ",
-                props.name
-            )
-        )
+        { className: "btn btn-toggle " + (checked ? "btn-primary" : "btn-default"), onClick: onToggle },
+        _react2.default.createElement("i", { className: "fa fa-fw " + (checked ? "fa-check-square-o" : "fa-square-o") }),
+        " ",
+        text
     );
 };
 
 ToggleButton.propTypes = {
-    name: _react2.default.PropTypes.string.isRequired,
-    onToggleChanged: _react2.default.PropTypes.func.isRequired
+    checked: _react2.default.PropTypes.bool.isRequired,
+    onToggle: _react2.default.PropTypes.func.isRequired,
+    text: _react2.default.PropTypes.string.isRequired
 };
 
 var ToggleInputButton = exports.ToggleInputButton = function (_React$Component) {
@@ -709,7 +720,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -967,12 +978,13 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":27,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":31,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.ToggleEventLog = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -984,11 +996,13 @@ var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
+var _reactRedux = require("react-redux");
+
 var _shallowequal = require("shallowequal");
 
 var _shallowequal2 = _interopRequireDefault(_shallowequal);
 
-var _actions = require("../actions.js");
+var _eventLog = require("../ducks/eventLog");
 
 var _AutoScroll = require("./helpers/AutoScroll");
 
@@ -996,11 +1010,7 @@ var _AutoScroll2 = _interopRequireDefault(_AutoScroll);
 
 var _VirtualScroll = require("./helpers/VirtualScroll");
 
-var _view = require("../store/view.js");
-
-var _lodash = require("lodash");
-
-var _lodash2 = _interopRequireDefault(_lodash);
+var _common = require("./common");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1010,22 +1020,36 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function LogIcon(_ref) {
+    var event = _ref.event;
+
+    var icon = { web: "html5", debug: "bug" }[event.level] || "info";
+    return _react2.default.createElement("i", { className: "fa fa-fw fa-" + icon });
+}
+
+function LogEntry(_ref2) {
+    var event = _ref2.event;
+    var registerHeight = _ref2.registerHeight;
+
+    return _react2.default.createElement(
+        "div",
+        { ref: registerHeight },
+        _react2.default.createElement(LogIcon, { event: event }),
+        event.message
+    );
+}
+
 var EventLogContents = function (_React$Component) {
     _inherits(EventLogContents, _React$Component);
 
-    function EventLogContents(props, context) {
+    function EventLogContents(props) {
         _classCallCheck(this, EventLogContents);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLogContents).call(this, props, context));
-
-        _this.view = new _view.StoreView(_this.context.eventStore, function (entry) {
-            return _this.props.filter[entry.level];
-        });
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLogContents).call(this, props));
 
         _this.heights = {};
-        _this.state = { entries: _this.view.list, vScroll: (0, _VirtualScroll.calcVScroll)() };
+        _this.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
 
-        _this.onChange = _this.onChange.bind(_this);
         _this.onViewportUpdate = _this.onViewportUpdate.bind(_this);
         return _this;
     }
@@ -1034,31 +1058,17 @@ var EventLogContents = function (_React$Component) {
         key: "componentDidMount",
         value: function componentDidMount() {
             window.addEventListener("resize", this.onViewportUpdate);
-            this.view.addListener("add", this.onChange);
-            this.view.addListener("recalculate", this.onChange);
             this.onViewportUpdate();
         }
     }, {
         key: "componentWillUnmount",
         value: function componentWillUnmount() {
             window.removeEventListener("resize", this.onViewportUpdate);
-            this.view.removeListener("add", this.onChange);
-            this.view.removeListener("recalculate", this.onChange);
-            this.view.close();
         }
     }, {
         key: "componentDidUpdate",
         value: function componentDidUpdate() {
             this.onViewportUpdate();
-        }
-    }, {
-        key: "componentWillReceiveProps",
-        value: function componentWillReceiveProps(nextProps) {
-            if (nextProps.filter !== this.props.filter) {
-                this.view.recalculate(function (entry) {
-                    return nextProps.filter[entry.level];
-                });
-            }
         }
     }, {
         key: "onViewportUpdate",
@@ -1068,11 +1078,11 @@ var EventLogContents = function (_React$Component) {
             var viewport = _reactDom2.default.findDOMNode(this);
 
             var vScroll = (0, _VirtualScroll.calcVScroll)({
-                itemCount: this.state.entries.length,
+                itemCount: this.props.events.length,
                 rowHeight: this.props.rowHeight,
                 viewportTop: viewport.scrollTop,
                 viewportHeight: viewport.offsetHeight,
-                itemHeights: this.state.entries.map(function (entry) {
+                itemHeights: this.props.events.map(function (entry) {
                     return _this2.heights[entry.id];
                 })
             });
@@ -1082,15 +1092,11 @@ var EventLogContents = function (_React$Component) {
             }
         }
     }, {
-        key: "onChange",
-        value: function onChange() {
-            this.setState({ entries: this.view.list });
-        }
-    }, {
         key: "setHeight",
-        value: function setHeight(id, ref) {
-            if (ref && !this.heights[id]) {
-                var height = _reactDom2.default.findDOMNode(ref).offsetHeight;
+        value: function setHeight(id, node) {
+            console.log("setHeight", id, node);
+            if (node && !this.heights[id]) {
+                var height = node.offsetHeight;
                 if (this.heights[id] !== height) {
                     this.heights[id] = height;
                     this.onViewportUpdate();
@@ -1098,30 +1104,26 @@ var EventLogContents = function (_React$Component) {
             }
         }
     }, {
-        key: "getIcon",
-        value: function getIcon(level) {
-            return { web: "html5", debug: "bug" }[level] || "info";
-        }
-    }, {
         key: "render",
         value: function render() {
             var _this3 = this;
 
             var vScroll = this.state.vScroll;
-            var entries = this.state.entries.slice(vScroll.start, vScroll.end);
+            var events = this.props.events.slice(vScroll.start, vScroll.end).map(function (event) {
+                return _react2.default.createElement(LogEntry, {
+                    event: event,
+                    key: event.id,
+                    registerHeight: function registerHeight(node) {
+                        return _this3.setHeight(event.id, node);
+                    }
+                });
+            });
 
             return _react2.default.createElement(
                 "pre",
                 { onScroll: this.onViewportUpdate },
                 _react2.default.createElement("div", { style: { height: vScroll.paddingTop } }),
-                entries.map(function (entry, index) {
-                    return _react2.default.createElement(
-                        "div",
-                        { key: entry.id, ref: _this3.setHeight.bind(_this3, entry.id) },
-                        _react2.default.createElement("i", { className: "fa fa-fw fa-" + _this3.getIcon(entry.level) }),
-                        entry.message
-                    );
-                }),
+                events,
                 _react2.default.createElement("div", { style: { height: vScroll.paddingBottom } })
             );
         }
@@ -1130,95 +1132,80 @@ var EventLogContents = function (_React$Component) {
     return EventLogContents;
 }(_react2.default.Component);
 
-EventLogContents.contextTypes = {
-    eventStore: _react2.default.PropTypes.object.isRequired
-};
 EventLogContents.defaultProps = {
     rowHeight: 18
 };
 
 
-ToggleFilter.propTypes = {
-    name: _react2.default.PropTypes.string.isRequired,
-    toggleLevel: _react2.default.PropTypes.func.isRequired,
-    active: _react2.default.PropTypes.bool
-};
+EventLogContents = (0, _AutoScroll2.default)(EventLogContents);
 
-function ToggleFilter(_ref) {
-    var name = _ref.name;
-    var active = _ref.active;
-    var toggleLevel = _ref.toggleLevel;
+var EventLogContentsContainer = (0, _reactRedux.connect)(function (state) {
+    return {
+        events: state.eventLog.filteredEvents
+    };
+})(EventLogContents);
 
-    var className = "label ";
-    if (active) {
-        className += "label-primary";
-    } else {
-        className += "label-default";
-    }
+var ToggleEventLog = exports.ToggleEventLog = (0, _reactRedux.connect)(function (state) {
+    return {
+        checked: state.eventLog.visible
+    };
+}, function (dispatch) {
+    return {
+        onToggle: function onToggle() {
+            return dispatch((0, _eventLog.toggleEventLogVisibility)());
+        }
+    };
+})(_common.ToggleButton);
 
-    function onClick(event) {
-        event.preventDefault();
-        toggleLevel(name);
-    }
+var ToggleFilter = (0, _reactRedux.connect)(function (state, ownProps) {
+    return {
+        checked: state.eventLog.filter[ownProps.text]
+    };
+}, function (dispatch, ownProps) {
+    return {
+        onToggle: function onToggle() {
+            return dispatch((0, _eventLog.toggleEventLogFilter)(ownProps.text));
+        }
+    };
+})(_common.ToggleButton);
 
+var EventLog = function EventLog(_ref3) {
+    var close = _ref3.close;
     return _react2.default.createElement(
-        "a",
-        {
-            href: "#",
-            className: className,
-            onClick: onClick },
-        name
-    );
-}
-
-var AutoScrollEventLog = (0, _AutoScroll2.default)(EventLogContents);
-
-var EventLog = _react2.default.createClass({
-    displayName: "EventLog",
-    getInitialState: function getInitialState() {
-        return {
-            filter: {
-                "debug": false,
-                "info": true,
-                "web": true
-            }
-        };
-    },
-    close: function close() {
-        var d = {};
-        d[_actions.Query.SHOW_EVENTLOG] = undefined;
-        this.props.updateLocation(undefined, d);
-    },
-    toggleLevel: function toggleLevel(level) {
-        var filter = _lodash2.default.extend({}, this.state.filter);
-        filter[level] = !filter[level];
-        this.setState({ filter: filter });
-    },
-    render: function render() {
-        return _react2.default.createElement(
+        "div",
+        { className: "eventlog" },
+        _react2.default.createElement(
             "div",
-            { className: "eventlog" },
+            null,
+            "Eventlog",
             _react2.default.createElement(
                 "div",
-                null,
-                "Eventlog",
-                _react2.default.createElement(
-                    "div",
-                    { className: "pull-right" },
-                    _react2.default.createElement(ToggleFilter, { name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel }),
-                    _react2.default.createElement(ToggleFilter, { name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel }),
-                    _react2.default.createElement(ToggleFilter, { name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel }),
-                    _react2.default.createElement("i", { onClick: this.close, className: "fa fa-close" })
-                )
-            ),
-            _react2.default.createElement(AutoScrollEventLog, { filter: this.state.filter })
-        );
-    }
-});
+                { className: "pull-right" },
+                _react2.default.createElement(ToggleFilter, { text: "debug" }),
+                _react2.default.createElement(ToggleFilter, { text: "info" }),
+                _react2.default.createElement(ToggleFilter, { text: "web" }),
+                _react2.default.createElement("i", { onClick: close, className: "fa fa-close" })
+            )
+        ),
+        _react2.default.createElement(EventLogContentsContainer, null)
+    );
+};
 
-exports.default = EventLog;
+EventLog.propTypes = {
+    close: _react2.default.PropTypes.func.isRequired
+};
 
-},{"../actions.js":2,"../store/view.js":26,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+var EventLogContainer = (0, _reactRedux.connect)(undefined, function (dispatch) {
+    return {
+        close: function close() {
+            return dispatch((0, _eventLog.toggleEventLogVisibility)());
+        }
+    };
+})(EventLog);
+
+exports.default = EventLogContainer;
+
+},{"../ducks/eventLog":23,"./common":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1487,7 +1474,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":24,"../utils.js":27,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":28,"../utils.js":31,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1779,7 +1766,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":27,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":31,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2133,7 +2120,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":28,"../../utils.js":31,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2401,7 +2388,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":27,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":31,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2895,7 +2882,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":27,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":28,"../../utils.js":31,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3078,7 +3065,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":27,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":31,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3098,6 +3085,8 @@ var _jquery = require("jquery");
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
+var _reactRedux = require("react-redux");
+
 var _filt = require("../filt/filt.js");
 
 var _filt2 = _interopRequireDefault(_filt);
@@ -3107,6 +3096,8 @@ var _utils = require("../utils.js");
 var _common = require("./common.js");
 
 var _actions = require("../actions.js");
+
+var _eventlog = require("./eventlog");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3361,29 +3352,14 @@ var ViewMenu = _react2.default.createClass({
         title: "View",
         route: "flows"
     },
-    toggleEventLog: function toggleEventLog() {
-        var d = {};
-        if (this.props.query[_actions.Query.SHOW_EVENTLOG]) {
-            d[_actions.Query.SHOW_EVENTLOG] = undefined;
-        } else {
-            d[_actions.Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
-        }
-
-        this.props.updateLocation(undefined, d);
-        console.log('toggleevent');
-    },
     render: function render() {
-        var showEventLog = this.props.query[_actions.Query.SHOW_EVENTLOG];
         return _react2.default.createElement(
             "div",
             null,
             _react2.default.createElement(
                 "div",
                 { className: "menu-row" },
-                _react2.default.createElement(_common.ToggleButton, {
-                    checked: showEventLog,
-                    name: "Show Eventlog",
-                    onToggleChanged: this.toggleEventLog })
+                _react2.default.createElement(_eventlog.ToggleEventLog, { text: "Show Event Log" })
             ),
             _react2.default.createElement("div", { className: "clearfix" })
         );
@@ -3410,39 +3386,39 @@ var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
         _react2.default.createElement(
             "div",
             { className: "menu-row" },
-            _react2.default.createElement(_common.ToggleButton, { name: "showhost",
+            _react2.default.createElement(_common.ToggleButton, { text: "showhost",
                 checked: showhost,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ showhost: !showhost });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "no_upstream_cert",
+            _react2.default.createElement(_common.ToggleButton, { text: "no_upstream_cert",
                 checked: no_upstream_cert,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ no_upstream_cert: !no_upstream_cert });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "rawtcp",
+            _react2.default.createElement(_common.ToggleButton, { text: "rawtcp",
                 checked: rawtcp,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ rawtcp: !rawtcp });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "http2",
+            _react2.default.createElement(_common.ToggleButton, { text: "http2",
                 checked: http2,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ http2: !http2 });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "anticache",
+            _react2.default.createElement(_common.ToggleButton, { text: "anticache",
                 checked: anticache,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ anticache: !anticache });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "anticomp",
+            _react2.default.createElement(_common.ToggleButton, { text: "anticomp",
                 checked: anticomp,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ anticomp: !anticomp });
                 }
             }),
@@ -3664,7 +3640,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":27,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":27,"../utils.js":31,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4080,7 +4056,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":26,"../utils.js":27,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":27,"../store/view.js":30,"../utils.js":31,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4216,13 +4192,13 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.app = undefined;
+exports.App = undefined;
 
 var _react = require("react");
 
@@ -4235,6 +4211,10 @@ var _reactDom2 = _interopRequireDefault(_reactDom);
 var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
+
+var _reactRedux = require("react-redux");
+
+var _reactRouter = require("react-router");
 
 var _common = require("./common.js");
 
@@ -4254,11 +4234,7 @@ var _eventlog2 = _interopRequireDefault(_eventlog);
 
 var _store = require("../store/store.js");
 
-var _actions = require("../actions.js");
-
 var _utils = require("../utils.js");
-
-var _reactRouter = require("react-router");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4377,8 +4353,8 @@ var ProxyAppMain = _react2.default.createClass({
     render: function render() {
         var query = this.getQuery();
         var eventlog;
-        if (this.props.location.query[_actions.Query.SHOW_EVENTLOG]) {
-            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog", updateLocation: this.updateLocation })];
+        if (this.props.showEventLog) {
+            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog" })];
         } else {
             eventlog = null;
         }
@@ -4393,42 +4369,58 @@ var ProxyAppMain = _react2.default.createClass({
     }
 });
 
-var app = exports.app = _react2.default.createElement(
+var AppContainer = (0, _reactRedux.connect)(function (state) {
+    return {
+        showEventLog: state.eventLog.visible
+    };
+})(ProxyAppMain);
+
+var App = exports.App = _react2.default.createElement(
     _reactRouter.Router,
     { history: _reactRouter.hashHistory },
     _react2.default.createElement(_reactRouter.Redirect, { from: "/", to: "/flows" }),
     _react2.default.createElement(
         _reactRouter.Route,
-        { path: "/", component: ProxyAppMain },
+        { path: "/", component: AppContainer },
         _react2.default.createElement(_reactRouter.Route, { path: "flows", component: _mainview2.default }),
         _react2.default.createElement(_reactRouter.Route, { path: "flows/:flowId/:detailTab", component: _mainview2.default }),
         _react2.default.createElement(_reactRouter.Route, { path: "reports", component: Reports })
     )
 );
 
-},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":29,"../utils.js":31,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.default = Connection;
 
 var _actions = require("./actions.js");
 
 var _dispatcher = require("./dispatcher.js");
 
-function Connection(url) {
+var _websocket = require("./ducks/websocket");
+
+var websocketActions = _interopRequireWildcard(_websocket);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function Connection(url, dispatch) {
     if (url[0] === "/") {
         url = location.origin.replace("http", "ws") + url;
     }
 
     var ws = new WebSocket(url);
     ws.onopen = function () {
+        dispatch(websocketActions.connected());
         _actions.ConnectionActions.open();
+        //TODO: fetch stuff!
     };
-    ws.onmessage = function (message) {
-        var m = JSON.parse(message.data);
-        _dispatcher.AppDispatcher.dispatchServerAction(m);
+    ws.onmessage = function (m) {
+        var message = JSON.parse(m.data);
+        _dispatcher.AppDispatcher.dispatchServerAction(message);
+        dispatch(message);
     };
     ws.onerror = function () {
         _actions.ConnectionActions.error();
@@ -4437,13 +4429,12 @@ function Connection(url) {
     ws.onclose = function () {
         _actions.ConnectionActions.close();
         _actions.EventLogActions.add_event("WebSocket connection closed.");
+        dispatch(websocketActions.disconnected());
     };
     return ws;
 }
 
-exports.default = Connection;
-
-},{"./actions.js":2,"./dispatcher.js":22}],22:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22,"./ducks/websocket":26}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4473,6 +4464,197 @@ AppDispatcher.dispatchServerAction = function (action) {
 };
 
 },{"flux":"flux"}],23:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = reducer;
+exports.toggleEventLogFilter = toggleEventLogFilter;
+exports.toggleEventLogVisibility = toggleEventLogVisibility;
+exports.addLogEntry = addLogEntry;
+
+var _list = require('./list');
+
+var _list2 = _interopRequireDefault(_list);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER';
+var TOGGLE_VISIBILITY = 'TOGGLE_EVENTLOG_VISIBILITY';
+var UPDATE_LIST = "UPDATE_EVENTLOG";
+
+var defaultState = {
+    visible: false,
+    filter: {
+        "debug": false,
+        "info": true,
+        "web": true
+    },
+    events: (0, _list2.default)(),
+    filteredEvents: []
+};
+
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case TOGGLE_FILTER:
+            var filter = _extends({}, state.filter, _defineProperty({}, action.filter, !state.filter[action.filter]));
+            return _extends({}, state, {
+                filter: filter,
+                filteredEvents: state.events.list.filter(function (x) {
+                    return filter[x.level];
+                })
+            });
+        case TOGGLE_VISIBILITY:
+            return _extends({}, state, {
+                visible: !state.visible
+            });
+        case UPDATE_LIST:
+            var events = (0, _list2.default)(state.events, action);
+            return _extends({}, state, {
+                events: events,
+                filteredEvents: events.list.filter(function (x) {
+                    return state.filter[x.level];
+                })
+            });
+        default:
+            return state;
+    }
+}
+
+function toggleEventLogFilter(filter) {
+    return { type: TOGGLE_FILTER, filter: filter };
+}
+function toggleEventLogVisibility() {
+    return { type: TOGGLE_VISIBILITY };
+}
+var id = 0;
+function addLogEntry(message) {
+    var level = arguments.length <= 1 || arguments[1] === undefined ? "web" : arguments[1];
+
+    return {
+        type: UPDATE_LIST,
+        cmd: _list.ADD,
+        data: { message: message, level: level, id: 'log-' + id++ }
+    };
+}
+
+},{"./list":25}],24:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _redux = require('redux');
+
+var _eventLog = require('./eventLog.js');
+
+var _eventLog2 = _interopRequireDefault(_eventLog);
+
+var _websocket = require('./websocket.js');
+
+var _websocket2 = _interopRequireDefault(_websocket);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var rootReducer = (0, _redux.combineReducers)({
+    eventLog: _eventLog2.default,
+    websocket: _websocket2.default
+});
+
+exports.default = rootReducer;
+
+},{"./eventLog.js":23,"./websocket.js":26,"redux":"redux"}],25:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = getList;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var ADD = exports.ADD = 'add';
+
+var defaultState = {
+    list: [],
+    //isFetching: false,
+    //updateBeforeFetch: [],
+    indexOf: {}
+};
+
+//views: {}
+function getList() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    switch (action.cmd) {
+        case ADD:
+            return {
+                list: [].concat(_toConsumableArray(state.list), [action.data]),
+                indexOf: _extends({}, state.indexOf, _defineProperty({}, action.data.id, state.list.length))
+            };
+        default:
+            return state;
+    }
+}
+
+},{}],26:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = reducer;
+exports.connected = connected;
+exports.disconnected = disconnected;
+var CONNECTED = 'WEBSOCKET_CONNECTED';
+var DISCONNECTED = 'WEBSOCKET_DISCONNECTED';
+
+var defaultState = {
+    connected: true
+};
+/* we may want to have an error message attribute here at some point */
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case CONNECTED:
+            return {
+                connected: true
+            };
+        case DISCONNECTED:
+            return {
+                connected: false
+            };
+        default:
+            return state;
+    }
+}
+
+function connected() {
+    return { type: CONNECTED };
+}
+function disconnected() {
+    return { type: DISCONNECTED };
+}
+
+},{}],27:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -6376,7 +6558,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":24}],24:[function(require,module,exports){
+},{"../flow/utils.js":28}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6510,7 +6692,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6697,7 +6879,7 @@ _lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],26:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6827,7 +7009,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":27,"events":1,"lodash":"lodash"}],27:[function(require,module,exports){
+},{"../utils.js":31,"events":1,"lodash":"lodash"}],31:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
