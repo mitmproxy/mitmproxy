@@ -243,29 +243,29 @@ export const OptionMenu = (props) => {
     return (
         <div>
             <div className="menu-row">
-                <ToggleButton name="showhost"
+                <ToggleButton text="showhost"
                               checked={showhost}
-                              onToggleChanged={() => SettingsActions.update({showhost: !showhost})}
+                              onToggle={() => SettingsActions.update({showhost: !showhost})}
                 />
-                <ToggleButton name="no_upstream_cert"
+                <ToggleButton text="no_upstream_cert"
                               checked={no_upstream_cert}
-                              onToggleChanged={() => SettingsActions.update({no_upstream_cert: !no_upstream_cert})}
+                              onToggle={() => SettingsActions.update({no_upstream_cert: !no_upstream_cert})}
                 />
-                <ToggleButton name="rawtcp"
+                <ToggleButton text="rawtcp"
                               checked={rawtcp}
-                              onToggleChanged={() => SettingsActions.update({rawtcp: !rawtcp})}
+                              onToggle={() => SettingsActions.update({rawtcp: !rawtcp})}
                 />
-                <ToggleButton name="http2"
+                <ToggleButton text="http2"
                               checked={http2}
-                              onToggleChanged={() => SettingsActions.update({http2: !http2})}
+                              onToggle={() => SettingsActions.update({http2: !http2})}
                 />
-                <ToggleButton name="anticache"
+                <ToggleButton text="anticache"
                               checked={anticache}
-                              onToggleChanged={() => SettingsActions.update({anticache: !anticache})}
+                              onToggle={() => SettingsActions.update({anticache: !anticache})}
                 />
-                <ToggleButton name="anticomp"
+                <ToggleButton text="anticomp"
                               checked={anticomp}
-                              onToggleChanged={() => SettingsActions.update({anticomp: !anticomp})}
+                              onToggle={() => SettingsActions.update({anticomp: !anticomp})}
                 />
                 <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
                     checked={Boolean(stickyauth)}

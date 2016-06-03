@@ -455,10 +455,6 @@ var _redux = require('redux');
 
 var _reactRedux = require('react-redux');
 
-var _jquery = require('jquery');
-
-var _jquery2 = _interopRequireDefault(_jquery);
-
 var _connection = require('./connection');
 
 var _connection2 = _interopRequireDefault(_connection);
@@ -475,8 +471,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var store = (0, _redux.createStore)(_index2.default);
 
-(0, _jquery2.default)(function () {
-    window.ws = new _connection2.default("/updates");
+document.addEventListener('DOMContentLoaded', function () {
+    window.ws = new _connection2.default("/updates", store.dispatch);
 
     window.onerror = function (msg) {
         _actions.EventLogActions.add_event(msg);
@@ -489,7 +485,7 @@ var store = (0, _redux.createStore)(_index2.default);
     ), document.getElementById("mitmproxy"));
 });
 
-},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"./ducks/index":24,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"./ducks/index":25,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -708,7 +704,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":29,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -966,7 +962,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":29,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":31,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1206,7 +1202,7 @@ var EventLogContainer = (0, _reactRedux.connect)(undefined, function (dispatch) 
 
 exports.default = EventLogContainer;
 
-},{"../ducks/eventLog":23,"../store/view.js":28,"./common":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+},{"../ducks/eventLog":23,"../store/view.js":30,"./common":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1475,7 +1471,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":26,"../utils.js":29,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":28,"../utils.js":31,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1767,7 +1763,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":29,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":31,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2121,7 +2117,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":26,"../../utils.js":29,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":28,"../../utils.js":31,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2389,7 +2385,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":29,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":31,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2883,7 +2879,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":26,"../../utils.js":29,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":28,"../../utils.js":31,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3066,7 +3062,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":29,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":31,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3387,39 +3383,39 @@ var OptionMenu = exports.OptionMenu = function OptionMenu(props) {
         _react2.default.createElement(
             "div",
             { className: "menu-row" },
-            _react2.default.createElement(_common.ToggleButton, { name: "showhost",
+            _react2.default.createElement(_common.ToggleButton, { text: "showhost",
                 checked: showhost,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ showhost: !showhost });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "no_upstream_cert",
+            _react2.default.createElement(_common.ToggleButton, { text: "no_upstream_cert",
                 checked: no_upstream_cert,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ no_upstream_cert: !no_upstream_cert });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "rawtcp",
+            _react2.default.createElement(_common.ToggleButton, { text: "rawtcp",
                 checked: rawtcp,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ rawtcp: !rawtcp });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "http2",
+            _react2.default.createElement(_common.ToggleButton, { text: "http2",
                 checked: http2,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ http2: !http2 });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "anticache",
+            _react2.default.createElement(_common.ToggleButton, { text: "anticache",
                 checked: anticache,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ anticache: !anticache });
                 }
             }),
-            _react2.default.createElement(_common.ToggleButton, { name: "anticomp",
+            _react2.default.createElement(_common.ToggleButton, { text: "anticomp",
                 checked: anticomp,
-                onToggleChanged: function onToggleChanged() {
+                onToggle: function onToggle() {
                     return _actions.SettingsActions.update({ anticomp: !anticomp });
                 }
             }),
@@ -3609,7 +3605,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":25,"../utils.js":29,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":27,"../utils.js":31,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4025,7 +4021,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":25,"../store/view.js":28,"../utils.js":29,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":27,"../store/view.js":30,"../utils.js":31,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4161,7 +4157,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":29,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4357,29 +4353,38 @@ var App = exports.App = _react2.default.createElement(
     )
 );
 
-},{"../store/store.js":27,"../utils.js":29,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":29,"../utils.js":31,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.default = Connection;
 
 var _actions = require("./actions.js");
 
 var _dispatcher = require("./dispatcher.js");
 
-function Connection(url) {
+var _websocket = require("./ducks/websocket");
+
+var websocketActions = _interopRequireWildcard(_websocket);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function Connection(url, dispatch) {
     if (url[0] === "/") {
         url = location.origin.replace("http", "ws") + url;
     }
 
     var ws = new WebSocket(url);
     ws.onopen = function () {
+        dispatch(websocketActions.connected());
         _actions.ConnectionActions.open();
     };
-    ws.onmessage = function (message) {
-        var m = JSON.parse(message.data);
-        _dispatcher.AppDispatcher.dispatchServerAction(m);
+    ws.onmessage = function (m) {
+        var message = JSON.parse(m.data);
+        _dispatcher.AppDispatcher.dispatchServerAction(message);
+        dispatch(websocketActions.receiveMessage(message));
     };
     ws.onerror = function () {
         _actions.ConnectionActions.error();
@@ -4388,13 +4393,12 @@ function Connection(url) {
     ws.onclose = function () {
         _actions.ConnectionActions.close();
         _actions.EventLogActions.add_event("WebSocket connection closed.");
+        dispatch(websocketActions.disconnected());
     };
     return ws;
 }
 
-exports.default = Connection;
-
-},{"./actions.js":2,"./dispatcher.js":22}],22:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22,"./ducks/websocket":26}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4475,6 +4479,32 @@ function toggleEventLogVisibility() {
 }
 
 },{}],24:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = reducer;
+var defaultState = {
+    list: [],
+    isFetching: false,
+    updateBeforeFetch: [],
+    byId: {},
+    indexOf: {},
+    views: {}
+};
+
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        default:
+            return state;
+    }
+}
+
+},{}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4487,15 +4517,71 @@ var _eventLog = require('./eventLog.js');
 
 var _eventLog2 = _interopRequireDefault(_eventLog);
 
+var _websocket = require('./websocket.js');
+
+var _websocket2 = _interopRequireDefault(_websocket);
+
+var _flows = require('./flows.js');
+
+var _flows2 = _interopRequireDefault(_flows);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var rootReducer = (0, _redux.combineReducers)({
-    eventLog: _eventLog2.default
+    eventLog: _eventLog2.default,
+    flows: _flows2.default,
+    websocket: _websocket2.default
 });
 
 exports.default = rootReducer;
 
-},{"./eventLog.js":23,"redux":"redux"}],25:[function(require,module,exports){
+},{"./eventLog.js":23,"./flows.js":24,"./websocket.js":26,"redux":"redux"}],26:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = reducer;
+exports.connected = connected;
+exports.disconnected = disconnected;
+exports.receiveMessage = receiveMessage;
+var CONNECTED = 'WEBSOCKET_CONNECTED';
+var DISCONNECTED = 'WEBSOCKET_DISCONNECTED';
+var RECEIVE_MESSAGE = 'RECEIVE_WEBSOCKET_MESSAGE';
+
+var defaultState = {
+    connected: true
+};
+/* we may want to have an error message attribute here at some point */
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case CONNECTED:
+            return {
+                connected: true
+            };
+        case DISCONNECTED:
+            return {
+                connected: false
+            };
+        default:
+            return state;
+    }
+}
+
+function connected() {
+    return { type: CONNECTED };
+}
+function disconnected() {
+    return { type: DISCONNECTED };
+}
+function receiveMessage(message) {
+    return { type: RECEIVE_MESSAGE, message: message };
+}
+
+},{}],27:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -6399,7 +6485,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":26}],26:[function(require,module,exports){
+},{"../flow/utils.js":28}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6533,7 +6619,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],27:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6720,7 +6806,7 @@ _lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],28:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6850,7 +6936,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":29,"events":1,"lodash":"lodash"}],29:[function(require,module,exports){
+},{"../utils.js":31,"events":1,"lodash":"lodash"}],31:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

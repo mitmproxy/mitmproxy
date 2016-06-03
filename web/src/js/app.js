@@ -3,7 +3,6 @@ import {render} from 'react-dom'
 import {createStore} from 'redux'
 import {Provider} from 'react-redux'
 
-import $ from "jquery"
 import Connection from "./connection"
 import {App} from "./components/proxyapp.js"
 import {EventLogActions} from "./actions.js"
@@ -11,8 +10,8 @@ import rootReducer from './ducks/index';
 
 let store = createStore(rootReducer);
 
-$(function () {
-    window.ws = new Connection("/updates");
+document.addEventListener('DOMContentLoaded', () => {
+    window.ws = new Connection("/updates", store.dispatch);
 
     window.onerror = function (msg) {
         EventLogActions.add_event(msg);
@@ -20,6 +19,7 @@ $(function () {
 
     render(
         <Provider store={store}>{App}</Provider>,
-        document.getElementById("mitmproxy"));
-});
+        document.getElementById("mitmproxy")
+    );
 
+});
