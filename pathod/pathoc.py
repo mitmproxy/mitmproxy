@@ -286,7 +286,7 @@ class Pathoc(tcp.TCPClient):
         if self.use_http2 and not self.ssl:
             raise NotImplementedError("HTTP2 without SSL is not supported.")
 
-        tcp.TCPClient.connect(self)
+        ret = tcp.TCPClient.connect(self)
 
         if connect_to:
             self.http_connect(connect_to)
@@ -324,6 +324,7 @@ class Pathoc(tcp.TCPClient):
 
         if self.timeout:
             self.settimeout(self.timeout)
+        return ret
 
     def stop(self):
         if self.ws_framereader:

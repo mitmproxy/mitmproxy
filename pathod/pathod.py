@@ -353,6 +353,8 @@ class Pathod(tcp.TCPServer):
             staticdir=self.staticdir
         )
 
+        self.loglock = threading.Lock()
+
     def check_policy(self, req, settings):
         """
             A policy check that verifies the request size is within limits.
@@ -403,8 +405,7 @@ class Pathod(tcp.TCPServer):
 
     def add_log(self, d):
         if not self.noapi:
-            lock = threading.Lock()
-            with lock:
+            with self.loglock:
                 d["id"] = self.logid
                 self.log.insert(0, d)
                 if len(self.log) > self.LOGBUF:
@@ -413,17 +414,18 @@ class Pathod(tcp.TCPServer):
             return d["id"]
 
     def clear_log(self):
-        lock = threading.Lock()
-        with lock:
+        with self.loglock:
             self.log = []
 
     def log_by_id(self, identifier):
-        for i in self.log:
-            if i["id"] == identifier:
-                return i
+        with self.loglock:
+            for i in self.log:
+                if i["id"] == identifier:
+                    return i
 
     def get_log(self):
-        return self.log
+        with self.loglock:
+            return self.log
 
 
 def main(args):  # pragma: no cover

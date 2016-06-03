@@ -3,19 +3,24 @@ mitmproxy
 
 |travis| |coveralls| |latest_release| |python_versions|
 
-This repository contains the **mitmproxy** and **pathod** projects, as well as their shared networking library, **netlib**.
+This repository contains the **mitmproxy** and **pathod** projects, as well as
+their shared networking library, **netlib**.
 
-``mitmproxy`` is an interactive, SSL-capable intercepting proxy with a console interface.
+``mitmproxy`` is an interactive, SSL-capable intercepting proxy with a console
+interface.
 
 ``mitmdump`` is the command-line version of mitmproxy. Think tcpdump for HTTP.
 
-``pathoc`` and ``pathod`` are perverse HTTP client and server applications designed to let you craft almost any conceivable HTTP request, including ones that creatively violate the standards.
+``pathoc`` and ``pathod`` are perverse HTTP client and server applications
+designed to let you craft almost any conceivable HTTP request, including ones
+that creatively violate the standards.
 
 
 Documentation & Help
 --------------------
 
-Documentation, tutorials and precompiled binaries can be found on the mitmproxy and pathod websites.
+Documentation, tutorials and precompiled binaries can be found on the mitmproxy
+and pathod websites.
 
 |mitmproxy_site| |pathod_site|
 
@@ -39,8 +44,8 @@ Hacking
 -------
 
 To get started hacking on mitmproxy, make sure you have Python_ 2.7.x. with
-virtualenv_ installed (you can find installation instructions for virtualenv here_).
-Then do the following:
+virtualenv_ installed (you can find installation instructions for virtualenv
+here_). Then do the following:
 
 .. code-block:: text
 
@@ -49,10 +54,11 @@ Then do the following:
     ./dev.sh
 
 
-The *dev* script will create a virtualenv environment in a directory called "venv",
-and install all mandatory and optional dependencies into it.
-The primary mitmproxy components - mitmproxy, netlib and pathod - are installed as "editable",
-so any changes to the source in the repository will be reflected live in the virtualenv.
+The *dev* script will create a virtualenv environment in a directory called
+"venv", and install all mandatory and optional dependencies into it. The
+primary mitmproxy components - mitmproxy, netlib and pathod - are installed as
+"editable", so any changes to the source in the repository will be reflected
+live in the virtualenv.
 
 To confirm that you're up and running, activate the virtualenv, and run the
 mitmproxy test suite:
@@ -63,9 +69,9 @@ mitmproxy test suite:
     py.test
 
 Note that the main executables for the project - ``mitmdump``, ``mitmproxy``,
-``mitmweb``, ``pathod``, and ``pathoc`` - are all created within the virtualenv. After activating the
-virtualenv, they will be on your $PATH, and you can run them like any other
-command:
+``mitmweb``, ``pathod``, and ``pathoc`` - are all created within the
+virtualenv. After activating the virtualenv, they will be on your $PATH, and
+you can run them like any other command:
 
 .. code-block:: text
 
@@ -92,9 +98,9 @@ suite. The project tries to maintain 100% test coverage.
 Documentation
 -------------
 
-The mitmproxy documentation is build using Sphinx_, which is installed automatically if you set up a development
-environment as described above.
-After installation, you can render the documentation like this:
+The mitmproxy documentation is build using Sphinx_, which is installed
+automatically if you set up a development environment as described above. After
+installation, you can render the documentation like this:
 
 .. code-block:: text
 
