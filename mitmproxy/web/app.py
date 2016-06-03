@@ -161,6 +161,7 @@ class Flows(RequestHandler):
             data=[_strip_content(f.get_state()) for f in self.state.flows]
         ))
 
+
 class DumpFlows(RequestHandler):
     def get(self):
         self.set_header("Content-Disposition", "attachment; filename=flows")
@@ -181,6 +182,7 @@ class DumpFlows(RequestHandler):
         bio = BytesIO(content)
         self.state.load_flows(FlowReader(bio).stream())
         bio.close()
+
 
 class ClearAll(RequestHandler):
 
