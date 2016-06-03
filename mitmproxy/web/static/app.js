@@ -1240,20 +1240,21 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function LogIcon(_ref) {
-    var entry = _ref.entry;
+    var event = _ref.event;
 
-    var icon = { web: "html5", debug: "bug" }[entry.level] || "info";
+    var icon = { web: "html5", debug: "bug" }[event.level] || "info";
     return _react2.default.createElement("i", { className: "fa fa-fw fa-" + icon });
 }
 
 function LogEntry(_ref2) {
-    var entry = _ref2.entry;
+    var event = _ref2.event;
+    var registerHeight = _ref2.registerHeight;
 
     return _react2.default.createElement(
         "div",
-        null,
-        _react2.default.createElement(LogIcon, { entry: entry }),
-        entry.message
+        { ref: registerHeight },
+        _react2.default.createElement(LogIcon, { event: event }),
+        event.message
     );
 }
 
@@ -1311,9 +1312,10 @@ var EventLogContents = function (_React$Component) {
         }
     }, {
         key: "setHeight",
-        value: function setHeight(id, ref) {
-            if (ref && !this.heights[id]) {
-                var height = _reactDom2.default.findDOMNode(ref).offsetHeight;
+        value: function setHeight(id, node) {
+            console.log("setHeight", id, node);
+            if (node && !this.heights[id]) {
+                var height = node.offsetHeight;
                 if (this.heights[id] !== height) {
                     this.heights[id] = height;
                     this.onViewportUpdate();
@@ -1326,8 +1328,14 @@ var EventLogContents = function (_React$Component) {
             var _this3 = this;
 
             var vScroll = this.state.vScroll;
-            var events = this.props.events.slice(vScroll.start, vScroll.end).map(function (entry) {
-                return _react2.default.createElement(LogEntry, { entry: entry, key: entry.id, ref: _this3.setHeight.bind(_this3, entry.id) });
+            var events = this.props.events.slice(vScroll.start, vScroll.end).map(function (event) {
+                return _react2.default.createElement(LogEntry, {
+                    event: event,
+                    key: event.id,
+                    registerHeight: function registerHeight(node) {
+                        return _this3.setHeight(event.id, node);
+                    }
+                });
             });
 
             return _react2.default.createElement(

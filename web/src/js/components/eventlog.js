@@ -7,15 +7,15 @@ import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll"
 import {ToggleButton} from "./common";
 
-function LogIcon({entry}) {
-    let icon = {web: "html5", debug: "bug"}[entry.level] || "info";
+function LogIcon({event}) {
+    let icon = {web: "html5", debug: "bug"}[event.level] || "info";
     return <i className={`fa fa-fw fa-${icon}`}></i>
 }
 
-function LogEntry({entry}) {
-    return <div>
-        <LogIcon entry={entry}/>
-        {entry.message}
+function LogEntry({event, registerHeight}) {
+    return <div ref={registerHeight}>
+        <LogIcon event={event}/>
+        {event.message}
     </div>;
 }
 
@@ -63,9 +63,10 @@ class EventLogContents extends React.Component {
         }
     }
 
-    setHeight(id, ref) {
-        if (ref && !this.heights[id]) {
-            const height = ReactDOM.findDOMNode(ref).offsetHeight;
+    setHeight(id, node) {
+        console.log("setHeight", id, node);
+        if (node && !this.heights[id]) {
+            const height = node.offsetHeight;
             if (this.heights[id] !== height) {
                 this.heights[id] = height;
                 this.onViewportUpdate();
@@ -77,8 +78,12 @@ class EventLogContents extends React.Component {
         const vScroll = this.state.vScroll;
         const events = this.props.events
             .slice(vScroll.start, vScroll.end)
-            .map(entry =>
-                <LogEntry entry={entry} key={entry.id} ref={this.setHeight.bind(this, entry.id)}/>
+            .map(event =>
+                <LogEntry
+                    event={event}
+                    key={event.id}
+                    registerHeight={(node) => this.setHeight(event.id, node)}
+                />
             );
 
         return (
