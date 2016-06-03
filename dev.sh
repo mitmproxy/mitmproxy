@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+set -x
 
 PYVERSION=$1
 VENV="venv$1"
