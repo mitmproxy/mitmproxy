@@ -333,17 +333,15 @@ class DumpMaster(flow.FlowMaster):
 
     @controller.handler
     def request(self, f):
-        flow.FlowMaster.request(self, f)
-        self.state.delete_flow(f)
+        f = flow.FlowMaster.request(self, f)
         if f:
-            f.reply()
+            self.state.delete_flow(f)
         return f
 
     @controller.handler
     def response(self, f):
-        flow.FlowMaster.response(self, f)
+        f = flow.FlowMaster.response(self, f)
         if f:
-            f.reply()
             self._process_flow(f)
         return f
 
