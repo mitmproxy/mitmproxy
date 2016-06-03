@@ -32,7 +32,7 @@ Installation
 ------------
 
 The installation instructions are `here <http://docs.mitmproxy.org/en/stable/install.html>`_.
-If you want to contribute changes, see the section on hacking.
+If you want to contribute changes, keep on reading.
 
 
 Hacking
