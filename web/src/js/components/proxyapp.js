@@ -145,7 +145,7 @@ var ProxyAppMain = React.createClass({
 
 import { Route, Router as ReactRouter, hashHistory, Redirect} from "react-router";
 
-export var app = (
+export var App = (
     <ReactRouter history={hashHistory}>
         <Redirect from="/" to="/flows" />
         <Route path="/" component={ProxyAppMain}>

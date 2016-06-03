@@ -1,9 +1,15 @@
 import React from "react"
-import { render } from 'react-dom'
+import {render} from 'react-dom'
+import {createStore} from 'redux'
+import {Provider} from 'react-redux'
+import mitmproxyApp from './reducers'
+
 import $ from "jquery"
 import Connection from "./connection"
-import {app} from "./components/proxyapp.js"
-import { EventLogActions } from "./actions.js"
+import {App} from "./components/proxyapp.js"
+import {EventLogActions} from "./actions.js"
+
+let store = createStore(mitmproxyApp);
 
 $(function () {
     window.ws = new Connection("/updates");
@@ -12,6 +18,8 @@ $(function () {
         EventLogActions.add_event(msg);
     };
 
-    render(app, document.getElementById("mitmproxy"));
+    render(
+        <Provider store={store}>{App}</Provider>,
+        document.getElementById("mitmproxy"));
 });
 
