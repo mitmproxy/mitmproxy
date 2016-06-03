@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from 'react-dom';
 import $ from "jquery";
+import {connect} from 'react-redux'
 
 import Filt from "../filt/filt.js";
 import {Key} from "../utils.js";
@@ -8,6 +9,7 @@ import {ToggleInputButton, ToggleButton} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 import {SettingsState} from "./common.js";
+import {ToggleEventLog} from "./eventlog"
 
 var FilterDocs = React.createClass({
     statics: {
@@ -224,26 +226,11 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    toggleEventLog: function () {
-        var d = {};
-        if (this.props.query[Query.SHOW_EVENTLOG]) {
-            d[Query.SHOW_EVENTLOG] = undefined;
-        } else {
-            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
-        }
-
-        this.props.updateLocation(undefined, d);
-        console.log('toggleevent');
-    },
     render: function () {
-      var showEventLog = this.props.query[Query.SHOW_EVENTLOG];
       return (
           <div>
             <div className="menu-row">
-              <ToggleButton
-                checked={showEventLog}
-                name = "Show Eventlog"
-                onToggleChanged={this.toggleEventLog}/>
+                <ToggleEventLog text="Show Event Log"/>
             </div>
             <div className="clearfix"></div>
           </div>

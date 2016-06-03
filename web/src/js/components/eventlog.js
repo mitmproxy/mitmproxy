@@ -1,12 +1,12 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import { connect } from 'react-redux'
+import {connect} from 'react-redux'
 import shallowEqual from "shallowequal"
-import {Query} from "../actions.js"
-import {toggleEventLogFilter} from "../reduxActions"
+import {toggleEventLogFilter, toggleEventLogVisibility} from "../ducks/eventLog"
 import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll"
 import {StoreView} from "../store/view.js"
+import {ToggleButton} from "./common";
 
 class EventLogContents extends React.Component {
 
@@ -27,7 +27,7 @@ class EventLogContents extends React.Component {
         );
 
         this.heights = {};
-        this.state = { entries: this.view.list, vScroll: calcVScroll() };
+        this.state = {entries: this.view.list, vScroll: calcVScroll()};
 
         this.onChange = this.onChange.bind(this);
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
@@ -71,12 +71,12 @@ class EventLogContents extends React.Component {
         });
 
         if (!shallowEqual(this.state.vScroll, vScroll)) {
-            this.setState({ vScroll });
+            this.setState({vScroll});
         }
     }
 
     onChange() {
-        this.setState({ entries: this.view.list });
+        this.setState({entries: this.view.list});
     }
 
     setHeight(id, ref) {
@@ -90,7 +90,7 @@ class EventLogContents extends React.Component {
     }
 
     getIcon(level) {
-        return { web: "html5", debug: "bug" }[level] || "info";
+        return {web: "html5", debug: "bug"}[level] || "info";
     }
 
     render() {
@@ -112,87 +112,59 @@ class EventLogContents extends React.Component {
     }
 }
 
-ToggleFilter.propTypes = {
-    name: React.PropTypes.string.isRequired,
-    toggleLevel: React.PropTypes.func.isRequired,
-    active: React.PropTypes.bool,
-};
-
-function ToggleFilter ({ name, active, toggleLevel }) {
-    let className = "label ";
-    if (active) {
-        className += "label-primary";
-    } else {
-        className += "label-default";
-    }
-
-    function onClick(event) {
-        event.preventDefault();
-        toggleLevel();
-    }
-
-    return (
-        <a
-            href="#"
-            className={className}
-            onClick={onClick}>
-            {name}
-        </a>
-    );
-}
-
-const mapStateToProps = (state, ownProps) => {
-  return {
-    active: state.eventLog.visibilityFilter[ownProps.name]
-  }
-};
-
-const mapDispatchToProps = (dispatch, ownProps) => {
-  return {
-    toggleLevel: () => {
-      dispatch(toggleEventLogFilter(ownProps.name))
-    }
-  }
-};
-
-const ToggleEventLogFilter = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ToggleFilter);
+EventLogContents = AutoScroll(EventLogContents);
 
 
-const AutoScrollEventLog = AutoScroll(EventLogContents);
+const EventLogContentsContainer = connect(
+    state => ({
+        filter: state.eventLog.filter
+    })
+)(EventLogContents);
 
 
-const VisibleAutoScrollEventLog = connect(
-    function mapStateToProps(state, ownProps) {
-        return {filter: state.eventLog.visibilityFilter}
-    })(AutoScrollEventLog);
+export const ToggleEventLog = connect(
+    state => ({
+        checked: state.eventLog.visible
+    }),
+    dispatch => ({
+        onToggle: () => dispatch(toggleEventLogVisibility())
+    })
+)(ToggleButton);
 
 
-var EventLog = React.createClass({
-    close() {
-        var d = {};
-        d[Query.SHOW_EVENTLOG] = undefined;
-        this.props.updateLocation(undefined, d);
-    },
-    render() {
-        return (
-            <div className="eventlog">
-                <div>
-                    Eventlog
-                    <div className="pull-right">
-                        <ToggleEventLogFilter name="debug"/>
-                        <ToggleEventLogFilter name="info"/>
-                        <ToggleEventLogFilter name="web"/>
-                        <i onClick={this.close} className="fa fa-close"></i>
-                    </div>
+const ToggleFilter = connect(
+    (state, ownProps) => ({
+        checked: state.eventLog.filter[ownProps.text]
+    }),
+    (dispatch, ownProps) => ({
+        onToggle: () => dispatch(toggleEventLogFilter(ownProps.text))
+    })
+)(ToggleButton);
 
-                </div>
-                <VisibleAutoScrollEventLog/>
+
+const EventLog = ({close}) =>
+    <div className="eventlog">
+        <div>
+            Eventlog
+            <div className="pull-right">
+                <ToggleFilter text="debug"/>
+                <ToggleFilter text="info"/>
+                <ToggleFilter text="web"/>
+                <i onClick={close} className="fa fa-close"></i>
             </div>
-        );
-    }
-});
+        </div>
+        <EventLogContentsContainer/>
+    </div>;
 
-export default EventLog;
+EventLog.propTypes = {
+    close: React.PropTypes.func.isRequired
+};
+
+const EventLogContainer = connect(
+    undefined,
+    dispatch => ({
+        close: () => dispatch(toggleEventLogVisibility())
+    })
+)(EventLog);
+
+export default EventLogContainer;

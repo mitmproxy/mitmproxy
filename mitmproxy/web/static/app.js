@@ -455,10 +455,6 @@ var _redux = require('redux');
 
 var _reactRedux = require('react-redux');
 
-var _reducers = require('./reducers');
-
-var _reducers2 = _interopRequireDefault(_reducers);
-
 var _jquery = require('jquery');
 
 var _jquery2 = _interopRequireDefault(_jquery);
@@ -471,9 +467,13 @@ var _proxyapp = require('./components/proxyapp.js');
 
 var _actions = require('./actions.js');
 
+var _index = require('./ducks/index');
+
+var _index2 = _interopRequireDefault(_index);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var store = (0, _redux.createStore)(_reducers2.default);
+var store = (0, _redux.createStore)(_index2.default);
 
 (0, _jquery2.default)(function () {
     window.ws = new _connection2.default("/updates");
@@ -489,7 +489,7 @@ var store = (0, _redux.createStore)(_reducers2.default);
     ), document.getElementById("mitmproxy"));
 });
 
-},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"./reducers":26,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"./ducks/index":24,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -629,28 +629,23 @@ var Splitter = exports.Splitter = _react2.default.createClass({
     }
 });
 
-var ToggleButton = exports.ToggleButton = function ToggleButton(props) {
+var ToggleButton = exports.ToggleButton = function ToggleButton(_ref) {
+    var checked = _ref.checked;
+    var onToggle = _ref.onToggle;
+    var text = _ref.text;
     return _react2.default.createElement(
         "div",
-        { className: "input-group toggle-btn" },
-        _react2.default.createElement(
-            "div",
-            {
-                className: "btn " + (props.checked ? "btn-primary" : "btn-default"),
-                onClick: props.onToggleChanged },
-            _react2.default.createElement(
-                "span",
-                { className: "fa " + (props.checked ? "fa-check-square-o" : "fa-square-o") },
-                " ",
-                props.name
-            )
-        )
+        { className: "btn btn-toggle " + (checked ? "btn-primary" : "btn-default"), onClick: onToggle },
+        _react2.default.createElement("i", { className: "fa fa-fw " + (checked ? "fa-check-square-o" : "fa-square-o") }),
+        " ",
+        text
     );
 };
 
 ToggleButton.propTypes = {
-    name: _react2.default.PropTypes.string.isRequired,
-    onToggleChanged: _react2.default.PropTypes.func.isRequired
+    checked: _react2.default.PropTypes.bool.isRequired,
+    onToggle: _react2.default.PropTypes.func.isRequired,
+    text: _react2.default.PropTypes.string.isRequired
 };
 
 var ToggleInputButton = exports.ToggleInputButton = function (_React$Component) {
@@ -713,7 +708,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":30,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":29,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -971,12 +966,13 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":30,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":29,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.ToggleEventLog = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -994,9 +990,7 @@ var _shallowequal = require("shallowequal");
 
 var _shallowequal2 = _interopRequireDefault(_shallowequal);
 
-var _actions = require("../actions.js");
-
-var _reduxActions = require("../reduxActions");
+var _eventLog = require("../ducks/eventLog");
 
 var _AutoScroll = require("./helpers/AutoScroll");
 
@@ -1005,6 +999,8 @@ var _AutoScroll2 = _interopRequireDefault(_AutoScroll);
 var _VirtualScroll = require("./helpers/VirtualScroll");
 
 var _view = require("../store/view.js");
+
+var _common = require("./common");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1142,93 +1138,75 @@ EventLogContents.defaultProps = {
 };
 
 
-ToggleFilter.propTypes = {
-    name: _react2.default.PropTypes.string.isRequired,
-    toggleLevel: _react2.default.PropTypes.func.isRequired,
-    active: _react2.default.PropTypes.bool
-};
+EventLogContents = (0, _AutoScroll2.default)(EventLogContents);
 
-function ToggleFilter(_ref) {
-    var name = _ref.name;
-    var active = _ref.active;
-    var toggleLevel = _ref.toggleLevel;
-
-    var className = "label ";
-    if (active) {
-        className += "label-primary";
-    } else {
-        className += "label-default";
-    }
-
-    function onClick(event) {
-        event.preventDefault();
-        toggleLevel();
-    }
-
-    return _react2.default.createElement(
-        "a",
-        {
-            href: "#",
-            className: className,
-            onClick: onClick },
-        name
-    );
-}
-
-var mapStateToProps = function mapStateToProps(state, ownProps) {
+var EventLogContentsContainer = (0, _reactRedux.connect)(function (state) {
     return {
-        active: state.eventLog.visibilityFilter[ownProps.name]
+        filter: state.eventLog.filter
     };
-};
+})(EventLogContents);
 
-var mapDispatchToProps = function mapDispatchToProps(dispatch, ownProps) {
+var ToggleEventLog = exports.ToggleEventLog = (0, _reactRedux.connect)(function (state) {
     return {
-        toggleLevel: function toggleLevel() {
-            dispatch((0, _reduxActions.toggleEventLogFilter)(ownProps.name));
+        checked: state.eventLog.visible
+    };
+}, function (dispatch) {
+    return {
+        onToggle: function onToggle() {
+            return dispatch((0, _eventLog.toggleEventLogVisibility)());
         }
     };
-};
+})(_common.ToggleButton);
 
-var ToggleEventLogFilter = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(ToggleFilter);
+var ToggleFilter = (0, _reactRedux.connect)(function (state, ownProps) {
+    return {
+        checked: state.eventLog.filter[ownProps.text]
+    };
+}, function (dispatch, ownProps) {
+    return {
+        onToggle: function onToggle() {
+            return dispatch((0, _eventLog.toggleEventLogFilter)(ownProps.text));
+        }
+    };
+})(_common.ToggleButton);
 
-var AutoScrollEventLog = (0, _AutoScroll2.default)(EventLogContents);
-
-var VisibleAutoScrollEventLog = (0, _reactRedux.connect)(function mapStateToProps(state, ownProps) {
-    return { filter: state.eventLog.visibilityFilter };
-})(AutoScrollEventLog);
-
-var EventLog = _react2.default.createClass({
-    displayName: "EventLog",
-    close: function close() {
-        var d = {};
-        d[_actions.Query.SHOW_EVENTLOG] = undefined;
-        this.props.updateLocation(undefined, d);
-    },
-    render: function render() {
-        return _react2.default.createElement(
+var EventLog = function EventLog(_ref) {
+    var close = _ref.close;
+    return _react2.default.createElement(
+        "div",
+        { className: "eventlog" },
+        _react2.default.createElement(
             "div",
-            { className: "eventlog" },
+            null,
+            "Eventlog",
             _react2.default.createElement(
                 "div",
-                null,
-                "Eventlog",
-                _react2.default.createElement(
-                    "div",
-                    { className: "pull-right" },
-                    _react2.default.createElement(ToggleEventLogFilter, { name: "debug" }),
-                    _react2.default.createElement(ToggleEventLogFilter, { name: "info" }),
-                    _react2.default.createElement(ToggleEventLogFilter, { name: "web" }),
-                    _react2.default.createElement("i", { onClick: this.close, className: "fa fa-close" })
-                )
-            ),
-            _react2.default.createElement(VisibleAutoScrollEventLog, null)
-        );
-    }
-});
+                { className: "pull-right" },
+                _react2.default.createElement(ToggleFilter, { text: "debug" }),
+                _react2.default.createElement(ToggleFilter, { text: "info" }),
+                _react2.default.createElement(ToggleFilter, { text: "web" }),
+                _react2.default.createElement("i", { onClick: close, className: "fa fa-close" })
+            )
+        ),
+        _react2.default.createElement(EventLogContentsContainer, null)
+    );
+};
 
-exports.default = EventLog;
+EventLog.propTypes = {
+    close: _react2.default.PropTypes.func.isRequired
+};
 
-},{"../actions.js":2,"../reduxActions":27,"../store/view.js":29,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+var EventLogContainer = (0, _reactRedux.connect)(undefined, function (dispatch) {
+    return {
+        close: function close() {
+            return dispatch((0, _eventLog.toggleEventLogVisibility)());
+        }
+    };
+})(EventLog);
+
+exports.default = EventLogContainer;
+
+},{"../ducks/eventLog":23,"../store/view.js":28,"./common":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1497,7 +1475,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":24,"../utils.js":30,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":26,"../utils.js":29,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1789,7 +1767,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":30,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":29,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2143,7 +2121,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":24,"../../utils.js":30,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":26,"../../utils.js":29,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2411,7 +2389,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":30,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":29,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2905,7 +2883,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":30,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":26,"../../utils.js":29,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3088,7 +3066,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":30,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":29,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3108,6 +3086,8 @@ var _jquery = require("jquery");
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
+var _reactRedux = require("react-redux");
+
 var _filt = require("../filt/filt.js");
 
 var _filt2 = _interopRequireDefault(_filt);
@@ -3117,6 +3097,8 @@ var _utils = require("../utils.js");
 var _common = require("./common.js");
 
 var _actions = require("../actions.js");
+
+var _eventlog = require("./eventlog");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3371,29 +3353,14 @@ var ViewMenu = _react2.default.createClass({
         title: "View",
         route: "flows"
     },
-    toggleEventLog: function toggleEventLog() {
-        var d = {};
-        if (this.props.query[_actions.Query.SHOW_EVENTLOG]) {
-            d[_actions.Query.SHOW_EVENTLOG] = undefined;
-        } else {
-            d[_actions.Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
-        }
-
-        this.props.updateLocation(undefined, d);
-        console.log('toggleevent');
-    },
     render: function render() {
-        var showEventLog = this.props.query[_actions.Query.SHOW_EVENTLOG];
         return _react2.default.createElement(
             "div",
             null,
             _react2.default.createElement(
                 "div",
                 { className: "menu-row" },
-                _react2.default.createElement(_common.ToggleButton, {
-                    checked: showEventLog,
-                    name: "Show Eventlog",
-                    onToggleChanged: this.toggleEventLog })
+                _react2.default.createElement(_eventlog.ToggleEventLog, { text: "Show Event Log" })
             ),
             _react2.default.createElement("div", { className: "clearfix" })
         );
@@ -3642,7 +3609,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":30,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":25,"../utils.js":29,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4058,7 +4025,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":29,"../utils.js":30,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":25,"../store/view.js":28,"../utils.js":29,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4194,7 +4161,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":30,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":29,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4214,6 +4181,10 @@ var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+var _reactRedux = require("react-redux");
+
+var _reactRouter = require("react-router");
+
 var _common = require("./common.js");
 
 var _mainview = require("./mainview.js");
@@ -4232,11 +4203,7 @@ var _eventlog2 = _interopRequireDefault(_eventlog);
 
 var _store = require("../store/store.js");
 
-var _actions = require("../actions.js");
-
 var _utils = require("../utils.js");
-
-var _reactRouter = require("react-router");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4355,8 +4322,8 @@ var ProxyAppMain = _react2.default.createClass({
     render: function render() {
         var query = this.getQuery();
         var eventlog;
-        if (this.props.location.query[_actions.Query.SHOW_EVENTLOG]) {
-            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog", updateLocation: this.updateLocation })];
+        if (this.props.showEventLog) {
+            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog" })];
         } else {
             eventlog = null;
         }
@@ -4371,20 +4338,26 @@ var ProxyAppMain = _react2.default.createClass({
     }
 });
 
+var AppContainer = (0, _reactRedux.connect)(function (state) {
+    return {
+        showEventLog: state.eventLog.visible
+    };
+})(ProxyAppMain);
+
 var App = exports.App = _react2.default.createElement(
     _reactRouter.Router,
     { history: _reactRouter.hashHistory },
     _react2.default.createElement(_reactRouter.Redirect, { from: "/", to: "/flows" }),
     _react2.default.createElement(
         _reactRouter.Route,
-        { path: "/", component: ProxyAppMain },
+        { path: "/", component: AppContainer },
         _react2.default.createElement(_reactRouter.Route, { path: "flows", component: _mainview2.default }),
         _react2.default.createElement(_reactRouter.Route, { path: "flows/:flowId/:detailTab", component: _mainview2.default }),
         _react2.default.createElement(_reactRouter.Route, { path: "reports", component: Reports })
     )
 );
 
-},{"../actions.js":2,"../store/store.js":28,"../utils.js":30,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":27,"../utils.js":29,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4451,6 +4424,78 @@ AppDispatcher.dispatchServerAction = function (action) {
 };
 
 },{"flux":"flux"}],23:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = reducer;
+exports.toggleEventLogFilter = toggleEventLogFilter;
+exports.toggleEventLogVisibility = toggleEventLogVisibility;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER';
+var TOGGLE_VISIBILITY = 'TOGGLE_EVENTLOG_VISIBILITY';
+
+var defaultState = {
+    visible: false,
+    filter: {
+        "debug": false,
+        "info": true,
+        "web": true
+    }
+};
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case TOGGLE_FILTER:
+            return _extends({}, state, {
+                filter: _extends({}, state.filter, _defineProperty({}, action.filter, !state.filter[action.filter]))
+            });
+        case TOGGLE_VISIBILITY:
+            return _extends({}, state, {
+                visible: !state.visible
+            });
+        default:
+            return state;
+    }
+}
+
+function toggleEventLogFilter(filter) {
+    return { type: TOGGLE_FILTER, filter: filter };
+}
+function toggleEventLogVisibility() {
+    return { type: TOGGLE_VISIBILITY };
+}
+
+},{}],24:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _redux = require('redux');
+
+var _eventLog = require('./eventLog.js');
+
+var _eventLog2 = _interopRequireDefault(_eventLog);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var rootReducer = (0, _redux.combineReducers)({
+    eventLog: _eventLog2.default
+});
+
+exports.default = rootReducer;
+
+},{"./eventLog.js":23,"redux":"redux"}],25:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -6354,7 +6399,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":24}],24:[function(require,module,exports){
+},{"../flow/utils.js":26}],26:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6488,96 +6533,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _redux = require("redux");
-
-var _reduxActions = require("../reduxActions");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-var defaultVisibility = {
-    "debug": false,
-    "info": true,
-    "web": true
-};
-
-var visibilityFilter = function visibilityFilter() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultVisibility : arguments[0];
-    var action = arguments[1];
-
-    switch (action.type) {
-        case _reduxActions.TOGGLE_EVENTLOG_FILTER:
-            return _extends({}, state, _defineProperty({}, action.filter, !state[action.filter]));
-        default:
-            return state;
-    }
-};
-
-var entries = function entries() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
-    var action = arguments[1];
-
-    return state;
-};
-
-var eventLog = (0, _redux.combineReducers)({
-    visibilityFilter: visibilityFilter,
-    entries: entries
-});
-
-exports.default = eventLog;
-
-},{"../reduxActions":27,"redux":"redux"}],26:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _redux = require('redux');
-
-var _eventlog = require('./eventlog');
-
-var _eventlog2 = _interopRequireDefault(_eventlog);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var mitmproxyApp = (0, _redux.combineReducers)({
-    eventLog: _eventlog2.default
-});
-
-exports.default = mitmproxyApp;
-
-},{"./eventlog":25,"redux":"redux"}],27:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.toggleEventLogFilter = toggleEventLogFilter;
-var TOGGLE_EVENTLOG_FILTER = exports.TOGGLE_EVENTLOG_FILTER = 'TOGGLE_EVENTLOG_FILTER';
-var HIDE_EVENTLOG = exports.HIDE_EVENTLOG = 'HIDE_EVENTLOG';
-var SHOW_EVENTLOG = exports.SHOW_EVENTLOG = 'SHOW_EVENTLOG';
-
-var EventLogFilters = exports.EventLogFilters = {
-    DEBUG: 'debug',
-    INFO: 'info',
-    WEB: 'web'
-};
-
-function toggleEventLogFilter(filter) {
-    return { type: TOGGLE_EVENTLOG_FILTER, filter: filter };
-}
-
-},{}],28:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],27:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6764,7 +6720,7 @@ _lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],29:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6894,7 +6850,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":30,"events":1,"lodash":"lodash"}],30:[function(require,module,exports){
+},{"../utils.js":29,"events":1,"lodash":"lodash"}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
