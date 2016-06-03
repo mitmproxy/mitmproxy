@@ -36,7 +36,7 @@ install:
     if [[ $TRAVIS_OS_NAME == "osx" ]]
     then
       brew update || brew update # try again if it fails
-      brew outdated openssl || brew upgrade openssl
+      # brew outdated openssl || brew upgrade openssl
       brew install python
     fi
   - pip install -U virtualenv

@@ -9,7 +9,7 @@ echo "Creating dev environment in $VENV using Python $PYVERSION"
 python$PYVERSION -m virtualenv "$VENV" --always-copy
 . "$VENV/bin/activate"
 pip$PYVERSION install -q -U pip setuptools
-pip$PYVERSION install -r requirements.txt
+pip$PYVERSION install -q -r requirements.txt
 
 echo ""
 echo "* Virtualenv created in $VENV and all dependencies installed."
