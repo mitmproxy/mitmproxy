@@ -3,6 +3,7 @@ import re
 import shutil
 import requests
 from six.moves import cStringIO as StringIO
+import urllib
 
 from netlib import tcp
 from netlib import utils
@@ -63,10 +64,11 @@ class DaemonTests(object):
         shutil.rmtree(cls.confdir)
 
     def teardown(self):
+        self.d.wait_for_silence()
         if not (self.noweb or self.noapi):
             self.d.clear_log()
 
-    def getpath(self, path, params=None):
+    def _getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
         resp = requests.get(
             "%s://localhost:%s/%s" % (
@@ -79,9 +81,29 @@ class DaemonTests(object):
         )
         return resp
 
+    def getpath(self, path, params=None):
+        logfp = StringIO()
+        c = pathoc.Pathoc(
+            ("localhost", self.d.port),
+            ssl=self.ssl,
+            fp=logfp,
+        )
+        with c.connect():
+            if params:
+                path = path + "?" + urllib.urlencode(params)
+            resp = c.request("get:%s" % path)
+            return resp
+
     def get(self, spec):
-        resp = requests.get(self.d.p(spec), verify=False)
-        return resp
+        logfp = StringIO()
+        c = pathoc.Pathoc(
+            ("localhost", self.d.port),
+            ssl=self.ssl,
+            fp=logfp,
+        )
+        with c.connect():
+            resp = c.request("get:/p/%s" % urllib.quote(spec).encode("string_escape"))
+            return resp
 
     def pathoc(
         self,
@@ -106,16 +128,16 @@ class DaemonTests(object):
             fp=logfp,
             use_http2=use_http2,
         )
-        c.connect(connect_to)
-        ret = []
-        for i in specs:
-            resp = c.request(i)
-            if resp:
-                ret.append(resp)
-        for frm in c.wait():
-            ret.append(frm)
-        c.stop()
-        return ret, logfp.getvalue()
+        with c.connect(connect_to):
+            ret = []
+            for i in specs:
+                resp = c.request(i)
+                if resp:
+                    ret.append(resp)
+            for frm in c.wait():
+                ret.append(frm)
+            c.stop()
+            return ret, logfp.getvalue()
 
 
 tmpdir = tutils.tmpdir

@@ -18,7 +18,7 @@ class WebsocketsProtocol:
                     frm = websockets.Frame.from_file(self.pathod_handler.rfile)
                 except NetlibException as e:
                     lg("Error reading websocket frame: %s" % e)
-                    break
+                    return None, None
                 ended = time.time()
                 lg(frm.human_readable())
             retlog = dict(

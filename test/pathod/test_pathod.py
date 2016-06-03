@@ -1,7 +1,6 @@
 from six.moves import cStringIO as StringIO
-import pytest
 
-from pathod import pathod, version
+from pathod import pathod
 from netlib import tcp
 from netlib.exceptions import HttpException, TlsException
 import tutils
@@ -129,7 +128,6 @@ class CommonTests(tutils.DaemonTests):
         assert self.d.last_log()
         # FIXME: Other binary data elements
 
-    @pytest.mark.skip(reason="race condition")
     def test_sizelimit(self):
         r = self.get("200:b@1g")
         assert r.status_code == 800
@@ -140,21 +138,15 @@ class CommonTests(tutils.DaemonTests):
         r, _ = self.pathoc([r"get:'/p/200':i0,'\r\n'"])
         assert r[0].status_code == 200
 
-    def test_info(self):
-        assert tuple(self.d.info()["version"]) == version.IVERSION
-
-    @pytest.mark.skip(reason="race condition")
     def test_logs(self):
-        assert self.d.clear_log()
-        assert not self.d.last_log()
+        self.d.clear_log()
         assert self.get("202:da")
-        assert len(self.d.log()) == 1
-        assert self.d.clear_log()
+        assert self.d.expect_log(1)
+        self.d.clear_log()
         assert len(self.d.log()) == 0
 
     def test_disconnect(self):
-        rsp = self.get("202:b@100k:d200")
-        assert len(rsp.content) < 200
+        tutils.raises("unexpected eof", self.get, "202:b@100k:d200")
 
     def test_parserr(self):
         rsp = self.get("400:msg,b:")
@@ -166,7 +158,7 @@ class CommonTests(tutils.DaemonTests):
         assert rsp.content.strip() == "testfile"
 
     def test_anchor(self):
-        rsp = self.getpath("anchor/foo")
+        rsp = self.getpath("/anchor/foo")
         assert rsp.status_code == 202
 
     def test_invalid_first_line(self):
@@ -223,7 +215,6 @@ class CommonTests(tutils.DaemonTests):
         )
         assert r[1].payload == "test"
 
-    @pytest.mark.skip(reason="race condition")
     def test_websocket_frame_reflect_error(self):
         r, _ = self.pathoc(
             ["ws:/p/", "wf:-mask:knone:f'wf:b@10':i13,'a'"],
@@ -233,7 +224,6 @@ class CommonTests(tutils.DaemonTests):
         # FIXME: Race Condition?
         assert "Parse error" in self.d.text_log()
 
-    @pytest.mark.skip(reason="race condition")
     def test_websocket_frame_disconnect_error(self):
         self.pathoc(["ws:/p/", "wf:b@10:d3"], ws_read_limit=0)
         assert self.d.last_log()

@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+set -x
 
 PYVERSION=$1
 VENV="venv$1"
@@ -8,8 +9,8 @@ echo "Creating dev environment in $VENV using Python $PYVERSION"
 
 python$PYVERSION -m virtualenv "$VENV" --always-copy
 . "$VENV/bin/activate"
-pip$PYVERSION install -q -U pip setuptools
-pip$PYVERSION install -q -r requirements.txt
+pip$PYVERSION install -U pip setuptools
+pip$PYVERSION install -r requirements.txt
 
 echo ""
 echo "* Virtualenv created in $VENV and all dependencies installed."
