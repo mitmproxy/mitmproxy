@@ -443,27 +443,37 @@ var Query = exports.Query = {
 };
 
 },{"./dispatcher.js":22,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
-"use strict";
+'use strict';
 
-var _react = require("react");
+var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = require("react-dom");
+var _reactDom = require('react-dom');
 
-var _jquery = require("jquery");
+var _redux = require('redux');
+
+var _reactRedux = require('react-redux');
+
+var _reducers = require('./reducers');
+
+var _reducers2 = _interopRequireDefault(_reducers);
+
+var _jquery = require('jquery');
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _connection = require("./connection");
+var _connection = require('./connection');
 
 var _connection2 = _interopRequireDefault(_connection);
 
-var _proxyapp = require("./components/proxyapp.js");
+var _proxyapp = require('./components/proxyapp.js');
 
-var _actions = require("./actions.js");
+var _actions = require('./actions.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var store = (0, _redux.createStore)(_reducers2.default);
 
 (0, _jquery2.default)(function () {
     window.ws = new _connection2.default("/updates");
@@ -472,10 +482,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
         _actions.EventLogActions.add_event(msg);
     };
 
-    (0, _reactDom.render)(_proxyapp.app, document.getElementById("mitmproxy"));
+    (0, _reactDom.render)(_react2.default.createElement(
+        _reactRedux.Provider,
+        { store: store },
+        _proxyapp.App
+    ), document.getElementById("mitmproxy"));
 });
 
-},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"jquery":"jquery","react":"react","react-dom":"react-dom"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"./reducers":26,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -699,7 +713,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":30,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -957,7 +971,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":27,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":30,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -974,11 +988,15 @@ var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
+var _reactRedux = require("react-redux");
+
 var _shallowequal = require("shallowequal");
 
 var _shallowequal2 = _interopRequireDefault(_shallowequal);
 
 var _actions = require("../actions.js");
+
+var _reduxActions = require("../reduxActions");
 
 var _AutoScroll = require("./helpers/AutoScroll");
 
@@ -987,10 +1005,6 @@ var _AutoScroll2 = _interopRequireDefault(_AutoScroll);
 var _VirtualScroll = require("./helpers/VirtualScroll");
 
 var _view = require("../store/view.js");
-
-var _lodash = require("lodash");
-
-var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1148,7 +1162,7 @@ function ToggleFilter(_ref) {
 
     function onClick(event) {
         event.preventDefault();
-        toggleLevel(name);
+        toggleLevel();
     }
 
     return _react2.default.createElement(
@@ -1165,26 +1179,14 @@ var AutoScrollEventLog = (0, _AutoScroll2.default)(EventLogContents);
 
 var EventLog = _react2.default.createClass({
     displayName: "EventLog",
-    getInitialState: function getInitialState() {
-        return {
-            filter: {
-                "debug": false,
-                "info": true,
-                "web": true
-            }
-        };
-    },
     close: function close() {
         var d = {};
         d[_actions.Query.SHOW_EVENTLOG] = undefined;
         this.props.updateLocation(undefined, d);
     },
-    toggleLevel: function toggleLevel(level) {
-        var filter = _lodash2.default.extend({}, this.state.filter);
-        filter[level] = !filter[level];
-        this.setState({ filter: filter });
-    },
     render: function render() {
+        var _this4 = this;
+
         return _react2.default.createElement(
             "div",
             { className: "eventlog" },
@@ -1195,20 +1197,46 @@ var EventLog = _react2.default.createClass({
                 _react2.default.createElement(
                     "div",
                     { className: "pull-right" },
-                    _react2.default.createElement(ToggleFilter, { name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel }),
-                    _react2.default.createElement(ToggleFilter, { name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel }),
-                    _react2.default.createElement(ToggleFilter, { name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel }),
+                    _react2.default.createElement(ToggleFilter, { name: "debug",
+                        active: this.props.visibilityFilter.debug,
+                        toggleLevel: function toggleLevel() {
+                            return _this4.props.toggleFilter("debug");
+                        } }),
+                    _react2.default.createElement(ToggleFilter, { name: "info",
+                        active: this.props.visibilityFilter.info,
+                        toggleLevel: function toggleLevel() {
+                            return _this4.props.toggleFilter("info");
+                        } }),
+                    _react2.default.createElement(ToggleFilter, { name: "web",
+                        active: this.props.visibilityFilter.web,
+                        toggleLevel: function toggleLevel() {
+                            return _this4.props.toggleFilter("web");
+                        } }),
                     _react2.default.createElement("i", { onClick: this.close, className: "fa fa-close" })
                 )
             ),
-            _react2.default.createElement(AutoScrollEventLog, { filter: this.state.filter })
+            _react2.default.createElement(AutoScrollEventLog, { filter: this.props.visibilityFilter })
         );
     }
 });
 
-exports.default = EventLog;
+var mapStateToProps = function mapStateToProps(state) {
+    return state.eventLog;
+};
 
-},{"../actions.js":2,"../store/view.js":26,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+var mapDispatchToProps = function mapDispatchToProps(dispatch) {
+    return {
+        toggleFilter: function toggleFilter(filter) {
+            dispatch((0, _reduxActions.toggleEventLogFilter)(filter));
+        }
+    };
+};
+
+var VisibleEventLog = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(EventLog);
+
+exports.default = VisibleEventLog;
+
+},{"../actions.js":2,"../reduxActions":27,"../store/view.js":29,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1477,7 +1505,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":24,"../utils.js":27,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":24,"../utils.js":30,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1769,7 +1797,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":27,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":30,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2123,7 +2151,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":24,"../../utils.js":30,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2391,7 +2419,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":27,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":30,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2885,7 +2913,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":27,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":30,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3068,7 +3096,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":27,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":30,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3622,7 +3650,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":27,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":30,"./common.js":4,"jquery":"jquery","react":"react","react-dom":"react-dom"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4038,7 +4066,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":26,"../utils.js":27,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":29,"../utils.js":30,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4174,13 +4202,13 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":27,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":30,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.app = undefined;
+exports.App = undefined;
 
 var _react = require("react");
 
@@ -4351,7 +4379,7 @@ var ProxyAppMain = _react2.default.createClass({
     }
 });
 
-var app = exports.app = _react2.default.createElement(
+var App = exports.App = _react2.default.createElement(
     _reactRouter.Router,
     { history: _reactRouter.hashHistory },
     _react2.default.createElement(_reactRouter.Redirect, { from: "/", to: "/flows" }),
@@ -4364,7 +4392,7 @@ var app = exports.app = _react2.default.createElement(
     )
 );
 
-},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":28,"../utils.js":30,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6474,6 +6502,95 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _redux = require("redux");
+
+var _reduxActions = require("../reduxActions");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var defaultVisibility = {
+    "debug": false,
+    "info": true,
+    "web": true
+};
+
+var visibilityFilter = function visibilityFilter() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultVisibility : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case _reduxActions.TOGGLE_EVENTLOG_FILTER:
+            return _extends({}, state, _defineProperty({}, action.filter, !state[action.filter]));
+        default:
+            return state;
+    }
+};
+
+var entries = function entries() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+    var action = arguments[1];
+
+    return state;
+};
+
+var eventLog = (0, _redux.combineReducers)({
+    visibilityFilter: visibilityFilter,
+    entries: entries
+});
+
+exports.default = eventLog;
+
+},{"../reduxActions":27,"redux":"redux"}],26:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _redux = require('redux');
+
+var _eventlog = require('./eventlog');
+
+var _eventlog2 = _interopRequireDefault(_eventlog);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var mitmproxyApp = (0, _redux.combineReducers)({
+    eventLog: _eventlog2.default
+});
+
+exports.default = mitmproxyApp;
+
+},{"./eventlog":25,"redux":"redux"}],27:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.toggleEventLogFilter = toggleEventLogFilter;
+var TOGGLE_EVENTLOG_FILTER = exports.TOGGLE_EVENTLOG_FILTER = 'TOGGLE_EVENTLOG_FILTER';
+var HIDE_EVENTLOG = exports.HIDE_EVENTLOG = 'HIDE_EVENTLOG';
+var SHOW_EVENTLOG = exports.SHOW_EVENTLOG = 'SHOW_EVENTLOG';
+
+var EventLogFilters = exports.EventLogFilters = {
+    DEBUG: 'debug',
+    INFO: 'info',
+    WEB: 'web'
+};
+
+function toggleEventLogFilter(filter) {
+    return { type: TOGGLE_EVENTLOG_FILTER, filter: filter };
+}
+
+},{}],28:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 exports.FlowStore = FlowStore;
 exports.SettingsStore = SettingsStore;
 exports.EventLogStore = EventLogStore;
@@ -6655,7 +6772,7 @@ _lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],26:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6785,7 +6902,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":27,"events":1,"lodash":"lodash"}],27:[function(require,module,exports){
+},{"../utils.js":30,"events":1,"lodash":"lodash"}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
