@@ -1,4 +1,3 @@
-
 import {ConnectionActions, EventLogActions} from "./actions.js";
 import {AppDispatcher} from "./dispatcher.js";
 import * as websocketActions from "./ducks/websocket"
@@ -12,11 +11,12 @@ export default function Connection(url, dispatch) {
     ws.onopen = function () {
         dispatch(websocketActions.connected());
         ConnectionActions.open();
+        //TODO: fetch stuff!
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
         AppDispatcher.dispatchServerAction(message);
-        dispatch(websocketActions.receiveMessage(message));
+        dispatch(message);
     };
     ws.onerror = function () {
         ConnectionActions.error();

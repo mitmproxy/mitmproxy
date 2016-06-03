@@ -73,7 +73,7 @@ class WebState(flow.State):
         }
         self.events.append(entry)
         app.ClientConnection.broadcast(
-            type="events",
+            type="UPDATE_EVENTLOG",
             cmd="add",
             data=entry
         )

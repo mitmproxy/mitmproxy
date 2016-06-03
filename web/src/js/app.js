@@ -1,21 +1,24 @@
 import React from "react"
 import {render} from 'react-dom'
-import {createStore} from 'redux'
+import {applyMiddleware, createStore} from 'redux'
 import {Provider} from 'react-redux'
+import createLogger from 'redux-logger';
 
 import Connection from "./connection"
 import {App} from "./components/proxyapp.js"
-import {EventLogActions} from "./actions.js"
 import rootReducer from './ducks/index';
+import {addLogEntry} from "./ducks/eventLog";
 
-let store = createStore(rootReducer);
+// logger must be last
+const logger = createLogger();
+const store = createStore(rootReducer, applyMiddleware(logger));
+
+window.onerror = function (msg) {
+    store.dispatch(addLogEntry(msg));
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     window.ws = new Connection("/updates", store.dispatch);
-
-    window.onerror = function (msg) {
-        EventLogActions.add_event(msg);
-    };
 
     render(
         <Provider store={store}>{App}</Provider>,

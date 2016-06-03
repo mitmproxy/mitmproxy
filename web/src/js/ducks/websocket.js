@@ -1,6 +1,5 @@
 const CONNECTED = 'WEBSOCKET_CONNECTED'
 const DISCONNECTED = 'WEBSOCKET_DISCONNECTED'
-const RECEIVE_MESSAGE = 'RECEIVE_WEBSOCKET_MESSAGE'
 
 
 const defaultState = {
@@ -28,7 +27,4 @@ export function connected() {
 }
 export function disconnected() {
     return {type: DISCONNECTED}
-}
-export function receiveMessage(message) {
-    return {type: RECEIVE_MESSAGE, message}
 }

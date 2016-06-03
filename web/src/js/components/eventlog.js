@@ -5,78 +5,62 @@ import shallowEqual from "shallowequal"
 import {toggleEventLogFilter, toggleEventLogVisibility} from "../ducks/eventLog"
 import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll"
-import {StoreView} from "../store/view.js"
 import {ToggleButton} from "./common";
 
-class EventLogContents extends React.Component {
+function LogIcon({entry}) {
+    let icon = {web: "html5", debug: "bug"}[entry.level] || "info";
+    return <i className={`fa fa-fw fa-${icon}`}></i>
+}
 
-    static contextTypes = {
-        eventStore: React.PropTypes.object.isRequired,
-    };
+function LogEntry({entry}) {
+    return <div>
+        <LogIcon entry={entry}/>
+        {entry.message}
+    </div>;
+}
+
+class EventLogContents extends React.Component {
 
     static defaultProps = {
         rowHeight: 18,
     };
 
-    constructor(props, context) {
-        super(props, context);
-
-        this.view = new StoreView(
-            this.context.eventStore,
-            entry => this.props.filter[entry.level]
-        );
+    constructor(props) {
+        super(props);
 
         this.heights = {};
-        this.state = {entries: this.view.list, vScroll: calcVScroll()};
+        this.state = {vScroll: calcVScroll()};
 
-        this.onChange = this.onChange.bind(this);
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
     }
 
     componentDidMount() {
         window.addEventListener("resize", this.onViewportUpdate);
-        this.view.addListener("add", this.onChange);
-        this.view.addListener("recalculate", this.onChange);
         this.onViewportUpdate();
     }
 
     componentWillUnmount() {
         window.removeEventListener("resize", this.onViewportUpdate);
-        this.view.removeListener("add", this.onChange);
-        this.view.removeListener("recalculate", this.onChange);
-        this.view.close();
     }
 
     componentDidUpdate() {
         this.onViewportUpdate();
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.filter !== this.props.filter) {
-            this.view.recalculate(
-                entry => nextProps.filter[entry.level]
-            );
-        }
-    }
-
     onViewportUpdate() {
         const viewport = ReactDOM.findDOMNode(this);
 
         const vScroll = calcVScroll({
-            itemCount: this.state.entries.length,
+            itemCount: this.props.events.length,
             rowHeight: this.props.rowHeight,
             viewportTop: viewport.scrollTop,
             viewportHeight: viewport.offsetHeight,
-            itemHeights: this.state.entries.map(entry => this.heights[entry.id]),
+            itemHeights: this.props.events.map(entry => this.heights[entry.id]),
         });
 
         if (!shallowEqual(this.state.vScroll, vScroll)) {
             this.setState({vScroll});
         }
-    }
-
-    onChange() {
-        this.setState({entries: this.view.list});
     }
 
     setHeight(id, ref) {
@@ -89,23 +73,18 @@ class EventLogContents extends React.Component {
         }
     }
 
-    getIcon(level) {
-        return {web: "html5", debug: "bug"}[level] || "info";
-    }
-
     render() {
         const vScroll = this.state.vScroll;
-        const entries = this.state.entries.slice(vScroll.start, vScroll.end);
+        const events = this.props.events
+            .slice(vScroll.start, vScroll.end)
+            .map(entry =>
+                <LogEntry entry={entry} key={entry.id} ref={this.setHeight.bind(this, entry.id)}/>
+            );
 
         return (
             <pre onScroll={this.onViewportUpdate}>
                 <div style={{ height: vScroll.paddingTop }}></div>
-                {entries.map((entry, index) => (
-                    <div key={entry.id} ref={this.setHeight.bind(this, entry.id)}>
-                        <i className={`fa fa-fw fa-${this.getIcon(entry.level)}`}></i>
-                        {entry.message}
-                    </div>
-                ))}
+                {events}
                 <div style={{ height: vScroll.paddingBottom }}></div>
             </pre>
         );
@@ -117,7 +96,7 @@ EventLogContents = AutoScroll(EventLogContents);
 
 const EventLogContentsContainer = connect(
     state => ({
-        filter: state.eventLog.filter
+        events: state.eventLog.filteredEvents
     })
 )(EventLogContents);
 

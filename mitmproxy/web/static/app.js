@@ -301,6 +301,235 @@ function isUndefined(arg) {
 },{}],2:[function(require,module,exports){
 "use strict";
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+var repeat = function repeat(str, times) {
+  return new Array(times + 1).join(str);
+};
+var pad = function pad(num, maxLength) {
+  return repeat("0", maxLength - num.toString().length) + num;
+};
+var formatTime = function formatTime(time) {
+  return "@ " + pad(time.getHours(), 2) + ":" + pad(time.getMinutes(), 2) + ":" + pad(time.getSeconds(), 2) + "." + pad(time.getMilliseconds(), 3);
+};
+
+// Use the new performance api to get better precision if available
+var timer = typeof performance !== "undefined" && typeof performance.now === "function" ? performance : Date;
+
+/**
+ * parse the level option of createLogger
+ *
+ * @property {string | function | object} level - console[level]
+ * @property {object} action
+ * @property {array} payload
+ * @property {string} type
+ */
+
+function getLogLevel(level, action, payload, type) {
+  switch (typeof level === "undefined" ? "undefined" : _typeof(level)) {
+    case "object":
+      return typeof level[type] === "function" ? level[type].apply(level, _toConsumableArray(payload)) : level[type];
+    case "function":
+      return level(action);
+    default:
+      return level;
+  }
+}
+
+/**
+ * Creates logger with followed options
+ *
+ * @namespace
+ * @property {object} options - options for logger
+ * @property {string | function | object} options.level - console[level]
+ * @property {boolean} options.duration - print duration of each action?
+ * @property {boolean} options.timestamp - print timestamp with each action?
+ * @property {object} options.colors - custom colors
+ * @property {object} options.logger - implementation of the `console` API
+ * @property {boolean} options.logErrors - should errors in action execution be caught, logged, and re-thrown?
+ * @property {boolean} options.collapsed - is group collapsed?
+ * @property {boolean} options.predicate - condition which resolves logger behavior
+ * @property {function} options.stateTransformer - transform state before print
+ * @property {function} options.actionTransformer - transform action before print
+ * @property {function} options.errorTransformer - transform error before print
+ */
+
+function createLogger() {
+  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+  var _options$level = options.level;
+  var level = _options$level === undefined ? "log" : _options$level;
+  var _options$logger = options.logger;
+  var logger = _options$logger === undefined ? console : _options$logger;
+  var _options$logErrors = options.logErrors;
+  var logErrors = _options$logErrors === undefined ? true : _options$logErrors;
+  var collapsed = options.collapsed;
+  var predicate = options.predicate;
+  var _options$duration = options.duration;
+  var duration = _options$duration === undefined ? false : _options$duration;
+  var _options$timestamp = options.timestamp;
+  var timestamp = _options$timestamp === undefined ? true : _options$timestamp;
+  var transformer = options.transformer;
+  var _options$stateTransfo = options.stateTransformer;
+  var // deprecated
+  stateTransformer = _options$stateTransfo === undefined ? function (state) {
+    return state;
+  } : _options$stateTransfo;
+  var _options$actionTransf = options.actionTransformer;
+  var actionTransformer = _options$actionTransf === undefined ? function (actn) {
+    return actn;
+  } : _options$actionTransf;
+  var _options$errorTransfo = options.errorTransformer;
+  var errorTransformer = _options$errorTransfo === undefined ? function (error) {
+    return error;
+  } : _options$errorTransfo;
+  var _options$colors = options.colors;
+  var colors = _options$colors === undefined ? {
+    title: function title() {
+      return "#000000";
+    },
+    prevState: function prevState() {
+      return "#9E9E9E";
+    },
+    action: function action() {
+      return "#03A9F4";
+    },
+    nextState: function nextState() {
+      return "#4CAF50";
+    },
+    error: function error() {
+      return "#F20404";
+    }
+  } : _options$colors;
+
+  // exit if console undefined
+
+  if (typeof logger === "undefined") {
+    return function () {
+      return function (next) {
+        return function (action) {
+          return next(action);
+        };
+      };
+    };
+  }
+
+  if (transformer) {
+    console.error("Option 'transformer' is deprecated, use stateTransformer instead");
+  }
+
+  var logBuffer = [];
+  function printBuffer() {
+    logBuffer.forEach(function (logEntry, key) {
+      var started = logEntry.started;
+      var startedTime = logEntry.startedTime;
+      var action = logEntry.action;
+      var prevState = logEntry.prevState;
+      var error = logEntry.error;
+      var took = logEntry.took;
+      var nextState = logEntry.nextState;
+
+      var nextEntry = logBuffer[key + 1];
+      if (nextEntry) {
+        nextState = nextEntry.prevState;
+        took = nextEntry.started - started;
+      }
+      // message
+      var formattedAction = actionTransformer(action);
+      var isCollapsed = typeof collapsed === "function" ? collapsed(function () {
+        return nextState;
+      }, action) : collapsed;
+
+      var formattedTime = formatTime(startedTime);
+      var titleCSS = colors.title ? "color: " + colors.title(formattedAction) + ";" : null;
+      var title = "action " + (timestamp ? formattedTime : "") + " " + formattedAction.type + " " + (duration ? "(in " + took.toFixed(2) + " ms)" : "");
+
+      // render
+      try {
+        if (isCollapsed) {
+          if (colors.title) logger.groupCollapsed("%c " + title, titleCSS);else logger.groupCollapsed(title);
+        } else {
+          if (colors.title) logger.group("%c " + title, titleCSS);else logger.group(title);
+        }
+      } catch (e) {
+        logger.log(title);
+      }
+
+      var prevStateLevel = getLogLevel(level, formattedAction, [prevState], "prevState");
+      var actionLevel = getLogLevel(level, formattedAction, [formattedAction], "action");
+      var errorLevel = getLogLevel(level, formattedAction, [error, prevState], "error");
+      var nextStateLevel = getLogLevel(level, formattedAction, [nextState], "nextState");
+
+      if (prevStateLevel) {
+        if (colors.prevState) logger[prevStateLevel]("%c prev state", "color: " + colors.prevState(prevState) + "; font-weight: bold", prevState);else logger[prevStateLevel]("prev state", prevState);
+      }
+
+      if (actionLevel) {
+        if (colors.action) logger[actionLevel]("%c action", "color: " + colors.action(formattedAction) + "; font-weight: bold", formattedAction);else logger[actionLevel]("action", formattedAction);
+      }
+
+      if (error && errorLevel) {
+        if (colors.error) logger[errorLevel]("%c error", "color: " + colors.error(error, prevState) + "; font-weight: bold", error);else logger[errorLevel]("error", error);
+      }
+
+      if (nextStateLevel) {
+        if (colors.nextState) logger[nextStateLevel]("%c next state", "color: " + colors.nextState(nextState) + "; font-weight: bold", nextState);else logger[nextStateLevel]("next state", nextState);
+      }
+
+      try {
+        logger.groupEnd();
+      } catch (e) {
+        logger.log("—— log end ——");
+      }
+    });
+    logBuffer.length = 0;
+  }
+
+  return function (_ref) {
+    var getState = _ref.getState;
+    return function (next) {
+      return function (action) {
+        // exit early if predicate function returns false
+        if (typeof predicate === "function" && !predicate(getState, action)) {
+          return next(action);
+        }
+
+        var logEntry = {};
+        logBuffer.push(logEntry);
+
+        logEntry.started = timer.now();
+        logEntry.startedTime = new Date();
+        logEntry.prevState = stateTransformer(getState());
+        logEntry.action = action;
+
+        var returnedValue = undefined;
+        if (logErrors) {
+          try {
+            returnedValue = next(action);
+          } catch (e) {
+            logEntry.error = errorTransformer(e);
+          }
+        } else {
+          returnedValue = next(action);
+        }
+
+        logEntry.took = timer.now() - logEntry.started;
+        logEntry.nextState = stateTransformer(getState());
+
+        printBuffer();
+
+        if (logEntry.error) throw logEntry.error;
+        return returnedValue;
+      };
+    };
+  };
+}
+
+module.exports = createLogger;
+},{}],3:[function(require,module,exports){
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -442,7 +671,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":22,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
+},{"./dispatcher.js":23,"jquery":"jquery","lodash":"lodash"}],4:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -455,28 +684,34 @@ var _redux = require('redux');
 
 var _reactRedux = require('react-redux');
 
+var _reduxLogger = require('redux-logger');
+
+var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
+
 var _connection = require('./connection');
 
 var _connection2 = _interopRequireDefault(_connection);
 
 var _proxyapp = require('./components/proxyapp.js');
 
-var _actions = require('./actions.js');
-
 var _index = require('./ducks/index');
 
 var _index2 = _interopRequireDefault(_index);
 
+var _eventLog = require('./ducks/eventLog');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var store = (0, _redux.createStore)(_index2.default);
+// logger must be last
+var logger = (0, _reduxLogger2.default)();
+var store = (0, _redux.createStore)(_index2.default, (0, _redux.applyMiddleware)(logger));
+
+window.onerror = function (msg) {
+    store.dispatch((0, _eventLog.addLogEntry)(msg));
+};
 
 document.addEventListener('DOMContentLoaded', function () {
     window.ws = new _connection2.default("/updates", store.dispatch);
-
-    window.onerror = function (msg) {
-        _actions.EventLogActions.add_event(msg);
-    };
 
     (0, _reactDom.render)(_react2.default.createElement(
         _reactRedux.Provider,
@@ -485,7 +720,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ), document.getElementById("mitmproxy"));
 });
 
-},{"./actions.js":2,"./components/proxyapp.js":20,"./connection":21,"./ducks/index":25,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux"}],4:[function(require,module,exports){
+},{"./components/proxyapp.js":21,"./connection":22,"./ducks/eventLog":24,"./ducks/index":25,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":2}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -704,7 +939,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -962,7 +1197,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":31,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":32,"react":"react","react-dom":"react-dom"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -994,8 +1229,6 @@ var _AutoScroll2 = _interopRequireDefault(_AutoScroll);
 
 var _VirtualScroll = require("./helpers/VirtualScroll");
 
-var _view = require("../store/view.js");
-
 var _common = require("./common");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -1006,22 +1239,35 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function LogIcon(_ref) {
+    var entry = _ref.entry;
+
+    var icon = { web: "html5", debug: "bug" }[entry.level] || "info";
+    return _react2.default.createElement("i", { className: "fa fa-fw fa-" + icon });
+}
+
+function LogEntry(_ref2) {
+    var entry = _ref2.entry;
+
+    return _react2.default.createElement(
+        "div",
+        null,
+        _react2.default.createElement(LogIcon, { entry: entry }),
+        entry.message
+    );
+}
+
 var EventLogContents = function (_React$Component) {
     _inherits(EventLogContents, _React$Component);
 
-    function EventLogContents(props, context) {
+    function EventLogContents(props) {
         _classCallCheck(this, EventLogContents);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLogContents).call(this, props, context));
-
-        _this.view = new _view.StoreView(_this.context.eventStore, function (entry) {
-            return _this.props.filter[entry.level];
-        });
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLogContents).call(this, props));
 
         _this.heights = {};
-        _this.state = { entries: _this.view.list, vScroll: (0, _VirtualScroll.calcVScroll)() };
+        _this.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
 
-        _this.onChange = _this.onChange.bind(_this);
         _this.onViewportUpdate = _this.onViewportUpdate.bind(_this);
         return _this;
     }
@@ -1030,31 +1276,17 @@ var EventLogContents = function (_React$Component) {
         key: "componentDidMount",
         value: function componentDidMount() {
             window.addEventListener("resize", this.onViewportUpdate);
-            this.view.addListener("add", this.onChange);
-            this.view.addListener("recalculate", this.onChange);
             this.onViewportUpdate();
         }
     }, {
         key: "componentWillUnmount",
         value: function componentWillUnmount() {
             window.removeEventListener("resize", this.onViewportUpdate);
-            this.view.removeListener("add", this.onChange);
-            this.view.removeListener("recalculate", this.onChange);
-            this.view.close();
         }
     }, {
         key: "componentDidUpdate",
         value: function componentDidUpdate() {
             this.onViewportUpdate();
-        }
-    }, {
-        key: "componentWillReceiveProps",
-        value: function componentWillReceiveProps(nextProps) {
-            if (nextProps.filter !== this.props.filter) {
-                this.view.recalculate(function (entry) {
-                    return nextProps.filter[entry.level];
-                });
-            }
         }
     }, {
         key: "onViewportUpdate",
@@ -1064,11 +1296,11 @@ var EventLogContents = function (_React$Component) {
             var viewport = _reactDom2.default.findDOMNode(this);
 
             var vScroll = (0, _VirtualScroll.calcVScroll)({
-                itemCount: this.state.entries.length,
+                itemCount: this.props.events.length,
                 rowHeight: this.props.rowHeight,
                 viewportTop: viewport.scrollTop,
                 viewportHeight: viewport.offsetHeight,
-                itemHeights: this.state.entries.map(function (entry) {
+                itemHeights: this.props.events.map(function (entry) {
                     return _this2.heights[entry.id];
                 })
             });
@@ -1076,11 +1308,6 @@ var EventLogContents = function (_React$Component) {
             if (!(0, _shallowequal2.default)(this.state.vScroll, vScroll)) {
                 this.setState({ vScroll: vScroll });
             }
-        }
-    }, {
-        key: "onChange",
-        value: function onChange() {
-            this.setState({ entries: this.view.list });
         }
     }, {
         key: "setHeight",
@@ -1094,30 +1321,20 @@ var EventLogContents = function (_React$Component) {
             }
         }
     }, {
-        key: "getIcon",
-        value: function getIcon(level) {
-            return { web: "html5", debug: "bug" }[level] || "info";
-        }
-    }, {
         key: "render",
         value: function render() {
             var _this3 = this;
 
             var vScroll = this.state.vScroll;
-            var entries = this.state.entries.slice(vScroll.start, vScroll.end);
+            var events = this.props.events.slice(vScroll.start, vScroll.end).map(function (entry) {
+                return _react2.default.createElement(LogEntry, { entry: entry, key: entry.id, ref: _this3.setHeight.bind(_this3, entry.id) });
+            });
 
             return _react2.default.createElement(
                 "pre",
                 { onScroll: this.onViewportUpdate },
                 _react2.default.createElement("div", { style: { height: vScroll.paddingTop } }),
-                entries.map(function (entry, index) {
-                    return _react2.default.createElement(
-                        "div",
-                        { key: entry.id, ref: _this3.setHeight.bind(_this3, entry.id) },
-                        _react2.default.createElement("i", { className: "fa fa-fw fa-" + _this3.getIcon(entry.level) }),
-                        entry.message
-                    );
-                }),
+                events,
                 _react2.default.createElement("div", { style: { height: vScroll.paddingBottom } })
             );
         }
@@ -1126,9 +1343,6 @@ var EventLogContents = function (_React$Component) {
     return EventLogContents;
 }(_react2.default.Component);
 
-EventLogContents.contextTypes = {
-    eventStore: _react2.default.PropTypes.object.isRequired
-};
 EventLogContents.defaultProps = {
     rowHeight: 18
 };
@@ -1138,7 +1352,7 @@ EventLogContents = (0, _AutoScroll2.default)(EventLogContents);
 
 var EventLogContentsContainer = (0, _reactRedux.connect)(function (state) {
     return {
-        filter: state.eventLog.filter
+        events: state.eventLog.filteredEvents
     };
 })(EventLogContents);
 
@@ -1166,8 +1380,8 @@ var ToggleFilter = (0, _reactRedux.connect)(function (state, ownProps) {
     };
 })(_common.ToggleButton);
 
-var EventLog = function EventLog(_ref) {
-    var close = _ref.close;
+var EventLog = function EventLog(_ref3) {
+    var close = _ref3.close;
     return _react2.default.createElement(
         "div",
         { className: "eventlog" },
@@ -1202,7 +1416,7 @@ var EventLogContainer = (0, _reactRedux.connect)(undefined, function (dispatch) 
 
 exports.default = EventLogContainer;
 
-},{"../ducks/eventLog":23,"../store/view.js":30,"./common":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+},{"../ducks/eventLog":24,"./common":5,"./helpers/AutoScroll":17,"./helpers/VirtualScroll":18,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1471,7 +1685,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":28,"../utils.js":31,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":29,"../utils.js":32,"react":"react"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1763,7 +1977,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":31,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":32,"./flowtable-columns.js":8,"./helpers/AutoScroll":17,"./helpers/VirtualScroll":18,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2117,7 +2331,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":28,"../../utils.js":31,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":29,"../../utils.js":32,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2385,7 +2599,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":31,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":32,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2514,7 +2728,7 @@ var FlowView = _react2.default.createClass({
 
 exports.default = FlowView;
 
-},{"../prompt.js":19,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
+},{"../prompt.js":20,"./details.js":11,"./messages.js":13,"./nav.js":14,"react":"react"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2879,7 +3093,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":28,"../../utils.js":31,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":3,"../../flow/utils.js":29,"../../utils.js":32,"../editor.js":6,"./contentview.js":10,"lodash":"lodash","react":"react","react-dom":"react-dom"}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2960,7 +3174,7 @@ var Nav = _react2.default.createClass({
 
 exports.default = Nav;
 
-},{"../../actions.js":2,"react":"react"}],14:[function(require,module,exports){
+},{"../../actions.js":3,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3062,7 +3276,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":31,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":32,"./common.js":5,"react":"react"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3605,7 +3819,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":27,"../utils.js":31,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
+},{"../actions.js":3,"../filt/filt.js":28,"../utils.js":32,"./common.js":5,"./eventlog":7,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3671,7 +3885,7 @@ exports.default = function (Component) {
     }(Component), _class.displayName = Component.name, _temp), Component);
 };
 
-},{"react":"react","react-dom":"react-dom"}],17:[function(require,module,exports){
+},{"react":"react","react-dom":"react-dom"}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3750,7 +3964,7 @@ function calcVScroll(opts) {
     return { start: start, end: end, paddingTop: paddingTop, paddingBottom: paddingBottom };
 }
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4021,7 +4235,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":27,"../store/view.js":30,"../utils.js":31,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":3,"../filt/filt.js":28,"../store/view.js":31,"../utils.js":32,"./common.js":5,"./flowtable.js":9,"./flowview/index.js":12,"react":"react"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4157,7 +4371,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4353,7 +4567,7 @@ var App = exports.App = _react2.default.createElement(
     )
 );
 
-},{"../store/store.js":29,"../utils.js":31,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":30,"../utils.js":32,"./common.js":5,"./eventlog.js":7,"./footer.js":15,"./header.js":16,"./mainview.js":19,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4380,11 +4594,12 @@ function Connection(url, dispatch) {
     ws.onopen = function () {
         dispatch(websocketActions.connected());
         _actions.ConnectionActions.open();
+        //TODO: fetch stuff!
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
         _dispatcher.AppDispatcher.dispatchServerAction(message);
-        dispatch(websocketActions.receiveMessage(message));
+        dispatch(message);
     };
     ws.onerror = function () {
         _actions.ConnectionActions.error();
@@ -4398,7 +4613,7 @@ function Connection(url, dispatch) {
     return ws;
 }
 
-},{"./actions.js":2,"./dispatcher.js":22,"./ducks/websocket":26}],22:[function(require,module,exports){
+},{"./actions.js":3,"./dispatcher.js":23,"./ducks/websocket":27}],23:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4427,7 +4642,7 @@ AppDispatcher.dispatchServerAction = function (action) {
     this.dispatch(action);
 };
 
-},{"flux":"flux"}],23:[function(require,module,exports){
+},{"flux":"flux"}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4439,11 +4654,19 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 exports.default = reducer;
 exports.toggleEventLogFilter = toggleEventLogFilter;
 exports.toggleEventLogVisibility = toggleEventLogVisibility;
+exports.addLogEntry = addLogEntry;
+
+var _list = require('./list');
+
+var _list2 = _interopRequireDefault(_list);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER';
 var TOGGLE_VISIBILITY = 'TOGGLE_EVENTLOG_VISIBILITY';
+var UPDATE_LIST = "UPDATE_EVENTLOG";
 
 var defaultState = {
     visible: false,
@@ -4451,20 +4674,35 @@ var defaultState = {
         "debug": false,
         "info": true,
         "web": true
-    }
+    },
+    events: (0, _list2.default)(),
+    filteredEvents: []
 };
+
 function reducer() {
     var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
     var action = arguments[1];
 
     switch (action.type) {
         case TOGGLE_FILTER:
+            var filter = _extends({}, state.filter, _defineProperty({}, action.filter, !state.filter[action.filter]));
             return _extends({}, state, {
-                filter: _extends({}, state.filter, _defineProperty({}, action.filter, !state.filter[action.filter]))
+                filter: filter,
+                filteredEvents: state.events.list.filter(function (x) {
+                    return filter[x.level];
+                })
             });
         case TOGGLE_VISIBILITY:
             return _extends({}, state, {
                 visible: !state.visible
+            });
+        case UPDATE_LIST:
+            var events = (0, _list2.default)(state.events, action);
+            return _extends({}, state, {
+                events: events,
+                filteredEvents: events.list.filter(function (x) {
+                    return state.filter[x.level];
+                })
             });
         default:
             return state;
@@ -4477,34 +4715,18 @@ function toggleEventLogFilter(filter) {
 function toggleEventLogVisibility() {
     return { type: TOGGLE_VISIBILITY };
 }
+var id = 0;
+function addLogEntry(message) {
+    var level = arguments.length <= 1 || arguments[1] === undefined ? "web" : arguments[1];
 
-},{}],24:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.default = reducer;
-var defaultState = {
-    list: [],
-    isFetching: false,
-    updateBeforeFetch: [],
-    byId: {},
-    indexOf: {},
-    views: {}
-};
-
-function reducer() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
-    var action = arguments[1];
-
-    switch (action.type) {
-        default:
-            return state;
-    }
+    return {
+        type: UPDATE_LIST,
+        cmd: _list.ADD,
+        data: { message: message, level: level, id: 'log-' + id++ }
+    };
 }
 
-},{}],25:[function(require,module,exports){
+},{"./list":26}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4521,21 +4743,56 @@ var _websocket = require('./websocket.js');
 
 var _websocket2 = _interopRequireDefault(_websocket);
 
-var _flows = require('./flows.js');
-
-var _flows2 = _interopRequireDefault(_flows);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var rootReducer = (0, _redux.combineReducers)({
     eventLog: _eventLog2.default,
-    flows: _flows2.default,
     websocket: _websocket2.default
 });
 
 exports.default = rootReducer;
 
-},{"./eventLog.js":23,"./flows.js":24,"./websocket.js":26,"redux":"redux"}],26:[function(require,module,exports){
+},{"./eventLog.js":24,"./websocket.js":27,"redux":"redux"}],26:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = getList;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var ADD = exports.ADD = 'add';
+
+var defaultState = {
+    list: [],
+    //isFetching: false,
+    //updateBeforeFetch: [],
+    indexOf: {}
+};
+
+//views: {}
+function getList() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    switch (action.cmd) {
+        case ADD:
+            return {
+                list: [].concat(_toConsumableArray(state.list), [action.data]),
+                indexOf: _extends({}, state.indexOf, _defineProperty({}, action.data.id, state.list.length))
+            };
+        default:
+            return state;
+    }
+}
+
+},{}],27:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4544,10 +4801,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = reducer;
 exports.connected = connected;
 exports.disconnected = disconnected;
-exports.receiveMessage = receiveMessage;
 var CONNECTED = 'WEBSOCKET_CONNECTED';
 var DISCONNECTED = 'WEBSOCKET_DISCONNECTED';
-var RECEIVE_MESSAGE = 'RECEIVE_WEBSOCKET_MESSAGE';
 
 var defaultState = {
     connected: true
@@ -4577,11 +4832,8 @@ function connected() {
 function disconnected() {
     return { type: DISCONNECTED };
 }
-function receiveMessage(message) {
-    return { type: RECEIVE_MESSAGE, message: message };
-}
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -6485,7 +6737,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":28}],28:[function(require,module,exports){
+},{"../flow/utils.js":29}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6619,7 +6871,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],29:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6806,7 +7058,7 @@ _lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
     }
 });
 
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
+},{"../actions.js":3,"../dispatcher.js":23,"events":1,"jquery":"jquery","lodash":"lodash"}],31:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6936,7 +7188,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":31,"events":1,"lodash":"lodash"}],31:[function(require,module,exports){
+},{"../utils.js":32,"events":1,"lodash":"lodash"}],32:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7051,7 +7303,7 @@ _jquery2.default.ajaxPrefilter(function (options) {
     alert(message);
 });
 
-},{"./actions.js":2,"jquery":"jquery","lodash":"lodash","react":"react"}]},{},[3])
+},{"./actions.js":3,"jquery":"jquery","lodash":"lodash","react":"react"}]},{},[4])
 
 
 //# sourceMappingURL=app.js.map
