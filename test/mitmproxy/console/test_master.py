@@ -4,7 +4,7 @@ import netlib.tutils
 from mitmproxy import console
 from mitmproxy.console import common
 
-from .. import tutils
+from .. import tutils, mastertest
 
 
 class TestConsoleState:
@@ -108,3 +108,15 @@ def test_format_keyvals():
 
 def test_options():
     assert console.master.Options(kill=True)
+
+
+class TestMaster(mastertest.MasterTest):
+    def mkmaster(self, filt, **options):
+        o = console.master.Options(filtstr=filt, **options)
+        return console.master.ConsoleMaster(None, o)
+
+    def test_basic(self):
+        m = self.mkmaster(None)
+        for i in (1, 2, 3):
+            self.dummy_cycle(m, 1, "")
+            assert len(m.state.flows) == i

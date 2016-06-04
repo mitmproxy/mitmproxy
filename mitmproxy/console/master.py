@@ -206,7 +206,8 @@ class Options(object):
         "nopop",
         "palette",
         "palette_transparent",
-        "no_mouse"
+        "no_mouse",
+        "outfile",
     ]
 
     def __init__(self, **kwargs):
@@ -225,11 +226,13 @@ class ConsoleMaster(flow.FlowMaster):
         self.stream_path = None
         self.options = options
 
-        for i in options.replacements:
-            self.replacehooks.add(*i)
+        if options.replacements:
+            for i in options.replacements:
+                self.replacehooks.add(*i)
 
-        for i in options.setheaders:
-            self.setheaders.add(*i)
+        if options.setheaders:
+            for i in options.setheaders:
+                self.setheaders.add(*i)
 
         r = self.set_intercept(options.intercept)
         if r:
