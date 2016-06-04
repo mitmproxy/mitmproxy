@@ -1,13 +1,11 @@
 import os
 from six.moves import cStringIO as StringIO
 from mitmproxy.exceptions import ContentViewException
-from mitmproxy.models import HTTPResponse
 
 import netlib.tutils
 
-from mitmproxy import dump, flow
-from mitmproxy.proxy import Log
-from . import tutils
+from mitmproxy import dump, flow, models
+from . import tutils, mastertest
 import mock
 
 
@@ -58,37 +56,28 @@ def test_contentview(get_content_view):
     assert "Content viewer failed" in m.outfile.getvalue()
 
 
-class TestDumpMaster:
+class TestDumpMaster(mastertest.MasterTest):
+    def dummy_cycle(self, master, n, content):
+        mastertest.MasterTest.dummy_cycle(self, master, n, content)
+        return master.outfile.getvalue()
 
-    def _cycle(self, m, content):
-        f = tutils.tflow(req=netlib.tutils.treq(content=content))
-        l = Log("connect")
-        l.reply = mock.MagicMock()
-        m.log(l)
-        m.clientconnect(f.client_conn)
-        m.serverconnect(f.server_conn)
-        m.request(f)
-        if not f.error:
-            f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=content))
-            f = m.response(f)
-        m.clientdisconnect(f.client_conn)
-        return f
-
-    def _dummy_cycle(self, n, filt, content, **options):
+    def mkmaster(self, filt, **options):
         cs = StringIO()
         o = dump.Options(filtstr=filt, **options)
-        m = dump.DumpMaster(None, o, outfile=cs)
-        for i in range(n):
-            self._cycle(m, content)
-        m.shutdown()
-        return cs.getvalue()
+        return dump.DumpMaster(None, o, outfile=cs)
 
-    def _flowfile(self, path):
-        f = open(path, "wb")
-        fw = flow.FlowWriter(f)
-        t = tutils.tflow(resp=True)
-        fw.add(t)
-        f.close()
+    def test_basic(self):
+        for i in (1, 2, 3):
+            assert "GET" in self.dummy_cycle(self.mkmaster("~s", flow_detail=i), 1, "")
+            assert "GET" in self.dummy_cycle(
+                self.mkmaster("~s", flow_detail=i),
+                1,
+                "\x00\x00\x00"
+            )
+            assert "GET" in self.dummy_cycle(
+                self.mkmaster("~s", flow_detail=i),
+                1, "ascii"
+            )
 
     def test_error(self):
         cs = StringIO()
@@ -106,7 +95,7 @@ class TestDumpMaster:
         f = tutils.tflow()
         f.request.content = None
         m.request(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = models.HTTPResponse.wrap(netlib.tutils.tresp())
         f.response.content = None
         m.response(f)
         assert "content missing" in cs.getvalue()
@@ -119,17 +108,17 @@ class TestDumpMaster:
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
-            self._flowfile(p)
+            self.flowfile(p)
 
             o = dump.Options(server_replay=[p], kill=True)
             m = dump.DumpMaster(None, o, outfile=cs)
 
-            self._cycle(m, "content")
-            self._cycle(m, "content")
+            self.cycle(m, "content")
+            self.cycle(m, "content")
 
             o = dump.Options(server_replay=[p], kill=False)
             m = dump.DumpMaster(None, o, outfile=cs)
-            self._cycle(m, "nonexistent")
+            self.cycle(m, "nonexistent")
 
             o = dump.Options(client_replay=[p], kill=False)
             m = dump.DumpMaster(None, o, outfile=cs)
@@ -137,22 +126,19 @@ class TestDumpMaster:
     def test_read(self):
         with tutils.tmpdir() as t:
             p = os.path.join(t, "read")
-            self._flowfile(p)
-            assert "GET" in self._dummy_cycle(
-                0,
-                None,
-                "",
-                flow_detail=1,
-                rfile=p
+            self.flowfile(p)
+            assert "GET" in self.dummy_cycle(
+                self.mkmaster(None, flow_detail=1, rfile=p),
+                0, "",
             )
 
             tutils.raises(
-                dump.DumpError, self._dummy_cycle,
-                0, None, "", verbosity=1, rfile="/nonexistent"
+                dump.DumpError,
+                self.mkmaster, None, verbosity=1, rfile="/nonexistent"
             )
             tutils.raises(
-                dump.DumpError, self._dummy_cycle,
-                0, None, "", verbosity=1, rfile="test_dump.py"
+                dump.DumpError,
+                self.mkmaster, None, verbosity=1, rfile="test_dump.py"
             )
 
     def test_options(self):
@@ -160,7 +146,9 @@ class TestDumpMaster:
         assert o.verbosity == 2
 
     def test_filter(self):
-        assert "GET" not in self._dummy_cycle(1, "~u foo", "", verbosity=1)
+        assert "GET" not in self.dummy_cycle(
+            self.mkmaster("~u foo", verbosity=1), 1, ""
+        )
 
     def test_app(self):
         o = dump.Options(app=True)
@@ -172,53 +160,50 @@ class TestDumpMaster:
         cs = StringIO()
         o = dump.Options(replacements=[(".*", "content", "foo")])
         m = dump.DumpMaster(None, o, outfile=cs)
-        f = self._cycle(m, "content")
+        f = self.cycle(m, "content")
         assert f.request.content == "foo"
 
     def test_setheader(self):
         cs = StringIO()
         o = dump.Options(setheaders=[(".*", "one", "two")])
         m = dump.DumpMaster(None, o, outfile=cs)
-        f = self._cycle(m, "content")
+        f = self.cycle(m, "content")
         assert f.request.headers["one"] == "two"
-
-    def test_basic(self):
-        for i in (1, 2, 3):
-            assert "GET" in self._dummy_cycle(1, "~s", "", flow_detail=i)
-            assert "GET" in self._dummy_cycle(
-                1,
-                "~s",
-                "\x00\x00\x00",
-                flow_detail=i)
-            assert "GET" in self._dummy_cycle(1, "~s", "ascii", flow_detail=i)
 
     def test_write(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a")
-            self._dummy_cycle(1, None, "", outfile=(p, "wb"), verbosity=0)
+            self.dummy_cycle(
+                self.mkmaster(None, outfile=(p, "wb"), verbosity=0), 1, ""
+            )
             assert len(list(flow.FlowReader(open(p, "rb")).stream())) == 1
 
     def test_write_append(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a.append")
-            self._dummy_cycle(1, None, "", outfile=(p, "wb"), verbosity=0)
-            self._dummy_cycle(1, None, "", outfile=(p, "ab"), verbosity=0)
+            self.dummy_cycle(
+                self.mkmaster(None, outfile=(p, "wb"), verbosity=0),
+                1, ""
+            )
+            self.dummy_cycle(
+                self.mkmaster(None, outfile=(p, "ab"), verbosity=0),
+                1, ""
+            )
             assert len(list(flow.FlowReader(open(p, "rb")).stream())) == 2
 
     def test_write_err(self):
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle,
-            1,
-            None,
-            "",
-            outfile = ("nonexistentdir/foo", "wb")
+            self.mkmaster, None, outfile = ("nonexistentdir/foo", "wb")
         )
 
     def test_script(self):
-        ret = self._dummy_cycle(
-            1, None, "",
-            scripts=[tutils.test_data.path("data/scripts/all.py")], verbosity=1
+        ret = self.dummy_cycle(
+            self.mkmaster(
+                None,
+                scripts=[tutils.test_data.path("data/scripts/all.py")], verbosity=1
+            ),
+            1, "",
         )
         assert "XCLIENTCONNECT" in ret
         assert "XSERVERCONNECT" in ret
@@ -227,15 +212,23 @@ class TestDumpMaster:
         assert "XCLIENTDISCONNECT" in ret
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", scripts=["nonexistent"]
+            self.mkmaster,
+            None, scripts=["nonexistent"]
         )
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", scripts=["starterr.py"]
+            self.mkmaster,
+            None, scripts=["starterr.py"]
         )
 
     def test_stickycookie(self):
-        self._dummy_cycle(1, None, "", stickycookie = ".*")
+        self.dummy_cycle(
+            self.mkmaster(None, stickycookie = ".*"),
+            1, ""
+        )
 
     def test_stickyauth(self):
-        self._dummy_cycle(1, None, "", stickyauth = ".*")
+        self.dummy_cycle(
+            self.mkmaster(None, stickyauth = ".*"),
+            1, ""
+        )

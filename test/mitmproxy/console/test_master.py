@@ -4,7 +4,7 @@ import netlib.tutils
 from mitmproxy import console
 from mitmproxy.console import common
 
-from .. import tutils
+from .. import tutils, mastertest
 
 
 class TestConsoleState:
@@ -15,7 +15,7 @@ class TestConsoleState:
 
                 connect -> request -> response
         """
-        c = console.ConsoleState()
+        c = console.master.ConsoleState()
         f = self._add_request(c)
         assert f in c.flows
         assert c.get_focus() == (f, 0)
@@ -26,7 +26,7 @@ class TestConsoleState:
 
                 connect -> request -> response
         """
-        c = console.ConsoleState()
+        c = console.master.ConsoleState()
         f = self._add_request(c)
 
         assert c.get_focus() == (f, 0)
@@ -62,14 +62,14 @@ class TestConsoleState:
         state.update_flow(f)
 
     def test_add_response(self):
-        c = console.ConsoleState()
+        c = console.master.ConsoleState()
         f = self._add_request(c)
         f.response = netlib.tutils.tresp()
         c.focus = None
         c.update_flow(f)
 
     def test_focus_view(self):
-        c = console.ConsoleState()
+        c = console.master.ConsoleState()
         self._add_request(c)
         self._add_response(c)
         self._add_request(c)
@@ -81,7 +81,7 @@ class TestConsoleState:
         assert c.focus == 0
 
     def test_settings(self):
-        c = console.ConsoleState()
+        c = console.master.ConsoleState()
         f = self._add_request(c)
         c.add_flow_setting(f, "foo", "bar")
         assert c.get_flow_setting(f, "foo") == "bar"
@@ -107,4 +107,16 @@ def test_format_keyvals():
 
 
 def test_options():
-    assert console.Options(kill=True)
+    assert console.master.Options(kill=True)
+
+
+class TestMaster(mastertest.MasterTest):
+    def mkmaster(self, filt, **options):
+        o = console.master.Options(filtstr=filt, **options)
+        return console.master.ConsoleMaster(None, o)
+
+    def test_basic(self):
+        m = self.mkmaster(None)
+        for i in (1, 2, 3):
+            self.dummy_cycle(m, 1, "")
+            assert len(m.state.flows) == i
