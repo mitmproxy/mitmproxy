@@ -56,7 +56,7 @@ def mitmproxy(args=None):  # pragma: no cover
         options.verbose = 0
 
     proxy_config = config.process_proxy_options(parser, options)
-    console_options = console.Options(**cmdline.get_common_options(options))
+    console_options = console.master.Options(**cmdline.get_common_options(options))
     console_options.palette = options.palette
     console_options.palette_transparent = options.palette_transparent
     console_options.eventlog = options.eventlog
@@ -67,7 +67,7 @@ def mitmproxy(args=None):  # pragma: no cover
 
     server = get_server(console_options.no_server, proxy_config)
 
-    m = console.ConsoleMaster(server, console_options)
+    m = console.master.ConsoleMaster(server, console_options)
     try:
         m.run()
     except (KeyboardInterrupt, _thread.error):
