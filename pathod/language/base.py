@@ -226,7 +226,7 @@ class TokValueFile(Token):
         return generators.FileGenerator(s)
 
     def spec(self):
-        return "<'%s'" % strutils.bytes_to_escaped_str(self.path)
+        return "<'%s'" % self.path
 
 
 TokValue = pp.MatchFirst(

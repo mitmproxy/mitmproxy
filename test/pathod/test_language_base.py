@@ -38,7 +38,7 @@ class TestTokValueNakedLiteral:
 
 class TestTokValueLiteral:
 
-    def test_espr(self):
+    def test_expr(self):
         v = base.TokValueLiteral("foo")
         assert v.expr()
         assert v.val == b"foo"
@@ -132,7 +132,7 @@ class TestTokValueFile:
         with tutils.tmpdir() as t:
             p = os.path.join(t, "path")
             with open(p, "wb") as f:
-                f.write("x" * 10000)
+                f.write(b"x" * 10000)
 
             assert v.get_generator(language.Settings(staticdir=t))
 
@@ -207,13 +207,13 @@ class TestMisc:
             p = os.path.join(t, "path")
             s = base.Settings(staticdir=t)
             with open(p, "wb") as f:
-                f.write("a" * 20)
+                f.write(b"a" * 20)
             v = e.parseString("m<path")[0]
             tutils.raises("invalid value length", v.values, s)
 
             p = os.path.join(t, "path")
             with open(p, "wb") as f:
-                f.write("a" * 4)
+                f.write(b"a" * 4)
             v = e.parseString("m<path")[0]
             assert v.values(s)
 
