@@ -437,7 +437,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":22,"./utils.js":32,"jquery":"jquery"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"./utils.js":33,"jquery":"jquery"}],3:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ), document.getElementById("mitmproxy"));
 });
 
-},{"./components/proxyapp.js":20,"./connection":21,"./ducks/eventLog":23,"./ducks/index":24,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
+},{"./components/proxyapp.js":20,"./connection":21,"./ducks/eventLog":23,"./ducks/index":25,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -709,7 +709,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":33,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -967,7 +967,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":32,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":33,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1462,7 +1462,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":29,"../utils.js":32,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":30,"../utils.js":33,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1754,7 +1754,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":33,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2108,7 +2108,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":29,"../../utils.js":32,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":30,"../../utils.js":33,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2376,7 +2376,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":32,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":33,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2870,7 +2870,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":29,"../../utils.js":32,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":30,"../../utils.js":33,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3053,7 +3053,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":32,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":33,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3628,7 +3628,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":28,"../utils.js":32,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":29,"../utils.js":33,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4044,7 +4044,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":28,"../store/view.js":31,"../utils.js":32,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":29,"../store/view.js":32,"../utils.js":33,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4180,7 +4180,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":33,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4372,7 +4372,7 @@ var App = exports.App = _react2.default.createElement(
     )
 );
 
-},{"../store/store.js":30,"../utils.js":32,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":31,"../utils.js":33,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4392,6 +4392,10 @@ var _eventLog = require("./ducks/eventLog");
 
 var eventLogActions = _interopRequireWildcard(_eventLog);
 
+var _flows = require("./ducks/flows");
+
+var flowActions = _interopRequireWildcard(_flows);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function Connection(url, dispatch) {
@@ -4402,9 +4406,9 @@ function Connection(url, dispatch) {
     var ws = new WebSocket(url);
     ws.onopen = function () {
         dispatch(webSocketActions.connected());
+        dispatch(flowActions.fetchFlows());
         dispatch(eventLogActions.fetchLogEntries());
         _actions.ConnectionActions.open();
-        //TODO: fetch stuff!
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
@@ -4412,6 +4416,8 @@ function Connection(url, dispatch) {
         switch (message.type) {
             case eventLogActions.UPDATE_LOG:
                 return dispatch(eventLogActions.updateLogEntries(message));
+            case flowActions.UPDATE_FLOWS:
+                return dispatch(flowActions.updateFlows(message));
             default:
                 console.warn("unknown message", message);
         }
@@ -4428,7 +4434,7 @@ function Connection(url, dispatch) {
     return ws;
 }
 
-},{"./actions.js":2,"./dispatcher.js":22,"./ducks/eventLog":23,"./ducks/websocket":27}],22:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22,"./ducks/eventLog":23,"./ducks/flows":24,"./ducks/websocket":28}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4554,7 +4560,56 @@ function addLogEntry(message) {
 exports.updateLogEntries = updateList;
 exports.fetchLogEntries = fetchList;
 
-},{"./utils/list":25,"./utils/view":26}],24:[function(require,module,exports){
+},{"./utils/list":26,"./utils/view":27}],24:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.fetchFlows = exports.updateFlows = exports.UPDATE_FLOWS = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = reducer;
+
+var _list = require("./utils/list");
+
+var _list2 = _interopRequireDefault(_list);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var UPDATE_FLOWS = exports.UPDATE_FLOWS = "UPDATE_FLOWS";
+
+var _makeList = (0, _list2.default)(UPDATE_FLOWS, "/flows");
+
+var reduceList = _makeList.reduceList;
+var updateList = _makeList.updateList;
+var fetchList = _makeList.fetchList;
+
+
+var defaultState = {
+    all: reduceList()
+};
+
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case UPDATE_FLOWS:
+            var all = reduceList(state.all, action);
+            return _extends({}, state, {
+                all: all
+            });
+        default:
+            return state;
+    }
+}
+
+exports.updateFlows = updateList;
+exports.fetchFlows = fetchList;
+
+},{"./utils/list":26}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4563,24 +4618,29 @@ Object.defineProperty(exports, "__esModule", {
 
 var _redux = require('redux');
 
-var _eventLog = require('./eventLog.js');
+var _eventLog = require('./eventLog');
 
 var _eventLog2 = _interopRequireDefault(_eventLog);
 
-var _websocket = require('./websocket.js');
+var _websocket = require('./websocket');
 
 var _websocket2 = _interopRequireDefault(_websocket);
+
+var _flows = require('./flows');
+
+var _flows2 = _interopRequireDefault(_flows);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var rootReducer = (0, _redux.combineReducers)({
     eventLog: _eventLog2.default,
-    websocket: _websocket2.default
+    websocket: _websocket2.default,
+    flows: _flows2.default
 });
 
 exports.default = rootReducer;
 
-},{"./eventLog.js":23,"./websocket.js":27,"redux":"redux"}],25:[function(require,module,exports){
+},{"./eventLog":23,"./flows":24,"./websocket":28,"redux":"redux"}],26:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4738,7 +4798,7 @@ function makeList(actionType, fetchURL) {
     return { reduceList: reduceList, addToList: addToList, updateList: updateList, fetchList: fetchList };
 }
 
-},{"../../utils":32}],26:[function(require,module,exports){
+},{"../../utils":33}],27:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4815,7 +4875,7 @@ function updateViewFilter(list) {
     return filtered;
 }
 
-},{"./list":25}],27:[function(require,module,exports){
+},{"./list":26}],28:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4856,7 +4916,7 @@ function disconnected() {
     return { type: DISCONNECTED };
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -6760,7 +6820,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":29}],29:[function(require,module,exports){
+},{"../flow/utils.js":30}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6894,7 +6954,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],31:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7063,7 +7123,7 @@ function SettingsStore() {
     return new LiveDictStore(_actions.ActionTypes.SETTINGS_STORE);
 }
 
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],31:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],32:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7193,7 +7253,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":32,"events":1,"lodash":"lodash"}],32:[function(require,module,exports){
+},{"../utils.js":33,"events":1,"lodash":"lodash"}],33:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

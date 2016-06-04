@@ -25,7 +25,7 @@ class WebFlowView(flow.FlowView):
     def _add(self, f):
         super(WebFlowView, self)._add(f)
         app.ClientConnection.broadcast(
-            type="flows",
+            type="UPDATE_FLOWS",
             cmd="add",
             data=app._strip_content(f.get_state())
         )
@@ -33,7 +33,7 @@ class WebFlowView(flow.FlowView):
     def _update(self, f):
         super(WebFlowView, self)._update(f)
         app.ClientConnection.broadcast(
-            type="flows",
+            type="UPDATE_FLOWS",
             cmd="update",
             data=app._strip_content(f.get_state())
         )
@@ -41,7 +41,7 @@ class WebFlowView(flow.FlowView):
     def _remove(self, f):
         super(WebFlowView, self)._remove(f)
         app.ClientConnection.broadcast(
-            type="flows",
+            type="UPDATE_FLOWS",
             cmd="remove",
             data=f.id
         )
@@ -49,7 +49,7 @@ class WebFlowView(flow.FlowView):
     def _recalculate(self, flows):
         super(WebFlowView, self)._recalculate(flows)
         app.ClientConnection.broadcast(
-            type="flows",
+            type="UPDATE_FLOWS",
             cmd="reset"
         )
 

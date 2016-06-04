@@ -1,4 +1,4 @@
-import makeList, {ADD} from "./utils/list"
+import makeList from "./utils/list"
 import {updateViewFilter, updateViewList} from "./utils/view"
 
 const TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER'
@@ -10,7 +10,7 @@ const {
     addToList,
     updateList,
     fetchList,
-} = makeList(UPDATE_LOG, "/events");
+} = makeList(UPDATE_LOG, "/events")
 
 
 const defaultState = {
@@ -67,7 +67,7 @@ export function toggleEventLogFilter(filter) {
 export function toggleEventLogVisibility() {
     return {type: TOGGLE_VISIBILITY}
 }
-let id = 0;
+let id = 0
 export function addLogEntry(message, level = "web") {
     return addToList({
         message,
