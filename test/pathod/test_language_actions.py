@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+from six import BytesIO
 
 from pathod.language import actions
 from pathod import language
@@ -61,7 +61,7 @@ class TestInject:
         assert v.offset == "r"
 
     def test_serve(self):
-        s = StringIO()
+        s = BytesIO()
         r = next(language.parse_pathod("400:i0,'foo'"))
         assert language.serve(r, s, {})
 
