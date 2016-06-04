@@ -122,6 +122,7 @@ class ProxyTestBase(object):
             cadir = cls.cadir,
             authenticator = cls.authenticator,
             add_upstream_certs_to_client_chain = cls.add_upstream_certs_to_client_chain,
+            ssl_insecure = True,
         )
 
 
