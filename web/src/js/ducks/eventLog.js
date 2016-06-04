@@ -1,8 +1,17 @@
-import getList, {ADD} from "./list"
+import makeList, {ADD} from "./utils/list"
+
 const TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER'
 const TOGGLE_VISIBILITY = 'TOGGLE_EVENTLOG_VISIBILITY'
-const UPDATE_LIST = "UPDATE_EVENTLOG"
+export const UPDATE_LOG = "UPDATE_EVENTLOG"
 
+const {
+    reduceList,
+    addToList,
+    updateList,
+    fetchList,
+} = makeList(UPDATE_LOG, "/events");
+
+export {updateList as updateLogEntries, fetchList as fetchLogEntries}
 
 const defaultState = {
     visible: false,
@@ -11,7 +20,7 @@ const defaultState = {
         "info": true,
         "web": true
     },
-    events: getList(),
+    events: reduceList(),
     filteredEvents: [],
 }
 
@@ -32,8 +41,8 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 visible: !state.visible
             }
-        case UPDATE_LIST:
-            const events = getList(state.events, action)
+        case UPDATE_LOG:
+            const events = reduceList(state.events, action)
             return {
                 ...state,
                 events,
@@ -53,9 +62,9 @@ export function toggleEventLogVisibility() {
 }
 let id = 0;
 export function addLogEntry(message, level = "web") {
-    return {
-        type: UPDATE_LIST,
-        cmd: ADD,
-        data: {message, level, id: `log-${id++}`}
-    }
+    return addToList({
+        message,
+        level,
+        id: `log-${id++}`
+    })
 }

@@ -64,7 +64,6 @@ class EventLogContents extends React.Component {
     }
 
     setHeight(id, node) {
-        console.log("setHeight", id, node);
         if (node && !this.heights[id]) {
             const height = node.offsetHeight;
             if (this.heights[id] !== height) {

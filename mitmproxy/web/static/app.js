@@ -469,6 +469,10 @@ var _reduxLogger = require('redux-logger');
 
 var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
 
+var _reduxThunk = require('redux-thunk');
+
+var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+
 var _connection = require('./connection');
 
 var _connection2 = _interopRequireDefault(_connection);
@@ -485,7 +489,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 // logger must be last
 var logger = (0, _reduxLogger2.default)();
-var store = (0, _redux.createStore)(_index2.default, (0, _redux.applyMiddleware)(logger));
+var store = (0, _redux.createStore)(_index2.default, (0, _redux.applyMiddleware)(_reduxThunk2.default, logger));
 
 window.onerror = function (msg) {
     store.dispatch((0, _eventLog.addLogEntry)(msg));
@@ -501,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ), document.getElementById("mitmproxy"));
 });
 
-},{"./components/proxyapp.js":20,"./connection":21,"./ducks/eventLog":23,"./ducks/index":24,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger"}],4:[function(require,module,exports){
+},{"./components/proxyapp.js":20,"./connection":21,"./ducks/eventLog":23,"./ducks/index":24,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1094,7 +1098,6 @@ var EventLogContents = function (_React$Component) {
     }, {
         key: "setHeight",
         value: function setHeight(id, node) {
-            console.log("setHeight", id, node);
             if (node && !this.heights[id]) {
                 var height = node.offsetHeight;
                 if (this.heights[id] !== height) {
@@ -4402,7 +4405,11 @@ var _dispatcher = require("./dispatcher.js");
 
 var _websocket = require("./ducks/websocket");
 
-var websocketActions = _interopRequireWildcard(_websocket);
+var webSocketActions = _interopRequireWildcard(_websocket);
+
+var _eventLog = require("./ducks/eventLog");
+
+var eventLogActions = _interopRequireWildcard(_eventLog);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -4413,14 +4420,20 @@ function Connection(url, dispatch) {
 
     var ws = new WebSocket(url);
     ws.onopen = function () {
-        dispatch(websocketActions.connected());
+        dispatch(webSocketActions.connected());
+        dispatch(eventLogActions.fetchLogEntries());
         _actions.ConnectionActions.open();
         //TODO: fetch stuff!
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
         _dispatcher.AppDispatcher.dispatchServerAction(message);
-        dispatch(message);
+        switch (message.type) {
+            case eventLogActions.UPDATE_LOG:
+                return dispatch(eventLogActions.updateLogEntries(message));
+            default:
+                console.warn("unknown message", message);
+        }
     };
     ws.onerror = function () {
         _actions.ConnectionActions.error();
@@ -4434,7 +4447,7 @@ function Connection(url, dispatch) {
     return ws;
 }
 
-},{"./actions.js":2,"./dispatcher.js":22,"./ducks/websocket":26}],22:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22,"./ducks/eventLog":23,"./ducks/websocket":26}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4469,6 +4482,7 @@ AppDispatcher.dispatchServerAction = function (action) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.fetchLogEntries = exports.updateLogEntries = exports.UPDATE_LOG = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -4477,7 +4491,7 @@ exports.toggleEventLogFilter = toggleEventLogFilter;
 exports.toggleEventLogVisibility = toggleEventLogVisibility;
 exports.addLogEntry = addLogEntry;
 
-var _list = require('./list');
+var _list = require('./utils/list');
 
 var _list2 = _interopRequireDefault(_list);
 
@@ -4487,7 +4501,17 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER';
 var TOGGLE_VISIBILITY = 'TOGGLE_EVENTLOG_VISIBILITY';
-var UPDATE_LIST = "UPDATE_EVENTLOG";
+var UPDATE_LOG = exports.UPDATE_LOG = "UPDATE_EVENTLOG";
+
+var _makeList = (0, _list2.default)(UPDATE_LOG, "/events");
+
+var reduceList = _makeList.reduceList;
+var addToList = _makeList.addToList;
+var updateList = _makeList.updateList;
+var fetchList = _makeList.fetchList;
+exports.updateLogEntries = updateList;
+exports.fetchLogEntries = fetchList;
+
 
 var defaultState = {
     visible: false,
@@ -4496,7 +4520,7 @@ var defaultState = {
         "info": true,
         "web": true
     },
-    events: (0, _list2.default)(),
+    events: reduceList(),
     filteredEvents: []
 };
 
@@ -4517,8 +4541,8 @@ function reducer() {
             return _extends({}, state, {
                 visible: !state.visible
             });
-        case UPDATE_LIST:
-            var events = (0, _list2.default)(state.events, action);
+        case UPDATE_LOG:
+            var events = reduceList(state.events, action);
             return _extends({}, state, {
                 events: events,
                 filteredEvents: events.list.filter(function (x) {
@@ -4540,14 +4564,14 @@ var id = 0;
 function addLogEntry(message) {
     var level = arguments.length <= 1 || arguments[1] === undefined ? "web" : arguments[1];
 
-    return {
-        type: UPDATE_LIST,
-        cmd: _list.ADD,
-        data: { message: message, level: level, id: 'log-' + id++ }
-    };
+    return addToList({
+        message: message,
+        level: level,
+        id: 'log-' + id++
+    });
 }
 
-},{"./list":25}],24:[function(require,module,exports){
+},{"./utils/list":25}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4574,7 +4598,7 @@ var rootReducer = (0, _redux.combineReducers)({
 exports.default = rootReducer;
 
 },{"./eventLog.js":23,"./websocket.js":26,"redux":"redux"}],25:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -4582,38 +4606,155 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-exports.default = getList;
+exports.default = makeList;
+
+var _utils = require("../../utils");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var ADD = exports.ADD = 'add';
+var ADD = "ADD";
+var REQUEST_LIST = "REQUEST_LIST";
+var RECEIVE_LIST = "RECEIVE_LIST";
 
 var defaultState = {
     list: [],
-    //isFetching: false,
-    //updateBeforeFetch: [],
+    isFetching: false,
+    actionsDuringFetch: [],
+    byId: {},
     indexOf: {}
 };
 
-//views: {}
-function getList() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
-    var action = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+function makeList(actionType, fetchURL) {
+    function reduceList() {
+        var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+        var action = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-    switch (action.cmd) {
-        case ADD:
-            return {
-                list: [].concat(_toConsumableArray(state.list), [action.data]),
-                indexOf: _extends({}, state.indexOf, _defineProperty({}, action.data.id, state.list.length))
-            };
-        default:
+
+        if (action.type !== actionType) {
             return state;
+        }
+
+        // Handle cases where we finished fetching or are still fetching.
+        if (action.cmd === RECEIVE_LIST) {
+            var s = {
+                isFetching: false,
+                actionsDuringFetch: [],
+                list: action.list,
+                byId: {},
+                indexOf: {}
+            };
+            for (var i = 0; i < action.list.length; i++) {
+                var item = action.list[i];
+                s.byId[item.id] = item;
+                s.indexOf[item.id] = i;
+            }
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = state.actionsDuringFetch[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    action = _step.value;
+
+                    s = reduceList(s, action);
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            return s;
+        } else if (state.isFetching) {
+            return _extends({}, state, {
+                actionsDuringFetch: [].concat(_toConsumableArray(state.actionsDuringFetch), [action])
+            });
+        }
+
+        switch (action.cmd) {
+            case ADD:
+                return {
+                    list: [].concat(_toConsumableArray(state.list), [action.item]),
+                    byId: _extends({}, state.byId, _defineProperty({}, action.item.id, action.item)),
+                    indexOf: _extends({}, state.indexOf, _defineProperty({}, action.item.id, state.list.length))
+                };
+
+            case REQUEST_LIST:
+                return _extends({}, defaultState, {
+                    isFetching: true
+                });
+
+            default:
+                console.debug("unknown action", action.type);
+                return state;
+        }
     }
+
+    function addToList(item) {
+        return {
+            type: actionType,
+            cmd: ADD,
+            item: item
+        };
+    }
+
+    function updateList(action) {
+        /* This action creater takes all WebSocket events */
+        return function (dispatch) {
+            switch (action.cmd) {
+                case "add":
+                    return dispatch(addToList(action.data));
+                case "reset":
+                    return dispatch(fetchList());
+                default:
+                    console.error("unknown list update", action);
+            }
+        };
+    }
+
+    function requestList() {
+        return {
+            type: actionType,
+            cmd: REQUEST_LIST
+        };
+    }
+
+    function receiveList(list) {
+        return {
+            type: actionType,
+            cmd: RECEIVE_LIST,
+            list: list
+        };
+    }
+
+    function fetchList() {
+        return function (dispatch) {
+
+            dispatch(requestList());
+
+            (0, _utils.fetchApi)(fetchURL).then(function (response) {
+                return response.json().then(function (json) {
+                    dispatch(receiveList(json.data));
+                });
+            });
+        };
+    }
+
+    return { reduceList: reduceList, addToList: addToList, updateList: updateList, fetchList: fetchList };
 }
 
-},{}],26:[function(require,module,exports){
+},{"../../utils":31}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

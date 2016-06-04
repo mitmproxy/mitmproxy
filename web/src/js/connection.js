@@ -1,6 +1,7 @@
 import {ConnectionActions, EventLogActions} from "./actions.js";
 import {AppDispatcher} from "./dispatcher.js";
-import * as websocketActions from "./ducks/websocket"
+import * as webSocketActions from "./ducks/websocket"
+import * as eventLogActions from "./ducks/eventLog"
 
 export default function Connection(url, dispatch) {
     if (url[0] === "/") {
@@ -9,14 +10,20 @@ export default function Connection(url, dispatch) {
 
     var ws = new WebSocket(url);
     ws.onopen = function () {
-        dispatch(websocketActions.connected());
-        ConnectionActions.open();
+        dispatch(webSocketActions.connected())
+        dispatch(eventLogActions.fetchLogEntries())
+        ConnectionActions.open()
         //TODO: fetch stuff!
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
         AppDispatcher.dispatchServerAction(message);
-        dispatch(message);
+        switch (message.type) {
+            case eventLogActions.UPDATE_LOG:
+                return dispatch(eventLogActions.updateLogEntries(message))
+            default:
+                console.warn("unknown message", message)
+        }
     };
     ws.onerror = function () {
         ConnectionActions.error();

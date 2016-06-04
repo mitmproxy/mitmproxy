@@ -27,6 +27,7 @@
     "react-router": "^2.4.0",
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
+    "redux-thunk": "^2.1.0",
     "shallowequal": "^0.2.2"
   },
   "devDependencies": {
@@ -52,6 +53,7 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-util": "^3.0.7",
     "jest": "^0.1.40",
+    "redux-thunk": "^2.1.0",
     "uglifyify": "^3.0.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",

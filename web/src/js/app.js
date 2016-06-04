@@ -2,7 +2,9 @@ import React from "react"
 import {render} from 'react-dom'
 import {applyMiddleware, createStore} from 'redux'
 import {Provider} from 'react-redux'
-import createLogger from 'redux-logger';
+import createLogger from 'redux-logger'
+import thunkMiddleware from 'redux-thunk'
+
 
 import Connection from "./connection"
 import {App} from "./components/proxyapp.js"
@@ -11,7 +13,10 @@ import {addLogEntry} from "./ducks/eventLog";
 
 // logger must be last
 const logger = createLogger();
-const store = createStore(rootReducer, applyMiddleware(logger));
+const store = createStore(
+    rootReducer,
+    applyMiddleware(thunkMiddleware, logger)
+);
 
 window.onerror = function (msg) {
     store.dispatch(addLogEntry(msg));
