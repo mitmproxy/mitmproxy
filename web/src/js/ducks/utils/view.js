@@ -1,4 +1,4 @@
-import {ADD, REQUEST_LIST, RECEIVE_LIST} from "./list"
+import {ADD, UPDATE, REMOVE, REQUEST_LIST, RECEIVE_LIST} from "./list"
 
 const defaultFilterFn = x => true
 const defaultSortFn = false
@@ -6,13 +6,13 @@ const defaultSortFn = false
 const makeCompareFn = sortFn => {
     let compareFn = (a, b) => {
         let akey = sortFn(a),
-            bkey = sortFn(b);
+            bkey = sortFn(b)
         if (akey < bkey) {
-            return -1;
+            return -1
         } else if (akey > bkey) {
-            return 1;
+            return 1
         } else {
-            return 0;
+            return 0
         }
     }
     if (sortFn.reverse)
@@ -33,19 +33,48 @@ const sortedInsert = (list, sortFn, item) => {
     return l
 }
 
+const sortedRemove = (list, sortFn, item) => {
+    let itemId = item.id
+    return list.filter(x => x.id !== itemId)
+}
+
 // for when the list changes
-export function updateViewList(state, nextList, action, filterFn = defaultFilterFn, sortFn = defaultSortFn) {
+export function updateViewList(state, currentList, nextList, action, filterFn = defaultFilterFn, sortFn = defaultSortFn) {
     switch (action.cmd) {
         case REQUEST_LIST:
             return state
         case RECEIVE_LIST:
             return updateViewFilter(nextList.list, filterFn, sortFn)
         case ADD:
-            if (filterFn(action.item))
+            if (filterFn(action.item)) {
                 return sortedInsert(state, sortFn, action.item)
+            }
+            return state
+        case UPDATE:
+            // let's determine if it's in the view currently and if it should be in the view.
+            let currentItemState = currentList.byId[action.item.id],
+                nextItemState = action.item,
+                isInView = filterFn(currentItemState),
+                shouldBeInView = filterFn(nextItemState)
+
+            if (!isInView && shouldBeInView)
+                return sortedInsert(state, sortFn, action.item)
+            if (isInView && !shouldBeInView)
+                return sortedRemove(state, sortFn, action.item)
+            if (isInView && shouldBeInView && sortFn(currentItemState) !== sortFn(nextItemState)) {
+                let s = [...state]
+                s.sort(sortFn)
+                return s
+            }
+            return state
+        case REMOVE:
+            let isInView_ = filterFn(currentList.byId[action.item.id])
+            if (isInView_) {
+                return sortedRemove(state, sortFn, action.item)
+            }
             return state
         default:
-            console.error("Unknown list action: ", action);
+            console.error("Unknown list action: ", action)
             return state
     }
 }

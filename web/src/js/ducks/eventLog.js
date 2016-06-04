@@ -7,9 +7,9 @@ export const UPDATE_LOG = "UPDATE_EVENTLOG"
 
 const {
     reduceList,
-    addToList,
     updateList,
     fetchList,
+    addItem,
 } = makeList(UPDATE_LOG, "/events")
 
 
@@ -51,7 +51,9 @@ export default function reducer(state = defaultState, action) {
                 events,
                 filteredEvents: updateViewList(
                     state.filteredEvents,
-                    events, action,
+                    state.events,
+                    events,
+                    action,
                     x => state.filter[x.level]
                 )
             }
@@ -69,7 +71,7 @@ export function toggleEventLogVisibility() {
 }
 let id = 0
 export function addLogEntry(message, level = "web") {
-    return addToList({
+    return addItem({
         message,
         level,
         id: `log-${id++}`

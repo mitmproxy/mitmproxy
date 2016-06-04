@@ -4495,9 +4495,9 @@ var UPDATE_LOG = exports.UPDATE_LOG = "UPDATE_EVENTLOG";
 var _makeList = (0, _list2.default)(UPDATE_LOG, "/events");
 
 var reduceList = _makeList.reduceList;
-var addToList = _makeList.addToList;
 var updateList = _makeList.updateList;
 var fetchList = _makeList.fetchList;
+var addItem = _makeList.addItem;
 
 
 var defaultState = {
@@ -4532,7 +4532,7 @@ function reducer() {
             var events = reduceList(state.events, action);
             return _extends({}, state, {
                 events: events,
-                filteredEvents: (0, _view.updateViewList)(state.filteredEvents, events, action, function (x) {
+                filteredEvents: (0, _view.updateViewList)(state.filteredEvents, state.events, events, action, function (x) {
                     return state.filter[x.level];
                 })
             });
@@ -4551,7 +4551,7 @@ var id = 0;
 function addLogEntry(message) {
     var level = arguments.length <= 1 || arguments[1] === undefined ? "web" : arguments[1];
 
-    return addToList({
+    return addItem({
         message: message,
         level: level,
         id: "log-" + id++
@@ -4646,7 +4646,7 @@ exports.default = rootReducer;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.RECEIVE_LIST = exports.REQUEST_LIST = exports.ADD = undefined;
+exports.RECEIVE_LIST = exports.REQUEST_LIST = exports.REMOVE = exports.UPDATE = exports.ADD = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -4659,6 +4659,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 var ADD = exports.ADD = "ADD";
+var UPDATE = exports.UPDATE = "UPDATE";
+var REMOVE = exports.REMOVE = "REMOVE";
 var REQUEST_LIST = exports.REQUEST_LIST = "REQUEST_LIST";
 var RECEIVE_LIST = exports.RECEIVE_LIST = "RECEIVE_LIST";
 
@@ -4726,6 +4728,8 @@ function makeList(actionType, fetchURL) {
             });
         }
 
+        var list = void 0,
+            itemIndex = void 0;
         switch (action.cmd) {
             case ADD:
                 return {
@@ -4734,18 +4738,37 @@ function makeList(actionType, fetchURL) {
                     indexOf: _extends({}, state.indexOf, _defineProperty({}, action.item.id, state.list.length))
                 };
 
+            case UPDATE:
+
+                list = [].concat(_toConsumableArray(state.list));
+                itemIndex = state.indexOf[action.item.id];
+                list[itemIndex] = action.item;
+                return _extends({}, defaultState, {
+                    list: list
+                });
+
+            case REMOVE:
+                list = [].concat(_toConsumableArray(state.list));
+                itemIndex = state.indexOf[action.item.id];
+                list.splice(itemIndex, 1);
+                return _extends({}, defaultState, {
+                    list: list,
+                    byId: _extends({}, state.byId, _defineProperty({}, action.item.id, undefined)),
+                    indexOf: _extends({}, state.indexOf, _defineProperty({}, action.item.id, undefined))
+                });
+
             case REQUEST_LIST:
                 return _extends({}, defaultState, {
                     isFetching: true
                 });
 
             default:
-                console.debug("unknown action", action.type);
+                console.debug("unknown action", action);
                 return state;
         }
     }
 
-    function addToList(item) {
+    function addItem(item) {
         return {
             type: actionType,
             cmd: ADD,
@@ -4753,16 +4776,36 @@ function makeList(actionType, fetchURL) {
         };
     }
 
-    function updateList(action) {
+    function updateItem(item) {
+        return {
+            type: actionType,
+            cmd: UPDATE,
+            item: item
+        };
+    }
+
+    function removeItem(item) {
+        return {
+            type: actionType,
+            cmd: REMOVE,
+            item: item
+        };
+    }
+
+    function updateList(event) {
         /* This action creater takes all WebSocket events */
         return function (dispatch) {
-            switch (action.cmd) {
+            switch (event.cmd) {
                 case "add":
-                    return dispatch(addToList(action.data));
+                    return dispatch(addItem(event.data));
+                case "update":
+                    return dispatch(updateItem(event.data));
+                case "remove":
+                    return dispatch(removeItem(event.data));
                 case "reset":
                     return dispatch(fetchList());
                 default:
-                    console.error("unknown list update", action);
+                    console.error("unknown list update", event);
             }
         };
     }
@@ -4795,7 +4838,7 @@ function makeList(actionType, fetchURL) {
         };
     }
 
-    return { reduceList: reduceList, addToList: addToList, updateList: updateList, fetchList: fetchList };
+    return { reduceList: reduceList, updateList: updateList, fetchList: fetchList, addItem: addItem, updateItem: updateItem, removeItem: removeItem };
 }
 
 },{"../../utils":33}],27:[function(require,module,exports){
@@ -4847,10 +4890,17 @@ var sortedInsert = function sortedInsert(list, sortFn, item) {
     return l;
 };
 
+var sortedRemove = function sortedRemove(list, sortFn, item) {
+    var itemId = item.id;
+    return list.filter(function (x) {
+        return x.id !== itemId;
+    });
+};
+
 // for when the list changes
-function updateViewList(state, nextList, action) {
-    var filterFn = arguments.length <= 3 || arguments[3] === undefined ? defaultFilterFn : arguments[3];
-    var sortFn = arguments.length <= 4 || arguments[4] === undefined ? defaultSortFn : arguments[4];
+function updateViewList(state, currentList, nextList, action) {
+    var filterFn = arguments.length <= 4 || arguments[4] === undefined ? defaultFilterFn : arguments[4];
+    var sortFn = arguments.length <= 5 || arguments[5] === undefined ? defaultSortFn : arguments[5];
 
     switch (action.cmd) {
         case _list.REQUEST_LIST:
@@ -4858,7 +4908,30 @@ function updateViewList(state, nextList, action) {
         case _list.RECEIVE_LIST:
             return updateViewFilter(nextList.list, filterFn, sortFn);
         case _list.ADD:
-            if (filterFn(action.item)) return sortedInsert(state, sortFn, action.item);
+            if (filterFn(action.item)) {
+                return sortedInsert(state, sortFn, action.item);
+            }
+            return state;
+        case _list.UPDATE:
+            // let's determine if it's in the view currently and if it should be in the view.
+            var currentItemState = currentList.byId[action.item.id],
+                nextItemState = action.item,
+                isInView = filterFn(currentItemState),
+                shouldBeInView = filterFn(nextItemState);
+
+            if (!isInView && shouldBeInView) return sortedInsert(state, sortFn, action.item);
+            if (isInView && !shouldBeInView) return sortedRemove(state, sortFn, action.item);
+            if (isInView && shouldBeInView && sortFn(currentItemState) !== sortFn(nextItemState)) {
+                var s = [].concat(_toConsumableArray(state));
+                s.sort(sortFn);
+                return s;
+            }
+            return state;
+        case _list.REMOVE:
+            var isInView_ = filterFn(currentList.byId[action.item.id]);
+            if (isInView_) {
+                return sortedRemove(state, sortFn, action.item);
+            }
             return state;
         default:
             console.error("Unknown list action: ", action);

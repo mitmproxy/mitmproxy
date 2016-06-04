@@ -1,6 +1,8 @@
-import {fetchApi} from "../../utils";
+import {fetchApi} from "../../utils"
 
 export const ADD = "ADD"
+export const UPDATE = "UPDATE"
+export const REMOVE = "REMOVE"
 export const REQUEST_LIST = "REQUEST_LIST"
 export const RECEIVE_LIST = "RECEIVE_LIST"
 
@@ -11,7 +13,7 @@ const defaultState = {
     actionsDuringFetch: [],
     byId: {},
     indexOf: {},
-};
+}
 
 export default function makeList(actionType, fetchURL) {
     function reduceList(state = defaultState, action = {}) {
@@ -45,12 +47,34 @@ export default function makeList(actionType, fetchURL) {
             }
         }
 
+        let list, itemIndex
         switch (action.cmd) {
             case ADD:
                 return {
                     list: [...state.list, action.item],
                     byId: {...state.byId, [action.item.id]: action.item},
                     indexOf: {...state.indexOf, [action.item.id]: state.list.length},
+                }
+
+            case UPDATE:
+
+                list = [...state.list]
+                itemIndex = state.indexOf[action.item.id]
+                list[itemIndex] = action.item
+                return {
+                    ...defaultState,
+                    list
+                }
+
+            case REMOVE:
+                list = [...state.list]
+                itemIndex = state.indexOf[action.item.id]
+                list.splice(itemIndex, 1)
+                return {
+                    ...defaultState,
+                    list,
+                    byId: {...state.byId, [action.item.id]: undefined},
+                    indexOf: {...state.indexOf, [action.item.id]: undefined},
                 }
 
             case REQUEST_LIST:
@@ -60,12 +84,12 @@ export default function makeList(actionType, fetchURL) {
                 }
 
             default:
-                console.debug("unknown action", action.type)
+                console.debug("unknown action", action)
                 return state
         }
     }
 
-    function addToList(item) {
+    function addItem(item) {
         return {
             type: actionType,
             cmd: ADD,
@@ -73,17 +97,37 @@ export default function makeList(actionType, fetchURL) {
         }
     }
 
+    function updateItem(item) {
+        return {
+            type: actionType,
+            cmd: UPDATE,
+            item
+        }
+    }
 
-    function updateList(action) {
+    function removeItem(item) {
+        return {
+            type: actionType,
+            cmd: REMOVE,
+            item
+        }
+    }
+
+
+    function updateList(event) {
         /* This action creater takes all WebSocket events */
         return dispatch => {
-            switch (action.cmd) {
+            switch (event.cmd) {
                 case "add":
-                    return dispatch(addToList(action.data))
+                    return dispatch(addItem(event.data))
+                case "update":
+                    return dispatch(updateItem(event.data))
+                case "remove":
+                    return dispatch(removeItem(event.data))
                 case "reset":
                     return dispatch(fetchList())
                 default:
-                    console.error("unknown list update", action)
+                    console.error("unknown list update", event)
             }
         }
     }
@@ -117,5 +161,5 @@ export default function makeList(actionType, fetchURL) {
     }
 
 
-    return {reduceList, addToList, updateList, fetchList}
+    return {reduceList, updateList, fetchList, addItem, updateItem, removeItem,}
 }

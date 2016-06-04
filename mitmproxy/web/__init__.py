@@ -43,7 +43,7 @@ class WebFlowView(flow.FlowView):
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="remove",
-            data=f.id
+            data=dict(id=f.id)
         )
 
     def _recalculate(self, flows):
