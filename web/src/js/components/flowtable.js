@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import {connect} from 'react-redux'
 import classNames from "classnames";
 import {reverseString} from "../utils.js";
 import _ from "lodash";
@@ -35,6 +36,14 @@ function FlowRow(props) {
         </tr>
     );
 }
+
+const FlowRowContainer = connect(
+    (state, ownProps) => ({
+        flow: state.flows.all.byId[ownProps.flowId]
+    }),
+    dispatch => ({
+    })
+)(FlowRow);
 
 class FlowTableHead extends React.Component {
 
@@ -196,9 +205,9 @@ class FlowTable extends React.Component {
                     <tbody>
                         <tr style={{ height: vScroll.paddingTop }}></tr>
                         {flows.map(flow => (
-                            <FlowRow
+                            <FlowRowContainer
+                                flowId={flow.id}
                                 key={flow.id}
-                                flow={flow}
                                 columns={flowtable_columns}
                                 selected={flow === this.props.selected}
                                 highlighted={highlight && highlight[flow.id]}

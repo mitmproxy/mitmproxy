@@ -1479,6 +1479,8 @@ var _reactDom = require("react-dom");
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
+var _reactRedux = require("react-redux");
+
 var _classnames = require("classnames");
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -1540,6 +1542,14 @@ function FlowRow(props) {
         })
     );
 }
+
+var FlowRowContainer = (0, _reactRedux.connect)(function (state, ownProps) {
+    return {
+        flow: state.flows.all.byId[ownProps.flowId]
+    };
+}, function (dispatch) {
+    return {};
+})(FlowRow);
 
 var FlowTableHead = function (_React$Component) {
     _inherits(FlowTableHead, _React$Component);
@@ -1724,9 +1734,9 @@ var FlowTable = function (_React$Component2) {
                         null,
                         _react2.default.createElement("tr", { style: { height: vScroll.paddingTop } }),
                         flows.map(function (flow) {
-                            return _react2.default.createElement(FlowRow, {
+                            return _react2.default.createElement(FlowRowContainer, {
+                                flowId: flow.id,
                                 key: flow.id,
-                                flow: flow,
                                 columns: _flowtableColumns2.default,
                                 selected: flow === _this4.props.selected,
                                 highlighted: highlight && highlight[flow.id],
@@ -1754,7 +1764,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":33,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":33,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4406,9 +4416,13 @@ function Connection(url, dispatch) {
     var ws = new WebSocket(url);
     ws.onopen = function () {
         dispatch(webSocketActions.connected());
-        dispatch(flowActions.fetchFlows());
+        dispatch(flowActions.fetchFlows())
+        // workaround to make sure that our state is already available.
+        .then(function () {
+            console.log("flows are loaded now");
+            _actions.ConnectionActions.open();
+        });
         dispatch(eventLogActions.fetchLogEntries());
-        _actions.ConnectionActions.open();
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
@@ -4830,7 +4844,7 @@ function makeList(actionType, fetchURL) {
 
             dispatch(requestList());
 
-            (0, _utils.fetchApi)(fetchURL).then(function (response) {
+            return (0, _utils.fetchApi)(fetchURL).then(function (response) {
                 return response.json().then(function (json) {
                     dispatch(receiveList(json.data));
                 });

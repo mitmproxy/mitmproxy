@@ -152,7 +152,7 @@ export default function makeList(actionType, fetchURL) {
 
             dispatch(requestList())
 
-            fetchApi(fetchURL).then(response => {
+            return fetchApi(fetchURL).then(response => {
                 return response.json().then(json => {
                     dispatch(receiveList(json.data))
                 })

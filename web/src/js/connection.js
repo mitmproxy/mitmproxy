@@ -13,8 +13,12 @@ export default function Connection(url, dispatch) {
     ws.onopen = function () {
         dispatch(webSocketActions.connected())
         dispatch(flowActions.fetchFlows())
+        // workaround to make sure that our state is already available.
+            .then(() => {
+            console.log("flows are loaded now")
+            ConnectionActions.open()
+        })
         dispatch(eventLogActions.fetchLogEntries())
-        ConnectionActions.open()
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
