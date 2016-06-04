@@ -109,7 +109,7 @@ def get_header(val, headers):
 
 
 class _HTTPMessage(message.Message):
-    version = "HTTP/1.1"
+    version = b"HTTP/1.1"
 
     @property
     def actions(self):
@@ -133,10 +133,10 @@ class _HTTPMessage(message.Message):
 
     def values(self, settings):
         vals = self.preamble(settings)
-        vals.append("\r\n")
+        vals.append(b"\r\n")
         for h in self.headers:
             vals.extend(h.values(settings))
-        vals.append("\r\n")
+        vals.append(b"\r\n")
         if self.body:
             vals.extend(self.body.values(settings))
         return vals
@@ -171,7 +171,7 @@ class Response(_HTTPMessage):
         return self.tok(Reason)
 
     def preamble(self, settings):
-        l = [self.version, " "]
+        l = [self.version, b" "]
         l.extend(self.status_code.values(settings))
         status_code = int(self.status_code.value)
         l.append(" ")
