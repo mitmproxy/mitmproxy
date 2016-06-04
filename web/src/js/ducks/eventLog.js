@@ -1,4 +1,5 @@
 import makeList, {ADD} from "./utils/list"
+import {updateViewFilter, updateViewList} from "./utils/view"
 
 const TOGGLE_FILTER = 'TOGGLE_EVENTLOG_FILTER'
 const TOGGLE_VISIBILITY = 'TOGGLE_EVENTLOG_VISIBILITY'
@@ -11,7 +12,6 @@ const {
     fetchList,
 } = makeList(UPDATE_LOG, "/events");
 
-export {updateList as updateLogEntries, fetchList as fetchLogEntries}
 
 const defaultState = {
     visible: false,
@@ -34,7 +34,10 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 filter,
-                filteredEvents: state.events.list.filter(x => filter[x.level])
+                filteredEvents: updateViewFilter(
+                    state.events.list,
+                    x => filter[x.level]
+                )
             }
         case TOGGLE_VISIBILITY:
             return {
@@ -46,7 +49,11 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 events,
-                filteredEvents: events.list.filter(x => state.filter[x.level])
+                filteredEvents: updateViewList(
+                    state.filteredEvents,
+                    events, action,
+                    x => state.filter[x.level]
+                )
             }
         default:
             return state
@@ -68,3 +75,4 @@ export function addLogEntry(message, level = "web") {
         id: `log-${id++}`
     })
 }
+export {updateList as updateLogEntries, fetchList as fetchLogEntries}

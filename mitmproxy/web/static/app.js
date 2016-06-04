@@ -304,7 +304,7 @@ function isUndefined(arg) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Query = exports.FlowActions = exports.EventLogActions = exports.SettingsActions = exports.ConnectionActions = exports.StoreCmds = exports.ActionTypes = undefined;
+exports.Query = exports.FlowActions = exports.SettingsActions = exports.ConnectionActions = exports.StoreCmds = exports.ActionTypes = undefined;
 
 var _jquery = require("jquery");
 
@@ -374,21 +374,6 @@ var SettingsActions = exports.SettingsActions = {
     }
 };
 
-var EventLogActions_event_id = 0;
-var EventLogActions = exports.EventLogActions = {
-    add_event: function add_event(message) {
-        _dispatcher.AppDispatcher.dispatchViewAction({
-            type: ActionTypes.EVENT_STORE,
-            cmd: StoreCmds.ADD,
-            data: {
-                message: message,
-                level: "web",
-                id: "viewAction-" + EventLogActions_event_id++
-            }
-        });
-    }
-};
-
 var FlowActions = exports.FlowActions = {
     accept: function accept(flow) {
         _jquery2.default.post("/flows/" + flow.id + "/accept");
@@ -452,7 +437,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":22,"./utils.js":31,"jquery":"jquery"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"./utils.js":32,"jquery":"jquery"}],3:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -724,7 +709,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -982,7 +967,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":31,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":32,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1477,7 +1462,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":28,"../utils.js":31,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":29,"../utils.js":32,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1769,7 +1754,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":31,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2123,7 +2108,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":28,"../../utils.js":31,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":29,"../../utils.js":32,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2391,7 +2376,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":31,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":32,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2885,7 +2870,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":28,"../../utils.js":31,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":29,"../../utils.js":32,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3068,7 +3053,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":31,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":32,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3643,7 +3628,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":27,"../utils.js":31,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":28,"../utils.js":32,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4059,7 +4044,7 @@ var MainView = _react2.default.createClass({
 
 exports.default = MainView;
 
-},{"../actions.js":2,"../filt/filt.js":27,"../store/view.js":30,"../utils.js":31,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":28,"../store/view.js":31,"../utils.js":32,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4195,7 +4180,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":31,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4259,7 +4244,6 @@ var ProxyAppMain = _react2.default.createClass({
 
     childContextTypes: {
         flowStore: _react2.default.PropTypes.object.isRequired,
-        eventStore: _react2.default.PropTypes.object.isRequired,
         returnFocus: _react2.default.PropTypes.func.isRequired,
         location: _react2.default.PropTypes.object.isRequired
     },
@@ -4298,13 +4282,11 @@ var ProxyAppMain = _react2.default.createClass({
     getChildContext: function getChildContext() {
         return {
             flowStore: this.state.flowStore,
-            eventStore: this.state.eventStore,
             returnFocus: this.focus,
             location: this.props.location
         };
     },
     getInitialState: function getInitialState() {
-        var eventStore = new _store.EventLogStore();
         var flowStore = new _store.FlowStore();
         var settingsStore = new _store.SettingsStore();
 
@@ -4313,8 +4295,7 @@ var ProxyAppMain = _react2.default.createClass({
         _lodash2.default.extend(settingsStore.dict, {});
         return {
             settings: settingsStore.dict,
-            flowStore: flowStore,
-            eventStore: eventStore
+            flowStore: flowStore
         };
     },
     focus: function focus() {
@@ -4391,7 +4372,7 @@ var App = exports.App = _react2.default.createElement(
     )
 );
 
-},{"../store/store.js":29,"../utils.js":31,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":30,"../utils.js":32,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4437,17 +4418,17 @@ function Connection(url, dispatch) {
     };
     ws.onerror = function () {
         _actions.ConnectionActions.error();
-        _actions.EventLogActions.add_event("WebSocket connection error.");
+        dispatch(eventLogActions.addLogEntry("WebSocket connection error."));
     };
     ws.onclose = function () {
         _actions.ConnectionActions.close();
-        _actions.EventLogActions.add_event("WebSocket connection closed.");
-        dispatch(websocketActions.disconnected());
+        dispatch(eventLogActions.addLogEntry("WebSocket connection closed."));
+        dispatch(webSocketActions.disconnected());
     };
     return ws;
 }
 
-},{"./actions.js":2,"./dispatcher.js":22,"./ducks/eventLog":23,"./ducks/websocket":26}],22:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22,"./ducks/eventLog":23,"./ducks/websocket":27}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4477,7 +4458,7 @@ AppDispatcher.dispatchServerAction = function (action) {
 };
 
 },{"flux":"flux"}],23:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -4491,9 +4472,11 @@ exports.toggleEventLogFilter = toggleEventLogFilter;
 exports.toggleEventLogVisibility = toggleEventLogVisibility;
 exports.addLogEntry = addLogEntry;
 
-var _list = require('./utils/list');
+var _list = require("./utils/list");
 
 var _list2 = _interopRequireDefault(_list);
+
+var _view = require("./utils/view");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4509,8 +4492,6 @@ var reduceList = _makeList.reduceList;
 var addToList = _makeList.addToList;
 var updateList = _makeList.updateList;
 var fetchList = _makeList.fetchList;
-exports.updateLogEntries = updateList;
-exports.fetchLogEntries = fetchList;
 
 
 var defaultState = {
@@ -4533,7 +4514,7 @@ function reducer() {
             var filter = _extends({}, state.filter, _defineProperty({}, action.filter, !state.filter[action.filter]));
             return _extends({}, state, {
                 filter: filter,
-                filteredEvents: state.events.list.filter(function (x) {
+                filteredEvents: (0, _view.updateViewFilter)(state.events.list, function (x) {
                     return filter[x.level];
                 })
             });
@@ -4545,7 +4526,7 @@ function reducer() {
             var events = reduceList(state.events, action);
             return _extends({}, state, {
                 events: events,
-                filteredEvents: events.list.filter(function (x) {
+                filteredEvents: (0, _view.updateViewList)(state.filteredEvents, events, action, function (x) {
                     return state.filter[x.level];
                 })
             });
@@ -4567,11 +4548,13 @@ function addLogEntry(message) {
     return addToList({
         message: message,
         level: level,
-        id: 'log-' + id++
+        id: "log-" + id++
     });
 }
+exports.updateLogEntries = updateList;
+exports.fetchLogEntries = fetchList;
 
-},{"./utils/list":25}],24:[function(require,module,exports){
+},{"./utils/list":25,"./utils/view":26}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4597,12 +4580,13 @@ var rootReducer = (0, _redux.combineReducers)({
 
 exports.default = rootReducer;
 
-},{"./eventLog.js":23,"./websocket.js":26,"redux":"redux"}],25:[function(require,module,exports){
+},{"./eventLog.js":23,"./websocket.js":27,"redux":"redux"}],25:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.RECEIVE_LIST = exports.REQUEST_LIST = exports.ADD = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -4614,9 +4598,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var ADD = "ADD";
-var REQUEST_LIST = "REQUEST_LIST";
-var RECEIVE_LIST = "RECEIVE_LIST";
+var ADD = exports.ADD = "ADD";
+var REQUEST_LIST = exports.REQUEST_LIST = "REQUEST_LIST";
+var RECEIVE_LIST = exports.RECEIVE_LIST = "RECEIVE_LIST";
 
 var defaultState = {
     list: [],
@@ -4754,7 +4738,84 @@ function makeList(actionType, fetchURL) {
     return { reduceList: reduceList, addToList: addToList, updateList: updateList, fetchList: fetchList };
 }
 
-},{"../../utils":31}],26:[function(require,module,exports){
+},{"../../utils":32}],26:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.updateViewList = updateViewList;
+exports.updateViewFilter = updateViewFilter;
+
+var _list = require("./list");
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var defaultFilterFn = function defaultFilterFn(x) {
+    return true;
+};
+var defaultSortFn = false;
+
+var makeCompareFn = function makeCompareFn(sortFn) {
+    var compareFn = function compareFn(a, b) {
+        var akey = sortFn(a),
+            bkey = sortFn(b);
+        if (akey < bkey) {
+            return -1;
+        } else if (akey > bkey) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+    if (sortFn.reverse) return function (a, b) {
+        return compareFn(b, a);
+    };
+    return compareFn;
+};
+
+var sortedInsert = function sortedInsert(list, sortFn, item) {
+    var l = [].concat(_toConsumableArray(list), [item]);
+    var compareFn = makeCompareFn(sortFn);
+
+    // only sort if sorting order is not correct yet
+    if (sortFn && compareFn(list[list.length - 1], item) > 0) {
+        // TODO: This is untested
+        console.debug("sorting view...");
+        l.sort(compareFn);
+    }
+    return l;
+};
+
+// for when the list changes
+function updateViewList(state, nextList, action) {
+    var filterFn = arguments.length <= 3 || arguments[3] === undefined ? defaultFilterFn : arguments[3];
+    var sortFn = arguments.length <= 4 || arguments[4] === undefined ? defaultSortFn : arguments[4];
+
+    switch (action.cmd) {
+        case _list.REQUEST_LIST:
+            return state;
+        case _list.RECEIVE_LIST:
+            return updateViewFilter(nextList.list, filterFn, sortFn);
+        case _list.ADD:
+            if (filterFn(action.item)) return sortedInsert(state, sortFn, action.item);
+            return state;
+        default:
+            console.error("Unknown list action: ", action);
+            return state;
+    }
+}
+
+function updateViewFilter(list) {
+    var filterFn = arguments.length <= 1 || arguments[1] === undefined ? defaultFilterFn : arguments[1];
+    var sortFn = arguments.length <= 2 || arguments[2] === undefined ? defaultSortFn : arguments[2];
+
+    var filtered = list.filter(filterFn);
+    if (sortFn) filtered.sort(makeCompareFn(sortFn));
+    return filtered;
+}
+
+},{"./list":25}],27:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4795,7 +4856,7 @@ function disconnected() {
     return { type: DISCONNECTED };
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -6699,7 +6760,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":28}],28:[function(require,module,exports){
+},{"../flow/utils.js":29}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6833,7 +6894,7 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
     });
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],29:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6841,7 +6902,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FlowStore = FlowStore;
 exports.SettingsStore = SettingsStore;
-exports.EventLogStore = EventLogStore;
 
 var _lodash = require("lodash");
 
@@ -6967,7 +7027,7 @@ _lodash2.default.extend(LiveStoreMixin.prototype, {
             this._fetchxhr = _jquery2.default.getJSON("/" + this.type).done(function (message) {
                 this.handle_fetch(message.data);
             }.bind(this)).fail(function () {
-                _actions.EventLogActions.add_event("Could not fetch " + this.type);
+                console.error("Could not fetch " + this.type);
             }.bind(this));
         }
     },
@@ -7003,24 +7063,7 @@ function SettingsStore() {
     return new LiveDictStore(_actions.ActionTypes.SETTINGS_STORE);
 }
 
-function EventLogStore() {
-    LiveListStore.call(this, _actions.ActionTypes.EVENT_STORE);
-}
-_lodash2.default.extend(EventLogStore.prototype, LiveListStore.prototype, {
-    fetch: function fetch() {
-        LiveListStore.prototype.fetch.apply(this, arguments);
-
-        // Make sure to display updates even if fetching all events failed.
-        // This way, we can send "fetch failed" log messages to the log.
-        if (this._fetchxhr) {
-            this._fetchxhr.fail(function () {
-                this.handle_fetch(null);
-            }.bind(this));
-        }
-    }
-});
-
-},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],30:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],31:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7150,7 +7193,7 @@ _lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
     }
 });
 
-},{"../utils.js":31,"events":1,"lodash":"lodash"}],31:[function(require,module,exports){
+},{"../utils.js":32,"events":1,"lodash":"lodash"}],32:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7265,7 +7308,6 @@ _jquery2.default.ajaxPrefilter(function (options) {
     }
     var message = jqXHR.responseText;
     console.error(thrownError, message, arguments);
-    _actions2.default.EventLogActions.add_event(thrownError + ": " + message);
     alert(message);
 });
 

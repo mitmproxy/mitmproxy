@@ -1,8 +1,8 @@
 import {fetchApi} from "../../utils";
 
-const ADD = "ADD"
-const REQUEST_LIST = "REQUEST_LIST"
-const RECEIVE_LIST = "RECEIVE_LIST"
+export const ADD = "ADD"
+export const REQUEST_LIST = "REQUEST_LIST"
+export const RECEIVE_LIST = "RECEIVE_LIST"
 
 
 const defaultState = {

@@ -1,0 +1,58 @@
+import {ADD, REQUEST_LIST, RECEIVE_LIST} from "./list"
+
+const defaultFilterFn = x => true
+const defaultSortFn = false
+
+const makeCompareFn = sortFn => {
+    let compareFn = (a, b) => {
+        let akey = sortFn(a),
+            bkey = sortFn(b);
+        if (akey < bkey) {
+            return -1;
+        } else if (akey > bkey) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    if (sortFn.reverse)
+        return (a, b) => compareFn(b, a)
+    return compareFn
+}
+
+const sortedInsert = (list, sortFn, item) => {
+    let l = [...list, item]
+    let compareFn = makeCompareFn(sortFn)
+
+    // only sort if sorting order is not correct yet
+    if (sortFn && compareFn(list[list.length - 1], item) > 0) {
+        // TODO: This is untested
+        console.debug("sorting view...")
+        l.sort(compareFn)
+    }
+    return l
+}
+
+// for when the list changes
+export function updateViewList(state, nextList, action, filterFn = defaultFilterFn, sortFn = defaultSortFn) {
+    switch (action.cmd) {
+        case REQUEST_LIST:
+            return state
+        case RECEIVE_LIST:
+            return updateViewFilter(nextList.list, filterFn, sortFn)
+        case ADD:
+            if (filterFn(action.item))
+                return sortedInsert(state, sortFn, action.item)
+            return state
+        default:
+            console.error("Unknown list action: ", action);
+            return state
+    }
+}
+
+export function updateViewFilter(list, filterFn = defaultFilterFn, sortFn = defaultSortFn) {
+    let filtered = list.filter(filterFn)
+    if (sortFn)
+        filtered.sort(makeCompareFn(sortFn))
+    return filtered
+}
