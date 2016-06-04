@@ -60,21 +60,6 @@ export var SettingsActions = {
     }
 };
 
-var EventLogActions_event_id = 0;
-export var EventLogActions = {
-    add_event: function (message) {
-        AppDispatcher.dispatchViewAction({
-            type: ActionTypes.EVENT_STORE,
-            cmd: StoreCmds.ADD,
-            data: {
-                message: message,
-                level: "web",
-                id: "viewAction-" + EventLogActions_event_id++
-            }
-        });
-    }
-};
-
 export var FlowActions = {
     accept: function (flow) {
         $.post("/flows/" + flow.id + "/accept");

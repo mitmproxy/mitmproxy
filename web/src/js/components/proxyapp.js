@@ -9,7 +9,7 @@ import MainView from "./mainview.js";
 import Footer from "./footer.js";
 import {Header, MainMenu} from "./header.js";
 import EventLog from "./eventlog.js"
-import {EventLogStore, FlowStore, SettingsStore} from "../store/store.js";
+import {FlowStore, SettingsStore} from "../store/store.js";
 import {Key} from "../utils.js";
 
 
@@ -24,7 +24,6 @@ var Reports = React.createClass({
 var ProxyAppMain = React.createClass({
     childContextTypes: {
         flowStore: React.PropTypes.object.isRequired,
-        eventStore: React.PropTypes.object.isRequired,
         returnFocus: React.PropTypes.func.isRequired,
         location: React.PropTypes.object.isRequired,
     },
@@ -63,13 +62,11 @@ var ProxyAppMain = React.createClass({
     getChildContext: function () {
         return {
             flowStore: this.state.flowStore,
-            eventStore: this.state.eventStore,
             returnFocus: this.focus,
             location: this.props.location
         };
     },
     getInitialState: function () {
-        var eventStore = new EventLogStore();
         var flowStore = new FlowStore();
         var settingsStore = new SettingsStore();
 
@@ -79,7 +76,6 @@ var ProxyAppMain = React.createClass({
         return {
             settings: settingsStore.dict,
             flowStore: flowStore,
-            eventStore: eventStore
         };
     },
     focus: function () {

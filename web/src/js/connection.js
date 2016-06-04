@@ -1,4 +1,4 @@
-import {ConnectionActions, EventLogActions} from "./actions.js";
+import {ConnectionActions} from "./actions.js";
 import {AppDispatcher} from "./dispatcher.js";
 import * as webSocketActions from "./ducks/websocket"
 import * as eventLogActions from "./ducks/eventLog"
@@ -27,12 +27,12 @@ export default function Connection(url, dispatch) {
     };
     ws.onerror = function () {
         ConnectionActions.error();
-        EventLogActions.add_event("WebSocket connection error.");
+        dispatch(eventLogActions.addLogEntry("WebSocket connection error."));
     };
     ws.onclose = function () {
         ConnectionActions.close();
-        EventLogActions.add_event("WebSocket connection closed.");
-        dispatch(websocketActions.disconnected());
+        dispatch(eventLogActions.addLogEntry("WebSocket connection closed."));
+        dispatch(webSocketActions.disconnected());
     };
     return ws;
 }

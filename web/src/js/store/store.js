@@ -2,7 +2,6 @@
 import _ from "lodash";
 import $ from "jquery";
 import {EventEmitter} from 'events';
-import { EventLogActions } from "../actions.js"
 import {ActionTypes, StoreCmds} from "../actions.js";
 import {AppDispatcher} from "../dispatcher.js";
 
@@ -118,7 +117,7 @@ _.extend(LiveStoreMixin.prototype, {
                     this.handle_fetch(message.data);
                 }.bind(this))
                 .fail(function () {
-                    EventLogActions.add_event("Could not fetch " + this.type);
+                    console.error("Could not fetch " + this.type)
                 }.bind(this));
         }
     },
@@ -154,20 +153,3 @@ export function FlowStore() {
 export function SettingsStore() {
     return new LiveDictStore(ActionTypes.SETTINGS_STORE);
 }
-
-export function EventLogStore() {
-    LiveListStore.call(this, ActionTypes.EVENT_STORE);
-}
-_.extend(EventLogStore.prototype, LiveListStore.prototype, {
-    fetch: function(){
-        LiveListStore.prototype.fetch.apply(this, arguments);
-
-        // Make sure to display updates even if fetching all events failed.
-        // This way, we can send "fetch failed" log messages to the log.
-        if(this._fetchxhr){
-            this._fetchxhr.fail(function(){
-                this.handle_fetch(null);
-            }.bind(this));
-        }
-    }
-});

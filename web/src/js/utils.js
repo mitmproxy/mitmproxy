@@ -99,7 +99,6 @@ $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
     }
     var message = jqXHR.responseText;
     console.error(thrownError, message, arguments);
-    actions.EventLogActions.add_event(thrownError + ": " + message);
     alert(message);
 });
 
