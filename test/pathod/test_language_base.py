@@ -38,7 +38,7 @@ class TestTokValueNakedLiteral:
 
 class TestTokValueLiteral:
 
-    def test_espr(self):
+    def test_expr(self):
         v = base.TokValueLiteral("foo")
         assert v.expr()
         assert v.val == b"foo"
