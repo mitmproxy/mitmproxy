@@ -340,7 +340,9 @@ def _read_headers(rfile):
                     raise ValueError()
                 ret.append((name, value))
             except ValueError:
-                raise exceptions.HttpSyntaxException("Invalid headers")
+                raise exceptions.HttpSyntaxException(
+                    "Invalid header line: %s" % repr(line)
+                )
     return headers.Headers(ret)
 
 

@@ -102,7 +102,9 @@ class DaemonTests(object):
             fp=logfp,
         )
         with c.connect():
-            resp = c.request("get:/p/%s" % urllib.quote(spec).encode("string_escape"))
+            resp = c.request(
+                "get:/p/%s" % urllib.quote(spec).encode("string_escape")
+            )
             return resp
 
     def pathoc(

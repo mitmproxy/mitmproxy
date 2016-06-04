@@ -187,7 +187,7 @@ class TestDaemon(_TestDaemon):
 
     def test_showresp_httperr(self):
         v = self.tval(["get:'/p/200:d20'"], showresp=True, showsummary=True)
-        assert "Invalid headers" in v
+        assert "Invalid header" in v
         assert "HTTP/" in v
 
     def test_explain(self):

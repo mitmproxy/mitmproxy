@@ -32,9 +32,6 @@ class TestApp(tutils.DaemonTests):
         assert self.getpath("/log/%s" % id).status_code == 200
         assert self.getpath("/log/9999999").status_code == 404
 
-    def test_log_binary(self):
-        assert self.get("200:h@10b=@10b:da")
-
     def test_response_preview(self):
         r = self.getpath("/response_preview", params=dict(spec="200"))
         assert r.status_code == 200
