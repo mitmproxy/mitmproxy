@@ -41,12 +41,12 @@ install:
     fi
   - pip install -U virtualenv
   - ./dev.sh
-  - source ./venv/bin/activate
+  - source venv/bin/activate
 
 before_script:
   - "openssl version -a"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
-  - "flake8 --count mitmproxy netlib pathod examples test"
+  - "flake8 --jobs 4 --count mitmproxy netlib pathod examples test"
 
 script:
   - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod ./test/$SCOPE"
@@ -71,6 +71,7 @@ notifications:
 
 cache:
   directories:
+    - $HOME/build/mitmproxy/mitmproxy/venv
     - $HOME/.cache/pip
     - $HOME/.pyenv
     - $HOME/Library/Caches/pip
