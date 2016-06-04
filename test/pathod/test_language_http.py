@@ -24,17 +24,17 @@ class TestRequest:
 
     def test_simple(self):
         r = parse_request('GET:"/foo"')
-        assert r.method.string() == "GET"
-        assert r.path.string() == "/foo"
+        assert r.method.string() == b"GET"
+        assert r.path.string() == b"/foo"
         r = parse_request('GET:/foo')
-        assert r.path.string() == "/foo"
+        assert r.path.string() == b"/foo"
         r = parse_request('GET:@1k')
         assert len(r.path.string()) == 1024
 
     def test_multiple(self):
         r = list(language.parse_pathoc("GET:/ PUT:/"))
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "PUT"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"PUT"
         assert len(r) == 2
 
         l = """
@@ -54,8 +54,8 @@ class TestRequest:
         """
         r = list(language.parse_pathoc(l))
         assert len(r) == 2
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "PUT"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"PUT"
 
         l = """
             get:"http://localhost:9999/p/200":ir,@1
@@ -63,8 +63,8 @@ class TestRequest:
         """
         r = list(language.parse_pathoc(l))
         assert len(r) == 2
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "GET"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"GET"
 
     def test_nested_response(self):
         l = "get:/p:s'200'"
@@ -90,8 +90,8 @@ class TestRequest:
             ir,@1
         """
         r = parse_request(l)
-        assert r.method.string() == "GET"
-        assert r.path.string() == "/foo"
+        assert r.method.string() == b"GET"
+        assert r.path.string() == b"/foo"
         assert r.actions
 
         l = """
@@ -106,8 +106,8 @@ class TestRequest:
             ir,@1
         """
         r = parse_request(l)
-        assert r.method.string() == "GET"
-        assert r.path.string().endswith("bar")
+        assert r.method.string() == b"GET"
+        assert r.path.string().endswith(b"bar")
         assert r.actions
 
     def test_spec(self):
@@ -225,8 +225,8 @@ class TestResponse:
         tutils.raises("ascii", language.parse_pathod, "foo:b\xf0")
 
     def test_parse_header(self):
-        assert http.get_header("foo", r.headers)
         r = next(language.parse_pathod('400:h"foo"="bar"'))
+        assert http.get_header(b"foo", r.headers)
 
     def test_parse_pause_before(self):
         r = next(language.parse_pathod("400:p0,10"))
@@ -266,8 +266,8 @@ class TestResponse:
 def test_ctype_shortcut():
     e = http.ShortcutContentType.expr()
     v = e.parseString("c'foo'")[0]
-    assert v.key.val == "Content-Type"
-    assert v.value.val == "foo"
+    assert v.key.val == b"Content-Type"
+    assert v.value.val == b"foo"
 
     s = v.spec()
     assert s == e.parseString(s)[0].spec()
@@ -282,8 +282,8 @@ def test_ctype_shortcut():
 def test_location_shortcut():
     e = http.ShortcutLocation.expr()
     v = e.parseString("l'foo'")[0]
-    assert v.key.val == "Location"
-    assert v.value.val == "foo"
+    assert v.key.val == b"Location"
+    assert v.value.val == b"foo"
 
     s = v.spec()
     assert s == e.parseString(s)[0].spec()
@@ -297,9 +297,9 @@ def test_location_shortcut():
 
 def test_shortcuts():
     assert next(language.parse_pathod(
-        "400:c'foo'")).headers[0].key.val == "Content-Type"
+        "400:c'foo'")).headers[0].key.val == b"Content-Type"
     assert next(language.parse_pathod(
-        "400:l'foo'")).headers[0].key.val == "Location"
+        "400:l'foo'")).headers[0].key.val == b"Location"
 
     assert "Android" in tutils.render(parse_request("get:/:ua"))
     assert "User-Agent" in tutils.render(parse_request("get:/:ua"))
