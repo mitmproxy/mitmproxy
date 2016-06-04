@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+from six import BytesIO
 from pathod import language
 from pathod.language import http, base
 import tutils
@@ -9,7 +9,7 @@ def parse_request(s):
 
 
 def test_make_error_response():
-    d = StringIO()
+    d = BytesIO()
     s = http.make_error_response("foo")
     language.serve(s, d, {})
 
@@ -75,7 +75,7 @@ class TestRequest:
         assert r[0].values({})
 
     def test_render(self):
-        s = StringIO()
+        s = BytesIO()
         r = parse_request("GET:'/foo'")
         assert language.serve(
             r,
@@ -162,7 +162,7 @@ class TestResponse:
         assert "OK" in [i[:] for i in r.preamble({})]
 
     def test_render(self):
-        s = StringIO()
+        s = BytesIO()
         r = next(language.parse_pathod("400:m'msg'"))
         assert language.serve(r, s, {})
 
@@ -172,13 +172,13 @@ class TestResponse:
         assert "p0" not in s.spec()
 
     def test_raw(self):
-        s = StringIO()
+        s = BytesIO()
         r = next(language.parse_pathod("400:b'foo'"))
         language.serve(r, s, {})
         v = s.getvalue()
         assert "Content-Length" in v
 
-        s = StringIO()
+        s = BytesIO()
         r = next(language.parse_pathod("400:b'foo':r"))
         language.serve(r, s, {})
         v = s.getvalue()
@@ -186,7 +186,7 @@ class TestResponse:
 
     def test_length(self):
         def testlen(x):
-            s = StringIO()
+            s = BytesIO()
             x = next(x)
             language.serve(x, s, language.Settings())
             assert x.length(language.Settings()) == len(s.getvalue())
@@ -196,8 +196,8 @@ class TestResponse:
 
     def test_maximum_length(self):
         def testlen(x):
-            s = StringIO()
             x = next(x)
+            s = BytesIO()
             m = x.maximum_length({})
             language.serve(x, s, {})
             assert m >= len(s.getvalue())
