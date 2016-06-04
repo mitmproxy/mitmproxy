@@ -4,7 +4,8 @@ import logging
 import os
 import sys
 import threading
-import urllib
+
+from six.moves import urllib
 
 from netlib import tcp, certutils, websockets
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
@@ -183,7 +184,7 @@ class PathodHandler(tcp.BaseHandler):
                     break
             else:
                 if m(path.startswith(self.server.craftanchor)):
-                    spec = urllib.unquote(path)[len(self.server.craftanchor):]
+                    spec = urllib.parse.unquote(path)[len(self.server.craftanchor):]
                     if spec:
                         try:
                             anchor_gen = language.parse_pathod(spec, self.use_http2)
@@ -204,7 +205,7 @@ class PathodHandler(tcp.BaseHandler):
                         )])
 
             if anchor_gen:
-                spec = anchor_gen.next()
+                spec = next(anchor_gen)
 
                 if self.use_http2 and isinstance(spec, language.http2.Response):
                     spec.stream_id = req.stream_id

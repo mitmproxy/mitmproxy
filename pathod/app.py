@@ -138,9 +138,9 @@ def make_app(noapi, debug):
 
         try:
             if is_request:
-                r = language.parse_pathoc(spec).next()
+                r = next(language.parse_pathoc(spec))
             else:
-                r = language.parse_pathod(spec).next()
+                r = next(language.parse_pathod(spec))
         except language.ParseException as v:
             args["syntaxerror"] = str(v)
             args["marked"] = v.marked()
