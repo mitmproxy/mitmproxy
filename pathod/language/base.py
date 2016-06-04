@@ -261,7 +261,7 @@ class _Component(Token):
 
     """
         A value component of the primary specification of an message.
-        Components produce byte values desribe the bytes of the message.
+        Components produce byte values describing the bytes of the message.
     """
 
     def values(self, settings):  # pragma: no cover
@@ -272,9 +272,9 @@ class _Component(Token):
 
     def string(self, settings=None):
         """
-            A string representation of the object.
+            A bytestring representation of the object.
         """
-        return "".join(i[:] for i in self.values(settings or {}))
+        return b"".join(i[:] for i in self.values(settings or {}))
 
 
 class KeyValue(_Component):
