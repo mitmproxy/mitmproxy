@@ -138,9 +138,9 @@ class TestProcessProxyOptions:
             "--singleuser",
             "test")
 
-    def test_verify_upstream_cert(self):
-        p = self.assert_noerr("--verify-upstream-cert")
-        assert p.openssl_verification_mode_server == SSL.VERIFY_PEER
+    def test_insecure(self):
+        p = self.assert_noerr("--insecure")
+        assert p.openssl_verification_mode_server == SSL.VERIFY_NONE
 
     def test_upstream_trusted_cadir(self):
         expected_dir = "/path/to/a/ca/dir"
