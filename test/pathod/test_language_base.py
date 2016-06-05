@@ -311,7 +311,7 @@ def test_options_or_value():
 def test_integer():
     e = base.Integer.expr()
     v = e.parseString("200")[0]
-    assert v.string() == "200"
+    assert v.string() == b"200"
     assert v.spec() == "200"
 
     assert v.freeze({}).value == v.value
