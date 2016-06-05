@@ -65,7 +65,7 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
-        "cryptography>=1.3, <1.4",
+        "cryptography>=1.3, <1.5",
         "Flask>=0.10.1, <0.11",
         "h2>=2.3.1, <3",
         "html2text>=2016.1.8, <=2016.4.2",
