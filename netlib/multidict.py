@@ -105,7 +105,7 @@ class _MultiDict(MutableMapping, basetypes.Serializable):
             if self._kconv(field[0]) == key_kconv:
                 if values:
                     new_fields.append(
-                        (key, values.pop(0))
+                        (field[0], values.pop(0))
                     )
             else:
                 new_fields.append(field)
