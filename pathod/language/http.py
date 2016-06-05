@@ -205,8 +205,8 @@ class Response(_HTTPMessage):
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
-                            base.TokValueLiteral(i[0]),
-                            base.TokValueLiteral(i[1]))
+                            base.TokValueLiteral(i[0].decode()),
+                            base.TokValueLiteral(i[1].decode()))
                     )
         if not self.raw:
             if not get_header("Content-Length", self.headers):
@@ -314,8 +314,8 @@ class Request(_HTTPMessage):
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
-                            base.TokValueLiteral(i[0]),
-                            base.TokValueLiteral(i[1])
+                            base.TokValueLiteral(i[0].decode()),
+                            base.TokValueLiteral(i[1].decode())
                         )
                     )
         if not self.raw:
