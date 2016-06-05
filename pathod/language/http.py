@@ -191,7 +191,7 @@ class Response(_HTTPMessage):
         if self.ws:
             if not settings.websocket_key:
                 raise exceptions.RenderError(
-                    b"No websocket key - have we seen a client handshake?"
+                    "No websocket key - have we seen a client handshake?"
                 )
             if not self.status_code:
                 tokens.insert(
