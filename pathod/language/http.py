@@ -57,7 +57,7 @@ class _HeaderMixin(object):
     unique_name = None
 
     def format_header(self, key, value):
-        return [key, ": ", value, "\r\n"]
+        return [key, b": ", value, b"\r\n"]
 
     def values(self, settings):
         return self.format_header(
@@ -174,14 +174,14 @@ class Response(_HTTPMessage):
         l = [self.version, b" "]
         l.extend(self.status_code.values(settings))
         status_code = int(self.status_code.value)
-        l.append(" ")
+        l.append(b" ")
         if self.reason:
             l.extend(self.reason.values(settings))
         else:
             l.append(
                 status_codes.RESPONSES.get(
                     status_code,
-                    "Unknown code"
+                    b"Unknown code"
                 )
             )
         return l
@@ -191,7 +191,7 @@ class Response(_HTTPMessage):
         if self.ws:
             if not settings.websocket_key:
                 raise exceptions.RenderError(
-                    "No websocket key - have we seen a client handshake?"
+                    b"No websocket key - have we seen a client handshake?"
                 )
             if not self.status_code:
                 tokens.insert(
@@ -294,11 +294,11 @@ class Request(_HTTPMessage):
 
     def preamble(self, settings):
         v = self.method.values(settings)
-        v.append(" ")
+        v.append(b" ")
         v.extend(self.path.values(settings))
         if self.nested_response:
             v.append(self.nested_response.parsed.spec())
-        v.append(" ")
+        v.append(b" ")
         v.append(self.version)
         return v
 
