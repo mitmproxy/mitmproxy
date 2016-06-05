@@ -93,9 +93,9 @@ class TestWebsocketFrame:
     def test_rawbody(self):
         frm = self.fr("wf:mask:r'foo'")
         assert len(frm.payload) == 3
-        assert frm.payload != "foo"
+        assert frm.payload != b"foo"
 
-        assert self.fr("wf:r'foo'").payload == "foo"
+        assert self.fr("wf:r'foo'").payload == b"foo"
 
     def test_construction_2(self):
         # Simple server frame
@@ -109,7 +109,7 @@ class TestWebsocketFrame:
         assert frm.header.masking_key
         frm = self.fr("wf:b'foo':k'abcd'", is_client=True)
         assert frm.header.mask
-        assert frm.header.masking_key == 'abcd'
+        assert frm.header.masking_key == b'abcd'
 
         # Server frame, mask explicitly set
         frm = self.fr("wf:b'foo':mask")
@@ -117,7 +117,7 @@ class TestWebsocketFrame:
         assert frm.header.masking_key
         frm = self.fr("wf:b'foo':k'abcd'")
         assert frm.header.mask
-        assert frm.header.masking_key == 'abcd'
+        assert frm.header.masking_key == b'abcd'
 
         # Client frame, mask explicitly unset
         frm = self.fr("wf:b'foo':-mask", is_client=True)
@@ -128,7 +128,7 @@ class TestWebsocketFrame:
         assert not frm.header.mask
         # We're reading back a corrupted frame - the first 3 characters of the
         # mask is mis-interpreted as the payload
-        assert frm.payload == "abc"
+        assert frm.payload == b"abc"
 
     def test_knone(self):
         with tutils.raises("expected 4 bytes"):
@@ -138,5 +138,5 @@ class TestWebsocketFrame:
         assert self.fr("wf:l3:b'foo'").header.payload_length == 3
         frm = self.fr("wf:l2:b'foo'")
         assert frm.header.payload_length == 2
-        assert frm.payload == "fo"
+        assert frm.payload == b"fo"
         tutils.raises("expected 1024 bytes", self.fr, "wf:l1024:b'foo'")
