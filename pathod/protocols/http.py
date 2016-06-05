@@ -1,4 +1,3 @@
-from netlib import wsgi
 from netlib.exceptions import TlsException
 from netlib.http import http1
 from .. import version, language
@@ -10,30 +9,6 @@ class HTTPProtocol(object):
 
     def make_error_response(self, reason, body):
         return language.http.make_error_response(reason, body)
-
-    def handle_http_app(self, method, path, headers, body, lg):
-        """
-            Handle a request to the built-in app.
-        """
-        if self.pathod_handler.server.noweb:
-            crafted = self.pathod_handler.make_http_error_response("Access Denied")
-            language.serve(crafted, self.pathod_handler.wfile, self.pathod_handler.settings)
-            return None, dict(
-                type="error",
-                msg="Access denied: web interface disabled"
-            )
-        lg("app: %s %s" % (method, path))
-        req = wsgi.Request("http", method, path, b"HTTP/1.1", headers, body)
-        flow = wsgi.Flow(self.pathod_handler.address, req)
-        sn = self.pathod_handler.connection.getsockname()
-        a = wsgi.WSGIAdaptor(
-            self.pathod_handler.server.app,
-            sn[0],
-            self.pathod_handler.server.address.port,
-            version.NAMEVERSION
-        )
-        a.serve(flow, self.pathod_handler.wfile)
-        return self.pathod_handler.handle_http_request, None
 
     def handle_http_connect(self, connect, lg):
         """

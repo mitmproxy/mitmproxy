@@ -43,16 +43,6 @@ class TestTimeout(tutils.DaemonTests):
         assert self.d.last_log()["type"] == "timeout"
 
 
-class TestNoApi(tutils.DaemonTests):
-    noapi = True
-
-    def test_noapi(self):
-        assert self.getpath("/log").status_code == 404
-        r = self.getpath("/")
-        assert r.status_code == 200
-        assert "Log" not in r.content
-
-
 class TestNotAfterConnect(tutils.DaemonTests):
     ssl = False
     ssloptions = dict(
