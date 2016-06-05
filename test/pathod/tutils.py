@@ -3,6 +3,7 @@ import re
 import shutil
 import requests
 from six.moves import cStringIO as StringIO
+from six import BytesIO
 import urllib
 
 from netlib import tcp
@@ -147,6 +148,6 @@ test_data = utils.Data(__name__)
 
 def render(r, settings=language.Settings()):
     r = r.resolve(settings)
-    s = StringIO()
+    s = BytesIO()
     assert language.serve(r, s, settings)
     return s.getvalue()
