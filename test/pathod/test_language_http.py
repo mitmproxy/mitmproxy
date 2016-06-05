@@ -301,18 +301,18 @@ def test_shortcuts():
     assert next(language.parse_pathod(
         "400:l'foo'")).headers[0].key.val == b"Location"
 
-    assert "Android" in tutils.render(parse_request("get:/:ua"))
-    assert "User-Agent" in tutils.render(parse_request("get:/:ua"))
+    assert b"Android" in tutils.render(parse_request("get:/:ua"))
+    assert b"User-Agent" in tutils.render(parse_request("get:/:ua"))
 
 
 def test_user_agent():
     e = http.ShortcutUserAgent.expr()
     v = e.parseString("ua")[0]
-    assert "Android" in v.string()
+    assert b"Android" in v.string()
 
     e = http.ShortcutUserAgent.expr()
     v = e.parseString("u'a'")[0]
-    assert "Android" not in v.string()
+    assert b"Android" not in v.string()
 
     v = e.parseString("u@100'")[0]
     assert len(str(v.freeze({}).value)) > 100
