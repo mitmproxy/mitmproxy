@@ -4,8 +4,8 @@ from __future__ import (absolute_import, print_function, division)
 
 import pytest
 import os
-import traceback
 import tempfile
+import traceback
 
 import h2
 
@@ -580,3 +580,54 @@ class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
         for flow in self.master.state.flows:
             assert flow.response.status_code == 200
             assert "Stream-ID" in flow.response.body
+
+
+@requires_alpn
+class TestConnectionTerminated(_Http2TestBase, _Http2ServerBase):
+
+    @classmethod
+    def setup_class(self):
+        _Http2TestBase.setup_class()
+        _Http2ServerBase.setup_class()
+
+    @classmethod
+    def teardown_class(self):
+        _Http2TestBase.teardown_class()
+        _Http2ServerBase.teardown_class()
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.RequestReceived):
+            h2_conn.close_connection(error_code=5, last_stream_id=42, additional_data='foobar')
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_connection_terminated(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(client.wfile, h2_conn, headers=[
+            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':method', 'GET'),
+            (':scheme', 'https'),
+            (':path', '/'),
+        ])
+
+        done = False
+        connection_terminated_event = None
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+                for event in events:
+                    if isinstance(event, h2.events.ConnectionTerminated):
+                        connection_terminated_event = event
+                        done = True
+            except:
+                break
+
+        assert len(self.master.state.flows) == 1
+        assert connection_terminated_event is not None
+        assert connection_terminated_event.error_code == 5
+        assert connection_terminated_event.last_stream_id == 42
+        assert connection_terminated_event.additional_data == 'foobar'
