@@ -437,7 +437,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":22,"./utils.js":33,"jquery":"jquery"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"./utils.js":32,"jquery":"jquery"}],3:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -709,7 +709,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":33,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -967,7 +967,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":33,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":32,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1462,7 +1462,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":30,"../utils.js":33,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":30,"../utils.js":32,"react":"react"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1505,6 +1505,10 @@ var _flowtableColumns = require("./flowtable-columns.js");
 
 var _flowtableColumns2 = _interopRequireDefault(_flowtableColumns);
 
+var _filt = require("../filt/filt");
+
+var _filt2 = _interopRequireDefault(_filt);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1517,7 +1521,7 @@ FlowRow.propTypes = {
     selectFlow: _react2.default.PropTypes.func.isRequired,
     columns: _react2.default.PropTypes.array.isRequired,
     flow: _react2.default.PropTypes.object.isRequired,
-    highlighted: _react2.default.PropTypes.bool,
+    highlight: _react2.default.PropTypes.string,
     selected: _react2.default.PropTypes.bool
 };
 
@@ -1526,7 +1530,7 @@ function FlowRow(props) {
 
     var className = (0, _classnames2.default)({
         "selected": props.selected,
-        "highlighted": props.highlighted,
+        "highlighted": props.highlight && parseFilter(props.highlight)(flow),
         "intercepted": flow.intercepted,
         "has-request": flow.request,
         "has-response": flow.response
@@ -1545,9 +1549,11 @@ function FlowRow(props) {
 
 var FlowRowContainer = (0, _reactRedux.connect)(function (state, ownProps) {
     return {
-        flow: state.flows.all.byId[ownProps.flowId]
+        flow: state.flows.all.byId[ownProps.flowId],
+        highlight: state.flows.highlight,
+        selected: state.flows.selected.indexOf(ownProps.flowId) >= 0
     };
-}, function (dispatch) {
+}, function (dispatch, ownProps) {
     return {};
 })(FlowRow);
 
@@ -1629,9 +1635,8 @@ var FlowTable = function (_React$Component2) {
 
         var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTable).call(this, props, context));
 
-        _this3.state = { flows: [], vScroll: (0, _VirtualScroll.calcVScroll)() };
+        _this3.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
 
-        _this3.onChange = _this3.onChange.bind(_this3);
         _this3.onViewportUpdate = _this3.onViewportUpdate.bind(_this3);
         return _this3;
     }
@@ -1640,19 +1645,22 @@ var FlowTable = function (_React$Component2) {
         key: "componentWillMount",
         value: function componentWillMount() {
             window.addEventListener("resize", this.onViewportUpdate);
-            this.context.view.addListener("add", this.onChange);
-            this.context.view.addListener("update", this.onChange);
-            this.context.view.addListener("remove", this.onChange);
-            this.context.view.addListener("recalculate", this.onChange);
         }
     }, {
         key: "componentWillUnmount",
         value: function componentWillUnmount() {
             window.removeEventListener("resize", this.onViewportUpdate);
-            this.context.view.removeListener("add", this.onChange);
-            this.context.view.removeListener("update", this.onChange);
-            this.context.view.removeListener("remove", this.onChange);
-            this.context.view.removeListener("recalculate", this.onChange);
+        }
+    }, {
+        key: "componentWillReceiveProps",
+        value: function componentWillReceiveProps(nextProps) {
+            var _this4 = this;
+
+            if (nextProps.selected && nextProps.selected !== this.props.selected) {
+                window.setTimeout(function () {
+                    return _this4.scrollIntoView(nextProps.selected);
+                }, 1);
+            }
         }
     }, {
         key: "componentDidUpdate",
@@ -1668,7 +1676,7 @@ var FlowTable = function (_React$Component2) {
             var vScroll = (0, _VirtualScroll.calcVScroll)({
                 viewportTop: viewportTop,
                 viewportHeight: viewport.offsetHeight,
-                itemCount: this.state.flows.length,
+                itemCount: this.props.flows.length,
                 rowHeight: this.props.rowHeight
             });
 
@@ -1677,15 +1685,10 @@ var FlowTable = function (_React$Component2) {
             }
         }
     }, {
-        key: "onChange",
-        value: function onChange() {
-            this.setState({ flows: this.context.view.list });
-        }
-    }, {
         key: "scrollIntoView",
         value: function scrollIntoView(flow) {
             var viewport = _reactDom2.default.findDOMNode(this);
-            var index = this.context.view.indexOf(flow);
+            var index = this.props.flows.indexOf(flow);
             var rowHeight = this.props.rowHeight;
             var head = _reactDom2.default.findDOMNode(this.refs.head);
 
@@ -1707,11 +1710,10 @@ var FlowTable = function (_React$Component2) {
     }, {
         key: "render",
         value: function render() {
-            var _this4 = this;
+            var _this5 = this;
 
             var vScroll = this.state.vScroll;
-            var highlight = this.context.view._highlight;
-            var flows = this.state.flows.slice(vScroll.start, vScroll.end);
+            var flows = this.props.flows.slice(vScroll.start, vScroll.end);
 
             var transform = "translate(0," + this.state.viewportTop + "px)";
 
@@ -1735,12 +1737,10 @@ var FlowTable = function (_React$Component2) {
                         _react2.default.createElement("tr", { style: { height: vScroll.paddingTop } }),
                         flows.map(function (flow) {
                             return _react2.default.createElement(FlowRowContainer, {
-                                flowId: flow.id,
                                 key: flow.id,
+                                flowId: flow.id,
                                 columns: _flowtableColumns2.default,
-                                selected: flow === _this4.props.selected,
-                                highlighted: highlight && highlight[flow.id],
-                                selectFlow: _this4.props.selectFlow
+                                selectFlow: _this5.props.selectFlow
                             });
                         }),
                         _react2.default.createElement("tr", { style: { height: vScroll.paddingBottom } })
@@ -1753,18 +1753,29 @@ var FlowTable = function (_React$Component2) {
     return FlowTable;
 }(_react2.default.Component);
 
-FlowTable.contextTypes = {
-    view: _react2.default.PropTypes.object.isRequired
-};
 FlowTable.propTypes = {
     rowHeight: _react2.default.PropTypes.number
 };
 FlowTable.defaultProps = {
     rowHeight: 32
 };
-exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../utils.js":33,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+
+FlowTable = (0, _AutoScroll2.default)(FlowTable);
+
+var parseFilter = _lodash2.default.memoize(_filt2.default.parse);
+
+var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
+    return {
+        flows: state.flows.view
+    };
+}, function (dispatch) {
+    return {};
+})(FlowTable);
+
+exports.default = FlowTableContainer;
+
+},{"../filt/filt":29,"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2118,7 +2129,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":30,"../../utils.js":33,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":30,"../../utils.js":32,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2386,7 +2397,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":33,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":32,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2880,7 +2891,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":30,"../../utils.js":33,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":30,"../../utils.js":32,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3063,7 +3074,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":33,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":32,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3638,7 +3649,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":29,"../utils.js":33,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":29,"../utils.js":32,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3798,12 +3809,6 @@ var _actions = require("../actions.js");
 
 var _utils = require("../utils.js");
 
-var _view = require("../store/view.js");
-
-var _filt = require("../filt/filt.js");
-
-var _filt2 = _interopRequireDefault(_filt);
-
 var _common = require("./common.js");
 
 var _flowtable = require("./flowtable.js");
@@ -3814,107 +3819,43 @@ var _index = require("./flowview/index.js");
 
 var _index2 = _interopRequireDefault(_index);
 
+var _reactRedux = require("react-redux");
+
+var _flows = require("../ducks/flows");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var MainView = _react2.default.createClass({
     displayName: "MainView",
 
-    contextTypes: {
-        flowStore: _react2.default.PropTypes.object.isRequired
-    },
-    childContextTypes: {
-        view: _react2.default.PropTypes.object.isRequired
-    },
-    getChildContext: function getChildContext() {
-        return {
-            view: this.state.view
-        };
-    },
-    getInitialState: function getInitialState() {
-        var sortKeyFun = false;
-        var view = new _view.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
-        view.addListener("recalculate", this.onRecalculate);
-        view.addListener("add", this.onUpdate);
-        view.addListener("update", this.onUpdate);
-        view.addListener("remove", this.onUpdate);
-        view.addListener("remove", this.onRemove);
-
-        return {
-            view: view,
-            sortKeyFun: sortKeyFun
-        };
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        this.state.view.close();
-    },
-    getViewFilt: function getViewFilt() {
-        try {
-            var filtStr = this.props.query[_actions.Query.SEARCH];
-            var filt = filtStr ? _filt2.default.parse(filtStr) : function () {
-                return true;
-            };
-            var highlightStr = this.props.query[_actions.Query.HIGHLIGHT];
-            var highlight = highlightStr ? _filt2.default.parse(highlightStr) : function () {
-                return false;
-            };
-        } catch (e) {
-            console.error("Error when processing filter: " + e);
-        }
-
-        var fun = function filter_and_highlight(flow) {
-            if (!this._highlight) {
-                this._highlight = {};
-            }
-            this._highlight[flow.id] = highlight(flow);
-            return filt(flow);
-        };
-        fun.highlightStr = highlightStr;
-        fun.filtStr = filtStr;
-        return fun;
-    },
     componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-        var filterChanged = this.state.view.filt.filtStr !== nextProps.location.query[_actions.Query.SEARCH];
-        var highlightChanged = this.state.view.filt.highlightStr !== nextProps.location.query[_actions.Query.HIGHLIGHT];
-        if (filterChanged || highlightChanged) {
-            this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
+        // Update redux store with route changes
+        if (nextProps.routeParams.flowId !== (nextProps.selectedFlow || {}).id) {
+            this.props.selectFlow(nextProps.routeParams.flowId);
         }
-    },
-    onRecalculate: function onRecalculate() {
-        this.forceUpdate();
-        var selected = this.getSelected();
-        if (selected) {
-            this.refs.flowTable.scrollIntoView(selected);
+        if (nextProps.location.query[_actions.Query.SEARCH] !== nextProps.filter) {
+            this.props.setFilter(nextProps.location.query[_actions.Query.SEARCH], false);
         }
-    },
-    onUpdate: function onUpdate(flow) {
-        if (flow.id === this.props.routeParams.flowId) {
-            this.forceUpdate();
-        }
-    },
-    onRemove: function onRemove(flow_id, index) {
-        if (flow_id === this.props.routeParams.flowId) {
-            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
-            this.selectFlow(flow_to_select);
+        if (nextProps.location.query[_actions.Query.HIGHLIGHT] !== nextProps.highlight) {
+            this.props.setHighlight(nextProps.location.query[_actions.Query.HIGHLIGHT], false);
         }
     },
     setSortKeyFun: function setSortKeyFun(sortKeyFun) {
-        this.setState({
-            sortKeyFun: sortKeyFun
-        });
-        this.state.view.recalculate(this.getViewFilt(), sortKeyFun);
+        // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
     },
     selectFlow: function selectFlow(flow) {
+        // TODO: This belongs into redux
         if (flow) {
             var tab = this.props.routeParams.detailTab || "request";
             this.props.updateLocation("/flows/" + flow.id + "/" + tab);
-            this.refs.flowTable.scrollIntoView(flow);
         } else {
             this.props.updateLocation("/flows");
         }
     },
     selectFlowRelative: function selectFlowRelative(shift) {
-        var flows = this.state.view.list;
-        var index;
+        // TODO: This belongs into redux
+        var flows = this.props.flows,
+            index = void 0;
         if (!this.props.routeParams.flowId) {
             if (shift < 0) {
                 index = flows.length - 1;
@@ -3922,20 +3863,13 @@ var MainView = _react2.default.createClass({
                 index = 0;
             }
         } else {
-            var currFlowId = this.props.routeParams.flowId;
-            var i = flows.length;
-            while (i--) {
-                if (flows[i].id === currFlowId) {
-                    index = i;
-                    break;
-                }
-            }
+            index = flows.indexOf(this.props.selectedFlow);
             index = Math.min(Math.max(0, index + shift), flows.length - 1);
         }
         this.selectFlow(flows[index]);
     },
     onMainKeyDown: function onMainKeyDown(e) {
-        var flow = this.getSelected();
+        var flow = this.props.selectedFlow;
         if (e.ctrlKey) {
             return;
         }
@@ -4021,23 +3955,17 @@ var MainView = _react2.default.createClass({
         }
         e.preventDefault();
     },
-    getSelected: function getSelected() {
-        return this.context.flowStore.get(this.props.routeParams.flowId);
-    },
     render: function render() {
-        var selected = this.getSelected();
 
-        var details;
-        if (selected) {
+        var details = null;
+        if (this.props.selectedFlow) {
             details = [_react2.default.createElement(_common.Splitter, { key: "splitter" }), _react2.default.createElement(_index2.default, {
                 key: "flowDetails",
                 ref: "flowDetails",
                 tab: this.props.routeParams.detailTab,
                 query: this.props.query,
                 updateLocation: this.props.updateLocation,
-                flow: selected })];
-        } else {
-            details = null;
+                flow: this.props.selectedFlow })];
         }
 
         return _react2.default.createElement(
@@ -4046,15 +3974,36 @@ var MainView = _react2.default.createClass({
             _react2.default.createElement(_flowtable2.default, { ref: "flowTable",
                 selectFlow: this.selectFlow,
                 setSortKeyFun: this.setSortKeyFun,
-                selected: selected }),
+                selected: this.props.selectedFlow }),
             details
         );
     }
 });
 
-exports.default = MainView;
+var MainViewContainer = (0, _reactRedux.connect)(function (state) {
+    return {
+        flows: state.flows.view,
+        filter: state.flows.filter,
+        highlight: state.flows.highlight,
+        selectedFlow: state.flows.all.byId[state.flows.selected[0]]
+    };
+}, function (dispatch) {
+    return {
+        selectFlow: function selectFlow(flowId) {
+            return dispatch((0, _flows.selectFlow)(flowId));
+        },
+        setFilter: function setFilter(filter) {
+            return dispatch((0, _flows.setFilter)(filter));
+        },
+        setHighlight: function setHighlight(highlight) {
+            return dispatch((0, _flows.setHighlight)(highlight));
+        }
+    };
+}, undefined, { withRef: true })(MainView);
 
-},{"../actions.js":2,"../filt/filt.js":29,"../store/view.js":32,"../utils.js":33,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],19:[function(require,module,exports){
+exports.default = MainViewContainer;
+
+},{"../actions.js":2,"../ducks/flows":24,"../utils.js":32,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react","react-redux":"react-redux"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4190,7 +4139,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":33,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4253,7 +4202,6 @@ var ProxyAppMain = _react2.default.createClass({
     displayName: "ProxyAppMain",
 
     childContextTypes: {
-        flowStore: _react2.default.PropTypes.object.isRequired,
         returnFocus: _react2.default.PropTypes.func.isRequired,
         location: _react2.default.PropTypes.object.isRequired
     },
@@ -4291,21 +4239,18 @@ var ProxyAppMain = _react2.default.createClass({
     },
     getChildContext: function getChildContext() {
         return {
-            flowStore: this.state.flowStore,
             returnFocus: this.focus,
             location: this.props.location
         };
     },
     getInitialState: function getInitialState() {
-        var flowStore = new _store.FlowStore();
         var settingsStore = new _store.SettingsStore();
 
         this.settingsStore = settingsStore;
         // Default Settings before fetch
         _lodash2.default.extend(settingsStore.dict, {});
         return {
-            settings: settingsStore.dict,
-            flowStore: flowStore
+            settings: settingsStore.dict
         };
     },
     focus: function focus() {
@@ -4314,7 +4259,7 @@ var ProxyAppMain = _react2.default.createClass({
         _reactDom2.default.findDOMNode(this).focus();
     },
     getMainComponent: function getMainComponent() {
-        return this.refs.view;
+        return this.refs.view.getWrappedInstance ? this.refs.view.getWrappedInstance() : this.refs.view;
     },
     onKeydown: function onKeydown(e) {
 
@@ -4382,7 +4327,7 @@ var App = exports.App = _react2.default.createElement(
     )
 );
 
-},{"../store/store.js":31,"../utils.js":33,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../store/store.js":31,"../utils.js":32,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4534,7 +4479,7 @@ function reducer() {
             var filter = _extends({}, state.filter, _defineProperty({}, action.filter, !state.filter[action.filter]));
             return _extends({}, state, {
                 filter: filter,
-                filteredEvents: (0, _view.updateViewFilter)(state.events.list, function (x) {
+                filteredEvents: (0, _view.updateViewFilter)(state.events, function (x) {
                     return filter[x.level];
                 })
             });
@@ -4580,19 +4525,31 @@ exports.fetchLogEntries = fetchList;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.fetchFlows = exports.updateFlows = exports.UPDATE_FLOWS = undefined;
+exports.fetchFlows = exports.updateFlows = exports.SELECT_FLOW = exports.SET_HIGHLIGHT = exports.SET_FILTER = exports.UPDATE_FLOWS = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = reducer;
+exports.setFilter = setFilter;
+exports.setHighlight = setHighlight;
+exports.selectFlow = selectFlow;
 
 var _list = require("./utils/list");
 
 var _list2 = _interopRequireDefault(_list);
 
+var _filt = require("../filt/filt");
+
+var _filt2 = _interopRequireDefault(_filt);
+
+var _view = require("./utils/view");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var UPDATE_FLOWS = exports.UPDATE_FLOWS = "UPDATE_FLOWS";
+var SET_FILTER = exports.SET_FILTER = "SET_FLOW_FILTER";
+var SET_HIGHLIGHT = exports.SET_HIGHLIGHT = "SET_FLOW_HIGHLIGHT";
+var SELECT_FLOW = exports.SELECT_FLOW = "SELECT_FLOW";
 
 var _makeList = (0, _list2.default)(UPDATE_FLOWS, "/flows");
 
@@ -4602,8 +4559,18 @@ var fetchList = _makeList.fetchList;
 
 
 var defaultState = {
-    all: reduceList()
+    all: reduceList(),
+    selected: [],
+    view: [],
+    filter: undefined,
+    highlight: undefined
 };
+
+function makeFilterFn(filter) {
+    return filter ? _filt2.default.parse(filter) : function () {
+        return true;
+    };
+}
 
 function reducer() {
     var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
@@ -4613,17 +4580,50 @@ function reducer() {
         case UPDATE_FLOWS:
             var all = reduceList(state.all, action);
             return _extends({}, state, {
-                all: all
+                all: all,
+                view: (0, _view.updateViewList)(state.view, state.all, all, action, makeFilterFn(action.filter))
+            });
+        case SET_FILTER:
+            return _extends({}, state, {
+                filter: action.filter,
+                view: (0, _view.updateViewFilter)(state.all, makeFilterFn(action.filter))
+            });
+        case SET_HIGHLIGHT:
+            return _extends({}, state, {
+                highlight: action.highlight
+            });
+        case SELECT_FLOW:
+            return _extends({}, state, {
+                selected: [action.flowId]
             });
         default:
             return state;
     }
 }
 
+function setFilter(filter) {
+    return {
+        type: SET_FILTER,
+        filter: filter
+    };
+}
+function setHighlight(highlight) {
+    return {
+        type: SET_HIGHLIGHT,
+        highlight: highlight
+    };
+}
+function selectFlow(flowId) {
+    return {
+        type: SELECT_FLOW,
+        flowId: flowId
+    };
+}
+
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"./utils/list":26}],25:[function(require,module,exports){
+},{"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4855,12 +4855,16 @@ function makeList(actionType, fetchURL) {
     return { reduceList: reduceList, updateList: updateList, fetchList: fetchList, addItem: addItem, updateItem: updateItem, removeItem: removeItem };
 }
 
-},{"../../utils":33}],27:[function(require,module,exports){
+},{"../../utils":32}],27:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+exports.sortedIndexOf = sortedIndexOf;
 exports.updateViewList = updateViewList;
 exports.updateViewFilter = updateViewFilter;
 
@@ -4885,14 +4889,17 @@ var makeCompareFn = function makeCompareFn(sortFn) {
             return 0;
         }
     };
-    if (sortFn.reverse) return function (a, b) {
-        return compareFn(b, a);
-    };
+    // need to adjust sortedIndexOf as well
+    // if (sortFn.reverse)
+    //    return (a, b) => compareFn(b, a)
     return compareFn;
 };
 
 var sortedInsert = function sortedInsert(list, sortFn, item) {
     var l = [].concat(_toConsumableArray(list), [item]);
+    l.indexOf = function (x) {
+        return sortedIndexOf(l, x, sortFn);
+    };
     var compareFn = makeCompareFn(sortFn);
 
     // only sort if sorting order is not correct yet
@@ -4906,26 +4913,61 @@ var sortedInsert = function sortedInsert(list, sortFn, item) {
 
 var sortedRemove = function sortedRemove(list, sortFn, item) {
     var itemId = item.id;
-    return list.filter(function (x) {
+    var l = list.filter(function (x) {
         return x.id !== itemId;
     });
+    l.indexOf = function (x) {
+        return sortedIndexOf(l, x, sortFn);
+    };
+    return l;
 };
 
+function sortedIndexOf(list, value, sortFn) {
+    if (sortFn === false) {
+        var i = 0;
+        while (i < list.length && list[i].id !== value.id) {
+            i++;
+        }
+        return i;
+    }
+
+    var low = 0,
+        high = list.length,
+        val = sortFn(value),
+        mid = void 0;
+    while (low < high) {
+        mid = low + high >>> 1;
+        if (sortFn(list[mid]) < val) {
+            low = mid + 1;
+        } else {
+            high = mid;
+        }
+    }
+
+    // Two flows may have the same sort value.
+    // we previously determined the leftmost flow with the same sort value,
+    // so no we need to scan linearly
+    while (list[low].id !== value.id && sortFn(list[low + 1]) === val) {
+        low++;
+    }
+    return low;
+}
+
 // for when the list changes
-function updateViewList(state, currentList, nextList, action) {
+function updateViewList(currentView, currentList, nextList, action) {
     var filterFn = arguments.length <= 4 || arguments[4] === undefined ? defaultFilterFn : arguments[4];
     var sortFn = arguments.length <= 5 || arguments[5] === undefined ? defaultSortFn : arguments[5];
 
     switch (action.cmd) {
         case _list.REQUEST_LIST:
-            return state;
+            return currentView;
         case _list.RECEIVE_LIST:
-            return updateViewFilter(nextList.list, filterFn, sortFn);
+            return updateViewFilter(nextList, filterFn, sortFn);
         case _list.ADD:
             if (filterFn(action.item)) {
-                return sortedInsert(state, sortFn, action.item);
+                return sortedInsert(currentView, sortFn, action.item);
             }
-            return state;
+            return currentView;
         case _list.UPDATE:
             // let's determine if it's in the view currently and if it should be in the view.
             var currentItemState = currentList.byId[action.item.id],
@@ -4933,23 +4975,32 @@ function updateViewList(state, currentList, nextList, action) {
                 isInView = filterFn(currentItemState),
                 shouldBeInView = filterFn(nextItemState);
 
-            if (!isInView && shouldBeInView) return sortedInsert(state, sortFn, action.item);
-            if (isInView && !shouldBeInView) return sortedRemove(state, sortFn, action.item);
-            if (isInView && shouldBeInView && sortFn(currentItemState) !== sortFn(nextItemState)) {
-                var s = [].concat(_toConsumableArray(state));
-                s.sort(sortFn);
-                return s;
+            if (!isInView && shouldBeInView) return sortedInsert(currentView, sortFn, action.item);
+            if (isInView && !shouldBeInView) return sortedRemove(currentView, sortFn, action.item);
+            if (isInView && shouldBeInView && sortFn && sortFn(currentItemState) !== sortFn(nextItemState)) {
+                var _ret = function () {
+                    var s = [].concat(_toConsumableArray(currentView));
+                    s.sort(makeCompareFn(sortFn));
+                    s.indexOf = function (x) {
+                        return sortedIndexOf(s, x, sortFn);
+                    };
+                    return {
+                        v: s
+                    };
+                }();
+
+                if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
             }
-            return state;
+            return currentView;
         case _list.REMOVE:
             var isInView_ = filterFn(currentList.byId[action.item.id]);
             if (isInView_) {
-                return sortedRemove(state, sortFn, action.item);
+                return sortedRemove(currentView, sortFn, action.item);
             }
-            return state;
+            return currentView;
         default:
             console.error("Unknown list action: ", action);
-            return state;
+            return currentView;
     }
 }
 
@@ -4957,8 +5008,14 @@ function updateViewFilter(list) {
     var filterFn = arguments.length <= 1 || arguments[1] === undefined ? defaultFilterFn : arguments[1];
     var sortFn = arguments.length <= 2 || arguments[2] === undefined ? defaultSortFn : arguments[2];
 
-    var filtered = list.filter(filterFn);
-    if (sortFn) filtered.sort(makeCompareFn(sortFn));
+    var filtered = list.list.filter(filterFn);
+    if (sortFn) {
+        filtered.sort(makeCompareFn(sortFn));
+    }
+    filtered.indexOf = function (x) {
+        return sortedIndexOf(filtered, x, sortFn);
+    };
+
     return filtered;
 }
 
@@ -7047,7 +7104,6 @@ var parseHttpVersion = exports.parseHttpVersion = function parseHttpVersion(http
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.FlowStore = FlowStore;
 exports.SettingsStore = SettingsStore;
 
 var _lodash = require("lodash");
@@ -7065,54 +7121,6 @@ var _actions = require("../actions.js");
 var _dispatcher = require("../dispatcher.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function ListStore() {
-    _events.EventEmitter.call(this);
-    this.reset();
-}
-_lodash2.default.extend(ListStore.prototype, _events.EventEmitter.prototype, {
-    add: function add(elem) {
-        if (elem.id in this._pos_map) {
-            return;
-        }
-        this._pos_map[elem.id] = this.list.length;
-        this.list.push(elem);
-        this.emit("add", elem);
-    },
-    update: function update(elem) {
-        if (!(elem.id in this._pos_map)) {
-            return;
-        }
-        this.list[this._pos_map[elem.id]] = elem;
-        this.emit("update", elem);
-    },
-    remove: function remove(elem_id) {
-        if (!(elem_id in this._pos_map)) {
-            return;
-        }
-        this.list.splice(this._pos_map[elem_id], 1);
-        this._build_map();
-        this.emit("remove", elem_id);
-    },
-    reset: function reset(elems) {
-        this.list = elems || [];
-        this._build_map();
-        this.emit("recalculate");
-    },
-    _build_map: function _build_map() {
-        this._pos_map = {};
-        for (var i = 0; i < this.list.length; i++) {
-            var elem = this.list[i];
-            this._pos_map[elem.id] = i;
-        }
-    },
-    get: function get(elem_id) {
-        return this.list[this._pos_map[elem_id]];
-    },
-    index: function index(elem_id) {
-        return this._pos_map[elem_id];
-    }
-});
 
 function DictStore() {
     _events.EventEmitter.call(this);
@@ -7190,157 +7198,17 @@ _lodash2.default.extend(LiveStoreMixin.prototype, {
     }
 });
 
-function LiveListStore(type) {
-    ListStore.call(this);
-    LiveStoreMixin.call(this, type);
-}
-_lodash2.default.extend(LiveListStore.prototype, ListStore.prototype, LiveStoreMixin.prototype);
-
 function LiveDictStore(type) {
     DictStore.call(this);
     LiveStoreMixin.call(this, type);
 }
 _lodash2.default.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
 
-function FlowStore() {
-    return new LiveListStore(_actions.ActionTypes.FLOW_STORE);
-}
-
 function SettingsStore() {
     return new LiveDictStore(_actions.ActionTypes.SETTINGS_STORE);
 }
 
 },{"../actions.js":2,"../dispatcher.js":22,"events":1,"jquery":"jquery","lodash":"lodash"}],32:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.StoreView = StoreView;
-
-var _events = require("events");
-
-var _lodash = require("lodash");
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-var _utils = require("../utils.js");
-
-var _utils2 = _interopRequireDefault(_utils);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function SortByStoreOrder(elem) {
-    return this.store.index(elem.id);
-}
-
-var default_sort = SortByStoreOrder;
-var default_filt = function default_filt(elem) {
-    return true;
-};
-
-function StoreView(store, filt, sortfun) {
-    _events.EventEmitter.call(this);
-
-    this.store = store;
-
-    this.add = this.add.bind(this);
-    this.update = this.update.bind(this);
-    this.remove = this.remove.bind(this);
-    this.recalculate = this.recalculate.bind(this);
-    this.store.addListener("add", this.add);
-    this.store.addListener("update", this.update);
-    this.store.addListener("remove", this.remove);
-    this.store.addListener("recalculate", this.recalculate);
-
-    this.recalculate(filt, sortfun);
-}
-
-_lodash2.default.extend(StoreView.prototype, _events.EventEmitter.prototype, {
-    close: function close() {
-        this.store.removeListener("add", this.add);
-        this.store.removeListener("update", this.update);
-        this.store.removeListener("remove", this.remove);
-        this.store.removeListener("recalculate", this.recalculate);
-        this.removeAllListeners();
-    },
-    recalculate: function recalculate(filt, sortfun) {
-        filt = filt || this.filt || default_filt;
-        sortfun = sortfun || this.sortfun || default_sort;
-        filt = filt.bind(this);
-        sortfun = sortfun.bind(this);
-        this.filt = filt;
-        this.sortfun = sortfun;
-
-        this.list = this.store.list.filter(filt);
-        this.list.sort(function (a, b) {
-            var akey = sortfun(a);
-            var bkey = sortfun(b);
-            if (akey < bkey) {
-                return -1;
-            } else if (akey > bkey) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
-        this.emit("recalculate");
-    },
-    indexOf: function indexOf(elem) {
-        return this.list.indexOf(elem, _lodash2.default.sortedIndexBy(this.list, elem, this.sortfun));
-    },
-    add: function add(elem) {
-        if (this.filt(elem)) {
-            var idx = _lodash2.default.sortedIndexBy(this.list, elem, this.sortfun);
-            if (idx === this.list.length) {
-                //happens often, .push is way faster.
-                this.list.push(elem);
-            } else {
-                this.list.splice(idx, 0, elem);
-            }
-            this.emit("add", elem, idx);
-        }
-    },
-    update: function update(elem) {
-        var idx;
-        var i = this.list.length;
-        // Search from the back, we usually update the latest entries.
-        while (i--) {
-            if (this.list[i].id === elem.id) {
-                idx = i;
-                break;
-            }
-        }
-
-        if (idx === -1) {
-            //not contained in list
-            this.add(elem);
-        } else if (!this.filt(elem)) {
-            this.remove(elem.id);
-        } else {
-            if (this.sortfun(this.list[idx]) !== this.sortfun(elem)) {
-                //sortpos has changed
-                this.remove(this.list[idx]);
-                this.add(elem);
-            } else {
-                this.list[idx] = elem;
-                this.emit("update", elem, idx);
-            }
-        }
-    },
-    remove: function remove(elem_id) {
-        var idx = this.list.length;
-        while (idx--) {
-            if (this.list[idx].id === elem_id) {
-                this.list.splice(idx, 1);
-                this.emit("remove", elem_id, idx);
-                break;
-            }
-        }
-    }
-});
-
-},{"../utils.js":33,"events":1,"lodash":"lodash"}],33:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

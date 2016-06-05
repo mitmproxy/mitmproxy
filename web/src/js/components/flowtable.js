@@ -8,12 +8,14 @@ import shallowEqual from "shallowequal";
 import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll";
 import flowtable_columns from "./flowtable-columns.js";
+import Filt from "../filt/filt";
+
 
 FlowRow.propTypes = {
     selectFlow: React.PropTypes.func.isRequired,
     columns: React.PropTypes.array.isRequired,
     flow: React.PropTypes.object.isRequired,
-    highlighted: React.PropTypes.bool,
+    highlight: React.PropTypes.string,
     selected: React.PropTypes.bool,
 };
 
@@ -22,7 +24,7 @@ function FlowRow(props) {
 
     const className = classNames({
         "selected": props.selected,
-        "highlighted": props.highlighted,
+        "highlighted": props.highlight && parseFilter(props.highlight)(flow),
         "intercepted": flow.intercepted,
         "has-request": flow.request,
         "has-response": flow.response,
@@ -39,9 +41,12 @@ function FlowRow(props) {
 
 const FlowRowContainer = connect(
     (state, ownProps) => ({
-        flow: state.flows.all.byId[ownProps.flowId]
+        flow: state.flows.all.byId[ownProps.flowId],
+        highlight: state.flows.highlight,
+        selected: state.flows.selected.indexOf(ownProps.flowId) >= 0
     }),
-    dispatch => ({
+    (dispatch, ownProps) => ({
+
     })
 )(FlowRow);
 
@@ -102,10 +107,6 @@ class FlowTableHead extends React.Component {
 
 class FlowTable extends React.Component {
 
-    static contextTypes = {
-        view: React.PropTypes.object.isRequired,
-    };
-
     static propTypes = {
         rowHeight: React.PropTypes.number,
     };
@@ -117,26 +118,23 @@ class FlowTable extends React.Component {
     constructor(props, context) {
         super(props, context);
 
-        this.state = { flows: [], vScroll: calcVScroll() };
+        this.state = { vScroll: calcVScroll() };
 
-        this.onChange = this.onChange.bind(this);
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
     }
 
     componentWillMount() {
         window.addEventListener("resize", this.onViewportUpdate);
-        this.context.view.addListener("add", this.onChange);
-        this.context.view.addListener("update", this.onChange);
-        this.context.view.addListener("remove", this.onChange);
-        this.context.view.addListener("recalculate", this.onChange);
     }
 
     componentWillUnmount() {
         window.removeEventListener("resize", this.onViewportUpdate);
-        this.context.view.removeListener("add", this.onChange);
-        this.context.view.removeListener("update", this.onChange);
-        this.context.view.removeListener("remove", this.onChange);
-        this.context.view.removeListener("recalculate", this.onChange);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.selected && nextProps.selected !== this.props.selected){
+            window.setTimeout(() => this.scrollIntoView(nextProps.selected), 1)
+        }
     }
 
     componentDidUpdate() {
@@ -150,7 +148,7 @@ class FlowTable extends React.Component {
         const vScroll = calcVScroll({
             viewportTop,
             viewportHeight: viewport.offsetHeight,
-            itemCount: this.state.flows.length,
+            itemCount: this.props.flows.length,
             rowHeight: this.props.rowHeight,
         });
 
@@ -160,13 +158,9 @@ class FlowTable extends React.Component {
         }
     }
 
-    onChange() {
-        this.setState({ flows: this.context.view.list });
-    }
-
     scrollIntoView(flow) {
         const viewport = ReactDOM.findDOMNode(this);
-        const index = this.context.view.indexOf(flow);
+        const index = this.props.flows.indexOf(flow);
         const rowHeight = this.props.rowHeight;
         const head = ReactDOM.findDOMNode(this.refs.head);
 
@@ -188,8 +182,7 @@ class FlowTable extends React.Component {
 
     render() {
         const vScroll = this.state.vScroll;
-        const highlight = this.context.view._highlight;
-        const flows = this.state.flows.slice(vScroll.start, vScroll.end);
+        const flows = this.props.flows.slice(vScroll.start, vScroll.end);
 
         const transform = `translate(0,${this.state.viewportTop}px)`;
 
@@ -206,11 +199,9 @@ class FlowTable extends React.Component {
                         <tr style={{ height: vScroll.paddingTop }}></tr>
                         {flows.map(flow => (
                             <FlowRowContainer
-                                flowId={flow.id}
                                 key={flow.id}
+                                flowId={flow.id}
                                 columns={flowtable_columns}
-                                selected={flow === this.props.selected}
-                                highlighted={highlight && highlight[flow.id]}
                                 selectFlow={this.props.selectFlow}
                             />
                         ))}
@@ -222,4 +213,17 @@ class FlowTable extends React.Component {
     }
 }
 
-export default AutoScroll(FlowTable);
+FlowTable = AutoScroll(FlowTable)
+
+
+const parseFilter = _.memoize(Filt.parse)
+
+const FlowTableContainer = connect(
+    state => ({
+        flows: state.flows.view,
+    }),
+    dispatch => ({
+    })
+)(FlowTable)
+
+export default FlowTableContainer;

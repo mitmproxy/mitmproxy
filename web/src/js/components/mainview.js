@@ -3,128 +3,59 @@ import React from "react";
 import {FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 import {Key} from "../utils.js";
-import {StoreView} from "../store/view.js";
-import Filt from "../filt/filt.js";
 import {Splitter} from "./common.js"
 import FlowTable from "./flowtable.js";
 import FlowView from "./flowview/index.js";
+import {connect} from 'react-redux'
+import {selectFlow, setFilter, setHighlight} from "../ducks/flows";
+
 
 var MainView = React.createClass({
-    contextTypes: {
-        flowStore: React.PropTypes.object.isRequired,
-    },
-    childContextTypes: {
-        view: React.PropTypes.object.isRequired,
-    },
-    getChildContext: function () {
-        return {
-            view: this.state.view
-        };
-    },
-    getInitialState: function () {
-        var sortKeyFun = false;
-        var view = new StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
-        view.addListener("recalculate", this.onRecalculate);
-        view.addListener("add", this.onUpdate);
-        view.addListener("update", this.onUpdate);
-        view.addListener("remove", this.onUpdate);
-        view.addListener("remove", this.onRemove);
-
-        return {
-            view: view,
-            sortKeyFun: sortKeyFun
-        };
-    },
-    componentWillUnmount: function () {
-        this.state.view.close();
-    },
-    getViewFilt: function () {
-        try {
-            var filtStr = this.props.query[Query.SEARCH];
-            var filt = filtStr ? Filt.parse(filtStr) : () => true;
-            var highlightStr = this.props.query[Query.HIGHLIGHT];
-            var highlight = highlightStr ? Filt.parse(highlightStr) : () => false;
-        } catch (e) {
-            console.error("Error when processing filter: " + e);
-        }
-
-        var fun = function filter_and_highlight(flow) {
-            if (!this._highlight) {
-                this._highlight = {};
-            }
-            this._highlight[flow.id] = highlight(flow);
-            return filt(flow);
-        };
-        fun.highlightStr = highlightStr;
-        fun.filtStr = filtStr;
-        return fun;
-    },
     componentWillReceiveProps: function (nextProps) {
-        var filterChanged = this.state.view.filt.filtStr !== nextProps.location.query[Query.SEARCH];
-        var highlightChanged = this.state.view.filt.highlightStr !== nextProps.location.query[Query.HIGHLIGHT];
-        if (filterChanged || highlightChanged) {
-            this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
+        // Update redux store with route changes
+        if(nextProps.routeParams.flowId !== (nextProps.selectedFlow || {}).id) {
+            this.props.selectFlow(nextProps.routeParams.flowId)
         }
-    },
-    onRecalculate: function () {
-        this.forceUpdate();
-        var selected = this.getSelected();
-        if (selected) {
-            this.refs.flowTable.scrollIntoView(selected);
+        if(nextProps.location.query[Query.SEARCH] !== nextProps.filter) {
+            this.props.setFilter(nextProps.location.query[Query.SEARCH], false)
         }
-    },
-    onUpdate: function (flow) {
-        if (flow.id === this.props.routeParams.flowId) {
-            this.forceUpdate();
-        }
-    },
-    onRemove: function (flow_id, index) {
-        if (flow_id === this.props.routeParams.flowId) {
-            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
-            this.selectFlow(flow_to_select);
+        if (nextProps.location.query[Query.HIGHLIGHT] !== nextProps.highlight) {
+            this.props.setHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
         }
     },
     setSortKeyFun: function (sortKeyFun) {
-        this.setState({
-            sortKeyFun: sortKeyFun
-        });
-        this.state.view.recalculate(this.getViewFilt(), sortKeyFun);
+        // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
     },
     selectFlow: function (flow) {
+        // TODO: This belongs into redux
         if (flow) {
-            var tab = this.props.routeParams.detailTab || "request";
+            let tab = this.props.routeParams.detailTab || "request";
             this.props.updateLocation(`/flows/${flow.id}/${tab}`);
-            this.refs.flowTable.scrollIntoView(flow);
         } else {
             this.props.updateLocation("/flows");
         }
     },
     selectFlowRelative: function (shift) {
-        var flows = this.state.view.list;
-        var index;
+        // TODO: This belongs into redux
+        let flows = this.props.flows,
+            index
         if (!this.props.routeParams.flowId) {
             if (shift < 0) {
-                index = flows.length - 1;
+                index = flows.length - 1
             } else {
-                index = 0;
+                index = 0
             }
         } else {
-            var currFlowId = this.props.routeParams.flowId;
-            var i = flows.length;
-            while (i--) {
-                if (flows[i].id === currFlowId) {
-                    index = i;
-                    break;
-                }
-            }
+            index = flows.indexOf(this.props.selectedFlow)
             index = Math.min(
                 Math.max(0, index + shift),
-                flows.length - 1);
+                flows.length - 1
+            )
         }
-        this.selectFlow(flows[index]);
+        this.selectFlow(flows[index])
     },
     onMainKeyDown: function (e) {
-        var flow = this.getSelected();
+        var flow = this.props.selectedFlow;
         if (e.ctrlKey) {
             return;
         }
@@ -210,14 +141,10 @@ var MainView = React.createClass({
         }
         e.preventDefault();
     },
-    getSelected: function () {
-        return this.context.flowStore.get(this.props.routeParams.flowId);
-    },
     render: function () {
-        var selected = this.getSelected();
 
-        var details;
-        if (selected) {
+        var details = null;
+        if (this.props.selectedFlow) {
             details = [
                 <Splitter key="splitter"/>,
                 <FlowView
@@ -226,10 +153,8 @@ var MainView = React.createClass({
                     tab={this.props.routeParams.detailTab}
                     query={this.props.query}
                     updateLocation={this.props.updateLocation}
-                    flow={selected}/>
-            ];
-        } else {
-            details = null;
+                    flow={this.props.selectedFlow}/>
+            ]
         }
 
         return (
@@ -237,11 +162,27 @@ var MainView = React.createClass({
                 <FlowTable ref="flowTable"
                     selectFlow={this.selectFlow}
                     setSortKeyFun={this.setSortKeyFun}
-                    selected={selected} />
+                    selected={this.props.selectedFlow} />
                 {details}
             </div>
         );
     }
 });
 
-export default MainView;
+const MainViewContainer = connect(
+    state => ({
+        flows: state.flows.view,
+        filter: state.flows.filter,
+        highlight: state.flows.highlight,
+        selectedFlow: state.flows.all.byId[state.flows.selected[0]]
+    }),
+    dispatch => ({
+        selectFlow: flowId => dispatch(selectFlow(flowId)),
+        setFilter: filter => dispatch(setFilter(filter)),
+        setHighlight: highlight => dispatch(setHighlight(highlight))
+    }),
+    undefined,
+    {withRef: true}
+)(MainView);
+
+export default MainViewContainer;
