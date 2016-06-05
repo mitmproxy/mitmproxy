@@ -10,7 +10,7 @@ from netlib import tcp, certutils, websockets
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
     TlsException
 
-from . import version, app, language, utils, log, protocols
+from . import version, language, utils, log, protocols
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -136,7 +136,6 @@ class PathodHandler(tcp.BaseHandler):
             path = req.path
             http_version = req.http_version
             headers = req.headers
-            body = req.content
 
             clientcert = None
             if self.clientcert:
@@ -203,24 +202,27 @@ class PathodHandler(tcp.BaseHandler):
                             self.server.craftanchor
                         )])
 
-            if anchor_gen:
-                spec = anchor_gen.next()
+            if not anchor_gen:
+                anchor_gen = iter([self.make_http_error_response(
+                    "Not found",
+                    "No valid craft request found"
+                )])
 
-                if self.use_http2 and isinstance(spec, language.http2.Response):
-                    spec.stream_id = req.stream_id
+            spec = anchor_gen.next()
 
-                lg("crafting spec: %s" % spec)
-                nexthandler, retlog["response"] = self.http_serve_crafted(
-                    spec,
-                    lg
-                )
-                if nexthandler and websocket_key:
-                    self.protocol = protocols.websockets.WebsocketsProtocol(self)
-                    return self.protocol.handle_websocket, retlog
-                else:
-                    return nexthandler, retlog
+            if self.use_http2 and isinstance(spec, language.http2.Response):
+                spec.stream_id = req.stream_id
+
+            lg("crafting spec: %s" % spec)
+            nexthandler, retlog["response"] = self.http_serve_crafted(
+                spec,
+                lg
+            )
+            if nexthandler and websocket_key:
+                self.protocol = protocols.websockets.WebsocketsProtocol(self)
+                return self.protocol.handle_websocket, retlog
             else:
-                return self.protocol.handle_http_app(method, path, headers, body, lg)
+                return nexthandler, retlog
 
     def make_http_error_response(self, reason, body=None):
         resp = self.protocol.make_error_response(reason, body)
@@ -302,9 +304,7 @@ class Pathod(tcp.TCPServer):
         staticdir=None,
         anchors=(),
         sizelimit=None,
-        noweb=False,
         nocraft=False,
-        noapi=False,
         nohang=False,
         timeout=None,
         logreq=False,
@@ -326,7 +326,6 @@ class Pathod(tcp.TCPServer):
             None.
             sizelimit: Limit size of served data.
             nocraft: Disable response crafting.
-            noapi: Disable the API.
             nohang: Disable pauses.
         """
         tcp.TCPServer.__init__(self, addr)
@@ -335,16 +334,14 @@ class Pathod(tcp.TCPServer):
         self.staticdir = staticdir
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit
-        self.noweb, self.nocraft = noweb, nocraft
-        self.noapi, self.nohang = noapi, nohang
+        self.nocraft = nocraft
+        self.nohang = nohang
         self.timeout, self.logreq = timeout, logreq
         self.logresp, self.hexdump = logresp, hexdump
         self.http2_framedump = http2_framedump
         self.explain = explain
         self.logfp = logfp
 
-        self.app = app.make_app(noapi, webdebug)
-        self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
         self.anchors = anchors
@@ -404,14 +401,13 @@ class Pathod(tcp.TCPServer):
             return
 
     def add_log(self, d):
-        if not self.noapi:
-            with self.loglock:
-                d["id"] = self.logid
-                self.log.insert(0, d)
-                if len(self.log) > self.LOGBUF:
-                    self.log.pop()
-                self.logid += 1
-            return d["id"]
+        with self.loglock:
+            d["id"] = self.logid
+            self.log.insert(0, d)
+            if len(self.log) > self.LOGBUF:
+                self.log.pop()
+            self.logid += 1
+        return d["id"]
 
     def clear_log(self):
         with self.loglock:
@@ -469,9 +465,7 @@ def main(args):  # pragma: no cover
             staticdir=args.staticdir,
             anchors=args.anchors,
             sizelimit=args.sizelimit,
-            noweb=args.noweb,
             nocraft=args.nocraft,
-            noapi=args.noapi,
             nohang=args.nohang,
             timeout=args.timeout,
             logreq=args.logreq,

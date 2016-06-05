@@ -23,34 +23,16 @@ class TestPathod(object):
         assert len(p.get_log()) <= p.LOGBUF
 
 
-class TestNoWeb(tutils.DaemonTests):
-    noweb = True
-
-    def test_noweb(self):
-        assert self.get("200:da").status_code == 200
-        assert self.getpath("/").status_code == 800
-
-
 class TestTimeout(tutils.DaemonTests):
     timeout = 0.01
 
-    def test_noweb(self):
+    def test_timeout(self):
         # FIXME: Add float values to spec language, reduce test timeout to
         # increase test performance
         # This is a bodge - we have some platform difference that causes
         # different exceptions to be raised here.
         tutils.raises(Exception, self.pathoc, ["get:/:p1,1"])
         assert self.d.last_log()["type"] == "timeout"
-
-
-class TestNoApi(tutils.DaemonTests):
-    noapi = True
-
-    def test_noapi(self):
-        assert self.getpath("/log").status_code == 404
-        r = self.getpath("/")
-        assert r.status_code == 200
-        assert "Log" not in r.content
 
 
 class TestNotAfterConnect(tutils.DaemonTests):
@@ -271,8 +253,6 @@ class TestDaemonSSL(CommonTests):
 
 class TestHTTP2(tutils.DaemonTests):
     ssl = True
-    noweb = True
-    noapi = True
     nohang = True
 
     if tcp.HAS_ALPN:

@@ -1,7 +1,4 @@
-import json
 from six.moves import cStringIO as StringIO
-import re
-import pytest
 from mock import Mock
 
 from netlib import http
@@ -9,10 +6,9 @@ from netlib import tcp
 from netlib.exceptions import NetlibException
 from netlib.http import http1, http2
 
-from pathod import pathoc, test, version, pathod, language
+from pathod import pathoc, language
 from netlib.tutils import raises
 import tutils
-from test.mitmproxy.tutils import skip_windows
 
 
 def test_response():
@@ -20,37 +16,7 @@ def test_response():
     assert repr(r)
 
 
-class _TestDaemon:
-    ssloptions = pathod.SSLOptions()
-
-    @classmethod
-    def setup_class(cls):
-        cls.d = test.Daemon(
-            ssl=cls.ssl,
-            ssloptions=cls.ssloptions,
-            staticdir=tutils.test_data.path("data"),
-            anchors=[
-                (re.compile("/anchor/.*"), "202")
-            ]
-        )
-
-    @classmethod
-    def teardown_class(cls):
-        cls.d.shutdown()
-
-    def setUp(self):
-        self.d.clear_log()
-
-    def test_info(self):
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-            ssl=self.ssl,
-            fp=None
-        )
-        c.connect()
-        resp = c.request("get:/api/info")
-        assert tuple(json.loads(resp.content)["version"]) == version.IVERSION
-
+class PathocTestDaemon(tutils.DaemonTests):
     def tval(
         self,
         requests,
@@ -77,23 +43,23 @@ class _TestDaemon:
             showsummary=showsummary,
             fp=s
         )
-        c.connect(showssl=showssl, fp=s)
-        if timeout:
-            c.settimeout(timeout)
-        for i in requests:
-            r = language.parse_pathoc(i).next()
-            if explain:
-                r = r.freeze(language.Settings())
-            try:
-                c.request(r)
-            except NetlibException:
-                pass
+        with c.connect(showssl=showssl, fp=s):
+            if timeout:
+                c.settimeout(timeout)
+            for i in requests:
+                r = language.parse_pathoc(i).next()
+                if explain:
+                    r = r.freeze(language.Settings())
+                try:
+                    c.request(r)
+                except NetlibException:
+                    pass
         return s.getvalue()
 
 
-class TestDaemonSSL(_TestDaemon):
+class TestDaemonSSL(PathocTestDaemon):
     ssl = True
-    ssloptions = pathod.SSLOptions(
+    ssloptions = dict(
         request_client_cert=True,
         sans=["test1.com", "test2.com"],
         alpn_select=b'h2',
@@ -106,11 +72,10 @@ class TestDaemonSSL(_TestDaemon):
             sni="foobar.com",
             fp=None
         )
-        c.connect()
-        c.request("get:/p/200")
-        r = c.request("get:/api/log")
-        d = json.loads(r.content)
-        assert d["log"][0]["request"]["sni"] == "foobar.com"
+        with c.connect():
+            c.request("get:/p/200")
+        log = self.d.log()
+        assert log[0]["request"]["sni"] == "foobar.com"
 
     def test_showssl(self):
         assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)
@@ -122,11 +87,11 @@ class TestDaemonSSL(_TestDaemon):
             clientcert=tutils.test_data.path("data/clientcert/client.pem"),
             fp=None
         )
-        c.connect()
-        c.request("get:/p/200")
-        r = c.request("get:/api/log")
-        d = json.loads(r.content)
-        assert d["log"][0]["request"]["clientcert"]["keyinfo"]
+        with c.connect():
+            c.request("get:/p/200")
+
+        log = self.d.log()
+        assert log[0]["request"]["clientcert"]["keyinfo"]
 
     def test_http2_without_ssl(self):
         fp = StringIO()
@@ -139,7 +104,7 @@ class TestDaemonSSL(_TestDaemon):
         tutils.raises(NotImplementedError, c.connect)
 
 
-class TestDaemon(_TestDaemon):
+class TestDaemon(PathocTestDaemon):
     ssl = False
 
     def test_ssl_error(self):
@@ -163,7 +128,7 @@ class TestDaemon(_TestDaemon):
                 201])
         assert "202" in self.tval(["get:'/p/202:b@1'"], ignorecodes=[200, 201])
 
-    def test_timeout(self):
+    def _test_timeout(self):
         assert "Timeout" in self.tval(["get:'/p/200:p0,100'"], timeout=0.01)
         assert "HTTP" in self.tval(
             ["get:'/p/200:p5,100'"],
@@ -178,8 +143,8 @@ class TestDaemon(_TestDaemon):
         )
 
     def test_showresp(self):
-        reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
-        assert self.tval(reqs).count("200") == 2
+        reqs = ["get:/p/200:da", "get:/p/200:da"]
+        assert self.tval(reqs).count("200 OK") == 2
         assert self.tval(reqs, showresp=True).count("HTTP/1.1 200 OK") == 2
         assert self.tval(
             reqs, showresp=True, hexdump=True
@@ -195,8 +160,8 @@ class TestDaemon(_TestDaemon):
         assert "b@100" not in self.tval(reqs, explain=True)
 
     def test_showreq(self):
-        reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
-        assert self.tval(reqs, showreq=True).count("GET /api") == 2
+        reqs = ["get:/p/200:da", "get:/p/200:da"]
+        assert self.tval(reqs, showreq=True).count("GET /p/200") == 2
         assert self.tval(
             reqs, showreq=True, hexdump=True
         ).count("0000000000") == 2
@@ -206,23 +171,20 @@ class TestDaemon(_TestDaemon):
 
     def test_websocket_shutdown(self):
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.connect()
-        c.request("ws:/")
-        c.stop()
+        with c.connect():
+            c.request("ws:/")
 
-    @skip_windows
-    @pytest.mark.skip(reason="race condition")
     def test_wait_finish(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             fp=None,
             ws_read_limit=1
         )
-        c.connect()
-        c.request("ws:/")
-        c.request("wf:f'wf:x100'")
-        [i for i in c.wait(timeout=0, finish=False)]
-        [i for i in c.wait(timeout=0)]
+        with c.connect():
+            c.request("ws:/")
+            c.request("wf:f'wf:x100'")
+            [i for i in c.wait(timeout=0, finish=False)]
+            [i for i in c.wait(timeout=0)]
 
     def test_connect_fail(self):
         to = ("foobar", 80)
@@ -264,8 +226,9 @@ class TestDaemon(_TestDaemon):
         c.socks_connect(("example.com", 0xDEAD))
 
 
-class TestDaemonHTTP2(_TestDaemon):
+class TestDaemonHTTP2(PathocTestDaemon):
     ssl = True
+    explain = False
 
     if tcp.HAS_ALPN:
 
@@ -295,10 +258,9 @@ class TestDaemonHTTP2(_TestDaemon):
             tmp_convert_to_ssl = c.convert_to_ssl
             c.convert_to_ssl = Mock()
             c.convert_to_ssl.side_effect = tmp_convert_to_ssl
-            c.connect()
-
-            _, kwargs = c.convert_to_ssl.call_args
-            assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
+            with c.connect():
+                _, kwargs = c.convert_to_ssl.call_args
+                assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
 
         def test_request(self):
             c = pathoc.Pathoc(
@@ -307,6 +269,6 @@ class TestDaemonHTTP2(_TestDaemon):
                 ssl=True,
                 use_http2=True,
             )
-            c.connect()
-            resp = c.request("get:/p/200")
+            with c.connect():
+                resp = c.request("get:/p/200")
             assert resp.status_code == 200

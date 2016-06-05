@@ -24,14 +24,13 @@ def treader(bytes):
 
 
 class DaemonTests(object):
-    noweb = False
-    noapi = False
     nohang = False
     ssl = False
     timeout = None
     hexdump = False
     ssloptions = None
     nocraft = False
+    explain = True
 
     @classmethod
     def setup_class(cls):
@@ -47,15 +46,13 @@ class DaemonTests(object):
             ssl=cls.ssl,
             ssloptions=so,
             sizelimit=1 * 1024 * 1024,
-            noweb=cls.noweb,
-            noapi=cls.noapi,
             nohang=cls.nohang,
             timeout=cls.timeout,
             hexdump=cls.hexdump,
             nocraft=cls.nocraft,
             logreq=True,
             logresp=True,
-            explain=True
+            explain=cls.explain
         )
 
     @classmethod
@@ -65,8 +62,7 @@ class DaemonTests(object):
 
     def teardown(self):
         self.d.wait_for_silence()
-        if not (self.noweb or self.noapi):
-            self.d.clear_log()
+        self.d.clear_log()
 
     def _getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
