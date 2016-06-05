@@ -35,7 +35,7 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 filter,
                 filteredEvents: updateViewFilter(
-                    state.events.list,
+                    state.events,
                     x => filter[x.level]
                 )
             }

@@ -6,55 +6,6 @@ import {ActionTypes, StoreCmds} from "../actions.js";
 import {AppDispatcher} from "../dispatcher.js";
 
 
-function ListStore() {
-    EventEmitter.call(this);
-    this.reset();
-}
-_.extend(ListStore.prototype, EventEmitter.prototype, {
-    add: function (elem) {
-        if (elem.id in this._pos_map) {
-            return;
-        }
-        this._pos_map[elem.id] = this.list.length;
-        this.list.push(elem);
-        this.emit("add", elem);
-    },
-    update: function (elem) {
-        if (!(elem.id in this._pos_map)) {
-            return;
-        }
-        this.list[this._pos_map[elem.id]] = elem;
-        this.emit("update", elem);
-    },
-    remove: function (elem_id) {
-        if (!(elem_id in this._pos_map)) {
-            return;
-        }
-        this.list.splice(this._pos_map[elem_id], 1);
-        this._build_map();
-        this.emit("remove", elem_id);
-    },
-    reset: function (elems) {
-        this.list = elems || [];
-        this._build_map();
-        this.emit("recalculate");
-    },
-    _build_map: function () {
-        this._pos_map = {};
-        for (var i = 0; i < this.list.length; i++) {
-            var elem = this.list[i];
-            this._pos_map[elem.id] = i;
-        }
-    },
-    get: function (elem_id) {
-        return this.list[this._pos_map[elem_id]];
-    },
-    index: function (elem_id) {
-        return this._pos_map[elem_id];
-    }
-});
-
-
 function DictStore() {
     EventEmitter.call(this);
     this.reset();
@@ -133,22 +84,12 @@ _.extend(LiveStoreMixin.prototype, {
     },
 });
 
-function LiveListStore(type) {
-    ListStore.call(this);
-    LiveStoreMixin.call(this, type);
-}
-_.extend(LiveListStore.prototype, ListStore.prototype, LiveStoreMixin.prototype);
-
 function LiveDictStore(type) {
     DictStore.call(this);
     LiveStoreMixin.call(this, type);
 }
 _.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
 
-
-export function FlowStore() {
-    return new LiveListStore(ActionTypes.FLOW_STORE);
-}
 
 export function SettingsStore() {
     return new LiveDictStore(ActionTypes.SETTINGS_STORE);
