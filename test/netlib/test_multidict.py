@@ -120,7 +120,7 @@ class TestMultiDict(object):
             ("a", "b"),
             ("x", "x"),
             ("c", "d"),
-            ("X", "x"),
+            ("X", "X"),
             ("e", "f"),
         ))
         md.set_all("x", ["1", "2", "3"])
@@ -128,7 +128,7 @@ class TestMultiDict(object):
             ("a", "b"),
             ("x", "1"),
             ("c", "d"),
-            ("x", "2"),
+            ("X", "2"),
             ("e", "f"),
             ("x", "3"),
         )
