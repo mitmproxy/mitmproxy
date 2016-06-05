@@ -128,17 +128,17 @@ class TestRequest:
     def test_websocket(self):
         r = parse_request('ws:/path/')
         res = r.resolve(language.Settings())
-        assert res.method.string().lower() == "get"
-        assert res.tok(http.Path).value.val == "/path/"
-        assert res.tok(http.Method).value.val.lower() == "get"
-        assert http.get_header("Upgrade", res.headers).value.val == "websocket"
+        assert res.method.string().lower() == b"get"
+        assert res.tok(http.Path).value.val == b"/path/"
+        assert res.tok(http.Method).value.val.lower() == b"get"
+        assert http.get_header(b"Upgrade", res.headers).value.val == b"websocket"
 
         r = parse_request('ws:put:/path/')
         res = r.resolve(language.Settings())
-        assert r.method.string().lower() == "put"
-        assert res.tok(http.Path).value.val == "/path/"
-        assert res.tok(http.Method).value.val.lower() == "put"
-        assert http.get_header("Upgrade", res.headers).value.val == "websocket"
+        assert r.method.string().lower() == b"put"
+        assert res.tok(http.Path).value.val == b"/path/"
+        assert res.tok(http.Method).value.val.lower() == b"put"
+        assert http.get_header(b"Upgrade", res.headers).value.val == b"websocket"
 
 
 class TestResponse:
@@ -259,8 +259,8 @@ class TestResponse:
     def test_websockets(self):
         r = next(language.parse_pathod("ws"))
         tutils.raises("no websocket key", r.resolve, language.Settings())
-        res = r.resolve(language.Settings(websocket_key="foo"))
-        assert res.status_code.string() == "101"
+        res = r.resolve(language.Settings(websocket_key=b"foo"))
+        assert res.status_code.string() == b"101"
 
 
 def test_ctype_shortcut():
