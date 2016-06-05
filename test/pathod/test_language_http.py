@@ -148,18 +148,18 @@ class TestResponse:
 
     def test_response(self):
         r = next(language.parse_pathod("400:m'msg'"))
-        assert r.status_code.string() == "400"
-        assert r.reason.string() == "msg"
+        assert r.status_code.string() == b"400"
+        assert r.reason.string() == b"msg"
 
         r = next(language.parse_pathod("400:m'msg':b@100b"))
-        assert r.reason.string() == "msg"
+        assert r.reason.string() == b"msg"
         assert r.body.values({})
         assert str(r)
 
         r = next(language.parse_pathod("200"))
-        assert r.status_code.string() == "200"
+        assert r.status_code.string() == b"200"
         assert not r.reason
-        assert "OK" in [i[:] for i in r.preamble({})]
+        assert b"OK" in [i[:] for i in r.preamble({})]
 
     def test_render(self):
         s = BytesIO()
@@ -176,13 +176,13 @@ class TestResponse:
         r = next(language.parse_pathod("400:b'foo'"))
         language.serve(r, s, {})
         v = s.getvalue()
-        assert "Content-Length" in v
+        assert b"Content-Length" in v
 
         s = BytesIO()
         r = next(language.parse_pathod("400:b'foo':r"))
         language.serve(r, s, {})
         v = s.getvalue()
-        assert "Content-Length" not in v
+        assert b"Content-Length" not in v
 
     def test_length(self):
         def testlen(x):
