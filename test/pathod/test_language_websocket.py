@@ -6,7 +6,7 @@ import tutils
 
 
 def parse_request(s):
-    return language.parse_pathoc(s).next()
+    return next(language.parse_pathoc(s))
 
 
 class TestWebsocketFrame:
