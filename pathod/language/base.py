@@ -401,7 +401,7 @@ class Integer(_Component):
         return e.setParseAction(lambda x: cls(*x))
 
     def values(self, settings):
-        return self.value
+        return [self.value]
 
     def spec(self):
         return "%s%s" % (self.preamble, self.value.decode())
