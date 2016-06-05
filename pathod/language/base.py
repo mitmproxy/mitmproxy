@@ -391,7 +391,7 @@ class Integer(_Component):
                 "Integer value must be between %s and %s." % self.bounds,
                 0, 0
             )
-        self.value = str(value)
+        self.value = str(value).encode()
 
     @classmethod
     def expr(cls):
@@ -404,7 +404,7 @@ class Integer(_Component):
         return self.value
 
     def spec(self):
-        return "%s%s" % (self.preamble, self.value)
+        return "%s%s" % (self.preamble, self.value.decode())
 
     def freeze(self, settings_):
         return self
