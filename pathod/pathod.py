@@ -304,9 +304,7 @@ class Pathod(tcp.TCPServer):
         staticdir=None,
         anchors=(),
         sizelimit=None,
-        noweb=False,
         nocraft=False,
-        noapi=False,
         nohang=False,
         timeout=None,
         logreq=False,
@@ -328,7 +326,6 @@ class Pathod(tcp.TCPServer):
             None.
             sizelimit: Limit size of served data.
             nocraft: Disable response crafting.
-            noapi: Disable the API.
             nohang: Disable pauses.
         """
         tcp.TCPServer.__init__(self, addr)
@@ -337,8 +334,8 @@ class Pathod(tcp.TCPServer):
         self.staticdir = staticdir
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit
-        self.noweb, self.nocraft = noweb, nocraft
-        self.noapi, self.nohang = noapi, nohang
+        self.nocraft = nocraft
+        self.nohang = nohang
         self.timeout, self.logreq = timeout, logreq
         self.logresp, self.hexdump = logresp, hexdump
         self.http2_framedump = http2_framedump
@@ -404,14 +401,13 @@ class Pathod(tcp.TCPServer):
             return
 
     def add_log(self, d):
-        if not self.noapi:
-            with self.loglock:
-                d["id"] = self.logid
-                self.log.insert(0, d)
-                if len(self.log) > self.LOGBUF:
-                    self.log.pop()
-                self.logid += 1
-            return d["id"]
+        with self.loglock:
+            d["id"] = self.logid
+            self.log.insert(0, d)
+            if len(self.log) > self.LOGBUF:
+                self.log.pop()
+            self.logid += 1
+        return d["id"]
 
     def clear_log(self):
         with self.loglock:
@@ -469,9 +465,7 @@ def main(args):  # pragma: no cover
             staticdir=args.staticdir,
             anchors=args.anchors,
             sizelimit=args.sizelimit,
-            noweb=args.noweb,
             nocraft=args.nocraft,
-            noapi=args.noapi,
             nohang=args.nohang,
             timeout=args.timeout,
             logreq=args.logreq,

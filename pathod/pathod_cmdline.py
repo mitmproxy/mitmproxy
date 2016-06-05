@@ -75,16 +75,8 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
         type=str,
         help='Size limit of served responses. Understands size suffixes, i.e. 100k.')
     parser.add_argument(
-        "--noapi", dest='noapi', default=False, action="store_true",
-        help='Disable API.'
-    )
-    parser.add_argument(
         "--nohang", dest='nohang', default=False, action="store_true",
         help='Disable pauses during crafted response generation.'
-    )
-    parser.add_argument(
-        "--noweb", dest='noweb', default=False, action="store_true",
-        help='Disable both web interface and API.'
     )
     parser.add_argument(
         "--nocraft",

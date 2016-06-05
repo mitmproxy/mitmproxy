@@ -228,6 +228,7 @@ class TestDaemon(PathocTestDaemon):
 
 class TestDaemonHTTP2(PathocTestDaemon):
     ssl = True
+    explain = False
 
     if tcp.HAS_ALPN:
 

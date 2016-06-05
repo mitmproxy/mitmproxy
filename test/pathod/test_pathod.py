@@ -23,18 +23,10 @@ class TestPathod(object):
         assert len(p.get_log()) <= p.LOGBUF
 
 
-class TestNoWeb(tutils.DaemonTests):
-    noweb = True
-
-    def test_noweb(self):
-        assert self.get("200:da").status_code == 200
-        assert self.getpath("/").status_code == 800
-
-
 class TestTimeout(tutils.DaemonTests):
     timeout = 0.01
 
-    def test_noweb(self):
+    def test_timeout(self):
         # FIXME: Add float values to spec language, reduce test timeout to
         # increase test performance
         # This is a bodge - we have some platform difference that causes
@@ -261,8 +253,6 @@ class TestDaemonSSL(CommonTests):
 
 class TestHTTP2(tutils.DaemonTests):
     ssl = True
-    noweb = True
-    noapi = True
     nohang = True
 
     if tcp.HAS_ALPN:
