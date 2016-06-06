@@ -555,7 +555,7 @@ class NestedMessage(Token):
         try:
             self.parsed = self.nest_type(
                 self.nest_type.expr().parseString(
-                    value.val,
+                    value.val.decode(),
                     parseAll=True
                 )
             )

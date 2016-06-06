@@ -324,7 +324,7 @@ def test_user_agent():
 def test_nested_response():
     e = http.NestedResponse.expr()
     v = e.parseString("s'200'")[0]
-    assert v.value.val == "200"
+    assert v.value.val == b"200"
     tutils.raises(
         language.ParseException,
         e.parseString,
