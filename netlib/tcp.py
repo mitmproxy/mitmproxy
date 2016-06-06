@@ -580,8 +580,10 @@ class _Connection(object):
 
 @contextlib.contextmanager
 def _closer(client):
-    yield
-    client.close()
+    try:
+        yield
+    finally:
+        client.close()
 
 
 class TCPClient(_Connection):
