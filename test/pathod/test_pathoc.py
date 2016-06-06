@@ -17,43 +17,26 @@ def test_response():
 
 
 class PathocTestDaemon(tutils.DaemonTests):
-    def tval(
-        self,
-        requests,
-        showreq=False,
-        showresp=False,
-        explain=False,
-        showssl=False,
-        hexdump=False,
-        timeout=None,
-        ignorecodes=(),
-        ignoretimeout=None,
-        showsummary=True
-    ):
+    def tval(self, requests, timeout=None, showssl=False, **kwargs):
         s = StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             ssl=self.ssl,
-            showreq=showreq,
-            showresp=showresp,
-            explain=explain,
-            hexdump=hexdump,
-            ignorecodes=ignorecodes,
-            ignoretimeout=ignoretimeout,
-            showsummary=showsummary,
-            fp=s
+            fp=s,
+            **kwargs
         )
         with c.connect(showssl=showssl, fp=s):
             if timeout:
                 c.settimeout(timeout)
             for i in requests:
                 r = language.parse_pathoc(i).next()
-                if explain:
+                if kwargs.get("explain"):
                     r = r.freeze(language.Settings())
                 try:
                     c.request(r)
                 except NetlibException:
                     pass
+        self.d.wait_for_silence()
         return s.getvalue()
 
 
@@ -66,14 +49,10 @@ class TestDaemonSSL(PathocTestDaemon):
     )
 
     def test_sni(self):
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-            ssl=True,
-            sni="foobar.com",
-            fp=None
+        self.tval(
+            ["get:/p/200"],
+            sni="foobar.com"
         )
-        with c.connect():
-            c.request("get:/p/200")
         log = self.d.log()
         assert log[0]["request"]["sni"] == "foobar.com"
 
@@ -81,15 +60,10 @@ class TestDaemonSSL(PathocTestDaemon):
         assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)
 
     def test_clientcert(self):
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-            ssl=True,
+        self.tval(
+            ["get:/p/200"],
             clientcert=tutils.test_data.path("data/clientcert/client.pem"),
-            fp=None
         )
-        with c.connect():
-            c.request("get:/p/200")
-
         log = self.d.log()
         assert log[0]["request"]["clientcert"]["keyinfo"]
 
@@ -170,9 +144,7 @@ class TestDaemon(PathocTestDaemon):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
 
     def test_websocket_shutdown(self):
-        c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        with c.connect():
-            c.request("ws:/")
+        self.tval(["ws:/"])
 
     def test_wait_finish(self):
         c = pathoc.Pathoc(
