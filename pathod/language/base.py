@@ -578,4 +578,4 @@ class NestedMessage(Token):
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
-        return self.__class__(TokValueLiteral(strutils.bytes_to_escaped_str(f)))
+        return self.__class__(TokValueLiteral(strutils.bytes_to_escaped_str(f.encode())))

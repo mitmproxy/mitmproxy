@@ -55,8 +55,15 @@ class TestTokValueLiteral:
         v = base.TokValueLiteral("f\x00oo")
         assert v.spec() == repr(v) == r"'f\x00oo'"
 
-        v = base.TokValueLiteral("\"")
-        assert v.spec() == repr(v) == '\'"\''
+        v = base.TokValueLiteral('"')
+        assert v.spec() == repr(v) == """  '"'  """.strip()
+
+        # While pyparsing has a escChar argument for QuotedString,
+        # escChar only performs scapes single-character escapes and does not work for e.g. r"\x02".
+        # Thus, we cannot use that option, which means we cannot have single quotes in strings.
+        # To fix this, we represent single quotes as r"\x07".
+        v = base.TokValueLiteral("'")
+        assert v.spec() == r"'\x27'"
 
     def roundtrip(self, spec):
         e = base.TokValueLiteral.expr()

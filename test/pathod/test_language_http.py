@@ -340,9 +340,7 @@ def test_nested_response():
 def test_nested_response_freeze():
     e = http.NestedResponse(
         base.TokValueLiteral(
-            "200:b'foo':i10,'\\x27'".encode(
-                "string_escape"
-            )
+            r"200:b\'foo\':i10,\'\\x27\'"
         )
     )
     assert e.freeze({})
