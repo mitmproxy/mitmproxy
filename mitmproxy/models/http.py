@@ -251,10 +251,11 @@ def make_error_response(status_code, message, headers=None):
             <head>
                 <title>%d %s</title>
             </head>
-            <body>%s</body>
+            <body><pre>%s</pre></body>
         </html>
     """.strip() % (status_code, response, cgi.escape(message))
-    body = body.encode("utf8", "replace")
+    # Remove the .decode('unicode_escape') when converting to py3
+    body = body.decode('unicode_escape').encode("utf8", "replace")
 
     if not headers:
         headers = Headers(
