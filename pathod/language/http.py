@@ -182,7 +182,7 @@ class Response(_HTTPMessage):
                 status_codes.RESPONSES.get(
                     status_code,
                     b"Unknown code"
-                )
+                ).encode()
             )
         return l
 
