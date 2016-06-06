@@ -43,12 +43,8 @@ const sortedRemove = (list, sortFn, item) => {
 }
 
 export function sortedIndexOf(list, value, sortFn) {
-    if (sortFn === false){
-        let i = 0
-        while (i < list.length && list[i].id !== value.id){
-            i++
-        }
-        return i
+    if (!sortFn) {
+        sortFn = x => 0 // This triggers the linear search for flows that have the same sort value.
     }
 
     let low = 0,
@@ -57,7 +53,7 @@ export function sortedIndexOf(list, value, sortFn) {
         mid;
     while (low < high) {
         mid = (low + high) >>> 1;
-        if ((sortFn(list[mid]) < val) ) {
+        if (sortFn(list[mid]) < val) {
             low = mid + 1
         } else {
             high = mid
