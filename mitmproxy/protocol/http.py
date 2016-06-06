@@ -161,7 +161,7 @@ class HttpLayer(base.Layer):
                 # don't throw an error for disconnects that happen before/between requests.
                 return
             except netlib.exceptions.NetlibException as e:
-                self.send_error_response(400, repr(e))
+                self.send_error_response(400, traceback.format_exc())
                 six.reraise(exceptions.ProtocolException, exceptions.ProtocolException(
                     "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
 
@@ -202,7 +202,7 @@ class HttpLayer(base.Layer):
                     return
 
             except (exceptions.ProtocolException, netlib.exceptions.NetlibException) as e:
-                self.send_error_response(502, repr(e))
+                self.send_error_response(502, traceback.format_exc())
 
                 if not flow.response:
                     flow.error = models.Error(str(e))
