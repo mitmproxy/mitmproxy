@@ -75,7 +75,7 @@ setup(
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
-        "pyparsing>=2.0, <2.1",  # 2.1.1 breaks our binaries, see https://sourceforge.net/p/pyparsing/bugs/93/
+        "pyparsing>=2.1.3, <2.2",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.10",
         "six>=1.10, <1.11",
