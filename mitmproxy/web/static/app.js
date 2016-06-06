@@ -1479,6 +1479,8 @@ var _filt = require("../filt/filt");
 
 var _filt2 = _interopRequireDefault(_filt);
 
+var _flows = require("../ducks/flows");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1536,13 +1538,28 @@ function FlowTableHead(_ref2) {
     var sort = _ref2.sort;
 
 
-    /*    function () {
-        const k = Column.sortKeyFun.apply(this, arguments);
-        if (_.isString(k)) {
-            return reverseString("" + k);
-        }
-        return -k;
-        };*/
+    //const hasSort = Column.sortKeyFun;
+
+    // let sortDesc = this.props.sort.sortDesc;
+    //
+    // if (Column === this.props.sort.sortColumn) {
+    //     sortDesc = !sortDesc;
+    //     this.props.setSort(sortColumn, sortDesc);
+    // } else {
+    //     this.props.setSort({sortColumn: hasSort && Column, sortDesc: false});
+    // }
+    //
+    // let sortKeyFun = Column.sortKeyFun;
+    // if (sortDesc) {
+    //     sortKeyFun = hasSort && function () {
+    //             const k = Column.sortKeyFun.apply(this, arguments);
+    //             if (_.isString(k)) {
+    //                 return reverseString("" + k);
+    //             }
+    //             return -k;
+    //         };
+    // }
+    //this.props.setSortKeyFun(sortKeyFun);
 
     var sortColumn = sort.sortColumn;
     var sortType = sort.sortDesc ? "sort-desc" : "sort-asc";
@@ -1571,6 +1588,12 @@ FlowTableHead.propTypes = {
 var FlowTableHeadContainer = (0, _reactRedux.connect)(function (state) {
     return {
         sort: state.flows.sort
+    };
+}, function (dispatch) {
+    return {
+        setSort: function setSort(sort) {
+            return dispatch((0, _flows.setSort)(sort));
+        }
     };
 })(FlowTableHead);
 
@@ -1715,6 +1738,7 @@ var parseFilter = _lodash2.default.memoize(_filt2.default.parse);
 
 var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
     return {
+        // first idea to sort here, but i think thats not good enough ( and not working yet)...
         flows: state.flows.view.sort(function (a, b) {
             return state.flows.sort.sortColumn ? a.response.status_code > b.response.status_code : 0;
         })
@@ -1723,7 +1747,7 @@ var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
 
 exports.default = FlowTableContainer;
 
-},{"../filt/filt":29,"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../ducks/flows":24,"../filt/filt":29,"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3918,7 +3942,6 @@ var MainView = _react2.default.createClass({
             { className: "main-view" },
             _react2.default.createElement(_flowtable2.default, { ref: "flowTable",
                 selectFlow: this.selectFlow,
-                setSort: this.props.setSort,
                 selected: this.props.selectedFlow }),
             details
         );
@@ -3940,9 +3963,6 @@ var MainViewContainer = (0, _reactRedux.connect)(function (state) {
         },
         setFilter: function setFilter(filter) {
             return dispatch((0, _flows.setFilter)(filter));
-        },
-        setSort: function setSort(sort) {
-            return dispatch((0, _flows.setSort)(sort));
         },
         setHighlight: function setHighlight(highlight) {
             return dispatch((0, _flows.setHighlight)(highlight));

@@ -9,6 +9,7 @@ import AutoScroll from "./helpers/AutoScroll";
 import {calcVScroll} from "./helpers/VirtualScroll";
 import flowtable_columns from "./flowtable-columns.js";
 import Filt from "../filt/filt";
+import {setSort} from "../ducks/flows";
 
 
 FlowRow.propTypes = {
@@ -94,8 +95,11 @@ FlowTableHead.propTypes = {
 };
 
 const FlowTableHeadContainer = connect(
-    (state) => ({
+    state => ({
         sort: state.flows.sort
+    }),
+    dispatch => ({
+        loc: (sort) => dispatch(setSort(sort)),
     })
 )(FlowTableHead)
 

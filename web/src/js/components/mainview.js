@@ -7,7 +7,7 @@ import {Splitter} from "./common.js"
 import FlowTable from "./flowtable.js";
 import FlowView from "./flowview/index.js";
 import {connect} from 'react-redux'
-import {selectFlow, setFilter, setHighlight, setSort} from "../ducks/flows";
+import {selectFlow, setFilter, setHighlight} from "../ducks/flows";
 
 
 var MainView = React.createClass({
@@ -158,7 +158,6 @@ var MainView = React.createClass({
             <div className="main-view">
                 <FlowTable ref="flowTable"
                     selectFlow={this.selectFlow}
-                    setSort={this.props.setSort}
                     selected={this.props.selectedFlow} />
                 {details}
             </div>
@@ -177,7 +176,6 @@ const MainViewContainer = connect(
     dispatch => ({
         selectFlow: flowId => dispatch(selectFlow(flowId)),
         setFilter: filter => dispatch(setFilter(filter)),
-        setSort: (sort) => dispatch(setSort(sort)),
         setHighlight: highlight => dispatch(setHighlight(highlight))
     }),
     undefined,
