@@ -96,10 +96,12 @@ export function updateViewList(currentView, currentList, nextList, action, filte
                 return sortedInsert(currentView, sortFn, action.item)
             if (isInView && !shouldBeInView)
                 return sortedRemove(currentView, sortFn, action.item)
-            if (isInView && shouldBeInView && sortFn && sortFn(currentItemState) !== sortFn(nextItemState)) {
+            if (isInView && shouldBeInView) {
                 let s = [...currentView]
-                s.sort(makeCompareFn(sortFn))
                 s.indexOf = x => sortedIndexOf(s, x, sortFn)
+                s[s.indexOf(currentItemState)] = nextItemState
+                if (sortFn && sortFn(currentItemState) !== sortFn(nextItemState))
+                    s.sort(makeCompareFn(sortFn))
                 return s
             }
             return currentView

@@ -3802,7 +3802,7 @@ var MainView = _react2.default.createClass({
     componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
         // Update redux store with route changes
         if (nextProps.routeParams.flowId !== (nextProps.selectedFlow || {}).id) {
-            // FIXME this.props.selectFlow(nextProps.routeParams.flowId)
+            this.props.selectFlow(nextProps.routeParams.flowId);
         }
         if (nextProps.location.query[_actions.Query.SEARCH] !== nextProps.filter) {
             this.props.setFilter(nextProps.location.query[_actions.Query.SEARCH], false);
@@ -3815,7 +3815,6 @@ var MainView = _react2.default.createClass({
         // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
     },
     selectFlow: function selectFlow(flow) {
-        return this.props.selectFlow(flow.id);
         // TODO: This belongs into redux
         if (flow) {
             var tab = this.props.routeParams.detailTab || "request";
@@ -4117,7 +4116,7 @@ exports.default = Prompt;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.history = exports.App = undefined;
+exports.App = undefined;
 
 var _react = require("react");
 
@@ -4298,7 +4297,6 @@ var App = exports.App = _react2.default.createElement(
         _react2.default.createElement(_reactRouter.Route, { path: "reports", component: Reports })
     )
 );
-exports.history = _reactRouter.hashHistory;
 
 },{"../store/store.js":31,"../utils.js":32,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
@@ -4517,8 +4515,6 @@ var _filt2 = _interopRequireDefault(_filt);
 
 var _view = require("./utils/view");
 
-var _proxyapp = require("../components/proxyapp");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var UPDATE_FLOWS = exports.UPDATE_FLOWS = "UPDATE_FLOWS";
@@ -4589,23 +4585,6 @@ function setHighlight(highlight) {
     };
 }
 function selectFlow(flowId) {
-    var detailTab = arguments.length <= 1 || arguments[1] === undefined ? "request" : arguments[1];
-
-    var pathname = void 0;
-    if (flowId) {
-        pathname = "/flows/" + flowId + "/" + detailTab;
-    } else {
-        pathname = "/flows";
-    }
-
-    /*
-    let location
-    history.listen(l => {location = l})()
-     history.replace({
-        ...location,
-        pathname
-    })
-    */
     return {
         type: SELECT_FLOW,
         flowId: flowId
@@ -4615,7 +4594,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../components/proxyapp":20,"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
+},{"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4750,7 +4729,8 @@ function makeList(actionType, fetchURL) {
                 itemIndex = state.indexOf[action.item.id];
                 list[itemIndex] = action.item;
                 return _extends({}, state, {
-                    list: list
+                    list: list,
+                    byId: _extends({}, state.byId, _defineProperty({}, action.item.id, action.item))
                 });
 
             case REMOVE:
@@ -4969,13 +4949,14 @@ function updateViewList(currentView, currentList, nextList, action) {
 
             if (!isInView && shouldBeInView) return sortedInsert(currentView, sortFn, action.item);
             if (isInView && !shouldBeInView) return sortedRemove(currentView, sortFn, action.item);
-            if (isInView && shouldBeInView && sortFn && sortFn(currentItemState) !== sortFn(nextItemState)) {
+            if (isInView && shouldBeInView) {
                 var _ret = function () {
                     var s = [].concat(_toConsumableArray(currentView));
-                    s.sort(makeCompareFn(sortFn));
                     s.indexOf = function (x) {
                         return sortedIndexOf(s, x, sortFn);
                     };
+                    s[s.indexOf(currentItemState)] = nextItemState;
+                    if (sortFn && sortFn(currentItemState) !== sortFn(nextItemState)) s.sort(makeCompareFn(sortFn));
                     return {
                         v: s
                     };

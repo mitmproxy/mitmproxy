@@ -63,7 +63,8 @@ export default function makeList(actionType, fetchURL) {
                 list[itemIndex] = action.item
                 return {
                     ...state,
-                    list
+                    list,
+                    byId: {...state.byId, [action.item.id]: action.item},
                 }
 
             case REMOVE:
