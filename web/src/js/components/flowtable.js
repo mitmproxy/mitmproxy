@@ -19,21 +19,20 @@ FlowRow.propTypes = {
     selected: React.PropTypes.bool,
 };
 
-function FlowRow(props) {
-    const flow = props.flow;
+function FlowRow({flow, selected, highlight, columns, selectFlow}) {
 
     const className = classNames({
-        "selected": props.selected,
-        "highlighted": props.highlight && parseFilter(props.highlight)(flow),
+        "selected": selected,
+        "highlighted": highlight && parseFilter(highlight)(flow),
         "intercepted": flow.intercepted,
         "has-request": flow.request,
         "has-response": flow.response,
     });
 
     return (
-        <tr className={className} onClick={() => props.selectFlow(flow)}>
-            {props.columns.map(Column => (
-                <Column key={Column.displayName} flow={flow}/>
+        <tr className={className} onClick={() => selectFlow(flow)}>
+            {columns.map(Column => (
+                <Column key={Column.name} flow={flow}/>
             ))}
         </tr>
     );
@@ -44,11 +43,8 @@ const FlowRowContainer = connect(
         flow: state.flows.all.byId[ownProps.flowId],
         highlight: state.flows.highlight,
         selected: state.flows.selected.indexOf(ownProps.flowId) >= 0
-    }),
-    (dispatch, ownProps) => ({
-
     })
-)(FlowRow);
+)(FlowRow)
 
 class FlowTableHead extends React.Component {
 
@@ -59,7 +55,7 @@ class FlowTableHead extends React.Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = { sortColumn: undefined, sortDesc: false };
+        this.state = {sortColumn: undefined, sortDesc: false};
     }
 
     onClick(Column) {
@@ -69,20 +65,20 @@ class FlowTableHead extends React.Component {
 
         if (Column === this.state.sortColumn) {
             sortDesc = !sortDesc;
-            this.setState({ sortDesc });
+            this.setState({sortDesc});
         } else {
-            this.setState({ sortColumn: hasSort && Column, sortDesc: false });
+            this.setState({sortColumn: hasSort && Column, sortDesc: false});
         }
 
         let sortKeyFun = Column.sortKeyFun;
         if (sortDesc) {
-            sortKeyFun = hasSort && function() {
-                const k = Column.sortKeyFun.apply(this, arguments);
-                if (_.isString(k)) {
-                    return reverseString("" + k);
-                }
-                return -k;
-            };
+            sortKeyFun = hasSort && function () {
+                    const k = Column.sortKeyFun.apply(this, arguments);
+                    if (_.isString(k)) {
+                        return reverseString("" + k);
+                    }
+                    return -k;
+                };
         }
 
         this.props.setSortKeyFun(sortKeyFun);
@@ -95,9 +91,9 @@ class FlowTableHead extends React.Component {
             <tr>
                 {this.props.columns.map(Column => (
                     <Column.Title
-                        key={Column.displayName}
+                        key={Column.name}
                         onClick={() => this.onClick(Column)}
-                        className={sortColumn === Column && sortType}
+                        className={sortColumn === Column ? sortType : undefined}
                     />
                 ))}
             </tr>
@@ -118,7 +114,7 @@ class FlowTable extends React.Component {
     constructor(props, context) {
         super(props, context);
 
-        this.state = { vScroll: calcVScroll() };
+        this.state = {vScroll: calcVScroll()};
 
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
     }
@@ -132,7 +128,7 @@ class FlowTable extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.selected && nextProps.selected !== this.props.selected){
+        if (nextProps.selected && nextProps.selected !== this.props.selected) {
             window.setTimeout(() => this.scrollIntoView(nextProps.selected), 1)
         }
     }
@@ -154,7 +150,7 @@ class FlowTable extends React.Component {
 
         if (!shallowEqual(this.state.vScroll, vScroll) ||
             this.state.viewportTop !== viewportTop) {
-            this.setState({ vScroll, viewportTop });
+            this.setState({vScroll, viewportTop});
         }
     }
 
@@ -190,22 +186,22 @@ class FlowTable extends React.Component {
             <div className="flow-table" onScroll={this.onViewportUpdate}>
                 <table>
                     <thead ref="head" style={{ transform }}>
-                        <FlowTableHead
-                            columns={flowtable_columns}
-                            setSortKeyFun={this.props.setSortKeyFun}
-                        />
+                    <FlowTableHead
+                        columns={flowtable_columns}
+                        setSortKeyFun={this.props.setSortKeyFun}
+                    />
                     </thead>
                     <tbody>
-                        <tr style={{ height: vScroll.paddingTop }}></tr>
-                        {flows.map(flow => (
-                            <FlowRowContainer
-                                key={flow.id}
-                                flowId={flow.id}
-                                columns={flowtable_columns}
-                                selectFlow={this.props.selectFlow}
-                            />
-                        ))}
-                        <tr style={{ height: vScroll.paddingBottom }}></tr>
+                    <tr style={{ height: vScroll.paddingTop }}></tr>
+                    {flows.map(flow => (
+                        <FlowRowContainer
+                            key={flow.id}
+                            flowId={flow.id}
+                            columns={flowtable_columns}
+                            selectFlow={this.props.selectFlow}
+                        />
+                    ))}
+                    <tr style={{ height: vScroll.paddingBottom }}></tr>
                     </tbody>
                 </table>
             </div>
@@ -221,8 +217,6 @@ const parseFilter = _.memoize(Filt.parse)
 const FlowTableContainer = connect(
     state => ({
         flows: state.flows.view,
-    }),
-    dispatch => ({
     })
 )(FlowTable)
 

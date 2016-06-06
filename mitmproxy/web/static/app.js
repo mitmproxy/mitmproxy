@@ -1212,251 +1212,221 @@ var _utils2 = require("../utils.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var TLSColumn = _react2.default.createClass({
-    displayName: "TLSColumn",
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
+function TLSColumn(_ref) {
+    var flow = _ref.flow;
 
-            render: function render() {
-                return _react2.default.createElement("th", _extends({}, this.props, { className: "col-tls " + (this.props.className || "") }));
-            }
-        }),
-        sortKeyFun: function sortKeyFun(flow) {
-            return flow.request.scheme;
-        }
-    },
-    render: function render() {
-        var flow = this.props.flow;
-        var ssl = flow.request.scheme === "https";
-        var classes;
-        if (ssl) {
-            classes = "col-tls col-tls-https";
-        } else {
-            classes = "col-tls col-tls-http";
-        }
-        return _react2.default.createElement("td", { className: classes });
+    var ssl = flow.request.scheme === "https";
+    var classes = void 0;
+    if (ssl) {
+        classes = "col-tls col-tls-https";
+    } else {
+        classes = "col-tls col-tls-http";
     }
-});
+    return _react2.default.createElement("td", { className: classes });
+}
+TLSColumn.Title = function (_ref2) {
+    var _ref2$className = _ref2.className;
+    var className = _ref2$className === undefined ? "" : _ref2$className;
 
-var IconColumn = _react2.default.createClass({
-    displayName: "IconColumn",
+    var props = _objectWithoutProperties(_ref2, ["className"]);
 
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
+    return _react2.default.createElement("th", _extends({}, props, { className: "col-tls " + className }));
+};
+TLSColumn.sortKeyFun = function (flow) {
+    return flow.request.scheme;
+};
 
-            render: function render() {
-                return _react2.default.createElement("th", _extends({}, this.props, { className: "col-icon " + (this.props.className || "") }));
-            }
-        })
-    },
-    render: function render() {
-        var flow = this.props.flow;
+function IconColumn(_ref3) {
+    var flow = _ref3.flow;
 
-        var icon;
-        if (flow.response) {
-            var contentType = _utils.ResponseUtils.getContentType(flow.response);
+    var icon = void 0;
+    if (flow.response) {
+        var contentType = _utils.ResponseUtils.getContentType(flow.response);
 
-            //TODO: We should assign a type to the flow somewhere else.
-            if (flow.response.status_code === 304) {
-                icon = "resource-icon-not-modified";
-            } else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
-                icon = "resource-icon-redirect";
-            } else if (contentType && contentType.indexOf("image") >= 0) {
-                icon = "resource-icon-image";
-            } else if (contentType && contentType.indexOf("javascript") >= 0) {
-                icon = "resource-icon-js";
-            } else if (contentType && contentType.indexOf("css") >= 0) {
-                icon = "resource-icon-css";
-            } else if (contentType && contentType.indexOf("html") >= 0) {
-                icon = "resource-icon-document";
-            }
+        //TODO: We should assign a type to the flow somewhere else.
+        if (flow.response.status_code === 304) {
+            icon = "resource-icon-not-modified";
+        } else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
+            icon = "resource-icon-redirect";
+        } else if (contentType && contentType.indexOf("image") >= 0) {
+            icon = "resource-icon-image";
+        } else if (contentType && contentType.indexOf("javascript") >= 0) {
+            icon = "resource-icon-js";
+        } else if (contentType && contentType.indexOf("css") >= 0) {
+            icon = "resource-icon-css";
+        } else if (contentType && contentType.indexOf("html") >= 0) {
+            icon = "resource-icon-document";
         }
-        if (!icon) {
-            icon = "resource-icon-plain";
-        }
-
-        icon += " resource-icon";
-        return _react2.default.createElement(
-            "td",
-            { className: "col-icon" },
-            _react2.default.createElement("div", { className: icon })
-        );
     }
-});
-
-var PathColumn = _react2.default.createClass({
-    displayName: "PathColumn",
-
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
-
-            render: function render() {
-                return _react2.default.createElement(
-                    "th",
-                    _extends({}, this.props, { className: "col-path " + (this.props.className || "") }),
-                    "Path"
-                );
-            }
-        }),
-        sortKeyFun: function sortKeyFun(flow) {
-            return _utils.RequestUtils.pretty_url(flow.request);
-        }
-    },
-    render: function render() {
-        var flow = this.props.flow;
-        return _react2.default.createElement(
-            "td",
-            { className: "col-path" },
-            flow.request.is_replay ? _react2.default.createElement("i", { className: "fa fa-fw fa-repeat pull-right" }) : null,
-            flow.intercepted ? _react2.default.createElement("i", { className: "fa fa-fw fa-pause pull-right" }) : null,
-            _utils.RequestUtils.pretty_url(flow.request)
-        );
+    if (!icon) {
+        icon = "resource-icon-plain";
     }
-});
 
-var MethodColumn = _react2.default.createClass({
-    displayName: "MethodColumn",
+    icon += " resource-icon";
+    return _react2.default.createElement(
+        "td",
+        { className: "col-icon" },
+        _react2.default.createElement("div", { className: icon })
+    );
+}
+IconColumn.Title = function (_ref4) {
+    var _ref4$className = _ref4.className;
+    var className = _ref4$className === undefined ? "" : _ref4$className;
 
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
+    var props = _objectWithoutProperties(_ref4, ["className"]);
 
-            render: function render() {
-                return _react2.default.createElement(
-                    "th",
-                    _extends({}, this.props, { className: "col-method " + (this.props.className || "") }),
-                    "Method"
-                );
-            }
-        }),
-        sortKeyFun: function sortKeyFun(flow) {
-            return flow.request.method;
-        }
-    },
-    render: function render() {
-        var flow = this.props.flow;
-        return _react2.default.createElement(
-            "td",
-            { className: "col-method" },
-            flow.request.method
-        );
+    return _react2.default.createElement("th", _extends({}, props, { className: "col-icon " + className }));
+};
+
+function PathColumn(_ref5) {
+    var flow = _ref5.flow;
+
+    return _react2.default.createElement(
+        "td",
+        { className: "col-path" },
+        flow.request.is_replay ? _react2.default.createElement("i", { className: "fa fa-fw fa-repeat pull-right" }) : null,
+        flow.intercepted ? _react2.default.createElement("i", { className: "fa fa-fw fa-pause pull-right" }) : null,
+        _utils.RequestUtils.pretty_url(flow.request)
+    );
+}
+PathColumn.Title = function (_ref6) {
+    var _ref6$className = _ref6.className;
+    var className = _ref6$className === undefined ? "" : _ref6$className;
+
+    var props = _objectWithoutProperties(_ref6, ["className"]);
+
+    return _react2.default.createElement(
+        "th",
+        _extends({}, props, { className: "col-path " + className }),
+        "Path"
+    );
+};
+PathColumn.sortKeyFun = function (flow) {
+    return _utils.RequestUtils.pretty_url(flow.request);
+};
+
+function MethodColumn(_ref7) {
+    var flow = _ref7.flow;
+
+    return _react2.default.createElement(
+        "td",
+        { className: "col-method" },
+        flow.request.method
+    );
+}
+MethodColumn.Title = function (_ref8) {
+    var _ref8$className = _ref8.className;
+    var className = _ref8$className === undefined ? "" : _ref8$className;
+
+    var props = _objectWithoutProperties(_ref8, ["className"]);
+
+    return _react2.default.createElement(
+        "th",
+        _extends({}, props, { className: "col-method " + className }),
+        "Method"
+    );
+};
+MethodColumn.sortKeyFun = function (flow) {
+    return flow.request.method;
+};
+
+function StatusColumn(_ref9) {
+    var flow = _ref9.flow;
+
+    var status = void 0;
+    if (flow.response) {
+        status = flow.response.status_code;
+    } else {
+        status = null;
     }
-});
+    return _react2.default.createElement(
+        "td",
+        { className: "col-status" },
+        status
+    );
+}
+StatusColumn.Title = function (_ref10) {
+    var _ref10$className = _ref10.className;
+    var className = _ref10$className === undefined ? "" : _ref10$className;
 
-var StatusColumn = _react2.default.createClass({
-    displayName: "StatusColumn",
+    var props = _objectWithoutProperties(_ref10, ["className"]);
 
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
+    return _react2.default.createElement(
+        "th",
+        _extends({}, props, { className: "col-status " + className }),
+        "Status"
+    );
+};
+StatusColumn.sortKeyFun = function (flow) {
+    return flow.response ? flow.response.status_code : undefined;
+};
 
-            render: function render() {
-                return _react2.default.createElement(
-                    "th",
-                    _extends({}, this.props, { className: "col-status " + (this.props.className || "") }),
-                    "Status"
-                );
-            }
-        }),
-        sortKeyFun: function sortKeyFun(flow) {
-            return flow.response ? flow.response.status_code : undefined;
-        }
-    },
-    render: function render() {
-        var flow = this.props.flow;
-        var status;
-        if (flow.response) {
-            status = flow.response.status_code;
-        } else {
-            status = null;
-        }
-        return _react2.default.createElement(
-            "td",
-            { className: "col-status" },
-            status
-        );
+function SizeColumn(_ref11) {
+    var flow = _ref11.flow;
+
+    var total = flow.request.contentLength;
+    if (flow.response) {
+        total += flow.response.contentLength || 0;
     }
-});
+    var size = (0, _utils2.formatSize)(total);
+    return _react2.default.createElement(
+        "td",
+        { className: "col-size" },
+        size
+    );
+}
+SizeColumn.Title = function (_ref12) {
+    var _ref12$className = _ref12.className;
+    var className = _ref12$className === undefined ? "" : _ref12$className;
 
-var SizeColumn = _react2.default.createClass({
-    displayName: "SizeColumn",
+    var props = _objectWithoutProperties(_ref12, ["className"]);
 
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
-
-            render: function render() {
-                return _react2.default.createElement(
-                    "th",
-                    _extends({}, this.props, { className: "col-size " + (this.props.className || "") }),
-                    "Size"
-                );
-            }
-        }),
-        sortKeyFun: function sortKeyFun(flow) {
-            var total = flow.request.contentLength;
-            if (flow.response) {
-                total += flow.response.contentLength || 0;
-            }
-            return total;
-        }
-    },
-    render: function render() {
-        var flow = this.props.flow;
-
-        var total = flow.request.contentLength;
-        if (flow.response) {
-            total += flow.response.contentLength || 0;
-        }
-        var size = (0, _utils2.formatSize)(total);
-        return _react2.default.createElement(
-            "td",
-            { className: "col-size" },
-            size
-        );
+    return _react2.default.createElement(
+        "th",
+        _extends({}, props, { className: "col-size " + className }),
+        "Size"
+    );
+};
+SizeColumn.sortKeyFun = function (flow) {
+    var total = flow.request.contentLength;
+    if (flow.response) {
+        total += flow.response.contentLength || 0;
     }
-});
+    return total;
+};
 
-var TimeColumn = _react2.default.createClass({
-    displayName: "TimeColumn",
+function TimeColumn(_ref13) {
+    var flow = _ref13.flow;
 
-    statics: {
-        Title: _react2.default.createClass({
-            displayName: "Title",
-
-            render: function render() {
-                return _react2.default.createElement(
-                    "th",
-                    _extends({}, this.props, { className: "col-time " + (this.props.className || "") }),
-                    "Time"
-                );
-            }
-        }),
-        sortKeyFun: function sortKeyFun(flow) {
-            if (flow.response) {
-                return flow.response.timestamp_end - flow.request.timestamp_start;
-            }
-        }
-    },
-    render: function render() {
-        var flow = this.props.flow;
-        var time;
-        if (flow.response) {
-            time = (0, _utils2.formatTimeDelta)(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
-        } else {
-            time = "...";
-        }
-        return _react2.default.createElement(
-            "td",
-            { className: "col-time" },
-            time
-        );
+    var time = void 0;
+    if (flow.response) {
+        time = (0, _utils2.formatTimeDelta)(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
+    } else {
+        time = "...";
     }
-});
+    return _react2.default.createElement(
+        "td",
+        { className: "col-time" },
+        time
+    );
+}
+TimeColumn.Title = function (_ref14) {
+    var _ref14$className = _ref14.className;
+    var className = _ref14$className === undefined ? "" : _ref14$className;
+
+    var props = _objectWithoutProperties(_ref14, ["className"]);
+
+    return _react2.default.createElement(
+        "th",
+        _extends({}, props, { className: "col-time " + className }),
+        "Time"
+    );
+};
+TimeColumn.sortKeyFun = function (flow) {
+    return flow.response.timestamp_end - flow.request.timestamp_start;
+};
 
 var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, SizeColumn, TimeColumn];
 
@@ -1525,12 +1495,17 @@ FlowRow.propTypes = {
     selected: _react2.default.PropTypes.bool
 };
 
-function FlowRow(props) {
-    var flow = props.flow;
+function FlowRow(_ref) {
+    var flow = _ref.flow;
+    var selected = _ref.selected;
+    var highlight = _ref.highlight;
+    var columns = _ref.columns;
+    var selectFlow = _ref.selectFlow;
+
 
     var className = (0, _classnames2.default)({
-        "selected": props.selected,
-        "highlighted": props.highlight && parseFilter(props.highlight)(flow),
+        "selected": selected,
+        "highlighted": highlight && parseFilter(highlight)(flow),
         "intercepted": flow.intercepted,
         "has-request": flow.request,
         "has-response": flow.response
@@ -1539,10 +1514,10 @@ function FlowRow(props) {
     return _react2.default.createElement(
         "tr",
         { className: className, onClick: function onClick() {
-                return props.selectFlow(flow);
+                return selectFlow(flow);
             } },
-        props.columns.map(function (Column) {
-            return _react2.default.createElement(Column, { key: Column.displayName, flow: flow });
+        columns.map(function (Column) {
+            return _react2.default.createElement(Column, { key: Column.name, flow: flow });
         })
     );
 }
@@ -1553,8 +1528,6 @@ var FlowRowContainer = (0, _reactRedux.connect)(function (state, ownProps) {
         highlight: state.flows.highlight,
         selected: state.flows.selected.indexOf(ownProps.flowId) >= 0
     };
-}, function (dispatch, ownProps) {
-    return {};
 })(FlowRow);
 
 var FlowTableHead = function (_React$Component) {
@@ -1608,11 +1581,11 @@ var FlowTableHead = function (_React$Component) {
                 null,
                 this.props.columns.map(function (Column) {
                     return _react2.default.createElement(Column.Title, {
-                        key: Column.displayName,
+                        key: Column.name,
                         onClick: function onClick() {
                             return _this2.onClick(Column);
                         },
-                        className: sortColumn === Column && sortType
+                        className: sortColumn === Column ? sortType : undefined
                     });
                 })
             );
@@ -1769,8 +1742,6 @@ var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
     return {
         flows: state.flows.view
     };
-}, function (dispatch) {
-    return {};
 })(FlowTable);
 
 exports.default = FlowTableContainer;
@@ -3831,7 +3802,7 @@ var MainView = _react2.default.createClass({
     componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
         // Update redux store with route changes
         if (nextProps.routeParams.flowId !== (nextProps.selectedFlow || {}).id) {
-            this.props.selectFlow(nextProps.routeParams.flowId);
+            // FIXME this.props.selectFlow(nextProps.routeParams.flowId)
         }
         if (nextProps.location.query[_actions.Query.SEARCH] !== nextProps.filter) {
             this.props.setFilter(nextProps.location.query[_actions.Query.SEARCH], false);
@@ -3844,6 +3815,7 @@ var MainView = _react2.default.createClass({
         // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
     },
     selectFlow: function selectFlow(flow) {
+        return this.props.selectFlow(flow.id);
         // TODO: This belongs into redux
         if (flow) {
             var tab = this.props.routeParams.detailTab || "request";
@@ -4145,7 +4117,7 @@ exports.default = Prompt;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.App = undefined;
+exports.history = exports.App = undefined;
 
 var _react = require("react");
 
@@ -4326,6 +4298,7 @@ var App = exports.App = _react2.default.createElement(
         _react2.default.createElement(_reactRouter.Route, { path: "reports", component: Reports })
     )
 );
+exports.history = _reactRouter.hashHistory;
 
 },{"../store/store.js":31,"../utils.js":32,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
 "use strict";
@@ -4544,6 +4517,8 @@ var _filt2 = _interopRequireDefault(_filt);
 
 var _view = require("./utils/view");
 
+var _proxyapp = require("../components/proxyapp");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var UPDATE_FLOWS = exports.UPDATE_FLOWS = "UPDATE_FLOWS";
@@ -4614,6 +4589,23 @@ function setHighlight(highlight) {
     };
 }
 function selectFlow(flowId) {
+    var detailTab = arguments.length <= 1 || arguments[1] === undefined ? "request" : arguments[1];
+
+    var pathname = void 0;
+    if (flowId) {
+        pathname = "/flows/" + flowId + "/" + detailTab;
+    } else {
+        pathname = "/flows";
+    }
+
+    /*
+    let location
+    history.listen(l => {location = l})()
+     history.replace({
+        ...location,
+        pathname
+    })
+    */
     return {
         type: SELECT_FLOW,
         flowId: flowId
@@ -4623,7 +4615,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
+},{"../components/proxyapp":20,"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4757,7 +4749,7 @@ function makeList(actionType, fetchURL) {
                 list = [].concat(_toConsumableArray(state.list));
                 itemIndex = state.indexOf[action.item.id];
                 list[itemIndex] = action.item;
-                return _extends({}, defaultState, {
+                return _extends({}, state, {
                     list: list
                 });
 
@@ -4765,14 +4757,14 @@ function makeList(actionType, fetchURL) {
                 list = [].concat(_toConsumableArray(state.list));
                 itemIndex = state.indexOf[action.item.id];
                 list.splice(itemIndex, 1);
-                return _extends({}, defaultState, {
+                return _extends({}, state, {
                     list: list,
                     byId: _extends({}, state.byId, _defineProperty({}, action.item.id, undefined)),
                     indexOf: _extends({}, state.indexOf, _defineProperty({}, action.item.id, undefined))
                 });
 
             case REQUEST_LIST:
-                return _extends({}, defaultState, {
+                return _extends({}, state, {
                     isFetching: true
                 });
 
