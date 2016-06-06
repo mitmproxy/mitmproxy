@@ -57,7 +57,7 @@ class _HeaderMixin(object):
     unique_name = None
 
     def format_header(self, key, value):
-        return [key, ": ", value, "\r\n"]
+        return [key, b": ", value, b"\r\n"]
 
     def values(self, settings):
         return self.format_header(
@@ -88,7 +88,7 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
     def values(self, settings):
         value = self.value.val
         if self.option_used:
-            value = user_agents.get_by_shortcut(value.lower())[2]
+            value = user_agents.get_by_shortcut(value.lower().decode())[2].encode()
 
         return self.format_header(
             self.key.get_generator(settings),
@@ -109,7 +109,7 @@ def get_header(val, headers):
 
 
 class _HTTPMessage(message.Message):
-    version = "HTTP/1.1"
+    version = b"HTTP/1.1"
 
     @property
     def actions(self):
@@ -133,10 +133,10 @@ class _HTTPMessage(message.Message):
 
     def values(self, settings):
         vals = self.preamble(settings)
-        vals.append("\r\n")
+        vals.append(b"\r\n")
         for h in self.headers:
             vals.extend(h.values(settings))
-        vals.append("\r\n")
+        vals.append(b"\r\n")
         if self.body:
             vals.extend(self.body.values(settings))
         return vals
@@ -171,18 +171,18 @@ class Response(_HTTPMessage):
         return self.tok(Reason)
 
     def preamble(self, settings):
-        l = [self.version, " "]
+        l = [self.version, b" "]
         l.extend(self.status_code.values(settings))
         status_code = int(self.status_code.value)
-        l.append(" ")
+        l.append(b" ")
         if self.reason:
             l.extend(self.reason.values(settings))
         else:
             l.append(
                 status_codes.RESPONSES.get(
                     status_code,
-                    "Unknown code"
-                )
+                    b"Unknown code"
+                ).encode()
             )
         return l
 
@@ -205,8 +205,8 @@ class Response(_HTTPMessage):
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
-                            base.TokValueLiteral(i[0]),
-                            base.TokValueLiteral(i[1]))
+                            base.TokValueLiteral(i[0].decode()),
+                            base.TokValueLiteral(i[1].decode()))
                     )
         if not self.raw:
             if not get_header("Content-Length", self.headers):
@@ -294,11 +294,11 @@ class Request(_HTTPMessage):
 
     def preamble(self, settings):
         v = self.method.values(settings)
-        v.append(" ")
+        v.append(b" ")
         v.extend(self.path.values(settings))
         if self.nested_response:
             v.append(self.nested_response.parsed.spec())
-        v.append(" ")
+        v.append(b" ")
         v.append(self.version)
         return v
 
@@ -314,8 +314,8 @@ class Request(_HTTPMessage):
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
-                            base.TokValueLiteral(i[0]),
-                            base.TokValueLiteral(i[1])
+                            base.TokValueLiteral(i[0].decode()),
+                            base.TokValueLiteral(i[1].decode())
                         )
                     )
         if not self.raw:

@@ -261,7 +261,7 @@ class _Component(Token):
 
     """
         A value component of the primary specification of an message.
-        Components produce byte values desribe the bytes of the message.
+        Components produce byte values describing the bytes of the message.
     """
 
     def values(self, settings):  # pragma: no cover
@@ -272,9 +272,9 @@ class _Component(Token):
 
     def string(self, settings=None):
         """
-            A string representation of the object.
+            A bytestring representation of the object.
         """
-        return "".join(i[:] for i in self.values(settings or {}))
+        return b"".join(i[:] for i in self.values(settings or {}))
 
 
 class KeyValue(_Component):
@@ -391,7 +391,7 @@ class Integer(_Component):
                 "Integer value must be between %s and %s." % self.bounds,
                 0, 0
             )
-        self.value = str(value)
+        self.value = str(value).encode()
 
     @classmethod
     def expr(cls):
@@ -401,10 +401,10 @@ class Integer(_Component):
         return e.setParseAction(lambda x: cls(*x))
 
     def values(self, settings):
-        return self.value
+        return [self.value]
 
     def spec(self):
-        return "%s%s" % (self.preamble, self.value)
+        return "%s%s" % (self.preamble, self.value.decode())
 
     def freeze(self, settings_):
         return self

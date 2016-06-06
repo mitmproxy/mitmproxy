@@ -1,5 +1,6 @@
 import abc
 from . import actions, exceptions
+from netlib import strutils
 
 LOG_TRUNCATE = 1024
 
@@ -49,7 +50,7 @@ class Message(object):
 
     def preview_safe(self):
         """
-            Return a copy of this message that issafe for previews.
+            Return a copy of this message that is safe for previews.
         """
         tokens = [i for i in self.tokens if not isinstance(i, actions.PauseAt)]
         return self.__class__(tokens)
@@ -80,10 +81,10 @@ class Message(object):
             # We truncate at 1k.
             if hasattr(v, "values"):
                 v = [x[:LOG_TRUNCATE] for x in v.values(settings)]
-                v = "".join(v).encode("string_escape")
+                v = strutils.bytes_to_escaped_str(b"".join(v))
             elif hasattr(v, "__len__"):
                 v = v[:LOG_TRUNCATE]
-                v = v.encode("string_escape")
+                v = strutils.bytes_to_escaped_str(v)
             ret[i] = v
         ret["spec"] = self.spec()
         return ret
