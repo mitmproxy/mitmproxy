@@ -1536,28 +1536,13 @@ function FlowTableHead(_ref2) {
     var sort = _ref2.sort;
 
 
-    //const hasSort = Column.sortKeyFun;
-
-    // let sortDesc = this.props.sort.sortDesc;
-    //
-    // if (Column === this.props.sort.sortColumn) {
-    //     sortDesc = !sortDesc;
-    //     this.props.setSort(sortColumn, sortDesc);
-    // } else {
-    //     this.props.setSort({sortColumn: hasSort && Column, sortDesc: false});
-    // }
-    //
-    // let sortKeyFun = Column.sortKeyFun;
-    // if (sortDesc) {
-    //     sortKeyFun = hasSort && function () {
-    //             const k = Column.sortKeyFun.apply(this, arguments);
-    //             if (_.isString(k)) {
-    //                 return reverseString("" + k);
-    //             }
-    //             return -k;
-    //         };
-    // }
-    //this.props.setSortKeyFun(sortKeyFun);
+    /*    function () {
+        const k = Column.sortKeyFun.apply(this, arguments);
+        if (_.isString(k)) {
+            return reverseString("" + k);
+        }
+        return -k;
+        };*/
 
     var sortColumn = sort.sortColumn;
     var sortType = sort.sortDesc ? "sort-desc" : "sort-asc";
@@ -1583,7 +1568,7 @@ FlowTableHead.propTypes = {
     columns: _react2.default.PropTypes.array.isRequired
 };
 
-var FlowTableHeadContainer = (0, _reactRedux.connect)(function (state, ownProps) {
+var FlowTableHeadContainer = (0, _reactRedux.connect)(function (state) {
     return {
         sort: state.flows.sort
     };
@@ -1730,7 +1715,9 @@ var parseFilter = _lodash2.default.memoize(_filt2.default.parse);
 
 var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
     return {
-        flows: state.flows.view
+        flows: state.flows.view.sort(function (a, b) {
+            return state.flows.sort.sortColumn ? a.response.status_code > b.response.status_code : 0;
+        })
     };
 })(FlowTable);
 
@@ -3801,9 +3788,6 @@ var MainView = _react2.default.createClass({
             this.props.setHighlight(nextProps.location.query[_actions.Query.HIGHLIGHT], false);
         }
     },
-    setSortKeyFun: function setSortKeyFun(sortKeyFun) {
-        // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
-    },
     selectFlow: function selectFlow(flow) {
         // TODO: This belongs into redux
         if (flow) {
@@ -3934,9 +3918,6 @@ var MainView = _react2.default.createClass({
             { className: "main-view" },
             _react2.default.createElement(_flowtable2.default, { ref: "flowTable",
                 selectFlow: this.selectFlow,
-                setSortKeyFun: function setSortKeyFun(f) {
-                    return console.log("asdf");
-                },
                 setSort: this.props.setSort,
                 selected: this.props.selectedFlow }),
             details

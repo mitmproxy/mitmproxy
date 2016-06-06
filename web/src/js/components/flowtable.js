@@ -94,7 +94,7 @@ FlowTableHead.propTypes = {
 };
 
 const FlowTableHeadContainer = connect(
-    (state, ownProps) => ({
+    (state) => ({
         sort: state.flows.sort
     })
 )(FlowTableHead)
@@ -215,7 +215,8 @@ const parseFilter = _.memoize(Filt.parse)
 
 const FlowTableContainer = connect(
     state => ({
-        flows: state.flows.view,
+        // first idea to sort here, but i think thats not good enough ( and not working yet)...
+        flows: state.flows.view.sort((a,b) => state.flows.sort.sortColumn ?  a.response.status_code > b.response.status_code : 0),
     })
 )(FlowTable)
 
