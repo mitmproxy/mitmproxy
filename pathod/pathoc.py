@@ -361,6 +361,7 @@ class Pathoc(tcp.TCPClient):
                         return
                 if frm is None:
                     self.ws_framereader.join()
+                    self.ws_framereader = None
                     return
                 yield frm
 

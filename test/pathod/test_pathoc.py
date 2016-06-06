@@ -154,9 +154,10 @@ class TestDaemon(PathocTestDaemon):
         )
         with c.connect():
             c.request("ws:/")
-            c.request("wf:f'wf:x100'")
-            [i for i in c.wait(timeout=0, finish=False)]
-            [i for i in c.wait(timeout=0)]
+            c.request("wf:f'wf'")
+            # This should read a frame and close the websocket reader
+            assert len([i for i in c.wait(timeout=5, finish=False)]) == 1
+            assert not [i for i in c.wait(timeout=0)]
 
     def test_connect_fail(self):
         to = ("foobar", 80)
