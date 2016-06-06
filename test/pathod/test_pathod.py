@@ -145,14 +145,14 @@ class CommonTests(tutils.DaemonTests):
 
     def test_invalid_first_line(self):
         c = tcp.TCPClient(("localhost", self.d.port))
-        c.connect()
-        if self.ssl:
-            c.convert_to_ssl()
-        c.wfile.write("foo\n\n\n")
-        c.wfile.flush()
-        l = self.d.last_log()
-        assert l["type"] == "error"
-        assert "foo" in l["msg"]
+        with c.connect():
+            if self.ssl:
+                c.convert_to_ssl()
+            c.wfile.write("foo\n\n\n")
+            c.wfile.flush()
+            l = self.d.last_log()
+            assert l["type"] == "error"
+            assert "foo" in l["msg"]
 
     def test_invalid_content_length(self):
         tutils.raises(
@@ -238,12 +238,12 @@ class TestDaemonSSL(CommonTests):
         c = tcp.TCPClient(("localhost", self.d.port))
         c.rbufsize = 0
         c.wbufsize = 0
-        c.connect()
-        c.wfile.write("\0\0\0\0")
-        tutils.raises(TlsException, c.convert_to_ssl)
-        l = self.d.last_log()
-        assert l["type"] == "error"
-        assert "SSL" in l["msg"]
+        with c.connect():
+            c.wfile.write("\0\0\0\0")
+            tutils.raises(TlsException, c.convert_to_ssl)
+            l = self.d.last_log()
+            assert l["type"] == "error"
+            assert "SSL" in l["msg"]
 
     def test_ssl_cipher(self):
         r, _ = self.pathoc([r"get:/p/202"])
