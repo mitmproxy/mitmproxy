@@ -46,60 +46,58 @@ const FlowRowContainer = connect(
     })
 )(FlowRow)
 
-class FlowTableHead extends React.Component {
+function FlowTableHead({setSort, columns, sort}) {
 
-    static propTypes = {
-        setSortKeyFun: React.PropTypes.func.isRequired,
-        columns: React.PropTypes.array.isRequired,
-    };
+        //const hasSort = Column.sortKeyFun;
 
-    constructor(props, context) {
-        super(props, context);
-        this.state = {sortColumn: undefined, sortDesc: false};
-    }
+        // let sortDesc = this.props.sort.sortDesc;
+        //
+        // if (Column === this.props.sort.sortColumn) {
+        //     sortDesc = !sortDesc;
+        //     this.props.setSort(sortColumn, sortDesc);
+        // } else {
+        //     this.props.setSort({sortColumn: hasSort && Column, sortDesc: false});
+        // }
+        //
+        // let sortKeyFun = Column.sortKeyFun;
+        // if (sortDesc) {
+        //     sortKeyFun = hasSort && function () {
+        //             const k = Column.sortKeyFun.apply(this, arguments);
+        //             if (_.isString(k)) {
+        //                 return reverseString("" + k);
+        //             }
+        //             return -k;
+        //         };
+        // }
+        //this.props.setSortKeyFun(sortKeyFun);
 
-    onClick(Column) {
-        const hasSort = Column.sortKeyFun;
+        const sortColumn = sort.sortColumn;
+        const sortType = sort.sortDesc ? "sort-desc" : "sort-asc";
 
-        let sortDesc = this.state.sortDesc;
-
-        if (Column === this.state.sortColumn) {
-            sortDesc = !sortDesc;
-            this.setState({sortDesc});
-        } else {
-            this.setState({sortColumn: hasSort && Column, sortDesc: false});
-        }
-
-        let sortKeyFun = Column.sortKeyFun;
-        if (sortDesc) {
-            sortKeyFun = hasSort && function () {
-                    const k = Column.sortKeyFun.apply(this, arguments);
-                    if (_.isString(k)) {
-                        return reverseString("" + k);
-                    }
-                    return -k;
-                };
-        }
-
-        this.props.setSortKeyFun(sortKeyFun);
-    }
-
-    render() {
-        const sortColumn = this.state.sortColumn;
-        const sortType = this.state.sortDesc ? "sort-desc" : "sort-asc";
         return (
             <tr>
-                {this.props.columns.map(Column => (
+                {columns.map(Column => (
                     <Column.Title
                         key={Column.name}
-                        onClick={() => this.onClick(Column)}
-                        className={sortColumn === Column ? sortType : undefined}
+                        onClick={() => setSort({sortColumn: Column.name, sortDesc: Column.name != sort.sortColumn ? false : !sort.sortDesc})}
+                        className={sortColumn === Column.name ? sortType : undefined}
                     />
                 ))}
             </tr>
         );
-    }
 }
+
+FlowTableHead.propTypes = {
+        setSort: React.PropTypes.func.isRequired,
+        sort: React.PropTypes.object.isRequired,
+        columns: React.PropTypes.array.isRequired
+};
+
+const FlowTableHeadContainer = connect(
+    (state, ownProps) => ({
+        sort: state.flows.sort
+    })
+)(FlowTableHead)
 
 class FlowTable extends React.Component {
 
@@ -186,9 +184,10 @@ class FlowTable extends React.Component {
             <div className="flow-table" onScroll={this.onViewportUpdate}>
                 <table>
                     <thead ref="head" style={{ transform }}>
-                    <FlowTableHead
+                    <FlowTableHeadContainer
                         columns={flowtable_columns}
                         setSortKeyFun={this.props.setSortKeyFun}
+                        setSort={this.props.setSort}
                     />
                     </thead>
                     <tbody>
