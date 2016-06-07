@@ -97,7 +97,6 @@ setup(
             "ipaddress>=1.0.15, <1.1",
         ],
         'dev': [
-            "coveralls>=1.1, <1.2",
             "mock>=2.0, <2.1",
             "flake8>=2.5.4, <3",
             "pytest>=2.8.7, <2.10",

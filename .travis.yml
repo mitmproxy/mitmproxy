@@ -52,7 +52,7 @@ script:
   - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod test/$SCOPE"
 
 after_success:
-  - coveralls
+  - bash <(curl -s https://codecov.io/bash)
   - |
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
