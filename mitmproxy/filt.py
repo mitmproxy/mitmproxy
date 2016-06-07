@@ -39,6 +39,9 @@ import sys
 import pyparsing as pp
 
 
+print("Random changes everywhere!")
+
+
 class _Token(object):
 
     def dump(self, indent=0, fp=sys.stdout):
