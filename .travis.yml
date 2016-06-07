@@ -22,9 +22,9 @@ matrix:
       git:
         depth: 9999999
     - python: 3.5
-      env: SCOPE="netlib test/mitmproxy/script test/pathod/test_utils.py test/pathod/test_log.py test/pathod/test_language_generators.py test/pathod/test_language_base.py test/pathod/test_language_http.py"
+      env: SCOPE="netlib test/mitmproxy/script test/pathod/test_utils.py test/pathod/test_log.py test/pathod/test_language_generators.py test/pathod/test_language_base.py test/pathod/test_language_http.py test/pathod/test_language_writer.py"
     - python: 3.5
-      env: SCOPE="netlib test/mitmproxy/script test/pathod/test_utils.py test/pathod/test_log.py test/pathod/test_language_generators.py test/pathod/test_language_base.py test/pathod/test_language_http.py" NO_ALPN=1
+      env: SCOPE="netlib test/mitmproxy/script test/pathod/test_utils.py test/pathod/test_log.py test/pathod/test_language_generators.py test/pathod/test_language_base.py test/pathod/test_language_http.py test/pathod/test_language_writer.py" NO_ALPN=1
     - python: 2.7
       env: DOCS=1
       script: 'cd docs && SPHINXOPTS="-W" make -e html'
