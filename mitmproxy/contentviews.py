@@ -70,12 +70,9 @@ def pretty_json(s):
     pretty = json.dumps(p, sort_keys=True, indent=4, ensure_ascii=False)
     if isinstance(pretty, six.text_type):
         # json.dumps _may_ decide to return unicode, if the JSON object is not ascii.
-        # Nonetheless, this function is expected to return bytes. We first try to utf8-encode
-        # back to bytes, and if that fails, we deliver the escaped version as a last resort.
-        try:
-            return pretty.encode("utf8", "strict")
-        except UnicodeError:
-            return json.dumps(p, sort_keys=True, indent=4, ensure_ascii=True)
+        # From limited testing this is always valid utf8 (otherwise json.loads will fail earlier),
+        # so we can just re-encode it here.
+        return pretty.encode("utf8", "strict")
     return pretty
 
 

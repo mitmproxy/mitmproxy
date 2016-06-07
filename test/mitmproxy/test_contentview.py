@@ -1,5 +1,3 @@
-import json
-
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 from netlib.odict import ODict
@@ -279,6 +277,7 @@ def test_get_by_shortcut():
 
 
 def test_pretty_json():
-    s = json.dumps({"foo": 1})
-    assert cv.pretty_json(s)
+    assert cv.pretty_json('{"foo": 1}')
     assert not cv.pretty_json("moo")
+    assert cv.pretty_json(b'{"foo" : "\xe4\xb8\x96\xe7\x95\x8c"}')  # utf8 with chinese characters
+    assert not cv.pretty_json(b'{"foo" : "\xFF"}')
