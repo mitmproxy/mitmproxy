@@ -1,29 +1,25 @@
-from threading import Event
-
 from mitmproxy.script import Script
 from test.mitmproxy import tutils
+from mitmproxy import controller
+import time
 
 
-class Dummy:
-    def __init__(self, reply):
-        self.reply = reply
+class Thing:
+    def __init__(self):
+        self.reply = controller.DummyReply()
 
 
 @tutils.skip_appveyor
 def test_concurrent():
     with Script(tutils.test_data.path("data/scripts/concurrent_decorator.py"), None) as s:
-        def reply():
-            reply.acked.set()
-        reply.acked = Event()
-
-        f1, f2 = Dummy(reply), Dummy(reply)
+        f1, f2 = Thing(), Thing()
         s.run("request", f1)
-        f1.reply()
         s.run("request", f2)
-        f2.reply()
-        assert f1.reply.acked == reply.acked
-        assert not reply.acked.is_set()
-        assert reply.acked.wait(10)
+        start = time.time()
+        while time.time() - start < 5:
+            if f1.reply.acked and f2.reply.acked:
+                return
+        raise ValueError("Script never acked")
 
 
 def test_concurrent_err():
