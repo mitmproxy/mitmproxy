@@ -62,11 +62,21 @@ KEY_MAX = 30
 
 
 def pretty_json(s):
+    # type: (bytes) -> bytes
     try:
         p = json.loads(s)
     except ValueError:
         return None
-    return json.dumps(p, sort_keys=True, indent=4)
+    pretty = json.dumps(p, sort_keys=True, indent=4, ensure_ascii=False)
+    if isinstance(pretty, six.text_type):
+        # json.dumps _may_ decide to return unicode, if the JSON object is not ascii.
+        # Nonetheless, this function is expected to return bytes. We first try to utf8-encode
+        # back to bytes, and if that fails, we deliver the escaped version as a last resort.
+        try:
+            return pretty.encode("utf8", "strict")
+        except UnicodeError:
+            return json.dumps(p, sort_keys=True, indent=4, ensure_ascii=True)
+    return pretty
 
 
 def format_dict(d):
@@ -153,7 +163,7 @@ class ViewRaw(View):
     content_types = []
 
     def __call__(self, data, **metadata):
-        return "Raw", format_text(data)
+        return "Raw", format_text(strutils.bytes_to_escaped_str(data))
 
 
 class ViewHex(View):
