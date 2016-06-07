@@ -190,7 +190,7 @@ class Response(_HTTP2Message):
             resp = http.Response(
                 (2, 0),
                 self.status_code.string(),
-                '',
+                b'',
                 headers,
                 body,
             )
@@ -271,11 +271,11 @@ class Request(_HTTP2Message):
                 body = body.string()
 
             req = http.Request(
-                '',
+                b'',
                 self.method.string(),
-                '',
-                '',
-                '',
+                b'',
+                b'',
+                b'',
                 path,
                 (2, 0),
                 headers,
