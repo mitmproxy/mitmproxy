@@ -39,7 +39,7 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python
     fi
-  - pip install -U virtualenv
+  - pip install -U virtualenv codecov
   - ./dev.sh
   - source venv/bin/activate
 

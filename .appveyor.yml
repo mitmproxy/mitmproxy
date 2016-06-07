@@ -13,7 +13,7 @@ environment:
   SNAPSHOT_PASS:
     secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
 install:
-  - "pip install --user -U virtualenv"
+  - "pip install --user -U virtualenv codecov"
   - "dev.bat"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 test_script:
