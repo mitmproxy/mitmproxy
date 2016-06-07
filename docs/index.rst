@@ -64,6 +64,17 @@
     tutorials/gamecenter
     tutorials/transparent-dhcp
 
+
+.. toctree::
+    :hidden:
+    :caption: Pathod & Pathoc
+
+    pathod/intro
+    pathod/language
+    pathod/library
+    pathod/test
+
+
 .. toctree::
     :hidden:
     :caption: Hacking
@@ -80,4 +91,3 @@
 
     * :ref:`genindex`
     * :ref:`modindex`
-
