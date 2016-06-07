@@ -120,13 +120,7 @@ def isMostlyBin(s):
 
 
 def isXML(s):
-    for i in s:
-        if i in "\n \t":
-            continue
-        elif i == "<":
-            return True
-        else:
-            return False
+    return s.strip().startswith("<")
 
 
 def clean_hanging_newline(t):

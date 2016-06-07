@@ -1,6 +1,18 @@
 # coding=utf-8
+import six
 
-from netlib import strutils
+from netlib import strutils, tutils
+
+
+def test_native():
+    with tutils.raises(TypeError):
+        strutils.native(42)
+    if six.PY2:
+        assert strutils.native(u"foo") == b"foo"
+        assert strutils.native(b"foo") == b"foo"
+    else:
+        assert strutils.native(u"foo") == u"foo"
+        assert strutils.native(b"foo") == u"foo"
 
 
 def test_clean_bin():
@@ -29,6 +41,9 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"'") == r"\'"
     assert strutils.bytes_to_escaped_str(b'"') == r'"'
 
+    with tutils.raises(ValueError):
+        strutils.bytes_to_escaped_str(u"such unicode")
+
 
 def test_escaped_str_to_bytes():
     assert strutils.escaped_str_to_bytes("foo") == b"foo"
@@ -38,6 +53,13 @@ def test_escaped_str_to_bytes():
     assert strutils.escaped_str_to_bytes(u"\\x08") == b"\b"
     assert strutils.escaped_str_to_bytes(u"&!?=\\\\)") == br"&!?=\)"
     assert strutils.escaped_str_to_bytes(u"ü") == b'\xc3\xbc'
+
+    if six.PY2:
+        with tutils.raises(ValueError):
+            strutils.escaped_str_to_bytes(42)
+    else:
+        with tutils.raises(ValueError):
+            strutils.escaped_str_to_bytes(b"very byte")
 
 
 def test_isBin():
