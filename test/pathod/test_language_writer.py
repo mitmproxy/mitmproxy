@@ -87,4 +87,4 @@ def test_write_values_after():
     s = BytesIO()
     r = next(language.parse_pathod("400:ia,'xx'"))
     language.serve(r, s, {})
-    assert s.getvalue().endswith('xx')
+    assert s.getvalue().endswith(b'xx')
