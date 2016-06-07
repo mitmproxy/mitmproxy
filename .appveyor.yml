@@ -19,7 +19,7 @@ install:
 test_script:
   - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod"
 after_test:
-  - bash <(curl -s https://codecov.io/bash)
+  - "codecov"
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
 deploy_script:
