@@ -56,6 +56,10 @@ Datastructures
         :special-members:
         :no-undoc-members:
 
+    .. autoclass:: decoded
+
+.. automodule:: netlib.multidict
+
     .. autoclass:: MultiDictView
 
         .. automethod:: get_all
@@ -67,9 +71,11 @@ Datastructures
         .. automethod:: items
         .. automethod:: to_dict
 
-    .. autoclass:: decoded
-
-.. automodule:: mitmproxy.models
+.. autoclass:: mitmproxy.models.Error
     :show-inheritance:
-    :noindex:
-    :members: Error, ServerConnection, ClientConnection
+
+.. autoclass:: mitmproxy.models.ServerConnection
+    :show-inheritance:
+
+.. autoclass:: mitmproxy.models.ClientConnection
+    :show-inheritance:
