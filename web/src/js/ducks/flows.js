@@ -37,7 +37,7 @@ function makeSortFn(sort){
 
     let sortKeyFun = column.sortKeyFun;
     if (sort.sortDesc) {
-        sortKeyFun = function () {
+        sortKeyFun = sortKeyFun && function () {
             const k = column.sortKeyFun.apply(this, arguments);
             return _.isString(k) ? reverseString("" + k) : -k;
         };

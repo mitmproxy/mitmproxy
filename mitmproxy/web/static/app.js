@@ -4900,12 +4900,10 @@ var sortedRemove = function sortedRemove(list, sortFn, item) {
 };
 
 function sortedIndexOf(list, value, sortFn) {
-    if (sortFn === false) {
-        var i = 0;
-        while (i < list.length && list[i].id !== value.id) {
-            i++;
-        }
-        return i;
+    if (!sortFn) {
+        sortFn = function sortFn(x) {
+            return 0;
+        }; // This triggers the linear search for flows that have the same sort value.
     }
 
     var low = 0,
