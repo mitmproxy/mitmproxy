@@ -145,10 +145,6 @@ class Channel(object):
         self.q.put((mtype, m))
 
 
-# Special value to distinguish the case where no reply was sent
-NO_REPLY = object()
-
-
 def handler(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -199,22 +195,19 @@ class Reply(object):
         self.handled = False
 
     def ack(self):
-        self(NO_REPLY)
+        self.send(self.obj)
 
     def kill(self):
-        self(exceptions.Kill)
+        self.send(exceptions.Kill)
 
     def take(self):
         self.taken = True
 
-    def __call__(self, msg=NO_REPLY):
+    def send(self, msg):
         if self.acked:
             raise exceptions.ControlException("Message already acked.")
         self.acked = True
-        if msg is NO_REPLY:
-            self.q.put(self.obj)
-        else:
-            self.q.put(msg)
+        self.q.put(msg)
 
     def __del__(self):
         if not self.acked:
@@ -233,13 +226,13 @@ class DummyReply(object):
         self.handled = False
 
     def kill(self):
-        self()
+        self.send(None)
 
     def ack(self):
-        self()
+        self.send(None)
 
     def take(self):
         self.taken = True
 
-    def __call__(self, msg=False):
+    def send(self, msg):
         self.acked = True

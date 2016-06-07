@@ -4,6 +4,7 @@ offload computations from mitmproxy's main master thread.
 """
 from __future__ import absolute_import, print_function, division
 
+from mitmproxy import controller
 import threading
 
 
@@ -14,15 +15,15 @@ class ReplyProxy(object):
         self.script_thread = script_thread
         self.master_reply = None
 
-    def __call__(self, *args):
+    def send(self, message):
         if self.master_reply is None:
-            self.master_reply = args
+            self.master_reply = message
             self.script_thread.start()
             return
-        self.reply_func(*args)
+        self.reply_func(message)
 
     def done(self):
-        self.reply_func(*self.master_reply)
+        self.reply_func.send(self.master_reply)
 
     def __getattr__(self, k):
         return getattr(self.reply_func, k)
@@ -49,17 +50,11 @@ class ScriptThread(threading.Thread):
 
 
 def concurrent(fn):
-    if fn.__name__ in (
-            "request",
-            "response",
-            "error",
-            "clientconnect",
-            "serverconnect",
-            "clientdisconnect",
-            "next_layer"):
-        def _concurrent(ctx, obj):
-            _handle_concurrent_reply(fn, obj, ctx, obj)
+    if fn.__name__ not in controller.Events:
+        raise NotImplementedError(
+            "Concurrent decorator not supported for '%s' method." % fn.__name__
+        )
 
-        return _concurrent
-    raise NotImplementedError(
-        "Concurrent decorator not supported for '%s' method." % fn.__name__)
+    def _concurrent(ctx, obj):
+        _handle_concurrent_reply(fn, obj, ctx, obj)
+    return _concurrent

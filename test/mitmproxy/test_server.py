@@ -743,7 +743,7 @@ class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
     def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
-        f.reply(resp)
+        f.reply.send(resp)
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -819,7 +819,7 @@ class MasterIncomplete(tservers.TestMaster):
     def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = None
-        f.reply(resp)
+        f.reply.send(resp)
 
 
 class TestIncompleteResponse(tservers.HTTPProxyTest):
