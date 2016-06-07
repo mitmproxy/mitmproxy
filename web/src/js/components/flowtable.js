@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {connect} from 'react-redux'
 import classNames from "classnames";
-import {reverseString} from "../utils.js";
 import _ from "lodash";
 import shallowEqual from "shallowequal";
 import AutoScroll from "./helpers/AutoScroll";
@@ -48,30 +47,6 @@ const FlowRowContainer = connect(
 )(FlowRow)
 
 function FlowTableHead({setSort, columns, sort}) {
-
-        //const hasSort = Column.sortKeyFun;
-
-        // let sortDesc = this.props.sort.sortDesc;
-        //
-        // if (Column === this.props.sort.sortColumn) {
-        //     sortDesc = !sortDesc;
-        //     this.props.setSort(sortColumn, sortDesc);
-        // } else {
-        //     this.props.setSort({sortColumn: hasSort && Column, sortDesc: false});
-        // }
-        //
-        // let sortKeyFun = Column.sortKeyFun;
-        // if (sortDesc) {
-        //     sortKeyFun = hasSort && function () {
-        //             const k = Column.sortKeyFun.apply(this, arguments);
-        //             if (_.isString(k)) {
-        //                 return reverseString("" + k);
-        //             }
-        //             return -k;
-        //         };
-        // }
-        //this.props.setSortKeyFun(sortKeyFun);
-
         const sortColumn = sort.sortColumn;
         const sortType = sort.sortDesc ? "sort-desc" : "sort-asc";
 
@@ -99,7 +74,7 @@ const FlowTableHeadContainer = connect(
         sort: state.flows.sort
     }),
     dispatch => ({
-        loc: (sort) => dispatch(setSort(sort)),
+        setSort: (sort) => dispatch(setSort(sort)),
     })
 )(FlowTableHead)
 
@@ -219,8 +194,7 @@ const parseFilter = _.memoize(Filt.parse)
 
 const FlowTableContainer = connect(
     state => ({
-        // first idea to sort here, but i think thats not good enough ( and not working yet)...
-        flows: state.flows.view.sort((a,b) => state.flows.sort.sortColumn ?  a.response.status_code > b.response.status_code : 0),
+        flows: state.flows.view
     })
 )(FlowTable)
 

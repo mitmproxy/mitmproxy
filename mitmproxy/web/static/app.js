@@ -1455,8 +1455,6 @@ var _classnames = require("classnames");
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _utils = require("../utils.js");
-
 var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
@@ -1536,30 +1534,6 @@ function FlowTableHead(_ref2) {
     var setSort = _ref2.setSort;
     var columns = _ref2.columns;
     var sort = _ref2.sort;
-
-
-    //const hasSort = Column.sortKeyFun;
-
-    // let sortDesc = this.props.sort.sortDesc;
-    //
-    // if (Column === this.props.sort.sortColumn) {
-    //     sortDesc = !sortDesc;
-    //     this.props.setSort(sortColumn, sortDesc);
-    // } else {
-    //     this.props.setSort({sortColumn: hasSort && Column, sortDesc: false});
-    // }
-    //
-    // let sortKeyFun = Column.sortKeyFun;
-    // if (sortDesc) {
-    //     sortKeyFun = hasSort && function () {
-    //             const k = Column.sortKeyFun.apply(this, arguments);
-    //             if (_.isString(k)) {
-    //                 return reverseString("" + k);
-    //             }
-    //             return -k;
-    //         };
-    // }
-    //this.props.setSortKeyFun(sortKeyFun);
 
     var sortColumn = sort.sortColumn;
     var sortType = sort.sortDesc ? "sort-desc" : "sort-asc";
@@ -1738,16 +1712,13 @@ var parseFilter = _lodash2.default.memoize(_filt2.default.parse);
 
 var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
     return {
-        // first idea to sort here, but i think thats not good enough ( and not working yet)...
-        flows: state.flows.view.sort(function (a, b) {
-            return state.flows.sort.sortColumn ? a.response.status_code > b.response.status_code : 0;
-        })
+        flows: state.flows.view
     };
 })(FlowTable);
 
 exports.default = FlowTableContainer;
 
-},{"../ducks/flows":24,"../filt/filt":29,"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../ducks/flows":24,"../filt/filt":29,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4514,6 +4485,12 @@ var _filt2 = _interopRequireDefault(_filt);
 
 var _view = require("./utils/view");
 
+var _utils = require("../utils.js");
+
+var _flowtableColumns = require("../components/flowtable-columns.js");
+
+var _flowtableColumns2 = _interopRequireDefault(_flowtableColumns);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var UPDATE_FLOWS = exports.UPDATE_FLOWS = "UPDATE_FLOWS";
@@ -4544,6 +4521,22 @@ function makeFilterFn(filter) {
     };
 }
 
+function makeSortFn(sort) {
+    var column = _.find(_flowtableColumns2.default, function (c) {
+        return c.name == sort.sortColumn;
+    });
+    if (!column) return;
+
+    var sortKeyFun = column.sortKeyFun;
+    if (sort.sortDesc) {
+        sortKeyFun = function sortKeyFun() {
+            var k = column.sortKeyFun.apply(this, arguments);
+            return _.isString(k) ? (0, _utils.reverseString)("" + k) : -k;
+        };
+    }
+    return sortKeyFun;
+}
+
 function reducer() {
     var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
     var action = arguments[1];
@@ -4553,12 +4546,12 @@ function reducer() {
             var all = reduceList(state.all, action);
             return _extends({}, state, {
                 all: all,
-                view: (0, _view.updateViewList)(state.view, state.all, all, action, makeFilterFn(action.filter))
+                view: (0, _view.updateViewList)(state.view, state.all, all, action, makeFilterFn(action.filter), makeSortFn(state.sort))
             });
         case SET_FILTER:
             return _extends({}, state, {
                 filter: action.filter,
-                view: (0, _view.updateViewFilter)(state.all, makeFilterFn(action.filter))
+                view: (0, _view.updateViewFilterSort)(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
             });
         case SET_HIGHLIGHT:
             return _extends({}, state, {
@@ -4566,7 +4559,8 @@ function reducer() {
             });
         case SET_SORT:
             return _extends({}, state, {
-                sort: action.sort
+                sort: action.sort,
+                view: (0, _view.updateViewFilterSort)(state.all, makeFilterFn(state.filter), makeSortFn(action.sort))
             });
         case SELECT_FLOW:
             return _extends({}, state, {
@@ -4605,7 +4599,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
+},{"../components/flowtable-columns.js":7,"../filt/filt":29,"../utils.js":32,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4849,7 +4843,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 exports.sortedIndexOf = sortedIndexOf;
 exports.updateViewList = updateViewList;
-exports.updateViewFilter = updateViewFilter;
+exports.updateViewFilterSort = updateViewFilterSort;
 
 var _list = require("./list");
 
@@ -4945,7 +4939,7 @@ function updateViewList(currentView, currentList, nextList, action) {
         case _list.REQUEST_LIST:
             return currentView;
         case _list.RECEIVE_LIST:
-            return updateViewFilter(nextList, filterFn, sortFn);
+            return updateViewFilterSort(nextList, filterFn, sortFn);
         case _list.ADD:
             if (filterFn(action.item)) {
                 return sortedInsert(currentView, sortFn, action.item);
@@ -4988,7 +4982,7 @@ function updateViewList(currentView, currentList, nextList, action) {
     }
 }
 
-function updateViewFilter(list) {
+function updateViewFilterSort(list) {
     var filterFn = arguments.length <= 1 || arguments[1] === undefined ? defaultFilterFn : arguments[1];
     var sortFn = arguments.length <= 2 || arguments[2] === undefined ? defaultSortFn : arguments[2];
 

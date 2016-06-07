@@ -1,6 +1,8 @@
 import makeList from "./utils/list"
 import Filt from "../filt/filt"
-import {updateViewFilter, updateViewList} from "./utils/view"
+import {updateViewFilterSort, updateViewList} from "./utils/view"
+import {reverseString} from "../utils.js";
+import flowtable_columns from "../components/flowtable-columns.js";
 
 export const UPDATE_FLOWS = "UPDATE_FLOWS"
 export const SET_FILTER = "SET_FLOW_FILTER"
@@ -28,6 +30,21 @@ function makeFilterFn(filter) {
     return filter ? Filt.parse(filter) : () => true;
 }
 
+
+function makeSortFn(sort){
+    let column = _.find(flowtable_columns, c => c.name == sort.sortColumn);
+    if (!column) return;
+
+    let sortKeyFun = column.sortKeyFun;
+    if (sort.sortDesc) {
+        sortKeyFun = function () {
+            const k = column.sortKeyFun.apply(this, arguments);
+            return _.isString(k) ? reverseString("" + k) : -k;
+        };
+    }
+    return sortKeyFun;
+}
+
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
         case UPDATE_FLOWS:
@@ -35,13 +52,13 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 all,
-                view: updateViewList(state.view, state.all, all, action, makeFilterFn(action.filter))
+                view: updateViewList(state.view, state.all, all, action, makeFilterFn(action.filter), makeSortFn(state.sort))
             }
         case SET_FILTER:
             return {
                 ...state,
                 filter: action.filter,
-                view: updateViewFilter(state.all, makeFilterFn(action.filter))
+                view: updateViewFilterSort(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
             }
         case SET_HIGHLIGHT:
             return {
@@ -51,7 +68,8 @@ export default function reducer(state = defaultState, action) {
         case SET_SORT:
             return {
                 ...state,
-                sort: action.sort
+                sort: action.sort,
+                view: updateViewFilterSort(state.all, makeFilterFn(state.filter), makeSortFn(action.sort))
             }
         case SELECT_FLOW:
             return {
