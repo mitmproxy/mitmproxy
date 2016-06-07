@@ -58,7 +58,7 @@ is a response specifier.
 File Access
 ^^^^^^^^^^^
 
-There are two operators in the :ref:`language <language>`` that load contents
+There are two operators in the :ref:`language <language>` that load contents
 from file - the **+** operator to load an entire request specification from
 file, and the **>** value specifier. In pathod, both of these operators are
 restricted to a directory specified at startup, or disabled if no directory is
