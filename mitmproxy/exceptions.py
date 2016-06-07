@@ -93,5 +93,5 @@ class FlowReadException(ProxyException):
     pass
 
 
-class ControlException(Exception):
+class ControlException(ProxyException):
     pass

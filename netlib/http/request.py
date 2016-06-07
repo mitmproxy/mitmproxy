@@ -227,7 +227,7 @@ class Request(message.Message):
     def query(self):
         # type: () -> multidict.MultiDictView
         """
-        The request query string as an :py:class:`MultiDictView` object.
+        The request query string as an :py:class:`~netlib.multidict.MultiDictView` object.
         """
         return multidict.MultiDictView(
             self._get_query,
@@ -254,7 +254,7 @@ class Request(message.Message):
         """
         The request cookies.
 
-        An empty :py:class:`multidict.MultiDictView` object if the cookie monster ate them all.
+        An empty :py:class:`~netlib.multidict.MultiDictView` object if the cookie monster ate them all.
         """
         return multidict.MultiDictView(
             self._get_cookies,
@@ -329,7 +329,7 @@ class Request(message.Message):
     @property
     def urlencoded_form(self):
         """
-        The URL-encoded form data as an :py:class:`multidict.MultiDictView` object.
+        The URL-encoded form data as an :py:class:`~netlib.multidict.MultiDictView` object.
         An empty multidict.MultiDictView if the content-type indicates non-form data
         or the content could not be parsed.
         """
@@ -359,7 +359,7 @@ class Request(message.Message):
     @property
     def multipart_form(self):
         """
-        The multipart form data as an :py:class:`MultipartFormDict` object.
+        The multipart form data as an :py:class:`~netlib.multidict.MultiDictView` object.
         None if the content-type indicates non-form data.
         """
         return multidict.MultiDictView(
