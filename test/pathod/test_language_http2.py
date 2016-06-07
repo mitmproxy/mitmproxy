@@ -10,11 +10,11 @@ import tutils
 
 
 def parse_request(s):
-    return language.parse_pathoc(s, True).next()
+    return next(language.parse_pathoc(s, True))
 
 
 def parse_response(s):
-    return language.parse_pathod(s, True).next()
+    return next(language.parse_pathod(s, True))
 
 
 def default_settings():
