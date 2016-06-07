@@ -1,27 +1,12 @@
-import json
 from mitmproxy import utils
 from . import tutils
 
 utils.CERT_SLEEP_TIME = 0
 
 
-def test_format_timestamp():
-    assert utils.format_timestamp(utils.timestamp())
-
-
-def test_format_timestamp_with_milli():
-    assert utils.format_timestamp_with_milli(utils.timestamp())
-
-
 def test_pkg_data():
     assert utils.pkg_data.path("console")
     tutils.raises("does not exist", utils.pkg_data.path, "nonexistent")
-
-
-def test_pretty_json():
-    s = json.dumps({"foo": 1})
-    assert utils.pretty_json(s)
-    assert not utils.pretty_json("moo")
 
 
 def test_LRUCache():

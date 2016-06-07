@@ -4,8 +4,6 @@ import re
 import importlib
 import inspect
 
-import six
-
 
 def setbit(byte, offset, value):
     """
@@ -94,16 +92,3 @@ def is_valid_host(host):
 
 def is_valid_port(port):
     return 0 <= port <= 65535
-
-
-def hostport(scheme, host, port):
-    """
-        Returns the host component, with a port specifcation if needed.
-    """
-    if (port, scheme) in [(80, "http"), (443, "https"), (80, b"http"), (443, b"https")]:
-        return host
-    else:
-        if isinstance(host, six.binary_type):
-            return b"%s:%d" % (host, port)
-        else:
-            return "%s:%d" % (host, port)

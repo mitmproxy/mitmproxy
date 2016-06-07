@@ -1,4 +1,13 @@
+import time
 from netlib import human, tutils
+
+
+def test_format_timestamp():
+    assert human.format_timestamp(time.time())
+
+
+def test_format_timestamp_with_milli():
+    assert human.format_timestamp_with_milli(time.time())
 
 
 def test_parse_size():

@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, division
 
+import time
 import copy
 import uuid
 
 from mitmproxy import exceptions
 from mitmproxy import stateobject
-from mitmproxy import utils
 from mitmproxy import version
 from mitmproxy.models.connections import ClientConnection
 from mitmproxy.models.connections import ServerConnection
@@ -34,7 +34,7 @@ class Error(stateobject.StateObject):
         @type timestamp: float
         """
         self.msg = msg
-        self.timestamp = timestamp or utils.timestamp()
+        self.timestamp = timestamp or time.time()
 
     _stateobject_attributes = dict(
         msg=str,

@@ -5,7 +5,16 @@ import os.path
 import re
 
 from netlib import tcp, human
-from . import pathod, version, utils
+from . import pathod, version
+
+
+def parse_anchor_spec(s):
+    """
+        Return a tuple, or None on error.
+    """
+    if "=" not in s:
+        return None
+    return tuple(s.split("=", 1))
 
 
 def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
@@ -188,7 +197,7 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
 
     alst = []
     for i in args.anchors:
-        parts = utils.parse_anchor_spec(i)
+        parts = parse_anchor_spec(i)
         if not parts:
             return parser.error("Invalid anchor specification: %s" % i)
         alst.append(parts)

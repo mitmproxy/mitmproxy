@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function, division
+import time
 
 import copy
 import os
@@ -6,7 +7,6 @@ import os
 import six
 
 from mitmproxy import stateobject
-from mitmproxy import utils
 from netlib import certutils
 from netlib import tcp
 
@@ -39,7 +39,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             self.clientcert = None
             self.ssl_established = None
 
-        self.timestamp_start = utils.timestamp()
+        self.timestamp_start = time.time()
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
         self.protocol = None
@@ -97,11 +97,11 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
     def convert_to_ssl(self, *args, **kwargs):
         super(ClientConnection, self).convert_to_ssl(*args, **kwargs)
-        self.timestamp_ssl_setup = utils.timestamp()
+        self.timestamp_ssl_setup = time.time()
 
     def finish(self):
         super(ClientConnection, self).finish()
-        self.timestamp_end = utils.timestamp()
+        self.timestamp_end = time.time()
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
@@ -194,9 +194,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         return copy.copy(self)
 
     def connect(self):
-        self.timestamp_start = utils.timestamp()
+        self.timestamp_start = time.time()
         tcp.TCPClient.connect(self)
-        self.timestamp_tcp_setup = utils.timestamp()
+        self.timestamp_tcp_setup = time.time()
 
     def send(self, message):
         if isinstance(message, list):
@@ -218,11 +218,11 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
         self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni
-        self.timestamp_ssl_setup = utils.timestamp()
+        self.timestamp_ssl_setup = time.time()
 
     def finish(self):
         tcp.TCPClient.finish(self)
-        self.timestamp_end = utils.timestamp()
+        self.timestamp_end = time.time()
 
 
 ServerConnection._stateobject_attributes["via"] = ServerConnection

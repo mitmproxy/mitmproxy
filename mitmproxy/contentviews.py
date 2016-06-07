@@ -28,7 +28,6 @@ from PIL import ExifTags
 from PIL import Image
 from six.moves import cStringIO as StringIO
 
-import mitmproxy.utils
 from mitmproxy import exceptions
 from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
@@ -60,6 +59,14 @@ else:
 VIEW_CUTOFF = 512
 
 KEY_MAX = 30
+
+
+def pretty_json(s):
+    try:
+        p = json.loads(s)
+    except ValueError:
+        return None
+    return json.dumps(p, sort_keys=True, indent=4)
 
 
 def format_dict(d):
@@ -215,9 +222,9 @@ class ViewJSON(View):
     content_types = ["application/json"]
 
     def __call__(self, data, **metadata):
-        pretty_json = mitmproxy.utils.pretty_json(data)
-        if pretty_json:
-            return "JSON", format_text(pretty_json)
+        pj = pretty_json(data)
+        if pj:
+            return "JSON", format_text(pj)
 
 
 class ViewHTML(View):

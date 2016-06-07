@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+import time
 import sys
 import traceback
 
@@ -9,7 +10,6 @@ import six
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
-from mitmproxy import utils
 from mitmproxy.protocol import base
 from netlib import http
 from netlib import tcp
@@ -265,7 +265,7 @@ class HttpLayer(base.Layer):
             if callable(flow.response.stream):
                 chunks = flow.response.stream(chunks)
             self.send_response_body(flow.response, chunks)
-            flow.response.timestamp_end = utils.timestamp()
+            flow.response.timestamp_end = time.time()
 
     def get_response_from_server(self, flow):
         def get_response():
@@ -310,7 +310,7 @@ class HttpLayer(base.Layer):
                 flow.request,
                 flow.response
             ))
-        flow.response.timestamp_end = utils.timestamp()
+        flow.response.timestamp_end = time.time()
 
         # no further manipulation of self.server_conn beyond this point
         # we can safely set it as the final attribute value here.

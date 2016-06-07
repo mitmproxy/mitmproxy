@@ -2,13 +2,13 @@ from __future__ import absolute_import, print_function, division
 
 import urwid
 
-from mitmproxy import utils
 from mitmproxy.console import common, searchable
+from netlib import human
 
 
 def maybe_timestamp(base, attr):
     if base is not None and getattr(base, attr):
-        return utils.format_timestamp_with_milli(getattr(base, attr))
+        return human.format_timestamp_with_milli(getattr(base, attr))
     else:
         return "active"
 

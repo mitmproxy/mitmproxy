@@ -136,7 +136,7 @@ def raw_format_flow(f, focus, extended):
     if extended:
         req.append(
             fcol(
-                utils.format_timestamp(f["req_timestamp"]),
+                human.format_timestamp(f["req_timestamp"]),
                 "highlight"
             )
         )

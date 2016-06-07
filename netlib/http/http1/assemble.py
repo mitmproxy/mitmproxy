@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
-from netlib import utils
+import netlib.http.url
 from netlib import exceptions
 
 
@@ -82,7 +82,7 @@ def _assemble_request_headers(request_data):
     """
     headers = request_data.headers.copy()
     if "host" not in headers and request_data.scheme and request_data.host and request_data.port:
-        headers["host"] = utils.hostport(
+        headers["host"] = netlib.http.url.hostport(
             request_data.scheme,
             request_data.host,
             request_data.port

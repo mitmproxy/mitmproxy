@@ -1,36 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
-import datetime
-import json
-import time
-
 import netlib.utils
-
-
-def timestamp():
-    """
-        Returns a serializable UTC timestamp.
-    """
-    return time.time()
-
-
-def format_timestamp(s):
-    s = time.localtime(s)
-    d = datetime.datetime.fromtimestamp(time.mktime(s))
-    return d.strftime("%Y-%m-%d %H:%M:%S")
-
-
-def format_timestamp_with_milli(s):
-    d = datetime.datetime.fromtimestamp(s)
-    return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-
-
-def pretty_json(s):
-    try:
-        p = json.loads(s)
-    except ValueError:
-        return None
-    return json.dumps(p, sort_keys=True, indent=4)
 
 
 pkg_data = netlib.utils.Data(__name__)

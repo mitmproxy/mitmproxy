@@ -78,7 +78,7 @@ def unparse(scheme, host, port, path=""):
     """
     if path == "*":
         path = ""
-    return "%s://%s%s" % (scheme, utils.hostport(scheme, host, port), path)
+    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
 def encode(s):
@@ -94,3 +94,16 @@ def decode(s):
         Takes a urlencoded string and returns a list of (key, value) tuples.
     """
     return urllib.parse.parse_qsl(s, keep_blank_values=True)
+
+
+def hostport(scheme, host, port):
+    """
+        Returns the host component, with a port specifcation if needed.
+    """
+    if (port, scheme) in [(80, "http"), (443, "https"), (80, b"http"), (443, b"https")]:
+        return host
+    else:
+        if isinstance(host, six.binary_type):
+            return b"%s:%d" % (host, port)
+        else:
+            return "%s:%d" % (host, port)

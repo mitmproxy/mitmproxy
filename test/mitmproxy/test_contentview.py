@@ -1,3 +1,5 @@
+import json
+
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 from netlib.odict import ODict
@@ -274,3 +276,9 @@ if cv.ViewProtobuf.is_available():
 
 def test_get_by_shortcut():
     assert cv.get_by_shortcut("h")
+
+
+def test_pretty_json():
+    s = json.dumps({"foo": 1})
+    assert cv.pretty_json(s)
+    assert not cv.pretty_json("moo")

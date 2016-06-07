@@ -17,15 +17,6 @@ class MemBool(object):
         return bool(v)
 
 
-def parse_anchor_spec(s):
-    """
-        Return a tuple, or None on error.
-    """
-    if "=" not in s:
-        return None
-    return tuple(s.split("=", 1))
-
-
 data = netlib.utils.Data(__name__)
 
 

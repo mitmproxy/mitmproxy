@@ -3,6 +3,11 @@ import tutils
 import mock
 
 
+def test_parse_anchor_spec():
+    assert cmdline.parse_anchor_spec("foo=200") == ("foo", "200")
+    assert cmdline.parse_anchor_spec("foo") is None
+
+
 @mock.patch("argparse.ArgumentParser.error")
 def test_pathod(perror):
     assert cmdline.args_pathod(["pathod"])
