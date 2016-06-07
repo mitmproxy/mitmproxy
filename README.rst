@@ -1,7 +1,7 @@
 mitmproxy
 ^^^^^^^^^
 
-|travis| |coveralls| |latest_release| |python_versions|
+|travis| |coverage| |latest_release| |python_versions|
 
 This repository contains the **mitmproxy** and **pathod** projects, as well as
 their shared networking library, **netlib**.
@@ -141,8 +141,8 @@ good reason not to.
     :target: https://travis-ci.org/mitmproxy/mitmproxy
     :alt: Build Status
 
-.. |coveralls| image:: https://shields.mitmproxy.org/coveralls/mitmproxy/mitmproxy/master.svg
-    :target: https://coveralls.io/r/mitmproxy/mitmproxy
+.. |coverage| image:: https://codecov.io/gh/mitmproxy/mitmproxy/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/mitmproxy/mitmproxy
     :alt: Coverage Status
 
 .. |latest_release| image:: https://shields.mitmproxy.org/pypi/v/mitmproxy.svg

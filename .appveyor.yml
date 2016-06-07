@@ -13,11 +13,13 @@ environment:
   SNAPSHOT_PASS:
     secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
 install:
-  - "pip install --user -U virtualenv"
+  - "pip install --user -U virtualenv codecov"
   - "dev.bat"
   - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
 test_script:
   - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod"
+after_test:
+  - "codecov"
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
 deploy_script:
