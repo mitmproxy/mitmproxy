@@ -91,6 +91,12 @@ class Options(urwid.WidgetWrap):
                     lambda: master.server.config.check_tcp,
                     self.tcp_proxy
                 ),
+                select.Option(
+                    "Verify Upstream Certs",
+                    "K",
+                    lambda: master.server.config.ssl_insecure,
+                    self.toggle_ssl_insecure
+                ),
 
                 select.Heading("Utility"),
                 select.Option(
@@ -189,6 +195,10 @@ class Options(urwid.WidgetWrap):
 
     def toggle_upstream_cert(self):
         self.master.server.config.no_upstream_cert = not self.master.server.config.no_upstream_cert
+        signals.update_settings.send(self)
+
+    def toggle_ssl_insecure(self):
+        self.master.server.config.ssl_insecure = not self.master.server.config.ssl_insecure
         signals.update_settings.send(self)
 
     def setheaders(self):
