@@ -3,6 +3,7 @@ import random
 import mmap
 
 import six
+import sys
 
 DATATYPES = dict(
     ascii_letters=string.ascii_letters.encode(),
@@ -68,7 +69,7 @@ class RandomGenerator(object):
     def __getitem__(self, x):
         chars = DATATYPES[self.dtype]
         if isinstance(x, slice):
-            return b"".join(rand_byte(chars) for _ in range(*x.indices(self.length)))
+            return b"".join(rand_byte(chars) for _ in range(*x.indices(min(self.length, sys.maxsize))))
         return rand_byte(chars)
 
     def __repr__(self):

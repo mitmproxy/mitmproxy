@@ -1,15 +1,15 @@
-from six.moves import cStringIO as StringIO
+from six import BytesIO
 from pathod import language
 from pathod.language import http, base
 import tutils
 
 
 def parse_request(s):
-    return language.parse_pathoc(s).next()
+    return next(language.parse_pathoc(s))
 
 
 def test_make_error_response():
-    d = StringIO()
+    d = BytesIO()
     s = http.make_error_response("foo")
     language.serve(s, d, {})
 
@@ -24,17 +24,17 @@ class TestRequest:
 
     def test_simple(self):
         r = parse_request('GET:"/foo"')
-        assert r.method.string() == "GET"
-        assert r.path.string() == "/foo"
+        assert r.method.string() == b"GET"
+        assert r.path.string() == b"/foo"
         r = parse_request('GET:/foo')
-        assert r.path.string() == "/foo"
+        assert r.path.string() == b"/foo"
         r = parse_request('GET:@1k')
         assert len(r.path.string()) == 1024
 
     def test_multiple(self):
         r = list(language.parse_pathoc("GET:/ PUT:/"))
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "PUT"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"PUT"
         assert len(r) == 2
 
         l = """
@@ -54,8 +54,8 @@ class TestRequest:
         """
         r = list(language.parse_pathoc(l))
         assert len(r) == 2
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "PUT"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"PUT"
 
         l = """
             get:"http://localhost:9999/p/200":ir,@1
@@ -63,8 +63,8 @@ class TestRequest:
         """
         r = list(language.parse_pathoc(l))
         assert len(r) == 2
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "GET"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"GET"
 
     def test_nested_response(self):
         l = "get:/p:s'200'"
@@ -75,7 +75,7 @@ class TestRequest:
         assert r[0].values({})
 
     def test_render(self):
-        s = StringIO()
+        s = BytesIO()
         r = parse_request("GET:'/foo'")
         assert language.serve(
             r,
@@ -90,8 +90,8 @@ class TestRequest:
             ir,@1
         """
         r = parse_request(l)
-        assert r.method.string() == "GET"
-        assert r.path.string() == "/foo"
+        assert r.method.string() == b"GET"
+        assert r.path.string() == b"/foo"
         assert r.actions
 
         l = """
@@ -106,8 +106,8 @@ class TestRequest:
             ir,@1
         """
         r = parse_request(l)
-        assert r.method.string() == "GET"
-        assert r.path.string().endswith("bar")
+        assert r.method.string() == b"GET"
+        assert r.path.string().endswith(b"bar")
         assert r.actions
 
     def test_spec(self):
@@ -128,66 +128,66 @@ class TestRequest:
     def test_websocket(self):
         r = parse_request('ws:/path/')
         res = r.resolve(language.Settings())
-        assert res.method.string().lower() == "get"
-        assert res.tok(http.Path).value.val == "/path/"
-        assert res.tok(http.Method).value.val.lower() == "get"
-        assert http.get_header("Upgrade", res.headers).value.val == "websocket"
+        assert res.method.string().lower() == b"get"
+        assert res.tok(http.Path).value.val == b"/path/"
+        assert res.tok(http.Method).value.val.lower() == b"get"
+        assert http.get_header(b"Upgrade", res.headers).value.val == b"websocket"
 
         r = parse_request('ws:put:/path/')
         res = r.resolve(language.Settings())
-        assert r.method.string().lower() == "put"
-        assert res.tok(http.Path).value.val == "/path/"
-        assert res.tok(http.Method).value.val.lower() == "put"
-        assert http.get_header("Upgrade", res.headers).value.val == "websocket"
+        assert r.method.string().lower() == b"put"
+        assert res.tok(http.Path).value.val == b"/path/"
+        assert res.tok(http.Method).value.val.lower() == b"put"
+        assert http.get_header(b"Upgrade", res.headers).value.val == b"websocket"
 
 
 class TestResponse:
 
     def dummy_response(self):
-        return language.parse_pathod("400'msg'").next()
+        return next(language.parse_pathod("400'msg'"))
 
     def test_response(self):
-        r = language.parse_pathod("400:m'msg'").next()
-        assert r.status_code.string() == "400"
-        assert r.reason.string() == "msg"
+        r = next(language.parse_pathod("400:m'msg'"))
+        assert r.status_code.string() == b"400"
+        assert r.reason.string() == b"msg"
 
-        r = language.parse_pathod("400:m'msg':b@100b").next()
-        assert r.reason.string() == "msg"
+        r = next(language.parse_pathod("400:m'msg':b@100b"))
+        assert r.reason.string() == b"msg"
         assert r.body.values({})
         assert str(r)
 
-        r = language.parse_pathod("200").next()
-        assert r.status_code.string() == "200"
+        r = next(language.parse_pathod("200"))
+        assert r.status_code.string() == b"200"
         assert not r.reason
-        assert "OK" in [i[:] for i in r.preamble({})]
+        assert b"OK" in [i[:] for i in r.preamble({})]
 
     def test_render(self):
-        s = StringIO()
-        r = language.parse_pathod("400:m'msg'").next()
+        s = BytesIO()
+        r = next(language.parse_pathod("400:m'msg'"))
         assert language.serve(r, s, {})
 
-        r = language.parse_pathod("400:p0,100:dr").next()
+        r = next(language.parse_pathod("400:p0,100:dr"))
         assert "p0" in r.spec()
         s = r.preview_safe()
         assert "p0" not in s.spec()
 
     def test_raw(self):
-        s = StringIO()
-        r = language.parse_pathod("400:b'foo'").next()
+        s = BytesIO()
+        r = next(language.parse_pathod("400:b'foo'"))
         language.serve(r, s, {})
         v = s.getvalue()
-        assert "Content-Length" in v
+        assert b"Content-Length" in v
 
-        s = StringIO()
-        r = language.parse_pathod("400:b'foo':r").next()
+        s = BytesIO()
+        r = next(language.parse_pathod("400:b'foo':r"))
         language.serve(r, s, {})
         v = s.getvalue()
-        assert "Content-Length" not in v
+        assert b"Content-Length" not in v
 
     def test_length(self):
         def testlen(x):
-            s = StringIO()
-            x = x.next()
+            s = BytesIO()
+            x = next(x)
             language.serve(x, s, language.Settings())
             assert x.length(language.Settings()) == len(s.getvalue())
         testlen(language.parse_pathod("400:m'msg':r"))
@@ -196,8 +196,8 @@ class TestResponse:
 
     def test_maximum_length(self):
         def testlen(x):
-            x = x.next()
-            s = StringIO()
+            x = next(x)
+            s = BytesIO()
             m = x.maximum_length({})
             language.serve(x, s, {})
             assert m >= len(s.getvalue())
@@ -225,19 +225,19 @@ class TestResponse:
         tutils.raises("ascii", language.parse_pathod, "foo:b\xf0")
 
     def test_parse_header(self):
-        r = language.parse_pathod('400:h"foo"="bar"').next()
-        assert http.get_header("foo", r.headers)
+        r = next(language.parse_pathod('400:h"foo"="bar"'))
+        assert http.get_header(b"foo", r.headers)
 
     def test_parse_pause_before(self):
-        r = language.parse_pathod("400:p0,10").next()
+        r = next(language.parse_pathod("400:p0,10"))
         assert r.actions[0].spec() == "p0,10"
 
     def test_parse_pause_after(self):
-        r = language.parse_pathod("400:pa,10").next()
+        r = next(language.parse_pathod("400:pa,10"))
         assert r.actions[0].spec() == "pa,10"
 
     def test_parse_pause_random(self):
-        r = language.parse_pathod("400:pr,10").next()
+        r = next(language.parse_pathod("400:pr,10"))
         assert r.actions[0].spec() == "pr,10"
 
     def test_parse_stress(self):
@@ -245,29 +245,29 @@ class TestResponse:
         # returns an int and a python 2.7 int on windows has 32bit precision.
         # Therefore, we should keep the body length < 2147483647 bytes in our
         # tests.
-        r = language.parse_pathod("400:b@1g").next()
+        r = next(language.parse_pathod("400:b@1g"))
         assert r.length({})
 
     def test_spec(self):
         def rt(s):
-            s = language.parse_pathod(s).next().spec()
-            assert language.parse_pathod(s).next().spec() == s
+            s = next(language.parse_pathod(s)).spec()
+            assert next(language.parse_pathod(s)).spec() == s
         rt("400:b@100g")
         rt("400")
         rt("400:da")
 
     def test_websockets(self):
-        r = language.parse_pathod("ws").next()
+        r = next(language.parse_pathod("ws"))
         tutils.raises("no websocket key", r.resolve, language.Settings())
-        res = r.resolve(language.Settings(websocket_key="foo"))
-        assert res.status_code.string() == "101"
+        res = r.resolve(language.Settings(websocket_key=b"foo"))
+        assert res.status_code.string() == b"101"
 
 
 def test_ctype_shortcut():
     e = http.ShortcutContentType.expr()
     v = e.parseString("c'foo'")[0]
-    assert v.key.val == "Content-Type"
-    assert v.value.val == "foo"
+    assert v.key.val == b"Content-Type"
+    assert v.value.val == b"foo"
 
     s = v.spec()
     assert s == e.parseString(s)[0].spec()
@@ -282,8 +282,8 @@ def test_ctype_shortcut():
 def test_location_shortcut():
     e = http.ShortcutLocation.expr()
     v = e.parseString("l'foo'")[0]
-    assert v.key.val == "Location"
-    assert v.value.val == "foo"
+    assert v.key.val == b"Location"
+    assert v.value.val == b"foo"
 
     s = v.spec()
     assert s == e.parseString(s)[0].spec()
@@ -296,23 +296,23 @@ def test_location_shortcut():
 
 
 def test_shortcuts():
-    assert language.parse_pathod(
-        "400:c'foo'").next().headers[0].key.val == "Content-Type"
-    assert language.parse_pathod(
-        "400:l'foo'").next().headers[0].key.val == "Location"
+    assert next(language.parse_pathod(
+        "400:c'foo'")).headers[0].key.val == b"Content-Type"
+    assert next(language.parse_pathod(
+        "400:l'foo'")).headers[0].key.val == b"Location"
 
-    assert "Android" in tutils.render(parse_request("get:/:ua"))
-    assert "User-Agent" in tutils.render(parse_request("get:/:ua"))
+    assert b"Android" in tutils.render(parse_request("get:/:ua"))
+    assert b"User-Agent" in tutils.render(parse_request("get:/:ua"))
 
 
 def test_user_agent():
     e = http.ShortcutUserAgent.expr()
     v = e.parseString("ua")[0]
-    assert "Android" in v.string()
+    assert b"Android" in v.string()
 
     e = http.ShortcutUserAgent.expr()
     v = e.parseString("u'a'")[0]
-    assert "Android" not in v.string()
+    assert b"Android" not in v.string()
 
     v = e.parseString("u@100'")[0]
     assert len(str(v.freeze({}).value)) > 100
@@ -324,7 +324,7 @@ def test_user_agent():
 def test_nested_response():
     e = http.NestedResponse.expr()
     v = e.parseString("s'200'")[0]
-    assert v.value.val == "200"
+    assert v.value.val == b"200"
     tutils.raises(
         language.ParseException,
         e.parseString,
@@ -340,9 +340,7 @@ def test_nested_response():
 def test_nested_response_freeze():
     e = http.NestedResponse(
         base.TokValueLiteral(
-            "200:b'foo':i10,'\\x27'".encode(
-                "string_escape"
-            )
+            r"200:b\'foo\':i10,\'\\x27\'"
         )
     )
     assert e.freeze({})

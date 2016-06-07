@@ -62,8 +62,9 @@ export default function makeList(actionType, fetchURL) {
                 itemIndex = state.indexOf[action.item.id]
                 list[itemIndex] = action.item
                 return {
-                    ...defaultState,
-                    list
+                    ...state,
+                    list,
+                    byId: {...state.byId, [action.item.id]: action.item},
                 }
 
             case REMOVE:
@@ -71,7 +72,7 @@ export default function makeList(actionType, fetchURL) {
                 itemIndex = state.indexOf[action.item.id]
                 list.splice(itemIndex, 1)
                 return {
-                    ...defaultState,
+                    ...state,
                     list,
                     byId: {...state.byId, [action.item.id]: undefined},
                     indexOf: {...state.indexOf, [action.item.id]: undefined},
@@ -79,7 +80,7 @@ export default function makeList(actionType, fetchURL) {
 
             case REQUEST_LIST:
                 return {
-                    ...defaultState,
+                    ...state,
                     isFetching: true
                 }
 
