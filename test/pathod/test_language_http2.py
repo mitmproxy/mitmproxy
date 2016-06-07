@@ -46,15 +46,15 @@ class TestRequest:
 
     def test_simple(self):
         r = parse_request('GET:"/foo"')
-        assert r.method.string() == "GET"
-        assert r.path.string() == "/foo"
+        assert r.method.string() == b"GET"
+        assert r.path.string() == b"/foo"
         r = parse_request('GET:/foo')
-        assert r.path.string() == "/foo"
+        assert r.path.string() == b"/foo"
 
     def test_multiple(self):
         r = list(language.parse_pathoc("GET:/ PUT:/"))
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "PUT"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"PUT"
         assert len(r) == 2
 
         l = """
@@ -71,8 +71,8 @@ class TestRequest:
         """
         r = list(language.parse_pathoc(l, True))
         assert len(r) == 2
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "PUT"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"PUT"
 
         l = """
             get:"http://localhost:9999/p/200"
@@ -80,8 +80,8 @@ class TestRequest:
         """
         r = list(language.parse_pathoc(l, True))
         assert len(r) == 2
-        assert r[0].method.string() == "GET"
-        assert r[1].method.string() == "GET"
+        assert r[0].method.string() == b"GET"
+        assert r[1].method.string() == b"GET"
 
     def test_render_simple(self):
         s = BytesIO()
@@ -101,29 +101,29 @@ class TestRequest:
 
         r = parse_request('GET:/')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-length", "0")
+        assert r.headers[0].values(default_settings()) == (b"content-length", b"0")
 
         r = parse_request('GET:/:b"foobar"')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-length", "6")
+        assert r.headers[0].values(default_settings()) == (b"content-length", b"6")
 
         r = parse_request('GET:/:b"foobar":h"content-length"="42"')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-length", "42")
+        assert r.headers[0].values(default_settings()) == (b"content-length", b"42")
 
         r = parse_request('GET:/:r:b"foobar":h"content-length"="42"')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-length", "42")
+        assert r.headers[0].values(default_settings()) == (b"content-length", b"42")
 
     def test_content_type(self):
         r = parse_request('GET:/:r:c"foobar"')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-type", "foobar")
+        assert r.headers[0].values(default_settings()) == (b"content-type", b"foobar")
 
     def test_user_agent(self):
         r = parse_request('GET:/:r:ua')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("user-agent", user_agents.get_by_shortcut('a')[2])
+        assert r.headers[0].values(default_settings()) == (b"user-agent", user_agents.get_by_shortcut('a')[2].encode())
 
     def test_render_with_headers(self):
         s = BytesIO()
@@ -177,26 +177,26 @@ class TestResponse:
 
         r = parse_response('200')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-length", "0")
+        assert r.headers[0].values(default_settings()) == (b"content-length", b"0")
 
     def test_content_type(self):
         r = parse_response('200:r:c"foobar"')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("content-type", "foobar")
+        assert r.headers[0].values(default_settings()) == (b"content-type", b"foobar")
 
     def test_simple(self):
         r = parse_response('200:r:h"foo"="bar"')
-        assert r.status_code.string() == "200"
+        assert r.status_code.string() == b"200"
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("foo", "bar")
+        assert r.headers[0].values(default_settings()) == (b"foo", b"bar")
         assert r.body is None
 
         r = parse_response('200:r:h"foo"="bar":bfoobar:h"bla"="fasel"')
-        assert r.status_code.string() == "200"
+        assert r.status_code.string() == b"200"
         assert len(r.headers) == 2
-        assert r.headers[0].values(default_settings()) == ("foo", "bar")
-        assert r.headers[1].values(default_settings()) == ("bla", "fasel")
-        assert r.body.string() == "foobar"
+        assert r.headers[0].values(default_settings()) == (b"foo", b"bar")
+        assert r.headers[1].values(default_settings()) == (b"bla", b"fasel")
+        assert r.body.string() == b"foobar"
 
     def test_render_simple(self):
         s = BytesIO()
