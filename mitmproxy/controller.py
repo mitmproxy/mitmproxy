@@ -145,23 +145,6 @@ class Channel(object):
         self.q.put((mtype, m))
 
 
-class DummyReply(object):
-    """
-    A reply object that does nothing. Useful when we need an object to seem
-    like it has a channel, and during testing.
-    """
-    def __init__(self):
-        self.acked = False
-        self.taken = False
-        self.handled = False
-
-    def take(self):
-        self.taken = True
-
-    def __call__(self, msg=False):
-        self.acked = True
-
-
 # Special value to distinguish the case where no reply was sent
 NO_REPLY = object()
 
@@ -192,7 +175,7 @@ def handler(f):
         ret = f(*args, **kwargs)
 
         if handling and not message.reply.acked and not message.reply.taken:
-            message.reply()
+            message.reply.ack()
         return ret
     # Mark this function as a handler wrapper
     wrapper.func_dict["__handler"] = True
@@ -215,6 +198,12 @@ class Reply(object):
         # Has a handler taken responsibility for ack-ing?
         self.handled = False
 
+    def ack(self):
+        self(NO_REPLY)
+
+    def kill(self):
+        self(exceptions.Kill)
+
     def take(self):
         self.taken = True
 
@@ -231,3 +220,26 @@ class Reply(object):
         if not self.acked:
             # This will be ignored by the interpreter, but emit a warning
             raise exceptions.ControlException("Un-acked message")
+
+
+class DummyReply(object):
+    """
+    A reply object that does nothing. Useful when we need an object to seem
+    like it has a channel, and during testing.
+    """
+    def __init__(self):
+        self.acked = False
+        self.taken = False
+        self.handled = False
+
+    def kill(self):
+        self()
+
+    def ack(self):
+        self()
+
+    def take(self):
+        self.taken = True
+
+    def __call__(self, msg=False):
+        self.acked = True

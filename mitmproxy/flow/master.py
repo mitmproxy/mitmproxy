@@ -411,7 +411,7 @@ class FlowMaster(controller.Master):
                 )
                 if err:
                     self.add_event("Error in wsgi app. %s" % err, "error")
-                f.reply(exceptions.Kill)
+                f.reply.kill()
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
@@ -428,7 +428,7 @@ class FlowMaster(controller.Master):
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
         except netlib.exceptions.HttpException:
-            f.reply(exceptions.Kill)
+            f.reply.kill()
             return
         self.run_script_hook("responseheaders", f)
         return f
