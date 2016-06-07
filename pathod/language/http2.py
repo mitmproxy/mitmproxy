@@ -125,7 +125,7 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
     def values(self, settings):
         value = self.value.val
         if self.option_used:
-            value = user_agents.get_by_shortcut(value.lower())[2]
+            value = user_agents.get_by_shortcut(value.lower().decode())[2].encode()
 
         return (
             self.key.get_generator(settings),
