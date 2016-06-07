@@ -35,7 +35,7 @@ achieve transparent mode.
 
     >>> mitmproxy -T --host
 
-    The :option:`-T` flag turns on transparent mode, and the :option:`--host`
+    The ``-T`` flag turns on transparent mode, and the ``--host``
     argument tells mitmproxy to use the value of the Host header for URL display.
 
  6. Finally, configure your test device to use the host on which mitmproxy is

@@ -21,7 +21,7 @@ record the authentication process once, and simply replay it on startup every ti
 to interact with the secured resources.
 
 ================== ======================
-command-line       :option:`-t FILTER`
+command-line       ``-t FILTER``
 mitmproxy shortcut :kbd:`o` then :kbd:`t`
 ================== ======================
 
@@ -36,6 +36,6 @@ authentication through the proxy. Note that :program:`mitmproxy` doesn't (yet) s
 replay of HTTP Digest authentication.
 
 ================== ======================
-command-line       :option:`-u FILTER`
+command-line       ``-u FILTER``
 mitmproxy shortcut :kbd:`o` then :kbd:`A`
 ================== ======================

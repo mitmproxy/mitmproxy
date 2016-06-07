@@ -10,8 +10,8 @@ upstream servers. For now, only HTTP Basic authentication is supported. The
 proxy auth options are not compatible with the transparent, socks or reverse proxy
 mode.
 
-================== =============================
-command-line       :option:`--nonanonymous`,
-                   :option:`--singleuser USER`,
-                   :option:`--htpasswd PATH`
-================== =============================
+================== ======================
+command-line       ``--nonanonymous``,
+                   ``--singleuser USER``,
+                   ``--htpasswd PATH``
+================== ======================

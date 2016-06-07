@@ -12,7 +12,7 @@ conversation, where requests may have been made concurrently.
 You may want to use client-side replay in conjunction with the
 :ref:`anticache` option, to make sure the server responds with complete data.
 
-================== =================
-command-line       :option:`-c path`
+================== ===========
+command-line       ``-c path``
 mitmproxy shortcut :kbd:`c`
-================== =================
+================== ===========

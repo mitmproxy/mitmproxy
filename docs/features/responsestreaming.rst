@@ -19,9 +19,9 @@ On the command-line
 Streaming can be enabled on the command line for all response bodies exceeding a certain size.
 The SIZE argument understands k/m/g suffixes, e.g. 3m for 3 megabytes.
 
-================== =============================
-command-line       :option:`--stream SIZE`
-================== =============================
+================== =================
+command-line       ``--stream SIZE``
+================== =================
 
 .. warning::
 

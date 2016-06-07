@@ -7,7 +7,7 @@ mitmdump
 
 **mitmdump** is the command-line companion to mitmproxy. It provides
 tcpdump-like functionality to let you view, record, and programmatically
-transform HTTP traffic. See the :option:`--help` flag output for complete
+transform HTTP traffic. See the ``--help`` flag output for complete
 documentation.
 
 
@@ -28,7 +28,7 @@ Filtering saved traffic
 
 >>> mitmdump -nr infile -w outfile "~m post"
 
-Start mitmdump without binding to the proxy port (:option:`-n`), read all flows from
+Start mitmdump without binding to the proxy port (``-n``), read all flows from
 infile, apply the specified filter expression (only match POSTs), and write to
 outfile.
 
@@ -38,8 +38,8 @@ Client replay
 
 >>> mitmdump -nc outfile
 
-Start mitmdump without binding to the proxy port (:option:`-n`), then replay all
-requests from outfile (:option:`-c filename`). Flags combine in the obvious way, so
+Start mitmdump without binding to the proxy port (``-n``), then replay all
+requests from outfile (``-c filename``). Flags combine in the obvious way, so
 you can replay requests from one file, and write the resulting flows to
 another:
 

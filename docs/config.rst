@@ -62,7 +62,7 @@ Options
 
 The options available in the config files are precisely those available as
 command-line flags, with the key being the option's long name. To get a
-complete list of these, use the :option:`--help` option on each of the tools. Be
+complete list of these, use the ``--help`` option on each of the tools. Be
 careful to only specify common options in the **common.conf** file -
 unsupported options in this file will be detected as an error on startup.
 
@@ -72,7 +72,7 @@ Examples
 common.conf
 ^^^^^^^^^^^
 
-Note that :option:`--port` is an option supported by all tools.
+Note that ``--port`` is an option supported by all tools.
 
 .. code-block:: none
 

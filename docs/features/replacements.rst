@@ -54,7 +54,7 @@ So, you might start **mitmdump** as follows:
 
 This will load the replacement text from the file ``~/xss-exploit``.
 
-Both the :option:`--replace` and :option:`--replace-from-file` flags can be passed multiple
+Both the ``--replace`` and ``--replace-from-file`` flags can be passed multiple
 times.
 
 
@@ -65,8 +65,8 @@ The :kbd:`R` shortcut key in the mitmproxy options menu (:kbd:`o`) lets you add 
 replacement hooks using a built-in editor. The context-sensitive help (:kbd:`?`) has
 complete usage information.
 
-================== =============================
-command-line       :option:`--replace`,
-                   :option:`--replace-from-file`
+================== =======================
+command-line       ``--replace``,
+                   ``--replace-from-file``
 mitmproxy shortcut :kbd:`o` then :kbd:`R`
-================== =============================
+================== =======================

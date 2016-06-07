@@ -20,10 +20,10 @@ take a look at the :ref:`responsestreaming` feature.
 How it works
 ------------
 
-================== =============================
-command-line       :option:`--ignore regex`
+================== ======================
+command-line       ``--ignore regex``
 mitmproxy shortcut :kbd:`o` then :kbd:`I`
-================== =============================
+================== ======================
 
 
 mitmproxy allows you to specify a regex which is matched against a ``host:port`` string
@@ -32,7 +32,7 @@ mitmproxy allows you to specify a regex which is matched against a ``host:port``
 There are two important quirks to consider:
 
 - **In transparent mode, the ignore pattern is matched against the IP and ClientHello SNI host.** While we usually infer the
-  hostname from the Host header if the :option:`--host` argument is passed to mitmproxy, we do not
+  hostname from the Host header if the ``--host`` argument is passed to mitmproxy, we do not
   have access to this information before the SSL handshake. If the client uses SNI however, then we treat the SNI host as an ignore target.
 - In regular mode, explicit HTTP requests are never ignored. [#explicithttp]_ The ignore pattern is
   applied on CONNECT requests, which initiate HTTPS or clear-text WebSocket connections.
@@ -42,7 +42,7 @@ Tutorial
 
 If you just want to ignore one specific domain, there's usually a bulletproof method to do so:
 
-1. Run mitmproxy or mitmdump in verbose mode (:option:`-v`) and observe the ``host:port``
+1. Run mitmproxy or mitmdump in verbose mode (``-v``) and observe the ``host:port``
    information in the serverconnect messages. mitmproxy will filter on these.
 2. Take the ``host:port`` string, surround it with ^ and $, escape all dots (. becomes \\.)
    and use this as your ignore pattern:

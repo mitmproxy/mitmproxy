@@ -13,7 +13,7 @@ By default, :program:`mitmproxy` excludes request headers when matching incoming
 requests with responses from the replay file. This works in most circumstances,
 and makes it possible to replay server responses in situations where request
 headers would naturally vary, e.g. using a different user agent.
-The :option:`--rheader headername` command-line option allows you to override
+The ``--rheader headername`` command-line option allows you to override
 this behaviour by specifying individual headers that should be included in matching.
 
 
@@ -30,10 +30,10 @@ recording. So, if they were in the past at the time of recording, they will be
 in the past at the time of replay, and vice versa. Cookie expiry times are
 updated in a similar way.
 
-You can turn off response refreshing using the :option:`--norefresh` argument, or using
+You can turn off response refreshing using the ``--norefresh`` argument, or using
 the :kbd:`o` options shortcut within :program:`mitmproxy`.
 
-================== =================
-command-line       :option:`-S path`
+================== ===========
+command-line       ``-S path``
 mitmproxy shortcut :kbd:`S`
-================== =================
+================== ===========

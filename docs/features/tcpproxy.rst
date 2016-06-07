@@ -18,7 +18,7 @@ How it works
 ------------
 
 ================== ======================
-command-line       :option:`--tcp HOST`
+command-line       ``--tcp HOST``
 mitmproxy shortcut :kbd:`o` then :kbd:`T`
 ================== ======================
 

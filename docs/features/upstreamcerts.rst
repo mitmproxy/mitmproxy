@@ -17,7 +17,7 @@ certs in transparent mode.
 
 Upstream cert sniffing is on by default, and can optionally be turned off.
 
-================== =============================
-command-line       :option:`--no-upstream-cert`
+================== ======================
+command-line       ``--no-upstream-cert``
 mitmproxy shortcut :kbd:`o` then :kbd:`U`
-================== =============================
+================== ======================

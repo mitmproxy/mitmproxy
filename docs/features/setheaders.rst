@@ -13,7 +13,7 @@ Example: Set the **Host** header to "example.com" for all requests.
 
     mitmdump -R http://example.com --setheader :~q:Host:example.com
 
-================== =============================
-command-line       :option:`--setheader PATTERN`
+================== =======================
+command-line       ``--setheader PATTERN``
 mitmproxy shortcut :kbd:`o` then :kbd:`H`
-================== =============================
+================== =======================
