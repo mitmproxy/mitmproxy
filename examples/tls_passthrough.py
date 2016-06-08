@@ -134,5 +134,5 @@ def next_layer(context, next_layer):
             # We don't intercept - reply with a pass-through layer and add a "skipped" entry.
             context.log("TLS passthrough for %s" % repr(next_layer.server_conn.address), "info")
             next_layer_replacement = RawTCPLayer(next_layer.ctx, logging=False)
-            next_layer.reply(next_layer_replacement)
+            next_layer.reply.send(next_layer_replacement)
             context.tls_strategy.record_skipped(server_address)

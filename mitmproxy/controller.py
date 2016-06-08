@@ -145,27 +145,6 @@ class Channel(object):
         self.q.put((mtype, m))
 
 
-class DummyReply(object):
-    """
-    A reply object that does nothing. Useful when we need an object to seem
-    like it has a channel, and during testing.
-    """
-    def __init__(self):
-        self.acked = False
-        self.taken = False
-        self.handled = False
-
-    def take(self):
-        self.taken = True
-
-    def __call__(self, msg=False):
-        self.acked = True
-
-
-# Special value to distinguish the case where no reply was sent
-NO_REPLY = object()
-
-
 def handler(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -192,7 +171,7 @@ def handler(f):
         ret = f(*args, **kwargs)
 
         if handling and not message.reply.acked and not message.reply.taken:
-            message.reply()
+            message.reply.ack()
         return ret
     # Mark this function as a handler wrapper
     wrapper.func_dict["__handler"] = True
@@ -215,19 +194,45 @@ class Reply(object):
         # Has a handler taken responsibility for ack-ing?
         self.handled = False
 
+    def ack(self):
+        self.send(self.obj)
+
+    def kill(self):
+        self.send(exceptions.Kill)
+
     def take(self):
         self.taken = True
 
-    def __call__(self, msg=NO_REPLY):
+    def send(self, msg):
         if self.acked:
             raise exceptions.ControlException("Message already acked.")
         self.acked = True
-        if msg is NO_REPLY:
-            self.q.put(self.obj)
-        else:
-            self.q.put(msg)
+        self.q.put(msg)
 
     def __del__(self):
         if not self.acked:
             # This will be ignored by the interpreter, but emit a warning
             raise exceptions.ControlException("Un-acked message")
+
+
+class DummyReply(object):
+    """
+    A reply object that does nothing. Useful when we need an object to seem
+    like it has a channel, and during testing.
+    """
+    def __init__(self):
+        self.acked = False
+        self.taken = False
+        self.handled = False
+
+    def kill(self):
+        self.send(None)
+
+    def ack(self):
+        self.send(None)
+
+    def take(self):
+        self.taken = True
+
+    def send(self, msg):
+        self.acked = True

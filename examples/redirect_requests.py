@@ -16,7 +16,7 @@ def request(context, flow):
             "HTTP/1.1", 200, "OK",
             Headers(Content_Type="text/html"),
             "helloworld")
-        flow.reply(resp)
+        flow.reply.send(resp)
 
     # Method 2: Redirect the request to a different server
     if flow.request.pretty_host.endswith("example.org"):

@@ -16,7 +16,9 @@ class MasterTest:
         master.request(f)
         if not f.error:
             f.response = models.HTTPResponse.wrap(netlib.tutils.tresp(content=content))
+            f.reply.acked = False
             f = master.response(f)
+        f.client_conn.reply.acked = False
         master.clientdisconnect(f.client_conn)
         return f
 
