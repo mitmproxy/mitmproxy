@@ -17,7 +17,7 @@ from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, Tcp
 from . import language, utils, log, protocols
 
 
-DEFAULT_CERT_DOMAIN = "pathod.net"
+DEFAULT_CERT_DOMAIN = b"pathod.net"
 CONFDIR = "~/.mitmproxy"
 CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
