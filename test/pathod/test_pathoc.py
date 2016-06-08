@@ -12,7 +12,7 @@ import tutils
 
 
 def test_response():
-    r = http.Response("HTTP/1.1", 200, "Message", {}, None, None)
+    r = http.Response(b"HTTP/1.1", 200, b"Message", {}, None, None)
     assert repr(r)
 
 
@@ -44,17 +44,17 @@ class TestDaemonSSL(PathocTestDaemon):
     ssl = True
     ssloptions = dict(
         request_client_cert=True,
-        sans=["test1.com", "test2.com"],
+        sans=[b"test1.com", b"test2.com"],
         alpn_select=b'h2',
     )
 
     def test_sni(self):
         self.tval(
             ["get:/p/200"],
-            sni="foobar.com"
+            sni=b"foobar.com"
         )
         log = self.d.log()
-        assert log[0]["request"]["sni"] == "foobar.com"
+        assert log[0]["request"]["sni"] == b"foobar.com"
 
     def test_showssl(self):
         assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)

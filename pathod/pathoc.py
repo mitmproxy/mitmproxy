@@ -73,7 +73,7 @@ class SSLInfo(object):
             parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
             s = certutils.SSLCert(i)
             if s.altnames:
-                parts.append("\tSANs: %s" % " ".join(s.altnames))
+                parts.append("\tSANs: %s" % b" ".join(s.altnames))
         return "\n".join(parts)
 
 
