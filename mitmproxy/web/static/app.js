@@ -1202,6 +1202,14 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+exports.TLSColumn = TLSColumn;
+exports.IconColumn = IconColumn;
+exports.PathColumn = PathColumn;
+exports.MethodColumn = MethodColumn;
+exports.StatusColumn = StatusColumn;
+exports.SizeColumn = SizeColumn;
+exports.TimeColumn = TimeColumn;
+
 var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
@@ -3923,7 +3931,6 @@ var MainViewContainer = (0, _reactRedux.connect)(function (state) {
     return {
         flows: state.flows.view,
         filter: state.flows.filter,
-        sort: state.flows.sort,
         highlight: state.flows.highlight,
         selectedFlow: state.flows.all.byId[state.flows.selected[0]]
     };
@@ -4489,7 +4496,9 @@ var _utils = require("../utils.js");
 
 var _flowtableColumns = require("../components/flowtable-columns.js");
 
-var _flowtableColumns2 = _interopRequireDefault(_flowtableColumns);
+var flow_table_columns = _interopRequireWildcard(_flowtableColumns);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4522,15 +4531,13 @@ function makeFilterFn(filter) {
 }
 
 function makeSortFn(sort) {
-    var column = _.find(_flowtableColumns2.default, function (c) {
-        return c.name == sort.sortColumn;
-    });
+    var column = flow_table_columns[sort.sortColumn];
     if (!column) return;
 
     var sortKeyFun = column.sortKeyFun;
     if (sort.sortDesc) {
-        sortKeyFun = function sortKeyFun() {
-            var k = column.sortKeyFun.apply(this, arguments);
+        sortKeyFun = sortKeyFun && function (flow) {
+            var k = column.sortKeyFun(flow);
             return _.isString(k) ? (0, _utils.reverseString)("" + k) : -k;
         };
     }
@@ -4551,7 +4558,7 @@ function reducer() {
         case SET_FILTER:
             return _extends({}, state, {
                 filter: action.filter,
-                view: (0, _view.updateViewFilterSort)(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
+                view: (0, _view.updateViewFilter)(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
             });
         case SET_HIGHLIGHT:
             return _extends({}, state, {
@@ -4560,7 +4567,7 @@ function reducer() {
         case SET_SORT:
             return _extends({}, state, {
                 sort: action.sort,
-                view: (0, _view.updateViewFilterSort)(state.all, makeFilterFn(state.filter), makeSortFn(action.sort))
+                view: (0, _view.updateViewSort)(state.view, makeSortFn(action.sort))
             });
         case SELECT_FLOW:
             return _extends({}, state, {
@@ -4843,7 +4850,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 exports.sortedIndexOf = sortedIndexOf;
 exports.updateViewList = updateViewList;
-exports.updateViewFilterSort = updateViewFilterSort;
+exports.updateViewFilter = updateViewFilter;
+exports.updateViewSort = updateViewSort;
 
 var _list = require("./list");
 
@@ -4937,7 +4945,7 @@ function updateViewList(currentView, currentList, nextList, action) {
         case _list.REQUEST_LIST:
             return currentView;
         case _list.RECEIVE_LIST:
-            return updateViewFilterSort(nextList, filterFn, sortFn);
+            return updateViewFilter(nextList, filterFn, sortFn);
         case _list.ADD:
             if (filterFn(action.item)) {
                 return sortedInsert(currentView, sortFn, action.item);
@@ -4980,7 +4988,7 @@ function updateViewList(currentView, currentList, nextList, action) {
     }
 }
 
-function updateViewFilterSort(list) {
+function updateViewFilter(list) {
     var filterFn = arguments.length <= 1 || arguments[1] === undefined ? defaultFilterFn : arguments[1];
     var sortFn = arguments.length <= 2 || arguments[2] === undefined ? defaultSortFn : arguments[2];
 
@@ -4993,6 +5001,20 @@ function updateViewFilterSort(list) {
     };
 
     return filtered;
+}
+
+function updateViewSort(list) {
+    var sortFn = arguments.length <= 1 || arguments[1] === undefined ? defaultSortFn : arguments[1];
+
+    var sorted = list.slice(0);
+    if (sortFn) {
+        sorted.sort(makeCompareFn(sortFn));
+    }
+    sorted.indexOf = function (x) {
+        return sortedIndexOf(sorted, x, sortFn);
+    };
+
+    return sorted;
 }
 
 },{"./list":26}],28:[function(require,module,exports){

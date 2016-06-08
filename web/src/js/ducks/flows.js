@@ -1,8 +1,8 @@
 import makeList from "./utils/list"
 import Filt from "../filt/filt"
-import {updateViewFilterSort, updateViewList} from "./utils/view"
+import {updateViewFilter, updateViewList, updateViewSort} from "./utils/view"
 import {reverseString} from "../utils.js";
-import flowtable_columns from "../components/flowtable-columns.js";
+import * as flow_table_columns from "../components/flowtable-columns.js";
 
 export const UPDATE_FLOWS = "UPDATE_FLOWS"
 export const SET_FILTER = "SET_FLOW_FILTER"
@@ -32,13 +32,13 @@ function makeFilterFn(filter) {
 
 
 function makeSortFn(sort){
-    let column = _.find(flowtable_columns, c => c.name == sort.sortColumn);
+    let column = flow_table_columns[sort.sortColumn];
     if (!column) return;
 
     let sortKeyFun = column.sortKeyFun;
     if (sort.sortDesc) {
-        sortKeyFun = sortKeyFun && function () {
-            const k = column.sortKeyFun.apply(this, arguments);
+        sortKeyFun = sortKeyFun && function (flow) {
+            const k = column.sortKeyFun(flow);
             return _.isString(k) ? reverseString("" + k) : -k;
         };
     }
@@ -58,7 +58,7 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 filter: action.filter,
-                view: updateViewFilterSort(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
+                view: updateViewFilter(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
             }
         case SET_HIGHLIGHT:
             return {
@@ -69,7 +69,7 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 sort: action.sort,
-                view: updateViewFilterSort(state.all, makeFilterFn(state.filter), makeSortFn(action.sort))
+                view: updateViewSort(state.view, makeSortFn(action.sort))
             }
         case SELECT_FLOW:
             return {

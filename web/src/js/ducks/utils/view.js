@@ -75,7 +75,7 @@ export function updateViewList(currentView, currentList, nextList, action, filte
         case REQUEST_LIST:
             return currentView
         case RECEIVE_LIST:
-            return updateViewFilterSort(nextList, filterFn, sortFn)
+            return updateViewFilter(nextList, filterFn, sortFn)
         case ADD:
             if (filterFn(action.item)) {
                 return sortedInsert(currentView, sortFn, action.item)
@@ -113,7 +113,7 @@ export function updateViewList(currentView, currentList, nextList, action, filte
     }
 }
 
-export function updateViewFilterSort(list, filterFn = defaultFilterFn, sortFn = defaultSortFn) {
+export function updateViewFilter(list, filterFn = defaultFilterFn, sortFn = defaultSortFn) {
     let filtered = list.list.filter(filterFn)
     if (sortFn){
         filtered.sort(makeCompareFn(sortFn))
@@ -121,4 +121,14 @@ export function updateViewFilterSort(list, filterFn = defaultFilterFn, sortFn = 
     filtered.indexOf = x => sortedIndexOf(filtered, x, sortFn)
 
     return filtered
+}
+
+export function updateViewSort(list, sortFn = defaultSortFn) {
+    let sorted = list.slice(0)
+    if (sortFn) {
+        sorted.sort(makeCompareFn(sortFn))
+    }
+    sorted.indexOf = x => sortedIndexOf(sorted, x, sortFn)
+
+    return sorted
 }

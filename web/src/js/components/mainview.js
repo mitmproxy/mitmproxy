@@ -169,7 +169,6 @@ const MainViewContainer = connect(
     state => ({
         flows: state.flows.view,
         filter: state.flows.filter,
-        sort: state.flows.sort,
         highlight: state.flows.highlight,
         selectedFlow: state.flows.all.byId[state.flows.selected[0]]
     }),
