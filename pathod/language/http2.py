@@ -262,7 +262,7 @@ class Request(_HTTP2Message):
         else:
             path = self.path.string()
             if self.nested_response:
-                path += self.nested_response.parsed.spec()
+                path += self.nested_response.parsed.spec().encode()
 
             headers = Headers([header.values(settings) for header in self.headers])
 
