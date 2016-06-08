@@ -14,7 +14,6 @@ from pathod import pathoc, pathod
 
 from mitmproxy import controller
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.exceptions import Kill
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
 
 from . import tutils, tservers
@@ -744,7 +743,7 @@ class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
     def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
-        f.reply(resp)
+        f.reply.send(resp)
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -771,7 +770,7 @@ class MasterKillRequest(tservers.TestMaster):
 
     @controller.handler
     def request(self, f):
-        f.reply(Kill)
+        f.reply.kill()
 
 
 class TestKillRequest(tservers.HTTPProxyTest):
@@ -788,7 +787,7 @@ class MasterKillResponse(tservers.TestMaster):
 
     @controller.handler
     def response(self, f):
-        f.reply(Kill)
+        f.reply.kill()
 
 
 class TestKillResponse(tservers.HTTPProxyTest):
@@ -820,7 +819,7 @@ class MasterIncomplete(tservers.TestMaster):
     def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = None
-        f.reply(resp)
+        f.reply.send(resp)
 
 
 class TestIncompleteResponse(tservers.HTTPProxyTest):
@@ -942,7 +941,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
                 if not (k[0] in exclude):
                     f.client_conn.finish()
                     f.error = Error("terminated")
-                    f.reply(Kill)
+                    f.reply.kill()
                 return _func(f)
 
             setattr(master, attr, handler)

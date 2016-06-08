@@ -66,7 +66,7 @@ class TestChannel(object):
         def reply():
             m, obj = q.get()
             assert m == "test"
-            obj.reply(42)
+            obj.reply.send(42)
 
         Thread(target=reply).start()
 
@@ -86,7 +86,7 @@ class TestDummyReply(object):
     def test_simple(self):
         reply = controller.DummyReply()
         assert not reply.acked
-        reply()
+        reply.ack()
         assert reply.acked
 
 
@@ -94,16 +94,16 @@ class TestReply(object):
     def test_simple(self):
         reply = controller.Reply(42)
         assert not reply.acked
-        reply("foo")
+        reply.send("foo")
         assert reply.acked
         assert reply.q.get() == "foo"
 
     def test_default(self):
         reply = controller.Reply(42)
-        reply()
+        reply.ack()
         assert reply.q.get() == 42
 
     def test_reply_none(self):
         reply = controller.Reply(42)
-        reply(None)
+        reply.send(None)
         assert reply.q.get() is None
