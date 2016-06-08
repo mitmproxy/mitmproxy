@@ -288,10 +288,10 @@ class PathodHandler(tcp.BaseHandler):
         # moment because JSON encoding can't handle binary data, and I don't
         # want to base64 everything.
         if self.server.logreq:
-            encoded_bytes = self.rfile.get_log().encode("string_escape")
+            encoded_bytes = strutils.bytes_to_escaped_str(self.rfile.get_log())
             log["request_bytes"] = encoded_bytes
         if self.server.logresp:
-            encoded_bytes = self.wfile.get_log().encode("string_escape")
+            encoded_bytes = strutils.bytes_to_escaped_str(self.wfile.get_log())
             log["response_bytes"] = encoded_bytes
         self.server.add_log(log)
 
