@@ -4,19 +4,20 @@ import logging
 import os
 import sys
 import threading
-import urllib
 
 from netlib import tcp
 from netlib import certutils
 from netlib import websockets
 from netlib import version
+
+from six.moves import urllib
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
     TlsException
 
 from . import language, utils, log, protocols
 
 
-DEFAULT_CERT_DOMAIN = "pathod.net"
+DEFAULT_CERT_DOMAIN = b"pathod.net"
 CONFDIR = "~/.mitmproxy"
 CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
@@ -185,7 +186,7 @@ class PathodHandler(tcp.BaseHandler):
                     break
             else:
                 if m(path.startswith(self.server.craftanchor)):
-                    spec = urllib.unquote(path)[len(self.server.craftanchor):]
+                    spec = urllib.parse.unquote(path)[len(self.server.craftanchor):]
                     if spec:
                         try:
                             anchor_gen = language.parse_pathod(spec, self.use_http2)
@@ -211,7 +212,7 @@ class PathodHandler(tcp.BaseHandler):
                     "No valid craft request found"
                 )])
 
-            spec = anchor_gen.next()
+            spec = next(anchor_gen)
 
             if self.use_http2 and isinstance(spec, language.http2.Response):
                 spec.stream_id = req.stream_id
@@ -283,15 +284,10 @@ class PathodHandler(tcp.BaseHandler):
                 return
 
     def addlog(self, log):
-        # FIXME: The bytes in the log should not be escaped. We do this at the
-        # moment because JSON encoding can't handle binary data, and I don't
-        # want to base64 everything.
         if self.server.logreq:
-            encoded_bytes = self.rfile.get_log().encode("string_escape")
-            log["request_bytes"] = encoded_bytes
+            log["request_bytes"] = self.rfile.get_log()
         if self.server.logresp:
-            encoded_bytes = self.wfile.get_log().encode("string_escape")
-            log["response_bytes"] = encoded_bytes
+            log["response_bytes"] = self.wfile.get_log()
         self.server.add_log(log)
 
 
