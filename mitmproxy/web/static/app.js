@@ -1202,6 +1202,14 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+exports.TLSColumn = TLSColumn;
+exports.IconColumn = IconColumn;
+exports.PathColumn = PathColumn;
+exports.MethodColumn = MethodColumn;
+exports.StatusColumn = StatusColumn;
+exports.SizeColumn = SizeColumn;
+exports.TimeColumn = TimeColumn;
+
 var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
@@ -1455,8 +1463,6 @@ var _classnames = require("classnames");
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _utils = require("../utils.js");
-
 var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
@@ -1478,6 +1484,8 @@ var _flowtableColumns2 = _interopRequireDefault(_flowtableColumns);
 var _filt = require("../filt/filt");
 
 var _filt2 = _interopRequireDefault(_filt);
+
+var _flows = require("../ducks/flows");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1530,88 +1538,59 @@ var FlowRowContainer = (0, _reactRedux.connect)(function (state, ownProps) {
     };
 })(FlowRow);
 
-var FlowTableHead = function (_React$Component) {
-    _inherits(FlowTableHead, _React$Component);
+function FlowTableHead(_ref2) {
+    var setSort = _ref2.setSort;
+    var columns = _ref2.columns;
+    var sort = _ref2.sort;
 
-    function FlowTableHead(props, context) {
-        _classCallCheck(this, FlowTableHead);
+    var sortColumn = sort.sortColumn;
+    var sortType = sort.sortDesc ? "sort-desc" : "sort-asc";
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTableHead).call(this, props, context));
-
-        _this.state = { sortColumn: undefined, sortDesc: false };
-        return _this;
-    }
-
-    _createClass(FlowTableHead, [{
-        key: "onClick",
-        value: function onClick(Column) {
-            var hasSort = Column.sortKeyFun;
-
-            var sortDesc = this.state.sortDesc;
-
-            if (Column === this.state.sortColumn) {
-                sortDesc = !sortDesc;
-                this.setState({ sortDesc: sortDesc });
-            } else {
-                this.setState({ sortColumn: hasSort && Column, sortDesc: false });
-            }
-
-            var sortKeyFun = Column.sortKeyFun;
-            if (sortDesc) {
-                sortKeyFun = hasSort && function () {
-                    var k = Column.sortKeyFun.apply(this, arguments);
-                    if (_lodash2.default.isString(k)) {
-                        return (0, _utils.reverseString)("" + k);
-                    }
-                    return -k;
-                };
-            }
-
-            this.props.setSortKeyFun(sortKeyFun);
-        }
-    }, {
-        key: "render",
-        value: function render() {
-            var _this2 = this;
-
-            var sortColumn = this.state.sortColumn;
-            var sortType = this.state.sortDesc ? "sort-desc" : "sort-asc";
-            return _react2.default.createElement(
-                "tr",
-                null,
-                this.props.columns.map(function (Column) {
-                    return _react2.default.createElement(Column.Title, {
-                        key: Column.name,
-                        onClick: function onClick() {
-                            return _this2.onClick(Column);
-                        },
-                        className: sortColumn === Column ? sortType : undefined
-                    });
-                })
-            );
-        }
-    }]);
-
-    return FlowTableHead;
-}(_react2.default.Component);
+    return _react2.default.createElement(
+        "tr",
+        null,
+        columns.map(function (Column) {
+            return _react2.default.createElement(Column.Title, {
+                key: Column.name,
+                onClick: function onClick() {
+                    return setSort({ sortColumn: Column.name, sortDesc: Column.name != sort.sortColumn ? false : !sort.sortDesc });
+                },
+                className: sortColumn === Column.name ? sortType : undefined
+            });
+        })
+    );
+}
 
 FlowTableHead.propTypes = {
-    setSortKeyFun: _react2.default.PropTypes.func.isRequired,
+    setSort: _react2.default.PropTypes.func.isRequired,
+    sort: _react2.default.PropTypes.object.isRequired,
     columns: _react2.default.PropTypes.array.isRequired
 };
 
-var FlowTable = function (_React$Component2) {
-    _inherits(FlowTable, _React$Component2);
+var FlowTableHeadContainer = (0, _reactRedux.connect)(function (state) {
+    return {
+        sort: state.flows.sort
+    };
+}, function (dispatch) {
+    return {
+        setSort: function setSort(sort) {
+            return dispatch((0, _flows.setSort)(sort));
+        }
+    };
+})(FlowTableHead);
+
+var FlowTable = function (_React$Component) {
+    _inherits(FlowTable, _React$Component);
 
     function FlowTable(props, context) {
         _classCallCheck(this, FlowTable);
 
-        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTable).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTable).call(this, props, context));
 
-        _this3.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
+        _this.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
 
-        _this3.onViewportUpdate = _this3.onViewportUpdate.bind(_this3);
-        return _this3;
+        _this.onViewportUpdate = _this.onViewportUpdate.bind(_this);
+        return _this;
     }
 
     _createClass(FlowTable, [{
@@ -1627,11 +1606,11 @@ var FlowTable = function (_React$Component2) {
     }, {
         key: "componentWillReceiveProps",
         value: function componentWillReceiveProps(nextProps) {
-            var _this4 = this;
+            var _this2 = this;
 
             if (nextProps.selected && nextProps.selected !== this.props.selected) {
                 window.setTimeout(function () {
-                    return _this4.scrollIntoView(nextProps.selected);
+                    return _this2.scrollIntoView(nextProps.selected);
                 }, 1);
             }
         }
@@ -1683,7 +1662,7 @@ var FlowTable = function (_React$Component2) {
     }, {
         key: "render",
         value: function render() {
-            var _this5 = this;
+            var _this3 = this;
 
             var vScroll = this.state.vScroll;
             var flows = this.props.flows.slice(vScroll.start, vScroll.end);
@@ -1699,9 +1678,10 @@ var FlowTable = function (_React$Component2) {
                     _react2.default.createElement(
                         "thead",
                         { ref: "head", style: { transform: transform } },
-                        _react2.default.createElement(FlowTableHead, {
+                        _react2.default.createElement(FlowTableHeadContainer, {
                             columns: _flowtableColumns2.default,
-                            setSortKeyFun: this.props.setSortKeyFun
+                            setSortKeyFun: this.props.setSortKeyFun,
+                            setSort: this.props.setSort
                         })
                     ),
                     _react2.default.createElement(
@@ -1713,7 +1693,7 @@ var FlowTable = function (_React$Component2) {
                                 key: flow.id,
                                 flowId: flow.id,
                                 columns: _flowtableColumns2.default,
-                                selectFlow: _this5.props.selectFlow
+                                selectFlow: _this3.props.selectFlow
                             });
                         }),
                         _react2.default.createElement("tr", { style: { height: vScroll.paddingBottom } })
@@ -1746,7 +1726,7 @@ var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
 
 exports.default = FlowTableContainer;
 
-},{"../filt/filt":29,"../utils.js":32,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../ducks/flows":24,"../filt/filt":29,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3811,9 +3791,6 @@ var MainView = _react2.default.createClass({
             this.props.setHighlight(nextProps.location.query[_actions.Query.HIGHLIGHT], false);
         }
     },
-    setSortKeyFun: function setSortKeyFun(sortKeyFun) {
-        // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
-    },
     selectFlow: function selectFlow(flow) {
         // TODO: This belongs into redux
         if (flow) {
@@ -3944,7 +3921,6 @@ var MainView = _react2.default.createClass({
             { className: "main-view" },
             _react2.default.createElement(_flowtable2.default, { ref: "flowTable",
                 selectFlow: this.selectFlow,
-                setSortKeyFun: this.setSortKeyFun,
                 selected: this.props.selectedFlow }),
             details
         );
@@ -4496,13 +4472,14 @@ exports.fetchLogEntries = fetchList;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.fetchFlows = exports.updateFlows = exports.SELECT_FLOW = exports.SET_HIGHLIGHT = exports.SET_FILTER = exports.UPDATE_FLOWS = undefined;
+exports.fetchFlows = exports.updateFlows = exports.SELECT_FLOW = exports.SET_SORT = exports.SET_HIGHLIGHT = exports.SET_FILTER = exports.UPDATE_FLOWS = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = reducer;
 exports.setFilter = setFilter;
 exports.setHighlight = setHighlight;
+exports.setSort = setSort;
 exports.selectFlow = selectFlow;
 
 var _list = require("./utils/list");
@@ -4515,11 +4492,20 @@ var _filt2 = _interopRequireDefault(_filt);
 
 var _view = require("./utils/view");
 
+var _utils = require("../utils.js");
+
+var _flowtableColumns = require("../components/flowtable-columns.js");
+
+var flow_table_columns = _interopRequireWildcard(_flowtableColumns);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var UPDATE_FLOWS = exports.UPDATE_FLOWS = "UPDATE_FLOWS";
 var SET_FILTER = exports.SET_FILTER = "SET_FLOW_FILTER";
 var SET_HIGHLIGHT = exports.SET_HIGHLIGHT = "SET_FLOW_HIGHLIGHT";
+var SET_SORT = exports.SET_SORT = "SET_FLOW_SORT";
 var SELECT_FLOW = exports.SELECT_FLOW = "SELECT_FLOW";
 
 var _makeList = (0, _list2.default)(UPDATE_FLOWS, "/flows");
@@ -4534,13 +4520,28 @@ var defaultState = {
     selected: [],
     view: [],
     filter: undefined,
-    highlight: undefined
+    highlight: undefined,
+    sort: { sortColumn: undefined, sortDesc: false }
 };
 
 function makeFilterFn(filter) {
     return filter ? _filt2.default.parse(filter) : function () {
         return true;
     };
+}
+
+function makeSortFn(sort) {
+    var column = flow_table_columns[sort.sortColumn];
+    if (!column) return;
+
+    var sortKeyFun = column.sortKeyFun;
+    if (sort.sortDesc) {
+        sortKeyFun = sortKeyFun && function (flow) {
+            var k = column.sortKeyFun(flow);
+            return _.isString(k) ? (0, _utils.reverseString)("" + k) : -k;
+        };
+    }
+    return sortKeyFun;
 }
 
 function reducer() {
@@ -4552,16 +4553,21 @@ function reducer() {
             var all = reduceList(state.all, action);
             return _extends({}, state, {
                 all: all,
-                view: (0, _view.updateViewList)(state.view, state.all, all, action, makeFilterFn(action.filter))
+                view: (0, _view.updateViewList)(state.view, state.all, all, action, makeFilterFn(action.filter), makeSortFn(state.sort))
             });
         case SET_FILTER:
             return _extends({}, state, {
                 filter: action.filter,
-                view: (0, _view.updateViewFilter)(state.all, makeFilterFn(action.filter))
+                view: (0, _view.updateViewFilter)(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
             });
         case SET_HIGHLIGHT:
             return _extends({}, state, {
                 highlight: action.highlight
+            });
+        case SET_SORT:
+            return _extends({}, state, {
+                sort: action.sort,
+                view: (0, _view.updateViewSort)(state.view, makeSortFn(action.sort))
             });
         case SELECT_FLOW:
             return _extends({}, state, {
@@ -4584,6 +4590,12 @@ function setHighlight(highlight) {
         highlight: highlight
     };
 }
+function setSort(sort) {
+    return {
+        type: SET_SORT,
+        sort: sort
+    };
+}
 function selectFlow(flowId) {
     return {
         type: SELECT_FLOW,
@@ -4594,7 +4606,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../filt/filt":29,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
+},{"../components/flowtable-columns.js":7,"../filt/filt":29,"../utils.js":32,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4839,6 +4851,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports.sortedIndexOf = sortedIndexOf;
 exports.updateViewList = updateViewList;
 exports.updateViewFilter = updateViewFilter;
+exports.updateViewSort = updateViewSort;
 
 var _list = require("./list");
 
@@ -4895,12 +4908,10 @@ var sortedRemove = function sortedRemove(list, sortFn, item) {
 };
 
 function sortedIndexOf(list, value, sortFn) {
-    if (sortFn === false) {
-        var i = 0;
-        while (i < list.length && list[i].id !== value.id) {
-            i++;
-        }
-        return i;
+    if (!sortFn) {
+        sortFn = function sortFn(x) {
+            return 0;
+        }; // This triggers the linear search for flows that have the same sort value.
     }
 
     var low = 0,
@@ -4990,6 +5001,20 @@ function updateViewFilter(list) {
     };
 
     return filtered;
+}
+
+function updateViewSort(list) {
+    var sortFn = arguments.length <= 1 || arguments[1] === undefined ? defaultSortFn : arguments[1];
+
+    var sorted = list.slice(0);
+    if (sortFn) {
+        sorted.sort(makeCompareFn(sortFn));
+    }
+    sorted.indexOf = function (x) {
+        return sortedIndexOf(sorted, x, sortFn);
+    };
+
+    return sorted;
 }
 
 },{"./list":26}],28:[function(require,module,exports){

@@ -23,9 +23,6 @@ var MainView = React.createClass({
             this.props.setHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
         }
     },
-    setSortKeyFun: function (sortKeyFun) {
-        // FIXME: Move to redux. This requires that sortKeyFun is not a function anymore.
-    },
     selectFlow: function (flow) {
         // TODO: This belongs into redux
         if (flow) {
@@ -161,7 +158,6 @@ var MainView = React.createClass({
             <div className="main-view">
                 <FlowTable ref="flowTable"
                     selectFlow={this.selectFlow}
-                    setSortKeyFun={this.setSortKeyFun}
                     selected={this.props.selectedFlow} />
                 {details}
             </div>

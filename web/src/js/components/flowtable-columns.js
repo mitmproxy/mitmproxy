@@ -3,7 +3,7 @@ import {RequestUtils, ResponseUtils} from "../flow/utils.js"
 import {formatSize, formatTimeDelta} from "../utils.js"
 
 
-function TLSColumn({flow}) {
+export function TLSColumn({flow}) {
     let ssl = (flow.request.scheme === "https")
     let classes
     if (ssl) {
@@ -17,7 +17,7 @@ TLSColumn.Title = ({className = "", ...props}) => <th {...props} className={"col
 TLSColumn.sortKeyFun = flow => flow.request.scheme
 
 
-function IconColumn({flow}) {
+export function IconColumn({flow}) {
     let icon
     if (flow.response) {
         var contentType = ResponseUtils.getContentType(flow.response)
@@ -49,7 +49,7 @@ function IconColumn({flow}) {
 IconColumn.Title = ({className = "", ...props}) => <th {...props} className={"col-icon " + className }></th>
 
 
-function PathColumn({flow}) {
+export function PathColumn({flow}) {
     return <td className="col-path">
         {flow.request.is_replay ? <i className="fa fa-fw fa-repeat pull-right"></i> : null}
         {flow.intercepted ? <i className="fa fa-fw fa-pause pull-right"></i> : null}
@@ -61,7 +61,7 @@ PathColumn.Title = ({className = "", ...props}) =>
 PathColumn.sortKeyFun = flow => RequestUtils.pretty_url(flow.request)
 
 
-function MethodColumn({flow}) {
+export function MethodColumn({flow}) {
     return <td className="col-method">{flow.request.method}</td>
 }
 MethodColumn.Title = ({className = "", ...props}) =>
@@ -69,7 +69,7 @@ MethodColumn.Title = ({className = "", ...props}) =>
 MethodColumn.sortKeyFun = flow => flow.request.method
 
 
-function StatusColumn({flow}) {
+export function StatusColumn({flow}) {
     let status
     if (flow.response) {
         status = flow.response.status_code
@@ -84,7 +84,7 @@ StatusColumn.Title = ({className = "", ...props}) =>
 StatusColumn.sortKeyFun = flow => flow.response ? flow.response.status_code : undefined
 
 
-function SizeColumn({flow}) {
+export function SizeColumn({flow}) {
     let total = flow.request.contentLength
     if (flow.response) {
         total += flow.response.contentLength || 0
@@ -104,7 +104,7 @@ SizeColumn.sortKeyFun = flow => {
 }
 
 
-function TimeColumn({flow}) {
+export function TimeColumn({flow}) {
     let time
     if (flow.response) {
         time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))
