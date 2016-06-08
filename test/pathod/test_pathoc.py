@@ -29,7 +29,7 @@ class PathocTestDaemon(tutils.DaemonTests):
             if timeout:
                 c.settimeout(timeout)
             for i in requests:
-                r = language.parse_pathoc(i).next()
+                r = next(language.parse_pathoc(i))
                 if kwargs.get("explain"):
                     r = r.freeze(language.Settings())
                 try:

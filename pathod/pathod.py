@@ -212,7 +212,7 @@ class PathodHandler(tcp.BaseHandler):
                     "No valid craft request found"
                 )])
 
-            spec = anchor_gen.next()
+            spec = next(anchor_gen)
 
             if self.use_http2 and isinstance(spec, language.http2.Response):
                 spec.stream_id = req.stream_id
