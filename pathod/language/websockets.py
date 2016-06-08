@@ -1,10 +1,11 @@
 import random
 import string
 import netlib.websockets
+from netlib import strutils
 import pyparsing as pp
 from . import base, generators, actions, message
 
-NESTED_LEADER = "pathod!"
+NESTED_LEADER = b"pathod!"
 
 
 class WF(base.CaselessLiteral):
@@ -193,7 +194,7 @@ class WebsocketFrame(message.Message):
             bodygen = self.rawbody.value.get_generator(settings)
             length = len(self.rawbody.value.get_generator(settings))
         elif self.nested_frame:
-            bodygen = NESTED_LEADER + self.nested_frame.parsed.spec()
+            bodygen = NESTED_LEADER + strutils.always_bytes(self.nested_frame.parsed.spec())
             length = len(bodygen)
         else:
             bodygen = None
