@@ -92,7 +92,7 @@ class Options(urwid.WidgetWrap):
                     self.tcp_proxy
                 ),
                 select.Option(
-                    "Verify Upstream Certs",
+                    "Don't Verify Upstream Certs",
                     "K",
                     lambda: master.server.config.ssl_insecure,
                     self.toggle_ssl_insecure
