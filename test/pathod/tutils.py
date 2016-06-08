@@ -3,8 +3,8 @@ import re
 import shutil
 import requests
 from six.moves import cStringIO as StringIO
+from six.moves import urllib
 from six import BytesIO
-import urllib
 
 from netlib import tcp
 from netlib import utils
@@ -87,7 +87,7 @@ class DaemonTests(object):
         )
         with c.connect():
             if params:
-                path = path + "?" + urllib.urlencode(params)
+                path = path + "?" + urllib.parse.urlencode(params)
             resp = c.request("get:%s" % path)
             return resp
 
@@ -100,7 +100,7 @@ class DaemonTests(object):
         )
         with c.connect():
             resp = c.request(
-                "get:/p/%s" % urllib.quote(spec).encode("string_escape")
+                "get:/p/%s" % urllib.parse.quote(spec).encode("string_escape")
             )
             return resp
 
