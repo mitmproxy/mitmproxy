@@ -20,7 +20,7 @@ import os
 
 import six
 
-from netlib import http
+from netlib import http, strutils
 
 websockets_magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 VERSION = "13"
@@ -109,4 +109,4 @@ class WebsocketsProtocol(object):
 
     @classmethod
     def create_server_nonce(self, client_nonce):
-        return base64.b64encode(hashlib.sha1(client_nonce + websockets_magic).digest())
+        return base64.b64encode(hashlib.sha1(strutils.always_bytes(client_nonce) + websockets_magic).digest())
