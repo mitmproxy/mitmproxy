@@ -184,23 +184,23 @@ class TestDaemon(PathocTestDaemon):
     def test_socks_connect(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = tutils.treader(""), StringIO()
+        c.rfile, c.wfile = tutils.treader(b""), StringIO()
         tutils.raises(pathoc.PathocError, c.socks_connect, to)
 
         c.rfile = tutils.treader(
-            "\x05\xEE"
+            b"\x05\xEE"
         )
         tutils.raises("SOCKS without authentication", c.socks_connect, ("example.com", 0xDEAD))
 
         c.rfile = tutils.treader(
-            "\x05\x00" +
-            "\x05\xEE\x00\x03\x0bexample.com\xDE\xAD"
+            b"\x05\x00" +
+            b"\x05\xEE\x00\x03\x0bexample.com\xDE\xAD"
         )
         tutils.raises("SOCKS server error", c.socks_connect, ("example.com", 0xDEAD))
 
         c.rfile = tutils.treader(
-            "\x05\x00" +
-            "\x05\x00\x00\x03\x0bexample.com\xDE\xAD"
+            b"\x05\x00" +
+            b"\x05\x00\x00\x03\x0bexample.com\xDE\xAD"
         )
         c.socks_connect(("example.com", 0xDEAD))
 
