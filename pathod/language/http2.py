@@ -60,7 +60,7 @@ class _HTTP2Message(message.Message):
         headers = self.toks(_HeaderMixin)
 
         if not self.raw:
-            if not get_header("content-length", headers):
+            if not get_header(b"content-length", headers):
                 if not self.body:
                     length = 0
                 else:
