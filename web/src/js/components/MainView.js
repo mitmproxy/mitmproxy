@@ -155,7 +155,7 @@ class MainView extends Component {
             <div className="main-view">
                 <FlowTable
                     ref="flowTable"
-                    selectFlow={this.selectFlow}
+                    selectFlow={flow => this.selectFlow(flow)}
                     selected={selectedFlow}
                 />
                 {selectedFlow && [

@@ -458,11 +458,19 @@ var _reduxThunk = require('redux-thunk');
 
 var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 
+var _reactRouter = require('react-router');
+
 var _connection = require('./connection');
 
 var _connection2 = _interopRequireDefault(_connection);
 
-var _proxyapp = require('./components/proxyapp.js');
+var _ProxyApp = require('./components/ProxyApp');
+
+var _ProxyApp2 = _interopRequireDefault(_ProxyApp);
+
+var _MainView = require('./components/MainView');
+
+var _MainView2 = _interopRequireDefault(_MainView);
 
 var _index = require('./ducks/index');
 
@@ -473,24 +481,546 @@ var _eventLog = require('./ducks/eventLog');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // logger must be last
-var logger = (0, _reduxLogger2.default)();
-var store = (0, _redux.createStore)(_index2.default, (0, _redux.applyMiddleware)(_reduxThunk2.default, logger));
+var store = (0, _redux.createStore)(_index2.default, (0, _redux.applyMiddleware)(_reduxThunk2.default, (0, _reduxLogger2.default)()));
 
-window.onerror = function (msg) {
+window.addEventListener('error', function (msg) {
     store.dispatch((0, _eventLog.addLogEntry)(msg));
-};
+});
 
+// @todo remove this
 document.addEventListener('DOMContentLoaded', function () {
     window.ws = new _connection2.default("/updates", store.dispatch);
 
     (0, _reactDom.render)(_react2.default.createElement(
         _reactRedux.Provider,
         { store: store },
-        _proxyapp.App
+        _react2.default.createElement(
+            _reactRouter.Router,
+            { history: _reactRouter.hashHistory },
+            _react2.default.createElement(_reactRouter.Redirect, { from: '/', to: '/flows' }),
+            _react2.default.createElement(
+                _reactRouter.Route,
+                { path: '/', component: _ProxyApp2.default },
+                _react2.default.createElement(_reactRouter.Route, { path: 'flows', component: _MainView2.default }),
+                _react2.default.createElement(_reactRouter.Route, { path: 'flows/:flowId/:detailTab', component: _MainView2.default })
+            )
+        )
     ), document.getElementById("mitmproxy"));
 });
 
-},{"./components/proxyapp.js":20,"./connection":21,"./ducks/eventLog":23,"./ducks/index":25,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
+},{"./components/MainView":4,"./components/ProxyApp":5,"./connection":21,"./ducks/eventLog":23,"./ducks/index":25,"react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _actions = require("../actions.js");
+
+var _utils = require("../utils.js");
+
+var _common = require("./common.js");
+
+var _flowtable = require("./flowtable.js");
+
+var _flowtable2 = _interopRequireDefault(_flowtable);
+
+var _index = require("./flowview/index.js");
+
+var _index2 = _interopRequireDefault(_index);
+
+var _reactRedux = require("react-redux");
+
+var _flows = require("../ducks/flows");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var MainView = function (_Component) {
+    _inherits(MainView, _Component);
+
+    function MainView() {
+        _classCallCheck(this, MainView);
+
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(MainView).apply(this, arguments));
+    }
+
+    _createClass(MainView, [{
+        key: "componentWillReceiveProps",
+
+
+        /**
+         * @todo move to actions
+         * @todo replace with mapStateToProps
+         */
+        value: function componentWillReceiveProps(nextProps) {
+            // Update redux store with route changes
+            if (nextProps.routeParams.flowId !== (nextProps.selectedFlow || {}).id) {
+                this.props.selectFlow(nextProps.routeParams.flowId);
+            }
+            if (nextProps.location.query[_actions.Query.SEARCH] !== nextProps.filter) {
+                this.props.setFilter(nextProps.location.query[_actions.Query.SEARCH], false);
+            }
+            if (nextProps.location.query[_actions.Query.HIGHLIGHT] !== nextProps.highlight) {
+                this.props.setHighlight(nextProps.location.query[_actions.Query.HIGHLIGHT], false);
+            }
+        }
+
+        /**
+         * @todo move to actions
+         */
+
+    }, {
+        key: "selectFlow",
+        value: function selectFlow(flow) {
+            if (flow) {
+                this.props.updateLocation("/flows/" + flow.id + "/" + (this.props.routeParams.detailTab || "request"));
+            } else {
+                this.props.updateLocation("/flows");
+            }
+        }
+
+        /**
+         * @todo move to actions
+         */
+
+    }, {
+        key: "selectFlowRelative",
+        value: function selectFlowRelative(shift) {
+            var _props = this.props;
+            var flows = _props.flows;
+            var routeParams = _props.routeParams;
+            var selectedFlow = _props.selectedFlow;
+
+            var index = 0;
+            if (!routeParams.flowId) {
+                if (shift < 0) {
+                    index = flows.length - 1;
+                }
+            } else {
+                index = Math.min(Math.max(0, flows.indexOf(selectedFlow) + shift), flows.length - 1);
+            }
+            this.selectFlow(flows[index]);
+        }
+
+        /**
+         * @todo move to actions
+         */
+
+    }, {
+        key: "onMainKeyDown",
+        value: function onMainKeyDown(e) {
+            var flow = this.props.selectedFlow;
+            if (e.ctrlKey) {
+                return;
+            }
+            switch (e.keyCode) {
+                case _utils.Key.K:
+                case _utils.Key.UP:
+                    this.selectFlowRelative(-1);
+                    break;
+                case _utils.Key.J:
+                case _utils.Key.DOWN:
+                    this.selectFlowRelative(+1);
+                    break;
+                case _utils.Key.SPACE:
+                case _utils.Key.PAGE_DOWN:
+                    this.selectFlowRelative(+10);
+                    break;
+                case _utils.Key.PAGE_UP:
+                    this.selectFlowRelative(-10);
+                    break;
+                case _utils.Key.END:
+                    this.selectFlowRelative(+1e10);
+                    break;
+                case _utils.Key.HOME:
+                    this.selectFlowRelative(-1e10);
+                    break;
+                case _utils.Key.ESC:
+                    this.selectFlow(null);
+                    break;
+                case _utils.Key.H:
+                case _utils.Key.LEFT:
+                    if (this.refs.flowDetails) {
+                        this.refs.flowDetails.nextTab(-1);
+                    }
+                    break;
+                case _utils.Key.L:
+                case _utils.Key.TAB:
+                case _utils.Key.RIGHT:
+                    if (this.refs.flowDetails) {
+                        this.refs.flowDetails.nextTab(+1);
+                    }
+                    break;
+                case _utils.Key.C:
+                    if (e.shiftKey) {
+                        _actions.FlowActions.clear();
+                    }
+                    break;
+                case _utils.Key.D:
+                    if (flow) {
+                        if (e.shiftKey) {
+                            _actions.FlowActions.duplicate(flow);
+                        } else {
+                            _actions.FlowActions.delete(flow);
+                        }
+                    }
+                    break;
+                case _utils.Key.A:
+                    if (e.shiftKey) {
+                        _actions.FlowActions.accept_all();
+                    } else if (flow && flow.intercepted) {
+                        _actions.FlowActions.accept(flow);
+                    }
+                    break;
+                case _utils.Key.R:
+                    if (!e.shiftKey && flow) {
+                        _actions.FlowActions.replay(flow);
+                    }
+                    break;
+                case _utils.Key.V:
+                    if (e.shiftKey && flow && flow.modified) {
+                        _actions.FlowActions.revert(flow);
+                    }
+                    break;
+                case _utils.Key.E:
+                    if (this.refs.flowDetails) {
+                        this.refs.flowDetails.promptEdit();
+                    }
+                    break;
+                case _utils.Key.SHIFT:
+                    break;
+                default:
+                    console.debug("keydown", e.keyCode);
+                    return;
+            }
+            e.preventDefault();
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var _this2 = this;
+
+            var selectedFlow = this.props.selectedFlow;
+
+            return _react2.default.createElement(
+                "div",
+                { className: "main-view" },
+                _react2.default.createElement(_flowtable2.default, {
+                    ref: "flowTable",
+                    selectFlow: function selectFlow(flow) {
+                        return _this2.selectFlow(flow);
+                    },
+                    selected: selectedFlow
+                }),
+                selectedFlow && [_react2.default.createElement(_common.Splitter, { key: "splitter" }), _react2.default.createElement(_index2.default, {
+                    key: "flowDetails",
+                    ref: "flowDetails",
+                    tab: this.props.routeParams.detailTab,
+                    query: this.props.query,
+                    updateLocation: this.props.updateLocation,
+                    flow: selectedFlow
+                })]
+            );
+        }
+    }]);
+
+    return MainView;
+}(_react.Component);
+
+exports.default = (0, _reactRedux.connect)(function (state) {
+    return {
+        flows: state.flows.view,
+        filter: state.flows.filter,
+        highlight: state.flows.highlight,
+        selectedFlow: state.flows.all.byId[state.flows.selected[0]]
+    };
+}, function (dispatch) {
+    return {
+        selectFlow: function selectFlow(flowId) {
+            return dispatch((0, _flows.selectFlow)(flowId));
+        },
+        setFilter: function setFilter(filter) {
+            return dispatch((0, _flows.setFilter)(filter));
+        },
+        setHighlight: function setHighlight(highlight) {
+            return dispatch((0, _flows.setHighlight)(highlight));
+        }
+    };
+}, undefined, { withRef: true })(MainView);
+
+},{"../actions.js":2,"../ducks/flows":24,"../utils.js":32,"./common.js":6,"./flowtable.js":10,"./flowview/index.js":13,"react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require("react-dom");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _reactRedux = require("react-redux");
+
+var _common = require("./common.js");
+
+var _header = require("./header.js");
+
+var _eventlog = require("./eventlog.js");
+
+var _eventlog2 = _interopRequireDefault(_eventlog);
+
+var _footer = require("./footer.js");
+
+var _footer2 = _interopRequireDefault(_footer);
+
+var _store = require("../store/store.js");
+
+var _utils = require("../utils.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ProxyAppMain = function (_Component) {
+    _inherits(ProxyAppMain, _Component);
+
+    function ProxyAppMain(props, context) {
+        _classCallCheck(this, ProxyAppMain);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ProxyAppMain).call(this, props, context));
+
+        _this.settingsStore = new _store.SettingsStore();
+
+        // Default Settings before fetch
+        _lodash2.default.extend(_this.settingsStore.dict, {});
+
+        _this.state = { settings: _this.settingsStore.dict };
+
+        _this.onKeyDown = _this.onKeyDown.bind(_this);
+        _this.updateLocation = _this.updateLocation.bind(_this);
+        _this.onSettingsChange = _this.onSettingsChange.bind(_this);
+        return _this;
+    }
+
+    /**
+     * @todo move to actions
+     */
+
+
+    _createClass(ProxyAppMain, [{
+        key: "updateLocation",
+        value: function updateLocation(pathname, queryUpdate) {
+            if (pathname === undefined) {
+                pathname = this.props.location.pathname;
+            }
+            var query = this.props.location.query;
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = Object.keys(queryUpdate || {})[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var key = _step.value;
+
+                    query[i] = queryUpdate[i] || undefined;
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            this.context.router.replace({ pathname: pathname, query: query });
+        }
+
+        /**
+         * @todo pass in with props
+         */
+
+    }, {
+        key: "getQuery",
+        value: function getQuery() {
+            // For whatever reason, react-router always returns the same object, which makes comparing
+            // the current props with nextProps impossible. As a workaround, we just clone the query object.
+            return _lodash2.default.clone(this.props.location.query);
+        }
+
+        /**
+         * @todo remove settings store
+         * @todo connect websocket here
+         * @todo listen to window's key events
+         */
+
+    }, {
+        key: "componentDidMount",
+        value: function componentDidMount() {
+            this.focus();
+            this.settingsStore.addListener("recalculate", this.onSettingsChange);
+        }
+
+        /**
+         * @todo remove settings store
+         * @todo disconnect websocket here
+         * @todo stop listening to window's key events
+         */
+
+    }, {
+        key: "componentWillUnmount",
+        value: function componentWillUnmount() {
+            this.settingsStore.removeListener("recalculate", this.onSettingsChange);
+        }
+
+        /**
+         * @todo move to actions
+         */
+
+    }, {
+        key: "onSettingsChange",
+        value: function onSettingsChange() {
+            this.setState({ settings: this.settingsStore.dict });
+        }
+
+        /**
+         * @todo use props
+         */
+
+    }, {
+        key: "getChildContext",
+        value: function getChildContext() {
+            return {
+                returnFocus: this.focus,
+                location: this.props.location
+            };
+        }
+
+        /**
+         * @todo remove it
+         */
+
+    }, {
+        key: "focus",
+        value: function focus() {
+            document.activeElement.blur();
+            window.getSelection().removeAllRanges();
+            _reactDom2.default.findDOMNode(this).focus();
+        }
+
+        /**
+         * @todo move to actions
+         */
+
+    }, {
+        key: "onKeyDown",
+        value: function onKeyDown(e) {
+            var _this2 = this;
+
+            var name = null;
+
+            switch (e.keyCode) {
+                case _utils.Key.I:
+                    name = "intercept";
+                    break;
+                case _utils.Key.L:
+                    name = "search";
+                    break;
+                case _utils.Key.H:
+                    name = "highlight";
+                    break;
+                default:
+                    var main = this.refs.view;
+                    if (this.refs.view.getWrappedInstance) {
+                        main = this.refs.view.getWrappedInstance();
+                    }
+                    if (main.onMainKeyDown) {
+                        main.onMainKeyDown(e);
+                    }
+                    return; // don't prevent default then
+            }
+
+            if (name) {
+                (function () {
+                    var headerComponent = _this2.refs.header;
+                    headerComponent.setState({ active: _header.MainMenu }, function () {
+                        headerComponent.refs.active.refs[name].select();
+                    });
+                })();
+            }
+
+            e.preventDefault();
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var showEventLog = _props.showEventLog;
+            var location = _props.location;
+            var children = _props.children;
+            var settings = this.state.settings;
+
+            var query = this.getQuery();
+            return _react2.default.createElement(
+                "div",
+                { id: "container", tabIndex: "0", onKeyDown: this.onKeyDown },
+                _react2.default.createElement(_header.Header, { ref: "header", settings: settings, updateLocation: this.updateLocation, query: query }),
+                _react2.default.cloneElement(children, { ref: "view", location: location, query: query, updateLocation: this.updateLocation }),
+                showEventLog && [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog" })],
+                _react2.default.createElement(_footer2.default, { settings: settings })
+            );
+        }
+    }]);
+
+    return ProxyAppMain;
+}(_react.Component);
+
+ProxyAppMain.childContextTypes = {
+    returnFocus: _react.PropTypes.func.isRequired,
+    location: _react.PropTypes.object.isRequired
+};
+ProxyAppMain.contextTypes = {
+    router: _react.PropTypes.object.isRequired
+};
+exports.default = (0, _reactRedux.connect)(function (state) {
+    return {
+        showEventLog: state.eventLog.visible
+    };
+})(ProxyAppMain);
+
+},{"../store/store.js":31,"../utils.js":32,"./common.js":6,"./eventlog.js":8,"./footer.js":16,"./header.js":17,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -709,7 +1239,7 @@ ToggleInputButton.propTypes = {
     onToggleChanged: _react2.default.PropTypes.func.isRequired
 };
 
-},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],5:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -967,7 +1497,7 @@ var ValueEditor = exports.ValueEditor = _react2.default.createClass({
     }
 });
 
-},{"../utils.js":32,"react":"react","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"../utils.js":32,"react":"react","react-dom":"react-dom"}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1193,7 +1723,7 @@ var EventLogContainer = (0, _reactRedux.connect)(undefined, function (dispatch) 
 
 exports.default = EventLogContainer;
 
-},{"../ducks/eventLog":23,"./common":4,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],7:[function(require,module,exports){
+},{"../ducks/eventLog":23,"./common":6,"./helpers/AutoScroll":18,"./helpers/VirtualScroll":19,"react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1440,7 +1970,7 @@ var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn
 
 exports.default = all_columns;
 
-},{"../flow/utils.js":30,"../utils.js":32,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":30,"../utils.js":32,"react":"react"}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1726,7 +2256,7 @@ var FlowTableContainer = (0, _reactRedux.connect)(function (state) {
 
 exports.default = FlowTableContainer;
 
-},{"../ducks/flows":24,"../filt/filt":29,"./flowtable-columns.js":7,"./helpers/AutoScroll":16,"./helpers/VirtualScroll":17,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],9:[function(require,module,exports){
+},{"../ducks/flows":24,"../filt/filt":29,"./flowtable-columns.js":9,"./helpers/AutoScroll":18,"./helpers/VirtualScroll":19,"classnames":"classnames","lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","shallowequal":"shallowequal"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2080,7 +2610,7 @@ var ContentView = _react2.default.createClass({
 
 exports.default = ContentView;
 
-},{"../../flow/utils.js":30,"../../utils.js":32,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":30,"../../utils.js":32,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2348,7 +2878,7 @@ var Details = _react2.default.createClass({
 
 exports.default = Details;
 
-},{"../../utils.js":32,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":32,"lodash":"lodash","react":"react"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2452,7 +2982,6 @@ var FlowView = _react2.default.createClass({
             } else {
                 active = tabs[0];
             }
-            this.selectTab(active);
         }
 
         var prompt = null;
@@ -2477,7 +3006,7 @@ var FlowView = _react2.default.createClass({
 
 exports.default = FlowView;
 
-},{"../prompt.js":19,"./details.js":10,"./messages.js":12,"./nav.js":13,"react":"react"}],12:[function(require,module,exports){
+},{"../prompt.js":20,"./details.js":12,"./messages.js":14,"./nav.js":15,"react":"react"}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2842,7 +3371,7 @@ var Error = exports.Error = _react2.default.createClass({
     }
 });
 
-},{"../../actions.js":2,"../../flow/utils.js":30,"../../utils.js":32,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react","react-dom":"react-dom"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":30,"../../utils.js":32,"../editor.js":7,"./contentview.js":11,"lodash":"lodash","react":"react","react-dom":"react-dom"}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2923,7 +3452,7 @@ var Nav = _react2.default.createClass({
 
 exports.default = Nav;
 
-},{"../../actions.js":2,"react":"react"}],14:[function(require,module,exports){
+},{"../../actions.js":2,"react":"react"}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3025,7 +3554,7 @@ function Footer(_ref) {
     );
 }
 
-},{"../utils.js":32,"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"../utils.js":32,"./common.js":6,"react":"react"}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3600,7 +4129,7 @@ var Header = exports.Header = _react2.default.createClass({
     }
 });
 
-},{"../actions.js":2,"../filt/filt.js":29,"../utils.js":32,"./common.js":4,"./eventlog":6,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":29,"../utils.js":32,"./common.js":6,"./eventlog":8,"jquery":"jquery","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3666,7 +4195,7 @@ exports.default = function (Component) {
     }(Component), _class.displayName = Component.name, _temp), Component);
 };
 
-},{"react":"react","react-dom":"react-dom"}],17:[function(require,module,exports){
+},{"react":"react","react-dom":"react-dom"}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3745,212 +4274,7 @@ function calcVScroll(opts) {
     return { start: start, end: end, paddingTop: paddingTop, paddingBottom: paddingBottom };
 }
 
-},{}],18:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _actions = require("../actions.js");
-
-var _utils = require("../utils.js");
-
-var _common = require("./common.js");
-
-var _flowtable = require("./flowtable.js");
-
-var _flowtable2 = _interopRequireDefault(_flowtable);
-
-var _index = require("./flowview/index.js");
-
-var _index2 = _interopRequireDefault(_index);
-
-var _reactRedux = require("react-redux");
-
-var _flows = require("../ducks/flows");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MainView = _react2.default.createClass({
-    displayName: "MainView",
-
-    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-        // Update redux store with route changes
-        if (nextProps.routeParams.flowId !== (nextProps.selectedFlow || {}).id) {
-            this.props.selectFlow(nextProps.routeParams.flowId);
-        }
-        if (nextProps.location.query[_actions.Query.SEARCH] !== nextProps.filter) {
-            this.props.setFilter(nextProps.location.query[_actions.Query.SEARCH], false);
-        }
-        if (nextProps.location.query[_actions.Query.HIGHLIGHT] !== nextProps.highlight) {
-            this.props.setHighlight(nextProps.location.query[_actions.Query.HIGHLIGHT], false);
-        }
-    },
-    selectFlow: function selectFlow(flow) {
-        // TODO: This belongs into redux
-        if (flow) {
-            var tab = this.props.routeParams.detailTab || "request";
-            this.props.updateLocation("/flows/" + flow.id + "/" + tab);
-        } else {
-            this.props.updateLocation("/flows");
-        }
-    },
-    selectFlowRelative: function selectFlowRelative(shift) {
-        // TODO: This belongs into redux
-        var flows = this.props.flows,
-            index = void 0;
-        if (!this.props.routeParams.flowId) {
-            if (shift < 0) {
-                index = flows.length - 1;
-            } else {
-                index = 0;
-            }
-        } else {
-            index = flows.indexOf(this.props.selectedFlow);
-            index = Math.min(Math.max(0, index + shift), flows.length - 1);
-        }
-        this.selectFlow(flows[index]);
-    },
-    onMainKeyDown: function onMainKeyDown(e) {
-        var flow = this.props.selectedFlow;
-        if (e.ctrlKey) {
-            return;
-        }
-        switch (e.keyCode) {
-            case _utils.Key.K:
-            case _utils.Key.UP:
-                this.selectFlowRelative(-1);
-                break;
-            case _utils.Key.J:
-            case _utils.Key.DOWN:
-                this.selectFlowRelative(+1);
-                break;
-            case _utils.Key.SPACE:
-            case _utils.Key.PAGE_DOWN:
-                this.selectFlowRelative(+10);
-                break;
-            case _utils.Key.PAGE_UP:
-                this.selectFlowRelative(-10);
-                break;
-            case _utils.Key.END:
-                this.selectFlowRelative(+1e10);
-                break;
-            case _utils.Key.HOME:
-                this.selectFlowRelative(-1e10);
-                break;
-            case _utils.Key.ESC:
-                this.selectFlow(null);
-                break;
-            case _utils.Key.H:
-            case _utils.Key.LEFT:
-                if (this.refs.flowDetails) {
-                    this.refs.flowDetails.nextTab(-1);
-                }
-                break;
-            case _utils.Key.L:
-            case _utils.Key.TAB:
-            case _utils.Key.RIGHT:
-                if (this.refs.flowDetails) {
-                    this.refs.flowDetails.nextTab(+1);
-                }
-                break;
-            case _utils.Key.C:
-                if (e.shiftKey) {
-                    _actions.FlowActions.clear();
-                }
-                break;
-            case _utils.Key.D:
-                if (flow) {
-                    if (e.shiftKey) {
-                        _actions.FlowActions.duplicate(flow);
-                    } else {
-                        _actions.FlowActions.delete(flow);
-                    }
-                }
-                break;
-            case _utils.Key.A:
-                if (e.shiftKey) {
-                    _actions.FlowActions.accept_all();
-                } else if (flow && flow.intercepted) {
-                    _actions.FlowActions.accept(flow);
-                }
-                break;
-            case _utils.Key.R:
-                if (!e.shiftKey && flow) {
-                    _actions.FlowActions.replay(flow);
-                }
-                break;
-            case _utils.Key.V:
-                if (e.shiftKey && flow && flow.modified) {
-                    _actions.FlowActions.revert(flow);
-                }
-                break;
-            case _utils.Key.E:
-                if (this.refs.flowDetails) {
-                    this.refs.flowDetails.promptEdit();
-                }
-                break;
-            case _utils.Key.SHIFT:
-                break;
-            default:
-                console.debug("keydown", e.keyCode);
-                return;
-        }
-        e.preventDefault();
-    },
-    render: function render() {
-
-        var details = null;
-        if (this.props.selectedFlow) {
-            details = [_react2.default.createElement(_common.Splitter, { key: "splitter" }), _react2.default.createElement(_index2.default, {
-                key: "flowDetails",
-                ref: "flowDetails",
-                tab: this.props.routeParams.detailTab,
-                query: this.props.query,
-                updateLocation: this.props.updateLocation,
-                flow: this.props.selectedFlow })];
-        }
-
-        return _react2.default.createElement(
-            "div",
-            { className: "main-view" },
-            _react2.default.createElement(_flowtable2.default, { ref: "flowTable",
-                selectFlow: this.selectFlow,
-                selected: this.props.selectedFlow }),
-            details
-        );
-    }
-});
-
-var MainViewContainer = (0, _reactRedux.connect)(function (state) {
-    return {
-        flows: state.flows.view,
-        filter: state.flows.filter,
-        highlight: state.flows.highlight,
-        selectedFlow: state.flows.all.byId[state.flows.selected[0]]
-    };
-}, function (dispatch) {
-    return {
-        selectFlow: function selectFlow(flowId) {
-            return dispatch((0, _flows.selectFlow)(flowId));
-        },
-        setFilter: function setFilter(filter) {
-            return dispatch((0, _flows.setFilter)(filter));
-        },
-        setHighlight: function setHighlight(highlight) {
-            return dispatch((0, _flows.setHighlight)(highlight));
-        }
-    };
-}, undefined, { withRef: true })(MainView);
-
-exports.default = MainViewContainer;
-
-},{"../actions.js":2,"../ducks/flows":24,"../utils.js":32,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react","react-redux":"react-redux"}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4086,195 +4410,7 @@ var Prompt = _react2.default.createClass({
 
 exports.default = Prompt;
 
-},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],20:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.App = undefined;
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactDom = require("react-dom");
-
-var _reactDom2 = _interopRequireDefault(_reactDom);
-
-var _lodash = require("lodash");
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-var _reactRedux = require("react-redux");
-
-var _reactRouter = require("react-router");
-
-var _common = require("./common.js");
-
-var _mainview = require("./mainview.js");
-
-var _mainview2 = _interopRequireDefault(_mainview);
-
-var _footer = require("./footer.js");
-
-var _footer2 = _interopRequireDefault(_footer);
-
-var _header = require("./header.js");
-
-var _eventlog = require("./eventlog.js");
-
-var _eventlog2 = _interopRequireDefault(_eventlog);
-
-var _store = require("../store/store.js");
-
-var _utils = require("../utils.js");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-//TODO: Move out of here, just a stub.
-var Reports = _react2.default.createClass({
-    displayName: "Reports",
-
-    render: function render() {
-        return _react2.default.createElement(
-            "div",
-            null,
-            "ReportEditor"
-        );
-    }
-});
-
-var ProxyAppMain = _react2.default.createClass({
-    displayName: "ProxyAppMain",
-
-    childContextTypes: {
-        returnFocus: _react2.default.PropTypes.func.isRequired,
-        location: _react2.default.PropTypes.object.isRequired
-    },
-    contextTypes: {
-        router: _react2.default.PropTypes.object.isRequired
-    },
-    updateLocation: function updateLocation(pathname, queryUpdate) {
-        if (pathname === undefined) {
-            pathname = this.props.location.pathname;
-        }
-        var query = this.props.location.query;
-        if (queryUpdate !== undefined) {
-            for (var i in queryUpdate) {
-                if (queryUpdate.hasOwnProperty(i)) {
-                    query[i] = queryUpdate[i] || undefined; //falsey values shall be removed.
-                }
-            }
-        }
-        this.context.router.replace({ pathname: pathname, query: query });
-    },
-    getQuery: function getQuery() {
-        // For whatever reason, react-router always returns the same object, which makes comparing
-        // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _lodash2.default.clone(this.props.location.query);
-    },
-    componentDidMount: function componentDidMount() {
-        this.focus();
-        this.settingsStore.addListener("recalculate", this.onSettingsChange);
-    },
-    componentWillUnmount: function componentWillUnmount() {
-        this.settingsStore.removeListener("recalculate", this.onSettingsChange);
-    },
-    onSettingsChange: function onSettingsChange() {
-        this.setState({ settings: this.settingsStore.dict });
-    },
-    getChildContext: function getChildContext() {
-        return {
-            returnFocus: this.focus,
-            location: this.props.location
-        };
-    },
-    getInitialState: function getInitialState() {
-        var settingsStore = new _store.SettingsStore();
-
-        this.settingsStore = settingsStore;
-        // Default Settings before fetch
-        _lodash2.default.extend(settingsStore.dict, {});
-        return {
-            settings: settingsStore.dict
-        };
-    },
-    focus: function focus() {
-        document.activeElement.blur();
-        window.getSelection().removeAllRanges();
-        _reactDom2.default.findDOMNode(this).focus();
-    },
-    getMainComponent: function getMainComponent() {
-        return this.refs.view.getWrappedInstance ? this.refs.view.getWrappedInstance() : this.refs.view;
-    },
-    onKeydown: function onKeydown(e) {
-
-        var selectFilterInput = function (name) {
-            var headerComponent = this.refs.header;
-            headerComponent.setState({ active: _header.MainMenu }, function () {
-                headerComponent.refs.active.refs[name].select();
-            });
-        }.bind(this);
-
-        switch (e.keyCode) {
-            case _utils.Key.I:
-                selectFilterInput("intercept");
-                break;
-            case _utils.Key.L:
-                selectFilterInput("search");
-                break;
-            case _utils.Key.H:
-                selectFilterInput("highlight");
-                break;
-            default:
-                var main = this.getMainComponent();
-                if (main.onMainKeyDown) {
-                    main.onMainKeyDown(e);
-                }
-                return; // don't prevent default then
-        }
-        e.preventDefault();
-    },
-    render: function render() {
-        var query = this.getQuery();
-        var eventlog;
-        if (this.props.showEventLog) {
-            eventlog = [_react2.default.createElement(_common.Splitter, { key: "splitter", axis: "y" }), _react2.default.createElement(_eventlog2.default, { key: "eventlog" })];
-        } else {
-            eventlog = null;
-        }
-        return _react2.default.createElement(
-            "div",
-            { id: "container", tabIndex: "0", onKeyDown: this.onKeydown },
-            _react2.default.createElement(_header.Header, { ref: "header", settings: this.state.settings, updateLocation: this.updateLocation, query: query }),
-            _react2.default.cloneElement(this.props.children, { ref: "view", location: this.props.location, updateLocation: this.updateLocation, query: query }),
-            eventlog,
-            _react2.default.createElement(_footer2.default, { settings: this.state.settings })
-        );
-    }
-});
-
-var AppContainer = (0, _reactRedux.connect)(function (state) {
-    return {
-        showEventLog: state.eventLog.visible
-    };
-})(ProxyAppMain);
-
-var App = exports.App = _react2.default.createElement(
-    _reactRouter.Router,
-    { history: _reactRouter.hashHistory },
-    _react2.default.createElement(_reactRouter.Redirect, { from: "/", to: "/flows" }),
-    _react2.default.createElement(
-        _reactRouter.Route,
-        { path: "/", component: AppContainer },
-        _react2.default.createElement(_reactRouter.Route, { path: "flows", component: _mainview2.default }),
-        _react2.default.createElement(_reactRouter.Route, { path: "flows/:flowId/:detailTab", component: _mainview2.default }),
-        _react2.default.createElement(_reactRouter.Route, { path: "reports", component: Reports })
-    )
-);
-
-},{"../store/store.js":31,"../utils.js":32,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":18,"lodash":"lodash","react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router"}],21:[function(require,module,exports){
+},{"../utils.js":32,"lodash":"lodash","react":"react","react-dom":"react-dom"}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4606,7 +4742,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../components/flowtable-columns.js":7,"../filt/filt":29,"../utils.js":32,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
+},{"../components/flowtable-columns.js":9,"../filt/filt":29,"../utils.js":32,"./utils/list":26,"./utils/view":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5030,7 +5166,7 @@ var CONNECTED = 'WEBSOCKET_CONNECTED';
 var DISCONNECTED = 'WEBSOCKET_DISCONNECTED';
 
 var defaultState = {
-    connected: true
+    connected: false
 };
 /* we may want to have an error message attribute here at some point */
 function reducer() {
@@ -7337,5 +7473,3 @@ function fetchApi(url, options) {
 
 },{"./actions.js":2,"jquery":"jquery","lodash":"lodash","react":"react"}]},{},[3])
 
-
-//# sourceMappingURL=app.js.map

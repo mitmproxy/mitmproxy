@@ -21,13 +21,19 @@ class ProxyAppMain extends Component {
         router: PropTypes.object.isRequired,
     }
 
-    constructor() {
+    constructor(props, context) {
+        super(props, context)
+
         this.settingsStore = new SettingsStore()
 
         // Default Settings before fetch
         _.extend(this.settingsStore.dict, {})
 
         this.state = { settings: this.settingsStore.dict }
+
+        this.onKeyDown = this.onKeyDown.bind(this)
+        this.updateLocation = this.updateLocation.bind(this)
+        this.onSettingsChange = this.onSettingsChange.bind(this)
     }
 
     /**
@@ -41,7 +47,7 @@ class ProxyAppMain extends Component {
         for (const key of Object.keys(queryUpdate || {})) {
             query[i] = queryUpdate[i] || undefined
         }
-        this.context.router.replace({pathname, query})
+        this.context.router.replace({ pathname, query })
     }
 
     /**
@@ -101,7 +107,7 @@ class ProxyAppMain extends Component {
     /**
      * @todo move to actions
      */
-    onKeydown(e) {
+    onKeyDown(e) {
         let name = null
 
         switch (e.keyCode) {
@@ -140,7 +146,7 @@ class ProxyAppMain extends Component {
         const { settings } = this.state
         const query = this.getQuery()
         return (
-            <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
+            <div id="container" tabIndex="0" onKeyDown={this.onKeyDown}>
                 <Header ref="header" settings={settings} updateLocation={this.updateLocation} query={query} />
                 {React.cloneElement(
                     children,
@@ -154,7 +160,7 @@ class ProxyAppMain extends Component {
             </div>
         )
     }
-})
+}
 
 export default connect(
     state => ({
