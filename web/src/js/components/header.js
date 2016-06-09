@@ -442,6 +442,7 @@ export var Header = React.createClass({
                 </nav>
                 <div className="menu">
                     <this.state.active
+                        ref="active"
                         settings={this.props.settings}
                         updateLocation={this.props.updateLocation}
                         query={this.props.query}

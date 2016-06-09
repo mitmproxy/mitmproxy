@@ -134,7 +134,7 @@ class ProxyAppMain extends Component {
 
         if (name) {
             const headerComponent = this.refs.header
-            headerComponent.setState({active: MainMenu}, function () {
+            headerComponent.setState({ active: MainMenu }, () => {
                 headerComponent.refs.active.refs[name].select()
             })
         }
