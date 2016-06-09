@@ -284,15 +284,10 @@ class PathodHandler(tcp.BaseHandler):
                 return
 
     def addlog(self, log):
-        # FIXME: The bytes in the log should not be escaped. We do this at the
-        # moment because JSON encoding can't handle binary data, and I don't
-        # want to base64 everything.
         if self.server.logreq:
-            encoded_bytes = strutils.bytes_to_escaped_str(self.rfile.get_log())
-            log["request_bytes"] = encoded_bytes
+            log["request_bytes"] = self.rfile.get_log()
         if self.server.logresp:
-            encoded_bytes = strutils.bytes_to_escaped_str(self.wfile.get_log())
-            log["response_bytes"] = encoded_bytes
+            log["response_bytes"] = self.wfile.get_log()
         self.server.add_log(log)
 
 
