@@ -266,7 +266,7 @@ class PathodHandler(tcp.BaseHandler):
 
         lr = self.rfile if self.server.logreq else None
         lw = self.wfile if self.server.logresp else None
-        logger = log.ConnectionLogger(self.logfp, self.server.hexdump, lr, lw)
+        logger = log.ConnectionLogger(self.logfp, self.server.hexdump, True, lr, lw)
 
         self.settings.protocol = self.protocol
 

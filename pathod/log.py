@@ -1,17 +1,14 @@
-import datetime
+import time
 
 import six
 
-from netlib import strutils
-
-TIMEFMT = '%d-%m-%y %H:%M:%S'
+from netlib import strutils, human
 
 
-def write_raw(fp, lines):
+def write_raw(fp, lines, timestamp=True):
     if fp:
-        fp.write(
-            "%s: " % datetime.datetime.now().strftime(TIMEFMT)
-        )
+        if timestamp:
+            fp.write(human.format_timestamp(time.time()))
         for i in lines:
             fp.write(i)
         fp.write("\n")
@@ -20,11 +17,12 @@ def write_raw(fp, lines):
 
 class LogCtx(object):
 
-    def __init__(self, fp, hex, rfile, wfile):
+    def __init__(self, fp, hex, timestamp, rfile, wfile):
         self.lines = []
         self.fp = fp
         self.suppressed = False
         self.hex = hex
+        self.timestamp = timestamp
         self.rfile, self.wfile = rfile, wfile
 
     def __enter__(self):
@@ -50,7 +48,8 @@ class LogCtx(object):
                 self.fp,
                 [
                     "\n".join(self.lines),
-                ]
+                ],
+                timestamp = self.timestamp
             )
         if exc_value:
             six.reraise(exc_type, exc_value, traceback)
@@ -71,13 +70,14 @@ class LogCtx(object):
 
 
 class ConnectionLogger:
-    def __init__(self, fp, hex, rfile, wfile):
+    def __init__(self, fp, hex, timestamp, rfile, wfile):
         self.fp = fp
         self.hex = hex
         self.rfile, self.wfile = rfile, wfile
+        self.timestamp = timestamp
 
     def ctx(self):
-        return LogCtx(self.fp, self.hex, self.rfile, self.wfile)
+        return LogCtx(self.fp, self.hex, self.timestamp, self.rfile, self.wfile)
 
     def write(self, lines):
-        write_raw(self.fp, lines)
+        write_raw(self.fp, lines, timestamp=self.timestamp)

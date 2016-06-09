@@ -18,7 +18,7 @@ from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsExcep
     NetlibException
 from netlib.http import http1, http2
 
-from . import log, language
+from pathod import log, language
 
 import logging
 from netlib.tutils import treq
@@ -100,6 +100,7 @@ class WebsocketFrameReader(threading.Thread):
         self.logger = log.ConnectionLogger(
             self.logfp,
             self.hexdump,
+            False,
             rfile if showresp else None,
             None
         )
@@ -216,7 +217,8 @@ class Pathoc(tcp.TCPClient):
                     self.fp,
                     "HTTP/2 requires ALPN support. "
                     "Please use OpenSSL >= 1.0.2. "
-                    "Pathoc might not be working as expected without ALPN."
+                    "Pathoc might not be working as expected without ALPN.",
+                    timestamp = False
                 )
             self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
@@ -372,6 +374,7 @@ class Pathoc(tcp.TCPClient):
         logger = log.ConnectionLogger(
             self.fp,
             self.hexdump,
+            False,
             None,
             self.wfile if self.showreq else None,
         )
@@ -412,6 +415,7 @@ class Pathoc(tcp.TCPClient):
         logger = log.ConnectionLogger(
             self.fp,
             self.hexdump,
+            False,
             self.rfile if self.showresp else None,
             self.wfile if self.showreq else None,
         )
