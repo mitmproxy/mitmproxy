@@ -42,7 +42,7 @@ var Prompt = React.createClass({
         var opts = [];
 
         var keyTaken = function (k) {
-            return _.includes(_.pluck(opts, "key"), k);
+            return _.includes(_.map(opts, "key"), k);
         };
 
         for (var i = 0; i < this.props.options.length; i++) {

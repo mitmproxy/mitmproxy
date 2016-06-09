@@ -4,7 +4,7 @@ import _ from "lodash"
 import { connect } from 'react-redux'
 
 import { Splitter } from "./common.js"
-import { Header, MainMenu } from "./header.js"
+import Header from "./Header"
 import EventLog from "./EventLog"
 import Footer from "./Footer"
 import { SettingsStore } from "../store/store.js"
@@ -134,7 +134,7 @@ class ProxyAppMain extends Component {
 
         if (name) {
             const headerComponent = this.refs.header
-            headerComponent.setState({ active: MainMenu }, () => {
+            headerComponent.setState({ active: Header.entries.MainMenu }, () => {
                 headerComponent.refs.active.refs[name].select()
             })
         }

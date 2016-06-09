@@ -19,7 +19,7 @@ function EventLog({ filters, events, onToggleFilter, onClose }) {
                 Eventlog
                 <div className="pull-right">
                     {['debug', 'info', 'web'].map(type => (
-                        <ToggleButton text={type} checked={filters[type]} onToggle={() => onToggleFilter(type)}/>
+                        <ToggleButton key={type} text={type} checked={filters[type]} onToggle={() => onToggleFilter(type)}/>
                     ))}
                     <i onClick={onClose} className="fa fa-close"></i>
                 </div>
