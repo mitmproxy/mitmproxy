@@ -73,10 +73,11 @@ class Response(message.Message):
     def cookies(self):
         # type: () -> multidict.MultiDictView
         """
-        The response cookies. A possibly empty :py:class:`~netlib.multidict.MultiDictView`, where the keys are
-        cookie name strings, and values are (value, attr) tuples. Value is a string, and attr is
-        an ODictCaseless containing cookie attributes. Within attrs, unary attributes (e.g. HTTPOnly)
-        are indicated by a Null value.
+        The response cookies. A possibly empty
+        :py:class:`~netlib.multidict.MultiDictView`, where the keys are cookie
+        name strings, and values are (value, attr) tuples. Value is a string,
+        and attr is an MultiDictView containing cookie attributes. Within
+        attrs, unary attributes (e.g. HTTPOnly) are indicated by a Null value.
 
         Caveats:
             Updating the attr

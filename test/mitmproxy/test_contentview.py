@@ -1,8 +1,8 @@
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
-from netlib.odict import ODict
 from netlib import encoding
 from netlib.http import url
+from netlib import multidict
 
 import mitmproxy.contentviews as cv
 from . import tutils
@@ -55,7 +55,7 @@ class TestContentView:
         f = v(
             "",
             headers=Headers(),
-            query=ODict([("foo", "bar")]),
+            query=multidict.MultiDict([("foo", "bar")]),
         )
         assert f[0] == "Query"
 
@@ -175,7 +175,7 @@ Larry
     def test_view_query(self):
         d = ""
         v = cv.ViewQuery()
-        f = v(d, query=ODict([("foo", "bar")]))
+        f = v(d, query=multidict.MultiDict([("foo", "bar")]))
         assert f[0] == "Query"
         assert [x for x in f[1]] == [[("header", "foo: "), ("text", "bar")]]
 
