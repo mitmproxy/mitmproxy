@@ -291,47 +291,43 @@ class Pathoc(tcp.TCPClient):
         if self.use_http2 and not self.ssl:
             raise NotImplementedError("HTTP2 without SSL is not supported.")
 
-        try:
-            ret = tcp.TCPClient.connect(self)
-            if connect_to:
-                self.http_connect(connect_to)
+        ret = tcp.TCPClient.connect(self)
+        if connect_to:
+            self.http_connect(connect_to)
 
-            self.sslinfo = None
-            if self.ssl:
-                try:
-                    alpn_protos = [b'http/1.1']
-                    if self.use_http2:
-                        alpn_protos.append(b'h2')
-
-                    self.convert_to_ssl(
-                        sni=self.sni,
-                        cert=self.clientcert,
-                        method=self.ssl_version,
-                        options=self.ssl_options,
-                        cipher_list=self.ciphers,
-                        alpn_protos=alpn_protos
-                    )
-                except TlsException as v:
-                    raise PathocError(str(v))
-
-                self.sslinfo = SSLInfo(
-                    self.connection.get_peer_cert_chain(),
-                    self.get_current_cipher(),
-                    self.get_alpn_proto_negotiated()
-                )
-                if showssl:
-                    print(str(self.sslinfo), file=fp)
-
+        self.sslinfo = None
+        if self.ssl:
+            try:
+                alpn_protos = [b'http/1.1']
                 if self.use_http2:
-                    self.protocol.check_alpn()
-                    if not self.http2_skip_connection_preface:
-                        self.protocol.perform_client_connection_preface()
+                    alpn_protos.append(b'h2')
 
-            if self.timeout:
-                self.settimeout(self.timeout)
-        except Exception:
-            self.close()
-            raise
+                self.convert_to_ssl(
+                    sni=self.sni,
+                    cert=self.clientcert,
+                    method=self.ssl_version,
+                    options=self.ssl_options,
+                    cipher_list=self.ciphers,
+                    alpn_protos=alpn_protos
+                )
+            except TlsException as v:
+                raise PathocError(str(v))
+
+            self.sslinfo = SSLInfo(
+                self.connection.get_peer_cert_chain(),
+                self.get_current_cipher(),
+                self.get_alpn_proto_negotiated()
+            )
+            if showssl:
+                print(str(self.sslinfo), file=fp)
+
+            if self.use_http2:
+                self.protocol.check_alpn()
+                if not self.http2_skip_connection_preface:
+                    self.protocol.perform_client_connection_preface()
+
+        if self.timeout:
+            self.settimeout(self.timeout)
         return ret
 
     def stop(self):
@@ -511,39 +507,40 @@ def main(args):  # pragma: no cover
             )
             trycount = 0
             try:
-                p.connect(args.connect_to, args.showssl)
+                with p.connect(args.connect_to, args.showssl):
+                    for spec in playlist:
+                        if args.explain or args.memo:
+                            spec = spec.freeze(p.settings)
+                        if args.memo:
+                            h = hashlib.sha256(spec.spec()).digest()
+                            if h not in memo:
+                                trycount = 0
+                                memo.add(h)
+                            else:
+                                trycount += 1
+                                if trycount > args.memolimit:
+                                    print("Memo limit exceeded...", file=sys.stderr)
+                                    return
+                                else:
+                                    continue
+                        try:
+                            ret = p.request(spec)
+                            if ret and args.oneshot:
+                                return
+                            # We consume the queue when we can, so it doesn't build up.
+                            for i_ in p.wait(timeout=0, finish=False):
+                                pass
+                        except NetlibException:
+                            break
+                    for i_ in p.wait(timeout=0.01, finish=True):
+                        pass
             except TcpException as v:
                 print(str(v), file=sys.stderr)
                 continue
             except PathocError as v:
                 print(str(v), file=sys.stderr)
                 sys.exit(1)
-            for spec in playlist:
-                if args.explain or args.memo:
-                    spec = spec.freeze(p.settings)
-                if args.memo:
-                    h = hashlib.sha256(spec.spec()).digest()
-                    if h not in memo:
-                        trycount = 0
-                        memo.add(h)
-                    else:
-                        trycount += 1
-                        if trycount > args.memolimit:
-                            print("Memo limit exceeded...", file=sys.stderr)
-                            return
-                        else:
-                            continue
-                try:
-                    ret = p.request(spec)
-                    if ret and args.oneshot:
-                        return
-                    # We consume the queue when we can, so it doesn't build up.
-                    for i_ in p.wait(timeout=0, finish=False):
-                        pass
-                except NetlibException:
-                    break
-            for i_ in p.wait(timeout=0.01, finish=True):
-                pass
+
     except KeyboardInterrupt:
         pass
     if p:

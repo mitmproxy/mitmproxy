@@ -218,7 +218,6 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
             print(v.marked(), file=stderr)
             sys.exit(1)
     args.requests = reqs
-
     return args
 
 
