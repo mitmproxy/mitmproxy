@@ -33,7 +33,7 @@ from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import encoding
 from netlib import http
-from netlib import odict
+from netlib import multidict
 from netlib.http import url
 from netlib import strutils
 
@@ -277,7 +277,7 @@ class ViewURLEncoded(View):
 
     def __call__(self, data, **metadata):
         d = url.decode(data)
-        return "URLEncoded form", format_dict(odict.ODict(d))
+        return "URLEncoded form", format_dict(multidict.MultiDict(d))
 
 
 class ViewMultipart(View):
@@ -288,7 +288,7 @@ class ViewMultipart(View):
     @staticmethod
     def _format(v):
         yield [("highlight", "Form data:\n")]
-        for message in format_dict(odict.ODict(v)):
+        for message in format_dict(multidict.MultiDict(v)):
             yield message
 
     def __call__(self, data, **metadata):
@@ -437,7 +437,7 @@ class ViewImage(View):
                     parts.append(
                         (str(tag), str(ex[i]))
                     )
-        fmt = format_dict(odict.ODict(parts))
+        fmt = format_dict(multidict.MultiDict(parts))
         return "%s image" % img.format, fmt
 
 

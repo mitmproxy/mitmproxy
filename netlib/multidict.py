@@ -235,6 +235,14 @@ class MultiDict(_MultiDict):
             tuple(i) for i in fields
         )
 
+    @staticmethod
+    def _reduce_values(values):
+        return values[0]
+
+    @staticmethod
+    def _kconv(key):
+        return key
+
 
 @six.add_metaclass(ABCMeta)
 class ImmutableMultiDict(MultiDict):
