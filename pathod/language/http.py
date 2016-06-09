@@ -209,7 +209,7 @@ class Response(_HTTPMessage):
                             base.TokValueLiteral(i[1].decode()))
                     )
         if not self.raw:
-            if not get_header("Content-Length", self.headers):
+            if not get_header(b"Content-Length", self.headers):
                 if not self.body:
                     length = 0
                 else:
