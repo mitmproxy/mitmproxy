@@ -45,7 +45,7 @@ Hacking
 
 To get started hacking on mitmproxy, make sure you have Python_ 2.7.x. with
 virtualenv_ installed (you can find installation instructions for virtualenv
-here_). Then do the following:
+`here <http://virtualenv.readthedocs.org/en/latest/installation.html>`_). Then do the following:
 
 .. code-block:: text
 
