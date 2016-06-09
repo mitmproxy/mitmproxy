@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 
 import { Splitter } from "./common.js"
 import { Header, MainMenu } from "./header.js"
-import EventLog from "./eventlog.js"
+import EventLog from "./EventLog"
 import Footer from "./Footer"
 import { SettingsStore } from "../store/store.js"
 import { Key } from "../utils.js"

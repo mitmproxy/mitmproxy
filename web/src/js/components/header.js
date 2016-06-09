@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from 'react-dom';
+import { bindActionCreators } from 'redux'
 import $ from "jquery";
 import {connect} from 'react-redux'
 
@@ -9,7 +10,16 @@ import {ToggleInputButton, ToggleButton} from "./common.js";
 import {SettingsActions, FlowActions} from "../actions.js";
 import {Query} from "../actions.js";
 import {SettingsState} from "./common.js";
-import {ToggleEventLog} from "./eventlog"
+import { toggleEventLogVisibility } from '../ducks/eventLog'
+
+const ToggleEventLog = connect(
+    state => ({
+        checked: state.eventLog.visible
+    }),
+    dispatch => bindActionCreators({
+        onToggle: toggleEventLogVisibility,
+    }, dispatch)
+)(ToggleButton)
 
 var FilterDocs = React.createClass({
     statics: {
