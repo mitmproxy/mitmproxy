@@ -31,6 +31,7 @@ class ProxyAppMain extends Component {
 
         this.state = { settings: this.settingsStore.dict }
 
+        this.focus = this.focus.bind(this)
         this.onKeyDown = this.onKeyDown.bind(this)
         this.updateLocation = this.updateLocation.bind(this)
         this.onSettingsChange = this.onSettingsChange.bind(this)
@@ -45,7 +46,7 @@ class ProxyAppMain extends Component {
         }
         const query = this.props.location.query
         for (const key of Object.keys(queryUpdate || {})) {
-            query[i] = queryUpdate[i] || undefined
+            query[key] = queryUpdate[key] || undefined
         }
         this.context.router.replace({ pathname, query })
     }

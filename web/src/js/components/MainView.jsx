@@ -1,15 +1,21 @@
-import React, { Component } from "react"
-
-import { FlowActions } from "../actions.js"
-import { Query } from "../actions.js"
-import { Key } from "../utils.js"
-import { Splitter } from "./common.js"
-import FlowTable from "./flowtable.js"
-import FlowView from "./flowview/index.js"
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { selectFlow, setFilter, setHighlight } from "../ducks/flows"
+import { bindActionCreators } from 'redux'
+
+import { FlowActions } from '../actions.js'
+import { Query } from '../actions.js'
+import { Key } from '../utils.js'
+import { Splitter } from './common.js'
+import FlowTable from './FlowTable'
+import FlowView from './flowview/index.js'
+import { selectFlow, setFilter, setHighlight } from '../ducks/flows'
 
 class MainView extends Component {
+
+    static propTypes = {
+        highlight: PropTypes.string,
+        sort: PropTypes.object,
+    }
 
     /**
      * @todo move to actions
@@ -33,9 +39,9 @@ class MainView extends Component {
      */
     selectFlow(flow) {
         if (flow) {
-            this.props.updateLocation(`/flows/${flow.id}/${this.props.routeParams.detailTab || "request"}`)
+            this.props.updateLocation(`/flows/${flow.id}/${this.props.routeParams.detailTab || 'request'}`)
         } else {
-            this.props.updateLocation("/flows")
+            this.props.updateLocation('/flows')
         }
     }
 
@@ -143,20 +149,22 @@ class MainView extends Component {
             case Key.SHIFT:
                 break
             default:
-                console.debug("keydown", e.keyCode)
+                console.debug('keydown', e.keyCode)
                 return
         }
         e.preventDefault()
     }
 
     render() {
-        const { selectedFlow } = this.props
+        const { flows, selectedFlow, highlight, sort } = this.props
         return (
             <div className="main-view">
                 <FlowTable
                     ref="flowTable"
-                    selectFlow={flow => this.selectFlow(flow)}
+                    flows={flows}
                     selected={selectedFlow}
+                    highlight={highlight}
+                    onSelect={flow => this.selectFlow(flow)}
                 />
                 {selectedFlow && [
                     <Splitter key="splitter"/>,
@@ -178,14 +186,15 @@ export default connect(
     state => ({
         flows: state.flows.view,
         filter: state.flows.filter,
+        sort: state.flows.sort,
         highlight: state.flows.highlight,
         selectedFlow: state.flows.all.byId[state.flows.selected[0]]
     }),
-    dispatch => ({
-        selectFlow: flowId => dispatch(selectFlow(flowId)),
-        setFilter: filter => dispatch(setFilter(filter)),
-        setHighlight: highlight => dispatch(setHighlight(highlight))
-    }),
+    dispatch => bindActionCreators({
+        selectFlow,
+        setFilter,
+        setHighlight,
+    }, dispatch),
     undefined,
     { withRef: true }
 )(MainView)
