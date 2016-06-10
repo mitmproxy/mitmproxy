@@ -4,9 +4,9 @@ import _ from "lodash"
 import { connect } from 'react-redux'
 
 import { Splitter } from "./common.js"
-import { Header, MainMenu } from "./header.js"
-import EventLog from "./eventlog.js"
-import Footer from "./footer.js"
+import Header from "./Header"
+import EventLog from "./EventLog"
+import Footer from "./Footer"
 import { SettingsStore } from "../store/store.js"
 import { Key } from "../utils.js"
 
@@ -31,6 +31,7 @@ class ProxyAppMain extends Component {
 
         this.state = { settings: this.settingsStore.dict }
 
+        this.focus = this.focus.bind(this)
         this.onKeyDown = this.onKeyDown.bind(this)
         this.updateLocation = this.updateLocation.bind(this)
         this.onSettingsChange = this.onSettingsChange.bind(this)
@@ -45,7 +46,7 @@ class ProxyAppMain extends Component {
         }
         const query = this.props.location.query
         for (const key of Object.keys(queryUpdate || {})) {
-            query[i] = queryUpdate[i] || undefined
+            query[key] = queryUpdate[key] || undefined
         }
         this.context.router.replace({ pathname, query })
     }
@@ -133,7 +134,7 @@ class ProxyAppMain extends Component {
 
         if (name) {
             const headerComponent = this.refs.header
-            headerComponent.setState({active: MainMenu}, function () {
+            headerComponent.setState({ active: Header.entries.MainMenu }, () => {
                 headerComponent.refs.active.refs[name].select()
             })
         }
