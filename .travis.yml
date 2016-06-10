@@ -40,12 +40,12 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python
     fi
+  - pip install tox tox-travis
 
 before_script:
-  - "pip install tox"
   - "tox -e lint"
 
-script: tox
+script: tox -e py27-ci,py35-ci,docs
 
 after_success:
   - |
