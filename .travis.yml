@@ -14,15 +14,15 @@ matrix:
   fast_finish: true
   include:
     - python: 2.7
-      env: TOXENV=py27
+      env: TOXENV=py27-ci
     - python: 2.7
-      env: TOXENV=py27 NO_ALPN=1
+      env: TOXENV=py27-ci NO_ALPN=1
     - python: 3.5
-      env: TOXENV=py35
+      env: TOXENV=py35-ci
     - python: 3.5
-      env: TOXENV=py35 NO_ALPN=1
+      env: TOXENV=py35-ci NO_ALPN=1
     - language: generic
-      env: TOXENV=py27
+      env: TOXENV=py27-ci
       os: osx
       osx_image: xcode7.1
       git:
@@ -45,7 +45,7 @@ install:
 before_script:
   - "tox -e lint"
 
-script: tox -e py27-ci,py35-ci,docs
+script: tox
 
 after_success:
   - |
