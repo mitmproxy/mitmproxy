@@ -18,6 +18,7 @@ from mitmproxy.protocol import base
 from mitmproxy.protocol import http
 import netlib.http
 from netlib import tcp
+from netlib import basethread
 from netlib.http import http2
 
 
@@ -261,10 +262,12 @@ class Http2Layer(base.Layer):
             self._cleanup_streams()
 
 
-class Http2SingleStreamLayer(http._HttpTransmissionLayer, threading.Thread):
+class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread):
 
     def __init__(self, ctx, stream_id, request_headers):
-        super(Http2SingleStreamLayer, self).__init__(ctx, name="Thread-Http2SingleStreamLayer-{}".format(stream_id))
+        super(Http2SingleStreamLayer, self).__init__(
+            ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
+        )
         self.zombie = None
         self.client_stream_id = stream_id
         self.server_stream_id = None

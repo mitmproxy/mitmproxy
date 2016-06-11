@@ -1,10 +1,10 @@
 from six.moves import cStringIO as StringIO
-import threading
 import time
 
 from six.moves import queue
 
 from . import pathod
+from netlib import basethread
 
 
 class TimeoutError(Exception):
@@ -95,11 +95,10 @@ class Daemon:
         self.thread.join()
 
 
-class _PaThread(threading.Thread):
+class _PaThread(basethread.BaseThread):
 
     def __init__(self, iface, q, ssl, daemonargs):
-        threading.Thread.__init__(self)
-        self.name = "PathodThread"
+        basethread.BaseThread.__init__(self, "PathodThread")
         self.iface, self.q, self.ssl = iface, q, ssl
         self.daemonargs = daemonargs
         self.server = None
