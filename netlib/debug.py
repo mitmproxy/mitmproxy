@@ -44,7 +44,8 @@ def dump_info(sig, frm, file=sys.stdout):  # pragma: no cover
     print("Summary", file=file)
     print("=======", file=file)
     print("num threads: ", p.num_threads(), file=file)
-    print("num fds: ", p.num_fds(), file=file)
+    if hasattr(p, "num_fds"):
+        print("num fds: ", p.num_fds(), file=file)
     print("memory: ", p.memory_info(), file=file)
 
     print(file=file)
