@@ -17,7 +17,11 @@ import six
 import OpenSSL
 from OpenSSL import SSL
 
-from netlib import certutils, version_check, basetypes, exceptions
+from netlib import certutils
+from netlib import version_check
+from netlib import basetypes
+from netlib import exceptions
+from netlib import basethread
 
 # This is a rather hackish way to make sure that
 # the latest version of pyOpenSSL is actually installed.
@@ -900,12 +904,16 @@ class TCPServer(object):
                         raise
                 if self.socket in r:
                     connection, client_address = self.socket.accept()
-                    t = threading.Thread(
+                    t = basethread.BaseThread(
+                        "TCPConnectionHandler (%s: %s:%s -> %s:%s)" % (
+                            self.__class__.__name__,
+                            client_address[0],
+                            client_address[1],
+                            self.address.host,
+                            self.address.port
+                        ),
                         target=self.connection_thread,
                         args=(connection, client_address),
-                        name="ConnectionThread (%s:%s -> %s:%s)" %
-                             (client_address[0], client_address[1],
-                              self.address.host, self.address.port)
                     )
                     t.setDaemon(1)
                     try:

@@ -5,10 +5,10 @@ offload computations from mitmproxy's main master thread.
 from __future__ import absolute_import, print_function, division
 
 from mitmproxy import controller
-import threading
+from netlib import basethread
 
 
-class ScriptThread(threading.Thread):
+class ScriptThread(basethread.BaseThread):
     name = "ScriptThread"
 
 
@@ -24,5 +24,8 @@ def concurrent(fn):
             if not obj.reply.acked:
                 obj.reply.ack()
         obj.reply.take()
-        ScriptThread(target=run).start()
+        ScriptThread(
+            "script.concurrent (%s)" % fn.__name__,
+            target=run
+        ).start()
     return _concurrent

@@ -5,7 +5,9 @@ import threading
 
 from six.moves import queue
 
+from netlib import basethread
 from mitmproxy import exceptions
+
 
 Events = frozenset([
     "clientconnect",
@@ -95,12 +97,13 @@ class Master(object):
         self.should_exit.set()
 
 
-class ServerThread(threading.Thread):
+class ServerThread(basethread.BaseThread):
     def __init__(self, server):
         self.server = server
-        super(ServerThread, self).__init__()
         address = getattr(self.server, "address", None)
-        self.name = "ServerThread ({})".format(repr(address))
+        super(ServerThread, self).__init__(
+            "ServerThread ({})".format(repr(address))
+        )
 
     def run(self):
         self.server.serve_forever()
