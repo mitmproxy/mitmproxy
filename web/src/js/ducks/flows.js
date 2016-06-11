@@ -2,7 +2,7 @@ import makeList from "./utils/list"
 import Filt from "../filt/filt"
 import {updateViewFilter, updateViewList, updateViewSort} from "./utils/view"
 import {reverseString} from "../utils.js";
-import * as flow_table_columns from "../components/flowtable-columns.js";
+import * as columns from "../components/FlowTable/FlowColumns";
 
 export const UPDATE_FLOWS = "UPDATE_FLOWS"
 export const SET_FILTER = "SET_FLOW_FILTER"
@@ -32,7 +32,7 @@ function makeFilterFn(filter) {
 
 
 function makeSortFn(sort){
-    let column = flow_table_columns[sort.sortColumn];
+    let column = columns[sort.sortColumn];
     if (!column) return;
 
     let sortKeyFun = column.sortKeyFun;
