@@ -12,15 +12,18 @@ def sysinfo():
         "Platform: %s"%platform.platform(),
     ]
     d = platform.linux_distribution()
-    if d[0]:
-        data.append("Linux distro: %s %s %s"%d)
+    t = "Linux distro: %s %s %s"%d
+    if d[0]: # pragma: no-cover
+        data.append(t)
 
     d = platform.mac_ver()
-    if d[0]:
-        data.append("Mac version: %s %s %s"%d)
+    t = "Mac version: %s %s %s"%d
+    if d[0]: # pragma: no-cover
+        data.append(t)
 
     d = platform.win32_ver()
-    if d[0]:
-        data.append("Windows version: %s %s %s %s"%d)
+    t = "Windows version: %s %s %s %s"%d
+    if d[0]: # pragma: no-cover
+        data.append(t)
 
     return "\n".join(data)
