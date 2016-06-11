@@ -5,8 +5,9 @@ import os
 import os.path
 
 from netlib import tcp
+from netlib import version
 from netlib.http import user_agents
-from . import pathoc, version, language
+from . import pathoc, language
 
 
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):

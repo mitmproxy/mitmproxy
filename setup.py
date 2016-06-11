@@ -7,7 +7,7 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-from mitmproxy import version
+from netlib import version
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()

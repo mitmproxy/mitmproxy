@@ -1,6 +1,7 @@
+from netlib import version
 from netlib.exceptions import TlsException
 from netlib.http import http1
-from .. import version, language
+from .. import language
 
 
 class HTTPProtocol(object):
@@ -17,7 +18,7 @@ class HTTPProtocol(object):
 
         self.pathod_handler.wfile.write(
             'HTTP/1.1 200 Connection established\r\n' +
-            ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
+            ('Proxy-agent: %s\r\n' % version.PATHOD) +
             '\r\n'
         )
         self.pathod_handler.wfile.flush()

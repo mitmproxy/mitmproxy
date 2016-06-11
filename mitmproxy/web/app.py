@@ -12,7 +12,7 @@ from io import BytesIO
 from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import filt
-from mitmproxy import version
+from netlib import version
 
 
 def _strip_content(flow_state):
@@ -72,7 +72,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
     def set_default_headers(self):
         super(RequestHandler, self).set_default_headers()
-        self.set_header("Server", version.NAMEVERSION)
+        self.set_header("Server", version.MITMPROXY)
         self.set_header("X-Frame-Options", "DENY")
         self.add_header("X-XSS-Protection", "1; mode=block")
         self.add_header("X-Content-Type-Options", "nosniff")
