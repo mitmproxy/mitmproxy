@@ -4,6 +4,7 @@ import sys
 import threading
 import signal
 import platform
+import traceback
 
 import psutil
 
@@ -76,5 +77,18 @@ def dump_info(sig, frm, file=sys.stdout):  # pragma: no cover
     print("****************************************************", file=file)
 
 
-def register_info_dumper():  # pragma: no cover
+def dump_stacks(signal, frame, file=sys.stdout):
+    id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
+    code = []
+    for threadId, stack in sys._current_frames().items():
+        code.append("\n# Thread: %s(%d)" % (id2name.get(threadId,""), threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append("  %s" % (line.strip()))
+    print("\n".join(code), file=file)
+
+
+def register_info_dumpers():  # pragma: no cover
     signal.signal(signal.SIGUSR1, dump_info)
+    signal.signal(signal.SIGUSR2, dump_stacks)
