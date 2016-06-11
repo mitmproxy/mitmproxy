@@ -220,6 +220,11 @@ def basic_options(parser):
         version="%(prog)s" + " " + version.VERSION
     )
     parser.add_argument(
+        '--sysinfo',
+        action='store_true',
+        dest='sysinfo',
+    )
+    parser.add_argument(
         '--shortversion',
         action='version',
         help="show program's short version number and exit",

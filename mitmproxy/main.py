@@ -11,6 +11,7 @@ from mitmproxy import exceptions
 from mitmproxy.proxy import config
 from mitmproxy.proxy import server
 from netlib import version_check
+from netlib import debug
 
 
 def assert_utf8_env():
@@ -40,6 +41,15 @@ def get_server(dummy_server, options):
             sys.exit(1)
 
 
+def process_options(parser, options):
+    if options.sysinfo:
+        print(debug.sysinfo())
+        sys.exit(0)
+    if options.quiet:
+        options.verbose = 0
+    return config.process_proxy_options(parser, options)
+
+
 def mitmproxy(args=None):  # pragma: no cover
     if os.name == "nt":
         print("Error: mitmproxy's console interface is not supported on Windows. "
@@ -52,10 +62,8 @@ def mitmproxy(args=None):  # pragma: no cover
 
     parser = cmdline.mitmproxy()
     options = parser.parse_args(args)
-    if options.quiet:
-        options.verbose = 0
+    proxy_config = process_options(parser, options)
 
-    proxy_config = config.process_proxy_options(parser, options)
     console_options = console.master.Options(**cmdline.get_common_options(options))
     console_options.palette = options.palette
     console_options.palette_transparent = options.palette_transparent
@@ -81,11 +89,10 @@ def mitmdump(args=None):  # pragma: no cover
 
     parser = cmdline.mitmdump()
     options = parser.parse_args(args)
+    proxy_config = process_options(parser, options)
     if options.quiet:
-        options.verbose = 0
         options.flow_detail = 0
 
-    proxy_config = config.process_proxy_options(parser, options)
     dump_options = dump.Options(**cmdline.get_common_options(options))
     dump_options.flow_detail = options.flow_detail
     dump_options.keepserving = options.keepserving
@@ -116,10 +123,8 @@ def mitmweb(args=None):  # pragma: no cover
     parser = cmdline.mitmweb()
 
     options = parser.parse_args(args)
-    if options.quiet:
-        options.verbose = 0
+    proxy_config = process_options(parser, options)
 
-    proxy_config = config.process_proxy_options(parser, options)
     web_options = web.master.Options(**cmdline.get_common_options(options))
     web_options.intercept = options.intercept
     web_options.wdebug = options.wdebug
