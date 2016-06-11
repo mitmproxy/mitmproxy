@@ -7,10 +7,10 @@ import re
 import configargparse
 
 from mitmproxy import filt
-from mitmproxy import version
 from mitmproxy.proxy import config
 from netlib import human
 from netlib import tcp
+from netlib import version
 from netlib.http import url
 
 APP_HOST = "mitm.it"

@@ -9,8 +9,8 @@ from six.moves import urllib
 
 from mitmproxy import controller
 from mitmproxy import filt
-from mitmproxy import version
 from netlib import wsgi
+from netlib import version
 from netlib.http import cookies
 from netlib.http import http1
 
@@ -28,7 +28,7 @@ class AppRegistry:
             app,
             domain,
             port,
-            version.NAMEVERSION
+            version.MITMPROXY
         )
 
     def get(self, request):
