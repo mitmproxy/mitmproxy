@@ -12,7 +12,7 @@ from netlib import version
 
 def sysinfo():
     data = [
-        "Mitmproxy verison: %s" % version.VERSION,
+        "Mitmproxy version: %s" % version.VERSION,
         "Python version: %s" % platform.python_version(),
         "Platform: %s" % platform.platform(),
     ]
