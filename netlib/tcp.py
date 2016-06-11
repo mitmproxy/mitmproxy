@@ -6,7 +6,6 @@ import sys
 import threading
 import time
 import traceback
-import contextlib
 
 import binascii
 from six.moves import range
@@ -582,12 +581,24 @@ class _Connection(object):
         return context
 
 
-@contextlib.contextmanager
-def _closer(client):
-    try:
-        yield
-    finally:
-        client.close()
+class ConnectionCloser(object):
+    def __init__(self, conn):
+        self.conn = conn
+        self._canceled = False
+
+    def pop(self):
+        """
+            Cancel the current closer, and return a fresh one.
+        """
+        self._canceled = True
+        return ConnectionCloser(self.conn)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if not self._canceled:
+            self.conn.close()
 
 
 class TCPClient(_Connection):
@@ -717,11 +728,12 @@ class TCPClient(_Connection):
         except (socket.error, IOError) as err:
             raise exceptions.TcpException(
                 'Error connecting to "%s": %s' %
-                (self.address.host, err))
+                (self.address.host, err)
+            )
         self.connection = connection
         self.ip_address = Address(connection.getpeername())
         self._makefile()
-        return _closer(self)
+        return ConnectionCloser(self)
 
     def settimeout(self, n):
         self.connection.settimeout(n)
