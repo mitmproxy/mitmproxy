@@ -9,7 +9,7 @@ import psutil
 
 from netlib import version
 
-from OpenSSL import SSL;
+from OpenSSL import SSL
 
 
 def sysinfo():
