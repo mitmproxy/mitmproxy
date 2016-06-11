@@ -10,5 +10,11 @@ def test_dump_info():
     assert cs.getvalue()
 
 
+def test_dump_stacks():
+    cs = StringIO()
+    debug.dump_stacks(None, None, file=cs)
+    assert cs.getvalue()
+
+
 def test_sysinfo():
     assert debug.sysinfo()
