@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
-import sys
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
@@ -73,6 +72,7 @@ setup(
         "lxml>=3.5.0, <3.7",
         "Pillow>=3.2, <3.3",
         "passlib>=1.6.5, <1.7",
+        "psutil>=4.2.0, <4.3",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1.3, <2.2",

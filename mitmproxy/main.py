@@ -47,6 +47,7 @@ def process_options(parser, options):
         sys.exit(0)
     if options.quiet:
         options.verbose = 0
+    debug.register_info_dumper()
     return config.process_proxy_options(parser, options)
 
 

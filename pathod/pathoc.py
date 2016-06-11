@@ -8,15 +8,15 @@ from six.moves import queue
 import random
 import select
 import time
-import threading
 
 import OpenSSL.crypto
 import six
 
 from netlib import tcp, certutils, websockets, socks
-from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsException, TcpException, \
-    NetlibException
-from netlib.http import http1, http2
+from netlib import exceptions
+from netlib.http import http1
+from netlib.http import http2
+from netlib import basethread
 
 from pathod import log, language
 
@@ -77,7 +77,7 @@ class SSLInfo(object):
         return "\n".join(parts)
 
 
-class WebsocketFrameReader(threading.Thread):
+class WebsocketFrameReader(basethread.BaseThread):
 
     def __init__(
             self,
@@ -88,7 +88,7 @@ class WebsocketFrameReader(threading.Thread):
             ws_read_limit,
             timeout
     ):
-        threading.Thread.__init__(self)
+        basethread.BaseThread.__init__(self, "WebsocketFrameReader")
         self.timeout = timeout
         self.ws_read_limit = ws_read_limit
         self.logfp = logfp
@@ -129,7 +129,7 @@ class WebsocketFrameReader(threading.Thread):
                     with self.logger.ctx() as log:
                         try:
                             frm = websockets.Frame.from_file(self.rfile)
-                        except TcpDisconnect:
+                        except exceptions.TcpDisconnect:
                             return
                         self.frames_queue.put(frm)
                         log("<< %s" % frm.header.human_readable())
@@ -241,8 +241,8 @@ class Pathoc(tcp.TCPClient):
         try:
             resp = self.protocol.read_response(self.rfile, treq(method="CONNECT"))
             if resp.status_code != 200:
-                raise HttpException("Unexpected status code: %s" % resp.status_code)
-        except HttpException as e:
+                raise exceptions.HttpException("Unexpected status code: %s" % resp.status_code)
+        except exceptions.HttpException as e:
             six.reraise(PathocError, PathocError(
                 "Proxy CONNECT failed: %s" % repr(e)
             ))
@@ -280,7 +280,7 @@ class Pathoc(tcp.TCPClient):
                     connect_reply.msg,
                     "SOCKS server error"
                 )
-        except (socks.SocksError, TcpDisconnect) as e:
+        except (socks.SocksError, exceptions.TcpDisconnect) as e:
             raise PathocError(str(e))
 
     def connect(self, connect_to=None, showssl=False, fp=sys.stdout):
@@ -310,7 +310,7 @@ class Pathoc(tcp.TCPClient):
                     cipher_list=self.ciphers,
                     alpn_protos=alpn_protos
                 )
-            except TlsException as v:
+            except exceptions.TlsException as v:
                 raise PathocError(str(v))
 
             self.sslinfo = SSLInfo(
@@ -406,7 +406,7 @@ class Pathoc(tcp.TCPClient):
 
             Returns Response if we have a non-ignored response.
 
-            May raise a NetlibException
+            May raise a exceptions.NetlibException
         """
         logger = log.ConnectionLogger(
             self.fp,
@@ -424,10 +424,10 @@ class Pathoc(tcp.TCPClient):
 
                 resp = self.protocol.read_response(self.rfile, treq(method=req["method"].encode()))
                 resp.sslinfo = self.sslinfo
-            except HttpException as v:
+            except exceptions.HttpException as v:
                 lg("Invalid server response: %s" % v)
                 raise
-            except TcpTimeout:
+            except exceptions.TcpTimeout:
                 if self.ignoretimeout:
                     lg("Timeout (ignored)")
                     return None
@@ -451,7 +451,7 @@ class Pathoc(tcp.TCPClient):
 
             Returns Response if we have a non-ignored response.
 
-            May raise a NetlibException
+            May raise a exceptions.NetlibException
         """
         if isinstance(r, basestring):
             r = language.parse_pathoc(r, self.use_http2).next()
@@ -530,11 +530,11 @@ def main(args):  # pragma: no cover
                             # We consume the queue when we can, so it doesn't build up.
                             for i_ in p.wait(timeout=0, finish=False):
                                 pass
-                        except NetlibException:
+                        except exceptions.NetlibException:
                             break
                     for i_ in p.wait(timeout=0.01, finish=True):
                         pass
-            except TcpException as v:
+            except exceptions.TcpException as v:
                 print(str(v), file=sys.stderr)
                 continue
             except PathocError as v:

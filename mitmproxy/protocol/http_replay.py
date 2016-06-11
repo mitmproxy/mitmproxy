@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import threading
 import traceback
 
 import netlib.exceptions
@@ -8,12 +7,13 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import models
 from netlib.http import http1
+from netlib import basethread
 
 
 # TODO: Doesn't really belong into mitmproxy.protocol...
 
 
-class RequestReplayThread(threading.Thread):
+class RequestReplayThread(basethread.BaseThread):
     name = "RequestReplayThread"
 
     def __init__(self, config, flow, event_queue, should_exit):
@@ -26,7 +26,9 @@ class RequestReplayThread(threading.Thread):
             self.channel = controller.Channel(event_queue, should_exit)
         else:
             self.channel = None
-        super(RequestReplayThread, self).__init__()
+        super(RequestReplayThread, self).__init__(
+            "RequestReplay (%s)" % flow.request.url
+        )
 
     def run(self):
         r = self.flow.request
