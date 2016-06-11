@@ -5,9 +5,10 @@ import copy
 import uuid
 
 from mitmproxy import stateobject
-from mitmproxy import version
 from mitmproxy.models.connections import ClientConnection
 from mitmproxy.models.connections import ServerConnection
+
+from netlib import version
 
 
 class Error(stateobject.StateObject):

@@ -3,9 +3,10 @@ from __future__ import absolute_import, print_function, division
 import urwid
 
 from mitmproxy import filt
-from mitmproxy import version
 from mitmproxy.console import common
 from mitmproxy.console import signals
+
+from netlib import version
 
 footer = [
     ("heading", 'mitmproxy v%s ' % version.VERSION),
