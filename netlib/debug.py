@@ -9,12 +9,15 @@ import psutil
 
 from netlib import version
 
+from OpenSSL import SSL;
+
 
 def sysinfo():
     data = [
         "Mitmproxy version: %s" % version.VERSION,
         "Python version: %s" % platform.python_version(),
         "Platform: %s" % platform.platform(),
+        "SSL version: %s" % SSL.SSLeay_version(SSL.SSLEAY_VERSION),
     ]
     d = platform.linux_distribution()
     t = "Linux distro: %s %s %s" % d
