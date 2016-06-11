@@ -83,7 +83,13 @@ class TestDaemon(PathocTestDaemon):
 
     def test_ssl_error(self):
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=True, fp=None)
-        tutils.raises("ssl handshake", c.connect)
+        try:
+            with c.connect():
+                pass
+        except Exception as e:
+            assert "SSL" in str(e)
+        else:
+            raise AssertionError("No exception raised.")
 
     def test_showssl(self):
         assert "certificate chain" not in self.tval(
