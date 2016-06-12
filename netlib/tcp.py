@@ -967,3 +967,14 @@ class TCPServer(object):
         """
             Called after server shutdown.
         """
+
+    def wait_for_silence(self, timeout=5):
+        start = time.time()
+        while 1:
+            if time.time() - start >= timeout:
+                raise exceptions.Timeout(
+                    "%s service threads still alive" %
+                    self.handler_counter.count
+                )
+            if self.handler_counter.count == 0:
+                return
