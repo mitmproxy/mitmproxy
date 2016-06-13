@@ -81,3 +81,12 @@ def test_script_exception():
         s.load()
         with tutils.raises(ScriptException):
             s.unload()
+
+
+def test_click_integration():
+    with tutils.chdir(tutils.test_data.path("data/scripts")):
+        with Script("click_simple.py foo", None) as s:
+            assert s.ns["var"] == "foo"
+
+        with Script("click_context.py", "context") as s:
+            assert s.ns["var"] == "context"
