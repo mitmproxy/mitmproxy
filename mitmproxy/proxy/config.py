@@ -89,6 +89,7 @@ class ProxyConfig:
         self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
+        self.ssl_insecure = ssl_insecure
         self.body_size_limit = body_size_limit
         self.mode = mode
         if upstream_server:

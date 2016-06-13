@@ -93,7 +93,7 @@ class Options(urwid.WidgetWrap):
                 ),
                 select.Option(
                     "Don't Verify Upstream Certs",
-                    "K",
+                    "V",
                     lambda: master.server.config.ssl_insecure,
                     self.toggle_ssl_insecure
                 ),
@@ -198,7 +198,7 @@ class Options(urwid.WidgetWrap):
         signals.update_settings.send(self)
 
     def toggle_ssl_insecure(self):
-        self.master.server.config.ssl_insecure = not self.master.server.config.ssl_insecure
+        self.master.server.config.openssl_verification_mode_server = VERIFY_PEER if self.master.server.config.openssl_verification_mode_server is VERIFY_NONE else VERIFY_NONE
         signals.update_settings.send(self)
 
     def setheaders(self):
