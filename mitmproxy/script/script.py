@@ -12,6 +12,11 @@ import sys
 
 import six
 
+try:
+    import click
+except ImportError:
+    click = False
+
 from mitmproxy import exceptions
 
 
@@ -89,6 +94,14 @@ class Script(object):
         finally:
             sys.path.pop()
             sys.path.pop()
+
+        start_fn = self.ns.get("start")
+        uses_click_cli = click and isinstance(start_fn, click.Command)
+        if uses_click_cli:
+            def cli_wrapper(context, argv):
+                return start_fn(args=argv[1:], prog_name=argv[0], standalone_mode=False, obj=context)
+            self.ns["start"] = cli_wrapper
+
         return self.run("start", self.args)
 
     def unload(self):
