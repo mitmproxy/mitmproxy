@@ -207,6 +207,8 @@ The arguments are then exposed in the start event:
    :caption: examples/modify_response_body.py
    :language: python
 
+Mitmproxy also supports `integration`_ with `click`_ for command line interfaces.
+
 Running scripts on saved flows
 ------------------------------
 
@@ -229,3 +231,5 @@ By default, spaces are interpreted as a separator between the inline script and 
 quotes if it contains spaces: ``-s '\'./foo bar/baz.py\' 42'``.
 
 .. _GitHub: https://github.com/mitmproxy/mitmproxy
+.. _integration: https://github.com/mitmproxy/mitmproxy/blob/master/test/mitmproxy/data/scripts/click_simple.py
+.. _click: http://click.pocoo.org/
