@@ -5,7 +5,7 @@ import time
 import hyperframe.frame
 
 from hpack.hpack import Encoder, Decoder
-from netlib import utils
+from netlib import utils, strutils
 from netlib.http import url
 import netlib.http.headers
 import netlib.http.response
@@ -230,7 +230,7 @@ class HTTP2Protocol(object):
         headers = response.headers.copy()
 
         if ':status' not in headers:
-            headers.insert(0, b':status', str(response.status_code).encode('ascii'))
+            headers.insert(0, b':status', strutils.always_bytes(response.status_code))
 
         if hasattr(response, 'stream_id'):
             stream_id = response.stream_id
