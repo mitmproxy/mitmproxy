@@ -328,7 +328,7 @@ class TlsLayer(base.Layer):
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
-        
+
         self._custom_server_sni = None
         self._client_hello = None  # type: TlsClientHello
 
@@ -376,11 +376,11 @@ class TlsLayer(base.Layer):
             client_tls_requires_server_connection
         )
 
-        if self._client_tls and establish_server_tls_now:	
-			try:
-				self._establish_tls_with_client_and_server()
-			except netlib.exceptions.TlsException as e:
-				self.log("Your libssl does not support this ssl version. May have been removed for security reasons.")	 	
+        if self._client_tls and establish_server_tls_now:
+            try:
+                self._establish_tls_with_client_and_server()
+            except netlib.exceptions.TlsException as e:
+                self.log("Your libssl does not support this ssl version. May have been removed for security reasons.")
         elif self._client_tls:
             self._establish_tls_with_client()
         elif establish_server_tls_now:
