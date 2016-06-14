@@ -44,7 +44,7 @@ to store any form of state you require.
 Script Lifecycle Events
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. py:function:: start(context, argv)
+.. py:function:: start(context)
 
     Called once on startup, before any other events.
 

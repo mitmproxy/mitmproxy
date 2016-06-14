@@ -1,4 +1,4 @@
-'''
+"""
 tcp_message Inline Script Hook API Demonstration
 ------------------------------------------------
 
@@ -7,7 +7,7 @@ tcp_message Inline Script Hook API Demonstration
 
 example cmdline invocation:
 mitmdump -T --host --tcp ".*" -q -s examples/tcp_message.py
-'''
+"""
 from netlib import strutils
 
 

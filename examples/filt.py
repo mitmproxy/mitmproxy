@@ -1,13 +1,13 @@
 # This scripts demonstrates how to use mitmproxy's filter pattern in inline scripts.
 # Usage: mitmdump -s "filt.py FILTER"
-
+import sys
 from mitmproxy import filt
 
 
-def start(context, argv):
-    if len(argv) != 2:
+def start(context):
+    if len(sys.argv) != 2:
         raise ValueError("Usage: -s 'filt.py FILTER'")
-    context.filter = filt.parse(argv[1])
+    context.filter = filt.parse(sys.argv[1])
 
 
 def response(context, flow):

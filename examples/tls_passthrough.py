@@ -24,6 +24,7 @@ from __future__ import (absolute_import, print_function, division)
 import collections
 import random
 
+import sys
 from enum import Enum
 
 from mitmproxy.exceptions import TlsProtocolException
@@ -110,9 +111,9 @@ class TlsFeedback(TlsLayer):
 # inline script hooks below.
 
 
-def start(context, argv):
-    if len(argv) == 2:
-        context.tls_strategy = ProbabilisticStrategy(float(argv[1]))
+def start(context):
+    if len(sys.argv) == 2:
+        context.tls_strategy = ProbabilisticStrategy(float(sys.argv[1]))
     else:
         context.tls_strategy = ConservativeStrategy()
 
