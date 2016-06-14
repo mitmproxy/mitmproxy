@@ -3,6 +3,8 @@
     https://github.com/JustusW/harparser to generate a HAR log object.
 """
 import six
+import sys
+import pytz
 from harparser import HAR
 
 from datetime import datetime
@@ -52,15 +54,15 @@ class _HARLog(HAR.log):
         return self.__page_list__
 
 
-def start(context, argv):
+def start(context):
     """
         On start we create a HARLog instance. You will have to adapt this to
         suit your actual needs of HAR generation. As it will probably be
         necessary to cluster logs by IPs or reset them from time to time.
     """
     context.dump_file = None
-    if len(argv) > 1:
-        context.dump_file = argv[1]
+    if len(sys.argv) > 1:
+        context.dump_file = sys.argv[1]
     else:
         raise ValueError(
             'Usage: -s "har_extractor.py filename" '
@@ -119,7 +121,7 @@ def response(context, flow):
     full_time = sum(v for v in timings.values() if v > -1)
 
     started_date_time = datetime.utcfromtimestamp(
-        flow.request.timestamp_start).isoformat()
+        flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
 
     request_query_string = [{"name": k, "value": v}
                             for k, v in flow.request.query or {}]
@@ -173,6 +175,7 @@ def response(context, flow):
                 "startedDateTime": entry['startedDateTime'],
                 "id": page_id,
                 "title": flow.request.url,
+                "pageTimings": {}
             })
         )
         context.HARLog.set_page_ref(flow.request.url, page_id)

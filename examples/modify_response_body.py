@@ -1,14 +1,16 @@
 # Usage: mitmdump -s "modify_response_body.py mitmproxy bananas"
 # (this script works best with --anticache)
+import sys
+
 from mitmproxy.models import decoded
 
 
-def start(context, argv):
-    if len(argv) != 3:
+def start(context):
+    if len(sys.argv) != 3:
         raise ValueError('Usage: -s "modify_response_body.py old new"')
     # You may want to use Python's argparse for more sophisticated argument
     # parsing.
-    context.old, context.new = argv[1], argv[2]
+    context.old, context.new = sys.argv[1], sys.argv[2]
 
 
 def response(context, flow):

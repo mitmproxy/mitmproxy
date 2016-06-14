@@ -60,7 +60,7 @@ class _HTTP2Message(message.Message):
         headers = self.toks(_HeaderMixin)
 
         if not self.raw:
-            if not get_header("content-length", headers):
+            if not get_header(b"content-length", headers):
                 if not self.body:
                     length = 0
                 else:
@@ -125,7 +125,7 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
     def values(self, settings):
         value = self.value.val
         if self.option_used:
-            value = user_agents.get_by_shortcut(value.lower())[2]
+            value = user_agents.get_by_shortcut(value.lower().decode())[2].encode()
 
         return (
             self.key.get_generator(settings),
@@ -190,7 +190,7 @@ class Response(_HTTP2Message):
             resp = http.Response(
                 (2, 0),
                 self.status_code.string(),
-                '',
+                b'',
                 headers,
                 body,
             )
@@ -262,7 +262,7 @@ class Request(_HTTP2Message):
         else:
             path = self.path.string()
             if self.nested_response:
-                path += self.nested_response.parsed.spec()
+                path += self.nested_response.parsed.spec().encode()
 
             headers = Headers([header.values(settings) for header in self.headers])
 
@@ -271,11 +271,11 @@ class Request(_HTTP2Message):
                 body = body.string()
 
             req = http.Request(
-                '',
+                b'',
                 self.method.string(),
-                '',
-                '',
-                '',
+                b'',
+                b'',
+                b'',
                 path,
                 (2, 0),
                 headers,

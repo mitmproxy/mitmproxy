@@ -33,7 +33,7 @@ from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import encoding
 from netlib import http
-from netlib import odict
+from netlib import multidict
 from netlib.http import url
 from netlib import strutils
 
@@ -62,11 +62,18 @@ KEY_MAX = 30
 
 
 def pretty_json(s):
+    # type: (bytes) -> bytes
     try:
         p = json.loads(s)
     except ValueError:
         return None
-    return json.dumps(p, sort_keys=True, indent=4)
+    pretty = json.dumps(p, sort_keys=True, indent=4, ensure_ascii=False)
+    if isinstance(pretty, six.text_type):
+        # json.dumps _may_ decide to return unicode, if the JSON object is not ascii.
+        # From limited testing this is always valid utf8 (otherwise json.loads will fail earlier),
+        # so we can just re-encode it here.
+        return pretty.encode("utf8", "strict")
+    return pretty
 
 
 def format_dict(d):
@@ -153,7 +160,7 @@ class ViewRaw(View):
     content_types = []
 
     def __call__(self, data, **metadata):
-        return "Raw", format_text(data)
+        return "Raw", format_text(strutils.bytes_to_escaped_str(data))
 
 
 class ViewHex(View):
@@ -270,7 +277,7 @@ class ViewURLEncoded(View):
 
     def __call__(self, data, **metadata):
         d = url.decode(data)
-        return "URLEncoded form", format_dict(odict.ODict(d))
+        return "URLEncoded form", format_dict(multidict.MultiDict(d))
 
 
 class ViewMultipart(View):
@@ -281,7 +288,7 @@ class ViewMultipart(View):
     @staticmethod
     def _format(v):
         yield [("highlight", "Form data:\n")]
-        for message in format_dict(odict.ODict(v)):
+        for message in format_dict(multidict.MultiDict(v)):
             yield message
 
     def __call__(self, data, **metadata):
@@ -430,7 +437,7 @@ class ViewImage(View):
                     parts.append(
                         (str(tag), str(ex[i]))
                     )
-        fmt = format_dict(odict.ODict(parts))
+        fmt = format_dict(multidict.MultiDict(parts))
         return "%s image" % img.format, fmt
 
 

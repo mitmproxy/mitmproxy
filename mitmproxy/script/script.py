@@ -6,13 +6,26 @@ by the mitmproxy-specific ScriptContext.
 # Do not import __future__ here, this would apply transitively to the inline scripts.
 from __future__ import absolute_import, print_function, division
 
+import inspect
 import os
 import shlex
 import sys
+import contextlib
+import warnings
 
 import six
 
 from mitmproxy import exceptions
+
+
+@contextlib.contextmanager
+def setargs(args):
+    oldargs = sys.argv
+    sys.argv = args
+    try:
+        yield
+    finally:
+        sys.argv = oldargs
 
 
 class Script(object):
@@ -89,7 +102,15 @@ class Script(object):
         finally:
             sys.path.pop()
             sys.path.pop()
-        return self.run("start", self.args)
+
+        start_fn = self.ns.get("start")
+        if start_fn and len(inspect.getargspec(start_fn).args) == 2:
+            warnings.warn(
+                "The 'args' argument of the start() script hook is deprecated. "
+                "Please use sys.argv instead."
+            )
+            return self.run("start", self.args)
+        return self.run("start")
 
     def unload(self):
         try:
@@ -113,7 +134,8 @@ class Script(object):
         f = self.ns.get(name)
         if f:
             try:
-                return f(self.ctx, *args, **kwargs)
+                with setargs(self.args):
+                    return f(self.ctx, *args, **kwargs)
             except Exception:
                 six.reraise(
                     exceptions.ScriptException,

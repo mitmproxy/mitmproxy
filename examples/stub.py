@@ -3,7 +3,7 @@
 """
 
 
-def start(context, argv):
+def start(context):
     """
         Called once on script startup, before any other events.
     """

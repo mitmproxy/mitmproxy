@@ -2,9 +2,9 @@ from __future__ import absolute_import, print_function, division
 
 import cgi
 
-from mitmproxy import version
 from mitmproxy.models.flow import Flow
 from netlib import encoding
+from netlib import version
 from netlib.http import Headers
 from netlib.http import Request
 from netlib.http import Response
@@ -258,7 +258,7 @@ def make_error_response(status_code, message, headers=None):
 
     if not headers:
         headers = Headers(
-            Server=version.NAMEVERSION,
+            Server=version.MITMPROXY,
             Connection="close",
             Content_Length=str(len(body)),
             Content_Type="text/html"

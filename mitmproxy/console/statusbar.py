@@ -4,7 +4,7 @@ import os.path
 
 import urwid
 
-import netlib.utils
+import netlib.http.url
 from mitmproxy.console import common
 from mitmproxy.console import pathedit
 from mitmproxy.console import signals
@@ -212,7 +212,7 @@ class StatusBar(urwid.WidgetWrap):
 
         if self.master.server.config.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
-            r.append("[dest:%s]" % netlib.utils.unparse(
+            r.append("[dest:%s]" % netlib.http.url.unparse(
                 dst.scheme,
                 dst.address.host,
                 dst.address.port

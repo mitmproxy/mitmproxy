@@ -8,17 +8,17 @@ from six.moves import queue
 import random
 import select
 import time
-import threading
 
 import OpenSSL.crypto
 import six
 
 from netlib import tcp, certutils, websockets, socks
-from netlib.exceptions import HttpException, TcpDisconnect, TcpTimeout, TlsException, TcpException, \
-    NetlibException
-from netlib.http import http1, http2
+from netlib import exceptions
+from netlib.http import http1
+from netlib.http import http2
+from netlib import basethread
 
-from . import log, language
+from pathod import log, language
 
 import logging
 from netlib.tutils import treq
@@ -77,7 +77,7 @@ class SSLInfo(object):
         return "\n".join(parts)
 
 
-class WebsocketFrameReader(threading.Thread):
+class WebsocketFrameReader(basethread.BaseThread):
 
     def __init__(
             self,
@@ -88,7 +88,7 @@ class WebsocketFrameReader(threading.Thread):
             ws_read_limit,
             timeout
     ):
-        threading.Thread.__init__(self)
+        basethread.BaseThread.__init__(self, "WebsocketFrameReader")
         self.timeout = timeout
         self.ws_read_limit = ws_read_limit
         self.logfp = logfp
@@ -100,6 +100,7 @@ class WebsocketFrameReader(threading.Thread):
         self.logger = log.ConnectionLogger(
             self.logfp,
             self.hexdump,
+            False,
             rfile if showresp else None,
             None
         )
@@ -128,7 +129,7 @@ class WebsocketFrameReader(threading.Thread):
                     with self.logger.ctx() as log:
                         try:
                             frm = websockets.Frame.from_file(self.rfile)
-                        except TcpDisconnect:
+                        except exceptions.TcpDisconnect:
                             return
                         self.frames_queue.put(frm)
                         log("<< %s" % frm.header.human_readable())
@@ -216,7 +217,8 @@ class Pathoc(tcp.TCPClient):
                     self.fp,
                     "HTTP/2 requires ALPN support. "
                     "Please use OpenSSL >= 1.0.2. "
-                    "Pathoc might not be working as expected without ALPN."
+                    "Pathoc might not be working as expected without ALPN.",
+                    timestamp = False
                 )
             self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
@@ -239,8 +241,8 @@ class Pathoc(tcp.TCPClient):
         try:
             resp = self.protocol.read_response(self.rfile, treq(method="CONNECT"))
             if resp.status_code != 200:
-                raise HttpException("Unexpected status code: %s" % resp.status_code)
-        except HttpException as e:
+                raise exceptions.HttpException("Unexpected status code: %s" % resp.status_code)
+        except exceptions.HttpException as e:
             six.reraise(PathocError, PathocError(
                 "Proxy CONNECT failed: %s" % repr(e)
             ))
@@ -278,7 +280,7 @@ class Pathoc(tcp.TCPClient):
                     connect_reply.msg,
                     "SOCKS server error"
                 )
-        except (socks.SocksError, TcpDisconnect) as e:
+        except (socks.SocksError, exceptions.TcpDisconnect) as e:
             raise PathocError(str(e))
 
     def connect(self, connect_to=None, showssl=False, fp=sys.stdout):
@@ -289,8 +291,7 @@ class Pathoc(tcp.TCPClient):
         if self.use_http2 and not self.ssl:
             raise NotImplementedError("HTTP2 without SSL is not supported.")
 
-        try:
-            ret = tcp.TCPClient.connect(self)
+        with tcp.TCPClient.connect(self) as closer:
             if connect_to:
                 self.http_connect(connect_to)
 
@@ -309,7 +310,7 @@ class Pathoc(tcp.TCPClient):
                         cipher_list=self.ciphers,
                         alpn_protos=alpn_protos
                     )
-                except TlsException as v:
+                except exceptions.TlsException as v:
                     raise PathocError(str(v))
 
                 self.sslinfo = SSLInfo(
@@ -327,10 +328,8 @@ class Pathoc(tcp.TCPClient):
 
             if self.timeout:
                 self.settimeout(self.timeout)
-        except Exception:
-            self.close()
-            raise
-        return ret
+
+            return closer.pop()
 
     def stop(self):
         if self.ws_framereader:
@@ -372,6 +371,7 @@ class Pathoc(tcp.TCPClient):
         logger = log.ConnectionLogger(
             self.fp,
             self.hexdump,
+            False,
             None,
             self.wfile if self.showreq else None,
         )
@@ -407,11 +407,12 @@ class Pathoc(tcp.TCPClient):
 
             Returns Response if we have a non-ignored response.
 
-            May raise a NetlibException
+            May raise a exceptions.NetlibException
         """
         logger = log.ConnectionLogger(
             self.fp,
             self.hexdump,
+            False,
             self.rfile if self.showresp else None,
             self.wfile if self.showreq else None,
         )
@@ -424,10 +425,10 @@ class Pathoc(tcp.TCPClient):
 
                 resp = self.protocol.read_response(self.rfile, treq(method=req["method"].encode()))
                 resp.sslinfo = self.sslinfo
-            except HttpException as v:
+            except exceptions.HttpException as v:
                 lg("Invalid server response: %s" % v)
                 raise
-            except TcpTimeout:
+            except exceptions.TcpTimeout:
                 if self.ignoretimeout:
                     lg("Timeout (ignored)")
                     return None
@@ -451,7 +452,7 @@ class Pathoc(tcp.TCPClient):
 
             Returns Response if we have a non-ignored response.
 
-            May raise a NetlibException
+            May raise a exceptions.NetlibException
         """
         if isinstance(r, basestring):
             r = language.parse_pathoc(r, self.use_http2).next()
@@ -507,39 +508,40 @@ def main(args):  # pragma: no cover
             )
             trycount = 0
             try:
-                p.connect(args.connect_to, args.showssl)
-            except TcpException as v:
+                with p.connect(args.connect_to, args.showssl):
+                    for spec in playlist:
+                        if args.explain or args.memo:
+                            spec = spec.freeze(p.settings)
+                        if args.memo:
+                            h = hashlib.sha256(spec.spec()).digest()
+                            if h not in memo:
+                                trycount = 0
+                                memo.add(h)
+                            else:
+                                trycount += 1
+                                if trycount > args.memolimit:
+                                    print("Memo limit exceeded...", file=sys.stderr)
+                                    return
+                                else:
+                                    continue
+                        try:
+                            ret = p.request(spec)
+                            if ret and args.oneshot:
+                                return
+                            # We consume the queue when we can, so it doesn't build up.
+                            for i_ in p.wait(timeout=0, finish=False):
+                                pass
+                        except exceptions.NetlibException:
+                            break
+                    for i_ in p.wait(timeout=0.01, finish=True):
+                        pass
+            except exceptions.TcpException as v:
                 print(str(v), file=sys.stderr)
                 continue
             except PathocError as v:
                 print(str(v), file=sys.stderr)
                 sys.exit(1)
-            for spec in playlist:
-                if args.explain or args.memo:
-                    spec = spec.freeze(p.settings)
-                if args.memo:
-                    h = hashlib.sha256(spec.spec()).digest()
-                    if h not in memo:
-                        trycount = 0
-                        memo.add(h)
-                    else:
-                        trycount += 1
-                        if trycount > args.memolimit:
-                            print("Memo limit exceeded...", file=sys.stderr)
-                            return
-                        else:
-                            continue
-                try:
-                    ret = p.request(spec)
-                    if ret and args.oneshot:
-                        return
-                    # We consume the queue when we can, so it doesn't build up.
-                    for i_ in p.wait(timeout=0, finish=False):
-                        pass
-                except NetlibException:
-                    break
-            for i_ in p.wait(timeout=0.01, finish=True):
-                pass
+
     except KeyboardInterrupt:
         pass
     if p:

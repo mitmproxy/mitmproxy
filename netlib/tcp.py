@@ -6,7 +6,6 @@ import sys
 import threading
 import time
 import traceback
-import contextlib
 
 import binascii
 from six.moves import range
@@ -17,7 +16,11 @@ import six
 import OpenSSL
 from OpenSSL import SSL
 
-from netlib import certutils, version_check, basetypes, exceptions
+from netlib import certutils
+from netlib import version_check
+from netlib import basetypes
+from netlib import exceptions
+from netlib import basethread
 
 # This is a rather hackish way to make sure that
 # the latest version of pyOpenSSL is actually installed.
@@ -578,12 +581,24 @@ class _Connection(object):
         return context
 
 
-@contextlib.contextmanager
-def _closer(client):
-    try:
-        yield
-    finally:
-        client.close()
+class ConnectionCloser(object):
+    def __init__(self, conn):
+        self.conn = conn
+        self._canceled = False
+
+    def pop(self):
+        """
+            Cancel the current closer, and return a fresh one.
+        """
+        self._canceled = True
+        return ConnectionCloser(self.conn)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if not self._canceled:
+            self.conn.close()
 
 
 class TCPClient(_Connection):
@@ -713,11 +728,12 @@ class TCPClient(_Connection):
         except (socket.error, IOError) as err:
             raise exceptions.TcpException(
                 'Error connecting to "%s": %s' %
-                (self.address.host, err))
+                (self.address.host, err)
+            )
         self.connection = connection
         self.ip_address = Address(connection.getpeername())
         self._makefile()
-        return _closer(self)
+        return ConnectionCloser(self)
 
     def settimeout(self, n):
         self.connection.settimeout(n)
@@ -900,12 +916,16 @@ class TCPServer(object):
                         raise
                 if self.socket in r:
                     connection, client_address = self.socket.accept()
-                    t = threading.Thread(
+                    t = basethread.BaseThread(
+                        "TCPConnectionHandler (%s: %s:%s -> %s:%s)" % (
+                            self.__class__.__name__,
+                            client_address[0],
+                            client_address[1],
+                            self.address.host,
+                            self.address.port
+                        ),
                         target=self.connection_thread,
                         args=(connection, client_address),
-                        name="ConnectionThread (%s:%s -> %s:%s)" %
-                             (client_address[0], client_address[1],
-                              self.address.host, self.address.port)
                     )
                     t.setDaemon(1)
                     try:
@@ -947,3 +967,14 @@ class TCPServer(object):
         """
             Called after server shutdown.
         """
+
+    def wait_for_silence(self, timeout=5):
+        start = time.time()
+        while 1:
+            if time.time() - start >= timeout:
+                raise exceptions.Timeout(
+                    "%s service threads still alive" %
+                    self.handler_counter.count
+                )
+            if self.handler_counter.count == 0:
+                return

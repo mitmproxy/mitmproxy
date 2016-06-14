@@ -11,7 +11,7 @@ var conf = {
         // Package these as well as the dependencies
         vendor_includes: [
         ],
-        app: 'src/js/app.js',
+        app: 'src/js/app',
         eslint: ["src/js/**/*.js", "!src/js/filt/filt.js"]
     },
     css: {
