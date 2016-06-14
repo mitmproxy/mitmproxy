@@ -104,7 +104,7 @@ class Script(object):
             sys.path.pop()
 
         start_fn = self.ns.get("start")
-        if len(inspect.getargspec(start_fn).args) == 2:
+        if start_fn and len(inspect.getargspec(start_fn).args) == 2:
             warnings.warn(
                 "The 'args' argument of the start() script hook is deprecated. "
                 "Please use sys.argv instead."
