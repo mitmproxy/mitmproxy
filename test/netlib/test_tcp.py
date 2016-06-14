@@ -45,7 +45,7 @@ class HangHandler(tcp.BaseHandler):
                 self.connection.setblocking(0)
                 ret = self.connection.recv(1)
                 # Client connection is dead...
-                if ret == "":
+                if ret == "" or ret == b"":
                     return
             except socket.error:
                 pass
