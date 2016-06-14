@@ -121,6 +121,18 @@ ToggleButton.propTypes = {
     text: React.PropTypes.string.isRequired
 };
 
+export const Button = ({onClick, text, icon}) =>
+    <div className={"btn btn-default"} onClick={onClick}>
+        <i className={"fa fa-fw " + icon}/>
+        &nbsp;
+        {text}
+    </div>;
+
+Button.propTypes = {
+    onClick: React.PropTypes.func.isRequired,
+    text: React.PropTypes.string.isRequired
+};
+
 export class ToggleInputButton extends React.Component {
     constructor(props) {
         super(props);

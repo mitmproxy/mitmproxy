@@ -9,6 +9,7 @@ import { Splitter } from './common.js'
 import FlowTable from './FlowTable'
 import FlowView from './flowview/index.js'
 import { selectFlow, setFilter, setHighlight } from '../ducks/flows'
+import { setDefaultMenu, setFlowMenu } from '../ducks/view'
 
 class MainView extends Component {
 
@@ -39,8 +40,10 @@ class MainView extends Component {
      */
     selectFlow(flow) {
         if (flow) {
+            this.props.setFlowMenu()
             this.props.updateLocation(`/flows/${flow.id}/${this.props.routeParams.detailTab || 'request'}`)
         } else {
+            this.props.setDefaultMenu()
             this.props.updateLocation('/flows')
         }
     }
@@ -192,6 +195,8 @@ export default connect(
     }),
     dispatch => bindActionCreators({
         selectFlow,
+        setDefaultMenu,
+        setFlowMenu,
         setFilter,
         setHighlight,
     }, dispatch),
