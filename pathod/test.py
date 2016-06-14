@@ -7,10 +7,6 @@ from . import pathod
 from netlib import basethread
 
 
-class TimeoutError(Exception):
-    pass
-
-
 class Daemon:
     IFACE = "127.0.0.1"
 
@@ -45,15 +41,7 @@ class Daemon:
         return self.logfp.getvalue()
 
     def wait_for_silence(self, timeout=5):
-        start = time.time()
-        while 1:
-            if time.time() - start >= timeout:
-                raise TimeoutError(
-                    "%s service threads still alive" %
-                    self.thread.server.handler_counter.count
-                )
-            if self.thread.server.handler_counter.count == 0:
-                return
+        self.thread.server.wait_for_silence(timeout=timeout)
 
     def expect_log(self, n, timeout=5):
         l = []

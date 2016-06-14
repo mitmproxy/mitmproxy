@@ -104,6 +104,9 @@ class ServerTestBase(object):
     def teardown_class(cls):
         cls.server.shutdown()
 
+    def teardown(self):
+        self.server.server.wait_for_silence()
+
     @property
     def last_handler(self):
         return self.server.server.last_handler
