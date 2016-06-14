@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import ReactDOM from 'react-dom'
-import { ValueEditor } from '../editor'
+import ValueEditor from '../ValueEditor'
 import { Key } from '../../utils.js'
 
 class HeaderEditor extends Component {

@@ -4,7 +4,7 @@ import _ from 'lodash'
 import Nav from './FlowView/Nav'
 import { Request, Response, Error } from './FlowView/Messages'
 import Details from './FlowView/Details'
-import Prompt from './prompt'
+import Prompt from './Prompt'
 
 export default class FlowView extends Component {
 
@@ -97,7 +97,7 @@ export default class FlowView extends Component {
                     active={active}
                     onSelectTab={this.selectTab}
                 />
-                <Tab flow={flow}/>
+                <Tab ref="tab" flow={flow}/>
                 {this.state.prompt && (
                     <Prompt {...this.state.prompt}/>
                 )}

@@ -5,7 +5,7 @@ import { FlowActions } from '../../actions.js'
 import { RequestUtils, isValidHttpVersion, parseUrl, parseHttpVersion } from '../../flow/utils.js'
 import { Key, formatTimeStamp } from '../../utils.js'
 import ContentView from '../ContentView'
-import { ValueEditor } from '../editor'
+import ValueEditor from '../ValueEditor'
 import Headers from './Headers'
 
 class RequestLine extends Component {
