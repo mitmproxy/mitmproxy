@@ -1355,6 +1355,8 @@ var _view = require('../ducks/view');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -1390,6 +1392,14 @@ var Header = function (_Component) {
             var selectedFlow = _props.selectedFlow;
             var active_menu = _props.active_menu;
 
+
+            var entries = [].concat(_toConsumableArray(Header.entries));
+            if (selectedFlow) entries.push(_FlowMenu2.default);
+
+            var Active = _.find(entries, function (e) {
+                return e.title == active_menu;
+            });
+
             return _react2.default.createElement(
                 'header',
                 null,
@@ -1397,12 +1407,12 @@ var Header = function (_Component) {
                     'nav',
                     { className: 'nav-tabs nav-tabs-lg' },
                     _react2.default.createElement(_FileMenu2.default, null),
-                    Header.entries.map(function (Entry) {
+                    entries.map(function (Entry) {
                         return _react2.default.createElement(
                             'a',
                             { key: Entry.title,
                                 href: '#',
-                                className: (0, _classnames2.default)({ active: Entry.title === active_menu, hidden: !selectedFlow && Entry === _FlowMenu2.default }),
+                                className: (0, _classnames2.default)({ active: Entry === Active }),
                                 onClick: function onClick(e) {
                                     return _this2.handleClick(Entry, e);
                                 } },
@@ -1413,16 +1423,10 @@ var Header = function (_Component) {
                 _react2.default.createElement(
                     'div',
                     { className: 'menu' },
-                    Header.entries.map(function (Entry) {
-                        return _react2.default.createElement(
-                            'div',
-                            { className: (0, _classnames2.default)({ hidden: Entry.title !== active_menu }) },
-                            _react2.default.createElement(Entry, {
-                                settings: settings,
-                                updateLocation: updateLocation,
-                                query: query
-                            })
-                        );
+                    _react2.default.createElement(Active, {
+                        settings: settings,
+                        updateLocation: updateLocation,
+                        query: query
                     })
                 )
             );
@@ -1432,7 +1436,7 @@ var Header = function (_Component) {
     return Header;
 }(_react.Component);
 
-Header.entries = [_MainMenu2.default, _ViewMenu2.default, _OptionMenu2.default, _FlowMenu2.default];
+Header.entries = [_MainMenu2.default, _ViewMenu2.default, _OptionMenu2.default];
 Header.propTypes = {
     settings: _react.PropTypes.object.isRequired
 };
@@ -5078,9 +5082,12 @@ function setSort(sort) {
     };
 }
 function selectFlow(flowId) {
-    return {
-        type: SELECT_FLOW,
-        flowId: flowId
+    return function (dispatch, getState) {
+        dispatch({
+            type: SELECT_FLOW,
+            currentSelection: getState().flows.selected[0],
+            flowId: flowId
+        });
     };
 }
 
@@ -5492,7 +5499,7 @@ function updateViewFilter(list) {
 function updateViewSort(list) {
     var sortFn = arguments.length <= 1 || arguments[1] === undefined ? defaultSortFn : arguments[1];
 
-    var sorted = list.slice(0);
+    var sorted = [].concat(_toConsumableArray(list));
     if (sortFn) {
         sorted.sort(makeCompareFn(sortFn));
     }
@@ -5515,7 +5522,13 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 exports.default = reducer;
 exports.setActiveMenu = setActiveMenu;
 
+var _reduxThunk = require('redux-thunk');
+
+var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+
 var _flows = require('./flows');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ACTIVE_MENU = 'ACTIVE_MENU';
 
@@ -5532,9 +5545,12 @@ function reducer() {
                 active_menu: action.active_menu
             });
         case _flows.SELECT_FLOW:
-            return _extends({}, state, {
-                active_menu: action.flowId ? 'Flow' : 'Start'
-            });
+            if (!action.currentSelection != !action.flowId) {
+                return _extends({}, state, {
+                    active_menu: action.flowId ? 'Flow' : state.active_menu == 'Flow' ? 'Start' : state.active_menu
+                });
+            }
+            return state;
         default:
             return state;
     }
@@ -5547,7 +5563,7 @@ function setActiveMenu(active_menu) {
     };
 }
 
-},{"./flows":34}],39:[function(require,module,exports){
+},{"./flows":34,"redux-thunk":"redux-thunk"}],39:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

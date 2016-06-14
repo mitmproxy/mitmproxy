@@ -11,8 +11,7 @@ import FlowMenu from './Header/FlowMenu'
 import {setActiveMenu} from '../ducks/view'
 
 class Header extends Component {
-
-    static entries = [MainMenu, ViewMenu, OptionMenu, FlowMenu]
+    static entries = [MainMenu, ViewMenu, OptionMenu]
 
     static propTypes = {
         settings: PropTypes.object.isRequired,
@@ -27,29 +26,32 @@ class Header extends Component {
 
     render() {
         const { settings, updateLocation, query, selectedFlow, active_menu} = this.props
+
+        let entries = [...Header.entries]
+        if(selectedFlow)
+            entries.push(FlowMenu)
+
+        const Active = _.find(entries, (e) => e.title == active_menu)
+
         return (
             <header>
                 <nav className="nav-tabs nav-tabs-lg">
                     <FileMenu/>
-                    {Header.entries.map(Entry => (
+                    {entries.map(Entry => (
                         <a key={Entry.title}
                            href="#"
-                           className={classnames({ active: Entry.title === active_menu, hidden: !selectedFlow && Entry === FlowMenu })}
+                           className={classnames({ active: Entry === Active})}
                            onClick={e => this.handleClick(Entry, e)}>
                             {Entry.title}
                         </a>
                     ))}
                 </nav>
                 <div className="menu">
-                    {Header.entries.map(Entry => (
-                        <div className={classnames({ hidden: Entry.title !== active_menu })}>
-                            <Entry
-                                settings={settings}
-                                updateLocation={updateLocation}
-                                query={query}
-                                />
-                        </div>
-                    ))}
+                    <Active
+                        settings={settings}
+                        updateLocation={updateLocation}
+                        query={query}
+                        />
                 </div>
             </header>
         )

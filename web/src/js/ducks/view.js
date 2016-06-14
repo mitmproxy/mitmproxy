@@ -1,3 +1,5 @@
+import ReduxThunk from 'redux-thunk'
+
 import { SELECT_FLOW } from './flows'
 const ACTIVE_MENU = 'ACTIVE_MENU'
 
@@ -13,10 +15,13 @@ export default function reducer(state = defaultState, action) {
                 active_menu: action.active_menu
             }
         case SELECT_FLOW:
-            return{
-                ...state,
-                active_menu: action.flowId ? 'Flow' : 'Start'
+            if (!action.currentSelection != !action.flowId){
+                return{
+                    ...state,
+                    active_menu: action.flowId ? 'Flow' : (state.active_menu == 'Flow' ? 'Start' : state.active_menu)
+                }
             }
+            return state
         default:
             return state
     }

@@ -101,9 +101,12 @@ export  function setSort(sort){
     }
 }
 export function selectFlow(flowId) {
-    return {
-        type: SELECT_FLOW,
-        flowId
+    return (dispatch, getState) => {
+        dispatch({
+            type: SELECT_FLOW,
+            currentSelection: getState().flows.selected[0],
+            flowId
+            })
     }
 }
 
