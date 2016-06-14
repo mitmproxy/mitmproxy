@@ -5,7 +5,7 @@ import { Query } from '../actions.js'
 import { Key } from '../utils.js'
 import { Splitter } from './common.js'
 import FlowTable from './FlowTable'
-import FlowView from './flowview/index.js'
+import FlowView from './FlowView'
 import { selectFlow, setFilter, setHighlight } from '../ducks/flows'
 
 class MainView extends Component {
