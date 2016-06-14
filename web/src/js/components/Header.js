@@ -27,28 +27,29 @@ class Header extends Component {
 
     render() {
         const { settings, updateLocation, query, selectedFlow, active_menu} = this.props
-        const Active = _.find(Header.entries, (e) => e.title == active_menu);
-        const entries = selectedFlow ? Header.entries : Header.entries.filter((h) => h != FlowMenu)
         return (
             <header>
                 <nav className="nav-tabs nav-tabs-lg">
                     <FileMenu/>
-                    {entries.map(Entry => (
+                    {Header.entries.map(Entry => (
                         <a key={Entry.title}
                            href="#"
-                           className={classnames({ active: Entry === Active })}
+                           className={classnames({ active: Entry.title === active_menu, hidden: !selectedFlow && Entry === FlowMenu })}
                            onClick={e => this.handleClick(Entry, e)}>
                             {Entry.title}
                         </a>
                     ))}
                 </nav>
                 <div className="menu">
-                    <Active
-                        ref="active"
-                        settings={settings}
-                        updateLocation={updateLocation}
-                        query={query}
-                    />
+                    {Header.entries.map(Entry => (
+                        <div className={classnames({ hidden: Entry.title !== active_menu })}>
+                            <Entry
+                                settings={settings}
+                                updateLocation={updateLocation}
+                                query={query}
+                                />
+                        </div>
+                    ))}
                 </div>
             </header>
         )

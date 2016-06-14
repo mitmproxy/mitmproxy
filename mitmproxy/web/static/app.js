@@ -1390,12 +1390,6 @@ var Header = function (_Component) {
             var selectedFlow = _props.selectedFlow;
             var active_menu = _props.active_menu;
 
-            var Active = _.find(Header.entries, function (e) {
-                return e.title == active_menu;
-            });
-            var entries = selectedFlow ? Header.entries : Header.entries.filter(function (h) {
-                return h != _FlowMenu2.default;
-            });
             return _react2.default.createElement(
                 'header',
                 null,
@@ -1403,12 +1397,12 @@ var Header = function (_Component) {
                     'nav',
                     { className: 'nav-tabs nav-tabs-lg' },
                     _react2.default.createElement(_FileMenu2.default, null),
-                    entries.map(function (Entry) {
+                    Header.entries.map(function (Entry) {
                         return _react2.default.createElement(
                             'a',
                             { key: Entry.title,
                                 href: '#',
-                                className: (0, _classnames2.default)({ active: Entry === Active }),
+                                className: (0, _classnames2.default)({ active: Entry.title === active_menu, hidden: !selectedFlow && Entry === _FlowMenu2.default }),
                                 onClick: function onClick(e) {
                                     return _this2.handleClick(Entry, e);
                                 } },
@@ -1419,11 +1413,16 @@ var Header = function (_Component) {
                 _react2.default.createElement(
                     'div',
                     { className: 'menu' },
-                    _react2.default.createElement(Active, {
-                        ref: 'active',
-                        settings: settings,
-                        updateLocation: updateLocation,
-                        query: query
+                    Header.entries.map(function (Entry) {
+                        return _react2.default.createElement(
+                            'div',
+                            { className: (0, _classnames2.default)({ hidden: Entry.title !== active_menu }) },
+                            _react2.default.createElement(Entry, {
+                                settings: settings,
+                                updateLocation: updateLocation,
+                                query: query
+                            })
+                        );
                     })
                 )
             );
@@ -2281,8 +2280,6 @@ var _index2 = _interopRequireDefault(_index);
 
 var _flows = require('../ducks/flows');
 
-var _view = require('../ducks/view');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -2329,10 +2326,8 @@ var MainView = function (_Component) {
         key: 'selectFlow',
         value: function selectFlow(flow) {
             if (flow) {
-                this.props.setFlowMenu();
                 this.props.updateLocation('/flows/' + flow.id + '/' + (this.props.routeParams.detailTab || 'request'));
             } else {
-                this.props.setDefaultMenu();
                 this.props.updateLocation('/flows');
             }
         }
@@ -2506,14 +2501,12 @@ exports.default = (0, _reactRedux.connect)(function (state) {
 }, function (dispatch) {
     return (0, _redux.bindActionCreators)({
         selectFlow: _flows.selectFlow,
-        setDefaultMenu: _view.setDefaultMenu,
-        setFlowMenu: _view.setFlowMenu,
         setFilter: _flows.setFilter,
         setHighlight: _flows.setHighlight
     }, dispatch);
 }, undefined, { withRef: true })(MainView);
 
-},{"../actions.js":2,"../ducks/flows":34,"../ducks/view":38,"../utils.js":43,"./FlowTable":6,"./common.js":21,"./flowview/index.js":25,"react":"react","react-redux":"react-redux","redux":"redux"}],20:[function(require,module,exports){
+},{"../actions.js":2,"../ducks/flows":34,"../utils.js":43,"./FlowTable":6,"./common.js":21,"./flowview/index.js":25,"react":"react","react-redux":"react-redux","redux":"redux"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5520,12 +5513,11 @@ Object.defineProperty(exports, "__esModule", {
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = reducer;
-exports.setDefaultMenu = setDefaultMenu;
-exports.setFlowMenu = setFlowMenu;
 exports.setActiveMenu = setActiveMenu;
+
+var _flows = require('./flows');
+
 var ACTIVE_MENU = 'ACTIVE_MENU';
-var DEFAULT_MENU = 'DEFAULT_MENU';
-var FLOW_MENU = 'FLOW_MENU';
 
 var defaultState = {
     active_menu: 'Start'
@@ -5539,29 +5531,13 @@ function reducer() {
             return _extends({}, state, {
                 active_menu: action.active_menu
             });
-        case DEFAULT_MENU:
+        case _flows.SELECT_FLOW:
             return _extends({}, state, {
-                active_menu: defaultState.active_menu
+                active_menu: action.flowId ? 'Flow' : 'Start'
             });
-        case FLOW_MENU:
-            return _extends({}, state, {
-                active_menu: "Flow"
-            });
-
         default:
             return state;
     }
-}
-
-function setDefaultMenu(active_menu) {
-    return {
-        type: DEFAULT_MENU
-    };
-}
-function setFlowMenu() {
-    return {
-        type: FLOW_MENU
-    };
 }
 
 function setActiveMenu(active_menu) {
@@ -5571,7 +5547,7 @@ function setActiveMenu(active_menu) {
     };
 }
 
-},{}],39:[function(require,module,exports){
+},{"./flows":34}],39:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
