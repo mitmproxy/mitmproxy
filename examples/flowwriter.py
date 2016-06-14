@@ -4,14 +4,14 @@ import sys
 from mitmproxy.flow import FlowWriter
 
 
-def start(context, argv):
-    if len(argv) != 2:
+def start(context):
+    if len(sys.argv) != 2:
         raise ValueError('Usage: -s "flowriter.py filename"')
 
-    if argv[1] == "-":
+    if sys.argv[1] == "-":
         f = sys.stdout
     else:
-        f = open(argv[1], "wb")
+        f = open(sys.argv[1], "wb")
     context.flow_writer = FlowWriter(f)
 
 
