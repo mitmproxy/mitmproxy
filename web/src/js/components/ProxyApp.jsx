@@ -1,14 +1,15 @@
-import React, { Component, PropTypes } from "react"
-import ReactDOM from "react-dom"
-import _ from "lodash"
+import React, { Component, PropTypes } from 'react'
+import ReactDOM from 'react-dom'
+import _ from 'lodash'
 import { connect } from 'react-redux'
 
-import { Splitter } from "./common.js"
-import Header from "./Header"
-import EventLog from "./EventLog"
-import Footer from "./Footer"
-import { SettingsStore } from "../store/store.js"
-import { Key } from "../utils.js"
+import { Splitter } from './common.js'
+import { connect as wsConnect } from '../ducks/websocket'
+import Header from './Header'
+import EventLog from './EventLog'
+import Footer from './Footer'
+import { SettingsStore } from '../store/store.js'
+import { Key } from '../utils.js'
 
 class ProxyAppMain extends Component {
 
@@ -35,6 +36,10 @@ class ProxyAppMain extends Component {
         this.onKeyDown = this.onKeyDown.bind(this)
         this.updateLocation = this.updateLocation.bind(this)
         this.onSettingsChange = this.onSettingsChange.bind(this)
+    }
+
+    componentWillMount() {
+        this.props.wsConnect()
     }
 
     /**
@@ -166,5 +171,8 @@ class ProxyAppMain extends Component {
 export default connect(
     state => ({
         showEventLog: state.eventLog.visible
-    })
+    }),
+    {
+        wsConnect,
+    }
 )(ProxyAppMain)
