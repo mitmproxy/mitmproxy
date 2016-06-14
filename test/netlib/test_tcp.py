@@ -507,7 +507,7 @@ class TestTimeOut(tservers.ServerTestBase):
 
     def test_timeout(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        with c.connect() as conn:
+        with c.connect():
             c.settimeout(0.1)
             assert c.gettimeout() == 0.1
             tutils.raises(TcpTimeout, c.rfile.read, 10)
