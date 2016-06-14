@@ -9,10 +9,19 @@ from __future__ import absolute_import, print_function, division
 import os
 import shlex
 import sys
+import contextlib
 
 import six
 
 from mitmproxy import exceptions
+
+
+@contextlib.contextmanager
+def setargs(args):
+    oldargs = sys.argv
+    sys.argv = args
+    yield
+    sys.argv = oldargs
 
 
 class Script(object):
@@ -113,7 +122,8 @@ class Script(object):
         f = self.ns.get(name)
         if f:
             try:
-                return f(self.ctx, *args, **kwargs)
+                with setargs(self.args):
+                    return f(self.ctx, *args, **kwargs)
             except Exception:
                 six.reraise(
                     exceptions.ScriptException,
