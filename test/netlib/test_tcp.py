@@ -39,8 +39,21 @@ class ClientCipherListHandler(tcp.BaseHandler):
 class HangHandler(tcp.BaseHandler):
 
     def handle(self):
+        # Hang as long as the client connection is alive
         while True:
-            time.sleep(1)
+            try:
+                self.connection.setblocking(0)
+                ret = self.connection.recv(1)
+                # Client connection is dead...
+                if ret == "" or ret == b"":
+                    return
+            except socket.error:
+                pass
+            except SSL.WantReadError:
+                pass
+            except Exception:
+                return
+            time.sleep(0.1)
 
 
 class ALPNHandler(tcp.BaseHandler):
@@ -61,18 +74,18 @@ class TestServer(tservers.ServerTestBase):
     def test_echo(self):
         testval = b"echo!\n"
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+        with c.connect():
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
     def test_thread_start_error(self):
         with mock.patch.object(threading.Thread, "start", side_effect=threading.ThreadError("nonewthread")) as m:
             c = tcp.TCPClient(("127.0.0.1", self.port))
-            c.connect()
-            assert not c.rfile.read(1)
-            assert m.called
-            assert "nonewthread" in self.q.get_nowait()
+            with c.connect():
+                assert not c.rfile.read(1)
+                assert m.called
+                assert "nonewthread" in self.q.get_nowait()
         self.test_echo()
 
 
@@ -92,9 +105,9 @@ class TestServerBind(tservers.ServerTestBase):
                 c = tcp.TCPClient(
                     ("127.0.0.1", self.port), source_address=(
                         "127.0.0.1", random_port))
-                c.connect()
-                assert c.rfile.readline() == str(("127.0.0.1", random_port)).encode()
-                return
+                with c.connect():
+                    assert c.rfile.readline() == str(("127.0.0.1", random_port)).encode()
+                    return
             except TcpException:  # port probably already in use
                 pass
 
@@ -106,10 +119,10 @@ class TestServerIPv6(tservers.ServerTestBase):
     def test_echo(self):
         testval = b"echo!\n"
         c = tcp.TCPClient(tcp.Address(("::1", self.port), use_ipv6=True))
-        c.connect()
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+        with c.connect():
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
 
 class TestEcho(tservers.ServerTestBase):
@@ -118,10 +131,10 @@ class TestEcho(tservers.ServerTestBase):
     def test_echo(self):
         testval = b"echo!\n"
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+        with c.connect():
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
 
 class HardDisconnectHandler(tcp.BaseHandler):
@@ -140,10 +153,10 @@ class TestFinishFail(tservers.ServerTestBase):
 
     def test_disconnect_in_finish(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.wfile.write(b"foo\n")
-        c.wfile.flush = mock.Mock(side_effect=TcpDisconnect)
-        c.finish()
+        with c.connect():
+            c.wfile.write(b"foo\n")
+            c.wfile.flush = mock.Mock(side_effect=TcpDisconnect)
+            c.finish()
 
 
 class TestServerSSL(tservers.ServerTestBase):
@@ -155,21 +168,21 @@ class TestServerSSL(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl(sni=b"foo.com", options=SSL.OP_ALL)
-        testval = b"echo!\n"
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+        with c.connect():
+            c.convert_to_ssl(sni=b"foo.com", options=SSL.OP_ALL)
+            testval = b"echo!\n"
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
     def test_get_current_cipher(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        assert not c.get_current_cipher()
-        c.convert_to_ssl(sni=b"foo.com")
-        ret = c.get_current_cipher()
-        assert ret
-        assert "AES" in ret[0]
+        with c.connect():
+            assert not c.get_current_cipher()
+            c.convert_to_ssl(sni=b"foo.com")
+            ret = c.get_current_cipher()
+            assert ret
+            assert "AES" in ret[0]
 
 
 class TestSSLv3Only(tservers.ServerTestBase):
@@ -181,8 +194,8 @@ class TestSSLv3Only(tservers.ServerTestBase):
 
     def test_failure(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        tutils.raises(TlsException, c.convert_to_ssl, sni=b"foo.com")
+        with c.connect():
+            tutils.raises(TlsException, c.convert_to_ssl, sni=b"foo.com")
 
 
 class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
@@ -195,49 +208,46 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
 
     def test_mode_default_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
+        with c.connect():
+            c.convert_to_ssl()
 
-        c.convert_to_ssl()
+            # Verification errors should be saved even if connection isn't aborted
+            # aborted
+            assert c.ssl_verification_error is not None
 
-        # Verification errors should be saved even if connection isn't aborted
-        # aborted
-        assert c.ssl_verification_error is not None
-
-        testval = b"echo!\n"
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+            testval = b"echo!\n"
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
     def test_mode_none_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
+        with c.connect():
+            c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
 
-        c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
+            # Verification errors should be saved even if connection isn't aborted
+            assert c.ssl_verification_error is not None
 
-        # Verification errors should be saved even if connection isn't aborted
-        assert c.ssl_verification_error is not None
-
-        testval = b"echo!\n"
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+            testval = b"echo!\n"
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
     def test_mode_strict_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
+        with c.connect():
+            with tutils.raises(InvalidCertificateException):
+                c.convert_to_ssl(
+                    sni=b"example.mitmproxy.org",
+                    verify_options=SSL.VERIFY_PEER,
+                    ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                )
 
-        with tutils.raises(InvalidCertificateException):
-            c.convert_to_ssl(
-                sni=b"example.mitmproxy.org",
-                verify_options=SSL.VERIFY_PEER,
-                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
-            )
+            assert c.ssl_verification_error is not None
 
-        assert c.ssl_verification_error is not None
-
-        # Unknown issuing certificate authority for first certificate
-        assert c.ssl_verification_error['errno'] == 18
-        assert c.ssl_verification_error['depth'] == 0
+            # Unknown issuing certificate authority for first certificate
+            assert c.ssl_verification_error['errno'] == 18
+            assert c.ssl_verification_error['depth'] == 0
 
 
 class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
@@ -250,26 +260,23 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
 
     def test_should_fail_without_sni(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-
-        with tutils.raises(TlsException):
-            c.convert_to_ssl(
-                verify_options=SSL.VERIFY_PEER,
-                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
-            )
+        with c.connect():
+            with tutils.raises(TlsException):
+                c.convert_to_ssl(
+                    verify_options=SSL.VERIFY_PEER,
+                    ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                )
 
     def test_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-
-        with tutils.raises(InvalidCertificateException):
-            c.convert_to_ssl(
-                sni=b"mitmproxy.org",
-                verify_options=SSL.VERIFY_PEER,
-                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
-            )
-
-        assert c.ssl_verification_error is not None
+        with c.connect():
+            with tutils.raises(InvalidCertificateException):
+                c.convert_to_ssl(
+                    sni=b"mitmproxy.org",
+                    verify_options=SSL.VERIFY_PEER,
+                    ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                )
+            assert c.ssl_verification_error is not None
 
 
 class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
@@ -282,37 +289,35 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
 
     def test_mode_strict_w_pemfile_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
+        with c.connect():
+            c.convert_to_ssl(
+                sni=b"example.mitmproxy.org",
+                verify_options=SSL.VERIFY_PEER,
+                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+            )
 
-        c.convert_to_ssl(
-            sni=b"example.mitmproxy.org",
-            verify_options=SSL.VERIFY_PEER,
-            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
-        )
+            assert c.ssl_verification_error is None
 
-        assert c.ssl_verification_error is None
-
-        testval = b"echo!\n"
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+            testval = b"echo!\n"
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
     def test_mode_strict_w_cadir_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
+        with c.connect():
+            c.convert_to_ssl(
+                sni=b"example.mitmproxy.org",
+                verify_options=SSL.VERIFY_PEER,
+                ca_path=tutils.test_data.path("data/verificationcerts/")
+            )
 
-        c.convert_to_ssl(
-            sni=b"example.mitmproxy.org",
-            verify_options=SSL.VERIFY_PEER,
-            ca_path=tutils.test_data.path("data/verificationcerts/")
-        )
+            assert c.ssl_verification_error is None
 
-        assert c.ssl_verification_error is None
-
-        testval = b"echo!\n"
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
+            testval = b"echo!\n"
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
 
 
 class TestSSLClientCert(tservers.ServerTestBase):
@@ -334,19 +339,19 @@ class TestSSLClientCert(tservers.ServerTestBase):
 
     def test_clientcert(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl(
-            cert=tutils.test_data.path("data/clientcert/client.pem"))
-        assert c.rfile.readline().strip() == b"1"
+        with c.connect():
+            c.convert_to_ssl(
+                cert=tutils.test_data.path("data/clientcert/client.pem"))
+            assert c.rfile.readline().strip() == b"1"
 
     def test_clientcert_err(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        tutils.raises(
-            TlsException,
-            c.convert_to_ssl,
-            cert=tutils.test_data.path("data/clientcert/make")
-        )
+        with c.connect():
+            tutils.raises(
+                TlsException,
+                c.convert_to_ssl,
+                cert=tutils.test_data.path("data/clientcert/make")
+            )
 
 
 class TestSNI(tservers.ServerTestBase):
@@ -365,10 +370,10 @@ class TestSNI(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl(sni=b"foo.com")
-        assert c.sni == b"foo.com"
-        assert c.rfile.readline() == b"foo.com"
+        with c.connect():
+            c.convert_to_ssl(sni=b"foo.com")
+            assert c.sni == b"foo.com"
+            assert c.rfile.readline() == b"foo.com"
 
 
 class TestServerCipherList(tservers.ServerTestBase):
@@ -379,9 +384,9 @@ class TestServerCipherList(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl(sni=b"foo.com")
-        assert c.rfile.readline() == b"['RC4-SHA']"
+        with c.connect():
+            c.convert_to_ssl(sni=b"foo.com")
+            assert c.rfile.readline() == b"['RC4-SHA']"
 
 
 class TestServerCurrentCipher(tservers.ServerTestBase):
@@ -399,9 +404,9 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl(sni=b"foo.com")
-        assert b"RC4-SHA" in c.rfile.readline()
+        with c.connect():
+            c.convert_to_ssl(sni=b"foo.com")
+            assert b"RC4-SHA" in c.rfile.readline()
 
 
 class TestServerCipherListError(tservers.ServerTestBase):
@@ -412,8 +417,8 @@ class TestServerCipherListError(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        tutils.raises("handshake error", c.convert_to_ssl, sni=b"foo.com")
+        with c.connect():
+            tutils.raises("handshake error", c.convert_to_ssl, sni=b"foo.com")
 
 
 class TestClientCipherListError(tservers.ServerTestBase):
@@ -424,12 +429,13 @@ class TestClientCipherListError(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        tutils.raises(
-            "cipher specification",
-            c.convert_to_ssl,
-            sni=b"foo.com",
-            cipher_list="bogus")
+        with c.connect():
+            tutils.raises(
+                "cipher specification",
+                c.convert_to_ssl,
+                sni=b"foo.com",
+                cipher_list="bogus"
+            )
 
 
 class TestSSLDisconnect(tservers.ServerTestBase):
@@ -443,13 +449,13 @@ class TestSSLDisconnect(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl()
-        # Excercise SSL.ZeroReturnError
-        c.rfile.read(10)
-        c.close()
-        tutils.raises(TcpDisconnect, c.wfile.write, b"foo")
-        tutils.raises(queue.Empty, self.q.get_nowait)
+        with c.connect():
+            c.convert_to_ssl()
+            # Excercise SSL.ZeroReturnError
+            c.rfile.read(10)
+            c.close()
+            tutils.raises(TcpDisconnect, c.wfile.write, b"foo")
+            tutils.raises(queue.Empty, self.q.get_nowait)
 
 
 class TestSSLHardDisconnect(tservers.ServerTestBase):
@@ -458,23 +464,23 @@ class TestSSLHardDisconnect(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl()
-        # Exercise SSL.SysCallError
-        c.rfile.read(10)
-        c.close()
-        tutils.raises(TcpDisconnect, c.wfile.write, b"foo")
+        with c.connect():
+            c.convert_to_ssl()
+            # Exercise SSL.SysCallError
+            c.rfile.read(10)
+            c.close()
+            tutils.raises(TcpDisconnect, c.wfile.write, b"foo")
 
 
 class TestDisconnect(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.rfile.read(10)
-        c.wfile.write(b"foo")
-        c.close()
-        c.close()
+        with c.connect():
+            c.rfile.read(10)
+            c.wfile.write(b"foo")
+            c.close()
+            c.close()
 
 
 class TestServerTimeOut(tservers.ServerTestBase):
@@ -491,9 +497,9 @@ class TestServerTimeOut(tservers.ServerTestBase):
 
     def test_timeout(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        time.sleep(0.3)
-        assert self.last_handler.timeout
+        with c.connect():
+            time.sleep(0.3)
+            assert self.last_handler.timeout
 
 
 class TestTimeOut(tservers.ServerTestBase):
@@ -501,10 +507,10 @@ class TestTimeOut(tservers.ServerTestBase):
 
     def test_timeout(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.settimeout(0.1)
-        assert c.gettimeout() == 0.1
-        tutils.raises(TcpTimeout, c.rfile.read, 10)
+        with c.connect():
+            c.settimeout(0.1)
+            assert c.gettimeout() == 0.1
+            tutils.raises(TcpTimeout, c.rfile.read, 10)
 
 
 class TestALPNClient(tservers.ServerTestBase):
@@ -516,25 +522,25 @@ class TestALPNClient(tservers.ServerTestBase):
     if tcp.HAS_ALPN:
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
-            c.connect()
-            c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
-            assert c.get_alpn_proto_negotiated() == b"bar"
-            assert c.rfile.readline().strip() == b"bar"
+            with c.connect():
+                c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
+                assert c.get_alpn_proto_negotiated() == b"bar"
+                assert c.rfile.readline().strip() == b"bar"
 
         def test_no_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
-            c.connect()
-            c.convert_to_ssl()
-            assert c.get_alpn_proto_negotiated() == b""
-            assert c.rfile.readline().strip() == b"NONE"
+            with c.connect():
+                c.convert_to_ssl()
+                assert c.get_alpn_proto_negotiated() == b""
+                assert c.rfile.readline().strip() == b"NONE"
 
     else:
         def test_none_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
-            c.connect()
-            c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
-            assert c.get_alpn_proto_negotiated() == b""
-            assert c.rfile.readline() == b"NONE"
+            with c.connect():
+                c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
+                assert c.get_alpn_proto_negotiated() == b""
+                assert c.rfile.readline() == b"NONE"
 
 
 class TestNoSSLNoALPNClient(tservers.ServerTestBase):
@@ -542,9 +548,9 @@ class TestNoSSLNoALPNClient(tservers.ServerTestBase):
 
     def test_no_ssl_no_alpn(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        assert c.get_alpn_proto_negotiated() == b""
-        assert c.rfile.readline().strip() == b"NONE"
+        with c.connect():
+            assert c.get_alpn_proto_negotiated() == b""
+            assert c.rfile.readline().strip() == b"NONE"
 
 
 class TestSSLTimeOut(tservers.ServerTestBase):
@@ -553,10 +559,10 @@ class TestSSLTimeOut(tservers.ServerTestBase):
 
     def test_timeout_client(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl()
-        c.settimeout(0.1)
-        tutils.raises(TcpTimeout, c.rfile.read, 10)
+        with c.connect():
+            c.convert_to_ssl()
+            c.settimeout(0.1)
+            tutils.raises(TcpTimeout, c.rfile.read, 10)
 
 
 class TestDHParams(tservers.ServerTestBase):
@@ -570,10 +576,10 @@ class TestDHParams(tservers.ServerTestBase):
 
     def test_dhparams(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl()
-        ret = c.get_current_cipher()
-        assert ret[0] == "DHE-RSA-AES256-SHA"
+        with c.connect():
+            c.convert_to_ssl()
+            ret = c.get_current_cipher()
+            assert ret[0] == "DHE-RSA-AES256-SHA"
 
     def test_create_dhparams(self):
         with tutils.tmpdir() as d:
@@ -718,33 +724,34 @@ class TestPeek(tservers.ServerTestBase):
     handler = EchoHandler
 
     def _connect(self, c):
-        c.connect()
+        return c.connect()
 
     def test_peek(self):
         testval = b"peek!\n"
         c = tcp.TCPClient(("127.0.0.1", self.port))
-        self._connect(c)
-        c.wfile.write(testval)
-        c.wfile.flush()
+        with self._connect(c):
+            c.wfile.write(testval)
+            c.wfile.flush()
 
-        assert c.rfile.peek(4) == b"peek"
-        assert c.rfile.peek(6) == b"peek!\n"
-        assert c.rfile.readline() == testval
+            assert c.rfile.peek(4) == b"peek"
+            assert c.rfile.peek(6) == b"peek!\n"
+            assert c.rfile.readline() == testval
 
-        c.close()
-        with tutils.raises(NetlibException):
-            if c.rfile.peek(1) == b"":
-                # Workaround for Python 2 on Unix:
-                # Peeking a closed connection does not raise an exception here.
-                raise NetlibException()
+            c.close()
+            with tutils.raises(NetlibException):
+                if c.rfile.peek(1) == b"":
+                    # Workaround for Python 2 on Unix:
+                    # Peeking a closed connection does not raise an exception here.
+                    raise NetlibException()
 
 
 class TestPeekSSL(TestPeek):
     ssl = True
 
     def _connect(self, c):
-        c.connect()
-        c.convert_to_ssl()
+        with c.connect() as conn:
+            c.convert_to_ssl()
+            return conn.pop()
 
 
 class TestAddress:
@@ -774,16 +781,16 @@ class TestSSLKeyLogger(tservers.ServerTestBase):
             tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
 
             c = tcp.TCPClient(("127.0.0.1", self.port))
-            c.connect()
-            c.convert_to_ssl()
-            c.wfile.write(testval)
-            c.wfile.flush()
-            assert c.rfile.readline() == testval
-            c.finish()
+            with c.connect():
+                c.convert_to_ssl()
+                c.wfile.write(testval)
+                c.wfile.flush()
+                assert c.rfile.readline() == testval
+                c.finish()
 
-            tcp.log_ssl_key.close()
-            with open(logfile, "rb") as f:
-                assert f.read().count(b"CLIENT_RANDOM") == 2
+                tcp.log_ssl_key.close()
+                with open(logfile, "rb") as f:
+                    assert f.read().count(b"CLIENT_RANDOM") == 2
 
         tcp.log_ssl_key = _logfun
 

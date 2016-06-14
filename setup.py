@@ -1,14 +1,13 @@
 from setuptools import setup, find_packages
 from codecs import open
 import os
-import sys
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-from mitmproxy import version
+from netlib import version
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
@@ -73,6 +72,7 @@ setup(
         "lxml>=3.5.0, <3.7",
         "Pillow>=3.2, <3.3",
         "passlib>=1.6.5, <1.7",
+        "psutil>=4.2.0, <4.3",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1.3, <2.2",
@@ -97,8 +97,8 @@ setup(
             "ipaddress>=1.0.15, <1.1",
         ],
         'dev': [
+            "tox>=2.3, <3",
             "mock>=2.0, <2.1",
-            "flake8>=2.5.4, <3",
             "pytest>=2.8.7, <2.10",
             "pytest-cov>=2.2.1, <2.3",
             "pytest-timeout>=1.0.0, <1.1",

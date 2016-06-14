@@ -89,7 +89,6 @@ var FlowView = React.createClass({
             } else {
                 active = tabs[0];
             }
-            this.selectTab(active);
         }
 
         var prompt = null;

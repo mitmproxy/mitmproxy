@@ -6,11 +6,14 @@ import sys
 import threading
 import urllib
 
-from netlib import tcp, certutils, websockets
+from netlib import tcp
+from netlib import certutils
+from netlib import websockets
+from netlib import version
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
     TlsException
 
-from . import version, language, utils, log, protocols
+from . import language, utils, log, protocols
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -266,7 +269,7 @@ class PathodHandler(tcp.BaseHandler):
 
         lr = self.rfile if self.server.logreq else None
         lw = self.wfile if self.server.logresp else None
-        logger = log.ConnectionLogger(self.logfp, self.server.hexdump, lr, lw)
+        logger = log.ConnectionLogger(self.logfp, self.server.hexdump, True, lr, lw)
 
         self.settings.protocol = self.protocol
 
@@ -486,7 +489,7 @@ def main(args):  # pragma: no cover
 
     try:
         print("%s listening on %s" % (
-            version.NAMEVERSION,
+            version.PATHOD,
             repr(pd.address)
         ))
         pd.serve_forever()

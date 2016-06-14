@@ -4,10 +4,6 @@ from netlib.multidict import MultiDict, ImmutableMultiDict, MultiDictView
 
 class _TMulti(object):
     @staticmethod
-    def _reduce_values(values):
-        return values[0]
-
-    @staticmethod
     def _kconv(key):
         return key.lower()
 

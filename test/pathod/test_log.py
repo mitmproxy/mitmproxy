@@ -16,7 +16,7 @@ class DummyIO(six.StringIO):
 def test_disconnect():
     outf = DummyIO()
     rw = DummyIO()
-    l = log.ConnectionLogger(outf, False, rw, rw)
+    l = log.ConnectionLogger(outf, False, True, rw, rw)
     try:
         with l.ctx() as lg:
             lg("Test")

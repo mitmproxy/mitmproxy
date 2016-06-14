@@ -1,11 +1,13 @@
+import sys
+
 from a_helper import parser
 
 var = 0
 
 
-def start(ctx, argv):
+def start(ctx):
     global var
-    var = parser.parse_args(argv[1:]).var
+    var = parser.parse_args(sys.argv[1:]).var
 
 
 def here(ctx):

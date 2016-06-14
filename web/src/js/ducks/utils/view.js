@@ -122,3 +122,13 @@ export function updateViewFilter(list, filterFn = defaultFilterFn, sortFn = defa
 
     return filtered
 }
+
+export function updateViewSort(list, sortFn = defaultSortFn) {
+    let sorted = list.slice(0)
+    if (sortFn) {
+        sorted.sort(makeCompareFn(sortFn))
+    }
+    sorted.indexOf = x => sortedIndexOf(sorted, x, sortFn)
+
+    return sorted
+}

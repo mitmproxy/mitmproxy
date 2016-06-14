@@ -142,6 +142,7 @@ function app_stream(dev) {
     var bundler = browserify({
         entries: [conf.js.app],
         debug: true,
+        extensions: ['.jsx'],
         cache: {}, // required for watchify
         packageCache: {} // required for watchify
     });

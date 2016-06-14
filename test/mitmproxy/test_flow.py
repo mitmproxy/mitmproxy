@@ -807,17 +807,22 @@ class TestFlowMaster:
         fm.load_script(tutils.test_data.path("data/scripts/all.py"))
         f = tutils.tflow(resp=True)
 
+        f.client_conn.acked = False
         fm.clientconnect(f.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
+        f.server_conn.acked = False
         fm.serverconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"
+        f.reply.acked = False
         fm.request(f)
         assert fm.scripts[0].ns["log"][-1] == "request"
+        f.reply.acked = False
         fm.response(f)
         assert fm.scripts[0].ns["log"][-1] == "response"
         # load second script
         fm.load_script(tutils.test_data.path("data/scripts/all.py"))
         assert len(fm.scripts) == 2
+        f.server_conn.reply.acked = False
         fm.clientdisconnect(f.server_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
         assert fm.scripts[1].ns["log"][-1] == "clientdisconnect"
@@ -828,6 +833,7 @@ class TestFlowMaster:
         fm.load_script(tutils.test_data.path("data/scripts/all.py"))
 
         f.error = tutils.terr()
+        f.reply.acked = False
         fm.error(f)
         assert fm.scripts[0].ns["log"][-1] == "error"
 
@@ -977,10 +983,12 @@ class TestFlowMaster:
         f = tutils.tflow(resp=True)
         f.response.headers["set-cookie"] = "foo=bar"
         fm.request(f)
+        f.reply.acked = False
         fm.response(f)
         assert fm.stickycookie_state.jar
         assert "cookie" not in f.request.headers
         f = f.copy()
+        f.reply.acked = False
         fm.request(f)
         assert f.request.headers["cookie"] == "foo=bar"
 

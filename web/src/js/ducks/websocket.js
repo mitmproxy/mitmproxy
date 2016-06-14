@@ -3,7 +3,7 @@ const DISCONNECTED = 'WEBSOCKET_DISCONNECTED'
 
 
 const defaultState = {
-    connected: true,
+    connected: false,
     /* we may want to have an error message attribute here at some point */
 }
 export default function reducer(state = defaultState, action) {

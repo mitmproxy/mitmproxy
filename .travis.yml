@@ -14,20 +14,21 @@ matrix:
   fast_finish: true
   include:
     - python: 2.7
+      env: TOXENV=py27-ci
     - python: 2.7
-      env: NO_ALPN=1
+      env: TOXENV=py27-ci NO_ALPN=1
+    - python: 3.5
+      env: TOXENV=py35-ci
+    - python: 3.5
+      env: TOXENV=py35-ci NO_ALPN=1
     - language: generic
+      env: TOXENV=py27-ci
       os: osx
       osx_image: xcode7.1
       git:
         depth: 9999999
-    - python: 3.5
-      env: SCOPE="netlib test/mitmproxy/script test/pathod/test_utils.py test/pathod/test_log.py test/pathod/test_language_generators.py test/pathod/test_language_writer.py test/pathod/test_language_base.py test/pathod/test_language_http.py test/pathod/test_language_websocket.py"
-    - python: 3.5
-      env: SCOPE="netlib test/mitmproxy/script test/pathod/test_utils.py test/pathod/test_log.py test/pathod/test_language_generators.py test/pathod/test_language_writer.py test/pathod/test_language_base.py test/pathod/test_language_http.py test/pathod/test_language_websocket.py" NO_ALPN=1
     - python: 2.7
-      env: DOCS=1
-      script: 'cd docs && SPHINXOPTS="-W" make -e html'
+      env: TOXENV=docs
   allow_failures:
     - python: pypy
 
@@ -39,23 +40,20 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python
     fi
-  - pip install -U virtualenv codecov
-  - ./dev.sh
-  - source venv/bin/activate
+  - pip install tox
 
 before_script:
-  - "openssl version -a"
-  - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
-  - "flake8 --jobs 4 --count mitmproxy netlib pathod examples test"
+  - "tox -e lint"
 
-script:
-  - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod test/$SCOPE"
+script: tox
 
 after_success:
-  - codecov
   - |
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
+        pip install -U virtualenv
+        ./dev.sh
+        source venv/bin/activate
         pip install -e ./release
         python ./release/rtool.py bdist
         python ./release/rtool.py upload-snapshot --bdist --wheel
@@ -71,7 +69,6 @@ notifications:
 
 cache:
   directories:
-    - $HOME/build/mitmproxy/mitmproxy/venv
+    - $HOME/build/mitmproxy/mitmproxy/.tox
     - $HOME/.cache/pip
     - $HOME/.pyenv
-    - $HOME/Library/Caches/pip

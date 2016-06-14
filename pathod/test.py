@@ -1,14 +1,10 @@
 from six.moves import cStringIO as StringIO
-import threading
 import time
 
 from six.moves import queue
 
 from . import pathod
-
-
-class TimeoutError(Exception):
-    pass
+from netlib import basethread
 
 
 class Daemon:
@@ -45,15 +41,7 @@ class Daemon:
         return self.logfp.getvalue()
 
     def wait_for_silence(self, timeout=5):
-        start = time.time()
-        while 1:
-            if time.time() - start >= timeout:
-                raise TimeoutError(
-                    "%s service threads still alive" %
-                    self.thread.server.handler_counter.count
-                )
-            if self.thread.server.handler_counter.count == 0:
-                return
+        self.thread.server.wait_for_silence(timeout=timeout)
 
     def expect_log(self, n, timeout=5):
         l = []
@@ -95,11 +83,10 @@ class Daemon:
         self.thread.join()
 
 
-class _PaThread(threading.Thread):
+class _PaThread(basethread.BaseThread):
 
     def __init__(self, iface, q, ssl, daemonargs):
-        threading.Thread.__init__(self)
-        self.name = "PathodThread"
+        basethread.BaseThread.__init__(self, "PathodThread")
         self.iface, self.q, self.ssl = iface, q, ssl
         self.daemonargs = daemonargs
         self.server = None

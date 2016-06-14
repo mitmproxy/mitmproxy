@@ -4,11 +4,11 @@ import time
 import copy
 import uuid
 
-from mitmproxy import exceptions
 from mitmproxy import stateobject
-from mitmproxy import version
 from mitmproxy.models.connections import ClientConnection
 from mitmproxy.models.connections import ServerConnection
+
+from netlib import version
 
 
 class Error(stateobject.StateObject):
@@ -155,7 +155,7 @@ class Flow(stateobject.StateObject):
         """
         self.error = Error("Connection killed")
         self.intercepted = False
-        self.reply(exceptions.Kill)
+        self.reply.kill()
         master.error(self)
 
     def intercept(self, master):
@@ -175,5 +175,5 @@ class Flow(stateobject.StateObject):
         if not self.intercepted:
             return
         self.intercepted = False
-        self.reply()
+        self.reply.ack()
         master.handle_accept_intercept(self)

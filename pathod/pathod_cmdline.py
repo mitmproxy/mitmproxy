@@ -4,8 +4,10 @@ import os
 import os.path
 import re
 
-from netlib import tcp, human
-from . import pathod, version
+from netlib import tcp
+from netlib import human
+from netlib import version
+from . import pathod
 
 
 def parse_anchor_spec(s):
