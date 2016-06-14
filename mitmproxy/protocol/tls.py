@@ -328,7 +328,6 @@ class TlsLayer(base.Layer):
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
-
         self._custom_server_sni = None
         self._client_hello = None  # type: TlsClientHello
 
@@ -362,6 +361,7 @@ class TlsLayer(base.Layer):
         #  2.4 The client wants to negotiate an alternative protocol in its handshake, we need to find out
         #      what is supported by the server
         #  2.5 The client did not sent a SNI value, we don't know the certificate subject.
+        
         client_tls_requires_server_connection = (
             self._server_tls and
             not self.config.no_upstream_cert and
@@ -376,8 +376,12 @@ class TlsLayer(base.Layer):
             client_tls_requires_server_connection
         )
 
-        if self._client_tls and establish_server_tls_now:
-            self._establish_tls_with_client_and_server()
+        if self._client_tls and establish_server_tls_now:	
+			try:
+				self._establish_tls_with_client_and_server()
+			except netlib.exceptions.TlsException as tls_exception:
+				print ('Your libssl does not support this SSL version. (This may have been removed for security reasons)')
+				print ('TLS Exception:' + tls_exception)	 	
         elif self._client_tls:
             self._establish_tls_with_client()
         elif establish_server_tls_now:
