@@ -18,3 +18,7 @@ def test_dump_stacks():
 
 def test_sysinfo():
     assert debug.sysinfo()
+
+
+def test_register_info_dumpers():
+    debug.register_info_dumpers()

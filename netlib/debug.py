@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
+import os
 import sys
 import threading
 import signal
@@ -93,6 +94,7 @@ def dump_stacks(signal, frame, file=sys.stdout):
     print("\n".join(code), file=file)
 
 
-def register_info_dumpers():  # pragma: no cover
-    signal.signal(signal.SIGUSR1, dump_info)
-    signal.signal(signal.SIGUSR2, dump_stacks)
+def register_info_dumpers():
+    if os.name != "nt":
+        signal.signal(signal.SIGUSR1, dump_info)
+        signal.signal(signal.SIGUSR2, dump_stacks)
