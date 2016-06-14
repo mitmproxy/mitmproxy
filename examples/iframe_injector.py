@@ -1,13 +1,14 @@
 # Usage: mitmdump -s "iframe_injector.py url"
 # (this script works best with --anticache)
+import sys
 from bs4 import BeautifulSoup
 from mitmproxy.models import decoded
 
 
-def start(context, argv):
-    if len(argv) != 2:
+def start(context):
+    if len(sys.argv) != 2:
         raise ValueError('Usage: -s "iframe_injector.py url"')
-    context.iframe_url = argv[1]
+    context.iframe_url = sys.argv[1]
 
 
 def response(context, flow):

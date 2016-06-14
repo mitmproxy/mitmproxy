@@ -3,7 +3,7 @@ import re
 from six.moves import urllib
 
 
-def start(context, argv):
+def start(context):
     # set of SSL/TLS capable hosts
     context.secure_hosts = set()
 
