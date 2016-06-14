@@ -4,6 +4,7 @@
 """
 import six
 import sys
+import pytz
 from harparser import HAR
 
 from datetime import datetime
@@ -120,7 +121,7 @@ def response(context, flow):
     full_time = sum(v for v in timings.values() if v > -1)
 
     started_date_time = datetime.utcfromtimestamp(
-        flow.request.timestamp_start).isoformat()
+        flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
 
     request_query_string = [{"name": k, "value": v}
                             for k, v in flow.request.query or {}]
@@ -174,6 +175,7 @@ def response(context, flow):
                 "startedDateTime": entry['startedDateTime'],
                 "id": page_id,
                 "title": flow.request.url,
+                "pageTimings": {}
             })
         )
         context.HARLog.set_page_ref(flow.request.url, page_id)
