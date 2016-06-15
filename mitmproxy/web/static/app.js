@@ -1351,7 +1351,7 @@ var _FlowMenu = require('./Header/FlowMenu');
 
 var _FlowMenu2 = _interopRequireDefault(_FlowMenu);
 
-var _view = require('../ducks/view');
+var _ui = require('../ducks/ui.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1443,15 +1443,15 @@ Header.propTypes = {
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
         selectedFlow: state.flows.selected[0],
-        active_menu: state.view.active_menu
+        active_menu: state.ui.active_menu
     };
 }, function (dispatch) {
     return (0, _redux.bindActionCreators)({
-        setActiveMenu: _view.setActiveMenu
+        setActiveMenu: _ui.setActiveMenu
     }, dispatch);
 })(Header);
 
-},{"../ducks/eventLog":33,"../ducks/view":38,"./Header/FileMenu":12,"./Header/FlowMenu":15,"./Header/MainMenu":16,"./Header/OptionMenu":17,"./Header/ViewMenu":18,"classnames":"classnames","react":"react","react-redux":"react-redux","redux":"redux"}],12:[function(require,module,exports){
+},{"../ducks/eventLog":33,"../ducks/ui.js":36,"./Header/FileMenu":12,"./Header/FlowMenu":15,"./Header/MainMenu":16,"./Header/OptionMenu":17,"./Header/ViewMenu":18,"classnames":"classnames","react":"react","react-redux":"react-redux","redux":"redux"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4951,7 +4951,7 @@ function addLogEntry(message) {
 exports.updateLogEntries = updateList;
 exports.fetchLogEntries = fetchList;
 
-},{"./utils/list":36,"./utils/view":37}],34:[function(require,module,exports){
+},{"./utils/list":37,"./utils/view":38}],34:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5094,7 +5094,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../components/FlowTable/FlowColumns":7,"../filt/filt":40,"../utils.js":43,"./utils/list":36,"./utils/view":37}],35:[function(require,module,exports){
+},{"../components/FlowTable/FlowColumns":7,"../filt/filt":40,"../utils.js":43,"./utils/list":37,"./utils/view":38}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5115,9 +5115,9 @@ var _flows = require('./flows');
 
 var _flows2 = _interopRequireDefault(_flows);
 
-var _view = require('./view');
+var _ui = require('./ui.js');
 
-var _view2 = _interopRequireDefault(_view);
+var _ui2 = _interopRequireDefault(_ui);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5125,12 +5125,67 @@ var rootReducer = (0, _redux.combineReducers)({
     eventLog: _eventLog2.default,
     websocket: _websocket2.default,
     flows: _flows2.default,
-    view: _view2.default
+    ui: _ui2.default
 });
 
 exports.default = rootReducer;
 
-},{"./eventLog":33,"./flows":34,"./view":38,"./websocket":39,"redux":"redux"}],36:[function(require,module,exports){
+},{"./eventLog":33,"./flows":34,"./ui.js":36,"./websocket":39,"redux":"redux"}],36:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = reducer;
+exports.setActiveMenu = setActiveMenu;
+
+var _reduxThunk = require('redux-thunk');
+
+var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+
+var _flows = require('./flows');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ACTIVE_MENU = 'SET_ACTIVE_MENU';
+
+var defaultState = {
+    active_menu: 'Start'
+};
+function reducer() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case ACTIVE_MENU:
+            return _extends({}, state, {
+                active_menu: action.active_menu
+            });
+        case _flows.SELECT_FLOW:
+            var isNewSelection = action.flowId && !action.currentSelection;
+            if (isNewSelection) {
+                var wasFlowSelected = state.active_menu == 'Flow';
+                return _extends({}, state, {
+                    active_menu: action.flowId ? 'Flow' : wasFlowSelected ? 'Start' : state.active_menu
+                });
+            }
+            return state;
+        default:
+            return state;
+    }
+}
+
+function setActiveMenu(active_menu) {
+    return {
+        type: ACTIVE_MENU,
+        active_menu: active_menu
+    };
+}
+
+},{"./flows":34,"redux-thunk":"redux-thunk"}],37:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5332,7 +5387,7 @@ function makeList(actionType, fetchURL) {
     return { reduceList: reduceList, updateList: updateList, fetchList: fetchList, addItem: addItem, updateItem: updateItem, removeItem: removeItem };
 }
 
-},{"../../utils":43}],37:[function(require,module,exports){
+},{"../../utils":43}],38:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5510,60 +5565,7 @@ function updateViewSort(list) {
     return sorted;
 }
 
-},{"./list":36}],38:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-exports.default = reducer;
-exports.setActiveMenu = setActiveMenu;
-
-var _reduxThunk = require('redux-thunk');
-
-var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
-
-var _flows = require('./flows');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var ACTIVE_MENU = 'ACTIVE_MENU';
-
-var defaultState = {
-    active_menu: 'Start'
-};
-function reducer() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
-    var action = arguments[1];
-
-    switch (action.type) {
-        case ACTIVE_MENU:
-            return _extends({}, state, {
-                active_menu: action.active_menu
-            });
-        case _flows.SELECT_FLOW:
-            if (!action.currentSelection != !action.flowId) {
-                return _extends({}, state, {
-                    active_menu: action.flowId ? 'Flow' : state.active_menu == 'Flow' ? 'Start' : state.active_menu
-                });
-            }
-            return state;
-        default:
-            return state;
-    }
-}
-
-function setActiveMenu(active_menu) {
-    return {
-        type: ACTIVE_MENU,
-        active_menu: active_menu
-    };
-}
-
-},{"./flows":34,"redux-thunk":"redux-thunk"}],39:[function(require,module,exports){
+},{"./list":37}],39:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

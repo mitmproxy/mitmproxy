@@ -8,7 +8,7 @@ import ViewMenu from './Header/ViewMenu'
 import OptionMenu from './Header/OptionMenu'
 import FileMenu from './Header/FileMenu'
 import FlowMenu from './Header/FlowMenu'
-import {setActiveMenu} from '../ducks/view'
+import {setActiveMenu} from '../ducks/ui.js'
 
 class Header extends Component {
     static entries = [MainMenu, ViewMenu, OptionMenu]
@@ -60,7 +60,7 @@ class Header extends Component {
 export default connect(
     (state) => ({
         selectedFlow: state.flows.selected[0],
-        active_menu: state.view.active_menu
+        active_menu: state.ui.active_menu
     }),
     dispatch => bindActionCreators({
         setActiveMenu,
