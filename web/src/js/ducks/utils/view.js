@@ -124,7 +124,7 @@ export function updateViewFilter(list, filterFn = defaultFilterFn, sortFn = defa
 }
 
 export function updateViewSort(list, sortFn = defaultSortFn) {
-    let sorted = list.slice(0)
+    let sorted = [...list]
     if (sortFn) {
         sorted.sort(makeCompareFn(sortFn))
     }

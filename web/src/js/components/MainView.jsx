@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-
 import { FlowActions } from '../actions.js'
 import { Query } from '../actions.js'
 import { Key } from '../utils.js'

@@ -1,42 +1,46 @@
 import React, { Component, PropTypes } from 'react'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
 import classnames from 'classnames'
 import { toggleEventLogVisibility } from '../ducks/eventLog'
 import MainMenu from './Header/MainMenu'
 import ViewMenu from './Header/ViewMenu'
 import OptionMenu from './Header/OptionMenu'
 import FileMenu from './Header/FileMenu'
+import FlowMenu from './Header/FlowMenu'
+import {setActiveMenu} from '../ducks/ui.js'
 
-export default class Header extends Component {
-
+class Header extends Component {
     static entries = [MainMenu, ViewMenu, OptionMenu]
 
     static propTypes = {
         settings: PropTypes.object.isRequired,
     }
 
-    constructor(props, context) {
-        super(props, context)
-        this.state = { active: Header.entries[0] }
-    }
-
     handleClick(active, e) {
         e.preventDefault()
-        this.props.updateLocation(active.route)
-        this.setState({ active })
+        this.props.setActiveMenu(active.title)
+       // this.props.updateLocation(active.route)
+       // this.setState({ active })
     }
 
     render() {
-        const { active: Active } = this.state
-        const { settings, updateLocation, query } = this.props
+        const { settings, updateLocation, query, selectedFlow, activeMenu} = this.props
+
+        let entries = [...Header.entries]
+        if(selectedFlow)
+            entries.push(FlowMenu)
+
+        const Active = _.find(entries, (e) => e.title == activeMenu)
 
         return (
             <header>
                 <nav className="nav-tabs nav-tabs-lg">
                     <FileMenu/>
-                    {Header.entries.map(Entry => (
+                    {entries.map(Entry => (
                         <a key={Entry.title}
                            href="#"
-                           className={classnames({ active: Entry === Active })}
+                           className={classnames({ active: Entry === Active})}
                            onClick={e => this.handleClick(Entry, e)}>
                             {Entry.title}
                         </a>
@@ -44,13 +48,21 @@ export default class Header extends Component {
                 </nav>
                 <div className="menu">
                     <Active
-                        ref="active"
                         settings={settings}
                         updateLocation={updateLocation}
                         query={query}
-                    />
+                        />
                 </div>
             </header>
         )
     }
 }
+export default connect(
+    (state) => ({
+        selectedFlow: state.flows.selected[0],
+        activeMenu: state.ui.activeMenu
+    }),
+    dispatch => bindActionCreators({
+        setActiveMenu,
+    }, dispatch)
+)(Header)
