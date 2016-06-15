@@ -218,7 +218,7 @@ class Pathoc(tcp.TCPClient):
                     "HTTP/2 requires ALPN support. "
                     "Please use OpenSSL >= 1.0.2. "
                     "Pathoc might not be working as expected without ALPN.",
-                    timestamp = False
+                    timestamp=False
                 )
             self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
