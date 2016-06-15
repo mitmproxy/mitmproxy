@@ -1,4 +1,5 @@
 from six.moves import cStringIO as StringIO
+from six import BytesIO
 from mock import Mock
 
 from netlib import http
@@ -171,20 +172,20 @@ class TestDaemon(PathocTestDaemon):
         c.rfile, c.wfile = StringIO(), StringIO()
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = StringIO(
-            "HTTP/1.1 500 OK\r\n"
+        c.rfile = BytesIO(
+            b"HTTP/1.1 500 OK\r\n"
         )
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = StringIO(
-            "HTTP/1.1 200 OK\r\n"
+        c.rfile = BytesIO(
+            b"HTTP/1.1 200 OK\r\n"
         )
         c.http_connect(to)
 
     def test_socks_connect(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = tutils.treader(b""), StringIO()
+        c.rfile, c.wfile = tutils.treader(b""), BytesIO()
         tutils.raises(pathoc.PathocError, c.socks_connect, to)
 
         c.rfile = tutils.treader(
