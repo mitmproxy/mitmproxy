@@ -25,13 +25,13 @@ class Header extends Component {
     }
 
     render() {
-        const { settings, updateLocation, query, selectedFlow, active_menu} = this.props
+        const { settings, updateLocation, query, selectedFlow, activeMenu} = this.props
 
         let entries = [...Header.entries]
         if(selectedFlow)
             entries.push(FlowMenu)
 
-        const Active = _.find(entries, (e) => e.title == active_menu)
+        const Active = _.find(entries, (e) => e.title == activeMenu)
 
         return (
             <header>
@@ -60,7 +60,7 @@ class Header extends Component {
 export default connect(
     (state) => ({
         selectedFlow: state.flows.selected[0],
-        active_menu: state.ui.active_menu
+        activeMenu: state.ui.activeMenu
     }),
     dispatch => bindActionCreators({
         setActiveMenu,

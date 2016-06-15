@@ -3,23 +3,28 @@ const SET_ACTIVE_MENU = 'SET_ACTIVE_MENU'
 
 
 const defaultState = {
-    active_menu: 'Start'
+    activeMenu: 'Start',
 }
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
         case SET_ACTIVE_MENU:
             return {
                 ...state,
-                active_menu: action.active_menu
+                activeMenu: action.activeMenu
             }
         case SELECT_FLOW:
-            let isNewSelection = (action.flowId && !action.currentSelection)
-            let isSelectAction = action.flowId
-            if (isNewSelection){
-                let wasFlowSelected = state.active_menu == 'Flow'
-                return{
+            let isNewSelect = (action.flowId && !action.currentSelection)
+            let isDeselect = (!action.flowId && action.currentSelection)
+            if(isNewSelect) {
+                return {
                     ...state,
-                    active_menu: isSelectAction ? 'Flow' : (wasFlowSelected ? 'Start' : state.active_menu)
+                    activeMenu: "Flow"
+                }
+            }
+            if(isDeselect && state.activeMenu === "Flow") {
+                return {
+                    ...state,
+                    activeMenu: "Start"
                 }
             }
             return state
@@ -28,10 +33,10 @@ export default function reducer(state = defaultState, action) {
     }
 }
 
-export function setActiveMenu(active_menu) {
+export function setActiveMenu(activeMenu) {
     return {
         type: SET_ACTIVE_MENU,
-        active_menu
+        activeMenu
     }
 }
 
