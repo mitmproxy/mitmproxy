@@ -66,7 +66,7 @@ class TestCustomCert(tutils.DaemonTests):
 class TestSSLCN(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
-        cn="foo.com"
+        cn=b"foo.com"
     )
 
     def test_connect(self):
@@ -100,7 +100,7 @@ class TestNocraft(tutils.DaemonTests):
     def test_nocraft(self):
         r = self.get(r"200:b'\xf0'")
         assert r.status_code == 800
-        assert "Crafting disabled" in r.content
+        assert b"Crafting disabled" in r.content
 
 
 class CommonTests(tutils.DaemonTests):
@@ -137,7 +137,7 @@ class CommonTests(tutils.DaemonTests):
     def test_static(self):
         rsp = self.get("200:b<file")
         assert rsp.status_code == 200
-        assert rsp.content.strip() == "testfile"
+        assert rsp.content.strip() == b"testfile"
 
     def test_anchor(self):
         rsp = self.getpath("/anchor/foo")
@@ -148,7 +148,7 @@ class CommonTests(tutils.DaemonTests):
         with c.connect():
             if self.ssl:
                 c.convert_to_ssl()
-            c.wfile.write("foo\n\n\n")
+            c.wfile.write(b"foo\n\n\n")
             c.wfile.flush()
             l = self.d.last_log()
             assert l["type"] == "error"
@@ -177,7 +177,7 @@ class CommonTests(tutils.DaemonTests):
     def test_source_access_denied(self):
         rsp = self.get("200:b</foo")
         assert rsp.status_code == 800
-        assert "File access denied" in rsp.content
+        assert b"File access denied" in rsp.content
 
     def test_proxy(self):
         r, _ = self.pathoc([r"get:'http://foo.com/p/202':da"])
@@ -195,7 +195,7 @@ class CommonTests(tutils.DaemonTests):
             ["ws:/p/", "wf:f'wf:b\"test\"':pa,1"],
             ws_read_limit=1
         )
-        assert r[1].payload == "test"
+        assert r[1].payload == b"test"
 
     def test_websocket_frame_reflect_error(self):
         r, _ = self.pathoc(
@@ -239,7 +239,7 @@ class TestDaemonSSL(CommonTests):
         c.rbufsize = 0
         c.wbufsize = 0
         with c.connect():
-            c.wfile.write("\0\0\0\0")
+            c.wfile.write(b"\0\0\0\0")
             tutils.raises(TlsException, c.convert_to_ssl)
             l = self.d.last_log()
             assert l["type"] == "error"
