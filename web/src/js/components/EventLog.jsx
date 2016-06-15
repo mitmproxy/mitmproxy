@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { toggleEventLogFilter, toggleEventLogVisibility } from '../ducks/eventLog'
 import { ToggleButton } from './common'
@@ -34,8 +33,8 @@ export default connect(
         filters: state.eventLog.filter,
         events: state.eventLog.filteredEvents,
     }),
-    dispatch => bindActionCreators({
+    {
         onClose: toggleEventLogVisibility,
         onToggleFilter: toggleEventLogFilter,
-    }, dispatch)
+    }
 )(EventLog)

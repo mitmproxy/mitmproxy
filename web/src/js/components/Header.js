@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
 import classnames from 'classnames'
 import { toggleEventLogVisibility } from '../ducks/eventLog'
 import MainMenu from './Header/MainMenu'
@@ -62,7 +61,7 @@ export default connect(
         selectedFlow: state.flows.selected[0],
         activeMenu: state.ui.activeMenu
     }),
-    dispatch => bindActionCreators({
+    {
         setActiveMenu,
-    }, dispatch)
+    }
 )(Header)

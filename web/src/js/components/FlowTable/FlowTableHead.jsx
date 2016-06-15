@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import classnames from 'classnames'
 import columns from './FlowColumns'
@@ -37,7 +36,7 @@ export default connect(
         sortDesc: state.flows.sort.sortDesc,
         sortColumn: state.flows.sort.sortColumn,
     }),
-    dispatch => bindActionCreators({
+    {
         onSort: setSort,
-    }, dispatch)
+    }
 )(FlowTableHead)

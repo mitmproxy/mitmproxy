@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
 import { FlowActions } from '../actions.js'
 import { Query } from '../actions.js'
 import { Key } from '../utils.js'
@@ -189,11 +188,11 @@ export default connect(
         highlight: state.flows.highlight,
         selectedFlow: state.flows.all.byId[state.flows.selected[0]]
     }),
-    dispatch => bindActionCreators({
+    {
         selectFlow,
         setFilter,
         setHighlight,
-    }, dispatch),
+    },
     undefined,
     { withRef: true }
 )(MainView)

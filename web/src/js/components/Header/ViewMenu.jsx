@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { ToggleButton } from '../common.js'
 import { toggleEventLogVisibility } from '../../ducks/eventLog'
@@ -27,7 +26,7 @@ export default connect(
     state => ({
         visible: state.eventLog.visible,
     }),
-    dispatch => bindActionCreators({
+    {
         onToggle: toggleEventLogVisibility,
-    }, dispatch)
+    }
 )(ViewMenu)
