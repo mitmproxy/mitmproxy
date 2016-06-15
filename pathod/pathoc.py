@@ -246,7 +246,7 @@ class Pathoc(tcp.TCPClient):
         )
         self.wfile.flush()
         try:
-            resp = self.protocol.read_response(self.rfile, treq(method="CONNECT"))
+            resp = self.protocol.read_response(self.rfile, treq(method=b"CONNECT"))
             if resp.status_code != 200:
                 raise exceptions.HttpException("Unexpected status code: %s" % resp.status_code)
         except exceptions.HttpException as e:
