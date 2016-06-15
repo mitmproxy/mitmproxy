@@ -100,7 +100,7 @@ class DaemonTests(object):
         )
         with c.connect():
             resp = c.request(
-                "get:/p/%s" % urllib.parse.quote(spec).encode("string_escape")
+                "get:/p/%s" % urllib.parse.quote(spec)
             )
             return resp
 
