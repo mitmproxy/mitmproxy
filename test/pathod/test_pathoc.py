@@ -74,7 +74,7 @@ class TestDaemonSSL(PathocTestDaemon):
             ("127.0.0.1", self.d.port),
             use_http2=True,
             ssl=False,
-            fp = fp
+            fp=fp
         )
         tutils.raises(NotImplementedError, c.connect)
 
