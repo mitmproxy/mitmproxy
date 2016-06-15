@@ -20,7 +20,7 @@ def treader(bytes):
     """
         Construct a tcp.Read object from bytes.
     """
-    fp = StringIO(bytes)
+    fp = BytesIO(bytes)
     return tcp.Reader(fp)
 
 

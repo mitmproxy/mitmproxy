@@ -42,7 +42,7 @@ class SSLInfo(object):
 
     def __str__(self):
         parts = [
-            "Application Layer Protocol: %s" % self.alp,
+            "Application Layer Protocol: %s" % strutils.native(self.alp, "utf8"),
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
@@ -50,18 +50,25 @@ class SSLInfo(object):
             parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
-                parts.append("\t\t%s=%s" % cn)
+                parts.append("\t\t%s=%s" % (
+                    strutils.native(cn[0], "utf8"),
+                    strutils.native(cn[1], "utf8"))
+                )
             parts.append("\tIssuer: ")
             for cn in i.get_issuer().get_components():
-                parts.append("\t\t%s=%s" % cn)
+                parts.append("\t\t%s=%s" % (
+                    strutils.native(cn[0], "utf8"),
+                    strutils.native(cn[1], "utf8"))
+                )
             parts.extend(
                 [
                     "\tVersion: %s" % i.get_version(),
                     "\tValidity: %s - %s" % (
-                        i.get_notBefore(), i.get_notAfter()
+                        strutils.native(i.get_notBefore(), "utf8"),
+                        strutils.native(i.get_notAfter(), "utf8")
                     ),
                     "\tSerial: %s" % i.get_serial_number(),
-                    "\tAlgorithm: %s" % i.get_signature_algorithm()
+                    "\tAlgorithm: %s" % strutils.native(i.get_signature_algorithm(), "utf8")
                 ]
             )
             pk = i.get_pubkey()
@@ -73,7 +80,7 @@ class SSLInfo(object):
             parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
             s = certutils.SSLCert(i)
             if s.altnames:
-                parts.append("\tSANs: %s" % " ".join(s.altnames))
+                parts.append("\tSANs: %s" % " ".join(strutils.native(n, "utf8") for n in s.altnames))
         return "\n".join(parts)
 
 
@@ -239,7 +246,7 @@ class Pathoc(tcp.TCPClient):
         )
         self.wfile.flush()
         try:
-            resp = self.protocol.read_response(self.rfile, treq(method="CONNECT"))
+            resp = self.protocol.read_response(self.rfile, treq(method=b"CONNECT"))
             if resp.status_code != 200:
                 raise exceptions.HttpException("Unexpected status code: %s" % resp.status_code)
         except exceptions.HttpException as e:
@@ -437,7 +444,7 @@ class Pathoc(tcp.TCPClient):
             finally:
                 if resp:
                     lg("<< %s %s: %s bytes" % (
-                        resp.status_code, strutils.bytes_to_escaped_str(resp.reason), len(resp.content)
+                        resp.status_code, strutils.bytes_to_escaped_str(resp.reason.encode()), len(resp.content)
                     ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()
@@ -454,8 +461,8 @@ class Pathoc(tcp.TCPClient):
 
             May raise a exceptions.NetlibException
         """
-        if isinstance(r, basestring):
-            r = language.parse_pathoc(r, self.use_http2).next()
+        if isinstance(r, six.string_types):
+            r = next(language.parse_pathoc(r, self.use_http2))
 
         if isinstance(r, language.http.Request):
             if r.ws:

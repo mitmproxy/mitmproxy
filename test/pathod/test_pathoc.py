@@ -1,4 +1,5 @@
 from six.moves import cStringIO as StringIO
+from six import BytesIO
 from mock import Mock
 
 from netlib import http
@@ -12,7 +13,7 @@ import tutils
 
 
 def test_response():
-    r = http.Response("HTTP/1.1", 200, "Message", {}, None, None)
+    r = http.Response(b"HTTP/1.1", 200, b"Message", {}, None, None)
     assert repr(r)
 
 
@@ -29,7 +30,7 @@ class PathocTestDaemon(tutils.DaemonTests):
             if timeout:
                 c.settimeout(timeout)
             for i in requests:
-                r = language.parse_pathoc(i).next()
+                r = next(language.parse_pathoc(i))
                 if kwargs.get("explain"):
                     r = r.freeze(language.Settings())
                 try:
@@ -44,17 +45,17 @@ class TestDaemonSSL(PathocTestDaemon):
     ssl = True
     ssloptions = dict(
         request_client_cert=True,
-        sans=["test1.com", "test2.com"],
+        sans=[b"test1.com", b"test2.com"],
         alpn_select=b'h2',
     )
 
     def test_sni(self):
         self.tval(
             ["get:/p/200"],
-            sni="foobar.com"
+            sni=b"foobar.com"
         )
         log = self.d.log()
-        assert log[0]["request"]["sni"] == "foobar.com"
+        assert log[0]["request"]["sni"] == b"foobar.com"
 
     def test_showssl(self):
         assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)
@@ -171,36 +172,36 @@ class TestDaemon(PathocTestDaemon):
         c.rfile, c.wfile = StringIO(), StringIO()
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = StringIO(
-            "HTTP/1.1 500 OK\r\n"
+        c.rfile = BytesIO(
+            b"HTTP/1.1 500 OK\r\n"
         )
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = StringIO(
-            "HTTP/1.1 200 OK\r\n"
+        c.rfile = BytesIO(
+            b"HTTP/1.1 200 OK\r\n"
         )
         c.http_connect(to)
 
     def test_socks_connect(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = tutils.treader(""), StringIO()
+        c.rfile, c.wfile = tutils.treader(b""), BytesIO()
         tutils.raises(pathoc.PathocError, c.socks_connect, to)
 
         c.rfile = tutils.treader(
-            "\x05\xEE"
+            b"\x05\xEE"
         )
         tutils.raises("SOCKS without authentication", c.socks_connect, ("example.com", 0xDEAD))
 
         c.rfile = tutils.treader(
-            "\x05\x00" +
-            "\x05\xEE\x00\x03\x0bexample.com\xDE\xAD"
+            b"\x05\x00" +
+            b"\x05\xEE\x00\x03\x0bexample.com\xDE\xAD"
         )
         tutils.raises("SOCKS server error", c.socks_connect, ("example.com", 0xDEAD))
 
         c.rfile = tutils.treader(
-            "\x05\x00" +
-            "\x05\x00\x00\x03\x0bexample.com\xDE\xAD"
+            b"\x05\x00" +
+            b"\x05\x00\x00\x03\x0bexample.com\xDE\xAD"
         )
         c.socks_connect(("example.com", 0xDEAD))
 
