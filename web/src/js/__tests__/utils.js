@@ -1,5 +1,4 @@
-jest.dontMock("jquery");
-jest.dontMock("../utils");
+jest.unmock("../utils.js");
 
 import {formatSize} from "../utils.js"
 
