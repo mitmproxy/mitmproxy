@@ -25,7 +25,7 @@ class HTTPProtocol(object):
         if not self.pathod_handler.server.ssloptions.not_after_connect:
             try:
                 cert, key, chain_file_ = self.pathod_handler.server.ssloptions.get_cert(
-                    connect[0]
+                    connect[0].encode()
                 )
                 self.pathod_handler.convert_to_ssl(
                     cert,
