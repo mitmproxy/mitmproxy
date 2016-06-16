@@ -200,7 +200,8 @@ class Options(urwid.WidgetWrap):
 
     def toggle_ssl_insecure(self):
         self.master.server.config.ssl_insecure = not self.master.server.config.ssl_insecure
-        self.master.server.config.openssl_verification_mode_server = SSL.VERIFY_NONE if self.master.server.config.ssl_insecure else SSL.VERIFY_PEER
+        self.master.server.config.openssl_verification_mode_server = SSL.VERIFY_NONE \
+            if self.master.server.config.ssl_insecure else SSL.VERIFY_PEER
         signals.update_settings.send(self)
 
     def setheaders(self):
