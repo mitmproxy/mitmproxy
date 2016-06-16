@@ -241,8 +241,8 @@ class Pathoc(tcp.TCPClient):
 
     def http_connect(self, connect_to):
         self.wfile.write(
-            'CONNECT %s:%s HTTP/1.1\r\n' % tuple(connect_to) +
-            '\r\n'
+            b'CONNECT %s:%d HTTP/1.1\r\n' % (connect_to[0].encode(), connect_to[1]) +
+            b'\r\n'
         )
         self.wfile.flush()
         try:

@@ -17,15 +17,15 @@ class HTTPProtocol(object):
         """
 
         self.pathod_handler.wfile.write(
-            'HTTP/1.1 200 Connection established\r\n' +
-            ('Proxy-agent: %s\r\n' % version.PATHOD) +
-            '\r\n'
+            b'HTTP/1.1 200 Connection established\r\n' +
+            (b'Proxy-agent: %s\r\n' % version.PATHOD.encode()) +
+            b'\r\n'
         )
         self.pathod_handler.wfile.flush()
         if not self.pathod_handler.server.ssloptions.not_after_connect:
             try:
                 cert, key, chain_file_ = self.pathod_handler.server.ssloptions.get_cert(
-                    connect[0]
+                    connect[0].encode()
                 )
                 self.pathod_handler.convert_to_ssl(
                     cert,
