@@ -60,14 +60,14 @@ export function fetch() {
 
 export function handleWsMsg(msg) {
     return (dispatch, getState) => {
-        if (msg.cmd === STORE_CMDS_RESET) {
-            const req = getState().settings.req
-            if (req) {
-                req.abort()
-            }
-            return dispatch(reset(msg.data))
+        if (msg.cmd !== STORE_CMDS_RESET) {
+            return dispatch({ type: RECV_WS_MSG, cmd: msg.cmd, data: msg.data })
         }
-        dispatch({ type: RECV_WS_MSG, cmd: msg.cmd, data: msg.data })
+        const req = getState().settings.req
+        if (req) {
+            req.abort()
+        }
+        dispatch(reset(msg.data))
     }
 }
 
