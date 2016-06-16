@@ -1,4 +1,5 @@
 import { StoreCmds } from '../actions'
+import { addLogEntry } from './eventLog'
 
 export const WS_MSG_TYPE = 'settings'
 export const WS_MSG_CMD_RESET = 'reset'
@@ -10,20 +11,6 @@ export const FETCH_ERROR = 'SETTINGS_FETCH_ERROR'
 export const RECV_WS_MSG = 'SETTINGS_RECV_WS_MSG'
 
 const defaultState = { settings: {}, pendings: null, req: null }
-
-function reduceData(data, action) {
-    switch (action.cmd) {
-
-        case WS_MSG_CMD_RESET:
-            return action.data || {}
-
-        case WS_MSG_CMD_UPDATE:
-            return _.merge({}, data.settings, action.data)
-
-        default:
-            return data
-    }
-}
 
 export default function reduce(state = defaultState, action) {
     switch (action.type) {
@@ -43,6 +30,20 @@ export default function reduce(state = defaultState, action) {
 
         default:
             return state
+    }
+}
+
+function reduceData(data, action) {
+    switch (action.cmd) {
+
+        case WS_MSG_CMD_RESET:
+            return action.data || {}
+
+        case WS_MSG_CMD_UPDATE:
+            return _.merge({}, data.settings, action.data)
+
+        default:
+            return data
     }
 }
 
@@ -76,6 +77,8 @@ export function reset(data) {
 }
 
 export function handleFetchError(error) {
-    console.error(error)
-    return { type: FETCH_ERROR, error }
+    return (dispatch, getState) => {
+        dispatch(addLogEntry(error.stack || error.message || error))
+        dispatch({ type: FETCH_ERROR, error })
+    }
 }
