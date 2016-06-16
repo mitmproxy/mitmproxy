@@ -169,7 +169,7 @@ class TestDaemon(PathocTestDaemon):
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = StringIO(), StringIO()
+        c.rfile, c.wfile = BytesIO(), BytesIO()
         with raises("connect failed"):
             c.http_connect(to)
         c.rfile = BytesIO(
