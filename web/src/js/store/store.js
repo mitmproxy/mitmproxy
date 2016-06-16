@@ -89,8 +89,3 @@ function LiveDictStore(type) {
     LiveStoreMixin.call(this, type);
 }
 _.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
-
-
-export function SettingsStore() {
-    return new LiveDictStore(ActionTypes.SETTINGS_STORE);
-}
