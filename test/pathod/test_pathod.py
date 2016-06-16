@@ -52,7 +52,7 @@ class TestNotAfterConnect(tutils.DaemonTests):
 class TestCustomCert(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
-        certs=[("*", tutils.test_data.path("data/testkey.pem"))],
+        certs=[(b"*", tutils.test_data.path("data/testkey.pem"))],
     )
 
     def test_connect(self):
