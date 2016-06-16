@@ -1,9 +1,9 @@
-jest.unmock("../utils.js");
+jest.unmock("../utils");
 
-import {formatSize} from "../utils.js"
+import {formatSize} from "../utils"
 
-describe("utils", function () {
-    it("formatSize", function(){
+describe("utils", () => {
+    it("formatSize", () => {
         expect(formatSize(1024)).toEqual("1kb");
         expect(formatSize(0)).toEqual("0");
         expect(formatSize(10)).toEqual("10b");
