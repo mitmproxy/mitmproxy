@@ -6,7 +6,8 @@ export const WS_MSG_CMD_RESET = 'reset'
 export const WS_MSG_CMD_UPDATE = 'update'
 
 export const BEGIN_FETCH = 'SETTINGS_BEGIN_FETCH'
-export const FETCH_SETTINGS = 'SETTINGS_FETCH_SETTINGS'
+export const FETCHED = 'SETTINGS_FETCHED'
+export const RESET = 'SETTINGS_RESET'
 export const FETCH_ERROR = 'SETTINGS_FETCH_ERROR'
 export const RECV_WS_MSG = 'SETTINGS_RECV_WS_MSG'
 
@@ -18,9 +19,12 @@ export default function reduce(state = defaultState, action) {
         case BEGIN_FETCH:
             return { ...state, pendings: [], req: action.req }
 
-        case FETCH_SETTINGS:
+        case FETCHED:
             const pendings = state.pendings || []
-            return { ...state, pendings: null, settings: pendings.reduce(reduceData, data) }
+            return { ...state, pendings: null, settings: pendings.reduce(reduceData, action.data) }
+
+        case RESET:
+            return { ...state, pendings: null, settings: action.data || {} }
 
         case RECV_WS_MSG:
             if (state.pendings) {
@@ -40,7 +44,7 @@ function reduceData(data, action) {
             return action.data || {}
 
         case WS_MSG_CMD_UPDATE:
-            return _.merge({}, data.settings, action.data)
+            return _.merge({}, data, action.data)
 
         default:
             return data
@@ -49,8 +53,8 @@ function reduceData(data, action) {
 
 export function fetch() {
     return dispatch => {
-        const req = $.getJSON('/' + this.type)
-            .done(msg => dispatch(reset(msg.data)))
+        const req = $.getJSON('/settings')
+            .done(msg => dispatch(handleFetchResponse(msg.data)))
             .fail(error => dispatch(handleFetchError(error)));
 
         dispatch({ type: BEGIN_FETCH, req })
@@ -61,7 +65,7 @@ export function fetch() {
 
 export function handleWsMsg(msg) {
     return (dispatch, getState) => {
-        if (msg.cmd !== STORE_CMDS_RESET) {
+        if (msg.cmd !== StoreCmds.RESET) {
             return dispatch({ type: RECV_WS_MSG, cmd: msg.cmd, data: msg.data })
         }
         const req = getState().settings.req
@@ -72,8 +76,12 @@ export function handleWsMsg(msg) {
     }
 }
 
+export function handleFetchResponse(data) {
+    return { type: FETCHED, data }
+}
+
 export function reset(data) {
-    return { type: FETCH_SETTINGS, data }
+    return { type: RESET, data }
 }
 
 export function handleFetchError(error) {

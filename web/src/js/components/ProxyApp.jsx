@@ -3,6 +3,7 @@ import ReactDOM from "react-dom"
 import _ from "lodash"
 import { connect } from 'react-redux'
 
+import { fetch as fetchSettings } from '../ducks/settings'
 import { Splitter } from "./common.js"
 import Header from "./Header"
 import EventLog from "./EventLog"
@@ -49,6 +50,10 @@ class ProxyAppMain extends Component {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _.clone(this.props.location.query)
+    }
+
+    componentWillMount() {
+        this.props.fetchSettings();
     }
 
     /**
@@ -139,5 +144,8 @@ export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
         settings: state.settings.settings,
-    })
+    }),
+    {
+        fetchSettings,
+    }
 )(ProxyAppMain)
