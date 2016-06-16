@@ -1,8 +1,9 @@
 import React, { PropTypes } from 'react'
-import { ToggleInputButton, ToggleButton } from '../common.js'
+import ToggleButton from '../common/ToggleButton'
+import ToggleInputButton from '../common/ToggleInputButton'
 import { SettingsActions } from '../../actions.js'
 
-OptionMenu.title = "Options"
+OptionMenu.title = 'Options'
 
 OptionMenu.propTypes = {
     settings: PropTypes.object.isRequired,

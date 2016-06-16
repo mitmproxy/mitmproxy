@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { toggleEventLogFilter, toggleEventLogVisibility } from '../ducks/eventLog'
-import { ToggleButton } from './common'
+import ToggleButton from './common/ToggleButton'
 import EventList from './EventLog/EventList'
 
 class EventLog extends Component {

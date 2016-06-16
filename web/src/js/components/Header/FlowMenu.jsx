@@ -1,10 +1,10 @@
 import React, { PropTypes } from 'react'
-import { Button } from '../common.js'
-import {FlowActions} from "../../actions.js";
-import {MessageUtils} from "../../flow/utils.js";
+import Button from '../common/Button'
+import { FlowActions } from '../../actions.js'
+import { MessageUtils } from '../../flow/utils.js'
 import { connect } from 'react-redux'
 
-FlowMenu.title = "Flow"
+FlowMenu.title = 'Flow'
 
 FlowMenu.propTypes = {
     flow: PropTypes.object.isRequired,
