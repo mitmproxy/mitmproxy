@@ -94,6 +94,18 @@ requirements installed, and you can simply run the test suite:
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage.
 
+You can also use `tox` to run a full suite of tests in Python 2.7 and 3.5,
+including a quick test to check documentation and code linting.
+
+The following tox environments are relevant for local testing:
+
+.. code-block:: text
+
+    tox -e py27  # runs all tests with Python 2.7
+    tox -e py35  # runs all tests with Python 3.5 (partial support only)
+    tox -e docs  # runs a does-it-compile check on the documentation
+    tox -e lint  # runs the linter for coding style checks
+
 
 Documentation
 -------------
@@ -119,6 +131,13 @@ Keeping to a consistent code style throughout the project makes it easier to
 contribute and collaborate. Please stick to the guidelines in
 `PEP8`_ and the `Google Style Guide`_ unless there's a very
 good reason not to.
+
+This is automatically enforced on every PR. If we detect a linting error, the
+PR checks will fail and block merging. We are using this command to check for style compliance:
+
+.. code-block:: text
+
+    flake8 --jobs 8 --count mitmproxy netlib pathod examples test
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
