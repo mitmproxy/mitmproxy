@@ -14,10 +14,6 @@ Prompt.propTypes = {
     prompt: PropTypes.string,
 }
 
-Prompt.componentDidMount = function() {
-    ReactDOM.findDOMNode(this).focus()
-}
-
 export default function Prompt({ prompt, done, options }, context) {
     const opts = []
 

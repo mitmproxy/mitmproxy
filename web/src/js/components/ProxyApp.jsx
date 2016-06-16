@@ -13,7 +13,6 @@ class ProxyAppMain extends Component {
 
     static childContextTypes = {
         returnFocus: PropTypes.func.isRequired,
-        location: PropTypes.object.isRequired,
     }
 
     static contextTypes = {
@@ -89,10 +88,7 @@ class ProxyAppMain extends Component {
      * @todo use props
      */
     getChildContext() {
-        return {
-            returnFocus: this.focus,
-            location: this.props.location
-        }
+        return { returnFocus: this.focus }
     }
 
     /**
@@ -106,6 +102,7 @@ class ProxyAppMain extends Component {
 
     /**
      * @todo move to actions
+     * @todo bind on window
      */
     onKeyDown(e) {
         let name = null
