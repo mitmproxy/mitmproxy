@@ -3,6 +3,7 @@ import {AppDispatcher} from "./dispatcher.js";
 import * as webSocketActions from "./ducks/websocket"
 import * as eventLogActions from "./ducks/eventLog"
 import * as flowActions from "./ducks/flows"
+import * as settingsActions from './ducks/settings'
 
 export default function Connection(url, dispatch) {
     if (url[0] === "/") {
@@ -12,6 +13,7 @@ export default function Connection(url, dispatch) {
     var ws = new WebSocket(url);
     ws.onopen = function () {
         dispatch(webSocketActions.connected())
+        dispatch(settingsActions.fetch())
         dispatch(flowActions.fetchFlows())
         // workaround to make sure that our state is already available.
             .then(() => {
@@ -28,6 +30,8 @@ export default function Connection(url, dispatch) {
                 return dispatch(eventLogActions.updateLogEntries(message))
             case flowActions.UPDATE_FLOWS:
                 return dispatch(flowActions.updateFlows(message))
+            case settingsActions.WS_MSG_TYPE:
+                return dispatch(settingsActions.handleWsMsg(message))
             default:
                 console.warn("unknown message", message)
         }
