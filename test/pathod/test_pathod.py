@@ -3,7 +3,8 @@ from six.moves import cStringIO as StringIO
 from pathod import pathod
 from netlib import tcp
 from netlib.exceptions import HttpException, TlsException
-import tutils
+
+from . import tutils
 
 
 class TestPathod(object):

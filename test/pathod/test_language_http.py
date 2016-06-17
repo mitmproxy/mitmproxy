@@ -1,7 +1,8 @@
 from six import BytesIO
 from pathod import language
 from pathod.language import http, base
-import tutils
+
+from . import tutils
 
 
 def parse_request(s):
