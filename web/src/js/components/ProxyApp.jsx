@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import _ from 'lodash'
 import { connect } from 'react-redux'
 
-import { Splitter } from './common.js'
 import { connect as wsConnect } from '../ducks/websocket'
 import Header from './Header'
 import EventLog from './EventLog'
@@ -15,7 +14,6 @@ class ProxyAppMain extends Component {
 
     static childContextTypes = {
         returnFocus: PropTypes.func.isRequired,
-        location: PropTypes.object.isRequired,
     }
 
     static contextTypes = {
@@ -72,7 +70,7 @@ class ProxyAppMain extends Component {
      */
     componentDidMount() {
         this.focus()
-        this.settingsStore.addListener("recalculate", this.onSettingsChange)
+        this.settingsStore.addListener('recalculate', this.onSettingsChange)
     }
 
     /**
@@ -81,7 +79,7 @@ class ProxyAppMain extends Component {
      * @todo stop listening to window's key events
      */
     componentWillUnmount() {
-        this.settingsStore.removeListener("recalculate", this.onSettingsChange)
+        this.settingsStore.removeListener('recalculate', this.onSettingsChange)
     }
 
     /**
@@ -95,10 +93,7 @@ class ProxyAppMain extends Component {
      * @todo use props
      */
     getChildContext() {
-        return {
-            returnFocus: this.focus,
-            location: this.props.location
-        }
+        return { returnFocus: this.focus }
     }
 
     /**
@@ -112,19 +107,20 @@ class ProxyAppMain extends Component {
 
     /**
      * @todo move to actions
+     * @todo bind on window
      */
     onKeyDown(e) {
         let name = null
 
         switch (e.keyCode) {
             case Key.I:
-                name = "intercept"
+                name = 'intercept'
                 break
             case Key.L:
-                name = "search"
+                name = 'search'
                 break
             case Key.H:
-                name = "highlight"
+                name = 'highlight'
                 break
             default:
                 let main = this.refs.view
@@ -139,7 +135,7 @@ class ProxyAppMain extends Component {
 
         if (name) {
             const headerComponent = this.refs.header
-            headerComponent.setState({ active: Header.entries.MainMenu }, () => {
+            headerComponent.setState({ active: Header.entries[0] }, () => {
                 headerComponent.refs.active.refs[name].select()
             })
         }
@@ -156,12 +152,11 @@ class ProxyAppMain extends Component {
                 <Header ref="header" settings={settings} updateLocation={this.updateLocation} query={query} />
                 {React.cloneElement(
                     children,
-                    { ref: "view", location, query, updateLocation: this.updateLocation }
+                    { ref: 'view', location, query, updateLocation: this.updateLocation }
                 )}
-                {showEventLog && [
-                    <Splitter key="splitter" axis="y"/>,
+                {showEventLog && (
                     <EventLog key="eventlog"/>
-                ]}
+                )}
                 <Footer settings={settings}/>
             </div>
         )

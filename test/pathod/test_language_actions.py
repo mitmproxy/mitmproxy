@@ -1,11 +1,10 @@
 from six import BytesIO
 
-from pathod.language import actions
-from pathod import language
+from pathod.language import actions, parse_pathoc, parse_pathod, serve
 
 
 def parse_request(s):
-    return next(language.parse_pathoc(s))
+    return next(parse_pathoc(s))
 
 
 def test_unique_name():
@@ -16,9 +15,9 @@ def test_unique_name():
 class TestDisconnects:
 
     def test_parse_pathod(self):
-        a = next(language.parse_pathod("400:d0")).actions[0]
+        a = next(parse_pathod("400:d0")).actions[0]
         assert a.spec() == "d0"
-        a = next(language.parse_pathod("400:dr")).actions[0]
+        a = next(parse_pathod("400:dr")).actions[0]
         assert a.spec() == "dr"
 
     def test_at(self):
@@ -42,12 +41,12 @@ class TestDisconnects:
 class TestInject:
 
     def test_parse_pathod(self):
-        a = next(language.parse_pathod("400:ir,@100")).actions[0]
+        a = next(parse_pathod("400:ir,@100")).actions[0]
         assert a.offset == "r"
         assert a.value.datatype == "bytes"
         assert a.value.usize == 100
 
-        a = next(language.parse_pathod("400:ia,@100")).actions[0]
+        a = next(parse_pathod("400:ia,@100")).actions[0]
         assert a.offset == "a"
 
     def test_at(self):
@@ -62,8 +61,8 @@ class TestInject:
 
     def test_serve(self):
         s = BytesIO()
-        r = next(language.parse_pathod("400:i0,'foo'"))
-        assert language.serve(r, s, {})
+        r = next(parse_pathod("400:i0,'foo'"))
+        assert serve(r, s, {})
 
     def test_spec(self):
         e = actions.InjectAt.expr()
@@ -96,7 +95,7 @@ class TestPauses:
         assert v.offset == "a"
 
     def test_request(self):
-        r = next(language.parse_pathod('400:p10,10'))
+        r = next(parse_pathod('400:p10,10'))
         assert r.actions[0].spec() == "p10,10"
 
     def test_spec(self):

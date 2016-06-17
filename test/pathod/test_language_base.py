@@ -1,7 +1,8 @@
 import os
 from pathod import language
 from pathod.language import base, exceptions
-import tutils
+
+from . import tutils
 
 
 def parse_request(s):

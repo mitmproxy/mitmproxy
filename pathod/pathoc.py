@@ -11,18 +11,18 @@ import time
 
 import OpenSSL.crypto
 import six
+import logging
 
+from netlib.tutils import treq
+from netlib import strutils
 from netlib import tcp, certutils, websockets, socks
 from netlib import exceptions
 from netlib.http import http1
-from netlib.http import http2
 from netlib import basethread
 
-from pathod import log, language
+from . import log, language
+from .protocols import http2
 
-import logging
-from netlib.tutils import treq
-from netlib import strutils
 
 logging.getLogger("hpack").setLevel(logging.WARNING)
 
@@ -227,7 +227,7 @@ class Pathoc(tcp.TCPClient):
                     "Pathoc might not be working as expected without ALPN.",
                     timestamp=False
                 )
-            self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
+            self.protocol = http2.HTTP2StateProtocol(self, dump_frames=self.http2_framedump)
         else:
             self.protocol = http1
 
@@ -241,8 +241,8 @@ class Pathoc(tcp.TCPClient):
 
     def http_connect(self, connect_to):
         self.wfile.write(
-            'CONNECT %s:%s HTTP/1.1\r\n' % tuple(connect_to) +
-            '\r\n'
+            b'CONNECT %s:%d HTTP/1.1\r\n' % (connect_to[0].encode("idna"), connect_to[1]) +
+            b'\r\n'
         )
         self.wfile.flush()
         try:
