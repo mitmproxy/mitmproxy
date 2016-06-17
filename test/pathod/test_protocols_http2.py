@@ -5,21 +5,22 @@ import hyperframe
 from netlib import tcp, http
 from netlib.tutils import raises
 from netlib.exceptions import TcpDisconnect
-from netlib.http.http2.connections import HTTP2Protocol, TCPHandler
 from netlib.http.http2 import framereader
 
-from ... import tservers
+from ..netlib import tservers as netlib_tservers
+
+from pathod.protocols.http2 import HTTP2StateProtocol, TCPHandler
 
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
         h = TCPHandler(rfile='foo', wfile='bar')
-        p = HTTP2Protocol(h)
+        p = HTTP2StateProtocol(h)
         assert p.tcp_handler.rfile == 'foo'
         assert p.tcp_handler.wfile == 'bar'
 
     def test_direct(self):
-        p = HTTP2Protocol(rfile='foo', wfile='bar')
+        p = HTTP2StateProtocol(rfile='foo', wfile='bar')
         assert isinstance(p.tcp_handler, TCPHandler)
         assert p.tcp_handler.rfile == 'foo'
         assert p.tcp_handler.wfile == 'bar'
@@ -36,10 +37,10 @@ class EchoHandler(tcp.BaseHandler):
 
 
 class TestProtocol:
-    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_server_connection_preface")
-    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_client_connection_preface")
+    @mock.patch("pathod.protocols.http2.HTTP2StateProtocol.perform_server_connection_preface")
+    @mock.patch("pathod.protocols.http2.HTTP2StateProtocol.perform_client_connection_preface")
     def test_perform_connection_preface(self, mock_client_method, mock_server_method):
-        protocol = HTTP2Protocol(is_server=False)
+        protocol = HTTP2StateProtocol(is_server=False)
         protocol.connection_preface_performed = True
 
         protocol.perform_connection_preface()
@@ -50,10 +51,10 @@ class TestProtocol:
         assert mock_client_method.called
         assert not mock_server_method.called
 
-    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_server_connection_preface")
-    @mock.patch("netlib.http.http2.connections.HTTP2Protocol.perform_client_connection_preface")
+    @mock.patch("pathod.protocols.http2.HTTP2StateProtocol.perform_server_connection_preface")
+    @mock.patch("pathod.protocols.http2.HTTP2StateProtocol.perform_client_connection_preface")
     def test_perform_connection_preface_server(self, mock_client_method, mock_server_method):
-        protocol = HTTP2Protocol(is_server=True)
+        protocol = HTTP2StateProtocol(is_server=True)
         protocol.connection_preface_performed = True
 
         protocol.perform_connection_preface()
@@ -65,7 +66,7 @@ class TestProtocol:
         assert mock_server_method.called
 
 
-class TestCheckALPNMatch(tservers.ServerTestBase):
+class TestCheckALPNMatch(netlib_tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         alpn_select=b'h2',
@@ -77,11 +78,11 @@ class TestCheckALPNMatch(tservers.ServerTestBase):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             with c.connect():
                 c.convert_to_ssl(alpn_protos=[b'h2'])
-                protocol = HTTP2Protocol(c)
+                protocol = HTTP2StateProtocol(c)
                 assert protocol.check_alpn()
 
 
-class TestCheckALPNMismatch(tservers.ServerTestBase):
+class TestCheckALPNMismatch(netlib_tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         alpn_select=None,
@@ -93,12 +94,12 @@ class TestCheckALPNMismatch(tservers.ServerTestBase):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             with c.connect():
                 c.convert_to_ssl(alpn_protos=[b'h2'])
-                protocol = HTTP2Protocol(c)
+                protocol = HTTP2StateProtocol(c)
                 with raises(NotImplementedError):
                     protocol.check_alpn()
 
 
-class TestPerformServerConnectionPreface(tservers.ServerTestBase):
+class TestPerformServerConnectionPreface(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -125,7 +126,7 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
     def test_perform_server_connection_preface(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            protocol = HTTP2Protocol(c)
+            protocol = HTTP2StateProtocol(c)
 
             assert not protocol.connection_preface_performed
             protocol.perform_server_connection_preface()
@@ -135,12 +136,12 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
                 protocol.perform_server_connection_preface(force=True)
 
 
-class TestPerformClientConnectionPreface(tservers.ServerTestBase):
+class TestPerformClientConnectionPreface(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
             # check magic
-            assert self.rfile.read(24) == HTTP2Protocol.CLIENT_CONNECTION_PREFACE
+            assert self.rfile.read(24) == HTTP2StateProtocol.CLIENT_CONNECTION_PREFACE
 
             # check empty settings frame
             assert self.rfile.read(9) ==\
@@ -161,7 +162,7 @@ class TestPerformClientConnectionPreface(tservers.ServerTestBase):
     def test_perform_client_connection_preface(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            protocol = HTTP2Protocol(c)
+            protocol = HTTP2StateProtocol(c)
 
             assert not protocol.connection_preface_performed
             protocol.perform_client_connection_preface()
@@ -170,7 +171,7 @@ class TestPerformClientConnectionPreface(tservers.ServerTestBase):
 
 class TestClientStreamIds(object):
     c = tcp.TCPClient(("127.0.0.1", 0))
-    protocol = HTTP2Protocol(c)
+    protocol = HTTP2StateProtocol(c)
 
     def test_client_stream_ids(self):
         assert self.protocol.current_stream_id is None
@@ -182,9 +183,9 @@ class TestClientStreamIds(object):
         assert self.protocol.current_stream_id == 5
 
 
-class TestServerStreamIds(object):
+class TestserverstreamIds(object):
     c = tcp.TCPClient(("127.0.0.1", 0))
-    protocol = HTTP2Protocol(c, is_server=True)
+    protocol = HTTP2StateProtocol(c, is_server=True)
 
     def test_server_stream_ids(self):
         assert self.protocol.current_stream_id is None
@@ -196,7 +197,7 @@ class TestServerStreamIds(object):
         assert self.protocol.current_stream_id == 6
 
 
-class TestApplySettings(tservers.ServerTestBase):
+class TestApplySettings(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             # check settings acknowledgement
@@ -211,7 +212,7 @@ class TestApplySettings(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c)
+            protocol = HTTP2StateProtocol(c)
 
             protocol._apply_settings({
                 hyperframe.frame.SettingsFrame.ENABLE_PUSH: 'foo',
@@ -239,12 +240,12 @@ class TestCreateHeaders(object):
             (b':scheme', b'https'),
             (b'foo', b'bar')])
 
-        bytes = HTTP2Protocol(self.c)._create_headers(
+        bytes = HTTP2StateProtocol(self.c)._create_headers(
             headers, 1, end_stream=True)
         assert b''.join(bytes) ==\
             codecs.decode('000014010500000001824488355217caf3a69a3f87408294e7838c767f', 'hex_codec')
 
-        bytes = HTTP2Protocol(self.c)._create_headers(
+        bytes = HTTP2StateProtocol(self.c)._create_headers(
             headers, 1, end_stream=False)
         assert b''.join(bytes) ==\
             codecs.decode('000014010400000001824488355217caf3a69a3f87408294e7838c767f', 'hex_codec')
@@ -257,7 +258,7 @@ class TestCreateHeaders(object):
             (b'foo', b'bar'),
             (b'server', b'version')])
 
-        protocol = HTTP2Protocol(self.c)
+        protocol = HTTP2StateProtocol(self.c)
         protocol.http2_settings[hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE] = 8
         bytes = protocol._create_headers(headers, 1, end_stream=True)
         assert len(bytes) == 3
@@ -270,17 +271,17 @@ class TestCreateBody(object):
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_create_body_empty(self):
-        protocol = HTTP2Protocol(self.c)
+        protocol = HTTP2StateProtocol(self.c)
         bytes = protocol._create_body(b'', 1)
         assert b''.join(bytes) == b''
 
     def test_create_body_single_frame(self):
-        protocol = HTTP2Protocol(self.c)
+        protocol = HTTP2StateProtocol(self.c)
         bytes = protocol._create_body(b'foobar', 1)
         assert b''.join(bytes) == codecs.decode('000006000100000001666f6f626172', 'hex_codec')
 
     def test_create_body_multiple_frames(self):
-        protocol = HTTP2Protocol(self.c)
+        protocol = HTTP2StateProtocol(self.c)
         protocol.http2_settings[hyperframe.frame.SettingsFrame.MAX_FRAME_SIZE] = 5
         bytes = protocol._create_body(b'foobarmehm42', 1)
         assert len(bytes) == 3
@@ -289,7 +290,7 @@ class TestCreateBody(object):
         assert bytes[2] == codecs.decode('0000020001000000013432', 'hex_codec')
 
 
-class TestReadRequest(tservers.ServerTestBase):
+class TestReadRequest(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -306,7 +307,7 @@ class TestReadRequest(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c, is_server=True)
+            protocol = HTTP2StateProtocol(c, is_server=True)
             protocol.connection_preface_performed = True
 
             req = protocol.read_request(NotImplemented)
@@ -319,7 +320,7 @@ class TestReadRequest(tservers.ServerTestBase):
             assert req.content == b'foobar'
 
 
-class TestReadRequestRelative(tservers.ServerTestBase):
+class TestReadRequestRelative(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             self.wfile.write(
@@ -332,7 +333,7 @@ class TestReadRequestRelative(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c, is_server=True)
+            protocol = HTTP2StateProtocol(c, is_server=True)
             protocol.connection_preface_performed = True
 
             req = protocol.read_request(NotImplemented)
@@ -342,7 +343,7 @@ class TestReadRequestRelative(tservers.ServerTestBase):
             assert req.path == "*"
 
 
-class TestReadRequestAbsolute(tservers.ServerTestBase):
+class TestReadRequestAbsolute(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             self.wfile.write(
@@ -355,7 +356,7 @@ class TestReadRequestAbsolute(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c, is_server=True)
+            protocol = HTTP2StateProtocol(c, is_server=True)
             protocol.connection_preface_performed = True
 
             req = protocol.read_request(NotImplemented)
@@ -366,7 +367,7 @@ class TestReadRequestAbsolute(tservers.ServerTestBase):
             assert req.port == 22
 
 
-class TestReadRequestConnect(tservers.ServerTestBase):
+class TestReadRequestConnect(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             self.wfile.write(
@@ -381,7 +382,7 @@ class TestReadRequestConnect(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c, is_server=True)
+            protocol = HTTP2StateProtocol(c, is_server=True)
             protocol.connection_preface_performed = True
 
             req = protocol.read_request(NotImplemented)
@@ -397,7 +398,7 @@ class TestReadRequestConnect(tservers.ServerTestBase):
             assert req.port == 443
 
 
-class TestReadResponse(tservers.ServerTestBase):
+class TestReadResponse(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             self.wfile.write(
@@ -413,7 +414,7 @@ class TestReadResponse(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c)
+            protocol = HTTP2StateProtocol(c)
             protocol.connection_preface_performed = True
 
             resp = protocol.read_response(NotImplemented, stream_id=42)
@@ -426,7 +427,7 @@ class TestReadResponse(tservers.ServerTestBase):
             assert resp.timestamp_end
 
 
-class TestReadEmptyResponse(tservers.ServerTestBase):
+class TestReadEmptyResponse(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             self.wfile.write(
@@ -439,7 +440,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl()
-            protocol = HTTP2Protocol(c)
+            protocol = HTTP2StateProtocol(c)
             protocol.connection_preface_performed = True
 
             resp = protocol.read_response(NotImplemented, stream_id=42)
@@ -456,7 +457,7 @@ class TestAssembleRequest(object):
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_request_simple(self):
-        bytes = HTTP2Protocol(self.c).assemble_request(http.Request(
+        bytes = HTTP2StateProtocol(self.c).assemble_request(http.Request(
             b'',
             b'GET',
             b'https',
@@ -483,12 +484,12 @@ class TestAssembleRequest(object):
             None,
         )
         req.stream_id = 0x42
-        bytes = HTTP2Protocol(self.c).assemble_request(req)
+        bytes = HTTP2StateProtocol(self.c).assemble_request(req)
         assert len(bytes) == 1
         assert bytes[0] == codecs.decode('00000d0105000000428284874188089d5c0b8170dc07', 'hex_codec')
 
     def test_request_with_body(self):
-        bytes = HTTP2Protocol(self.c).assemble_request(http.Request(
+        bytes = HTTP2StateProtocol(self.c).assemble_request(http.Request(
             b'',
             b'GET',
             b'https',
@@ -510,7 +511,7 @@ class TestAssembleResponse(object):
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_simple(self):
-        bytes = HTTP2Protocol(self.c, is_server=True).assemble_response(http.Response(
+        bytes = HTTP2StateProtocol(self.c, is_server=True).assemble_response(http.Response(
             b"HTTP/2.0",
             200,
         ))
@@ -524,13 +525,13 @@ class TestAssembleResponse(object):
             200,
         )
         resp.stream_id = 0x42
-        bytes = HTTP2Protocol(self.c, is_server=True).assemble_response(resp)
+        bytes = HTTP2StateProtocol(self.c, is_server=True).assemble_response(resp)
         assert len(bytes) == 1
         assert bytes[0] ==\
             codecs.decode('00000101050000004288', 'hex_codec')
 
     def test_with_body(self):
-        bytes = HTTP2Protocol(self.c, is_server=True).assemble_response(http.Response(
+        bytes = HTTP2StateProtocol(self.c, is_server=True).assemble_response(http.Response(
             b"HTTP/2.0",
             200,
             b'',

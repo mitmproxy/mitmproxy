@@ -1,7 +1,7 @@
 import os
 
 from pathod.language import generators
-import tutils
+from . import tutils
 
 
 def test_randomgenerator():

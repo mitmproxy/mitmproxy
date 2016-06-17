@@ -1,6 +1,8 @@
-from pathod import pathod_cmdline as cmdline
-import tutils
 import mock
+
+from pathod import pathod_cmdline as cmdline
+
+from . import tutils
 
 
 def test_parse_anchor_spec():

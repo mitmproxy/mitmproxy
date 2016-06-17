@@ -1,5 +1,6 @@
 from pathod import utils
-import tutils
+
+from . import tutils
 
 
 def test_membool():

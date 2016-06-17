@@ -1,7 +1,8 @@
 import logging
 import requests
 from pathod import test
-import tutils
+
+from . import tutils
 
 import requests.packages.urllib3
 

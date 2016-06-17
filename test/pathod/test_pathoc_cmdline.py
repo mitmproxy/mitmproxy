@@ -1,7 +1,9 @@
-from pathod import pathoc_cmdline as cmdline
-import tutils
 from six.moves import cStringIO as StringIO
 import mock
+
+from pathod import pathoc_cmdline as cmdline
+
+from . import tutils
 
 
 @mock.patch("argparse.ArgumentParser.error")

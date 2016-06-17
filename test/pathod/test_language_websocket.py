@@ -2,7 +2,8 @@
 from pathod import language
 from pathod.language import websockets
 import netlib.websockets
-import tutils
+
+from . import tutils
 
 
 def parse_request(s):
