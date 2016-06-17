@@ -519,8 +519,6 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = require('redux');
-
 var _reactRedux = require('react-redux');
 
 var _eventLog = require('../ducks/eventLog');
@@ -573,14 +571,12 @@ exports.default = (0, _reactRedux.connect)(function (state) {
         filters: state.eventLog.filter,
         events: state.eventLog.filteredEvents
     };
-}, function (dispatch) {
-    return (0, _redux.bindActionCreators)({
-        onClose: _eventLog.toggleEventLogVisibility,
-        onToggleFilter: _eventLog.toggleEventLogFilter
-    }, dispatch);
+}, {
+    onClose: _eventLog.toggleEventLogVisibility,
+    onToggleFilter: _eventLog.toggleEventLogFilter
 })(EventLog);
 
-},{"../ducks/eventLog":33,"./EventLog/EventList":5,"./common":21,"react":"react","react-redux":"react-redux","redux":"redux"}],5:[function(require,module,exports){
+},{"../ducks/eventLog":33,"./EventLog/EventList":5,"./common":21,"react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1156,8 +1152,6 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = require('redux');
-
 var _reactRedux = require('react-redux');
 
 var _classnames = require('classnames');
@@ -1211,13 +1205,11 @@ exports.default = (0, _reactRedux.connect)(function (state) {
         sortDesc: state.flows.sort.sortDesc,
         sortColumn: state.flows.sort.sortColumn
     };
-}, function (dispatch) {
-    return (0, _redux.bindActionCreators)({
-        onSort: _flows.setSort
-    }, dispatch);
+}, {
+    onSort: _flows.setSort
 })(FlowTableHead);
 
-},{"../../ducks/flows":34,"./FlowColumns":7,"classnames":"classnames","react":"react","react-redux":"react-redux","redux":"redux"}],10:[function(require,module,exports){
+},{"../../ducks/flows":34,"./FlowColumns":7,"classnames":"classnames","react":"react","react-redux":"react-redux"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1323,8 +1315,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
-var _redux = require('redux');
-
 var _classnames = require('classnames');
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -1390,14 +1380,14 @@ var Header = function (_Component) {
             var updateLocation = _props.updateLocation;
             var query = _props.query;
             var selectedFlow = _props.selectedFlow;
-            var active_menu = _props.active_menu;
+            var activeMenu = _props.activeMenu;
 
 
             var entries = [].concat(_toConsumableArray(Header.entries));
             if (selectedFlow) entries.push(_FlowMenu2.default);
 
             var Active = _.find(entries, function (e) {
-                return e.title == active_menu;
+                return e.title == activeMenu;
             });
 
             return _react2.default.createElement(
@@ -1443,15 +1433,13 @@ Header.propTypes = {
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
         selectedFlow: state.flows.selected[0],
-        active_menu: state.ui.active_menu
+        activeMenu: state.ui.activeMenu
     };
-}, function (dispatch) {
-    return (0, _redux.bindActionCreators)({
-        setActiveMenu: _ui.setActiveMenu
-    }, dispatch);
+}, {
+    setActiveMenu: _ui.setActiveMenu
 })(Header);
 
-},{"../ducks/eventLog":33,"../ducks/ui.js":36,"./Header/FileMenu":12,"./Header/FlowMenu":15,"./Header/MainMenu":16,"./Header/OptionMenu":17,"./Header/ViewMenu":18,"classnames":"classnames","react":"react","react-redux":"react-redux","redux":"redux"}],12:[function(require,module,exports){
+},{"../ducks/eventLog":33,"../ducks/ui.js":36,"./Header/FileMenu":12,"./Header/FlowMenu":15,"./Header/MainMenu":16,"./Header/OptionMenu":17,"./Header/ViewMenu":18,"classnames":"classnames","react":"react","react-redux":"react-redux"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2207,8 +2195,6 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = require('redux');
-
 var _reactRedux = require('react-redux');
 
 var _common = require('../common.js');
@@ -2245,13 +2231,11 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     return {
         visible: state.eventLog.visible
     };
-}, function (dispatch) {
-    return (0, _redux.bindActionCreators)({
-        onToggle: _eventLog.toggleEventLogVisibility
-    }, dispatch);
+}, {
+    onToggle: _eventLog.toggleEventLogVisibility
 })(ViewMenu);
 
-},{"../../ducks/eventLog":33,"../common.js":21,"react":"react","react-redux":"react-redux","redux":"redux"}],19:[function(require,module,exports){
+},{"../../ducks/eventLog":33,"../common.js":21,"react":"react","react-redux":"react-redux"}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2265,8 +2249,6 @@ var _react = require('react');
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
-
-var _redux = require('redux');
 
 var _actions = require('../actions.js');
 
@@ -2502,15 +2484,13 @@ exports.default = (0, _reactRedux.connect)(function (state) {
         highlight: state.flows.highlight,
         selectedFlow: state.flows.all.byId[state.flows.selected[0]]
     };
-}, function (dispatch) {
-    return (0, _redux.bindActionCreators)({
-        selectFlow: _flows.selectFlow,
-        setFilter: _flows.setFilter,
-        setHighlight: _flows.setHighlight
-    }, dispatch);
+}, {
+    selectFlow: _flows.selectFlow,
+    setFilter: _flows.setFilter,
+    setHighlight: _flows.setHighlight
 }, undefined, { withRef: true })(MainView);
 
-},{"../actions.js":2,"../ducks/flows":34,"../utils.js":43,"./FlowTable":6,"./common.js":21,"./flowview/index.js":25,"react":"react","react-redux":"react-redux","redux":"redux"}],20:[function(require,module,exports){
+},{"../actions.js":2,"../ducks/flows":34,"../utils.js":43,"./FlowTable":6,"./common.js":21,"./flowview/index.js":25,"react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4979,7 +4959,7 @@ var _view = require("./utils/view");
 
 var _utils = require("../utils.js");
 
-var _FlowColumns = require("../components/FlowTable/FlowColumns");
+var _FlowColumns = require("../components/FlowTable/FlowColumns.jsx");
 
 var columns = _interopRequireWildcard(_FlowColumns);
 
@@ -5094,7 +5074,7 @@ function selectFlow(flowId) {
 exports.updateFlows = updateList;
 exports.fetchFlows = fetchList;
 
-},{"../components/FlowTable/FlowColumns":7,"../filt/filt":40,"../utils.js":43,"./utils/list":37,"./utils/view":38}],35:[function(require,module,exports){
+},{"../components/FlowTable/FlowColumns.jsx":7,"../filt/filt":40,"../utils.js":43,"./utils/list":37,"./utils/view":38}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5115,7 +5095,7 @@ var _flows = require('./flows');
 
 var _flows2 = _interopRequireDefault(_flows);
 
-var _ui = require('./ui.js');
+var _ui = require('./ui');
 
 var _ui2 = _interopRequireDefault(_ui);
 
@@ -5130,46 +5110,46 @@ var rootReducer = (0, _redux.combineReducers)({
 
 exports.default = rootReducer;
 
-},{"./eventLog":33,"./flows":34,"./ui.js":36,"./websocket":39,"redux":"redux"}],36:[function(require,module,exports){
+},{"./eventLog":33,"./flows":34,"./ui":36,"./websocket":39,"redux":"redux"}],36:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.SET_ACTIVE_MENU = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = reducer;
 exports.setActiveMenu = setActiveMenu;
 
-var _reduxThunk = require('redux-thunk');
-
-var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
-
 var _flows = require('./flows');
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var ACTIVE_MENU = 'SET_ACTIVE_MENU';
+var SET_ACTIVE_MENU = exports.SET_ACTIVE_MENU = 'SET_ACTIVE_MENU';
 
 var defaultState = {
-    active_menu: 'Start'
+    activeMenu: 'Start'
 };
 function reducer() {
     var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
     var action = arguments[1];
 
     switch (action.type) {
-        case ACTIVE_MENU:
+        case SET_ACTIVE_MENU:
             return _extends({}, state, {
-                active_menu: action.active_menu
+                activeMenu: action.activeMenu
             });
         case _flows.SELECT_FLOW:
-            var isNewSelection = action.flowId && !action.currentSelection;
-            if (isNewSelection) {
-                var wasFlowSelected = state.active_menu == 'Flow';
+            var isNewSelect = action.flowId && !action.currentSelection;
+            var isDeselect = !action.flowId && action.currentSelection;
+            if (isNewSelect) {
                 return _extends({}, state, {
-                    active_menu: action.flowId ? 'Flow' : wasFlowSelected ? 'Start' : state.active_menu
+                    activeMenu: "Flow"
+                });
+            }
+            if (isDeselect && state.activeMenu === "Flow") {
+                return _extends({}, state, {
+                    activeMenu: "Start"
                 });
             }
             return state;
@@ -5178,14 +5158,14 @@ function reducer() {
     }
 }
 
-function setActiveMenu(active_menu) {
+function setActiveMenu(activeMenu) {
     return {
-        type: ACTIVE_MENU,
-        active_menu: active_menu
+        type: SET_ACTIVE_MENU,
+        activeMenu: activeMenu
     };
 }
 
-},{"./flows":34,"redux-thunk":"redux-thunk"}],37:[function(require,module,exports){
+},{"./flows":34}],37:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
