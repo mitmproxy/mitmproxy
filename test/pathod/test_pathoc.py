@@ -5,11 +5,13 @@ from mock import Mock
 from netlib import http
 from netlib import tcp
 from netlib.exceptions import NetlibException
-from netlib.http import http1, http2
+from netlib.http import http1
+from netlib.tutils import raises
 
 from pathod import pathoc, language
-from netlib.tutils import raises
-import tutils
+from pathod.protocols.http2 import HTTP2StateProtocol
+
+from . import tutils
 
 
 def test_response():
@@ -169,7 +171,7 @@ class TestDaemon(PathocTestDaemon):
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = StringIO(), StringIO()
+        c.rfile, c.wfile = BytesIO(), BytesIO()
         with raises("connect failed"):
             c.http_connect(to)
         c.rfile = BytesIO(
@@ -219,7 +221,7 @@ class TestDaemonHTTP2(PathocTestDaemon):
                 ssl=True,
                 use_http2=True,
             )
-            assert isinstance(c.protocol, http2.HTTP2Protocol)
+            assert isinstance(c.protocol, HTTP2StateProtocol)
 
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),

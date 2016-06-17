@@ -1,6 +1,5 @@
 import React from 'react'
 import { formatSize } from '../utils.js'
-import { SettingsState } from './common.js'
 
 Footer.propTypes = {
     settings: React.PropTypes.object.isRequired,

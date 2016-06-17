@@ -1,12 +1,13 @@
 from six import BytesIO
 
-import netlib
 from netlib import tcp
 from netlib.http import user_agents
 
 from pathod import language
 from pathod.language import http2
-import tutils
+from pathod.protocols.http2 import HTTP2StateProtocol
+
+from . import tutils
 
 
 def parse_request(s):
@@ -20,7 +21,7 @@ def parse_response(s):
 def default_settings():
     return language.Settings(
         request_host="foo.com",
-        protocol=netlib.http.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
+        protocol=HTTP2StateProtocol(tcp.TCPClient(('localhost', 1234)))
     )
 
 
