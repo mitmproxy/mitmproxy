@@ -70,3 +70,8 @@ export function fetchSettings() {
         // TODO: Error handling
     }
 }
+
+export function setInterceptPattern(intercept) {
+    return dispatch =>
+        fetchApi.put("/settings", {intercept})
+}
