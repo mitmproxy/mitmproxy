@@ -111,11 +111,11 @@ class ProxyAppMain extends Component {
     }
 
     render() {
-        const { showEventLog, location, children, settings } = this.props
+        const { showEventLog, location, children } = this.props
         const query = this.getQuery()
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeyDown}>
-                <Header ref="header" settings={settings} updateLocation={this.updateLocation} query={query} />
+                <Header ref="header" updateLocation={this.updateLocation} query={query} />
                 {React.cloneElement(
                     children,
                     { ref: 'view', location, query, updateLocation: this.updateLocation }
@@ -123,7 +123,7 @@ class ProxyAppMain extends Component {
                 {showEventLog && (
                     <EventLog key="eventlog"/>
                 )}
-                <Footer settings={settings}/>
+                <Footer />
             </div>
         )
     }
@@ -132,6 +132,5 @@ class ProxyAppMain extends Component {
 export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
-        settings: state.settings.settings,
     })
 )(ProxyAppMain)
