@@ -20,6 +20,6 @@ __all__ = [
     "make_connect_response", "expect_continue_response",
     "ClientConnection", "ServerConnection",
     "Flow", "Error",
-    "TCPFlow"
-    "FLOW_TYPES"
+    "TCPFlow",
+    "FLOW_TYPES",
 ]
