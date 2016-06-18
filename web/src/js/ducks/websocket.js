@@ -3,17 +3,17 @@ import { AppDispatcher } from '../dispatcher.js'
 import * as eventLogActions from './eventLog'
 import * as flowActions from './flows'
 
-const CONNECT = 'WEBSOCKET_CONNECT'
-const CONNECTED = 'WEBSOCKET_CONNECTED'
-const DISCONNECT = 'WEBSOCKET_DISCONNECT'
-const DISCONNECTED = 'WEBSOCKET_DISCONNECTED'
-const ERROR = 'WEBSOCKET_ERROR'
-const MESSAGE = 'WEBSOCKET_MESSAGE'
+export const CONNECT = 'WEBSOCKET_CONNECT'
+export const CONNECTED = 'WEBSOCKET_CONNECTED'
+export const DISCONNECT = 'WEBSOCKET_DISCONNECT'
+export const DISCONNECTED = 'WEBSOCKET_DISCONNECTED'
+export const ERROR = 'WEBSOCKET_ERROR'
+export const MESSAGE = 'WEBSOCKET_MESSAGE'
 
 /* we may want to have an error message attribute here at some point */
 const defaultState = { connected: false, socket: null }
 
-export default function reducer(state = defaultState, action) {
+export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
         case CONNECT:
@@ -52,7 +52,10 @@ export function connect() {
 }
 
 export function disconnect() {
-    return { type: DISCONNECT }
+    return (dispatch, getState) => {
+        getState().settings.socket.close()
+        dispatch({ type: DISCONNECT })
+    }
 }
 
 export function onConnect() {

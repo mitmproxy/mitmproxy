@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import _ from 'lodash'
 import { connect } from 'react-redux'
 
-import { connect as wsConnect } from '../ducks/websocket'
+import { init as appInit, destruct as appDestruct } from '../ducks/app'
 import Header from './Header'
 import EventLog from './EventLog'
 import Footer from './Footer'
@@ -37,7 +37,7 @@ class ProxyAppMain extends Component {
     }
 
     componentWillMount() {
-        this.props.wsConnect()
+        this.props.appInit()
     }
 
     /**
@@ -79,6 +79,7 @@ class ProxyAppMain extends Component {
      * @todo stop listening to window's key events
      */
     componentWillUnmount() {
+        this.props.appDestruct()
         this.settingsStore.removeListener('recalculate', this.onSettingsChange)
     }
 
@@ -168,6 +169,7 @@ export default connect(
         showEventLog: state.eventLog.visible
     }),
     {
-        wsConnect,
+        appInit,
+        appDestruct,
     }
 )(ProxyAppMain)
