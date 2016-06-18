@@ -13,7 +13,7 @@ export default function Connection(url, dispatch) {
     var ws = new WebSocket(url);
     ws.onopen = function () {
         dispatch(webSocketActions.connected())
-        dispatch(settingsActions.fetch())
+        dispatch(settingsActions.fetchSettings())
         dispatch(flowActions.fetchFlows())
         // workaround to make sure that our state is already available.
             .then(() => {
@@ -30,8 +30,8 @@ export default function Connection(url, dispatch) {
                 return dispatch(eventLogActions.updateLogEntries(message))
             case flowActions.UPDATE_FLOWS:
                 return dispatch(flowActions.updateFlows(message))
-            case settingsActions.WS_MSG_TYPE:
-                return dispatch(settingsActions.handleWsMsg(message))
+            case settingsActions.UPDATE_SETTINGS:
+                return dispatch(settingsActions.updateSettings(message))
             default:
                 console.warn("unknown message", message)
         }

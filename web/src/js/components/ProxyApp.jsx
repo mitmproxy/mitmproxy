@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import _ from 'lodash'
 import { connect } from 'react-redux'
 
-import { fetch as fetchSettings } from '../ducks/settings'
 import Header from './Header'
 import EventLog from './EventLog'
 import Footer from './Footer'
@@ -50,12 +49,7 @@ class ProxyAppMain extends Component {
         return _.clone(this.props.location.query)
     }
 
-    componentWillMount() {
-        this.props.fetchSettings();
-    }
-
     /**
-     * @todo connect websocket here
      * @todo listen to window's key events
      */
     componentDidMount() {
@@ -139,8 +133,5 @@ export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
         settings: state.settings.settings,
-    }),
-    {
-        fetchSettings,
-    }
+    })
 )(ProxyAppMain)

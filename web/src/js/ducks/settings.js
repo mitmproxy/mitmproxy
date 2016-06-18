@@ -1,64 +1,72 @@
-import { addLogEntry } from './eventLog'
+import {fetchApi} from "../utils";
 
-export const WS_MSG_TYPE = 'settings'
-export const WS_MSG_CMD_UPDATE = 'update'
+export const REQUEST_SETTINGS = "REQUEST_SETTINGS"
+export const RECEIVE_SETTINGS = "RECEIVE_SETTINGS"
+export const UPDATE_SETTINGS = "UPDATE_SETTINGS"
 
-export const BEGIN_FETCH = 'SETTINGS_BEGIN_FETCH'
-export const FETCHED = 'SETTINGS_FETCHED'
-export const RECV_WS_MSG = 'SETTINGS_RECV_WS_MSG'
+const defaultState = {
+    settings: {},
+    isFetching: false,
+    actionsDuringFetch: [],
+}
 
-const defaultState = { settings: {}, pendings: null }
-
-export default function reduce(state = defaultState, action) {
+export default function reducer(state = defaultState, action) {
     switch (action.type) {
 
-        case BEGIN_FETCH:
-            return { ...state, pendings: [] }
-
-        case FETCHED:
-            const pendings = state.pendings || []
-            return { ...state, pendings: null, settings: pendings.reduce(reduceData, action.data) }
-
-        case RECV_WS_MSG:
-            if (state.pendings) {
-                return { ...state, pendings: state.pendings.concat(action) }
+        case REQUEST_SETTINGS:
+            return {
+                ...state,
+                isFetching: true
             }
-            return { ...state, settings: reduceData(state.settings, action) }
+
+        case RECEIVE_SETTINGS:
+            let s = {
+                settings: action.settings,
+                isFetching: false,
+                actionsDuringFetch: [],
+            }
+            for (action of state.actionsDuringFetch) {
+                s = reducer(s, action)
+            }
+            return s
+
+        case UPDATE_SETTINGS:
+            if (state.isFetching) {
+                return {
+                    ...state,
+                    actionsDuringFetch: [...state.actionsDuringFetch, action]
+                }
+            }
+            return {
+                ...state,
+                settings: {...state.settings, ...action.settings}
+            }
 
         default:
             return state
     }
 }
 
-function reduceData(data, action) {
-    switch (action.cmd) {
-
-        case WS_MSG_CMD_UPDATE:
-            return { ...data, ...action.data }
-
-        default:
-            return data
+export function updateSettings(event) {
+    /* This action creator takes all WebSocket events */
+    if (event.cmd === "update") {
+        return {
+            type: UPDATE_SETTINGS,
+            settings: event.data
+        }
     }
+    console.error("unknown settings update", event)
 }
 
-export function fetch() {
+export function fetchSettings() {
     return dispatch => {
-        dispatch({ type: BEGIN_FETCH })
-        return $.getJSON('/settings')
-            .done(msg => dispatch(handleFetchResponse(msg.data)))
-            .fail(error => dispatch(handleFetchError(error)));
+        dispatch({type: REQUEST_SETTINGS})
+
+        return fetchApi("/settings")
+            .then(response => response.json())
+            .then(json =>
+                dispatch({type: RECEIVE_SETTINGS, settings: json.data})
+            )
+        // TODO: Error handling
     }
-}
-
-export function handleWsMsg(msg) {
-    return { type: RECV_WS_MSG, cmd: msg.cmd, data: msg.data }
-}
-
-export function handleFetchResponse(data) {
-    return { type: FETCHED, data }
-}
-
-export function handleFetchError(error) {
-    // @todo let eventLog subscribe to SettingsActions.FETCH_ERROR
-    return addLogEntry(error.stack || error.message || error)
 }

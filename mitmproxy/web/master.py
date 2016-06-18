@@ -82,7 +82,7 @@ class WebState(flow.State):
         super(WebState, self).clear()
         self.events.clear()
         app.ClientConnection.broadcast(
-            type="events",
+            type="UPDATE_EVENTLOG",
             cmd="reset",
             data=[]
         )
