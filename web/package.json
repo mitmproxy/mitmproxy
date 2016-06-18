@@ -2,7 +2,9 @@
   "name": "mitmproxy",
   "private": true,
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "gulp prod",
+    "start": "gulp"
   },
   "jest": {
     "testPathDirs": [

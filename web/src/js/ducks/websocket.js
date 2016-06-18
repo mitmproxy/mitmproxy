@@ -1,7 +1,8 @@
 import { ConnectionActions } from '../actions.js'
 import { AppDispatcher } from '../dispatcher.js'
 import * as eventLogActions from './eventLog'
-import * as flowActions from './flows'
+import * as flowsActions from './flows'
+import * as settingsActions from './settings'
 
 export const CONNECT = 'WEBSOCKET_CONNECT'
 export const CONNECTED = 'WEBSOCKET_CONNECTED'
@@ -62,15 +63,8 @@ export function onConnect() {
     // workaround to make sure that our state is already available.
     return dispatch => {
         dispatch({ type: CONNECTED })
-        dispatch(flowActions.fetchFlows()).then(() => ConnectionActions.open())
-    }
-}
-
-export function onDisconnect() {
-    return dispatch => {
-        ConnectionActions.close()
-        dispatch(eventLogActions.addLogEntry('WebSocket connection closed.'))
-        dispatch({ type: DISCONNECTED })
+        dispatch(settingsActions.fetchSettings())
+        dispatch(flowsActions.fetchFlows()).then(() => ConnectionActions.open())
     }
 }
 
@@ -85,14 +79,25 @@ export function onMessage(msg) {
             case eventLogActions.UPDATE_LOG:
                 return dispatch(eventLogActions.updateLogEntries(data))
 
-            case flowActions.UPDATE_FLOWS:
-                return dispatch(flowActions.updateFlows(data))
+            case flowsActions.UPDATE_FLOWS:
+                return dispatch(flowsActions.updateFlows(data))
+
+            case settingsActions.UPDATE_SETTINGS:
+                return dispatch(settingsActions.updateSettings(message))
 
             default:
                 console.warn('unknown message', data)
         }
 
         dispatch({ type: MESSAGE, msg })
+    }
+}
+
+export function onDisconnect() {
+    return dispatch => {
+        ConnectionActions.close()
+        dispatch(eventLogActions.addLogEntry('WebSocket connection closed.'))
+        dispatch({ type: DISCONNECTED })
     }
 }
 
