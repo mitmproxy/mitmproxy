@@ -109,7 +109,19 @@ export function fetchApi(url, options) {
         url += "&" + xsrf;
     }
     return fetch(url, {
-        ...options,
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        ...options
     });
 }
+
+fetchApi.put = (url, json, options) => fetchApi(
+    url,
+    {
+        method: "PUT",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(json),
+        ...options
+    }
+)
