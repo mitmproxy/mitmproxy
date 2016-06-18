@@ -364,7 +364,7 @@ class Settings(RequestHandler):
                 print("Warning: Unknown setting {}: {}".format(k, v))
 
         ClientConnection.broadcast(
-            type="settings",
+            type="UPDATE_SETTINGS",
             cmd="update",
             data=update
         )

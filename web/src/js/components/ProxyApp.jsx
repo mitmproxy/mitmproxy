@@ -6,7 +6,6 @@ import { connect } from 'react-redux'
 import Header from './Header'
 import EventLog from './EventLog'
 import Footer from './Footer'
-import { SettingsStore } from '../store/store.js'
 import { Key } from '../utils.js'
 
 class ProxyAppMain extends Component {
@@ -22,17 +21,9 @@ class ProxyAppMain extends Component {
     constructor(props, context) {
         super(props, context)
 
-        this.settingsStore = new SettingsStore()
-
-        // Default Settings before fetch
-        _.extend(this.settingsStore.dict, {})
-
-        this.state = { settings: this.settingsStore.dict }
-
         this.focus = this.focus.bind(this)
         this.onKeyDown = this.onKeyDown.bind(this)
         this.updateLocation = this.updateLocation.bind(this)
-        this.onSettingsChange = this.onSettingsChange.bind(this)
     }
 
     /**
@@ -59,29 +50,10 @@ class ProxyAppMain extends Component {
     }
 
     /**
-     * @todo remove settings store
-     * @todo connect websocket here
      * @todo listen to window's key events
      */
     componentDidMount() {
         this.focus()
-        this.settingsStore.addListener('recalculate', this.onSettingsChange)
-    }
-
-    /**
-     * @todo remove settings store
-     * @todo disconnect websocket here
-     * @todo stop listening to window's key events
-     */
-    componentWillUnmount() {
-        this.settingsStore.removeListener('recalculate', this.onSettingsChange)
-    }
-
-    /**
-     * @todo move to actions
-     */
-    onSettingsChange() {
-        this.setState({ settings: this.settingsStore.dict })
     }
 
     /**
@@ -139,8 +111,7 @@ class ProxyAppMain extends Component {
     }
 
     render() {
-        const { showEventLog, location, children } = this.props
-        const { settings } = this.state
+        const { showEventLog, location, children, settings } = this.props
         const query = this.getQuery()
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeyDown}>
@@ -160,6 +131,7 @@ class ProxyAppMain extends Component {
 
 export default connect(
     state => ({
-        showEventLog: state.eventLog.visible
+        showEventLog: state.eventLog.visible,
+        settings: state.settings.settings,
     })
 )(ProxyAppMain)

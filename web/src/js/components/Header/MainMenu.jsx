@@ -1,9 +1,10 @@
 import React, { Component, PropTypes } from 'react'
-import { SettingsActions } from "../../actions.js"
 import FilterInput from './FilterInput'
 import { Query } from '../../actions.js'
+import {setInterceptPattern} from "../../ducks/settings"
+import { connect } from 'react-redux'
 
-export default class MainMenu extends Component {
+class MainMenu extends Component {
 
     static title = 'Start'
     static route = 'flows'
@@ -28,7 +29,7 @@ export default class MainMenu extends Component {
     }
 
     onInterceptChange(val) {
-        SettingsActions.update({ intercept: val })
+        this.props.setInterceptPattern(val);
     }
 
     render() {
@@ -71,3 +72,7 @@ export default class MainMenu extends Component {
         )
     }
 }
+
+export default connect(undefined, {
+    setInterceptPattern
+})(MainMenu);
