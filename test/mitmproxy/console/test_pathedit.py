@@ -2,6 +2,8 @@ import os
 from os.path import normpath
 from mitmproxy.console import pathedit
 
+from mock import patch
+
 from .. import tutils
 
 
@@ -47,3 +49,25 @@ class TestPathCompleter:
         s = "thisisatotallynonexistantpathforsure"
         assert c.complete(s) == s
         assert c.final == s
+
+
+class TestPathEdit():
+
+    def test_keypress(self):
+
+        pe = pathedit.PathEdit()
+
+        with patch('urwid.widget.Edit.get_edit_text') as get_text, \
+                patch('urwid.widget.Edit.set_edit_text') as set_text:
+
+            cd = tutils.test_data.path("completion")
+            get_text.return_value = os.path.join(cd, "a")
+
+            # Pressing tab should set completed path
+            pe.keypress((1,), "tab")
+            set_text_called_with = set_text.call_args[0][0]
+            assert set_text_called_with.endswith(normpath("/completion/aaa"))
+
+            # Pressing any other key should reset
+            pe.keypress((1,), "a")
+            assert pe.lookup is None
