@@ -130,7 +130,7 @@ def _rdumpq(q, size, value, encoding=None):
     if value is False:
         write("5:false!")
         return size + 8
-    if isinstance(value, (int, long)):
+    if isinstance(value, six.integer_types):
         data = str(value)
         ldata = len(data)
         span = str(ldata)
@@ -208,7 +208,7 @@ def _gdumps(value, encoding):
         yield "4:true!"
     elif value is False:
         yield "5:false!"
-    elif isinstance(value, (int, long)):
+    elif isinstance(value, six.integer_types):
         data = str(value)
         yield str(len(data))
         yield ":"

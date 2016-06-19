@@ -1,6 +1,7 @@
-import tutils
-import netlib.tutils
 import mock
+
+from . import tutils
+import netlib.tutils
 
 from mitmproxy import flow, proxy, models
 
