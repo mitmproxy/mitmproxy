@@ -138,16 +138,16 @@ class TestContentView:
     def test_view_image(self):
         v = cv.ViewImage()
         p = tutils.test_data.path("data/image.png")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
         p = tutils.test_data.path("data/image.gif")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
         p = tutils.test_data.path("data/image-err1.jpg")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
         p = tutils.test_data.path("data/image.ico")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
         assert not v("flibble")
 
@@ -252,22 +252,22 @@ if pyamf:
         v = cv.ViewAMF()
 
         p = tutils.test_data.path("data/amf01")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
         p = tutils.test_data.path("data/amf02")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
     def test_view_amf_response():
         v = cv.ViewAMF()
         p = tutils.test_data.path("data/amf03")
-        assert v(file(p, "rb").read())
+        assert v(open(p, "rb").read())
 
 if cv.ViewProtobuf.is_available():
     def test_view_protobuf_request():
         v = cv.ViewProtobuf()
 
         p = tutils.test_data.path("data/protobuf01")
-        content_type, output = v(file(p, "rb").read())
+        content_type, output = v(open(p, "rb").read())
         assert content_type == "Protobuf"
         assert output.next()[0][1] == '1: "3bbc333c-e61c-433b-819a-0b9a8cc103b8"'
 
