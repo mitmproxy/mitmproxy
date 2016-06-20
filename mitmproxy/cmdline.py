@@ -9,6 +9,7 @@ import configargparse
 from mitmproxy import filt
 from mitmproxy.proxy import config
 from netlib import human
+from netlib import strutils
 from netlib import tcp
 from netlib import version
 from netlib.http import url
@@ -127,7 +128,7 @@ def parse_upstream_auth(auth):
         raise configargparse.ArgumentTypeError(
             "Invalid upstream auth specification: %s" % auth
         )
-    return "Basic" + " " + base64.b64encode(auth)
+    return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
 
 
 def get_common_options(options):
