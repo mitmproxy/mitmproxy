@@ -110,7 +110,7 @@ def parse_setheader(s):
 def parse_server_spec(spec):
     try:
         p = url.parse(spec)
-        if p[0] not in ("http", "https"):
+        if p[0] not in (b"http", b"https"):
             raise ValueError()
     except ValueError:
         raise configargparse.ArgumentTypeError(

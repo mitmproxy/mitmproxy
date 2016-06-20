@@ -39,11 +39,11 @@ def test_parse_replace_hook():
 def test_parse_server_spec():
     tutils.raises("Invalid server specification", cmdline.parse_server_spec, "")
     assert cmdline.parse_server_spec(
-        "http://foo.com:88") == ("http", ("foo.com", 88))
+        "http://foo.com:88") == (b"http", (b"foo.com", 88))
     assert cmdline.parse_server_spec(
-        "http://foo.com") == ("http", ("foo.com", 80))
+        "http://foo.com") == (b"http", (b"foo.com", 80))
     assert cmdline.parse_server_spec(
-        "https://foo.com") == ("https", ("foo.com", 443))
+        "https://foo.com") == (b"https", (b"foo.com", 443))
     tutils.raises(
         "Invalid server specification",
         cmdline.parse_server_spec,
@@ -59,9 +59,9 @@ def test_parse_upstream_auth():
     tutils.raises("Invalid upstream auth specification", cmdline.parse_upstream_auth, ":")
     tutils.raises("Invalid upstream auth specification", cmdline.parse_upstream_auth, ":test")
     assert cmdline.parse_upstream_auth(
-        "test:test") == "Basic" + " " + base64.b64encode("test:test")
+        "test:test") == b"Basic" + b" " + base64.b64encode(b"test:test")
     assert cmdline.parse_upstream_auth(
-        "test:") == "Basic" + " " + base64.b64encode("test:")
+        "test:") == b"Basic" + b" " + base64.b64encode(b"test:")
 
 
 def test_parse_setheaders():
@@ -124,7 +124,7 @@ def test_common():
     opts.replace_file = [("/foo/bar/%s" % p)]
     v = cmdline.get_common_options(opts)["replacements"]
     assert len(v) == 1
-    assert v[0][2].strip() == "replacecontents"
+    assert v[0][2].strip() == b"replacecontents"
 
 
 def test_mitmproxy():
