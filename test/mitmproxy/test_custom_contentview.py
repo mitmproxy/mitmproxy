@@ -40,7 +40,7 @@ def test_custom_views():
     cv.remove(view_obj)
     r = cv.get_content_view(
         cv.get("Auto"),
-        "[1, 2, 3]",
+        b"[1, 2, 3]",
         headers=Headers(
             content_type="text/none"
         )

@@ -23,37 +23,37 @@ class TestContentView:
     def test_view_auto(self):
         v = cv.ViewAuto()
         f = v(
-            "foo",
+            b"foo",
             headers=Headers()
         )
         assert f[0] == "Raw"
 
         f = v(
-            "<html></html>",
+            b"<html></html>",
             headers=Headers(content_type="text/html")
         )
         assert f[0] == "HTML"
 
         f = v(
-            "foo",
+            b"foo",
             headers=Headers(content_type="text/flibble")
         )
         assert f[0] == "Raw"
 
         f = v(
-            "<xml></xml>",
+            b"<xml></xml>",
             headers=Headers(content_type="text/flibble")
         )
         assert f[0].startswith("XML")
 
         f = v(
-            "",
+            b"",
             headers=Headers()
         )
         assert f[0] == "No content"
 
         f = v(
-            "",
+            b"",
             headers=Headers(),
             query=multidict.MultiDict([("foo", "bar")]),
         )
@@ -69,29 +69,29 @@ class TestContentView:
 
     def test_view_html(self):
         v = cv.ViewHTML()
-        s = "<html><br><br></br><p>one</p></html>"
+        s = b"<html><br><br></br><p>one</p></html>"
         assert v(s)
 
-        s = "gobbledygook"
+        s = b"gobbledygook"
         assert not v(s)
 
     def test_view_html_outline(self):
         v = cv.ViewHTMLOutline()
-        s = "<html><br><br></br><p>one</p></html>"
+        s = b"<html><br><br></br><p>one</p></html>"
         assert v(s)
 
     def test_view_json(self):
         cv.VIEW_CUTOFF = 100
         v = cv.ViewJSON()
-        assert v("{}")
-        assert not v("{")
-        assert v("[1, 2, 3, 4, 5]")
+        assert v(b"{}")
+        assert not v(b"{")
+        assert v(b"[1, 2, 3, 4, 5]")
 
     def test_view_xml(self):
         v = cv.ViewXML()
-        assert v("<foo></foo>")
-        assert not v("<foo>")
-        s = """<?xml version="1.0" encoding="UTF-8"?>
+        assert v(b"<foo></foo>")
+        assert not v(b"<foo>")
+        s = b"""<?xml version="1.0" encoding="UTF-8"?>
             <?xml-stylesheet title="XSL_formatting"?>
             <rss
                 xmlns:media="http://search.yahoo.com/mrss/"
@@ -103,7 +103,7 @@ class TestContentView:
 
     def test_view_raw(self):
         v = cv.ViewRaw()
-        assert v("foo")
+        assert v(b"foo")
 
     def test_view_javascript(self):
         v = cv.ViewJavaScript()
@@ -133,7 +133,7 @@ class TestContentView:
 
     def test_view_hex(self):
         v = cv.ViewHex()
-        assert v("foo")
+        assert v(b"foo")
 
     def test_view_image(self):
         v = cv.ViewImage()
@@ -149,11 +149,11 @@ class TestContentView:
         p = tutils.test_data.path("data/image.ico")
         assert v(open(p, "rb").read())
 
-        assert not v("flibble")
+        assert not v(b"flibble")
 
     def test_view_multipart(self):
         view = cv.ViewMultipart()
-        v = """
+        v = b"""
 --AaB03x
 Content-Disposition: form-data; name="submit-name"
 
@@ -182,21 +182,21 @@ Larry
     def test_get_content_view(self):
         r = cv.get_content_view(
             cv.get("Raw"),
-            "[1, 2, 3]",
+            b"[1, 2, 3]",
             headers=Headers(content_type="application/json")
         )
         assert "Raw" in r[0]
 
         r = cv.get_content_view(
             cv.get("Auto"),
-            "[1, 2, 3]",
+            b"[1, 2, 3]",
             headers=Headers(content_type="application/json")
         )
         assert r[0] == "JSON"
 
         r = cv.get_content_view(
             cv.get("Auto"),
-            "[1, 2",
+            b"[1, 2",
             headers=Headers(content_type="application/json")
         )
         assert "Raw" in r[0]
@@ -205,13 +205,13 @@ Larry
             ContentViewException,
             cv.get_content_view,
             cv.get("AMF"),
-            "[1, 2",
+            b"[1, 2",
             headers=Headers()
         )
 
         r = cv.get_content_view(
             cv.get("Auto"),
-            encoding.encode('gzip', "[1, 2, 3]"),
+            encoding.encode('gzip', b"[1, 2, 3]"),
             headers=Headers(
                 content_type="application/json",
                 content_encoding="gzip"
@@ -222,7 +222,7 @@ Larry
 
         r = cv.get_content_view(
             cv.get("XML"),
-            encoding.encode('gzip', "[1, 2, 3]"),
+            encoding.encode('gzip', b"[1, 2, 3]"),
             headers=Headers(
                 content_type="application/json",
                 content_encoding="gzip"
@@ -277,7 +277,7 @@ def test_get_by_shortcut():
 
 
 def test_pretty_json():
-    assert cv.pretty_json('{"foo": 1}')
-    assert not cv.pretty_json("moo")
+    assert cv.pretty_json(b'{"foo": 1}')
+    assert not cv.pretty_json(b"moo")
     assert cv.pretty_json(b'{"foo" : "\xe4\xb8\x96\xe7\x95\x8c"}')  # utf8 with chinese characters
     assert not cv.pretty_json(b'{"foo" : "\xFF"}')
