@@ -121,8 +121,10 @@ ToggleButton.propTypes = {
     text: React.PropTypes.string.isRequired
 };
 
-export const Button = ({onClick, text, icon}) =>
-    <div className={"btn btn-default"} onClick={onClick}>
+export const Button = ({onClick, text, icon, disabled}) =>
+    <div className={"btn btn-default"}
+         onClick={onClick}
+         disabled={disabled}>
         <i className={"fa fa-fw " + icon}/>
         &nbsp;
         {text}
