@@ -1,8 +1,8 @@
-import {fetchApi} from "../utils";
+import {fetchApi} from '../utils';
 
-export const REQUEST_SETTINGS = "REQUEST_SETTINGS"
-export const RECEIVE_SETTINGS = "RECEIVE_SETTINGS"
-export const UPDATE_SETTINGS = "UPDATE_SETTINGS"
+export const REQUEST_SETTINGS = 'REQUEST_SETTINGS'
+export const RECEIVE_SETTINGS = 'RECEIVE_SETTINGS'
+export const UPDATE_SETTINGS = 'UPDATE_SETTINGS'
 
 const defaultState = {
     settings: {},
@@ -49,20 +49,20 @@ export default function reducer(state = defaultState, action) {
 
 export function updateSettings(event) {
     /* This action creator takes all WebSocket events */
-    if (event.cmd === "update") {
+    if (event.cmd === 'update') {
         return {
             type: UPDATE_SETTINGS,
             settings: event.data
         }
     }
-    console.error("unknown settings update", event)
+    console.error('unknown settings update', event)
 }
 
 export function fetchSettings() {
     return dispatch => {
         dispatch({type: REQUEST_SETTINGS})
 
-        return fetchApi("/settings")
+        return fetchApi('/settings')
             .then(response => response.json())
             .then(json =>
                 dispatch({type: RECEIVE_SETTINGS, settings: json.data})
@@ -71,7 +71,7 @@ export function fetchSettings() {
     }
 }
 
-export function setInterceptPattern(intercept) {
-    return dispatch =>
-        fetchApi.put("/settings", {intercept})
+export function updateSettings(settings) {
+    fetchApi.put('/settings', settings)
+    return { type: SET_INTERCEPT }
 }

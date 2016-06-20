@@ -1,11 +1,12 @@
 import React from 'react'
+import { connect } from 'react-redux'
 import { formatSize } from '../utils.js'
 
 Footer.propTypes = {
     settings: React.PropTypes.object.isRequired,
 }
 
-export default function Footer({ settings }) {
+function Footer({ settings }) {
     return (
         <footer>
             {settings.mode && settings.mode != "regular" && (
@@ -44,3 +45,9 @@ export default function Footer({ settings }) {
         </footer>
     )
 }
+
+export default connect(
+    state => ({
+        settings: state.settings.settings,
+    })
+)(Footer)
