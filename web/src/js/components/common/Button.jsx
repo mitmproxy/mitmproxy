@@ -5,9 +5,11 @@ Button.propTypes = {
     text: PropTypes.string.isRequired
 }
 
-export default function Button({ onClick, text, icon }) {
+export default function Button({ onClick, text, icon, disabled }) {
     return (
-        <div className={"btn btn-default"} onClick={onClick}>
+        <div className={"btn btn-default"}
+             onClick={onClick}
+             disabled={disabled}>
             <i className={"fa fa-fw " + icon}/>
             &nbsp;
             {text}
