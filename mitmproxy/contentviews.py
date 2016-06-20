@@ -209,7 +209,7 @@ class ViewXML(View):
             p = p.getprevious()
         doctype = docinfo.doctype
         if prev:
-            doctype += "\n".join(prev).strip()
+            doctype += "\n".join(p.decode() for p in prev).strip()
         doctype = doctype.strip()
 
         s = lxml.etree.tostring(
