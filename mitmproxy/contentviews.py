@@ -26,7 +26,7 @@ import lxml.html
 import six
 from PIL import ExifTags
 from PIL import Image
-from six.moves import cStringIO as StringIO
+from six import BytesIO
 
 from mitmproxy import exceptions
 from mitmproxy.contrib import jsbeautifier
@@ -416,7 +416,7 @@ class ViewImage(View):
 
     def __call__(self, data, **metadata):
         try:
-            img = Image.open(StringIO(data))
+            img = Image.open(BytesIO(data))
         except IOError:
             return None
         parts = [
