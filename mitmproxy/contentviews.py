@@ -323,7 +323,10 @@ if pyamf:
         prompt = ("amf", "f")
         content_types = ["application/x-amf"]
 
-        def unpack(self, b, seen=set([])):
+        def unpack(self, b, seen=None):
+            if seen is None:
+                seen = set([])
+
             if hasattr(b, "body"):
                 return self.unpack(b.body, seen)
             if isinstance(b, DummyObject):
