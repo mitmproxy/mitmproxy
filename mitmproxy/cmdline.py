@@ -74,7 +74,7 @@ def parse_replace_hook(s):
     try:
         re.compile(regex)
     except re.error as e:
-        raise ParseException("Malformed replacement regex: %s" % str(e.message))
+        raise ParseException("Malformed replacement regex: %s" % str(e))
     return patt, regex, replacement
 
 
@@ -148,13 +148,13 @@ def get_common_options(options):
         try:
             p = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e)
         try:
             v = open(path, "rb").read()
         except IOError as e:
@@ -168,7 +168,7 @@ def get_common_options(options):
         try:
             p = parse_setheader(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e)
         setheaders.append(p)
 
     if options.outfile and options.outfile[0] == options.rfile:
