@@ -62,9 +62,9 @@ class ViewPigLatin(contentviews.View):
 pig_view = ViewPigLatin()
 
 
-def start(context):
-    context.add_contentview(pig_view)
+def configure(options):
+    contentviews.add(pig_view)
 
 
 def done(context):
-    context.remove_contentview(pig_view)
+    contentviews.remove(pig_view)

@@ -3,18 +3,23 @@
 import sys
 
 from mitmproxy.models import decoded
+from mitmproxy import ctx
+
+state = {}
 
 
-def start(context):
+def configure(options):
     if len(sys.argv) != 3:
         raise ValueError('Usage: -s "modify_response_body.py old new"')
     # You may want to use Python's argparse for more sophisticated argument
     # parsing.
-    context.old, context.new = sys.argv[1], sys.argv[2]
+    state["old"] = sys.argv[1]
+    state["new"] = sys.argv[2]
 
 
-def response(context, flow):
-    with decoded(flow.response):  # automatically decode gzipped responses.
-        flow.response.content = flow.response.content.replace(
-            context.old,
-            context.new)
+def response():
+    with decoded(ctx.flow.response):  # automatically decode gzipped responses.
+        ctx.flow.response.content = ctx.flow.response.content.replace(
+            state["old"],
+            state["new"],
+        )

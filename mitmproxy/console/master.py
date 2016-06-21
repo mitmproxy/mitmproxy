@@ -19,7 +19,9 @@ from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import script
+from mitmproxy import builtins
+from mitmproxy import options as masteroptions
+from mitmproxy.builtins import script
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -175,7 +177,7 @@ class ConsoleState(flow.State):
         self.add_flow_setting(flow, "marked", marked)
 
 
-class Options(object):
+class Options(masteroptions.Options):
     attributes = [
         "app",
         "app_domain",
@@ -210,21 +212,20 @@ class Options(object):
         "outfile",
     ]
 
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
-
 
 class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, server, ConsoleState())
+        flow.FlowMaster.__init__(self, options, server, ConsoleState())
+        try:
+            self.addons.add(*builtins.default_addons())
+        except exceptions.OptionsError as v:
+            print("%s" % str(v))
+            sys.exit(1)
+        self.options.errored.connect(self.options_error)
+
         self.stream_path = None
-        self.options = options
 
         if options.replacements:
             for i in options.replacements:
@@ -242,21 +243,9 @@ class ConsoleMaster(flow.FlowMaster):
         if options.limit:
             self.set_limit(options.limit)
 
-        r = self.set_stickycookie(options.stickycookie)
-        if r:
-            print("Sticky cookies error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
-        r = self.set_stickyauth(options.stickyauth)
-        if r:
-            print("Sticky auth error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
         self.set_stream_large_bodies(options.stream_large_bodies)
 
         self.refresh_server_playback = options.refresh_server_playback
-        self.anticache = options.anticache
-        self.anticomp = options.anticomp
         self.killextra = options.kill
         self.rheaders = options.rheaders
         self.nopop = options.nopop
@@ -274,23 +263,6 @@ class ConsoleMaster(flow.FlowMaster):
         if options.server_replay:
             self.server_playback_path(options.server_replay)
 
-        if options.scripts:
-            for i in options.scripts:
-                try:
-                    self.load_script(i)
-                except exceptions.ScriptException as e:
-                    print("Script load error: {}".format(e), file=sys.stderr)
-                    sys.exit(1)
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1]
-            )
-            if err:
-                print("Stream file error: {}".format(err), file=sys.stderr)
-                sys.exit(1)
-
         self.view_stack = []
 
         if options.app:
@@ -304,9 +276,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.__dict__[name] = value
         signals.update_settings.send(self)
 
-    def load_script(self, command, use_reloader=True):
-        # We default to using the reloader in the console ui.
-        return super(ConsoleMaster, self).load_script(command, use_reloader)
+    def options_error(self, opts, exc):
+        signals.status_message.send(
+            message=str(exc),
+            expire=1
+        )
 
     def sig_add_event(self, sender, e, level):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
@@ -349,16 +323,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.view_stack.append(window)
         self.loop.widget = window
         self.loop.draw_screen()
-
-    def _run_script_method(self, method, s, f):
-        status, val = s.run(method, f)
-        if val:
-            if status:
-                signals.add_event("Method %s return: %s" % (method, val), "debug")
-            else:
-                signals.add_event(
-                    "Method %s error: %s" %
-                    (method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
@@ -699,25 +663,19 @@ class ConsoleMaster(flow.FlowMaster):
     def set_intercept(self, txt):
         return self.state.set_intercept(txt)
 
+    def set_stickyauth(self, txt):
+        self.options.stickyauth = txt
+
+    def set_stickycookie(self, txt):
+        self.options.stickycookie = txt
+
     def change_default_display_mode(self, t):
         v = contentviews.get_by_shortcut(t)
         self.state.default_body_view = v
         self.refresh_focus()
 
     def edit_scripts(self, scripts):
-        commands = [x[0] for x in scripts]  # remove outer array
-        if commands == [s.command for s in self.scripts]:
-            return
-
-        self.unload_scripts()
-        for command in commands:
-            try:
-                self.load_script(command)
-            except exceptions.ScriptException as e:
-                signals.status_message.send(
-                    message='Error loading "{}".'.format(command)
-                )
-                signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
+        self.options.scripts = [x[0] for x in scripts]
         signals.update_settings.send(self)
 
     def stop_client_playback_prompt(self, a):
@@ -796,10 +754,3 @@ class ConsoleMaster(flow.FlowMaster):
         if f:
             self.process_flow(f)
         return f
-
-    @controller.handler
-    def script_change(self, script):
-        if super(ConsoleMaster, self).script_change(script):
-            signals.status_message.send(message='"{}" reloaded.'.format(script.filename))
-        else:
-            signals.status_message.send(message='Error reloading "{}".'.format(script.filename))

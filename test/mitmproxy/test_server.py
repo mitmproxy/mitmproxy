@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+import types
 from OpenSSL import SSL
 from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.tcp import Address
@@ -13,6 +14,7 @@ from netlib.tutils import raises
 from pathod import pathoc, pathod
 
 from mitmproxy import controller
+from mitmproxy.builtins import script
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
 
@@ -285,10 +287,28 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         self.master.set_stream_large_bodies(None)
 
     def test_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("data/scripts/stream_modify.py"))
+        s = script.Script(
+            tutils.test_data.path("data/addonscripts/stream_modify.py")
+        )
+        self.master.addons.add(s)
         d = self.pathod('200:b"foo"')
         assert d.content == "bar"
-        self.master.unload_scripts()
+        self.master.addons.remove(s)
+
+
+class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
+    ssl = False
+
+    def test_tcp_stream_modify(self):
+        s = script.Script(
+            tutils.test_data.path("data/addonscripts/tcp_stream_modify.py")
+        )
+        self.master.addons.add(s)
+        self._tcpproxy_on()
+        d = self.pathod('200:b"foo"')
+        self._tcpproxy_off()
+        assert d.content == "bar"
+        self.master.addons.remove(s)
 
 
 class TestHTTPAuth(tservers.HTTPProxyTest):
@@ -504,21 +524,6 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     def test_http(self):
         p = self.pathoc(ssl=False)
         assert p.request("get:'/p/200'").status_code == 200
-
-
-class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
-    ssl = False
-
-    def test_tcp_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("data/scripts/tcp_stream_modify.py"))
-
-        self._tcpproxy_on()
-        d = self.pathod('200:b"foo"')
-        self._tcpproxy_off()
-
-        assert d.content == "bar"
-
-        self.master.unload_scripts()
 
 
 class TestTransparentSSL(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
@@ -935,8 +940,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             _func = getattr(master, attr)
 
             @controller.handler
-            def handler(*args):
-                f = args[-1]
+            def handler(self, f):
                 k[0] += 1
                 if not (k[0] in exclude):
                     f.client_conn.finish()
@@ -944,7 +948,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
                     f.reply.kill()
                 return _func(f)
 
-            setattr(master, attr, handler)
+            setattr(master, attr, types.MethodType(handler, master))
 
         kill_requests(
             self.chain[1].tmaster,

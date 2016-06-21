@@ -120,6 +120,7 @@ class StatusBar(urwid.WidgetWrap):
         self.ab = ActionBar()
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self._w = urwid.Pile([self.ib, self.ab])
+        master.options.changed.connect(self.sig_update_settings)
         signals.update_settings.connect(self.sig_update_settings)
         signals.flowlist_change.connect(self.sig_update_settings)
         self.redraw()
@@ -172,23 +173,23 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "Marked Flows"))
             r.append("]")
-        if self.master.stickycookie_txt:
+        if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
-            r.append(":%s]" % self.master.stickycookie_txt)
-        if self.master.stickyauth_txt:
+            r.append(":%s]" % self.master.options.stickycookie)
+        if self.master.options.stickyauth:
             r.append("[")
             r.append(("heading_key", "u"))
-            r.append(":%s]" % self.master.stickyauth_txt)
+            r.append(":%s]" % self.master.options.stickyauth)
         if self.master.state.default_body_view.name != "Auto":
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.state.default_body_view.name)
 
         opts = []
-        if self.master.anticache:
+        if self.master.options.anticache:
             opts.append("anticache")
-        if self.master.anticomp:
+        if self.master.options.anticomp:
             opts.append("anticomp")
         if self.master.showhost:
             opts.append("showhost")
@@ -217,14 +218,13 @@ class StatusBar(urwid.WidgetWrap):
                 dst.address.host,
                 dst.address.port
             ))
-        if self.master.scripts:
+        if self.master.options.scripts:
             r.append("[")
             r.append(("heading_key", "s"))
-            r.append("cripts:%s]" % len(self.master.scripts))
-        # r.append("[lt:%0.3f]"%self.master.looptime)
+            r.append("cripts:%s]" % len(self.master.options.scripts))
 
-        if self.master.stream:
-            r.append("[W:%s]" % self.master.stream_path)
+        if self.master.options.outfile:
+            r.append("[W:%s]" % self.master.options.outfile[0])
 
         return r
 

@@ -7,10 +7,10 @@ import re
 import urwid
 
 from mitmproxy import filt
-from mitmproxy import script
 from mitmproxy import utils
 from mitmproxy.console import common
 from mitmproxy.console import signals
+from mitmproxy.builtins import script
 from netlib.http import cookies
 from netlib.http import user_agents
 

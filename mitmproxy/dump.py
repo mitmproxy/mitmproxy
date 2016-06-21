@@ -11,6 +11,8 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
+from mitmproxy import builtins
+from mitmproxy import options
 from netlib import human
 from netlib import tcp
 from netlib import strutils
@@ -20,7 +22,7 @@ class DumpError(Exception):
     pass
 
 
-class Options(object):
+class Options(options.Options):
     attributes = [
         "app",
         "app_host",
@@ -50,25 +52,17 @@ class Options(object):
         "replay_ignore_content",
         "replay_ignore_params",
         "replay_ignore_payload_params",
-        "replay_ignore_host"
-    ]
+        "replay_ignore_host",
 
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
+        "tfile"
+    ]
 
 
 class DumpMaster(flow.FlowMaster):
 
-    def __init__(self, server, options, outfile=None):
-        flow.FlowMaster.__init__(self, server, flow.State())
-        self.outfile = outfile
-        self.o = options
-        self.anticache = options.anticache
-        self.anticomp = options.anticomp
+    def __init__(self, options, server):
+        flow.FlowMaster.__init__(self, options, server, flow.State())
+        self.addons.add(*builtins.default_addons())
         self.showhost = options.showhost
         self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
@@ -85,23 +79,10 @@ class DumpMaster(flow.FlowMaster):
 
         if options.filtstr:
             self.filt = filt.parse(options.filtstr)
+            if not self.filt:
+                raise DumpError("Invalid filter specification.")
         else:
             self.filt = None
-
-        if options.stickycookie:
-            self.set_stickycookie(options.stickycookie)
-
-        if options.stickyauth:
-            self.set_stickyauth(options.stickyauth)
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1],
-                self.filt
-            )
-            if err:
-                raise DumpError(err)
 
         if options.replacements:
             for i in options.replacements:
@@ -129,13 +110,6 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        scripts = options.scripts or []
-        for command in scripts:
-            try:
-                self.load_script(command, use_reloader=True)
-            except exceptions.ScriptException as e:
-                raise DumpError(str(e))
-
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
@@ -143,8 +117,8 @@ class DumpMaster(flow.FlowMaster):
                 self.add_event("Flow file corrupted.", "error")
                 raise DumpError(v)
 
-        if self.o.app:
-            self.start_app(self.o.app_host, self.o.app_port)
+        if self.options.app:
+            self.start_app(self.options.app_host, self.options.app_port)
 
     def _readflow(self, paths):
         """
@@ -158,13 +132,14 @@ class DumpMaster(flow.FlowMaster):
 
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.o.verbosity >= needed:
-            self.echo(
-                e,
-                fg="red" if level == "error" else None,
-                dim=(level == "debug"),
-                err=(level == "error")
-            )
+        fg = None
+        if level == "error":
+            fg = "red"
+        elif level == "warn":
+            fg = "yellow"
+
+        if self.options.verbosity >= needed:
+            self.echo(e, fg = fg, dim=(level == "debug"), err=(level == "error"))
 
     @staticmethod
     def indent(n, text):
@@ -175,10 +150,10 @@ class DumpMaster(flow.FlowMaster):
     def echo(self, text, indent=None, **style):
         if indent:
             text = self.indent(indent, text)
-        click.secho(text, file=self.outfile, **style)
+        click.secho(text, file=self.options.tfile, **style)
 
     def _echo_message(self, message):
-        if self.o.flow_detail >= 2:
+        if self.options.flow_detail >= 2:
             headers = "\r\n".join(
                 "{}: {}".format(
                     click.style(strutils.bytes_to_escaped_str(k), fg="blue", bold=True),
@@ -186,7 +161,7 @@ class DumpMaster(flow.FlowMaster):
                 for k, v in message.headers.fields
             )
             self.echo(headers, indent=4)
-        if self.o.flow_detail >= 3:
+        if self.options.flow_detail >= 3:
             if message.content is None:
                 self.echo("(content missing)", indent=4)
             elif message.content:
@@ -219,7 +194,7 @@ class DumpMaster(flow.FlowMaster):
                     for (style, text) in line:
                         yield click.style(text, **styles.get(style, {}))
 
-                if self.o.flow_detail == 3:
+                if self.options.flow_detail == 3:
                     lines_to_echo = itertools.islice(lines, 70)
                 else:
                     lines_to_echo = lines
@@ -234,7 +209,7 @@ class DumpMaster(flow.FlowMaster):
                 if next(lines, None):
                     self.echo("(cut off)", indent=4, dim=True)
 
-        if self.o.flow_detail >= 2:
+        if self.options.flow_detail >= 2:
             self.echo("")
 
     def _echo_request_line(self, flow):
@@ -308,7 +283,7 @@ class DumpMaster(flow.FlowMaster):
         self.echo(line)
 
     def echo_flow(self, f):
-        if self.o.flow_detail == 0:
+        if self.options.flow_detail == 0:
             return
 
         if f.request:
@@ -322,8 +297,8 @@ class DumpMaster(flow.FlowMaster):
         if f.error:
             self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
 
-        if self.outfile:
-            self.outfile.flush()
+        if self.options.tfile:
+            self.options.tfile.flush()
 
     def _process_flow(self, f):
         if self.filt and not f.match(self.filt):
@@ -333,27 +308,20 @@ class DumpMaster(flow.FlowMaster):
 
     @controller.handler
     def request(self, f):
-        f = flow.FlowMaster.request(self, f)
-        if f:
-            self.state.delete_flow(f)
-        return f
+        flow.FlowMaster.request(self, f)
+        self.state.delete_flow(f)
 
     @controller.handler
     def response(self, f):
-        f = flow.FlowMaster.response(self, f)
-        if f:
-            self._process_flow(f)
-        return f
+        flow.FlowMaster.response(self, f)
+        self._process_flow(f)
 
     @controller.handler
     def error(self, f):
         flow.FlowMaster.error(self, f)
-        if f:
-            self._process_flow(f)
-        return f
+        self._process_flow(f)
 
     def run(self):  # pragma: no cover
-        if self.o.rfile and not self.o.keepserving:
-            self.unload_scripts()  # make sure to trigger script unload events.
+        if self.options.rfile and not self.options.keepserving:
             return
         super(DumpMaster, self).run()

@@ -6,6 +6,7 @@ Be aware that content replacement isn't trivial:
     - If you want to replace all occurences of "foobar", make sure to catch the cases
       where one chunk ends with [...]foo" and the next starts with "bar[...].
 """
+from mitmproxy import ctx
 
 
 def modify(chunks):
@@ -16,5 +17,5 @@ def modify(chunks):
         yield chunk.replace("foo", "bar")
 
 
-def responseheaders(context, flow):
-    flow.response.stream = modify
+def responseheaders():
+    ctx.flow.response.stream = modify

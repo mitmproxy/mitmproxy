@@ -2,12 +2,15 @@ from __future__ import absolute_import, print_function, division
 
 import functools
 import threading
+import contextlib
 
 from six.moves import queue
 
 from netlib import basethread
-
-from . import exceptions
+from mitmproxy import exceptions
+from mitmproxy import addons
+from mitmproxy import ctx
+from mitmproxy import options
 
 
 Events = frozenset([
@@ -30,20 +33,58 @@ Events = frozenset([
     "error",
     "log",
 
-    "script_change",
+    "done",
 ])
+
+
+class Log:
+    def __init__(self, master):
+        self.master = master
+
+    def log(self, level, txt):
+        self.master.add_event(txt, level)
+
+    def debug(self, txt):
+        self.log("debug", txt)
+
+    def info(self, txt):
+        self.log("info", txt)
+
+    def warn(self, txt):
+        self.log("warn", txt)
+
+    def error(self, txt):
+        self.log("error", txt)
 
 
 class Master(object):
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self, *servers):
-        self.event_queue = queue.Queue()
-        self.should_exit = threading.Event()
+    def __init__(self, opts, *servers):
+        self.options = opts or options.Options()
         self.servers = []
         for i in servers:
             self.add_server(i)
+        self.addons = addons.Addons(self)
+        self.event_queue = queue.Queue()
+        self.should_exit = threading.Event()
+
+    @contextlib.contextmanager
+    def handlecontext(self, flow):
+        # Handlecontexts also have to nest - leave cleanup to the outermost
+        if ctx._master or ctx._flow or ctx._log:
+            yield
+            return
+        ctx._master = self
+        ctx._flow = flow
+        ctx._log = Log(self)
+        try:
+            yield
+        finally:
+            ctx._master = None
+            ctx._flow = None
+            ctx._log = None
 
     def add_server(self, server):
         # We give a Channel to the server which can be used to communicate with the master
@@ -77,9 +118,9 @@ class Master(object):
                 if mtype not in Events:
                     raise exceptions.ControlException("Unknown event %s" % repr(mtype))
                 handle_func = getattr(self, mtype)
-                if not hasattr(handle_func, "__dict__"):
-                    raise exceptions.ControlException("Handler %s not a function" % mtype)
-                if not handle_func.__dict__.get("__handler"):
+                if not callable(handle_func):
+                    raise exceptions.ControlException("Handler %s not callable" % mtype)
+                if not handle_func.func_dict.get("__handler"):
                     raise exceptions.ControlException(
                         "Handler function %s is not decorated with controller.handler" % (
                             handle_func
@@ -96,6 +137,7 @@ class Master(object):
         for server in self.servers:
             server.shutdown()
         self.should_exit.set()
+        self.addons.done()
 
 
 class ServerThread(basethread.BaseThread):
@@ -151,15 +193,7 @@ class Channel(object):
 
 def handler(f):
     @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        # We can either be called as a method, or as a wrapped solo function
-        if len(args) == 1:
-            message = args[0]
-        elif len(args) == 2:
-            message = args[1]
-        else:
-            raise exceptions.ControlException("Handler takes one argument: a message")
-
+    def wrapper(master, message):
         if not hasattr(message, "reply"):
             raise exceptions.ControlException("Message %s has no reply attribute" % message)
 
@@ -172,11 +206,13 @@ def handler(f):
             handling = True
             message.reply.handled = True
 
-        ret = f(*args, **kwargs)
+        with master.handlecontext(message):
+            f(master, message)
+            if handling:
+                master.addons(f.func_name)
 
         if handling and not message.reply.acked and not message.reply.taken:
             message.reply.ack()
-        return ret
     # Mark this function as a handler wrapper
     wrapper.__dict__["__handler"] = True
     return wrapper
@@ -216,7 +252,7 @@ class Reply(object):
     def __del__(self):
         if not self.acked:
             # This will be ignored by the interpreter, but emit a warning
-            raise exceptions.ControlException("Un-acked message")
+            raise exceptions.ControlException("Un-acked message: %s" % self.obj)
 
 
 class DummyReply(object):

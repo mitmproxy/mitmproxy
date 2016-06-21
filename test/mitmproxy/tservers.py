@@ -8,7 +8,7 @@ from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 import pathod.test
 import pathod.pathoc
-from mitmproxy import flow, controller
+from mitmproxy import flow, controller, options
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
 testapp = flask.Flask(__name__)
@@ -30,11 +30,11 @@ def errapp(environ, start_response):
 
 class TestMaster(flow.FlowMaster):
 
-    def __init__(self, config):
+    def __init__(self, options, config):
         config.port = 0
         s = ProxyServer(config)
         state = flow.State()
-        flow.FlowMaster.__init__(self, s, state)
+        flow.FlowMaster.__init__(self, options, s, state)
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
@@ -70,6 +70,10 @@ class ProxyThread(threading.Thread):
         self.tmaster.shutdown()
 
 
+class BlankOpts(options.Options):
+    pass
+
+
 class ProxyTestBase(object):
     # Test Configuration
     ssl = None
@@ -90,7 +94,7 @@ class ProxyTestBase(object):
 
         cls.config = ProxyConfig(**cls.get_proxy_config())
 
-        tmaster = cls.masterclass(cls.config)
+        tmaster = cls.masterclass(BlankOpts(), cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
@@ -286,7 +290,7 @@ class ChainProxyTest(ProxyTestBase):
         super(ChainProxyTest, cls).setup_class()
         for _ in range(cls.n):
             config = ProxyConfig(**cls.get_proxy_config())
-            tmaster = cls.masterclass(config)
+            tmaster = cls.masterclass(None, config)
             proxy = ProxyThread(tmaster)
             proxy.start()
             cls.chain.insert(0, proxy)
