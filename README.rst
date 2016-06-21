@@ -31,13 +31,13 @@ The latest documentation for mitmproxy is also available on ReadTheDocs.
 |mitmproxy_docs|
 
 
-Join our discussion forum on Discourse to ask questions and help
-each other solving problems and come up with new ideas and solutions.
+Join our discussion forum on Discourse to ask questions, help
+each other solve problems, and come up with new ideas for the project.
 
 |mitmproxy_discourse|
 
 
-Join our developer chat on Slack if you plan on hacking on code or working on pull requests.
+Join our developer chat on Slack if you would like to hack on mitmproxy itself.
 
 |slack|
 
