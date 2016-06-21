@@ -19,16 +19,25 @@ that creatively violate the standards.
 Documentation & Help
 --------------------
 
-Documentation, tutorials and precompiled binaries can be found on the mitmproxy
+
+General information, tutorials, and precompiled binaries can be found on the mitmproxy
 and pathod websites.
 
 |mitmproxy_site| |pathod_site|
+
 
 The latest documentation for mitmproxy is also available on ReadTheDocs.
 
 |mitmproxy_docs|
 
-You can join our developer chat on Slack.
+
+Join our discussion forum on Discourse to ask questions, help
+each other solve problems, and come up with new ideas for the project.
+
+|mitmproxy_discourse|
+
+
+Join our developer chat on Slack if you would like to hack on mitmproxy itself.
 
 |slack|
 
@@ -154,6 +163,10 @@ PR checks will fail and block merging. We are using this command to check for st
 .. |mitmproxy_docs| image:: https://readthedocs.org/projects/mitmproxy/badge/
     :target: http://docs.mitmproxy.org/en/latest/
     :alt: mitmproxy documentation
+
+.. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
+    :target: https://discourse.mitmproxy.org
+    :alt: Discourse: mitmproxy
 
 .. |slack| image:: http://slack.mitmproxy.org/badge.svg
     :target: http://slack.mitmproxy.org/

@@ -9,6 +9,7 @@ import configargparse
 from mitmproxy import filt
 from mitmproxy.proxy import config
 from netlib import human
+from netlib import strutils
 from netlib import tcp
 from netlib import version
 from netlib.http import url
@@ -73,7 +74,7 @@ def parse_replace_hook(s):
     try:
         re.compile(regex)
     except re.error as e:
-        raise ParseException("Malformed replacement regex: %s" % str(e.message))
+        raise ParseException("Malformed replacement regex: %s" % str(e))
     return patt, regex, replacement
 
 
@@ -109,7 +110,7 @@ def parse_setheader(s):
 def parse_server_spec(spec):
     try:
         p = url.parse(spec)
-        if p[0] not in ("http", "https"):
+        if p[0] not in (b"http", b"https"):
             raise ValueError()
     except ValueError:
         raise configargparse.ArgumentTypeError(
@@ -127,7 +128,7 @@ def parse_upstream_auth(auth):
         raise configargparse.ArgumentTypeError(
             "Invalid upstream auth specification: %s" % auth
         )
-    return "Basic" + " " + base64.b64encode(auth)
+    return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
 
 
 def get_common_options(options):
@@ -147,13 +148,13 @@ def get_common_options(options):
         try:
             p = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e)
         try:
             v = open(path, "rb").read()
         except IOError as e:
@@ -167,7 +168,7 @@ def get_common_options(options):
         try:
             p = parse_setheader(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e)
         setheaders.append(p)
 
     if options.outfile and options.outfile[0] == options.rfile:

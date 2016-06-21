@@ -39,27 +39,6 @@ export var ConnectionActions = {
     }
 };
 
-export var SettingsActions = {
-    update: function (settings) {
-
-        $.ajax({
-            type: "PUT",
-            url: "/settings",
-            contentType: 'application/json',
-            data: JSON.stringify(settings)
-        });
-
-        /*
-        //Facebook Flux: We do an optimistic update on the client already.
-        AppDispatcher.dispatchViewAction({
-            type: ActionTypes.SETTINGS_STORE,
-            cmd: StoreCmds.UPDATE,
-            data: settings
-        });
-        */
-    }
-};
-
 export var FlowActions = {
     accept: function (flow) {
         $.post("/flows/" + flow.id + "/accept");

@@ -6,7 +6,8 @@ import threading
 from six.moves import queue
 
 from netlib import basethread
-from mitmproxy import exceptions
+
+from . import exceptions
 
 
 Events = frozenset([
@@ -76,9 +77,9 @@ class Master(object):
                 if mtype not in Events:
                     raise exceptions.ControlException("Unknown event %s" % repr(mtype))
                 handle_func = getattr(self, mtype)
-                if not hasattr(handle_func, "func_dict"):
+                if not hasattr(handle_func, "__dict__"):
                     raise exceptions.ControlException("Handler %s not a function" % mtype)
-                if not handle_func.func_dict.get("__handler"):
+                if not handle_func.__dict__.get("__handler"):
                     raise exceptions.ControlException(
                         "Handler function %s is not decorated with controller.handler" % (
                             handle_func
@@ -177,7 +178,7 @@ def handler(f):
             message.reply.ack()
         return ret
     # Mark this function as a handler wrapper
-    wrapper.func_dict["__handler"] = True
+    wrapper.__dict__["__handler"] = True
     return wrapper
 
 

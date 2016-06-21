@@ -12,10 +12,6 @@ import {setActiveMenu} from '../ducks/ui.js'
 class Header extends Component {
     static entries = [MainMenu, ViewMenu, OptionMenu]
 
-    static propTypes = {
-        settings: PropTypes.object.isRequired,
-    }
-
     handleClick(active, e) {
         e.preventDefault()
         this.props.setActiveMenu(active.title)
@@ -24,7 +20,7 @@ class Header extends Component {
     }
 
     render() {
-        const { settings, updateLocation, query, selectedFlow, activeMenu} = this.props
+        const { updateLocation, query, selectedFlow, activeMenu} = this.props
 
         let entries = [...Header.entries]
         if(selectedFlow)
@@ -47,10 +43,9 @@ class Header extends Component {
                 </nav>
                 <div className="menu">
                     <Active
-                        settings={settings}
                         updateLocation={updateLocation}
                         query={query}
-                        />
+                    />
                 </div>
             </header>
         )

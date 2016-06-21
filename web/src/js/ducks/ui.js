@@ -1,5 +1,5 @@
-import { SELECT_FLOW } from './flows'
-const SET_ACTIVE_MENU = 'SET_ACTIVE_MENU'
+import {SELECT_FLOW} from "./flows"
+export const SET_ACTIVE_MENU = 'SET_ACTIVE_MENU';
 
 
 const defaultState = {

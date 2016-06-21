@@ -26,7 +26,7 @@ import lxml.html
 import six
 from PIL import ExifTags
 from PIL import Image
-from six.moves import cStringIO as StringIO
+from six import BytesIO
 
 from mitmproxy import exceptions
 from mitmproxy.contrib import jsbeautifier
@@ -64,7 +64,7 @@ KEY_MAX = 30
 def pretty_json(s):
     # type: (bytes) -> bytes
     try:
-        p = json.loads(s)
+        p = json.loads(s.decode('utf-8'))
     except ValueError:
         return None
     pretty = json.dumps(p, sort_keys=True, indent=4, ensure_ascii=False)
@@ -143,11 +143,11 @@ class ViewAuto(View):
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
-            elif strutils.isXML(data):
+            elif strutils.isXML(data.decode()):
                 return get("XML")(data, **metadata)
         if metadata.get("query"):
             return get("Query")(data, **metadata)
-        if data and strutils.isMostlyBin(data):
+        if data and strutils.isMostlyBin(data.decode()):
             return get("Hex")(data)
         if not data:
             return "No content", []
@@ -209,7 +209,7 @@ class ViewXML(View):
             p = p.getprevious()
         doctype = docinfo.doctype
         if prev:
-            doctype += "\n".join(prev).strip()
+            doctype += "\n".join(p.decode() for p in prev).strip()
         doctype = doctype.strip()
 
         s = lxml.etree.tostring(
@@ -240,7 +240,7 @@ class ViewHTML(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if strutils.isXML(data):
+        if strutils.isXML(data.decode()):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -323,7 +323,10 @@ if pyamf:
         prompt = ("amf", "f")
         content_types = ["application/x-amf"]
 
-        def unpack(self, b, seen=set([])):
+        def unpack(self, b, seen=None):
+            if seen is None:
+                seen = set([])
+
             if hasattr(b, "body"):
                 return self.unpack(b.body, seen)
             if isinstance(b, DummyObject):
@@ -416,7 +419,7 @@ class ViewImage(View):
 
     def __call__(self, data, **metadata):
         try:
-            img = Image.open(StringIO(data))
+            img = Image.open(BytesIO(data))
         except IOError:
             return None
         parts = [
