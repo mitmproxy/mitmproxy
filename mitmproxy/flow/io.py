@@ -4,7 +4,7 @@ import os
 
 from mitmproxy import exceptions
 from mitmproxy import models
-from mitmproxy import tnetstring
+from mitmproxy.contrib import tnetstring
 from mitmproxy.flow import io_compat
 
 

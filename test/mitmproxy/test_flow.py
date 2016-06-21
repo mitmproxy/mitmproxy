@@ -5,7 +5,8 @@ import mock
 
 import netlib.utils
 from netlib.http import Headers
-from mitmproxy import filt, controller, tnetstring, flow
+from mitmproxy import filt, controller, flow
+from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, ScriptException
 from mitmproxy.models import Error
 from mitmproxy.models import Flow

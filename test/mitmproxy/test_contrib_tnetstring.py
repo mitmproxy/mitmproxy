@@ -4,7 +4,7 @@ import math
 import io
 import struct
 
-from mitmproxy import tnetstring
+from mitmproxy.contrib import tnetstring
 
 MAXINT = 2 ** (struct.Struct('i').size * 8 - 1) - 1
 
