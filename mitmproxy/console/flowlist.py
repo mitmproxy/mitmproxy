@@ -395,13 +395,10 @@ class FlowListBox(urwid.ListBox):
         elif key == "F":
             self.master.toggle_follow_flows()
         elif key == "W":
-            if self.master.stream:
-                self.master.stop_stream()
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Stream flows to",
-                    callback = self.master.start_stream_to_path
-                )
+            signals.status_prompt_path.send(
+                self,
+                prompt = "Stream flows to",
+                callback = self.master.start_stream_to_path
+            )
         else:
             return urwid.ListBox.keypress(self, size, key)

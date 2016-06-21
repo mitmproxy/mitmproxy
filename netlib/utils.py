@@ -56,6 +56,13 @@ class Data(object):
         dirname = os.path.dirname(inspect.getsourcefile(m))
         self.dirname = os.path.abspath(dirname)
 
+    def push(self, subpath):
+        """
+            Change the data object to a path relative to the module.
+        """
+        self.dirname = os.path.join(self.dirname, subpath)
+        return self
+
     def path(self, path):
         """
             Returns a path to the package data housed at 'path' under this

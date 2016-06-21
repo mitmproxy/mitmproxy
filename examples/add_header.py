@@ -1,2 +1,5 @@
-def response(context, flow):
-    flow.response.headers["newheader"] = "foo"
+from mitmproxy import ctx
+
+
+def response():
+    ctx.flow.response.headers["newheader"] = "foo"

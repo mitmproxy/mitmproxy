@@ -5,9 +5,14 @@
 import six
 import sys
 import pytz
+import pprint
+import json
+
 from harparser import HAR
 
 from datetime import datetime
+
+from mitmproxy import ctx
 
 
 class _HARLog(HAR.log):
@@ -54,26 +59,29 @@ class _HARLog(HAR.log):
         return self.__page_list__
 
 
-def start(context):
+state = {}
+
+
+def configure(options):
     """
         On start we create a HARLog instance. You will have to adapt this to
         suit your actual needs of HAR generation. As it will probably be
         necessary to cluster logs by IPs or reset them from time to time.
     """
-    context.dump_file = None
+    state["dump_file"] = None
     if len(sys.argv) > 1:
-        context.dump_file = sys.argv[1]
+        state["dump_file"] = sys.argv[1]
     else:
         raise ValueError(
             'Usage: -s "har_extractor.py filename" '
             '(- will output to stdout, filenames ending with .zhar '
             'will result in compressed har)'
         )
-    context.HARLog = _HARLog()
-    context.seen_server = set()
+    state["HARLog"] = _HARLog()
+    state["seen_server"] = set()
 
 
-def response(context, flow):
+def response():
     """
        Called when a server response has been received. At the time of this
        message both a request and a response are present and completely done.
@@ -81,21 +89,21 @@ def response(context, flow):
     # Values are converted from float seconds to int milliseconds later.
     ssl_time = -.001
     connect_time = -.001
-    if flow.server_conn not in context.seen_server:
+    if ctx.flow.server_conn not in state["seen_server"]:
         # Calculate the connect_time for this server_conn. Afterwards add it to
         # seen list, in order to avoid the connect_time being present in entries
         # that use an existing connection.
-        connect_time = (flow.server_conn.timestamp_tcp_setup -
-                        flow.server_conn.timestamp_start)
-        context.seen_server.add(flow.server_conn)
+        connect_time = (ctx.flow.server_conn.timestamp_tcp_setup -
+                        ctx.flow.server_conn.timestamp_start)
+        state["seen_server"].add(ctx.flow.server_conn)
 
-        if flow.server_conn.timestamp_ssl_setup is not None:
+        if ctx.flow.server_conn.timestamp_ssl_setup is not None:
             # Get the ssl_time for this server_conn as the difference between
             # the start of the successful tcp setup and the successful ssl
             # setup. If no ssl setup has been made it is left as -1 since it
             # doesn't apply to this connection.
-            ssl_time = (flow.server_conn.timestamp_ssl_setup -
-                        flow.server_conn.timestamp_tcp_setup)
+            ssl_time = (ctx.flow.server_conn.timestamp_ssl_setup -
+                        ctx.flow.server_conn.timestamp_tcp_setup)
 
     # Calculate the raw timings from the different timestamps present in the
     # request and response object. For lack of a way to measure it dns timings
@@ -105,9 +113,9 @@ def response(context, flow):
     # between request.timestamp_end and response.timestamp_start thus it
     # correlates to HAR wait instead.
     timings_raw = {
-        'send': flow.request.timestamp_end - flow.request.timestamp_start,
-        'wait': flow.response.timestamp_start - flow.request.timestamp_end,
-        'receive': flow.response.timestamp_end - flow.response.timestamp_start,
+        'send': ctx.flow.request.timestamp_end - ctx.flow.request.timestamp_start,
+        'wait': ctx.flow.response.timestamp_start - ctx.flow.request.timestamp_end,
+        'receive': ctx.flow.response.timestamp_end - ctx.flow.response.timestamp_start,
         'connect': connect_time,
         'ssl': ssl_time
     }
@@ -121,41 +129,41 @@ def response(context, flow):
     full_time = sum(v for v in timings.values() if v > -1)
 
     started_date_time = datetime.utcfromtimestamp(
-        flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
+        ctx.flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
 
     request_query_string = [{"name": k, "value": v}
-                            for k, v in flow.request.query or {}]
+                            for k, v in ctx.flow.request.query or {}]
 
-    response_body_size = len(flow.response.content)
-    response_body_decoded_size = len(flow.response.get_decoded_content())
+    response_body_size = len(ctx.flow.response.content)
+    response_body_decoded_size = len(ctx.flow.response.get_decoded_content())
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = HAR.entries({
         "startedDateTime": started_date_time,
         "time": full_time,
         "request": {
-            "method": flow.request.method,
-            "url": flow.request.url,
-            "httpVersion": flow.request.http_version,
-            "cookies": format_cookies(flow.request.cookies),
-            "headers": format_headers(flow.request.headers),
+            "method": ctx.flow.request.method,
+            "url": ctx.flow.request.url,
+            "httpVersion": ctx.flow.request.http_version,
+            "cookies": format_cookies(ctx.flow.request.cookies),
+            "headers": format_headers(ctx.flow.request.headers),
             "queryString": request_query_string,
-            "headersSize": len(str(flow.request.headers)),
-            "bodySize": len(flow.request.content),
+            "headersSize": len(str(ctx.flow.request.headers)),
+            "bodySize": len(ctx.flow.request.content),
         },
         "response": {
-            "status": flow.response.status_code,
-            "statusText": flow.response.reason,
-            "httpVersion": flow.response.http_version,
-            "cookies": format_cookies(flow.response.cookies),
-            "headers": format_headers(flow.response.headers),
+            "status": ctx.flow.response.status_code,
+            "statusText": ctx.flow.response.reason,
+            "httpVersion": ctx.flow.response.http_version,
+            "cookies": format_cookies(ctx.flow.response.cookies),
+            "headers": format_headers(ctx.flow.response.headers),
             "content": {
                 "size": response_body_size,
                 "compression": response_body_compression,
-                "mimeType": flow.response.headers.get('Content-Type', '')
+                "mimeType": ctx.flow.response.headers.get('Content-Type', '')
             },
-            "redirectURL": flow.response.headers.get('Location', ''),
-            "headersSize": len(str(flow.response.headers)),
+            "redirectURL": ctx.flow.response.headers.get('Location', ''),
+            "headersSize": len(str(ctx.flow.response.headers)),
             "bodySize": response_body_size,
         },
         "cache": {},
@@ -165,58 +173,54 @@ def response(context, flow):
     # If the current url is in the page list of context.HARLog or
     # does not have a referrer, we add it as a new pages object.
     is_new_page = (
-        flow.request.url in context.HARLog.get_page_list() or
-        flow.request.headers.get('Referer') is None
+        ctx.flow.request.url in state["HARLog"].get_page_list() or
+        ctx.flow.request.headers.get('Referer') is None
     )
     if is_new_page:
-        page_id = context.HARLog.create_page_id()
-        context.HARLog.add(
+        page_id = state["HARLog"].create_page_id()
+        state["HARLog"].add(
             HAR.pages({
                 "startedDateTime": entry['startedDateTime'],
                 "id": page_id,
-                "title": flow.request.url,
+                "title": ctx.flow.request.url,
                 "pageTimings": {}
             })
         )
-        context.HARLog.set_page_ref(flow.request.url, page_id)
+        state["HARLog"].set_page_ref(ctx.flow.request.url, page_id)
         entry['pageref'] = page_id
-
-    # Lookup the referer in the page_ref of context.HARLog to point this entries
-    # pageref attribute to the right pages object, then set it as a new
-    # reference to build a reference tree.
-    elif context.HARLog.get_page_ref(flow.request.headers.get('Referer')) is not None:
-        entry['pageref'] = context.HARLog.get_page_ref(
-            flow.request.headers['Referer']
+    elif state["HARLog"].get_page_ref(ctx.flow.request.headers.get('Referer')) is not None:
+        # Lookup the referer in the page_ref of context.HARLog to point this entries
+        # pageref attribute to the right pages object, then set it as a new
+        # reference to build a reference tree.
+        entry['pageref'] = state["HARLog"].get_page_ref(
+            ctx.flow.request.headers['Referer']
         )
-        context.HARLog.set_page_ref(
-            flow.request.headers['Referer'], entry['pageref']
+        state["HARLog"].set_page_ref(
+            ctx.flow.request.headers['Referer'], entry['pageref']
         )
 
-    context.HARLog.add(entry)
+    state["HARLog"].add(entry)
 
 
-def done(context):
+def done():
     """
-        Called once on script shutdown, after any other events.
+        Called onc  e on script shutdown, after any other events.
     """
-    import pprint
-    import json
+    json_dump = state["HARLog"].json()
+    compressed_json_dump = state["HARLog"].compress()
 
-    json_dump = context.HARLog.json()
-    compressed_json_dump = context.HARLog.compress()
-
-    if context.dump_file == '-':
-        context.log(pprint.pformat(json.loads(json_dump)))
-    elif context.dump_file.endswith('.zhar'):
-        file(context.dump_file, "w").write(compressed_json_dump)
+    if state["dump_file"] == '-':
+        ctx.log.info(pprint.pformat(json.loads(json_dump)))
+    elif state["dump_file"].endswith('.zhar'):
+        file(state["dump_file"], "w").write(compressed_json_dump)
     else:
-        file(context.dump_file, "w").write(json_dump)
-    context.log(
+        file(state["dump_file"], "w").write(json_dump)
+    ctx.log.info(
         "HAR log finished with %s bytes (%s bytes compressed)" % (
             len(json_dump), len(compressed_json_dump)
         )
     )
-    context.log(
+    ctx.log.info(
         "Compression rate is %s%%" % str(
             100. * len(compressed_json_dump) / len(json_dump)
         )

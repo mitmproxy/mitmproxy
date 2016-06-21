@@ -1,155 +1,119 @@
-import glob
 import json
-import os
-from contextlib import contextmanager
 
-from mitmproxy import script
-from mitmproxy.proxy import config
+import os.path
+from mitmproxy.flow import master
+from mitmproxy.flow import state
+from mitmproxy import options
+from mitmproxy import contentviews
+from mitmproxy.builtins import script
 import netlib.utils
 from netlib import tutils as netutils
 from netlib.http import Headers
-from . import tservers, tutils
+from . import tutils, mastertest
 
-example_dir = netlib.utils.Data(__name__).path("../../examples")
-
-
-class DummyContext(object):
-    """Emulate script.ScriptContext() functionality."""
-
-    contentview = None
-
-    def log(self, *args, **kwargs):
-        pass
-
-    def add_contentview(self, view_obj):
-        self.contentview = view_obj
-
-    def remove_contentview(self, view_obj):
-        self.contentview = None
+example_dir = netlib.utils.Data(__name__).push("../../examples")
 
 
-@contextmanager
-def example(command):
-    command = os.path.join(example_dir, command)
-    ctx = DummyContext()
-    with script.Script(command, ctx) as s:
-        yield s
+class ScriptError(Exception):
+    pass
 
 
-def test_load_scripts():
-    scripts = glob.glob("%s/*.py" % example_dir)
-
-    tmaster = tservers.TestMaster(config.ProxyConfig())
-
-    for f in scripts:
-        if "har_extractor" in f:
-            continue
-        if "flowwriter" in f:
-            f += " -"
-        if "iframe_injector" in f:
-            f += " foo"  # one argument required
-        if "filt" in f:
-            f += " ~a"
-        if "modify_response_body" in f:
-            f += " foo bar"  # two arguments required
-
-        s = script.Script(f, script.ScriptContext(tmaster))
-        try:
-            s.load()
-        except Exception as v:
-            if "ImportError" not in str(v):
-                raise
-        else:
-            s.unload()
+class RaiseMaster(master.FlowMaster):
+    def add_event(self, e, level):
+        if level in ("warn", "error"):
+            raise ScriptError(e)
 
 
-def test_add_header():
-    flow = tutils.tflow(resp=netutils.tresp())
-    with example("add_header.py") as ex:
-        ex.run("response", flow)
-        assert flow.response.headers["newheader"] == "foo"
+def tscript(cmd, args=""):
+    cmd = example_dir.path(cmd) + " " + args
+    m = RaiseMaster(options.Options(), None, state.State())
+    sc = script.Script(cmd)
+    m.addons.add(sc)
+    return m, sc
 
 
-def test_custom_contentviews():
-    with example("custom_contentviews.py") as ex:
-        pig = ex.ctx.contentview
+class TestAddons(mastertest.MasterTest):
+    def test_add_header(self):
+        m, _ = tscript("add_header.py")
+        f = tutils.tflow(resp=netutils.tresp())
+        self.invoke(m, "response", f)
+        assert f.response.headers["newheader"] == "foo"
+
+    def test_custom_contentviews(self):
+        m, sc = tscript("custom_contentviews.py")
+        pig = contentviews.get("pig_latin_HTML")
         _, fmt = pig("<html>test!</html>")
         assert any('esttay!' in val[0][1] for val in fmt)
         assert not pig("gobbledygook")
 
+    def test_iframe_injector(self):
+        with tutils.raises(ScriptError):
+            tscript("iframe_injector.py")
 
-def test_iframe_injector():
-    with tutils.raises(script.ScriptException):
-        with example("iframe_injector.py") as ex:
-            pass
-
-    flow = tutils.tflow(resp=netutils.tresp(content="<html>mitmproxy</html>"))
-    with example("iframe_injector.py http://example.org/evil_iframe") as ex:
-        ex.run("response", flow)
+        m, sc = tscript("iframe_injector.py", "http://example.org/evil_iframe")
+        flow = tutils.tflow(resp=netutils.tresp(content="<html>mitmproxy</html>"))
+        self.invoke(m, "response", flow)
         content = flow.response.content
         assert 'iframe' in content and 'evil_iframe' in content
 
+    def test_modify_form(self):
+        m, sc = tscript("modify_form.py")
 
-def test_modify_form():
-    form_header = Headers(content_type="application/x-www-form-urlencoded")
-    flow = tutils.tflow(req=netutils.treq(headers=form_header))
-    with example("modify_form.py") as ex:
-        ex.run("request", flow)
-        assert flow.request.urlencoded_form["mitmproxy"] == "rocks"
+        form_header = Headers(content_type="application/x-www-form-urlencoded")
+        f = tutils.tflow(req=netutils.treq(headers=form_header))
+        self.invoke(m, "request", f)
 
-        flow.request.headers["content-type"] = ""
-        ex.run("request", flow)
-        assert list(flow.request.urlencoded_form.items()) == [("foo", "bar")]
+        assert f.request.urlencoded_form["mitmproxy"] == "rocks"
 
+        f.request.headers["content-type"] = ""
+        self.invoke(m, "request", f)
+        assert list(f.request.urlencoded_form.items()) == [("foo", "bar")]
 
-def test_modify_querystring():
-    flow = tutils.tflow(req=netutils.treq(path="/search?q=term"))
-    with example("modify_querystring.py") as ex:
-        ex.run("request", flow)
-        assert flow.request.query["mitmproxy"] == "rocks"
+    def test_modify_querystring(self):
+        m, sc = tscript("modify_querystring.py")
+        f = tutils.tflow(req=netutils.treq(path="/search?q=term"))
 
-        flow.request.path = "/"
-        ex.run("request", flow)
-        assert flow.request.query["mitmproxy"] == "rocks"
+        self.invoke(m, "request", f)
+        assert f.request.query["mitmproxy"] == "rocks"
 
+        f.request.path = "/"
+        self.invoke(m, "request", f)
+        assert f.request.query["mitmproxy"] == "rocks"
 
-def test_modify_response_body():
-    with tutils.raises(script.ScriptException):
-        with example("modify_response_body.py"):
-            assert True
+    def test_modify_response_body(self):
+        with tutils.raises(ScriptError):
+            tscript("modify_response_body.py")
 
-    flow = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
-    with example("modify_response_body.py mitmproxy rocks") as ex:
-        assert ex.ctx.old == "mitmproxy" and ex.ctx.new == "rocks"
-        ex.run("response", flow)
-        assert flow.response.content == "I <3 rocks"
+        m, sc = tscript("modify_response_body.py", "mitmproxy rocks")
+        f = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
+        self.invoke(m, "response", f)
+        assert f.response.content == "I <3 rocks"
 
+    def test_redirect_requests(self):
+        m, sc = tscript("redirect_requests.py")
+        f = tutils.tflow(req=netutils.treq(host="example.org"))
+        self.invoke(m, "request", f)
+        assert f.request.host == "mitmproxy.org"
 
-def test_redirect_requests():
-    flow = tutils.tflow(req=netutils.treq(host="example.org"))
-    with example("redirect_requests.py") as ex:
-        ex.run("request", flow)
-        assert flow.request.host == "mitmproxy.org"
+    def test_har_extractor(self):
+        with tutils.raises(ScriptError):
+            tscript("har_extractor.py")
 
+        with tutils.tmpdir() as tdir:
+            times = dict(
+                timestamp_start=746203272,
+                timestamp_end=746203272,
+            )
 
-def test_har_extractor():
-    with tutils.raises(script.ScriptException):
-        with example("har_extractor.py"):
-            pass
+            path = os.path.join(tdir, "file")
+            m, sc = tscript("har_extractor.py", path)
+            f = tutils.tflow(
+                req=netutils.treq(**times),
+                resp=netutils.tresp(**times)
+            )
+            self.invoke(m, "response", f)
+            m.addons.remove(sc)
 
-    times = dict(
-        timestamp_start=746203272,
-        timestamp_end=746203272,
-    )
-
-    flow = tutils.tflow(
-        req=netutils.treq(**times),
-        resp=netutils.tresp(**times)
-    )
-
-    with example("har_extractor.py -") as ex:
-        ex.run("response", flow)
-
-        with open(tutils.test_data.path("data/har_extractor.har")) as fp:
+            fp = open(path, "rb")
             test_data = json.load(fp)
-            assert json.loads(ex.ctx.HARLog.json()) == test_data["test_response"]
+            assert len(test_data["log"]["pages"]) == 1

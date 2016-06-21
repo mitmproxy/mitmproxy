@@ -102,7 +102,7 @@ def mitmdump(args=None):  # pragma: no cover
     server = get_server(dump_options.no_server, proxy_config)
 
     try:
-        master = dump.DumpMaster(server, dump_options)
+        master = dump.DumpMaster(dump_options, server)
 
         def cleankill(*args, **kwargs):
             master.shutdown()
