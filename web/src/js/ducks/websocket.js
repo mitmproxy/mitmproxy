@@ -4,6 +4,8 @@ import * as eventLogActions from './eventLog'
 import * as flowsActions from './flows'
 import * as settingsActions from './settings'
 
+export const SYM_SOCKET = Symbol('WEBSOCKET_SYM_SOCKET')
+
 export const CONNECT = 'WEBSOCKET_CONNECT'
 export const CONNECTED = 'WEBSOCKET_CONNECTED'
 export const DISCONNECT = 'WEBSOCKET_DISCONNECT'
@@ -18,7 +20,7 @@ export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
         case CONNECT:
-            return { ...state, socket: action.socket }
+            return { ...state, [SYM_SOCKET]: action.socket }
 
         case CONNECTED:
             return { ...state, connected: true }
@@ -27,7 +29,7 @@ export default function reduce(state = defaultState, action) {
             return { ...state, connected: false }
 
         case DISCONNECTED:
-            return { ...state, socket: null }
+            return { ...state, [SYM_SOCKET]: null }
 
         default:
             return state
@@ -54,7 +56,7 @@ export function connect() {
 
 export function disconnect() {
     return (dispatch, getState) => {
-        getState().settings.socket.close()
+        getState().settings[SYM_SOCKET].close()
         dispatch({ type: DISCONNECT })
     }
 }
