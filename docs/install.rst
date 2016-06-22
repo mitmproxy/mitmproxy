@@ -87,7 +87,9 @@ Installation On Windows
 
 First, install the latest version of Python 2.7 from the `Python website`_.
 If you already have an older version of Python 2.7 installed, make sure to install pip_
-(pip is included in Python 2.7.9+ by default).
+(pip is included in Python 2.7.9+ by default). If pip aborts with an error, make sure you are using the current version of pip.
+
+>>> python -m pip install --upgrade pip
 
 Next, add Python and the Python Scripts directory to your **PATH** variable.
 You can do this easily by running the following in powershell:
