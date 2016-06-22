@@ -1,6 +1,6 @@
 def modify(chunks):
     for chunk in chunks:
-        yield chunk.replace("foo", "bar")
+        yield chunk.replace(b"foo", b"bar")
 
 
 def responseheaders(context, flow):
