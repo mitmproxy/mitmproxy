@@ -29,8 +29,8 @@ function FlowTableHead({ sortColumn, sortDesc, onSort }) {
 
 export default connect(
     state => ({
-        sortDesc: state.flows.sort.sortDesc,
-        sortColumn: state.flows.sort.sortColumn,
+        sortDesc: state.flows.sorter.desc,
+        sortColumn: state.flows.sorter.column,
     }),
     {
         onSort: updateSorter,

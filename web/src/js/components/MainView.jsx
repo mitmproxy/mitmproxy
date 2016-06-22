@@ -154,7 +154,7 @@ class MainView extends Component {
     }
 
     render() {
-        const { flows, selectedFlow, highlight, sort } = this.props
+        const { flows, selectedFlow, highlight } = this.props
         return (
             <div className="main-view">
                 <FlowTable
@@ -182,11 +182,10 @@ class MainView extends Component {
 
 export default connect(
     state => ({
-        flows: state.flows.view,
+        flows: state.flows.list.data,
         filter: state.flows.filter,
-        sort: state.flows.sort,
         highlight: state.flows.highlight,
-        selectedFlow: state.flows.all.byId[state.flows.selected[0]]
+        selectedFlow: state.flows.list.byId[state.flows.selected[0]]
     }),
     {
         selectFlow,

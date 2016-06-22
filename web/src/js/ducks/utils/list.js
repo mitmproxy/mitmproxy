@@ -1,4 +1,4 @@
-import * as websocketActions from './websocket'
+import * as websocketActions from '../websocket'
 
 export const UPDATE_FILTER = 'LIST_UPDATE_FILTER'
 export const UPDATE_SORTER = 'LIST_UPDATE_SORTER'

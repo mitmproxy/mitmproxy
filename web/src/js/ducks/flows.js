@@ -116,7 +116,7 @@ export  function updateSorter(column, desc, sortKeyFun) {
 /**
  * @public
  */
-export function selectFlow(id) {
+export function select(id) {
     return (dispatch, getState) => {
         dispatch({ type: SELECT_FLOW, currentSelection: getState().flows.selected[0], id })
     }
@@ -141,7 +141,7 @@ export function acceptAll() {
 /**
  * @public
  */
-export function delete(flow) {
+export function remove(flow) {
     fetch(`/flows/${flow.id}`, { method: 'DELETE' })
     return { type: REQUEST_ACTION }
 }
