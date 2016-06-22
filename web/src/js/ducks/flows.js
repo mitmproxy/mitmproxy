@@ -7,6 +7,7 @@ export const UPDATE_FILTER = 'FLOWS_UPDATE_FLOW_FILTER'
 export const UPDATE_HIGHLIGHT = 'FLOWS_UPDATE_FLOW_HIGHLIGHT'
 export const UPDATE_SORT = 'FLOWS_UPDATE_FLOW_SORT'
 export const SELECT = 'FLOWS_SELECT'
+export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 
 const defaultState = {
     selected: [],
@@ -119,6 +120,88 @@ export function fetchData() {
             .then(json => dispatch(receive(json.data)))
             .catch(error => dispatch(fetchError(error)))
     }
+}
+
+/**
+ * @public
+ */
+export function accept(flow) {
+    fetch(`/flows/${flow.id}/accept`, { method: 'POST' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function acceptAll() {
+    fetch('/flows/accept', { method: 'POST' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function delete(flow) {
+    fetch(`/flows/${flow.id}`, { method: 'DELETE' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function duplicate(flow) {
+    fetch(`/flows/${flow.id}/duplicate`, { method: 'POST' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function replay(flow) {
+    fetch(`/flows/${flow.id}/replay`, { method: 'POST' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function revert(flow) {
+    fetch(`/flows/${flow.id}/revert`, { method: 'POST' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function update(flow, body) {
+    fetch(`/flows/${flow.id}`, { method: 'PUT', body })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function clear() {
+    fetch('/clear', { method: 'POST' })
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function download() {
+    window.location = '/flows/dump'
+    return { type: REQUEST_ACTION }
+}
+
+/**
+ * @public
+ */
+export function upload(file) {
+    const body = new FormData()
+    body.append('file', file)
+    fetch('/flows/dump',  { method: 'post', body })
+    return { type: REQUEST_ACTION }
 }
 
 /**
