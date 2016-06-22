@@ -12,7 +12,7 @@ export const ERROR = 'EVENTLOG_ERROR'
 const defaultState = {
     visible: false,
     filters: { debug: false, info: true, web: true },
-    list: reduceList()
+    list: reduceList(undefined, { type: Symbol('EVENTLOG_INIT_LIST') })
 }
 
 export default function reduce(state = defaultState, action) {
