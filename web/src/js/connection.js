@@ -31,7 +31,7 @@ export default function Connection(url, dispatch) {
             case flowActions.WS_MSG_TYPE:
                 return dispatch(flowActions.handleWsMsg(message))
             case settingsActions.UPDATE_SETTINGS:
-                return dispatch(settingsActions.updateSettings(message))
+                return dispatch(settingsActions.handleWsMsg(message))
             default:
                 console.warn("unknown message", message)
         }
