@@ -1,114 +1,143 @@
-import makeList from "./utils/list"
-import Filt from "../filt/filt"
-import {updateViewFilter, updateViewList, updateViewSort} from "./utils/view"
-import {reverseString} from "../utils.js";
-import * as columns from "../components/FlowTable/FlowColumns";
+import { fetchApi as fetch } from '../utils'
+import { CMD_RESET as WS_CMD_RESET } from './websocket'
+import reduceList, * as listActions from './utils/list'
 
-export const UPDATE_FLOWS = "UPDATE_FLOWS"
-export const SET_FILTER = "SET_FLOW_FILTER"
-export const SET_HIGHLIGHT = "SET_FLOW_HIGHLIGHT"
-export const SET_SORT = "SET_FLOW_SORT"
-export const SELECT_FLOW = "SELECT_FLOW"
-
-const {
-    reduceList,
-    updateList,
-    fetchList,
-} = makeList(UPDATE_FLOWS, "/flows")
-
+export const WS_MSG = 'FLOWS_WS_MSG'
+export const UPDATE_FILTER = 'FLOWS_UPDATE_FLOW_FILTER'
+export const UPDATE_HIGHLIGHT = 'FLOWS_UPDATE_FLOW_HIGHLIGHT'
+export const UPDATE_SORT = 'FLOWS_UPDATE_FLOW_SORT'
+export const SELECT = 'FLOWS_SELECT'
 
 const defaultState = {
-    all: reduceList(),
     selected: [],
-    view: [],
-    filter: undefined,
-    highlight: undefined,
-    sort: {sortColumn: undefined, sortDesc: false},
+    sorter: {},
+    filter: null,
+    highlight: null,
+    list: reduceList(undefined, { type: Symbol('FLOWS_INIT_LIST') }),
 }
 
-function makeFilterFn(filter) {
-    return filter ? Filt.parse(filter) : () => true;
-}
-
-
-function makeSortFn(sort){
-    let column = columns[sort.sortColumn];
-    if (!column) return;
-
-    let sortKeyFun = column.sortKeyFun;
-    if (sort.sortDesc) {
-        sortKeyFun = sortKeyFun && function (flow) {
-            const k = column.sortKeyFun(flow);
-            return _.isString(k) ? reverseString("" + k) : -k;
-        };
-    }
-    return sortKeyFun;
-}
-
-export default function reducer(state = defaultState, action) {
+export default function reduce(state = defaultState, action) {
     switch (action.type) {
-        case UPDATE_FLOWS:
-            let all = reduceList(state.all, action)
-            return {
-                ...state,
-                all,
-                view: updateViewList(state.view, state.all, all, action, makeFilterFn(action.filter), makeSortFn(state.sort))
-            }
-        case SET_FILTER:
+
+        case UPDATE_FILTER:
             return {
                 ...state,
                 filter: action.filter,
-                view: updateViewFilter(state.all, makeFilterFn(action.filter), makeSortFn(state.sort))
+                list: reduceList(state.list, listActions.updateFilter(action.filter ? Filt.parse(action.filter) : () => true)),
             }
-        case SET_HIGHLIGHT:
+
+        case UPDATE_HIGHLIGHT:
             return {
                 ...state,
-                highlight: action.highlight
+                highlight: action.highlight,
             }
-        case SET_SORT:
+
+        case UPDATE_SORTER:
+            const { column, desc, sortKeyFun } = action
             return {
                 ...state,
-                sort: action.sort,
-                view: updateViewSort(state.view, makeSortFn(action.sort))
+                sorter: { column, desc },
+                list: reduceList(state.list, listActions.updateSorter((a, b) => {
+                    const ka = sortKeyFun(a)
+                    const kb = sortKeyFun(b)
+                    if (ka > kb) {
+                        return desc ? -1 : 1
+                    }
+                    if (ka < kb) {
+                        return desc ? 1 : -1
+                    }
+                    return 0
+                })),
             }
-        case SELECT_FLOW:
+
+        case SELECT:
             return {
                 ...state,
-                selected: [action.flowId]
+                selected: [action.id],
             }
+
+        case WS_MSG:
+            return {
+                ...state,
+                list: reduceList(state.list, listActions.handleWsMsg(action.msg)),
+            }
+
         default:
             return state
     }
 }
 
+/**
+ * @public
+ */
+export function updateFilter(filter) {
+    return { type: UPDATE_FILTER, filter }
+}
 
-export function setFilter(filter) {
-    return {
-        type: SET_FILTER,
-        filter
-    }
+/**
+ * @public
+ */
+export function updateHighlight(highlight) {
+    return { type: UPDATE_HIGHLIGHT, highlight }
 }
-export function setHighlight(highlight) {
-    return {
-        type: SET_HIGHLIGHT,
-        highlight
-    }
+
+/**
+ * @public
+ */
+export  function updateSorter(column, desc, sortKeyFun) {
+    return { type: SET_SORTER, column, desc, sortKeyFun }
 }
-export  function setSort(sort){
-    return {
-        type: SET_SORT,
-        sort
-    }
-}
-export function selectFlow(flowId) {
+
+/**
+ * @public
+ */
+export function selectFlow(id) {
     return (dispatch, getState) => {
-        dispatch({
-            type: SELECT_FLOW,
-            currentSelection: getState().flows.selected[0],
-            flowId
-            })
+        dispatch({ type: SELECT, currentSelection: getState().flows.selected[0], id })
     }
 }
 
+/**
+ * @public websocket
+ */
+export function handleWsMsg(msg) {
+    if (msg.cmd === WS_CMD_RESET) {
+        return fetchData()
+    }
+    return { type: WS_MSG, msg }
+}
 
-export {updateList as updateFlows, fetchList as fetchFlows}
+/**
+ * @public websocket
+ */
+export function fetchData() {
+    return dispatch => {
+        dispatch(request())
+
+        return fetch('/flows')
+            .then(res => res.json())
+            .then(json => dispatch(receive(json.data)))
+            .catch(error => dispatch(fetchError(error)))
+    }
+}
+
+/**
+ * @private
+ */
+export function request() {
+    return { type: REQUEST }
+}
+
+/**
+ * @private
+ */
+export function receive(list) {
+    return { type: RECEIVE, list }
+}
+
+/**
+ * @private
+ */
+export function fetchError(error) {
+    return { type: FETCH_ERROR, error }
+}

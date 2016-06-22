@@ -19,7 +19,7 @@ function FlowTableHead({ sortColumn, sortDesc, onSort }) {
             {columns.map(Column => (
                 <th className={classnames(Column.headerClass, sortColumn === Column.name && sortType)}
                     key={Column.name}
-                    onClick={() => onSort({ sortColumn: Column.name, sortDesc: Column.name !== sortColumn ? false : !sortDesc })}>
+                    onClick={() => onSort(Column.name, Column.name !== sortColumn ? false : !sortDesc, Column.sortKeyFun)}>
                     {Column.headerName}
                 </th>
             ))}

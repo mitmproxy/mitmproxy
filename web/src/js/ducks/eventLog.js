@@ -101,7 +101,7 @@ export function add(message, level = 'web') {
  */
 export function handleWsMsg(msg) {
     if (msg.cmd === WS_CMD_RESET) {
-        return fetch()
+        return fetchData()
     }
     return { type: WS_MSG, msg }
 }
@@ -109,7 +109,7 @@ export function handleWsMsg(msg) {
 /**
  * @private
  */
-export function fetch() {
+export function fetchData() {
     return dispatch => {
         dispatch(request())
 
