@@ -14,22 +14,22 @@ export default function Connection(url, dispatch) {
     ws.onopen = function () {
         dispatch(webSocketActions.connected())
         dispatch(settingsActions.fetchSettings())
-        dispatch(flowActions.fetchFlows())
+        dispatch(eventLogActions.fetchData())
+        dispatch(flowActions.fetchData())
         // workaround to make sure that our state is already available.
             .then(() => {
             console.log("flows are loaded now")
             ConnectionActions.open()
         })
-        dispatch(eventLogActions.fetchLogEntries())
     };
     ws.onmessage = function (m) {
         var message = JSON.parse(m.data);
         AppDispatcher.dispatchServerAction(message);
         switch (message.type) {
-            case eventLogActions.UPDATE_LOG:
-                return dispatch(eventLogActions.updateLogEntries(message))
-            case flowActions.UPDATE_FLOWS:
-                return dispatch(flowActions.updateFlows(message))
+            case eventLogActions.WS_MSG_TYPE:
+                return dispatch(eventLogActions.handleWsMsg(message))
+            case flowActions.WS_MSG_TYPE:
+                return dispatch(flowActions.handleWsMsg(message))
             case settingsActions.UPDATE_SETTINGS:
                 return dispatch(settingsActions.updateSettings(message))
             default:
@@ -38,11 +38,11 @@ export default function Connection(url, dispatch) {
     };
     ws.onerror = function () {
         ConnectionActions.error();
-        dispatch(eventLogActions.addLogEntry("WebSocket connection error."));
+        dispatch(eventLogActions.add("WebSocket connection error."));
     };
     ws.onclose = function () {
         ConnectionActions.close();
-        dispatch(eventLogActions.addLogEntry("WebSocket connection closed."));
+        dispatch(eventLogActions.add("WebSocket connection closed."));
         dispatch(webSocketActions.disconnected());
     };
     return ws;

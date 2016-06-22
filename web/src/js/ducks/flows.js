@@ -2,11 +2,13 @@ import { fetchApi as fetch } from '../utils'
 import { CMD_RESET as WS_CMD_RESET } from './websocket'
 import reduceList, * as listActions from './utils/list'
 
+export const WS_MSG_TYPE ='UPDATE_FLOWS'
+
 export const UPDATE_FILTER = 'FLOWS_UPDATE_FLOW_FILTER'
 export const UPDATE_HIGHLIGHT = 'FLOWS_UPDATE_FLOW_HIGHLIGHT'
 export const UPDATE_SORT = 'FLOWS_UPDATE_FLOW_SORT'
 export const WS_MSG = 'FLOWS_WS_MSG'
-export const SELECT = 'FLOWS_SELECT'
+export const SELECT_FLOW = 'FLOWS_SELECT_FLOW'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 export const REQUEST = 'FLOWS_REQUEST'
 export const RECEIVE = 'FLOWS_RECEIVE'
@@ -43,7 +45,7 @@ export default function reduce(state = defaultState, action) {
                 list: reduceList(state.list, listActions.updateSorter(makeSortFun(action.sortKeyFun, action.desc))),
             }
 
-        case SELECT:
+        case SELECT_FLOW:
             return {
                 ...state,
                 selected: [action.id],
@@ -116,7 +118,7 @@ export  function updateSorter(column, desc, sortKeyFun) {
  */
 export function selectFlow(id) {
     return (dispatch, getState) => {
-        dispatch({ type: SELECT, currentSelection: getState().flows.selected[0], id })
+        dispatch({ type: SELECT_FLOW, currentSelection: getState().flows.selected[0], id })
     }
 }
 

@@ -1,8 +1,8 @@
 jest.unmock("../../ducks/ui");
 jest.unmock("../../ducks/flows");
 
-import reducer, {setActiveMenu} from '../../ducks/ui';
-import {SELECT_FLOW} from '../../ducks/flows';
+import reducer, { setActiveMenu } from '../../ducks/ui';
+import { SELECT_FLOW } from '../../ducks/flows';
 
 describe("ui reducer", () => {
     it("should return the initial state", () => {

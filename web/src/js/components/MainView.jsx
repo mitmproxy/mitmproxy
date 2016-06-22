@@ -6,7 +6,7 @@ import { Key } from '../utils.js'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
-import { selectFlow, setFilter, setHighlight } from '../ducks/flows'
+import { selectFlow, updateFilter, updateHighlight } from '../ducks/flows'
 
 class MainView extends Component {
 
@@ -25,10 +25,10 @@ class MainView extends Component {
             this.props.selectFlow(nextProps.routeParams.flowId)
         }
         if (nextProps.location.query[Query.SEARCH] !== nextProps.filter) {
-            this.props.setFilter(nextProps.location.query[Query.SEARCH], false)
+            this.props.updateFilter(nextProps.location.query[Query.SEARCH], false)
         }
         if (nextProps.location.query[Query.HIGHLIGHT] !== nextProps.highlight) {
-            this.props.setHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
+            this.props.updateHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
         }
     }
 
@@ -190,8 +190,8 @@ export default connect(
     }),
     {
         selectFlow,
-        setFilter,
-        setHighlight,
+        updateFilter,
+        updateHighlight,
     },
     undefined,
     { withRef: true }

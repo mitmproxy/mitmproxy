@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import ToggleButton from '../common/ToggleButton'
-import { toggleEventLogVisibility } from '../../ducks/eventLog'
+import { toggleVisibility } from '../../ducks/eventLog'
 
 ViewMenu.title = 'View'
 ViewMenu.route = 'flows'
@@ -27,6 +27,6 @@ export default connect(
         visible: state.eventLog.visible,
     }),
     {
-        onToggle: toggleEventLogVisibility,
+        onToggle: toggleVisibility,
     }
 )(ViewMenu)

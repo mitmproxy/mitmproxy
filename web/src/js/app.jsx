@@ -10,7 +10,7 @@ import Connection from "./connection"
 import ProxyApp from "./components/ProxyApp"
 import MainView from './components/MainView'
 import rootReducer from './ducks/index'
-import { addLogEntry } from "./ducks/eventLog"
+import { add as addLog } from "./ducks/eventLog"
 
 // logger must be last
 const store = createStore(
@@ -19,7 +19,7 @@ const store = createStore(
 )
 
 window.addEventListener('error', msg => {
-    store.dispatch(addLogEntry(msg))
+    store.dispatch(addLog(msg))
 })
 
 // @todo remove this

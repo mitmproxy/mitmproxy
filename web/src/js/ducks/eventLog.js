@@ -2,6 +2,8 @@ import { fetchApi as fetch } from '../utils'
 import { CMD_RESET as WS_CMD_RESET } from './websocket'
 import reduceList, * as listActions from './utils/list'
 
+export const WS_MSG_TYPE = 'UPDATE_LOG'
+
 export const TOGGLE_VISIBILITY = 'EVENTLOG_TOGGLE_VISIBILITY'
 export const TOGGLE_FILTER = 'EVENTLOG_TOGGLE_FILTER'
 export const ADD = 'EVENTLOG_ADD'

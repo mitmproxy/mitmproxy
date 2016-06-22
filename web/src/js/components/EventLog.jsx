@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { toggleEventLogFilter, toggleEventLogVisibility } from '../ducks/eventLog'
+import { toggleFilter, toggleVisibility } from '../ducks/eventLog'
 import ToggleButton from './common/ToggleButton'
 import EventList from './EventLog/EventList'
 
@@ -73,7 +73,7 @@ export default connect(
         events: state.eventLog.filteredEvents,
     }),
     {
-        onClose: toggleEventLogVisibility,
-        onToggleFilter: toggleEventLogFilter,
+        onClose: toggleVisibility,
+        onToggleFilter: toggleFilter,
     }
 )(EventLog)

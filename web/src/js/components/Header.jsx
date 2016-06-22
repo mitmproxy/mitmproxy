@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import classnames from 'classnames'
-import { toggleEventLogVisibility } from '../ducks/eventLog'
 import MainMenu from './Header/MainMenu'
 import ViewMenu from './Header/ViewMenu'
 import OptionMenu from './Header/OptionMenu'
