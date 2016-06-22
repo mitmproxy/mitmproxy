@@ -29,7 +29,7 @@ export default function reduce(state = defaultState, action) {
             return { ...state, connected: false }
 
         case DISCONNECTED:
-            return { ...state, [SYM_SOCKET]: null }
+            return { ...state, [SYM_SOCKET]: null, connected: false }
 
         default:
             return state
