@@ -11,6 +11,8 @@ import pathod.pathoc
 from mitmproxy import flow, controller
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
+from netlib import strutils
+
 testapp = flask.Flask(__name__)
 
 
@@ -43,7 +45,7 @@ class TestMaster(flow.FlowMaster):
         self.tlog = []
 
     def add_event(self, message, level=None):
-        self.tlog.append(message)
+        self.tlog.append(strutils.native(message, "utf8"))
 
 
 class ProxyThread(threading.Thread):
@@ -148,7 +150,6 @@ class HTTPProxyTest(ProxyTestBase):
             Constructs a pathod GET request, with the appropriate base and proxy.
         """
         p = self.pathoc(sni=sni)
-        spec = spec.encode("string_escape")
         if self.ssl:
             q = "get:'/p/%s'" % spec
         else:
