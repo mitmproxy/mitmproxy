@@ -87,13 +87,14 @@ export default function reduce(state = defaultState, action) {
             }
 
         case RECEIVE:
-            return {
+            return state[SYM_PENDING].reduce(reduce, {
                 ...state,
+                [SYM_PENDING]: [],
                 isFetching: false,
                 raw: action.list,
                 data: action.list.filter(state[SYM_FILTER]).sort(state[SYM_SORTER]),
                 byId: _.fromPairs(action.list.map(item => [item.id, item])),
-            }
+            })
 
         default:
             return state

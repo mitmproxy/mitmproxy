@@ -123,30 +123,6 @@ export function selectFlow(id) {
 }
 
 /**
- * @public websocket
- */
-export function handleWsMsg(msg) {
-    if (msg.cmd === WS_CMD_RESET) {
-        return fetchData()
-    }
-    return { type: WS_MSG, msg }
-}
-
-/**
- * @public websocket
- */
-export function fetchData() {
-    return dispatch => {
-        dispatch(request())
-
-        return fetch('/flows')
-            .then(res => res.json())
-            .then(json => dispatch(receive(json.data)))
-            .catch(error => dispatch(fetchError(error)))
-    }
-}
-
-/**
  * @public
  */
 export function accept(flow) {
@@ -226,6 +202,32 @@ export function upload(file) {
     body.append('file', file)
     fetch('/flows/dump',  { method: 'post', body })
     return { type: REQUEST_ACTION }
+}
+
+/**
+ * This action creater takes all WebSocket events
+ *
+ * @public websocket
+ */
+export function handleWsMsg(msg) {
+    if (msg.cmd === WS_CMD_RESET) {
+        return fetchData()
+    }
+    return { type: WS_MSG, msg }
+}
+
+/**
+ * @public websocket
+ */
+export function fetchData() {
+    return dispatch => {
+        dispatch(request())
+
+        return fetch('/flows')
+            .then(res => res.json())
+            .then(json => dispatch(receive(json.data)))
+            .catch(error => dispatch(fetchError(error)))
+    }
 }
 
 /**

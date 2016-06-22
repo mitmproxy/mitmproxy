@@ -103,7 +103,7 @@ export function handleWsMsg(msg) {
 }
 
 /**
- * @private
+ * @public websocket
  */
 export function fetchData() {
     return dispatch => {
