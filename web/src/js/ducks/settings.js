@@ -47,7 +47,7 @@ export default function reducer(state = defaultState, action) {
     }
 }
 
-export function updateSettings(event) {
+export function handleWsMsg(event) {
     /* This action creator takes all WebSocket events */
     if (event.cmd === 'update') {
         return {
