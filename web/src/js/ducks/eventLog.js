@@ -8,7 +8,7 @@ export const ADD = 'EVENTLOG_ADD'
 export const WS_MSG = 'EVENTLOG_WS_MSG'
 export const REQUEST = 'EVENTLOG_REQUEST'
 export const RECEIVE = 'EVENTLOG_RECEIVE'
-export const ERROR = 'EVENTLOG_ERROR'
+export const FETCH_ERROR = 'EVENTLOG_FETCH_ERROR'
 
 const defaultState = {
     logId: 0,
@@ -58,12 +58,6 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 list: reduceList(state.list, listActions.receive(action.list))
-            }
-
-        case FETCH_ERROR:
-            return {
-                ...state,
-                list: reduceList(state.list, listActions.fetchError(action.error))
             }
 
         default:
