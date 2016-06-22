@@ -24,7 +24,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 filter: action.filter,
-                list: reduceList(state.list, listActions.updateFilter(action.filter ? Filt.parse(action.filter) : () => true)),
+                list: reduceList(state.list, listActions.updateFilter(makeFilterFun(action.filter))),
             }
 
         case UPDATE_HIGHLIGHT:
@@ -34,21 +34,10 @@ export default function reduce(state = defaultState, action) {
             }
 
         case UPDATE_SORTER:
-            const { column, desc, sortKeyFun } = action
             return {
                 ...state,
-                sorter: { column, desc },
-                list: reduceList(state.list, listActions.updateSorter((a, b) => {
-                    const ka = sortKeyFun(a)
-                    const kb = sortKeyFun(b)
-                    if (ka > kb) {
-                        return desc ? -1 : 1
-                    }
-                    if (ka < kb) {
-                        return desc ? 1 : -1
-                    }
-                    return 0
-                })),
+                sorter: { column: action.column, desc: action.desc },
+                list: reduceList(state.list, listActions.updateSorter(makeSortFun(action.sortKeyFun, action.desc))),
             }
 
         case SELECT:
@@ -65,6 +54,24 @@ export default function reduce(state = defaultState, action) {
 
         default:
             return state
+    }
+}
+
+function makeFilterFun(filter) {
+    return filter ? Filt.parse(filter) : () => true
+}
+
+function makeSortFun(sortKeyFun, desc) {
+    return (a, b) => {
+        const ka = sortKeyFun(a)
+        const kb = sortKeyFun(b)
+        if (ka > kb) {
+            return desc ? -1 : 1
+        }
+        if (ka < kb) {
+            return desc ? 1 : -1
+        }
+        return 0
     }
 }
 
