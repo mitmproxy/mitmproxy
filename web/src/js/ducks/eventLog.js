@@ -1,15 +1,17 @@
 import { fetchApi as fetch } from '../utils'
+import { CMD_RESET as WS_CMD_RESET } from './websocket'
 import reduceList, * as listActions from './utils/list'
 
-export const TOGGLE_FILTER = 'EVENTLOG_TOGGLE_FILTER'
 export const TOGGLE_VISIBILITY = 'EVENTLOG_TOGGLE_VISIBILITY'
+export const TOGGLE_FILTER = 'EVENTLOG_TOGGLE_FILTER'
 export const ADD = 'EVENTLOG_ADD'
-export const UPDATE = 'EVENTLOG_UPDATE'
+export const WS_MSG = 'EVENTLOG_WS_MSG'
 export const REQUEST = 'EVENTLOG_REQUEST'
 export const RECEIVE = 'EVENTLOG_RECEIVE'
 export const ERROR = 'EVENTLOG_ERROR'
 
 const defaultState = {
+    logId: 0,
     visible: false,
     filters: { debug: false, info: true, web: true },
     list: reduceList(undefined, { type: Symbol('EVENTLOG_INIT_LIST') })
@@ -32,19 +34,36 @@ export default function reduce(state = defaultState, action) {
         case ADD:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.add({ message: action.message, level: action.level }))
+                logId: state.logId + 1,
+                list: reduceList(state.list, listActions.add({
+                    id: `log-${state.logId}`,
+                    message: action.message,
+                    level: action.level,
+                }))
             }
 
-        case UPDATE:
+        case WS_MSG:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.update(action))
+                list: reduceList(state.list, listActions.handleWsMsg(action.msg))
+            }
+
+        case REQUEST:
+            return {
+                ...state,
+                list: reduceList(state.list, listActions.request())
             }
 
         case RECEIVE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.reset(action.list))
+                list: reduceList(state.list, listActions.receive(action.list))
+            }
+
+        case FETCH_ERROR:
+            return {
+                ...state,
+                list: reduceList(state.list, listActions.fetchError(action.error))
             }
 
         default:
@@ -84,14 +103,7 @@ export function handleWsMsg(msg) {
     if (msg.cmd === WS_CMD_RESET) {
         return fetch()
     }
-    return update(msg.cmd, msg.data)
-}
-
-/**
- * @private
- */
-export function update(cmd, data) {
-    return { type: UPDATE, cmd, data }
+    return { type: WS_MSG, msg }
 }
 
 /**

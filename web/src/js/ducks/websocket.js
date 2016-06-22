@@ -1,6 +1,10 @@
 const CONNECTED = 'WEBSOCKET_CONNECTED'
 const DISCONNECTED = 'WEBSOCKET_DISCONNECTED'
 
+export const CMD_ADD = 'add'
+export const CMD_UPDATE = 'update'
+export const CMD_REMOVE = 'remove'
+export const CMD_RESET = 'reset'
 
 const defaultState = {
     connected: false,
