@@ -3,16 +3,15 @@ import reduceList, * as listActions from './utils/list'
 import reduceView, * as viewActions from './utils/view'
 import * as websocketActions from './websocket'
 
-export const WS_MSG_TYPE = 'UPDATE_LOG'
+export const WS_MSG_TYPE       = 'UPDATE_LOG'
 
+export const ADD               = 'EVENTLOG_ADD'
+export const REQUEST           = 'EVENTLOG_REQUEST'
+export const RECEIVE           = 'EVENTLOG_RECEIVE'
 export const TOGGLE_VISIBILITY = 'EVENTLOG_TOGGLE_VISIBILITY'
-export const TOGGLE_FILTER = 'EVENTLOG_TOGGLE_FILTER'
-export const ADD = 'EVENTLOG_ADD'
-export const WS_MSG = 'EVENTLOG_WS_MSG'
-export const REQUEST = 'EVENTLOG_REQUEST'
-export const RECEIVE = 'EVENTLOG_RECEIVE'
-export const FETCH_ERROR = 'EVENTLOG_FETCH_ERROR'
-export const UNKNOWN_CMD = 'EVENTLOG_UNKNOWN_CMD'
+export const TOGGLE_FILTER     = 'EVENTLOG_TOGGLE_FILTER'
+export const UNKNOWN_CMD       = 'EVENTLOG_UNKNOWN_CMD'
+export const FETCH_ERROR       = 'EVENTLOG_FETCH_ERROR'
 
 const defaultState = {
     logId: 0,
@@ -26,7 +25,10 @@ export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
         case TOGGLE_VISIBILITY:
-            return { ...state, visible: !state.visible }
+            return {
+                ...state,
+                visible: !state.visible
+            }
 
         case TOGGLE_FILTER:
             const filters = { ...state.filters, [action.filter]: !state.filters[action.filter] }

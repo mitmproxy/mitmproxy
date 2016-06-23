@@ -3,17 +3,16 @@ import reduceList, * as listActions from './utils/list'
 import reduceViews, * as viewsActions from './views'
 import * as websocketActions from './websocket'
 
-export const WS_MSG_TYPE = 'UPDATE_FLOWS'
+export const WS_MSG_TYPE    = 'UPDATE_FLOWS'
 
-export const ADD = 'FLOWS_ADD'
-export const UPDATE = 'FLOWS_UPDATE'
-export const REMOVE = 'FLOWS_REMOVE'
-export const REQUEST = 'FLOWS_REQUEST'
-export const RECEIVE = 'FLOWS_RECEIVE'
-export const WS_MSG = 'FLOWS_WS_MSG'
+export const ADD            = 'FLOWS_ADD'
+export const UPDATE         = 'FLOWS_UPDATE'
+export const REMOVE         = 'FLOWS_REMOVE'
+export const REQUEST        = 'FLOWS_REQUEST'
+export const RECEIVE        = 'FLOWS_RECEIVE'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
-export const FETCH_ERROR = 'FLOWS_FETCH_ERROR'
-export const UNKNOWN_CMD = 'FLOWS_UNKNOWN_CMD'
+export const UNKNOWN_CMD    = 'FLOWS_UNKNOWN_CMD'
+export const FETCH_ERROR    = 'FLOWS_FETCH_ERROR'
 
 const defaultState = {
     list: null,
@@ -33,8 +32,8 @@ export default function reduce(state = defaultState, action) {
         case UPDATE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.update(action.item.id, action.item)),
-                views: reduceViews(state.views, viewsActions.update(action.item.id, action.item)),
+                list: reduceList(state.list, listActions.update(action.id, action.item)),
+                views: reduceViews(state.views, viewsActions.update(action.id, action.item)),
             }
 
         case REMOVE:
@@ -186,6 +185,27 @@ export function fetchData() {
             .then(json => dispatch(receive(json.data)))
             .catch(error => dispatch(fetchError(error)))
     }
+}
+
+/**
+ * @private
+ */
+export function add(item) {
+    return { type: ADD, item }
+}
+
+/**
+ * @private
+ */
+export function update(id, item) {
+    return { type: UPDATE, id, item }
+}
+
+/**
+ * @private
+ */
+export function remove(id) {
+    return { type: REMOVE, id }
 }
 
 /**
