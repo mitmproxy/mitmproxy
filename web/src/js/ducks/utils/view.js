@@ -16,7 +16,7 @@ export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
         case UPDATE_FILTER:
-            const data = action.list.data.filter(action.filter).sort(action.sorter)
+            const data = _.values(action.list.data).filter(action.filter).sort(action.sorter)
             return {
                 ...state,
                 data,
@@ -66,7 +66,7 @@ export default function reduce(state = defaultState, action) {
             }
 
         case RECEIVE:
-            const data = action.list.data.filter(action.filter).sort(action.sorter)
+            const data = _.values(action.list.data).filter(action.filter).sort(action.sorter)
             return {
                 ...state,
                 data,
