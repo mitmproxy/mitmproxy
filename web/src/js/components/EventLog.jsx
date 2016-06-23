@@ -70,7 +70,7 @@ class EventLog extends Component {
 export default connect(
     state => ({
         filters: state.eventLog.filters,
-        events: state.eventLog.list.data,
+        events: state.eventLog.view.data,
     }),
     {
         onClose: toggleVisibility,
