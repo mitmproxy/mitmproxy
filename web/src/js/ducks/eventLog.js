@@ -58,15 +58,18 @@ export default function reduce(state = defaultState, action) {
             }
 
         case RECEIVE:
+            const list = reduceList(state.list, listActions.receive(action.list))
             return {
                 ...state,
-                list: reduceList(state.list, listActions.receive(action.list)),
+                list,
+                view: reduceView(state.view, viewActions.receive(list, log => state.filters[log.level])),
             }
 
         default:
             return {
                 ...state,
                 list: reduceList(state.list, action),
+                view: reduceView(state.view, action),
             }
     }
 }
