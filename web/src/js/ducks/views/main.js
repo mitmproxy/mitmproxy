@@ -29,10 +29,10 @@ const sortKeyFuns = {
 
 
 const defaultState = {
-    filter: null,
-    sorter: null,
     highlight: null,
     selected: [],
+    filter: null,
+    sorter: { column: null, desc: false },
     view: null,
 }
 

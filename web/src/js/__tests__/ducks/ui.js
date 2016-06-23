@@ -1,4 +1,5 @@
 jest.unmock("../../ducks/ui");
+// @todo fix it ( this is why I don't like to add tests until our architecture is stable :P )
 jest.unmock("../../ducks/flows");
 
 import reducer, { setActiveMenu } from '../../ducks/ui';

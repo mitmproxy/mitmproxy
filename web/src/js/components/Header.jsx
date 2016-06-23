@@ -52,8 +52,8 @@ class Header extends Component {
 }
 export default connect(
     state => ({
-        selectedFlow: state.flows.selected[0],
-        activeMenu: state.ui.activeMenu
+        selectedFlow: state.flows.views.main.selected[0],
+        activeMenu: state.ui.activeMenu,
     }),
     {
         setActiveMenu,

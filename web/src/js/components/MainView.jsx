@@ -6,7 +6,7 @@ import { Key } from '../utils.js'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
-import { selectFlow, updateFilter, updateHighlight } from '../ducks/flows'
+import { selectFlow, updateFilter, updateHighlight } from '../ducks/views/main'
 
 class MainView extends Component {
 
@@ -182,10 +182,10 @@ class MainView extends Component {
 
 export default connect(
     state => ({
-        flows: state.flows.list.data,
-        filter: state.flows.filter,
-        highlight: state.flows.highlight,
-        selectedFlow: state.flows.list.byId[state.flows.selected[0]]
+        flows: state.flows.views.main.view.data,
+        filter: state.flows.views.main.filter,
+        highlight: state.flows.views.main.highlight,
+        selectedFlow: state.flows.list.data[state.flows.views.main.selected[0]]
     }),
     {
         selectFlow,
