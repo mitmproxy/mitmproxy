@@ -16,7 +16,8 @@ const defaultState = {
     logId: 0,
     visible: false,
     filters: { debug: false, info: true, web: true },
-    list: reduceList(undefined, { type: Symbol('EVENTLOG_INIT_LIST') })
+    list: reduceList(undefined, { type: Symbol('EVENTLOG_INIT_LIST') }),
+    view: reduceView(undefined, viewActions.init([]))
 }
 
 export default function reduce(state = defaultState, action) {
@@ -30,7 +31,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 filters,
-                list: reduceList(state.list, listActions.updateFilter(e => filters[e.level]))
+                view: reduceView(state.list, listActions.updateFilter(e => filters[e.level], state.list))
             }
 
         case ADD:

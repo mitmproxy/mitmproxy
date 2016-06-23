@@ -1,99 +1,50 @@
+import _ from 'lodash'
 import * as websocketActions from '../websocket'
 
-export const UPDATE_FILTER = 'LIST_UPDATE_FILTER'
-export const UPDATE_SORTER = 'LIST_UPDATE_SORTER'
-export const ADD = 'LIST_ADD'
-export const UPDATE = 'LIST_UPDATE'
-export const REMOVE = 'LIST_REMOVE'
+export const SET = 'LIST_SET'
+export const CLEAR = 'LIST_CLEAR'
 export const UNKNOWN_CMD = 'LIST_UNKNOWN_CMD'
 export const REQUEST = 'LIST_REQUEST'
 export const RECEIVE = 'LIST_RECEIVE'
-export const FETCH_ERROR = 'LIST_FETCH_ERROR'
 
-export const SYM_FILTER = Symbol('LIST_SYM_FILTER')
-export const SYM_SORTER = Symbol('LIST_SYM_SORTER')
-export const SYM_PENDING = Symbol('LIST_SYM_PENDING')
-
-// @todo add indexOf map if necessary
 const defaultState = {
-    raw: [],
-    data: [],
-    byId: {},
-    isFetching: false,
-    [SYM_FILTER]: () => true,
-    [SYM_SORTER]: () => 0,
-    [SYM_PENDING]: [],
+    data: {},
+    pendingActions: null,
 }
 
 export default function reduce(state = defaultState, action) {
-    if (state.isFetching && action.type !== RECEIVE) {
+    if (state.pendingActions && action.type !== RECEIVE) {
         return {
             ...state,
-            [SYM_PENDING]: [...state[SYM_PENDING], action]
+            pendingActions: [...state.pendingActions, action]
         }
     }
 
     switch (action.type) {
 
-        case UPDATE_FILTER:
+        case SET:
             return {
                 ...state,
-                [SYM_FILTER]: action.filter,
-                data: state.raw.filter(action.filter).sort(state[SYM_SORTER]),
+                data: { ...state.data, [action.id]: null, [action.item.id]: action.item }
             }
 
-        case UPDATE_SORTER:
+        case CLEAR:
             return {
                 ...state,
-                [SYM_SORTER]: action.sorter,
-                data: state.data.slice().sort(state[SYM_SORTER]),
-            }
-
-        case ADD:
-            let data = state.data
-            if (state[SYM_FILTER](action.item)) {
-                data = [...state.data, action.item].sort(state[SYM_SORTER])
-            }
-            return {
-                ...state,
-                data,
-                raw: [...state.raw, action.item],
-                byId: { ...state.byId, [action.item.id]: action.item },
-            }
-
-        case UPDATE:
-            // @todo optimize if necessary
-            const raw = state.raw.map(item => item.id === action.id ? action.item : item)
-            return {
-                ...state,
-                raw,
-                data: raw.filter(state[SYM_FILTER]).sort(state[SYM_SORTER]),
-                byId: { ...state.byId, [action.id]: null, [action.item.id]: action.item },
-            }
-
-        case REMOVE:
-            // @todo optimize if necessary
-            return {
-                ...state,
-                raw: state.raw.filter(item => item.id !== action.id),
-                data: state.data.filter(item => item.id !== action.id),
-                byId: { ...state.byId, [action.id]: null },
+                data: { ...state.data, [action.id]: null }
             }
 
         case REQUEST:
             return {
                 ...state,
-                isFetching: true,
+                pendingActions: []
             }
 
         case RECEIVE:
-            return state[SYM_PENDING].reduce(reduce, {
+            return state.pendingActions.reduce(reduce, {
                 ...state,
-                [SYM_PENDING]: [],
-                isFetching: false,
-                raw: action.list,
-                data: action.list.filter(state[SYM_FILTER]).sort(state[SYM_SORTER]),
-                byId: _.fromPairs(action.list.map(item => [item.id, item])),
+                pendingActions: null,
+                data: _.fromPairs(action.list.map(item => [item.id, item])),
             })
 
         default:
@@ -101,26 +52,44 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-export function updateFilter(filter) {
-    return { type: UPDATE_FILTER, filter }
-}
-
-export function updateSorter(sorter) {
-    return { type: UPDATE_SORTER, sorter }
-}
-
+/**
+ * @public
+ */
 export function add(item) {
-    return { type: ADD, item }
+    return { type: SET, id: item.id, item }
 }
 
+/**
+ * @public
+ */
 export function update(id, item) {
-    return { type: UPDATE, id, item }
+    return { type: SET, id, item }
 }
 
+/**
+ * @public
+ */
 export function remove(id) {
-    return { type: REMOVE, id }
+    return { type: CLEAR, id }
 }
 
+/**
+ * @public
+ */
+export function request() {
+    return { type: REQUEST }
+}
+
+/**
+ * @public
+ */
+export function receive(list) {
+    return { type: RECEIVE, list }
+}
+
+/**
+ * @public websocket
+ */
 export function handleWsMsg(msg) {
     switch (msg.cmd) {
 
@@ -136,16 +105,4 @@ export function handleWsMsg(msg) {
         default:
             return { type: UNKNOWN_CMD, msg }
     }
-}
-
-export function request() {
-    return { type: REQUEST }
-}
-
-export function receive(list) {
-    return { type: RECEIVE, list }
-}
-
-export function fetchError(error) {
-    return { type: FETCH_ERROR, error }
 }

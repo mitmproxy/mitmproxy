@@ -1,124 +1,66 @@
-import { fetchApi as fetch } from '../utils'
-import { CMD_RESET as WS_CMD_RESET } from './websocket'
 import reduceList, * as listActions from './utils/list'
+import reduceViews, * as viewsActions from './views'
 
-export const WS_MSG_TYPE ='UPDATE_FLOWS'
+export const WS_MSG_TYPE = 'UPDATE_FLOWS'
 
-export const UPDATE_FILTER = 'FLOWS_UPDATE_FLOW_FILTER'
-export const UPDATE_HIGHLIGHT = 'FLOWS_UPDATE_FLOW_HIGHLIGHT'
-export const UPDATE_SORT = 'FLOWS_UPDATE_FLOW_SORT'
-export const WS_MSG = 'FLOWS_WS_MSG'
-export const SELECT_FLOW = 'FLOWS_SELECT_FLOW'
-export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
+export const ADD = 'FLOWS_ADD'
+export const UPDATE = 'FLOWS_UPDATE'
+export const REMOVE = 'FLOWS_REMOVE'
 export const REQUEST = 'FLOWS_REQUEST'
 export const RECEIVE = 'FLOWS_RECEIVE'
+export const WS_MSG = 'FLOWS_WS_MSG'
+export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 export const FETCH_ERROR = 'FLOWS_FETCH_ERROR'
 
 const defaultState = {
-    selected: [],
-    sorter: {},
-    filter: null,
-    highlight: null,
-    list: reduceList(undefined, { type: Symbol('FLOWS_INIT_LIST') }),
+    list: null,
+    views: null,
 }
 
 export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
-        case UPDATE_FILTER:
+        case ADD:
             return {
                 ...state,
-                filter: action.filter,
-                list: reduceList(state.list, listActions.updateFilter(makeFilterFun(action.filter))),
+                list: reduceList(state.list, listActions.add(action.item)),
+                views: reduceViews(state.views, viewsActions.add(action.item)),
             }
 
-        case UPDATE_HIGHLIGHT:
+        case UPDATE:
             return {
                 ...state,
-                highlight: action.highlight,
+                list: reduceList(state.list, listActions.update(action.item.id, action.item)),
+                views: reduceViews(state.views, viewsActions.update(action.item.id, action.item)),
             }
 
-        case UPDATE_SORTER:
+        case REMOVE:
             return {
                 ...state,
-                sorter: { column: action.column, desc: action.desc },
-                list: reduceList(state.list, listActions.updateSorter(makeSortFun(action.sortKeyFun, action.desc))),
-            }
-
-        case SELECT_FLOW:
-            return {
-                ...state,
-                selected: [action.id],
-            }
-
-        case WS_MSG:
-            return {
-                ...state,
-                list: reduceList(state.list, listActions.handleWsMsg(action.msg)),
+                list: reduceList(state.list, listActions.remove(action.item.id)),
+                views: reduceViews(state.views, viewsActions.remove(action.item.id)),
             }
 
         case REQUEST:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.request())
+                list: reduceList(state.list, listActions.request()),
             }
 
         case RECEIVE:
+            const list = reduceList(state.list, listActions.receive(action.list))
             return {
                 ...state,
-                list: reduceList(state.list, listActions.receive(action.list))
+                list,
+                views: reduceViews(state.views, viewsActions.receive(list)),
             }
 
         default:
-            return state
-    }
-}
-
-function makeFilterFun(filter) {
-    return filter ? Filt.parse(filter) : () => true
-}
-
-function makeSortFun(sortKeyFun, desc) {
-    return (a, b) => {
-        const ka = sortKeyFun(a)
-        const kb = sortKeyFun(b)
-        if (ka > kb) {
-            return desc ? -1 : 1
-        }
-        if (ka < kb) {
-            return desc ? 1 : -1
-        }
-        return 0
-    }
-}
-
-/**
- * @public
- */
-export function updateFilter(filter) {
-    return { type: UPDATE_FILTER, filter }
-}
-
-/**
- * @public
- */
-export function updateHighlight(highlight) {
-    return { type: UPDATE_HIGHLIGHT, highlight }
-}
-
-/**
- * @public
- */
-export  function updateSorter(column, desc, sortKeyFun) {
-    return { type: UPDATE_SORTER, column, desc, sortKeyFun }
-}
-
-/**
- * @public
- */
-export function select(id) {
-    return (dispatch, getState) => {
-        dispatch({ type: SELECT_FLOW, currentSelection: getState().flows.selected[0], id })
+            return {
+                ...state,
+                list: reduceList(state.list, action),
+                views: reduceViews(state.views, action),
+            }
     }
 }
 
