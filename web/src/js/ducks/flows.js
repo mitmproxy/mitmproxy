@@ -1,5 +1,7 @@
+import { fetchApi } from '../utils'
 import reduceList, * as listActions from './utils/list'
 import reduceViews, * as viewsActions from './views'
+import * as websocketActions from './websocket'
 
 export const WS_MSG_TYPE = 'UPDATE_FLOWS'
 
@@ -11,6 +13,7 @@ export const RECEIVE = 'FLOWS_RECEIVE'
 export const WS_MSG = 'FLOWS_WS_MSG'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 export const FETCH_ERROR = 'FLOWS_FETCH_ERROR'
+export const UNKNOWN_CMD = 'FLOWS_UNKNOWN_CMD'
 
 const defaultState = {
     list: null,
@@ -68,7 +71,7 @@ export default function reduce(state = defaultState, action) {
  * @public
  */
 export function accept(flow) {
-    fetch(`/flows/${flow.id}/accept`, { method: 'POST' })
+    fetchApi(`/flows/${flow.id}/accept`, { method: 'POST' })
     return { type: REQUEST_ACTION }
 }
 
@@ -76,7 +79,7 @@ export function accept(flow) {
  * @public
  */
 export function acceptAll() {
-    fetch('/flows/accept', { method: 'POST' })
+    fetchApi('/flows/accept', { method: 'POST' })
     return { type: REQUEST_ACTION }
 }
 
@@ -84,7 +87,7 @@ export function acceptAll() {
  * @public
  */
 export function remove(flow) {
-    fetch(`/flows/${flow.id}`, { method: 'DELETE' })
+    fetchApi(`/flows/${flow.id}`, { method: 'DELETE' })
     return { type: REQUEST_ACTION }
 }
 
@@ -92,7 +95,7 @@ export function remove(flow) {
  * @public
  */
 export function duplicate(flow) {
-    fetch(`/flows/${flow.id}/duplicate`, { method: 'POST' })
+    fetchApi(`/flows/${flow.id}/duplicate`, { method: 'POST' })
     return { type: REQUEST_ACTION }
 }
 
@@ -100,7 +103,7 @@ export function duplicate(flow) {
  * @public
  */
 export function replay(flow) {
-    fetch(`/flows/${flow.id}/replay`, { method: 'POST' })
+    fetchApi(`/flows/${flow.id}/replay`, { method: 'POST' })
     return { type: REQUEST_ACTION }
 }
 
@@ -108,7 +111,7 @@ export function replay(flow) {
  * @public
  */
 export function revert(flow) {
-    fetch(`/flows/${flow.id}/revert`, { method: 'POST' })
+    fetchApi(`/flows/${flow.id}/revert`, { method: 'POST' })
     return { type: REQUEST_ACTION }
 }
 
@@ -116,7 +119,7 @@ export function revert(flow) {
  * @public
  */
 export function update(flow, body) {
-    fetch(`/flows/${flow.id}`, { method: 'PUT', body })
+    fetchApi(`/flows/${flow.id}`, { method: 'PUT', body })
     return { type: REQUEST_ACTION }
 }
 
@@ -124,7 +127,7 @@ export function update(flow, body) {
  * @public
  */
 export function clear() {
-    fetch('/clear', { method: 'POST' })
+    fetchApi('/clear', { method: 'POST' })
     return { type: REQUEST_ACTION }
 }
 
@@ -142,7 +145,7 @@ export function download() {
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
-    fetch('/flows/dump',  { method: 'post', body })
+    fetchApi('/flows/dump',  { method: 'post', body })
     return { type: REQUEST_ACTION }
 }
 
@@ -152,10 +155,23 @@ export function upload(file) {
  * @public websocket
  */
 export function handleWsMsg(msg) {
-    if (msg.cmd === WS_CMD_RESET) {
-        return fetchData()
+    switch (msg.cmd) {
+
+        case websocketActions.CMD_ADD:
+            return add(msg.data)
+
+        case websocketActions.CMD_UPDATE:
+            return update(msg.data.id, msg.data)
+
+        case websocketActions.CMD_REMOVE:
+            return remove(msg.data.id)
+
+        case websocketActions.CMD_RESET:
+            return fetchData()
+
+        default:
+            return { type: UNKNOWN_CMD, msg }
     }
-    return { type: WS_MSG, msg }
 }
 
 /**
@@ -165,7 +181,7 @@ export function fetchData() {
     return dispatch => {
         dispatch(request())
 
-        return fetch('/flows')
+        return fetchApi('/flows')
             .then(res => res.json())
             .then(json => dispatch(receive(json.data)))
             .catch(error => dispatch(fetchError(error)))

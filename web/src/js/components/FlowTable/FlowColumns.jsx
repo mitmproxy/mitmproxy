@@ -9,7 +9,6 @@ export function TLSColumn({ flow }) {
     )
 }
 
-TLSColumn.sortKeyFun = flow => flow.request.scheme
 TLSColumn.headerClass = 'col-tls'
 TLSColumn.headerName = ''
 
@@ -68,7 +67,6 @@ export function PathColumn({ flow }) {
     )
 }
 
-PathColumn.sortKeyFun = flow => RequestUtils.pretty_url(flow.request)
 PathColumn.headerClass = 'col-path'
 PathColumn.headerName = 'Path'
 
@@ -78,7 +76,6 @@ export function MethodColumn({ flow }) {
     )
 }
 
-MethodColumn.sortKeyFun = flow => flow.request.method
 MethodColumn.headerClass = 'col-method'
 MethodColumn.headerName = 'Method'
 
@@ -88,7 +85,6 @@ export function StatusColumn({ flow }) {
     )
 }
 
-StatusColumn.sortKeyFun = flow => flow.response && flow.response.status_code
 StatusColumn.headerClass = 'col-status'
 StatusColumn.headerName = 'Status'
 
@@ -98,7 +94,7 @@ export function SizeColumn({ flow }) {
     )
 }
 
-SizeColumn.sortKeyFun = flow => {
+SizeColumn.getTotalSize = flow => {
     let total = flow.request.contentLength
     if (flow.response) {
         total += flow.response.contentLength || 0
@@ -106,7 +102,6 @@ SizeColumn.sortKeyFun = flow => {
     return total
 }
 
-SizeColumn.getTotalSize = SizeColumn.sortKeyFun
 SizeColumn.headerClass = 'col-size'
 SizeColumn.headerName = 'Size'
 
@@ -122,7 +117,6 @@ export function TimeColumn({ flow }) {
     )
 }
 
-TimeColumn.sortKeyFun = flow => flow.response && flow.response.timestamp_end - flow.request.timestamp_start
 TimeColumn.headerClass = 'col-time'
 TimeColumn.headerName = 'Time'
 

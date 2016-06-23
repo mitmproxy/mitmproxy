@@ -72,19 +72,19 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-export function updateFilter(list, filter, sorter) {
+export function updateFilter(list, filter = defaultFilter, sorter = defaultSorter) {
     return { type: UPDATE_FILTER, list, filter, sorter }
 }
 
-export function updateSorter(sorter) {
+export function updateSorter(sorter = defaultSorter) {
     return { type: UPDATE_SORTER, sorter }
 }
 
-export function add(item, filter, sorter) {
+export function add(item, filter = defaultFilter, sorter = defaultSorter) {
     return { type: ADD, item, filter, sorter }
 }
 
-export function update(id, item, filter, sorter) {
+export function update(id, item, filter = defaultFilter, sorter = defaultSorter) {
     return { type: UPDATE, id, item, filter, sorter }
 }
 
@@ -92,7 +92,7 @@ export function remove(id) {
     return { type: REMOVE, id }
 }
 
-export function receive(list, filter, sorter) {
+export function receive(list, filter = defaultFilter, sorter = defaultSorter) {
     return { type: RECEIVE, list, filter, sorter }
 }
 
@@ -136,4 +136,12 @@ function sortedIndex(list, item, sorter) {
     }
 
     return low
+}
+
+function defaultFilter() {
+    return true
+}
+
+function defaultSorter(a, b) {
+    return 0
 }

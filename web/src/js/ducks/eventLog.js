@@ -1,6 +1,7 @@
-import { fetchApi as fetch } from '../utils'
-import { CMD_RESET as WS_CMD_RESET } from './websocket'
+import { fetchApi } from '../utils'
 import reduceList, * as listActions from './utils/list'
+import reduceView, * as viewActions from './utils/view'
+import * as websocketActions from './websocket'
 
 export const WS_MSG_TYPE = 'UPDATE_LOG'
 
@@ -11,13 +12,14 @@ export const WS_MSG = 'EVENTLOG_WS_MSG'
 export const REQUEST = 'EVENTLOG_REQUEST'
 export const RECEIVE = 'EVENTLOG_RECEIVE'
 export const FETCH_ERROR = 'EVENTLOG_FETCH_ERROR'
+export const UNKNOWN_CMD = 'EVENTLOG_UNKNOWN_CMD'
 
 const defaultState = {
     logId: 0,
     visible: false,
     filters: { debug: false, info: true, web: true },
-    list: reduceList(undefined, { type: Symbol('EVENTLOG_INIT_LIST') }),
-    view: reduceView(undefined, viewActions.init([]))
+    list: null,
+    view: null,
 }
 
 export default function reduce(state = defaultState, action) {
@@ -31,40 +33,39 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 filters,
-                view: reduceView(state.list, listActions.updateFilter(e => filters[e.level], state.list))
+                view: reduceView(state.view, viewActions.updateFilter(state.list, log => filters[log.level])),
             }
 
         case ADD:
+            const item = {
+                id: `log-${state.logId}`,
+                message: action.message,
+                level: action.level,
+            }
             return {
                 ...state,
                 logId: state.logId + 1,
-                list: reduceList(state.list, listActions.add({
-                    id: `log-${state.logId}`,
-                    message: action.message,
-                    level: action.level,
-                }))
-            }
-
-        case WS_MSG:
-            return {
-                ...state,
-                list: reduceList(state.list, listActions.handleWsMsg(action.msg))
+                list: reduceList(state.list, listActions.add(item)),
+                view: reduceView(state.view, viewActions.add(item, log => state.filters[log.level])),
             }
 
         case REQUEST:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.request())
+                list: reduceList(state.list, listActions.request()),
             }
 
         case RECEIVE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.receive(action.list))
+                list: reduceList(state.list, listActions.receive(action.list)),
             }
 
         default:
-            return state
+            return {
+                ...state,
+                list: reduceList(state.list, action),
+            }
     }
 }
 
@@ -97,10 +98,17 @@ export function add(message, level = 'web') {
  * @public websocket
  */
 export function handleWsMsg(msg) {
-    if (msg.cmd === WS_CMD_RESET) {
-        return fetchData()
+    switch (msg.cmd) {
+
+        case websocketActions.CMD_ADD:
+            return add(msg.data.message, msg.data.level)
+
+        case websocketActions.CMD_RESET:
+            return fetchData()
+
+        default:
+            return { type: UNKNOWN_CMD, msg }
     }
-    return { type: WS_MSG, msg }
 }
 
 /**
@@ -110,7 +118,7 @@ export function fetchData() {
     return dispatch => {
         dispatch(request())
 
-        return fetch('/events')
+        return fetchApi('/events')
             .then(res => res.json())
             .then(json =>  dispatch(receive(json.data)))
             .catch(error => dispatch(fetchError(error)))

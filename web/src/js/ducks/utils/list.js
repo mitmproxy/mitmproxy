@@ -1,9 +1,7 @@
 import _ from 'lodash'
-import * as websocketActions from '../websocket'
 
 export const SET = 'LIST_SET'
 export const CLEAR = 'LIST_CLEAR'
-export const UNKNOWN_CMD = 'LIST_UNKNOWN_CMD'
 export const REQUEST = 'LIST_REQUEST'
 export const RECEIVE = 'LIST_RECEIVE'
 
@@ -85,24 +83,4 @@ export function request() {
  */
 export function receive(list) {
     return { type: RECEIVE, list }
-}
-
-/**
- * @public websocket
- */
-export function handleWsMsg(msg) {
-    switch (msg.cmd) {
-
-        case websocketActions.CMD_ADD:
-            return add(msg.data)
-
-        case websocketActions.CMD_UPDATE:
-            return update(msg.data.id, msg.data)
-
-        case websocketActions.CMD_REMOVE:
-            return remove(msg.data.id)
-
-        default:
-            return { type: UNKNOWN_CMD, msg }
-    }
 }

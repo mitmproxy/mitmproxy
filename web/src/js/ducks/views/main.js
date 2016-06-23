@@ -6,6 +6,28 @@ export const UPDATE_SORTER = 'MAIN_VIEW_UPDATE_SORTER'
 export const UPDATE_HIGHLIGHT = 'MAIN_VIEW_UPDATE_HIGHLIGHT'
 export const SELECT = 'MAIN_VIEW_SELECT'
 
+const sortKeyFuns = {
+
+    TLSColumn: flow => flow.request.scheme,
+
+    PathColumn: flow => RequestUtils.pretty_url(flow.request),
+
+    MethodColumn: flow => flow.request.method,
+
+    StatusColumn: flow => flow.response && flow.response.status_code,
+
+    TimeColumn: flow => flow.response && flow.response.timestamp_end - flow.request.timestamp_start,
+
+    SizeColumn: flow => {
+        let total = flow.request.contentLength
+        if (flow.response) {
+            total += flow.response.contentLength || 0
+        }
+        return total
+    },
+}
+
+
 const defaultState = {
     filter: null,
     sorter: null,
@@ -144,7 +166,7 @@ export function select(id) {
  * @private
  */
 function makeFilter(filter) {
-    return filter ? Filt.parse(filter) : () => true
+    return filter && Filt.parse(filter)
 }
 
 /**
@@ -152,6 +174,9 @@ function makeFilter(filter) {
  */
 function makeSorter(column, desc) {
     const sortKeyFun = sortKeyFuns[column]
+    if (!sortKeyFun) {
+        return
+    }
     return (a, b) => {
         const ka = sortKeyFun(a)
         const kb = sortKeyFun(b)
