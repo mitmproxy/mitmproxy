@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import classnames from 'classnames'
-import { FlowActions } from '../../actions.js'
+import * as flowActions from '../../ducks/flows'
 
 export default class FileMenu extends Component {
 
@@ -35,7 +35,7 @@ export default class FileMenu extends Component {
     onNewClick(e) {
         e.preventDefault()
         if (confirm('Delete all flows?')) {
-            FlowActions.clear()
+            flowActions.clear()
         }
     }
 
@@ -47,14 +47,14 @@ export default class FileMenu extends Component {
     onOpenFile(e) {
         e.preventDefault()
         if (e.target.files.length > 0) {
-            FlowActions.upload(e.target.files[0])
+            flowActions.upload(e.target.files[0])
             this.fileInput.value = ''
         }
     }
 
     onSaveClick(e) {
         e.preventDefault()
-        FlowActions.download()
+        flowActions.download()
     }
 
     render() {

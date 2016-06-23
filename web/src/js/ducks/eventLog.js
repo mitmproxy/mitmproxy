@@ -3,7 +3,7 @@ import reduceList, * as listActions from './utils/list'
 import reduceView, * as viewActions from './utils/view'
 import * as websocketActions from './websocket'
 
-export const WS_MSG_TYPE       = 'UPDATE_LOG'
+export const WS_MSG_TYPE       = 'UPDATE_EVENTLOG'
 
 export const ADD               = 'EVENTLOG_ADD'
 export const REQUEST           = 'EVENTLOG_REQUEST'

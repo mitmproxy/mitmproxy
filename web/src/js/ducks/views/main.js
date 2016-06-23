@@ -1,4 +1,5 @@
-import reduceView, * as viewActions from '../utils/list'
+import { RequestUtils } from '../../flow/utils'
+import reduceView, * as viewActions from '../utils/view'
 import * as viewsActions from '../views'
 
 export const UPDATE_FILTER = 'FLOW_VIEWS_MAIN_UPDATE_FILTER'
@@ -170,13 +171,16 @@ export function select(id) {
  * @private
  */
 function makeFilter(filter) {
-    return filter && Filt.parse(filter)
+    if (!filter) {
+        return
+    }
+    return Filt.parse(filter)
 }
 
 /**
  * @private
  */
-function makeSorter(column, desc) {
+function makeSorter({ column, desc }) {
     const sortKeyFun = sortKeyFuns[column]
     if (!sortKeyFun) {
         return
