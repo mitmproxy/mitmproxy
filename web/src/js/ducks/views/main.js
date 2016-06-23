@@ -27,7 +27,6 @@ const sortKeyFuns = {
     },
 }
 
-
 const defaultState = {
     highlight: null,
     selected: [],
@@ -108,7 +107,12 @@ export default function reduce(state = defaultState, action) {
         case viewsActions.REMOVE:
             return {
                 ...state,
-                view: reduceView(state.view, viewActions.remove(action.id)),
+                view: reduceView(
+                    state.view,
+                    viewActions.remove(
+                        action.id
+                    )
+                ),
             }
 
         case viewsActions.RECEIVE:
