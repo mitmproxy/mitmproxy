@@ -120,7 +120,7 @@ export function fetchData() {
 
         return fetchApi('/events')
             .then(res => res.json())
-            .then(json =>  dispatch(receive(json.data)))
+            .then(json => dispatch(receive(json.data)))
             .catch(error => dispatch(fetchError(error)))
     }
 }

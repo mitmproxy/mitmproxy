@@ -32,7 +32,7 @@ export default function reduce(state = defaultState, action) {
             }
 
         case ADD:
-            if (!action.filter(action.item)) {
+            if (state.indexOf[action.item.id] != null || !action.filter(action.item)) {
                 return state
             }
             return {
@@ -41,12 +41,18 @@ export default function reduce(state = defaultState, action) {
             }
 
         case REMOVE:
+            if (state.indexOf[action.item.id] == null) {
+                return state
+            }
             return {
                 ...state,
                 ...sortedRemove(state, action.id),
             }
 
         case UPDATE:
+            if (state.indexOf[action.item.id] == null) {
+                return
+            }
             const nextState = {
                 ...state,
                 ...sortedRemove(state, action.id),
