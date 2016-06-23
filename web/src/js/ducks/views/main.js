@@ -1,10 +1,10 @@
 import reduceView, * as viewActions from '../utils/list'
 import * as viewsActions from '../views'
 
-export const UPDATE_FILTER = 'MAIN_VIEW_UPDATE_FILTER'
-export const UPDATE_SORTER = 'MAIN_VIEW_UPDATE_SORTER'
-export const UPDATE_HIGHLIGHT = 'MAIN_VIEW_UPDATE_HIGHLIGHT'
-export const SELECT = 'MAIN_VIEW_SELECT'
+export const UPDATE_FILTER = 'FLOW_VIEWS_MAIN_UPDATE_FILTER'
+export const UPDATE_SORTER = 'FLOW_VIEWS_MAIN_UPDATE_SORTER'
+export const UPDATE_HIGHLIGHT = 'FLOW_VIEWS_MAIN_UPDATE_HIGHLIGHT'
+export const SELECT = 'FLOW_VIEWS_MAIN_SELECT'
 
 const sortKeyFuns = {
 
@@ -32,7 +32,7 @@ const defaultState = {
     selected: [],
     filter: null,
     sorter: { column: null, desc: false },
-    view: null,
+    view: undefined,
 }
 
 export default function reduce(state = defaultState, action) {

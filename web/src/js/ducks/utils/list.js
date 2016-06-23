@@ -11,22 +11,27 @@ const defaultState = {
 }
 
 export default function reduce(state = defaultState, action) {
-    if (state.pendingActions && action.type !== RECEIVE) {
-        return {
-            ...state,
-            pendingActions: [...state.pendingActions, action]
-        }
-    }
-
     switch (action.type) {
 
         case SET:
+            if (state.pendingActions) {
+                return {
+                    ...state,
+                    pendingActions: [...state.pendingActions, action]
+                }
+            }
             return {
                 ...state,
                 data: { ...state.data, [action.id]: null, [action.item.id]: action.item }
             }
 
         case CLEAR:
+            if (state.pendingActions) {
+                return {
+                    ...state,
+                    pendingActions: [...state.pendingActions, action]
+                }
+            }
             return {
                 ...state,
                 data: { ...state.data, [action.id]: null }

@@ -15,21 +15,23 @@ const defaultState = {
 export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
-        case UPDATE_FILTER:
+        case UPDATE_FILTER: {
             const data = _.values(action.list.data).filter(action.filter).sort(action.sorter)
             return {
                 ...state,
                 data,
                 indexOf: _.fromPairs(data.map((item, index) => [item.id, index])),
             }
+        }
 
-        case UPDATE_SORTER:
-            const data = state.data.slice().sort(action.sorter)
+        case UPDATE_SORTER: {
+            const data = [...state.data].sort(action.sorter)
             return {
                 ...state,
                 data,
                 indexOf: _.fromPairs(data.map((item, index) => [item.id, index]))
             }
+        }
 
         case ADD:
             if (state.indexOf[action.item.id] != null || !action.filter(action.item)) {
@@ -49,7 +51,7 @@ export default function reduce(state = defaultState, action) {
                 ...sortedRemove(state, action.id),
             }
 
-        case UPDATE:
+        case UPDATE: {
             if (state.indexOf[action.item.id] == null) {
                 return
             }
@@ -64,14 +66,16 @@ export default function reduce(state = defaultState, action) {
                 ...nextState,
                 ...sortedInsert(nextState, action.item, action.sorter)
             }
+        }
 
-        case RECEIVE:
+        case RECEIVE: {
             const data = _.values(action.list.data).filter(action.filter).sort(action.sorter)
             return {
                 ...state,
                 data,
                 indexOf: _.fromPairs(data.map((item, index) => [item.id, index])),
             }
+        }
 
         default:
             return state

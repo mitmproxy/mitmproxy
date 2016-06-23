@@ -15,8 +15,8 @@ export const UNKNOWN_CMD    = 'FLOWS_UNKNOWN_CMD'
 export const FETCH_ERROR    = 'FLOWS_FETCH_ERROR'
 
 const defaultState = {
-    list: null,
-    views: null,
+    list: undefined,
+    views: undefined,
 }
 
 export default function reduce(state = defaultState, action) {

@@ -17,8 +17,8 @@ const defaultState = {
     logId: 0,
     visible: false,
     filters: { debug: false, info: true, web: true },
-    list: null,
-    view: null,
+    list: undefined,
+    view: undefined,
 }
 
 export default function reduce(state = defaultState, action) {
