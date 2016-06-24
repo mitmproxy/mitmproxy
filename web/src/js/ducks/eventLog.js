@@ -1,12 +1,12 @@
-import { fetchApi } from '../utils'
 import reduceList, * as listActions from './utils/list'
 import reduceView, * as viewActions from './utils/view'
 import * as websocketActions from './websocket'
+import * as msgQueueActions from './msgQueue'
 
-export const WS_MSG_TYPE       = 'UPDATE_EVENTLOG'
+export const MSG_TYPE = 'UPDATE_EVENTLOG'
+export const DATA_URL = '/events'
 
 export const ADD               = 'EVENTLOG_ADD'
-export const REQUEST           = 'EVENTLOG_REQUEST'
 export const RECEIVE           = 'EVENTLOG_RECEIVE'
 export const TOGGLE_VISIBILITY = 'EVENTLOG_TOGGLE_VISIBILITY'
 export const TOGGLE_FILTER     = 'EVENTLOG_TOGGLE_FILTER'
@@ -49,12 +49,6 @@ export default function reduce(state = defaultState, action) {
                 logId: state.logId + 1,
                 list: reduceList(state.list, listActions.add(item)),
                 view: reduceView(state.view, viewActions.add(item, log => state.filters[log.level])),
-            }
-
-        case REQUEST:
-            return {
-                ...state,
-                list: reduceList(state.list, listActions.request()),
             }
 
         case RECEIVE:
@@ -120,33 +114,12 @@ export function handleWsMsg(msg) {
  * @public websocket
  */
 export function fetchData() {
-    return dispatch => {
-        dispatch(request())
-
-        return fetchApi('/events')
-            .then(res => res.json())
-            .then(json => dispatch(receive(json.data)))
-            .catch(error => dispatch(fetchError(error)))
-    }
+    return msgQueueActions.fetchData(MSG_TYPE)
 }
 
 /**
- * @private
+ * @public msgQueue
  */
-export function request() {
-    return { type: REQUEST }
-}
-
-/**
- * @private
- */
-export function receive(list) {
+export function receiveData(list) {
     return { type: RECEIVE, list }
-}
-
-/**
- * @private
- */
-export function fetchError(error) {
-    return { type: FETCH_ERROR, error }
 }

@@ -1,16 +1,16 @@
-import {combineReducers} from 'redux'
+import { combineReducers } from 'redux'
 import eventLog from './eventLog'
 import websocket from './websocket'
 import flows from './flows'
 import settings from './settings'
 import ui from './ui'
+import msgQueue from './msgQueue'
 
-const rootReducer = combineReducers({
+export default combineReducers({
     eventLog,
     websocket,
     flows,
     settings,
-    ui
+    ui,
+    msgQueue,
 })
-
-export default rootReducer

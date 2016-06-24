@@ -1,14 +1,15 @@
 import { fetchApi } from '../utils'
 import reduceList, * as listActions from './utils/list'
 import reduceViews, * as viewsActions from './views'
+import * as msgQueueActions from './msgQueue'
 import * as websocketActions from './websocket'
 
-export const WS_MSG_TYPE    = 'UPDATE_FLOWS'
+export const MSG_TYPE = 'UPDATE_FLOWS'
+export const DATA_URL = '/flows'
 
 export const ADD            = 'FLOWS_ADD'
 export const UPDATE         = 'FLOWS_UPDATE'
 export const REMOVE         = 'FLOWS_REMOVE'
-export const REQUEST        = 'FLOWS_REQUEST'
 export const RECEIVE        = 'FLOWS_RECEIVE'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 export const UNKNOWN_CMD    = 'FLOWS_UNKNOWN_CMD'
@@ -41,12 +42,6 @@ export default function reduce(state = defaultState, action) {
                 ...state,
                 list: reduceList(state.list, listActions.remove(action.item.id)),
                 views: reduceViews(state.views, viewsActions.remove(action.item.id)),
-            }
-
-        case REQUEST:
-            return {
-                ...state,
-                list: reduceList(state.list, listActions.request()),
             }
 
         case RECEIVE:
@@ -177,14 +172,14 @@ export function handleWsMsg(msg) {
  * @public websocket
  */
 export function fetchData() {
-    return dispatch => {
-        dispatch(request())
+    return msgQueueActions.fetchData(MSG_TYPE)
+}
 
-        return fetchApi('/flows')
-            .then(res => res.json())
-            .then(json => dispatch(receive(json.data)))
-            .catch(error => dispatch(fetchError(error)))
-    }
+/**
+ * @public msgQueue
+ */
+export function receiveData(list) {
+    return { type: RECEIVE, list }
 }
 
 /**
@@ -206,25 +201,4 @@ export function update(id, item) {
  */
 export function remove(id) {
     return { type: REMOVE, id }
-}
-
-/**
- * @private
- */
-export function request() {
-    return { type: REQUEST }
-}
-
-/**
- * @private
- */
-export function receive(list) {
-    return { type: RECEIVE, list }
-}
-
-/**
- * @private
- */
-export function fetchError(error) {
-    return { type: FETCH_ERROR, error }
 }

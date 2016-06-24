@@ -1,54 +1,74 @@
 import _ from 'lodash'
 
-export const SET = 'LIST_SET'
-export const CLEAR = 'LIST_CLEAR'
-export const REQUEST = 'LIST_REQUEST'
+export const ADD = 'LIST_ADD'
+export const UPDATE = 'LIST_UPDATE'
+export const REMOVE = 'LIST_REMOVE'
 export const RECEIVE = 'LIST_RECEIVE'
 
 const defaultState = {
-    data: {},
-    pendingActions: null,
+    data: [],
+    byId: {},
+    indexOf: {},
 }
 
 export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
-        case SET:
-            if (state.pendingActions) {
-                return {
-                    ...state,
-                    pendingActions: [...state.pendingActions, action]
-                }
-            }
+        case ADD:
             return {
                 ...state,
-                data: { ...state.data, [action.id]: null, [action.item.id]: action.item }
+                data: [...state.data, action.item],
+                byId: { ...state.byId, [action.item.id]: action.item },
+                indexOf: { ...state.indexOf, [action.item.id]: state.data.length },
             }
 
-        case CLEAR:
-            if (state.pendingActions) {
-                return {
-                    ...state,
-                    pendingActions: [...state.pendingActions, action]
-                }
-            }
-            return {
-                ...state,
-                data: { ...state.data, [action.id]: null }
+        case UPDATE: {
+            const data = [...state.data]
+            const index = state.indexOf[action.id]
+
+            if (index == null) {
+                throw new Error('Item not found')
             }
 
-        case REQUEST:
+            data[index] = action.item
+
             return {
                 ...state,
-                pendingActions: []
+                data,
+                byId: { ...state.byId, [action.id]: null, [action.item.id]: action.item },
+                indexOf: { ...state.indexOf, [action.id]: null, [action.item.id]: index },
             }
+        }
+
+        case REMOVE: {
+            const data = [...state.data]
+            const indexOf = { ...state.indexOf }
+            const index = indexOf[action.id]
+
+            if (index == null) {
+                throw new Error('Item not found')
+            }
+
+            data.splice(index, 1)
+            for (let i = data.length - 1; i >= index; i--) {
+                indexOf[data[i].id] = i
+            }
+
+            return {
+                ...state,
+                data,
+                indexOf,
+                byId: { ...state.byId, [action.id]: null },
+            }
+        }
 
         case RECEIVE:
-            return state.pendingActions.reduce(reduce, {
+            return {
                 ...state,
-                pendingActions: null,
-                data: _.fromPairs(action.list.map(item => [item.id, item])),
-            })
+                data: action.list,
+                byId: _.fromPairs(action.list.map(item => [item.id, item])),
+                indexOf: _.fromPairs(action.list.map((item, index) => [item.id, index])),
+            }
 
         default:
             return state
@@ -59,28 +79,21 @@ export default function reduce(state = defaultState, action) {
  * @public
  */
 export function add(item) {
-    return { type: SET, id: item.id, item }
+    return { type: ADD, item }
 }
 
 /**
  * @public
  */
 export function update(id, item) {
-    return { type: SET, id, item }
+    return { type: UPDATE, id, item }
 }
 
 /**
  * @public
  */
 export function remove(id) {
-    return { type: CLEAR, id }
-}
-
-/**
- * @public
- */
-export function request() {
-    return { type: REQUEST }
+    return { type: REMOVE, id }
 }
 
 /**

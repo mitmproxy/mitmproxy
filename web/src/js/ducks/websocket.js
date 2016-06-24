@@ -1,5 +1,7 @@
 import { ConnectionActions } from '../actions.js'
 import { AppDispatcher } from '../dispatcher.js'
+
+import * as msgQueueActions from './msgQueue'
 import * as eventLogActions from './eventLog'
 import * as flowsActions from './flows'
 import * as settingsActions from './settings'
@@ -45,17 +47,12 @@ export function connect() {
     return dispatch => {
         const socket = new WebSocket(location.origin.replace('http', 'ws') + '/updates')
 
-        // @todo remove this
-        window.ws = socket
-
         socket.addEventListener('open', () => dispatch(onConnect()))
         socket.addEventListener('close', () => dispatch(onDisconnect()))
-        socket.addEventListener('message', msg => dispatch(onMessage(msg)))
+        socket.addEventListener('message', msg => dispatch(onMessage(JSON.parse(msg.data))))
         socket.addEventListener('error', error => dispatch(onError(error)))
 
         dispatch({ type: CONNECT, socket })
-
-        return socket
     }
 }
 
@@ -70,39 +67,18 @@ export function onConnect() {
     // workaround to make sure that our state is already available.
     return dispatch => {
         dispatch({ type: CONNECTED })
-        dispatch(settingsActions.fetchSettings())
-        dispatch(flowsActions.fetchFlows()).then(() => ConnectionActions.open())
+        dispatch(settingsActions.fetchData())
+        dispatch(flowsActions.fetchData())
+        dispatch(eventLogActions.fetchData())
     }
 }
 
 export function onMessage(msg) {
-    return dispatch => {
-        const data = JSON.parse(msg.data)
-
-        AppDispatcher.dispatchServerAction(data)
-
-        switch (data.type) {
-
-            case eventLogActions.WS_MSG_TYPE:
-                return dispatch(eventLogActions.handleWsMsg(data))
-
-            case flowsActions.WS_MSG_TYPE:
-                return dispatch(flowsActions.handleWsMsg(data))
-
-            case settingsActions.UPDATE_SETTINGS:
-                return dispatch(settingsActions.handleWsMsg(data))
-
-            default:
-                console.warn('unknown message', data)
-        }
-
-        dispatch({ type: MESSAGE, msg })
-    }
+    return msgQueueActions.handleWsMsg(msg)
 }
 
 export function onDisconnect() {
     return dispatch => {
-        ConnectionActions.close()
         dispatch(eventLogActions.addLogEntry('WebSocket connection closed.'))
         dispatch({ type: DISCONNECTED })
     }
@@ -111,7 +87,6 @@ export function onDisconnect() {
 export function onError(error) {
     // @todo let event log subscribe WebSocketActions.ERROR
     return dispatch => {
-        ConnectionActions.error()
         dispatch(eventLogActions.addLogEntry('WebSocket connection error.'))
         dispatch({ type: ERROR, error })
     }

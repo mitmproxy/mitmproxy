@@ -16,7 +16,7 @@ export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
         case UPDATE_FILTER: {
-            const data = _.values(action.list.data).filter(action.filter).sort(action.sorter)
+            const data = action.list.data.filter(action.filter).sort(action.sorter)
             return {
                 ...state,
                 data,
@@ -69,7 +69,7 @@ export default function reduce(state = defaultState, action) {
         }
 
         case RECEIVE: {
-            const data = _.values(action.list.data).filter(action.filter).sort(action.sorter)
+            const data = action.list.data.filter(action.filter).sort(action.sorter)
             return {
                 ...state,
                 data,
@@ -138,7 +138,7 @@ function sortedIndex(list, item, sorter) {
 
     while (low < high) {
         const middle = (low + high) >>> 1
-        if (sorter(item, list[middle]) > 0) {
+        if (sorter(item, list[middle]) >= 0) {
             low = middle + 1
         } else {
             high = middle

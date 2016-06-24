@@ -1,45 +1,31 @@
-import {fetchApi} from '../utils';
+import { fetchApi } from '../utils'
+import * as msgQueueActions from './msgQueue'
 
-export const REQUEST_SETTINGS = 'REQUEST_SETTINGS'
-export const RECEIVE_SETTINGS = 'RECEIVE_SETTINGS'
-export const UPDATE_SETTINGS = 'UPDATE_SETTINGS'
+export const MSG_TYPE = 'UPDATE_SETTINGS'
+export const DATA_URL = '/settings'
+
+export const RECEIVE = 'RECEIVE'
+export const UPDATE = 'UPDATE'
+export const REQUEST_UPDATE = 'REQUEST_UPDATE'
+export const UNKNOWN_CMD = 'SETTINGS_UNKNOWN_CMD'
 
 const defaultState = {
     settings: {},
-    isFetching: false,
-    actionsDuringFetch: [],
 }
 
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
 
-        case REQUEST_SETTINGS:
+        case RECEIVE:
             return {
                 ...state,
-                isFetching: true
-            }
-
-        case RECEIVE_SETTINGS:
-            let s = {
                 settings: action.settings,
-                isFetching: false,
-                actionsDuringFetch: [],
             }
-            for (action of state.actionsDuringFetch) {
-                s = reducer(s, action)
-            }
-            return s
 
-        case UPDATE_SETTINGS:
-            if (state.isFetching) {
-                return {
-                    ...state,
-                    actionsDuringFetch: [...state.actionsDuringFetch, action]
-                }
-            }
+        case UPDATE:
             return {
                 ...state,
-                settings: {...state.settings, ...action.settings}
+                settings: { ...state.settings, ...action.settings },
             }
 
         default:
@@ -47,31 +33,39 @@ export default function reducer(state = defaultState, action) {
     }
 }
 
-export function handleWsMsg(event) {
-    /* This action creator takes all WebSocket events */
-    if (event.cmd === 'update') {
-        return {
-            type: UPDATE_SETTINGS,
-            settings: event.data
-        }
-    }
-    console.error('unknown settings update', event)
-}
+/**
+ * @public msgQueue
+ */
+export function handleWsMsg(msg) {
+    switch (msg.cmd) {
 
-export function fetchSettings() {
-    return dispatch => {
-        dispatch({type: REQUEST_SETTINGS})
+        case websocketActions.CMD_UPDATE:
+            return { type: UPDATE, settings: msg.data }
 
-        return fetchApi('/settings')
-            .then(response => response.json())
-            .then(json =>
-                dispatch({type: RECEIVE_SETTINGS, settings: json.data})
-            )
-        // TODO: Error handling
+        default:
+            console.error('unknown settings update', msg)
+            return { type: UNKNOWN_CMD, msg }
     }
 }
 
+/**
+ * @public
+ */
 export function updateSettings(settings) {
     fetchApi.put('/settings', settings)
-    return { type: SET_INTERCEPT }
+    return { type: REQUEST_UPDATE }
+}
+
+/**
+ * @public websocket
+ */
+export function fetchData() {
+    return msgQueueActions.fetchData(MSG_TYPE)
+}
+
+/**
+ * @public msgQueue
+ */
+export function receiveData(settings) {
+    return { type: RECEIVE, settings }
 }
