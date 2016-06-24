@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import _ from 'lodash'
 import { connect } from 'react-redux'
 
+import { init as appInit, destruct as appDestruct } from '../ducks/app'
 import Header from './Header'
 import EventLog from './EventLog'
 import Footer from './Footer'
@@ -26,27 +27,8 @@ class ProxyAppMain extends Component {
         this.updateLocation = this.updateLocation.bind(this)
     }
 
-    /**
-     * @todo move to actions
-     */
-    updateLocation(pathname, queryUpdate) {
-        if (pathname === undefined) {
-            pathname = this.props.location.pathname
-        }
-        const query = this.props.location.query
-        for (const key of Object.keys(queryUpdate || {})) {
-            query[key] = queryUpdate[key] || undefined
-        }
-        this.context.router.replace({ pathname, query })
-    }
-
-    /**
-     * @todo pass in with props
-     */
-    getQuery() {
-        // For whatever reason, react-router always returns the same object, which makes comparing
-        // the current props with nextProps impossible. As a workaround, we just clone the query object.
-        return _.clone(this.props.location.query)
+    componentWillMount() {
+        this.props.appInit()
     }
 
     /**
@@ -54,6 +36,10 @@ class ProxyAppMain extends Component {
      */
     componentDidMount() {
         this.focus()
+    }
+
+    componentWillUnmount() {
+        this.props.appDestruct()
     }
 
     /**
@@ -110,6 +96,29 @@ class ProxyAppMain extends Component {
         e.preventDefault()
     }
 
+    /**
+     * @todo move to actions
+     */
+    updateLocation(pathname, queryUpdate) {
+        if (pathname === undefined) {
+            pathname = this.props.location.pathname
+        }
+        const query = this.props.location.query
+        for (const key of Object.keys(queryUpdate || {})) {
+            query[key] = queryUpdate[key] || undefined
+        }
+        this.context.router.replace({ pathname, query })
+    }
+
+    /**
+     * @todo pass in with props
+     */
+    getQuery() {
+        // For whatever reason, react-router always returns the same object, which makes comparing
+        // the current props with nextProps impossible. As a workaround, we just clone the query object.
+        return _.clone(this.props.location.query)
+    }
+
     render() {
         const { showEventLog, location, children } = this.props
         const query = this.getQuery()
@@ -132,5 +141,10 @@ class ProxyAppMain extends Component {
 export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
-    })
+        settings: state.settings.settings,
+    }),
+    {
+        appInit,
+        appDestruct,
+    }
 )(ProxyAppMain)
