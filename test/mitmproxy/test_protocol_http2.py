@@ -98,6 +98,7 @@ class _Http2TestBase(object):
             no_upstream_cert = False,
             cadir = cls.cadir,
             authenticator = None,
+            ssl_insecure = True,
         )
 
     def setup(self):
