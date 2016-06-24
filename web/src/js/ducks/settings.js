@@ -4,10 +4,10 @@ import * as msgQueueActions from './msgQueue'
 export const MSG_TYPE = 'UPDATE_SETTINGS'
 export const DATA_URL = '/settings'
 
-export const RECEIVE = 'RECEIVE'
-export const UPDATE = 'UPDATE'
+export const RECEIVE        = 'RECEIVE'
+export const UPDATE         = 'UPDATE'
 export const REQUEST_UPDATE = 'REQUEST_UPDATE'
-export const UNKNOWN_CMD = 'SETTINGS_UNKNOWN_CMD'
+export const UNKNOWN_CMD    = 'SETTINGS_UNKNOWN_CMD'
 
 const defaultState = {
     settings: {},

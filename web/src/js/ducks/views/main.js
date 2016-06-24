@@ -164,7 +164,9 @@ export function updateSorter(column, desc) {
  * @public
  */
 export function select(id) {
-    return { type: SELECT, currentSelection: getState().flows.views.main.selected[0], id }
+    return (dispatch, getState) => {
+        dispatch({ type: SELECT, currentSelection: getState().flows.views.main.selected[0], id })
+    }
 }
 
 /**

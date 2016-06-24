@@ -29,6 +29,6 @@ function FlowMenu({ flow }) {
 
 export default connect(
     state => ({
-        flow: state.flows.list.data[state.flows.views.main.selected[0]],
+        flow: state.flows.list.byId[state.flows.views.main.selected[0]],
     })
 )(FlowMenu)
