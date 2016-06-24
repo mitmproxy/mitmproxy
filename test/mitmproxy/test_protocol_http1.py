@@ -18,14 +18,14 @@ class TestInvalidRequests(tservers.HTTPProxyTest):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
         assert r.status_code == 400
-        assert "Invalid HTTP request form" in r.content
+        assert b"Invalid HTTP request form" in r.content
 
     def test_relative_request(self):
         p = self.pathoc_raw()
         p.connect()
         r = p.request("get:/p/200")
         assert r.status_code == 400
-        assert "Invalid HTTP request form" in r.content
+        assert b"Invalid HTTP request form" in r.content
 
 
 class TestExpectHeader(tservers.HTTPProxyTest):
@@ -43,8 +43,8 @@ class TestExpectHeader(tservers.HTTPProxyTest):
         )
         client.wfile.flush()
 
-        assert client.rfile.readline() == "HTTP/1.1 100 Continue\r\n"
-        assert client.rfile.readline() == "\r\n"
+        assert client.rfile.readline() == b"HTTP/1.1 100 Continue\r\n"
+        assert client.rfile.readline() == b"\r\n"
 
         client.wfile.write(b"0123456789abcdef\r\n")
         client.wfile.flush()

@@ -8,6 +8,7 @@ def lookup(address, port, s):
 
         Returns an (address, port) tuple, or None.
     """
+    s = s.decode()
     spec = "%s:%s" % (address, port)
     for i in s.split("\n"):
         if "ESTABLISHED:ESTABLISHED" in i and spec in i:
