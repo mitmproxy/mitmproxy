@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux'
 import classnames from 'classnames'
-import * as flowActions from '../../ducks/flows'
+import * as flowsActions from '../../ducks/flows'
 
-export default class FileMenu extends Component {
+class FileMenu extends Component {
 
     constructor(props, context) {
         super(props, context)
@@ -35,7 +36,7 @@ export default class FileMenu extends Component {
     onNewClick(e) {
         e.preventDefault()
         if (confirm('Delete all flows?')) {
-            flowActions.clear()
+            this.props.onClear()
         }
     }
 
@@ -47,14 +48,14 @@ export default class FileMenu extends Component {
     onOpenFile(e) {
         e.preventDefault()
         if (e.target.files.length > 0) {
-            flowActions.upload(e.target.files[0])
+            this.props.onUpload(e.target.files[0])
             this.fileInput.value = ''
         }
     }
 
     onSaveClick(e) {
         e.preventDefault()
-        flowActions.download()
+        this.props.onDownload()
     }
 
     render() {
@@ -98,3 +99,12 @@ export default class FileMenu extends Component {
         )
     }
 }
+
+export default connect(
+    null,
+    {
+        onClear: flowsActions.clear,
+        onUpload: flowsActions.upload,
+        onDownload: flowsActions.download,
+    }
+)(FileMenu)

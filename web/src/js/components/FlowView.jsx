@@ -75,7 +75,7 @@ export default class FlowView extends Component {
 
     render() {
         const tabs = this.getTabs()
-        let { flow, tab: active } = this.props
+        let { flow, tab: active, onUpdate } = this.props
 
         if (tabs.indexOf(active) < 0) {
             if (active === 'response' && flow.error) {
@@ -97,7 +97,7 @@ export default class FlowView extends Component {
                     active={active}
                     onSelectTab={this.selectTab}
                 />
-                <Tab ref="tab" flow={flow}/>
+                <Tab ref="tab" flow={flow} onUpdate={onUpdate} />
                 {this.state.prompt && (
                     <Prompt {...this.state.prompt}/>
                 )}

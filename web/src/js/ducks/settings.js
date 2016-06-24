@@ -40,7 +40,7 @@ export function handleWsMsg(msg) {
     switch (msg.cmd) {
 
         case websocketActions.CMD_UPDATE:
-            return { type: UPDATE, settings: msg.data }
+            return updateSettings(msg.data)
 
         default:
             console.error('unknown settings update', msg)
@@ -51,7 +51,7 @@ export function handleWsMsg(msg) {
 /**
  * @public
  */
-export function updateSettings(settings) {
+export function update(settings) {
     fetchApi.put('/settings', settings)
     return { type: REQUEST_UPDATE }
 }
@@ -68,4 +68,11 @@ export function fetchData() {
  */
 export function receiveData(settings) {
     return { type: RECEIVE, settings }
+}
+
+/**
+ * @private
+ */
+export function updateSettings(settings) {
+    return { type: UPDATE, settings }
 }

@@ -37,7 +37,7 @@ export default function Prompt({ prompt, done, options }, context) {
     }
 
     return (
-        <div tabIndex="0" onKeyDown={onKeyDown} onClick={onClick} className="prompt-dialog">
+        <div tabIndex="0" onKeyDown={onKeyDown} className="prompt-dialog">
             <div className="prompt-content">
             {prompt || <strong>Select: </strong> }
             {opts.map(opt => {
@@ -49,7 +49,7 @@ export default function Prompt({ prompt, done, options }, context) {
                 return (
                     <span key={opt.key} className="option" onClick={onClick}>
                         {idx !== -1 ? opt.text.substring(0, idx) : opt.text + '('}
-                        {prefix}<strong className="text-primary">{opt.key}</strong>
+                        <strong className="text-primary">{opt.key}</strong>
                         {idx !== -1 ? opt.text.substring(idx + 1) : ')'}
                     </span>
                 )
@@ -65,7 +65,7 @@ export default function Prompt({ prompt, done, options }, context) {
         if (!key && event.keyCode !== Key.ESC && event.keyCode !== Key.ENTER) {
             return
         }
-        done(k || false)
+        done(key.key || false)
         context.returnFocus()
     }
 }

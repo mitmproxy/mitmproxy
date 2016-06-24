@@ -1,11 +1,11 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { FlowActions } from '../actions.js'
 import { Query } from '../actions.js'
 import { Key } from '../utils.js'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
+import * as flowsActions from '../ducks/flows'
 import { select as selectFlow, updateFilter, updateHighlight } from '../ducks/views/main'
 
 class MainView extends Component {
@@ -110,33 +110,33 @@ class MainView extends Component {
                 break
             case Key.C:
                 if (e.shiftKey) {
-                    FlowActions.clear()
+                    this.props.onClear()
                 }
                 break
             case Key.D:
                 if (flow) {
                     if (e.shiftKey) {
-                        FlowActions.duplicate(flow)
+                        this.props.onDuplicate(flow)
                     } else {
-                        FlowActions.delete(flow)
+                        this.props.onRemove(flow)
                     }
                 }
                 break
             case Key.A:
                 if (e.shiftKey) {
-                    FlowActions.accept_all()
+                    this.props.onAcceptAll()
                 } else if (flow && flow.intercepted) {
-                    FlowActions.accept(flow)
+                    this.props.onAccept(flow)
                 }
                 break
             case Key.R:
                 if (!e.shiftKey && flow) {
-                    FlowActions.replay(flow)
+                    this.props.onReplay(flow)
                 }
                 break
             case Key.V:
                 if (e.shiftKey && flow && flow.modified) {
-                    FlowActions.revert(flow)
+                    this.props.onRevert(flow)
                 }
                 break
             case Key.E:
@@ -147,7 +147,6 @@ class MainView extends Component {
             case Key.SHIFT:
                 break
             default:
-                console.debug('keydown', e.keyCode)
                 return
         }
         e.preventDefault()
@@ -172,6 +171,7 @@ class MainView extends Component {
                         tab={this.props.routeParams.detailTab}
                         query={this.props.query}
                         updateLocation={this.props.updateLocation}
+                        onUpdate={attrs => this.props.onUpdate(selectedFlow, attrs)}
                         flow={selectedFlow}
                     />
                 ]}
@@ -191,6 +191,14 @@ export default connect(
         selectFlow,
         updateFilter,
         updateHighlight,
+        onUpdate: flowsActions.update,
+        onClear: flowsActions.clear,
+        onDuplicate: flowsActions.duplicate,
+        onRemove: flowsActions.remove,
+        onAcceptAll: flowsActions.acceptAll,
+        onAccept: flowsActions.accept,
+        onReplay: flowsActions.replay,
+        onRevert: flowsActions.revert,
     },
     undefined,
     { withRef: true }

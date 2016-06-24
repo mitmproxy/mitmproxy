@@ -14,8 +14,6 @@ class Header extends Component {
     handleClick(active, e) {
         e.preventDefault()
         this.props.setActiveMenu(active.title)
-       // this.props.updateLocation(active.route)
-       // this.setState({ active })
     }
 
     render() {
@@ -42,6 +40,7 @@ class Header extends Component {
                 </nav>
                 <div className="menu">
                     <Active
+                        ref="active"
                         updateLocation={updateLocation}
                         query={query}
                     />
@@ -50,6 +49,7 @@ class Header extends Component {
         )
     }
 }
+
 export default connect(
     state => ({
         selectedFlow: state.flows.views.main.selected[0],
@@ -57,5 +57,9 @@ export default connect(
     }),
     {
         setActiveMenu,
+    },
+    null,
+    {
+        withRef: true,
     }
 )(Header)

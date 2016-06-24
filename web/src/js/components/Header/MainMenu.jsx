@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import FilterInput from './FilterInput'
 import { Query } from '../../actions.js'
-import { updateSettings } from '../../ducks/settings'
+import { update as updateSettings } from '../../ducks/settings'
 
 class MainMenu extends Component {
 
@@ -73,5 +73,9 @@ export default connect(
     }),
     {
         onSettingsChange: updateSettings,
+    },
+    null,
+    {
+        withRef: true,
     }
 )(MainMenu);

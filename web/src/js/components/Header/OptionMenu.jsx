@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import ToggleButton from '../common/ToggleButton'
 import ToggleInputButton from '../common/ToggleInputButton'
-import { updateSettings } from '../../ducks/settings'
+import { update as updateSettings } from '../../ducks/settings'
 
 OptionMenu.title = 'Options'
 

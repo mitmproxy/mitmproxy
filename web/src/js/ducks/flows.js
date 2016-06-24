@@ -40,8 +40,8 @@ export default function reduce(state = defaultState, action) {
         case REMOVE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.remove(action.item.id)),
-                views: reduceViews(state.views, viewsActions.remove(action.item.id)),
+                list: reduceList(state.list, listActions.remove(action.id)),
+                views: reduceViews(state.views, viewsActions.remove(action.id)),
             }
 
         case RECEIVE:
@@ -113,7 +113,7 @@ export function revert(flow) {
  * @public
  */
 export function update(flow, body) {
-    fetchApi(`/flows/${flow.id}`, { method: 'PUT', body })
+    fetchApi.put(`/flows/${flow.id}`, body)
     return { type: REQUEST_ACTION }
 }
 
@@ -152,13 +152,13 @@ export function handleWsMsg(msg) {
     switch (msg.cmd) {
 
         case websocketActions.CMD_ADD:
-            return add(msg.data)
+            return addItem(msg.data)
 
         case websocketActions.CMD_UPDATE:
-            return update(msg.data.id, msg.data)
+            return updateItem(msg.data.id, msg.data)
 
         case websocketActions.CMD_REMOVE:
-            return remove(msg.data.id)
+            return removeItem(msg.data.id)
 
         case websocketActions.CMD_RESET:
             return fetchData()
@@ -185,20 +185,20 @@ export function receiveData(list) {
 /**
  * @private
  */
-export function add(item) {
+export function addItem(item) {
     return { type: ADD, item }
 }
 
 /**
  * @private
  */
-export function update(id, item) {
+export function updateItem(id, item) {
     return { type: UPDATE, id, item }
 }
 
 /**
  * @private
  */
-export function remove(id) {
+export function removeItem(id) {
     return { type: REMOVE, id }
 }

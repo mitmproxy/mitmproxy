@@ -77,8 +77,8 @@ class ProxyAppMain extends Component {
                 break
             default:
                 let main = this.refs.view
-                if (this.refs.view.getWrappedInstance) {
-                    main = this.refs.view.getWrappedInstance()
+                if (this.refs.view.refs.wrappedInstance) {
+                    main = this.refs.view.refs.wrappedInstance
                 }
                 if (main.onMainKeyDown) {
                     main.onMainKeyDown(e)
@@ -87,9 +87,10 @@ class ProxyAppMain extends Component {
         }
 
         if (name) {
-            const headerComponent = this.refs.header
+            const headerComponent = this.refs.header.refs.wrappedInstance || this.refs.header
             headerComponent.setState({ active: Header.entries[0] }, () => {
-                headerComponent.refs.active.refs[name].select()
+                const active = headerComponent.refs.active.refs.wrappedInstance || headerComponent.refs.active
+                active.refs[name].select()
             })
         }
 
