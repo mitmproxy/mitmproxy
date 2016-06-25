@@ -40,6 +40,7 @@
     "babel-preset-react": "^6.5.0",
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
+    "envify": "^3.4.1",
     "eslint": "^2.9.0",
     "gulp": "^3.9.1",
     "gulp-clean-css": "^2.0.6",
