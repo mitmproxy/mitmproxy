@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import _ from 'lodash'
 
 import Nav from './FlowView/Nav'
-import { Request, Response, Error } from './FlowView/Messages'
+import { Request, Response, ErrorView as Error } from './FlowView/Messages'
 import Details from './FlowView/Details'
 import Prompt from './Prompt'
 

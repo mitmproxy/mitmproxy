@@ -152,3 +152,20 @@ export class Response extends Component {
         }
     }
 }
+
+ErrorView.propTypes = {
+    flow: PropTypes.object.isRequired,
+}
+
+export function ErrorView({ flow }) {
+    return (
+        <section>
+            <div className="alert alert-warning">
+                {flow.error.msg}
+                <div>
+                    <small>{formatTimeStamp(flow.error.timestamp)}</small>
+                </div>
+            </div>
+        </section>
+    )
+}
