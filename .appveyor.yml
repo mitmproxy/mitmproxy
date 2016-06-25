@@ -1,9 +1,13 @@
 version: '{build}'
 build: off  # Not a C# project
+
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
-  PATH: "%APPDATA%\\Python\\Scripts;C:\\Python27;C:\\Python27\\Scripts;%PATH%"
+      TOXENV: "py27-ci"
+    - PYTHON: "C:\\Python35"
+      TOXENV: "py35-ci-win"
+
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
   SNAPSHOT_PORT:
@@ -12,22 +16,29 @@ environment:
     secure: 6yBwmO5gv4vAwoFYII8qjQ==
   SNAPSHOT_PASS:
     secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
+
 install:
-  - "pip install --user -U virtualenv codecov"
-  - "dev.bat"
-  - "python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -m pip install --disable-pip-version-check -U pip"
+  - "pip install -U tox"
+
+before_test:
+  - "tox -e lint"
+
 test_script:
-  - "py.test --timeout 60 --cov netlib --cov mitmproxy --cov pathod"
-after_test:
-  - "codecov"
-cache:
-  - C:\Users\appveyor\AppData\Local\pip\cache
+  - "tox"
+
 deploy_script:
   ps: |
     if(($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true")) {
-    python .\release\rtool.py bdist
-    python .\release\rtool.py upload-snapshot --bdist
+      python .\release\rtool.py bdist
+      python .\release\rtool.py upload-snapshot --bdist
     }
+
+cache:
+  - C:\Users\appveyor\AppData\Local\pip\cache
+  - C:\projects\mitmproxy\.tox
+
 notifications:
-- provider: Slack
-  incoming_webhook: https://hooks.slack.com/services/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
+  - provider: Slack
+    incoming_webhook: https://hooks.slack.com/services/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
