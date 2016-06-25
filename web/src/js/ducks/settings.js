@@ -1,4 +1,5 @@
 import { fetchApi } from '../utils'
+import * as websocketActions from './websocket'
 import * as msgQueueActions from './msgQueue'
 
 export const MSG_TYPE = 'UPDATE_SETTINGS'

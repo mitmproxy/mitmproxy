@@ -1,3 +1,4 @@
+import Filt from '../../filt/filt'
 import { RequestUtils } from '../../flow/utils'
 import reduceView, * as viewActions from '../utils/view'
 import * as viewsActions from '../views'
