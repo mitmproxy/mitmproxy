@@ -142,7 +142,7 @@ export default function reduce(state = defaultState, action) {
  */
 export function updateFilter(filter) {
     return (dispatch, getState) => {
-        return { type: UPDATE_FILTER, filter, list: getState().flows.list }
+        dispatch({ type: UPDATE_FILTER, filter, list: getState().flows.list })
     }
 }
 
