@@ -1,5 +1,4 @@
 import React from 'react'
-import { ViewImage } from './ContentViews'
 import {formatSize} from '../../utils.js'
 
 export function ContentEmpty({ flow, message }) {

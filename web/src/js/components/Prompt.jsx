@@ -35,6 +35,17 @@ export default function Prompt({ prompt, done, options }, context) {
         }
         opts.push(opt)
     }
+    
+    function onKeyDown(event) {
+        event.stopPropagation()
+        event.preventDefault()
+        const key = opts.find(opt => Key[opt.key.toUpperCase()] === event.keyCode)
+        if (!key && event.keyCode !== Key.ESC && event.keyCode !== Key.ENTER) {
+            return
+        }
+        done(key.key || false)
+        context.returnFocus()
+    }
 
     return (
         <div tabIndex="0" onKeyDown={onKeyDown} className="prompt-dialog">
@@ -57,15 +68,4 @@ export default function Prompt({ prompt, done, options }, context) {
             </div>
         </div>
     )
-
-    function onKeyDown(event) {
-        event.stopPropagation()
-        event.preventDefault()
-        const key = opts.find(opt => Key[opt.key.toUpperCase()] === event.keyCode)
-        if (!key && event.keyCode !== Key.ESC && event.keyCode !== Key.ENTER) {
-            return
-        }
-        done(key.key || false)
-        context.returnFocus()
-    }
 }

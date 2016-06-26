@@ -28,13 +28,9 @@ export function ConnectionInfo({ conn }) {
                     <td>Address:</td>
                     <td>{conn.address.address.join(':')}</td>
                 </tr>
-                {conn.sni ? (
-                    <tr key="sni"></tr>
-                ) : (
+                {conn.sni && (
                     <tr key="sni">
-                        <td>
-                            <abbr title="TLS Server Name Indication">TLS SNI:</abbr>
-                        </td>
+                        <td><abbr title="TLS Server Name Indication">TLS SNI:</abbr></td>
                         <td>{conn.sni}</td>
                     </tr>
                 )}

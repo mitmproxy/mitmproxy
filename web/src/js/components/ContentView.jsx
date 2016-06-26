@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { MessageUtils } from '../flow/utils.js'
 import { ViewAuto, ViewImage } from './ContentView/ContentViews'
-import * as ContentErrors from './ContentView/ContentErrors'
+import * as MetaViews from './ContentView/MetaViews'
 import ContentLoader from './ContentView/ContentLoader'
 import ViewSelector from './ContentView/ViewSelector'
 
@@ -45,15 +45,15 @@ export default class ContentView extends Component {
         const { displayLarge, View } = this.state
 
         if (message.contentLength === 0) {
-            return <ContentErrors.ContentEmpty {...this.props}/>
+            return <MetaViews.ContentEmpty {...this.props}/>
         }
 
         if (message.contentLength === null) {
-            return <ContentErrors.ContentMissing {...this.props}/>
+            return <MetaViews.ContentMissing {...this.props}/>
         }
 
         if (!displayLarge && this.isContentTooLarge(message)) {
-            return <ContentErrors.ContentTooLarge {...this.props} onClick={this.displayLarge}/>
+            return <MetaViews.ContentTooLarge {...this.props} onClick={this.displayLarge}/>
         }
 
         return (
