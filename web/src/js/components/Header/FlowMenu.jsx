@@ -10,16 +10,16 @@ FlowMenu.propTypes = {
     flow: PropTypes.object.isRequired,
 }
 
-function FlowMenu({ flow, onAccept, onReplay, onDuplicate, onRemove, onRevert }) {
+function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
 
     return (
         <div>
             <div className="menu-row">
-                <Button disabled={!flow.intercepted} title="[a]ccept intercepted flow" text="Accept" icon="fa-play" onClick={() => onAccept(flow)} />
-                <Button title="[r]eplay flow" text="Replay" icon="fa-repeat" onClick={() => onReplay(flow)} />
-                <Button title="[D]uplicate flow" text="Duplicate" icon="fa-copy" onClick={() => onDuplicate(flow)} />
-                <Button title="[d]elete flow" text="Delete" icon="fa-trash" onClick={() => onRemove(flow)}/>
-                <Button disabled={!flow.modified} title="revert changes to flow [V]" text="Revert" icon="fa-history" onClick={() => onRevert(flow)} />
+                <Button disabled={!flow.intercepted} title="[a]ccept intercepted flow" text="Accept" icon="fa-play" onClick={() => acceptFlow(flow)} />
+                <Button title="[r]eplay flow" text="Replay" icon="fa-repeat" onClick={() => replayFlow(flow)} />
+                <Button title="[D]uplicate flow" text="Duplicate" icon="fa-copy" onClick={() => duplicateFlow(flow)} />
+                <Button title="[d]elete flow" text="Delete" icon="fa-trash" onClick={() => removeFlow(flow)}/>
+                <Button disabled={!flow.modified} title="revert changes to flow [V]" text="Revert" icon="fa-history" onClick={() => revertFlow(flow)} />
                 <Button title="download" text="Download" icon="fa-download" onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}/>
             </div>
             <div className="clearfix"/>
@@ -32,10 +32,10 @@ export default connect(
         flow: state.flows.list.byId[state.flows.views.main.selected[0]],
     }),
     {
-        onAccept: flowsActions.accept,
-        onReplay: flowsActions.replay,
-        onDuplicate: flowsActions.duplicate,
-        onRemove: flowsActions.remove,
-        onRevert: flowsActions.revert,
+        acceptFlow: flowsActions.accept,
+        replayFlow: flowsActions.replay,
+        duplicateFlow: flowsActions.duplicate,
+        removeFlow: flowsActions.remove,
+        revertFlow: flowsActions.revert,
     }
 )(FlowMenu)

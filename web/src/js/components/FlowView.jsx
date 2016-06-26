@@ -35,8 +35,8 @@ export default class FlowView extends Component {
 
     closePrompt(edit) {
         this.setState({ prompt: false })
-        if (edit) {
-            this.refs.tab.edit(edit)
+        if (edit && this.tabComponent) {
+            this.tabComponent.edit(edit)
         }
     }
 
@@ -75,7 +75,7 @@ export default class FlowView extends Component {
 
     render() {
         const tabs = this.getTabs()
-        let { flow, tab: active, onUpdate } = this.props
+        let { flow, tab: active, updateFlow } = this.props
 
         if (tabs.indexOf(active) < 0) {
             if (active === 'response' && flow.error) {
@@ -97,7 +97,7 @@ export default class FlowView extends Component {
                     active={active}
                     onSelectTab={this.selectTab}
                 />
-                <Tab ref="tab" flow={flow} onUpdate={onUpdate} />
+                <Tab ref={ tab => this.tabComponent = tab } flow={flow} updateFlow={updateFlow} />
                 {this.state.prompt && (
                     <Prompt {...this.state.prompt}/>
                 )}

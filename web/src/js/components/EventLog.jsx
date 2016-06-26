@@ -9,8 +9,8 @@ class EventLog extends Component {
     static propTypes = {
         filters: PropTypes.object.isRequired,
         events: PropTypes.array.isRequired,
-        onToggleFilter: PropTypes.func.isRequired,
-        onClose: PropTypes.func.isRequired,
+        toggleFilter: PropTypes.func.isRequired,
+        close: PropTypes.func.isRequired,
         defaultHeight: PropTypes.number,
     }
 
@@ -48,7 +48,7 @@ class EventLog extends Component {
 
     render() {
         const { height } = this.state
-        const { filters, events, onToggleFilter, onClose } = this.props
+        const { filters, events, toggleFilter, close } = this.props
 
         return (
             <div className="eventlog" style={{ height }}>
@@ -56,9 +56,9 @@ class EventLog extends Component {
                     Eventlog
                     <div className="pull-right">
                         {['debug', 'info', 'web'].map(type => (
-                            <ToggleButton key={type} text={type} checked={filters[type]} onToggle={() => onToggleFilter(type)}/>
+                            <ToggleButton key={type} text={type} checked={filters[type]} onToggle={() => toggleFilter(type)}/>
                         ))}
-                        <i onClick={onClose} className="fa fa-close"></i>
+                        <i onClick={close} className="fa fa-close"></i>
                     </div>
                 </div>
                 <EventList events={events} />
@@ -73,7 +73,7 @@ export default connect(
         events: state.eventLog.view.data,
     }),
     {
-        onClose: toggleVisibility,
-        onToggleFilter: toggleFilter,
+        close: toggleVisibility,
+        toggleFilter: toggleFilter,
     }
 )(EventLog)

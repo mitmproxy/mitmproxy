@@ -36,7 +36,7 @@ class FileMenu extends Component {
     onNewClick(e) {
         e.preventDefault()
         if (confirm('Delete all flows?')) {
-            this.props.onClear()
+            this.props.clearFlows()
         }
     }
 
@@ -48,14 +48,14 @@ class FileMenu extends Component {
     onOpenFile(e) {
         e.preventDefault()
         if (e.target.files.length > 0) {
-            this.props.onUpload(e.target.files[0])
+            this.props.loadFlows(e.target.files[0])
             this.fileInput.value = ''
         }
     }
 
     onSaveClick(e) {
         e.preventDefault()
-        this.props.onDownload()
+        this.props.saveFlows()
     }
 
     render() {
@@ -103,8 +103,8 @@ class FileMenu extends Component {
 export default connect(
     null,
     {
-        onClear: flowsActions.clear,
-        onUpload: flowsActions.upload,
-        onDownload: flowsActions.download,
+        clearFlows: flowsActions.clear,
+        loadFlows: flowsActions.upload,
+        saveFlows: flowsActions.download,
     }
 )(FileMenu)

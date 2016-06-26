@@ -7,15 +7,15 @@ ViewMenu.title = 'View'
 ViewMenu.route = 'flows'
 
 ViewMenu.propTypes = {
-    visible: PropTypes.bool.isRequired,
-    onToggle: PropTypes.func.isRequired,
+    eventLogVisible: PropTypes.bool.isRequired,
+    toggleEventLog: PropTypes.func.isRequired,
 }
 
-function ViewMenu({ visible, onToggle }) {
+function ViewMenu({ eventLogVisible, toggleEventLog }) {
     return (
         <div>
             <div className="menu-row">
-                <ToggleButton text="Show Event Log" checked={visible} onToggle={onToggle} />
+                <ToggleButton text="Show Event Log" checked={eventLogVisible} onToggle={toggleEventLog} />
             </div>
             <div className="clearfix"></div>
         </div>
@@ -24,9 +24,9 @@ function ViewMenu({ visible, onToggle }) {
 
 export default connect(
     state => ({
-        visible: state.eventLog.visible,
+        eventLogVisible: state.eventLog.visible,
     }),
     {
-        onToggle: toggleVisibility,
+        toggleEventLog: toggleVisibility,
     }
 )(ViewMenu)

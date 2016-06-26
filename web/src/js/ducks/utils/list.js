@@ -26,6 +26,7 @@ export default function reduce(state = defaultState, action) {
             const data = [...state.data]
             const index = state.indexOf[action.id]
 
+            // FIXME: We should just swallow this
             if (index == null) {
                 throw new Error('Item not found')
             }
@@ -35,8 +36,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 data,
-                byId: { ...state.byId, [action.id]: null, [action.item.id]: action.item },
-                indexOf: { ...state.indexOf, [action.id]: null, [action.item.id]: index },
+                byId: { ...state.byId, [action.item.id]: action.item },
             }
         }
 
@@ -45,6 +45,7 @@ export default function reduce(state = defaultState, action) {
             const indexOf = { ...state.indexOf }
             const index = indexOf[action.id]
 
+            // FIXME: We should just swallow this
             if (index == null) {
                 throw new Error('Item not found')
             }

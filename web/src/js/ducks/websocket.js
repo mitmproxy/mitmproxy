@@ -79,7 +79,7 @@ export function onMessage(msg) {
 
 export function onDisconnect() {
     return dispatch => {
-        dispatch(eventLogActions.addLogEntry('WebSocket connection closed.'))
+        dispatch(eventLogActions.add('WebSocket connection closed.'))
         dispatch({ type: DISCONNECTED })
     }
 }
@@ -87,7 +87,7 @@ export function onDisconnect() {
 export function onError(error) {
     // @todo let event log subscribe WebSocketActions.ERROR
     return dispatch => {
-        dispatch(eventLogActions.addLogEntry('WebSocket connection error.'))
+        dispatch(eventLogActions.add('WebSocket connection error.'))
         dispatch({ type: ERROR, error })
     }
 }

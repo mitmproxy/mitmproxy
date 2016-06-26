@@ -13,7 +13,7 @@ class MainMenu extends Component {
         query: PropTypes.object.isRequired,
         settings: PropTypes.object.isRequired,
         updateLocation: PropTypes.func.isRequired,
-        onSettingsChange: PropTypes.func.isRequired,
+        updateSettings: PropTypes.func.isRequired,
     }
 
     constructor(props, context) {
@@ -31,7 +31,7 @@ class MainMenu extends Component {
     }
 
     render() {
-        const { query, settings, onSettingsChange } = this.props
+        const { query, settings, updateSettings } = this.props
 
         return (
             <div>
@@ -58,7 +58,7 @@ class MainMenu extends Component {
                         type="pause"
                         color="hsl(208, 56%, 53%)"
                         value={settings.intercept || ''}
-                        onChange={intercept => onSettingsChange({ intercept })}
+                        onChange={intercept => updateSettings({ intercept })}
                     />
                 </div>
                 <div className="clearfix"></div>
@@ -72,7 +72,7 @@ export default connect(
         settings: state.settings.settings,
     }),
     {
-        onSettingsChange: updateSettings,
+        updateSettings,
     },
     null,
     {

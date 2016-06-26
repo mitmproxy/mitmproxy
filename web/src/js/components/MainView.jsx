@@ -110,33 +110,33 @@ class MainView extends Component {
                 break
             case Key.C:
                 if (e.shiftKey) {
-                    this.props.onClear()
+                    this.props.clearFlows()
                 }
                 break
             case Key.D:
                 if (flow) {
                     if (e.shiftKey) {
-                        this.props.onDuplicate(flow)
+                        this.props.duplicateFlow(flow)
                     } else {
-                        this.props.onRemove(flow)
+                        this.props.removeFlow(flow)
                     }
                 }
                 break
             case Key.A:
                 if (e.shiftKey) {
-                    this.props.onAcceptAll()
+                    this.props.acceptAllFlows()
                 } else if (flow && flow.intercepted) {
-                    this.props.onAccept(flow)
+                    this.props.acceptFlow(flow)
                 }
                 break
             case Key.R:
                 if (!e.shiftKey && flow) {
-                    this.props.onReplay(flow)
+                    this.props.replayFlow(flow)
                 }
                 break
             case Key.V:
                 if (e.shiftKey && flow && flow.modified) {
-                    this.props.onRevert(flow)
+                    this.props.revertFlow(flow)
                 }
                 break
             case Key.E:
@@ -147,6 +147,7 @@ class MainView extends Component {
             case Key.SHIFT:
                 break
             default:
+                console.debug('keydown', e.keyCode)
                 return
         }
         e.preventDefault()
@@ -171,7 +172,7 @@ class MainView extends Component {
                         tab={this.props.routeParams.detailTab}
                         query={this.props.query}
                         updateLocation={this.props.updateLocation}
-                        onUpdate={attrs => this.props.onUpdate(selectedFlow, attrs)}
+                        updateFlow={data => this.props.updateFlow(selectedFlow, data)}
                         flow={selectedFlow}
                     />
                 ]}
@@ -191,14 +192,14 @@ export default connect(
         selectFlow,
         updateFilter,
         updateHighlight,
-        onUpdate: flowsActions.update,
-        onClear: flowsActions.clear,
-        onDuplicate: flowsActions.duplicate,
-        onRemove: flowsActions.remove,
-        onAcceptAll: flowsActions.acceptAll,
-        onAccept: flowsActions.accept,
-        onReplay: flowsActions.replay,
-        onRevert: flowsActions.revert,
+        updateFlow: flowsActions.update,
+        clearFlows: flowsActions.clear,
+        duplicateFlow: flowsActions.duplicate,
+        removeFlow: flowsActions.remove,
+        acceptAllFlows: flowsActions.acceptAll,
+        acceptFlow: flowsActions.accept,
+        replayFlow: flowsActions.replay,
+        revertFlow: flowsActions.revert,
     },
     undefined,
     { withRef: true }

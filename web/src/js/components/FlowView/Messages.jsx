@@ -10,21 +10,21 @@ import Headers from './Headers'
 class RequestLine extends Component {
 
     render() {
-        const { flow, onUpdate } = this.props
+        const { flow, updateFlow } = this.props
 
         return (
             <div className="first-line request-line">
                 <ValueEditor
                     ref="method"
                     content={flow.request.method}
-                    onDone={method => onUpdate({ request: { method } })}
+                    onDone={method => updateFlow({ request: { method } })}
                     inline
                 />
                 &nbsp;
                 <ValueEditor
                     ref="url"
                     content={RequestUtils.pretty_url(flow.request)}
-                    onDone={url => onUpdate({ request: Object.assign({ path: '' }, parseUrl(url)) })}
+                    onDone={url => updateFlow({ request: Object.assign({ path: '' }, parseUrl(url)) })}
                     isValid={url => !!parseUrl(url).host}
                     inline
                 />
@@ -32,7 +32,7 @@ class RequestLine extends Component {
                 <ValueEditor
                     ref="httpVersion"
                     content={flow.request.http_version}
-                    onDone={ver => onUpdate({ request: { http_version: parseHttpVersion(ver) } })}
+                    onDone={ver => updateFlow({ request: { http_version: parseHttpVersion(ver) } })}
                     isValid={isValidHttpVersion}
                     inline
                 />
@@ -44,14 +44,14 @@ class RequestLine extends Component {
 class ResponseLine extends Component {
 
     render() {
-        const { flow, onUpdate } = this.props
+        const { flow, updateFlow } = this.props
 
         return (
             <div className="first-line response-line">
                 <ValueEditor
                     ref="httpVersion"
                     content={flow.response.http_version}
-                    onDone={nextVer => onUpdate({ response: { http_version: parseHttpVersion(nextVer) } })}
+                    onDone={nextVer => updateFlow({ response: { http_version: parseHttpVersion(nextVer) } })}
                     isValid={isValidHttpVersion}
                     inline
                 />
@@ -59,7 +59,7 @@ class ResponseLine extends Component {
                 <ValueEditor
                     ref="code"
                     content={flow.response.status_code + ''}
-                    onDone={code => onUpdate({ response: { code: parseInt(code) } })}
+                    onDone={code => updateFlow({ response: { code: parseInt(code) } })}
                     isValid={code => /^\d+$/.test(code)}
                     inline
                 />
@@ -67,7 +67,7 @@ class ResponseLine extends Component {
                 <ValueEditor
                     ref="msg"
                     content={flow.response.reason}
-                    onDone={msg => onUpdate({ response: { msg } })}
+                    onDone={msg => updateFlow({ response: { msg } })}
                     inline
                 />
             </div>
@@ -78,15 +78,15 @@ class ResponseLine extends Component {
 export class Request extends Component {
 
     render() {
-        const { flow, onUpdate } = this.props
+        const { flow, updateFlow } = this.props
 
         return (
             <section className="request">
-                <RequestLine ref="requestLine" flow={flow} onUpdate={onUpdate} />
+                <RequestLine ref="requestLine" flow={flow} updateFlow={updateFlow} />
                 <Headers
                     ref="headers"
                     message={flow.request}
-                    onChange={headers => onUpdate({ request: { headers } })}
+                    onChange={headers => updateFlow({ request: { headers } })}
                 />
                 <hr/>
                 <ContentView flow={flow} message={flow.request}/>
@@ -117,15 +117,15 @@ export class Request extends Component {
 export class Response extends Component {
 
     render() {
-        const { flow, onUpdate } = this.props
+        const { flow, updateFlow } = this.props
 
         return (
             <section className="response">
-                <ResponseLine ref="responseLine" flow={flow} onUpdate={onUpdate} />
+                <ResponseLine ref="responseLine" flow={flow} updateFlow={updateFlow} />
                 <Headers
                     ref="headers"
                     message={flow.response}
-                    onChange={headers => onUpdate({ response: { headers } })}
+                    onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
                 <ContentView flow={flow} message={flow.response}/>

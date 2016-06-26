@@ -17,8 +17,8 @@ const defaultState = {
     logId: 0,
     visible: false,
     filters: { debug: false, info: true, web: true },
-    list: undefined,
-    view: undefined,
+    list: reduceList(undefined, {}),
+    view: reduceView(undefined, {}),
 }
 
 export default function reduce(state = defaultState, action) {
@@ -40,7 +40,7 @@ export default function reduce(state = defaultState, action) {
 
         case ADD:
             const item = {
-                id: `log-${state.logId}`,
+                id: state.logId,
                 message: action.message,
                 level: action.level,
             }
@@ -52,19 +52,14 @@ export default function reduce(state = defaultState, action) {
             }
 
         case RECEIVE:
-            const list = reduceList(state.list, listActions.receive(action.list))
             return {
                 ...state,
-                list,
+                list: reduceList(state.list, listActions.receive(action.list)),
                 view: reduceView(state.view, viewActions.receive(list, log => state.filters[log.level])),
             }
 
         default:
-            return {
-                ...state,
-                list: reduceList(state.list, action),
-                view: reduceView(state.view, action),
-            }
+            return state
     }
 }
 

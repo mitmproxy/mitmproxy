@@ -6,7 +6,7 @@ import columns from './FlowColumns'
 import { updateSort } from '../../ducks/views/main'
 
 FlowTableHead.propTypes = {
-    onSort: PropTypes.func.isRequired,
+    updateSort: PropTypes.func.isRequired,
     sortDesc: React.PropTypes.bool.isRequired,
     sortColumn: React.PropTypes.string,
 }

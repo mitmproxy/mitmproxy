@@ -112,8 +112,8 @@ export function revert(flow) {
 /**
  * @public
  */
-export function update(flow, body) {
-    fetchApi.put(`/flows/${flow.id}`, body)
+export function update(flow, data) {
+    fetchApi.put(`/flows/${flow.id}`, data)
     return { type: REQUEST_ACTION }
 }
 
@@ -139,7 +139,7 @@ export function download() {
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
-    fetchApi('/flows/dump',  { method: 'post', body })
+    fetchApi('/flows/dump', { method: 'post', body })
     return { type: REQUEST_ACTION }
 }
 
