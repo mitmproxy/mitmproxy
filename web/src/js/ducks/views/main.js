@@ -4,7 +4,7 @@ import reduceView, * as viewActions from '../utils/view'
 import * as viewsActions from '../views'
 
 export const UPDATE_FILTER = 'FLOW_VIEWS_MAIN_UPDATE_FILTER'
-export const UPDATE_SORTER = 'FLOW_VIEWS_MAIN_UPDATE_SORTER'
+export const UPDATE_SORT = 'FLOW_VIEWS_MAIN_UPDATE_SORT'
 export const UPDATE_HIGHLIGHT = 'FLOW_VIEWS_MAIN_UPDATE_HIGHLIGHT'
 export const SELECT = 'FLOW_VIEWS_MAIN_SELECT'
 
@@ -33,7 +33,7 @@ const defaultState = {
     highlight: null,
     selected: [],
     filter: null,
-    sorter: { column: null, desc: false },
+    sort: { column: null, desc: false },
     view: undefined,
 }
 
@@ -61,20 +61,20 @@ export default function reduce(state = defaultState, action) {
                     viewActions.updateFilter(
                         action.list,
                         makeFilter(action.filter),
-                        makeSorter(state.sorter)
+                        makeSort(state.sort)
                     )
                 ),
             }
 
-        case UPDATE_SORTER:
-            const sorter = { column: action.column, desc: action.desc }
+        case UPDATE_SORT:
+            const sort = { column: action.column, desc: action.desc }
             return {
                 ...state,
-                sorter,
+                sort,
                 view: reduceView(
                     state.view,
-                    viewActions.updateSorter(
-                        makeSorter(sorter)
+                    viewActions.updateSort(
+                        makeSort(sort)
                     )
                 ),
             }
@@ -87,7 +87,7 @@ export default function reduce(state = defaultState, action) {
                     viewActions.add(
                         action.item,
                         makeFilter(state.filter),
-                        makeSorter(state.sorter)
+                        makeSort(state.sort)
                     )
                 ),
             }
@@ -101,7 +101,7 @@ export default function reduce(state = defaultState, action) {
                         action.id,
                         action.item,
                         makeFilter(state.filter),
-                        makeSorter(state.sorter)
+                        makeSort(state.sort)
                     )
                 ),
             }
@@ -125,7 +125,7 @@ export default function reduce(state = defaultState, action) {
                     viewActions.receive(
                         action.list,
                         makeFilter(state.filter),
-                        makeSorter(state.sorter)
+                        makeSort(state.sort)
                     )
                 ),
             }
@@ -157,8 +157,8 @@ export function updateHighlight(highlight) {
 /**
  * @public
  */
-export function updateSorter(column, desc) {
-    return { type: UPDATE_SORTER, column, desc }
+export function updateSort(column, desc) {
+    return { type: UPDATE_SORT, column, desc }
 }
 
 /**
@@ -183,7 +183,7 @@ function makeFilter(filter) {
 /**
  * @private
  */
-function makeSorter({ column, desc }) {
+function makeSort({ column, desc }) {
     const sortKeyFun = sortKeyFuns[column]
     if (!sortKeyFun) {
         return
