@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import $ from 'jquery'
+import { fetchApi } from "../../utils";
+
 
 export default class FilterDocs extends Component {
 
@@ -15,13 +16,13 @@ export default class FilterDocs extends Component {
 
     componentWillMount() {
         if (!FilterDocs.xhr) {
-            FilterDocs.xhr = $.getJSON('/filter-help')
-            FilterDocs.xhr.fail(() => {
+            FilterDocs.xhr = fetchApi('/filter-help').then(response => response.json())
+            FilterDocs.xhr.catch(() => {
                 FilterDocs.xhr = null
             })
         }
         if (!this.state.doc) {
-            FilterDocs.xhr.done(doc => {
+            FilterDocs.xhr.then(doc => {
                 FilterDocs.doc = doc
                 this.setState({ doc })
             })

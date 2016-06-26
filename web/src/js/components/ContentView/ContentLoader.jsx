@@ -1,5 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { MessageUtils } from '../../flow/utils.js'
+// This is the only place where we use jQuery.
+// Remove when possible.
+import $ from "jquery"
 
 export default class ContentLoader extends Component {
 
@@ -18,7 +21,8 @@ export default class ContentLoader extends Component {
             this.state.request.abort()
         }
 
-        const request = MessageUtils.getContent(nextProps.flow, nextProps.message)
+        const requestUrl = MessageUtils.getContentURL(nextProps.flow, nextProps.message)
+        const request = $.get(requestUrl)
 
         this.setState({ content: null, request })
 

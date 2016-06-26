@@ -1,5 +1,4 @@
-import _ from "lodash";
-import $ from "jquery";
+import _ from "lodash"
 
 var defaultPorts = {
     "http": 80,
@@ -52,10 +51,6 @@ export var MessageUtils = {
         }
         return "/flows/" + flow.id + "/" + message + "/content";
     },
-    getContent: function (flow, message) {
-        var url = MessageUtils.getContentURL(flow, message);
-        return $.get(url);
-    }
 };
 
 export var RequestUtils = _.extend(MessageUtils, {

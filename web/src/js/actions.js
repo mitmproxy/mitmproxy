@@ -1,6 +1,4 @@
-import $ from "jquery";
 import {AppDispatcher} from "./dispatcher.js";
-import {fetchApi} from "./utils.js";
 
 export var ActionTypes = {
     // Connection

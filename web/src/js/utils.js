@@ -1,8 +1,5 @@
-import $ from "jquery";
 import _ from "lodash";
-import actions from "./actions.js";
 
-window.$ = $;
 window._ = _;
 window.React = require("react");
 
@@ -82,32 +79,15 @@ function getCookie(name) {
 }
 const xsrf = `_xsrf=${getCookie("_xsrf")}`;
 
-//Tornado XSRF Protection.
-$.ajaxPrefilter(function (options) {
-    if (["post", "put", "delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
-        if(options.url.indexOf("?") === -1){
-            options.url += "?" + xsrf;
+export function fetchApi(url, options={}) {
+    if (options.method && options.method !== "GET") {
+        if (url.indexOf("?") === -1) {
+            url += "?" + xsrf;
         } else {
-            options.url += "&" + xsrf;
+            url += "&" + xsrf;
         }
     }
-});
-// Log AJAX Errors
-$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
-    if (thrownError === "abort") {
-        return;
-    }
-    var message = jqXHR.responseText;
-    console.error(thrownError, message, arguments);
-    alert(message);
-});
 
-export function fetchApi(url, options) {
-    if(url.indexOf("?") === -1){
-        url += "?" + xsrf;
-    } else {
-        url += "&" + xsrf;
-    }
     return fetch(url, {
         credentials: 'same-origin',
         ...options
