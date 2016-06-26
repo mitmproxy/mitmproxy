@@ -17,7 +17,7 @@ client:
 
 The first argument to each event method is an instance of
 :py:class:`~mitmproxy.script.ScriptContext` that lets the script interact with the global mitmproxy
-state. The **response** event also gets an instance of :py:class:`~mitmproxy.script.ScriptContext`,
+state. The **response** event also gets an instance of :py:class:`~mitmproxy.models.HTTPFlow`,
 which we can use to manipulate the response itself.
 
 We can now run this script using mitmdump or mitmproxy as follows:
