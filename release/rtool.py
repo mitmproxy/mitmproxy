@@ -53,7 +53,7 @@ project = {
         "pathod": ["pathoc", "pathod"]
     },
     "dir": ROOT_DIR,
-    "python_version": "py2"
+    "python_version": "py2.py3",
 }
 if platform.system() == "Windows":
     project["tools"].remove("mitmproxy")
@@ -182,7 +182,7 @@ def wheels():
         subprocess.check_call(
             [
                 "python", "./setup.py", "-q",
-                "bdist_wheel", "--dist-dir", DIST_DIR,
+                "bdist_wheel", "--dist-dir", DIST_DIR, "--universal"
             ],
             cwd=project["dir"]
         )
@@ -194,6 +194,9 @@ def wheels():
 
         with chdir(DIST_DIR):
             print("Installing %s..." % project["name"])
+            # lxml...
+            if os.name == "nt":
+                subprocess.check_call([VENV_PIP, "install", "-q", "https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl"])
             subprocess.check_call([VENV_PIP, "install", "-q", wheel_name()])
 
             print("Running binaries...")
