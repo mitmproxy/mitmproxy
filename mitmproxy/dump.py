@@ -248,7 +248,7 @@ class DumpMaster(flow.FlowMaster):
         else:
             client = click.style("[replay]", fg="yellow", bold=True)
 
-        method = flow.request.method
+        method = flow.request.data.method
         method_color = dict(
             GET="green",
             DELETE="red"
@@ -258,7 +258,7 @@ class DumpMaster(flow.FlowMaster):
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        url = click.style(strutils.bytes_to_escaped_str(url), bold=True)
+        url = click.style(url, bold=True)
 
         httpversion = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
@@ -288,7 +288,7 @@ class DumpMaster(flow.FlowMaster):
         elif 400 <= code < 600:
             code_color = "red"
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        reason = click.style(strutils.bytes_to_escaped_str(flow.response.reason), fg=code_color, bold=True)
+        reason = click.style(strutils.bytes_to_escaped_str(flow.response.data.reason), fg=code_color, bold=True)
 
         if flow.response.content is None:
             size = "(content missing)"
