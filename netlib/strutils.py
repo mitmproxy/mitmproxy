@@ -19,12 +19,12 @@ def native(s, *encoding_opts):
     """
     if not isinstance(s, (six.binary_type, six.text_type)):
         raise TypeError("%r is neither bytes nor unicode" % s)
-    if six.PY3:
-        if isinstance(s, six.binary_type):
-            return s.decode(*encoding_opts)
-    else:
+    if six.PY2:
         if isinstance(s, six.text_type):
             return s.encode(*encoding_opts)
+    else:
+        if isinstance(s, six.binary_type):
+            return s.decode(*encoding_opts)
     return s
 
 
