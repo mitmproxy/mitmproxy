@@ -1,7 +1,7 @@
 mitmproxy
 ^^^^^^^^^
 
-|travis| |coverage| |latest_release| |python_versions|
+|travis| |appveyor| |coverage| |latest_release| |python_versions|
 
 This repository contains the **mitmproxy** and **pathod** projects, as well as
 their shared networking library, **netlib**.
@@ -172,9 +172,13 @@ PR checks will fail and block merging. We are using this command to check for st
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
-.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg
+.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg?label=Travis%20build
     :target: https://travis-ci.org/mitmproxy/mitmproxy
-    :alt: Build Status
+    :alt: Travis Build Status
+
+.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mhils/mitmproxy/master.svg?label=Appveyor%20build
+    :target: https://ci.appveyor.com/project/mhils/mitmproxy
+    :alt: Appveyor Build Status
 
 .. |coverage| image:: https://codecov.io/gh/mitmproxy/mitmproxy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/mitmproxy/mitmproxy
