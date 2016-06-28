@@ -4,7 +4,7 @@ import json
 import re
 from textwrap import dedent
 
-from six.moves.urllib.parse import quote, quote_plus
+from six.moves import urllib
 
 import netlib.http
 
@@ -48,7 +48,7 @@ def python_code(flow):
         print(response.text)
     """).strip()
 
-    components = map(lambda x: quote(x, safe=""), flow.request.path_components)
+    components = [urllib.parse.quote(c, safe="") for c in flow.request.path_components]
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
 
     args = ""
@@ -126,7 +126,7 @@ def locust_code(flow):
             max_wait = 3000
 """).strip()
 
-    components = map(lambda x: quote(x, safe=""), flow.request.path_components)
+    components = [urllib.parse.quote(c, safe="") for c in flow.request.path_components]
     file_name = "_".join(components)
     name = re.sub('\W|^(?=\d)', '_', file_name)
     url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
