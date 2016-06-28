@@ -32,7 +32,7 @@ deploy_script:
   ps: |
     if(($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true")) {
       pip install -U virtualenv
-      dev.bat
+      .\dev.bat
       python .\release\rtool.py bdist
       python .\release\rtool.py upload-snapshot --bdist
     }
