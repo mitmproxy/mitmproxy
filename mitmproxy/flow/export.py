@@ -4,15 +4,26 @@ import json
 import re
 from textwrap import dedent
 
+import six
 from six.moves import urllib
 
 import netlib.http
 
 
+def _native(s):
+    if six.PY2:
+        if isinstance(s, six.text_type):
+            return s.encode()
+    else:
+        if isinstance(s, six.binary_type):
+            return s.decode()
+    return s
+
+
 def dictstr(items, indent):
     lines = []
     for k, v in items:
-        lines.append(indent + "%s: %s,\n" % (repr(k), repr(v)))
+        lines.append(indent + "%s: %s,\n" % (repr(_native(k)), repr(_native(v))))
     return "{\n%s}\n" % "".join(lines)
 
 
@@ -20,7 +31,7 @@ def curl_command(flow):
     data = "curl "
 
     for k, v in flow.request.headers.fields:
-        data += "-H '%s:%s' " % (k, v)
+        data += "-H '%s:%s' " % (_native(k), _native(v))
 
     if flow.request.method != "GET":
         data += "-X %s " % flow.request.method
@@ -29,7 +40,7 @@ def curl_command(flow):
     data += "'%s'" % full_url
 
     if flow.request.content:
-        data += " --data-binary '%s'" % flow.request.content
+        data += " --data-binary '%s'" % _native(flow.request.content)
 
     return data
 
@@ -69,7 +80,7 @@ def python_code(flow):
             data = "\njson = %s\n" % dictstr(sorted(json_obj.items()), "    ")
             args += "\n    json=json,"
         else:
-            data = "\ndata = '''%s'''\n" % flow.request.body
+            data = "\ndata = '''%s'''\n" % _native(flow.request.content)
             args += "\n    data=data,"
 
     code = code.format(
@@ -85,7 +96,7 @@ def python_code(flow):
 
 def raw_request(flow):
     data = netlib.http.http1.assemble_request(flow.request)
-    return data
+    return _native(data)
 
 
 def is_json(headers, content):
@@ -127,16 +138,20 @@ def locust_code(flow):
 """).strip()
 
     components = [urllib.parse.quote(c, safe="") for c in flow.request.path_components]
-    file_name = "_".join(components)
-    name = re.sub('\W|^(?=\d)', '_', file_name)
-    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
+    name = re.sub('\W|^(?=\d)', '_', "_".join(components))
     if name == "" or name is None:
         new_name = "_".join([str(flow.request.host), str(flow.request.timestamp_start)])
         name = re.sub('\W|^(?=\d)', '_', new_name)
+
+    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
+
     args = ""
     headers = ""
     if flow.request.headers:
-        lines = [(k, v) for k, v in flow.request.headers.fields if k.lower() not in ["host", "cookie"]]
+        lines = [
+            (_native(k), _native(v)) for k, v in flow.request.headers.fields
+            if _native(k).lower() not in ["host", "cookie"]
+        ]
         lines = ["            '%s': '%s',\n" % (k, v) for k, v in lines]
         headers += "\n        headers = {\n%s        }\n" % "".join(lines)
         args += "\n            headers=headers,"
@@ -148,8 +163,8 @@ def locust_code(flow):
         args += "\n            params=params,"
 
     data = ""
-    if flow.request.body:
-        data = "\n        data = '''%s'''\n" % flow.request.body
+    if flow.request.content:
+        data = "\n        data = '''%s'''\n" % _native(flow.request.content)
         args += "\n            data=data,"
 
     code = code.format(
@@ -164,8 +179,8 @@ def locust_code(flow):
 
     host = flow.request.scheme + "://" + flow.request.host
     code = code.replace(host, "' + self.locust.host + '")
-    code = code.replace(quote_plus(host), "' + quote_plus(self.locust.host) + '")
-    code = code.replace(quote(host), "' + quote(self.locust.host) + '")
+    code = code.replace(urllib.parse.quote_plus(host), "' + quote_plus(self.locust.host) + '")
+    code = code.replace(urllib.parse.quote(host), "' + quote(self.locust.host) + '")
     code = code.replace("'' + ", "")
 
     return code

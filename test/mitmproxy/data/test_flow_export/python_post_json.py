@@ -8,8 +8,8 @@ headers = {
 
 
 json = {
-    u'email': u'example@example.com',
-    u'name': u'example',
+    'email': 'example@example.com',
+    'name': 'example',
 }
 
 
