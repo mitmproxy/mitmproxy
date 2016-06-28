@@ -28,7 +28,7 @@ class RequestData(message.MessageData):
 
         self.first_line_format = first_line_format
         self.method = method
-        self.scheme = scheme
+        self.scheme = scheme or b''
         self.host = host
         self.port = port
         self.path = path
