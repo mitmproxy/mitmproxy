@@ -29,7 +29,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 data,
-                indexOf: _.fromPairs(data.map((item, index) => [item.id, index]))
+                indexOf: _.fromPairs(data.map((item, index) => [item.id, index])),
             }
         }
 
@@ -43,7 +43,7 @@ export default function reduce(state = defaultState, action) {
             }
 
         case REMOVE:
-            if (state.indexOf[action.item.id] == null) {
+            if (state.indexOf[action.id] == null) {
                 return state
             }
             return {
@@ -52,7 +52,7 @@ export default function reduce(state = defaultState, action) {
             }
 
         case UPDATE: {
-            if (state.indexOf[action.item.id] == null) {
+            if (state.indexOf[action.id] == null) {
                 return
             }
             const nextState = {

@@ -23,32 +23,32 @@ export default function reduce(state = defaultState, action) {
             }
 
         case UPDATE: {
-            const data = [...state.data]
             const index = state.indexOf[action.id]
 
-            // FIXME: We should just swallow this
             if (index == null) {
-                throw new Error('Item not found')
+                return state
             }
+
+            const data = [...state.data]
 
             data[index] = action.item
 
             return {
                 ...state,
                 data,
-                byId: { ...state.byId, [action.item.id]: action.item },
+                byId: { ...state.byId, [action.id]: action.item }
             }
         }
 
         case REMOVE: {
-            const data = [...state.data]
-            const indexOf = { ...state.indexOf }
-            const index = indexOf[action.id]
+            const index = state.indexOf[action.id]
 
-            // FIXME: We should just swallow this
             if (index == null) {
-                throw new Error('Item not found')
+                return state
             }
+
+            const data = [...state.data]
+            const indexOf = { ...state.indexOf, [action.id]: null }
 
             data.splice(index, 1)
             for (let i = data.length - 1; i >= index; i--) {

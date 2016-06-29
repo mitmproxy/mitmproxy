@@ -1,4 +1,4 @@
-import {SELECT_FLOW} from "./flows"
+import {SELECT} from "./views/main"
 export const SET_ACTIVE_MENU = 'SET_ACTIVE_MENU';
 
 
@@ -12,7 +12,7 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 activeMenu: action.activeMenu
             }
-        case SELECT_FLOW:
+        case SELECT:
             let isNewSelect = (action.flowId && !action.currentSelection)
             let isDeselect = (!action.flowId && action.currentSelection)
             if(isNewSelect) {
