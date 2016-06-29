@@ -80,7 +80,6 @@ setup(
         "requests>=2.9.1, <2.11",
         "six>=1.10, <1.11",
         "tornado>=4.3, <4.4",
-        "typing>=3.5.2, <3.6",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
     ],
@@ -95,6 +94,7 @@ setup(
         ':python_version == "2.7"': [
             "enum34>=1.0.4, <2",
             "ipaddress>=1.0.15, <1.1",
+            "typing==3.5.2.2",
         ],
         'dev': [
             "tox>=2.3, <3",
