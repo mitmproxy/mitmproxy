@@ -23,7 +23,7 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - "tox"
+  - ps: "tox | Select-String -NotMatch Cryptography_locking_cb"
 
 deploy_script:
   ps: |
