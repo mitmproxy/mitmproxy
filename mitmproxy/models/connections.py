@@ -8,6 +8,7 @@ import six
 
 from mitmproxy import stateobject
 from netlib import certutils
+from netlib import strutils
 from netlib import tcp
 
 
@@ -212,11 +213,11 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             else:
                 path = os.path.join(
                     clientcerts,
-                    self.address.host.encode("idna")) + ".pem"
+                    self.address.host.encode("idna").decode()) + ".pem"
                 if os.path.exists(path):
                     clientcert = path
 
-        self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
+        self.convert_to_ssl(cert=clientcert, sni=strutils.always_bytes(sni), **kwargs)
         self.sni = sni
         self.timestamp_ssl_setup = time.time()
 
