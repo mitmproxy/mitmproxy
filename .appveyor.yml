@@ -31,7 +31,7 @@ deploy_script:
   ps: |
     if(
       ($Env:TOXENV -match "py27") -and
-      (($Env:APPVEYOR_REPO_BRANCH -match "simplify-tox") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
+      (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
       pip install -U virtualenv
       .\dev.ps1
