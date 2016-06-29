@@ -323,7 +323,7 @@ def basic_options(parser):
 
 
 def proxy_modes(parser):
-    group = parser.add_argument_group("Proxy Modes").add_mutually_exclusive_group()
+    group = parser.add_argument_group("Proxy Modes")
     group.add_argument(
         "-R", "--reverse",
         action="store",
