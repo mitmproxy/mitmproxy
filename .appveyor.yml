@@ -2,11 +2,13 @@ version: '{build}'
 build: off  # Not a C# project
 
 environment:
+  CI_DEPS: codecov>=2.0.5
+  CI_COMMANDS: codecov
   matrix:
     - PYTHON: "C:\\Python27"
-      TOXENV: "py27-ci"
+      TOXENV: "py27"
     - PYTHON: "C:\\Python35"
-      TOXENV: "py35-ci-win"
+      TOXENV: "py35"
 
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
@@ -22,18 +24,18 @@ install:
   - "python -m pip install --disable-pip-version-check -U pip"
   - "pip install -U tox"
 
-before_test:
-  - "tox -e lint"
-
 test_script:
-  - "tox"
+  - ps: "tox -- --cov netlib --cov mitmproxy --cov pathod | Select-String -NotMatch Cryptography_locking_cb"
 
 deploy_script:
   ps: |
-    if(($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true")) {
+    if(
+      ($Env:TOXENV -match "py27") -and
+      (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
+      ) {
       pip install -U virtualenv
-      .\dev.bat
-      python .\release\rtool.py bdist
+      .\dev.ps1
+      cmd /c "python .\release\rtool.py bdist 2>&1"
       python .\release\rtool.py upload-snapshot --bdist
     }
 

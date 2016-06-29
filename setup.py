@@ -105,13 +105,14 @@ setup(
             "pytest-xdist>=1.14, <1.15",
             "sphinx>=1.3.5, <1.5",
             "sphinx-autobuild>=0.5.2, <0.7",
-            "sphinxcontrib-documentedlist>=0.3.0, <0.4",
+            "sphinxcontrib-documentedlist>=0.4.0, <0.5",
             "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
             "cssutils>=1.0.1, <1.1",
-            "protobuf>=2.6.1, <2.7",
-            "pyamf>=0.8.0, <0.9",
+            # TODO: Find Python 3 replacements
+            # "protobuf>=2.6.1, <2.7",
+            # "pyamf>=0.8.0, <0.9",
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.5",

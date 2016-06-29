@@ -60,7 +60,7 @@ here_). Then do the following:
 
     git clone https://github.com/mitmproxy/mitmproxy.git
     cd mitmproxy
-    ./dev.sh
+    ./dev.sh  # powershell .\dev.ps1 on Windows
 
 
 The *dev* script will create a virtualenv environment in a directory called
@@ -74,7 +74,7 @@ mitmproxy test suite:
 
 .. code-block:: text
 
-    . venv/bin/activate # venv\Scripts\activate.bat on Windows
+    . venv/bin/activate  # venv\Scripts\activate on Windows
     py.test
 
 Note that the main executables for the project - ``mitmdump``, ``mitmproxy``,
