@@ -110,8 +110,9 @@ setup(
         ],
         'contentviews': [
             "cssutils>=1.0.1, <1.1",
-            "protobuf>=2.6.1, <2.7",
-            "pyamf>=0.8.0, <0.9",
+            # TODO: Find Python 3 replacements
+            # "protobuf>=2.6.1, <2.7",
+            # "pyamf>=0.8.0, <0.9",
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.5",
