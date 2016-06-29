@@ -50,7 +50,7 @@ install:
     fi
   - pip install tox
 
-script: tox -- --cov netlib --cov mitmproxy --cov pathod
+script: set -o pipefail; tox -- --cov netlib --cov mitmproxy --cov pathod 2>&1 | grep -v Cryptography_locking_cb
 
 after_success:
   - |
