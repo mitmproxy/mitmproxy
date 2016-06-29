@@ -35,7 +35,7 @@ matrix:
       env: TOXENV=py27
     - python: 3.5
       env: TOXENV=lint
-    - python: 2.7
+    - python: 3.5
       env: TOXENV=docs
   allow_failures:
     - python: pypy
