@@ -8,8 +8,7 @@ import netlib.basetypes
 
 
 def _is_list(cls):
-    # The typing module backport is somewhat broken.
-    # Python 3.5 or 3.6 should fix this.
+    # The typing module is broken on Python 3.5.0, fixed on 3.5.1.
     is_list_bugfix = getattr(cls, "__origin__", False) == getattr(List[Any], "__origin__", True)
     return issubclass(cls, List) or is_list_bugfix
 
@@ -63,7 +62,7 @@ class StateObject(netlib.basetypes.Serializable):
                     obj = cls.from_state(state.pop(attr))
                     setattr(self, attr, obj)
                 elif _is_list(cls):
-                    cls = cls.__parameters__[0]
+                    cls = cls.__parameters__[0] if cls.__parameters__ else cls.__args__[0]
                     setattr(self, attr, [cls.from_state(x) for x in state.pop(attr)])
                 else:  # primitive types such as int, str, ...
                     setattr(self, attr, cls(state.pop(attr)))
