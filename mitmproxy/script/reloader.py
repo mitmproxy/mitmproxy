@@ -5,12 +5,10 @@ import sys
 
 from watchdog.events import RegexMatchingEventHandler
 
-if sys.platform == 'darwin':  # pragma: no cover
-    from watchdog.observers.polling import PollingObserver as Observer
-else:
-    from watchdog.observers import Observer
-# The OSX reloader in watchdog 0.8.3 breaks when unobserving paths.
-# We use the PollingObserver instead.
+from watchdog.observers.polling import PollingObserver as Observer
+# We occasionally have watchdog errors on Windows, Linux and Mac when using the native observers.
+# After reading through the watchdog source code and issue tracker,
+# we may want to replace this with a very simple implementation of our own.
 
 _observers = {}
 
