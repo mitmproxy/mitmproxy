@@ -2,6 +2,8 @@ version: '{build}'
 build: off  # Not a C# project
 
 environment:
+  CI_DEPS: codecov>=2.0.5
+  CI_COMMANDS: codecov
   matrix:
     - PYTHON: "C:\\Python27"
       TOXENV: "py27"
@@ -23,7 +25,7 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: "tox | Select-String -NotMatch Cryptography_locking_cb"
+  - ps: "tox -- --cov netlib --cov mitmproxy --cov pathod | Select-String -NotMatch Cryptography_locking_cb"
 
 deploy_script:
   ps: |
