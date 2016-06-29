@@ -12,7 +12,6 @@ addons:
 
 env: 
   global:
-    - TOXENV=py
     - CI_DEPS=codecov>=2.0.5
     - CI_COMMANDS=codecov
 
