@@ -518,7 +518,7 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()
 
-        assert d.content == "bar"
+        assert d.content == b"bar"
 
         self.master.unload_scripts()
 
@@ -641,7 +641,7 @@ class MasterRedirectRequest(tservers.TestMaster):
 
     @controller.handler
     def response(self, f):
-        f.response.content = str(f.client_conn.address.port)
+        f.response.content = bytes(f.client_conn.address.port)
         f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
         super(MasterRedirectRequest, self).response(f)
 
@@ -723,7 +723,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
     def test_stream_chunked(self):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("127.0.0.1", self.proxy.port))
-        fconn = connection.makefile()
+        fconn = connection.makefile("rb")
         spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n11\\r\\nisatest__reachhex\\r\\n0\\r\\n\\r\\n"'
         connection.send(
             b"GET %s/p/%s HTTP/1.1\r\n" %
@@ -736,7 +736,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
         assert resp.status_code == 200
 
         chunks = list(http1.read_body(fconn, None))
-        assert chunks == ["this", "isatest__reachhex"]
+        assert chunks == [b"this", b"isatest__reachhex"]
 
         connection.close()
 
@@ -848,7 +848,7 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest, CommonMixin, AppMixin):
 
         p = self.pathoc()
         req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
-        assert req.content == "ORLY"
+        assert req.content == b"ORLY"
         assert req.status_code == 418
 
 

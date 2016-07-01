@@ -35,6 +35,7 @@ from __future__ import absolute_import, print_function, division
 
 import re
 import sys
+from netlib import strutils
 
 import pyparsing as pp
 
@@ -78,38 +79,43 @@ class FResp(_Action):
     help = "Match response"
 
     def __call__(self, f):
-        return True if f.response else False
+        return bool(f.response)
 
 
 class _Rex(_Action):
     flags = 0
+    is_binary = True
 
     def __init__(self, expr):
         self.expr = expr
+        if self.is_binary:
+            expr = strutils.escaped_str_to_bytes(expr)
         try:
-            self.re = re.compile(self.expr, self.flags)
+            self.re = re.compile(expr, self.flags)
         except:
             raise ValueError("Cannot compile expression.")
 
 
-def _check_content_type(expr, o):
-    val = o.headers.get("content-type")
-    if val and re.search(expr, val):
-        return True
-    return False
+def _check_content_type(rex, message):
+    return any(
+        name.lower() == b"content-type" and
+        rex.search(value)
+        for name, value in message.headers.fields
+    )
 
 
 class FAsset(_Action):
     code = "a"
     help = "Match asset in response: CSS, Javascript, Flash, images."
     ASSET_TYPES = [
-        "text/javascript",
-        "application/x-javascript",
-        "application/javascript",
-        "text/css",
-        "image/.*",
-        "application/x-shockwave-flash"
+        b"text/javascript",
+        b"application/x-javascript",
+        b"application/javascript",
+        b"text/css",
+        b"image/.*",
+        b"application/x-shockwave-flash"
     ]
+    ASSET_TYPES = [re.compile(x) for x in ASSET_TYPES]
 
     def __call__(self, f):
         if f.response:
@@ -124,9 +130,9 @@ class FContentType(_Rex):
     help = "Content-type header"
 
     def __call__(self, f):
-        if _check_content_type(self.expr, f.request):
+        if _check_content_type(self.re, f.request):
             return True
-        elif f.response and _check_content_type(self.expr, f.response):
+        elif f.response and _check_content_type(self.re, f.response):
             return True
         return False
 
@@ -136,7 +142,7 @@ class FRequestContentType(_Rex):
     help = "Request Content-Type header"
 
     def __call__(self, f):
-        return _check_content_type(self.expr, f.request)
+        return _check_content_type(self.re, f.request)
 
 
 class FResponseContentType(_Rex):
@@ -145,7 +151,7 @@ class FResponseContentType(_Rex):
 
     def __call__(self, f):
         if f.response:
-            return _check_content_type(self.expr, f.response)
+            return _check_content_type(self.re, f.response)
         return False
 
 
@@ -222,7 +228,7 @@ class FMethod(_Rex):
     flags = re.IGNORECASE
 
     def __call__(self, f):
-        return bool(self.re.search(f.request.method))
+        return bool(self.re.search(f.request.data.method))
 
 
 class FDomain(_Rex):
@@ -231,12 +237,13 @@ class FDomain(_Rex):
     flags = re.IGNORECASE
 
     def __call__(self, f):
-        return bool(self.re.search(f.request.host))
+        return bool(self.re.search(f.request.data.host))
 
 
 class FUrl(_Rex):
     code = "u"
     help = "URL"
+    is_binary = False
     # FUrl is special, because it can be "naked".
 
     @classmethod
@@ -252,6 +259,7 @@ class FUrl(_Rex):
 class FSrc(_Rex):
     code = "src"
     help = "Match source address"
+    is_binary = False
 
     def __call__(self, f):
         return f.client_conn.address and self.re.search(repr(f.client_conn.address))
@@ -260,6 +268,7 @@ class FSrc(_Rex):
 class FDst(_Rex):
     code = "dst"
     help = "Match destination address"
+    is_binary = False
 
     def __call__(self, f):
         return f.server_conn.address and self.re.search(repr(f.server_conn.address))

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+import re
 import warnings
 
 import six
@@ -196,11 +197,14 @@ class Message(basetypes.Serializable):
         Returns:
             The number of replacements made.
         """
-        # TODO: Proper distinction between text and bytes.
+        if isinstance(pattern, six.text_type):
+            pattern = strutils.escaped_str_to_bytes(pattern)
+        if isinstance(repl, six.text_type):
+            repl = strutils.escaped_str_to_bytes(repl)
         replacements = 0
         if self.content:
             with decoded(self):
-                self.content, replacements = strutils.safe_subn(
+                self.content, replacements = re.subn(
                     pattern, repl, self.content, flags=flags
                 )
         replacements += self.headers.replace(pattern, repl, flags)

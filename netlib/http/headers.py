@@ -156,8 +156,10 @@ class Headers(multidict.MultiDict):
         Returns:
             The number of replacements made.
         """
-        pattern = _always_bytes(pattern)
-        repl = _always_bytes(repl)
+        if isinstance(pattern, six.text_type):
+            pattern = strutils.escaped_str_to_bytes(pattern)
+        if isinstance(repl, six.text_type):
+            repl = strutils.escaped_str_to_bytes(repl)
         pattern = re.compile(pattern, flags)
         replacements = 0
 

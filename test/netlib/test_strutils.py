@@ -29,10 +29,6 @@ def test_clean_bin():
     assert strutils.clean_bin(u"\u2605") == u"\u2605"
 
 
-def test_safe_subn():
-    assert strutils.safe_subn("foo", u"bar", "\xc2foo")
-
-
 def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"foo") == "foo"
     assert strutils.bytes_to_escaped_str(b"\b") == r"\x08"

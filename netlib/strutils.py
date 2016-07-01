@@ -1,4 +1,3 @@
-import re
 import unicodedata
 import codecs
 
@@ -54,15 +53,6 @@ def clean_bin(s, keep_spacing=True):
             six.int2byte(ch) if (31 < ch < 127 or ch in keep) else b"."
             for ch in six.iterbytes(s)
         )
-
-
-def safe_subn(pattern, repl, target, *args, **kwargs):
-    """
-        There are Unicode conversion problems with re.subn. We try to smooth
-        that over by casting the pattern and replacement to strings. We really
-        need a better solution that is aware of the actual content ecoding.
-    """
-    return re.subn(str(pattern), str(repl), target, *args, **kwargs)
 
 
 def bytes_to_escaped_str(data):

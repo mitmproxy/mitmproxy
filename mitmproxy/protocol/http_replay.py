@@ -49,7 +49,7 @@ class RequestReplayThread(basethread.BaseThread):
                     server = models.ServerConnection(server_address, (self.config.host, 0))
                     server.connect()
                     if r.scheme == "https":
-                        connect_request = models.make_connect_request((r.host, r.port))
+                        connect_request = models.make_connect_request((r.data.host, r.port))
                         server.wfile.write(http1.assemble_request(connect_request))
                         server.wfile.flush()
                         resp = http1.read_response(

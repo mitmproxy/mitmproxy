@@ -65,10 +65,14 @@ class Request(message.Message):
             Returns:
                 The number of replacements made.
         """
-        # TODO: Proper distinction between text and bytes.
+        if isinstance(pattern, six.text_type):
+            pattern = strutils.escaped_str_to_bytes(pattern)
+        if isinstance(repl, six.text_type):
+            repl = strutils.escaped_str_to_bytes(repl)
+
         c = super(Request, self).replace(pattern, repl, flags)
-        self.path, pc = strutils.safe_subn(
-            pattern, repl, self.path, flags=flags
+        self.path, pc = re.subn(
+            pattern, repl, self.data.path, flags=flags
         )
         c += pc
         return c
