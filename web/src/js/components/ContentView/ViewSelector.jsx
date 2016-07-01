@@ -14,7 +14,7 @@ export default function ViewSelector({ active, message, onSelectView }) {
             {views.map(View => (
                 <button
                     key={View.name}
-                    onClick={() => onSelectView(View)}
+                    onClick={() => onSelectView(View.name)}
                     className={classnames('btn btn-default', { active: View === active })}>
                     {View === ViewAuto ? (
                         `auto: ${ViewAuto.findView(message).name.toLowerCase().replace('view', '')}`
