@@ -31,7 +31,6 @@ from six import BytesIO
 from mitmproxy import exceptions
 from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
-from netlib import encoding
 from netlib import http
 from netlib import multidict
 from netlib.http import url

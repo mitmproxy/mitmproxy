@@ -1,6 +1,5 @@
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
-from netlib import encoding
 from netlib.http import url
 from netlib import multidict
 
