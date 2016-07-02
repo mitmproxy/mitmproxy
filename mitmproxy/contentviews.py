@@ -600,7 +600,7 @@ def safe_to_print(lines, encoding="utf8"):
             try:
                 text = strutils.clean_bin(text.decode(encoding, "strict"))
             except UnicodeDecodeError:
-                text = strutils.clean_bin(text).decode(encoding, "strict")
+                text = strutils.clean_bin(text)
             clean_line.append((style, text))
         yield clean_line
 

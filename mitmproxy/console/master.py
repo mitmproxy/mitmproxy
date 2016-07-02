@@ -30,7 +30,7 @@ from mitmproxy.console import palettes
 from mitmproxy.console import signals
 from mitmproxy.console import statusbar
 from mitmproxy.console import window
-from netlib import tcp
+from netlib import tcp, strutils
 
 EVENTLOG_SIZE = 500
 
@@ -796,6 +796,18 @@ class ConsoleMaster(flow.FlowMaster):
         if f:
             self.process_flow(f)
         return f
+
+    @controller.handler
+    def tcp_message(self, f):
+        super(ConsoleMaster, self).tcp_message(f)
+        message = f.messages[-1]
+        direction = "->" if message.from_client else "<-"
+        self.add_event("{client} {direction} tcp {direction} {server}".format(
+            client=repr(f.client_conn.address),
+            server=repr(f.server_conn.address),
+            direction=direction,
+        ), "info")
+        self.add_event(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
     def script_change(self, script):

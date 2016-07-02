@@ -28,7 +28,7 @@ class RequestData(message.MessageData):
 
         self.first_line_format = first_line_format
         self.method = method
-        self.scheme = scheme or b''
+        self.scheme = scheme
         self.host = host
         self.port = port
         self.path = path
@@ -106,6 +106,8 @@ class Request(message.Message):
         """
         HTTP request scheme, which should be "http" or "https".
         """
+        if not self.data.scheme:
+            return self.data.scheme
         return message._native(self.data.scheme)
 
     @scheme.setter

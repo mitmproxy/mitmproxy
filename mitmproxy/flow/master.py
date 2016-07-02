@@ -499,15 +499,8 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def tcp_message(self, flow):
+        # type: (TCPFlow) -> None
         self.run_scripts("tcp_message", flow)
-        message = flow.messages[-1]
-        direction = "->" if message.from_client else "<-"
-        self.add_event("{client} {direction} tcp {direction} {server}".format(
-            client=repr(flow.client_conn.address),
-            server=repr(flow.server_conn.address),
-            direction=direction,
-        ), "info")
-        self.add_event(strutils.clean_bin(message.content), "debug")
 
     @controller.handler
     def tcp_error(self, flow):

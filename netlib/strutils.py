@@ -29,6 +29,7 @@ def native(s, *encoding_opts):
 
 
 def clean_bin(s, keep_spacing=True):
+    # type: (Union[bytes, six.text_type], bool) -> six.text_type
     """
         Cleans binary data to make it safe to display.
 
@@ -49,8 +50,8 @@ def clean_bin(s, keep_spacing=True):
             keep = (9, 10, 13)  # \t, \n, \r,
         else:
             keep = ()
-        return b"".join(
-            six.int2byte(ch) if (31 < ch < 127 or ch in keep) else b"."
+        return "".join(
+            chr(ch) if (31 < ch < 127 or ch in keep) else "."
             for ch in six.iterbytes(s)
         )
 
@@ -133,6 +134,6 @@ def hexdump(s):
     for i in range(0, len(s), 16):
         offset = "{:0=10x}".format(i).encode()
         part = s[i:i + 16]
-        x = b" ".join("{:0=2x}".format(i).encode() for i in six.iterbytes(part))
+        x = " ".join("{:0=2x}".format(i) for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15
         yield (offset, x, clean_bin(part, False))

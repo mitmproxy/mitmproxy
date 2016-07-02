@@ -45,7 +45,7 @@ class TestMaster(flow.FlowMaster):
         self.tlog = []
 
     def add_event(self, message, level=None):
-        self.tlog.append(strutils.native(message, "utf8"))
+        self.tlog.append(message)
 
 
 class ProxyThread(threading.Thread):

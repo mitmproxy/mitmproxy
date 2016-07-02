@@ -178,7 +178,7 @@ class DumpMaster(flow.FlowMaster):
         click.secho(text, file=self.outfile, **style)
 
     def _echo_message(self, message):
-        if self.o.flow_detail >= 2:
+        if self.o.flow_detail >= 2 and hasattr(message, "headers"):
             headers = "\r\n".join(
                 "{}: {}".format(
                     click.style(strutils.bytes_to_escaped_str(k), fg="blue", bold=True),
@@ -196,7 +196,7 @@ class DumpMaster(flow.FlowMaster):
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Auto"),
                         message.content,
-                        headers=message.headers
+                        headers=getattr(message, "headers", None)
                     )
                 except exceptions.ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
@@ -204,7 +204,7 @@ class DumpMaster(flow.FlowMaster):
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
                         message.content,
-                        headers=message.headers
+                        headers=getattr(message, "headers", None)
                     )
 
                 styles = dict(
@@ -351,6 +351,21 @@ class DumpMaster(flow.FlowMaster):
         if f:
             self._process_flow(f)
         return f
+
+    @controller.handler
+    def tcp_message(self, f):
+        super(DumpMaster, self).tcp_message(f)
+
+        if self.o.flow_detail == 0:
+            return
+        message = f.messages[-1]
+        direction = "->" if message.from_client else "<-"
+        self.echo("{client} {direction} tcp {direction} {server}".format(
+            client=repr(f.client_conn.address),
+            server=repr(f.server_conn.address),
+            direction=direction,
+        ))
+        self._echo_message(message)
 
     def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
