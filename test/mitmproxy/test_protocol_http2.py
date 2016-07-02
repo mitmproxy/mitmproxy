@@ -120,7 +120,7 @@ class _Http2TestBase(object):
         client.wfile.flush()
 
         # read CONNECT response
-        while client.rfile.readline() != "\r\n":
+        while client.rfile.readline() != b"\r\n":
             pass
 
         client.convert_to_ssl(alpn_protos=[b'h2'])
@@ -197,7 +197,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
             (':path', '/'),
             ('ClIeNt-FoO', 'client-bar-1'),
             ('ClIeNt-FoO', 'client-bar-2'),
-        ], body='my request body echoed back to me')
+        ], body=b'my request body echoed back to me')
 
         done = False
         while not done:
@@ -269,7 +269,7 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
                 (':scheme', 'https'),
                 (':path', '/'),
             ],
-            body='foobar with request body',
+            body=b'foobar with request body',
         )
 
         done = False

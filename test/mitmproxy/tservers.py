@@ -11,7 +11,6 @@ import pathod.pathoc
 from mitmproxy import flow, controller
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
-from netlib import strutils
 
 testapp = flask.Flask(__name__)
 

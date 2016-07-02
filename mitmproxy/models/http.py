@@ -1,9 +1,9 @@
 from __future__ import absolute_import, print_function, division
 
 import cgi
+import warnings
 
 from mitmproxy.models.flow import Flow
-from netlib import encoding
 from netlib import version
 from netlib.http import Headers
 from netlib.http import Request
@@ -20,10 +20,8 @@ class MessageMixin(object):
             header.
             Doesn't change the message iteself or its headers.
         """
-        ce = self.headers.get("content-encoding")
-        if not self.content or ce not in encoding.ENCODINGS:
-            return self.content
-        return encoding.decode(ce, self.content)
+        warnings.warn(".get_decoded_content() is deprecated, please use .content directly instead.", DeprecationWarning)
+        return self.content
 
 
 class HTTPRequest(MessageMixin, Request):

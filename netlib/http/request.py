@@ -5,7 +5,6 @@ import re
 import six
 from six.moves import urllib
 
-from netlib import encoding
 from netlib import multidict
 from netlib import strutils
 from netlib.http import multipart
@@ -44,6 +43,7 @@ class Request(message.Message):
     An HTTP request.
     """
     def __init__(self, *args, **kwargs):
+        super(Request, self).__init__()
         self.data = RequestData(*args, **kwargs)
 
     def __repr__(self):
@@ -327,7 +327,7 @@ class Request(message.Message):
             self.headers["accept-encoding"] = (
                 ', '.join(
                     e
-                    for e in encoding.ENCODINGS
+                    for e in {"gzip", "identity", "deflate"}
                     if e in accept_encoding
                 )
             )

@@ -290,10 +290,10 @@ class DumpMaster(flow.FlowMaster):
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
         reason = click.style(strutils.bytes_to_escaped_str(flow.response.reason), fg=code_color, bold=True)
 
-        if flow.response.content is None:
+        if flow.response.raw_content is None:
             size = "(content missing)"
         else:
-            size = human.pretty_size(len(flow.response.content))
+            size = human.pretty_size(len(flow.response.raw_content))
         size = click.style(size, bold=True)
 
         arrows = click.style("<<", bold=True)

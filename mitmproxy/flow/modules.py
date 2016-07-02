@@ -157,7 +157,7 @@ class StreamLargeBodies(object):
         expected_size = http1.expected_http_body_size(
             flow.request, flow.response if not is_request else None
         )
-        if not r.content and not (0 <= expected_size <= self.max_size):
+        if not r.raw_content and not (0 <= expected_size <= self.max_size):
             # r.stream may already be a callable, which we want to preserve.
             r.stream = r.stream or True
 
@@ -251,7 +251,7 @@ class ServerPlaybackState:
                     if p[0] not in self.ignore_payload_params
                 )
             else:
-                key.append(str(r.content))
+                key.append(str(r.raw_content))
 
         if not self.ignore_host:
             key.append(r.host)

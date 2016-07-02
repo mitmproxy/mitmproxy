@@ -618,15 +618,6 @@ def get_content_view(viewmode, data, **metadata):
         Raises:
             ContentViewException, if the content view threw an error.
     """
-    msg = []
-
-    headers = metadata.get("headers", {})
-    enc = headers.get("content-encoding")
-    if enc and enc != "identity":
-        decoded = encoding.decode(enc, data)
-        if decoded:
-            data = decoded
-            msg.append("[decoded %s]" % enc)
     try:
         ret = viewmode(data, **metadata)
     # Third-party viewers can fail in unexpected ways...
@@ -637,8 +628,8 @@ def get_content_view(viewmode, data, **metadata):
             sys.exc_info()[2]
         )
     if not ret:
-        ret = get("Raw")(data, **metadata)
-        msg.append("Couldn't parse: falling back to Raw")
+        desc = "Couldn't parse: falling back to Raw"
+        _, content = get("Raw")(data, **metadata)
     else:
-        msg.append(ret[0])
-    return " ".join(msg), safe_to_print(ret[1])
+        desc, content = ret
+    return desc, safe_to_print(content)

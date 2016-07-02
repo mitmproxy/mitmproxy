@@ -194,10 +194,10 @@ class FBod(_Rex):
 
     def __call__(self, f):
         if f.request and f.request.content:
-            if self.re.search(f.request.get_decoded_content()):
+            if self.re.search(f.request.content):
                 return True
         if f.response and f.response.content:
-            if self.re.search(f.response.get_decoded_content()):
+            if self.re.search(f.response.content):
                 return True
         return False
 
@@ -208,7 +208,7 @@ class FBodRequest(_Rex):
 
     def __call__(self, f):
         if f.request and f.request.content:
-            if self.re.search(f.request.get_decoded_content()):
+            if self.re.search(f.request.content):
                 return True
 
 
@@ -218,7 +218,7 @@ class FBodResponse(_Rex):
 
     def __call__(self, f):
         if f.response and f.response.content:
-            if self.re.search(f.response.get_decoded_content()):
+            if self.re.search(f.response.content):
                 return True
 
 

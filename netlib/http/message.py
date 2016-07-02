@@ -52,7 +52,22 @@ class MessageData(basetypes.Serializable):
         return cls(**state)
 
 
+class CachedDecode(object):
+    __slots__ = ["encoded", "encoding", "decoded"]
+
+    def __init__(self, object, encoding, decoded):
+        self.encoded = object
+        self.encoding = encoding
+        self.decoded = decoded
+
+no_cached_decode = CachedDecode(None, None, None)
+
+
 class Message(basetypes.Serializable):
+    def __init__(self):
+        self._content_cache = no_cached_decode  # type: CachedDecode
+        self._text_cache = no_cached_decode  # type: CachedDecode
+
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
@@ -90,19 +105,65 @@ class Message(basetypes.Serializable):
         self.data.headers = h
 
     @property
-    def content(self):
+    def raw_content(self):
+        # type: () -> bytes
         """
         The raw (encoded) HTTP message body
 
-        See also: :py:attr:`text`
+        See also: :py:attr:`content`, :py:class:`text`
         """
         return self.data.content
 
-    @content.setter
-    def content(self, content):
+    @raw_content.setter
+    def raw_content(self, content):
         self.data.content = content
-        if isinstance(content, bytes):
-            self.headers["content-length"] = str(len(content))
+
+    @property
+    def content(self):
+        # type: () -> bytes
+        """
+        The HTTP message body decoded with the content-encoding header (e.g. gzip)
+
+        See also: :py:class:`raw_content`, :py:attr:`text`
+        """
+        ce = self.headers.get("content-encoding")
+        cached = (
+            self._content_cache.encoded == self.raw_content and
+            self._content_cache.encoding == ce
+        )
+        if not cached:
+            try:
+                if not ce:
+                    raise ValueError()
+                decoded = encoding.decode(self.raw_content, ce)
+            except ValueError:
+                decoded = self.raw_content
+            self._content_cache = CachedDecode(self.raw_content, ce, decoded)
+        return self._content_cache.decoded
+
+    @content.setter
+    def content(self, value):
+        ce = self.headers.get("content-encoding")
+        cached = (
+            self._content_cache.decoded == value and
+            self._content_cache.encoding == ce
+        )
+        if not cached:
+            try:
+                if not ce:
+                    raise ValueError()
+                encoded = encoding.encode(value, ce)
+            except ValueError:
+                # Do we have an unknown content-encoding?
+                # If so, we want to remove it.
+                if value and ce:
+                    self.headers.pop("content-encoding", None)
+                    ce = None
+                encoded = value
+            self._content_cache = CachedDecode(encoded, ce, value)
+        self.raw_content = self._content_cache.encoded
+        if isinstance(self.raw_content, bytes):
+            self.headers["content-length"] = str(len(self.raw_content))
 
     @property
     def http_version(self):
@@ -137,56 +198,81 @@ class Message(basetypes.Serializable):
     def timestamp_end(self, timestamp_end):
         self.data.timestamp_end = timestamp_end
 
+    def _get_content_type_charset(self):
+        # type: () -> Optional[str]
+        ct = headers.parse_content_type(self.headers.get("content-type", ""))
+        if ct:
+            return ct[2].get("charset")
+
     @property
     def text(self):
+        # type: () -> six.text_type
         """
-        The decoded HTTP message body.
-        Decoded contents are not cached, so accessing this attribute repeatedly is relatively expensive.
+        The HTTP message body decoded with both content-encoding header (e.g. gzip)
+        and content-type header charset.
 
-        .. note::
-            This is not implemented yet.
-
-        See also: :py:attr:`content`, :py:class:`decoded`
+        See also: :py:attr:`content`, :py:class:`raw_content`
         """
         # This attribute should be called text, because that's what requests does.
-        raise NotImplementedError()
+        enc = self._get_content_type_charset()
+
+        # We may also want to check for HTML meta tags here at some point.
+
+        cached = (
+            self._text_cache.encoded == self.content and
+            self._text_cache.encoding == enc
+        )
+        if not cached:
+            try:
+                if not enc:
+                    raise ValueError()
+                decoded = encoding.decode(self.content, enc)
+            except ValueError:
+                decoded = self.content.decode("utf8", "replace" if six.PY2 else "surrogateescape")
+            self._text_cache = CachedDecode(self.content, enc, decoded)
+        return self._text_cache.decoded
 
     @text.setter
     def text(self, text):
-        raise NotImplementedError()
+        enc = self._get_content_type_charset()
+        cached = (
+            self._text_cache.decoded == text and
+            self._text_cache.encoding == enc
+        )
+        if not cached:
+            try:
+                if not enc:
+                    raise ValueError()
+                encoded = encoding.encode(text, enc)
+            except ValueError:
+                # Do we have an unknown content-type charset?
+                # If so, we want to replace it with utf8.
+                if text and enc:
+                    self.headers["content-type"] = re.sub(
+                        "charset=[^;]+",
+                        "charset=utf-8",
+                        self.headers["content-type"]
+                    )
+                encoded = text.encode("utf8", "replace" if six.PY2 else "surrogateescape")
+            self._text_cache = CachedDecode(encoded, enc, text)
+        self.content = self._text_cache.encoded
 
     def decode(self):
         """
-            Decodes body based on the current Content-Encoding header, then
-            removes the header. If there is no Content-Encoding header, no
-            action is taken.
-
-            Returns:
-                True, if decoding succeeded.
-                False, otherwise.
+        Decodes body based on the current Content-Encoding header, then
+        removes the header. If there is no Content-Encoding header, no
+        action is taken.
         """
-        ce = self.headers.get("content-encoding")
-        data = encoding.decode(ce, self.content)
-        if data is None:
-            return False
-        self.content = data
+        self.raw_content = self.content
         self.headers.pop("content-encoding", None)
-        return True
 
     def encode(self, e):
         """
-            Encodes body with the encoding e, where e is "gzip", "deflate" or "identity".
-
-            Returns:
-                True, if decoding succeeded.
-                False, otherwise.
+        Encodes body with the encoding e, where e is "gzip", "deflate" or "identity".
         """
-        data = encoding.encode(e, self.content)
-        if data is None:
-            return False
-        self.content = data
+        self.decode()  # remove the current encoding
         self.headers["content-encoding"] = e
-        return True
+        self.content = self.raw_content
 
     def replace(self, pattern, repl, flags=0):
         """
@@ -203,10 +289,9 @@ class Message(basetypes.Serializable):
             repl = strutils.escaped_str_to_bytes(repl)
         replacements = 0
         if self.content:
-            with decoded(self):
-                self.content, replacements = re.subn(
-                    pattern, repl, self.content, flags=flags
-                )
+            self.content, replacements = re.subn(
+                pattern, repl, self.content, flags=flags
+            )
         replacements += self.headers.replace(pattern, repl, flags)
         return replacements
 
@@ -225,29 +310,16 @@ class Message(basetypes.Serializable):
 
 class decoded(object):
     """
-    A context manager that decodes a request or response, and then
-    re-encodes it with the same encoding after execution of the block.
-
-    Example:
-
-    .. code-block:: python
-
-        with decoded(request):
-            request.content = request.content.replace("foo", "bar")
+    Deprecated: You can now directly use :py:attr:`content`.
+    :py:attr:`raw_content` has the encoded content.
     """
 
     def __init__(self, message):
-        self.message = message
-        ce = message.headers.get("content-encoding")
-        if ce in encoding.ENCODINGS:
-            self.ce = ce
-        else:
-            self.ce = None
+        warnings.warn("decoded() is deprecated, you can now directly use .content instead. "
+                      ".raw_content has the encoded content.", DeprecationWarning)
 
     def __enter__(self):
-        if self.ce:
-            self.message.decode()
+        pass
 
     def __exit__(self, type, value, tb):
-        if self.ce:
-            self.message.encode(self.ce)
+        pass

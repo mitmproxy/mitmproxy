@@ -41,10 +41,10 @@ class _HttpTransmissionLayer(base.Layer):
         yield "this is a generator"  # pragma: no cover
 
     def send_response(self, response):
-        if response.content is None:
+        if response.data.content is None:
             raise netlib.exceptions.HttpException("Cannot assemble flow with missing content")
         self.send_response_headers(response)
-        self.send_response_body(response, [response.content])
+        self.send_response_body(response, [response.data.content])
 
     def send_response_headers(self, response):
         raise NotImplementedError()

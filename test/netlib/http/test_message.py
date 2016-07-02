@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-from netlib.http import decoded
+import six
+
 from netlib.tutils import tresp
 
 
@@ -76,6 +77,9 @@ class TestMessage(object):
         resp.content = b""
         assert resp.data.content == b""
         assert resp.headers["content-length"] == "0"
+        resp.raw_content = b"bar"
+        assert resp.data.content == b"bar"
+        assert resp.headers["content-length"] == "0"
 
     def test_content_basic(self):
         _test_passthrough_attr(tresp(), "content")
@@ -93,61 +97,108 @@ class TestMessage(object):
         _test_decoded_attr(tresp(), "http_version")
 
 
-class TestDecodedDecorator(object):
-
+class TestMessageContentEncoding(object):
     def test_simple(self):
         r = tresp()
-        assert r.content == b"message"
+        assert r.raw_content == b"message"
         assert "content-encoding" not in r.headers
-        assert r.encode("gzip")
+        r.encode("gzip")
 
         assert r.headers["content-encoding"]
-        assert r.content != b"message"
-        with decoded(r):
-            assert "content-encoding" not in r.headers
-            assert r.content == b"message"
-        assert r.headers["content-encoding"]
-        assert r.content != b"message"
+        assert r.raw_content != b"message"
+        assert r.content == b"message"
+        assert r.raw_content != b"message"
 
     def test_modify(self):
         r = tresp()
         assert "content-encoding" not in r.headers
-        assert r.encode("gzip")
+        r.encode("gzip")
 
-        with decoded(r):
-            r.content = b"foo"
-
-        assert r.content != b"foo"
+        r.content = b"foo"
+        assert r.raw_content != b"foo"
         r.decode()
-        assert r.content == b"foo"
+        assert r.raw_content == b"foo"
 
     def test_unknown_ce(self):
         r = tresp()
         r.headers["content-encoding"] = "zopfli"
-        r.content = b"foo"
-        with decoded(r):
-            assert r.headers["content-encoding"]
-            assert r.content == b"foo"
-        assert r.headers["content-encoding"]
+        r.raw_content = b"foo"
         assert r.content == b"foo"
+        assert r.headers["content-encoding"]
 
     def test_cannot_decode(self):
         r = tresp()
-        assert r.encode("gzip")
-        r.content = b"foo"
-        with decoded(r):
-            assert r.headers["content-encoding"]
-            assert r.content == b"foo"
-        assert r.headers["content-encoding"]
-        assert r.content != b"foo"
-        r.decode()
+        r.encode("gzip")
+        r.raw_content = b"foo"
         assert r.content == b"foo"
+        assert r.headers["content-encoding"]
+        r.decode()
+        assert r.raw_content == b"foo"
+        assert "content-encoding" not in r.headers
 
     def test_cannot_encode(self):
         r = tresp()
-        assert r.encode("gzip")
-        with decoded(r):
-            r.content = None
+        r.encode("gzip")
+        r.content = None
+        assert r.headers["content-encoding"]
+        assert r.raw_content is None
 
+        r.headers["content-encoding"] = "zopfli"
+        r.content = b"foo"
         assert "content-encoding" not in r.headers
-        assert r.content is None
+        assert r.raw_content == b"foo"
+
+
+class TestMessageText(object):
+    def test_simple(self):
+        r = tresp(content=b'\xc3\xbc')
+        assert r.raw_content == b"\xc3\xbc"
+        assert r.content == b"\xc3\xbc"
+        assert r.text == u"ü"
+
+        r.encode("gzip")
+        assert r.text == u"ü"
+        r.decode()
+        assert r.text == u"ü"
+
+        r.headers["content-type"] = "text/html; charset=latin1"
+        assert r.content == b"\xc3\xbc"
+        assert r.text == u"Ã¼"
+
+    def test_modify(self):
+        r = tresp()
+
+        r.text = u"ü"
+        assert r.raw_content == b"\xc3\xbc"
+
+        r.headers["content-type"] = "text/html; charset=latin1"
+        r.text = u"ü"
+        assert r.raw_content == b"\xfc"
+        assert r.headers["content-length"] == "1"
+
+    def test_unknown_ce(self):
+        r = tresp()
+        r.headers["content-type"] = "text/html; charset=wtf"
+        r.raw_content = b"foo"
+        assert r.text == u"foo"
+
+    def test_cannot_decode(self):
+        r = tresp()
+        r.raw_content = b"\xFF"
+        assert r.text == u'\ufffd' if six.PY2 else '\udcff'
+
+    def test_cannot_encode(self):
+        r = tresp()
+        r.content = None
+        assert "content-type" not in r.headers
+        assert r.raw_content is None
+
+        r.headers["content-type"] = "text/html; charset=latin1"
+        r.text = u"☃"
+        assert r.headers["content-type"] == "text/html; charset=utf-8"
+        assert r.raw_content == b'\xe2\x98\x83'
+
+        r.headers["content-type"] = "text/html; charset=latin1"
+        r.text = u'\udcff'
+        assert r.headers["content-type"] == "text/html; charset=utf-8"
+        assert r.raw_content == b'\xed\xb3\xbf' if six.PY2 else b"\xFF"
