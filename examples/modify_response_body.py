@@ -2,8 +2,6 @@
 # (this script works best with --anticache)
 import sys
 
-from mitmproxy.models import decoded
-
 
 def start(context):
     if len(sys.argv) != 3:
@@ -14,7 +12,7 @@ def start(context):
 
 
 def response(context, flow):
-    with decoded(flow.response):  # automatically decode gzipped responses.
-        flow.response.content = flow.response.content.replace(
-            context.old,
-            context.new)
+    flow.response.content = flow.response.content.replace(
+        context.old,
+        context.new
+    )

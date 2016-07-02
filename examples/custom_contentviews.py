@@ -20,7 +20,7 @@ class ViewPigLatin(contentviews.View):
             docinfo = d.getroottree().docinfo
 
             def piglify(src):
-                words = string.split(src)
+                words = src.split()
                 ret = ''
                 for word in words:
                     idx = -1

@@ -2,7 +2,6 @@
 # (this script works best with --anticache)
 import sys
 from bs4 import BeautifulSoup
-from mitmproxy.models import decoded
 
 
 def start(context):
@@ -14,15 +13,14 @@ def start(context):
 def response(context, flow):
     if flow.request.host in context.iframe_url:
         return
-    with decoded(flow.response):  # Remove content encoding (gzip, ...)
-        html = BeautifulSoup(flow.response.content, "lxml")
-        if html.body:
-            iframe = html.new_tag(
-                "iframe",
-                src=context.iframe_url,
-                frameborder=0,
-                height=0,
-                width=0)
-            html.body.insert(0, iframe)
-            flow.response.content = str(html)
-            context.log("Iframe inserted.")
+    html = BeautifulSoup(flow.response.content, "lxml")
+    if html.body:
+        iframe = html.new_tag(
+            "iframe",
+            src=context.iframe_url,
+            frameborder=0,
+            height=0,
+            width=0)
+        html.body.insert(0, iframe)
+        flow.response.content = str(html)
+        context.log("Iframe inserted.")
