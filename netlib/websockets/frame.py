@@ -255,7 +255,7 @@ class Frame(object):
     def __repr__(self):
         ret = repr(self.header)
         if self.payload:
-            ret = ret + "\nPayload:\n" + strutils.clean_bin(self.payload).decode("ascii")
+            ret = ret + "\nPayload:\n" + strutils.clean_bin(self.payload)
         return ret
 
     def human_readable(self):

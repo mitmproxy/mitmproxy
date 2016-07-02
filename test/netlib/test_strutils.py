@@ -16,11 +16,11 @@ def test_native():
 
 
 def test_clean_bin():
-    assert strutils.clean_bin(b"one") == b"one"
-    assert strutils.clean_bin(b"\00ne") == b".ne"
-    assert strutils.clean_bin(b"\nne") == b"\nne"
-    assert strutils.clean_bin(b"\nne", False) == b".ne"
-    assert strutils.clean_bin(u"\u2605".encode("utf8")) == b"..."
+    assert strutils.clean_bin(b"one") == u"one"
+    assert strutils.clean_bin(b"\00ne") == u".ne"
+    assert strutils.clean_bin(b"\nne") == u"\nne"
+    assert strutils.clean_bin(b"\nne", False) == u".ne"
+    assert strutils.clean_bin(u"\u2605".encode("utf8")) == u"..."
 
     assert strutils.clean_bin(u"one") == u"one"
     assert strutils.clean_bin(u"\00ne") == u".ne"

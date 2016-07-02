@@ -273,7 +273,7 @@ class Request(_HTTP2Message):
             req = http.Request(
                 b'',
                 self.method.string(),
-                b'',
+                b'http',
                 b'',
                 b'',
                 path,
