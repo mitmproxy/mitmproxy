@@ -314,12 +314,12 @@ class decoded(object):
     :py:attr:`raw_content` has the encoded content.
     """
 
-    def __init__(self, message):
+    def __init__(self, message):  # pragma no cover
         warnings.warn("decoded() is deprecated, you can now directly use .content instead. "
                       ".raw_content has the encoded content.", DeprecationWarning)
 
-    def __enter__(self):
+    def __enter__(self):  # pragma no cover
         pass
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, type, value, tb):  # pragma no cover
         pass

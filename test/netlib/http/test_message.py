@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
+import mock
 import six
 
 from netlib.tutils import tresp
+from netlib import http
 
 
 def _test_passthrough_attr(message, attr):
@@ -69,6 +71,15 @@ class TestMessage(object):
 
         assert resp != 0
 
+    def test_hash(self):
+        resp = tresp()
+        assert hash(resp)
+
+    def test_serializable(self):
+        resp = tresp()
+        resp2 = http.Response.from_state(resp.get_state())
+        assert resp == resp2
+
     def test_content_length_update(self):
         resp = tresp()
         resp.content = b"foo"
@@ -93,7 +104,7 @@ class TestMessage(object):
     def test_timestamp_end(self):
         _test_passthrough_attr(tresp(), "timestamp_end")
 
-    def teste_http_version(self):
+    def test_http_version(self):
         _test_decoded_attr(tresp(), "http_version")
 
 
@@ -109,6 +120,14 @@ class TestMessageContentEncoding(object):
         assert r.content == b"message"
         assert r.raw_content != b"message"
 
+        r.raw_content = b"foo"
+        with mock.patch("netlib.encoding.decode") as e:
+            assert r.content
+            assert e.call_count == 1
+            e.reset_mock()
+            assert r.content
+            assert e.call_count == 0
+
     def test_modify(self):
         r = tresp()
         assert "content-encoding" not in r.headers
@@ -118,6 +137,13 @@ class TestMessageContentEncoding(object):
         assert r.raw_content != b"foo"
         r.decode()
         assert r.raw_content == b"foo"
+
+        r.encode("identity")
+        with mock.patch("netlib.encoding.encode") as e:
+            r.content = b"foo"
+            assert e.call_count == 0
+            r.content = b"bar"
+            assert e.call_count == 1
 
     def test_unknown_ce(self):
         r = tresp()
@@ -165,6 +191,15 @@ class TestMessageText(object):
         assert r.content == b"\xc3\xbc"
         assert r.text == u"Ã¼"
 
+        r.encode("identity")
+        r.raw_content = b"foo"
+        with mock.patch("netlib.encoding.decode") as e:
+            assert r.text
+            assert e.call_count == 2
+            e.reset_mock()
+            assert r.text
+            assert e.call_count == 0
+
     def test_modify(self):
         r = tresp()
 
@@ -175,6 +210,13 @@ class TestMessageText(object):
         r.text = u"ü"
         assert r.raw_content == b"\xfc"
         assert r.headers["content-length"] == "1"
+
+        r.encode("identity")
+        with mock.patch("netlib.encoding.encode") as e:
+            r.text = u"ü"
+            assert e.call_count == 0
+            r.text = u"ä"
+            assert e.call_count == 2
 
     def test_unknown_ce(self):
         r = tresp()
