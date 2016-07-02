@@ -16,7 +16,6 @@ from mitmproxy.flow import modules
 from mitmproxy.onboarding import app
 from mitmproxy.protocol import http_replay
 from mitmproxy.proxy.config import HostMatcher
-from netlib import strutils
 
 
 class FlowMaster(controller.Master):
