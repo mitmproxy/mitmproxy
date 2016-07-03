@@ -12,6 +12,9 @@ from mitmproxy import utils
 from mitmproxy.console import signals
 from netlib import human
 
+import re
+
+
 try:
     import pyperclip
 except:
@@ -32,6 +35,14 @@ METHOD_OPTIONS = [
     ("edit raw", "e"),
 ]
 
+re_phone = re.compile(r'\b\d{10}\b')
+
+re_email = re.compile(r'[^@\/=\?]+(@|%40)[^@\/=\?]+\.[^@\/=\?]+')
+
+re_userid = re.compile(r'\b\d{4,7}\b')
+
+re_phone_or_email_or_userid = re.compile(r'(?:\b\d{10}\b)|(?:[^@\/=\?]+(@|%40)[^@\/=\?]+\.[^@\/=\?]+)|(?:\b\d{4,8}\b)')
+
 
 def is_keypress(k):
     """
@@ -39,6 +50,26 @@ def is_keypress(k):
     """
     if isinstance(k, basestring):
         return True
+
+
+def highlight_regex(str, regex, textattr="text", regexattr="key"):
+    """
+        Like highlight key, this highlights a given regex
+    """
+    l = []
+
+    ss = regex.finditer(str)
+
+    prev = 0
+    for i in ss:
+        span_tup = i.span()
+        l.append((textattr, str[prev:span_tup[0]]))
+        l.append((regexattr, str[span_tup[0]:span_tup[1]]))
+        prev = span_tup[1]
+
+    l.append((textattr, str[prev:]))
+
+    return l
 
 
 def highlight_key(str, key, textattr="text", keyattr="key"):
@@ -163,7 +194,7 @@ def raw_format_flow(f, focus, extended):
     if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
         url += " " + f["req_http_version"]
     req.append(
-        urwid.Text([(uc, url)])
+        urwid.Text(highlight_regex(url, re_phone_or_email_or_userid, uc))
     )
 
     pile.append(urwid.Columns(req, dividechars=1))

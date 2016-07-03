@@ -14,7 +14,16 @@ from mitmproxy.console import signals
 from netlib.http import cookies
 from netlib.http import user_agents
 
+import base64
+import urllib
+
 FOOTER = [
+    ('heading_key', "p"), ":plus1 ",
+    ('heading_key', "m"), ":minus1 ",
+    ('heading_key', "E"), ":b64encode ",
+    ('heading_key', "D"), ":b64decode ",
+    ('heading_key', "n"), ":smart ",
+    ('heading_key', "u"), ":urldecode ",
     ('heading_key', "enter"), ":edit ",
     ('heading_key', "q"), ":back ",
 ]
@@ -58,6 +67,59 @@ class TextColumn:
                 n = utils.clean_hanging_newline(n)
                 editor.walker.set_current_value(n, False)
                 editor.walker._modified()
+        elif key == "D":
+            # base64 decode
+            o = editor.walker.get_current_value()
+            if o is not None:
+                try:
+                    b64decoded_val = base64.b64decode(o)
+                except:
+                    b64decoded_val = o
+                editor.walker.set_current_value(b64decoded_val, False)
+                editor.walker._modified()
+        elif key == "E":
+            # base64 encode
+            o = editor.walker.get_current_value()
+            if o is not None:
+                try:
+                    b64encoded_val = base64.b64encode(o)
+                except:
+                    b64encoded_val = o
+                editor.walker.set_current_value(b64encoded_val, False)
+                editor.walker._modified()
+        elif key == "p":
+            # increase a number by 1
+            o = editor.walker.get_current_value()
+            try:
+                n = str(int(o) + 1)
+            except:
+                n = o
+            editor.walker.set_current_value(n, False)
+            editor.walker._modified()
+        elif key == "m":
+            # increase a number by 1
+            o = editor.walker.get_current_value()
+            try:
+                n = str(int(o) - 1)
+            except:
+                n = o
+            editor.walker.set_current_value(n, False)
+            editor.walker._modified()
+        elif key == "n":
+            o = editor.walker.get_current_value()
+
+            n = "mkagenius1@gmail.com"
+            editor.walker.set_current_value(n, False)
+            editor.walker._modified()
+        elif key == "u":
+            o = editor.walker.get_current_value()
+            try:
+                n = urllib.unquote_plus(o)
+            except:
+                n = o
+            editor.walker.set_current_value(n, False)
+            editor.walker._modified()
+
         elif key in ["enter"]:
             editor.walker.start_edit()
         else:
