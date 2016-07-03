@@ -330,38 +330,12 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         if self.zombie:  # pragma: no cover
             raise exceptions.Http2ProtocolException("Zombie Stream")
 
-        authority = self.request_headers.get(':authority', '')
-        method = self.request_headers.get(':method', 'GET')
-        scheme = self.request_headers.get(':scheme', 'https')
-        path = self.request_headers.get(':path', '/')
-        self.request_headers.clear(":method")
-        self.request_headers.clear(":scheme")
-        self.request_headers.clear(":path")
-        host = None
-        port = None
-
-        if path == '*' or path.startswith("/"):
-            first_line_format = "relative"
-        elif method == 'CONNECT':  # pragma: no cover
-            raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
-        else:  # pragma: no cover
-            first_line_format = "absolute"
-            # FIXME: verify if path or :host contains what we need
-            scheme, host, port, _ = netlib.http.url.parse(path)
-
-        if authority:
-            host, _, port = authority.partition(':')
-
-        if not host:
-            host = 'localhost'
-        if not port:
-            port = 443 if scheme == 'https' else 80
-        port = int(port)
-
         data = []
         while self.request_data_queue.qsize() > 0:
             data.append(self.request_data_queue.get())
         data = b"".join(data)
+
+        first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_headers)
 
         return models.HTTPRequest(
             first_line_format,
