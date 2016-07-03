@@ -140,6 +140,7 @@ class Http2Layer(base.Layer):
             headers = netlib.http.Headers([[k, v] for k, v in event.headers])
             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
             self.streams[eid].timestamp_start = time.time()
+            self.streams[eid].no_body = (event.stream_ended is not None)
             if event.priority_updated is not None:
                 self.streams[eid].priority_weight = event.priority_updated.weight
                 self.streams[eid].priority_depends_on = event.priority_updated.depends_on
@@ -307,6 +308,8 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
 
+        self.no_body = False
+
         self.priority_weight = None
         self.priority_depends_on = None
         self.priority_exclusive = None
@@ -409,6 +412,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
                 self.is_zombie,
                 self.server_stream_id,
                 headers,
+                end_stream=self.no_body,
                 priority_weight=self.priority_weight,
                 priority_depends_on=self.priority_depends_on,
                 priority_exclusive=self.priority_exclusive,
@@ -418,11 +422,13 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         finally:
             self.server_conn.h2.lock.release()
 
-        self.server_conn.h2.safe_send_body(
-            self.is_zombie,
-            self.server_stream_id,
-            message.body
-        )
+        if not self.no_body:
+            self.server_conn.h2.safe_send_body(
+                self.is_zombie,
+                self.server_stream_id,
+                message.body
+            )
+
         if self.zombie:  # pragma: no cover
             raise exceptions.Http2ProtocolException("Zombie Stream")
 
