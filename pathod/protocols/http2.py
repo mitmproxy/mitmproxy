@@ -181,10 +181,10 @@ class HTTP2StateProtocol(object):
         headers = request.headers.copy()
 
         if ':authority' not in headers:
-            headers.insert(0, b':authority', authority.encode('ascii'))
-        headers.insert(0, b':scheme', request.scheme.encode('ascii'))
-        headers.insert(0, b':path', request.path.encode('ascii'))
-        headers.insert(0, b':method', request.method.encode('ascii'))
+            headers.insert(0, ':authority', authority)
+        headers.insert(0, ':scheme', request.scheme)
+        headers.insert(0, ':path', request.path)
+        headers.insert(0, ':method', request.method)
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id
@@ -397,7 +397,7 @@ class HTTP2StateProtocol(object):
                 self._handle_unexpected_frame(frm)
 
         headers = netlib.http.headers.Headers(
-            (k.encode('ascii'), v.encode('ascii')) for k, v in self.decoder.decode(header_blocks)
+            [[k, v] for k, v in self.decoder.decode(header_blocks, raw=True)]
         )
 
         return stream_id, headers, body

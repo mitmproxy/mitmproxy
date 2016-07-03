@@ -2,10 +2,10 @@ from netlib.http import url
 
 
 def parse_headers(headers):
-    authority = headers.get(':authority', b'')
-    method = headers.get(':method', b'GET')
-    scheme = headers.get(':scheme', b'https')
-    path = headers.get(':path', b'/')
+    authority = headers.get(':authority', '').encode()
+    method = headers.get(':method', 'GET').encode()
+    scheme = headers.get(':scheme', 'https').encode()
+    path = headers.get(':path', '/').encode()
 
     headers.clear(":method")
     headers.clear(":scheme")
