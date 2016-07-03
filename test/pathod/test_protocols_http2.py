@@ -367,37 +367,6 @@ class TestReadRequestAbsolute(netlib_tservers.ServerTestBase):
             assert req.port == 22
 
 
-class TestReadRequestConnect(netlib_tservers.ServerTestBase):
-    class handler(tcp.BaseHandler):
-        def handle(self):
-            self.wfile.write(
-                codecs.decode('00001b0105000000014287bdab4e9c17b7ff44871c92585422e08541871c92585422e085', 'hex_codec'))
-            self.wfile.write(
-                codecs.decode('00001d0105000000014287bdab4e9c17b7ff44882f91d35d055c87a741882f91d35d055c87a7', 'hex_codec'))
-            self.wfile.flush()
-
-    ssl = True
-
-    def test_connect(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        with c.connect():
-            c.convert_to_ssl()
-            protocol = HTTP2StateProtocol(c, is_server=True)
-            protocol.connection_preface_performed = True
-
-            req = protocol.read_request(NotImplemented)
-            assert req.first_line_format == "authority"
-            assert req.method == "CONNECT"
-            assert req.host == "address"
-            assert req.port == 22
-
-            req = protocol.read_request(NotImplemented)
-            assert req.first_line_format == "authority"
-            assert req.method == "CONNECT"
-            assert req.host == "example.com"
-            assert req.port == 443
-
-
 class TestReadResponse(netlib_tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
