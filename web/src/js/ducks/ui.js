@@ -1,11 +1,22 @@
-import { SELECT as SELECT_FLOW } from './views/main'
+import { SELECT as SELECT_FLOW, selectRelative as selectFlowRelative } from './views/main'
+import { Key } from '../utils.js'
+import * as flowsActions from '../ducks/flows'
 
 export const SET_ACTIVE_MENU = 'UI_SET_ACTIVE_MENU'
 export const SET_CONTENT_VIEW = 'UI_SET_CONTENT_VIEW'
+export const SET_SELECTED_INPUT = 'SET_SELECTED_INPUT'
+export const UPDATE_QUERY = 'UPDATE_QUERY'
+export const SELECT_TAB = 'SELECT_TAB'
+export const SELECT_TAB_RELATIVE = 'SELECT_TAB_RELATIVE'
+export const SET_PROMPT = 'SET_PROMPT'
 
 const defaultState = {
     activeMenu: 'Start',
+    selectedInput: null,
+    promptOpen: false,
     contentView: 'ViewAuto',
+    query: {},
+    panel: 'request'
 }
 
 export default function reducer(state = defaultState, action) {
@@ -40,6 +51,43 @@ export default function reducer(state = defaultState, action) {
                 contentView: action.contentView,
             }
 
+        case SET_SELECTED_INPUT:
+            return {
+                ...state,
+                selectedInput: action.input
+            }
+
+        case UPDATE_QUERY:
+            return {
+                ...state,
+                query: { ...state.query, ...action.query }
+            }
+
+        case SELECT_TAB:
+            return {
+                ...state,
+                panel: action.panel
+            }
+
+        case SELECT_TAB_RELATIVE:
+            if (!action.flow || action.shift === null) {
+                return {
+                    ...state,
+                    panel: 'request'
+                }
+            }
+            const tabs = ['request', 'response', 'error'].filter(k => action.flow[k]).concat(['details'])
+            return {
+                ...state,
+                panel: tabs[(tabs.indexOf(state.panel) + action.shift + tabs.length) % tabs.length]
+            }
+
+        case SET_PROMPT:
+            return {
+                ...state,
+                promptOpen: action.open,
+            }
+
         default:
             return state
     }
@@ -51,4 +99,142 @@ export function setActiveMenu(activeMenu) {
 
 export function setContentView(contentView) {
     return { type: SET_CONTENT_VIEW, contentView }
+}
+
+export function setSelectedInput(input) {
+    return { type: SET_SELECTED_INPUT, input }
+}
+
+export function updateQuery(query) {
+    return { type: UPDATE_QUERY, query }
+}
+
+export function selectTab(panel) {
+    return { type: SELECT_TAB, panel }
+}
+
+export function selectTabRelative(shift) {
+    return (dispatch, getState) => {
+        let flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+        dispatch({ type: SELECT_TAB_RELATIVE, shift, flow })
+    }
+}
+
+export function setPrompt(open) {
+    return { type: SET_PROMPT, open }
+}
+
+export function onKeyDown(key, shiftKey) {
+    return (dispatch, getState) => {
+        switch (key) {
+
+            case Key.I:
+                dispatch(setSelectedInput('intercept'))
+                break
+
+            case Key.L:
+                dispatch(setSelectedInput('search'))
+                break
+
+            case Key.H:
+                dispatch(setSelectedInput('highlight'))
+                break
+
+            case Key.K:
+            case Key.UP:
+                dispatch(selectFlowRelative(-1))
+                break
+
+            case Key.J:
+            case Key.DOWN:
+                dispatch(selectFlowRelative(+1))
+                break
+
+            case Key.SPACE:
+            case Key.PAGE_DOWN:
+                dispatch(selectFlowRelative(+10))
+                break
+
+            case Key.PAGE_UP:
+                dispatch(selectFlowRelative(-10))
+                break
+
+            case Key.END:
+                dispatch(selectFlowRelative(+1e10))
+                break
+
+            case Key.HOME:
+                dispatch(selectFlowRelative(-1e10))
+                break
+
+            case Key.ESC:
+                dispatch(selectFlowRelative(null))
+                dispatch(selectTabRelative(null))
+                break
+
+            case Key.H:
+            case Key.LEFT:
+                dispatch(selectTabRelative(-1))
+                break
+
+            case Key.L:
+            case Key.TAB:
+            case Key.RIGHT:
+                dispatch(selectTabRelative(+1))
+                break
+
+            case Key.C:
+                if (shiftKey) {
+                    dispatch(flowsActions.clear())
+                }
+                break
+
+            case Key.D: {
+                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+                if (!flow) {
+                    return
+                }
+                if (shiftKey) {
+                    dispatch(flowsActions.duplicate(flow))
+                } else {
+                    dispatch(flowsActions.remove(flow))
+                }
+                break
+            }
+
+            case Key.A: {
+                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+                if (shiftKey) {
+                    dispatch(flowsActions.acceptAll())
+                } else if (flow && flow.intercepted) {
+                    dispatch(flowsActions.accept(flow))
+                }
+                break
+            }
+
+            case Key.R: {
+                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+                if (!shiftKey && flow) {
+                    dispatch(flowsActions.replay(flow))
+                }
+                break
+            }
+
+            case Key.V: {
+                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+                if (!shiftKey && flow && flow.modified) {
+                    dispatch(flowsActions.revert(flow))
+                }
+                break
+            }
+
+            case Key.E:
+                dispatch(setPrompt(true))
+                break
+
+            default:
+                return () => {}
+        }
+        event.preventDefault()
+    }
 }
