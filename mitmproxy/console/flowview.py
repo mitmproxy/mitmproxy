@@ -226,7 +226,7 @@ class FlowView(tabs.Tabs):
             description = description.replace("Raw", "Couldn't parse: falling back to Raw")
 
         if enc:
-            description = " ".join(enc, description)
+            description = " ".join([enc, description])
 
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, models.HTTPRequest):
