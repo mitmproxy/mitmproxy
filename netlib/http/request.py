@@ -347,7 +347,10 @@ class Request(message.Message):
     def _get_urlencoded_form(self):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return tuple(netlib.http.url.decode(self.content))
+            try:
+                return tuple(netlib.http.url.decode(self.content))
+            except ValueError:
+                pass
         return ()
 
     def _set_urlencoded_form(self, value):
@@ -356,7 +359,7 @@ class Request(message.Message):
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = netlib.http.url.encode(value)
+        self.content = netlib.http.url.encode(value).encode()
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):
@@ -376,7 +379,10 @@ class Request(message.Message):
     def _get_multipart_form(self):
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return multipart.decode(self.headers, self.content)
+            try:
+                return multipart.decode(self.headers, self.content)
+            except ValueError:
+                pass
         return ()
 
     def _set_multipart_form(self, value):

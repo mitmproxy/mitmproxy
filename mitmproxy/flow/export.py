@@ -19,17 +19,23 @@ def dictstr(items, indent):
 def curl_command(flow):
     data = "curl "
 
-    for k, v in flow.request.headers.fields:
+    request = flow.request.copy()
+    try:
+        request.decode()
+    except ValueError:
+        pass
+
+    for k, v in request.headers.fields:
         data += "-H '%s:%s' " % (k, v)
 
-    if flow.request.method != "GET":
-        data += "-X %s " % flow.request.method
+    if request.method != "GET":
+        data += "-X %s " % request.method
 
-    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
+    full_url = request.scheme + "://" + request.host + request.path
     data += "'%s'" % full_url
 
-    if flow.request.content:
-        data += " --data-binary '%s'" % flow.request.content
+    if request.raw_content:
+        data += " --data-binary '%s'" % request.raw_content
 
     return data
 

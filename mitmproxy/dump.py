@@ -187,15 +187,20 @@ class DumpMaster(flow.FlowMaster):
             )
             self.echo(headers, indent=4)
         if self.o.flow_detail >= 3:
-            if message.content is None:
+            try:
+                content = message.content
+            except ValueError:
+                content = message.raw_content
+
+            if content is None:
                 self.echo("(content missing)", indent=4)
-            elif message.content:
+            elif content:
                 self.echo("")
 
                 try:
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Auto"),
-                        message.content,
+                        content,
                         headers=getattr(message, "headers", None)
                     )
                 except exceptions.ContentViewException:
@@ -203,7 +208,7 @@ class DumpMaster(flow.FlowMaster):
                     self.add_event(s, "debug")
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
-                        message.content,
+                        content,
                         headers=getattr(message, "headers", None)
                     )
 

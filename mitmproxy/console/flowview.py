@@ -200,25 +200,33 @@ class FlowView(tabs.Tabs):
     def _get_content_view(self, viewmode, message, max_lines, _):
 
         try:
+            content = message.content
+            if content != message.raw_content:
+                enc = "[decoded {}]".format(
+                    message.headers.get("content-encoding")
+                )
+            else:
+                enc = None
+        except ValueError:
+            content = message.raw_content
+            enc = "[cannot decode]"
+        try:
             query = None
             if isinstance(message, models.HTTPRequest):
                 query = message.query
             description, lines = contentviews.get_content_view(
-                viewmode, message.content, headers=message.headers, query=query
+                viewmode, content, headers=message.headers, query=query
             )
         except exceptions.ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()
             signals.add_event(s, "error")
             description, lines = contentviews.get_content_view(
-                contentviews.get("Raw"), message.content, headers=message.headers
+                contentviews.get("Raw"), content, headers=message.headers
             )
             description = description.replace("Raw", "Couldn't parse: falling back to Raw")
 
-        if message.content != message.raw_content:
-            description = "[decoded {enc}] {desc}".format(
-                enc=message.headers.get("content-encoding"),
-                desc=description
-            )
+        if enc:
+            description = " ".join(enc, description)
 
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, models.HTTPRequest):
@@ -419,10 +427,14 @@ class FlowView(tabs.Tabs):
             # editing message bodies, this can cause problems. For now, I
             # just strip the newlines off the end of the body when we return
             # from an editor.
-            c = self.master.spawn_editor(message.content or b"")
+            try:
+                content = message.content
+            except ValueError:
+                content = message.raw_content
+            c = self.master.spawn_editor(content or b"")
             message.content = c.rstrip(b"\n")
         elif part == "f":
-            if not message.urlencoded_form and message.content:
+            if not message.urlencoded_form and message.raw_content:
                 signals.status_prompt_onekey.send(
                     prompt = "Existing body is not a URL-encoded form. Clear and edit?",
                     keys = [
@@ -682,10 +694,14 @@ class FlowView(tabs.Tabs):
                 )
                 key = None
             elif key == "v":
-                if conn.content:
+                if conn.raw_content:
                     t = conn.headers.get("content-type")
                     if "EDITOR" in os.environ or "PAGER" in os.environ:
-                        self.master.spawn_external_viewer(conn.content, t)
+                        try:
+                            content = conn.content
+                        except ValueError:
+                            content = conn.raw_content
+                        self.master.spawn_external_viewer(content, t)
                     else:
                         signals.status_message.send(
                             message = "Error! Set $EDITOR or $PAGER."

@@ -60,10 +60,14 @@ class WSGIAdaptor(object):
         else:
             path_info = path
             query = ''
+        try:
+            content = flow.request.content
+        except ValueError:
+            content = flow.request.raw_content
         environ = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': strutils.native(flow.request.scheme, "latin-1"),
-            'wsgi.input': BytesIO(flow.request.content or b""),
+            'wsgi.input': BytesIO(content or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,

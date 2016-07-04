@@ -5,7 +5,7 @@ import mock
 import six
 
 from netlib.tutils import tresp
-from netlib import http
+from netlib import http, tutils
 
 
 def _test_passthrough_attr(message, attr):
@@ -92,9 +92,6 @@ class TestMessage(object):
         assert resp.data.content == b"bar"
         assert resp.headers["content-length"] == "0"
 
-    def test_content_basic(self):
-        _test_passthrough_attr(tresp(), "content")
-
     def test_headers(self):
         _test_passthrough_attr(tresp(), "headers")
 
@@ -149,18 +146,22 @@ class TestMessageContentEncoding(object):
         r = tresp()
         r.headers["content-encoding"] = "zopfli"
         r.raw_content = b"foo"
-        assert r.content == b"foo"
+        with tutils.raises(ValueError):
+            assert r.content
         assert r.headers["content-encoding"]
 
     def test_cannot_decode(self):
         r = tresp()
         r.encode("gzip")
         r.raw_content = b"foo"
-        assert r.content == b"foo"
+        with tutils.raises(ValueError):
+            assert r.content
         assert r.headers["content-encoding"]
-        r.decode()
+
+        with tutils.raises(ValueError):
+            r.decode()
         assert r.raw_content == b"foo"
-        assert "content-encoding" not in r.headers
+        assert "content-encoding" in r.headers
 
     def test_cannot_encode(self):
         r = tresp()
@@ -213,6 +214,7 @@ class TestMessageText(object):
 
         r.encode("identity")
         with mock.patch("netlib.encoding.encode") as e:
+            e.return_value = b""
             r.text = u"ü"
             assert e.call_count == 0
             r.text = u"ä"
