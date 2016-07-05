@@ -12,23 +12,18 @@ import { Key } from '../utils.js'
 
 class ProxyAppMain extends Component {
 
-    static childContextTypes = {
-        returnFocus: PropTypes.func.isRequired,
-    }
-
     static contextTypes = {
         router: PropTypes.object.isRequired,
     }
 
-    constructor(props, context) {
-        super(props, context)
-
-        this.focus = this.focus.bind(this)
-        this.onKeyDown = this.onKeyDown.bind(this)
-    }
-
     componentWillMount() {
         this.props.appInit()
+        window.addEventListener('keydown', this.props.onKeyDown);
+    }
+
+    componentWillUnmount() {
+        this.props.appDestruct()
+        window.removeEventListener('keydown', this.props.onKeyDown);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -42,49 +37,10 @@ class ProxyAppMain extends Component {
         }
     }
 
-    /**
-     * @todo listen to window's key events
-     */
-    componentDidMount() {
-        this.focus()
-    }
-
-    componentWillUnmount() {
-        this.props.appDestruct()
-    }
-
-    /**
-     * @todo use props
-     */
-    getChildContext() {
-        return { returnFocus: this.focus }
-    }
-
-    /**
-     * @todo remove it
-     */
-    focus() {
-        document.activeElement.blur()
-        window.getSelection().removeAllRanges()
-        ReactDOM.findDOMNode(this).focus()
-    }
-
-    /**
-     * @todo move to actions
-     * @todo bind on window
-     */
-    onKeyDown(e) {
-        if (e.ctrlKey) {
-            return
-        }
-        this.props.onKeyDown(e.keyCode)
-        e.preventDefault()
-    }
-
     render() {
         const { showEventLog, location, children, query } = this.props
         return (
-            <div id="container" tabIndex="0" onKeyDown={this.onKeyDown}>
+            <div id="container" tabIndex="0">
                 <Header ref="header" query={query} />
                 {React.cloneElement(
                     children,
