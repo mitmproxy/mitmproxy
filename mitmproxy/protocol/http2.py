@@ -5,7 +5,6 @@ import time
 import traceback
 
 import h2.exceptions
-import hyperframe
 import six
 from h2 import connection
 from h2 import events
@@ -55,12 +54,12 @@ class SafeH2Connection(connection.H2Connection):
             self.update_settings(new_settings)
             self.conn.send(self.data_to_send())
 
-    def safe_send_headers(self, is_zombie, stream_id, headers):
-        # make sure to have a lock
-        if is_zombie():  # pragma: no cover
-            raise exceptions.Http2ProtocolException("Zombie Stream")
-        self.send_headers(stream_id, headers.fields)
-        self.conn.send(self.data_to_send())
+    def safe_send_headers(self, is_zombie, stream_id, headers, **kwargs):
+        with self.lock:
+            if is_zombie():  # pragma: no cover
+                raise exceptions.Http2ProtocolException("Zombie Stream")
+            self.send_headers(stream_id, headers.fields, **kwargs)
+            self.conn.send(self.data_to_send())
 
     def safe_send_body(self, is_zombie, stream_id, chunks):
         for chunk in chunks:
@@ -141,6 +140,12 @@ class Http2Layer(base.Layer):
             headers = netlib.http.Headers([[k, v] for k, v in event.headers])
             self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
             self.streams[eid].timestamp_start = time.time()
+            self.streams[eid].no_body = (event.stream_ended is not None)
+            if event.priority_updated is not None:
+                self.streams[eid].priority_weight = event.priority_updated.weight
+                self.streams[eid].priority_depends_on = event.priority_updated.depends_on
+                self.streams[eid].priority_exclusive = event.priority_updated.exclusive
+                self.streams[eid].handled_priority_event = event.priority_updated
             self.streams[eid].start()
         elif isinstance(event, events.ResponseReceived):
             headers = netlib.http.Headers([[k, v] for k, v in event.headers])
@@ -184,7 +189,6 @@ class Http2Layer(base.Layer):
                 self.client_conn.send(self.client_conn.h2.data_to_send())
                 self._kill_all_streams()
                 return False
-
         elif isinstance(event, events.PushedStreamReceived):
             # pushed stream ids should be unique and not dependent on race conditions
             # only the parent stream id must be looked up first
@@ -202,6 +206,11 @@ class Http2Layer(base.Layer):
             self.streams[event.pushed_stream_id].request_data_finished.set()
             self.streams[event.pushed_stream_id].start()
         elif isinstance(event, events.PriorityUpdated):
+            if self.streams[eid].handled_priority_event is event:
+                # This event was already handled during stream creation
+                # HeadersFrame + Priority information as RequestReceived
+                return True
+
             stream_id = event.stream_id
             if stream_id in self.streams.keys() and self.streams[stream_id].server_stream_id:
                 stream_id = self.streams[stream_id].server_stream_id
@@ -210,9 +219,18 @@ class Http2Layer(base.Layer):
             if depends_on in self.streams.keys() and self.streams[depends_on].server_stream_id:
                 depends_on = self.streams[depends_on].server_stream_id
 
-            # weight is between 1 and 256 (inclusive), but represented as uint8 (0 to 255)
-            frame = hyperframe.frame.PriorityFrame(stream_id, depends_on, event.weight - 1, event.exclusive)
-            self.server_conn.send(frame.serialize())
+            self.streams[eid].priority_weight = event.weight
+            self.streams[eid].priority_depends_on = event.depends_on
+            self.streams[eid].priority_exclusive = event.exclusive
+
+            with self.server_conn.h2.lock:
+                self.server_conn.h2.prioritize(
+                    stream_id,
+                    weight=event.weight,
+                    depends_on=depends_on,
+                    exclusive=event.exclusive
+                )
+                self.server_conn.send(self.server_conn.h2.data_to_send())
         elif isinstance(event, events.TrailersReceived):
             raise NotImplementedError()
 
@@ -267,7 +285,7 @@ class Http2Layer(base.Layer):
                                 self._kill_all_streams()
                                 return
 
-                self._cleanup_streams()
+                    self._cleanup_streams()
         except Exception as e:
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
@@ -295,6 +313,13 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.response_data_queue = queue.Queue()
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
+
+        self.no_body = False
+
+        self.priority_weight = None
+        self.priority_depends_on = None
+        self.priority_exclusive = None
+        self.handled_priority_event = None
 
     @property
     def data_queue(self):
@@ -394,17 +419,23 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
                 self.is_zombie,
                 self.server_stream_id,
                 headers,
+                end_stream=self.no_body,
+                priority_weight=self.priority_weight,
+                priority_depends_on=self.priority_depends_on,
+                priority_exclusive=self.priority_exclusive,
             )
         except Exception as e:
             raise e
         finally:
             self.server_conn.h2.lock.release()
 
-        self.server_conn.h2.safe_send_body(
-            self.is_zombie,
-            self.server_stream_id,
-            message.body
-        )
+        if not self.no_body:
+            self.server_conn.h2.safe_send_body(
+                self.is_zombie,
+                self.server_stream_id,
+                message.body
+            )
+
         if self.zombie:  # pragma: no cover
             raise exceptions.Http2ProtocolException("Zombie Stream")
 
