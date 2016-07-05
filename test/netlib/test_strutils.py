@@ -1,4 +1,3 @@
-# coding=utf-8
 import six
 
 from netlib import strutils, tutils
@@ -15,18 +14,22 @@ def test_native():
         assert strutils.native(b"foo") == u"foo"
 
 
-def test_clean_bin():
-    assert strutils.clean_bin(b"one") == u"one"
-    assert strutils.clean_bin(b"\00ne") == u".ne"
-    assert strutils.clean_bin(b"\nne") == u"\nne"
-    assert strutils.clean_bin(b"\nne", False) == u".ne"
-    assert strutils.clean_bin(u"\u2605".encode("utf8")) == u"..."
-
-    assert strutils.clean_bin(u"one") == u"one"
-    assert strutils.clean_bin(u"\00ne") == u".ne"
-    assert strutils.clean_bin(u"\nne") == u"\nne"
-    assert strutils.clean_bin(u"\nne", False) == u".ne"
-    assert strutils.clean_bin(u"\u2605") == u"\u2605"
+def test_escape_control_characters():
+    assert strutils.escape_control_characters(u"one") == u"one"
+    assert strutils.escape_control_characters(u"\00ne") == u".ne"
+    assert strutils.escape_control_characters(u"\nne") == u"\nne"
+    assert strutils.escape_control_characters(u"\nne", False) == u".ne"
+    assert strutils.escape_control_characters(u"\u2605") == u"\u2605"
+    assert (
+        strutils.escape_control_characters(bytes(bytearray(range(128))).decode()) ==
+        u'.........\t\n..\r.................. !"#$%&\'()*+,-./0123456789:;<'
+        u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
+    )
+    assert (
+        strutils.escape_control_characters(bytes(bytearray(range(128))).decode(), False) ==
+        u'................................ !"#$%&\'()*+,-./0123456789:;<'
+        u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
+    )
 
 
 def test_bytes_to_escaped_str():
@@ -37,6 +40,14 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"'") == r"\'"
     assert strutils.bytes_to_escaped_str(b'"') == r'"'
 
+    assert strutils.bytes_to_escaped_str(b"\r\n\t") == "\\r\\n\\t"
+    assert strutils.bytes_to_escaped_str(b"\r\n\t", True) == "\r\n\t"
+
+    assert strutils.bytes_to_escaped_str(b"\n", True) == "\n"
+    assert strutils.bytes_to_escaped_str(b"\\n", True) == "\\ \\ n".replace(" ", "")
+    assert strutils.bytes_to_escaped_str(b"\\\n", True) == "\\ \\ \n".replace(" ", "")
+    assert strutils.bytes_to_escaped_str(b"\\\\n", True) == "\\ \\ \\ \\ n".replace(" ", "")
+
     with tutils.raises(ValueError):
         strutils.bytes_to_escaped_str(u"such unicode")
 
@@ -45,10 +56,9 @@ def test_escaped_str_to_bytes():
     assert strutils.escaped_str_to_bytes("foo") == b"foo"
     assert strutils.escaped_str_to_bytes("\x08") == b"\b"
     assert strutils.escaped_str_to_bytes("&!?=\\\\)") == br"&!?=\)"
-    assert strutils.escaped_str_to_bytes("ü") == b'\xc3\xbc'
     assert strutils.escaped_str_to_bytes(u"\\x08") == b"\b"
     assert strutils.escaped_str_to_bytes(u"&!?=\\\\)") == br"&!?=\)"
-    assert strutils.escaped_str_to_bytes(u"ü") == b'\xc3\xbc'
+    assert strutils.escaped_str_to_bytes(u"\u00fc") == b'\xc3\xbc'
 
     if six.PY2:
         with tutils.raises(ValueError):

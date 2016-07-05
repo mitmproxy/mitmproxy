@@ -160,7 +160,7 @@ class ViewRaw(View):
     content_types = []
 
     def __call__(self, data, **metadata):
-        return "Raw", format_text(strutils.bytes_to_escaped_str(data))
+        return "Raw", format_text(strutils.bytes_to_escaped_str(data, True))
 
 
 class ViewHex(View):
@@ -597,10 +597,9 @@ def safe_to_print(lines, encoding="utf8"):
     for line in lines:
         clean_line = []
         for (style, text) in line:
-            try:
-                text = strutils.clean_bin(text.decode(encoding, "strict"))
-            except UnicodeDecodeError:
-                text = strutils.clean_bin(text)
+            if isinstance(text, bytes):
+                text = text.decode(encoding, "replace")
+            text = strutils.escape_control_characters(text)
             clean_line.append((style, text))
         yield clean_line
 
