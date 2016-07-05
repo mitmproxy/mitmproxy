@@ -17,21 +17,21 @@ class ProxyAppMain extends Component {
     }
 
     componentWillMount() {
-        this.props.appInit()
+        this.props.appInit(this.context.router)
         window.addEventListener('keydown', this.props.onKeyDown);
     }
 
     componentWillUnmount() {
-        this.props.appDestruct()
+        this.props.appDestruct(this.context.router)
         window.removeEventListener('keydown', this.props.onKeyDown);
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.query === this.props.query && nextProps.flowId === this.props.flowId && nextProps.panel === this.props.panel) {
+        if (nextProps.query === this.props.query && nextProps.selectedFlowId === this.props.selectedFlowId && nextProps.panel === this.props.panel) {
             return
         }
-        if(nextProps.flowId) {
-            this.context.router.replace({ pathname: `/flows/${nextProps.flowId}/${nextProps.panel}`, query: nextProps.query })
+        if (nextProps.selectedFlowId) {
+            this.context.router.replace({ pathname: `/flows/${nextProps.selectedFlowId}/${nextProps.panel}`, query: nextProps.query })
         } else {
             this.context.router.replace({ pathname: '/flows', query: nextProps.query })
         }
@@ -58,10 +58,9 @@ class ProxyAppMain extends Component {
 export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
-        settings: state.settings.settings,
         query: state.ui.query,
         panel: state.ui.panel,
-        flowId: state.flows.views.main.selected[0]
+        selectedFlowId: state.flows.views.main.selected[0]
     }),
     {
         appInit,

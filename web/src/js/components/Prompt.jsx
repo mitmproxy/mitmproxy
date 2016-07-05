@@ -13,10 +13,6 @@ Prompt.propTypes = {
 export default function Prompt({ prompt, done, options }) {
     const opts = []
 
-    function keyTaken(k) {
-        return _.map(opts, 'key').includes(k)
-    }
-
     for (let i = 0; i < options.length; i++) {
         let opt = options[i]
         if (_.isString(opt)) {
@@ -30,6 +26,10 @@ export default function Prompt({ prompt, done, options }) {
             throw 'invalid options'
         }
         opts.push(opt)
+    }
+
+    function keyTaken(k) {
+        return _.map(opts, 'key').includes(k)
     }
 
     function onKeyDown(event) {
