@@ -206,10 +206,15 @@ class Http2Layer(base.Layer):
             self.streams[event.pushed_stream_id].request_data_finished.set()
             self.streams[event.pushed_stream_id].start()
         elif isinstance(event, events.PriorityUpdated):
-            if self.streams[eid].handled_priority_event is event:
-                # This event was already handled during stream creation
-                # HeadersFrame + Priority information as RequestReceived
-                return True
+            if eid in self.streams:
+                if self.streams[eid].handled_priority_event is event:
+                    # This event was already handled during stream creation
+                    # HeadersFrame + Priority information as RequestReceived
+                    return True
+                if eid in self.streams:
+                    self.streams[eid].priority_weight = event.weight
+                    self.streams[eid].priority_depends_on = event.depends_on
+                    self.streams[eid].priority_exclusive = event.exclusive
 
             stream_id = event.stream_id
             if stream_id in self.streams.keys() and self.streams[stream_id].server_stream_id:
@@ -218,10 +223,6 @@ class Http2Layer(base.Layer):
             depends_on = event.depends_on
             if depends_on in self.streams.keys() and self.streams[depends_on].server_stream_id:
                 depends_on = self.streams[depends_on].server_stream_id
-
-            self.streams[eid].priority_weight = event.weight
-            self.streams[eid].priority_depends_on = event.depends_on
-            self.streams[eid].priority_exclusive = event.exclusive
 
             with self.server_conn.h2.lock:
                 self.server_conn.h2.prioritize(
