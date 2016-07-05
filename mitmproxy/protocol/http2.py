@@ -145,6 +145,7 @@ class Http2Layer(base.Layer):
                 self.streams[eid].priority_weight = event.priority_updated.weight
                 self.streams[eid].priority_depends_on = event.priority_updated.depends_on
                 self.streams[eid].priority_exclusive = event.priority_updated.exclusive
+                self.streams[eid].handled_priority_event = event.priority_updated
             self.streams[eid].start()
         elif isinstance(event, events.ResponseReceived):
             headers = netlib.http.Headers([[k, v] for k, v in event.headers])
@@ -205,6 +206,11 @@ class Http2Layer(base.Layer):
             self.streams[event.pushed_stream_id].request_data_finished.set()
             self.streams[event.pushed_stream_id].start()
         elif isinstance(event, events.PriorityUpdated):
+            if self.streams[eid].handled_priority_event is event:
+                # This event was already handled during stream creation
+                # HeadersFrame + Priority information as RequestReceived
+                return True
+
             stream_id = event.stream_id
             if stream_id in self.streams.keys() and self.streams[stream_id].server_stream_id:
                 stream_id = self.streams[stream_id].server_stream_id
@@ -313,6 +319,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.priority_weight = None
         self.priority_depends_on = None
         self.priority_exclusive = None
+        self.handled_priority_event = None
 
     @property
     def data_queue(self):
