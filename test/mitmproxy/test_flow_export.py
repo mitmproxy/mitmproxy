@@ -21,15 +21,15 @@ def python_equals(testdata, text):
 
 
 def req_get():
-    return netlib.tutils.treq(method='GET', content='', path=b"/path?a=foo&a=bar&b=baz")
+    return netlib.tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz")
 
 
 def req_post():
-    return netlib.tutils.treq(method='POST', headers=())
+    return netlib.tutils.treq(method=b'POST', headers=())
 
 
 def req_patch():
-    return netlib.tutils.treq(method='PATCH', path=b"/path?query=param")
+    return netlib.tutils.treq(method=b'PATCH', path=b"/path?query=param")
 
 
 class TestExportCurlCommand():
