@@ -4,15 +4,17 @@ import * as flowsActions from '../ducks/flows'
 
 export const SET_ACTIVE_MENU = 'UI_SET_ACTIVE_MENU'
 export const SET_CONTENT_VIEW = 'UI_SET_CONTENT_VIEW'
-export const SET_SELECTED_INPUT = 'SET_SELECTED_INPUT'
-export const UPDATE_QUERY = 'UPDATE_QUERY'
-export const SELECT_TAB = 'SELECT_TAB'
-export const SELECT_TAB_RELATIVE = 'SELECT_TAB_RELATIVE'
-export const SET_PROMPT = 'SET_PROMPT'
+export const SET_SELECTED_INPUT = 'UI_SET_SELECTED_INPUT'
+export const UPDATE_QUERY = 'UI_UPDATE_QUERY'
+export const SELECT_TAB = 'UI_SELECT_TAB'
+export const SELECT_TAB_RELATIVE = 'UI_SELECT_TAB_RELATIVE'
+export const SET_PROMPT = 'UI_SET_PROMPT'
+export const SET_DISPLAY_LARGE = 'UI_SET_DISPLAY_LARGE'
 
 const defaultState = {
     activeMenu: 'Start',
     selectedInput: null,
+    displayLarge: false,
     promptOpen: false,
     contentView: 'ViewAuto',
     query: {},
@@ -32,6 +34,7 @@ export default function reducer(state = defaultState, action) {
             if (action.flowId && !action.currentSelection) {
                 return {
                     ...state,
+                    displayLarge: false,
                     activeMenu: 'Flow',
                 }
             }
@@ -39,11 +42,15 @@ export default function reducer(state = defaultState, action) {
             if (!action.flowId && state.activeMenu === 'Flow') {
                 return {
                     ...state,
+                    displayLarge: false,
                     activeMenu: 'Start',
                 }
             }
 
-            return state
+            return {
+                ...state,
+                displayLarge: false,
+            }
 
         case SET_CONTENT_VIEW:
             return {
@@ -88,6 +95,12 @@ export default function reducer(state = defaultState, action) {
                 promptOpen: action.open,
             }
 
+        case SET_DISPLAY_LARGE:
+            return {
+                ...state,
+                displayLarge: action.displayLarge,
+            }
+
         default:
             return state
     }
@@ -124,7 +137,17 @@ export function setPrompt(open) {
     return { type: SET_PROMPT, open }
 }
 
-export function onKeyDown(key, shiftKey) {
+export function setDisplayLarge(displayLarge) {
+    return { type: SET_DISPLAY_LARGE, displayLarge }
+}
+
+export function onKeyDown(e) {
+    if(e.ctrlKey) {
+        return () => {}
+    }
+    var key = e.keyCode
+    var shiftKey = e.shiftKey
+    e.preventDefault()
     return (dispatch, getState) => {
         switch (key) {
 
@@ -235,6 +258,5 @@ export function onKeyDown(key, shiftKey) {
             default:
                 return () => {}
         }
-        event.preventDefault()
     }
 }

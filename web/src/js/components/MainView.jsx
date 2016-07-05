@@ -69,5 +69,7 @@ export default connect(
         updateFlow: flowsActions.update,
     },
     undefined,
-    { withRef: true }
+    {
+        withRef: true
+    }
 )(MainView)

@@ -1,5 +1,5 @@
 import React from 'react'
-import {formatSize} from '../../utils.js'
+import { formatSize } from '../../utils.js'
 
 export function ContentEmpty({ flow, message }) {
     return (

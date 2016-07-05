@@ -4,22 +4,14 @@ import _ from 'lodash'
 
 import {Key} from '../utils.js'
 
-Prompt.contextTypes = {
-    returnFocus: PropTypes.func
-}
-
 Prompt.propTypes = {
     options: PropTypes.array.isRequired,
     done: PropTypes.func.isRequired,
     prompt: PropTypes.string,
 }
 
-export default function Prompt({ prompt, done, options }, context) {
+export default function Prompt({ prompt, done, options }) {
     const opts = []
-
-    function keyTaken(k) {
-        return _.map(opts, 'key').includes(k)
-    }
 
     for (let i = 0; i < options.length; i++) {
         let opt = options[i]
@@ -35,7 +27,11 @@ export default function Prompt({ prompt, done, options }, context) {
         }
         opts.push(opt)
     }
-    
+
+    function keyTaken(k) {
+        return _.map(opts, 'key').includes(k)
+    }
+
     function onKeyDown(event) {
         event.stopPropagation()
         event.preventDefault()
@@ -44,7 +40,6 @@ export default function Prompt({ prompt, done, options }, context) {
             return
         }
         done(key.key || false)
-        context.returnFocus()
     }
 
     return (
