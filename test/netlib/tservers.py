@@ -24,7 +24,7 @@ class _ServerThread(threading.Thread):
 
 class _TServer(tcp.TCPServer):
 
-    def __init__(self, ssl, q, handler_klass, addr):
+    def __init__(self, ssl, q, handler_klass, addr, **kwargs):
         """
             ssl: A dictionary of SSL parameters:
 
@@ -42,6 +42,8 @@ class _TServer(tcp.TCPServer):
 
         self.q = q
         self.handler_klass = handler_klass
+        if self.handler_klass is not None:
+            self.handler_klass.kwargs = kwargs
         self.last_handler = None
 
     def handle_client_connection(self, request, client_address):
@@ -89,16 +91,16 @@ class ServerTestBase(object):
     addr = ("localhost", 0)
 
     @classmethod
-    def setup_class(cls):
+    def setup_class(cls, **kwargs):
         cls.q = queue.Queue()
-        s = cls.makeserver()
+        s = cls.makeserver(**kwargs)
         cls.port = s.address.port
         cls.server = _ServerThread(s)
         cls.server.start()
 
     @classmethod
-    def makeserver(cls):
-        return _TServer(cls.ssl, cls.q, cls.handler, cls.addr)
+    def makeserver(cls, **kwargs):
+        return _TServer(cls.ssl, cls.q, cls.handler, cls.addr, **kwargs)
 
     @classmethod
     def teardown_class(cls):
