@@ -77,7 +77,7 @@ class ProxyAppMain extends Component {
         if (e.ctrlKey) {
             return
         }
-        this.props.onKeyDown(e.keyCode)
+        this.props.onKeyDown(e.keyCode, e.shiftKey)
         e.preventDefault()
     }
 

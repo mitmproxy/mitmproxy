@@ -79,7 +79,7 @@ export default class FlowView extends Component {
                     onSelectTab={this.props.selectTab}
                 />
                 <Tab ref={ tab => this.tabComponent = tab } flow={flow} updateFlow={updateFlow} />
-                {this.state.prompt && (
+                {this.props.promptOpen && (
                     <Prompt options={this.getPromptOptions()} done={this.onPromptFinish} />
                 )}
             </div>
@@ -89,7 +89,7 @@ export default class FlowView extends Component {
 
 export default connect(
     state => ({
-        needEdit: state.ui.needEdit,
+        promptOpen: state.ui.promptOpen,
     }),
     {
         setPrompt,
