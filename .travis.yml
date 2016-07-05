@@ -71,8 +71,4 @@ notifications:
       on_failure: change
       on_start: never
 
-cache:
-  directories:
-    - $HOME/build/mitmproxy/mitmproxy/.tox
-    - $HOME/.cache/pip
-    - $HOME/.pyenv
+cache: pip
