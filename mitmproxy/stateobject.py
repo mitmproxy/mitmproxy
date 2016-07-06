@@ -53,7 +53,7 @@ class StateObject(netlib.basetypes.Serializable):
         state = state.copy()
         for attr, cls in six.iteritems(self._stateobject_attributes):
             val = state.pop(attr)
-            if state.get(attr) is None:
+            if val is None:
                 setattr(self, attr, val)
             else:
                 curr = getattr(self, attr)
