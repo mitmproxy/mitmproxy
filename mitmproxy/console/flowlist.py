@@ -5,6 +5,7 @@ import urwid
 import netlib.http.url
 from mitmproxy.console import common
 from mitmproxy.console import signals
+from mitmproxy.flow import export
 
 
 def _mkhelp():
@@ -269,13 +270,7 @@ class ConnectionItem(urwid.WidgetWrap):
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export",
-                keys = (
-                    ("as curl command", "c"),
-                    ("as python code", "p"),
-                    ("as raw request", "r"),
-                    ("as locust code", "l"),
-                    ("as locust task", "t"),
-                ),
+                keys = [(e[0], e[1]) for e in export.EXPORTERS],
                 callback = common.export_prompt,
                 args = (self.flow,)
             )

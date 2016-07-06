@@ -197,3 +197,12 @@ def locust_task(flow):
     task_code = code[start_task:end_task]
 
     return task_code
+
+
+EXPORTERS = [
+    ("as curl command", "c", curl_command),
+    ("as python code", "p", python_code),
+    ("as raw request", "r", raw_request),
+    ("as locust code", "l", locust_code),
+    ("as locust task", "t", locust_task),
+]

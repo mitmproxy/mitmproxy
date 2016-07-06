@@ -285,15 +285,9 @@ def copy_flow_format_data(part, scope, flow):
 
 
 def export_prompt(k, f):
-    exporters = {
-        "c": flow.export.curl_command,
-        "p": flow.export.python_code,
-        "r": flow.export.raw_request,
-        "l": flow.export.locust_code,
-        "t": flow.export.locust_task,
-    }
-    if k in exporters:
-        copy_to_clipboard_or_prompt(exporters[k](f))
+    for exporter in flow.export.EXPORTERS:
+        if k == exporter[1]:
+            copy_to_clipboard_or_prompt(exporter[2](f))
 
 
 def copy_to_clipboard_or_prompt(data):
