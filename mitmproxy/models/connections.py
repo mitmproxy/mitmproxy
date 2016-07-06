@@ -162,7 +162,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         source_address=tcp.Address,
         ssl_established=bool,
         cert=certutils.SSLCert,
-        sni=str,
+        sni=bytes,
         timestamp_start=float,
         timestamp_tcp_setup=float,
         timestamp_ssl_setup=float,

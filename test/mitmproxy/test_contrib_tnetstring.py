@@ -15,7 +15,9 @@ FORMAT_EXAMPLES = {
     {'hello': [12345678901, b'this', True, None, b'\x00\x00\x00\x00']},
     b'5:12345#': 12345,
     b'12:this is cool,': b'this is cool',
+    b'19:this is unicode \xe2\x98\x85;': u'this is unicode \u2605',
     b'0:,': b'',
+    b'0:;': u'',
     b'0:~': None,
     b'4:true!': True,
     b'5:false!': False,
@@ -77,12 +79,6 @@ class Test_Format(unittest.TestCase):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
             self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
-
-    def test_unicode_handling(self):
-        with self.assertRaises(ValueError):
-            tnetstring.dumps(u"hello")
-        self.assertEqual(tnetstring.dumps(u"hello".encode()), b"5:hello,")
-        self.assertEqual(type(tnetstring.loads(b"5:hello,")), bytes)
 
     def test_roundtrip_format_unicode(self):
         for _ in range(500):

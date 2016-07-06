@@ -96,7 +96,7 @@ def _rdumpq(q, size, value):
     elif value is False:
         write(b'5:false!')
         return size + 8
-    elif isinstance(value, int):
+    elif isinstance(value, six.integer_types):
         data = str(value).encode()
         ldata = len(data)
         span = str(ldata).encode()
@@ -119,7 +119,7 @@ def _rdumpq(q, size, value):
         write(b'%s:%s,' % (span, data))
         return size + 2 + len(span) + ldata
     elif isinstance(value, six.text_type):
-        data = value.encode()
+        data = value.encode("utf8")
         ldata = len(data)
         span = str(ldata).encode()
         write(b'%s:%s;' % (span, data))
@@ -137,8 +137,6 @@ def _rdumpq(q, size, value):
         write(b'}')
         init_size = size = size + 1
         for (k, v) in value.items():
-            if isinstance(k, str):
-                k = k.encode("ascii", "strict")
             size = _rdumpq(q, size, v)
             size = _rdumpq(q, size, k)
         span = str(size - init_size).encode()
@@ -184,13 +182,17 @@ def load(file_handle):
 
 
 def parse(data_type, data):
+    if six.PY2:
+        data_type = ord(data_type)
     # type: (int, bytes) -> TSerializable
     if data_type == ord(b','):
         return data
     if data_type == ord(b';'):
-        return data.decode()
+        return data.decode("utf8")
     if data_type == ord(b'#'):
         try:
+            if six.PY2:
+                return long(data)
             return int(data)
         except ValueError:
             raise ValueError("not a tnetstring: invalid integer literal: {}".format(data))
@@ -220,8 +222,6 @@ def parse(data_type, data):
         d = {}
         while data:
             key, data = pop(data)
-            if isinstance(key, bytes):
-                key = key.decode("ascii", "strict")
             val, data = pop(data)
             d[key] = val
         return d
