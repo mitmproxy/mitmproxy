@@ -44,12 +44,13 @@ class FlowReader:
                     raise exceptions.FlowReadException(str(e))
                 if can_tell:
                     off = self.fo.tell()
-                if data["type"] not in models.FLOW_TYPES:
-                    raise exceptions.FlowReadException("Unknown flow type: {}".format(data["type"]))
-                yield models.FLOW_TYPES[data["type"]].from_state(data)
+                data_type = data["type"].decode()
+                if data_type not in models.FLOW_TYPES:
+                    raise exceptions.FlowReadException("Unknown flow type: {}".format(data_type))
+                yield models.FLOW_TYPES[data_type].from_state(data)
         except ValueError:
             # Error is due to EOF
-            if can_tell and self.fo.tell() == off and self.fo.read() == '':
+            if can_tell and self.fo.tell() == off and self.fo.read() == b'':
                 return
             raise exceptions.FlowReadException("Invalid data format.")
 

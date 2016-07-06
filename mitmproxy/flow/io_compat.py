@@ -9,6 +9,7 @@ from netlib import version
 def convert_013_014(data):
     data["request"]["first_line_format"] = data["request"].pop("form_in")
     data["request"]["http_version"] = "HTTP/" + ".".join(str(x) for x in data["request"].pop("httpversion"))
+    data["response"]["http_version"] = "HTTP/" + ".".join(str(x) for x in data["response"].pop("httpversion"))
     data["response"]["status_code"] = data["response"].pop("code")
     data["response"]["body"] = data["response"].pop("content")
     data["server_conn"].pop("state")
@@ -26,8 +27,6 @@ def convert_015_016(data):
     for m in ("request", "response"):
         if "body" in data[m]:
             data[m]["content"] = data[m].pop("body")
-        if "httpversion" in data[m]:
-            data[m]["http_version"] = data[m].pop("httpversion")
     if "msg" in data["response"]:
         data["response"]["reason"] = data["response"].pop("msg")
     data["request"].pop("form_out", None)

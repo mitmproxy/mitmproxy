@@ -126,6 +126,8 @@ def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
         write(b'}')
         init_size = size = size + 1
         for (k, v) in value.items():
+            if isinstance(k, str):
+                k = k.encode("ascii", "strict")
             size = _rdumpq(q, size, v)
             size = _rdumpq(q, size, k)
         span = str(size - init_size).encode()
@@ -154,7 +156,7 @@ def load(file_handle: io.BinaryIO) -> TSerializable:
     #  Note that the netstring spec explicitly forbids padding zeros.
     c = file_handle.read(1)
     data_length = b""
-    while ord(b'0') <= ord(c) <= ord(b'9'):
+    while c.isdigit():
         data_length += c
         if len(data_length) > 9:
             raise ValueError("not a tnetstring: absurdly large length prefix")
@@ -202,6 +204,8 @@ def parse(data_type: int, data: bytes) -> TSerializable:
         d = {}
         while data:
             key, data = pop(data)
+            if isinstance(key, bytes):
+                key = key.decode("ascii", "strict")
             val, data = pop(data)
             d[key] = val
         return d
@@ -230,4 +234,4 @@ def pop(data: bytes) -> Tuple[TSerializable, bytes]:
     return parse(data_type, data), remain
 
 
-__all__ = ["dump", "dumps", "load", "loads"]
+__all__ = ["dump", "dumps", "load", "loads", "pop"]

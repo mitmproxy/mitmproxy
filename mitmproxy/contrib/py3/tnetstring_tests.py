@@ -11,7 +11,7 @@ FORMAT_EXAMPLES = {
     b'0:}': {},
     b'0:]': [],
     b'51:5:hello,39:11:12345678901#4:this,4:true!0:~4:\x00\x00\x00\x00,]}':
-            {b'hello': [12345678901, b'this', True, None, b'\x00\x00\x00\x00']},
+            {'hello': [12345678901, b'this', True, None, b'\x00\x00\x00\x00']},
     b'5:12345#': 12345,
     b'12:this is cool,': b'this is cool',
     b'0:,': b'',
@@ -41,7 +41,7 @@ def get_random_object(random=random, depth=0):
             d = {}
             for _ in range(n):
                 n = random.randint(0,100)
-                k = bytes([random.randint(32,126) for _ in range(n)])
+                k = str([random.randint(32,126) for _ in range(n)])
                 d[k] = get_random_object(random,depth+1)
             return d
     else:
