@@ -34,7 +34,6 @@ def _mkhelp():
         ("b", "save request/response body"),
         ("D", "duplicate flow"),
         ("d", "delete flow"),
-        ("E", "export"),
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("m", "change body display mode for this entity"),

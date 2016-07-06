@@ -17,7 +17,6 @@ def _mkhelp():
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
-        ("E", "export"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
         ("l", "set limit filter pattern"),
@@ -25,7 +24,8 @@ def _mkhelp():
         ("m", "toggle flow mark"),
         ("M", "toggle marked flow view"),
         ("n", "create a new request"),
-        ("P", "copy flow to clipboard"),
+        ("p", "export flow to file"),
+        ("P", "export flow to clipboard"),
         ("r", "replay request"),
         ("U", "unmark all marked flows"),
         ("V", "revert changes to request"),
@@ -264,14 +264,20 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
-        elif key == "P":
-            common.ask_copy_part("a", self.flow, self.master, self.state)
-        elif key == "E":
+        elif key == "p":
             signals.status_prompt_onekey.send(
                 self,
-                prompt = "Export",
+                prompt = "Export to file",
                 keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_prompt,
+                callback = common.export_to_file,
+                args = (self.flow,)
+            )
+        elif key == "P":
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Export to clipboard",
+                keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                callback = common.export_to_clipboard,
                 args = (self.flow,)
             )
         elif key == "b":

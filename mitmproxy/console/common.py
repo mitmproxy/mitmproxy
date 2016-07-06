@@ -284,12 +284,6 @@ def copy_flow_format_data(part, scope, flow):
     return data, False
 
 
-def export_prompt(k, f):
-    for exporter in flow.export.EXPORTERS:
-        if k == exporter[1]:
-            copy_to_clipboard_or_prompt(exporter[2](f))
-
-
 def copy_to_clipboard_or_prompt(data):
     # pyperclip calls encode('utf-8') on data to be copied without checking.
     # if data are already encoded that way UnicodeDecodeError is thrown.
@@ -393,6 +387,18 @@ def ask_save_body(part, master, state, flow):
         )
     else:
         signals.status_message.send(message="No content to save.")
+
+
+def export_to_clipboard(k, f):
+    for exporter in flow.export.EXPORTERS:
+        if k == exporter[1]:
+            copy_to_clipboard_or_prompt(exporter[2](f))
+
+
+def export_to_file(k, f):
+    for exporter in flow.export.EXPORTERS:
+        if k == exporter[1]:
+            ask_save_path("File path", exporter[2](f))
 
 
 flowcache = utils.LRUCache(800)
