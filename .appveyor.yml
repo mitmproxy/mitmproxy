@@ -25,7 +25,7 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: "tox --recreate -- --cov netlib --cov mitmproxy --cov pathod | Select-String -NotMatch Cryptography_locking_cb"
+  - ps: "tox -- --cov netlib --cov mitmproxy --cov pathod | Select-String -NotMatch Cryptography_locking_cb"
 
 deploy_script:
   ps: |
@@ -41,7 +41,6 @@ deploy_script:
 
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
-  - C:\projects\mitmproxy\.tox
 
 notifications:
   - provider: Slack
