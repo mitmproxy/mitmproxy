@@ -12,7 +12,7 @@ FORMAT_EXAMPLES = {
     b'0:}': {},
     b'0:]': [],
     b'51:5:hello,39:11:12345678901#4:this,4:true!0:~4:\x00\x00\x00\x00,]}':
-    {'hello': [12345678901, b'this', True, None, b'\x00\x00\x00\x00']},
+    {b'hello': [12345678901, b'this', True, None, b'\x00\x00\x00\x00']},
     b'5:12345#': 12345,
     b'12:this is cool,': b'this is cool',
     b'19:this is unicode \xe2\x98\x85;': u'this is unicode \u2605',
