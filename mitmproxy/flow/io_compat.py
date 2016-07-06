@@ -5,13 +5,15 @@ from __future__ import absolute_import, print_function, division
 
 import six
 
-from netlib import version
+from netlib import version, strutils
 
 
 def convert_013_014(data):
     data[b"request"][b"first_line_format"] = data[b"request"].pop(b"form_in")
-    data[b"request"][b"http_version"] = b"HTTP/" + ".".join(str(x) for x in data[b"request"].pop(b"httpversion")).encode()
-    data[b"response"][b"http_version"] = b"HTTP/" + ".".join(str(x) for x in data[b"response"].pop(b"httpversion")).encode()
+    data[b"request"][b"http_version"] = b"HTTP/" + ".".join(
+        str(x) for x in data[b"request"].pop(b"httpversion")).encode()
+    data[b"response"][b"http_version"] = b"HTTP/" + ".".join(
+        str(x) for x in data[b"response"].pop(b"httpversion")).encode()
     data[b"response"][b"status_code"] = data[b"response"].pop(b"code")
     data[b"response"][b"body"] = data[b"response"].pop(b"content")
     data[b"server_conn"].pop(b"state")
@@ -43,36 +45,54 @@ def convert_016_017(data):
 
 
 def convert_017_018(data):
-    if not six.PY2:
-        # Python 2 versions of mitmproxy did not support serializing unicode.
-        def dict_keys_to_str(o):
-            if isinstance(o, dict):
-                return {k.decode(): dict_keys_to_str(v) for k, v in o.items()}
-            else:
-                return o
-        data = dict_keys_to_str(data)
-
-        def dict_vals_to_str(o, decode):
-            for k, v in decode.items():
-                if not o or k not in o:
-                    continue
-                if v is True:
-                    o[k] = o[k].decode()
-                else:
-                    dict_vals_to_str(o[k], v)
-        dict_vals_to_str(data, {
-            "type": True,
-            "id": True,
-            "request": {
-                "first_line_format": True
-            },
-            "error": {
-                "msg": True
-            }
-        })
+    # convert_unicode needs to be called for every dual release and the first py3-only release
+    data = convert_unicode(data)
 
     data["server_conn"]["ip_address"] = data["server_conn"].pop("peer_address")
     data["version"] = (0, 18)
+    return data
+
+
+def _convert_dict_keys(o):
+    # type: (Any) -> Any
+    if isinstance(o, dict):
+        return {strutils.native(k): _convert_dict_keys(v) for k, v in o.items()}
+    else:
+        return o
+
+
+def _convert_dict_vals(o, values_to_convert):
+    # type: (dict, dict) -> dict
+    for k, v in values_to_convert.items():
+        if not o or k not in o:
+            continue
+        if v is True:
+            o[k] = strutils.native(o[k])
+        else:
+            _convert_dict_vals(o[k], v)
+    return o
+
+
+def convert_unicode(data):
+    # type: (dict) -> dict
+    """
+    The Python 2 version of mitmproxy serializes everything as bytes.
+    This method converts between Python 3 and Python 2 dumpfiles.
+    """
+    if not six.PY2:
+        data = _convert_dict_keys(data)
+        data = _convert_dict_vals(
+            data, {
+                "type": True,
+                "id": True,
+                "request": {
+                    "first_line_format": True
+                },
+                "error": {
+                    "msg": True
+                }
+            }
+        )
     return data
 
 
@@ -97,4 +117,7 @@ def migrate_flow(flow_data):
             raise ValueError(
                 "{} cannot read files serialized with version {}.".format(version.MITMPROXY, v)
             )
+    # TODO: This should finally be moved in the converter for the first py3-only release.
+    # It's here so that a py2 0.18 dump can be read by py3 0.18 and vice versa.
+    flow_data = convert_unicode(flow_data)
     return flow_data

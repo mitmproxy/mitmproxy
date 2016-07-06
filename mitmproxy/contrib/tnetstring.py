@@ -116,13 +116,19 @@ def _rdumpq(q, size, value):
         data = value
         ldata = len(data)
         span = str(ldata).encode()
-        write(b'%s:%s,' % (span, data))
+        write(b',')
+        write(data)
+        write(b':')
+        write(span)
         return size + 2 + len(span) + ldata
     elif isinstance(value, six.text_type):
         data = value.encode("utf8")
         ldata = len(data)
         span = str(ldata).encode()
-        write(b'%s:%s;' % (span, data))
+        write(b';')
+        write(data)
+        write(b':')
+        write(span)
         return size + 2 + len(span) + ldata
     elif isinstance(value, (list, tuple)):
         write(b']')
