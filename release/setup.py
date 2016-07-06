@@ -10,7 +10,7 @@ setup(
         "virtualenv>=14.0.5, <14.1",
         "wheel>=0.29.0, <0.30",
         "six>=1.10.0, <1.11",
-        "pysftp>=0.2.8, <0.3",
+        "pysftp>=0.2.8, !=0.2.9, <0.3",
     ],
     entry_points={
         "console_scripts": [
