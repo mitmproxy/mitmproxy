@@ -62,9 +62,15 @@ class LogCtx(object):
             for line in strutils.hexdump(data):
                 self("\t%s %s %s" % line)
         else:
-            data = data.decode("ascii", "replace").replace(u"\ufffd", u".")
-            for i in strutils.escape_control_characters(data).split(u"\n"):
-                self(u"\t%s" % i)
+            data = strutils.native(
+                strutils.escape_control_characters(
+                    data
+                        .decode("ascii", "replace")
+                        .replace(u"\ufffd", u".")
+                )
+            )
+            for i in data.split("\n"):
+                self("\t%s" % i)
 
     def __call__(self, line):
         self.lines.append(line)
