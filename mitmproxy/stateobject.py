@@ -52,19 +52,20 @@ class StateObject(netlib.basetypes.Serializable):
         """
         state = state.copy()
         for attr, cls in six.iteritems(self._stateobject_attributes):
+            val = state.pop(attr)
             if state.get(attr) is None:
-                setattr(self, attr, state.pop(attr))
+                setattr(self, attr, val)
             else:
                 curr = getattr(self, attr)
                 if hasattr(curr, "set_state"):
-                    curr.set_state(state.pop(attr))
+                    curr.set_state(val)
                 elif hasattr(cls, "from_state"):
-                    obj = cls.from_state(state.pop(attr))
+                    obj = cls.from_state(val)
                     setattr(self, attr, obj)
                 elif _is_list(cls):
                     cls = cls.__parameters__[0] if cls.__parameters__ else cls.__args__[0]
-                    setattr(self, attr, [cls.from_state(x) for x in state.pop(attr)])
+                    setattr(self, attr, [cls.from_state(x) for x in val])
                 else:  # primitive types such as int, str, ...
-                    setattr(self, attr, cls(state.pop(attr)))
+                    setattr(self, attr, cls(val))
         if state:
             raise RuntimeWarning("Unexpected State in __setstate__: {}".format(state))
