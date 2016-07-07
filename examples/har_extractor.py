@@ -60,6 +60,12 @@ def start(context):
         suit your actual needs of HAR generation. As it will probably be
         necessary to cluster logs by IPs or reset them from time to time.
     """
+    if sys.version_info >= (3, 0):
+        raise RuntimeError(
+            "har_extractor.py does not work on Python 3. "
+            "Please check out https://github.com/mitmproxy/mitmproxy/issues/1320 "
+            "if you want to help making this work again."
+        )
     context.dump_file = None
     if len(sys.argv) > 1:
         context.dump_file = sys.argv[1]

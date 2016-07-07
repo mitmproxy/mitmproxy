@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import sys
 from contextlib import contextmanager
 
 from mitmproxy import script
@@ -133,6 +134,12 @@ def test_redirect_requests():
 
 
 def test_har_extractor():
+    if sys.version_info >= (3, 0):
+        with tutils.raises("does not work on Python 3"):
+            with example("har_extractor.py -"):
+                pass
+        return
+
     with tutils.raises(script.ScriptException):
         with example("har_extractor.py"):
             pass
