@@ -197,7 +197,7 @@ class Http2Layer(base.Layer):
                 self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
                 self.client_conn.send(self.client_conn.h2.data_to_send())
 
-            headers = netlib.http.Headers([[str(k), str(v)] for k, v in event.headers])
+            headers = netlib.http.Headers([[k, v] for k, v in event.headers])
             self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
             self.streams[event.pushed_stream_id].timestamp_start = time.time()
             self.streams[event.pushed_stream_id].pushed = True
@@ -434,7 +434,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
             self.server_conn.h2.safe_send_body(
                 self.is_zombie,
                 self.server_stream_id,
-                message.body
+                [message.body]
             )
 
         if self.zombie:  # pragma: no cover
@@ -453,7 +453,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         return models.HTTPResponse(
             http_version=b"HTTP/2.0",
             status_code=status_code,
-            reason='',
+            reason=b'',
             headers=headers,
             content=None,
             timestamp_start=self.timestamp_start,
