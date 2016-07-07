@@ -68,17 +68,10 @@ def test_escaped_str_to_bytes():
             strutils.escaped_str_to_bytes(b"very byte")
 
 
-def test_isBin():
-    assert not strutils.isBin("testing\n\r")
-    assert strutils.isBin("testing\x01")
-    assert strutils.isBin("testing\x0e")
-    assert strutils.isBin("testing\x7f")
-
-
-def test_isXml():
-    assert not strutils.isXML("foo")
-    assert strutils.isXML("<foo")
-    assert strutils.isXML("  \n<foo")
+def test_is_xml():
+    assert not strutils.is_xml(b"foo")
+    assert strutils.is_xml(b"<foo")
+    assert strutils.is_xml(b"  \n<foo")
 
 
 def test_clean_hanging_newline():

@@ -114,24 +114,17 @@ def escaped_str_to_bytes(data):
     return codecs.escape_decode(data)[0]
 
 
-def isBin(s):
-    """
-        Does this string have any non-ASCII characters?
-    """
-    for i in s:
-        i = ord(i)
-        if i < 9 or 13 < i < 32 or 126 < i:
-            return True
-    return False
+def is_mostly_bin(s):
+    # type: (bytes) -> bool
+    return sum(
+        i < 9 or 13 < i < 32 or 126 < i
+        for i in six.iterbytes(s[:100])
+    ) > 30
 
 
-def isMostlyBin(s):
-    s = s[:100]
-    return sum(isBin(ch) for ch in s) / len(s) > 0.3
-
-
-def isXML(s):
-    return s.strip().startswith("<")
+def is_xml(s):
+    # type: (bytes) -> bool
+    return s.strip().startswith(b"<")
 
 
 def clean_hanging_newline(t):

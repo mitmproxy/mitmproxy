@@ -73,9 +73,9 @@ def test_add_header():
 def test_custom_contentviews():
     with example("custom_contentviews.py") as ex:
         pig = ex.ctx.contentview
-        _, fmt = pig("<html>test!</html>")
-        assert any('esttay!' in val[0][1] for val in fmt)
-        assert not pig("gobbledygook")
+        _, fmt = pig(b"<html>test!</html>")
+        assert any(b'esttay!' in val[0][1] for val in fmt)
+        assert not pig(b"gobbledygook")
 
 
 def test_iframe_injector():
@@ -103,7 +103,7 @@ def test_modify_form():
 
 
 def test_modify_querystring():
-    flow = tutils.tflow(req=netutils.treq(path="/search?q=term"))
+    flow = tutils.tflow(req=netutils.treq(path=b"/search?q=term"))
     with example("modify_querystring.py") as ex:
         ex.run("request", flow)
         assert flow.request.query["mitmproxy"] == "rocks"
@@ -126,7 +126,7 @@ def test_modify_response_body():
 
 
 def test_redirect_requests():
-    flow = tutils.tflow(req=netutils.treq(host="example.org"))
+    flow = tutils.tflow(req=netutils.treq(host=b"example.org"))
     with example("redirect_requests.py") as ex:
         ex.run("request", flow)
         assert flow.request.host == "mitmproxy.org"

@@ -143,11 +143,11 @@ class ViewAuto(View):
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
-            elif strutils.isXML(data.decode()):
+            elif strutils.is_xml(data):
                 return get("XML")(data, **metadata)
         if metadata.get("query"):
             return get("Query")(data, **metadata)
-        if data and strutils.isMostlyBin(data.decode()):
+        if data and strutils.is_mostly_bin(data):
             return get("Hex")(data)
         if not data:
             return "No content", []
@@ -240,7 +240,7 @@ class ViewHTML(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if strutils.isXML(data.decode()):
+        if strutils.is_xml(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True

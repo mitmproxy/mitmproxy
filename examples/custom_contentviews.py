@@ -11,7 +11,7 @@ class ViewPigLatin(contentviews.View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if strutils.isXML(data):
+        if strutils.is_xml(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -20,7 +20,7 @@ class ViewPigLatin(contentviews.View):
             docinfo = d.getroottree().docinfo
 
             def piglify(src):
-                words = string.split(src)
+                words = src.split()
                 ret = ''
                 for word in words:
                     idx = -1
