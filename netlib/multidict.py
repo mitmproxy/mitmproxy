@@ -170,18 +170,10 @@ class _MultiDict(MutableMapping, basetypes.Serializable):
         else:
             return super(_MultiDict, self).items()
 
-    def clear(self, key):
-        """
-            Removes all items with the specified key, and does not raise an
-            exception if the key does not exist.
-        """
-        if key in self:
-            del self[key]
-
     def collect(self):
         """
             Returns a list of (key, value) tuples, where values are either
-            singular if threre is only one matching item for a key, or a list
+            singular if there is only one matching item for a key, or a list
             if there are more than one. The order of the keys matches the order
             in the underlying fields list.
         """
@@ -204,18 +196,16 @@ class _MultiDict(MutableMapping, basetypes.Serializable):
         .. code-block:: python
 
             # Simple dict with duplicate values.
-            >>> d
-            MultiDictView[("name", "value"), ("a", "false"), ("a", "42")]
+            >>> d = MultiDict([("name", "value"), ("a", False), ("a", 42)])
             >>> d.to_dict()
             {
                 "name": "value",
-                "a": ["false", "42"]
+                "a": [False, 42]
             }
         """
-        d = {}
-        for k, v in self.collect():
-            d[k] = v
-        return d
+        return {
+            k: v for k, v in self.collect()
+        }
 
     def get_state(self):
         return self.fields
@@ -307,4 +297,4 @@ class MultiDictView(_MultiDict):
 
     @fields.setter
     def fields(self, value):
-        return self._setter(value)
+        self._setter(value)

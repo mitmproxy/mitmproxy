@@ -12,34 +12,57 @@ from io import BytesIO
 from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import filt
+from mitmproxy import models
 from netlib import version
 
 
-def _strip_content(flow_state):
+def convert_flow_to_json_dict(flow):
+    # type: (models.Flow) -> dict
     """
     Remove flow message content and cert to save transmission space.
 
     Args:
-        flow_state: The original flow state. Will be left unmodified
+        flow: The original flow.
     """
-    for attr in ("request", "response"):
-        if attr in flow_state:
-            message = flow_state[attr]
-            if message is None:
-                continue
-            if message["content"]:
-                message["contentLength"] = len(message["content"])
-            else:
-                message["contentLength"] = None
-            del message["content"]
+    f = {
+        "id": flow.id,
+        "intercepted": flow.intercepted,
+        "client_conn": flow.client_conn.get_state(),
+        "server_conn": flow.server_conn.get_state(),
+        "type": flow.type
+    }
+    if flow.error:
+        f["error"] = flow.error.get_state()
 
-    if "backup" in flow_state:
-        del flow_state["backup"]
-        flow_state["modified"] = True
+    if isinstance(flow, models.HTTPFlow):
+        if flow.request:
+            f["request"] = {
+                "method": flow.request.method,
+                "scheme": flow.request.scheme,
+                "host": flow.request.host,
+                "port": flow.request.port,
+                "path": flow.request.path,
+                "http_version": flow.request.http_version,
+                "headers": tuple(flow.request.headers.items(True)),
+                "contentLength": len(flow.request.content) if flow.request.content is not None else None,
+                "timestamp_start": flow.request.timestamp_start,
+                "timestamp_end": flow.request.timestamp_end,
+                "is_replay": flow.request.is_replay,
+            }
+        if flow.response:
+            f["response"] = {
+                "http_version": flow.response.http_version,
+                "status_code": flow.response.status_code,
+                "reason": flow.response.reason,
+                "headers": tuple(flow.response.headers.items(True)),
+                "contentLength": len(flow.response.content) if flow.response.content is not None else None,
+                "timestamp_start": flow.response.timestamp_start,
+                "timestamp_end": flow.response.timestamp_end,
+                "is_replay": flow.response.is_replay,
+            }
+    f.get("server_conn", {}).pop("cert", None)
 
-    flow_state.get("server_conn", {}).pop("cert", None)
-
-    return flow_state
+    return f
 
 
 class APIError(tornado.web.HTTPError):
@@ -158,7 +181,7 @@ class Flows(RequestHandler):
 
     def get(self):
         self.write(dict(
-            data=[_strip_content(f.get_state()) for f in self.state.flows]
+            data=[convert_flow_to_json_dict(f) for f in self.state.flows]
         ))
 
 

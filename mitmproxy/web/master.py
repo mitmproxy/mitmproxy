@@ -27,7 +27,7 @@ class WebFlowView(flow.FlowView):
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="add",
-            data=app._strip_content(f.get_state())
+            data=app.convert_flow_to_json_dict(f)
         )
 
     def _update(self, f):
@@ -35,7 +35,7 @@ class WebFlowView(flow.FlowView):
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="update",
-            data=app._strip_content(f.get_state())
+            data=app.convert_flow_to_json_dict(f)
         )
 
     def _remove(self, f):

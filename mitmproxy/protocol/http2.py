@@ -448,7 +448,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
 
         status_code = int(self.response_headers.get(':status', 502))
         headers = self.response_headers.copy()
-        headers.clear(":status")
+        headers.pop(":status", None)
 
         return models.HTTPResponse(
             http_version=b"HTTP/2.0",

@@ -7,9 +7,9 @@ def parse_headers(headers):
     scheme = headers.get(':scheme', 'https').encode()
     path = headers.get(':path', '/').encode()
 
-    headers.clear(":method")
-    headers.clear(":scheme")
-    headers.clear(":path")
+    headers.pop(":method", None)
+    headers.pop(":scheme", None)
+    headers.pop(":path", None)
 
     host = None
     port = None
