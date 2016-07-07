@@ -100,10 +100,10 @@ class CommonMixin:
         if not self.ssl:
             return
 
-        f = self.pathod("304", sni=b"testserver.com")
+        f = self.pathod("304", sni="testserver.com")
         assert f.status_code == 304
         log = self.server.last_log()
-        assert log["request"]["sni"] == b"testserver.com"
+        assert log["request"]["sni"] == "testserver.com"
 
 
 class TcpMixin:
@@ -498,7 +498,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
         assert p.request("get:'/p/200'").status_code == 200
 
     def test_sni(self):
-        p = self.pathoc(ssl=True, sni=b"example.com")
+        p = self.pathoc(ssl=True, sni="example.com")
         assert p.request("get:'/p/200'").status_code == 200
         assert all("Error in handle_sni" not in msg for msg in self.proxy.tlog)
 

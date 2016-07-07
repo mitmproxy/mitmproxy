@@ -130,7 +130,7 @@ def tserver_conn():
         timestamp_ssl_setup=3,
         timestamp_end=4,
         ssl_established=False,
-        sni=b"address",
+        sni="address",
         via=None
     ))
     c.reply = controller.DummyReply()

@@ -89,7 +89,10 @@ class PathodHandler(tcp.BaseHandler):
         self.http2_framedump = http2_framedump
 
     def handle_sni(self, connection):
-        self.sni = connection.get_servername()
+        sni = connection.get_servername()
+        if sni:
+            sni = sni.decode("idna")
+        self.sni = sni
 
     def http_serve_crafted(self, crafted, logctx):
         error, crafted = self.server.check_policy(

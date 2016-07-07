@@ -676,7 +676,7 @@ class TCPClient(_Connection):
         self.connection = SSL.Connection(context, self.connection)
         if sni:
             self.sni = sni
-            self.connection.set_tlsext_host_name(sni)
+            self.connection.set_tlsext_host_name(sni.encode("idna"))
         self.connection.set_connect_state()
         try:
             self.connection.do_handshake()
@@ -705,7 +705,7 @@ class TCPClient(_Connection):
             if self.cert.cn:
                 crt["subject"] = [[["commonName", self.cert.cn.decode("ascii", "strict")]]]
             if sni:
-                hostname = sni.decode("ascii", "strict")
+                hostname = sni
             else:
                 hostname = "no-hostname"
             ssl_match_hostname.match_hostname(crt, hostname)
