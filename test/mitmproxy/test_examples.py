@@ -1,5 +1,4 @@
 import glob
-import json
 import os
 from contextlib import contextmanager
 
@@ -130,26 +129,3 @@ def test_redirect_requests():
     with example("redirect_requests.py") as ex:
         ex.run("request", flow)
         assert flow.request.host == "mitmproxy.org"
-
-
-def test_har_extractor():
-    with tutils.raises(script.ScriptException):
-        with example("har_extractor.py"):
-            pass
-
-    times = dict(
-        timestamp_start=746203272,
-        timestamp_end=746203272,
-    )
-
-    flow = tutils.tflow(
-        req=netutils.treq(**times),
-        resp=netutils.tresp(**times)
-    )
-
-    with example("har_extractor.py -") as ex:
-        ex.run("response", flow)
-
-        with open(tutils.test_data.path("data/har_extractor.har")) as fp:
-            test_data = json.load(fp)
-            assert json.loads(ex.ctx.HARLog.json()) == test_data["test_response"]
