@@ -169,8 +169,8 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
-            assert ('client-foo', 'client-bar-1') in event.headers
-            assert ('client-foo', 'client-bar-2') in event.headers
+            assert (b'client-foo', b'client-bar-1') in event.headers
+            assert (b'client-foo', b'client-bar-2') in event.headers
 
             import warnings
             with warnings.catch_warnings():
@@ -538,7 +538,7 @@ class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
                 (':status', '200'),
                 ('X-Stream-ID', str(event.stream_id)),
             ])
-            h2_conn.send_data(event.stream_id, b'Stream-ID {}'.format(event.stream_id))
+            h2_conn.send_data(event.stream_id, 'Stream-ID {}'.format(event.stream_id).encode())
             h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
@@ -579,7 +579,7 @@ class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
         assert len(self.master.state.flows) == len(new_streams)
         for flow in self.master.state.flows:
             assert flow.response.status_code == 200
-            assert "Stream-ID" in flow.response.body
+            assert b"Stream-ID " in flow.response.body
 
 
 @requires_alpn
@@ -598,7 +598,7 @@ class TestConnectionTerminated(_Http2TestBase, _Http2ServerBase):
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.RequestReceived):
-            h2_conn.close_connection(error_code=5, last_stream_id=42, additional_data='foobar')
+            h2_conn.close_connection(error_code=5, last_stream_id=42, additional_data=b'foobar')
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
         return True
@@ -630,4 +630,4 @@ class TestConnectionTerminated(_Http2TestBase, _Http2ServerBase):
         assert connection_terminated_event is not None
         assert connection_terminated_event.error_code == 5
         assert connection_terminated_event.last_stream_id == 42
-        assert connection_terminated_event.additional_data == 'foobar'
+        assert connection_terminated_event.additional_data == b'foobar'
