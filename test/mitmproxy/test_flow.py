@@ -55,14 +55,16 @@ class TestStickyCookieState:
         assert s.domain_match("google.com", ".google.com")
 
     def test_response(self):
-        c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; " \
+        c = (
+            "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; "
             "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
+        )
 
         s, f = self._response(c, "host")
         assert not s.jar.keys()
 
         s, f = self._response(c, "www.google.com")
-        assert s.jar.keys()
+        assert list(s.jar.keys())[0] == ('.google.com', 80, '/')
 
         s, f = self._response("SSID=mooo", "www.google.com")
         assert list(s.jar.keys())[0] == ('www.google.com', 80, '/')
@@ -100,6 +102,28 @@ class TestStickyCookieState:
         googlekey = list(s.jar.keys())[0]
         assert len(s.jar[googlekey]) == 1
         assert list(s.jar[googlekey]["somecookie"].values())[0] == "newvalue"
+
+    def test_response_delete(self):
+        c = "duffer=zafar; Path=/", "www.google.com"
+
+        # Test that a cookie is be deleted
+        # by setting the expire time in the past
+        s, f = self._response(*c)
+        f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
+        s.handle_response(f)
+        assert not s.jar.keys()
+
+        # or by setting Max-Age to 0
+        s, f = self._response(*c)
+        f.response.headers["Set-Cookie"] = "duffer=; Max-Age=0"
+        s.handle_response(f)
+        assert not s.jar.keys()
+
+        # or both
+        s, f = self._response(*c)
+        f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0"
+        s.handle_response(f)
+        assert not s.jar.keys()
 
     def test_request(self):
         s, f = self._response("SSID=mooo", b"www.google.com")
