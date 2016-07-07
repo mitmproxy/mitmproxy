@@ -9,6 +9,7 @@ from mitmproxy.models.connections import ClientConnection
 from mitmproxy.models.connections import ServerConnection
 
 from netlib import version
+from typing import Optional  # noqa
 
 
 class Error(stateobject.StateObject):
@@ -70,18 +71,13 @@ class Flow(stateobject.StateObject):
     def __init__(self, type, client_conn, server_conn, live=None):
         self.type = type
         self.id = str(uuid.uuid4())
-        self.client_conn = client_conn
-        """@type: ClientConnection"""
-        self.server_conn = server_conn
-        """@type: ServerConnection"""
+        self.client_conn = client_conn  # type: ClientConnection
+        self.server_conn = server_conn  # type: ServerConnection
         self.live = live
-        """@type: LiveConnection"""
 
-        self.error = None
-        """@type: Error"""
-        self.intercepted = False
-        """@type: bool"""
-        self._backup = None
+        self.error = None  # type: Error
+        self.intercepted = False  # type: bool
+        self._backup = None  # type: Optional[Flow]
         self.reply = None
 
     _stateobject_attributes = dict(

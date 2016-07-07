@@ -169,7 +169,7 @@ class TestServerSSL(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_ssl(sni=b"foo.com", options=SSL.OP_ALL)
+            c.convert_to_ssl(sni="foo.com", options=SSL.OP_ALL)
             testval = b"echo!\n"
             c.wfile.write(testval)
             c.wfile.flush()
@@ -179,7 +179,7 @@ class TestServerSSL(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             assert not c.get_current_cipher()
-            c.convert_to_ssl(sni=b"foo.com")
+            c.convert_to_ssl(sni="foo.com")
             ret = c.get_current_cipher()
             assert ret
             assert "AES" in ret[0]
@@ -195,7 +195,7 @@ class TestSSLv3Only(tservers.ServerTestBase):
     def test_failure(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises(TlsException, c.convert_to_ssl, sni=b"foo.com")
+            tutils.raises(TlsException, c.convert_to_ssl, sni="foo.com")
 
 
 class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
@@ -238,7 +238,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
         with c.connect():
             with tutils.raises(InvalidCertificateException):
                 c.convert_to_ssl(
-                    sni=b"example.mitmproxy.org",
+                    sni="example.mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
                 )
@@ -272,7 +272,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
         with c.connect():
             with tutils.raises(InvalidCertificateException):
                 c.convert_to_ssl(
-                    sni=b"mitmproxy.org",
+                    sni="mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
                 )
@@ -291,7 +291,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(
-                sni=b"example.mitmproxy.org",
+                sni="example.mitmproxy.org",
                 verify_options=SSL.VERIFY_PEER,
                 ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
             )
@@ -307,7 +307,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(
-                sni=b"example.mitmproxy.org",
+                sni="example.mitmproxy.org",
                 verify_options=SSL.VERIFY_PEER,
                 ca_path=tutils.test_data.path("data/verificationcerts/")
             )
@@ -371,8 +371,8 @@ class TestSNI(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_ssl(sni=b"foo.com")
-            assert c.sni == b"foo.com"
+            c.convert_to_ssl(sni="foo.com")
+            assert c.sni == "foo.com"
             assert c.rfile.readline() == b"foo.com"
 
 
@@ -385,7 +385,7 @@ class TestServerCipherList(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_ssl(sni=b"foo.com")
+            c.convert_to_ssl(sni="foo.com")
             assert c.rfile.readline() == b"['RC4-SHA']"
 
 
@@ -405,7 +405,7 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_ssl(sni=b"foo.com")
+            c.convert_to_ssl(sni="foo.com")
             assert b"RC4-SHA" in c.rfile.readline()
 
 
@@ -418,7 +418,7 @@ class TestServerCipherListError(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises("handshake error", c.convert_to_ssl, sni=b"foo.com")
+            tutils.raises("handshake error", c.convert_to_ssl, sni="foo.com")
 
 
 class TestClientCipherListError(tservers.ServerTestBase):
@@ -433,7 +433,7 @@ class TestClientCipherListError(tservers.ServerTestBase):
             tutils.raises(
                 "cipher specification",
                 c.convert_to_ssl,
-                sni=b"foo.com",
+                sni="foo.com",
                 cipher_list="bogus"
             )
 

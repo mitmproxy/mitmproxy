@@ -8,7 +8,6 @@ import six
 
 from mitmproxy import stateobject
 from netlib import certutils
-from netlib import strutils
 from netlib import tcp
 
 
@@ -206,6 +205,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.wfile.flush()
 
     def establish_ssl(self, clientcerts, sni, **kwargs):
+        if sni and not isinstance(sni, six.string_types):
+            raise ValueError("sni must be str, not " + type(sni).__name__)
         clientcert = None
         if clientcerts:
             if os.path.isfile(clientcerts):
@@ -217,7 +218,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
                 if os.path.exists(path):
                     clientcert = path
 
-        self.convert_to_ssl(cert=clientcert, sni=strutils.always_bytes(sni), **kwargs)
+        self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni
         self.timestamp_ssl_setup = time.time()
 

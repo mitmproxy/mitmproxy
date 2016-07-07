@@ -10,6 +10,7 @@ import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy.contrib.tls import _constructs
 from mitmproxy.protocol import base
+from netlib import utils
 
 
 # taken from https://testssl.sh/openssl-rfc.mappping.html
@@ -274,10 +275,11 @@ class TlsClientHello(object):
             is_valid_sni_extension = (
                 extension.type == 0x00 and
                 len(extension.server_names) == 1 and
-                extension.server_names[0].type == 0
+                extension.server_names[0].type == 0 and
+                utils.is_valid_host(extension.server_names[0].name)
             )
             if is_valid_sni_extension:
-                return extension.server_names[0].name
+                return extension.server_names[0].name.decode("idna")
 
     @property
     def alpn_protocols(self):
@@ -403,13 +405,14 @@ class TlsLayer(base.Layer):
             self._establish_tls_with_server()
 
     def set_server_tls(self, server_tls, sni=None):
+        # type: (bool, Union[six.text_type, None, False]) -> None
         """
         Set the TLS settings for the next server connection that will be established.
         This function will not alter an existing connection.
 
         Args:
             server_tls: Shall we establish TLS with the server?
-            sni: ``bytes`` for a custom SNI value,
+            sni: ``str`` for a custom SNI value,
                 ``None`` for the client SNI value,
                 ``False`` if no SNI value should be sent.
         """
@@ -602,9 +605,9 @@ class TlsLayer(base.Layer):
                 host = upstream_cert.cn.decode("utf8").encode("idna")
         # Also add SNI values.
         if self._client_hello.sni:
-            sans.add(self._client_hello.sni)
+            sans.add(self._client_hello.sni.encode("idna"))
         if self._custom_server_sni:
-            sans.add(self._custom_server_sni)
+            sans.add(self._custom_server_sni.encode("idna"))
 
         # RFC 2818: If a subjectAltName extension of type dNSName is present, that MUST be used as the identity.
         # In other words, the Common Name is irrelevant then.

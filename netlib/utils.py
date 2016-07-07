@@ -73,11 +73,9 @@ _label_valid = re.compile(b"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
 
 
 def is_valid_host(host):
+    # type: (bytes) -> bool
     """
     Checks if a hostname is valid.
-
-    Args:
-      host (bytes): The hostname
     """
     try:
         host.decode("idna")

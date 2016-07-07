@@ -49,7 +49,7 @@ class FlowReader:
                 yield models.FLOW_TYPES[data["type"]].from_state(data)
         except ValueError:
             # Error is due to EOF
-            if can_tell and self.fo.tell() == off and self.fo.read() == '':
+            if can_tell and self.fo.tell() == off and self.fo.read() == b'':
                 return
             raise exceptions.FlowReadException("Invalid data format.")
 
