@@ -201,6 +201,13 @@ Larry
         )
         assert "Raw" in r[0]
 
+        r = cv.get_content_view(
+            cv.get("Auto"),
+            b"[1, 2, 3]",
+            headers=Headers(content_type="application/vnd.api+json")
+        )
+        assert r[0] == "JSON"
+
         tutils.raises(
             ContentViewException,
             cv.get_content_view,

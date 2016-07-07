@@ -226,7 +226,10 @@ class ViewXML(View):
 class ViewJSON(View):
     name = "JSON"
     prompt = ("json", "s")
-    content_types = ["application/json"]
+    content_types = [
+        "application/json",
+        "application/vnd.api+json"
+    ]
 
     def __call__(self, data, **metadata):
         pj = pretty_json(data)
