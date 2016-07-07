@@ -172,7 +172,7 @@ class ViewHex(View):
     def _format(data):
         for offset, hexa, s in strutils.hexdump(data):
             yield [
-                ("offset", offset + " "),
+                ("offset", offset + b" "),
                 ("text", hexa + "   "),
                 ("text", s)
             ]
