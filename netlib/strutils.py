@@ -149,8 +149,8 @@ def hexdump(s):
         part = s[i:i + 16]
         x = " ".join("{:0=2x}".format(i) for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15
-        part_repr = escape_control_characters(
+        part_repr = native(escape_control_characters(
             part.decode("ascii", "replace").replace(u"\ufffd", u"."),
             False
-        )
+        ))
         yield (offset, x, part_repr)
