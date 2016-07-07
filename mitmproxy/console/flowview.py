@@ -257,7 +257,7 @@ class FlowView(tabs.Tabs):
     def conn_text(self, conn):
         if conn:
             txt = common.format_keyvals(
-                [(h + ":", v) for (h, v) in conn.headers.fields],
+                [(h + ":", v) for (h, v) in conn.headers.items(multi=True)],
                 key = "header",
                 val = "text"
             )

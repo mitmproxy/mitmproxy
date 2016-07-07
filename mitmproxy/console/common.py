@@ -4,6 +4,7 @@ import os
 
 import urwid
 import urwid.util
+import six
 
 import netlib
 from mitmproxy import flow
@@ -108,7 +109,7 @@ def shortcuts(k):
 
 
 def fcol(s, attr):
-    s = unicode(s)
+    s = six.text_type(s)
     return (
         "fixed",
         len(s),

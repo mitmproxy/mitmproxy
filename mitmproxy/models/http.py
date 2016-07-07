@@ -220,7 +220,7 @@ class HTTPFlow(Flow):
             If f is a string, it will be compiled as a filter expression. If
             the expression is invalid, ValueError is raised.
         """
-        if isinstance(f, basestring):
+        if isinstance(f, str):
             from .. import filt
 
             f = filt.parse(f)
