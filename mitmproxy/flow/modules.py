@@ -1,10 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 import collections
-import email.utils
 import hashlib
 import re
-import time
 
 from six.moves import http_cookiejar
 from six.moves import urllib
@@ -325,20 +323,7 @@ class StickyCookieState:
             dom_port_path = self.ckey(attrs, f)
 
             if self.domain_match(f.request.host, dom_port_path[0]):
-
-                # See if 'expires' time is in the past
-                expired = False
-                if 'expires' in attrs:
-                    e = email.utils.parsedate_tz(attrs["expires"])
-                    if e:
-                        exp_ts = email.utils.mktime_tz(e)
-                        now_ts = time.time()
-                        expired = exp_ts < now_ts
-
-                # or if Max-Age is 0
-                expired = expired or (int(attrs.get('Max-Age', 1)) == 0)
-
-                if expired:
+                if cookies.is_expired(attrs):
                     # Remove the cookie from jar
                     self.jar[dom_port_path].pop(name, None)
 
