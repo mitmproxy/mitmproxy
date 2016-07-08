@@ -11,6 +11,7 @@ from mitmproxy import controller
 from mitmproxy import filt
 from netlib import wsgi
 from netlib import version
+from netlib import strutils
 from netlib.http import cookies
 from netlib.http import http1
 
@@ -216,7 +217,7 @@ class ServerPlaybackState:
         self.nopop = nopop
         self.ignore_params = ignore_params
         self.ignore_content = ignore_content
-        self.ignore_payload_params = ignore_payload_params
+        self.ignore_payload_params = [strutils.always_bytes(x) for x in (ignore_payload_params or ())]
         self.ignore_host = ignore_host
         self.fmap = {}
         for i in flows:
@@ -271,7 +272,7 @@ class ServerPlaybackState:
                 v = r.headers.get(i)
                 headers.append((i, v))
             key.append(headers)
-        return hashlib.sha256(repr(key)).digest()
+        return hashlib.sha256(repr(key).encode("utf8", "surrogateescape")).digest()
 
     def next_flow(self, request):
         """

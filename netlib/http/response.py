@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import time
+import six
 
 from netlib.http import cookies
 from netlib.http import headers as nheaders
@@ -13,8 +14,14 @@ from netlib import human
 class ResponseData(message.MessageData):
     def __init__(self, http_version, status_code, reason=None, headers=(), content=None,
                  timestamp_start=None, timestamp_end=None):
+        if isinstance(http_version, six.text_type):
+            http_version = http_version.encode("ascii", "strict")
+        if isinstance(reason, six.text_type):
+            reason = reason.encode("ascii", "strict")
         if not isinstance(headers, nheaders.Headers):
             headers = nheaders.Headers(headers)
+        if isinstance(content, six.text_type):
+            raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
 
         self.http_version = http_version
         self.status_code = status_code

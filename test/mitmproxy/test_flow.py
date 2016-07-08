@@ -1,7 +1,7 @@
 import os.path
-from six.moves import cStringIO as StringIO
 
 import mock
+import io
 
 import netlib.utils
 from netlib.http import Headers
@@ -65,7 +65,7 @@ class TestStickyCookieState:
         assert s.jar.keys()
 
         s, f = self._response("SSID=mooo", "www.google.com")
-        assert s.jar.keys()[0] == ('www.google.com', 80, '/')
+        assert list(s.jar.keys())[0] == ('www.google.com', 80, '/')
 
         # Test setting of multiple cookies
         c1 = "somecookie=test; Path=/"
@@ -73,7 +73,7 @@ class TestStickyCookieState:
         s, f = self._response(c1, "www.google.com")
         f.response.headers["Set-Cookie"] = c2
         s.handle_response(f)
-        googlekey = s.jar.keys()[0]
+        googlekey = list(s.jar.keys())[0]
         assert len(s.jar[googlekey].keys()) == 2
 
         # Test setting of weird cookie keys
@@ -88,8 +88,8 @@ class TestStickyCookieState:
         for c in cs:
             f.response.headers["Set-Cookie"] = c
             s.handle_response(f)
-        googlekey = s.jar.keys()[0]
-        assert len(s.jar[googlekey].keys()) == len(cs)
+        googlekey = list(s.jar.keys())[0]
+        assert len(s.jar[googlekey]) == len(cs)
 
         # Test overwriting of a cookie value
         c1 = "somecookie=helloworld; Path=/"
@@ -97,12 +97,12 @@ class TestStickyCookieState:
         s, f = self._response(c1, "www.google.com")
         f.response.headers["Set-Cookie"] = c2
         s.handle_response(f)
-        googlekey = s.jar.keys()[0]
-        assert len(s.jar[googlekey].keys()) == 1
-        assert s.jar[googlekey]["somecookie"].items()[0][1] == "newvalue"
+        googlekey = list(s.jar.keys())[0]
+        assert len(s.jar[googlekey]) == 1
+        assert list(s.jar[googlekey]["somecookie"].values())[0] == "newvalue"
 
     def test_request(self):
-        s, f = self._response("SSID=mooo", "www.google.com")
+        s, f = self._response("SSID=mooo", b"www.google.com")
         assert "cookie" not in f.request.headers
         s.handle_request(f)
         assert "cookie" in f.request.headers
@@ -264,26 +264,26 @@ class TestServerPlaybackState:
                 "param1", "param2"], False)
         r = tutils.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r.request.content = "paramx=x&param1=1"
+        r.request.content = b"paramx=x&param1=1"
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r2.request.content = "paramx=x&param1=1"
+        r2.request.content = b"paramx=x&param1=1"
         # same parameters
         assert s._hash(r) == s._hash(r2)
         # ignored parameters !=
-        r2.request.content = "paramx=x&param1=2"
+        r2.request.content = b"paramx=x&param1=2"
         assert s._hash(r) == s._hash(r2)
         # missing parameter
-        r2.request.content = "paramx=x"
+        r2.request.content = b"paramx=x"
         assert s._hash(r) == s._hash(r2)
         # ignorable parameter added
-        r2.request.content = "paramx=x&param1=2"
+        r2.request.content = b"paramx=x&param1=2"
         assert s._hash(r) == s._hash(r2)
         # not ignorable parameter changed
-        r2.request.content = "paramx=y&param1=1"
+        r2.request.content = b"paramx=y&param1=1"
         assert not s._hash(r) == s._hash(r2)
         # not ignorable parameter missing
-        r2.request.content = "param1=1"
+        r2.request.content = b"param1=1"
         assert not s._hash(r) == s._hash(r2)
 
     def test_ignore_payload_params_other_content_type(self):
@@ -292,14 +292,14 @@ class TestServerPlaybackState:
                 "param1", "param2"], False)
         r = tutils.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/json"
-        r.request.content = '{"param1":"1"}'
+        r.request.content = b'{"param1":"1"}'
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/json"
-        r2.request.content = '{"param1":"1"}'
+        r2.request.content = b'{"param1":"1"}'
         # same content
         assert s._hash(r) == s._hash(r2)
         # distint content (note only x-www-form-urlencoded payload is analysed)
-        r2.request.content = '{"param1":"2"}'
+        r2.request.content = b'{"param1":"2"}'
         assert not s._hash(r) == s._hash(r2)
 
     def test_ignore_payload_wins_over_params(self):
@@ -309,10 +309,10 @@ class TestServerPlaybackState:
                 "param1", "param2"], False)
         r = tutils.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r.request.content = "paramx=y"
+        r.request.content = b"paramx=y"
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r2.request.content = "paramx=x"
+        r2.request.content = b"paramx=x"
         # same parameters
         assert s._hash(r) == s._hash(r2)
 
@@ -329,10 +329,10 @@ class TestServerPlaybackState:
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
 
-        r.request.content = "foo"
-        r2.request.content = "foo"
+        r.request.content = b"foo"
+        r2.request.content = b"foo"
         assert s._hash(r) == s._hash(r2)
-        r2.request.content = "bar"
+        r2.request.content = b"bar"
         assert not s._hash(r) == s._hash(r2)
 
         # now ignoring content
@@ -347,12 +347,12 @@ class TestServerPlaybackState:
             False)
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
-        r.request.content = "foo"
-        r2.request.content = "foo"
+        r.request.content = b"foo"
+        r2.request.content = b"foo"
         assert s._hash(r) == s._hash(r2)
-        r2.request.content = "bar"
+        r2.request.content = b"bar"
         assert s._hash(r) == s._hash(r2)
-        r2.request.content = ""
+        r2.request.content = b""
         assert s._hash(r) == s._hash(r2)
         r2.request.content = None
         assert s._hash(r) == s._hash(r2)
@@ -420,13 +420,13 @@ class TestFlow(object):
     def test_backup(self):
         f = tutils.tflow()
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
-        f.request.content = "foo"
+        f.request.content = b"foo"
         assert not f.modified()
         f.backup()
-        f.request.content = "bar"
+        f.request.content = b"bar"
         assert f.modified()
         f.revert()
-        assert f.request.content == "foo"
+        assert f.request.content == b"foo"
 
     def test_backup_idempotence(self):
         f = tutils.tflow(resp=True)
@@ -486,8 +486,8 @@ class TestFlow(object):
 
     def test_replace_unicode(self):
         f = tutils.tflow(resp=True)
-        f.response.content = "\xc2foo"
-        f.replace("foo", u"bar")
+        f.response.content = b"\xc2foo"
+        f.replace(b"foo", u"bar")
 
     def test_replace_no_content(self):
         f = tutils.tflow()
@@ -497,34 +497,34 @@ class TestFlow(object):
     def test_replace(self):
         f = tutils.tflow(resp=True)
         f.request.headers["foo"] = "foo"
-        f.request.content = "afoob"
+        f.request.content = b"afoob"
 
         f.response.headers["foo"] = "foo"
-        f.response.content = "afoob"
+        f.response.content = b"afoob"
 
         assert f.replace("foo", "bar") == 6
 
         assert f.request.headers["bar"] == "bar"
-        assert f.request.content == "abarb"
+        assert f.request.content == b"abarb"
         assert f.response.headers["bar"] == "bar"
-        assert f.response.content == "abarb"
+        assert f.response.content == b"abarb"
 
     def test_replace_encoded(self):
         f = tutils.tflow(resp=True)
-        f.request.content = "afoob"
+        f.request.content = b"afoob"
         f.request.encode("gzip")
-        f.response.content = "afoob"
+        f.response.content = b"afoob"
         f.response.encode("gzip")
 
         f.replace("foo", "bar")
 
-        assert f.request.content != "abarb"
+        assert f.request.content != b"abarb"
         f.request.decode()
-        assert f.request.content == "abarb"
+        assert f.request.content == b"abarb"
 
-        assert f.response.content != "abarb"
+        assert f.response.content != b"abarb"
         f.response.decode()
-        assert f.response.content == "abarb"
+        assert f.response.content == b"abarb"
 
 
 class TestState:
@@ -667,7 +667,7 @@ class TestState:
 class TestSerialize:
 
     def _treader(self):
-        sio = StringIO()
+        sio = io.BytesIO()
         w = flow.FlowWriter(sio)
         for i in range(3):
             f = tutils.tflow(resp=True)
@@ -684,9 +684,9 @@ class TestSerialize:
         return flow.FlowReader(sio)
 
     def test_roundtrip(self):
-        sio = StringIO()
+        sio = io.BytesIO()
         f = tutils.tflow()
-        f.request.content = "".join(chr(i) for i in range(255))
+        f.request.content = bytes(bytearray(range(256)))
         w = flow.FlowWriter(sio)
         w.add(f)
 
@@ -718,7 +718,7 @@ class TestSerialize:
         assert s.flows[0].request.host == "use-this-domain"
 
     def test_filter(self):
-        sio = StringIO()
+        sio = io.BytesIO()
         fl = filt.parse("~c 200")
         w = flow.FilteredFlowWriter(sio, fl)
 
@@ -735,8 +735,8 @@ class TestSerialize:
         assert len(list(r.stream()))
 
     def test_error(self):
-        sio = StringIO()
-        sio.write("bogus")
+        sio = io.BytesIO()
+        sio.write(b"bogus")
         sio.seek(0)
         r = flow.FlowReader(sio)
         tutils.raises(FlowReadException, list, r.stream())
@@ -748,7 +748,7 @@ class TestSerialize:
         f = tutils.tflow()
         d = f.get_state()
         d["version"] = (0, 0)
-        sio = StringIO()
+        sio = io.BytesIO()
         tnetstring.dump(d, sio)
         sio.seek(0)
 
@@ -938,7 +938,7 @@ class TestFlowMaster:
             None,
             False)
         r = tutils.tflow()
-        r.request.content = "gibble"
+        r.request.content = b"gibble"
         assert not fm.do_server_playback(r)
         assert fm.do_server_playback(tutils.tflow())
 
@@ -1017,27 +1017,30 @@ class TestFlowMaster:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
 
-            def r():
-                r = flow.FlowReader(open(p, "rb"))
-                return list(r.stream())
+            def read():
+                with open(p, "rb") as f:
+                    r = flow.FlowReader(f)
+                    return list(r.stream())
 
             s = flow.State()
             fm = flow.FlowMaster(None, s)
             f = tutils.tflow(resp=True)
 
-            fm.start_stream(file(p, "ab"), None)
-            fm.request(f)
-            fm.response(f)
-            fm.stop_stream()
+            with open(p, "ab") as tmpfile:
+                fm.start_stream(tmpfile, None)
+                fm.request(f)
+                fm.response(f)
+                fm.stop_stream()
 
-            assert r()[0].response
+            assert read()[0].response
 
-            f = tutils.tflow()
-            fm.start_stream(file(p, "ab"), None)
-            fm.request(f)
-            fm.shutdown()
+            with open(p, "ab") as tmpfile:
+                f = tutils.tflow()
+                fm.start_stream(tmpfile, None)
+                fm.request(f)
+                fm.shutdown()
 
-            assert not r()[1].response
+            assert not read()[1].response
 
 
 class TestRequest:
@@ -1086,10 +1089,10 @@ class TestRequest:
         r = HTTPRequest.wrap(netlib.tutils.treq())
         r.path = "path/foo"
         r.headers["Foo"] = "fOo"
-        r.content = "afoob"
+        r.content = b"afoob"
         assert r.replace("foo(?i)", "boo") == 4
         assert r.path == "path/boo"
-        assert "foo" not in r.content
+        assert b"foo" not in r.content
         assert r.headers["boo"] == "boo"
 
     def test_constrain_encoding(self):
@@ -1108,9 +1111,9 @@ class TestRequest:
         r.headers["content-encoding"] = "identity"
         assert r.get_decoded_content() is None
 
-        r.content = "falafel"
+        r.content = b"falafel"
         r.encode("gzip")
-        assert r.get_decoded_content() == "falafel"
+        assert r.get_decoded_content() == b"falafel"
 
     def test_get_content_type(self):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
@@ -1129,9 +1132,9 @@ class TestResponse:
     def test_replace(self):
         r = HTTPResponse.wrap(netlib.tutils.tresp())
         r.headers["Foo"] = "fOo"
-        r.content = "afoob"
+        r.content = b"afoob"
         assert r.replace("foo(?i)", "boo") == 3
-        assert "foo" not in r.content
+        assert b"foo" not in r.content
         assert r.headers["boo"] == "boo"
 
     def test_get_content_type(self):
@@ -1208,24 +1211,24 @@ def test_replacehooks():
     assert h.count() == 0
 
     f = tutils.tflow()
-    f.request.content = "foo"
+    f.request.content = b"foo"
     h.add("~s", "foo", "bar")
     h.run(f)
-    assert f.request.content == "foo"
+    assert f.request.content == b"foo"
 
     f = tutils.tflow(resp=True)
-    f.request.content = "foo"
-    f.response.content = "foo"
+    f.request.content = b"foo"
+    f.response.content = b"foo"
     h.run(f)
-    assert f.response.content == "bar"
-    assert f.request.content == "foo"
+    assert f.response.content == b"bar"
+    assert f.request.content == b"foo"
 
     f = tutils.tflow()
     h.clear()
     h.add("~q", "foo", "bar")
-    f.request.content = "foo"
+    f.request.content = b"foo"
     h.run(f)
-    assert f.request.content == "bar"
+    assert f.request.content == b"bar"
 
     assert not h.add("~", "foo", "bar")
     assert not h.add("foo", "*", "bar")
@@ -1257,10 +1260,10 @@ def test_setheaders():
     assert h.count() == 0
 
     f = tutils.tflow()
-    f.request.content = "foo"
+    f.request.content = b"foo"
     h.add("~s", "foo", "bar")
     h.run(f)
-    assert f.request.content == "foo"
+    assert f.request.content == b"foo"
 
     h.clear()
     h.add("~s", "one", "two")

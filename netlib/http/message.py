@@ -100,7 +100,10 @@ class Message(basetypes.Serializable):
 
     @content.setter
     def content(self, content):
+        # type: (Optional[bytes]) -> None
         self.data.content = content
+        if isinstance(content, six.text_type):
+            raise ValueError("Message content must be bytes, not {}".format(type(content).__name__))
         if isinstance(content, bytes):
             self.headers["content-length"] = str(len(content))
 

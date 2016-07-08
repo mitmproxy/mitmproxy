@@ -23,8 +23,20 @@ host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 class RequestData(message.MessageData):
     def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=(), content=None,
                  timestamp_start=None, timestamp_end=None):
+        if isinstance(method, six.text_type):
+            method = method.encode("ascii", "strict")
+        if isinstance(scheme, six.text_type):
+            scheme = scheme.encode("ascii", "strict")
+        if isinstance(host, six.text_type):
+            host = host.encode("idna", "strict")
+        if isinstance(path, six.text_type):
+            path = path.encode("ascii", "strict")
+        if isinstance(http_version, six.text_type):
+            http_version = http_version.encode("ascii", "strict")
         if not isinstance(headers, nheaders.Headers):
             headers = nheaders.Headers(headers)
+        if isinstance(content, six.text_type):
+            raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
 
         self.first_line_format = first_line_format
         self.method = method
@@ -356,7 +368,7 @@ class Request(message.Message):
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = netlib.http.url.encode(value)
+        self.content = netlib.http.url.encode(value).encode()
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):
