@@ -4,7 +4,7 @@ from . import tutils
 
 
 def test_load():
-    with open(tutils.test_data.path("data/dumpfile-013"), "rb") as f:
+    with open(tutils.test_data.path("data/dumpfile-011"), "rb") as f:
         flow_reader = FlowReader(f)
         flows = list(flow_reader.stream())
         assert len(flows) == 1
@@ -12,7 +12,7 @@ def test_load():
 
 
 def test_cannot_convert():
-    with open(tutils.test_data.path("data/dumpfile-012"), "rb") as f:
+    with open(tutils.test_data.path("data/dumpfile-010"), "rb") as f:
         flow_reader = FlowReader(f)
         with tutils.raises(FlowReadException):
             list(flow_reader.stream())
