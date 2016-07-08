@@ -11,7 +11,7 @@ class Thing:
 
 @tutils.skip_appveyor
 def test_concurrent():
-    with Script(tutils.test_data.path("data/scripts/concurrent_decorator.py"), None) as s:
+    with Script(tutils.test_data.path("data/scripts/concurrent_decorator.py")) as s:
         f1, f2 = Thing(), Thing()
         s.run("request", f1)
         s.run("request", f2)
@@ -23,6 +23,6 @@ def test_concurrent():
 
 
 def test_concurrent_err():
-    s = Script(tutils.test_data.path("data/scripts/concurrent_decorator_err.py"), None)
+    s = Script(tutils.test_data.path("data/scripts/concurrent_decorator_err.py"))
     with tutils.raises("Concurrent decorator not supported for 'start' method"):
         s.load()

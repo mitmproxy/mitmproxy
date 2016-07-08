@@ -15,8 +15,8 @@ _observers = {}
 def watch(script, callback):
     if script in _observers:
         raise RuntimeError("Script already observed")
-    script_dir = os.path.dirname(os.path.abspath(script.filename))
-    script_name = os.path.basename(script.filename)
+    script_dir = os.path.dirname(os.path.abspath(script.path))
+    script_name = os.path.basename(script.path)
     event_handler = _ScriptModificationHandler(callback, filename=script_name)
     observer = Observer()
     observer.schedule(event_handler, script_dir)

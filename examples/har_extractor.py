@@ -2,6 +2,7 @@
     This inline script utilizes harparser.HAR from
     https://github.com/JustusW/harparser to generate a HAR log object.
 """
+import mitmproxy
 import six
 import sys
 import pytz
@@ -218,17 +219,17 @@ def done():
     compressed_json_dump = context.HARLog.compress()
 
     if context.dump_file == '-':
-        context.log(pprint.pformat(json.loads(json_dump)))
+        mitmproxy.log(pprint.pformat(json.loads(json_dump)))
     elif context.dump_file.endswith('.zhar'):
         file(context.dump_file, "w").write(compressed_json_dump)
     else:
         file(context.dump_file, "w").write(json_dump)
-    context.log(
+    mitmproxy.log(
         "HAR log finished with %s bytes (%s bytes compressed)" % (
             len(json_dump), len(compressed_json_dump)
         )
     )
-    context.log(
+    mitmproxy.log(
         "Compression rate is %s%%" % str(
             100. * len(compressed_json_dump) / len(json_dump)
         )
