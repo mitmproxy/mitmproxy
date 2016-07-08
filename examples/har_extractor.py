@@ -54,7 +54,13 @@ class _HARLog(HAR.log):
         return self.__page_list__
 
 
-def start(context):
+class Context(object):
+    pass
+
+context = Context()
+
+
+def start():
     """
         On start we create a HARLog instance. You will have to adapt this to
         suit your actual needs of HAR generation. As it will probably be
@@ -79,7 +85,7 @@ def start(context):
     context.seen_server = set()
 
 
-def response(context, flow):
+def response(flow):
     """
        Called when a server response has been received. At the time of this
        message both a request and a response are present and completely done.
@@ -201,7 +207,7 @@ def response(context, flow):
     context.HARLog.add(entry)
 
 
-def done(context):
+def done():
     """
         Called once on script shutdown, after any other events.
     """

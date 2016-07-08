@@ -1,3 +1,3 @@
 
-def start(ctx):
+def start():
     raise ValueError()

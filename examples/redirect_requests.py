@@ -5,7 +5,7 @@ from mitmproxy.models import HTTPResponse
 from netlib.http import Headers
 
 
-def request(context, flow):
+def request(flow):
     # pretty_host takes the "Host" header of the request into account,
     # which is useful in transparent mode where we usually only have the IP
     # otherwise.

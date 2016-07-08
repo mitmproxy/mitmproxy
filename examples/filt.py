@@ -3,14 +3,16 @@
 import sys
 from mitmproxy import filt
 
+state = {}
 
-def start(context):
+
+def start():
     if len(sys.argv) != 2:
         raise ValueError("Usage: -s 'filt.py FILTER'")
-    context.filter = filt.parse(sys.argv[1])
+    state["filter"] = filt.parse(sys.argv[1])
 
 
-def response(context, flow):
-    if flow.match(context.filter):
+def response(flow):
+    if flow.match(state["filter"]):
         print("Flow matches filter:")
         print(flow)

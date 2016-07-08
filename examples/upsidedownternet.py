@@ -3,7 +3,7 @@ from PIL import Image
 from mitmproxy.models import decoded
 
 
-def response(context, flow):
+def response(flow):
     if flow.response.headers.get("content-type", "").startswith("image"):
         with decoded(flow.response):  # automatically decode gzipped responses.
             try:

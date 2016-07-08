@@ -14,7 +14,7 @@ def proxy_address(flow):
         return ("localhost", 8081)
 
 
-def request(context, flow):
+def request(flow):
     if flow.request.method == "CONNECT":
         # If the decision is done by domain, one could also modify the server address here.
         # We do it after CONNECT here to have the request data available as well.

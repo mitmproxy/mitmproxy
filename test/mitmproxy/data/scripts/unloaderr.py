@@ -1,2 +1,2 @@
-def done(ctx):
+def done():
     raise RuntimeError()

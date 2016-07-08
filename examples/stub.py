@@ -1,79 +1,80 @@
+import mitmproxy
 """
     This is a script stub, with definitions for all events.
 """
 
 
-def start(context):
+def start():
     """
         Called once on script startup, before any other events.
     """
-    context.log("start")
+    mitmproxy.log("start")
 
 
-def clientconnect(context, root_layer):
+def clientconnect(root_layer):
     """
         Called when a client initiates a connection to the proxy. Note that a
         connection can correspond to multiple HTTP requests
     """
-    context.log("clientconnect")
+    mitmproxy.log("clientconnect")
 
 
-def request(context, flow):
+def request(flow):
     """
         Called when a client request has been received.
     """
-    context.log("request")
+    mitmproxy.log("request")
 
 
-def serverconnect(context, server_conn):
+def serverconnect(server_conn):
     """
         Called when the proxy initiates a connection to the target server. Note that a
         connection can correspond to multiple HTTP requests
     """
-    context.log("serverconnect")
+    mitmproxy.log("serverconnect")
 
 
-def responseheaders(context, flow):
+def responseheaders(flow):
     """
         Called when the response headers for a server response have been received,
         but the response body has not been processed yet. Can be used to tell mitmproxy
         to stream the response.
     """
-    context.log("responseheaders")
+    mitmproxy.log("responseheaders")
 
 
-def response(context, flow):
+def response(flow):
     """
        Called when a server response has been received.
     """
-    context.log("response")
+    mitmproxy.log("response")
 
 
-def error(context, flow):
+def error(flow):
     """
         Called when a flow error has occured, e.g. invalid server responses, or
         interrupted connections. This is distinct from a valid server HTTP error
         response, which is simply a response with an HTTP error code.
     """
-    context.log("error")
+    mitmproxy.log("error")
 
 
-def serverdisconnect(context, server_conn):
+def serverdisconnect(server_conn):
     """
         Called when the proxy closes the connection to the target server.
     """
-    context.log("serverdisconnect")
+    mitmproxy.log("serverdisconnect")
 
 
-def clientdisconnect(context, root_layer):
+def clientdisconnect(root_layer):
     """
         Called when a client disconnects from the proxy.
     """
-    context.log("clientdisconnect")
+    mitmproxy.log("clientdisconnect")
 
 
-def done(context):
+def done():
     """
         Called once on script shutdown, after any other events.
     """
-    context.log("done")
+    mitmproxy.log("done")

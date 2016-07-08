@@ -1,2 +1,2 @@
-def request(ctx, r):
-    raise ValueError
+def request(r):
+    raise ValueError()

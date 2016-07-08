@@ -11,7 +11,7 @@ mitmdump -T --host --tcp ".*" -q -s examples/tcp_message.py
 from netlib import strutils
 
 
-def tcp_message(ctx, tcp_msg):
+def tcp_message(tcp_msg):
     modified_msg = tcp_msg.message.replace("foo", "bar")
 
     is_modified = False if modified_msg == tcp_msg.message else True

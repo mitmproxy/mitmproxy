@@ -1,2 +1,2 @@
-def request(context, flow):
+def request(flow):
     flow.request.query["mitmproxy"] = "rocks"

@@ -20,13 +20,14 @@ Example:
 
 Authors: Maximilian Hils, Matthew Tuusberg
 """
-from __future__ import (absolute_import, print_function, division)
+from __future__ import absolute_import, print_function, division
 import collections
 import random
 
 import sys
 from enum import Enum
 
+import mitmproxy
 from mitmproxy.exceptions import TlsProtocolException
 from mitmproxy.protocol import TlsLayer, RawTCPLayer
 
@@ -97,7 +98,6 @@ class TlsFeedback(TlsLayer):
 
     def _establish_tls_with_client(self):
         server_address = self.server_conn.address
-        tls_strategy = self.script_context.tls_strategy
 
         try:
             super(TlsFeedback, self)._establish_tls_with_client()
@@ -110,15 +110,18 @@ class TlsFeedback(TlsLayer):
 
 # inline script hooks below.
 
+tls_strategy = None
 
-def start(context):
+
+def start():
+    global tls_strategy
     if len(sys.argv) == 2:
-        context.tls_strategy = ProbabilisticStrategy(float(sys.argv[1]))
+        tls_strategy = ProbabilisticStrategy(float(sys.argv[1]))
     else:
-        context.tls_strategy = ConservativeStrategy()
+        tls_strategy = ConservativeStrategy()
 
 
-def next_layer(context, next_layer):
+def next_layer(next_layer):
     """
     This hook does the actual magic - if the next layer is planned to be a TLS layer,
     we check if we want to enter pass-through mode instead.
@@ -126,14 +129,13 @@ def next_layer(context, next_layer):
     if isinstance(next_layer, TlsLayer) and next_layer._client_tls:
         server_address = next_layer.server_conn.address
 
-        if context.tls_strategy.should_intercept(server_address):
+        if tls_strategy.should_intercept(server_address):
             # We try to intercept.
             # Monkey-Patch the layer to get feedback from the TLSLayer if interception worked.
             next_layer.__class__ = TlsFeedback
-            next_layer.script_context = context
         else:
             # We don't intercept - reply with a pass-through layer and add a "skipped" entry.
-            context.log("TLS passthrough for %s" % repr(next_layer.server_conn.address), "info")
-            next_layer_replacement = RawTCPLayer(next_layer.ctx, logging=False)
+            mitmproxy.log("TLS passthrough for %s" % repr(next_layer.server_conn.address), "info")
+            next_layer_replacement = RawTCPLayer(next_layer.ctx, ignore=True)
             next_layer.reply.send(next_layer_replacement)
-            context.tls_strategy.record_skipped(server_address)
+            tls_strategy.record_skipped(server_address)
