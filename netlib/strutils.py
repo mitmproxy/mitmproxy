@@ -119,7 +119,7 @@ def is_mostly_bin(s):
     return sum(
         i < 9 or 13 < i < 32 or 126 < i
         for i in six.iterbytes(s[:100])
-    ) > 30
+    ) / len(s[:100]) > 0.3
 
 
 def is_xml(s):

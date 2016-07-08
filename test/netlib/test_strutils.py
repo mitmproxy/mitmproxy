@@ -3,6 +3,13 @@ import six
 from netlib import strutils, tutils
 
 
+def test_always_bytes():
+    assert strutils.always_bytes(bytes(bytearray(range(256)))) == bytes(bytearray(range(256)))
+    assert strutils.always_bytes("foo") == b"foo"
+    with tutils.raises(ValueError):
+        strutils.always_bytes(u"\u2605", "ascii")
+
+
 def test_native():
     with tutils.raises(TypeError):
         strutils.native(42)
@@ -30,6 +37,9 @@ def test_escape_control_characters():
         u'................................ !"#$%&\'()*+,-./0123456789:;<'
         u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
     )
+
+    with tutils.raises(ValueError):
+        strutils.escape_control_characters(b"foo")
 
 
 def test_bytes_to_escaped_str():
@@ -66,6 +76,11 @@ def test_escaped_str_to_bytes():
     else:
         with tutils.raises(ValueError):
             strutils.escaped_str_to_bytes(b"very byte")
+
+
+def test_is_mostly_bin():
+    assert not strutils.is_mostly_bin(b"foo\xFF")
+    assert strutils.is_mostly_bin(b"foo" + b"\xFF" * 10)
 
 
 def test_is_xml():
