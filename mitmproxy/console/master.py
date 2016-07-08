@@ -310,7 +310,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def sig_add_event(self, sender, e, level):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.options.verbosity < needed:
+        if self.options.verbosity or -1 < needed:
             return
 
         if level == "error":
