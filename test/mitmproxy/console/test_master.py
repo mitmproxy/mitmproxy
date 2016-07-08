@@ -112,11 +112,13 @@ def test_options():
 
 class TestMaster(mastertest.MasterTest):
     def mkmaster(self, filt, **options):
+        if "verbosity" not in options:
+            options["verbosity"] = 0
         o = console.master.Options(filtstr=filt, **options)
         return console.master.ConsoleMaster(None, o)
 
     def test_basic(self):
         m = self.mkmaster(None)
         for i in (1, 2, 3):
-            self.dummy_cycle(m, 1, "")
+            self.dummy_cycle(m, 1, b"")
             assert len(m.state.flows) == i

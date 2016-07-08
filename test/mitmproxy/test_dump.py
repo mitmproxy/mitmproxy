@@ -63,6 +63,8 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def mkmaster(self, filt, **options):
         cs = StringIO()
+        if "verbosity" not in options:
+            options["verbosity"] = 0
         o = dump.Options(filtstr=filt, **options)
         return dump.DumpMaster(None, o, outfile=cs)
 
