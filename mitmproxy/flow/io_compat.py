@@ -7,6 +7,13 @@ import six
 
 from netlib import version, strutils
 
+def convert_011_012(data):
+    data[b"version"] = (0, 12)
+    return data
+
+def convert_012_013(data):
+    data[b"version"] = (0, 13)
+    return data
 
 def convert_013_014(data):
     data[b"request"][b"first_line_format"] = data[b"request"].pop(b"form_in")
@@ -97,6 +104,8 @@ def convert_unicode(data):
 
 
 converters = {
+    (0, 11): convert_011_012,
+    (0, 12): convert_012_013,
     (0, 13): convert_013_014,
     (0, 14): convert_014_015,
     (0, 15): convert_015_016,
