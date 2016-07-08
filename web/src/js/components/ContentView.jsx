@@ -17,18 +17,19 @@ ContentView.propTypes = {
 
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
 
-function ContentView({ flow, message, contentView, selectView, displayLarge }) {
+function ContentView(props) {
+    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge } = props
 
     if (message.contentLength === 0) {
-        return <MetaViews.ContentEmpty {...this.props}/>
+        return <MetaViews.ContentEmpty {...props}/>
     }
 
     if (message.contentLength === null) {
-        return <MetaViews.ContentMissing {...this.props}/>
+        return <MetaViews.ContentMissing {...props}/>
     }
 
     if (!displayLarge && ContentView.isContentTooLarge(message)) {
-        return <MetaViews.ContentTooLarge {...this.props} onClick={() => this.props.setDisplayLarge(true)}/>
+        return <MetaViews.ContentTooLarge {...props} onClick={() => setDisplayLarge(true)}/>
     }
 
     const View = ContentViews[contentView]
