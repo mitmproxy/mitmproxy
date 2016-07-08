@@ -24,5 +24,5 @@ def response(context, flow):
                 height=0,
                 width=0)
             html.body.insert(0, iframe)
-            flow.response.content = str(html)
+            flow.response.content = str(html).encode("utf8")
             context.log("Iframe inserted.")

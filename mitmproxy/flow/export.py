@@ -75,7 +75,7 @@ def python_code(flow):
 
     data = ""
     if flow.request.body:
-        json_obj = is_json(flow.request.headers, flow.request.body)
+        json_obj = is_json(flow.request.headers, flow.request.content)
         if json_obj:
             data = "\njson = %s\n" % dictstr(sorted(json_obj.items()), "    ")
             args += "\n    json=json,"
@@ -100,11 +100,12 @@ def raw_request(flow):
 
 
 def is_json(headers, content):
+    # type: (netlib.http.Headers, bytes) -> bool
     if headers:
         ct = netlib.http.parse_content_type(headers.get("content-type", ""))
         if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
             try:
-                return json.loads(content)
+                return json.loads(content.decode("utf8", "surrogateescape"))
             except ValueError:
                 return False
     return False

@@ -84,11 +84,11 @@ def test_iframe_injector():
         with example("iframe_injector.py") as ex:
             pass
 
-    flow = tutils.tflow(resp=netutils.tresp(content="<html>mitmproxy</html>"))
+    flow = tutils.tflow(resp=netutils.tresp(content=b"<html>mitmproxy</html>"))
     with example("iframe_injector.py http://example.org/evil_iframe") as ex:
         ex.run("response", flow)
         content = flow.response.content
-        assert 'iframe' in content and 'evil_iframe' in content
+        assert b'iframe' in content and b'evil_iframe' in content
 
 
 def test_modify_form():
@@ -96,11 +96,11 @@ def test_modify_form():
     flow = tutils.tflow(req=netutils.treq(headers=form_header))
     with example("modify_form.py") as ex:
         ex.run("request", flow)
-        assert flow.request.urlencoded_form["mitmproxy"] == "rocks"
+        assert flow.request.urlencoded_form[b"mitmproxy"] == b"rocks"
 
         flow.request.headers["content-type"] = ""
         ex.run("request", flow)
-        assert list(flow.request.urlencoded_form.items()) == [("foo", "bar")]
+        assert list(flow.request.urlencoded_form.items()) == [(b"foo", b"bar")]
 
 
 def test_modify_querystring():
@@ -119,11 +119,11 @@ def test_modify_response_body():
         with example("modify_response_body.py"):
             assert True
 
-    flow = tutils.tflow(resp=netutils.tresp(content="I <3 mitmproxy"))
+    flow = tutils.tflow(resp=netutils.tresp(content=b"I <3 mitmproxy"))
     with example("modify_response_body.py mitmproxy rocks") as ex:
-        assert ex.ctx.old == "mitmproxy" and ex.ctx.new == "rocks"
+        assert ex.ctx.old == b"mitmproxy" and ex.ctx.new == b"rocks"
         ex.run("response", flow)
-        assert flow.response.content == "I <3 rocks"
+        assert flow.response.content == b"I <3 rocks"
 
 
 def test_redirect_requests():

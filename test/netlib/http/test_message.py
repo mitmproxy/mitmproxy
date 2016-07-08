@@ -7,8 +7,8 @@ from netlib.tutils import tresp
 
 def _test_passthrough_attr(message, attr):
     assert getattr(message, attr) == getattr(message.data, attr)
-    setattr(message, attr, "foo")
-    assert getattr(message.data, attr) == "foo"
+    setattr(message, attr, b"foo")
+    assert getattr(message.data, attr) == b"foo"
 
 
 def _test_decoded_attr(message, attr):

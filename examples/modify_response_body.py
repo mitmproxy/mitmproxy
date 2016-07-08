@@ -10,7 +10,7 @@ def start(context):
         raise ValueError('Usage: -s "modify_response_body.py old new"')
     # You may want to use Python's argparse for more sophisticated argument
     # parsing.
-    context.old, context.new = sys.argv[1], sys.argv[2]
+    context.old, context.new = sys.argv[1].encode(), sys.argv[2].encode()
 
 
 def response(context, flow):
