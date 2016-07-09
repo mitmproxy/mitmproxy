@@ -146,7 +146,7 @@ def hexdump(s):
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i).encode()
+        offset = "{:0=10x}".format(i)
         part = s[i:i + 16]
         x = " ".join("{:0=2x}".format(i) for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15
