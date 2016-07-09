@@ -21,8 +21,8 @@ def example(command):
         yield s
 
 
-@mock.patch("mitmproxy.master")
-@mock.patch("mitmproxy.log")
+@mock.patch("mitmproxy.ctx.master")
+@mock.patch("mitmproxy.ctx.log")
 def test_load_scripts(log, master):
     scripts = glob.glob("%s/*.py" % example_dir)
 
@@ -121,7 +121,7 @@ def test_redirect_requests():
         assert flow.request.host == "mitmproxy.org"
 
 
-@mock.patch("mitmproxy.log")
+@mock.patch("mitmproxy.ctx.log")
 def test_har_extractor(log):
     if sys.version_info >= (3, 0):
         with tutils.raises("does not work on Python 3"):

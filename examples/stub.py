@@ -8,7 +8,7 @@ def start():
     """
         Called once on script startup, before any other events.
     """
-    mitmproxy.log("start")
+    mitmproxy.ctx.log("start")
 
 
 def clientconnect(root_layer):
@@ -16,14 +16,14 @@ def clientconnect(root_layer):
         Called when a client initiates a connection to the proxy. Note that a
         connection can correspond to multiple HTTP requests
     """
-    mitmproxy.log("clientconnect")
+    mitmproxy.ctx.log("clientconnect")
 
 
 def request(flow):
     """
         Called when a client request has been received.
     """
-    mitmproxy.log("request")
+    mitmproxy.ctx.log("request")
 
 
 def serverconnect(server_conn):
@@ -31,7 +31,7 @@ def serverconnect(server_conn):
         Called when the proxy initiates a connection to the target server. Note that a
         connection can correspond to multiple HTTP requests
     """
-    mitmproxy.log("serverconnect")
+    mitmproxy.ctx.log("serverconnect")
 
 
 def responseheaders(flow):
@@ -40,14 +40,14 @@ def responseheaders(flow):
         but the response body has not been processed yet. Can be used to tell mitmproxy
         to stream the response.
     """
-    mitmproxy.log("responseheaders")
+    mitmproxy.ctx.log("responseheaders")
 
 
 def response(flow):
     """
        Called when a server response has been received.
     """
-    mitmproxy.log("response")
+    mitmproxy.ctx.log("response")
 
 
 def error(flow):
@@ -56,25 +56,25 @@ def error(flow):
         interrupted connections. This is distinct from a valid server HTTP error
         response, which is simply a response with an HTTP error code.
     """
-    mitmproxy.log("error")
+    mitmproxy.ctx.log("error")
 
 
 def serverdisconnect(server_conn):
     """
         Called when the proxy closes the connection to the target server.
     """
-    mitmproxy.log("serverdisconnect")
+    mitmproxy.ctx.log("serverdisconnect")
 
 
 def clientdisconnect(root_layer):
     """
         Called when a client disconnects from the proxy.
     """
-    mitmproxy.log("clientdisconnect")
+    mitmproxy.ctx.log("clientdisconnect")
 
 
 def done():
     """
         Called once on script shutdown, after any other events.
     """
-    mitmproxy.log("done")
+    mitmproxy.ctx.log("done")

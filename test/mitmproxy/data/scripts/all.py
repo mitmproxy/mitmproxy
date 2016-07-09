@@ -3,35 +3,35 @@ log = []
 
 
 def clientconnect(cc):
-    mitmproxy.log("XCLIENTCONNECT")
+    mitmproxy.ctx.log("XCLIENTCONNECT")
     log.append("clientconnect")
 
 
 def serverconnect(cc):
-    mitmproxy.log("XSERVERCONNECT")
+    mitmproxy.ctx.log("XSERVERCONNECT")
     log.append("serverconnect")
 
 
 def request(f):
-    mitmproxy.log("XREQUEST")
+    mitmproxy.ctx.log("XREQUEST")
     log.append("request")
 
 
 def response(f):
-    mitmproxy.log("XRESPONSE")
+    mitmproxy.ctx.log("XRESPONSE")
     log.append("response")
 
 
 def responseheaders(f):
-    mitmproxy.log("XRESPONSEHEADERS")
+    mitmproxy.ctx.log("XRESPONSEHEADERS")
     log.append("responseheaders")
 
 
 def clientdisconnect(cc):
-    mitmproxy.log("XCLIENTDISCONNECT")
+    mitmproxy.ctx.log("XCLIENTDISCONNECT")
     log.append("clientdisconnect")
 
 
 def error(cc):
-    mitmproxy.log("XERROR")
+    mitmproxy.ctx.log("XERROR")
     log.append("error")

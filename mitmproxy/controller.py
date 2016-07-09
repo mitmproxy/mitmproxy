@@ -6,7 +6,7 @@ import contextlib
 
 from six.moves import queue
 
-import mitmproxy
+from . import ctx as mitmproxy_ctx
 from netlib import basethread
 from . import exceptions
 
@@ -59,16 +59,16 @@ class Master(object):
     @contextlib.contextmanager
     def handlecontext(self):
         # Handlecontexts also have to nest - leave cleanup to the outermost
-        if mitmproxy.master:
+        if mitmproxy_ctx.master:
             yield
             return
-        mitmproxy.master = self
-        mitmproxy.log = Log(self)
+        mitmproxy_ctx.master = self
+        mitmproxy_ctx.log = Log(self)
         try:
             yield
         finally:
-            mitmproxy.master = None
-            mitmproxy.log = None
+            mitmproxy_ctx.master = None
+            mitmproxy_ctx.log = None
 
     def add_server(self, server):
         # We give a Channel to the server which can be used to communicate with the master
