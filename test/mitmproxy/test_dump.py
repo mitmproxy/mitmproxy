@@ -65,6 +65,8 @@ class TestDumpMaster(mastertest.MasterTest):
         cs = StringIO()
         if "verbosity" not in options:
             options["verbosity"] = 0
+        if "flow_detail" not in options:
+            options["flow_detail"] = 0
         o = dump.Options(filtstr=filt, **options)
         return dump.DumpMaster(None, o, outfile=cs)
 
@@ -118,16 +120,22 @@ class TestDumpMaster(mastertest.MasterTest):
             self.flowfile(p)
 
             o = dump.Options(server_replay=[p], kill=True)
+            o.verbosity = 0
+            o.flow_detail = 0
             m = dump.DumpMaster(None, o, outfile=cs)
 
             self.cycle(m, b"content")
             self.cycle(m, b"content")
 
             o = dump.Options(server_replay=[p], kill=False)
+            o.verbosity = 0
+            o.flow_detail = 0
             m = dump.DumpMaster(None, o, outfile=cs)
             self.cycle(m, b"nonexistent")
 
             o = dump.Options(client_replay=[p], kill=False)
+            o.verbosity = 0
+            o.flow_detail = 0
             m = dump.DumpMaster(None, o, outfile=cs)
 
     def test_read(self):
@@ -166,6 +174,8 @@ class TestDumpMaster(mastertest.MasterTest):
     def test_replacements(self):
         cs = StringIO()
         o = dump.Options(replacements=[(".*", "content", "foo")])
+        o.verbosity = 0
+        o.flow_detail = 0
         m = dump.DumpMaster(None, o, outfile=cs)
         f = self.cycle(m, b"content")
         assert f.request.content == b"foo"
@@ -173,6 +183,8 @@ class TestDumpMaster(mastertest.MasterTest):
     def test_setheader(self):
         cs = StringIO()
         o = dump.Options(setheaders=[(".*", "one", "two")])
+        o.verbosity = 0
+        o.flow_detail = 0
         m = dump.DumpMaster(None, o, outfile=cs)
         f = self.cycle(m, b"content")
         assert f.request.headers["one"] == "two"
