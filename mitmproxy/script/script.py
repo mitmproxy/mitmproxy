@@ -15,6 +15,11 @@ import warnings
 
 import six
 
+try:
+    import click
+except ImportError:
+    click = False
+
 from mitmproxy import exceptions
 
 
@@ -104,6 +109,9 @@ class Script(object):
             sys.path.pop()
 
         start_fn = self.ns.get("start")
+        if click and isinstance(start_fn, click.Command):
+            # click sys.exit()s by default, we explicitly disable that.
+            return self.run("start", standalone_mode=False)
         if start_fn and len(inspect.getargspec(start_fn).args) == 2:
             warnings.warn(
                 "The 'args' argument of the start() script hook is deprecated. "
