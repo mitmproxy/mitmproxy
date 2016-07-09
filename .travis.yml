@@ -20,12 +20,9 @@ matrix:
   include:
     - python: 3.5
       env: TOXENV=lint
-    - language: generic
-      os: osx
-      osx_image: xcode7.1
-      git:
-        depth: 9999999
-      env: TOXENV=py27
+    - os: osx
+      language: generic
+      env: TOXENV=py35
     - python: 3.5
       env: TOXENV=py35
     - python: 3.5
@@ -45,7 +42,7 @@ install:
     then
       brew update || brew update # try again if it fails
       brew outdated openssl || brew upgrade openssl
-      brew install python
+      brew install python python3
     fi
   - pip install tox
 
@@ -55,9 +52,9 @@ after_success:
   - |
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        pip install -U virtualenv
-        ./dev.sh
-        source venv/bin/activate
+        pip3 install -U virtualenv
+        ./dev.sh 3.5
+        source venv3.5/bin/activate
         pip install -e ./release
         python ./release/rtool.py bdist
         python ./release/rtool.py upload-snapshot --bdist --wheel
