@@ -6,38 +6,40 @@ by the mitmproxy-specific ScriptContext.
 # Do not import __future__ here, this would apply transitively to the inline scripts.
 from __future__ import absolute_import, print_function, division
 
-import inspect
 import os
 import shlex
 import sys
 import contextlib
-import warnings
 
 import six
+from typing import List  # noqa
 
 from mitmproxy import exceptions
 
 
 @contextlib.contextmanager
-def setargs(args):
+def scriptenv(path, args):
+    # type: (str, List[str]) -> None
     oldargs = sys.argv
-    sys.argv = args
+    script_dir = os.path.dirname(os.path.abspath(path))
+
+    sys.argv = [path] + args
+    sys.path.append(script_dir)
     try:
         yield
     finally:
         sys.argv = oldargs
+        sys.path.pop()
 
 
 class Script(object):
-
     """
     Script object representing an inline script.
     """
 
-    def __init__(self, command, context):
+    def __init__(self, command):
         self.command = command
-        self.args = self.parse_command(command)
-        self.ctx = context
+        self.path, self.args = self.parse_command(command)
         self.ns = None
 
     def __enter__(self):
@@ -46,15 +48,15 @@ class Script(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val:
-            return False  # reraise the exception
+            return False  # re-raise the exception
         self.unload()
-
-    @property
-    def filename(self):
-        return self.args[0]
 
     @staticmethod
     def parse_command(command):
+        # type: (str) -> Tuple[str,List[str]]
+        """
+            Returns a (path, args) tuple.
+        """
         if not command or not command.strip():
             raise exceptions.ScriptException("Empty script command.")
         # Windows: escape all backslashes in the path.
@@ -71,7 +73,7 @@ class Script(object):
                 args[0])
         elif os.path.isdir(args[0]):
             raise exceptions.ScriptException("Not a file: %s" % args[0])
-        return args
+        return args[0], args[1:]
 
     def load(self):
         """
@@ -85,31 +87,19 @@ class Script(object):
         """
         if self.ns is not None:
             raise exceptions.ScriptException("Script is already loaded")
-        script_dir = os.path.dirname(os.path.abspath(self.args[0]))
-        self.ns = {'__file__': os.path.abspath(self.args[0])}
-        sys.path.append(script_dir)
-        sys.path.append(os.path.join(script_dir, ".."))
-        try:
-            with open(self.filename) as f:
-                code = compile(f.read(), self.filename, 'exec')
-                exec(code, self.ns, self.ns)
-        except Exception:
-            six.reraise(
-                exceptions.ScriptException,
-                exceptions.ScriptException.from_exception_context(),
-                sys.exc_info()[2]
-            )
-        finally:
-            sys.path.pop()
-            sys.path.pop()
+        self.ns = {'__file__': os.path.abspath(self.path)}
 
-        start_fn = self.ns.get("start")
-        if start_fn and len(inspect.getargspec(start_fn).args) == 2:
-            warnings.warn(
-                "The 'args' argument of the start() script hook is deprecated. "
-                "Please use sys.argv instead."
-            )
-            return self.run("start", self.args)
+        with scriptenv(self.path, self.args):
+            try:
+                with open(self.path) as f:
+                    code = compile(f.read(), self.path, 'exec')
+                    exec(code, self.ns, self.ns)
+            except Exception:
+                six.reraise(
+                    exceptions.ScriptException,
+                    exceptions.ScriptException.from_exception_context(),
+                    sys.exc_info()[2]
+                )
         return self.run("start")
 
     def unload(self):
@@ -134,8 +124,8 @@ class Script(object):
         f = self.ns.get(name)
         if f:
             try:
-                with setargs(self.args):
-                    return f(self.ctx, *args, **kwargs)
+                with scriptenv(self.path, self.args):
+                    return f(*args, **kwargs)
             except Exception:
                 six.reraise(
                     exceptions.ScriptException,

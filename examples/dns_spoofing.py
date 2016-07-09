@@ -28,7 +28,7 @@ import re
 parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
-def request(context, flow):
+def request(flow):
     if flow.client_conn.ssl_established:
         flow.request.scheme = "https"
         sni = flow.client_conn.connection.get_servername()

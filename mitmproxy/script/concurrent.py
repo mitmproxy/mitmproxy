@@ -18,9 +18,9 @@ def concurrent(fn):
             "Concurrent decorator not supported for '%s' method." % fn.__name__
         )
 
-    def _concurrent(ctx, obj):
+    def _concurrent(obj):
         def run():
-            fn(ctx, obj)
+            fn(obj)
             if not obj.reply.acked:
                 obj.reply.ack()
         obj.reply.take()

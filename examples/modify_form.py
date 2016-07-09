@@ -1,4 +1,4 @@
-def request(context, flow):
+def request(flow):
     if flow.request.urlencoded_form:
         flow.request.urlencoded_form["mitmproxy"] = "rocks"
     else:

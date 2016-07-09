@@ -10,7 +10,7 @@ def test_simple():
             pass
 
         script = mock.Mock()
-        script.filename = "foo.py"
+        script.path = "foo.py"
 
         e = Event()
 

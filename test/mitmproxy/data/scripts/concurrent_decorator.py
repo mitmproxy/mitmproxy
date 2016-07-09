@@ -3,5 +3,5 @@ from mitmproxy.script import concurrent
 
 
 @concurrent
-def request(context, flow):
+def request(flow):
     time.sleep(0.1)

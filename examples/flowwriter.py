@@ -3,8 +3,10 @@ import sys
 
 from mitmproxy.flow import FlowWriter
 
+state = {}
 
-def start(context):
+
+def start():
     if len(sys.argv) != 2:
         raise ValueError('Usage: -s "flowriter.py filename"')
 
@@ -12,9 +14,9 @@ def start(context):
         f = sys.stdout
     else:
         f = open(sys.argv[1], "wb")
-    context.flow_writer = FlowWriter(f)
+    state["flow_writer"] = FlowWriter(f)
 
 
-def response(context, flow):
+def response(flow):
     if random.choice([True, False]):
-        context.flow_writer.add(flow)
+        state["flow_writer"].add(flow)

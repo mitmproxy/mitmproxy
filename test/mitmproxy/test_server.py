@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+import types
 from OpenSSL import SSL
 from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.tcp import Address
@@ -945,7 +946,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
                     f.reply.kill()
                 return _func(f)
 
-            setattr(master, attr, handler)
+            setattr(master, attr, types.MethodType(handler, master))
 
         kill_requests(
             self.chain[1].tmaster,

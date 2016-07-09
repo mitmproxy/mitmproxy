@@ -366,7 +366,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.add_event("Running script on flow: %s" % command, "debug")
 
         try:
-            s = script.Script(command, script.ScriptContext(self))
+            s = script.Script(command)
             s.load()
         except script.ScriptException as e:
             signals.status_message.send(
@@ -812,6 +812,6 @@ class ConsoleMaster(flow.FlowMaster):
     @controller.handler
     def script_change(self, script):
         if super(ConsoleMaster, self).script_change(script):
-            signals.status_message.send(message='"{}" reloaded.'.format(script.filename))
+            signals.status_message.send(message='"{}" reloaded.'.format(script.path))
         else:
-            signals.status_message.send(message='Error reloading "{}".'.format(script.filename))
+            signals.status_message.send(message='Error reloading "{}".'.format(script.path))
