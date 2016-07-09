@@ -1,7 +1,8 @@
 import collections
-import re
-
 import email.utils
+import re
+import time
+
 from netlib import multidict
 
 """
@@ -260,3 +261,29 @@ def refresh_set_cookie_header(c, delta):
     if not ret:
         raise ValueError("Invalid Cookie")
     return ret
+
+
+def is_expired(cookie_attrs):
+    """
+        Determines whether a cookie has expired.
+
+        Returns: boolean
+    """
+
+    # See if 'expires' time is in the past
+    expires = False
+    if 'expires' in cookie_attrs:
+        e = email.utils.parsedate_tz(cookie_attrs["expires"])
+        if e:
+            exp_ts = email.utils.mktime_tz(e)
+            now_ts = time.time()
+            expires = exp_ts < now_ts
+
+    # or if Max-Age is 0
+    max_age = False
+    try:
+        max_age = int(cookie_attrs.get('Max-Age', 1)) == 0
+    except ValueError:
+        pass
+
+    return expires or max_age
