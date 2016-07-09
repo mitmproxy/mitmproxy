@@ -245,3 +245,24 @@ def test_refresh_cookie():
     assert cookies.refresh_set_cookie_header(c, 0)
     c = "foo/bar=bla"
     assert cookies.refresh_set_cookie_header(c, 0)
+
+
+def test_is_expired():
+    CA = cookies.CookieAttrs
+
+    # A cookie can be expired
+    # by setting the expire time in the past
+    assert cookies.is_expired(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")]))
+
+    # or by setting Max-Age to 0
+    assert cookies.is_expired(CA([("Max-Age", "0")]))
+
+    # or both
+    assert cookies.is_expired(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT"), ("Max-Age", "0")]))
+
+    assert not cookies.is_expired(CA([("Expires", "Thu, 24-Aug-2063 00:00:00 GMT")]))
+    assert not cookies.is_expired(CA([("Max-Age", "1")]))
+    assert not cookies.is_expired(CA([("Expires", "Thu, 15-Jul-2068 00:00:00 GMT"), ("Max-Age", "1")]))
+
+    assert not cookies.is_expired(CA([("Max-Age", "nan")]))
+    assert not cookies.is_expired(CA([("Expires", "false")]))
