@@ -244,7 +244,7 @@ class DumpMaster(flow.FlowMaster):
             stickycookie = ""
 
         if flow.client_conn:
-            client = click.style(strutils.bytes_to_escaped_str(flow.client_conn.address.host), bold=True)
+            client = click.style(strutils.escape_control_characters(flow.client_conn.address.host), bold=True)
         else:
             client = click.style("[replay]", fg="yellow", bold=True)
 
@@ -253,12 +253,12 @@ class DumpMaster(flow.FlowMaster):
             GET="green",
             DELETE="red"
         ).get(method.upper(), "magenta")
-        method = click.style(strutils.bytes_to_escaped_str(method), fg=method_color, bold=True)
+        method = click.style(strutils.escape_control_characters(method), fg=method_color, bold=True)
         if self.showhost:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        url = click.style(strutils.bytes_to_escaped_str(url), bold=True)
+        url = click.style(strutils.escape_control_characters(url), bold=True)
 
         httpversion = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
@@ -288,7 +288,7 @@ class DumpMaster(flow.FlowMaster):
         elif 400 <= code < 600:
             code_color = "red"
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        reason = click.style(strutils.bytes_to_escaped_str(flow.response.reason), fg=code_color, bold=True)
+        reason = click.style(strutils.escape_control_characters(flow.response.reason), fg=code_color, bold=True)
 
         if flow.response.content is None:
             size = "(content missing)"

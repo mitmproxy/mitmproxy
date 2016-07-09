@@ -40,7 +40,7 @@ def test_strfuncs():
     flow.response.status_code = 300
     m.echo_flow(flow)
 
-    flow = tutils.tflow(resp=netlib.tutils.tresp(content="{"))
+    flow = tutils.tflow(resp=netlib.tutils.tresp(content=b"{"))
     flow.response.headers["content-type"] = "application/json"
     flow.response.status_code = 400
     m.echo_flow(flow)
@@ -65,20 +65,27 @@ class TestDumpMaster(mastertest.MasterTest):
         cs = StringIO()
         if "verbosity" not in options:
             options["verbosity"] = 0
+        if "flow_detail" not in options:
+            options["flow_detail"] = 0
         o = dump.Options(filtstr=filt, **options)
         return dump.DumpMaster(None, o, outfile=cs)
 
     def test_basic(self):
         for i in (1, 2, 3):
-            assert "GET" in self.dummy_cycle(self.mkmaster("~s", flow_detail=i), 1, "")
             assert "GET" in self.dummy_cycle(
                 self.mkmaster("~s", flow_detail=i),
                 1,
-                "\x00\x00\x00"
+                b""
             )
             assert "GET" in self.dummy_cycle(
                 self.mkmaster("~s", flow_detail=i),
-                1, "ascii"
+                1,
+                b"\x00\x00\x00"
+            )
+            assert "GET" in self.dummy_cycle(
+                self.mkmaster("~s", flow_detail=i),
+                1,
+                b"ascii"
             )
 
     def test_error(self):
@@ -113,16 +120,22 @@ class TestDumpMaster(mastertest.MasterTest):
             self.flowfile(p)
 
             o = dump.Options(server_replay=[p], kill=True)
+            o.verbosity = 0
+            o.flow_detail = 0
             m = dump.DumpMaster(None, o, outfile=cs)
 
-            self.cycle(m, "content")
-            self.cycle(m, "content")
+            self.cycle(m, b"content")
+            self.cycle(m, b"content")
 
             o = dump.Options(server_replay=[p], kill=False)
+            o.verbosity = 0
+            o.flow_detail = 0
             m = dump.DumpMaster(None, o, outfile=cs)
-            self.cycle(m, "nonexistent")
+            self.cycle(m, b"nonexistent")
 
             o = dump.Options(client_replay=[p], kill=False)
+            o.verbosity = 0
+            o.flow_detail = 0
             m = dump.DumpMaster(None, o, outfile=cs)
 
     def test_read(self):
@@ -131,7 +144,7 @@ class TestDumpMaster(mastertest.MasterTest):
             self.flowfile(p)
             assert "GET" in self.dummy_cycle(
                 self.mkmaster(None, flow_detail=1, rfile=p),
-                0, "",
+                0, b"",
             )
 
             tutils.raises(
@@ -149,7 +162,7 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def test_filter(self):
         assert "GET" not in self.dummy_cycle(
-            self.mkmaster("~u foo", verbosity=1), 1, ""
+            self.mkmaster("~u foo", verbosity=1), 1, b""
         )
 
     def test_app(self):
@@ -161,22 +174,26 @@ class TestDumpMaster(mastertest.MasterTest):
     def test_replacements(self):
         cs = StringIO()
         o = dump.Options(replacements=[(".*", "content", "foo")])
+        o.verbosity = 0
+        o.flow_detail = 0
         m = dump.DumpMaster(None, o, outfile=cs)
-        f = self.cycle(m, "content")
-        assert f.request.content == "foo"
+        f = self.cycle(m, b"content")
+        assert f.request.content == b"foo"
 
     def test_setheader(self):
         cs = StringIO()
         o = dump.Options(setheaders=[(".*", "one", "two")])
+        o.verbosity = 0
+        o.flow_detail = 0
         m = dump.DumpMaster(None, o, outfile=cs)
-        f = self.cycle(m, "content")
+        f = self.cycle(m, b"content")
         assert f.request.headers["one"] == "two"
 
     def test_write(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a")
             self.dummy_cycle(
-                self.mkmaster(None, outfile=(p, "wb"), verbosity=0), 1, ""
+                self.mkmaster(None, outfile=(p, "wb"), verbosity=0), 1, b""
             )
             assert len(list(flow.FlowReader(open(p, "rb")).stream())) == 1
 
@@ -185,11 +202,11 @@ class TestDumpMaster(mastertest.MasterTest):
             p = os.path.join(d, "a.append")
             self.dummy_cycle(
                 self.mkmaster(None, outfile=(p, "wb"), verbosity=0),
-                1, ""
+                1, b""
             )
             self.dummy_cycle(
                 self.mkmaster(None, outfile=(p, "ab"), verbosity=0),
-                1, ""
+                1, b""
             )
             assert len(list(flow.FlowReader(open(p, "rb")).stream())) == 2
 
@@ -205,7 +222,7 @@ class TestDumpMaster(mastertest.MasterTest):
                 None,
                 scripts=[tutils.test_data.path("data/scripts/all.py")], verbosity=1
             ),
-            1, "",
+            1, b"",
         )
         assert "XCLIENTCONNECT" in ret
         assert "XSERVERCONNECT" in ret
@@ -226,11 +243,11 @@ class TestDumpMaster(mastertest.MasterTest):
     def test_stickycookie(self):
         self.dummy_cycle(
             self.mkmaster(None, stickycookie = ".*"),
-            1, ""
+            1, b""
         )
 
     def test_stickyauth(self):
         self.dummy_cycle(
             self.mkmaster(None, stickyauth = ".*"),
-            1, ""
+            1, b""
         )
