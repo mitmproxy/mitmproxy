@@ -222,9 +222,9 @@ class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, server, ConsoleState())
+        super(ConsoleMaster, self).__init__(server, ConsoleState(), options)
         self.stream_path = None
-        self.options = options
+        self.options = self.options  # FIXME
 
         if options.replacements:
             for i in options.replacements:

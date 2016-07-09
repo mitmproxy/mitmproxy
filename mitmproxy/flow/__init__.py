@@ -8,6 +8,7 @@ from mitmproxy.flow.modules import (
     ServerPlaybackState, StickyCookieState, StickyAuthState
 )
 from mitmproxy.flow.state import State, FlowView
+from mitmproxy.flow.options import Options
 
 # TODO: We may want to remove the imports from .modules and just expose "modules"
 
@@ -18,4 +19,5 @@ __all__ = [
     "AppRegistry", "ReplaceHooks", "SetHeaders", "StreamLargeBodies", "ClientPlaybackState",
     "ServerPlaybackState", "StickyCookieState", "StickyAuthState",
     "State", "FlowView",
+    "Options",
 ]

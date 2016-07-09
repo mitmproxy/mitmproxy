@@ -14,11 +14,11 @@ def test_strfuncs():
     m = dump.DumpMaster(None, o)
 
     m.outfile = StringIO()
-    m.o.flow_detail = 0
+    m.update_options(flow_detail=0)
     m.echo_flow(tutils.tflow())
     assert not m.outfile.getvalue()
 
-    m.o.flow_detail = 4
+    m.update_options(flow_detail=4)
     m.echo_flow(tutils.tflow())
     assert m.outfile.getvalue()
 
@@ -153,7 +153,7 @@ class TestDumpMaster(mastertest.MasterTest):
         )
 
     def test_app(self):
-        o = dump.Options(app=True)
+        o = dump.Options(onboarding_app=True)
         s = mock.MagicMock()
         m = dump.DumpMaster(s, o)
         assert len(m.apps.apps) == 1

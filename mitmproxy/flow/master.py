@@ -13,6 +13,7 @@ from mitmproxy import models
 from mitmproxy import script
 from mitmproxy.flow import io
 from mitmproxy.flow import modules
+from mitmproxy.flow import options as foptions  # noqa
 from mitmproxy.onboarding import app
 from mitmproxy.protocol import http_replay
 from mitmproxy.proxy.config import HostMatcher
@@ -27,8 +28,19 @@ class FlowMaster(controller.Master):
         if len(self.servers) > 0:
             return self.servers[0]
 
-    def __init__(self, server, state):
-        super(FlowMaster, self).__init__()
+    def __init__(
+            self,
+            server,
+            state,
+            options=None,  # type: foptions.Options
+    ):
+        if options is None:
+            options = foptions.Options()
+        super(FlowMaster, self).__init__(options)
+
+        # Type Hinting
+        self.options = self.options  # type: foptions.Options
+
         if server:
             self.add_server(server)
         self.state = state
