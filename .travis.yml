@@ -44,7 +44,7 @@ install:
       brew outdated openssl || brew upgrade openssl
       brew install python python3
       pip install -U pip setuptools wheel
-      pip3 install -U pip3 setuptools wheel
+      pip3 install -U pip setuptools wheel
     fi
   - pip install tox
 
