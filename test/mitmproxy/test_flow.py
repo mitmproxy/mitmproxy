@@ -113,18 +113,6 @@ class TestStickyCookieState:
         s.handle_response(f)
         assert not s.jar.keys()
 
-        # or by setting Max-Age to 0
-        s, f = self._response(*c)
-        f.response.headers["Set-Cookie"] = "duffer=; Max-Age=0"
-        s.handle_response(f)
-        assert not s.jar.keys()
-
-        # or both
-        s, f = self._response(*c)
-        f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0"
-        s.handle_response(f)
-        assert not s.jar.keys()
-
     def test_request(self):
         s, f = self._response("SSID=mooo", b"www.google.com")
         assert "cookie" not in f.request.headers
