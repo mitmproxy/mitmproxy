@@ -17,7 +17,7 @@ def sysinfo():
         "Mitmproxy version: %s" % version.VERSION,
         "Python version: %s" % platform.python_version(),
         "Platform: %s" % platform.platform(),
-        "SSL version: %s" % SSL.SSLeay_version(SSL.SSLEAY_VERSION),
+        "SSL version: %s" % SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode(),
     ]
     d = platform.linux_distribution()
     t = "Linux distro: %s %s %s" % d
