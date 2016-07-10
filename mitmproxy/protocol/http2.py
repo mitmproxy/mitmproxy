@@ -78,7 +78,7 @@ class SafeH2Connection(connection.H2Connection):
                 self.send_data(stream_id, frame_chunk)
                 try:
                     self.conn.send(self.data_to_send())
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     raise e
                 finally:
                     self.lock.release()
@@ -142,9 +142,9 @@ class Http2Layer(base.Layer):
             self.streams[eid].timestamp_start = time.time()
             self.streams[eid].no_body = (event.stream_ended is not None)
             if event.priority_updated is not None:
-                self.streams[eid].priority_weight = event.priority_updated.weight
-                self.streams[eid].priority_depends_on = event.priority_updated.depends_on
                 self.streams[eid].priority_exclusive = event.priority_updated.exclusive
+                self.streams[eid].priority_depends_on = event.priority_updated.depends_on
+                self.streams[eid].priority_weight = event.priority_updated.weight
                 self.streams[eid].handled_priority_event = event.priority_updated
             self.streams[eid].start()
         elif isinstance(event, events.ResponseReceived):
@@ -155,10 +155,13 @@ class Http2Layer(base.Layer):
             self.streams[eid].response_arrived.set()
         elif isinstance(event, events.DataReceived):
             if self.config.body_size_limit and self.streams[eid].queued_data_length > self.config.body_size_limit:
-                raise netlib.exceptions.HttpException("HTTP body too large. Limit is {}.".format(self.config.body_size_limit))
-            self.streams[eid].data_queue.put(event.data)
-            self.streams[eid].queued_data_length += len(event.data)
-            source_conn.h2.safe_increment_flow_control(event.stream_id, event.flow_controlled_length)
+                self.streams[eid].zombie = time.time()
+                source_conn.h2.safe_reset_stream(event.stream_id, 0x7)
+                self.log("HTTP body too large. Limit is {}.".format(self.config.body_size_limit), "info")
+            else:
+                self.streams[eid].data_queue.put(event.data)
+                self.streams[eid].queued_data_length += len(event.data)
+                source_conn.h2.safe_increment_flow_control(event.stream_id, event.flow_controlled_length)
         elif isinstance(event, events.StreamEnded):
             self.streams[eid].timestamp_end = time.time()
             self.streams[eid].data_finished.set()
@@ -206,6 +209,11 @@ class Http2Layer(base.Layer):
             self.streams[event.pushed_stream_id].request_data_finished.set()
             self.streams[event.pushed_stream_id].start()
         elif isinstance(event, events.PriorityUpdated):
+            if eid in self.streams and self.streams[eid].handled_priority_event is event:
+                # this event was already handled during stream creation
+                # HeadersFrame + Priority information as RequestReceived
+                return True
+
             mapped_stream_id = event.stream_id
             if mapped_stream_id in self.streams and self.streams[mapped_stream_id].server_stream_id:
                 # if the stream is already up and running and was sent to the server
@@ -213,13 +221,9 @@ class Http2Layer(base.Layer):
                 mapped_stream_id = self.streams[mapped_stream_id].server_stream_id
 
             if eid in self.streams:
-                if self.streams[eid].handled_priority_event is event:
-                    # this event was already handled during stream creation
-                    # HeadersFrame + Priority information as RequestReceived
-                    return True
-                self.streams[eid].priority_weight = event.weight
-                self.streams[eid].priority_depends_on = event.depends_on
                 self.streams[eid].priority_exclusive = event.exclusive
+                self.streams[eid].priority_depends_on = event.depends_on
+                self.streams[eid].priority_weight = event.weight
 
             with self.server_conn.h2.lock:
                 self.server_conn.h2.prioritize(
@@ -248,10 +252,12 @@ class Http2Layer(base.Layer):
 
     def _cleanup_streams(self):
         death_time = time.time() - 10
-        for stream_id in self.streams.keys():
-            zombie = self.streams[stream_id].zombie
-            if zombie and zombie <= death_time:
-                self.streams.pop(stream_id, None)
+
+        zombie_streams = [(stream_id, stream) for stream_id, stream in list(self.streams.items()) if stream.zombie]
+        outdated_streams = [stream_id for stream_id, stream in zombie_streams if stream.zombie <= death_time]
+
+        for stream_id in outdated_streams:  # pragma: no cover
+            self.streams.pop(stream_id, None)
 
     def _kill_all_streams(self):
         for stream in self.streams.values():
@@ -296,7 +302,7 @@ class Http2Layer(base.Layer):
                                 return
 
                     self._cleanup_streams()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
             self._kill_all_streams()
@@ -326,9 +332,9 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
 
         self.no_body = False
 
-        self.priority_weight = None
-        self.priority_depends_on = None
         self.priority_exclusive = None
+        self.priority_depends_on = None
+        self.priority_weight = None
         self.handled_priority_event = None
 
     @property
@@ -428,11 +434,11 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
                 self.server_stream_id,
                 headers,
                 end_stream=self.no_body,
-                priority_weight=self.priority_weight,
-                priority_depends_on=self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on),
                 priority_exclusive=self.priority_exclusive,
+                priority_depends_on=self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on),
+                priority_weight=self.priority_weight,
             )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise e
         finally:
             self.server_conn.h2.lock.release()
@@ -523,7 +529,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
 
         try:
             layer()
-        except exceptions.ProtocolException as e:
+        except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
 
