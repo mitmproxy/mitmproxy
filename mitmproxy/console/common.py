@@ -7,11 +7,6 @@ import urwid.util
 import six
 
 import netlib
-<<<<<<< a7bc7d29a484c87bc1576d33bf5ab23aa5031c43
-from mitmproxy import flow
-=======
-from mitmproxy import models
->>>>>>> Common function for both file and clipboard
 from mitmproxy import utils
 from mitmproxy.console import signals
 from mitmproxy.flow import export
@@ -199,8 +194,8 @@ def copy_to_clipboard_or_prompt(data):
         )
 
 
-def flow_format_data(part, scope, flow):
-    if part == "u":
+def flow_format_data(key, scope, flow):
+    if key == "u":
         data = flow.request.url
     else:
         data = ""
@@ -209,12 +204,12 @@ def flow_format_data(part, scope, flow):
             request.decode(strict=False)
             if request.content is None:
                 return None, "Request content is missing"
-            if part == "h":
+            if key == "h":
                 data += netlib.http.http1.assemble_request(request)
-            elif part == "c":
+            elif key == "c":
                 data += request.content
             else:
-                raise ValueError("Unknown part: {}".format(part))
+                raise ValueError("Unknown key: {}".format(key))
         if scope == "a" and flow.request.raw_content and flow.response:
             # Add padding between request and response
             data += "\r\n" * 2
@@ -223,21 +218,21 @@ def flow_format_data(part, scope, flow):
             response.decode(strict=False)
             if response.content is None:
                 return None, "Response content is missing"
-            if part == "h":
+            if key == "h":
                 data += netlib.http.http1.assemble_response(response)
-            elif part == "c":
+            elif key == "c":
                 data += response.content
             else:
-                raise ValueError("Unknown part: {}".format(part))
+                raise ValueError("Unknown key: {}".format(key))
     return data, False
 
 
-def copy_flow(part, scope, flow):
+def copy_flow(key, scope, flow, writer):
     """
-    part: _c_ontent, _h_eaders+content, _u_rl
+    key: _c_ontent, _h_eaders+content, _u_rl
     scope: _a_ll, re_q_uest, re_s_ponse
     """
-    data, err = flow_format_data(part, scope, flow)
+    data, err = flow_format_data(key, scope, flow)
 
     if err:
         signals.status_message.send(message=err)
@@ -252,7 +247,7 @@ def copy_flow(part, scope, flow):
             signals.status_message.send(message="No contents to copy.")
         return
 
-    copy_to_clipboard_or_prompt(data)
+    writer(data)
 
 
 def ask_copy_part(scope, flow):
@@ -271,17 +266,17 @@ def ask_copy_part(scope, flow):
     )
 
 
-def ask_save_body(part, flow):
+def ask_save_body(scope, flow):
     """
     Save either the request or the response body to disk.
 
-    'part' can either be "q" (request), "s" (response) or None (ask user if necessary).
+    'scope' can either be "q" (request), "s" (response) or None (ask user if necessary).
     """
 
     request_has_content = flow.request and flow.request.raw_content
     response_has_content = flow.response and flow.response.raw_content
 
-    if part is None:
+    if scope is None:
         # We first need to determine whether we want to save the request or the
         # response content.
         if request_has_content and response_has_content:
@@ -299,21 +294,21 @@ def ask_save_body(part, flow):
         else:
             ask_save_body("q", flow)
 
-    elif part == "q" and request_has_content:
+    elif scope == "q" and request_has_content:
         ask_save_path(
             flow.request.get_content(strict=False),
-            "Save request content",
+            "Save request content to"
         )
-    elif part == "s" and response_has_content:
+    elif scope == "s" and response_has_content:
         ask_save_path(
             flow.response.get_content(strict=False),
-            "Save response content",
+            "Save response content to"
         )
     else:
         signals.status_message.send(message="No content to save.")
 
 
-def export_to_clip_or_file(key, flow, writer):
+def export_to_clip_or_file(key, scope, flow, writer):
     """
     Export selected flow to clipboard or a file.
 
