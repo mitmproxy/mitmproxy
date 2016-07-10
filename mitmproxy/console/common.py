@@ -232,7 +232,7 @@ def flow_format_data(part, scope, flow):
     return data, False
 
 
-def copy_flow(part, scope, flow, master, state):
+def copy_flow(part, scope, flow):
     """
     part: _c_ontent, _h_eaders+content, _u_rl
     scope: _a_ll, re_q_uest, re_s_ponse
@@ -255,7 +255,7 @@ def copy_flow(part, scope, flow, master, state):
     copy_to_clipboard_or_prompt(data)
 
 
-def ask_copy_part(scope, flow, master, state):
+def ask_copy_part(scope, flow):
     choices = [
         ("content", "c"),
         ("headers+content", "h")
@@ -267,11 +267,11 @@ def ask_copy_part(scope, flow, master, state):
         prompt = "Copy",
         keys = choices,
         callback = copy_flow,
-        args = (scope, flow, master, state)
+        args = (scope, flow)
     )
 
 
-def ask_save_body(part, master, state, flow):
+def ask_save_body(part, flow):
     """
     Save either the request or the response body to disk.
 
@@ -292,12 +292,12 @@ def ask_save_body(part, master, state, flow):
                     ("response", "s"),
                 ),
                 callback = ask_save_body,
-                args = (master, state, flow)
+                args = (flow)
             )
         elif response_has_content:
-            ask_save_body("s", master, state, flow)
+            ask_save_body("s", flow)
         else:
-            ask_save_body("q", master, state, flow)
+            ask_save_body("q", flow)
 
     elif part == "q" and request_has_content:
         ask_save_path(

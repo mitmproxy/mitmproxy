@@ -281,7 +281,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 args = (self.flow, common.copy_to_clipboard_or_prompt)
             )
         elif key == "b":
-            common.ask_save_body(None, self.master, self.state, self.flow)
+            common.ask_save_body(None, self.flow)
         else:
             return key
 
