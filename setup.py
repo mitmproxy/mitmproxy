@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 from codecs import open
 import os
 
+from netlib import version
+
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-from netlib import version
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
@@ -72,7 +72,7 @@ setup(
         "html2text>=2016.1.8, <=2016.5.29",
         "hyperframe>=4.0.1, <5",
         "lxml>=3.5.0, <3.7",
-        "Pillow>=3.2, <3.3",
+        "Pillow>=3.2, <3.4",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
@@ -100,10 +100,10 @@ setup(
         'dev': [
             "tox>=2.3, <3",
             "mock>=2.0, <2.1",
-            "pytest>=2.8.7, <2.10",
-            "pytest-cov>=2.2.1, <2.3",
-            "pytest-timeout>=1.0.0, <1.1",
-            "pytest-xdist>=1.14, <1.15",
+            "pytest>=2.8.7, <3",
+            "pytest-cov>=2.2.1, <3",
+            "pytest-timeout>=1.0.0, <2",
+            "pytest-xdist>=1.14, <2",
             "sphinx>=1.3.5, <1.5",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.4.0, <0.5",
