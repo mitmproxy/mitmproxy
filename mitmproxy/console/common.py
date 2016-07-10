@@ -7,9 +7,14 @@ import urwid.util
 import six
 
 import netlib
+<<<<<<< a7bc7d29a484c87bc1576d33bf5ab23aa5031c43
 from mitmproxy import flow
+=======
+from mitmproxy import models
+>>>>>>> Common function for both file and clipboard
 from mitmproxy import utils
 from mitmproxy.console import signals
+from mitmproxy.flow import export
 from netlib import human
 
 try:
@@ -243,7 +248,7 @@ def ask_save_overwrite(path, data):
         save_data(path, data)
 
 
-def ask_save_path(prompt, data):
+def ask_save_path(data, prompt="File path"):
     signals.status_prompt_path.send(
         prompt = prompt,
         callback = ask_save_overwrite,
@@ -298,7 +303,7 @@ def copy_to_clipboard_or_prompt(data):
     except (RuntimeError, UnicodeDecodeError, AttributeError, TypeError):
         def save(k):
             if k == "y":
-                ask_save_path("Save data", data)
+                ask_save_path(data, "Save data")
         signals.status_prompt_onekey.send(
             prompt = "Cannot copy data to clipboard. Save as file?",
             keys = (
@@ -377,29 +382,28 @@ def ask_save_body(part, master, state, flow):
 
     elif part == "q" and request_has_content:
         ask_save_path(
-            "Save request content",
             flow.request.get_content(strict=False),
+            "Save request content",
         )
     elif part == "s" and response_has_content:
         ask_save_path(
-            "Save response content",
             flow.response.get_content(strict=False),
+            "Save response content",
         )
     else:
         signals.status_message.send(message="No content to save.")
 
 
-def export_to_clipboard(k, f):
-    for exporter in flow.export.EXPORTERS:
-        if k == exporter[1]:
-            copy_to_clipboard_or_prompt(exporter[2](f))
+def export_to_clip_or_file(key, flow, writer):
+    """
+    Export selected flow to clipboard or a file.
 
-
-def export_to_file(k, f):
-    for exporter in flow.export.EXPORTERS:
-        if k == exporter[1]:
-            ask_save_path("File path", exporter[2](f))
-
+    'writer' is a function that handles the data
+    can be: copy_to_clipboard_or_prompt or ask_save_path
+    """
+    for exporter in export.EXPORTERS:
+        if key == exporter[1]:
+            writer(exporter[2](flow))
 
 flowcache = utils.LRUCache(800)
 

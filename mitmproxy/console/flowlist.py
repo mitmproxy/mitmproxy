@@ -269,16 +269,16 @@ class ConnectionItem(urwid.WidgetWrap):
                 self,
                 prompt = "Export to file",
                 keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_file,
-                args = (self.flow,)
+                callback = common.export_to_clip_or_file,
+                args = (self.flow, common.ask_save_path)
             )
         elif key == "P":
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export to clipboard",
                 keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_clipboard,
-                args = (self.flow,)
+                callback = common.export_to_clip_or_file,
+                args = (self.flow, common.copy_to_clipboard_or_prompt)
             )
         elif key == "b":
             common.ask_save_body(None, self.master, self.state, self.flow)
