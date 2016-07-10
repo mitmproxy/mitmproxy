@@ -76,7 +76,7 @@ def get_snapshot_version():
         return "{version}dev{tag_dist:04}-0x{commit}".format(
             version=get_version(),  # this should already be the next version
             tag_dist=tag_dist,
-            commit=commit
+            commit=commit.decode()
         )
 
 
