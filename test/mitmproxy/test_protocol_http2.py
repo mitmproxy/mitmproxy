@@ -151,8 +151,7 @@ class _Http2TestBase(object):
         wfile.flush()
 
 
-@requires_alpn
-class TestSimple(_Http2TestBase, _Http2ServerBase):
+class _Http2Test(_Http2TestBase, _Http2ServerBase):
 
     @classmethod
     def setup_class(self):
@@ -163,6 +162,10 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
     def teardown_class(self):
         _Http2TestBase.teardown_class()
         _Http2ServerBase.teardown_class()
+
+
+@requires_alpn
+class TestSimple(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -196,14 +199,18 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
     def test_simple(self):
         client, h2_conn = self._setup_connection()
 
-        self._send_request(client.wfile, h2_conn, headers=[
-            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
-            (':method', 'GET'),
-            (':scheme', 'https'),
-            (':path', '/'),
-            ('ClIeNt-FoO', 'client-bar-1'),
-            ('ClIeNt-FoO', 'client-bar-2'),
-        ], body=b'my request body echoed back to me')
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+                ('ClIeNt-FoO', 'client-bar-1'),
+                ('ClIeNt-FoO', 'client-bar-2'),
+            ],
+            body=b'my request body echoed back to me')
 
         done = False
         while not done:
@@ -233,18 +240,8 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestWithBodies(_Http2TestBase, _Http2ServerBase):
+class TestWithBodies(_Http2Test):
     tmp_data_buffer_foobar = b''
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -302,17 +299,7 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestPushPromise(_Http2TestBase, _Http2ServerBase):
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+class TestPushPromise(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -465,17 +452,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+class TestConnectionLost(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -517,17 +494,7 @@ class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class(h2_server_settings={h2.settings.MAX_CONCURRENT_STREAMS: 2})
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+class TestMaxConcurrentStreams(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -583,17 +550,7 @@ class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestConnectionTerminated(_Http2TestBase, _Http2ServerBase):
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+class TestConnectionTerminated(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
