@@ -59,11 +59,11 @@ export default class ContentView extends Component {
         return (
             <div>
                 {View.textView ? (
-                    <ContentLoader flow={flow} message={message}>
-                        <this.state.View content="" />
+                    <ContentLoader  flow={flow} message={message}>
+                        <this.state.View onChange={this.props.onChange} content="" />
                     </ContentLoader>
                 ) : (
-                    <View flow={flow} message={message} />
+                    <View flow={flow} onChange={this.props.onChange}  message={message} />
                 )}
                 <div className="view-options text-center">
                     <ViewSelector onSelectView={this.selectView} active={View} message={message}/>

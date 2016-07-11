@@ -89,7 +89,7 @@ export class Request extends Component {
                     onChange={headers => updateFlow({ request: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.request}/>
+                <ContentView flow={flow} message={flow.request} onChange={content => updateFlow({request: {content} })}/>
             </section>
         )
     }
@@ -128,7 +128,7 @@ export class Response extends Component {
                     onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.response}/>
+                <ContentView flow={flow} message={flow.response} onChange={content => updateFlow({response: {content} }) }/>
             </section>
         )
     }

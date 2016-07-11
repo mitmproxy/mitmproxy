@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils.js'
+import Button from '../common/Button'
+
 
 const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw]
 
@@ -22,13 +24,19 @@ export function ViewImage({ flow, message }) {
 
 ViewRaw.textView = true
 ViewRaw.matches = () => true
+ViewRaw.input = {}
 
 ViewRaw.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
 
-export function ViewRaw({ content }) {
-    return <pre>{content}</pre>
+export function ViewRaw({ content, onChange }) {
+    return (
+        <div>
+            <textarea onKeyDown={e => e.stopPropagation()} ref={ref => ViewRaw.input = ref}>{content}</textarea>
+            <Button onClick={(e) => onChange(ViewRaw.input.value)} text="Update"/>
+        </div>
+    )
 }
 
 ViewJSON.textView = true
@@ -58,10 +66,10 @@ ViewAuto.propTypes = {
     flow: React.PropTypes.object.isRequired,
 }
 
-export function ViewAuto({ message, flow }) {
+export function ViewAuto({ message, flow, onChange }) {
     const View = ViewAuto.findView(message)
     if (View.textView) {
-        return <ContentLoader message={message} flow={flow}><View content="" /></ContentLoader>
+        return <ContentLoader message={message} flow={flow}><View onChange={onChange} content="" /></ContentLoader>
     } else {
         return <View message={message} flow={flow} />
     }
