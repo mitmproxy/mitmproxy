@@ -268,6 +268,22 @@ class TestMatchingTCPFlow:
         assert self.q("~b hello", f)
         assert self.q("~b me", f)
 
+    def test_src(self):
+        f = self.flow()
+        assert self.q("~src address", f)
+        assert not self.q("~src foobar", f)
+        assert self.q("~src :22", f)
+        assert not self.q("~src :99", f)
+        assert self.q("~src address:22", f)
+
+    def test_dst(self):
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+        assert self.q("~dst address", f)
+        assert not self.q("~dst foobar", f)
+        assert self.q("~dst :22", f)
+        assert not self.q("~dst :99", f)
+        assert self.q("~dst address:22", f)
 
 @patch('traceback.extract_tb')
 def test_pyparsing_bug(extract_tb):
