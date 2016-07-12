@@ -192,7 +192,7 @@ class TestSimple(_Http2Test):
         elif isinstance(event, h2.events.RequestReceived):
             assert (b'client-foo', b'client-bar-1') in event.headers
             assert (b'client-foo', b'client-bar-2') in event.headers
-
+        elif isinstance(event, h2.events.StreamEnded):
             import warnings
             with warnings.catch_warnings():
                 # Ignore UnicodeWarning:
