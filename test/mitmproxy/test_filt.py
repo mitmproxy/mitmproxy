@@ -262,6 +262,13 @@ class TestMatchingTCPFlow:
         e = self.err()
         assert self.q("~e", e)
 
+    def test_body(self):
+        f = self.flow()
+        assert not self.q("~b nonexistent", f)
+        assert self.q("~b hello", f)
+        assert self.q("~b me", f)
+
+
 @patch('traceback.extract_tb')
 def test_pyparsing_bug(extract_tb):
     """https://github.com/mitmproxy/mitmproxy/issues/1087"""

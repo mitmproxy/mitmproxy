@@ -193,12 +193,22 @@ class FBod(_Rex):
     help = "Body"
 
     def __call__(self, f):
-        if f.request and f.request.content:
-            if self.re.search(f.request.get_decoded_content()):
-                return True
-        if f.response and f.response.content:
-            if self.re.search(f.response.get_decoded_content()):
-                return True
+
+        # HTTPFlow
+        if hasattr(f, 'request'):
+            if f.request and f.request.content:
+                if self.re.search(f.request.get_decoded_content()):
+                    return True
+            if f.response and f.response.content:
+                if self.re.search(f.response.get_decoded_content()):
+                    return True
+
+        # TCPFlow
+        elif hasattr(f, 'messages'):
+            for msg in f.messages:
+                if self.re.search(msg.content):
+                    return True
+
         return False
 
 
