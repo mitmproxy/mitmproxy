@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "jest",
-    "build": "gulp dev",
+    "build": "gulp prod",
     "start": "gulp"
   },
   "jest": {
