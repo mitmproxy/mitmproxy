@@ -285,6 +285,31 @@ class TestMatchingTCPFlow:
         assert not self.q("~dst :99", f)
         assert self.q("~dst address:22", f)
 
+    def test_and(self):
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+        assert self.q("~b hello & ~b me", f)
+        assert not self.q("~src wrongaddress & ~b hello", f)
+        assert self.q("(~src :22 & ~dst :22) & ~b hello", f)
+        assert not self.q("(~src address:22 & ~dst :22) & ~b nonexistent", f)
+        assert not self.q("(~src address:22 & ~dst :99) & ~b hello", f)
+
+    def test_or(self):
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+        assert self.q("~b hello | ~b me", f)
+        assert self.q("~src :22 | ~b me", f)
+        assert not self.q("~src :99 | ~dst :99", f)
+        assert self.q("(~src :22 | ~dst :22) | ~b me", f)
+
+    def test_not(self):
+        f = self.flow()
+        assert not self.q("! ~src :22", f)
+        assert self.q("! ~src :99", f)
+        assert self.q("!~src :99 !~src :99", f)
+        assert not self.q("!~src :99 !~src :22", f)
+
+
 @patch('traceback.extract_tb')
 def test_pyparsing_bug(extract_tb):
     """https://github.com/mitmproxy/mitmproxy/issues/1087"""
