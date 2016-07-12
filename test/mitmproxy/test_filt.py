@@ -73,7 +73,7 @@ class TestParsing:
         self._dump(a)
 
 
-class TestMatching:
+class TestMatchingHTTPFlow:
 
     def req(self):
         return tutils.tflow()
@@ -246,6 +246,21 @@ class TestMatching:
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
 
+
+class TestMatchingTCPFlow:
+
+    def flow(self):
+        return tutils.ttcpflow()
+
+    def err(self):
+        return tutils.ttcpflow(err=True)
+
+    def q(self, q, o):
+        return filt.parse(q)(o)
+
+    def test_ferr(self):
+        e = self.err()
+        assert self.q("~e", e)
 
 @patch('traceback.extract_tb')
 def test_pyparsing_bug(extract_tb):
