@@ -7,7 +7,7 @@ import Button from './Button'
 
 import 'brace/mode/javascript';
 import 'brace/mode/json';
-import 'brace/theme/monokai';
+import 'brace/theme/kuroir';
 
 
 
@@ -28,7 +28,7 @@ export default class CodeEditor extends Component{
                 <AceEditor
                     onChange={e => this.onChange(e)}
                     mode="javascript"
-                    theme="monokai"
+                    theme="kuroir"
                     value={this.state.value}
                     width="100%"
                     name="codeEditor"
