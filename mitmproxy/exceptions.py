@@ -95,3 +95,7 @@ class FlowReadException(ProxyException):
 
 class ControlException(ProxyException):
     pass
+
+
+class OptionsError(Exception):
+    pass

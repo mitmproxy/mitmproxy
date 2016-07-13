@@ -9,6 +9,7 @@ import tornado.ioloop
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import options
 from mitmproxy.web import app
 from netlib.http import authentication
 
@@ -88,7 +89,7 @@ class WebState(flow.State):
         )
 
 
-class Options(object):
+class Options(options.Options):
     attributes = [
         "app",
         "app_domain",
@@ -124,13 +125,6 @@ class Options(object):
         "wsingleuser",
         "whtpasswd",
     ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
 
     def process_web_options(self, parser):
         if self.wsingleuser or self.whtpasswd:

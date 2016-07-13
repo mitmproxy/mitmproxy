@@ -20,6 +20,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
+import mitmproxy.options
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -175,7 +176,7 @@ class ConsoleState(flow.State):
         self.add_flow_setting(flow, "marked", marked)
 
 
-class Options(object):
+class Options(mitmproxy.options.Options):
     attributes = [
         "app",
         "app_domain",
@@ -210,21 +211,16 @@ class Options(object):
         "outfile",
     ]
 
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
-
 
 class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
+
         self.stream_path = None
         self.options = options
+        self.options.errored.connect(self.options_error)
 
         if options.replacements:
             for i in options.replacements:
@@ -303,6 +299,12 @@ class ConsoleMaster(flow.FlowMaster):
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         signals.update_settings.send(self)
+
+    def options_error(self, opts, exc):
+        signals.status_message.send(
+            message=str(exc),
+            expire=1
+        )
 
     def load_script(self, command, use_reloader=True):
         # We default to using the reloader in the console ui.
