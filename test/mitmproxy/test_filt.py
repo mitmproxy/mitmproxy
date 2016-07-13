@@ -268,6 +268,12 @@ class TestMatchingTCPFlow:
         assert self.q("~b hello", f)
         assert self.q("~b me", f)
 
+        # Request Body
+        assert not self.q("~bq whatever", f)
+
+        # Response Body
+        assert not self.q("~bs whatever", f)
+
     def test_src(self):
         f = self.flow()
         assert self.q("~src address", f)
@@ -308,6 +314,50 @@ class TestMatchingTCPFlow:
         assert self.q("! ~src :99", f)
         assert self.q("!~src :99 !~src :99", f)
         assert not self.q("!~src :99 !~src :22", f)
+
+    def test_request(self):
+        f = self.flow()
+        assert not self.q("~q", f)
+
+    def test_response(self):
+        f = self.flow()
+        assert not self.q("~s", f)
+
+    def test_headers(self):
+        f = self.flow()
+        assert not self.q("~h whatever", f)
+
+        # Request headers
+        assert not self.q("~hq whatever", f)
+
+        # Response headers
+        assert not self.q("~hs whatever", f)
+
+    def test_content_type(self):
+        f = self.flow()
+        assert not self.q("~t whatever", f)
+
+        # Request content-type
+        assert not self.q("~tq whatever", f)
+
+        # Response content-type
+        assert not self.q("~ts whatever", f)
+
+    def test_code(self):
+        f = self.flow()
+        assert not self.q("~c 200", f)
+
+    def test_domain(self):
+        f = self.flow()
+        assert not self.q("~d whatever", f)
+
+    def test_method(self):
+        f = self.flow()
+        assert not self.q("~m whatever", f)
+
+    def test_url(self):
+        f = self.flow()
+        assert not self.q("~u whatever", f)
 
 
 @patch('traceback.extract_tb')
