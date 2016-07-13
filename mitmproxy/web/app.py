@@ -245,9 +245,6 @@ class FlowHandler(RequestHandler):
                         request.port = int(v)
                     elif k == "headers":
                         request.headers.set_state(v)
-                    elif k == "content":
-                        print(v)
-                        response.content = str(v)
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
 
@@ -262,9 +259,6 @@ class FlowHandler(RequestHandler):
                         response.http_version = str(v)
                     elif k == "headers":
                         response.headers.set_state(v)
-                    elif k == "content":
-                        print(v)
-                        response.content = str(v)
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
             else:
@@ -297,6 +291,22 @@ class ReplayFlow(RequestHandler):
 
 
 class FlowContent(RequestHandler):
+
+    def post (self, flow_id, message):
+        # handle request later now just change response content
+
+        flow = self.flow
+        flow.backup()
+        content = ''
+        if (len(self.request.files.values()) > 0):
+            content = self.request.files.values()[0][0]["body"]
+        elif (len(self.request.arguments) > 0):
+            content = self.request.arguments['file']
+
+        flow.response.content = str(content)
+        self.state.update_flow(flow)
+
+
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)

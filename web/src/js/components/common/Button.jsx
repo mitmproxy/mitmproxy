@@ -10,8 +10,10 @@ export default function Button({ onClick, text, icon, disabled }) {
         <div className={"btn btn-default"}
              onClick={onClick}
              disabled={disabled}>
-            <i className={"fa fa-fw " + icon}/>
-            &nbsp;
+            <span hidden={!icon}>
+                <i className={"fa fa-fw " + icon}/>
+                &nbsp;
+            </span>
             {text}
         </div>
     )

@@ -1,10 +1,12 @@
 import React, { PropTypes } from 'react'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils.js'
-import Button from '../common/Button'
+import CodeEditor from '../common/CodeEditor'
+import {formatSize} from '../../utils.js'
 
 
-const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw]
+
+const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw, ViewFile]
 
 ViewImage.regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i
 ViewImage.matches = msg => ViewImage.regex.test(MessageUtils.getContentType(msg))
@@ -30,12 +32,9 @@ ViewRaw.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
 
-export function ViewRaw({ content, onChange }) {
+export function ViewRaw({ content, update_content }) {
     return (
-        <div>
-            <textarea onKeyDown={e => e.stopPropagation()} ref={ref => ViewRaw.input = ref}>{content}</textarea>
-            <Button onClick={(e) => onChange(ViewRaw.input.value)} text="Update"/>
-        </div>
+        <CodeEditor value={content} onSave={update_content}/>
     )
 }
 
@@ -66,13 +65,26 @@ ViewAuto.propTypes = {
     flow: React.PropTypes.object.isRequired,
 }
 
-export function ViewAuto({ message, flow, onChange }) {
+export function ViewAuto({ message, flow, update_content }) {
     const View = ViewAuto.findView(message)
     if (View.textView) {
-        return <ContentLoader message={message} flow={flow}><View onChange={onChange} content="" /></ContentLoader>
+        return <ContentLoader message={message} flow={flow}><View update_content={update_content} content="" /></ContentLoader>
     } else {
         return <View message={message} flow={flow} />
     }
+}
+
+ViewFile.matches = () => false
+
+ViewFile.propTypes = {
+    message: React.PropTypes.object.isRequired,
+    flow: React.PropTypes.object.isRequired,
+}
+
+export function ViewFile({ message, flow }) {
+    return <div className="alert alert-info">
+            {formatSize(message.contentLength)} content size.
+        </div>
 }
 
 export default views

@@ -117,6 +117,14 @@ export function update(flow, data) {
     return { type: REQUEST_ACTION }
 }
 
+export function update_content(flow, file) {
+    const body = new FormData()
+    body.append('file', file)
+    fetchApi(`/flows/${flow.id}/response/content`, {method: 'post',  body} )
+    return { type: REQUEST_ACTION }
+}
+
+
 /**
  * @public
  */

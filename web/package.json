@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "jest",
-    "build": "gulp dev",
+    "build": "gulp prod",
     "start": "gulp"
   },
   "jest": {
@@ -29,7 +29,7 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "shallowequal": "^0.2.2",
-    "monaco-editor": "^0.5.1"
+    "react-ace": "^3.5.0"
   },
   "devDependencies": {
     "babel-core": "^6.7.7",
