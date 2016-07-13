@@ -42,9 +42,6 @@ class FlowMaster(controller.Master):
         self.stickycookie_state = None  # type: Optional[modules.StickyCookieState]
         self.stickycookie_txt = None
 
-        self.stickyauth_state = False  # type: Optional[modules.StickyAuthState]
-        self.stickyauth_txt = None
-
         self.anticache = False
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
@@ -135,17 +132,6 @@ class FlowMaster(controller.Master):
             self.stream_large_bodies = modules.StreamLargeBodies(max_size)
         else:
             self.stream_large_bodies = False
-
-    def set_stickyauth(self, txt):
-        if txt:
-            flt = filt.parse(txt)
-            if not flt:
-                return "Invalid filter expression."
-            self.stickyauth_state = modules.StickyAuthState(flt)
-            self.stickyauth_txt = txt
-        else:
-            self.stickyauth_state = None
-            self.stickyauth_txt = None
 
     def start_client_playback(self, flows, exit):
         """
@@ -326,8 +312,6 @@ class FlowMaster(controller.Master):
     def process_new_request(self, f):
         if self.stickycookie_state:
             self.stickycookie_state.handle_request(f)
-        if self.stickyauth_state:
-            self.stickyauth_state.handle_request(f)
 
         if self.anticache:
             f.request.anticache()

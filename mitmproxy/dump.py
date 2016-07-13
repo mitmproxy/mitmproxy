@@ -87,9 +87,6 @@ class DumpMaster(flow.FlowMaster):
         if options.stickycookie:
             self.set_stickycookie(options.stickycookie)
 
-        if options.stickyauth:
-            self.set_stickyauth(options.stickyauth)
-
         if options.outfile:
             err = self.start_stream_to_path(
                 options.outfile[0],

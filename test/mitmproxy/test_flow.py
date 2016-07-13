@@ -120,20 +120,6 @@ class TestStickyCookieState:
         assert "cookie" in f.request.headers
 
 
-class TestStickyAuthState:
-
-    def test_response(self):
-        s = flow.StickyAuthState(filt.parse(".*"))
-        f = tutils.tflow(resp=True)
-        f.request.headers["authorization"] = "foo"
-        s.handle_request(f)
-        assert "address" in s.hosts
-
-        f = tutils.tflow(resp=True)
-        s.handle_request(f)
-        assert f.request.headers["authorization"] == "foo"
-
-
 class TestClientPlaybackState:
 
     def test_tick(self):
@@ -1003,26 +989,6 @@ class TestFlowMaster:
         f.reply.acked = False
         fm.request(f)
         assert f.request.headers["cookie"] == "foo=bar"
-
-    def test_stickyauth(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
-        assert "Invalid" in fm.set_stickyauth("~h")
-        fm.set_stickyauth(".*")
-        assert fm.stickyauth_state
-        fm.set_stickyauth(None)
-        assert not fm.stickyauth_state
-
-        fm.set_stickyauth(".*")
-        f = tutils.tflow(resp=True)
-        f.request.headers["authorization"] = "foo"
-        fm.request(f)
-
-        f = tutils.tflow(resp=True)
-        assert fm.stickyauth_state.hosts
-        assert "authorization" not in f.request.headers
-        fm.request(f)
-        assert f.request.headers["authorization"] == "foo"
 
     def test_stream(self):
         with tutils.tmpdir() as tdir:
