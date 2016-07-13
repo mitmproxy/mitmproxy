@@ -76,7 +76,11 @@ def mitmproxy(args=None):  # pragma: no cover
 
     server = get_server(console_options.no_server, proxy_config)
 
-    m = console.master.ConsoleMaster(server, console_options)
+    try:
+        m = console.master.ConsoleMaster(server, console_options)
+    except exceptions.OptionsError as e:
+        print("mitmproxy: %s" % e, file=sys.stderr)
+        sys.exit(1)
     try:
         m.run()
     except (KeyboardInterrupt, _thread.error):
@@ -109,7 +113,7 @@ def mitmdump(args=None):  # pragma: no cover
 
         signal.signal(signal.SIGTERM, cleankill)
         master.run()
-    except dump.DumpError as e:
+    except (dump.DumpError, exceptions.OptionsError) as e:
         print("mitmdump: %s" % e, file=sys.stderr)
         sys.exit(1)
     except (KeyboardInterrupt, _thread.error):
@@ -137,7 +141,11 @@ def mitmweb(args=None):  # pragma: no cover
 
     server = get_server(web_options.no_server, proxy_config)
 
-    m = web.master.WebMaster(server, web_options)
+    try:
+        m = web.master.WebMaster(server, web_options)
+    except exceptions.OptionsError as e:
+        print("mitmweb: %s" % e, file=sys.stderr)
+        sys.exit(1)
     try:
         m.run()
     except (KeyboardInterrupt, _thread.error):
