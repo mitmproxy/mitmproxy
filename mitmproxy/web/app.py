@@ -344,7 +344,7 @@ class Settings(RequestHandler):
                 http2=self.master.server.config.http2,
                 anticache=self.master.options.anticache,
                 anticomp=self.master.options.anticomp,
-                stickyauth=self.master.stickyauth_txt,
+                stickyauth=self.master.options.stickyauth,
                 stickycookie=self.master.stickycookie_txt,
                 stream= self.master.stream_large_bodies.max_size if self.master.stream_large_bodies else False
             )
@@ -378,7 +378,7 @@ class Settings(RequestHandler):
                 self.master.set_stickycookie(v)
                 update[k] = v
             elif k == "stickyauth":
-                self.master.set_stickyauth(v)
+                self.master.options.stickyauth = v
                 update[k] = v
             elif k == "stream":
                 self.master.set_stream_large_bodies(v)

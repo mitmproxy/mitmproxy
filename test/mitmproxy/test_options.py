@@ -3,7 +3,7 @@ import copy
 
 from mitmproxy import options
 from mitmproxy import exceptions
-from netlib.tutils import raises
+from netlib import tutils
 
 
 class TO(options.Options):
@@ -19,8 +19,8 @@ def test_options():
     assert o.two == "three"
     o.one = "one"
     assert o.one == "one"
-    raises("no such option", setattr, o, "nonexistent", "value")
-    raises("no such option", o.update, nonexistent = "value")
+    tutils.raises("no such option", setattr, o, "nonexistent", "value")
+    tutils.raises("no such option", o.update, nonexistent = "value")
 
     rec = []
 
@@ -36,6 +36,14 @@ def test_options():
     o.update(one="oink")
     assert len(rec) == 2
     assert rec[-1].one == "oink"
+
+
+def test_setter():
+    o = TO(two="three")
+    f = o.setter("two")
+    f("xxx")
+    assert o.two == "xxx"
+    tutils.raises("no such option", o.setter, "nonexistent")
 
 
 def test_rollback():

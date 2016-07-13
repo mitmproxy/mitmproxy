@@ -65,5 +65,10 @@ class Options(object):
             self._opts.update(kwargs)
             self.changed.send(self)
 
+    def setter(self, attr):
+        if attr not in self._opts:
+            raise KeyError("No such option: %s" % attr)
+        return lambda x: self.__setattr__(attr, x)
+
     def __repr__(self):
         return pprint.pformat(self._opts)

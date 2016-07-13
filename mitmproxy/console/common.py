@@ -38,7 +38,7 @@ def is_keypress(k):
     """
         Is this input event a keypress?
     """
-    if isinstance(k, basestring):
+    if isinstance(k, six.string_types):
         return True
 
 

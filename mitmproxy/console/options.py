@@ -153,7 +153,6 @@ class Options(urwid.WidgetWrap):
 
     def clearall(self):
         self.master.anticache = False
-        self.master.anticomp = False
         self.master.killextra = False
         self.master.showhost = False
         self.master.refresh_server_playback = True
@@ -163,8 +162,11 @@ class Options(urwid.WidgetWrap):
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
         self.master.scripts = []
-        self.master.set_stickyauth(None)
         self.master.set_stickycookie(None)
+
+        self.master.options.stickyauth = None
+        self.master.options.anticomp = False
+
         self.master.state.default_body_view = contentviews.get("Auto")
 
         signals.update_settings.send(self)
@@ -263,7 +265,7 @@ class Options(urwid.WidgetWrap):
         signals.status_prompt.send(
             prompt = "Sticky auth filter",
             text = self.master.options.stickyauth,
-            callback = self.master.set_stickyauth
+            callback = self.master.options.setter("stickyauth")
         )
 
     def sticky_cookie(self):
