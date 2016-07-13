@@ -870,7 +870,6 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, None, s)
         fm.anticache = True
-        fm.anticomp = True
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
         f.request = HTTPRequest.wrap(netlib.tutils.treq())

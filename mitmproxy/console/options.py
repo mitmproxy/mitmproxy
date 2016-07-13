@@ -102,7 +102,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Anti-Compression",
                     "o",
-                    lambda: master.anticomp,
+                    lambda: master.options.anticomp,
                     self.toggle_anticomp
                 ),
                 select.Option(
@@ -177,7 +177,7 @@ class Options(urwid.WidgetWrap):
         self.master.anticache = not self.master.anticache
 
     def toggle_anticomp(self):
-        self.master.anticomp = not self.master.anticomp
+        self.master.options.anticomp = not self.master.options.anticomp
 
     def toggle_killextra(self):
         self.master.killextra = not self.master.killextra

@@ -12,6 +12,7 @@ from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
 from mitmproxy import options
+from mitmproxy import builtins
 from netlib import human
 from netlib import tcp
 from netlib import strutils
@@ -59,6 +60,7 @@ class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options, outfile=None):
         flow.FlowMaster.__init__(self, options, server, flow.State())
+        self.addons.add(*builtins.default_addons())
         self.outfile = outfile
         self.o = options
         self.anticache = options.anticache

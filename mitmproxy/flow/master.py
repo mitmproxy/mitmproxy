@@ -46,7 +46,6 @@ class FlowMaster(controller.Master):
         self.stickyauth_txt = None
 
         self.anticache = False
-        self.anticomp = False
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
         self.replacehooks = modules.ReplaceHooks()
@@ -332,8 +331,6 @@ class FlowMaster(controller.Master):
 
         if self.anticache:
             f.request.anticache()
-        if self.anticomp:
-            f.request.anticomp()
 
         if self.server_playback:
             pb = self.do_server_playback(f)
