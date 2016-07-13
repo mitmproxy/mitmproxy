@@ -350,20 +350,3 @@ class StickyCookieState:
         if l:
             f.request.stickycookie = True
             f.request.headers["cookie"] = "; ".join(l)
-
-
-class StickyAuthState:
-    def __init__(self, flt):
-        """
-            flt: Compiled filter.
-        """
-        self.flt = flt
-        self.hosts = {}
-
-    def handle_request(self, f):
-        host = f.request.host
-        if "authorization" in f.request.headers:
-            self.hosts[host] = f.request.headers["authorization"]
-        elif f.match(self.flt):
-            if host in self.hosts:
-                f.request.headers["authorization"] = self.hosts[host]

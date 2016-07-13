@@ -120,7 +120,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Sticky Auth",
                     "A",
-                    lambda: master.stickyauth_txt,
+                    lambda: master.options.stickyauth,
                     self.sticky_auth
                 ),
                 select.Option(
@@ -262,7 +262,7 @@ class Options(urwid.WidgetWrap):
     def sticky_auth(self):
         signals.status_prompt.send(
             prompt = "Sticky auth filter",
-            text = self.master.stickyauth_txt,
+            text = self.master.options.stickyauth,
             callback = self.master.set_stickyauth
         )
 

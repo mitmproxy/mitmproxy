@@ -244,11 +244,6 @@ class ConsoleMaster(flow.FlowMaster):
             print("Sticky cookies error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
-        r = self.set_stickyauth(options.stickyauth)
-        if r:
-            print("Sticky auth error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
         self.set_stream_large_bodies(options.stream_large_bodies)
 
         self.refresh_server_playback = options.refresh_server_playback
@@ -299,6 +294,9 @@ class ConsoleMaster(flow.FlowMaster):
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         signals.update_settings.send(self)
+
+    def set_stickyauth(self, txt):
+        self.options.stickyauth = txt
 
     def options_error(self, opts, exc):
         signals.status_message.send(
