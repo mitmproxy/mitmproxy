@@ -295,9 +295,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.__dict__[name] = value
         signals.update_settings.send(self)
 
-    def set_stickyauth(self, txt):
-        self.options.stickyauth = txt
-
     def options_error(self, opts, exc):
         signals.status_message.send(
             message=str(exc),
