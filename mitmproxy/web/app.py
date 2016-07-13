@@ -297,12 +297,9 @@ class FlowContent(RequestHandler):
 
         flow = self.flow
         flow.backup()
-        content = ''
+        content = 'Can not read file!'
         if (len(self.request.files.values()) > 0):
             content = self.request.files.values()[0][0]["body"]
-        elif (len(self.request.arguments) > 0):
-            content = self.request.arguments['file']
-
         flow.response.content = str(content)
         self.state.update_flow(flow)
 

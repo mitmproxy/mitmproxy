@@ -119,6 +119,8 @@ export function update(flow, data) {
 
 export function update_content(flow, file) {
     const body = new FormData()
+    if (typeof file !== File)
+        file = new Blob([file], {type: 'plain/text'})
     body.append('file', file)
     fetchApi(`/flows/${flow.id}/response/content`, {method: 'post',  body} )
     return { type: REQUEST_ACTION }
