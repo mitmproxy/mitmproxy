@@ -7,6 +7,8 @@ from typing import List
 import netlib.basetypes
 from mitmproxy.models.flow import Flow
 
+import six
+
 
 class TCPMessage(netlib.basetypes.Serializable):
 
@@ -53,3 +55,22 @@ class TCPFlow(Flow):
 
     def __repr__(self):
         return "<TCPFlow ({} messages)>".format(len(self.messages))
+
+    def match(self, f):
+        """
+            Match this flow against a compiled filter expression. Returns True
+            if matched, False if not.
+
+            If f is a string, it will be compiled as a filter expression. If
+            the expression is invalid, ValueError is raised.
+        """
+        if isinstance(f, six.string_types):
+            from .. import filt
+
+            f = filt.parse(f)
+            if not f:
+                raise ValueError("Invalid filter expression.")
+        if f:
+            return f(self)
+
+        return True
