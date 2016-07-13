@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+
 class AntiComp:
     def __init__(self):
         self.enabled = False
