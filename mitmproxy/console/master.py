@@ -216,10 +216,9 @@ class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, server, ConsoleState())
+        flow.FlowMaster.__init__(self, options, server, ConsoleState())
 
         self.stream_path = None
-        self.options = options
         self.options.errored.connect(self.options_error)
 
         if options.replacements:

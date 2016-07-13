@@ -34,7 +34,7 @@ class TestMaster(flow.FlowMaster):
         config.port = 0
         s = ProxyServer(config)
         state = flow.State()
-        flow.FlowMaster.__init__(self, s, state)
+        flow.FlowMaster.__init__(self, None, s, state)
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()

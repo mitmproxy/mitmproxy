@@ -27,8 +27,8 @@ class FlowMaster(controller.Master):
         if len(self.servers) > 0:
             return self.servers[0]
 
-    def __init__(self, server, state):
-        super(FlowMaster, self).__init__()
+    def __init__(self, options, server, state):
+        super(FlowMaster, self).__init__(options)
         if server:
             self.add_server(server)
         self.state = state

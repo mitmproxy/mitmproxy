@@ -147,9 +147,10 @@ class Options(options.Options):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        self.options = options
-        super(WebMaster, self).__init__(server, WebState())
-        self.app = app.Application(self, self.options.wdebug, self.options.wauthenticator)
+        super(WebMaster, self).__init__(options, server, WebState())
+        self.app = app.Application(
+            self, self.options.wdebug, self.options.wauthenticator
+        )
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)

@@ -58,7 +58,7 @@ class Options(options.Options):
 class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options, outfile=None):
-        flow.FlowMaster.__init__(self, server, flow.State())
+        flow.FlowMaster.__init__(self, options, server, flow.State())
         self.outfile = outfile
         self.o = options
         self.anticache = options.anticache
@@ -137,8 +137,8 @@ class DumpMaster(flow.FlowMaster):
                 self.add_event("Flow file corrupted.", "error")
                 raise DumpError(v)
 
-        if self.o.app:
-            self.start_app(self.o.app_host, self.o.app_port)
+        if self.options.app:
+            self.start_app(self.options.app_host, self.options.app_port)
 
     def _readflow(self, paths):
         """
@@ -152,7 +152,7 @@ class DumpMaster(flow.FlowMaster):
 
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.o.verbosity >= needed:
+        if self.options.verbosity >= needed:
             self.echo(
                 e,
                 fg="red" if level == "error" else None,
@@ -172,7 +172,7 @@ class DumpMaster(flow.FlowMaster):
         click.secho(text, file=self.outfile, **style)
 
     def _echo_message(self, message):
-        if self.o.flow_detail >= 2 and hasattr(message, "headers"):
+        if self.options.flow_detail >= 2 and hasattr(message, "headers"):
             headers = "\r\n".join(
                 "{}: {}".format(
                     click.style(strutils.bytes_to_escaped_str(k), fg="blue", bold=True),
@@ -180,7 +180,7 @@ class DumpMaster(flow.FlowMaster):
                 for k, v in message.headers.fields
             )
             self.echo(headers, indent=4)
-        if self.o.flow_detail >= 3:
+        if self.options.flow_detail >= 3:
             if message.content is None:
                 self.echo("(content missing)", indent=4)
             elif message.content:
@@ -213,7 +213,7 @@ class DumpMaster(flow.FlowMaster):
                     for (style, text) in line:
                         yield click.style(text, **styles.get(style, {}))
 
-                if self.o.flow_detail == 3:
+                if self.options.flow_detail == 3:
                     lines_to_echo = itertools.islice(lines, 70)
                 else:
                     lines_to_echo = lines
@@ -228,7 +228,7 @@ class DumpMaster(flow.FlowMaster):
                 if next(lines, None):
                     self.echo("(cut off)", indent=4, dim=True)
 
-        if self.o.flow_detail >= 2:
+        if self.options.flow_detail >= 2:
             self.echo("")
 
     def _echo_request_line(self, flow):
@@ -302,7 +302,7 @@ class DumpMaster(flow.FlowMaster):
         self.echo(line)
 
     def echo_flow(self, f):
-        if self.o.flow_detail == 0:
+        if self.options.flow_detail == 0:
             return
 
         if f.request:
@@ -350,7 +350,7 @@ class DumpMaster(flow.FlowMaster):
     def tcp_message(self, f):
         super(DumpMaster, self).tcp_message(f)
 
-        if self.o.flow_detail == 0:
+        if self.options.flow_detail == 0:
             return
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
@@ -362,7 +362,7 @@ class DumpMaster(flow.FlowMaster):
         self._echo_message(message)
 
     def run(self):  # pragma: no cover
-        if self.o.rfile and not self.o.keepserving:
+        if self.options.rfile and not self.options.keepserving:
             self.unload_scripts()  # make sure to trigger script unload events.
             return
         super(DumpMaster, self).run()

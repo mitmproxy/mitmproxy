@@ -6,6 +6,8 @@ import contextlib
 
 from six.moves import queue
 
+from mitmproxy import addons
+from mitmproxy import options
 from . import ctx as mitmproxy_ctx
 from netlib import basethread
 from . import exceptions
@@ -49,7 +51,9 @@ class Master(object):
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self, *servers):
+    def __init__(self, opts, *servers):
+        self.options = opts or options.Options()
+        self.addons = addons.Addons(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.servers = []
@@ -121,6 +125,7 @@ class Master(object):
         for server in self.servers:
             server.shutdown()
         self.should_exit.set()
+        self.addons.done()
 
 
 class ServerThread(basethread.BaseThread):
@@ -191,6 +196,10 @@ def handler(f):
 
         with master.handlecontext():
             ret = f(master, message)
+            if handling:
+                # Python2/3 compatibility hack
+                fn = getattr(f, "func_name", None) or getattr(f, "__name__")
+                master.addons(fn)
 
         if handling and not message.reply.acked and not message.reply.taken:
             message.reply.ack()
