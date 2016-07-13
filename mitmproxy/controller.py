@@ -197,9 +197,7 @@ def handler(f):
         with master.handlecontext():
             ret = f(master, message)
             if handling:
-                # Python2/3 compatibility hack
-                fn = getattr(f, "func_name", None) or getattr(f, "__name__")
-                master.addons(fn, message)
+                master.addons(f.__name__, message)
 
         if handling and not message.reply.acked and not message.reply.taken:
             message.reply.ack()
