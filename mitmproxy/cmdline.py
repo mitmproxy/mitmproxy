@@ -184,9 +184,9 @@ def get_common_options(options):
             )
 
     return dict(
-        app=options.app,
-        app_host=options.app_host,
-        app_port=options.app_port,
+        onboarding_app=options.onboarding_app,
+        onboarding_app_host=options.onboarding_app_host,
+        onboarding_app_port=options.onboarding_app_port,
 
         anticache=options.anticache,
         anticomp=options.anticomp,
@@ -502,12 +502,12 @@ def onboarding_app(parser):
     group = parser.add_argument_group("Onboarding App")
     group.add_argument(
         "--noapp",
-        action="store_false", dest="app", default=True,
+        action="store_false", dest="onboarding_app", default=True,
         help="Disable the mitmproxy onboarding app."
     )
     group.add_argument(
         "--app-host",
-        action="store", dest="app_host", default=APP_HOST, metavar="host",
+        action="store", dest="onboarding_app_host", default=APP_HOST, metavar="host",
         help="""
             Domain to serve the onboarding app from. For transparent mode, use
             an IP when a DNS entry for the app domain is not present. Default:
@@ -517,7 +517,7 @@ def onboarding_app(parser):
     group.add_argument(
         "--app-port",
         action="store",
-        dest="app_port",
+        dest="onboarding_app_port",
         default=APP_PORT,
         type=int,
         metavar="80",

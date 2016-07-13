@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import functools
+import pprint
 import threading
 import contextlib
 
@@ -45,16 +46,69 @@ class Log(object):
     # We may want to add .log(), .warn() etc. here at a later point in time
 
 
+class Options(object):
+    __initialized = False
+
+    def __init__(self):
+        self.__initialized = True
+
+    def __setattr__(self, key, value):
+        if not self.__initialized:
+            return super(Options, self).__setattr__(key, value)
+        raise RuntimeError('{} objects are immutable'.format(self.__class__.__name__))
+
+    def __eq__(self, other):
+        if isinstance(other, Options):
+            return self.__dict__ == other.__dict__
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def _dict(self):
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if "__" not in k
+        }
+
+    def __repr__(self):
+        options = pprint.pformat(self._dict(), indent=4)
+        if "\n" in options:
+            options = "{\n" + options[1:-1] + "\n}"
+        return "{mod}.{cls}({options})".format(
+            mod=type(self).__module__,
+            cls=type(self).__name__,
+            options=options
+        )
+
+    def with_update(self, **update):
+        new_dict = self._dict()
+        new_dict.update(update)
+        return type(self)(**new_dict)
+
+
 class Master(object):
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self, *servers):
-        self.event_queue = queue.Queue()
-        self.should_exit = threading.Event()
+    def __init__(
+            self,
+            options,  # type: Options
+            *servers
+    ):
+        self.options = options
         self.servers = []
         for i in servers:
             self.add_server(i)
+        self.event_queue = queue.Queue()
+        self.should_exit = threading.Event()
+
+    def update_options(self, **new_options):
+        # FIXME: Propagate updates from here.
+        # If any handler/addon raises an exception, call `.update_options(old_option)`
+        # for all already processed handlers as a rollback.
+        self.options = self.options.with_update(**new_options)
 
     @contextlib.contextmanager
     def handlecontext(self):

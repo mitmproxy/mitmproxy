@@ -153,8 +153,8 @@ class Options(object):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        self.options = options
-        super(WebMaster, self).__init__(server, WebState())
+        super(WebMaster, self).__init__(server, WebState(), options)
+        self.options = options  # type: Options
         self.app = app.Application(self, self.options.wdebug, self.options.wauthenticator)
         if options.rfile:
             try:

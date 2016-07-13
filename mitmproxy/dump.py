@@ -3,8 +3,11 @@ from __future__ import absolute_import, print_function, division
 import itertools
 import sys
 import traceback
+import warnings
 
 import click
+
+from typing import Optional  # noqa
 
 from mitmproxy import contentviews
 from mitmproxy import controller
@@ -20,53 +23,26 @@ class DumpError(Exception):
     pass
 
 
-class Options(object):
-    attributes = [
-        "app",
-        "app_host",
-        "app_port",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "filtstr",
-        "flow_detail",
-        "keepserving",
-        "kill",
-        "no_server",
-        "nopop",
-        "refresh_server_playback",
-        "replacements",
-        "rfile",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "scripts",
-        "showhost",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "outfile",
-        "replay_ignore_content",
-        "replay_ignore_params",
-        "replay_ignore_payload_params",
-        "replay_ignore_host"
-    ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
+class Options(flow.Options):
+    def __init__(
+            self,
+            filtstr=None,  # type: Optional[str]
+            flow_detail=1,  # type: int
+            keepserving=False,  # type: bool
+            **kwargs
+    ):
+        self.filtstr = filtstr
+        self.flow_detail = flow_detail
+        self.keepserving = keepserving
+        super(Options, self).__init__(**kwargs)
 
 
 class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options, outfile=None):
-        flow.FlowMaster.__init__(self, server, flow.State())
+        flow.FlowMaster.__init__(self, server, flow.State(), options)
+        self.options = self.options  # type: Options
         self.outfile = outfile
-        self.o = options
         self.anticache = options.anticache
         self.anticomp = options.anticomp
         self.showhost = options.showhost
@@ -143,8 +119,13 @@ class DumpMaster(flow.FlowMaster):
                 self.add_event("Flow file corrupted.", "error")
                 raise DumpError(v)
 
-        if self.o.app:
-            self.start_app(self.o.app_host, self.o.app_port)
+        if self.o.onboarding_app:
+            self.start_app(self.o.onboarding_app_host, self.o.onboarding_app_port)
+
+    @property
+    def o(self):
+        warnings.warn(".o is deprecated")
+        return self.options
 
     def _readflow(self, paths):
         """
