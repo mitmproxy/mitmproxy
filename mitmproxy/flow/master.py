@@ -42,7 +42,6 @@ class FlowMaster(controller.Master):
         self.stickycookie_state = None  # type: Optional[modules.StickyCookieState]
         self.stickycookie_txt = None
 
-        self.anticache = False
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
         self.replacehooks = modules.ReplaceHooks()
@@ -312,9 +311,6 @@ class FlowMaster(controller.Master):
     def process_new_request(self, f):
         if self.stickycookie_state:
             self.stickycookie_state.handle_request(f)
-
-        if self.anticache:
-            f.request.anticache()
 
         if self.server_playback:
             pb = self.do_server_playback(f)

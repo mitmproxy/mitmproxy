@@ -855,7 +855,6 @@ class TestFlowMaster:
     def test_all(self):
         s = flow.State()
         fm = flow.FlowMaster(None, None, s)
-        fm.anticache = True
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
         f.request = HTTPRequest.wrap(netlib.tutils.treq())
@@ -1052,15 +1051,6 @@ class TestRequest:
         r.headers["Host"] = "foo.com:22"
         assert r.url == "https://address:22/path"
         assert r.pretty_url == "https://foo.com:22/path"
-
-    def test_anticache(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers = Headers()
-        r.headers["if-modified-since"] = "test"
-        r.headers["if-none-match"] = "test"
-        r.anticache()
-        assert "if-modified-since" not in r.headers
-        assert "if-none-match" not in r.headers
 
     def test_replace(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
