@@ -139,7 +139,7 @@ class TestClientPlaybackState:
     def test_tick(self):
         first = tutils.tflow()
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.start_client_playback([first, tutils.tflow()], True)
         c = fm.client_playback
         c.testing = True
@@ -470,7 +470,7 @@ class TestFlow(object):
 
     def test_kill(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow()
         f.intercept(mock.Mock())
         f.kill(fm)
@@ -479,7 +479,7 @@ class TestFlow(object):
 
     def test_killall(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
 
         f = tutils.tflow()
         f.intercept(fm)
@@ -714,7 +714,7 @@ class TestSerialize:
     def test_load_flows(self):
         r = self._treader()
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.load_flows(r)
         assert len(s.flows) == 6
 
@@ -725,7 +725,7 @@ class TestSerialize:
             mode="reverse",
             upstream_server=("https", ("use-this-domain", 80))
         )
-        fm = flow.FlowMaster(DummyServer(conf), s)
+        fm = flow.FlowMaster(None, DummyServer(conf), s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"
 
@@ -772,7 +772,7 @@ class TestFlowMaster:
 
     def test_load_script(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
 
         fm.load_script(tutils.test_data.path("data/scripts/a.py"))
         fm.load_script(tutils.test_data.path("data/scripts/a.py"))
@@ -788,14 +788,14 @@ class TestFlowMaster:
     def test_getset_ignore(self):
         p = mock.Mock()
         p.config.check_ignore = HostMatcher()
-        fm = flow.FlowMaster(p, flow.State())
+        fm = flow.FlowMaster(None, p, flow.State())
         assert not fm.get_ignore_filter()
         fm.set_ignore_filter(["^apple\.com:", ":443$"])
         assert fm.get_ignore_filter()
 
     def test_replay(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow(resp=True)
         f.request.content = None
         assert "missing" in fm.replay_request(f)
@@ -808,7 +808,7 @@ class TestFlowMaster:
 
     def test_script_reqerr(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.load_script(tutils.test_data.path("data/scripts/reqerr.py"))
         f = tutils.tflow()
         fm.clientconnect(f.client_conn)
@@ -816,7 +816,7 @@ class TestFlowMaster:
 
     def test_script(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.load_script(tutils.test_data.path("data/scripts/all.py"))
         f = tutils.tflow(resp=True)
 
@@ -852,7 +852,7 @@ class TestFlowMaster:
 
     def test_duplicate_flow(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow(resp=True)
         fm.load_flow(f)
         assert s.flow_count() == 1
@@ -863,14 +863,13 @@ class TestFlowMaster:
 
     def test_create_flow(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.anticache = True
-        fm.anticomp = True
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
         f.request = HTTPRequest.wrap(netlib.tutils.treq())
@@ -895,7 +894,7 @@ class TestFlowMaster:
 
         f = tutils.tflow(resp=True)
         pb = [tutils.tflow(resp=True), f]
-        fm = flow.FlowMaster(DummyServer(ProxyConfig()), s)
+        fm = flow.FlowMaster(None, DummyServer(ProxyConfig()), s)
         assert not fm.start_server_playback(
             pb,
             False,
@@ -923,7 +922,7 @@ class TestFlowMaster:
         f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
 
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 
@@ -965,7 +964,7 @@ class TestFlowMaster:
         f = tutils.tflow()
         f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.refresh_server_playback = True
         fm.start_server_playback(
             pb,
@@ -985,7 +984,7 @@ class TestFlowMaster:
 
     def test_stickycookie(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         assert "Invalid" in fm.set_stickycookie("~h")
         fm.set_stickycookie(".*")
         assert fm.stickycookie_state
@@ -1007,7 +1006,7 @@ class TestFlowMaster:
 
     def test_stickyauth(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         assert "Invalid" in fm.set_stickyauth("~h")
         fm.set_stickyauth(".*")
         assert fm.stickyauth_state
@@ -1035,7 +1034,7 @@ class TestFlowMaster:
                     return list(r.stream())
 
             s = flow.State()
-            fm = flow.FlowMaster(None, s)
+            fm = flow.FlowMaster(None, None, s)
             f = tutils.tflow(resp=True)
 
             with open(p, "ab") as tmpfile:

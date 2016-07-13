@@ -4,7 +4,7 @@ from . import tutils
 
 def test_duplicate_flow():
     s = flow.State()
-    fm = flow.FlowMaster(None, s)
+    fm = flow.FlowMaster(None, None, s)
     fm.load_script(tutils.test_data.path("data/scripts/duplicate_flow.py"))
     f = tutils.tflow()
     fm.request(f)

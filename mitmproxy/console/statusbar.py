@@ -189,7 +189,7 @@ class StatusBar(urwid.WidgetWrap):
         opts = []
         if self.master.anticache:
             opts.append("anticache")
-        if self.master.anticomp:
+        if self.master.options.anticomp:
             opts.append("anticomp")
         if self.master.showhost:
             opts.append("showhost")

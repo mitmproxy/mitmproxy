@@ -15,6 +15,7 @@ import weakref
 
 import urwid
 
+from mitmproxy import builtins
 from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -216,10 +217,10 @@ class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, server, ConsoleState())
+        flow.FlowMaster.__init__(self, options, server, ConsoleState())
+        self.addons.add(*builtins.default_addons())
 
         self.stream_path = None
-        self.options = options
         self.options.errored.connect(self.options_error)
 
         if options.replacements:
@@ -252,7 +253,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
-        self.anticomp = options.anticomp
         self.killextra = options.kill
         self.rheaders = options.rheaders
         self.nopop = options.nopop

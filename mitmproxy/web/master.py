@@ -6,6 +6,7 @@ import collections
 import tornado.httpserver
 import tornado.ioloop
 
+from mitmproxy import builtins
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -147,9 +148,11 @@ class Options(options.Options):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        self.options = options
-        super(WebMaster, self).__init__(server, WebState())
-        self.app = app.Application(self, self.options.wdebug, self.options.wauthenticator)
+        super(WebMaster, self).__init__(options, server, WebState())
+        self.addons.add(*builtins.default_addons())
+        self.app = app.Application(
+            self, self.options.wdebug, self.options.wauthenticator
+        )
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
