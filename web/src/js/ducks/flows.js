@@ -123,6 +123,7 @@ export function update_content(flow, file) {
         file = new Blob([file], {type: 'plain/text'})
     body.append('file', file)
     fetchApi(`/flows/${flow.id}/response/content`, {method: 'post',  body} )
+    update(flow, {response: {headers: [['Content-Encoding', '']]} } )
     return { type: REQUEST_ACTION }
 }
 
