@@ -140,6 +140,7 @@ class Options(urwid.WidgetWrap):
         )
         self.master.loop.widget.footer.update("")
         signals.update_settings.connect(self.sig_update_settings)
+        master.options.changed.connect(self.sig_update_settings)
 
     def sig_update_settings(self, sender):
         self.lb.walker._modified()

@@ -217,8 +217,10 @@ class ConsoleMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
+
         self.stream_path = None
         self.options = options
+        self.options.errored.connect(self.options_error)
 
         if options.replacements:
             for i in options.replacements:
@@ -297,6 +299,12 @@ class ConsoleMaster(flow.FlowMaster):
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         signals.update_settings.send(self)
+
+    def options_error(self, opts, exc):
+        signals.status_message.send(
+            message=str(exc),
+            expire=1
+        )
 
     def load_script(self, command, use_reloader=True):
         # We default to using the reloader in the console ui.

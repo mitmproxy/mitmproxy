@@ -125,6 +125,7 @@ class Options(options.Options):
         "wsingleuser",
         "whtpasswd",
     ]
+
     def process_web_options(self, parser):
         if self.wsingleuser or self.whtpasswd:
             if self.wsingleuser:
