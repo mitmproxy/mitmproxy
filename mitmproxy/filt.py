@@ -35,9 +35,19 @@ from __future__ import absolute_import, print_function, division
 
 import re
 import sys
+import functools
+
+from mitmproxy.models.http import HTTPFlow
 from netlib import strutils
 
 import pyparsing as pp
+
+
+def http(fn):
+    @functools.wraps(fn)
+    def filter_http_only(self, flow):
+        return isinstance(flow, HTTPFlow) and fn(self, flow)
+    return filter_http_only
 
 
 class _Token(object):
@@ -69,6 +79,7 @@ class FReq(_Action):
     code = "q"
     help = "Match request with no response"
 
+    @http
     def __call__(self, f):
         if not f.response:
             return True
@@ -78,6 +89,7 @@ class FResp(_Action):
     code = "s"
     help = "Match response"
 
+    @http
     def __call__(self, f):
         return bool(f.response)
 
@@ -117,6 +129,7 @@ class FAsset(_Action):
     ]
     ASSET_TYPES = [re.compile(x) for x in ASSET_TYPES]
 
+    @http
     def __call__(self, f):
         if f.response:
             for i in self.ASSET_TYPES:
@@ -129,6 +142,7 @@ class FContentType(_Rex):
     code = "t"
     help = "Content-type header"
 
+    @http
     def __call__(self, f):
         if _check_content_type(self.re, f.request):
             return True
@@ -141,6 +155,7 @@ class FRequestContentType(_Rex):
     code = "tq"
     help = "Request Content-Type header"
 
+    @http
     def __call__(self, f):
         return _check_content_type(self.re, f.request)
 
@@ -149,6 +164,7 @@ class FResponseContentType(_Rex):
     code = "ts"
     help = "Response Content-Type header"
 
+    @http
     def __call__(self, f):
         if f.response:
             return _check_content_type(self.re, f.response)
@@ -160,6 +176,7 @@ class FHead(_Rex):
     help = "Header"
     flags = re.MULTILINE
 
+    @http
     def __call__(self, f):
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
@@ -173,6 +190,7 @@ class FHeadRequest(_Rex):
     help = "Request header"
     flags = re.MULTILINE
 
+    @http
     def __call__(self, f):
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
@@ -183,6 +201,7 @@ class FHeadResponse(_Rex):
     help = "Response header"
     flags = re.MULTILINE
 
+    @http
     def __call__(self, f):
         if f.response and self.re.search(bytes(f.response.headers)):
             return True
@@ -216,6 +235,7 @@ class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
 
+    @http
     def __call__(self, f):
         if f.request and f.request.content:
             if self.re.search(f.request.get_decoded_content()):
@@ -226,6 +246,7 @@ class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
 
+    @http
     def __call__(self, f):
         if f.response and f.response.content:
             if self.re.search(f.response.get_decoded_content()):
@@ -237,6 +258,7 @@ class FMethod(_Rex):
     help = "Method"
     flags = re.IGNORECASE
 
+    @http
     def __call__(self, f):
         return bool(self.re.search(f.request.data.method))
 
@@ -246,6 +268,7 @@ class FDomain(_Rex):
     help = "Domain"
     flags = re.IGNORECASE
 
+    @http
     def __call__(self, f):
         return bool(self.re.search(f.request.data.host))
 
@@ -262,6 +285,7 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
+    @http
     def __call__(self, f):
         return self.re.search(f.request.url)
 
@@ -294,6 +318,7 @@ class FCode(_Int):
     code = "c"
     help = "HTTP response code"
 
+    @http
     def __call__(self, f):
         if f.response and f.response.status_code == self.num:
             return True
