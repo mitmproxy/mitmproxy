@@ -42,7 +42,10 @@ class Options(object):
         return self.__class__(**self._opts)
 
     def __getattr__(self, attr):
-        return self._opts[attr]
+        if attr in self._opts:
+            return self._opts[attr]
+        else:
+            raise AttributeError()
 
     def __setattr__(self, attr, value):
         if attr not in self._opts:
