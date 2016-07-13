@@ -11,6 +11,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
+from mitmproxy import options
 from netlib import human
 from netlib import tcp
 from netlib import strutils
@@ -20,7 +21,7 @@ class DumpError(Exception):
     pass
 
 
-class Options(object):
+class Options(options.Options):
     attributes = [
         "app",
         "app_host",
@@ -52,13 +53,6 @@ class Options(object):
         "replay_ignore_payload_params",
         "replay_ignore_host"
     ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
 
 
 class DumpMaster(flow.FlowMaster):

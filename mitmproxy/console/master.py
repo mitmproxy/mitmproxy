@@ -20,6 +20,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
+import mitmproxy.options
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -175,7 +176,7 @@ class ConsoleState(flow.State):
         self.add_flow_setting(flow, "marked", marked)
 
 
-class Options(object):
+class Options(mitmproxy.options.Options):
     attributes = [
         "app",
         "app_domain",
@@ -209,13 +210,6 @@ class Options(object):
         "no_mouse",
         "outfile",
     ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
 
 
 class ConsoleMaster(flow.FlowMaster):
