@@ -8,7 +8,6 @@ from typing import List, Optional, Set  # noqa
 import netlib.exceptions
 from mitmproxy import controller
 from mitmproxy import exceptions
-from mitmproxy import filt
 from mitmproxy import models
 from mitmproxy import script
 from mitmproxy.flow import io
@@ -38,9 +37,6 @@ class FlowMaster(controller.Master):
         self.kill_nonreplay = False
         self.scripts = []  # type: List[script.Script]
         self.pause_scripts = False
-
-        self.stickycookie_state = None  # type: Optional[modules.StickyCookieState]
-        self.stickycookie_txt = None
 
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
@@ -114,17 +110,6 @@ class FlowMaster(controller.Master):
 
     def set_tcp_filter(self, host_patterns):
         self.server.config.check_tcp = HostMatcher(host_patterns)
-
-    def set_stickycookie(self, txt):
-        if txt:
-            flt = filt.parse(txt)
-            if not flt:
-                return "Invalid filter expression."
-            self.stickycookie_state = modules.StickyCookieState(flt)
-            self.stickycookie_txt = txt
-        else:
-            self.stickycookie_state = None
-            self.stickycookie_txt = None
 
     def set_stream_large_bodies(self, max_size):
         if max_size is not None:
@@ -309,17 +294,10 @@ class FlowMaster(controller.Master):
             raise exceptions.FlowReadException(v.strerror)
 
     def process_new_request(self, f):
-        if self.stickycookie_state:
-            self.stickycookie_state.handle_request(f)
-
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb and self.kill_nonreplay:
                 f.kill(self)
-
-    def process_new_response(self, f):
-        if self.stickycookie_state:
-            self.stickycookie_state.handle_response(f)
 
     def replay_request(self, f, block=False, run_scripthooks=True):
         """
@@ -431,7 +409,6 @@ class FlowMaster(controller.Master):
         if not f.reply.acked:
             if self.client_playback:
                 self.client_playback.clear(f)
-        self.process_new_response(f)
         if self.stream:
             self.stream.add(f)
         return f

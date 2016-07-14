@@ -126,7 +126,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Sticky Cookies",
                     "t",
-                    lambda: master.stickycookie_txt,
+                    lambda: master.options.stickycookie,
                     self.sticky_cookie
                 ),
             ]
@@ -161,11 +161,11 @@ class Options(urwid.WidgetWrap):
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
         self.master.scripts = []
-        self.master.set_stickycookie(None)
 
         self.master.options.anticache = False
         self.master.options.anticomp = False
         self.master.options.stickyauth = None
+        self.master.options.stickycookie = None
 
         self.master.state.default_body_view = contentviews.get("Auto")
 
@@ -271,8 +271,8 @@ class Options(urwid.WidgetWrap):
     def sticky_cookie(self):
         signals.status_prompt.send(
             prompt = "Sticky cookie filter",
-            text = self.master.stickycookie_txt,
-            callback = self.master.set_stickycookie
+            text = self.master.options.stickycookie,
+            callback = self.master.options.setter("stickycookie")
         )
 
     def palette(self):

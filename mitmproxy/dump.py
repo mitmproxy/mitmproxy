@@ -82,9 +82,6 @@ class DumpMaster(flow.FlowMaster):
         else:
             self.filt = None
 
-        if options.stickycookie:
-            self.set_stickycookie(options.stickycookie)
-
         if options.outfile:
             err = self.start_stream_to_path(
                 options.outfile[0],
@@ -230,7 +227,9 @@ class DumpMaster(flow.FlowMaster):
 
     def _echo_request_line(self, flow):
         if flow.request.stickycookie:
-            stickycookie = click.style("[stickycookie] ", fg="yellow", bold=True)
+            stickycookie = click.style(
+                "[stickycookie] ", fg="yellow", bold=True
+            )
         else:
             stickycookie = ""
 

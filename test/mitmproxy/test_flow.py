@@ -40,86 +40,6 @@ def test_app_registry():
     assert ar.get(r)
 
 
-class TestStickyCookieState:
-
-    def _response(self, cookie, host):
-        s = flow.StickyCookieState(filt.parse(".*"))
-        f = tutils.tflow(req=netlib.tutils.treq(host=host, port=80), resp=True)
-        f.response.headers["Set-Cookie"] = cookie
-        s.handle_response(f)
-        return s, f
-
-    def test_domain_match(self):
-        s = flow.StickyCookieState(filt.parse(".*"))
-        assert s.domain_match("www.google.com", ".google.com")
-        assert s.domain_match("google.com", ".google.com")
-
-    def test_response(self):
-        c = (
-            "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; "
-            "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
-        )
-
-        s, f = self._response(c, "host")
-        assert not s.jar.keys()
-
-        s, f = self._response(c, "www.google.com")
-        assert list(s.jar.keys())[0] == ('.google.com', 80, '/')
-
-        s, f = self._response("SSID=mooo", "www.google.com")
-        assert list(s.jar.keys())[0] == ('www.google.com', 80, '/')
-
-        # Test setting of multiple cookies
-        c1 = "somecookie=test; Path=/"
-        c2 = "othercookie=helloworld; Path=/"
-        s, f = self._response(c1, "www.google.com")
-        f.response.headers["Set-Cookie"] = c2
-        s.handle_response(f)
-        googlekey = list(s.jar.keys())[0]
-        assert len(s.jar[googlekey].keys()) == 2
-
-        # Test setting of weird cookie keys
-        s = flow.StickyCookieState(filt.parse(".*"))
-        f = tutils.tflow(req=netlib.tutils.treq(host="www.google.com", port=80), resp=True)
-        cs = [
-            "foo/bar=hello",
-            "foo:bar=world",
-            "foo@bar=fizz",
-            "foo,bar=buzz",
-        ]
-        for c in cs:
-            f.response.headers["Set-Cookie"] = c
-            s.handle_response(f)
-        googlekey = list(s.jar.keys())[0]
-        assert len(s.jar[googlekey]) == len(cs)
-
-        # Test overwriting of a cookie value
-        c1 = "somecookie=helloworld; Path=/"
-        c2 = "somecookie=newvalue; Path=/"
-        s, f = self._response(c1, "www.google.com")
-        f.response.headers["Set-Cookie"] = c2
-        s.handle_response(f)
-        googlekey = list(s.jar.keys())[0]
-        assert len(s.jar[googlekey]) == 1
-        assert list(s.jar[googlekey]["somecookie"].values())[0] == "newvalue"
-
-    def test_response_delete(self):
-        c = "duffer=zafar; Path=/", "www.google.com"
-
-        # Test that a cookie is be deleted
-        # by setting the expire time in the past
-        s, f = self._response(*c)
-        f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
-        s.handle_response(f)
-        assert not s.jar.keys()
-
-    def test_request(self):
-        s, f = self._response("SSID=mooo", b"www.google.com")
-        assert "cookie" not in f.request.headers
-        s.handle_request(f)
-        assert "cookie" in f.request.headers
-
-
 class TestClientPlaybackState:
 
     def test_tick(self):
@@ -966,28 +886,6 @@ class TestFlowMaster:
         f.request.host = "nonexistent"
         fm.process_new_request(f)
         assert "killed" in f.error.msg
-
-    def test_stickycookie(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
-        assert "Invalid" in fm.set_stickycookie("~h")
-        fm.set_stickycookie(".*")
-        assert fm.stickycookie_state
-        fm.set_stickycookie(None)
-        assert not fm.stickycookie_state
-
-        fm.set_stickycookie(".*")
-        f = tutils.tflow(resp=True)
-        f.response.headers["set-cookie"] = "foo=bar"
-        fm.request(f)
-        f.reply.acked = False
-        fm.response(f)
-        assert fm.stickycookie_state.jar
-        assert "cookie" not in f.request.headers
-        f = f.copy()
-        f.reply.acked = False
-        fm.request(f)
-        assert f.request.headers["cookie"] == "foo=bar"
 
     def test_stream(self):
         with tutils.tmpdir() as tdir:
