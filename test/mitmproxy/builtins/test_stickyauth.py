@@ -2,7 +2,7 @@ from .. import tutils, mastertest
 from mitmproxy.builtins import stickyauth
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy import options
+from mitmproxy.flow import options
 
 
 class TestStickyAuth(mastertest.MasterTest):

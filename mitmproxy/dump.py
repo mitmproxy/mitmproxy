@@ -6,12 +6,14 @@ import traceback
 
 import click
 
+from typing import Optional  # noqa
+import typing  # noqa
+
 from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
-from mitmproxy import options
 from mitmproxy import builtins
 from netlib import human
 from netlib import tcp
@@ -22,40 +24,20 @@ class DumpError(Exception):
     pass
 
 
-class Options(options.Options):
-    attributes = [
-        "app",
-        "app_host",
-        "app_port",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "filtstr",
-        "flow_detail",
-        "keepserving",
-        "kill",
-        "no_server",
-        "nopop",
-        "refresh_server_playback",
-        "replacements",
-        "rfile",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "scripts",
-        "showhost",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "outfile",
-        "replay_ignore_content",
-        "replay_ignore_params",
-        "replay_ignore_payload_params",
-        "replay_ignore_host",
-
-        "tfile"
-    ]
+class Options(flow.options.Options):
+    def __init__(
+            self,
+            filtstr=None,  # type: Optional[str]
+            flow_detail=1,  # type: int
+            keepserving=False,  # type: bool
+            tfile=None,  # type: Optional[typing.io.TextIO]
+            **kwargs
+    ):
+        self.filtstr = filtstr
+        self.flow_detail = flow_detail
+        self.keepserving = keepserving
+        self.tfile = tfile
+        super(Options, self).__init__(**kwargs)
 
 
 class DumpMaster(flow.FlowMaster):
@@ -63,6 +45,8 @@ class DumpMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, flow.State())
         self.addons.add(*builtins.default_addons())
+        # This line is just for type hinting
+        self.options = self.options  # type: Options
         self.o = options
         self.showhost = options.showhost
         self.replay_ignore_params = options.replay_ignore_params

@@ -2,7 +2,7 @@ from .. import tutils, mastertest
 from mitmproxy.builtins import stickycookie
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy import options
+from mitmproxy.flow import options
 from netlib import tutils as ntutils
 
 

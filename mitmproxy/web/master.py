@@ -6,11 +6,12 @@ import collections
 import tornado.httpserver
 import tornado.ioloop
 
+from typing import Optional  # noqa
+
 from mitmproxy import builtins
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import options
 from mitmproxy.web import app
 from netlib.http import authentication
 
@@ -90,43 +91,26 @@ class WebState(flow.State):
         )
 
 
-class Options(options.Options):
-    attributes = [
-        "app",
-        "app_domain",
-        "app_ip",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "eventlog",
-        "keepserving",
-        "kill",
-        "intercept",
-        "no_server",
-        "outfile",
-        "refresh_server_playback",
-        "rfile",
-        "scripts",
-        "showhost",
-        "replacements",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "wfile",
-        "nopop",
+class Options(flow.options.Options):
+    def __init__(
+            self,
+            wdebug=bool,  # type: bool
+            wport=8081,  # type: int
+            wiface="127.0.0.1",  # type: str
+            wauthenticator=None,  # type: Optional[authentication.PassMan]
+            wsingleuser=None,  # type: Optional[str]
+            whtpasswd=None,  # type: Optional[str]
+            **kwargs
+    ):
+        self.wdebug = wdebug
+        self.wport = wport
+        self.wiface = wiface
+        self.wauthenticator = wauthenticator
+        self.wsingleuser = wsingleuser
+        self.whtpasswd = whtpasswd
+        super(Options, self).__init__(**kwargs)
 
-        "wdebug",
-        "wport",
-        "wiface",
-        "wauthenticator",
-        "wsingleuser",
-        "whtpasswd",
-    ]
-
+    # TODO: This doesn't belong here.
     def process_web_options(self, parser):
         if self.wsingleuser or self.whtpasswd:
             if self.wsingleuser:
@@ -153,6 +137,8 @@ class WebMaster(flow.FlowMaster):
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator
         )
+        # This line is just for type hinting
+        self.options = self.options  # type: Options
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
