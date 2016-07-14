@@ -110,24 +110,21 @@ class Master(object):
     def tick(self, timeout):
         changed = False
         try:
-            # This endless loop runs until the 'Queue.Empty'
-            # exception is thrown.
-            while True:
-                mtype, obj = self.event_queue.get(timeout=timeout)
-                if mtype not in Events:
-                    raise exceptions.ControlException("Unknown event %s" % repr(mtype))
-                handle_func = getattr(self, mtype)
-                if not callable(handle_func):
-                    raise exceptions.ControlException("Handler %s not callable" % mtype)
-                if not handle_func.__dict__.get("__handler"):
-                    raise exceptions.ControlException(
-                        "Handler function %s is not decorated with controller.handler" % (
-                            handle_func
-                        )
+            mtype, obj = self.event_queue.get(timeout=timeout)
+            if mtype not in Events:
+                raise exceptions.ControlException("Unknown event %s" % repr(mtype))
+            handle_func = getattr(self, mtype)
+            if not callable(handle_func):
+                raise exceptions.ControlException("Handler %s not callable" % mtype)
+            if not handle_func.__dict__.get("__handler"):
+                raise exceptions.ControlException(
+                    "Handler function %s is not decorated with controller.handler" % (
+                        handle_func
                     )
-                handle_func(obj)
-                self.event_queue.task_done()
-                changed = True
+                )
+            handle_func(obj)
+            self.event_queue.task_done()
+            changed = True
         except queue.Empty:
             pass
         return changed
