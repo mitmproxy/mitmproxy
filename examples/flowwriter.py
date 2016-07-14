@@ -6,7 +6,7 @@ from mitmproxy.flow import FlowWriter
 state = {}
 
 
-def start():
+def configure(options):
     if len(sys.argv) != 2:
         raise ValueError('Usage: -s "flowriter.py filename"')
 

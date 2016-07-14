@@ -8,7 +8,7 @@ from mitmproxy.models import decoded
 state = {}
 
 
-def start():
+def configure(options):
     if len(sys.argv) != 3:
         raise ValueError('Usage: -s "modify_response_body.py old new"')
     # You may want to use Python's argparse for more sophisticated argument

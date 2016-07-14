@@ -16,7 +16,7 @@ def hello_world():
 
 # Register the app using the magic domain "proxapp" on port 80. Requests to
 # this domain and port combination will now be routed to the WSGI app instance.
-def start():
+def configure(options):
     mitmproxy.ctx.master.apps.add(app, "proxapp", 80)
 
     # SSL works too, but the magic domain needs to be resolvable from the mitmproxy machine due to mitmproxy's design.

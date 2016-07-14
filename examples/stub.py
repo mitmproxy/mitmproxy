@@ -4,11 +4,11 @@ import mitmproxy
 """
 
 
-def start():
+def configure(options):
     """
-        Called once on script startup, before any other events.
+        Called once on script startup before any other events, and whenever options changes.
     """
-    mitmproxy.ctx.log("start")
+    mitmproxy.ctx.log("configure")
 
 
 def clientconnect(root_layer):

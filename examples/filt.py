@@ -6,7 +6,7 @@ from mitmproxy import filt
 state = {}
 
 
-def start():
+def configure(options):
     if len(sys.argv) != 2:
         raise ValueError("Usage: -s 'filt.py FILTER'")
     state["filter"] = filt.parse(sys.argv[1])

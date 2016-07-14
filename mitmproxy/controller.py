@@ -32,6 +32,7 @@ Events = frozenset([
 
     "error",
     "log",
+    "done",
 
     "script_change",
 ])
