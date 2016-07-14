@@ -6,6 +6,7 @@ import { Key, formatTimeStamp } from '../../utils.js'
 import ContentView from '../ContentView'
 import ValueEditor from '../ValueEditor'
 import Headers from './Headers'
+import * as flowActions  from '../../ducks/flows'
 
 class RequestLine extends Component {
 
@@ -89,7 +90,10 @@ export class Request extends Component {
                     onChange={headers => updateFlow({ request: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.request} onChange={content => updateFlow({request: {content} })}/>
+                <ContentView flow={flow}
+                             onContentChange={content => flowActions.updateContent(this.props.flow, content, "request") }
+                             message={flow.request}
+                />
             </section>
         )
     }
@@ -128,7 +132,10 @@ export class Response extends Component {
                     onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.response} onChange={content => updateFlow({response: {content} }) }/>
+                <ContentView flow={flow}
+                             onContentChange={content => flowActions.updateContent(this.props.flow, content, "response") }
+                             message={flow.response}
+                />
             </section>
         )
     }

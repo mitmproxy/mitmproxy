@@ -201,7 +201,7 @@ class DumpFlows(RequestHandler):
     def post(self):
         self.state.clear()
 
-        content = self.request.files.values()[0][0]["body"]
+        content = self.request.files.values()[0][0].body
         bio = BytesIO(content)
         self.state.load_flows(FlowReader(bio).stream())
         bio.close()
@@ -297,13 +297,14 @@ class FlowContent(RequestHandler):
 
         flow = self.flow
         flow.backup()
-        content = 'Can not read file!'
-        if (len(self.request.files.values()) > 0):
-            content = self.request.files.values()[0][0]["body"]
-        flow.response.content = str(content)
+        content = self.request.files.values()[0][0].body
+        if (message == "response"):
+            with models.decoded(flow.response):
+                flow.response.content = content
+        elif(message == "request"):
+            with models.decoded(flow.request):
+                flow.request.content = content
         self.state.update_flow(flow)
-
-
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)

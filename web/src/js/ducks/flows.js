@@ -117,13 +117,12 @@ export function update(flow, data) {
     return { type: REQUEST_ACTION }
 }
 
-export function update_content(flow, file) {
+export function updateContent(flow, file, type) {
     const body = new FormData()
     if (typeof file !== File)
         file = new Blob([file], {type: 'plain/text'})
     body.append('file', file)
-    fetchApi(`/flows/${flow.id}/response/content`, {method: 'post',  body} )
-    update(flow, {response: {headers: [['Content-Encoding', '']]} } )
+    fetchApi(`/flows/${flow.id}/${type}/content`, {method: 'post',  body} )
     return { type: REQUEST_ACTION }
 }
 

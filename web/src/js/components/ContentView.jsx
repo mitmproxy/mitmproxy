@@ -4,7 +4,7 @@ import { ViewAuto, ViewImage } from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
 import ContentLoader from './ContentView/ContentLoader'
 import ViewSelector from './ContentView/ViewSelector'
-import * as flowsActions from '../ducks/flows'
+import ContentEditor from './ContentView/ContentEditor'
 
 export default class ContentView extends Component {
 
@@ -14,12 +14,13 @@ export default class ContentView extends Component {
         // <Auto flow={flow} message={flow.request}/>
         flow: React.PropTypes.object.isRequired,
         message: React.PropTypes.object.isRequired,
+        onContentChange: React.PropTypes.func.isRequired
     }
 
     constructor(props, context) {
         super(props, context)
 
-        this.state = { displayLarge: false, View: ViewAuto }
+        this.state = { displayLarge: false, View: ViewAuto, contentEditorClosed: true }
         this.selectView = this.selectView.bind(this)
     }
 
@@ -43,9 +44,7 @@ export default class ContentView extends Component {
 
     onOpenFile(e) {
         if (e.target.files.length > 0) {
-            //alert(e.target.files[0])
-            flowsActions.update_content(this.props.flow, e.target.files[0])
-            //this.fileInput.value = ''
+            this.props.onContentChange(e.target.files[0])
         }
         e.preventDefault()
     }
@@ -68,30 +67,56 @@ export default class ContentView extends Component {
 
         return (
             <div>
-                {View.textView ? (
-                    <ContentLoader  flow={flow} message={message}>
-                        <this.state.View update_content={content => flowsActions.update_content(this.props.flow, content)} content="" />
-                    </ContentLoader>
-                ) : (
-                    <View flow={flow} update_content={content => flowsActions.update_content(this.props.flow, content)}  message={message} />
-                )}
-                <div className="view-options text-center">
-                    <ViewSelector onSelectView={this.selectView} active={View} message={message}/>
-                    &nbsp;
-                    <a className="btn btn-default btn-xs" href={MessageUtils.getContentURL(flow, message)}>
-                        <i className="fa fa-download"/>
-                    </a>
-                    &nbsp;
-                    <a className="btn btn-default btn-xs" href="#" onClick={e => {this.fileInput.click(); e.preventDefault();}}>
-                        <i className="fa fa-upload"/>
-                    </a>
-                    <input
-                        ref={ref => this.fileInput = ref}
-                        className="hidden"
-                        type="file"
-                        onChange={e => this.onOpenFile(e)}
-                    />
+                <div className="row">
+                    <div className="col-sm-12">
+                         <ContentLoader flow={flow} message={message}>
+                            <ContentEditor
+                                    onSave={this.props.onContentChange}
+                                    onClose={() => this.setState({contentEditorClosed : true})}
+                                    onOpen={() => this.setState({contentEditorClosed : false})}
+                                    isClosed={this.state.contentEditorClosed}
+                                    content=""
+                            />
+                        </ContentLoader>
+                    </div>
                 </div>
+
+                {this.state.contentEditorClosed && (<div>
+                    {View.textView ? (
+                        <ContentLoader  flow={flow} message={message}>
+                            <this.state.View content="" />
+                        </ContentLoader>
+                    ) : (
+                        <View flow={flow}  message={message} />
+                    )}
+
+
+
+                    <div className="view-options text-center">
+                        <ViewSelector onSelectView={this.selectView} active={View} message={message}/>
+                        &nbsp;
+                        <a  className="btn btn-default btn-xs"
+                            href={MessageUtils.getContentURL(flow, message)}
+                            title="Download the content of the flow."
+                        >
+                            <i className="fa fa-download"/>
+                        </a>
+                        &nbsp;
+                        <a  className="btn btn-default btn-xs"
+                            href="#"
+                            onClick={e => {this.fileInput.click(); e.preventDefault();}}
+                            title="Upload a file to replace the content."
+                        >
+                            <i className="fa fa-upload"/>
+                        </a>
+                        <input
+                            ref={ref => this.fileInput = ref}
+                            className="hidden"
+                            type="file"
+                            onChange={e => this.onOpenFile(e)}
+                        />
+                    </div>
+                </div>)}
             </div>
         )
     }

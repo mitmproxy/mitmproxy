@@ -1,12 +1,9 @@
 import React, { PropTypes } from 'react'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils.js'
-import CodeEditor from '../common/CodeEditor'
-import {formatSize} from '../../utils.js'
 
 
-
-const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw, ViewFile]
+const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw]
 
 ViewImage.regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i
 ViewImage.matches = msg => ViewImage.regex.test(MessageUtils.getContentType(msg))
@@ -26,16 +23,13 @@ export function ViewImage({ flow, message }) {
 
 ViewRaw.textView = true
 ViewRaw.matches = () => true
-ViewRaw.input = {}
 
 ViewRaw.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
 
-export function ViewRaw({ content, update_content }) {
-    return (
-        <CodeEditor value={content} onSave={update_content}/>
-    )
+export function ViewRaw({ content }) {
+    return <pre>{content}</pre>
 }
 
 ViewJSON.textView = true
@@ -65,26 +59,13 @@ ViewAuto.propTypes = {
     flow: React.PropTypes.object.isRequired,
 }
 
-export function ViewAuto({ message, flow, update_content }) {
+export function ViewAuto({ message, flow }) {
     const View = ViewAuto.findView(message)
     if (View.textView) {
-        return <ContentLoader message={message} flow={flow}><View update_content={update_content} content="" /></ContentLoader>
+        return <ContentLoader message={message} flow={flow}><View content="" /></ContentLoader>
     } else {
         return <View message={message} flow={flow} />
     }
-}
-
-ViewFile.matches = () => false
-
-ViewFile.propTypes = {
-    message: React.PropTypes.object.isRequired,
-    flow: React.PropTypes.object.isRequired,
-}
-
-export function ViewFile({ message, flow }) {
-    return <div className="alert alert-info">
-            {formatSize(message.contentLength)} content size.
-        </div>
 }
 
 export default views

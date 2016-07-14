@@ -2,7 +2,8 @@ import React, { PropTypes } from 'react'
 
 Button.propTypes = {
     onClick: PropTypes.func.isRequired,
-    text: PropTypes.string.isRequired
+    text: PropTypes.string,
+    icon: PropTypes.string
 }
 
 export default function Button({ onClick, text, icon, disabled }) {
@@ -10,11 +11,8 @@ export default function Button({ onClick, text, icon, disabled }) {
         <div className={"btn btn-default"}
              onClick={onClick}
              disabled={disabled}>
-            <span hidden={!icon}>
-                <i className={"fa fa-fw " + icon}/>
-                &nbsp;
-            </span>
-            {text}
+            {icon && (<i className={"fa fa-fw " + icon}/> )}
+            {text && text}
         </div>
     )
 }
