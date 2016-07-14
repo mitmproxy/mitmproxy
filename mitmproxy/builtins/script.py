@@ -13,12 +13,7 @@ from mitmproxy import ctx
 
 
 import watchdog.events
-# The OSX reloader in watchdog 0.8.3 breaks when unobserving paths.
-# We use the PollingObserver instead.
-if sys.platform == 'darwin':  # pragma: no cover
-    from watchdog.observers.polling import PollingObserver as Observer
-else:
-    from watchdog.observers import Observer
+from watchdog.observers import polling
 
 
 def parse_command(command):
@@ -134,7 +129,7 @@ class Script:
     def configure(self, options):
         self.last_options = options
         if not self.observer:
-            self.observer = Observer()
+            self.observer = polling.PollingObserver()
             # Bind the handler to the real underlying master object
             self.observer.schedule(
                 ReloadHandler(self.reload),
