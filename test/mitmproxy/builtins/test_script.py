@@ -78,6 +78,7 @@ class TestScript(mastertest.MasterTest):
             for _ in range(100):
                 with open("foo.py", "a") as f:
                     f.write(".")
+                m.addons.invoke_with_context(sc, "tick")
                 time.sleep(0.1)
                 if m.event_log:
                     return

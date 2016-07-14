@@ -33,6 +33,7 @@ Events = frozenset([
     "error",
     "log",
     "done",
+    "tick",
 
     "script_change",
 ])
@@ -108,6 +109,8 @@ class Master(object):
             self.shutdown()
 
     def tick(self, timeout):
+        with self.handlecontext():
+            self.addons("tick")
         changed = False
         try:
             mtype, obj = self.event_queue.get(timeout=timeout)

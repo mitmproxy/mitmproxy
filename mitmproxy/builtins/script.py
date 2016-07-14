@@ -4,8 +4,8 @@ import contextlib
 import os
 import shlex
 import sys
+import threading
 import traceback
-import copy
 
 from mitmproxy import exceptions
 from mitmproxy import controller
@@ -76,15 +76,14 @@ def load_script(path, args):
 
 
 class ReloadHandler(watchdog.events.FileSystemEventHandler):
-    def __init__(self, callback, master, options):
+    def __init__(self, callback):
         self.callback = callback
-        self.master, self.options = master, options
 
     def on_modified(self, event):
-        self.callback(self.master, self.options)
+        self.callback()
 
     def on_created(self, event):
-        self.callback(self.master, self.options)
+        self.callback()
 
 
 class Script:
@@ -99,7 +98,10 @@ class Script:
         self.ns = None
         self.observer = None
 
-        for i in controller.Events:
+        self.last_options = None
+        self.should_reload = threading.Event()
+
+        for i in controller.Events - set(["tick"]):
             def mkprox():
                 evt = i
 
@@ -117,21 +119,25 @@ class Script:
                 with scriptenv(self.path, self.args):
                     func(*args, **kwargs)
 
-    def reload(self, master, options):
-        with master.handlecontext():
+    def reload(self):
+        self.should_reload.set()
+
+    def tick(self):
+        if self.should_reload.is_set():
+            self.should_reload.clear()
             self.ns = None
-            self.configure(options)
+            ctx.log.info("Reloading script: %s" % self.name)
+            self.configure(self.last_options)
+        else:
+            self.run("tick")
 
     def configure(self, options):
+        self.last_options = options
         if not self.observer:
             self.observer = Observer()
             # Bind the handler to the real underlying master object
             self.observer.schedule(
-                ReloadHandler(
-                    self.reload,
-                    ctx.master,
-                    copy.copy(options),
-                ),
+                ReloadHandler(self.reload),
                 os.path.dirname(self.path) or "."
             )
             self.observer.start()
