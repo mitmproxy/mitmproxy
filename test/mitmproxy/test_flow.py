@@ -1,5 +1,3 @@
-import os.path
-
 import mock
 import io
 
@@ -886,35 +884,6 @@ class TestFlowMaster:
         f.request.host = "nonexistent"
         fm.process_new_request(f)
         assert "killed" in f.error.msg
-
-    def test_stream(self):
-        with tutils.tmpdir() as tdir:
-            p = os.path.join(tdir, "foo")
-
-            def read():
-                with open(p, "rb") as f:
-                    r = flow.FlowReader(f)
-                    return list(r.stream())
-
-            s = flow.State()
-            fm = flow.FlowMaster(None, None, s)
-            f = tutils.tflow(resp=True)
-
-            with open(p, "ab") as tmpfile:
-                fm.start_stream(tmpfile, None)
-                fm.request(f)
-                fm.response(f)
-                fm.stop_stream()
-
-            assert read()[0].response
-
-            with open(p, "ab") as tmpfile:
-                f = tutils.tflow()
-                fm.start_stream(tmpfile, None)
-                fm.request(f)
-                fm.shutdown()
-
-            assert not read()[1].response
 
 
 class TestRequest:

@@ -4,6 +4,7 @@ from mitmproxy.builtins import anticache
 from mitmproxy.builtins import anticomp
 from mitmproxy.builtins import stickyauth
 from mitmproxy.builtins import stickycookie
+from mitmproxy.builtins import stream
 
 
 def default_addons():
@@ -12,4 +13,5 @@ def default_addons():
         anticomp.AntiComp(),
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
+        stream.Stream(),
     ]

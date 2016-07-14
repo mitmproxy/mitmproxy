@@ -4,31 +4,33 @@ from mitmproxy.exceptions import ContentViewException
 
 import netlib.tutils
 
-from mitmproxy import dump, flow, models
+from mitmproxy import dump, flow, models, exceptions
 from . import tutils, mastertest
 import mock
 
 
 def test_strfuncs():
-    o = dump.Options()
+    o = dump.Options(
+        tfile = StringIO(),
+        flow_detail = 0,
+    )
     m = dump.DumpMaster(None, o)
 
-    m.outfile = StringIO()
     m.o.flow_detail = 0
     m.echo_flow(tutils.tflow())
-    assert not m.outfile.getvalue()
+    assert not o.tfile.getvalue()
 
     m.o.flow_detail = 4
     m.echo_flow(tutils.tflow())
-    assert m.outfile.getvalue()
+    assert o.tfile.getvalue()
 
-    m.outfile = StringIO()
+    o.tfile = StringIO()
     m.echo_flow(tutils.tflow(resp=True))
-    assert "<<" in m.outfile.getvalue()
+    assert "<<" in o.tfile.getvalue()
 
-    m.outfile = StringIO()
+    o.tfile = StringIO()
     m.echo_flow(tutils.tflow(err=True))
-    assert "<<" in m.outfile.getvalue()
+    assert "<<" in o.tfile.getvalue()
 
     flow = tutils.tflow()
     flow.request = netlib.tutils.treq()
@@ -50,25 +52,32 @@ def test_strfuncs():
 def test_contentview(get_content_view):
     get_content_view.side_effect = ContentViewException(""), ("x", iter([]))
 
-    o = dump.Options(flow_detail=4, verbosity=3)
-    m = dump.DumpMaster(None, o, StringIO())
+    o = dump.Options(
+        flow_detail=4,
+        verbosity=3,
+        tfile=StringIO(),
+    )
+    m = dump.DumpMaster(None, o)
     m.echo_flow(tutils.tflow())
-    assert "Content viewer failed" in m.outfile.getvalue()
+    assert "Content viewer failed" in m.options.tfile.getvalue()
 
 
 class TestDumpMaster(mastertest.MasterTest):
     def dummy_cycle(self, master, n, content):
         mastertest.MasterTest.dummy_cycle(self, master, n, content)
-        return master.outfile.getvalue()
+        return master.options.tfile.getvalue()
 
     def mkmaster(self, filt, **options):
-        cs = StringIO()
         if "verbosity" not in options:
             options["verbosity"] = 0
         if "flow_detail" not in options:
             options["flow_detail"] = 0
-        o = dump.Options(filtstr=filt, **options)
-        return dump.DumpMaster(None, o, outfile=cs)
+        o = dump.Options(
+            filtstr=filt,
+            tfile=StringIO(),
+            **options
+        )
+        return dump.DumpMaster(None, o)
 
     def test_basic(self):
         for i in (1, 2, 3):
@@ -89,31 +98,33 @@ class TestDumpMaster(mastertest.MasterTest):
             )
 
     def test_error(self):
-        cs = StringIO()
-        o = dump.Options(flow_detail=1)
-        m = dump.DumpMaster(None, o, outfile=cs)
+        o = dump.Options(
+            tfile=StringIO(),
+            flow_detail=1
+        )
+        m = dump.DumpMaster(None, o)
         f = tutils.tflow(err=True)
         m.request(f)
         assert m.error(f)
-        assert "error" in cs.getvalue()
+        assert "error" in o.tfile.getvalue()
 
     def test_missing_content(self):
-        cs = StringIO()
-        o = dump.Options(flow_detail=3)
-        m = dump.DumpMaster(None, o, outfile=cs)
+        o = dump.Options(
+            flow_detail=3,
+            tfile=StringIO(),
+        )
+        m = dump.DumpMaster(None, o)
         f = tutils.tflow()
         f.request.content = None
         m.request(f)
         f.response = models.HTTPResponse.wrap(netlib.tutils.tresp())
         f.response.content = None
         m.response(f)
-        assert "content missing" in cs.getvalue()
+        assert "content missing" in o.tfile.getvalue()
 
     def test_replay(self):
-        cs = StringIO()
-
         o = dump.Options(server_replay=["nonexistent"], kill=True)
-        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, outfile=cs)
+        tutils.raises(dump.DumpError, dump.DumpMaster, None, o)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
@@ -122,7 +133,7 @@ class TestDumpMaster(mastertest.MasterTest):
             o = dump.Options(server_replay=[p], kill=True)
             o.verbosity = 0
             o.flow_detail = 0
-            m = dump.DumpMaster(None, o, outfile=cs)
+            m = dump.DumpMaster(None, o)
 
             self.cycle(m, b"content")
             self.cycle(m, b"content")
@@ -130,13 +141,13 @@ class TestDumpMaster(mastertest.MasterTest):
             o = dump.Options(server_replay=[p], kill=False)
             o.verbosity = 0
             o.flow_detail = 0
-            m = dump.DumpMaster(None, o, outfile=cs)
+            m = dump.DumpMaster(None, o)
             self.cycle(m, b"nonexistent")
 
             o = dump.Options(client_replay=[p], kill=False)
             o.verbosity = 0
             o.flow_detail = 0
-            m = dump.DumpMaster(None, o, outfile=cs)
+            m = dump.DumpMaster(None, o)
 
     def test_read(self):
         with tutils.tmpdir() as t:
@@ -172,20 +183,24 @@ class TestDumpMaster(mastertest.MasterTest):
         assert len(m.apps.apps) == 1
 
     def test_replacements(self):
-        cs = StringIO()
-        o = dump.Options(replacements=[(".*", "content", "foo")])
+        o = dump.Options(
+            replacements=[(".*", "content", "foo")],
+            tfile = StringIO(),
+        )
         o.verbosity = 0
         o.flow_detail = 0
-        m = dump.DumpMaster(None, o, outfile=cs)
+        m = dump.DumpMaster(None, o)
         f = self.cycle(m, b"content")
         assert f.request.content == b"foo"
 
     def test_setheader(self):
-        cs = StringIO()
-        o = dump.Options(setheaders=[(".*", "one", "two")])
+        o = dump.Options(
+            setheaders=[(".*", "one", "two")],
+            tfile=StringIO()
+        )
         o.verbosity = 0
         o.flow_detail = 0
-        m = dump.DumpMaster(None, o, outfile=cs)
+        m = dump.DumpMaster(None, o)
         f = self.cycle(m, b"content")
         assert f.request.headers["one"] == "two"
 
@@ -212,7 +227,7 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def test_write_err(self):
         tutils.raises(
-            dump.DumpError,
+            exceptions.OptionsError,
             self.mkmaster, None, outfile = ("nonexistentdir/foo", "wb")
         )
 
