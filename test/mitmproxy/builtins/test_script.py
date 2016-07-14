@@ -35,7 +35,7 @@ class TestParseCommand:
     def test_parse_windows(self):
         with tutils.chdir(tutils.test_data.dirname):
             assert script.parse_command("data\\scripts\\a.py") == ("data\\scripts\\a.py", [])
-            assert script.parse_command("data\\scripts\\a.py 'foo \\ bar'") == ("data\\scripts\\a.py", 'foo \\ bar', [])
+            assert script.parse_command("data\\scripts\\a.py 'foo \\ bar'") == ("data\\scripts\\a.py", ['foo \\ bar'])
 
 
 def test_load_script():
