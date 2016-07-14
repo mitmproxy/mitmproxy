@@ -46,10 +46,20 @@ class StickyCookie:
             for name, (value, attrs) in flow.response.cookies.items(multi=True):
                 # FIXME: We now know that Cookie.py screws up some cookies with
                 # valid RFC 822/1123 datetime specifications for expiry. Sigh.
-                a = ckey(attrs, flow)
-                if domain_match(flow.request.host, a[0]):
-                    b = attrs.with_insert(0, name, value)
-                    self.jar[a][name] = b
+                dom_port_path = ckey(attrs, flow)
+
+                if domain_match(flow.request.host, dom_port_path[0]):
+                    if cookies.is_expired(attrs):
+                        # Remove the cookie from jar
+                        self.jar[dom_port_path].pop(name, None)
+
+                        # If all cookies of a dom_port_path have been removed
+                        # then remove it from the jar itself
+                        if not self.jar[dom_port_path]:
+                            self.jar.pop(dom_port_path, None)
+                    else:
+                        b = attrs.with_insert(0, name, value)
+                        self.jar[dom_port_path][name] = b
 
     def request(self, flow):
         if self.flt:
