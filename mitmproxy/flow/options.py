@@ -31,7 +31,7 @@ class Options(options.Options):
             stickyauth=None,  # type: Optional[str]
             stream_large_bodies=None,  # type: Optional[str]
             verbosity=1,  # type: int
-            outfile=None,  # type: Optional[str]
+            outfile=None,  # type: Tuple[str, str]
             replay_ignore_content=False,  # type: bool
             replay_ignore_params=(),  # type: Sequence[str]
             replay_ignore_payload_params=(),  # type: Sequence[str]

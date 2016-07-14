@@ -7,7 +7,7 @@ import traceback
 import click
 
 from typing import Optional  # noqa
-import typing
+import typing  # noqa
 
 from mitmproxy import contentviews
 from mitmproxy import controller

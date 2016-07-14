@@ -7,7 +7,7 @@ import os.path
 from mitmproxy.builtins import stream
 from mitmproxy.flow import master, FlowReader
 from mitmproxy.flow import state
-from mitmproxy import options
+from mitmproxy.flow import options
 
 
 class TestStream(mastertest.MasterTest):
