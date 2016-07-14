@@ -245,12 +245,12 @@ class TestDumpMaster(mastertest.MasterTest):
         assert "XRESPONSE" in ret
         assert "XCLIENTDISCONNECT" in ret
         tutils.raises(
-            dump.DumpError,
+            exceptions.AddonError,
             self.mkmaster,
             None, scripts=["nonexistent"]
         )
         tutils.raises(
-            dump.DumpError,
+            exceptions.AddonError,
             self.mkmaster,
             None, scripts=["starterr.py"]
         )

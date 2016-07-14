@@ -44,7 +44,17 @@ class Log(object):
     def __call__(self, text, level="info"):
         self.master.add_event(text, level)
 
-    # We may want to add .log(), .warn() etc. here at a later point in time
+    def debug(self, txt):
+        self(txt, "debug")
+
+    def info(self, txt):
+        self(txt, "info")
+
+    def warn(self, txt):
+        self(txt, "warn")
+
+    def error(self, txt):
+        self(txt, "error")
 
 
 class Master(object):

@@ -13,6 +13,7 @@ from netlib.http import authentication, http1
 from netlib.tutils import raises
 from pathod import pathoc, pathod
 
+from mitmproxy.builtins import script
 from mitmproxy import controller
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
@@ -287,10 +288,13 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         self.master.set_stream_large_bodies(None)
 
     def test_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("data/scripts/stream_modify.py"))
+        s = script.Script(
+            tutils.test_data.path("data/addonscripts/stream_modify.py")
+        )
+        self.master.addons.add(s)
         d = self.pathod('200:b"foo"')
-        assert d.content == b"bar"
-        self.master.unload_scripts()
+        assert d.content == "bar"
+        self.master.addons.remove(s)
 
 
 class TestHTTPAuth(tservers.HTTPProxyTest):
@@ -512,15 +516,15 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
     def test_tcp_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("data/scripts/tcp_stream_modify.py"))
-
+        s = script.Script(
+            tutils.test_data.path("data/addonscripts/tcp_stream_modify.py")
+        )
+        self.master.addons.add(s)
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()
-
-        assert d.content == b"bar"
-
-        self.master.unload_scripts()
+        assert d.content == "bar"
+        self.master.addons.remove(s)
 
 
 class TestTransparentSSL(tservers.TransparentProxyTest, CommonMixin, TcpMixin):

@@ -93,13 +93,6 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        scripts = options.scripts or []
-        for command in scripts:
-            try:
-                self.load_script(command, use_reloader=True)
-            except exceptions.ScriptException as e:
-                raise DumpError(str(e))
-
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
@@ -335,6 +328,5 @@ class DumpMaster(flow.FlowMaster):
 
     def run(self):  # pragma: no cover
         if self.options.rfile and not self.options.keepserving:
-            self.unload_scripts()  # make sure to trigger script unload events.
             return
         super(DumpMaster, self).run()

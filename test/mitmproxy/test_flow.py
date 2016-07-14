@@ -5,7 +5,7 @@ import netlib.utils
 from netlib.http import Headers
 from mitmproxy import filt, controller, flow
 from mitmproxy.contrib import tnetstring
-from mitmproxy.exceptions import FlowReadException, ScriptException
+from mitmproxy.exceptions import FlowReadException
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
@@ -674,21 +674,6 @@ class TestSerialize:
 
 class TestFlowMaster:
 
-    def test_load_script(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
-
-        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
-        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
-        fm.unload_scripts()
-        with tutils.raises(ScriptException):
-            fm.load_script("nonexistent")
-        try:
-            fm.load_script(tutils.test_data.path("data/scripts/starterr.py"))
-        except ScriptException as e:
-            assert "ValueError" in str(e)
-        assert len(fm.scripts) == 0
-
     def test_getset_ignore(self):
         p = mock.Mock()
         p.config.check_ignore = HostMatcher()
@@ -708,51 +693,7 @@ class TestFlowMaster:
         assert "intercepting" in fm.replay_request(f)
 
         f.live = True
-        assert "live" in fm.replay_request(f, run_scripthooks=True)
-
-    def test_script_reqerr(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
-        fm.load_script(tutils.test_data.path("data/scripts/reqerr.py"))
-        f = tutils.tflow()
-        fm.clientconnect(f.client_conn)
-        assert fm.request(f)
-
-    def test_script(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
-        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
-        f = tutils.tflow(resp=True)
-
-        f.client_conn.acked = False
-        fm.clientconnect(f.client_conn)
-        assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        f.server_conn.acked = False
-        fm.serverconnect(f.server_conn)
-        assert fm.scripts[0].ns["log"][-1] == "serverconnect"
-        f.reply.acked = False
-        fm.request(f)
-        assert fm.scripts[0].ns["log"][-1] == "request"
-        f.reply.acked = False
-        fm.response(f)
-        assert fm.scripts[0].ns["log"][-1] == "response"
-        # load second script
-        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
-        assert len(fm.scripts) == 2
-        f.server_conn.reply.acked = False
-        fm.clientdisconnect(f.server_conn)
-        assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
-        assert fm.scripts[1].ns["log"][-1] == "clientdisconnect"
-
-        # unload first script
-        fm.unload_scripts()
-        assert len(fm.scripts) == 0
-        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
-
-        f.error = tutils.terr()
-        f.reply.acked = False
-        fm.error(f)
-        assert fm.scripts[0].ns["log"][-1] == "error"
+        assert "live" in fm.replay_request(f)
 
     def test_duplicate_flow(self):
         s = flow.State()
@@ -789,7 +730,6 @@ class TestFlowMaster:
         f.error.reply = controller.DummyReply()
         fm.error(f)
 
-        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
         fm.shutdown()
 
     def test_client_playback(self):
