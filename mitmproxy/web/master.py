@@ -94,6 +94,7 @@ class WebState(flow.State):
 class Options(flow.options.Options):
     def __init__(
             self,
+            intercept=False,  # type: bool
             wdebug=bool,  # type: bool
             wport=8081,  # type: int
             wiface="127.0.0.1",  # type: str
@@ -108,6 +109,7 @@ class Options(flow.options.Options):
         self.wauthenticator = wauthenticator
         self.wsingleuser = wsingleuser
         self.whtpasswd = whtpasswd
+        self.intercept = intercept
         super(Options, self).__init__(**kwargs)
 
     # TODO: This doesn't belong here.
