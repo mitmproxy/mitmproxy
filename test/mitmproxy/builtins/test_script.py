@@ -4,7 +4,7 @@ from mitmproxy.builtins import script
 from mitmproxy import exceptions
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy import options
+from mitmproxy.flow import options
 
 from .. import tutils, mastertest
 
