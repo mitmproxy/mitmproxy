@@ -187,7 +187,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append(":%s]" % self.master.state.default_body_view.name)
 
         opts = []
-        if self.master.anticache:
+        if self.master.options.anticache:
             opts.append("anticache")
         if self.master.options.anticomp:
             opts.append("anticomp")

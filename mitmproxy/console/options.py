@@ -96,7 +96,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Anti-Cache",
                     "a",
-                    lambda: master.anticache,
+                    lambda: master.options.anticache,
                     self.toggle_anticache
                 ),
                 select.Option(
@@ -152,7 +152,6 @@ class Options(urwid.WidgetWrap):
         return super(self.__class__, self).keypress(size, key)
 
     def clearall(self):
-        self.master.anticache = False
         self.master.killextra = False
         self.master.showhost = False
         self.master.refresh_server_playback = True
@@ -164,8 +163,9 @@ class Options(urwid.WidgetWrap):
         self.master.scripts = []
         self.master.set_stickycookie(None)
 
-        self.master.options.stickyauth = None
+        self.master.options.anticache = False
         self.master.options.anticomp = False
+        self.master.options.stickyauth = None
 
         self.master.state.default_body_view = contentviews.get("Auto")
 
@@ -176,7 +176,7 @@ class Options(urwid.WidgetWrap):
         )
 
     def toggle_anticache(self):
-        self.master.anticache = not self.master.anticache
+        self.master.options.anticache = not self.master.options.anticache
 
     def toggle_anticomp(self):
         self.master.options.anticomp = not self.master.options.anticomp

@@ -63,8 +63,6 @@ class DumpMaster(flow.FlowMaster):
         self.addons.add(*builtins.default_addons())
         self.outfile = outfile
         self.o = options
-        self.anticache = options.anticache
-        self.anticomp = options.anticomp
         self.showhost = options.showhost
         self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
