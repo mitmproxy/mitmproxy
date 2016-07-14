@@ -47,15 +47,6 @@ def test_load_script():
     assert ns["configure"]
 
 
-class RecordingMaster(master.FlowMaster):
-    def __init__(self, *args, **kwargs):
-        master.FlowMaster.__init__(self, *args, **kwargs)
-        self.event_log = []
-
-    def add_event(self, e, level):
-        self.event_log.append((level, e))
-
-
 class TestScript(mastertest.MasterTest):
     def test_simple(self):
         s = state.State()
@@ -77,7 +68,7 @@ class TestScript(mastertest.MasterTest):
 
     def test_reload(self):
         s = state.State()
-        m = RecordingMaster(options.Options(), None, s)
+        m = mastertest.RecordingMaster(options.Options(), None, s)
         with tutils.tmpdir():
             with open("foo.py", "w"):
                 pass
@@ -94,7 +85,7 @@ class TestScript(mastertest.MasterTest):
 
     def test_exception(self):
         s = state.State()
-        m = RecordingMaster(options.Options(), None, s)
+        m = mastertest.RecordingMaster(options.Options(), None, s)
         sc = script.Script(
             tutils.test_data.path("data/addonscripts/error.py")
         )

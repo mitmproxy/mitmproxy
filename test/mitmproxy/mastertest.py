@@ -3,6 +3,7 @@ import mock
 from . import tutils
 import netlib.tutils
 
+from mitmproxy.flow import master
 from mitmproxy import flow, proxy, models, controller
 
 
@@ -39,3 +40,12 @@ class MasterTest:
         t = tutils.tflow(resp=True)
         fw.add(t)
         f.close()
+
+
+class RecordingMaster(master.FlowMaster):
+    def __init__(self, *args, **kwargs):
+        master.FlowMaster.__init__(self, *args, **kwargs)
+        self.event_log = []
+
+    def add_event(self, e, level):
+        self.event_log.append((level, e))

@@ -390,6 +390,3 @@ class FlowMaster(controller.Master):
     @controller.handler
     def tcp_close(self, flow):
         self.active_flows.discard(flow)
-
-    def shutdown(self):
-        super(FlowMaster, self).shutdown()
