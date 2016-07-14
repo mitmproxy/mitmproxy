@@ -14,14 +14,21 @@ class Options(object):
         exception, all changes are rolled back, the exception is suppressed,
         and the .errored signal is notified.
     """
+    _initialized = False
     attributes = []
 
-    def __init__(self, **kwargs):
+    def __new__(cls, *args, **kwargs):
+        # Initialize instance._opts before __init__ is called.
+        # This allows us to call super().__init__() last, which then sets
+        # ._initialized = True as the final operation.
+        instance = super(Options, cls).__new__(cls)
+        instance.__dict__["_opts"] = {}
+        return instance
+
+    def __init__(self):
         self.__dict__["changed"] = blinker.Signal()
         self.__dict__["errored"] = blinker.Signal()
-        self.__dict__["_opts"] = dict([(i, None) for i in self.attributes])
-        for k, v in kwargs.items():
-            self._opts[k] = v
+        self.__dict__["_initialized"] = True
 
     @contextlib.contextmanager
     def rollback(self):
@@ -48,6 +55,9 @@ class Options(object):
             raise AttributeError()
 
     def __setattr__(self, attr, value):
+        if not self._initialized:
+            self._opts[attr] = value
+            return
         if attr not in self._opts:
             raise KeyError("No such option: %s" % attr)
         with self.rollback():
@@ -71,4 +81,11 @@ class Options(object):
         return lambda x: self.__setattr__(attr, x)
 
     def __repr__(self):
-        return pprint.pformat(self._opts)
+        options = pprint.pformat(self._opts, indent=4).strip(" {}")
+        if "\n" in options:
+            options = "\n    " + options + "\n"
+        return "{mod}.{cls}({{{options}}})".format(
+            mod=type(self).__module__,
+            cls=type(self).__name__,
+            options=options
+        )

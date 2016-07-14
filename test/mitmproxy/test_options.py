@@ -7,10 +7,10 @@ from netlib import tutils
 
 
 class TO(options.Options):
-    attributes = [
-        "one",
-        "two"
-    ]
+    def __init__(self, one=None, two=None):
+        self.one = one
+        self.two = two
+        super(TO, self).__init__()
 
 
 def test_options():
@@ -19,8 +19,13 @@ def test_options():
     assert o.two == "three"
     o.one = "one"
     assert o.one == "one"
-    tutils.raises("no such option", setattr, o, "nonexistent", "value")
-    tutils.raises("no such option", o.update, nonexistent = "value")
+
+    with tutils.raises(TypeError):
+        TO(nonexistent = "value")
+    with tutils.raises("no such option"):
+        o.nonexistent = "value"
+    with tutils.raises("no such option"):
+        o.update(nonexistent = "value")
 
     rec = []
 
@@ -43,7 +48,8 @@ def test_setter():
     f = o.setter("two")
     f("xxx")
     assert o.two == "xxx"
-    tutils.raises("no such option", o.setter, "nonexistent")
+    with tutils.raises("no such option"):
+        o.setter("nonexistent")
 
 
 def test_rollback():
@@ -61,7 +67,7 @@ def test_rollback():
 
     def err(opts):
         if opts.one == "ten":
-            raise exceptions.OptionsError
+            raise exceptions.OptionsError()
 
     o.changed.connect(sub)
     o.changed.connect(err)
@@ -73,3 +79,11 @@ def test_rollback():
     assert len(rec) == 2
     assert rec[0].one == "ten"
     assert rec[1].one == "two"
+
+
+def test_repr():
+    assert repr(TO()) == "test.mitmproxy.test_options.TO({'one': None, 'two': None})"
+    assert repr(TO(one='x' * 60)) == """test.mitmproxy.test_options.TO({
+    'one': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    'two': None
+})"""

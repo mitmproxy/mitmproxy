@@ -2,7 +2,7 @@ from .. import tutils, mastertest
 from mitmproxy.builtins import anticache
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy import options
+from mitmproxy.flow import options
 
 
 class TestAntiCache(mastertest.MasterTest):

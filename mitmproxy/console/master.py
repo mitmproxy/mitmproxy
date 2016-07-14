@@ -14,6 +14,7 @@ import traceback
 import weakref
 
 import urwid
+from typing import Optional  # noqa
 
 from mitmproxy import builtins
 from mitmproxy import contentviews
@@ -21,7 +22,6 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
-import mitmproxy.options
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -177,40 +177,26 @@ class ConsoleState(flow.State):
         self.add_flow_setting(flow, "marked", marked)
 
 
-class Options(mitmproxy.options.Options):
-    attributes = [
-        "app",
-        "app_domain",
-        "app_ip",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "eventlog",
-        "follow",
-        "keepserving",
-        "kill",
-        "intercept",
-        "limit",
-        "no_server",
-        "refresh_server_playback",
-        "rfile",
-        "scripts",
-        "showhost",
-        "replacements",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "wfile",
-        "nopop",
-        "palette",
-        "palette_transparent",
-        "no_mouse",
-        "outfile",
-    ]
+class Options(flow.options.Options):
+    def __init__(
+            self,
+            eventlog=False,  # type: bool
+            follow=False,  # type: bool
+            intercept=False,  # type: bool
+            limit=None,  # type: Optional[str]
+            palette=None,  # type: Optional[str]
+            palette_transparent=False,  # type: bool
+            no_mouse=False,  # type: bool
+            **kwargs
+    ):
+        self.eventlog = eventlog
+        self.follow = follow
+        self.intercept = intercept
+        self.limit = limit
+        self.palette = palette
+        self.palette_transparent = palette_transparent
+        self.no_mouse = no_mouse
+        super(Options, self).__init__(**kwargs)
 
 
 class ConsoleMaster(flow.FlowMaster):
@@ -221,6 +207,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.addons.add(*builtins.default_addons())
 
         self.stream_path = None
+        # This line is just for type hinting
+        self.options = self.options  # type: Options
         self.options.errored.connect(self.options_error)
 
         if options.replacements:
