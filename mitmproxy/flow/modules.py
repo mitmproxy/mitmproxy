@@ -1,10 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
-import collections
 import hashlib
 import re
 
-from six.moves import http_cookiejar
 from six.moves import urllib
 
 from mitmproxy import controller
@@ -12,7 +10,6 @@ from mitmproxy import filt
 from netlib import wsgi
 from netlib import version
 from netlib import strutils
-from netlib.http import cookies
 from netlib.http import http1
 
 
