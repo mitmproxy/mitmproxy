@@ -64,8 +64,11 @@ class TestStickyCookie(mastertest.MasterTest):
         self._response(s, m, sc, c, "www.google.com")
         assert sc.jar.keys()
 
-        self._response(s, m, sc, "SSID=mooo", "www.google.com")
-        assert sc.jar.keys()[0] == ('www.google.com', 80, '/')
+        sc.jar.clear()
+        self._response(
+            s, m, sc, "SSID=mooo", "www.google.com"
+        )
+        assert list(sc.jar.keys())[0] == ('www.google.com', 80, '/')
 
     def test_response_multiple(self):
         s, m, sc = self.mk()
@@ -76,7 +79,7 @@ class TestStickyCookie(mastertest.MasterTest):
         f = self._response(s, m, sc, c1, "www.google.com")
         f.response.headers["Set-Cookie"] = c2
         self.invoke(m, "response", f)
-        googlekey = sc.jar.keys()[0]
+        googlekey = list(sc.jar.keys())[0]
         assert len(sc.jar[googlekey].keys()) == 2
 
     def test_response_weird(self):
@@ -93,7 +96,7 @@ class TestStickyCookie(mastertest.MasterTest):
         for c in cs:
             f.response.headers["Set-Cookie"] = c
             self.invoke(m, "response", f)
-        googlekey = sc.jar.keys()[0]
+        googlekey = list(sc.jar.keys())[0]
         assert len(sc.jar[googlekey].keys()) == len(cs)
 
     def test_response_overwrite(self):
@@ -105,9 +108,9 @@ class TestStickyCookie(mastertest.MasterTest):
         f = self._response(s, m, sc, c1, "www.google.com")
         f.response.headers["Set-Cookie"] = c2
         self.invoke(m, "response", f)
-        googlekey = sc.jar.keys()[0]
+        googlekey = list(sc.jar.keys())[0]
         assert len(sc.jar[googlekey].keys()) == 1
-        assert sc.jar[googlekey]["somecookie"].items()[0][1] == "newvalue"
+        assert list(sc.jar[googlekey]["somecookie"].items())[0][1] == "newvalue"
 
     def test_request(self):
         s, m, sc = self.mk()
