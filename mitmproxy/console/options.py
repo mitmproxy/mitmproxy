@@ -54,7 +54,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Scripts",
                     "S",
-                    lambda: master.scripts,
+                    lambda: master.options.scripts,
                     self.scripts
                 ),
 
@@ -160,12 +160,14 @@ class Options(urwid.WidgetWrap):
         self.master.replacehooks.clear()
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
-        self.master.scripts = []
 
-        self.master.options.anticache = False
-        self.master.options.anticomp = False
-        self.master.options.stickyauth = None
-        self.master.options.stickycookie = None
+        self.master.options.update(
+            scripts = [],
+            anticache = False,
+            anticomp = False,
+            stickyauth = None,
+            stickycookie = None
+        )
 
         self.master.state.default_body_view = contentviews.get("Auto")
 
@@ -234,7 +236,7 @@ class Options(urwid.WidgetWrap):
         self.master.view_grideditor(
             grideditor.ScriptEditor(
                 self.master,
-                [[i.command] for i in self.master.scripts],
+                [[i] for i in self.master.options.scripts],
                 self.master.edit_scripts
             )
         )

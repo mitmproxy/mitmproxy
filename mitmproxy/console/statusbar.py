@@ -218,14 +218,13 @@ class StatusBar(urwid.WidgetWrap):
                 dst.address.host,
                 dst.address.port
             ))
-        if self.master.scripts:
+        if self.master.options.scripts:
             r.append("[")
             r.append(("heading_key", "s"))
-            r.append("cripts:%s]" % len(self.master.scripts))
-        # r.append("[lt:%0.3f]"%self.master.looptime)
+            r.append("cripts:%s]" % len(self.master.options.scripts))
 
-        if self.master.stream:
-            r.append("[W:%s]" % self.master.stream_path)
+        if self.master.options.outfile:
+            r.append("[W:%s]" % self.master.outfile[0])
 
         return r
 

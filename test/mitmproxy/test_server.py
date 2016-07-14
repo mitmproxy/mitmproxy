@@ -293,7 +293,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         )
         self.master.addons.add(s)
         d = self.pathod('200:b"foo"')
-        assert d.content == "bar"
+        assert d.content == b"bar"
         self.master.addons.remove(s)
 
 
@@ -523,7 +523,7 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()
-        assert d.content == "bar"
+        assert d.content == b"bar"
         self.master.addons.remove(s)
 
 

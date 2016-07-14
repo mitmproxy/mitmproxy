@@ -6,11 +6,12 @@ import re
 
 import urwid
 
+from mitmproxy import exceptions
 from mitmproxy import filt
-from mitmproxy import script
-from mitmproxy import utils
+from mitmproxy.builtins import script
 from mitmproxy.console import common
 from mitmproxy.console import signals
+from netlib import strutils
 from netlib.http import cookies
 from netlib.http import user_agents
 
@@ -55,7 +56,7 @@ class TextColumn:
             o = editor.walker.get_current_value()
             if o is not None:
                 n = editor.master.spawn_editor(o.encode("string-escape"))
-                n = utils.clean_hanging_newline(n)
+                n = strutils.clean_hanging_newline(n)
                 editor.walker.set_current_value(n, False)
                 editor.walker._modified()
         elif key in ["enter"]:
@@ -643,8 +644,8 @@ class ScriptEditor(GridEditor):
 
     def is_error(self, col, val):
         try:
-            script.Script.parse_command(val)
-        except script.ScriptException as e:
+            script.parse_command(val)
+        except exceptions.AddonError as e:
             return str(e)
 
 

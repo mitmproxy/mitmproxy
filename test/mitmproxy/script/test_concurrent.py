@@ -1,11 +1,10 @@
-from test.mitmproxy import tutils
+from test.mitmproxy import tutils, mastertest
 from mitmproxy import controller
 from mitmproxy.builtins import script
 from mitmproxy import options
 from mitmproxy.flow import master
 from mitmproxy.flow import state
 import time
-from .. import mastertest, tutils
 
 
 class Thing:
