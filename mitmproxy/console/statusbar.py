@@ -173,10 +173,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "Marked Flows"))
             r.append("]")
-        if self.master.stickycookie_txt:
+        if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
-            r.append(":%s]" % self.master.stickycookie_txt)
+            r.append(":%s]" % self.master.options.stickycookie)
         if self.master.options.stickyauth:
             r.append("[")
             r.append(("heading_key", "u"))

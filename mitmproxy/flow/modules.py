@@ -1,10 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
-import collections
 import hashlib
 import re
 
-from six.moves import http_cookiejar
 from six.moves import urllib
 
 from mitmproxy import controller
@@ -12,7 +10,6 @@ from mitmproxy import filt
 from netlib import wsgi
 from netlib import version
 from netlib import strutils
-from netlib.http import cookies
 from netlib.http import http1
 
 
@@ -287,66 +284,3 @@ class ServerPlaybackState:
             return l[0]
         else:
             return l.pop(0)
-
-
-class StickyCookieState:
-    def __init__(self, flt):
-        """
-            flt: Compiled filter.
-        """
-        self.jar = collections.defaultdict(dict)
-        self.flt = flt
-
-    def ckey(self, attrs, f):
-        """
-            Returns a (domain, port, path) tuple.
-        """
-        domain = f.request.host
-        path = "/"
-        if "domain" in attrs:
-            domain = attrs["domain"]
-        if "path" in attrs:
-            path = attrs["path"]
-        return (domain, f.request.port, path)
-
-    def domain_match(self, a, b):
-        if http_cookiejar.domain_match(a, b):
-            return True
-        elif http_cookiejar.domain_match(a, b.strip(".")):
-            return True
-        return False
-
-    def handle_response(self, f):
-        for name, (value, attrs) in f.response.cookies.items(multi=True):
-            # FIXME: We now know that Cookie.py screws up some cookies with
-            # valid RFC 822/1123 datetime specifications for expiry. Sigh.
-            dom_port_path = self.ckey(attrs, f)
-
-            if self.domain_match(f.request.host, dom_port_path[0]):
-                if cookies.is_expired(attrs):
-                    # Remove the cookie from jar
-                    self.jar[dom_port_path].pop(name, None)
-
-                    # If all cookies of a dom_port_path have been removed
-                    # then remove it from the jar itself
-                    if not self.jar[dom_port_path]:
-                        self.jar.pop(dom_port_path, None)
-                else:
-                    b = attrs.with_insert(0, name, value)
-                    self.jar[dom_port_path][name] = b
-
-    def handle_request(self, f):
-        l = []
-        if f.match(self.flt):
-            for domain, port, path in self.jar.keys():
-                match = [
-                    self.domain_match(f.request.host, domain),
-                    f.request.port == port,
-                    f.request.path.startswith(path)
-                ]
-                if all(match):
-                    c = self.jar[(domain, port, path)]
-                    l.extend([cookies.format_cookie_header(c[name].items(multi=True)) for name in c.keys()])
-        if l:
-            f.request.stickycookie = True
-            f.request.headers["cookie"] = "; ".join(l)

@@ -239,11 +239,6 @@ class ConsoleMaster(flow.FlowMaster):
         if options.limit:
             self.set_limit(options.limit)
 
-        r = self.set_stickycookie(options.stickycookie)
-        if r:
-            print("Sticky cookies error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
         self.set_stream_large_bodies(options.stream_large_bodies)
 
         self.refresh_server_playback = options.refresh_server_playback

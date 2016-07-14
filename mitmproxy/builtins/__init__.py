@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 from mitmproxy.builtins import anticache
 from mitmproxy.builtins import anticomp
 from mitmproxy.builtins import stickyauth
+from mitmproxy.builtins import stickycookie
 
 
 def default_addons():
@@ -10,4 +11,5 @@ def default_addons():
         anticache.AntiCache(),
         anticomp.AntiComp(),
         stickyauth.StickyAuth(),
+        stickycookie.StickyCookie(),
     ]
