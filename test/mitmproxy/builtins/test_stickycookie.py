@@ -112,6 +112,16 @@ class TestStickyCookie(mastertest.MasterTest):
         assert len(sc.jar[googlekey].keys()) == 1
         assert list(sc.jar[googlekey]["somecookie"].items())[0][1] == "newvalue"
 
+    def test_response_delete(self):
+        s, m, sc = self.mk()
+
+        # Test that a cookie is be deleted
+        # by setting the expire time in the past
+        f = self._response(s, m, sc, "duffer=zafar; Path=/", "www.google.com")
+        f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
+        self.invoke(m, "response", f)
+        assert not sc.jar.keys()
+
     def test_request(self):
         s, m, sc = self.mk()
 
