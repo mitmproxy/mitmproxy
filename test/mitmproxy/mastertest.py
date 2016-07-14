@@ -18,15 +18,14 @@ class MasterTest:
         l = proxy.Log("connect")
         l.reply = mock.MagicMock()
         master.log(l)
-        master.clientconnect(f.client_conn)
-        master.serverconnect(f.server_conn)
-        master.request(f)
+        self.invoke(master, "clientconnect", f.client_conn)
+        self.invoke(master, "clientconnect", f.client_conn)
+        self.invoke(master, "serverconnect", f.server_conn)
+        self.invoke(master, "request", f)
         if not f.error:
             f.response = models.HTTPResponse.wrap(netlib.tutils.tresp(content=content))
-            f.reply.acked = False
-            f = master.response(f)
-        f.client_conn.reply.acked = False
-        master.clientdisconnect(f.client_conn)
+            self.invoke(master, "response", f)
+        self.invoke(master, "clientdisconnect", f)
         return f
 
     def dummy_cycle(self, master, n, content):

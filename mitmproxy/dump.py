@@ -52,16 +52,17 @@ class Options(options.Options):
         "replay_ignore_content",
         "replay_ignore_params",
         "replay_ignore_payload_params",
-        "replay_ignore_host"
+        "replay_ignore_host",
+
+        "tfile"
     ]
 
 
 class DumpMaster(flow.FlowMaster):
 
-    def __init__(self, server, options, outfile=None):
+    def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, flow.State())
         self.addons.add(*builtins.default_addons())
-        self.outfile = outfile
         self.o = options
         self.showhost = options.showhost
         self.replay_ignore_params = options.replay_ignore_params
@@ -81,15 +82,6 @@ class DumpMaster(flow.FlowMaster):
             self.filt = filt.parse(options.filtstr)
         else:
             self.filt = None
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1],
-                self.filt
-            )
-            if err:
-                raise DumpError(err)
 
         if options.replacements:
             for i in options.replacements:
@@ -163,7 +155,7 @@ class DumpMaster(flow.FlowMaster):
     def echo(self, text, indent=None, **style):
         if indent:
             text = self.indent(indent, text)
-        click.secho(text, file=self.outfile, **style)
+        click.secho(text, file=self.options.tfile, **style)
 
     def _echo_message(self, message):
         if self.options.flow_detail >= 2 and hasattr(message, "headers"):
@@ -312,8 +304,8 @@ class DumpMaster(flow.FlowMaster):
         if f.error:
             self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
 
-        if self.outfile:
-            self.outfile.flush()
+        if self.options.tfile:
+            self.options.tfile.flush()
 
     def _process_flow(self, f):
         if self.filt and not f.match(self.filt):

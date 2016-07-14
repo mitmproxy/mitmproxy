@@ -46,7 +46,6 @@ class FlowMaster(controller.Master):
         self.replay_ignore_content = None
         self.replay_ignore_host = False
 
-        self.stream = None
         self.apps = modules.AppRegistry()
 
     def start_app(self, host, port):
@@ -409,8 +408,6 @@ class FlowMaster(controller.Master):
         if not f.reply.acked:
             if self.client_playback:
                 self.client_playback.clear(f)
-        if self.stream:
-            self.stream.add(f)
         return f
 
     def handle_intercept(self, f):
@@ -471,33 +468,8 @@ class FlowMaster(controller.Master):
     @controller.handler
     def tcp_close(self, flow):
         self.active_flows.discard(flow)
-        if self.stream:
-            self.stream.add(flow)
         self.run_scripts("tcp_close", flow)
 
     def shutdown(self):
         super(FlowMaster, self).shutdown()
-
-        # Add all flows that are still active
-        if self.stream:
-            for flow in self.active_flows:
-                self.stream.add(flow)
-            self.stop_stream()
-
         self.unload_scripts()
-
-    def start_stream(self, fp, filt):
-        self.stream = io.FilteredFlowWriter(fp, filt)
-
-    def stop_stream(self):
-        self.stream.fo.close()
-        self.stream = None
-
-    def start_stream_to_path(self, path, mode="wb", filt=None):
-        path = os.path.expanduser(path)
-        try:
-            f = open(path, mode)
-            self.start_stream(f, filt)
-        except IOError as v:
-            return str(v)
-        self.stream_path = path
