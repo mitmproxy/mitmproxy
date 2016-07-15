@@ -58,8 +58,8 @@ class TestScript(mastertest.MasterTest):
         )
         m.addons.add(sc)
         assert sc.ns["call_log"] == [
-            ("start", (), {}),
-            ("configure", (options.Options(),), {})
+            ("solo", "start", (), {}),
+            ("solo", "configure", (options.Options(),), {})
         ]
 
         sc.ns["call_log"] = []
@@ -67,7 +67,7 @@ class TestScript(mastertest.MasterTest):
         self.invoke(m, "request", f)
 
         recf = sc.ns["call_log"][0]
-        assert recf[0] == "request"
+        assert recf[1] == "request"
 
     def test_reload(self):
         s = state.State()
@@ -129,3 +129,59 @@ class TestScriptLoader(mastertest.MasterTest):
         assert len(m.addons) == 2
         o.update(scripts = [])
         assert len(m.addons) == 1
+
+    def test_dupes(self):
+        s = state.State()
+        o = options.Options(scripts=["one", "one"])
+        m = master.FlowMaster(o, None, s)
+        sc = script.ScriptLoader()
+        tutils.raises(exceptions.OptionsError, m.addons.add, sc)
+
+    def test_order(self):
+        rec = tutils.test_data.path("data/addonscripts/recorder.py")
+
+        s = state.State()
+        o = options.Options(
+            scripts = [
+                "%s %s" % (rec, "a"),
+                "%s %s" % (rec, "b"),
+                "%s %s" % (rec, "c"),
+            ]
+        )
+        m = mastertest.RecordingMaster(o, None, s)
+        sc = script.ScriptLoader()
+        m.addons.add(sc)
+
+        debug = [(i[0], i[1]) for i in m.event_log if i[0] == "debug"]
+        assert debug == [
+            ('debug', 'a start'), ('debug', 'a configure'),
+            ('debug', 'b start'), ('debug', 'b configure'),
+            ('debug', 'c start'), ('debug', 'c configure')
+        ]
+        m.event_log[:] = []
+
+        o.scripts = [
+            "%s %s" % (rec, "c"),
+            "%s %s" % (rec, "a"),
+            "%s %s" % (rec, "b"),
+        ]
+        debug = [(i[0], i[1]) for i in m.event_log if i[0] == "debug"]
+        assert debug == [
+            ('debug', 'c configure'),
+            ('debug', 'a configure'),
+            ('debug', 'b configure'),
+        ]
+        m.event_log[:] = []
+
+        o.scripts = [
+            "%s %s" % (rec, "x"),
+            "%s %s" % (rec, "a"),
+        ]
+        debug = [(i[0], i[1]) for i in m.event_log if i[0] == "debug"]
+        assert debug == [
+            ('debug', 'c done'),
+            ('debug', 'b done'),
+            ('debug', 'x start'),
+            ('debug', 'x configure'),
+            ('debug', 'a configure'),
+        ]

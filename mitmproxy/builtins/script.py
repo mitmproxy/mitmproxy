@@ -99,23 +99,25 @@ class Script:
         self.path, self.args = parse_command(command)
         self.ns = None
         self.observer = None
+        self.dead = False
 
         self.last_options = None
         self.should_reload = threading.Event()
 
-        for i in controller.Events - set(["start", "configure", "tick"]):
-            def mkprox():
-                evt = i
+        for i in controller.Events:
+            if not hasattr(self, i):
+                def mkprox():
+                    evt = i
 
-                def prox(*args, **kwargs):
-                    self.run(evt, *args, **kwargs)
-                return prox
-            setattr(self, i, mkprox())
+                    def prox(*args, **kwargs):
+                        self.run(evt, *args, **kwargs)
+                    return prox
+                setattr(self, i, mkprox())
 
     def run(self, name, *args, **kwargs):
         # It's possible for ns to be un-initialised if we failed during
         # configure
-        if self.ns is not None:
+        if self.ns is not None and not self.dead:
             func = self.ns.get(name)
             if func:
                 with scriptenv(self.path, self.args):
@@ -149,18 +151,35 @@ class Script:
             self.observer.start()
         self.run("configure", options)
 
+    def done(self):
+        self.run("done")
+        self.dead = True
+
 
 class ScriptLoader():
     """
         An addon that manages loading scripts from options.
     """
     def configure(self, options):
-        for s in options.scripts or []:
-            if not ctx.master.addons.has_addon(s):
+        for s in options.scripts:
+            if options.scripts.count(s) > 1:
+                raise exceptions.OptionsError("Duplicate script: %s" % s)
+
+        for a in ctx.master.addons.chain[:]:
+            if isinstance(a, Script) and a.name not in options.scripts:
+                    ctx.log.info("Un-loading script: %s" % a.name)
+                    ctx.master.addons.remove(a)
+
+        current = {}
+        for a in ctx.master.addons.chain[:]:
+            if isinstance(a, Script):
+                current[a.name] = a
+                ctx.master.addons.chain.remove(a)
+
+        for s in options.scripts:
+            if s in current:
+                ctx.master.addons.chain.append(current[s])
+            else:
                 ctx.log.info("Loading script: %s" % s)
                 sc = Script(s)
                 ctx.master.addons.add(sc)
-        for a in ctx.master.addons.chain:
-            if isinstance(a, Script):
-                if a.name not in options.scripts or []:
-                    ctx.master.addons.remove(a)
