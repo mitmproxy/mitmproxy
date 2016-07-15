@@ -28,9 +28,10 @@ class ActionBar(urwid.WidgetWrap):
         self.pathprompt = False
 
     def sig_message(self, sender, message, expire=None):
+        if self.prompting:
+            return
         w = urwid.Text(message)
         self._w = w
-        self.prompting = False
         if expire:
             def cb(*args):
                 if w == self._w:
