@@ -21,6 +21,7 @@ class Addons(object):
     def add(self, *addons):
         self.chain.extend(addons)
         for i in addons:
+            self.invoke_with_context(i, "start")
             self.invoke_with_context(i, "configure", self.master.options)
 
     def remove(self, addon):

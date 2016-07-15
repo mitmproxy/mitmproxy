@@ -57,7 +57,10 @@ class TestScript(mastertest.MasterTest):
             )
         )
         m.addons.add(sc)
-        assert sc.ns["call_log"] == [("configure", (options.Options(),), {})]
+        assert sc.ns["call_log"] == [
+            ("start", (), {}),
+            ("configure", (options.Options(),), {})
+        ]
 
         sc.ns["call_log"] = []
         f = tutils.tflow(resp=True)
@@ -93,7 +96,7 @@ class TestScript(mastertest.MasterTest):
         m.addons.add(sc)
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)
-        assert m.event_log[0][0] == "warn"
+        assert m.event_log[0][0] == "error"
 
     def test_duplicate_flow(self):
         s = state.State()

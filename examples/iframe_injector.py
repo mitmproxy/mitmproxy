@@ -7,7 +7,7 @@ from mitmproxy.models import decoded
 iframe_url = None
 
 
-def configure(options):
+def start():
     if len(sys.argv) != 2:
         raise ValueError('Usage: -s "iframe_injector.py url"')
     global iframe_url

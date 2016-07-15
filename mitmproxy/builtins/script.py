@@ -51,22 +51,29 @@ def scriptenv(path, args):
         _, _, tb = sys.exc_info()
         scriptdir = os.path.dirname(os.path.abspath(path))
         for i, s in enumerate(reversed(traceback.extract_tb(tb))):
+            tb = tb.tb_next
             if not os.path.abspath(s[0]).startswith(scriptdir):
                 break
-            else:
-                tb = tb.tb_next
-        ctx.log.warn("".join(traceback.format_tb(tb)))
+        ctx.log.error("Script error: %s" % "".join(traceback.format_tb(tb)))
     finally:
         sys.argv = oldargs
         sys.path.pop()
 
 
 def load_script(path, args):
+    with open(path, "rb") as f:
+        try:
+            code = compile(f.read(), path, 'exec')
+        except SyntaxError as e:
+            ctx.log.error(
+                "Script error: %s line %s: %s" % (
+                    e.filename, e.lineno, e.msg
+                )
+            )
+            return
     ns = {'__file__': os.path.abspath(path)}
     with scriptenv(path, args):
-        with open(path, "rb") as f:
-            code = compile(f.read(), path, 'exec')
-            exec(code, ns, ns)
+        exec(code, ns, ns)
     return ns
 
 
@@ -96,7 +103,7 @@ class Script:
         self.last_options = None
         self.should_reload = threading.Event()
 
-        for i in controller.Events - set(["tick"]):
+        for i in controller.Events - set(["start", "configure", "tick"]):
             def mkprox():
                 evt = i
 
@@ -120,11 +127,15 @@ class Script:
     def tick(self):
         if self.should_reload.is_set():
             self.should_reload.clear()
-            self.ns = None
             ctx.log.info("Reloading script: %s" % self.name)
+            self.ns = load_script(self.path, self.args)
             self.configure(self.last_options)
         else:
             self.run("tick")
+
+    def start(self):
+        self.ns = load_script(self.path, self.args)
+        self.run("start")
 
     def configure(self, options):
         self.last_options = options
@@ -136,8 +147,6 @@ class Script:
                 os.path.dirname(self.path) or "."
             )
             self.observer.start()
-        if not self.ns:
-            self.ns = load_script(self.path, self.args)
         self.run("configure", options)
 
 

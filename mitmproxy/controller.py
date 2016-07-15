@@ -32,6 +32,9 @@ Events = frozenset([
 
     "error",
     "log",
+
+    "start",
+    "configure",
     "done",
     "tick",
 

@@ -62,7 +62,7 @@ class ViewPigLatin(contentviews.View):
 pig_view = ViewPigLatin()
 
 
-def configure(options):
+def start():
     contentviews.add(pig_view)
 
 

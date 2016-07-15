@@ -61,7 +61,7 @@ class Context(object):
 context = Context()
 
 
-def configure(options):
+def start():
     """
         On start we create a HARLog instance. You will have to adapt this to
         suit your actual needs of HAR generation. As it will probably be

@@ -113,7 +113,7 @@ class TlsFeedback(TlsLayer):
 tls_strategy = None
 
 
-def configure(options):
+def start():
     global tls_strategy
     if len(sys.argv) == 2:
         tls_strategy = ProbabilisticStrategy(float(sys.argv[1]))

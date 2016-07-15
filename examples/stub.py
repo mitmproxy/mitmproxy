@@ -4,6 +4,15 @@ import mitmproxy
 """
 
 
+
+def start():
+    """
+        Called once on script startup before any other events
+    """
+    mitmproxy.ctx.log("start")
+
+
+
 def configure(options):
     """
         Called once on script startup before any other events, and whenever options changes.
