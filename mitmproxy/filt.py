@@ -175,7 +175,7 @@ class FContentType(_Rex):
         return False
 
 
-class FRequestContentType(_Rex):
+class FContentTypeRequest(_Rex):
     code = "tq"
     help = "Request Content-Type header"
 
@@ -184,7 +184,7 @@ class FRequestContentType(_Rex):
         return _check_content_type(self.re, f.request)
 
 
-class FResponseContentType(_Rex):
+class FContentTypeResponse(_Rex):
     code = "ts"
     help = "Response Content-Type header"
 
@@ -399,28 +399,28 @@ class FNot(_Token):
 
 
 filt_unary = [
-    FReq,
-    FResp,
     FAsset,
     FErr,
     FHTTP,
+    FReq,
+    FResp,
     FTCP,
 ]
 filt_rex = [
-    FHeadRequest,
-    FHeadResponse,
-    FHead,
+    FBod,
     FBodRequest,
     FBodResponse,
-    FBod,
-    FMethod,
-    FDomain,
-    FUrl,
-    FRequestContentType,
-    FResponseContentType,
     FContentType,
-    FSrc,
+    FContentTypeRequest,
+    FContentTypeResponse,
+    FDomain,
     FDst,
+    FHead,
+    FHeadRequest,
+    FHeadResponse,
+    FMethod,
+    FSrc,
+    FUrl,
 ]
 filt_int = [
     FCode
