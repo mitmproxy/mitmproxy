@@ -1,5 +1,6 @@
 import json
 
+import six
 import sys
 import os.path
 from mitmproxy.flow import master
@@ -112,7 +113,7 @@ class TestScripts(mastertest.MasterTest):
             )
 
             path = os.path.join(tdir, "file")
-            m, sc = tscript("har_extractor.py", path)
+            m, sc = tscript("har_extractor.py", six.moves.shlex_quote(path))
             f = tutils.tflow(
                 req=netutils.treq(**times),
                 resp=netutils.tresp(**times)
@@ -120,6 +121,6 @@ class TestScripts(mastertest.MasterTest):
             self.invoke(m, "response", f)
             m.addons.remove(sc)
 
-            fp = open(path, "rb")
-            test_data = json.load(fp)
+            with open(path, "rb") as f:
+                test_data = json.load(f)
             assert len(test_data["log"]["pages"]) == 1
