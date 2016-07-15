@@ -118,6 +118,9 @@ def mitmdump(args=None):  # pragma: no cover
         sys.exit(1)
     except (KeyboardInterrupt, _thread.error):
         pass
+    if master.has_errored:
+        print("mitmdump: errors occurred during run", file=sys.stderr)
+        sys.exit(1)
 
 
 def mitmweb(args=None):  # pragma: no cover

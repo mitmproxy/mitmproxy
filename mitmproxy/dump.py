@@ -45,6 +45,7 @@ class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, flow.State())
+        self.has_errored = False
         self.addons.add(*builtins.default_addons())
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -115,6 +116,8 @@ class DumpMaster(flow.FlowMaster):
             raise DumpError(str(e))
 
     def add_log(self, e, level="info"):
+        if level == "error":
+            self.has_errored = True
         if self.options.verbosity >= utils.log_tier(level):
             self.echo(
                 e,
