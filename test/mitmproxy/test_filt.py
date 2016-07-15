@@ -87,6 +87,11 @@ class TestMatchingHTTPFlow:
     def q(self, q, o):
         return filt.parse(q)(o)
 
+    def test_http(self):
+        s = self.req()
+        assert self.q("~http", s)
+        assert not self.q("~tcp", s)
+
     def test_asset(self):
         s = self.resp()
         assert not self.q("~a", s)
@@ -257,6 +262,11 @@ class TestMatchingTCPFlow:
 
     def q(self, q, o):
         return filt.parse(q)(o)
+
+    def test_tcp(self):
+        f = self.flow()
+        assert self.q("~tcp", f)
+        assert not self.q("~http", f)
 
     def test_ferr(self):
         e = self.err()

@@ -81,6 +81,24 @@ class FErr(_Action):
         return True if f.error else False
 
 
+class FHTTP(_Action):
+    code = "http"
+    help = "Match HTTP flows"
+
+    @only(HTTPFlow)
+    def __call__(self, f):
+        return True
+
+
+class FTCP(_Action):
+    code = "tcp"
+    help = "Match TCP flows"
+
+    @only(TCPFlow)
+    def __call__(self, f):
+        return True
+
+
 class FReq(_Action):
     code = "q"
     help = "Match request with no response"
@@ -384,7 +402,9 @@ filt_unary = [
     FReq,
     FResp,
     FAsset,
-    FErr
+    FErr,
+    FHTTP,
+    FTCP,
 ]
 filt_rex = [
     FHeadRequest,
