@@ -276,6 +276,9 @@ class ConsoleMaster(flow.FlowMaster):
             return
 
         if level == "error":
+            signals.status_message.send(
+                message = "Error: %s" % str(e)
+            )
             e = urwid.Text(("error", str(e)))
         else:
             e = urwid.Text(str(e))
