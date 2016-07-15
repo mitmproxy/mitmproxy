@@ -27,15 +27,19 @@ class TestParseCommand:
 
     def test_parse_args(self):
         with tutils.chdir(tutils.test_data.dirname):
-            assert script.parse_command("data/scripts/a.py") == ("data/scripts/a.py", [])
-            assert script.parse_command("data/scripts/a.py foo bar") == ("data/scripts/a.py", ["foo", "bar"])
-            assert script.parse_command("data/scripts/a.py 'foo bar'") == ("data/scripts/a.py", ["foo bar"])
+            assert script.parse_command("data/addonscripts/recorder.py") == ("data/addonscripts/recorder.py", [])
+            assert script.parse_command("data/addonscripts/recorder.py foo bar") == ("data/addonscripts/recorder.py", ["foo", "bar"])
+            assert script.parse_command("data/addonscripts/recorder.py 'foo bar'") == ("data/addonscripts/recorder.py", ["foo bar"])
 
     @tutils.skip_not_windows
     def test_parse_windows(self):
         with tutils.chdir(tutils.test_data.dirname):
-            assert script.parse_command("data\\scripts\\a.py") == ("data\\scripts\\a.py", [])
-            assert script.parse_command("data\\scripts\\a.py 'foo \\ bar'") == ("data\\scripts\\a.py", ['foo \\ bar'])
+            assert script.parse_command(
+                "data\\addonscripts\\recorder.py"
+            ) == ("data\\addonscripts\\recorder.py", [])
+            assert script.parse_command(
+                "data\\addonscripts\\recorder.py 'foo \\ bar'"
+            ) == ("data\\addonscripts\\recorder.py", ['foo \\ bar'])
 
 
 def test_load_script():

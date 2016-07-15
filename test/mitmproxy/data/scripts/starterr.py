@@ -1,3 +1,0 @@
-
-def start():
-    raise ValueError()
