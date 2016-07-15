@@ -67,20 +67,14 @@ export default class ContentView extends Component {
 
         return (
             <div>
-                <div className="row">
-                    <div className="col-sm-12">
-                         <ContentLoader flow={flow} message={message}>
-                            <ContentEditor
-                                    onSave={this.props.onContentChange}
-                                    onClose={() => this.setState({contentEditorClosed : true})}
-                                    onOpen={() => this.setState({contentEditorClosed : false})}
-                                    isClosed={this.state.contentEditorClosed}
-                                    content=""
-                            />
-                        </ContentLoader>
-                    </div>
-                </div>
-
+                 <ContentLoader flow={flow} message={message}>
+                    <ContentEditor
+                            onSave={content => {this.props.onContentChange(content);this.setState({contentEditorClosed : true});}}
+                            onOpen={() => this.setState({contentEditorClosed : false})}
+                            isClosed={this.state.contentEditorClosed}
+                            content=""
+                    />
+                </ContentLoader>
                 {this.state.contentEditorClosed && (<div>
                     {View.textView ? (
                         <ContentLoader  flow={flow} message={message}>

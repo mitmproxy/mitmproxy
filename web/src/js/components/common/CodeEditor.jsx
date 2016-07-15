@@ -1,9 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { render } from 'react-dom';
-import AceEditor from 'react-ace';
+import Codemirror from 'react-codemirror';
 
-import 'brace/mode/javascript';
-import 'brace/theme/kuroir';
 
 export default class CodeEditor extends Component{
      static propTypes = {
@@ -12,17 +10,12 @@ export default class CodeEditor extends Component{
     }
 
     render() {
+        let options = {
+            lineNumbers: true
+        };
         return (
             <div onKeyDown={e => e.stopPropagation()}>
-                <AceEditor
-                    mode="javascript"
-                    theme="kuroir"
-                    onChange={this.props.onChange}
-                    name="rea"
-                    value={this.props.value}
-                    width="100%"
-                    editorProps={{$blockScrolling: Infinity}}
-                />
+                <Codemirror value={this.props.value} onChange={this.props.onChange} options={options}/>
             </div>
         )
     }
