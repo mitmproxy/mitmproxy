@@ -1,28 +1,46 @@
-from mitmproxy.script import Script
-from test.mitmproxy import tutils
+from test.mitmproxy import tutils, mastertest
 from mitmproxy import controller
+from mitmproxy.builtins import script
+from mitmproxy import options
+from mitmproxy.flow import master
+from mitmproxy.flow import state
 import time
 
 
 class Thing:
     def __init__(self):
         self.reply = controller.DummyReply()
+        self.live = True
 
 
-@tutils.skip_appveyor
-def test_concurrent():
-    with Script(tutils.test_data.path("data/scripts/concurrent_decorator.py")) as s:
-        f1, f2 = Thing(), Thing()
-        s.run("request", f1)
-        s.run("request", f2)
+class TestConcurrent(mastertest.MasterTest):
+    @tutils.skip_appveyor
+    def test_concurrent(self):
+        s = state.State()
+        m = master.FlowMaster(options.Options(), None, s)
+        sc = script.Script(
+            tutils.test_data.path(
+                "data/addonscripts/concurrent_decorator.py"
+            )
+        )
+        m.addons.add(sc)
+        f1, f2 = tutils.tflow(), tutils.tflow()
+        self.invoke(m, "request", f1)
+        self.invoke(m, "request", f2)
         start = time.time()
         while time.time() - start < 5:
             if f1.reply.acked and f2.reply.acked:
                 return
         raise ValueError("Script never acked")
 
-
-def test_concurrent_err():
-    s = Script(tutils.test_data.path("data/scripts/concurrent_decorator_err.py"))
-    with tutils.raises("Concurrent decorator not supported for 'start' method"):
-        s.load()
+    def test_concurrent_err(self):
+        s = state.State()
+        m = mastertest.RecordingMaster(options.Options(), None, s)
+        sc = script.Script(
+            tutils.test_data.path(
+                "data/addonscripts/concurrent_decorator_err.py"
+            )
+        )
+        with m.handlecontext():
+            sc.start()
+        assert "decorator not supported" in m.event_log[0][1]

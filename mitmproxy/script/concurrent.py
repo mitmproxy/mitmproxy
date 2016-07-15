@@ -13,7 +13,7 @@ class ScriptThread(basethread.BaseThread):
 
 
 def concurrent(fn):
-    if fn.__name__ not in controller.Events:
+    if fn.__name__ not in controller.Events - set(["start", "configure", "tick"]):
         raise NotImplementedError(
             "Concurrent decorator not supported for '%s' method." % fn.__name__
         )

@@ -248,23 +248,6 @@ class ConsoleMaster(flow.FlowMaster):
         if options.server_replay:
             self.server_playback_path(options.server_replay)
 
-        if options.scripts:
-            for i in options.scripts:
-                try:
-                    self.load_script(i)
-                except exceptions.ScriptException as e:
-                    print("Script load error: {}".format(e), file=sys.stderr)
-                    sys.exit(1)
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1]
-            )
-            if err:
-                print("Stream file error: {}".format(err), file=sys.stderr)
-                sys.exit(1)
-
         self.view_stack = []
 
         if options.app:
@@ -685,20 +668,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.refresh_focus()
 
     def edit_scripts(self, scripts):
-        commands = [x[0] for x in scripts]  # remove outer array
-        if commands == [s.command for s in self.scripts]:
-            return
-
-        self.unload_scripts()
-        for command in commands:
-            try:
-                self.load_script(command)
-            except exceptions.ScriptException as e:
-                signals.status_message.send(
-                    message='Error loading "{}".'.format(command)
-                )
-                signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
-        signals.update_settings.send(self)
+        self.options.scripts = [x[0] for x in scripts]
 
     def stop_client_playback_prompt(self, a):
         if a != "n":

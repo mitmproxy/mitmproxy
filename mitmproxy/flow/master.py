@@ -9,7 +9,6 @@ import netlib.exceptions
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import models
-from mitmproxy import script
 from mitmproxy.flow import io
 from mitmproxy.flow import modules
 from mitmproxy.onboarding import app
@@ -35,8 +34,6 @@ class FlowMaster(controller.Master):
         self.server_playback = None  # type: Optional[modules.ServerPlaybackState]
         self.client_playback = None  # type: Optional[modules.ClientPlaybackState]
         self.kill_nonreplay = False
-        self.scripts = []  # type: List[script.Script]
-        self.pause_scripts = False
 
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
@@ -59,44 +56,6 @@ class FlowMaster(controller.Master):
         """
             level: debug, info, error
         """
-
-    def unload_scripts(self):
-        for s in self.scripts[:]:
-            self.unload_script(s)
-
-    def unload_script(self, script_obj):
-        try:
-            script_obj.unload()
-        except script.ScriptException as e:
-            self.add_event("Script error:\n" + str(e), "error")
-        script.reloader.unwatch(script_obj)
-        self.scripts.remove(script_obj)
-
-    def load_script(self, command, use_reloader=False):
-        """
-            Loads a script.
-
-            Raises:
-                ScriptException
-        """
-        s = script.Script(command)
-        s.load()
-        if use_reloader:
-            s.reply = controller.DummyReply()
-            script.reloader.watch(s, lambda: self.event_queue.put(("script_change", s)))
-        self.scripts.append(s)
-
-    def _run_single_script_hook(self, script_obj, name, *args, **kwargs):
-        if script_obj and not self.pause_scripts:
-            try:
-                script_obj.run(name, *args, **kwargs)
-            except script.ScriptException as e:
-                self.add_event("Script error:\n{}".format(e), "error")
-
-    def run_scripts(self, name, msg):
-        for script_obj in self.scripts:
-            if not msg.reply.acked:
-                self._run_single_script_hook(script_obj, name, msg)
 
     def get_ignore_filter(self):
         return self.server.config.check_ignore.patterns
@@ -298,11 +257,11 @@ class FlowMaster(controller.Master):
             if not pb and self.kill_nonreplay:
                 f.kill(self)
 
-    def replay_request(self, f, block=False, run_scripthooks=True):
+    def replay_request(self, f, block=False):
         """
             Returns None if successful, or error message if not.
         """
-        if f.live and run_scripthooks:
+        if f.live:
             return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
@@ -319,7 +278,7 @@ class FlowMaster(controller.Master):
             rt = http_replay.RequestReplayThread(
                 self.server.config,
                 f,
-                self.event_queue if run_scripthooks else False,
+                self.event_queue,
                 self.should_exit
             )
             rt.start()  # pragma: no cover
@@ -332,28 +291,27 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def clientconnect(self, root_layer):
-        self.run_scripts("clientconnect", root_layer)
+        pass
 
     @controller.handler
     def clientdisconnect(self, root_layer):
-        self.run_scripts("clientdisconnect", root_layer)
+        pass
 
     @controller.handler
     def serverconnect(self, server_conn):
-        self.run_scripts("serverconnect", server_conn)
+        pass
 
     @controller.handler
     def serverdisconnect(self, server_conn):
-        self.run_scripts("serverdisconnect", server_conn)
+        pass
 
     @controller.handler
     def next_layer(self, top_layer):
-        self.run_scripts("next_layer", top_layer)
+        pass
 
     @controller.handler
     def error(self, f):
         self.state.update_flow(f)
-        self.run_scripts("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
         return f
@@ -381,8 +339,6 @@ class FlowMaster(controller.Master):
             self.setheaders.run(f)
         if not f.reply.acked:
             self.process_new_request(f)
-        if not f.reply.acked:
-            self.run_scripts("request", f)
         return f
 
     @controller.handler
@@ -393,7 +349,6 @@ class FlowMaster(controller.Master):
         except netlib.exceptions.HttpException:
             f.reply.kill()
             return
-        self.run_scripts("responseheaders", f)
         return f
 
     @controller.handler
@@ -404,7 +359,6 @@ class FlowMaster(controller.Master):
             self.replacehooks.run(f)
         if not f.reply.acked:
             self.setheaders.run(f)
-        self.run_scripts("response", f)
         if not f.reply.acked:
             if self.client_playback:
                 self.client_playback.clear(f)
@@ -417,45 +371,14 @@ class FlowMaster(controller.Master):
         self.state.update_flow(f)
 
     @controller.handler
-    def script_change(self, s):
-        """
-        Handle a script whose contents have been changed on the file system.
-
-        Args:
-            s (script.Script): the changed script
-
-        Returns:
-            True, if reloading was successful.
-            False, otherwise.
-        """
-        ok = True
-        # We deliberately do not want to fail here.
-        # In the worst case, we have an "empty" script object.
-        try:
-            s.unload()
-        except script.ScriptException as e:
-            ok = False
-            self.add_event('Error reloading "{}":\n{}'.format(s.path, e), 'error')
-        try:
-            s.load()
-        except script.ScriptException as e:
-            ok = False
-            self.add_event('Error reloading "{}":\n{}'.format(s.path, e), 'error')
-        else:
-            self.add_event('"{}" reloaded.'.format(s.path), 'info')
-        return ok
-
-    @controller.handler
     def tcp_open(self, flow):
         # TODO: This would break mitmproxy currently.
         # self.state.add_flow(flow)
         self.active_flows.add(flow)
-        self.run_scripts("tcp_open", flow)
 
     @controller.handler
     def tcp_message(self, flow):
-        # type: (TCPFlow) -> None
-        self.run_scripts("tcp_message", flow)
+        pass
 
     @controller.handler
     def tcp_error(self, flow):
@@ -463,13 +386,7 @@ class FlowMaster(controller.Master):
             repr(flow.server_conn.address),
             flow.error
         ), "info")
-        self.run_scripts("tcp_error", flow)
 
     @controller.handler
     def tcp_close(self, flow):
         self.active_flows.discard(flow)
-        self.run_scripts("tcp_close", flow)
-
-    def shutdown(self):
-        super(FlowMaster, self).shutdown()
-        self.unload_scripts()

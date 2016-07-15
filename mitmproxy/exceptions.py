@@ -99,3 +99,7 @@ class ControlException(ProxyException):
 
 class OptionsError(Exception):
     pass
+
+
+class AddonError(Exception):
+    pass
