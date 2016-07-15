@@ -1,6 +1,9 @@
 from six.moves import cStringIO as StringIO
-from mitmproxy import filt
 from mock import patch
+
+from mitmproxy import filt
+from mitmproxy.models.flow import Flow
+
 from . import tutils
 
 
@@ -374,6 +377,61 @@ class TestMatchingTCPFlow:
     def test_url(self):
         f = self.flow()
         assert not self.q("~u whatever", f)
+
+
+class DummyFlow(Flow):
+    """ A flow that is neither HTTP nor TCP. """
+
+    def __init__(self):
+        pass
+
+
+class TestMatchingDummyFlow:
+
+    def flow(self):
+        return DummyFlow()
+
+    def q(self, q, o):
+        return filt.parse(q)(o)
+
+    def test_filters(self):
+        f = self.flow()
+
+        assert not self.q("~a", f)
+
+        assert not self.q("~b whatever", f)
+        assert not self.q("~bq whatever", f)
+        assert not self.q("~bs whatever", f)
+
+        assert not self.q("~dst whatever", f)
+
+        assert not self.q("~c 0", f)
+
+        assert not self.q("~d whatever", f)
+
+        assert not self.q("~e", f)
+
+        assert not self.q("~http", f)
+
+        assert not self.q("~h whatever", f)
+        assert not self.q("~hq whatever", f)
+        assert not self.q("~hs whatever", f)
+
+        assert not self.q("~m whatever", f)
+
+        assert not self.q("~s", f)
+
+        assert not self.q("~src whatever", f)
+
+        assert not self.q("~tcp", f)
+
+        assert not self.q("~t whatever", f)
+        assert not self.q("~tq whatever", f)
+        assert not self.q("~ts whatever", f)
+
+        assert not self.q("~u whatever", f)
+
+        assert not self.q("~q", f)
 
 
 @patch('traceback.extract_tb')
