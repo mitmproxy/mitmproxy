@@ -116,10 +116,12 @@ class ActionBar(urwid.WidgetWrap):
 class StatusBar(urwid.WidgetWrap):
 
     def __init__(self, master, helptext):
-        self.master, self.helptext = master, helptext
+        # type: (mitmproxy.console.master.ConsoleMaster, object) -> None
+        self.master = master
+        self.helptext = helptext
         self.ab = ActionBar()
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        self._w = urwid.Pile([self.ib, self.ab])
+        super(StatusBar, self).__init__(urwid.Pile([self.ib, self.ab]))
         signals.update_settings.connect(self.sig_update_settings)
         signals.flowlist_change.connect(self.sig_update_settings)
         master.options.changed.connect(self.sig_update_settings)
@@ -224,7 +226,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append("cripts:%s]" % len(self.master.options.scripts))
 
         if self.master.options.outfile:
-            r.append("[W:%s]" % self.master.outfile[0])
+            r.append("[W:%s]" % self.master.options.outfile[0])
 
         return r
 
