@@ -21,7 +21,7 @@ class ScriptError(Exception):
 
 
 class RaiseMaster(master.FlowMaster):
-    def add_event(self, e, level):
+    def add_log(self, e, level):
         if level in ("warn", "error"):
             raise ScriptError(e)
 

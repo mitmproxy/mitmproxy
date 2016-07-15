@@ -208,7 +208,7 @@ class FlowView(tabs.Tabs):
             )
         except exceptions.ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()
-            signals.add_event(s, "error")
+            signals.add_log(s, "error")
             description, lines = contentviews.get_content_view(
                 contentviews.get("Raw"), message.content, headers=message.headers
             )

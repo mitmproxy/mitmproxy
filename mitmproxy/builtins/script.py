@@ -131,6 +131,7 @@ class Script:
             self.should_reload.clear()
             ctx.log.info("Reloading script: %s" % self.name)
             self.ns = load_script(self.path, self.args)
+            self.start()
             self.configure(self.last_options)
         else:
             self.run("tick")

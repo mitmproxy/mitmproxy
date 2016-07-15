@@ -235,7 +235,8 @@ class TestDumpMaster(mastertest.MasterTest):
         ret = self.dummy_cycle(
             self.mkmaster(
                 None,
-                scripts=[tutils.test_data.path("data/scripts/all.py")], verbosity=1
+                scripts=[tutils.test_data.path("data/scripts/all.py")],
+                verbosity=2
             ),
             1, b"",
         )

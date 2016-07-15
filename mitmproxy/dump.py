@@ -15,6 +15,7 @@ from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
 from mitmproxy import builtins
+from mitmproxy import utils
 from netlib import human
 from netlib import tcp
 from netlib import strutils
@@ -44,6 +45,7 @@ class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, flow.State())
+        self.has_errored = False
         self.addons.add(*builtins.default_addons())
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -97,7 +99,7 @@ class DumpMaster(flow.FlowMaster):
             try:
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
-                self.add_event("Flow file corrupted.", "error")
+                self.add_log("Flow file corrupted.", "error")
                 raise DumpError(v)
 
         if self.options.app:
@@ -113,9 +115,10 @@ class DumpMaster(flow.FlowMaster):
         except exceptions.FlowReadException as e:
             raise DumpError(str(e))
 
-    def add_event(self, e, level="info"):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.options.verbosity >= needed:
+    def add_log(self, e, level="info"):
+        if level == "error":
+            self.has_errored = True
+        if self.options.verbosity >= utils.log_tier(level):
             self.echo(
                 e,
                 fg="red" if level == "error" else None,
@@ -157,7 +160,7 @@ class DumpMaster(flow.FlowMaster):
                     )
                 except exceptions.ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
-                    self.add_event(s, "debug")
+                    self.add_log(s, "debug")
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
                         message.content,

@@ -22,6 +22,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
+from mitmproxy import utils
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -204,8 +205,6 @@ class ConsoleMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, ConsoleState())
-        self.addons.add(*builtins.default_addons())
-
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -238,8 +237,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.palette = options.palette
         self.palette_transparent = options.palette_transparent
 
-        self.eventlog = options.eventlog
-        self.eventlist = urwid.SimpleListWalker([])
+        self.logbuffer = urwid.SimpleListWalker([])
         self.follow = options.follow
 
         if options.client_replay:
@@ -252,10 +250,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
+
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
-        signals.sig_add_event.connect(self.sig_add_event)
+        signals.sig_add_log.connect(self.sig_add_log)
+        self.addons.add(*builtins.default_addons())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -271,22 +271,24 @@ class ConsoleMaster(flow.FlowMaster):
         # We default to using the reloader in the console ui.
         return super(ConsoleMaster, self).load_script(command, use_reloader)
 
-    def sig_add_event(self, sender, e, level):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.options.verbosity < needed:
+    def sig_add_log(self, sender, e, level):
+        if self.options.verbosity < utils.log_tier(level):
             return
 
         if level == "error":
+            signals.status_message.send(
+                message = "Error: %s" % str(e)
+            )
             e = urwid.Text(("error", str(e)))
         else:
             e = urwid.Text(str(e))
-        self.eventlist.append(e)
-        if len(self.eventlist) > EVENTLOG_SIZE:
-            self.eventlist.pop(0)
-        self.eventlist.set_focus(len(self.eventlist) - 1)
+        self.logbuffer.append(e)
+        if len(self.logbuffer) > EVENTLOG_SIZE:
+            self.logbuffer.pop(0)
+        self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
-    def add_event(self, e, level):
-        signals.add_event(e, level)
+    def add_log(self, e, level):
+        signals.add_log(e, level)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -317,16 +319,16 @@ class ConsoleMaster(flow.FlowMaster):
         status, val = s.run(method, f)
         if val:
             if status:
-                signals.add_event("Method %s return: %s" % (method, val), "debug")
+                signals.add_log("Method %s return: %s" % (method, val), "debug")
             else:
-                signals.add_event(
+                signals.add_log(
                     "Method %s error: %s" %
                     (method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
             return
-        signals.add_event("Running script on flow: %s" % command, "debug")
+        signals.add_log("Running script on flow: %s" % command, "debug")
 
         try:
             s = script.Script(command)
@@ -335,7 +337,7 @@ class ConsoleMaster(flow.FlowMaster):
             signals.status_message.send(
                 message='Error loading "{}".'.format(command)
             )
-            signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
+            signals.add_log('Error loading "{}":\n{}'.format(command, e), "error")
             return
 
         if f.request:
@@ -348,7 +350,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.flow_change.send(self, flow = f)
 
     def toggle_eventlog(self):
-        self.eventlog = not self.eventlog
+        self.options.eventlog = not self.options.eventlog
         signals.pop_view_state.send(self)
         self.view_flowlist()
 
@@ -475,7 +477,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.options.rfile:
             ret = self.load_flows_path(self.options.rfile)
             if ret and self.state.flow_count():
-                signals.add_event(
+                signals.add_log(
                     "File truncated or corrupted. "
                     "Loaded as many flows as possible.",
                     "error"
@@ -578,7 +580,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.state.follow_focus:
             self.state.set_focus(self.state.flow_count())
 
-        if self.eventlog:
+        if self.options.eventlog:
             body = flowlist.BodyPile(self)
         else:
             body = flowlist.FlowListBox(self)
@@ -723,7 +725,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.flow_change.send(self, flow = f)
 
     def clear_events(self):
-        self.eventlist[:] = []
+        self.logbuffer[:] = []
 
     # Handlers
     @controller.handler
@@ -752,12 +754,12 @@ class ConsoleMaster(flow.FlowMaster):
         super(ConsoleMaster, self).tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        self.add_event("{client} {direction} tcp {direction} {server}".format(
+        self.add_log("{client} {direction} tcp {direction} {server}".format(
             client=repr(f.client_conn.address),
             server=repr(f.server_conn.address),
             direction=direction,
         ), "info")
-        self.add_event(strutils.bytes_to_escaped_str(message.content), "debug")
+        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
     def script_change(self, script):

@@ -47,7 +47,7 @@ class Log(object):
         self.master = master
 
     def __call__(self, text, level="info"):
-        self.master.add_event(text, level)
+        self.master.add_log(text, level)
 
     def debug(self, txt):
         self(txt, "debug")
@@ -88,6 +88,11 @@ class Master(object):
         finally:
             mitmproxy_ctx.master = None
             mitmproxy_ctx.log = None
+
+    def add_log(self, e, level="info"):
+        """
+            level: debug, info, warn, error
+        """
 
     def add_server(self, server):
         # We give a Channel to the server which can be used to communicate with the master
