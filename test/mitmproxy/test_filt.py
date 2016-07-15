@@ -264,15 +264,21 @@ class TestMatchingTCPFlow:
 
     def test_body(self):
         f = self.flow()
-        assert not self.q("~b nonexistent", f)
+
+        # Messages sent by client or server
         assert self.q("~b hello", f)
         assert self.q("~b me", f)
+        assert not self.q("~b nonexistent", f)
 
-        # Request Body
-        assert not self.q("~bq whatever", f)
+        # Messages sent by client
+        assert self.q("~bq hello", f)
+        assert not self.q("~bq me", f)
+        assert not self.q("~bq nonexistent", f)
 
-        # Response Body
-        assert not self.q("~bs whatever", f)
+        # Messages sent by server
+        assert self.q("~bs me", f)
+        assert not self.q("~bs hello", f)
+        assert not self.q("~bs nonexistent", f)
 
     def test_src(self):
         f = self.flow()

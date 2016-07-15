@@ -219,18 +219,14 @@ class FBod(_Rex):
 
     @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
-
-        # HTTPFlow
-        if hasattr(f, 'request'):
+        if isinstance(f, HTTPFlow):
             if f.request and f.request.content:
                 if self.re.search(f.request.get_decoded_content()):
                     return True
             if f.response and f.response.content:
                 if self.re.search(f.response.get_decoded_content()):
                     return True
-
-        # TCPFlow
-        elif hasattr(f, 'messages'):
+        elif isinstance(f, TCPFlow):
             for msg in f.messages:
                 if self.re.search(msg.content):
                     return True
@@ -242,22 +238,32 @@ class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
 
-    @only(HTTPFlow)
+    @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
-        if f.request and f.request.content:
-            if self.re.search(f.request.get_decoded_content()):
-                return True
+        if isinstance(f, HTTPFlow):
+            if f.request and f.request.content:
+                if self.re.search(f.request.get_decoded_content()):
+                    return True
+        elif isinstance(f, TCPFlow):
+            for msg in f.messages:
+                if msg.from_client and self.re.search(msg.content):
+                    return True
 
 
 class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
 
-    @only(HTTPFlow)
+    @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
-        if f.response and f.response.content:
-            if self.re.search(f.response.get_decoded_content()):
-                return True
+        if isinstance(f, HTTPFlow):
+            if f.response and f.response.content:
+                if self.re.search(f.response.get_decoded_content()):
+                    return True
+        elif isinstance(f, TCPFlow):
+            for msg in f.messages:
+                if not msg.from_client and self.re.search(msg.content):
+                    return True
 
 
 class FMethod(_Rex):
