@@ -42,5 +42,5 @@ class TestConcurrent(mastertest.MasterTest):
             )
         )
         with m.handlecontext():
-            sc.configure(options.Options())
+            sc.start()
         assert "decorator not supported" in m.event_log[0][1]

@@ -4,13 +4,11 @@ import mitmproxy
 """
 
 
-
 def start():
     """
         Called once on script startup before any other events
     """
     mitmproxy.ctx.log("start")
-
 
 
 def configure(options):
