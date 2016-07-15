@@ -204,8 +204,6 @@ class ConsoleMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, ConsoleState())
-        self.addons.add(*builtins.default_addons())
-
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -252,10 +250,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
+
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_event.connect(self.sig_add_event)
+        self.addons.add(*builtins.default_addons())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -272,7 +272,7 @@ class ConsoleMaster(flow.FlowMaster):
         return super(ConsoleMaster, self).load_script(command, use_reloader)
 
     def sig_add_event(self, sender, e, level):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
+        needed = dict(error=0, warn=1, info=2, debug=3).get(level, 2)
         if self.options.verbosity < needed:
             return
 
