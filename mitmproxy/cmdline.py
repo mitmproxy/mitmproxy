@@ -284,7 +284,7 @@ def basic_options(parser):
     )
     parser.add_argument(
         "-v", "--verbose",
-        action="store_const", dest="verbose", default=1, const=2,
+        action="store_const", dest="verbose", default=2, const=3,
         help="Increase event log verbosity."
     )
     outfile = parser.add_mutually_exclusive_group()

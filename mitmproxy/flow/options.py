@@ -30,7 +30,7 @@ class Options(options.Options):
             stickycookie=None,  # type: Optional[str]
             stickyauth=None,  # type: Optional[str]
             stream_large_bodies=None,  # type: Optional[str]
-            verbosity=1,  # type: int
+            verbosity=2,  # type: int
             outfile=None,  # type: Tuple[str, str]
             replay_ignore_content=False,  # type: bool
             replay_ignore_params=(),  # type: Sequence[str]

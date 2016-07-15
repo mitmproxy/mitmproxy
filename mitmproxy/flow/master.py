@@ -52,11 +52,6 @@ class FlowMaster(controller.Master):
             port
         )
 
-    def add_event(self, e, level="info"):
-        """
-            level: debug, info, error
-        """
-
     def get_ignore_filter(self):
         return self.server.config.check_ignore.patterns
 

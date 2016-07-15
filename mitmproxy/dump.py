@@ -114,7 +114,7 @@ class DumpMaster(flow.FlowMaster):
             raise DumpError(str(e))
 
     def add_event(self, e, level="info"):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
+        needed = dict(error=0, warn=1, info=2, debug=3).get(level, 2)
         if self.options.verbosity >= needed:
             self.echo(
                 e,
