@@ -42,7 +42,7 @@ class TestMaster(flow.FlowMaster):
     def clear_log(self):
         self.tlog = []
 
-    def add_event(self, message, level=None):
+    def add_log(self, message, level=None):
         self.tlog.append(message)
 
 

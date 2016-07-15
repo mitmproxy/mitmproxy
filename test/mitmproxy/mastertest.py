@@ -47,5 +47,5 @@ class RecordingMaster(master.FlowMaster):
         master.FlowMaster.__init__(self, *args, **kwargs)
         self.event_log = []
 
-    def add_event(self, e, level):
+    def add_log(self, e, level):
         self.event_log.append((level, e))

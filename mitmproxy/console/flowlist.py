@@ -44,11 +44,11 @@ footer = [
 ]
 
 
-class EventListBox(urwid.ListBox):
+class LogBufferBox(urwid.ListBox):
 
     def __init__(self, master):
         self.master = master
-        urwid.ListBox.__init__(self, master.eventlist)
+        urwid.ListBox.__init__(self, master.logbuffer)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
@@ -56,7 +56,7 @@ class EventListBox(urwid.ListBox):
             self.master.clear_events()
             key = None
         elif key == "G":
-            self.set_focus(len(self.master.eventlist) - 1)
+            self.set_focus(len(self.master.logbuffer) - 1)
         elif key == "g":
             self.set_focus(0)
         return urwid.ListBox.keypress(self, size, key)
@@ -76,7 +76,7 @@ class BodyPile(urwid.Pile):
             [
                 FlowListBox(master),
                 urwid.Frame(
-                    EventListBox(master),
+                    LogBufferBox(master),
                     header = self.inactive_header
                 )
             ]

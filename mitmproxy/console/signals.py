@@ -3,11 +3,11 @@ from __future__ import absolute_import, print_function, division
 import blinker
 
 # Show a status message in the action bar
-sig_add_event = blinker.Signal()
+sig_add_log = blinker.Signal()
 
 
-def add_event(e, level):
-    sig_add_event.send(
+def add_log(e, level):
+    sig_add_log.send(
         None,
         e=e,
         level=level

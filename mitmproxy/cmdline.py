@@ -285,7 +285,7 @@ def basic_options(parser):
     parser.add_argument(
         "-v", "--verbose",
         action="store_const", dest="verbose", default=2, const=3,
-        help="Increase event log verbosity."
+        help="Increase log verbosity."
     )
     outfile = parser.add_mutually_exclusive_group()
     outfile.add_argument(
@@ -384,7 +384,7 @@ def proxy_options(parser):
         help="""
             Generic TCP SSL proxy mode for all hosts that match the pattern.
             Similar to --ignore, but SSL connections are intercepted. The
-            communication contents are printed to the event log in verbose mode.
+            communication contents are printed to the log in verbose mode.
         """
     )
     group.add_argument(

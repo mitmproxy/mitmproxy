@@ -67,7 +67,7 @@ class WebState(flow.State):
         self._last_event_id = 0
         self.events = collections.deque(maxlen=1000)
 
-    def add_event(self, e, level):
+    def add_log(self, e, level):
         self._last_event_id += 1
         entry = {
             "id": self._last_event_id,
@@ -145,7 +145,7 @@ class WebMaster(flow.FlowMaster):
             try:
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
-                self.add_event(
+                self.add_log(
                     "Could not read flow file: %s" % v,
                     "error"
                 )
@@ -200,6 +200,6 @@ class WebMaster(flow.FlowMaster):
         super(WebMaster, self).error(f)
         return self._process_flow(f)
 
-    def add_event(self, e, level="info"):
-        super(WebMaster, self).add_event(e, level)
-        return self.state.add_event(e, level)
+    def add_log(self, e, level="info"):
+        super(WebMaster, self).add_log(e, level)
+        return self.state.add_log(e, level)

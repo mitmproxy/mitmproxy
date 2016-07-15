@@ -282,7 +282,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def log(self, l):
-        self.add_event(l.msg, l.level)
+        self.add_log(l.msg, l.level)
 
     @controller.handler
     def clientconnect(self, root_layer):
@@ -322,7 +322,7 @@ class FlowMaster(controller.Master):
                     **{"mitmproxy.master": self}
                 )
                 if err:
-                    self.add_event("Error in wsgi app. %s" % err, "error")
+                    self.add_log("Error in wsgi app. %s" % err, "error")
                 f.reply.kill()
                 return
         if f not in self.state.flows:  # don't add again on replay
@@ -377,7 +377,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def tcp_error(self, flow):
-        self.add_event("Error in TCP connection to {}: {}".format(
+        self.add_log("Error in TCP connection to {}: {}".format(
             repr(flow.server_conn.address),
             flow.error
         ), "info")

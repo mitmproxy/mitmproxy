@@ -47,7 +47,7 @@ class Log(object):
         self.master = master
 
     def __call__(self, text, level="info"):
-        self.master.add_event(text, level)
+        self.master.add_log(text, level)
 
     def debug(self, txt):
         self(txt, "debug")
@@ -89,7 +89,7 @@ class Master(object):
             mitmproxy_ctx.master = None
             mitmproxy_ctx.log = None
 
-    def add_event(self, e, level="info"):
+    def add_log(self, e, level="info"):
         """
             level: debug, info, warn, error
         """

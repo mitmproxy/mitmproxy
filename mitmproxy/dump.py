@@ -97,7 +97,7 @@ class DumpMaster(flow.FlowMaster):
             try:
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
-                self.add_event("Flow file corrupted.", "error")
+                self.add_log("Flow file corrupted.", "error")
                 raise DumpError(v)
 
         if self.options.app:
@@ -113,7 +113,7 @@ class DumpMaster(flow.FlowMaster):
         except exceptions.FlowReadException as e:
             raise DumpError(str(e))
 
-    def add_event(self, e, level="info"):
+    def add_log(self, e, level="info"):
         needed = dict(error=0, warn=1, info=2, debug=3).get(level, 2)
         if self.options.verbosity >= needed:
             self.echo(
@@ -157,7 +157,7 @@ class DumpMaster(flow.FlowMaster):
                     )
                 except exceptions.ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
-                    self.add_event(s, "debug")
+                    self.add_log(s, "debug")
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
                         message.content,
