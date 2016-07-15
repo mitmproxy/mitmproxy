@@ -15,6 +15,7 @@ from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
 from mitmproxy import builtins
+from mitmproxy import utils
 from netlib import human
 from netlib import tcp
 from netlib import strutils
@@ -114,8 +115,7 @@ class DumpMaster(flow.FlowMaster):
             raise DumpError(str(e))
 
     def add_log(self, e, level="info"):
-        needed = dict(error=0, warn=1, info=2, debug=3).get(level, 2)
-        if self.options.verbosity >= needed:
+        if self.options.verbosity >= utils.log_tier(level):
             self.echo(
                 e,
                 fg="red" if level == "error" else None,

@@ -22,6 +22,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
+from mitmproxy import utils
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -271,8 +272,7 @@ class ConsoleMaster(flow.FlowMaster):
         return super(ConsoleMaster, self).load_script(command, use_reloader)
 
     def sig_add_log(self, sender, e, level):
-        needed = dict(error=0, warn=1, info=2, debug=3).get(level, 2)
-        if self.options.verbosity < needed:
+        if self.options.verbosity < utils.log_tier(level):
             return
 
         if level == "error":
