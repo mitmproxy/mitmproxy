@@ -8,7 +8,6 @@ import six
 
 import netlib
 from mitmproxy import flow
-from mitmproxy import models
 from mitmproxy import utils
 from mitmproxy.console import signals
 from netlib import human
@@ -258,28 +257,30 @@ def copy_flow_format_data(part, scope, flow):
     else:
         data = ""
         if scope in ("q", "a"):
-            if flow.request.content is None:
+            request = flow.request.copy()
+            request.decode(strict=False)
+            if request.content is None:
                 return None, "Request content is missing"
-            with models.decoded(flow.request):
-                if part == "h":
-                    data += netlib.http.http1.assemble_request(flow.request)
-                elif part == "c":
-                    data += flow.request.content
-                else:
-                    raise ValueError("Unknown part: {}".format(part))
-        if scope == "a" and flow.request.content and flow.response:
+            if part == "h":
+                data += netlib.http.http1.assemble_request(request)
+            elif part == "c":
+                data += request.content
+            else:
+                raise ValueError("Unknown part: {}".format(part))
+        if scope == "a" and flow.request.raw_content and flow.response:
             # Add padding between request and response
             data += "\r\n" * 2
         if scope in ("s", "a") and flow.response:
-            if flow.response.content is None:
+            response = flow.response.copy()
+            response.decode(strict=False)
+            if response.content is None:
                 return None, "Response content is missing"
-            with models.decoded(flow.response):
-                if part == "h":
-                    data += netlib.http.http1.assemble_response(flow.response)
-                elif part == "c":
-                    data += flow.response.content
-                else:
-                    raise ValueError("Unknown part: {}".format(part))
+            if part == "h":
+                data += netlib.http.http1.assemble_response(response)
+            elif part == "c":
+                data += response.content
+            else:
+                raise ValueError("Unknown part: {}".format(part))
     return data, False
 
 
@@ -365,8 +366,8 @@ def ask_save_body(part, master, state, flow):
     "q" (request), "s" (response) or None (ask user if necessary).
     """
 
-    request_has_content = flow.request and flow.request.content
-    response_has_content = flow.response and flow.response.content
+    request_has_content = flow.request and flow.request.raw_content
+    response_has_content = flow.response and flow.response.raw_content
 
     if part is None:
         # We first need to determine whether we want to save the request or the
@@ -389,12 +390,12 @@ def ask_save_body(part, master, state, flow):
     elif part == "q" and request_has_content:
         ask_save_path(
             "Save request content",
-            flow.request.get_decoded_content()
+            flow.request.get_content(strict=False),
         )
     elif part == "s" and response_has_content:
         ask_save_path(
             "Save response content",
-            flow.response.get_decoded_content()
+            flow.response.get_content(strict=False),
         )
     else:
         signals.status_message.send(message="No content to save.")
@@ -419,9 +420,9 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
         marked = marked,
     )
     if f.response:
-        if f.response.content:
-            contentdesc = human.pretty_size(len(f.response.content))
-        elif f.response.content is None:
+        if f.response.raw_content:
+            contentdesc = human.pretty_size(len(f.response.raw_content))
+        elif f.response.raw_content is None:
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"

@@ -1,6 +1,5 @@
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
-from netlib import encoding
 from netlib.http import url
 from netlib import multidict
 
@@ -215,28 +214,6 @@ Larry
             b"[1, 2",
             headers=Headers()
         )
-
-        r = cv.get_content_view(
-            cv.get("Auto"),
-            encoding.encode('gzip', b"[1, 2, 3]"),
-            headers=Headers(
-                content_type="application/json",
-                content_encoding="gzip"
-            )
-        )
-        assert "decoded gzip" in r[0]
-        assert "JSON" in r[0]
-
-        r = cv.get_content_view(
-            cv.get("XML"),
-            encoding.encode('gzip', b"[1, 2, 3]"),
-            headers=Headers(
-                content_type="application/json",
-                content_encoding="gzip"
-            )
-        )
-        assert "decoded gzip" in r[0]
-        assert "Raw" in r[0]
 
     def test_add_cv(self):
         class TestContentView(cv.View):

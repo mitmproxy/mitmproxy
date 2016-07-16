@@ -295,7 +295,7 @@ class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
 
-        if not message.content:
+        if not message.raw_content:
             raise APIError(400, "No content.")
 
         content_encoding = message.headers.get("Content-Encoding", None)
@@ -318,7 +318,7 @@ class FlowContent(RequestHandler):
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("X-Frame-Options", "DENY")
-        self.write(message.content)
+        self.write(message.raw_content)
 
 
 class Events(RequestHandler):

@@ -5,7 +5,7 @@ from netlib import exceptions
 
 
 def assemble_request(request):
-    if request.content is None:
+    if request.data.content is None:
         raise exceptions.HttpException("Cannot assemble flow with missing content")
     head = assemble_request_head(request)
     body = b"".join(assemble_body(request.data.headers, [request.data.content]))
@@ -19,7 +19,7 @@ def assemble_request_head(request):
 
 
 def assemble_response(response):
-    if response.content is None:
+    if response.data.content is None:
         raise exceptions.HttpException("Cannot assemble flow with missing content")
     head = assemble_response_head(response)
     body = b"".join(assemble_body(response.data.headers, [response.data.content]))

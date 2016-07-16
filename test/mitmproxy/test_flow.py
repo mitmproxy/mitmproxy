@@ -434,13 +434,13 @@ class TestFlow(object):
 
         f.replace("foo", "bar")
 
-        assert f.request.content != b"abarb"
+        assert f.request.raw_content != b"abarb"
         f.request.decode()
-        assert f.request.content == b"abarb"
+        assert f.request.raw_content == b"abarb"
 
-        assert f.response.content != b"abarb"
+        assert f.response.raw_content != b"abarb"
         f.response.decode()
-        assert f.response.content == b"abarb"
+        assert f.response.raw_content == b"abarb"
 
 
 class TestState:
@@ -878,16 +878,6 @@ class TestRequest:
         r.headers.set_all("accept-encoding", ["gzip", "oink"])
         r.constrain_encoding()
         assert "oink" not in r.headers["accept-encoding"]
-
-    def test_get_decoded_content(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.content = None
-        r.headers["content-encoding"] = "identity"
-        assert r.get_decoded_content() is None
-
-        r.content = b"falafel"
-        r.encode("gzip")
-        assert r.get_decoded_content() == b"falafel"
 
     def test_get_content_type(self):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())

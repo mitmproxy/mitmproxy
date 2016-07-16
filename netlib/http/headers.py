@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 import re
 
+import collections
 import six
 from netlib import multidict
 from netlib import strutils
@@ -206,10 +207,22 @@ def parse_content_type(c):
     ts = parts[0].split("/", 1)
     if len(ts) != 2:
         return None
-    d = {}
+    d = collections.OrderedDict()
     if len(parts) == 2:
         for i in parts[1].split(";"):
             clause = i.split("=", 1)
             if len(clause) == 2:
                 d[clause[0].strip()] = clause[1].strip()
     return ts[0].lower(), ts[1].lower(), d
+
+
+def assemble_content_type(type, subtype, parameters):
+    if not parameters:
+        return "{}/{}".format(type, subtype)
+    params = "; ".join(
+        "{}={}".format(k, v)
+        for k, v in parameters.items()
+    )
+    return "{}/{}; {}".format(
+        type, subtype, params
+    )

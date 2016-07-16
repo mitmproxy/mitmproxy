@@ -1,37 +1,39 @@
-from netlib import encoding
+from netlib import encoding, tutils
 
 
 def test_identity():
-    assert b"string" == encoding.decode("identity", b"string")
-    assert b"string" == encoding.encode("identity", b"string")
-    assert not encoding.encode("nonexistent", b"string")
-    assert not encoding.decode("nonexistent encoding", b"string")
+    assert b"string" == encoding.decode(b"string", "identity")
+    assert b"string" == encoding.encode(b"string", "identity")
+    with tutils.raises(ValueError):
+        encoding.encode(b"string", "nonexistent encoding")
 
 
 def test_gzip():
     assert b"string" == encoding.decode(
-        "gzip",
         encoding.encode(
-            "gzip",
-            b"string"
-        )
+            b"string",
+            "gzip"
+        ),
+        "gzip"
     )
-    assert encoding.decode("gzip", b"bogus") is None
+    with tutils.raises(ValueError):
+        encoding.decode(b"bogus", "gzip")
 
 
 def test_deflate():
     assert b"string" == encoding.decode(
-        "deflate",
         encoding.encode(
-            "deflate",
-            b"string"
-        )
+            b"string",
+            "deflate"
+        ),
+        "deflate"
     )
     assert b"string" == encoding.decode(
-        "deflate",
         encoding.encode(
-            "deflate",
-            b"string"
-        )[2:-4]
+            b"string",
+            "deflate"
+        )[2:-4],
+        "deflate"
     )
-    assert encoding.decode("deflate", b"bogus") is None
+    with tutils.raises(ValueError):
+        encoding.decode(b"bogus", "deflate")

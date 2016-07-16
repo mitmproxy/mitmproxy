@@ -143,15 +143,20 @@ class DumpMaster(flow.FlowMaster):
             )
             self.echo(headers, indent=4)
         if self.options.flow_detail >= 3:
-            if message.content is None:
+            try:
+                content = message.content
+            except ValueError:
+                content = message.get_content(strict=False)
+
+            if content is None:
                 self.echo("(content missing)", indent=4)
-            elif message.content:
+            elif content:
                 self.echo("")
 
                 try:
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Auto"),
-                        message.content,
+                        content,
                         headers=getattr(message, "headers", None)
                     )
                 except exceptions.ContentViewException:
@@ -159,7 +164,7 @@ class DumpMaster(flow.FlowMaster):
                     self.add_log(s, "debug")
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
-                        message.content,
+                        content,
                         headers=getattr(message, "headers", None)
                     )
 
@@ -248,10 +253,10 @@ class DumpMaster(flow.FlowMaster):
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
         reason = click.style(strutils.escape_control_characters(flow.response.reason), fg=code_color, bold=True)
 
-        if flow.response.content is None:
+        if flow.response.raw_content is None:
             size = "(content missing)"
         else:
-            size = human.pretty_size(len(flow.response.content))
+            size = human.pretty_size(len(flow.response.raw_content))
         size = click.style(size, bold=True)
 
         arrows = click.style("<<", bold=True)

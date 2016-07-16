@@ -259,13 +259,16 @@ class FlowMaster(controller.Master):
             return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
-        if f.request.content is None:
+        if f.request.raw_content is None:
             return "Can't replay request with missing content..."
         if f.request:
             f.backup()
             f.request.is_replay = True
+
+            # TODO: We should be able to remove this.
             if "Content-Length" in f.request.headers:
-                f.request.headers["Content-Length"] = str(len(f.request.content))
+                f.request.headers["Content-Length"] = str(len(f.request.raw_content))
+
             f.response = None
             f.error = None
             self.process_new_request(f)

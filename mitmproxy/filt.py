@@ -193,11 +193,11 @@ class FBod(_Rex):
     help = "Body"
 
     def __call__(self, f):
-        if f.request and f.request.content:
-            if self.re.search(f.request.get_decoded_content()):
+        if f.request and f.request.raw_content:
+            if self.re.search(f.request.get_content(strict=False)):
                 return True
-        if f.response and f.response.content:
-            if self.re.search(f.response.get_decoded_content()):
+        if f.response and f.response.raw_content:
+            if self.re.search(f.response.get_content(strict=False)):
                 return True
         return False
 
@@ -207,8 +207,8 @@ class FBodRequest(_Rex):
     help = "Request body"
 
     def __call__(self, f):
-        if f.request and f.request.content:
-            if self.re.search(f.request.get_decoded_content()):
+        if f.request and f.request.raw_content:
+            if self.re.search(f.request.get_content(strict=False)):
                 return True
 
 
@@ -217,8 +217,8 @@ class FBodResponse(_Rex):
     help = "Response body"
 
     def __call__(self, f):
-        if f.response and f.response.content:
-            if self.re.search(f.response.get_decoded_content()):
+        if f.response and f.response.raw_content:
+            if self.re.search(f.response.get_content(strict=False)):
                 return True
 
 

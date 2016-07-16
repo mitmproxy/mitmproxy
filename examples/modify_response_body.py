@@ -2,8 +2,6 @@
 # (this script works best with --anticache)
 import sys
 
-from mitmproxy.models import decoded
-
 
 state = {}
 
@@ -17,8 +15,7 @@ def start():
 
 
 def response(flow):
-    with decoded(flow.response):  # automatically decode gzipped responses.
-        flow.response.content = flow.response.content.replace(
-            state["old"],
-            state["new"]
-        )
+    flow.response.content = flow.response.content.replace(
+        state["old"],
+        state["new"]
+    )

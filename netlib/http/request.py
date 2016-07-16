@@ -5,7 +5,6 @@ import re
 import six
 from six.moves import urllib
 
-from netlib import encoding
 from netlib import multidict
 from netlib import strutils
 from netlib.http import multipart
@@ -56,6 +55,7 @@ class Request(message.Message):
     An HTTP request.
     """
     def __init__(self, *args, **kwargs):
+        super(Request, self).__init__()
         self.data = RequestData(*args, **kwargs)
 
     def __repr__(self):
@@ -339,7 +339,7 @@ class Request(message.Message):
             self.headers["accept-encoding"] = (
                 ', '.join(
                     e
-                    for e in encoding.ENCODINGS
+                    for e in {"gzip", "identity", "deflate"}
                     if e in accept_encoding
                 )
             )
@@ -359,7 +359,10 @@ class Request(message.Message):
     def _get_urlencoded_form(self):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return tuple(netlib.http.url.decode(self.content))
+            try:
+                return tuple(netlib.http.url.decode(self.content))
+            except ValueError:
+                pass
         return ()
 
     def _set_urlencoded_form(self, value):
@@ -388,7 +391,10 @@ class Request(message.Message):
     def _get_multipart_form(self):
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            return multipart.decode(self.headers, self.content)
+            try:
+                return multipart.decode(self.headers, self.content)
+            except ValueError:
+                pass
         return ()
 
     def _set_multipart_form(self, value):

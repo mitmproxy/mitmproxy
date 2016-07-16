@@ -140,7 +140,7 @@ def response(flow):
                             for k, v in flow.request.query or {}]
 
     response_body_size = len(flow.response.content)
-    response_body_decoded_size = len(flow.response.get_decoded_content())
+    response_body_decoded_size = len(flow.response.content)
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = HAR.entries({
