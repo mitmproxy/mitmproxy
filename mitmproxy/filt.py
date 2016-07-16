@@ -241,7 +241,7 @@ class FBod(_Rex):
                 if self.re.search(f.request.get_content(strict=False)):
                     return True
             if f.response and f.response.raw_content:
-                if self.re.search(f.request.get_content(strict=False)):
+                if self.re.search(f.response.get_content(strict=False)):
                     return True
         elif isinstance(f, TCPFlow):
             for msg in f.messages:
