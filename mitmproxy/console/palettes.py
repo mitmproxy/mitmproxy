@@ -24,7 +24,7 @@ class Palette:
         # List and Connections
         'method', 'focus',
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
-        'error',
+        'error', "warn",
         'header', 'highlight', 'intercept', 'replay', 'mark',
 
         # Hex view
@@ -100,6 +100,7 @@ class LowDark(Palette):
         code_500 = ('light red', 'default'),
         code_other = ('dark red', 'default'),
 
+        warn = ('brown', 'default'),
         error = ('light red', 'default'),
 
         header = ('dark cyan', 'default'),
@@ -166,6 +167,7 @@ class LowLight(Palette):
         code_other = ('light red', 'default'),
 
         error = ('light red', 'default'),
+        warn = ('brown', 'default'),
 
         header = ('dark blue', 'default'),
         highlight = ('black,bold', 'default'),
@@ -250,6 +252,7 @@ class SolarizedLight(LowLight):
         code_other = (sol_magenta, 'default'),
 
         error = (sol_red, 'default'),
+        warn = (sol_orange, 'default'),
 
         header = (sol_blue, 'default'),
         highlight = (sol_base01, 'default'),
@@ -299,6 +302,7 @@ class SolarizedDark(LowDark):
         code_other = (sol_magenta, 'default'),
 
         error = (sol_red, 'default'),
+        warn = (sol_orange, 'default'),
 
         header = (sol_blue, 'default'),
         highlight = (sol_base01, 'default'),

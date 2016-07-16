@@ -5,9 +5,10 @@ from mitmproxy.flow.io import FlowWriter, FilteredFlowWriter, FlowReader, read_f
 from mitmproxy.flow.master import FlowMaster
 from mitmproxy.flow.modules import (
     AppRegistry, ReplaceHooks, SetHeaders, StreamLargeBodies, ClientPlaybackState,
-    ServerPlaybackState, StickyCookieState, StickyAuthState
+    ServerPlaybackState
 )
 from mitmproxy.flow.state import State, FlowView
+from mitmproxy.flow import options
 
 # TODO: We may want to remove the imports from .modules and just expose "modules"
 
@@ -16,6 +17,6 @@ __all__ = [
     "FlowWriter", "FilteredFlowWriter", "FlowReader", "read_flows_from_paths",
     "FlowMaster",
     "AppRegistry", "ReplaceHooks", "SetHeaders", "StreamLargeBodies", "ClientPlaybackState",
-    "ServerPlaybackState", "StickyCookieState", "StickyAuthState",
-    "State", "FlowView",
+    "ServerPlaybackState", "State", "FlowView",
+    "options",
 ]

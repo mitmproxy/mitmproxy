@@ -219,7 +219,7 @@ class FlowView(tabs.Tabs):
             )
         except exceptions.ContentViewException:
             s = "Content viewer failed: \n" + traceback.format_exc()
-            signals.add_event(s, "error")
+            signals.add_log(s, "error")
             description, lines = contentviews.get_content_view(
                 contentviews.get("Raw"), content, headers=message.headers
             )
@@ -271,7 +271,7 @@ class FlowView(tabs.Tabs):
     def conn_text(self, conn):
         if conn:
             txt = common.format_keyvals(
-                [(h + ":", v) for (h, v) in conn.headers.fields],
+                [(h + ":", v) for (h, v) in conn.headers.items(multi=True)],
                 key = "header",
                 val = "text"
             )

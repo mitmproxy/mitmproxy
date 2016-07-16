@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+import types
 from OpenSSL import SSL
 from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.tcp import Address
@@ -12,6 +13,7 @@ from netlib.http import authentication, http1
 from netlib.tutils import raises
 from pathod import pathoc, pathod
 
+from mitmproxy.builtins import script
 from mitmproxy import controller
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
@@ -100,10 +102,10 @@ class CommonMixin:
         if not self.ssl:
             return
 
-        f = self.pathod("304", sni=b"testserver.com")
+        f = self.pathod("304", sni="testserver.com")
         assert f.status_code == 304
         log = self.server.last_log()
-        assert log["request"]["sni"] == b"testserver.com"
+        assert log["request"]["sni"] == "testserver.com"
 
 
 class TcpMixin:
@@ -286,10 +288,13 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         self.master.set_stream_large_bodies(None)
 
     def test_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("data/scripts/stream_modify.py"))
+        s = script.Script(
+            tutils.test_data.path("data/addonscripts/stream_modify.py")
+        )
+        self.master.addons.add(s)
         d = self.pathod('200:b"foo"')
         assert d.content == b"bar"
-        self.master.unload_scripts()
+        self.master.addons.remove(s)
 
 
 class TestHTTPAuth(tservers.HTTPProxyTest):
@@ -498,7 +503,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
         assert p.request("get:'/p/200'").status_code == 200
 
     def test_sni(self):
-        p = self.pathoc(ssl=True, sni=b"example.com")
+        p = self.pathoc(ssl=True, sni="example.com")
         assert p.request("get:'/p/200'").status_code == 200
         assert all("Error in handle_sni" not in msg for msg in self.proxy.tlog)
 
@@ -511,15 +516,15 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
     def test_tcp_stream_modify(self):
-        self.master.load_script(tutils.test_data.path("data/scripts/tcp_stream_modify.py"))
-
+        s = script.Script(
+            tutils.test_data.path("data/addonscripts/tcp_stream_modify.py")
+        )
+        self.master.addons.add(s)
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()
-
         assert d.content == b"bar"
-
-        self.master.unload_scripts()
+        self.master.addons.remove(s)
 
 
 class TestTransparentSSL(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
@@ -945,7 +950,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
                     f.reply.kill()
                 return _func(f)
 
-            setattr(master, attr, handler)
+            setattr(master, attr, types.MethodType(handler, master))
 
         kill_requests(
             self.chain[1].tmaster,

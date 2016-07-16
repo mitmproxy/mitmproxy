@@ -5,7 +5,7 @@ from mitmproxy.models import HTTPResponse
 from netlib.http import Headers
 
 
-def request(context, flow):
+def request(flow):
     # pretty_host takes the "Host" header of the request into account,
     # which is useful in transparent mode where we usually only have the IP
     # otherwise.
@@ -15,7 +15,8 @@ def request(context, flow):
         resp = HTTPResponse(
             b"HTTP/1.1", 200, b"OK",
             Headers(Content_Type="text/html"),
-            b"helloworld")
+            b"helloworld"
+        )
         flow.reply.send(resp)
 
     # Method 2: Redirect the request to a different server

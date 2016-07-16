@@ -41,7 +41,6 @@ deploy_script:
 
 cache:
   - C:\Users\appveyor\AppData\Local\pip\cache
-  - C:\projects\mitmproxy\.tox
 
 notifications:
   - provider: Slack

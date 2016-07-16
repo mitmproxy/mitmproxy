@@ -11,7 +11,6 @@ import pathod.pathoc
 from mitmproxy import flow, controller
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
-
 testapp = flask.Flask(__name__)
 
 
@@ -35,7 +34,7 @@ class TestMaster(flow.FlowMaster):
         config.port = 0
         s = ProxyServer(config)
         state = flow.State()
-        flow.FlowMaster.__init__(self, s, state)
+        flow.FlowMaster.__init__(self, None, s, state)
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
@@ -43,7 +42,7 @@ class TestMaster(flow.FlowMaster):
     def clear_log(self):
         self.tlog = []
 
-    def add_event(self, message, level=None):
+    def add_log(self, message, level=None):
         self.tlog.append(message)
 
 

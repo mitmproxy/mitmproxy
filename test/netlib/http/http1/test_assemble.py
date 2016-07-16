@@ -24,7 +24,7 @@ def test_assemble_request():
 
 
 def test_assemble_request_head():
-    c = assemble_request_head(treq(content="foo"))
+    c = assemble_request_head(treq(content=b"foo"))
     assert b"GET" in c
     assert b"qvalue" in c
     assert b"content-length" in c

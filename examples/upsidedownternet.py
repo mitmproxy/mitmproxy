@@ -2,7 +2,7 @@ from six.moves import cStringIO as StringIO
 from PIL import Image
 
 
-def response(context, flow):
+def response(flow):
     if flow.response.headers.get("content-type", "").startswith("image"):
         try:
             s = StringIO(flow.response.content)

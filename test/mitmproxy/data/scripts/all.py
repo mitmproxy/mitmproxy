@@ -1,36 +1,37 @@
+import mitmproxy
 log = []
 
 
-def clientconnect(ctx, cc):
-    ctx.log("XCLIENTCONNECT")
+def clientconnect(cc):
+    mitmproxy.ctx.log("XCLIENTCONNECT")
     log.append("clientconnect")
 
 
-def serverconnect(ctx, cc):
-    ctx.log("XSERVERCONNECT")
+def serverconnect(cc):
+    mitmproxy.ctx.log("XSERVERCONNECT")
     log.append("serverconnect")
 
 
-def request(ctx, f):
-    ctx.log("XREQUEST")
+def request(f):
+    mitmproxy.ctx.log("XREQUEST")
     log.append("request")
 
 
-def response(ctx, f):
-    ctx.log("XRESPONSE")
+def response(f):
+    mitmproxy.ctx.log("XRESPONSE")
     log.append("response")
 
 
-def responseheaders(ctx, f):
-    ctx.log("XRESPONSEHEADERS")
+def responseheaders(f):
+    mitmproxy.ctx.log("XRESPONSEHEADERS")
     log.append("responseheaders")
 
 
-def clientdisconnect(ctx, cc):
-    ctx.log("XCLIENTDISCONNECT")
+def clientdisconnect(cc):
+    mitmproxy.ctx.log("XCLIENTDISCONNECT")
     log.append("clientdisconnect")
 
 
-def error(ctx, cc):
-    ctx.log("XERROR")
+def error(cc):
+    mitmproxy.ctx.log("XERROR")
     log.append("error")

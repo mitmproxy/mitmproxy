@@ -1,23 +1,21 @@
 import re
 from six.moves import urllib
 
-
-def start(context):
-    # set of SSL/TLS capable hosts
-    context.secure_hosts = set()
+# set of SSL/TLS capable hosts
+secure_hosts = set()
 
 
-def request(context, flow):
+def request(flow):
     flow.request.headers.pop('If-Modified-Since', None)
     flow.request.headers.pop('Cache-Control', None)
 
     # proxy connections to SSL-enabled hosts
-    if flow.request.pretty_host in context.secure_hosts:
+    if flow.request.pretty_host in secure_hosts:
         flow.request.scheme = 'https'
         flow.request.port = 443
 
 
-def response(context, flow):
+def response(flow):
     flow.request.headers.pop('Strict-Transport-Security', None)
     flow.request.headers.pop('Public-Key-Pins', None)
 
@@ -29,7 +27,7 @@ def response(context, flow):
         location = flow.response.headers['Location']
         hostname = urllib.parse.urlparse(location).hostname
         if hostname:
-            context.secure_hosts.add(hostname)
+            secure_hosts.add(hostname)
         flow.response.headers['Location'] = location.replace('https://', 'http://', 1)
 
     # strip secure flag from 'Set-Cookie' headers

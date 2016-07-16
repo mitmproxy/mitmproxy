@@ -71,7 +71,7 @@ def flowdetails(state, flow):
                 parts.append(
                     [
                         "Alt names",
-                        ", ".join(c.altnames)
+                        ", ".join(str(x) for x in c.altnames)
                     ]
                 )
             text.extend(

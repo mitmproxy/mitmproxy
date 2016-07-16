@@ -13,8 +13,8 @@ export default function reducer(state = defaultState, action) {
                 activeMenu: action.activeMenu
             }
         case SELECT:
-            let isNewSelect = (action.flowId && !action.currentSelection)
-            let isDeselect = (!action.flowId && action.currentSelection)
+            let isNewSelect = (action.id && !action.currentSelection)
+            let isDeselect = (!action.id && action.currentSelection)
             if(isNewSelect) {
                 return {
                     ...state,

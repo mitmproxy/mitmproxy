@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 import cgi
 import warnings
+import six
 
 from mitmproxy.models.flow import Flow
 from netlib import version
@@ -218,7 +219,7 @@ class HTTPFlow(Flow):
             If f is a string, it will be compiled as a filter expression. If
             the expression is invalid, ValueError is raised.
         """
-        if isinstance(f, basestring):
+        if isinstance(f, six.string_types):
             from .. import filt
 
             f = filt.parse(f)

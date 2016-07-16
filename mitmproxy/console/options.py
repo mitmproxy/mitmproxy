@@ -54,7 +54,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Scripts",
                     "S",
-                    lambda: master.scripts,
+                    lambda: master.options.scripts,
                     self.scripts
                 ),
 
@@ -96,13 +96,13 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Anti-Cache",
                     "a",
-                    lambda: master.anticache,
+                    lambda: master.options.anticache,
                     self.toggle_anticache
                 ),
                 select.Option(
                     "Anti-Compression",
                     "o",
-                    lambda: master.anticomp,
+                    lambda: master.options.anticomp,
                     self.toggle_anticomp
                 ),
                 select.Option(
@@ -120,13 +120,13 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Sticky Auth",
                     "A",
-                    lambda: master.stickyauth_txt,
+                    lambda: master.options.stickyauth,
                     self.sticky_auth
                 ),
                 select.Option(
                     "Sticky Cookies",
                     "t",
-                    lambda: master.stickycookie_txt,
+                    lambda: master.options.stickycookie,
                     self.sticky_cookie
                 ),
             ]
@@ -140,6 +140,7 @@ class Options(urwid.WidgetWrap):
         )
         self.master.loop.widget.footer.update("")
         signals.update_settings.connect(self.sig_update_settings)
+        master.options.changed.connect(self.sig_update_settings)
 
     def sig_update_settings(self, sender):
         self.lb.walker._modified()
@@ -151,8 +152,6 @@ class Options(urwid.WidgetWrap):
         return super(self.__class__, self).keypress(size, key)
 
     def clearall(self):
-        self.master.anticache = False
-        self.master.anticomp = False
         self.master.killextra = False
         self.master.showhost = False
         self.master.refresh_server_playback = True
@@ -161,9 +160,15 @@ class Options(urwid.WidgetWrap):
         self.master.replacehooks.clear()
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
-        self.master.scripts = []
-        self.master.set_stickyauth(None)
-        self.master.set_stickycookie(None)
+
+        self.master.options.update(
+            scripts = [],
+            anticache = False,
+            anticomp = False,
+            stickyauth = None,
+            stickycookie = None
+        )
+
         self.master.state.default_body_view = contentviews.get("Auto")
 
         signals.update_settings.send(self)
@@ -173,10 +178,10 @@ class Options(urwid.WidgetWrap):
         )
 
     def toggle_anticache(self):
-        self.master.anticache = not self.master.anticache
+        self.master.options.anticache = not self.master.options.anticache
 
     def toggle_anticomp(self):
-        self.master.anticomp = not self.master.anticomp
+        self.master.options.anticomp = not self.master.options.anticomp
 
     def toggle_killextra(self):
         self.master.killextra = not self.master.killextra
@@ -231,7 +236,7 @@ class Options(urwid.WidgetWrap):
         self.master.view_grideditor(
             grideditor.ScriptEditor(
                 self.master,
-                [[i.command] for i in self.master.scripts],
+                [[i] for i in self.master.options.scripts],
                 self.master.edit_scripts
             )
         )
@@ -261,15 +266,15 @@ class Options(urwid.WidgetWrap):
     def sticky_auth(self):
         signals.status_prompt.send(
             prompt = "Sticky auth filter",
-            text = self.master.stickyauth_txt,
-            callback = self.master.set_stickyauth
+            text = self.master.options.stickyauth,
+            callback = self.master.options.setter("stickyauth")
         )
 
     def sticky_cookie(self):
         signals.status_prompt.send(
             prompt = "Sticky cookie filter",
-            text = self.master.stickycookie_txt,
-            callback = self.master.set_stickycookie
+            text = self.master.options.stickycookie,
+            callback = self.master.options.setter("stickycookie")
         )
 
     def palette(self):

@@ -10,8 +10,8 @@ from netlib import http, tutils
 
 def _test_passthrough_attr(message, attr):
     assert getattr(message, attr) == getattr(message.data, attr)
-    setattr(message, attr, "foo")
-    assert getattr(message.data, attr) == "foo"
+    setattr(message, attr, b"foo")
+    assert getattr(message.data, attr) == b"foo"
 
 
 def _test_decoded_attr(message, attr):
@@ -233,7 +233,7 @@ class TestMessageText(object):
     def test_none(self):
         r = tresp(content=None)
         assert r.text is None
-        r.text = b"foo"
+        r.text = u"foo"
         assert r.text is not None
         r.text = None
         assert r.text is None

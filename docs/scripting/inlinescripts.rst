@@ -15,9 +15,7 @@ client:
    :caption: examples/add_header.py
    :language: python
 
-The first argument to each event method is an instance of
-:py:class:`~mitmproxy.script.ScriptContext` that lets the script interact with the global mitmproxy
-state. The **response** event also gets an instance of :py:class:`~mitmproxy.models.HTTPFlow`,
+All events that deal with an HTTP request get an instance of :py:class:`~mitmproxy.models.HTTPFlow`,
 which we can use to manipulate the response itself.
 
 We can now run this script using mitmdump or mitmproxy as follows:
@@ -35,11 +33,6 @@ We encourage you to either browse them locally or on `GitHub`_.
 
 Events
 ------
-
-The ``context`` argument passed to each event method is always a
-:py:class:`~mitmproxy.script.ScriptContext` instance. It is guaranteed to be the same object
-for the scripts lifetime and is not shared between multiple inline scripts. You can safely use it
-to store any form of state you require.
 
 Script Lifecycle Events
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -155,8 +148,9 @@ The canonical API documentation is the code, which you can browse here, locally 
 
 The main classes you will deal with in writing mitmproxy scripts are:
 
-:py:class:`~mitmproxy.script.ScriptContext`
-    - A handle for interacting with mitmproxy's Flow Master from within scripts.
+:py:class:`mitmproxy.flow.FlowMaster`
+    - The "heart" of mitmproxy, usually subclassed as :py:class:`mitmproxy.dump.DumpMaster` or
+      :py:class:`mitmproxy.console.ConsoleMaster`.
 :py:class:`~mitmproxy.models.ClientConnection`
     - Describes a client connection.
 :py:class:`~mitmproxy.models.ServerConnection`
@@ -173,16 +167,7 @@ The main classes you will deal with in writing mitmproxy scripts are:
     - A dictionary-like object for managing HTTP headers.
 :py:class:`netlib.certutils.SSLCert`
     - Exposes information SSL certificates.
-:py:class:`mitmproxy.flow.FlowMaster`
-    - The "heart" of mitmproxy, usually subclassed as :py:class:`mitmproxy.dump.DumpMaster` or
-      :py:class:`mitmproxy.console.ConsoleMaster`.
 
-Script Context
---------------
-
-.. autoclass:: mitmproxy.script.ScriptContext
-    :members:
-    :undoc-members:
 
 Running scripts in parallel
 ---------------------------

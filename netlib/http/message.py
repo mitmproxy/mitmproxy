@@ -263,7 +263,7 @@ class Message(basetypes.Serializable):
                 if strict:
                     raise
                 is_strict = False
-                decoded = self.content.decode(enc, "replace" if six.PY2 else "surrogateescape")
+                decoded = self.content.decode("utf8", "replace" if six.PY2 else "surrogateescape")
             self._text_cache = CachedDecode(content, enc, is_strict, decoded)
         return self._text_cache.decoded
 

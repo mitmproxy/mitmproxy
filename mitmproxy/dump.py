@@ -6,11 +6,16 @@ import traceback
 
 import click
 
+from typing import Optional  # noqa
+import typing  # noqa
+
 from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import flow
+from mitmproxy import builtins
+from mitmproxy import utils
 from netlib import human
 from netlib import tcp
 from netlib import strutils
@@ -20,55 +25,31 @@ class DumpError(Exception):
     pass
 
 
-class Options(object):
-    attributes = [
-        "app",
-        "app_host",
-        "app_port",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "filtstr",
-        "flow_detail",
-        "keepserving",
-        "kill",
-        "no_server",
-        "nopop",
-        "refresh_server_playback",
-        "replacements",
-        "rfile",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "scripts",
-        "showhost",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "outfile",
-        "replay_ignore_content",
-        "replay_ignore_params",
-        "replay_ignore_payload_params",
-        "replay_ignore_host"
-    ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
+class Options(flow.options.Options):
+    def __init__(
+            self,
+            filtstr=None,  # type: Optional[str]
+            flow_detail=1,  # type: int
+            keepserving=False,  # type: bool
+            tfile=None,  # type: Optional[typing.io.TextIO]
+            **kwargs
+    ):
+        self.filtstr = filtstr
+        self.flow_detail = flow_detail
+        self.keepserving = keepserving
+        self.tfile = tfile
+        super(Options, self).__init__(**kwargs)
 
 
 class DumpMaster(flow.FlowMaster):
 
-    def __init__(self, server, options, outfile=None):
-        flow.FlowMaster.__init__(self, server, flow.State())
-        self.outfile = outfile
+    def __init__(self, server, options):
+        flow.FlowMaster.__init__(self, options, server, flow.State())
+        self.has_errored = False
+        self.addons.add(*builtins.default_addons())
+        # This line is just for type hinting
+        self.options = self.options  # type: Options
         self.o = options
-        self.anticache = options.anticache
-        self.anticomp = options.anticomp
         self.showhost = options.showhost
         self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
@@ -87,21 +68,6 @@ class DumpMaster(flow.FlowMaster):
             self.filt = filt.parse(options.filtstr)
         else:
             self.filt = None
-
-        if options.stickycookie:
-            self.set_stickycookie(options.stickycookie)
-
-        if options.stickyauth:
-            self.set_stickyauth(options.stickyauth)
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1],
-                self.filt
-            )
-            if err:
-                raise DumpError(err)
 
         if options.replacements:
             for i in options.replacements:
@@ -129,22 +95,15 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        scripts = options.scripts or []
-        for command in scripts:
-            try:
-                self.load_script(command, use_reloader=True)
-            except exceptions.ScriptException as e:
-                raise DumpError(str(e))
-
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
-                self.add_event("Flow file corrupted.", "error")
+                self.add_log("Flow file corrupted.", "error")
                 raise DumpError(v)
 
-        if self.o.app:
-            self.start_app(self.o.app_host, self.o.app_port)
+        if self.options.app:
+            self.start_app(self.options.app_host, self.options.app_port)
 
     def _readflow(self, paths):
         """
@@ -156,9 +115,10 @@ class DumpMaster(flow.FlowMaster):
         except exceptions.FlowReadException as e:
             raise DumpError(str(e))
 
-    def add_event(self, e, level="info"):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.o.verbosity >= needed:
+    def add_log(self, e, level="info"):
+        if level == "error":
+            self.has_errored = True
+        if self.options.verbosity >= utils.log_tier(level):
             self.echo(
                 e,
                 fg="red" if level == "error" else None,
@@ -175,10 +135,10 @@ class DumpMaster(flow.FlowMaster):
     def echo(self, text, indent=None, **style):
         if indent:
             text = self.indent(indent, text)
-        click.secho(text, file=self.outfile, **style)
+        click.secho(text, file=self.options.tfile, **style)
 
     def _echo_message(self, message):
-        if self.o.flow_detail >= 2 and hasattr(message, "headers"):
+        if self.options.flow_detail >= 2 and hasattr(message, "headers"):
             headers = "\r\n".join(
                 "{}: {}".format(
                     click.style(strutils.bytes_to_escaped_str(k), fg="blue", bold=True),
@@ -186,7 +146,7 @@ class DumpMaster(flow.FlowMaster):
                 for k, v in message.headers.fields
             )
             self.echo(headers, indent=4)
-        if self.o.flow_detail >= 3:
+        if self.options.flow_detail >= 3:
             try:
                 content = message.content
             except ValueError:
@@ -205,7 +165,7 @@ class DumpMaster(flow.FlowMaster):
                     )
                 except exceptions.ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
-                    self.add_event(s, "debug")
+                    self.add_log(s, "debug")
                     type, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
                         content,
@@ -224,7 +184,7 @@ class DumpMaster(flow.FlowMaster):
                     for (style, text) in line:
                         yield click.style(text, **styles.get(style, {}))
 
-                if self.o.flow_detail == 3:
+                if self.options.flow_detail == 3:
                     lines_to_echo = itertools.islice(lines, 70)
                 else:
                     lines_to_echo = lines
@@ -239,17 +199,19 @@ class DumpMaster(flow.FlowMaster):
                 if next(lines, None):
                     self.echo("(cut off)", indent=4, dim=True)
 
-        if self.o.flow_detail >= 2:
+        if self.options.flow_detail >= 2:
             self.echo("")
 
     def _echo_request_line(self, flow):
         if flow.request.stickycookie:
-            stickycookie = click.style("[stickycookie] ", fg="yellow", bold=True)
+            stickycookie = click.style(
+                "[stickycookie] ", fg="yellow", bold=True
+            )
         else:
             stickycookie = ""
 
         if flow.client_conn:
-            client = click.style(strutils.bytes_to_escaped_str(flow.client_conn.address.host), bold=True)
+            client = click.style(strutils.escape_control_characters(flow.client_conn.address.host), bold=True)
         else:
             client = click.style("[replay]", fg="yellow", bold=True)
 
@@ -258,12 +220,12 @@ class DumpMaster(flow.FlowMaster):
             GET="green",
             DELETE="red"
         ).get(method.upper(), "magenta")
-        method = click.style(strutils.bytes_to_escaped_str(method), fg=method_color, bold=True)
+        method = click.style(strutils.escape_control_characters(method), fg=method_color, bold=True)
         if self.showhost:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        url = click.style(strutils.bytes_to_escaped_str(url), bold=True)
+        url = click.style(strutils.escape_control_characters(url), bold=True)
 
         httpversion = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
@@ -293,7 +255,7 @@ class DumpMaster(flow.FlowMaster):
         elif 400 <= code < 600:
             code_color = "red"
         code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        reason = click.style(strutils.bytes_to_escaped_str(flow.response.reason), fg=code_color, bold=True)
+        reason = click.style(strutils.escape_control_characters(flow.response.reason), fg=code_color, bold=True)
 
         if flow.response.raw_content is None:
             size = "(content missing)"
@@ -313,7 +275,7 @@ class DumpMaster(flow.FlowMaster):
         self.echo(line)
 
     def echo_flow(self, f):
-        if self.o.flow_detail == 0:
+        if self.options.flow_detail == 0:
             return
 
         if f.request:
@@ -327,8 +289,8 @@ class DumpMaster(flow.FlowMaster):
         if f.error:
             self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
 
-        if self.outfile:
-            self.outfile.flush()
+        if self.options.tfile:
+            self.options.tfile.flush()
 
     def _process_flow(self, f):
         if self.filt and not f.match(self.filt):
@@ -361,7 +323,7 @@ class DumpMaster(flow.FlowMaster):
     def tcp_message(self, f):
         super(DumpMaster, self).tcp_message(f)
 
-        if self.o.flow_detail == 0:
+        if self.options.flow_detail == 0:
             return
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
@@ -373,7 +335,6 @@ class DumpMaster(flow.FlowMaster):
         self._echo_message(message)
 
     def run(self):  # pragma: no cover
-        if self.o.rfile and not self.o.keepserving:
-            self.unload_scripts()  # make sure to trigger script unload events.
+        if self.options.rfile and not self.options.keepserving:
             return
         super(DumpMaster, self).run()

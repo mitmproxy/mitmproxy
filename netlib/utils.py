@@ -56,6 +56,13 @@ class Data(object):
         dirname = os.path.dirname(inspect.getsourcefile(m))
         self.dirname = os.path.abspath(dirname)
 
+    def push(self, subpath):
+        """
+            Change the data object to a path relative to the module.
+        """
+        self.dirname = os.path.join(self.dirname, subpath)
+        return self
+
     def path(self, path):
         """
             Returns a path to the package data housed at 'path' under this
@@ -73,11 +80,9 @@ _label_valid = re.compile(b"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
 
 
 def is_valid_host(host):
+    # type: (bytes) -> bool
     """
     Checks if a hostname is valid.
-
-    Args:
-      host (bytes): The hostname
     """
     try:
         host.decode("idna")

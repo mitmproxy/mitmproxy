@@ -142,11 +142,11 @@ class ViewAuto(View):
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](data, **metadata)
-            elif strutils.isXML(data.decode()):
+            elif strutils.is_xml(data):
                 return get("XML")(data, **metadata)
         if metadata.get("query"):
             return get("Query")(data, **metadata)
-        if data and strutils.isMostlyBin(data.decode()):
+        if data and strutils.is_mostly_bin(data):
             return get("Hex")(data)
         if not data:
             return "No content", []
@@ -159,7 +159,7 @@ class ViewRaw(View):
     content_types = []
 
     def __call__(self, data, **metadata):
-        return "Raw", format_text(strutils.bytes_to_escaped_str(data))
+        return "Raw", format_text(strutils.bytes_to_escaped_str(data, True))
 
 
 class ViewHex(View):
@@ -225,7 +225,10 @@ class ViewXML(View):
 class ViewJSON(View):
     name = "JSON"
     prompt = ("json", "s")
-    content_types = ["application/json"]
+    content_types = [
+        "application/json",
+        "application/vnd.api+json"
+    ]
 
     def __call__(self, data, **metadata):
         pj = pretty_json(data)
@@ -239,7 +242,7 @@ class ViewHTML(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if strutils.isXML(data.decode()):
+        if strutils.is_xml(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -596,10 +599,9 @@ def safe_to_print(lines, encoding="utf8"):
     for line in lines:
         clean_line = []
         for (style, text) in line:
-            try:
-                text = strutils.clean_bin(text.decode(encoding, "strict"))
-            except UnicodeDecodeError:
-                text = strutils.clean_bin(text)
+            if isinstance(text, bytes):
+                text = text.decode(encoding, "replace")
+            text = strutils.escape_control_characters(text)
             clean_line.append((style, text))
         yield clean_line
 

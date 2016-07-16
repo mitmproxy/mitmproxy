@@ -1,13 +1,11 @@
-import os.path
-from six.moves import cStringIO as StringIO
-
 import mock
+import io
 
 import netlib.utils
 from netlib.http import Headers
 from mitmproxy import filt, controller, flow
 from mitmproxy.contrib import tnetstring
-from mitmproxy.exceptions import FlowReadException, ScriptException
+from mitmproxy.exceptions import FlowReadException
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
@@ -40,94 +38,12 @@ def test_app_registry():
     assert ar.get(r)
 
 
-class TestStickyCookieState:
-
-    def _response(self, cookie, host):
-        s = flow.StickyCookieState(filt.parse(".*"))
-        f = tutils.tflow(req=netlib.tutils.treq(host=host, port=80), resp=True)
-        f.response.headers["Set-Cookie"] = cookie
-        s.handle_response(f)
-        return s, f
-
-    def test_domain_match(self):
-        s = flow.StickyCookieState(filt.parse(".*"))
-        assert s.domain_match("www.google.com", ".google.com")
-        assert s.domain_match("google.com", ".google.com")
-
-    def test_response(self):
-        c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; " \
-            "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
-
-        s, f = self._response(c, "host")
-        assert not s.jar.keys()
-
-        s, f = self._response(c, "www.google.com")
-        assert s.jar.keys()
-
-        s, f = self._response("SSID=mooo", "www.google.com")
-        assert s.jar.keys()[0] == ('www.google.com', 80, '/')
-
-        # Test setting of multiple cookies
-        c1 = "somecookie=test; Path=/"
-        c2 = "othercookie=helloworld; Path=/"
-        s, f = self._response(c1, "www.google.com")
-        f.response.headers["Set-Cookie"] = c2
-        s.handle_response(f)
-        googlekey = s.jar.keys()[0]
-        assert len(s.jar[googlekey].keys()) == 2
-
-        # Test setting of weird cookie keys
-        s = flow.StickyCookieState(filt.parse(".*"))
-        f = tutils.tflow(req=netlib.tutils.treq(host="www.google.com", port=80), resp=True)
-        cs = [
-            "foo/bar=hello",
-            "foo:bar=world",
-            "foo@bar=fizz",
-            "foo,bar=buzz",
-        ]
-        for c in cs:
-            f.response.headers["Set-Cookie"] = c
-            s.handle_response(f)
-        googlekey = s.jar.keys()[0]
-        assert len(s.jar[googlekey].keys()) == len(cs)
-
-        # Test overwriting of a cookie value
-        c1 = "somecookie=helloworld; Path=/"
-        c2 = "somecookie=newvalue; Path=/"
-        s, f = self._response(c1, "www.google.com")
-        f.response.headers["Set-Cookie"] = c2
-        s.handle_response(f)
-        googlekey = s.jar.keys()[0]
-        assert len(s.jar[googlekey].keys()) == 1
-        assert s.jar[googlekey]["somecookie"].items()[0][1] == "newvalue"
-
-    def test_request(self):
-        s, f = self._response("SSID=mooo", "www.google.com")
-        assert "cookie" not in f.request.headers
-        s.handle_request(f)
-        assert "cookie" in f.request.headers
-
-
-class TestStickyAuthState:
-
-    def test_response(self):
-        s = flow.StickyAuthState(filt.parse(".*"))
-        f = tutils.tflow(resp=True)
-        f.request.headers["authorization"] = "foo"
-        s.handle_request(f)
-        assert "address" in s.hosts
-
-        f = tutils.tflow(resp=True)
-        s.handle_request(f)
-        assert f.request.headers["authorization"] == "foo"
-
-
 class TestClientPlaybackState:
 
     def test_tick(self):
         first = tutils.tflow()
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.start_client_playback([first, tutils.tflow()], True)
         c = fm.client_playback
         c.testing = True
@@ -264,26 +180,26 @@ class TestServerPlaybackState:
                 "param1", "param2"], False)
         r = tutils.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r.request.content = "paramx=x&param1=1"
+        r.request.content = b"paramx=x&param1=1"
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r2.request.content = "paramx=x&param1=1"
+        r2.request.content = b"paramx=x&param1=1"
         # same parameters
         assert s._hash(r) == s._hash(r2)
         # ignored parameters !=
-        r2.request.content = "paramx=x&param1=2"
+        r2.request.content = b"paramx=x&param1=2"
         assert s._hash(r) == s._hash(r2)
         # missing parameter
-        r2.request.content = "paramx=x"
+        r2.request.content = b"paramx=x"
         assert s._hash(r) == s._hash(r2)
         # ignorable parameter added
-        r2.request.content = "paramx=x&param1=2"
+        r2.request.content = b"paramx=x&param1=2"
         assert s._hash(r) == s._hash(r2)
         # not ignorable parameter changed
-        r2.request.content = "paramx=y&param1=1"
+        r2.request.content = b"paramx=y&param1=1"
         assert not s._hash(r) == s._hash(r2)
         # not ignorable parameter missing
-        r2.request.content = "param1=1"
+        r2.request.content = b"param1=1"
         assert not s._hash(r) == s._hash(r2)
 
     def test_ignore_payload_params_other_content_type(self):
@@ -292,14 +208,14 @@ class TestServerPlaybackState:
                 "param1", "param2"], False)
         r = tutils.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/json"
-        r.request.content = '{"param1":"1"}'
+        r.request.content = b'{"param1":"1"}'
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/json"
-        r2.request.content = '{"param1":"1"}'
+        r2.request.content = b'{"param1":"1"}'
         # same content
         assert s._hash(r) == s._hash(r2)
         # distint content (note only x-www-form-urlencoded payload is analysed)
-        r2.request.content = '{"param1":"2"}'
+        r2.request.content = b'{"param1":"2"}'
         assert not s._hash(r) == s._hash(r2)
 
     def test_ignore_payload_wins_over_params(self):
@@ -309,10 +225,10 @@ class TestServerPlaybackState:
                 "param1", "param2"], False)
         r = tutils.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r.request.content = "paramx=y"
+        r.request.content = b"paramx=y"
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        r2.request.content = "paramx=x"
+        r2.request.content = b"paramx=x"
         # same parameters
         assert s._hash(r) == s._hash(r2)
 
@@ -329,10 +245,10 @@ class TestServerPlaybackState:
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
 
-        r.request.content = "foo"
-        r2.request.content = "foo"
+        r.request.content = b"foo"
+        r2.request.content = b"foo"
         assert s._hash(r) == s._hash(r2)
-        r2.request.content = "bar"
+        r2.request.content = b"bar"
         assert not s._hash(r) == s._hash(r2)
 
         # now ignoring content
@@ -347,12 +263,12 @@ class TestServerPlaybackState:
             False)
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
-        r.request.content = "foo"
-        r2.request.content = "foo"
+        r.request.content = b"foo"
+        r2.request.content = b"foo"
         assert s._hash(r) == s._hash(r2)
-        r2.request.content = "bar"
+        r2.request.content = b"bar"
         assert s._hash(r) == s._hash(r2)
-        r2.request.content = ""
+        r2.request.content = b""
         assert s._hash(r) == s._hash(r2)
         r2.request.content = None
         assert s._hash(r) == s._hash(r2)
@@ -420,13 +336,13 @@ class TestFlow(object):
     def test_backup(self):
         f = tutils.tflow()
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
-        f.request.content = "foo"
+        f.request.content = b"foo"
         assert not f.modified()
         f.backup()
-        f.request.content = "bar"
+        f.request.content = b"bar"
         assert f.modified()
         f.revert()
-        assert f.request.content == "foo"
+        assert f.request.content == b"foo"
 
     def test_backup_idempotence(self):
         f = tutils.tflow(resp=True)
@@ -458,7 +374,7 @@ class TestFlow(object):
 
     def test_kill(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow()
         f.intercept(mock.Mock())
         f.kill(fm)
@@ -467,7 +383,7 @@ class TestFlow(object):
 
     def test_killall(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
 
         f = tutils.tflow()
         f.intercept(fm)
@@ -486,8 +402,8 @@ class TestFlow(object):
 
     def test_replace_unicode(self):
         f = tutils.tflow(resp=True)
-        f.response.content = "\xc2foo"
-        f.replace("foo", u"bar")
+        f.response.content = b"\xc2foo"
+        f.replace(b"foo", u"bar")
 
     def test_replace_no_content(self):
         f = tutils.tflow()
@@ -497,34 +413,34 @@ class TestFlow(object):
     def test_replace(self):
         f = tutils.tflow(resp=True)
         f.request.headers["foo"] = "foo"
-        f.request.content = "afoob"
+        f.request.content = b"afoob"
 
         f.response.headers["foo"] = "foo"
-        f.response.content = "afoob"
+        f.response.content = b"afoob"
 
         assert f.replace("foo", "bar") == 6
 
         assert f.request.headers["bar"] == "bar"
-        assert f.request.content == "abarb"
+        assert f.request.content == b"abarb"
         assert f.response.headers["bar"] == "bar"
-        assert f.response.content == "abarb"
+        assert f.response.content == b"abarb"
 
     def test_replace_encoded(self):
         f = tutils.tflow(resp=True)
-        f.request.content = "afoob"
+        f.request.content = b"afoob"
         f.request.encode("gzip")
-        f.response.content = "afoob"
+        f.response.content = b"afoob"
         f.response.encode("gzip")
 
         f.replace("foo", "bar")
 
-        assert f.request.raw_content != "abarb"
+        assert f.request.raw_content != b"abarb"
         f.request.decode()
-        assert f.request.raw_content == "abarb"
+        assert f.request.raw_content == b"abarb"
 
-        assert f.response.raw_content != "abarb"
+        assert f.response.raw_content != b"abarb"
         f.response.decode()
-        assert f.response.raw_content == "abarb"
+        assert f.response.raw_content == b"abarb"
 
 
 class TestState:
@@ -667,7 +583,7 @@ class TestState:
 class TestSerialize:
 
     def _treader(self):
-        sio = StringIO()
+        sio = io.BytesIO()
         w = flow.FlowWriter(sio)
         for i in range(3):
             f = tutils.tflow(resp=True)
@@ -684,9 +600,9 @@ class TestSerialize:
         return flow.FlowReader(sio)
 
     def test_roundtrip(self):
-        sio = StringIO()
+        sio = io.BytesIO()
         f = tutils.tflow()
-        f.request.content = "".join(chr(i) for i in range(255))
+        f.request.content = bytes(bytearray(range(256)))
         w = flow.FlowWriter(sio)
         w.add(f)
 
@@ -702,7 +618,7 @@ class TestSerialize:
     def test_load_flows(self):
         r = self._treader()
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.load_flows(r)
         assert len(s.flows) == 6
 
@@ -713,12 +629,12 @@ class TestSerialize:
             mode="reverse",
             upstream_server=("https", ("use-this-domain", 80))
         )
-        fm = flow.FlowMaster(DummyServer(conf), s)
+        fm = flow.FlowMaster(None, DummyServer(conf), s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"
 
     def test_filter(self):
-        sio = StringIO()
+        sio = io.BytesIO()
         fl = filt.parse("~c 200")
         w = flow.FilteredFlowWriter(sio, fl)
 
@@ -735,8 +651,8 @@ class TestSerialize:
         assert len(list(r.stream()))
 
     def test_error(self):
-        sio = StringIO()
-        sio.write("bogus")
+        sio = io.BytesIO()
+        sio.write(b"bogus")
         sio.seek(0)
         r = flow.FlowReader(sio)
         tutils.raises(FlowReadException, list, r.stream())
@@ -748,7 +664,7 @@ class TestSerialize:
         f = tutils.tflow()
         d = f.get_state()
         d["version"] = (0, 0)
-        sio = StringIO()
+        sio = io.BytesIO()
         tnetstring.dump(d, sio)
         sio.seek(0)
 
@@ -758,32 +674,17 @@ class TestSerialize:
 
 class TestFlowMaster:
 
-    def test_load_script(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, s)
-
-        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
-        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
-        fm.unload_scripts()
-        with tutils.raises(ScriptException):
-            fm.load_script("nonexistent")
-        try:
-            fm.load_script(tutils.test_data.path("data/scripts/starterr.py"))
-        except ScriptException as e:
-            assert "ValueError" in str(e)
-        assert len(fm.scripts) == 0
-
     def test_getset_ignore(self):
         p = mock.Mock()
         p.config.check_ignore = HostMatcher()
-        fm = flow.FlowMaster(p, flow.State())
+        fm = flow.FlowMaster(None, p, flow.State())
         assert not fm.get_ignore_filter()
         fm.set_ignore_filter(["^apple\.com:", ":443$"])
         assert fm.get_ignore_filter()
 
     def test_replay(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow(resp=True)
         f.request.content = None
         assert "missing" in fm.replay_request(f)
@@ -792,55 +693,11 @@ class TestFlowMaster:
         assert "intercepting" in fm.replay_request(f)
 
         f.live = True
-        assert "live" in fm.replay_request(f, run_scripthooks=True)
-
-    def test_script_reqerr(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, s)
-        fm.load_script(tutils.test_data.path("data/scripts/reqerr.py"))
-        f = tutils.tflow()
-        fm.clientconnect(f.client_conn)
-        assert fm.request(f)
-
-    def test_script(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, s)
-        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
-        f = tutils.tflow(resp=True)
-
-        f.client_conn.acked = False
-        fm.clientconnect(f.client_conn)
-        assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        f.server_conn.acked = False
-        fm.serverconnect(f.server_conn)
-        assert fm.scripts[0].ns["log"][-1] == "serverconnect"
-        f.reply.acked = False
-        fm.request(f)
-        assert fm.scripts[0].ns["log"][-1] == "request"
-        f.reply.acked = False
-        fm.response(f)
-        assert fm.scripts[0].ns["log"][-1] == "response"
-        # load second script
-        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
-        assert len(fm.scripts) == 2
-        f.server_conn.reply.acked = False
-        fm.clientdisconnect(f.server_conn)
-        assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
-        assert fm.scripts[1].ns["log"][-1] == "clientdisconnect"
-
-        # unload first script
-        fm.unload_scripts()
-        assert len(fm.scripts) == 0
-        fm.load_script(tutils.test_data.path("data/scripts/all.py"))
-
-        f.error = tutils.terr()
-        f.reply.acked = False
-        fm.error(f)
-        assert fm.scripts[0].ns["log"][-1] == "error"
+        assert "live" in fm.replay_request(f)
 
     def test_duplicate_flow(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow(resp=True)
         fm.load_flow(f)
         assert s.flow_count() == 1
@@ -851,14 +708,12 @@ class TestFlowMaster:
 
     def test_create_flow(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, s)
-        fm.anticache = True
-        fm.anticomp = True
+        fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
         f.request = HTTPRequest.wrap(netlib.tutils.treq())
@@ -875,7 +730,6 @@ class TestFlowMaster:
         f.error.reply = controller.DummyReply()
         fm.error(f)
 
-        fm.load_script(tutils.test_data.path("data/scripts/a.py"))
         fm.shutdown()
 
     def test_client_playback(self):
@@ -883,7 +737,7 @@ class TestFlowMaster:
 
         f = tutils.tflow(resp=True)
         pb = [tutils.tflow(resp=True), f]
-        fm = flow.FlowMaster(DummyServer(ProxyConfig()), s)
+        fm = flow.FlowMaster(None, DummyServer(ProxyConfig()), s)
         assert not fm.start_server_playback(
             pb,
             False,
@@ -911,7 +765,7 @@ class TestFlowMaster:
         f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
 
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 
@@ -938,7 +792,7 @@ class TestFlowMaster:
             None,
             False)
         r = tutils.tflow()
-        r.request.content = "gibble"
+        r.request.content = b"gibble"
         assert not fm.do_server_playback(r)
         assert fm.do_server_playback(tutils.tflow())
 
@@ -953,7 +807,7 @@ class TestFlowMaster:
         f = tutils.tflow()
         f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
-        fm = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, None, s)
         fm.refresh_server_playback = True
         fm.start_server_playback(
             pb,
@@ -970,74 +824,6 @@ class TestFlowMaster:
         f.request.host = "nonexistent"
         fm.process_new_request(f)
         assert "killed" in f.error.msg
-
-    def test_stickycookie(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, s)
-        assert "Invalid" in fm.set_stickycookie("~h")
-        fm.set_stickycookie(".*")
-        assert fm.stickycookie_state
-        fm.set_stickycookie(None)
-        assert not fm.stickycookie_state
-
-        fm.set_stickycookie(".*")
-        f = tutils.tflow(resp=True)
-        f.response.headers["set-cookie"] = "foo=bar"
-        fm.request(f)
-        f.reply.acked = False
-        fm.response(f)
-        assert fm.stickycookie_state.jar
-        assert "cookie" not in f.request.headers
-        f = f.copy()
-        f.reply.acked = False
-        fm.request(f)
-        assert f.request.headers["cookie"] == "foo=bar"
-
-    def test_stickyauth(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, s)
-        assert "Invalid" in fm.set_stickyauth("~h")
-        fm.set_stickyauth(".*")
-        assert fm.stickyauth_state
-        fm.set_stickyauth(None)
-        assert not fm.stickyauth_state
-
-        fm.set_stickyauth(".*")
-        f = tutils.tflow(resp=True)
-        f.request.headers["authorization"] = "foo"
-        fm.request(f)
-
-        f = tutils.tflow(resp=True)
-        assert fm.stickyauth_state.hosts
-        assert "authorization" not in f.request.headers
-        fm.request(f)
-        assert f.request.headers["authorization"] == "foo"
-
-    def test_stream(self):
-        with tutils.tmpdir() as tdir:
-            p = os.path.join(tdir, "foo")
-
-            def r():
-                r = flow.FlowReader(open(p, "rb"))
-                return list(r.stream())
-
-            s = flow.State()
-            fm = flow.FlowMaster(None, s)
-            f = tutils.tflow(resp=True)
-
-            fm.start_stream(file(p, "ab"), None)
-            fm.request(f)
-            fm.response(f)
-            fm.stop_stream()
-
-            assert r()[0].response
-
-            f = tutils.tflow()
-            fm.start_stream(file(p, "ab"), None)
-            fm.request(f)
-            fm.shutdown()
-
-            assert not r()[1].response
 
 
 class TestRequest:
@@ -1073,23 +859,14 @@ class TestRequest:
         assert r.url == "https://address:22/path"
         assert r.pretty_url == "https://foo.com:22/path"
 
-    def test_anticache(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
-        r.headers = Headers()
-        r.headers["if-modified-since"] = "test"
-        r.headers["if-none-match"] = "test"
-        r.anticache()
-        assert "if-modified-since" not in r.headers
-        assert "if-none-match" not in r.headers
-
     def test_replace(self):
         r = HTTPRequest.wrap(netlib.tutils.treq())
         r.path = "path/foo"
         r.headers["Foo"] = "fOo"
-        r.content = "afoob"
+        r.content = b"afoob"
         assert r.replace("foo(?i)", "boo") == 4
         assert r.path == "path/boo"
-        assert "foo" not in r.content
+        assert b"foo" not in r.content
         assert r.headers["boo"] == "boo"
 
     def test_constrain_encoding(self):
@@ -1119,9 +896,9 @@ class TestResponse:
     def test_replace(self):
         r = HTTPResponse.wrap(netlib.tutils.tresp())
         r.headers["Foo"] = "fOo"
-        r.content = "afoob"
+        r.content = b"afoob"
         assert r.replace("foo(?i)", "boo") == 3
-        assert "foo" not in r.content
+        assert b"foo" not in r.content
         assert r.headers["boo"] == "boo"
 
     def test_get_content_type(self):
@@ -1198,24 +975,24 @@ def test_replacehooks():
     assert h.count() == 0
 
     f = tutils.tflow()
-    f.request.content = "foo"
+    f.request.content = b"foo"
     h.add("~s", "foo", "bar")
     h.run(f)
-    assert f.request.content == "foo"
+    assert f.request.content == b"foo"
 
     f = tutils.tflow(resp=True)
-    f.request.content = "foo"
-    f.response.content = "foo"
+    f.request.content = b"foo"
+    f.response.content = b"foo"
     h.run(f)
-    assert f.response.content == "bar"
-    assert f.request.content == "foo"
+    assert f.response.content == b"bar"
+    assert f.request.content == b"foo"
 
     f = tutils.tflow()
     h.clear()
     h.add("~q", "foo", "bar")
-    f.request.content = "foo"
+    f.request.content = b"foo"
     h.run(f)
-    assert f.request.content == "bar"
+    assert f.request.content == b"bar"
 
     assert not h.add("~", "foo", "bar")
     assert not h.add("foo", "*", "bar")
@@ -1247,10 +1024,10 @@ def test_setheaders():
     assert h.count() == 0
 
     f = tutils.tflow()
-    f.request.content = "foo"
+    f.request.content = b"foo"
     h.add("~s", "foo", "bar")
     h.run(f)
-    assert f.request.content == "foo"
+    assert f.request.content == b"foo"
 
     h.clear()
     h.add("~s", "one", "two")

@@ -11,7 +11,7 @@ class ViewPigLatin(contentviews.View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        if strutils.isXML(data):
+        if strutils.is_xml(data):
             parser = lxml.etree.HTMLParser(
                 strip_cdata=True,
                 remove_blank_text=True
@@ -62,9 +62,9 @@ class ViewPigLatin(contentviews.View):
 pig_view = ViewPigLatin()
 
 
-def start(context):
-    context.add_contentview(pig_view)
+def start():
+    contentviews.add(pig_view)
 
 
-def done(context):
-    context.remove_contentview(pig_view)
+def done():
+    contentviews.remove(pig_view)

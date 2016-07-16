@@ -21,15 +21,15 @@ def python_equals(testdata, text):
 
 
 def req_get():
-    return netlib.tutils.treq(method='GET', content='', path=b"/path?a=foo&a=bar&b=baz")
+    return netlib.tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz")
 
 
 def req_post():
-    return netlib.tutils.treq(method='POST', headers=())
+    return netlib.tutils.treq(method=b'POST', headers=())
 
 
 def req_patch():
-    return netlib.tutils.treq(method='PATCH', path=b"/path?query=param")
+    return netlib.tutils.treq(method=b'PATCH', path=b"/path?query=param")
 
 
 class TestExportCurlCommand():
@@ -60,7 +60,7 @@ class TestExportPythonCode():
 
     def test_post_json(self):
         p = req_post()
-        p.content = '{"name": "example", "email": "example@example.com"}'
+        p.content = b'{"name": "example", "email": "example@example.com"}'
         p.headers = Headers(content_type="application/json")
         flow = tutils.tflow(req=p)
         python_equals("data/test_flow_export/python_post_json.py", export.python_code(flow))
@@ -112,7 +112,7 @@ class TestExportLocustCode():
 
     def test_post(self):
         p = req_post()
-        p.content = '''content'''
+        p.content = b'content'
         p.headers = ''
         flow = tutils.tflow(req=p)
         python_equals("data/test_flow_export/locust_post.py", export.locust_code(flow))
@@ -142,14 +142,14 @@ class TestIsJson():
 
     def test_json_type(self):
         headers = Headers(content_type="application/json")
-        assert export.is_json(headers, "foobar") is False
+        assert export.is_json(headers, b"foobar") is False
 
     def test_valid(self):
         headers = Headers(content_type="application/foobar")
-        j = export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
         assert j is False
 
     def test_valid2(self):
         headers = Headers(content_type="application/json")
-        j = export.is_json(headers, '{"name": "example", "email": "example@example.com"}')
+        j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
         assert isinstance(j, dict)

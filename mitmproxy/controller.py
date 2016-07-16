@@ -2,11 +2,14 @@ from __future__ import absolute_import, print_function, division
 
 import functools
 import threading
+import contextlib
 
 from six.moves import queue
 
+from mitmproxy import addons
+from mitmproxy import options
+from . import ctx as mitmproxy_ctx
 from netlib import basethread
-
 from . import exceptions
 
 
@@ -30,20 +33,66 @@ Events = frozenset([
     "error",
     "log",
 
+    "start",
+    "configure",
+    "done",
+    "tick",
+
     "script_change",
 ])
+
+
+class Log(object):
+    def __init__(self, master):
+        self.master = master
+
+    def __call__(self, text, level="info"):
+        self.master.add_log(text, level)
+
+    def debug(self, txt):
+        self(txt, "debug")
+
+    def info(self, txt):
+        self(txt, "info")
+
+    def warn(self, txt):
+        self(txt, "warn")
+
+    def error(self, txt):
+        self(txt, "error")
 
 
 class Master(object):
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self, *servers):
+    def __init__(self, opts, *servers):
+        self.options = opts or options.Options()
+        self.addons = addons.Addons(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.servers = []
         for i in servers:
             self.add_server(i)
+
+    @contextlib.contextmanager
+    def handlecontext(self):
+        # Handlecontexts also have to nest - leave cleanup to the outermost
+        if mitmproxy_ctx.master:
+            yield
+            return
+        mitmproxy_ctx.master = self
+        mitmproxy_ctx.log = Log(self)
+        try:
+            yield
+        finally:
+            mitmproxy_ctx.master = None
+            mitmproxy_ctx.log = None
+
+    def add_log(self, e, level="info"):
+        """
+            level: debug, info, warn, error
+        """
 
     def add_server(self, server):
         # We give a Channel to the server which can be used to communicate with the master
@@ -68,26 +117,25 @@ class Master(object):
             self.shutdown()
 
     def tick(self, timeout):
+        with self.handlecontext():
+            self.addons("tick")
         changed = False
         try:
-            # This endless loop runs until the 'Queue.Empty'
-            # exception is thrown.
-            while True:
-                mtype, obj = self.event_queue.get(timeout=timeout)
-                if mtype not in Events:
-                    raise exceptions.ControlException("Unknown event %s" % repr(mtype))
-                handle_func = getattr(self, mtype)
-                if not hasattr(handle_func, "__dict__"):
-                    raise exceptions.ControlException("Handler %s not a function" % mtype)
-                if not handle_func.__dict__.get("__handler"):
-                    raise exceptions.ControlException(
-                        "Handler function %s is not decorated with controller.handler" % (
-                            handle_func
-                        )
+            mtype, obj = self.event_queue.get(timeout=timeout)
+            if mtype not in Events:
+                raise exceptions.ControlException("Unknown event %s" % repr(mtype))
+            handle_func = getattr(self, mtype)
+            if not callable(handle_func):
+                raise exceptions.ControlException("Handler %s not callable" % mtype)
+            if not handle_func.__dict__.get("__handler"):
+                raise exceptions.ControlException(
+                    "Handler function %s is not decorated with controller.handler" % (
+                        handle_func
                     )
-                handle_func(obj)
-                self.event_queue.task_done()
-                changed = True
+                )
+            handle_func(obj)
+            self.event_queue.task_done()
+            changed = True
         except queue.Empty:
             pass
         return changed
@@ -96,6 +144,7 @@ class Master(object):
         for server in self.servers:
             server.shutdown()
         self.should_exit.set()
+        self.addons.done()
 
 
 class ServerThread(basethread.BaseThread):
@@ -151,15 +200,7 @@ class Channel(object):
 
 def handler(f):
     @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        # We can either be called as a method, or as a wrapped solo function
-        if len(args) == 1:
-            message = args[0]
-        elif len(args) == 2:
-            message = args[1]
-        else:
-            raise exceptions.ControlException("Handler takes one argument: a message")
-
+    def wrapper(master, message):
         if not hasattr(message, "reply"):
             raise exceptions.ControlException("Message %s has no reply attribute" % message)
 
@@ -172,7 +213,10 @@ def handler(f):
             handling = True
             message.reply.handled = True
 
-        ret = f(*args, **kwargs)
+        with master.handlecontext():
+            ret = f(master, message)
+            if handling:
+                master.addons(f.__name__, message)
 
         if handling and not message.reply.acked and not message.reply.taken:
             message.reply.ack()
@@ -216,7 +260,7 @@ class Reply(object):
     def __del__(self):
         if not self.acked:
             # This will be ignored by the interpreter, but emit a warning
-            raise exceptions.ControlException("Un-acked message")
+            raise exceptions.ControlException("Un-acked message: %s" % self.obj)
 
 
 class DummyReply(object):

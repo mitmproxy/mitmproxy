@@ -23,12 +23,12 @@ class Resolver(object):
         try:
             stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-            if "sudo: a password is required" in e.output:
+            if "sudo: a password is required" in e.output.decode(errors="replace"):
                 insufficient_priv = True
             else:
                 raise RuntimeError("Error getting pfctl state: " + repr(e))
         else:
-            insufficient_priv = "sudo: a password is required" in stxt
+            insufficient_priv = "sudo: a password is required" in stxt.decode(errors="replace")
 
         if insufficient_priv:
             raise RuntimeError(

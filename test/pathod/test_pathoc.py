@@ -54,10 +54,10 @@ class TestDaemonSSL(PathocTestDaemon):
     def test_sni(self):
         self.tval(
             ["get:/p/200"],
-            sni=b"foobar.com"
+            sni="foobar.com"
         )
         log = self.d.log()
-        assert log[0]["request"]["sni"] == b"foobar.com"
+        assert log[0]["request"]["sni"] == "foobar.com"
 
     def test_showssl(self):
         assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)

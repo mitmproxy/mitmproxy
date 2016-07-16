@@ -8,9 +8,7 @@ from typing import List, Optional, Set  # noqa
 import netlib.exceptions
 from mitmproxy import controller
 from mitmproxy import exceptions
-from mitmproxy import filt
 from mitmproxy import models
-from mitmproxy import script
 from mitmproxy.flow import io
 from mitmproxy.flow import modules
 from mitmproxy.onboarding import app
@@ -27,8 +25,8 @@ class FlowMaster(controller.Master):
         if len(self.servers) > 0:
             return self.servers[0]
 
-    def __init__(self, server, state):
-        super(FlowMaster, self).__init__()
+    def __init__(self, options, server, state):
+        super(FlowMaster, self).__init__(options)
         if server:
             self.add_server(server)
         self.state = state
@@ -36,17 +34,7 @@ class FlowMaster(controller.Master):
         self.server_playback = None  # type: Optional[modules.ServerPlaybackState]
         self.client_playback = None  # type: Optional[modules.ClientPlaybackState]
         self.kill_nonreplay = False
-        self.scripts = []  # type: List[script.Script]
-        self.pause_scripts = False
 
-        self.stickycookie_state = None  # type: Optional[modules.StickyCookieState]
-        self.stickycookie_txt = None
-
-        self.stickyauth_state = False  # type: Optional[modules.StickyAuthState]
-        self.stickyauth_txt = None
-
-        self.anticache = False
-        self.anticomp = False
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
         self.replacehooks = modules.ReplaceHooks()
@@ -55,7 +43,6 @@ class FlowMaster(controller.Master):
         self.replay_ignore_content = None
         self.replay_ignore_host = False
 
-        self.stream = None
         self.apps = modules.AppRegistry()
 
     def start_app(self, host, port):
@@ -64,48 +51,6 @@ class FlowMaster(controller.Master):
             host,
             port
         )
-
-    def add_event(self, e, level="info"):
-        """
-            level: debug, info, error
-        """
-
-    def unload_scripts(self):
-        for s in self.scripts[:]:
-            self.unload_script(s)
-
-    def unload_script(self, script_obj):
-        try:
-            script_obj.unload()
-        except script.ScriptException as e:
-            self.add_event("Script error:\n" + str(e), "error")
-        script.reloader.unwatch(script_obj)
-        self.scripts.remove(script_obj)
-
-    def load_script(self, command, use_reloader=False):
-        """
-            Loads a script.
-
-            Raises:
-                ScriptException
-        """
-        s = script.Script(command, script.ScriptContext(self))
-        s.load()
-        if use_reloader:
-            script.reloader.watch(s, lambda: self.event_queue.put(("script_change", s)))
-        self.scripts.append(s)
-
-    def _run_single_script_hook(self, script_obj, name, *args, **kwargs):
-        if script_obj and not self.pause_scripts:
-            try:
-                script_obj.run(name, *args, **kwargs)
-            except script.ScriptException as e:
-                self.add_event("Script error:\n{}".format(e), "error")
-
-    def run_scripts(self, name, msg):
-        for script_obj in self.scripts:
-            if not msg.reply.acked:
-                self._run_single_script_hook(script_obj, name, msg)
 
     def get_ignore_filter(self):
         return self.server.config.check_ignore.patterns
@@ -119,33 +64,11 @@ class FlowMaster(controller.Master):
     def set_tcp_filter(self, host_patterns):
         self.server.config.check_tcp = HostMatcher(host_patterns)
 
-    def set_stickycookie(self, txt):
-        if txt:
-            flt = filt.parse(txt)
-            if not flt:
-                return "Invalid filter expression."
-            self.stickycookie_state = modules.StickyCookieState(flt)
-            self.stickycookie_txt = txt
-        else:
-            self.stickycookie_state = None
-            self.stickycookie_txt = None
-
     def set_stream_large_bodies(self, max_size):
         if max_size is not None:
             self.stream_large_bodies = modules.StreamLargeBodies(max_size)
         else:
             self.stream_large_bodies = False
-
-    def set_stickyauth(self, txt):
-        if txt:
-            flt = filt.parse(txt)
-            if not flt:
-                return "Invalid filter expression."
-            self.stickyauth_state = modules.StickyAuthState(flt)
-            self.stickyauth_txt = txt
-        else:
-            self.stickyauth_state = None
-            self.stickyauth_txt = None
 
     def start_client_playback(self, flows, exit):
         """
@@ -234,8 +157,12 @@ class FlowMaster(controller.Master):
         return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
+        """
+            Duplicate flow, and insert it into state without triggering any of
+            the normal flow events.
+        """
         f2 = f.copy()
-        self.load_flow(f2)
+        self.state.add_flow(f2)
         return f2
 
     def create_request(self, method, scheme, host, port, path):
@@ -320,30 +247,16 @@ class FlowMaster(controller.Master):
             raise exceptions.FlowReadException(v.strerror)
 
     def process_new_request(self, f):
-        if self.stickycookie_state:
-            self.stickycookie_state.handle_request(f)
-        if self.stickyauth_state:
-            self.stickyauth_state.handle_request(f)
-
-        if self.anticache:
-            f.request.anticache()
-        if self.anticomp:
-            f.request.anticomp()
-
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb and self.kill_nonreplay:
                 f.kill(self)
 
-    def process_new_response(self, f):
-        if self.stickycookie_state:
-            self.stickycookie_state.handle_response(f)
-
-    def replay_request(self, f, block=False, run_scripthooks=True):
+    def replay_request(self, f, block=False):
         """
             Returns None if successful, or error message if not.
         """
-        if f.live and run_scripthooks:
+        if f.live:
             return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
@@ -363,7 +276,7 @@ class FlowMaster(controller.Master):
             rt = http_replay.RequestReplayThread(
                 self.server.config,
                 f,
-                self.event_queue if run_scripthooks else False,
+                self.event_queue,
                 self.should_exit
             )
             rt.start()  # pragma: no cover
@@ -372,32 +285,31 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def log(self, l):
-        self.add_event(l.msg, l.level)
+        self.add_log(l.msg, l.level)
 
     @controller.handler
     def clientconnect(self, root_layer):
-        self.run_scripts("clientconnect", root_layer)
+        pass
 
     @controller.handler
     def clientdisconnect(self, root_layer):
-        self.run_scripts("clientdisconnect", root_layer)
+        pass
 
     @controller.handler
     def serverconnect(self, server_conn):
-        self.run_scripts("serverconnect", server_conn)
+        pass
 
     @controller.handler
     def serverdisconnect(self, server_conn):
-        self.run_scripts("serverdisconnect", server_conn)
+        pass
 
     @controller.handler
     def next_layer(self, top_layer):
-        self.run_scripts("next_layer", top_layer)
+        pass
 
     @controller.handler
     def error(self, f):
         self.state.update_flow(f)
-        self.run_scripts("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
         return f
@@ -413,7 +325,7 @@ class FlowMaster(controller.Master):
                     **{"mitmproxy.master": self}
                 )
                 if err:
-                    self.add_event("Error in wsgi app. %s" % err, "error")
+                    self.add_log("Error in wsgi app. %s" % err, "error")
                 f.reply.kill()
                 return
         if f not in self.state.flows:  # don't add again on replay
@@ -425,8 +337,6 @@ class FlowMaster(controller.Master):
             self.setheaders.run(f)
         if not f.reply.acked:
             self.process_new_request(f)
-        if not f.reply.acked:
-            self.run_scripts("request", f)
         return f
 
     @controller.handler
@@ -437,7 +347,6 @@ class FlowMaster(controller.Master):
         except netlib.exceptions.HttpException:
             f.reply.kill()
             return
-        self.run_scripts("responseheaders", f)
         return f
 
     @controller.handler
@@ -448,13 +357,9 @@ class FlowMaster(controller.Master):
             self.replacehooks.run(f)
         if not f.reply.acked:
             self.setheaders.run(f)
-        self.run_scripts("response", f)
         if not f.reply.acked:
             if self.client_playback:
                 self.client_playback.clear(f)
-        self.process_new_response(f)
-        if self.stream:
-            self.stream.add(f)
         return f
 
     def handle_intercept(self, f):
@@ -464,84 +369,22 @@ class FlowMaster(controller.Master):
         self.state.update_flow(f)
 
     @controller.handler
-    def script_change(self, s):
-        """
-        Handle a script whose contents have been changed on the file system.
-
-        Args:
-            s (script.Script): the changed script
-
-        Returns:
-            True, if reloading was successful.
-            False, otherwise.
-        """
-        ok = True
-        # We deliberately do not want to fail here.
-        # In the worst case, we have an "empty" script object.
-        try:
-            s.unload()
-        except script.ScriptException as e:
-            ok = False
-            self.add_event('Error reloading "{}":\n{}'.format(s.filename, e), 'error')
-        try:
-            s.load()
-        except script.ScriptException as e:
-            ok = False
-            self.add_event('Error reloading "{}":\n{}'.format(s.filename, e), 'error')
-        else:
-            self.add_event('"{}" reloaded.'.format(s.filename), 'info')
-        return ok
-
-    @controller.handler
     def tcp_open(self, flow):
         # TODO: This would break mitmproxy currently.
         # self.state.add_flow(flow)
         self.active_flows.add(flow)
-        self.run_scripts("tcp_open", flow)
 
     @controller.handler
     def tcp_message(self, flow):
-        # type: (TCPFlow) -> None
-        self.run_scripts("tcp_message", flow)
+        pass
 
     @controller.handler
     def tcp_error(self, flow):
-        self.add_event("Error in TCP connection to {}: {}".format(
+        self.add_log("Error in TCP connection to {}: {}".format(
             repr(flow.server_conn.address),
             flow.error
         ), "info")
-        self.run_scripts("tcp_error", flow)
 
     @controller.handler
     def tcp_close(self, flow):
         self.active_flows.discard(flow)
-        if self.stream:
-            self.stream.add(flow)
-        self.run_scripts("tcp_close", flow)
-
-    def shutdown(self):
-        super(FlowMaster, self).shutdown()
-
-        # Add all flows that are still active
-        if self.stream:
-            for flow in self.active_flows:
-                self.stream.add(flow)
-            self.stop_stream()
-
-        self.unload_scripts()
-
-    def start_stream(self, fp, filt):
-        self.stream = io.FilteredFlowWriter(fp, filt)
-
-    def stop_stream(self):
-        self.stream.fo.close()
-        self.stream = None
-
-    def start_stream_to_path(self, path, mode="wb", filt=None):
-        path = os.path.expanduser(path)
-        try:
-            f = open(path, mode)
-            self.start_stream(f, filt)
-        except IOError as v:
-            return str(v)
-        self.stream_path = path

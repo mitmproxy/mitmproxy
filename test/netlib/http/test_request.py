@@ -248,20 +248,20 @@ class TestRequestUtils(object):
         assert "gzip" in request.headers["Accept-Encoding"]
 
     def test_get_urlencoded_form(self):
-        request = treq(content="foobar=baz")
+        request = treq(content=b"foobar=baz")
         assert not request.urlencoded_form
 
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        assert list(request.urlencoded_form.items()) == [("foobar", "baz")]
+        assert list(request.urlencoded_form.items()) == [(b"foobar", b"baz")]
 
     def test_set_urlencoded_form(self):
         request = treq()
-        request.urlencoded_form = [('foo', 'bar'), ('rab', 'oof')]
+        request.urlencoded_form = [(b'foo', b'bar'), (b'rab', b'oof')]
         assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
         assert request.content
 
     def test_get_multipart_form(self):
-        request = treq(content="foobar")
+        request = treq(content=b"foobar")
         assert not request.multipart_form
 
         request.headers["Content-Type"] = "multipart/form-data"

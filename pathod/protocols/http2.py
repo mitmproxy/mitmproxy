@@ -7,8 +7,7 @@ import hyperframe.frame
 from hpack.hpack import Encoder, Decoder
 
 from netlib import utils, strutils
-from netlib.http import url
-from netlib.http.http2 import framereader
+from netlib.http import http2
 import netlib.http.headers
 import netlib.http.response
 import netlib.http.request
@@ -101,46 +100,15 @@ class HTTP2StateProtocol(object):
 
         timestamp_end = time.time()
 
-        authority = headers.get(':authority', b'')
-        method = headers.get(':method', 'GET')
-        scheme = headers.get(':scheme', 'https')
-        path = headers.get(':path', '/')
-
-        headers.clear(":method")
-        headers.clear(":scheme")
-        headers.clear(":path")
-
-        host = None
-        port = None
-
-        if path == '*' or path.startswith("/"):
-            first_line_format = "relative"
-        elif method == 'CONNECT':
-            first_line_format = "authority"
-            if ":" in authority:
-                host, port = authority.split(":", 1)
-            else:
-                host = authority
-        else:
-            first_line_format = "absolute"
-            # FIXME: verify if path or :host contains what we need
-            scheme, host, port, _ = url.parse(path)
-            scheme = scheme.decode('ascii')
-            host = host.decode('ascii')
-
-        if host is None:
-            host = 'localhost'
-        if port is None:
-            port = 80 if scheme == 'http' else 443
-        port = int(port)
+        first_line_format, method, scheme, host, port, path = http2.parse_headers(headers)
 
         request = netlib.http.request.Request(
             first_line_format,
-            method.encode('ascii'),
-            scheme.encode('ascii'),
-            host.encode('ascii'),
+            method,
+            scheme,
+            host,
             port,
-            path.encode('ascii'),
+            path,
             b"HTTP/2.0",
             headers,
             body,
@@ -213,10 +181,10 @@ class HTTP2StateProtocol(object):
         headers = request.headers.copy()
 
         if ':authority' not in headers:
-            headers.insert(0, b':authority', authority.encode('ascii'))
-        headers.insert(0, b':scheme', request.scheme.encode('ascii'))
-        headers.insert(0, b':path', request.path.encode('ascii'))
-        headers.insert(0, b':method', request.method.encode('ascii'))
+            headers.insert(0, ':authority', authority)
+        headers.insert(0, ':scheme', request.scheme)
+        headers.insert(0, ':path', request.path)
+        headers.insert(0, ':method', request.method)
 
         if hasattr(request, 'stream_id'):
             stream_id = request.stream_id
@@ -286,7 +254,7 @@ class HTTP2StateProtocol(object):
 
     def read_frame(self, hide=False):
         while True:
-            frm = framereader.http2_read_frame(self.tcp_handler.rfile)
+            frm = http2.framereader.http2_read_frame(self.tcp_handler.rfile)
             if not hide and self.dump_frames:  # pragma no cover
                 print(frm.human_readable("<<"))
 
@@ -429,7 +397,7 @@ class HTTP2StateProtocol(object):
                 self._handle_unexpected_frame(frm)
 
         headers = netlib.http.headers.Headers(
-            (k.encode('ascii'), v.encode('ascii')) for k, v in self.decoder.decode(header_blocks)
+            [[k, v] for k, v in self.decoder.decode(header_blocks, raw=True)]
         )
 
         return stream_id, headers, body

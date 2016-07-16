@@ -1,4 +1,5 @@
-import unicodedata
+from __future__ import absolute_import, print_function, division
+import re
 import codecs
 
 import six
@@ -19,60 +20,80 @@ def native(s, *encoding_opts):
     """
     if not isinstance(s, (six.binary_type, six.text_type)):
         raise TypeError("%r is neither bytes nor unicode" % s)
-    if six.PY3:
-        if isinstance(s, six.binary_type):
-            return s.decode(*encoding_opts)
-    else:
+    if six.PY2:
         if isinstance(s, six.text_type):
             return s.encode(*encoding_opts)
+    else:
+        if isinstance(s, six.binary_type):
+            return s.decode(*encoding_opts)
     return s
 
 
-def clean_bin(s, keep_spacing=True):
-    # type: (Union[bytes, six.text_type], bool) -> six.text_type
-    """
-        Cleans binary data to make it safe to display.
+# Translate control characters to "safe" characters. This implementation initially
+# replaced them with the matching control pictures (http://unicode.org/charts/PDF/U2400.pdf),
+# but that turned out to render badly with monospace fonts. We are back to "." therefore.
+_control_char_trans = {
+    x: ord(".")  # x + 0x2400 for unicode control group pictures
+    for x in range(32)
+}
+_control_char_trans[127] = ord(".")  # 0x2421
+_control_char_trans_newline = _control_char_trans.copy()
+for x in ("\r", "\n", "\t"):
+    del _control_char_trans_newline[ord(x)]
 
-        Args:
-            keep_spacing: If False, tabs and newlines will also be replaced.
+
+if six.PY2:
+    pass
+else:
+    _control_char_trans = str.maketrans(_control_char_trans)
+    _control_char_trans_newline = str.maketrans(_control_char_trans_newline)
+
+
+def escape_control_characters(text, keep_spacing=True):
     """
-    if isinstance(s, six.text_type):
-        if keep_spacing:
-            keep = u" \n\r\t"
-        else:
-            keep = u" "
+    Replace all unicode C1 control characters from the given text with their respective control pictures.
+    For example, a null byte is replaced with the unicode character "\u2400".
+
+    Args:
+        keep_spacing: If True, tabs and newlines will not be replaced.
+    """
+    # type: (six.string_types) -> six.text_type
+    if not isinstance(text, six.string_types):
+        raise ValueError("text type must be unicode but is {}".format(type(text).__name__))
+
+    trans = _control_char_trans_newline if keep_spacing else _control_char_trans
+    if six.PY2:
         return u"".join(
-            ch if (unicodedata.category(ch)[0] not in "CZ" or ch in keep) else u"."
-            for ch in s
+            six.unichr(trans.get(ord(ch), ord(ch)))
+            for ch in text
         )
-    else:
-        if keep_spacing:
-            keep = (9, 10, 13)  # \t, \n, \r,
-        else:
-            keep = ()
-        return "".join(
-            chr(ch) if (31 < ch < 127 or ch in keep) else "."
-            for ch in six.iterbytes(s)
-        )
+    return text.translate(trans)
 
 
-def bytes_to_escaped_str(data):
+def bytes_to_escaped_str(data, keep_spacing=False):
     """
     Take bytes and return a safe string that can be displayed to the user.
 
     Single quotes are always escaped, double quotes are never escaped:
         "'" + bytes_to_escaped_str(...) + "'"
     gives a valid Python string.
+
+    Args:
+        keep_spacing: If True, tabs and newlines will not be escaped.
     """
-    # TODO: We may want to support multi-byte characters without escaping them.
-    # One way to do would be calling .decode("utf8", "backslashreplace") first
-    # and then escaping UTF8 control chars (see clean_bin).
 
     if not isinstance(data, bytes):
         raise ValueError("data must be bytes, but is {}".format(data.__class__.__name__))
     # We always insert a double-quote here so that we get a single-quoted string back
     # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
-    return repr(b'"' + data).lstrip("b")[2:-1]
+    ret = repr(b'"' + data).lstrip("b")[2:-1]
+    if keep_spacing:
+        ret = re.sub(
+            r"(?<!\\)(\\\\)*\\([nrt])",
+            lambda m: (m.group(1) or "") + dict(n="\n", r="\r", t="\t")[m.group(2)],
+            ret
+        )
+    return ret
 
 
 def escaped_str_to_bytes(data):
@@ -94,24 +115,17 @@ def escaped_str_to_bytes(data):
     return codecs.escape_decode(data)[0]
 
 
-def isBin(s):
-    """
-        Does this string have any non-ASCII characters?
-    """
-    for i in s:
-        i = ord(i)
-        if i < 9 or 13 < i < 32 or 126 < i:
-            return True
-    return False
+def is_mostly_bin(s):
+    # type: (bytes) -> bool
+    return sum(
+        i < 9 or 13 < i < 32 or 126 < i
+        for i in six.iterbytes(s[:100])
+    ) / len(s[:100]) > 0.3
 
 
-def isMostlyBin(s):
-    s = s[:100]
-    return sum(isBin(ch) for ch in s) / len(s) > 0.3
-
-
-def isXML(s):
-    return s.strip().startswith("<")
+def is_xml(s):
+    # type: (bytes) -> bool
+    return s.strip().startswith(b"<")
 
 
 def clean_hanging_newline(t):
@@ -132,8 +146,12 @@ def hexdump(s):
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i).encode()
+        offset = "{:0=10x}".format(i)
         part = s[i:i + 16]
         x = " ".join("{:0=2x}".format(i) for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15
-        yield (offset, x, clean_bin(part, False))
+        part_repr = native(escape_control_characters(
+            part.decode("ascii", "replace").replace(u"\ufffd", u"."),
+            False
+        ))
+        yield (offset, x, part_repr)
