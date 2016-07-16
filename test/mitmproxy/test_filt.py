@@ -2,7 +2,6 @@ from six.moves import cStringIO as StringIO
 from mock import patch
 
 from mitmproxy import filt
-from mitmproxy.models.flow import Flow
 
 from . import tutils
 
@@ -379,23 +378,21 @@ class TestMatchingTCPFlow:
         assert not self.q("~u whatever", f)
 
 
-class DummyFlow(Flow):
-    """ A flow that is neither HTTP nor TCP. """
-
-    def __init__(self):
-        pass
-
-
 class TestMatchingDummyFlow:
 
     def flow(self):
-        return DummyFlow()
+        return tutils.tdummyflow()
+
+    def err(self):
+        return tutils.tdummyflow(err=True)
 
     def q(self, q, o):
         return filt.parse(q)(o)
 
     def test_filters(self):
+        e = self.err()
         f = self.flow()
+        f.server_conn = tutils.tserver_conn()
 
         assert not self.q("~a", f)
 
@@ -403,12 +400,14 @@ class TestMatchingDummyFlow:
         assert not self.q("~bq whatever", f)
         assert not self.q("~bs whatever", f)
 
-        assert not self.q("~dst whatever", f)
-
         assert not self.q("~c 0", f)
 
         assert not self.q("~d whatever", f)
 
+        assert self.q("~dst address", f)
+        assert not self.q("~dst nonexistent", f)
+
+        assert self.q("~e", e)
         assert not self.q("~e", f)
 
         assert not self.q("~http", f)
@@ -421,7 +420,8 @@ class TestMatchingDummyFlow:
 
         assert not self.q("~s", f)
 
-        assert not self.q("~src whatever", f)
+        assert self.q("~src address", f)
+        assert not self.q("~src nonexistent", f)
 
         assert not self.q("~tcp", f)
 

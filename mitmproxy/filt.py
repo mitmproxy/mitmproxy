@@ -76,7 +76,6 @@ class FErr(_Action):
     code = "e"
     help = "Match error"
 
-    @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
         return True if f.error else False
 
@@ -326,7 +325,6 @@ class FSrc(_Rex):
     help = "Match source address"
     is_binary = False
 
-    @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
         return f.client_conn.address and self.re.search(repr(f.client_conn.address))
 
@@ -336,7 +334,6 @@ class FDst(_Rex):
     help = "Match destination address"
     is_binary = False
 
-    @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
         return f.server_conn.address and self.re.search(repr(f.server_conn.address))
 
