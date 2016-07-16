@@ -141,7 +141,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "H"))
             r.append("eaders]")
-        if self.master.replacehooks.count():
+        if len(self.master.options.replacements):
             r.append("[")
             r.append(("heading_key", "R"))
             r.append("eplacing]")

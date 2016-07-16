@@ -9,7 +9,9 @@ from mitmproxy.proxy.server import ProxyServer
 import pathod.test
 import pathod.pathoc
 from mitmproxy import flow, controller
+from mitmproxy.flow import options
 from mitmproxy.cmdline import APP_HOST, APP_PORT
+from mitmproxy import builtins
 
 testapp = flask.Flask(__name__)
 
@@ -34,7 +36,8 @@ class TestMaster(flow.FlowMaster):
         config.port = 0
         s = ProxyServer(config)
         state = flow.State()
-        flow.FlowMaster.__init__(self, None, s, state)
+        flow.FlowMaster.__init__(self, options.Options(), s, state)
+        self.addons.add(*builtins.default_addons())
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()

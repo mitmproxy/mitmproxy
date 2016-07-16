@@ -183,8 +183,8 @@ class Headers(multidict.MultiDict):
                 pass
             else:
                 replacements += n
-            fields.append([name, value])
-        self.fields = fields
+            fields.append((name, value))
+        self.fields = tuple(fields)
         return replacements
 
 

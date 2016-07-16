@@ -210,10 +210,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.options = self.options  # type: Options
         self.options.errored.connect(self.options_error)
 
-        if options.replacements:
-            for i in options.replacements:
-                self.replacehooks.add(*i)
-
         if options.setheaders:
             for i in options.setheaders:
                 self.setheaders.add(*i)

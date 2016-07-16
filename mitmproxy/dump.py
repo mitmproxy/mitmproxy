@@ -69,10 +69,6 @@ class DumpMaster(flow.FlowMaster):
         else:
             self.filt = None
 
-        if options.replacements:
-            for i in options.replacements:
-                self.replacehooks.add(*i)
-
         if options.setheaders:
             for i in options.setheaders:
                 self.setheaders.add(*i)

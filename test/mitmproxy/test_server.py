@@ -839,17 +839,12 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest, CommonMixin, AppMixin):
     ssl = False
 
     def test_order(self):
-        self.proxy.tmaster.replacehooks.add(
-            "~q",
-            "foo",
-            "bar")  # replace in request
-        self.chain[0].tmaster.replacehooks.add("~q", "bar", "baz")
-        self.chain[1].tmaster.replacehooks.add("~q", "foo", "oh noes!")
-        self.chain[0].tmaster.replacehooks.add(
-            "~s",
-            "baz",
-            "ORLY")  # replace in response
-
+        self.proxy.tmaster.options.replacements = [
+            ("~q", "foo", "bar"),
+            ("~q", "bar", "baz"),
+            ("~q", "foo", "oh noes!"),
+            ("~s", "baz", "ORLY")
+        ]
         p = self.pathoc()
         req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
         assert req.content == b"ORLY"

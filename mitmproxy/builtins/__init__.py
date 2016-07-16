@@ -6,6 +6,7 @@ from mitmproxy.builtins import stickyauth
 from mitmproxy.builtins import stickycookie
 from mitmproxy.builtins import script
 from mitmproxy.builtins import stream
+from mitmproxy.builtins import replace
 
 
 def default_addons():
@@ -16,4 +17,5 @@ def default_addons():
         stickycookie.StickyCookie(),
         script.ScriptLoader(),
         stream.Stream(),
+        replace.Replace(),
     ]

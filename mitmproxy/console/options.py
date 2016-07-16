@@ -48,7 +48,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Replacement Patterns",
                     "R",
-                    lambda: master.replacehooks.count(),
+                    lambda: len(master.options.replacements),
                     self.replacepatterns
                 ),
                 select.Option(
@@ -157,14 +157,14 @@ class Options(urwid.WidgetWrap):
         self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
         self.master.setheaders.clear()
-        self.master.replacehooks.clear()
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
 
         self.master.options.update(
-            scripts = [],
             anticache = False,
             anticomp = False,
+            replacements = [],
+            scripts = [],
             stickyauth = None,
             stickycookie = None
         )
@@ -221,13 +221,13 @@ class Options(urwid.WidgetWrap):
         )
 
     def replacepatterns(self):
-        def _set(*args, **kwargs):
-            self.master.replacehooks.set(*args, **kwargs)
+        def _set(replacements):
+            self.master.options.replacements = replacements
             signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.ReplaceEditor(
                 self.master,
-                self.master.replacehooks.get_specs(),
+                self.master.options.replacements,
                 _set
             )
         )
