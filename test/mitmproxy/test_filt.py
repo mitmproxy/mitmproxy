@@ -1,6 +1,8 @@
 from six.moves import cStringIO as StringIO
-from mitmproxy import filt
 from mock import patch
+
+from mitmproxy import filt
+
 from . import tutils
 
 
@@ -73,7 +75,7 @@ class TestParsing:
         self._dump(a)
 
 
-class TestMatching:
+class TestMatchingHTTPFlow:
 
     def req(self):
         return tutils.tflow()
@@ -86,6 +88,11 @@ class TestMatching:
 
     def q(self, q, o):
         return filt.parse(q)(o)
+
+    def test_http(self):
+        s = self.req()
+        assert self.q("~http", s)
+        assert not self.q("~tcp", s)
 
     def test_asset(self):
         s = self.resp()
@@ -245,6 +252,186 @@ class TestMatching:
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
+
+
+class TestMatchingTCPFlow:
+
+    def flow(self):
+        return tutils.ttcpflow()
+
+    def err(self):
+        return tutils.ttcpflow(err=True)
+
+    def q(self, q, o):
+        return filt.parse(q)(o)
+
+    def test_tcp(self):
+        f = self.flow()
+        assert self.q("~tcp", f)
+        assert not self.q("~http", f)
+
+    def test_ferr(self):
+        e = self.err()
+        assert self.q("~e", e)
+
+    def test_body(self):
+        f = self.flow()
+
+        # Messages sent by client or server
+        assert self.q("~b hello", f)
+        assert self.q("~b me", f)
+        assert not self.q("~b nonexistent", f)
+
+        # Messages sent by client
+        assert self.q("~bq hello", f)
+        assert not self.q("~bq me", f)
+        assert not self.q("~bq nonexistent", f)
+
+        # Messages sent by server
+        assert self.q("~bs me", f)
+        assert not self.q("~bs hello", f)
+        assert not self.q("~bs nonexistent", f)
+
+    def test_src(self):
+        f = self.flow()
+        assert self.q("~src address", f)
+        assert not self.q("~src foobar", f)
+        assert self.q("~src :22", f)
+        assert not self.q("~src :99", f)
+        assert self.q("~src address:22", f)
+
+    def test_dst(self):
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+        assert self.q("~dst address", f)
+        assert not self.q("~dst foobar", f)
+        assert self.q("~dst :22", f)
+        assert not self.q("~dst :99", f)
+        assert self.q("~dst address:22", f)
+
+    def test_and(self):
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+        assert self.q("~b hello & ~b me", f)
+        assert not self.q("~src wrongaddress & ~b hello", f)
+        assert self.q("(~src :22 & ~dst :22) & ~b hello", f)
+        assert not self.q("(~src address:22 & ~dst :22) & ~b nonexistent", f)
+        assert not self.q("(~src address:22 & ~dst :99) & ~b hello", f)
+
+    def test_or(self):
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+        assert self.q("~b hello | ~b me", f)
+        assert self.q("~src :22 | ~b me", f)
+        assert not self.q("~src :99 | ~dst :99", f)
+        assert self.q("(~src :22 | ~dst :22) | ~b me", f)
+
+    def test_not(self):
+        f = self.flow()
+        assert not self.q("! ~src :22", f)
+        assert self.q("! ~src :99", f)
+        assert self.q("!~src :99 !~src :99", f)
+        assert not self.q("!~src :99 !~src :22", f)
+
+    def test_request(self):
+        f = self.flow()
+        assert not self.q("~q", f)
+
+    def test_response(self):
+        f = self.flow()
+        assert not self.q("~s", f)
+
+    def test_headers(self):
+        f = self.flow()
+        assert not self.q("~h whatever", f)
+
+        # Request headers
+        assert not self.q("~hq whatever", f)
+
+        # Response headers
+        assert not self.q("~hs whatever", f)
+
+    def test_content_type(self):
+        f = self.flow()
+        assert not self.q("~t whatever", f)
+
+        # Request content-type
+        assert not self.q("~tq whatever", f)
+
+        # Response content-type
+        assert not self.q("~ts whatever", f)
+
+    def test_code(self):
+        f = self.flow()
+        assert not self.q("~c 200", f)
+
+    def test_domain(self):
+        f = self.flow()
+        assert not self.q("~d whatever", f)
+
+    def test_method(self):
+        f = self.flow()
+        assert not self.q("~m whatever", f)
+
+    def test_url(self):
+        f = self.flow()
+        assert not self.q("~u whatever", f)
+
+
+class TestMatchingDummyFlow:
+
+    def flow(self):
+        return tutils.tdummyflow()
+
+    def err(self):
+        return tutils.tdummyflow(err=True)
+
+    def q(self, q, o):
+        return filt.parse(q)(o)
+
+    def test_filters(self):
+        e = self.err()
+        f = self.flow()
+        f.server_conn = tutils.tserver_conn()
+
+        assert not self.q("~a", f)
+
+        assert not self.q("~b whatever", f)
+        assert not self.q("~bq whatever", f)
+        assert not self.q("~bs whatever", f)
+
+        assert not self.q("~c 0", f)
+
+        assert not self.q("~d whatever", f)
+
+        assert self.q("~dst address", f)
+        assert not self.q("~dst nonexistent", f)
+
+        assert self.q("~e", e)
+        assert not self.q("~e", f)
+
+        assert not self.q("~http", f)
+
+        assert not self.q("~h whatever", f)
+        assert not self.q("~hq whatever", f)
+        assert not self.q("~hs whatever", f)
+
+        assert not self.q("~m whatever", f)
+
+        assert not self.q("~s", f)
+
+        assert self.q("~src address", f)
+        assert not self.q("~src nonexistent", f)
+
+        assert not self.q("~tcp", f)
+
+        assert not self.q("~t whatever", f)
+        assert not self.q("~tq whatever", f)
+        assert not self.q("~ts whatever", f)
+
+        assert not self.q("~u whatever", f)
+
+        assert not self.q("~q", f)
 
 
 @patch('traceback.extract_tb')

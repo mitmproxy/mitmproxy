@@ -4,11 +4,10 @@ import tempfile
 import argparse
 import sys
 
-from mitmproxy.models.tcp import TCPMessage
-from six.moves import cStringIO as StringIO
 from contextlib import contextmanager
-
 from unittest.case import SkipTest
+
+from six.moves import cStringIO as StringIO
 
 import netlib.utils
 import netlib.tutils
@@ -16,6 +15,8 @@ from mitmproxy import controller
 from mitmproxy.models import (
     ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow, TCPFlow
 )
+from mitmproxy.models.tcp import TCPMessage
+from mitmproxy.models.flow import Flow
 
 
 def _skip_windows(*args):
@@ -45,6 +46,27 @@ def skip_appveyor(fn):
         return _skip_appveyor
     else:
         return fn
+
+
+class DummyFlow(Flow):
+    """A flow that is neither HTTP nor TCP."""
+
+    def __init__(self, client_conn, server_conn, live=None):
+        super(DummyFlow, self).__init__("dummy", client_conn, server_conn, live)
+
+
+def tdummyflow(client_conn=True, server_conn=True, err=None):
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    if err is True:
+        err = terr()
+
+    f = DummyFlow(client_conn, server_conn)
+    f.error = err
+    f.reply = controller.DummyReply()
+    return f
 
 
 def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):

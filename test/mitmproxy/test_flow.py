@@ -293,7 +293,7 @@ class TestServerPlaybackState:
         assert s._hash(r) == s._hash(r2)
 
 
-class TestFlow(object):
+class TestHTTPFlow(object):
 
     def test_copy(self):
         f = tutils.tflow(resp=True)
@@ -441,6 +441,20 @@ class TestFlow(object):
         assert f.response.raw_content != b"abarb"
         f.response.decode()
         assert f.response.raw_content == b"abarb"
+
+
+class TestTCPFlow:
+
+    def test_match(self):
+        f = tutils.ttcpflow()
+        assert not f.match("~b nonexistent")
+        assert f.match(None)
+        assert not f.match("~b nonexistent")
+
+        f = tutils.ttcpflow(err=True)
+        assert f.match("~e")
+
+        tutils.raises(ValueError, f.match, "~")
 
 
 class TestState:
