@@ -195,8 +195,11 @@ def locust_task(flow):
 
 
 EXPORTERS = [
-    ("as curl command", "c", curl_command),
-    ("as python code", "p", python_code),
-    ("as locust code", "l", locust_code),
-    ("as locust task", "t", locust_task),
+    ("content", "c"),
+    ("headers+content", "h"),
+    ("url", "u"),
+    ("as curl command", "r"),
+    ("as python code", "p"),
+    ("as locust code", "l"),
+    ("as locust task", "t"),
 ]

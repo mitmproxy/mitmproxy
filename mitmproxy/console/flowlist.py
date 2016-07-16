@@ -268,7 +268,7 @@ class ConnectionItem(urwid.WidgetWrap):
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export to file",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                keys = export.EXPORTERS,
                 callback = common.export_to_clip_or_file,
                 args = ("a", self.flow, common.ask_save_path)
             )
@@ -276,7 +276,7 @@ class ConnectionItem(urwid.WidgetWrap):
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export to clipboard",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                keys = export.EXPORTERS,
                 callback = common.export_to_clip_or_file,
                 args = ("a", self.flow, common.copy_to_clipboard_or_prompt)
             )

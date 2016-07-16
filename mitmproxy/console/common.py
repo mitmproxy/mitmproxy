@@ -194,7 +194,7 @@ def copy_to_clipboard_or_prompt(data):
         )
 
 
-def flow_format_data(key, scope, flow):
+def format_flow_data(key, scope, flow):
     if key == "u":
         data = flow.request.url
     else:
@@ -227,12 +227,12 @@ def flow_format_data(key, scope, flow):
     return data, False
 
 
-def copy_flow(key, scope, flow, writer):
+def write_flow_data(key, scope, flow, writer):
     """
     key: _c_ontent, _h_eaders+content, _u_rl
     scope: _a_ll, re_q_uest, re_s_ponse
     """
-    data, err = flow_format_data(key, scope, flow)
+    data, err = format_flow_data(key, scope, flow)
 
     if err:
         signals.status_message.send(message=err)
@@ -248,22 +248,6 @@ def copy_flow(key, scope, flow, writer):
         return
 
     writer(data)
-
-
-def ask_copy_part(scope, flow):
-    choices = [
-        ("content", "c"),
-        ("headers+content", "h")
-    ]
-    if scope != "s":
-        choices.append(("url", "u"))
-
-    signals.status_prompt_onekey.send(
-        prompt = "Copy",
-        keys = choices,
-        callback = copy_flow,
-        args = (scope, flow)
-    )
 
 
 def ask_save_body(scope, flow):
@@ -315,9 +299,18 @@ def export_to_clip_or_file(key, scope, flow, writer):
     'writer' is a function that handles the data
     can be: copy_to_clipboard_or_prompt or ask_save_path
     """
+
     for exporter in export.EXPORTERS:
-        if key == exporter[1]:
-            writer(exporter[2](flow))
+        if key in ["c", "h", "u"]:
+            write_flow_data(key, scope, flow, writer)
+        if key == "r":
+            writer(export.curl_command(flow))
+        if key == "p":
+            writer(export.python_code(flow))
+        if key == "l":
+            writer(export.locust_code(flow))
+        if key == "t":
+            writer(export.locust_task(flow))
 
 flowcache = utils.LRUCache(800)
 
