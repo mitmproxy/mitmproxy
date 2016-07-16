@@ -118,8 +118,10 @@ class Dumper():
                 ),
                 bold=True
             )
-        else:
+        elif flow.request.is_replay:
             client = click.style("[replay]", fg="yellow", bold=True)
+        else:
+            client = ""
 
         method = flow.request.method
         method_color = dict(
@@ -183,7 +185,7 @@ class Dumper():
             size = human.pretty_size(len(flow.response.raw_content))
         size = click.style(size, bold=True)
 
-        arrows = click.style("<<", bold=True)
+        arrows = click.style("    <<", bold=True)
 
         line = "{replay} {arrows} {code} {reason} {size}".format(
             replay=replay,
