@@ -959,55 +959,6 @@ class TestClientConnection:
         assert str(c)
 
 
-def test_replacehooks():
-    h = flow.ReplaceHooks()
-    h.add("~q", "foo", "bar")
-    assert h.lst
-
-    h.set(
-        [
-            (".*", "one", "two"),
-            (".*", "three", "four"),
-        ]
-    )
-    assert h.count() == 2
-
-    h.clear()
-    assert not h.lst
-
-    h.add("~q", "foo", "bar")
-    h.add("~s", "foo", "bar")
-
-    v = h.get_specs()
-    assert v == [('~q', 'foo', 'bar'), ('~s', 'foo', 'bar')]
-    assert h.count() == 2
-    h.clear()
-    assert h.count() == 0
-
-    f = tutils.tflow()
-    f.request.content = b"foo"
-    h.add("~s", "foo", "bar")
-    h.run(f)
-    assert f.request.content == b"foo"
-
-    f = tutils.tflow(resp=True)
-    f.request.content = b"foo"
-    f.response.content = b"foo"
-    h.run(f)
-    assert f.response.content == b"bar"
-    assert f.request.content == b"foo"
-
-    f = tutils.tflow()
-    h.clear()
-    h.add("~q", "foo", "bar")
-    f.request.content = b"foo"
-    h.run(f)
-    assert f.request.content == b"bar"
-
-    assert not h.add("~", "foo", "bar")
-    assert not h.add("foo", "*", "bar")
-
-
 def test_setheaders():
     h = flow.SetHeaders()
     h.add("~q", "foo", "bar")
