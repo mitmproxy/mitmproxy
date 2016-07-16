@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 import re
 
+import collections
 import six
 from netlib import multidict
 from netlib import strutils
@@ -206,7 +207,7 @@ def parse_content_type(c):
     ts = parts[0].split("/", 1)
     if len(ts) != 2:
         return None
-    d = {}
+    d = collections.OrderedDict()
     if len(parts) == 2:
         for i in parts[1].split(";"):
             clause = i.split("=", 1)
