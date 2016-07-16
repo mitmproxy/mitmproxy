@@ -142,6 +142,9 @@ class TestMessageContentEncoding(object):
             r.content = b"bar"
             assert e.call_count == 1
 
+        with tutils.raises(TypeError):
+            r.content = u"foo"
+
     def test_unknown_ce(self):
         r = tresp()
         r.headers["content-encoding"] = "zopfli"
@@ -149,6 +152,7 @@ class TestMessageContentEncoding(object):
         with tutils.raises(ValueError):
             assert r.content
         assert r.headers["content-encoding"]
+        assert r.get_content(strict=False) == b"foo"
 
     def test_cannot_decode(self):
         r = tresp()
@@ -157,11 +161,24 @@ class TestMessageContentEncoding(object):
         with tutils.raises(ValueError):
             assert r.content
         assert r.headers["content-encoding"]
+        assert r.get_content(strict=False) == b"foo"
 
         with tutils.raises(ValueError):
             r.decode()
         assert r.raw_content == b"foo"
         assert "content-encoding" in r.headers
+
+        r.decode(strict=False)
+        assert r.content == b"foo"
+        assert "content-encoding" not in r.headers
+
+    def test_none(self):
+        r = tresp(content=None)
+        assert r.content is None
+        r.content = b"foo"
+        assert r.content is not None
+        r.content = None
+        assert r.content is None
 
     def test_cannot_encode(self):
         r = tresp()
@@ -175,12 +192,17 @@ class TestMessageContentEncoding(object):
         assert "content-encoding" not in r.headers
         assert r.raw_content == b"foo"
 
+        with tutils.raises(ValueError):
+            r.encode("zopfli")
+        assert r.raw_content == b"foo"
+        assert "content-encoding" not in r.headers
+
 
 class TestMessageText(object):
     def test_simple(self):
-        r = tresp(content=b'\xc3\xbc')
-        assert r.raw_content == b"\xc3\xbc"
-        assert r.content == b"\xc3\xbc"
+        r = tresp(content=b'\xfc')
+        assert r.raw_content == b"\xfc"
+        assert r.content == b"\xfc"
         assert r.text == u"ü"
 
         r.encode("gzip")
@@ -189,8 +211,10 @@ class TestMessageText(object):
         assert r.text == u"ü"
 
         r.headers["content-type"] = "text/html; charset=latin1"
-        assert r.content == b"\xc3\xbc"
+        r.content = b"\xc3\xbc"
         assert r.text == u"Ã¼"
+        r.headers["content-type"] = "text/html; charset=utf8"
+        assert r.text == u"ü"
 
         r.encode("identity")
         r.raw_content = b"foo"
@@ -201,16 +225,29 @@ class TestMessageText(object):
             assert r.text
             assert e.call_count == 0
 
+    def test_guess_json(self):
+        r = tresp(content=b'"\xc3\xbc"')
+        r.headers["content-type"] = "application/json"
+        assert r.text == u'"ü"'
+
+    def test_none(self):
+        r = tresp(content=None)
+        assert r.text is None
+        r.text = b"foo"
+        assert r.text is not None
+        r.text = None
+        assert r.text is None
+
     def test_modify(self):
         r = tresp()
 
         r.text = u"ü"
-        assert r.raw_content == b"\xc3\xbc"
-
-        r.headers["content-type"] = "text/html; charset=latin1"
-        r.text = u"ü"
         assert r.raw_content == b"\xfc"
-        assert r.headers["content-length"] == "1"
+
+        r.headers["content-type"] = "text/html; charset=utf8"
+        r.text = u"ü"
+        assert r.raw_content == b"\xc3\xbc"
+        assert r.headers["content-length"] == "2"
 
         r.encode("identity")
         with mock.patch("netlib.encoding.encode") as e:
@@ -224,12 +261,18 @@ class TestMessageText(object):
         r = tresp()
         r.headers["content-type"] = "text/html; charset=wtf"
         r.raw_content = b"foo"
-        assert r.text == u"foo"
+        with tutils.raises(ValueError):
+            assert r.text == u"foo"
+        assert r.get_text(strict=False) == u"foo"
 
     def test_cannot_decode(self):
         r = tresp()
+        r.headers["content-type"] = "text/html; charset=utf8"
         r.raw_content = b"\xFF"
-        assert r.text == u'\ufffd' if six.PY2 else '\udcff'
+        with tutils.raises(ValueError):
+            assert r.text
+
+        assert r.get_text(strict=False) == u'\ufffd' if six.PY2 else '\udcff'
 
     def test_cannot_encode(self):
         r = tresp()
@@ -237,9 +280,19 @@ class TestMessageText(object):
         assert "content-type" not in r.headers
         assert r.raw_content is None
 
-        r.headers["content-type"] = "text/html; charset=latin1"
+        r.headers["content-type"] = "text/html; charset=latin1; foo=bar"
         r.text = u"☃"
-        assert r.headers["content-type"] == "text/html; charset=utf-8"
+        assert r.headers["content-type"] == "text/html; charset=utf-8; foo=bar"
+        assert r.raw_content == b'\xe2\x98\x83'
+
+        r.headers["content-type"] = "gibberish"
+        r.text = u"☃"
+        assert r.headers["content-type"] == "text/plain; charset=utf-8"
+        assert r.raw_content == b'\xe2\x98\x83'
+
+        del r.headers["content-type"]
+        r.text = u"☃"
+        assert r.headers["content-type"] == "text/plain; charset=utf-8"
         assert r.raw_content == b'\xe2\x98\x83'
 
         r.headers["content-type"] = "text/html; charset=latin1"

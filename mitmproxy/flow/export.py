@@ -20,12 +20,9 @@ def curl_command(flow):
     data = "curl "
 
     request = flow.request.copy()
-    try:
-        request.decode()
-    except ValueError:
-        pass
+    request.decode(strict=False)
 
-    for k, v in request.headers.fields:
+    for k, v in request.headers.items(multi=True):
         data += "-H '%s:%s' " % (k, v)
 
     if request.method != "GET":
@@ -34,8 +31,8 @@ def curl_command(flow):
     full_url = request.scheme + "://" + request.host + request.path
     data += "'%s'" % full_url
 
-    if request.raw_content:
-        data += " --data-binary '%s'" % request.raw_content
+    if request.content:
+        data += " --data-binary '%s'" % request.content
 
     return data
 

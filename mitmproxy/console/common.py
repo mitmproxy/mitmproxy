@@ -257,16 +257,13 @@ def copy_flow_format_data(part, scope, flow):
         data = ""
         if scope in ("q", "a"):
             request = flow.request.copy()
-            try:
-                request.decode()
-            except ValueError:
-                pass
-            if request.raw_content is None:
+            request.decode(strict=False)
+            if request.content is None:
                 return None, "Request content is missing"
             if part == "h":
                 data += netlib.http.http1.assemble_request(request)
             elif part == "c":
-                data += request.raw_content
+                data += request.content
             else:
                 raise ValueError("Unknown part: {}".format(part))
         if scope == "a" and flow.request.raw_content and flow.response:
@@ -274,16 +271,13 @@ def copy_flow_format_data(part, scope, flow):
             data += "\r\n" * 2
         if scope in ("s", "a") and flow.response:
             response = flow.response.copy()
-            try:
-                response.decode()
-            except ValueError:
-                pass
-            if response.raw_content is None:
+            response.decode(strict=False)
+            if response.content is None:
                 return None, "Response content is missing"
             if part == "h":
                 data += netlib.http.http1.assemble_response(response)
             elif part == "c":
-                data += response.raw_content
+                data += response.content
             else:
                 raise ValueError("Unknown part: {}".format(part))
     return data, False
@@ -393,22 +387,14 @@ def ask_save_body(part, master, state, flow):
             ask_save_body("q", master, state, flow)
 
     elif part == "q" and request_has_content:
-        try:
-            content = flow.request.content
-        except ValueError:
-            content = flow.request.raw_content
         ask_save_path(
             "Save request content",
-            content
+            flow.request.get_content(strict=False),
         )
     elif part == "s" and response_has_content:
-        try:
-            content = flow.response.content
-        except ValueError:
-            content = flow.response.raw_content
         ask_save_path(
             "Save response content",
-            content
+            flow.response.get_content(strict=False),
         )
     else:
         signals.status_message.send(message="No content to save.")

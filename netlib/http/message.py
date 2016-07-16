@@ -53,14 +53,15 @@ class MessageData(basetypes.Serializable):
 
 
 class CachedDecode(object):
-    __slots__ = ["encoded", "encoding", "decoded"]
+    __slots__ = ["encoded", "encoding", "strict", "decoded"]
 
-    def __init__(self, object, encoding, decoded):
+    def __init__(self, object, encoding, strict, decoded):
         self.encoded = object
         self.encoding = encoding
+        self.strict = strict
         self.decoded = decoded
 
-no_cached_decode = CachedDecode(None, None, None)
+no_cached_decode = CachedDecode(None, None, None, None)
 
 
 class Message(basetypes.Serializable):
@@ -118,33 +119,44 @@ class Message(basetypes.Serializable):
     def raw_content(self, content):
         self.data.content = content
 
-    @property
-    def content(self):
-        # type: () -> bytes
+    def get_content(self, strict=True):
+        # type: (bool) -> bytes
         """
         The HTTP message body decoded with the content-encoding header (e.g. gzip)
 
         Raises:
-            ValueError, when getting the content and the content-encoding is invalid.
+            ValueError, when the content-encoding is invalid and strict is True.
 
         See also: :py:class:`raw_content`, :py:attr:`text`
         """
+        if self.raw_content is None:
+            return None
         ce = self.headers.get("content-encoding")
         cached = (
             self._content_cache.encoded == self.raw_content and
+            (self._content_cache.strict or not strict) and
             self._content_cache.encoding == ce
         )
         if not cached:
+            is_strict = True
             if ce:
-                decoded = encoding.decode(self.raw_content, ce)
+                try:
+                    decoded = encoding.decode(self.raw_content, ce)
+                except ValueError:
+                    if strict:
+                        raise
+                    is_strict = False
+                    decoded = self.raw_content
             else:
                 decoded = self.raw_content
-            self._content_cache = CachedDecode(self.raw_content, ce, decoded)
+            self._content_cache = CachedDecode(self.raw_content, ce, is_strict, decoded)
         return self._content_cache.decoded
 
-    @content.setter
-    def content(self, value):
-        if value is not None and not isinstance(value, bytes):
+    def set_content(self, value):
+        if value is None:
+            self.raw_content = None
+            return
+        if not isinstance(value, bytes):
             raise TypeError(
                 "Message content must be bytes, not {}. "
                 "Please use .text if you want to assign a str."
@@ -153,24 +165,23 @@ class Message(basetypes.Serializable):
         ce = self.headers.get("content-encoding")
         cached = (
             self._content_cache.decoded == value and
-            self._content_cache.encoding == ce
+            self._content_cache.encoding == ce and
+            self._content_cache.strict
         )
         if not cached:
             try:
-                if ce and value is not None:
-                    encoded = encoding.encode(value, ce)
-                else:
-                    encoded = value
+                encoded = encoding.encode(value, ce or "identity")
             except ValueError:
                 # So we have an invalid content-encoding?
                 # Let's remove it!
                 del self.headers["content-encoding"]
                 ce = None
                 encoded = value
-            self._content_cache = CachedDecode(encoded, ce, value)
+            self._content_cache = CachedDecode(encoded, ce, True, value)
         self.raw_content = self._content_cache.encoded
-        if isinstance(self.raw_content, bytes):
-            self.headers["content-length"] = str(len(self.raw_content))
+        self.headers["content-length"] = str(len(self.raw_content))
+
+    content = property(get_content, set_content)
 
     @property
     def http_version(self):
@@ -211,69 +222,87 @@ class Message(basetypes.Serializable):
         if ct:
             return ct[2].get("charset")
 
-    @property
-    def text(self):
-        # type: () -> six.text_type
+    def _guess_encoding(self):
+        # type: () -> str
+        enc = self._get_content_type_charset()
+        if enc:
+            return enc
+
+        if "json" in self.headers.get("content-type", ""):
+            return "utf8"
+        else:
+            # We may also want to check for HTML meta tags here at some point.
+            return "latin-1"
+
+    def get_text(self, strict=True):
+        # type: (bool) -> six.text_type
         """
         The HTTP message body decoded with both content-encoding header (e.g. gzip)
         and content-type header charset.
 
+        Raises:
+            ValueError, when either content-encoding or charset is invalid and strict is True.
+
         See also: :py:attr:`content`, :py:class:`raw_content`
         """
-        # This attribute should be called text, because that's what requests does.
-        enc = self._get_content_type_charset()
+        if self.raw_content is None:
+            return None
+        enc = self._guess_encoding()
 
-        # We may also want to check for HTML meta tags here at some point.
-
+        content = self.get_content(strict)
         cached = (
-            self._text_cache.encoded == self.content and
+            self._text_cache.encoded == content and
+            (self._text_cache.strict or not strict) and
             self._text_cache.encoding == enc
         )
         if not cached:
+            is_strict = self._content_cache.strict
             try:
-                if not enc:
-                    raise ValueError()
-                decoded = encoding.decode(self.content, enc)
+                decoded = encoding.decode(content, enc)
             except ValueError:
-                decoded = self.content.decode("utf8", "replace" if six.PY2 else "surrogateescape")
-            self._text_cache = CachedDecode(self.content, enc, decoded)
+                if strict:
+                    raise
+                is_strict = False
+                decoded = self.content.decode(enc, "replace" if six.PY2 else "surrogateescape")
+            self._text_cache = CachedDecode(content, enc, is_strict, decoded)
         return self._text_cache.decoded
 
-    @text.setter
-    def text(self, text):
-        enc = self._get_content_type_charset()
+    def set_text(self, text):
+        if text is None:
+            self.content = None
+            return
+        enc = self._guess_encoding()
+
         cached = (
             self._text_cache.decoded == text and
-            self._text_cache.encoding == enc
+            self._text_cache.encoding == enc and
+            self._text_cache.strict
         )
         if not cached:
             try:
-                if not enc:
-                    raise ValueError()
                 encoded = encoding.encode(text, enc)
             except ValueError:
-                # Do we have an unknown content-type charset?
-                # If so, we want to replace it with utf8.
-                if text and enc:
-                    self.headers["content-type"] = re.sub(
-                        "charset=[^;]+",
-                        "charset=utf-8",
-                        self.headers["content-type"]
-                    )
-                encoded = text.encode("utf8", "replace" if six.PY2 else "surrogateescape")
-            self._text_cache = CachedDecode(encoded, enc, text)
+                # Fall back to UTF-8 and update the content-type header.
+                ct = headers.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+                ct[2]["charset"] = "utf-8"
+                self.headers["content-type"] = headers.assemble_content_type(*ct)
+                enc = "utf8"
+                encoded = text.encode(enc, "replace" if six.PY2 else "surrogateescape")
+            self._text_cache = CachedDecode(encoded, enc, True, text)
         self.content = self._text_cache.encoded
 
-    def decode(self):
+    text = property(get_text, set_text)
+
+    def decode(self, strict=True):
         """
         Decodes body based on the current Content-Encoding header, then
         removes the header. If there is no Content-Encoding header, no
         action is taken.
 
         Raises:
-            ValueError, when the content-encoding is invalid.
+            ValueError, when the content-encoding is invalid and strict is True.
         """
-        self.raw_content = self.content
+        self.raw_content = self.get_content(strict)
         self.headers.pop("content-encoding", None)
 
     def encode(self, e):

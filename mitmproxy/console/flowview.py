@@ -427,11 +427,7 @@ class FlowView(tabs.Tabs):
             # editing message bodies, this can cause problems. For now, I
             # just strip the newlines off the end of the body when we return
             # from an editor.
-            try:
-                content = message.content
-            except ValueError:
-                content = message.raw_content
-            c = self.master.spawn_editor(content or b"")
+            c = self.master.spawn_editor(message.get_content(strict=False) or b"")
             message.content = c.rstrip(b"\n")
         elif part == "f":
             if not message.urlencoded_form and message.raw_content:
@@ -697,11 +693,7 @@ class FlowView(tabs.Tabs):
                 if conn.raw_content:
                     t = conn.headers.get("content-type")
                     if "EDITOR" in os.environ or "PAGER" in os.environ:
-                        try:
-                            content = conn.content
-                        except ValueError:
-                            content = conn.raw_content
-                        self.master.spawn_external_viewer(content, t)
+                        self.master.spawn_external_viewer(conn.get_content(strict=False), t)
                     else:
                         signals.status_message.send(
                             message = "Error! Set $EDITOR or $PAGER."

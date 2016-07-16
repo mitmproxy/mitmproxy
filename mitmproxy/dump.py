@@ -190,7 +190,7 @@ class DumpMaster(flow.FlowMaster):
             try:
                 content = message.content
             except ValueError:
-                content = message.raw_content
+                content = message.get_content(strict=False)
 
             if content is None:
                 self.echo("(content missing)", indent=4)

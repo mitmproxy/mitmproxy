@@ -54,20 +54,20 @@ class WSGIAdaptor(object):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 
     def make_environ(self, flow, errsoc, **extra):
+        """
+        Raises:
+            ValueError, if the content-encoding is invalid.
+        """
         path = strutils.native(flow.request.path, "latin-1")
         if '?' in path:
             path_info, query = strutils.native(path, "latin-1").split('?', 1)
         else:
             path_info = path
             query = ''
-        try:
-            content = flow.request.content
-        except ValueError:
-            content = flow.request.raw_content
         environ = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': strutils.native(flow.request.scheme, "latin-1"),
-            'wsgi.input': BytesIO(content or b""),
+            'wsgi.input': BytesIO(flow.request.content or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,

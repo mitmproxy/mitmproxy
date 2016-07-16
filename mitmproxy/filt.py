@@ -194,17 +194,11 @@ class FBod(_Rex):
 
     def __call__(self, f):
         if f.request and f.request.raw_content:
-            try:
-                if self.re.search(f.request.content):
-                    return True
-            except ValueError:
-                pass
+            if self.re.search(f.request.get_content(strict=False)):
+                return True
         if f.response and f.response.raw_content:
-            try:
-                if self.re.search(f.response.content):
-                    return True
-            except ValueError:
-                pass
+            if self.re.search(f.response.get_content(strict=False)):
+                return True
         return False
 
 
@@ -214,11 +208,8 @@ class FBodRequest(_Rex):
 
     def __call__(self, f):
         if f.request and f.request.raw_content:
-            try:
-                if self.re.search(f.request.content):
-                    return True
-            except ValueError:
-                pass
+            if self.re.search(f.request.get_content(strict=False)):
+                return True
 
 
 class FBodResponse(_Rex):
@@ -227,11 +218,8 @@ class FBodResponse(_Rex):
 
     def __call__(self, f):
         if f.response and f.response.raw_content:
-            try:
-                if self.re.search(f.response.content):
-                    return True
-            except ValueError:
-                pass
+            if self.re.search(f.response.get_content(strict=False)):
+                return True
 
 
 class FMethod(_Rex):

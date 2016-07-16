@@ -204,3 +204,15 @@ def parse_content_type(c):
             if len(clause) == 2:
                 d[clause[0].strip()] = clause[1].strip()
     return ts[0].lower(), ts[1].lower(), d
+
+
+def assemble_content_type(type, subtype, parameters):
+    if not parameters:
+        return "{}/{}".format(type, subtype)
+    params = "; ".join(
+        "{}={}".format(k, v)
+        for k, v in parameters.items()
+    )
+    return "{}/{}; {}".format(
+        type, subtype, params
+    )
