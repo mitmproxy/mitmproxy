@@ -8,11 +8,12 @@ from mitmproxy import flow, proxy, models, controller
 
 
 class MasterTest:
-    def invoke(self, master, handler, message):
+    def invoke(self, master, handler, *message):
         with master.handlecontext():
             func = getattr(master, handler)
-            func(message)
-        message.reply = controller.DummyReply()
+            func(*message)
+        if message:
+            message[0].reply = controller.DummyReply()
 
     def cycle(self, master, content):
         f = tutils.tflow(req=netlib.tutils.treq(content=content))
