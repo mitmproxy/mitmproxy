@@ -30,13 +30,20 @@ class Dumper():
         if ident:
             text = indent(ident, text)
         click.secho(text, file=self.outfp, **style)
+        if self.outfp:
+            self.outfp.flush()
 
     def _echo_message(self, message):
         if self.flow_detail >= 2 and hasattr(message, "headers"):
             headers = "\r\n".join(
                 "{}: {}".format(
-                    click.style(strutils.bytes_to_escaped_str(k), fg="blue", bold=True),
-                    click.style(strutils.bytes_to_escaped_str(v), fg="blue"))
+                    click.style(
+                        strutils.bytes_to_escaped_str(k), fg="blue", bold=True
+                    ),
+                    click.style(
+                        strutils.bytes_to_escaped_str(v), fg="blue"
+                    )
+                )
                 for k, v in message.headers.fields
             )
             self.echo(headers, ident=4)
@@ -105,7 +112,12 @@ class Dumper():
             stickycookie = ""
 
         if flow.client_conn:
-            client = click.style(strutils.escape_control_characters(flow.client_conn.address.host), bold=True)
+            client = click.style(
+                strutils.escape_control_characters(
+                    flow.client_conn.address.host
+                ),
+                bold=True
+            )
         else:
             client = click.style("[replay]", fg="yellow", bold=True)
 
@@ -114,7 +126,11 @@ class Dumper():
             GET="green",
             DELETE="red"
         ).get(method.upper(), "magenta")
-        method = click.style(strutils.escape_control_characters(method), fg=method_color, bold=True)
+        method = click.style(
+            strutils.escape_control_characters(method),
+            fg=method_color,
+            bold=True
+        )
         if self.showhost:
             url = flow.request.pretty_url
         else:
@@ -123,7 +139,8 @@ class Dumper():
 
         httpversion = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
-            httpversion = " " + flow.request.http_version  # We hide "normal" HTTP 1.
+            # We hide "normal" HTTP 1.
+            httpversion = " " + flow.request.http_version
 
         line = "{stickycookie}{client} {method} {url}{httpversion}".format(
             stickycookie=stickycookie,
@@ -148,8 +165,17 @@ class Dumper():
             code_color = "magenta"
         elif 400 <= code < 600:
             code_color = "red"
-        code = click.style(str(code), fg=code_color, bold=True, blink=(code == 418))
-        reason = click.style(strutils.escape_control_characters(flow.response.reason), fg=code_color, bold=True)
+        code = click.style(
+            str(code),
+            fg=code_color,
+            bold=True,
+            blink=(code == 418)
+        )
+        reason = click.style(
+            strutils.escape_control_characters(flow.response.reason),
+            fg=code_color,
+            bold=True
+        )
 
         if flow.response.raw_content is None:
             size = "(content missing)"
@@ -169,9 +195,6 @@ class Dumper():
         self.echo(line)
 
     def echo_flow(self, f):
-        if self.flow_detail == 0:
-            return
-
         if f.request:
             self._echo_request_line(f)
             self._echo_message(f.request)
@@ -183,13 +206,14 @@ class Dumper():
         if f.error:
             self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
 
-        if self.outfp:
-            self.outfp.flush()
-
-    def _process_flow(self, f):
-        if self.filt and not f.match(self.filt):
-            return
-        self.echo_flow(f)
+    def match(self, f):
+        if self.flow_detail == 0:
+            return False
+        if not self.filt:
+            return True
+        elif f.match(self.filt):
+            return True
+        return False
 
     def configure(self, options):
         if options.filtstr:
@@ -205,12 +229,15 @@ class Dumper():
         self.showhost = options.showhost
 
     def response(self, f):
-        self._process_flow(f)
+        if self.match(f):
+            self.echo_flow(f)
 
     def error(self, f):
-        self._process_flow(f)
+        if self.match(f):
+            self.echo_flow(f)
 
     def tcp_message(self, f):
+        # FIXME: Filter should be applied here
         if self.options.flow_detail == 0:
             return
         message = f.messages[-1]

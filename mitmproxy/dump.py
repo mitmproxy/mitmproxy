@@ -114,7 +114,7 @@ class DumpMaster(flow.FlowMaster):
 
     @controller.handler
     def request(self, f):
-        f = flow.FlowMaster.request(self, f)
+        f = super(DumpMaster, self).request(f)
         if f:
             self.state.delete_flow(f)
         return f
