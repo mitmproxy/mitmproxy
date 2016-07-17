@@ -466,10 +466,9 @@ def proxy_ssl_options(parser):
              "that will be served to the proxy client, as extras."
     )
     group.add_argument(
-        "--verify-upstream-cert", default=False,
-        action="store_true", dest="ssl_verify_upstream_cert",
-        help="Verify upstream server SSL/TLS certificates and fail if invalid "
-             "or not present."
+        "--insecure", default=False,
+        action="store_true", dest="ssl_insecure",
+        help="Do not verify upstream server SSL/TLS certificates."
     )
     group.add_argument(
         "--upstream-trusted-cadir", default=None, action="store",
