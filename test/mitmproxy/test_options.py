@@ -52,6 +52,17 @@ def test_setter():
         o.setter("nonexistent")
 
 
+def test_toggler():
+    o = TO(two=True)
+    f = o.toggler("two")
+    f()
+    assert o.two is False
+    f()
+    assert o.two is True
+    with tutils.raises("no such option"):
+        o.toggler("nonexistent")
+
+
 def test_rollback():
     o = TO(one="two")
 

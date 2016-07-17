@@ -74,8 +74,8 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Show Host",
                     "w",
-                    lambda: master.showhost,
-                    self.toggle_showhost
+                    lambda: master.options.showhost,
+                    master.options.toggler("showhost")
                 ),
 
                 select.Heading("Network"),
@@ -153,7 +153,6 @@ class Options(urwid.WidgetWrap):
 
     def clearall(self):
         self.master.killextra = False
-        self.master.showhost = False
         self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
         self.master.set_ignore_filter([])
@@ -165,6 +164,7 @@ class Options(urwid.WidgetWrap):
             replacements = [],
             scripts = [],
             setheaders = [],
+            showhost = False,
             stickyauth = None,
             stickycookie = None
         )
@@ -185,9 +185,6 @@ class Options(urwid.WidgetWrap):
 
     def toggle_killextra(self):
         self.master.killextra = not self.master.killextra
-
-    def toggle_showhost(self):
-        self.master.showhost = not self.master.showhost
 
     def toggle_refresh_server_playback(self):
         self.master.refresh_server_playback = not self.master.refresh_server_playback

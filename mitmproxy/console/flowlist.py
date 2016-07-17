@@ -118,7 +118,7 @@ class ConnectionItem(urwid.WidgetWrap):
         return common.format_flow(
             self.flow,
             self.f,
-            hostheader = self.master.showhost,
+            hostheader = self.master.options.showhost,
             marked=self.state.flow_marked(self.flow)
         )
 

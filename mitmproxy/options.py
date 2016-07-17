@@ -76,9 +76,22 @@ class Options(object):
             self.changed.send(self)
 
     def setter(self, attr):
+        """
+            Generate a setter for a given attribute. This returns a callable
+            taking a single argument.
+        """
         if attr not in self._opts:
             raise KeyError("No such option: %s" % attr)
         return lambda x: self.__setattr__(attr, x)
+
+    def toggler(self, attr):
+        """
+            Generate a toggler for a boolean attribute. This returns a callable
+            that takes no arguments.
+        """
+        if attr not in self._opts:
+            raise KeyError("No such option: %s" % attr)
+        return lambda: self.__setattr__(attr, not getattr(self, attr))
 
     def __repr__(self):
         options = pprint.pformat(self._opts, indent=4).strip(" {}")

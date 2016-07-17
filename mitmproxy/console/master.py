@@ -225,7 +225,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.killextra = options.kill
         self.rheaders = options.rheaders
         self.nopop = options.nopop
-        self.showhost = options.showhost
         self.palette = options.palette
         self.palette_transparent = options.palette_transparent
 
