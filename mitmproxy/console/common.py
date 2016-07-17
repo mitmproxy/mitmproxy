@@ -169,6 +169,27 @@ def ask_save_path(data, prompt="File path"):
     )
 
 
+def ask_scope_and_callback(flow, cb, *args):
+    request_has_content = flow.request and flow.request.raw_content
+    response_has_content = flow.response and flow.response.raw_content
+
+    if request_has_content and response_has_content:
+        signals.status_prompt_onekey.send(
+            prompt = "Save",
+            keys = (
+                ("request", "q"),
+                ("response", "s"),
+                ("both", "b"),
+            ),
+            callback = cb,
+            args = (flow,) + args
+        )
+    elif response_has_content:
+        cb("s", flow, *args)
+    else:
+        cb("q", flow, *args)
+
+
 def copy_to_clipboard_or_prompt(data):
     # pyperclip calls encode('utf-8') on data to be copied without checking.
     # if data are already encoded that way UnicodeDecodeError is thrown.
@@ -195,42 +216,40 @@ def copy_to_clipboard_or_prompt(data):
 
 
 def format_flow_data(key, scope, flow):
-    if key == "u":
-        data = flow.request.url
-    else:
-        data = ""
-        if scope in ("q", "a"):
-            request = flow.request.copy()
-            request.decode(strict=False)
-            if request.content is None:
-                return None, "Request content is missing"
-            if key == "h":
-                data += netlib.http.http1.assemble_request(request)
-            elif key == "c":
-                data += request.content
-            else:
-                raise ValueError("Unknown key: {}".format(key))
-        if scope == "a" and flow.request.raw_content and flow.response:
-            # Add padding between request and response
-            data += "\r\n" * 2
-        if scope in ("s", "a") and flow.response:
-            response = flow.response.copy()
-            response.decode(strict=False)
-            if response.content is None:
-                return None, "Response content is missing"
-            if key == "h":
-                data += netlib.http.http1.assemble_response(response)
-            elif key == "c":
-                data += response.content
-            else:
-                raise ValueError("Unknown key: {}".format(key))
+    data = ""
+    if scope in ("q", "b"):
+        request = flow.request.copy()
+        request.decode(strict=False)
+        if request.content is None:
+            return None, "Request content is missing"
+        if key == "h":
+            data += netlib.http.http1.assemble_request(request)
+        elif key == "c":
+            data += request.get_content(strict=False)
+        else:
+            raise ValueError("Unknown key: {}".format(key))
+    if scope == "b" and flow.request.raw_content and flow.response:
+        # Add padding between request and response
+        data += "\r\n" * 2
+    if scope in ("s", "b") and flow.response:
+        response = flow.response.copy()
+        response.decode(strict=False)
+        if response.content is None:
+            return None, "Response content is missing"
+        if key == "h":
+            data += netlib.http.http1.assemble_response(response)
+        elif key == "c":
+            data += response.get_content(strict=False)
+        else:
+            raise ValueError("Unknown key: {}".format(key))
     return data, False
 
 
-def write_flow_data(key, scope, flow, writer):
+def handle_flow_data(scope, flow, key, writer):
     """
     key: _c_ontent, _h_eaders+content, _u_rl
-    scope: _a_ll, re_q_uest, re_s_ponse
+    scope: re_q_uest, re_s_ponse, _b_oth
+    writer: copy_to_clipboard_or_prompt, ask_save_path
     """
     data, err = format_flow_data(key, scope, flow)
 
@@ -240,11 +259,11 @@ def write_flow_data(key, scope, flow, writer):
 
     if not data:
         if scope == "q":
-            signals.status_message.send(message="No request content to copy.")
+            signals.status_message.send(message="No request content.")
         elif scope == "s":
-            signals.status_message.send(message="No response content to copy.")
+            signals.status_message.send(message="No response content.")
         else:
-            signals.status_message.send(message="No contents to copy.")
+            signals.status_message.send(message="No content.")
         return
 
     writer(data)
@@ -254,30 +273,14 @@ def ask_save_body(scope, flow):
     """
     Save either the request or the response body to disk.
 
-    'scope' can either be "q" (request), "s" (response) or None (ask user if necessary).
+    scope: re_q_uest, re_s_ponse, _b_oth, None (ask user if necessary)
     """
 
     request_has_content = flow.request and flow.request.raw_content
     response_has_content = flow.response and flow.response.raw_content
 
     if scope is None:
-        # We first need to determine whether we want to save the request or the
-        # response content.
-        if request_has_content and response_has_content:
-            signals.status_prompt_onekey.send(
-                prompt = "Save",
-                keys = (
-                    ("request", "q"),
-                    ("response", "s"),
-                ),
-                callback = ask_save_body,
-                args = (flow)
-            )
-        elif response_has_content:
-            ask_save_body("s", flow)
-        else:
-            ask_save_body("q", flow)
-
+        ask_scope_and_callback(flow, ask_save_body)
     elif scope == "q" and request_has_content:
         ask_save_path(
             flow.request.get_content(strict=False),
@@ -288,28 +291,42 @@ def ask_save_body(scope, flow):
             flow.response.get_content(strict=False),
             "Save response content to"
         )
+    elif scope == "b" and request_has_content and response_has_content:
+        ask_save_path(
+            (flow.request.get_content(strict=False) + "\n" +
+             flow.response.get_content(strict=False)),
+            "Save request & response content to"
+        )
     else:
-        signals.status_message.send(message="No content to save.")
+        signals.status_message.send(message="No content.")
 
 
 def export_to_clip_or_file(key, scope, flow, writer):
     """
     Export selected flow to clipboard or a file.
 
-    'writer' is a function that handles the data
-    can be: copy_to_clipboard_or_prompt or ask_save_path
+    key:    _c_ontent, _h_eaders+content, _u_rl,
+            cu_r_l_command, _p_ython_code,
+            _l_ocust_code, locust_t_ask
+    scope:  None, _a_ll, re_q_uest, re_s_ponse
+    writer: copy_to_clipboard_or_prompt, ask_save_path
     """
 
     for exporter in export.EXPORTERS:
-        if key in ["c", "h", "u"]:
-            write_flow_data(key, scope, flow, writer)
-        if key == "r":
+        if key in ["c", "h"]:
+            if scope is None:
+                ask_scope_and_callback(flow, handle_flow_data, key, writer)
+            else:
+                handle_flow_data(scope, flow, key, writer)
+        elif key == "u":
+            writer(flow.request.url)
+        elif key == "r":
             writer(export.curl_command(flow))
-        if key == "p":
+        elif key == "p":
             writer(export.python_code(flow))
-        if key == "l":
+        elif key == "l":
             writer(export.locust_code(flow))
-        if key == "t":
+        elif key == "t":
             writer(export.locust_task(flow))
 
 flowcache = utils.LRUCache(800)
