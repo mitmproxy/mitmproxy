@@ -63,6 +63,7 @@
     tutorials/30second
     tutorials/gamecenter
     tutorials/transparent-dhcp
+    tutorials/blockheads
 
 
 .. toctree::
