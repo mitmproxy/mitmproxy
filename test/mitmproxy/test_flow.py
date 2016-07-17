@@ -751,7 +751,11 @@ class TestFlowMaster:
 
         f = tutils.tflow(resp=True)
         pb = [tutils.tflow(resp=True), f]
-        fm = flow.FlowMaster(None, DummyServer(ProxyConfig()), s)
+        fm = flow.FlowMaster(
+            flow.options.Options(),
+            DummyServer(ProxyConfig()),
+            s
+        )
         assert not fm.start_server_playback(
             pb,
             False,
@@ -779,7 +783,7 @@ class TestFlowMaster:
         f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
 
-        fm = flow.FlowMaster(None, None, s)
+        fm = flow.FlowMaster(flow.options.Options(), None, s)
         fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 

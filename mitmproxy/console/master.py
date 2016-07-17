@@ -220,9 +220,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.set_stream_large_bodies(options.stream_large_bodies)
 
-        self.refresh_server_playback = options.refresh_server_playback
-        self.anticache = options.anticache
-        self.killextra = options.kill
         self.rheaders = options.rheaders
         self.nopop = options.nopop
         self.palette = options.palette
@@ -372,7 +369,7 @@ class ConsoleMaster(flow.FlowMaster):
         if flows:
             self.start_server_playback(
                 flows,
-                self.killextra, self.rheaders,
+                self.options.kill, self.rheaders,
                 False, self.nopop,
                 self.options.replay_ignore_params,
                 self.options.replay_ignore_content,
