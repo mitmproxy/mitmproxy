@@ -4,7 +4,7 @@ from .. import tutils, mastertest
 
 import os.path
 
-from mitmproxy.builtins import stream
+from mitmproxy.builtins import filestreamer
 from mitmproxy.flow import master, FlowReader
 from mitmproxy.flow import state
 from mitmproxy.flow import options
@@ -27,7 +27,7 @@ class TestStream(mastertest.MasterTest):
                 None,
                 s
             )
-            sa = stream.Stream()
+            sa = filestreamer.FileStreamer()
 
             m.addons.add(sa)
             f = tutils.tflow(resp=True)

@@ -2,10 +2,10 @@ from __future__ import absolute_import, print_function, division
 
 from mitmproxy.builtins import anticache
 from mitmproxy.builtins import anticomp
+from mitmproxy.builtins import filestreamer
 from mitmproxy.builtins import stickyauth
 from mitmproxy.builtins import stickycookie
 from mitmproxy.builtins import script
-from mitmproxy.builtins import stream
 from mitmproxy.builtins import replace
 
 
@@ -16,6 +16,6 @@ def default_addons():
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
         script.ScriptLoader(),
-        stream.Stream(),
+        filestreamer.FileStreamer(),
         replace.Replace(),
     ]
