@@ -4,7 +4,7 @@ from mitmproxy.flow import export, modules
 from mitmproxy.flow.io import FlowWriter, FilteredFlowWriter, FlowReader, read_flows_from_paths
 from mitmproxy.flow.master import FlowMaster
 from mitmproxy.flow.modules import (
-    AppRegistry, ReplaceHooks, SetHeaders, StreamLargeBodies, ClientPlaybackState,
+    AppRegistry, SetHeaders, StreamLargeBodies, ClientPlaybackState,
     ServerPlaybackState
 )
 from mitmproxy.flow.state import State, FlowView
@@ -16,7 +16,7 @@ __all__ = [
     "export", "modules",
     "FlowWriter", "FilteredFlowWriter", "FlowReader", "read_flows_from_paths",
     "FlowMaster",
-    "AppRegistry", "ReplaceHooks", "SetHeaders", "StreamLargeBodies", "ClientPlaybackState",
+    "AppRegistry", "SetHeaders", "StreamLargeBodies", "ClientPlaybackState",
     "ServerPlaybackState", "State", "FlowView",
     "options",
 ]
