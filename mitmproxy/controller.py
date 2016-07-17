@@ -220,6 +220,12 @@ def handler(f):
 
         if handling and not message.reply.acked and not message.reply.taken:
             message.reply.ack()
+
+        # Reset the handled flag - it's common for us to feed the same object
+        # through handlers repeatedly, so we don't want this to persist across
+        # calls.
+        if message.reply.handled:
+            message.reply.handled = False
         return ret
     # Mark this function as a handler wrapper
     wrapper.__dict__["__handler"] = True

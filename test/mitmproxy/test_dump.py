@@ -1,65 +1,9 @@
 import os
 from six.moves import cStringIO as StringIO
-from mitmproxy.exceptions import ContentViewException
 
-import netlib.tutils
-
-from mitmproxy import dump, flow, models, exceptions
+from mitmproxy import dump, flow, exceptions
 from . import tutils, mastertest
 import mock
-
-
-def test_strfuncs():
-    o = dump.Options(
-        tfile = StringIO(),
-        flow_detail = 0,
-    )
-    m = dump.DumpMaster(None, o)
-
-    m.o.flow_detail = 0
-    m.echo_flow(tutils.tflow())
-    assert not o.tfile.getvalue()
-
-    m.o.flow_detail = 4
-    m.echo_flow(tutils.tflow())
-    assert o.tfile.getvalue()
-
-    o.tfile = StringIO()
-    m.echo_flow(tutils.tflow(resp=True))
-    assert "<<" in o.tfile.getvalue()
-
-    o.tfile = StringIO()
-    m.echo_flow(tutils.tflow(err=True))
-    assert "<<" in o.tfile.getvalue()
-
-    flow = tutils.tflow()
-    flow.request = netlib.tutils.treq()
-    flow.request.stickycookie = True
-    flow.client_conn = mock.MagicMock()
-    flow.client_conn.address.host = "foo"
-    flow.response = netlib.tutils.tresp(content=None)
-    flow.response.is_replay = True
-    flow.response.status_code = 300
-    m.echo_flow(flow)
-
-    flow = tutils.tflow(resp=netlib.tutils.tresp(content=b"{"))
-    flow.response.headers["content-type"] = "application/json"
-    flow.response.status_code = 400
-    m.echo_flow(flow)
-
-
-@mock.patch("mitmproxy.contentviews.get_content_view")
-def test_contentview(get_content_view):
-    get_content_view.side_effect = ContentViewException(""), ("x", iter([]))
-
-    o = dump.Options(
-        flow_detail=4,
-        verbosity=3,
-        tfile=StringIO(),
-    )
-    m = dump.DumpMaster(None, o)
-    m.echo_flow(tutils.tflow())
-    assert "Content viewer failed" in m.options.tfile.getvalue()
 
 
 class TestDumpMaster(mastertest.MasterTest):
@@ -72,11 +16,7 @@ class TestDumpMaster(mastertest.MasterTest):
             options["verbosity"] = 0
         if "flow_detail" not in options:
             options["flow_detail"] = 0
-        o = dump.Options(
-            filtstr=filt,
-            tfile=StringIO(),
-            **options
-        )
+        o = dump.Options(filtstr=filt, tfile=StringIO(), **options)
         return dump.DumpMaster(None, o)
 
     def test_basic(self):
@@ -104,23 +44,9 @@ class TestDumpMaster(mastertest.MasterTest):
         )
         m = dump.DumpMaster(None, o)
         f = tutils.tflow(err=True)
-        m.request(f)
+        m.error(f)
         assert m.error(f)
         assert "error" in o.tfile.getvalue()
-
-    def test_missing_content(self):
-        o = dump.Options(
-            flow_detail=3,
-            tfile=StringIO(),
-        )
-        m = dump.DumpMaster(None, o)
-        f = tutils.tflow()
-        f.request.content = None
-        m.request(f)
-        f.response = models.HTTPResponse.wrap(netlib.tutils.tresp())
-        f.response.content = None
-        m.response(f)
-        assert "content missing" in o.tfile.getvalue()
 
     def test_replay(self):
         o = dump.Options(server_replay=["nonexistent"], kill=True)
@@ -155,9 +81,8 @@ class TestDumpMaster(mastertest.MasterTest):
             self.flowfile(p)
             assert "GET" in self.dummy_cycle(
                 self.mkmaster(None, flow_detail=1, rfile=p),
-                0, b"",
+                1, b"",
             )
-
             tutils.raises(
                 dump.DumpError,
                 self.mkmaster, None, verbosity=1, rfile="/nonexistent"
