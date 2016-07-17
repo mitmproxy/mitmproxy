@@ -117,3 +117,9 @@ class TestIsJson():
         headers = Headers(content_type="application/json")
         j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
         assert isinstance(j, dict)
+
+
+class TestURL():
+    def test_url(self):
+        flow = tutils.tflow()
+        assert export.url(flow) == "http://address:22/path"

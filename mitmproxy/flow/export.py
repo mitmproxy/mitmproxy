@@ -194,6 +194,10 @@ def locust_task(flow):
     return task_code
 
 
+def url(flow):
+    return flow.request.url
+
+
 EXPORTERS = [
     ("content", "c"),
     ("headers+content", "h"),
