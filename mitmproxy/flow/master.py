@@ -35,7 +35,6 @@ class FlowMaster(controller.Master):
         self.kill_nonreplay = False
 
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
-        self.refresh_server_playback = False
         self.replay_ignore_params = False
         self.replay_ignore_content = None
         self.replay_ignore_host = False
@@ -120,7 +119,7 @@ class FlowMaster(controller.Master):
                 return None
             response = rflow.response.copy()
             response.is_replay = True
-            if self.refresh_server_playback:
+            if self.options.refresh_server_playback:
                 response.refresh()
             flow.response = response
             return True

@@ -74,8 +74,8 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Show Host",
                     "w",
-                    lambda: master.showhost,
-                    self.toggle_showhost
+                    lambda: master.options.showhost,
+                    master.options.toggler("showhost")
                 ),
 
                 select.Heading("Network"),
@@ -97,25 +97,25 @@ class Options(urwid.WidgetWrap):
                     "Anti-Cache",
                     "a",
                     lambda: master.options.anticache,
-                    self.toggle_anticache
+                    master.options.toggler("anticache")
                 ),
                 select.Option(
                     "Anti-Compression",
                     "o",
                     lambda: master.options.anticomp,
-                    self.toggle_anticomp
+                    master.options.toggler("anticomp")
                 ),
                 select.Option(
                     "Kill Extra",
                     "x",
-                    lambda: master.killextra,
-                    self.toggle_killextra
+                    lambda: master.options.kill,
+                    master.options.toggler("kill")
                 ),
                 select.Option(
                     "No Refresh",
                     "f",
-                    lambda: not master.refresh_server_playback,
-                    self.toggle_refresh_server_playback
+                    lambda: not master.options.refresh_server_playback,
+                    master.options.toggler("refresh_server_playback")
                 ),
                 select.Option(
                     "Sticky Auth",
@@ -152,9 +152,6 @@ class Options(urwid.WidgetWrap):
         return super(self.__class__, self).keypress(size, key)
 
     def clearall(self):
-        self.master.killextra = False
-        self.master.showhost = False
-        self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
@@ -162,9 +159,12 @@ class Options(urwid.WidgetWrap):
         self.master.options.update(
             anticache = False,
             anticomp = False,
+            kill = False,
+            refresh_server_playback = True,
             replacements = [],
             scripts = [],
             setheaders = [],
+            showhost = False,
             stickyauth = None,
             stickycookie = None
         )
@@ -177,33 +177,16 @@ class Options(urwid.WidgetWrap):
             expire = 1
         )
 
-    def toggle_anticache(self):
-        self.master.options.anticache = not self.master.options.anticache
-
-    def toggle_anticomp(self):
-        self.master.options.anticomp = not self.master.options.anticomp
-
-    def toggle_killextra(self):
-        self.master.killextra = not self.master.killextra
-
-    def toggle_showhost(self):
-        self.master.showhost = not self.master.showhost
-
-    def toggle_refresh_server_playback(self):
-        self.master.refresh_server_playback = not self.master.refresh_server_playback
-
     def toggle_upstream_cert(self):
         self.master.server.config.no_upstream_cert = not self.master.server.config.no_upstream_cert
         signals.update_settings.send(self)
 
     def setheaders(self):
-        def _set(shdrs):
-            self.master.options.setheaders = shdrs
         self.master.view_grideditor(
             grideditor.SetHeadersEditor(
                 self.master,
                 self.master.options.setheaders,
-                _set
+                self.master.options.setter("setheaders")
             )
         )
 
@@ -219,14 +202,11 @@ class Options(urwid.WidgetWrap):
         )
 
     def replacepatterns(self):
-        def _set(replacements):
-            self.master.options.replacements = replacements
-            signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.ReplaceEditor(
                 self.master,
                 self.master.options.replacements,
-                _set
+                self.master.options.setter("replacements")
             )
         )
 
