@@ -36,7 +36,6 @@ class FlowMaster(controller.Master):
 
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.refresh_server_playback = False
-        self.setheaders = modules.SetHeaders()
         self.replay_ignore_params = False
         self.replay_ignore_content = None
         self.replay_ignore_host = False
@@ -329,8 +328,6 @@ class FlowMaster(controller.Master):
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
         if not f.reply.acked:
-            self.setheaders.run(f)
-        if not f.reply.acked:
             self.process_new_request(f)
         return f
 
@@ -347,8 +344,6 @@ class FlowMaster(controller.Master):
     @controller.handler
     def response(self, f):
         self.state.update_flow(f)
-        if not f.reply.acked:
-            self.setheaders.run(f)
         if not f.reply.acked:
             if self.client_playback:
                 self.client_playback.clear(f)

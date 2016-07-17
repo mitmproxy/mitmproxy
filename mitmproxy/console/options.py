@@ -36,7 +36,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Header Set Patterns",
                     "H",
-                    lambda: master.setheaders.count(),
+                    lambda: len(master.options.setheaders),
                     self.setheaders
                 ),
                 select.Option(
@@ -156,7 +156,6 @@ class Options(urwid.WidgetWrap):
         self.master.showhost = False
         self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
-        self.master.setheaders.clear()
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
 
@@ -165,6 +164,7 @@ class Options(urwid.WidgetWrap):
             anticomp = False,
             replacements = [],
             scripts = [],
+            setheaders = [],
             stickyauth = None,
             stickycookie = None
         )
@@ -197,13 +197,12 @@ class Options(urwid.WidgetWrap):
         signals.update_settings.send(self)
 
     def setheaders(self):
-        def _set(*args, **kwargs):
-            self.master.setheaders.set(*args, **kwargs)
-            signals.update_settings.send(self)
+        def _set(shdrs):
+            self.master.options.setheaders = shdrs
         self.master.view_grideditor(
             grideditor.SetHeadersEditor(
                 self.master,
-                self.master.setheaders.get_specs(),
+                self.master.options.setheaders,
                 _set
             )
         )
@@ -211,7 +210,6 @@ class Options(urwid.WidgetWrap):
     def ignorepatterns(self):
         def _set(ignore):
             self.master.set_ignore_filter(ignore)
-            signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.HostPatternEditor(
                 self.master,

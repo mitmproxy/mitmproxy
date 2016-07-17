@@ -137,7 +137,7 @@ class StatusBar(urwid.WidgetWrap):
     def get_status(self):
         r = []
 
-        if self.master.setheaders.count():
+        if len(self.master.options.setheaders):
             r.append("[")
             r.append(("heading_key", "H"))
             r.append("eaders]")

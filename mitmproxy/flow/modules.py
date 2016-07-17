@@ -5,7 +5,6 @@ import hashlib
 from six.moves import urllib
 
 from mitmproxy import controller
-from mitmproxy import filt
 from netlib import wsgi
 from netlib import version
 from netlib import strutils
@@ -37,60 +36,6 @@ class AppRegistry:
         if "host" in request.headers:
             host = request.headers["host"]
             return self.apps.get((host, request.port), None)
-
-
-class SetHeaders:
-    def __init__(self):
-        self.lst = []
-
-    def set(self, r):
-        self.clear()
-        for i in r:
-            self.add(*i)
-
-    def add(self, fpatt, header, value):
-        """
-            Add a set header hook.
-
-            fpatt: String specifying a filter pattern.
-            header: Header name.
-            value: Header value string
-
-            Returns True if hook was added, False if the pattern could not be
-            parsed.
-        """
-        cpatt = filt.parse(fpatt)
-        if not cpatt:
-            return False
-        self.lst.append((fpatt, header, value, cpatt))
-        return True
-
-    def get_specs(self):
-        """
-            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s)
-            tuples.
-        """
-        return [i[:3] for i in self.lst]
-
-    def count(self):
-        return len(self.lst)
-
-    def clear(self):
-        self.lst = []
-
-    def run(self, f):
-        for _, header, value, cpatt in self.lst:
-            if cpatt(f):
-                if f.response:
-                    f.response.headers.pop(header, None)
-                else:
-                    f.request.headers.pop(header, None)
-        for _, header, value, cpatt in self.lst:
-            if cpatt(f):
-                if f.response:
-                    f.response.headers.add(header, value)
-                else:
-                    f.request.headers.add(header, value)
 
 
 class StreamLargeBodies(object):
