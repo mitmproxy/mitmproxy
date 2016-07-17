@@ -18,6 +18,7 @@ from mitmproxy.console import grideditor
 from mitmproxy.console import searchable
 from mitmproxy.console import signals
 from mitmproxy.console import tabs
+from mitmproxy.flow import export
 from netlib.http import Headers
 from netlib.http import status_codes
 
@@ -74,8 +75,8 @@ def _mkhelp():
          [("text", ": XML")]
          ),
         ("M", "change default body display mode"),
-        ("p", "previous flow"),
-        ("P", "copy request/response (content/headers) to clipboard"),
+        ("p", "export flow to file"),
+        ("P", "export flow to clipboard"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
@@ -588,20 +589,6 @@ class FlowView(tabs.Tabs):
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
             )
-        elif key == "E":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Export",
-                keys = (
-                    ("as curl command", "c"),
-                    ("as python code", "p"),
-                    ("as raw request", "r"),
-                    ("as locust code", "l"),
-                    ("as locust task", "t"),
-                ),
-                callback = common.export_prompt,
-                args = (self.flow,)
-            )
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
@@ -609,7 +596,7 @@ class FlowView(tabs.Tabs):
                 args = (self.flow,)
             )
 
-        if not conn and key in set(list("befgmxvz")):
+        if not conn and key in set(list("befgmxvzpP")):
             signals.status_message.send(
                 message = "Tab to the request or response",
                 expire = 1
@@ -662,12 +649,6 @@ class FlowView(tabs.Tabs):
                 )
                 signals.flow_change.send(self, flow = self.flow)
                 signals.status_message.send(message="")
-            elif key == "P":
-                if self.tab_offset == TAB_REQ:
-                    scope = "q"
-                else:
-                    scope = "s"
-                common.ask_copy_part(scope, self.flow, self.master, self.state)
             elif key == "m":
                 p = list(contentviews.view_prompts)
                 p.insert(0, ("Clear", "C"))
@@ -678,6 +659,30 @@ class FlowView(tabs.Tabs):
                     callback = self.change_this_display_mode
                 )
                 key = None
+            elif key == "p":
+                if self.tab_offset == TAB_REQ:
+                    scope = "q"
+                else:
+                    scope = "s"
+                signals.status_prompt_onekey.send(
+                    self,
+                    prompt = "Export to file",
+                    keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                    callback = common.export_to_clip_or_file,
+                    args = (scope, self.flow, common.ask_save_path)
+                )
+            elif key == "P":
+                if self.tab_offset == TAB_REQ:
+                    scope = "q"
+                else:
+                    scope = "s"
+                signals.status_prompt_onekey.send(
+                    self,
+                    prompt = "Export to clipboard",
+                    keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                    callback = common.export_to_clip_or_file,
+                    args = (scope, self.flow, common.copy_to_clipboard_or_prompt)
+                )
             elif key == "x":
                 signals.status_prompt_onekey.send(
                     prompt = "Delete body",
