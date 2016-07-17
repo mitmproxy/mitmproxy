@@ -87,30 +87,30 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
 class _Http2TestBase(object):
 
     @classmethod
-    def setup_class(self):
-        self.config = ProxyConfig(**self.get_proxy_config())
+    def setup_class(cls):
+        cls.config = ProxyConfig(**cls.get_proxy_config())
 
-        tmaster = tservers.TestMaster(self.config)
+        tmaster = tservers.TestMaster(cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
-        self.proxy = tservers.ProxyThread(tmaster)
-        self.proxy.start()
+        cls.proxy = tservers.ProxyThread(tmaster)
+        cls.proxy.start()
 
     @classmethod
     def teardown_class(cls):
         cls.proxy.shutdown()
 
-    @property
-    def master(self):
-        return self.proxy.tmaster
-
     @classmethod
     def get_proxy_config(cls):
         cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return dict(
-            no_upstream_cert = False,
-            cadir = cls.cadir,
-            authenticator = None,
+            no_upstream_cert=False,
+            cadir=cls.cadir,
+            authenticator=None,
         )
+
+    @property
+    def master(self):
+        return self.proxy.tmaster
 
     def setup(self):
         self.master.clear_log()
