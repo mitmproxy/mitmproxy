@@ -150,13 +150,17 @@ class _Http2TestBase(object):
                       stream_id=1,
                       headers=[],
                       body=b'',
+                      end_stream=None,
                       priority_exclusive=None,
                       priority_depends_on=None,
                       priority_weight=None):
+        if end_stream is None:
+            end_stream = (len(body) == 0)
+
         h2_conn.send_headers(
             stream_id=stream_id,
             headers=headers,
-            end_stream=(len(body) == 0),
+            end_stream=end_stream,
             priority_exclusive=priority_exclusive,
             priority_depends_on=priority_depends_on,
             priority_weight=priority_weight,
@@ -373,6 +377,153 @@ class TestRequestWithPriority(_Http2Test):
         assert 'priority_exclusive' not in self.master.state.flows[0].response.headers
         assert 'priority_depends_on' not in self.master.state.flows[0].response.headers
         assert 'priority_weight' not in self.master.state.flows[0].response.headers
+
+
+@requires_alpn
+class TestPriority(_Http2Test):
+    priority_data = None
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.PriorityUpdated):
+            self.priority_data = (event.exclusive, event.depends_on, event.weight)
+        elif isinstance(event, h2.events.RequestReceived):
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+
+                headers = [(':status', '200')]
+                h2_conn.send_headers(event.stream_id, headers)
+            h2_conn.end_stream(event.stream_id)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_priority(self):
+        client, h2_conn = self._setup_connection()
+
+        h2_conn.prioritize(1, exclusive=True, depends_on=0, weight=42)
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+        )
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.priority_data == (True, 0, 42)
+
+
+@requires_alpn
+class TestPriorityWithExistingStream(_Http2Test):
+    priority_data = []
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.PriorityUpdated):
+            self.priority_data.append((event.exclusive, event.depends_on, event.weight))
+        elif isinstance(event, h2.events.RequestReceived):
+            assert not event.priority_updated
+
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+
+                headers = [(':status', '200')]
+                h2_conn.send_headers(event.stream_id, headers)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        elif isinstance(event, h2.events.StreamEnded):
+            h2_conn.end_stream(event.stream_id)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_priority_with_existing_stream(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+            end_stream=False,
+        )
+
+        h2_conn.prioritize(1, exclusive=True, depends_on=0, weight=42)
+        h2_conn.end_stream(1)
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.priority_data == [(True, 0, 42)]
 
 
 @requires_alpn
