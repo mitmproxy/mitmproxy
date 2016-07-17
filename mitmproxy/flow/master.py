@@ -30,7 +30,6 @@ class FlowMaster(controller.Master):
         if server:
             self.add_server(server)
         self.state = state
-        self.active_flows = set()  # type: Set[models.Flow]
         self.server_playback = None  # type: Optional[modules.ServerPlaybackState]
         self.client_playback = None  # type: Optional[modules.ClientPlaybackState]
         self.kill_nonreplay = False
@@ -329,7 +328,6 @@ class FlowMaster(controller.Master):
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
-        self.active_flows.add(f)
         if not f.reply.acked:
             self.setheaders.run(f)
         if not f.reply.acked:
@@ -348,7 +346,6 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def response(self, f):
-        self.active_flows.discard(f)
         self.state.update_flow(f)
         if not f.reply.acked:
             self.setheaders.run(f)
@@ -367,7 +364,7 @@ class FlowMaster(controller.Master):
     def tcp_open(self, flow):
         # TODO: This would break mitmproxy currently.
         # self.state.add_flow(flow)
-        self.active_flows.add(flow)
+        pass
 
     @controller.handler
     def tcp_message(self, flow):
@@ -382,4 +379,4 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def tcp_close(self, flow):
-        self.active_flows.discard(flow)
+        pass

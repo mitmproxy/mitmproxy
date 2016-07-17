@@ -1,14 +1,14 @@
 from __future__ import absolute_import, print_function, division
 import os.path
 
-from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy.flow import io
 
 
-class Stream:
+class FileStreamer:
     def __init__(self):
         self.stream = None
+        self.active_flows = set()  # type: Set[models.Flow]
 
     def start_stream_to_path(self, path, mode, filt):
         path = os.path.expanduser(path)
@@ -17,6 +17,7 @@ class Stream:
         except IOError as v:
             return str(v)
         self.stream = io.FilteredFlowWriter(f, filt)
+        self.active_flows = set()
 
     def configure(self, options):
         # We're already streaming - stop the previous stream and restart
@@ -38,17 +39,28 @@ class Stream:
             if err:
                 raise exceptions.OptionsError(err)
 
-    def done(self):
+    def tcp_open(self, flow):
         if self.stream:
-            for flow in ctx.master.active_flows:
-                self.stream.add(flow)
-            self.stream.fo.close()
-            self.stream = None
+            self.active_flows.add(flow)
 
     def tcp_close(self, flow):
         if self.stream:
             self.stream.add(flow)
+            self.active_flows.discard(flow)
 
     def response(self, flow):
         if self.stream:
             self.stream.add(flow)
+            self.active_flows.discard(flow)
+
+    def request(self, flow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def done(self):
+        if self.stream:
+            for flow in self.active_flows:
+                self.stream.add(flow)
+            self.active_flows = set([])
+            self.stream.fo.close()
+            self.stream = None
