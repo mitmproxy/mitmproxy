@@ -216,7 +216,7 @@ def save_data(path, data):
     if not path:
         return
     try:
-        with file(path, "wb") as f:
+        with open(path, "wb") as f:
             f.write(data)
     except IOError as v:
         signals.status_message.send(message=v.strerror)

@@ -396,7 +396,7 @@ class GridEditor(urwid.WidgetWrap):
         if p:
             try:
                 p = os.path.expanduser(p)
-                d = file(p, "rb").read()
+                d = open(p, "rb").read()
                 self.walker.set_current_value(d, unescaped)
                 self.walker._modified()
             except IOError as v:

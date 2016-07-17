@@ -608,7 +608,7 @@ class ConsoleMaster(flow.FlowMaster):
             return
         path = os.path.expanduser(path)
         try:
-            f = file(path, "wb")
+            f = open(path, "wb")
             fw = flow.FlowWriter(f)
             for i in flows:
                 fw.add(i)
