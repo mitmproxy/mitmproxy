@@ -199,11 +199,11 @@ def url(flow):
 
 
 EXPORTERS = [
-    ("content", "c"),
-    ("headers+content", "h"),
-    ("url", "u"),
-    ("as curl command", "r"),
-    ("as python code", "p"),
-    ("as locust code", "l"),
-    ("as locust task", "t"),
+    ("content", "c", None),
+    ("headers+content", "h", None),
+    ("url", "u", url),
+    ("as curl command", "r", curl_command),
+    ("as python code", "p", python_code),
+    ("as locust code", "l", locust_code),
+    ("as locust task", "t", locust_task),
 ]

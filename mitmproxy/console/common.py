@@ -312,22 +312,15 @@ def export_to_clip_or_file(key, scope, flow, writer):
     writer: copy_to_clipboard_or_prompt, ask_save_path
     """
 
-    for exporter in export.EXPORTERS:
-        if key in ["c", "h"]:
-            if scope is None:
-                ask_scope_and_callback(flow, handle_flow_data, key, writer)
-            else:
-                handle_flow_data(scope, flow, key, writer)
-        elif key == "u":
-            writer(flow.request.url)
-        elif key == "r":
-            writer(export.curl_command(flow))
-        elif key == "p":
-            writer(export.python_code(flow))
-        elif key == "l":
-            writer(export.locust_code(flow))
-        elif key == "t":
-            writer(export.locust_task(flow))
+    for _, exp_key, exporter in export.EXPORTERS:
+        if key == exp_key:
+            if exporter is None:  # 'c' & 'h'
+                if scope is None:
+                    ask_scope_and_callback(flow, handle_flow_data, key, writer)
+                else:
+                    handle_flow_data(scope, flow, key, writer)
+            else:  # other keys
+                writer(exporter(flow))
 
 flowcache = utils.LRUCache(800)
 
