@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
 import hashlib
-import re
 
 from six.moves import urllib
 
@@ -38,58 +37,6 @@ class AppRegistry:
         if "host" in request.headers:
             host = request.headers["host"]
             return self.apps.get((host, request.port), None)
-
-
-class ReplaceHooks:
-    def __init__(self):
-        self.lst = []
-
-    def set(self, r):
-        self.clear()
-        for i in r:
-            self.add(*i)
-
-    def add(self, fpatt, rex, s):
-        """
-            add a replacement hook.
-
-            fpatt: a string specifying a filter pattern.
-            rex: a regular expression.
-            s: the replacement string
-
-            returns true if hook was added, false if the pattern could not be
-            parsed.
-        """
-        cpatt = filt.parse(fpatt)
-        if not cpatt:
-            return False
-        try:
-            re.compile(rex)
-        except re.error:
-            return False
-        self.lst.append((fpatt, rex, s, cpatt))
-        return True
-
-    def get_specs(self):
-        """
-            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s)
-            tuples.
-        """
-        return [i[:3] for i in self.lst]
-
-    def count(self):
-        return len(self.lst)
-
-    def run(self, f):
-        for _, rex, s, cpatt in self.lst:
-            if cpatt(f):
-                if f.response:
-                    f.response.replace(rex, s)
-                else:
-                    f.request.replace(rex, s)
-
-    def clear(self):
-        self.lst = []
 
 
 class SetHeaders:
