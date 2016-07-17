@@ -210,10 +210,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.options = self.options  # type: Options
         self.options.errored.connect(self.options_error)
 
-        if options.setheaders:
-            for i in options.setheaders:
-                self.setheaders.add(*i)
-
         r = self.set_intercept(options.intercept)
         if r:
             print("Intercept error: {}".format(r), file=sys.stderr)

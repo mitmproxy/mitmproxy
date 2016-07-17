@@ -7,6 +7,7 @@ from mitmproxy.builtins import stickyauth
 from mitmproxy.builtins import stickycookie
 from mitmproxy.builtins import script
 from mitmproxy.builtins import replace
+from mitmproxy.builtins import setheaders
 
 
 def default_addons():
@@ -18,4 +19,5 @@ def default_addons():
         script.ScriptLoader(),
         filestreamer.FileStreamer(),
         replace.Replace(),
+        setheaders.SetHeaders(),
     ]
