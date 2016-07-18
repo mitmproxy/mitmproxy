@@ -40,6 +40,7 @@ class Options(options.Options):
 
             # Proxy options
             cadir = cmdline.CA_DIR,  # type: str
+            certs = (),  # type: Sequence[Tuple[str, str]]
             clientcerts = None,  # type: Optional[str]
             listen_host = "",  # type: str
             listen_port = 8080,  # type: int
@@ -74,7 +75,9 @@ class Options(options.Options):
         self.replay_ignore_payload_params = replay_ignore_payload_params
         self.replay_ignore_host = replay_ignore_host
 
+        # Proxy options
         self.cadir = cadir
+        self.certs = certs
         self.clientcerts = clientcerts
         self.listen_host = listen_host
         self.listen_port = listen_port

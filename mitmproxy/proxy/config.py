@@ -5,7 +5,7 @@ import os
 import re
 
 import six
-from OpenSSL import SSL
+from OpenSSL import SSL, crypto
 
 from mitmproxy import platform
 from mitmproxy import exceptions
@@ -117,9 +117,6 @@ class ProxyConfig:
         self.config(options)
         options.changed.connect(self)
 
-        for spec, cert in certs:
-            self.certstore.add_cert_file(spec, cert)
-
     def config(self, options):
         certstore_path = os.path.expanduser(options.cadir)
         if not os.path.exists(certstore_path):
@@ -139,6 +136,20 @@ class ProxyConfig:
                     options.clientcerts
                 )
             self.clientcerts = clientcerts
+
+        for spec, cert in options.certs:
+            cert = os.path.expanduser(cert)
+            if not os.path.exists(cert):
+                raise exceptions.OptionsError(
+                    "Certificate file does not exist: %s" % cert
+                )
+            try:
+                self.certstore.add_cert_file(spec, cert)
+            except crypto.Error:
+                raise exceptions.OptionsError(
+                    "Invalid certificate format: %s" % cert
+                )
+
 
 
 def process_proxy_options(parser, options, args):
@@ -214,16 +225,6 @@ def process_proxy_options(parser, options, args):
     else:
         authenticator = authentication.NullProxyAuth(None)
 
-    certs = []
-    for i in args.certs:
-        parts = i.split("=", 1)
-        if len(parts) == 1:
-            parts = ["*", parts[0]]
-        parts[1] = os.path.expanduser(parts[1])
-        if not os.path.exists(parts[1]):
-            parser.error("Certificate file does not exist: %s" % parts[1])
-        certs.append(parts)
-
     return ProxyConfig(
         options,
         no_upstream_cert=args.no_upstream_cert,
@@ -238,7 +239,6 @@ def process_proxy_options(parser, options, args):
         authenticator=authenticator,
         ciphers_client=args.ciphers_client,
         ciphers_server=args.ciphers_server,
-        certs=tuple(certs),
         ssl_version_client=args.ssl_version_client,
         ssl_version_server=args.ssl_version_server,
         ssl_verify_upstream_cert=args.ssl_verify_upstream_cert,

@@ -184,6 +184,15 @@ def get_common_options(args):
                 "That would trigger an infinite loop."
             )
 
+
+    # Proxy config
+    certs = []
+    for i in args.certs:
+        parts = i.split("=", 1)
+        if len(parts) == 1:
+            parts = ["*", parts[0]]
+        certs.append(parts)
+
     return dict(
         app=args.app,
         app_host=args.app_host,
@@ -213,10 +222,11 @@ def get_common_options(args):
         replay_ignore_payload_params=args.replay_ignore_payload_params,
         replay_ignore_host=args.replay_ignore_host,
 
+        cadir = args.cadir,
+        certs = certs,
+        clientcerts = args.clientcerts,
         listen_host = args.addr,
         listen_port = args.port,
-        cadir = args.cadir,
-        clientcerts = args.clientcerts,
     )
 
 
