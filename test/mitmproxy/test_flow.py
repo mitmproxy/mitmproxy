@@ -4,6 +4,7 @@ import io
 import netlib.utils
 from netlib.http import Headers
 from mitmproxy import filt, controller, flow
+from mitmproxy.flow import options
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.models import Error
@@ -640,6 +641,7 @@ class TestSerialize:
         r = self._treader()
         s = flow.State()
         conf = ProxyConfig(
+            options.Options(),
             mode="reverse",
             upstream_server=("https", ("use-this-domain", 80))
         )
@@ -753,7 +755,7 @@ class TestFlowMaster:
         pb = [tutils.tflow(resp=True), f]
         fm = flow.FlowMaster(
             flow.options.Options(),
-            DummyServer(ProxyConfig()),
+            DummyServer(ProxyConfig(options.Options())),
             s
         )
         assert not fm.start_server_playback(

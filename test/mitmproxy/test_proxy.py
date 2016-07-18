@@ -7,6 +7,7 @@ from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.config import process_proxy_options
 from mitmproxy.models.connections import ServerConnection
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
+from mitmproxy.flow import options
 from netlib.exceptions import TcpDisconnect
 from pathod import test
 from netlib.http import http1
@@ -58,8 +59,8 @@ class TestProcessProxyOptions:
     def p(self, *args):
         parser = tutils.MockParser()
         cmdline.common_options(parser)
-        opts = parser.parse_args(args=args)
-        return parser, process_proxy_options(parser, opts)
+        args = parser.parse_args(args=args)
+        return parser, process_proxy_options(parser, options.Options(), args)
 
     def assert_err(self, err, *args):
         tutils.raises(err, self.p, *args)
@@ -159,12 +160,14 @@ class TestProxyServer:
     @tutils.skip_windows
     def test_err(self):
         conf = ProxyConfig(
+            options.Options(),
             port=1
         )
         tutils.raises("error starting proxy server", ProxyServer, conf)
 
     def test_err_2(self):
         conf = ProxyConfig(
+            options.Options(),
             host="invalidhost"
         )
         tutils.raises("error starting proxy server", ProxyServer, conf)

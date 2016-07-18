@@ -32,11 +32,11 @@ def errapp(environ, start_response):
 
 class TestMaster(flow.FlowMaster):
 
-    def __init__(self, config):
+    def __init__(self, opts, config):
         config.port = 0
         s = ProxyServer(config)
         state = flow.State()
-        flow.FlowMaster.__init__(self, options.Options(), s, state)
+        flow.FlowMaster.__init__(self, opts, s, state)
         self.addons.add(*builtins.default_addons())
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
@@ -80,6 +80,7 @@ class ProxyTestBase(object):
     no_upstream_cert = False
     authenticator = None
     masterclass = TestMaster
+    masteroptions = options.Options()
     add_upstream_certs_to_client_chain = False
 
     @classmethod
@@ -91,9 +92,8 @@ class ProxyTestBase(object):
             ssl=cls.ssl,
             ssloptions=cls.ssloptions)
 
-        cls.config = ProxyConfig(**cls.get_proxy_config())
-
-        tmaster = cls.masterclass(cls.config)
+        cls.config = ProxyConfig(cls.masteroptions, **cls.get_proxy_config())
+        tmaster = cls.masterclass(cls.masteroptions, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
@@ -284,17 +284,19 @@ class ChainProxyTest(ProxyTestBase):
 
     @classmethod
     def setup_class(cls):
+        cls.masteroptions = options.Options()
         cls.chain = []
         super(ChainProxyTest, cls).setup_class()
         for _ in range(cls.n):
-            config = ProxyConfig(**cls.get_proxy_config())
-            tmaster = cls.masterclass(config)
+            config = ProxyConfig(cls.masteroptions, **cls.get_proxy_config())
+            tmaster = cls.masterclass(cls.masteroptions, config)
             proxy = ProxyThread(tmaster)
             proxy.start()
             cls.chain.insert(0, proxy)
 
         # Patch the orginal proxy to upstream mode
         cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(
+            cls.masteroptions,
             **cls.get_proxy_config())
 
     @classmethod

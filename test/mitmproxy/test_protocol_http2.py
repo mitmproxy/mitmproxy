@@ -9,6 +9,7 @@ import traceback
 
 import h2
 
+from mitmproxy.flow import options
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
@@ -88,9 +89,10 @@ class _Http2TestBase(object):
 
     @classmethod
     def setup_class(cls):
-        cls.config = ProxyConfig(**cls.get_proxy_config())
+        cls.masteroptions = options.Options()
+        cls.config = ProxyConfig(cls.masteroptions, **cls.get_proxy_config())
 
-        tmaster = tservers.TestMaster(cls.config)
+        tmaster = tservers.TestMaster(cls.masteroptions, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()

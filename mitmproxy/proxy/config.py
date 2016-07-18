@@ -59,6 +59,7 @@ class ProxyConfig:
 
     def __init__(
             self,
+            options,
             host='',
             port=8080,
             cadir=CA_DIR,
@@ -83,6 +84,7 @@ class ProxyConfig:
             ssl_verify_upstream_trusted_ca=None,
             add_upstream_certs_to_client_chain=False,
     ):
+        self.options = options
         self.host = host
         self.port = port
         self.ciphers_client = ciphers_client
@@ -125,79 +127,79 @@ class ProxyConfig:
         self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
 
 
-def process_proxy_options(parser, options):
-    body_size_limit = options.body_size_limit
+def process_proxy_options(parser, options, args):
+    body_size_limit = args.body_size_limit
     if body_size_limit:
         body_size_limit = human.parse_size(body_size_limit)
 
     c = 0
     mode, upstream_server, upstream_auth = "regular", None, None
-    if options.transparent_proxy:
+    if args.transparent_proxy:
         c += 1
         if not platform.resolver:
             return parser.error("Transparent mode not supported on this platform.")
         mode = "transparent"
-    if options.socks_proxy:
+    if args.socks_proxy:
         c += 1
         mode = "socks5"
-    if options.reverse_proxy:
+    if args.reverse_proxy:
         c += 1
         mode = "reverse"
-        upstream_server = options.reverse_proxy
-    if options.upstream_proxy:
+        upstream_server = args.reverse_proxy
+    if args.upstream_proxy:
         c += 1
         mode = "upstream"
-        upstream_server = options.upstream_proxy
-        upstream_auth = options.upstream_auth
+        upstream_server = args.upstream_proxy
+        upstream_auth = args.upstream_auth
     if c > 1:
         return parser.error(
             "Transparent, SOCKS5, reverse and upstream proxy mode "
             "are mutually exclusive. Read the docs on proxy modes to understand why."
         )
-    if options.add_upstream_certs_to_client_chain and options.no_upstream_cert:
+    if args.add_upstream_certs_to_client_chain and args.no_upstream_cert:
         return parser.error(
             "The no-upstream-cert and add-upstream-certs-to-client-chain "
             "options are mutually exclusive. If no-upstream-cert is enabled "
             "then the upstream certificate is not retrieved before generating "
             "the client certificate chain."
         )
-    if options.add_upstream_certs_to_client_chain and options.ssl_verify_upstream_cert:
+    if args.add_upstream_certs_to_client_chain and args.ssl_verify_upstream_cert:
         return parser.error(
             "The verify-upstream-cert and add-upstream-certs-to-client-chain "
             "options are mutually exclusive. If upstream certificates are verified "
             "then extra upstream certificates are not available for inclusion "
             "to the client chain."
         )
-    if options.clientcerts:
-        options.clientcerts = os.path.expanduser(options.clientcerts)
-        if not os.path.exists(options.clientcerts):
+    if args.clientcerts:
+        args.clientcerts = os.path.expanduser(args.clientcerts)
+        if not os.path.exists(args.clientcerts):
             return parser.error(
-                "Client certificate path does not exist: %s" % options.clientcerts
+                "Client certificate path does not exist: %s" % args.clientcerts
             )
-    if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
+    if args.auth_nonanonymous or args.auth_singleuser or args.auth_htpasswd:
 
-        if options.transparent_proxy:
+        if args.transparent_proxy:
             return parser.error("Proxy Authentication not supported in transparent mode.")
 
-        if options.socks_proxy:
+        if args.socks_proxy:
             return parser.error(
                 "Proxy Authentication not supported in SOCKS mode. "
                 "https://github.com/mitmproxy/mitmproxy/issues/738"
             )
 
-        if options.auth_singleuser:
-            if len(options.auth_singleuser.split(':')) != 2:
+        if args.auth_singleuser:
+            if len(args.auth_singleuser.split(':')) != 2:
                 return parser.error(
                     "Invalid single-user specification. Please use the format username:password"
                 )
-            username, password = options.auth_singleuser.split(':')
+            username, password = args.auth_singleuser.split(':')
             password_manager = authentication.PassManSingleUser(username, password)
-        elif options.auth_nonanonymous:
+        elif args.auth_nonanonymous:
             password_manager = authentication.PassManNonAnon()
-        elif options.auth_htpasswd:
+        elif args.auth_htpasswd:
             try:
                 password_manager = authentication.PassManHtpasswd(
-                    options.auth_htpasswd)
+                    args.auth_htpasswd)
             except ValueError as v:
                 return parser.error(v)
         authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
@@ -205,7 +207,7 @@ def process_proxy_options(parser, options):
         authenticator = authentication.NullProxyAuth(None)
 
     certs = []
-    for i in options.certs:
+    for i in args.certs:
         parts = i.split("=", 1)
         if len(parts) == 1:
             parts = ["*", parts[0]]
@@ -215,27 +217,28 @@ def process_proxy_options(parser, options):
         certs.append(parts)
 
     return ProxyConfig(
-        host=options.addr,
-        port=options.port,
-        cadir=options.cadir,
-        clientcerts=options.clientcerts,
-        no_upstream_cert=options.no_upstream_cert,
+        options,
+        host=args.addr,
+        port=args.port,
+        cadir=args.cadir,
+        clientcerts=args.clientcerts,
+        no_upstream_cert=args.no_upstream_cert,
         body_size_limit=body_size_limit,
         mode=mode,
         upstream_server=upstream_server,
         upstream_auth=upstream_auth,
-        ignore_hosts=options.ignore_hosts,
-        tcp_hosts=options.tcp_hosts,
-        http2=options.http2,
-        rawtcp=options.rawtcp,
+        ignore_hosts=args.ignore_hosts,
+        tcp_hosts=args.tcp_hosts,
+        http2=args.http2,
+        rawtcp=args.rawtcp,
         authenticator=authenticator,
-        ciphers_client=options.ciphers_client,
-        ciphers_server=options.ciphers_server,
+        ciphers_client=args.ciphers_client,
+        ciphers_server=args.ciphers_server,
         certs=tuple(certs),
-        ssl_version_client=options.ssl_version_client,
-        ssl_version_server=options.ssl_version_server,
-        ssl_verify_upstream_cert=options.ssl_verify_upstream_cert,
-        ssl_verify_upstream_trusted_cadir=options.ssl_verify_upstream_trusted_cadir,
-        ssl_verify_upstream_trusted_ca=options.ssl_verify_upstream_trusted_ca,
-        add_upstream_certs_to_client_chain=options.add_upstream_certs_to_client_chain,
+        ssl_version_client=args.ssl_version_client,
+        ssl_version_server=args.ssl_version_server,
+        ssl_verify_upstream_cert=args.ssl_verify_upstream_cert,
+        ssl_verify_upstream_trusted_cadir=args.ssl_verify_upstream_trusted_cadir,
+        ssl_verify_upstream_trusted_ca=args.ssl_verify_upstream_trusted_ca,
+        add_upstream_certs_to_client_chain=args.add_upstream_certs_to_client_chain,
     )
