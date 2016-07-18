@@ -183,14 +183,21 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_data_received(self, eid, event, source_conn):
-        if self.config.body_size_limit and self.streams[eid].queued_data_length > self.config.body_size_limit:
+        bsl = self.config.options.body_size_limit
+        if bsl and self.streams[eid].queued_data_length > bsl:
             self.streams[eid].zombie = time.time()
-            source_conn.h2.safe_reset_stream(event.stream_id, h2.errors.REFUSED_STREAM)
-            self.log("HTTP body too large. Limit is {}.".format(self.config.body_size_limit), "info")
+            source_conn.h2.safe_reset_stream(
+                event.stream_id,
+                h2.errors.REFUSED_STREAM
+            )
+            self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
         else:
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
-            source_conn.h2.safe_increment_flow_control(event.stream_id, event.flow_controlled_length)
+            source_conn.h2.safe_increment_flow_control(
+                event.stream_id,
+                event.flow_controlled_length
+            )
         return True
 
     def _handle_stream_ended(self, eid):

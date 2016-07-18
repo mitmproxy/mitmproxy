@@ -10,7 +10,6 @@ from OpenSSL import SSL, crypto
 from mitmproxy import platform
 from mitmproxy import exceptions
 from netlib import certutils
-from netlib import human
 from netlib import tcp
 from netlib.http import authentication
 
@@ -61,7 +60,6 @@ class ProxyConfig:
             self,
             options,
             no_upstream_cert=False,
-            body_size_limit=None,
             mode="regular",
             upstream_server=None,
             upstream_auth=None,
@@ -84,7 +82,6 @@ class ProxyConfig:
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.no_upstream_cert = no_upstream_cert
-        self.body_size_limit = body_size_limit
         self.mode = mode
         if upstream_server:
             self.upstream_server = ServerSpec(upstream_server[0], tcp.Address.wrap(upstream_server[1]))
@@ -114,10 +111,10 @@ class ProxyConfig:
 
         self.certstore = None
         self.clientcerts = None
-        self.config(options)
-        options.changed.connect(self)
+        self.configure(options)
+        options.changed.connect(self.configure)
 
-    def config(self, options):
+    def configure(self, options):
         certstore_path = os.path.expanduser(options.cadir)
         if not os.path.exists(certstore_path):
             raise exceptions.OptionsError(
@@ -151,12 +148,7 @@ class ProxyConfig:
                 )
 
 
-
 def process_proxy_options(parser, options, args):
-    body_size_limit = args.body_size_limit
-    if body_size_limit:
-        body_size_limit = human.parse_size(body_size_limit)
-
     c = 0
     mode, upstream_server, upstream_auth = "regular", None, None
     if args.transparent_proxy:
@@ -228,7 +220,6 @@ def process_proxy_options(parser, options, args):
     return ProxyConfig(
         options,
         no_upstream_cert=args.no_upstream_cert,
-        body_size_limit=body_size_limit,
         mode=mode,
         upstream_server=upstream_server,
         upstream_auth=upstream_auth,

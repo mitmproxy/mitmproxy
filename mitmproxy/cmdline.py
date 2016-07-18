@@ -184,7 +184,6 @@ def get_common_options(args):
                 "That would trigger an infinite loop."
             )
 
-
     # Proxy config
     certs = []
     for i in args.certs:
@@ -192,6 +191,10 @@ def get_common_options(args):
         if len(parts) == 1:
             parts = ["*", parts[0]]
         certs.append(parts)
+
+    body_size_limit = args.body_size_limit
+    if body_size_limit:
+        body_size_limit = human.parse_size(body_size_limit)
 
     return dict(
         app=args.app,
@@ -222,6 +225,7 @@ def get_common_options(args):
         replay_ignore_payload_params=args.replay_ignore_payload_params,
         replay_ignore_host=args.replay_ignore_host,
 
+        body_size_limit = body_size_limit,
         cadir = args.cadir,
         certs = certs,
         clientcerts = args.clientcerts,

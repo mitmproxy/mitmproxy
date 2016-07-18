@@ -55,7 +55,7 @@ class RequestReplayThread(basethread.BaseThread):
                         resp = http1.read_response(
                             server.rfile,
                             connect_request,
-                            body_size_limit=self.config.body_size_limit
+                            body_size_limit=self.config.options.body_size_limit
                         )
                         if resp.status_code != 200:
                             raise exceptions.ReplayException("Upstream server refuses CONNECT request")
@@ -83,7 +83,7 @@ class RequestReplayThread(basethread.BaseThread):
                 self.flow.response = models.HTTPResponse.wrap(http1.read_response(
                     server.rfile,
                     r,
-                    body_size_limit=self.config.body_size_limit
+                    body_size_limit=self.config.options.body_size_limit
                 ))
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)

@@ -39,6 +39,7 @@ class Options(options.Options):
             replay_ignore_host=False,  # type: bool
 
             # Proxy options
+            body_size_limit=None,  # type: Optional[int]
             cadir = cmdline.CA_DIR,  # type: str
             certs = (),  # type: Sequence[Tuple[str, str]]
             clientcerts = None,  # type: Optional[str]
@@ -76,6 +77,7 @@ class Options(options.Options):
         self.replay_ignore_host = replay_ignore_host
 
         # Proxy options
+        self.body_size_limit = body_size_limit
         self.cadir = cadir
         self.certs = certs
         self.clientcerts = clientcerts
