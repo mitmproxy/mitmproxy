@@ -64,16 +64,18 @@ def mitmproxy(args=None):  # pragma: no cover
     parser = cmdline.mitmproxy()
     args = parser.parse_args(args)
 
-    console_options = console.master.Options(**cmdline.get_common_options(args))
-    console_options.palette = args.palette
-    console_options.palette_transparent = args.palette_transparent
-    console_options.eventlog = args.eventlog
-    console_options.follow = args.follow
-    console_options.intercept = args.intercept
-    console_options.limit = args.limit
-    console_options.no_mouse = args.no_mouse
-
     try:
+        console_options = console.master.Options(
+            **cmdline.get_common_options(args)
+        )
+        console_options.palette = args.palette
+        console_options.palette_transparent = args.palette_transparent
+        console_options.eventlog = args.eventlog
+        console_options.follow = args.follow
+        console_options.intercept = args.intercept
+        console_options.limit = args.limit
+        console_options.no_mouse = args.no_mouse
+
         proxy_config = process_options(parser, console_options, args)
         server = get_server(console_options.no_server, proxy_config)
         m = console.master.ConsoleMaster(server, console_options)
@@ -96,12 +98,12 @@ def mitmdump(args=None):  # pragma: no cover
     if args.quiet:
         args.flow_detail = 0
 
-    dump_options = dump.Options(**cmdline.get_common_options(args))
-    dump_options.flow_detail = args.flow_detail
-    dump_options.keepserving = args.keepserving
-    dump_options.filtstr = " ".join(args.args) if args.args else None
 
     try:
+        dump_options = dump.Options(**cmdline.get_common_options(args))
+        dump_options.flow_detail = args.flow_detail
+        dump_options.keepserving = args.keepserving
+        dump_options.filtstr = " ".join(args.args) if args.args else None
         proxy_config = process_options(parser, dump_options, args)
         server = get_server(dump_options.no_server, proxy_config)
         master = dump.DumpMaster(server, dump_options)
@@ -130,16 +132,16 @@ def mitmweb(args=None):  # pragma: no cover
 
     args = parser.parse_args(args)
 
-    web_options = web.master.Options(**cmdline.get_common_options(args))
-    web_options.intercept = args.intercept
-    web_options.wdebug = args.wdebug
-    web_options.wiface = args.wiface
-    web_options.wport = args.wport
-    web_options.wsingleuser = args.wsingleuser
-    web_options.whtpasswd = args.whtpasswd
-    web_options.process_web_options(parser)
-
     try:
+        web_options = web.master.Options(**cmdline.get_common_options(args))
+        web_options.intercept = args.intercept
+        web_options.wdebug = args.wdebug
+        web_options.wiface = args.wiface
+        web_options.wport = args.wport
+        web_options.wsingleuser = args.wsingleuser
+        web_options.whtpasswd = args.whtpasswd
+        web_options.process_web_options(parser)
+
         proxy_config = process_options(parser, web_options, args)
         server = get_server(web_options.no_server, proxy_config)
         m = web.master.WebMaster(server, web_options)

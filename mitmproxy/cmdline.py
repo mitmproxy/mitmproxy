@@ -6,6 +6,7 @@ import re
 
 import configargparse
 
+from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy.proxy import config
 from netlib import human
@@ -149,17 +150,17 @@ def get_common_options(args):
         try:
             p = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e)
+            raise exceptions.OptionsError(e)
         reps.append(p)
     for i in args.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e)
+            raise exceptions.OptionsError(e)
         try:
             v = open(path, "rb").read()
         except IOError as e:
-            raise configargparse.ArgumentTypeError(
+            raise exceptions.OptionsError(
                 "Could not read replace file: %s" % path
             )
         reps.append((patt, rex, v))
@@ -169,17 +170,17 @@ def get_common_options(args):
         try:
             p = parse_setheader(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e)
+            raise exceptions.OptionsError(e)
         setheaders.append(p)
 
     if args.outfile and args.outfile[0] == args.rfile:
         if args.outfile[1] == "wb":
-            raise configargparse.ArgumentTypeError(
+            raise exceptions.OptionsError(
                 "Cannot use '{}' for both reading and writing flows. "
                 "Are you looking for --afile?".format(args.rfile)
             )
         else:
-            raise configargparse.ArgumentTypeError(
+            raise exceptions.OptionsError(
                 "Cannot use '{}' for both reading and appending flows. "
                 "That would trigger an infinite loop."
             )
@@ -194,7 +195,12 @@ def get_common_options(args):
 
     body_size_limit = args.body_size_limit
     if body_size_limit:
-        body_size_limit = human.parse_size(body_size_limit)
+        try:
+            body_size_limit = human.parse_size(body_size_limit)
+        except ValueError, e:
+            raise exceptions.OptionsError(
+                "Invalid body size limit specification: %s" % body_size_limit
+            )
 
     return dict(
         app=args.app,
