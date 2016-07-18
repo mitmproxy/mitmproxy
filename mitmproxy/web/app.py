@@ -336,7 +336,7 @@ class Settings(RequestHandler):
         self.write(dict(
             data=dict(
                 version=version.VERSION,
-                mode=str(self.master.server.config.mode),
+                mode=str(self.master.options.mode),
                 intercept=self.state.intercept_txt,
                 showhost=self.master.options.showhost,
                 no_upstream_cert=self.master.server.config.no_upstream_cert,

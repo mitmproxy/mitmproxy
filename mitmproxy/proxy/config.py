@@ -1,17 +1,19 @@
 from __future__ import absolute_import, print_function, division
 
+import base64
 import collections
 import os
 import re
+from netlib import strutils
 
 import six
 from OpenSSL import SSL, crypto
 
-from mitmproxy import platform
 from mitmproxy import exceptions
 from netlib import certutils
 from netlib import tcp
 from netlib.http import authentication
+from netlib.http import url
 
 CONF_BASENAME = "mitmproxy"
 
@@ -54,13 +56,36 @@ class HostMatcher(object):
 ServerSpec = collections.namedtuple("ServerSpec", "scheme address")
 
 
+def parse_server_spec(spec):
+    try:
+        p = url.parse(spec)
+        if p[0] not in (b"http", b"https"):
+            raise ValueError()
+    except ValueError:
+        raise exceptions.OptionsError(
+            "Invalid server specification: %s" % spec
+        )
+
+    address = tcp.Address(p[1:3])
+    scheme = p[0].lower()
+    return ServerSpec(scheme, address)
+
+
+def parse_upstream_auth(auth):
+    pattern = re.compile(".+:")
+    if pattern.search(auth) is None:
+        raise exceptions.OptionsError(
+            "Invalid upstream auth specification: %s" % auth
+        )
+    return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
+
+
 class ProxyConfig:
 
     def __init__(
             self,
             options,
             no_upstream_cert=False,
-            mode="regular",
             upstream_server=None,
             upstream_auth=None,
             authenticator=None,
@@ -82,13 +107,6 @@ class ProxyConfig:
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.no_upstream_cert = no_upstream_cert
-        self.mode = mode
-        if upstream_server:
-            self.upstream_server = ServerSpec(upstream_server[0], tcp.Address.wrap(upstream_server[1]))
-            self.upstream_auth = upstream_auth
-        else:
-            self.upstream_server = None
-            self.upstream_auth = None
 
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
@@ -125,6 +143,7 @@ class ProxyConfig:
             os.path.expanduser(options.cadir),
             CONF_BASENAME
         )
+
         if options.clientcerts:
             clientcerts = os.path.expanduser(options.clientcerts)
             if not os.path.exists(clientcerts):
@@ -147,39 +166,15 @@ class ProxyConfig:
                     "Invalid certificate format: %s" % cert
                 )
 
+        self.upstream_server = None
+        self.upstream_auth = None
+        if options.upstream_server:
+            self.upstream_server = parse_server_spec(options.upstream_server)
+        if options.upstream_auth:
+            self.upstream_auth = parse_upstream_auth(options.upstream_auth)
+
 
 def process_proxy_options(parser, options, args):
-    c = 0
-    mode, upstream_server, upstream_auth = "regular", None, None
-    if args.transparent_proxy:
-        c += 1
-        if not platform.resolver:
-            return parser.error("Transparent mode not supported on this platform.")
-        mode = "transparent"
-    if args.socks_proxy:
-        c += 1
-        mode = "socks5"
-    if args.reverse_proxy:
-        c += 1
-        mode = "reverse"
-        upstream_server = args.reverse_proxy
-    if args.upstream_proxy:
-        c += 1
-        mode = "upstream"
-        upstream_server = args.upstream_proxy
-        upstream_auth = args.upstream_auth
-    if c > 1:
-        return parser.error(
-            "Transparent, SOCKS5, reverse and upstream proxy mode "
-            "are mutually exclusive. Read the docs on proxy modes to understand why."
-        )
-    if args.add_upstream_certs_to_client_chain and args.no_upstream_cert:
-        return parser.error(
-            "The no-upstream-cert and add-upstream-certs-to-client-chain "
-            "options are mutually exclusive. If no-upstream-cert is enabled "
-            "then the upstream certificate is not retrieved before generating "
-            "the client certificate chain."
-        )
     if args.add_upstream_certs_to_client_chain and args.ssl_verify_upstream_cert:
         return parser.error(
             "The verify-upstream-cert and add-upstream-certs-to-client-chain "
@@ -220,9 +215,6 @@ def process_proxy_options(parser, options, args):
     return ProxyConfig(
         options,
         no_upstream_cert=args.no_upstream_cert,
-        mode=mode,
-        upstream_server=upstream_server,
-        upstream_auth=upstream_auth,
         ignore_hosts=args.ignore_hosts,
         tcp_hosts=args.tcp_hosts,
         http2=args.http2,

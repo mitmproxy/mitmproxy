@@ -85,7 +85,7 @@ class ConnectionHandler(object):
             self.channel
         )
 
-        mode = self.config.mode
+        mode = self.config.options.mode
         if mode == "upstream":
             return modes.HttpUpstreamProxy(
                 root_ctx,

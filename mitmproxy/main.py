@@ -98,7 +98,6 @@ def mitmdump(args=None):  # pragma: no cover
     if args.quiet:
         args.flow_detail = 0
 
-
     try:
         dump_options = dump.Options(**cmdline.get_common_options(args))
         dump_options.flow_detail = args.flow_detail

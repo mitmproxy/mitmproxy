@@ -15,7 +15,7 @@ from pathod import pathoc, pathod
 
 from mitmproxy.builtins import script
 from mitmproxy import controller
-from mitmproxy.proxy.config import HostMatcher
+from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
 
 from . import tutils, tservers
@@ -485,7 +485,8 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     @classmethod
     def get_proxy_config(cls):
         d, opts = super(TestHttps2Http, cls).get_proxy_config()
-        d["upstream_server"] = ("http", d["upstream_server"][1])
+        s = parse_server_spec(opts.upstream_server)
+        opts.upstream_server = "http://%s" % s.address.decode("ascii")
         return d, opts
 
     def pathoc(self, ssl, sni=None):

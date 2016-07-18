@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import base64
 import os
 import re
 
@@ -9,11 +8,10 @@ import configargparse
 from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy.proxy import config
+from mitmproxy import platform
 from netlib import human
-from netlib import strutils
 from netlib import tcp
 from netlib import version
-from netlib.http import url
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -109,30 +107,6 @@ def parse_setheader(s):
     return _parse_hook(s)
 
 
-def parse_server_spec(spec):
-    try:
-        p = url.parse(spec)
-        if p[0] not in (b"http", b"https"):
-            raise ValueError()
-    except ValueError:
-        raise configargparse.ArgumentTypeError(
-            "Invalid server specification: %s" % spec
-        )
-
-    address = tcp.Address(p[1:3])
-    scheme = p[0].lower()
-    return config.ServerSpec(scheme, address)
-
-
-def parse_upstream_auth(auth):
-    pattern = re.compile(".+:")
-    if pattern.search(auth) is None:
-        raise configargparse.ArgumentTypeError(
-            "Invalid upstream auth specification: %s" % auth
-        )
-    return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
-
-
 def get_common_options(args):
     stickycookie, stickyauth = None, None
     if args.stickycookie_filt:
@@ -197,10 +171,45 @@ def get_common_options(args):
     if body_size_limit:
         try:
             body_size_limit = human.parse_size(body_size_limit)
-        except ValueError, e:
+        except ValueError as e:
             raise exceptions.OptionsError(
                 "Invalid body size limit specification: %s" % body_size_limit
             )
+
+    # Establish proxy mode
+    c = 0
+    mode, upstream_server = "regular", None
+    if args.transparent_proxy:
+        c += 1
+        if not platform.resolver:
+            raise exceptions.OptionsError(
+                "Transparent mode not supported on this platform."
+            )
+        mode = "transparent"
+    if args.socks_proxy:
+        c += 1
+        mode = "socks5"
+    if args.reverse_proxy:
+        c += 1
+        mode = "reverse"
+        upstream_server = args.reverse_proxy
+    if args.upstream_proxy:
+        c += 1
+        mode = "upstream"
+        upstream_server = args.upstream_proxy
+    if c > 1:
+        raise exceptions.OptionsError(
+            "Transparent, SOCKS5, reverse and upstream proxy mode "
+            "are mutually exclusive. Read the docs on proxy modes "
+            "to understand why."
+        )
+    if args.add_upstream_certs_to_client_chain and args.no_upstream_cert:
+        raise exceptions.OptionsError(
+            "The no-upstream-cert and add-upstream-certs-to-client-chain "
+            "options are mutually exclusive. If no-upstream-cert is enabled "
+            "then the upstream certificate is not retrieved before generating "
+            "the client certificate chain."
+        )
 
     return dict(
         app=args.app,
@@ -237,6 +246,9 @@ def get_common_options(args):
         clientcerts = args.clientcerts,
         listen_host = args.addr,
         listen_port = args.port,
+        mode = mode,
+        upstream_server = upstream_server,
+        upstream_auth = args.upstream_auth,
     )
 
 
@@ -353,7 +365,7 @@ def proxy_modes(parser):
     group.add_argument(
         "-R", "--reverse",
         action="store",
-        type=parse_server_spec,
+        type=str,
         dest="reverse_proxy",
         default=None,
         help="""
@@ -376,7 +388,7 @@ def proxy_modes(parser):
     group.add_argument(
         "-U", "--upstream",
         action="store",
-        type=parse_server_spec,
+        type=str,
         dest="upstream_proxy",
         default=None,
         help="Forward all requests to upstream proxy server: http://host[:port]"
@@ -434,7 +446,7 @@ def proxy_options(parser):
     parser.add_argument(
         "--upstream-auth",
         action="store", dest="upstream_auth", default=None,
-        type=parse_upstream_auth,
+        type=str,
         help="""
             Proxy Authentication:
             username:password

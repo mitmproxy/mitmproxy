@@ -200,7 +200,7 @@ class TransparentProxyTest(ProxyTestBase):
     @classmethod
     def get_proxy_config(cls):
         d, opts = ProxyTestBase.get_proxy_config()
-        d["mode"] = "transparent"
+        opts.mode = "transparent"
         return d, opts
 
     def pathod(self, spec, sni=None):
@@ -232,11 +232,15 @@ class ReverseProxyTest(ProxyTestBase):
     @classmethod
     def get_proxy_config(cls):
         d, opts = ProxyTestBase.get_proxy_config()
-        d["upstream_server"] = (
-            "https" if cls.ssl else "http",
-            ("127.0.0.1", cls.server.port)
+        opts.upstream_server = "".join(
+            [
+                "https" if cls.ssl else "http",
+                "://",
+                "127.0.0.1:",
+                str(cls.server.port)
+            ]
         )
-        d["mode"] = "reverse"
+        opts.mode = "reverse"
         return d, opts
 
     def pathoc(self, sni=None):
@@ -267,7 +271,7 @@ class SocksModeTest(HTTPProxyTest):
     @classmethod
     def get_proxy_config(cls):
         d, opts = ProxyTestBase.get_proxy_config()
-        d["mode"] = "socks5"
+        opts.mode = "socks5"
         return d, opts
 
 
@@ -314,9 +318,9 @@ class ChainProxyTest(ProxyTestBase):
     def get_proxy_config(cls):
         d, opts = super(ChainProxyTest, cls).get_proxy_config()
         if cls.chain:  # First proxy is in normal mode.
-            d.update(
+            opts.update(
                 mode="upstream",
-                upstream_server=("http", ("127.0.0.1", cls.chain[0].port))
+                upstream_server="http://127.0.0.1:%s" % cls.chain[0].port
             )
         return d, opts
 

@@ -640,12 +640,12 @@ class TestSerialize:
     def test_load_flows_reverse(self):
         r = self._treader()
         s = flow.State()
-        conf = ProxyConfig(
-            options.Options(),
+        opts = options.Options(
             mode="reverse",
-            upstream_server=("https", ("use-this-domain", 80))
+            upstream_server="https://use-this-domain"
         )
-        fm = flow.FlowMaster(None, DummyServer(conf), s)
+        conf = ProxyConfig(opts)
+        fm = flow.FlowMaster(opts, DummyServer(conf), s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"
 

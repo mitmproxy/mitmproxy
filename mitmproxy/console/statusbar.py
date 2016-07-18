@@ -214,7 +214,7 @@ class StatusBar(urwid.WidgetWrap):
         if opts:
             r.append("[%s]" % (":".join(opts)))
 
-        if self.master.server.config.mode in ["reverse", "upstream"]:
+        if self.master.options.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
             r.append("[dest:%s]" % netlib.http.url.unparse(
                 dst.scheme,

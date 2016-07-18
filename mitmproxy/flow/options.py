@@ -45,6 +45,9 @@ class Options(options.Options):
             clientcerts = None,  # type: Optional[str]
             listen_host = "",  # type: str
             listen_port = 8080,  # type: int
+            mode = "regular",  # type: str
+            upstream_server = "",  # type: str
+            upstream_auth = "",  # type: str
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -83,5 +86,8 @@ class Options(options.Options):
         self.clientcerts = clientcerts
         self.listen_host = listen_host
         self.listen_port = listen_port
+        self.mode = mode
+        self.upstream_server = upstream_server
+        self.upstream_auth = upstream_auth
 
         super(Options, self).__init__()
