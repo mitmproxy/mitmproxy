@@ -160,15 +160,13 @@ class TestProxyServer:
     @tutils.skip_windows
     def test_err(self):
         conf = ProxyConfig(
-            options.Options(),
-            port=1
+            options.Options(listen_port=1),
         )
         tutils.raises("error starting proxy server", ProxyServer, conf)
 
     def test_err_2(self):
         conf = ProxyConfig(
-            options.Options(),
-            host="invalidhost"
+            options.Options(listen_host="invalidhost"),
         )
         tutils.raises("error starting proxy server", ProxyServer, conf)
 

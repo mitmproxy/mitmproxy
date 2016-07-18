@@ -36,6 +36,10 @@ class Options(options.Options):
             replay_ignore_params=(),  # type: Sequence[str]
             replay_ignore_payload_params=(),  # type: Sequence[str]
             replay_ignore_host=False,  # type: bool
+
+            # Proxy options
+            listen_host = "", # type: str
+            listen_port = 8080, # type: int
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -66,4 +70,8 @@ class Options(options.Options):
         self.replay_ignore_params = replay_ignore_params
         self.replay_ignore_payload_params = replay_ignore_payload_params
         self.replay_ignore_host = replay_ignore_host
+
+        self.listen_host = listen_host
+        self.listen_port = listen_port
+
         super(Options, self).__init__()

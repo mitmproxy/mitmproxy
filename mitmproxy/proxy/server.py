@@ -41,7 +41,9 @@ class ProxyServer(tcp.TCPServer):
         """
         self.config = config
         try:
-            super(ProxyServer, self).__init__((config.host, config.port))
+            super(ProxyServer, self).__init__(
+                (config.options.listen_host, config.options.listen_port)
+            )
         except socket.error as e:
             six.reraise(
                 exceptions.ServerException,

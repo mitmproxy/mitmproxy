@@ -90,9 +90,10 @@ class _Http2TestBase(object):
     @classmethod
     def setup_class(cls):
         cls.masteroptions = options.Options()
-        cls.config = ProxyConfig(cls.masteroptions, **cls.get_proxy_config())
+        cnf, opts = cls.get_proxy_config()
+        cls.config = ProxyConfig(opts, **cnf)
 
-        tmaster = tservers.TestMaster(cls.masteroptions, cls.config)
+        tmaster = tservers.TestMaster(opts, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
@@ -103,12 +104,14 @@ class _Http2TestBase(object):
 
     @classmethod
     def get_proxy_config(cls):
+        opts = options.Options(listen_port=0)
         cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        return dict(
+        d = dict(
             no_upstream_cert=False,
             cadir=cls.cadir,
             authenticator=None,
         )
+        return d, opts
 
     @property
     def master(self):

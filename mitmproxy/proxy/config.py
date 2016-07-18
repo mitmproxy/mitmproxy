@@ -60,8 +60,6 @@ class ProxyConfig:
     def __init__(
             self,
             options,
-            host='',
-            port=8080,
             cadir=CA_DIR,
             clientcerts=None,
             no_upstream_cert=False,
@@ -85,8 +83,6 @@ class ProxyConfig:
             add_upstream_certs_to_client_chain=False,
     ):
         self.options = options
-        self.host = host
-        self.port = port
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
@@ -218,8 +214,6 @@ def process_proxy_options(parser, options, args):
 
     return ProxyConfig(
         options,
-        host=args.addr,
-        port=args.port,
         cadir=args.cadir,
         clientcerts=args.clientcerts,
         no_upstream_cert=args.no_upstream_cert,

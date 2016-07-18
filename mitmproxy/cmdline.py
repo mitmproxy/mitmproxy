@@ -131,26 +131,26 @@ def parse_upstream_auth(auth):
     return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
 
 
-def get_common_options(options):
+def get_common_options(args):
     stickycookie, stickyauth = None, None
-    if options.stickycookie_filt:
-        stickycookie = options.stickycookie_filt
+    if args.stickycookie_filt:
+        stickycookie = args.stickycookie_filt
 
-    if options.stickyauth_filt:
-        stickyauth = options.stickyauth_filt
+    if args.stickyauth_filt:
+        stickyauth = args.stickyauth_filt
 
-    stream_large_bodies = options.stream_large_bodies
+    stream_large_bodies = args.stream_large_bodies
     if stream_large_bodies:
         stream_large_bodies = human.parse_size(stream_large_bodies)
 
     reps = []
-    for i in options.replace:
+    for i in args.replace:
         try:
             p = parse_replace_hook(i)
         except ParseException as e:
             raise configargparse.ArgumentTypeError(e)
         reps.append(p)
-    for i in options.replace_file:
+    for i in args.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException as e:
@@ -164,18 +164,18 @@ def get_common_options(options):
         reps.append((patt, rex, v))
 
     setheaders = []
-    for i in options.setheader:
+    for i in args.setheader:
         try:
             p = parse_setheader(i)
         except ParseException as e:
             raise configargparse.ArgumentTypeError(e)
         setheaders.append(p)
 
-    if options.outfile and options.outfile[0] == options.rfile:
-        if options.outfile[1] == "wb":
+    if args.outfile and args.outfile[0] == args.rfile:
+        if args.outfile[1] == "wb":
             raise configargparse.ArgumentTypeError(
                 "Cannot use '{}' for both reading and writing flows. "
-                "Are you looking for --afile?".format(options.rfile)
+                "Are you looking for --afile?".format(args.rfile)
             )
         else:
             raise configargparse.ArgumentTypeError(
@@ -184,33 +184,36 @@ def get_common_options(options):
             )
 
     return dict(
-        app=options.app,
-        app_host=options.app_host,
-        app_port=options.app_port,
+        app=args.app,
+        app_host=args.app_host,
+        app_port=args.app_port,
 
-        anticache=options.anticache,
-        anticomp=options.anticomp,
-        client_replay=options.client_replay,
-        kill=options.kill,
-        no_server=options.no_server,
-        refresh_server_playback=not options.norefresh,
-        rheaders=options.rheaders,
-        rfile=options.rfile,
+        anticache=args.anticache,
+        anticomp=args.anticomp,
+        client_replay=args.client_replay,
+        kill=args.kill,
+        no_server=args.no_server,
+        refresh_server_playback=not args.norefresh,
+        rheaders=args.rheaders,
+        rfile=args.rfile,
         replacements=reps,
         setheaders=setheaders,
-        server_replay=options.server_replay,
-        scripts=options.scripts,
+        server_replay=args.server_replay,
+        scripts=args.scripts,
         stickycookie=stickycookie,
         stickyauth=stickyauth,
         stream_large_bodies=stream_large_bodies,
-        showhost=options.showhost,
-        outfile=options.outfile,
-        verbosity=options.verbose,
-        nopop=options.nopop,
-        replay_ignore_content=options.replay_ignore_content,
-        replay_ignore_params=options.replay_ignore_params,
-        replay_ignore_payload_params=options.replay_ignore_payload_params,
-        replay_ignore_host=options.replay_ignore_host
+        showhost=args.showhost,
+        outfile=args.outfile,
+        verbosity=args.verbose,
+        nopop=args.nopop,
+        replay_ignore_content=args.replay_ignore_content,
+        replay_ignore_params=args.replay_ignore_params,
+        replay_ignore_payload_params=args.replay_ignore_payload_params,
+        replay_ignore_host=args.replay_ignore_host,
+
+        listen_host = args.addr,
+        listen_port = args.port,
     )
 
 
