@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 from mitmproxy import options
 from typing import Tuple, Optional, Sequence  # noqa
+from mitmproxy import cmdline
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -38,8 +39,9 @@ class Options(options.Options):
             replay_ignore_host=False,  # type: bool
 
             # Proxy options
-            listen_host = "", # type: str
-            listen_port = 8080, # type: int
+            cadir = cmdline.CA_DIR,  # type: str
+            listen_host = "",  # type: str
+            listen_port = 8080,  # type: int
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -71,6 +73,7 @@ class Options(options.Options):
         self.replay_ignore_payload_params = replay_ignore_payload_params
         self.replay_ignore_host = replay_ignore_host
 
+        self.cadir = cadir
         self.listen_host = listen_host
         self.listen_port = listen_port
 

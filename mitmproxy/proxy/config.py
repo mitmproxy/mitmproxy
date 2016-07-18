@@ -14,7 +14,6 @@ from netlib import tcp
 from netlib.http import authentication
 
 CONF_BASENAME = "mitmproxy"
-CA_DIR = "~/.mitmproxy"
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
@@ -60,7 +59,6 @@ class ProxyConfig:
     def __init__(
             self,
             options,
-            cadir=CA_DIR,
             clientcerts=None,
             no_upstream_cert=False,
             body_size_limit=None,
@@ -101,9 +99,8 @@ class ProxyConfig:
         self.http2 = http2
         self.rawtcp = rawtcp
         self.authenticator = authenticator
-        self.cadir = os.path.expanduser(cadir)
         self.certstore = certutils.CertStore.from_store(
-            self.cadir,
+            os.path.expanduser(options.cadir),
             CONF_BASENAME
         )
         for spec, cert in certs:
@@ -214,7 +211,6 @@ def process_proxy_options(parser, options, args):
 
     return ProxyConfig(
         options,
-        cadir=args.cadir,
         clientcerts=args.clientcerts,
         no_upstream_cert=args.no_upstream_cert,
         body_size_limit=body_size_limit,

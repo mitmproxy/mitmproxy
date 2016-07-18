@@ -16,6 +16,7 @@ from netlib.http import url
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
+CA_DIR = "~/.mitmproxy"
 
 
 class ParseException(Exception):
@@ -245,8 +246,8 @@ def basic_options(parser):
     )
     parser.add_argument(
         "--cadir",
-        action="store", type=str, dest="cadir", default=config.CA_DIR,
-        help="Location of the default mitmproxy CA files. (%s)" % config.CA_DIR
+        action="store", type=str, dest="cadir", default=CA_DIR,
+        help="Location of the default mitmproxy CA files. (%s)" % CA_DIR
     )
     parser.add_argument(
         "--host",
@@ -699,8 +700,8 @@ def mitmproxy():
         usage="%(prog)s [options]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(config.CA_DIR, "common.conf"),
-            os.path.join(config.CA_DIR, "mitmproxy.conf")
+            os.path.join(CA_DIR, "common.conf"),
+            os.path.join(CA_DIR, "mitmproxy.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
@@ -754,8 +755,8 @@ def mitmdump():
         usage="%(prog)s [options] [filter]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(config.CA_DIR, "common.conf"),
-            os.path.join(config.CA_DIR, "mitmdump.conf")
+            os.path.join(CA_DIR, "common.conf"),
+            os.path.join(CA_DIR, "mitmdump.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
@@ -784,8 +785,8 @@ def mitmweb():
         usage="%(prog)s [options]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(config.CA_DIR, "common.conf"),
-            os.path.join(config.CA_DIR, "mitmweb.conf")
+            os.path.join(CA_DIR, "common.conf"),
+            os.path.join(CA_DIR, "mitmweb.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
