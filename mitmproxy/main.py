@@ -73,10 +73,9 @@ def mitmproxy(args=None):  # pragma: no cover
     console_options.limit = args.limit
     console_options.no_mouse = args.no_mouse
 
-    proxy_config = process_options(parser, console_options, args)
-    server = get_server(console_options.no_server, proxy_config)
-
     try:
+        proxy_config = process_options(parser, console_options, args)
+        server = get_server(console_options.no_server, proxy_config)
         m = console.master.ConsoleMaster(server, console_options)
     except exceptions.OptionsError as e:
         print("mitmproxy: %s" % e, file=sys.stderr)
@@ -102,10 +101,9 @@ def mitmdump(args=None):  # pragma: no cover
     dump_options.keepserving = args.keepserving
     dump_options.filtstr = " ".join(args.args) if args.args else None
 
-    proxy_config = process_options(parser, dump_options, args)
-    server = get_server(dump_options.no_server, proxy_config)
-
     try:
+        proxy_config = process_options(parser, dump_options, args)
+        server = get_server(dump_options.no_server, proxy_config)
         master = dump.DumpMaster(server, dump_options)
 
         def cleankill(*args, **kwargs):
@@ -141,10 +139,9 @@ def mitmweb(args=None):  # pragma: no cover
     web_options.whtpasswd = args.whtpasswd
     web_options.process_web_options(parser)
 
-    proxy_config = process_options(parser, web_options, args)
-    server = get_server(web_options.no_server, proxy_config)
-
     try:
+        proxy_config = process_options(parser, web_options, args)
+        server = get_server(web_options.no_server, proxy_config)
         m = web.master.WebMaster(server, web_options)
     except exceptions.OptionsError as e:
         print("mitmweb: %s" % e, file=sys.stderr)

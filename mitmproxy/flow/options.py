@@ -40,6 +40,7 @@ class Options(options.Options):
 
             # Proxy options
             cadir = cmdline.CA_DIR,  # type: str
+            clientcerts = None,  # type: Optional[str]
             listen_host = "",  # type: str
             listen_port = 8080,  # type: int
     ):
@@ -74,6 +75,7 @@ class Options(options.Options):
         self.replay_ignore_host = replay_ignore_host
 
         self.cadir = cadir
+        self.clientcerts = clientcerts
         self.listen_host = listen_host
         self.listen_port = listen_port
 

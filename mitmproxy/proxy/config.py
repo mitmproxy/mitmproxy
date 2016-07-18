@@ -8,6 +8,7 @@ import six
 from OpenSSL import SSL
 
 from mitmproxy import platform
+from mitmproxy import exceptions
 from netlib import certutils
 from netlib import human
 from netlib import tcp
@@ -59,7 +60,6 @@ class ProxyConfig:
     def __init__(
             self,
             options,
-            clientcerts=None,
             no_upstream_cert=False,
             body_size_limit=None,
             mode="regular",
@@ -83,7 +83,6 @@ class ProxyConfig:
         self.options = options
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
-        self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
         self.mode = mode
@@ -99,12 +98,6 @@ class ProxyConfig:
         self.http2 = http2
         self.rawtcp = rawtcp
         self.authenticator = authenticator
-        self.certstore = certutils.CertStore.from_store(
-            os.path.expanduser(options.cadir),
-            CONF_BASENAME
-        )
-        for spec, cert in certs:
-            self.certstore.add_cert_file(spec, cert)
 
         self.openssl_method_client, self.openssl_options_client = \
             tcp.sslversion_choices[ssl_version_client]
@@ -118,6 +111,34 @@ class ProxyConfig:
         self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
         self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
         self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
+
+        self.certstore = None
+        self.clientcerts = None
+        self.config(options)
+        options.changed.connect(self)
+
+        for spec, cert in certs:
+            self.certstore.add_cert_file(spec, cert)
+
+    def config(self, options):
+        certstore_path = os.path.expanduser(options.cadir)
+        if not os.path.exists(certstore_path):
+            raise exceptions.OptionsError(
+                "Certificate Authority directory does not exist: %s" %
+                options.cadir
+            )
+        self.certstore = certutils.CertStore.from_store(
+            os.path.expanduser(options.cadir),
+            CONF_BASENAME
+        )
+        if options.clientcerts:
+            clientcerts = os.path.expanduser(options.clientcerts)
+            if not os.path.exists(clientcerts):
+                raise exceptions.OptionsError(
+                    "Client certificate path does not exist: %s" %
+                    options.clientcerts
+                )
+            self.clientcerts = clientcerts
 
 
 def process_proxy_options(parser, options, args):
@@ -163,12 +184,6 @@ def process_proxy_options(parser, options, args):
             "then extra upstream certificates are not available for inclusion "
             "to the client chain."
         )
-    if args.clientcerts:
-        args.clientcerts = os.path.expanduser(args.clientcerts)
-        if not os.path.exists(args.clientcerts):
-            return parser.error(
-                "Client certificate path does not exist: %s" % args.clientcerts
-            )
     if args.auth_nonanonymous or args.auth_singleuser or args.auth_htpasswd:
 
         if args.transparent_proxy:
@@ -211,7 +226,6 @@ def process_proxy_options(parser, options, args):
 
     return ProxyConfig(
         options,
-        clientcerts=args.clientcerts,
         no_upstream_cert=args.no_upstream_cert,
         body_size_limit=body_size_limit,
         mode=mode,

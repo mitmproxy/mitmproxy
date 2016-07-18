@@ -60,7 +60,9 @@ class TestProcessProxyOptions:
         parser = tutils.MockParser()
         cmdline.common_options(parser)
         args = parser.parse_args(args=args)
-        return parser, process_proxy_options(parser, options.Options(), args)
+        opts = cmdline.get_common_options(args)
+        pconf = process_proxy_options(parser, options.Options(**opts), args)
+        return parser, pconf
 
     def assert_err(self, err, *args):
         tutils.raises(err, self.p, *args)

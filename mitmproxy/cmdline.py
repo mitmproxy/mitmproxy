@@ -215,6 +215,8 @@ def get_common_options(args):
 
         listen_host = args.addr,
         listen_port = args.port,
+        cadir = args.cadir,
+        clientcerts = args.clientcerts,
     )
 
 
