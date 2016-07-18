@@ -486,7 +486,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     def get_proxy_config(cls):
         d, opts = super(TestHttps2Http, cls).get_proxy_config()
         s = parse_server_spec(opts.upstream_server)
-        opts.upstream_server = "http://%s" % s.address.decode("ascii")
+        opts.upstream_server = "http://%s" % s.address
         return d, opts
 
     def pathoc(self, ssl, sni=None):

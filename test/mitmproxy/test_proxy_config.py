@@ -8,13 +8,13 @@ def test_parse_server_spec():
         "Invalid server specification", config.parse_server_spec, ""
     )
     assert config.parse_server_spec("http://foo.com:88") == (
-        b"http", (b"foo.com", 88)
+        "http", ("foo.com", 88)
     )
     assert config.parse_server_spec("http://foo.com") == (
-        b"http", (b"foo.com", 80)
+        "http", ("foo.com", 80)
     )
     assert config.parse_server_spec("https://foo.com") == (
-        b"https", (b"foo.com", 443)
+        "https", ("foo.com", 443)
     )
     tutils.raises(
         "Invalid server specification",

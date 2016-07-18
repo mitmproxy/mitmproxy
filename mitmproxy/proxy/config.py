@@ -65,9 +65,9 @@ def parse_server_spec(spec):
         raise exceptions.OptionsError(
             "Invalid server specification: %s" % spec
         )
-
-    address = tcp.Address(p[1:3])
-    scheme = p[0].lower()
+    host, port = p[1:3]
+    address = tcp.Address((host.decode("ascii"), port))
+    scheme = p[0].decode("ascii").lower()
     return ServerSpec(scheme, address)
 
 
