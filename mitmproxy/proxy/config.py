@@ -86,8 +86,6 @@ class ProxyConfig:
             self,
             options,
             no_upstream_cert=False,
-            upstream_server=None,
-            upstream_auth=None,
             authenticator=None,
             ignore_hosts=tuple(),
             tcp_hosts=tuple(),
@@ -96,12 +94,6 @@ class ProxyConfig:
             ciphers_client=DEFAULT_CLIENT_CIPHERS,
             ciphers_server=None,
             certs=tuple(),
-            ssl_version_client="secure",
-            ssl_version_server="secure",
-            ssl_verify_upstream_cert=False,
-            ssl_verify_upstream_trusted_cadir=None,
-            ssl_verify_upstream_trusted_ca=None,
-            add_upstream_certs_to_client_chain=False,
     ):
         self.options = options
         self.ciphers_client = ciphers_client
@@ -115,17 +107,14 @@ class ProxyConfig:
         self.authenticator = authenticator
 
         self.openssl_method_client, self.openssl_options_client = \
-            tcp.sslversion_choices[ssl_version_client]
+            tcp.sslversion_choices[options.ssl_version_client]
         self.openssl_method_server, self.openssl_options_server = \
-            tcp.sslversion_choices[ssl_version_server]
+            tcp.sslversion_choices[options.ssl_version_server]
 
-        if ssl_verify_upstream_cert:
+        if options.ssl_verify_upstream_cert:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER
         else:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
-        self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
-        self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
-        self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
 
         self.certstore = None
         self.clientcerts = None
@@ -172,6 +161,8 @@ class ProxyConfig:
             self.upstream_server = parse_server_spec(options.upstream_server)
         if options.upstream_auth:
             self.upstream_auth = parse_upstream_auth(options.upstream_auth)
+        self.openssl_trusted_cadir_server = options.ssl_verify_upstream_trusted_cadir
+        self.openssl_trusted_ca_server = options.ssl_verify_upstream_trusted_ca
 
 
 def process_proxy_options(parser, options, args):
@@ -183,7 +174,6 @@ def process_proxy_options(parser, options, args):
             "to the client chain."
         )
     if args.auth_nonanonymous or args.auth_singleuser or args.auth_htpasswd:
-
         if args.transparent_proxy:
             return parser.error("Proxy Authentication not supported in transparent mode.")
 
@@ -205,7 +195,8 @@ def process_proxy_options(parser, options, args):
         elif args.auth_htpasswd:
             try:
                 password_manager = authentication.PassManHtpasswd(
-                    args.auth_htpasswd)
+                    args.auth_htpasswd
+                )
             except ValueError as v:
                 return parser.error(v)
         authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
@@ -222,10 +213,4 @@ def process_proxy_options(parser, options, args):
         authenticator=authenticator,
         ciphers_client=args.ciphers_client,
         ciphers_server=args.ciphers_server,
-        ssl_version_client=args.ssl_version_client,
-        ssl_version_server=args.ssl_version_server,
-        ssl_verify_upstream_cert=args.ssl_verify_upstream_cert,
-        ssl_verify_upstream_trusted_cadir=args.ssl_verify_upstream_trusted_cadir,
-        ssl_verify_upstream_trusted_ca=args.ssl_verify_upstream_trusted_ca,
-        add_upstream_certs_to_client_chain=args.add_upstream_certs_to_client_chain,
     )

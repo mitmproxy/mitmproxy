@@ -368,7 +368,7 @@ class TlsLayer(base.Layer):
             self._server_tls and
             not self.config.no_upstream_cert and
             (
-                self.config.add_upstream_certs_to_client_chain or
+                self.config.options.add_upstream_certs_to_client_chain or
                 self._client_hello.alpn_protocols or
                 not self._client_hello.sni
             )
@@ -473,7 +473,7 @@ class TlsLayer(base.Layer):
         self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self._find_cert()
 
-        if self.config.add_upstream_certs_to_client_chain:
+        if self.config.options.add_upstream_certs_to_client_chain:
             extra_certs = self.server_conn.server_certs
         else:
             extra_certs = None

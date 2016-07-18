@@ -249,6 +249,12 @@ def get_common_options(args):
         mode = mode,
         upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
+        ssl_version_client = args.ssl_version_client,
+        ssl_version_server = args.ssl_version_server,
+        ssl_verify_upstream_cert = args.ssl_verify_upstream_cert,
+        ssl_verify_upstream_trusted_cadir = args.ssl_verify_upstream_trusted_cadir,
+        ssl_verify_upstream_trusted_ca = args.ssl_verify_upstream_trusted_ca,
+        add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
     )
 
 

@@ -48,6 +48,12 @@ class Options(options.Options):
             mode = "regular",  # type: str
             upstream_server = "",  # type: str
             upstream_auth = "",  # type: str
+            ssl_version_client="secure",  # type: str
+            ssl_version_server="secure",  # type: str
+            ssl_verify_upstream_cert=False,  # type: bool
+            ssl_verify_upstream_trusted_cadir=None,  # type: str
+            ssl_verify_upstream_trusted_ca=None,  # type: str
+            add_upstream_certs_to_client_chain=False,  # type: bool
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -89,5 +95,10 @@ class Options(options.Options):
         self.mode = mode
         self.upstream_server = upstream_server
         self.upstream_auth = upstream_auth
-
+        self.ssl_version_client = ssl_version_client
+        self.ssl_version_server = ssl_version_server
+        self.ssl_verify_upstream_cert = ssl_verify_upstream_cert
+        self.ssl_verify_upstream_trusted_cadir = ssl_verify_upstream_trusted_cadir
+        self.ssl_verify_upstream_trusted_ca = ssl_verify_upstream_trusted_ca
+        self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
         super(Options, self).__init__()

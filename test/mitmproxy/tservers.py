@@ -123,9 +123,12 @@ class ProxyTestBase(object):
         cnf = dict(
             no_upstream_cert = cls.no_upstream_cert,
             authenticator = cls.authenticator,
-            add_upstream_certs_to_client_chain = cls.add_upstream_certs_to_client_chain,
         )
-        return cnf, options.Options(listen_port=0, cadir=cls.cadir)
+        return cnf, options.Options(
+            listen_port=0,
+            cadir=cls.cadir,
+            add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain
+        )
 
 
 class HTTPProxyTest(ProxyTestBase):

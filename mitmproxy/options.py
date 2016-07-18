@@ -52,7 +52,7 @@ class Options(object):
         if attr in self._opts:
             return self._opts[attr]
         else:
-            raise AttributeError()
+            raise AttributeError("No such option: %s" % attr)
 
     def __setattr__(self, attr, value):
         if not self._initialized:
