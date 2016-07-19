@@ -73,17 +73,10 @@ class ProxyConfig:
     def __init__(
             self,
             options,
-            no_upstream_cert=False,
             authenticator=None,
-            http2=True,
-            rawtcp=False,
-            certs=tuple(),
     ):
         self.options = options
-        self.no_upstream_cert = no_upstream_cert
 
-        self.http2 = http2
-        self.rawtcp = rawtcp
         self.authenticator = authenticator
 
         self.check_ignore = None
@@ -189,8 +182,5 @@ def process_proxy_options(parser, options, args):
 
     return ProxyConfig(
         options,
-        no_upstream_cert=args.no_upstream_cert,
-        http2=args.http2,
-        rawtcp=args.rawtcp,
         authenticator=authenticator,
     )

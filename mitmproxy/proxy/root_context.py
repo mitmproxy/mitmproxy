@@ -102,7 +102,7 @@ class RootContext(object):
             # expect A-Za-z
             all(65 <= x <= 90 or 97 <= x <= 122 for x in six.iterbytes(d))
         )
-        if self.config.rawtcp and not is_ascii:
+        if self.config.options.rawtcp and not is_ascii:
             return protocol.RawTCPLayer(top_layer)
 
         # 7. Assume HTTP1 by default

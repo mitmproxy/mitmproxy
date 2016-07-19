@@ -121,12 +121,12 @@ class ProxyTestBase(object):
     def get_proxy_config(cls):
         cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         cnf = dict(
-            no_upstream_cert = cls.no_upstream_cert,
             authenticator = cls.authenticator,
         )
         return cnf, options.Options(
             listen_port=0,
             cadir=cls.cadir,
+            no_upstream_cert = cls.no_upstream_cert,
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain
         )
 

@@ -46,10 +46,13 @@ class Options(options.Options):
             ciphers_client = cmdline.DEFAULT_CLIENT_CIPHERS,   # type: str
             ciphers_server = None,   # type: Optional[str]
             clientcerts = None,  # type: Optional[str]
+            http2 = True,  # type: bool
             ignore_hosts = (),  # type: Sequence[str]
             listen_host = "",  # type: str
             listen_port = 8080,  # type: int
             mode = "regular",  # type: str
+            no_upstream_cert = False,  # type: bool
+            rawtcp = False,  # type: bool
             upstream_server = "",  # type: str
             upstream_auth = "",  # type: str
             ssl_version_client="secure",  # type: str
@@ -97,10 +100,13 @@ class Options(options.Options):
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
+        self.http2 = http2
         self.ignore_hosts = ignore_hosts
         self.listen_host = listen_host
         self.listen_port = listen_port
         self.mode = mode
+        self.no_upstream_cert = no_upstream_cert
+        self.rawtcp = rawtcp
         self.upstream_server = upstream_server
         self.upstream_auth = upstream_auth
         self.ssl_version_client = ssl_version_client

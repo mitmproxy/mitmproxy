@@ -366,7 +366,7 @@ class TlsLayer(base.Layer):
         #  2.5 The client did not sent a SNI value, we don't know the certificate subject.
         client_tls_requires_server_connection = (
             self._server_tls and
-            not self.config.no_upstream_cert and
+            not self.config.options.no_upstream_cert and
             (
                 self.config.options.add_upstream_certs_to_client_chain or
                 self._client_hello.alpn_protocols or
@@ -519,7 +519,7 @@ class TlsLayer(base.Layer):
                 alpn = [x for x in self._client_hello.alpn_protocols if not deprecated_http2_variant(x)]
             else:
                 alpn = None
-            if alpn and b"h2" in alpn and not self.config.http2:
+            if alpn and b"h2" in alpn and not self.config.options.http2:
                 alpn.remove(b"h2")
 
             ciphers_server = self.config.options.ciphers_server
@@ -595,7 +595,7 @@ class TlsLayer(base.Layer):
         use_upstream_cert = (
             self.server_conn and
             self.server_conn.tls_established and
-            (not self.config.no_upstream_cert)
+            (not self.config.options.no_upstream_cert)
         )
         if use_upstream_cert:
             upstream_cert = self.server_conn.cert

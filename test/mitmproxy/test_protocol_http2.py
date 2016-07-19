@@ -104,10 +104,9 @@ class _Http2TestBase(object):
 
     @classmethod
     def get_proxy_config(cls):
-        opts = options.Options(listen_port=0)
+        opts = options.Options(listen_port=0, no_upstream_cert=False)
         opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         d = dict(
-            no_upstream_cert=False,
             authenticator=None,
         )
         return d, opts
@@ -122,8 +121,6 @@ class _Http2TestBase(object):
         self.server.server.handle_server_event = self.handle_server_event
 
     def _setup_connection(self):
-        self.config.http2 = True
-
         client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
