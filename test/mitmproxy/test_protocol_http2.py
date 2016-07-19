@@ -9,6 +9,7 @@ import traceback
 
 import h2
 
+from mitmproxy.flow import options
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
@@ -88,9 +89,11 @@ class _Http2TestBase(object):
 
     @classmethod
     def setup_class(cls):
-        cls.config = ProxyConfig(**cls.get_proxy_config())
+        cls.masteroptions = options.Options()
+        cnf, opts = cls.get_proxy_config()
+        cls.config = ProxyConfig(opts, **cnf)
 
-        tmaster = tservers.TestMaster(cls.config)
+        tmaster = tservers.TestMaster(opts, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
@@ -101,12 +104,10 @@ class _Http2TestBase(object):
 
     @classmethod
     def get_proxy_config(cls):
-        cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        return dict(
-            no_upstream_cert=False,
-            cadir=cls.cadir,
-            authenticator=None,
-        )
+        opts = options.Options(listen_port=0, no_upstream_cert=False)
+        opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        d = dict()
+        return d, opts
 
     @property
     def master(self):
@@ -118,8 +119,6 @@ class _Http2TestBase(object):
         self.server.server.handle_server_event = self.handle_server_event
 
     def _setup_connection(self):
-        self.config.http2 = True
-
         client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
@@ -587,7 +586,7 @@ class TestBodySizeLimit(_Http2Test):
         return True
 
     def test_body_size_limit(self):
-        self.config.body_size_limit = 20
+        self.config.options.body_size_limit = 20
 
         client, h2_conn = self._setup_connection()
 

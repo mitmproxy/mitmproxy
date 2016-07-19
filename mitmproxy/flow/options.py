@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 from mitmproxy import options
 from typing import Tuple, Optional, Sequence  # noqa
+from mitmproxy import cmdline
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -36,6 +37,33 @@ class Options(options.Options):
             replay_ignore_params=(),  # type: Sequence[str]
             replay_ignore_payload_params=(),  # type: Sequence[str]
             replay_ignore_host=False,  # type: bool
+
+            # Proxy options
+            auth_nonanonymous=False,  # type: bool
+            auth_singleuser=None,  # type: Optional[str]
+            auth_htpasswd=None,  # type: Optional[str]
+            add_upstream_certs_to_client_chain=False,  # type: bool
+            body_size_limit=None,  # type: Optional[int]
+            cadir = cmdline.CA_DIR,  # type: str
+            certs = (),  # type: Sequence[Tuple[str, str]]
+            ciphers_client = cmdline.DEFAULT_CLIENT_CIPHERS,   # type: str
+            ciphers_server = None,   # type: Optional[str]
+            clientcerts = None,  # type: Optional[str]
+            http2 = True,  # type: bool
+            ignore_hosts = (),  # type: Sequence[str]
+            listen_host = "",  # type: str
+            listen_port = 8080,  # type: int
+            mode = "regular",  # type: str
+            no_upstream_cert = False,  # type: bool
+            rawtcp = False,  # type: bool
+            upstream_server = "",  # type: str
+            upstream_auth = "",  # type: str
+            ssl_version_client="secure",  # type: str
+            ssl_version_server="secure",  # type: str
+            ssl_verify_upstream_cert=False,  # type: bool
+            ssl_verify_upstream_trusted_cadir=None,  # type: str
+            ssl_verify_upstream_trusted_ca=None,  # type: str
+            tcp_hosts = (),  # type: Sequence[str]
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -66,4 +94,31 @@ class Options(options.Options):
         self.replay_ignore_params = replay_ignore_params
         self.replay_ignore_payload_params = replay_ignore_payload_params
         self.replay_ignore_host = replay_ignore_host
+
+        # Proxy options
+        self.auth_nonanonymous = auth_nonanonymous
+        self.auth_singleuser = auth_singleuser
+        self.auth_htpasswd = auth_htpasswd
+        self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
+        self.body_size_limit = body_size_limit
+        self.cadir = cadir
+        self.certs = certs
+        self.ciphers_client = ciphers_client
+        self.ciphers_server = ciphers_server
+        self.clientcerts = clientcerts
+        self.http2 = http2
+        self.ignore_hosts = ignore_hosts
+        self.listen_host = listen_host
+        self.listen_port = listen_port
+        self.mode = mode
+        self.no_upstream_cert = no_upstream_cert
+        self.rawtcp = rawtcp
+        self.upstream_server = upstream_server
+        self.upstream_auth = upstream_auth
+        self.ssl_version_client = ssl_version_client
+        self.ssl_version_server = ssl_version_server
+        self.ssl_verify_upstream_cert = ssl_verify_upstream_cert
+        self.ssl_verify_upstream_trusted_cadir = ssl_verify_upstream_trusted_cadir
+        self.ssl_verify_upstream_trusted_ca = ssl_verify_upstream_trusted_ca
+        self.tcp_hosts = tcp_hosts
         super(Options, self).__init__()

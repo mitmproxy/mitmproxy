@@ -47,7 +47,7 @@ class PEM(tornado.web.RequestHandler):
         return config.CONF_BASENAME + "-ca-cert.pem"
 
     def get(self):
-        p = os.path.join(self.request.master.server.config.cadir, self.filename)
+        p = os.path.join(self.request.master.options.cadir, self.filename)
         self.set_header("Content-Type", "application/x-x509-ca-cert")
         self.set_header(
             "Content-Disposition",
@@ -65,7 +65,7 @@ class P12(tornado.web.RequestHandler):
         return config.CONF_BASENAME + "-ca-cert.p12"
 
     def get(self):
-        p = os.path.join(self.request.master.server.config.cadir, self.filename)
+        p = os.path.join(self.request.master.options.cadir, self.filename)
         self.set_header("Content-Type", "application/x-pkcs12")
         self.set_header(
             "Content-Disposition",

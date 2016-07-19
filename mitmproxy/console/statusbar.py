@@ -156,14 +156,14 @@ class StatusBar(urwid.WidgetWrap):
                 r.append(":%s in file]" % self.master.server_playback.count())
             else:
                 r.append(":%s to go]" % self.master.server_playback.count())
-        if self.master.get_ignore_filter():
+        if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))
-            r.append("gnore:%d]" % len(self.master.get_ignore_filter()))
-        if self.master.get_tcp_filter():
+            r.append("gnore:%d]" % len(self.master.options.ignore_hosts))
+        if self.master.options.tcp_hosts:
             r.append("[")
             r.append(("heading_key", "T"))
-            r.append("CP:%d]" % len(self.master.get_tcp_filter()))
+            r.append("CP:%d]" % len(self.master.options.tcp_hosts))
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("heading_key", "i"))
@@ -200,7 +200,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("norefresh")
         if self.master.options.kill:
             opts.append("killextra")
-        if self.master.server.config.no_upstream_cert:
+        if self.master.options.no_upstream_cert:
             opts.append("no-upstream-cert")
         if self.master.state.follow_focus:
             opts.append("following")
@@ -214,7 +214,7 @@ class StatusBar(urwid.WidgetWrap):
         if opts:
             r.append("[%s]" % (":".join(opts)))
 
-        if self.master.server.config.mode in ["reverse", "upstream"]:
+        if self.master.options.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
             r.append("[dest:%s]" % netlib.http.url.unparse(
                 dst.scheme,

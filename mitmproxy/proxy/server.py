@@ -41,7 +41,9 @@ class ProxyServer(tcp.TCPServer):
         """
         self.config = config
         try:
-            super(ProxyServer, self).__init__((config.host, config.port))
+            super(ProxyServer, self).__init__(
+                (config.options.listen_host, config.options.listen_port)
+            )
         except socket.error as e:
             six.reraise(
                 exceptions.ServerException,
@@ -83,7 +85,7 @@ class ConnectionHandler(object):
             self.channel
         )
 
-        mode = self.config.mode
+        mode = self.config.options.mode
         if mode == "upstream":
             return modes.HttpUpstreamProxy(
                 root_ctx,

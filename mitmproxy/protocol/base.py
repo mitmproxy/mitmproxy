@@ -114,7 +114,7 @@ class ServerConnectionMixin(object):
 
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
-        self.server_conn = models.ServerConnection(server_address, (self.config.host, 0))
+        self.server_conn = models.ServerConnection(server_address, (self.config.options.listen_host, 0))
         self.__check_self_connect()
 
     def __check_self_connect(self):
@@ -125,7 +125,7 @@ class ServerConnectionMixin(object):
         address = self.server_conn.address
         if address:
             self_connect = (
-                address.port == self.config.port and
+                address.port == self.config.options.listen_port and
                 address.host in ("localhost", "127.0.0.1", "::1")
             )
             if self_connect:

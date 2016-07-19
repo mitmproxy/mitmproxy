@@ -42,8 +42,8 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Ignore Patterns",
                     "I",
-                    lambda: master.server.config.check_ignore,
-                    self.ignorepatterns
+                    lambda: master.options.ignore_hosts,
+                    self.ignore_hosts
                 ),
                 select.Option(
                     "Replacement Patterns",
@@ -82,14 +82,14 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "No Upstream Certs",
                     "U",
-                    lambda: master.server.config.no_upstream_cert,
-                    self.toggle_upstream_cert
+                    lambda: master.options.no_upstream_cert,
+                    master.options.toggler("no_upstream_cert")
                 ),
                 select.Option(
                     "TCP Proxying",
                     "T",
-                    lambda: master.server.config.check_tcp,
-                    self.tcp_proxy
+                    lambda: master.options.tcp_hosts,
+                    self.tcp_hosts
                 ),
 
                 select.Heading("Utility"),
@@ -152,21 +152,20 @@ class Options(urwid.WidgetWrap):
         return super(self.__class__, self).keypress(size, key)
 
     def clearall(self):
-        self.master.server.config.no_upstream_cert = False
-        self.master.set_ignore_filter([])
-        self.master.set_tcp_filter([])
-
         self.master.options.update(
             anticache = False,
             anticomp = False,
+            ignore_hosts = (),
+            tcp_hosts = (),
             kill = False,
+            no_upstream_cert = False,
             refresh_server_playback = True,
             replacements = [],
             scripts = [],
             setheaders = [],
             showhost = False,
             stickyauth = None,
-            stickycookie = None
+            stickycookie = None,
         )
 
         self.master.state.default_body_view = contentviews.get("Auto")
@@ -177,10 +176,6 @@ class Options(urwid.WidgetWrap):
             expire = 1
         )
 
-    def toggle_upstream_cert(self):
-        self.master.server.config.no_upstream_cert = not self.master.server.config.no_upstream_cert
-        signals.update_settings.send(self)
-
     def setheaders(self):
         self.master.view_grideditor(
             grideditor.SetHeadersEditor(
@@ -190,14 +185,21 @@ class Options(urwid.WidgetWrap):
             )
         )
 
-    def ignorepatterns(self):
-        def _set(ignore):
-            self.master.set_ignore_filter(ignore)
+    def tcp_hosts(self):
         self.master.view_grideditor(
             grideditor.HostPatternEditor(
                 self.master,
-                self.master.get_ignore_filter(),
-                _set
+                self.master.options.tcp_hosts,
+                self.master.options.setter("tcp_hosts")
+            )
+        )
+
+    def ignore_hosts(self):
+        self.master.view_grideditor(
+            grideditor.HostPatternEditor(
+                self.master,
+                self.master.options.ignore_hosts,
+                self.master.options.setter("ignore_hosts")
             )
         )
 
@@ -228,18 +230,6 @@ class Options(urwid.WidgetWrap):
 
     def has_default_displaymode(self):
         return self.master.state.default_body_view.name != "Auto"
-
-    def tcp_proxy(self):
-        def _set(tcp):
-            self.master.set_tcp_filter(tcp)
-            signals.update_settings.send(self)
-        self.master.view_grideditor(
-            grideditor.HostPatternEditor(
-                self.master,
-                self.master.get_tcp_filter(),
-                _set
-            )
-        )
 
     def sticky_auth(self):
         signals.status_prompt.send(

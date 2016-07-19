@@ -44,9 +44,9 @@ class RequestReplayThread(basethread.BaseThread):
 
             if not self.flow.response:
                 # In all modes, we directly connect to the server displayed
-                if self.config.mode == "upstream":
+                if self.config.options.mode == "upstream":
                     server_address = self.config.upstream_server.address
-                    server = models.ServerConnection(server_address, (self.config.host, 0))
+                    server = models.ServerConnection(server_address, (self.config.options.listen_host, 0))
                     server.connect()
                     if r.scheme == "https":
                         connect_request = models.make_connect_request((r.data.host, r.port))
@@ -55,7 +55,7 @@ class RequestReplayThread(basethread.BaseThread):
                         resp = http1.read_response(
                             server.rfile,
                             connect_request,
-                            body_size_limit=self.config.body_size_limit
+                            body_size_limit=self.config.options.body_size_limit
                         )
                         if resp.status_code != 200:
                             raise exceptions.ReplayException("Upstream server refuses CONNECT request")
@@ -68,7 +68,7 @@ class RequestReplayThread(basethread.BaseThread):
                         r.first_line_format = "absolute"
                 else:
                     server_address = (r.host, r.port)
-                    server = models.ServerConnection(server_address, (self.config.host, 0))
+                    server = models.ServerConnection(server_address, (self.config.options.listen_host, 0))
                     server.connect()
                     if r.scheme == "https":
                         server.establish_ssl(
@@ -83,7 +83,7 @@ class RequestReplayThread(basethread.BaseThread):
                 self.flow.response = models.HTTPResponse.wrap(http1.read_response(
                     server.rfile,
                     r,
-                    body_size_limit=self.config.body_size_limit
+                    body_size_limit=self.config.options.body_size_limit
                 ))
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)

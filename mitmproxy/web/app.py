@@ -336,12 +336,12 @@ class Settings(RequestHandler):
         self.write(dict(
             data=dict(
                 version=version.VERSION,
-                mode=str(self.master.server.config.mode),
+                mode=str(self.master.options.mode),
                 intercept=self.state.intercept_txt,
                 showhost=self.master.options.showhost,
-                no_upstream_cert=self.master.server.config.no_upstream_cert,
-                rawtcp=self.master.server.config.rawtcp,
-                http2=self.master.server.config.http2,
+                no_upstream_cert=self.master.options.no_upstream_cert,
+                rawtcp=self.master.options.rawtcp,
+                http2=self.master.options.http2,
                 anticache=self.master.options.anticache,
                 anticomp=self.master.options.anticomp,
                 stickyauth=self.master.options.stickyauth,
@@ -360,13 +360,13 @@ class Settings(RequestHandler):
                 self.master.options.showhost = v
                 update[k] = v
             elif k == "no_upstream_cert":
-                self.master.server.config.no_upstream_cert = v
+                self.master.options.no_upstream_cert = v
                 update[k] = v
             elif k == "rawtcp":
-                self.master.server.config.rawtcp = v
+                self.master.options.rawtcp = v
                 update[k] = v
             elif k == "http2":
-                self.master.server.config.http2 = v
+                self.master.options.http2 = v
                 update[k] = v
             elif k == "anticache":
                 self.master.options.anticache = v

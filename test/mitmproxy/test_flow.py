@@ -4,6 +4,7 @@ import io
 import netlib.utils
 from netlib.http import Headers
 from mitmproxy import filt, controller, flow
+from mitmproxy.flow import options
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.models import Error
@@ -11,7 +12,6 @@ from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
 from mitmproxy.models import HTTPRequest
 from mitmproxy.models import HTTPResponse
-from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy.models.connections import ClientConnection
@@ -639,11 +639,12 @@ class TestSerialize:
     def test_load_flows_reverse(self):
         r = self._treader()
         s = flow.State()
-        conf = ProxyConfig(
+        opts = options.Options(
             mode="reverse",
-            upstream_server=("https", ("use-this-domain", 80))
+            upstream_server="https://use-this-domain"
         )
-        fm = flow.FlowMaster(None, DummyServer(conf), s)
+        conf = ProxyConfig(opts)
+        fm = flow.FlowMaster(opts, DummyServer(conf), s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"
 
@@ -687,14 +688,6 @@ class TestSerialize:
 
 
 class TestFlowMaster:
-
-    def test_getset_ignore(self):
-        p = mock.Mock()
-        p.config.check_ignore = HostMatcher()
-        fm = flow.FlowMaster(None, p, flow.State())
-        assert not fm.get_ignore_filter()
-        fm.set_ignore_filter(["^apple\.com:", ":443$"])
-        assert fm.get_ignore_filter()
 
     def test_replay(self):
         s = flow.State()
@@ -753,7 +746,7 @@ class TestFlowMaster:
         pb = [tutils.tflow(resp=True), f]
         fm = flow.FlowMaster(
             flow.options.Options(),
-            DummyServer(ProxyConfig()),
+            DummyServer(ProxyConfig(options.Options())),
             s
         )
         assert not fm.start_server_playback(

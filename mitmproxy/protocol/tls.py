@@ -366,9 +366,9 @@ class TlsLayer(base.Layer):
         #  2.5 The client did not sent a SNI value, we don't know the certificate subject.
         client_tls_requires_server_connection = (
             self._server_tls and
-            not self.config.no_upstream_cert and
+            not self.config.options.no_upstream_cert and
             (
-                self.config.add_upstream_certs_to_client_chain or
+                self.config.options.add_upstream_certs_to_client_chain or
                 self._client_hello.alpn_protocols or
                 not self._client_hello.sni
             )
@@ -473,7 +473,7 @@ class TlsLayer(base.Layer):
         self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self._find_cert()
 
-        if self.config.add_upstream_certs_to_client_chain:
+        if self.config.options.add_upstream_certs_to_client_chain:
             extra_certs = self.server_conn.server_certs
         else:
             extra_certs = None
@@ -483,7 +483,7 @@ class TlsLayer(base.Layer):
                 cert, key,
                 method=self.config.openssl_method_client,
                 options=self.config.openssl_options_client,
-                cipher_list=self.config.ciphers_client,
+                cipher_list=self.config.options.ciphers_client,
                 dhparams=self.config.certstore.dhparams,
                 chain_file=chain_file,
                 alpn_select_callback=self.__alpn_select_callback,
@@ -519,10 +519,10 @@ class TlsLayer(base.Layer):
                 alpn = [x for x in self._client_hello.alpn_protocols if not deprecated_http2_variant(x)]
             else:
                 alpn = None
-            if alpn and b"h2" in alpn and not self.config.http2:
+            if alpn and b"h2" in alpn and not self.config.options.http2:
                 alpn.remove(b"h2")
 
-            ciphers_server = self.config.ciphers_server
+            ciphers_server = self.config.options.ciphers_server
             if not ciphers_server:
                 ciphers_server = []
                 for id in self._client_hello.cipher_suites:
@@ -536,8 +536,8 @@ class TlsLayer(base.Layer):
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,
                 verify_options=self.config.openssl_verification_mode_server,
-                ca_path=self.config.openssl_trusted_cadir_server,
-                ca_pemfile=self.config.openssl_trusted_ca_server,
+                ca_path=self.config.options.ssl_verify_upstream_trusted_cadir,
+                ca_pemfile=self.config.options.ssl_verify_upstream_trusted_ca,
                 cipher_list=ciphers_server,
                 alpn_protos=alpn,
             )
@@ -595,7 +595,7 @@ class TlsLayer(base.Layer):
         use_upstream_cert = (
             self.server_conn and
             self.server_conn.tls_established and
-            (not self.config.no_upstream_cert)
+            (not self.config.options.no_upstream_cert)
         )
         if use_upstream_cert:
             upstream_cert = self.server_conn.cert
