@@ -222,6 +222,9 @@ def get_common_options(args):
             "the client certificate chain."
         )
 
+    if args.quiet:
+        args.verbose = 0
+
     return dict(
         app=args.app,
         app_host=args.app_host,

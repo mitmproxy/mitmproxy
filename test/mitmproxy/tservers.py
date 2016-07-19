@@ -77,8 +77,8 @@ class ProxyTestBase(object):
     # Test Configuration
     ssl = None
     ssloptions = False
-    no_upstream_cert = False
     masterclass = TestMaster
+
     add_upstream_certs_to_client_chain = False
 
     @classmethod
@@ -90,8 +90,8 @@ class ProxyTestBase(object):
             ssl=cls.ssl,
             ssloptions=cls.ssloptions)
 
-        cnf, opts = cls.get_proxy_config()
-        cls.config = ProxyConfig(opts, **cnf)
+        opts = cls.get_options()
+        cls.config = ProxyConfig(opts)
         tmaster = cls.masterclass(opts, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = ProxyThread(tmaster)
@@ -117,13 +117,11 @@ class ProxyTestBase(object):
         return self.proxy.tmaster
 
     @classmethod
-    def get_proxy_config(cls):
+    def get_options(cls):
         cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        cnf = dict()
-        return cnf, options.Options(
+        return options.Options(
             listen_port=0,
             cadir=cls.cadir,
-            no_upstream_cert = cls.no_upstream_cert,
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain
         )
 
@@ -198,10 +196,10 @@ class TransparentProxyTest(ProxyTestBase):
         super(TransparentProxyTest, cls).teardown_class()
 
     @classmethod
-    def get_proxy_config(cls):
-        d, opts = ProxyTestBase.get_proxy_config()
+    def get_options(cls):
+        opts = ProxyTestBase.get_options()
         opts.mode = "transparent"
-        return d, opts
+        return opts
 
     def pathod(self, spec, sni=None):
         """
@@ -230,8 +228,8 @@ class ReverseProxyTest(ProxyTestBase):
     ssl = None
 
     @classmethod
-    def get_proxy_config(cls):
-        d, opts = ProxyTestBase.get_proxy_config()
+    def get_options(cls):
+        opts = ProxyTestBase.get_options()
         opts.upstream_server = "".join(
             [
                 "https" if cls.ssl else "http",
@@ -241,7 +239,7 @@ class ReverseProxyTest(ProxyTestBase):
             ]
         )
         opts.mode = "reverse"
-        return d, opts
+        return opts
 
     def pathoc(self, sni=None):
         """
@@ -269,10 +267,10 @@ class ReverseProxyTest(ProxyTestBase):
 class SocksModeTest(HTTPProxyTest):
 
     @classmethod
-    def get_proxy_config(cls):
-        d, opts = ProxyTestBase.get_proxy_config()
+    def get_options(cls):
+        opts = ProxyTestBase.get_options()
         opts.mode = "socks5"
-        return d, opts
+        return opts
 
 
 class ChainProxyTest(ProxyTestBase):
@@ -291,16 +289,16 @@ class ChainProxyTest(ProxyTestBase):
         cls.chain = []
         super(ChainProxyTest, cls).setup_class()
         for _ in range(cls.n):
-            cnf, opts = cls.get_proxy_config()
-            config = ProxyConfig(opts, **cnf)
+            opts = cls.get_options()
+            config = ProxyConfig(opts)
             tmaster = cls.masterclass(opts, config)
             proxy = ProxyThread(tmaster)
             proxy.start()
             cls.chain.insert(0, proxy)
 
         # Patch the orginal proxy to upstream mode
-        cnf, opts = cls.get_proxy_config()
-        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(opts, **cnf)
+        opts = cls.get_options()
+        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(opts)
 
     @classmethod
     def teardown_class(cls):
@@ -315,14 +313,14 @@ class ChainProxyTest(ProxyTestBase):
             proxy.tmaster.state.clear()
 
     @classmethod
-    def get_proxy_config(cls):
-        d, opts = super(ChainProxyTest, cls).get_proxy_config()
+    def get_options(cls):
+        opts = super(ChainProxyTest, cls).get_options()
         if cls.chain:  # First proxy is in normal mode.
             opts.update(
                 mode="upstream",
                 upstream_server="http://127.0.0.1:%s" % cls.chain[0].port
             )
-        return d, opts
+        return opts
 
 
 class HTTPUpstreamProxyTest(ChainProxyTest, HTTPProxyTest):

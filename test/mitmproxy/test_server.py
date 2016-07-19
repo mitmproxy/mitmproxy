@@ -486,11 +486,11 @@ class TestSocks5(tservers.SocksModeTest):
 class TestHttps2Http(tservers.ReverseProxyTest):
 
     @classmethod
-    def get_proxy_config(cls):
-        d, opts = super(TestHttps2Http, cls).get_proxy_config()
+    def get_options(cls):
+        opts = super(TestHttps2Http, cls).get_options()
         s = parse_server_spec(opts.upstream_server)
         opts.upstream_server = "http://%s" % s.address
-        return d, opts
+        return opts
 
     def pathoc(self, ssl, sni=None):
         """
@@ -766,8 +766,13 @@ class TestFakeResponse(tservers.HTTPProxyTest):
 
 class TestServerConnect(tservers.HTTPProxyTest):
     masterclass = MasterFakeResponse
-    no_upstream_cert = True
     ssl = True
+
+    @classmethod
+    def get_options(cls):
+        opts = tservers.HTTPProxyTest.get_options()
+        opts.no_upstream_cert = True
+        return opts
 
     def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no_upstream_cert should not connect to an upstream server"""
@@ -1034,20 +1039,34 @@ class AddUpstreamCertsToClientChainMixin:
             if receivedCert.digest('sha256') == upstreamCert.digest('sha256'):
                 upstream_cert_found_in_client_chain = True
                 break
-        assert(upstream_cert_found_in_client_chain == self.add_upstream_certs_to_client_chain)
+        assert(upstream_cert_found_in_client_chain == self.master.options.add_upstream_certs_to_client_chain)
 
 
-class TestHTTPSAddUpstreamCertsToClientChainTrue(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
-
+class TestHTTPSAddUpstreamCertsToClientChainTrue(
+    AddUpstreamCertsToClientChainMixin,
+    tservers.HTTPProxyTest
+):
     """
-    If --add-server-certs-to-client-chain is True, then the client should receive the upstream server's certificates
+    If --add-server-certs-to-client-chain is True, then the client should
+    receive the upstream server's certificates
     """
-    add_upstream_certs_to_client_chain = True
+    @classmethod
+    def get_options(cls):
+        opts = super(tservers.HTTPProxyTest, cls).get_options()
+        opts.add_upstream_certs_to_client_chain = True
+        return opts
 
 
-class TestHTTPSAddUpstreamCertsToClientChainFalse(AddUpstreamCertsToClientChainMixin, tservers.HTTPProxyTest):
-
+class TestHTTPSAddUpstreamCertsToClientChainFalse(
+    AddUpstreamCertsToClientChainMixin,
+    tservers.HTTPProxyTest
+):
     """
-    If --add-server-certs-to-client-chain is False, then the client should not receive the upstream server's certificates
+    If --add-server-certs-to-client-chain is False, then the client should not
+    receive the upstream server's certificates
     """
-    add_upstream_certs_to_client_chain = False
+    @classmethod
+    def get_options(cls):
+        opts = super(tservers.HTTPProxyTest, cls).get_options()
+        opts.add_upstream_certs_to_client_chain = False
+        return opts
