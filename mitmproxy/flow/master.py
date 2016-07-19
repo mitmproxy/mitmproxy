@@ -13,7 +13,6 @@ from mitmproxy.flow import io
 from mitmproxy.flow import modules
 from mitmproxy.onboarding import app
 from mitmproxy.protocol import http_replay
-from mitmproxy.proxy.config import HostMatcher
 
 
 class FlowMaster(controller.Master):
@@ -47,18 +46,6 @@ class FlowMaster(controller.Master):
             host,
             port
         )
-
-    def get_ignore_filter(self):
-        return self.server.config.check_ignore.patterns
-
-    def set_ignore_filter(self, host_patterns):
-        self.server.config.check_ignore = HostMatcher(host_patterns)
-
-    def get_tcp_filter(self):
-        return self.server.config.check_tcp.patterns
-
-    def set_tcp_filter(self, host_patterns):
-        self.server.config.check_tcp = HostMatcher(host_patterns)
 
     def set_stream_large_bodies(self, max_size):
         if max_size is not None:

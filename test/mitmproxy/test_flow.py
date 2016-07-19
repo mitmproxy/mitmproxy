@@ -12,7 +12,6 @@ from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
 from mitmproxy.models import HTTPRequest
 from mitmproxy.models import HTTPResponse
-from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy.models.connections import ClientConnection
@@ -689,14 +688,6 @@ class TestSerialize:
 
 
 class TestFlowMaster:
-
-    def test_getset_ignore(self):
-        p = mock.Mock()
-        p.config.check_ignore = HostMatcher()
-        fm = flow.FlowMaster(None, p, flow.State())
-        assert not fm.get_ignore_filter()
-        fm.set_ignore_filter(["^apple\.com:", ":443$"])
-        assert fm.get_ignore_filter()
 
     def test_replay(self):
         s = flow.State()
