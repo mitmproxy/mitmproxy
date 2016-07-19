@@ -17,18 +17,6 @@ from netlib.http import url
 
 CONF_BASENAME = "mitmproxy"
 
-# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
-DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:" \
-    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:" \
-    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:" \
-    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:" \
-    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:" \
-    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:" \
-    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:" \
-    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:" \
-    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
-
 
 class HostMatcher(object):
 
@@ -89,13 +77,9 @@ class ProxyConfig:
             authenticator=None,
             http2=True,
             rawtcp=False,
-            ciphers_client=DEFAULT_CLIENT_CIPHERS,
-            ciphers_server=None,
             certs=tuple(),
     ):
         self.options = options
-        self.ciphers_client = ciphers_client
-        self.ciphers_server = ciphers_server
         self.no_upstream_cert = no_upstream_cert
 
         self.http2 = http2
@@ -209,6 +193,4 @@ def process_proxy_options(parser, options, args):
         http2=args.http2,
         rawtcp=args.rawtcp,
         authenticator=authenticator,
-        ciphers_client=args.ciphers_client,
-        ciphers_server=args.ciphers_server,
     )

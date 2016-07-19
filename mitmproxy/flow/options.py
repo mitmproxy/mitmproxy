@@ -43,6 +43,8 @@ class Options(options.Options):
             body_size_limit=None,  # type: Optional[int]
             cadir = cmdline.CA_DIR,  # type: str
             certs = (),  # type: Sequence[Tuple[str, str]]
+            ciphers_client = cmdline.DEFAULT_CLIENT_CIPHERS,   # type: str
+            ciphers_server = None,   # type: Optional[str]
             clientcerts = None,  # type: Optional[str]
             ignore_hosts = (),  # type: Sequence[str]
             listen_host = "",  # type: str
@@ -92,6 +94,8 @@ class Options(options.Options):
         self.body_size_limit = body_size_limit
         self.cadir = cadir
         self.certs = certs
+        self.ciphers_client = ciphers_client
+        self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
         self.ignore_hosts = ignore_hosts
         self.listen_host = listen_host

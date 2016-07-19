@@ -483,7 +483,7 @@ class TlsLayer(base.Layer):
                 cert, key,
                 method=self.config.openssl_method_client,
                 options=self.config.openssl_options_client,
-                cipher_list=self.config.ciphers_client,
+                cipher_list=self.config.options.ciphers_client,
                 dhparams=self.config.certstore.dhparams,
                 chain_file=chain_file,
                 alpn_select_callback=self.__alpn_select_callback,
@@ -522,7 +522,7 @@ class TlsLayer(base.Layer):
             if alpn and b"h2" in alpn and not self.config.http2:
                 alpn.remove(b"h2")
 
-            ciphers_server = self.config.ciphers_server
+            ciphers_server = self.config.options.ciphers_server
             if not ciphers_server:
                 ciphers_server = []
                 for id in self._client_hello.cipher_suites:

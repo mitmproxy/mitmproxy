@@ -7,7 +7,6 @@ import configargparse
 
 from mitmproxy import exceptions
 from mitmproxy import filt
-from mitmproxy.proxy import config
 from mitmproxy import platform
 from netlib import human
 from netlib import tcp
@@ -16,6 +15,18 @@ from netlib import version
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
+
+# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
+# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
+DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:" \
+    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:" \
+    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:" \
+    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:" \
+    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:" \
+    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:" \
+    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:" \
+    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:" \
+    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
 
 
 class ParseException(Exception):
@@ -244,6 +255,8 @@ def get_common_options(args):
         body_size_limit = body_size_limit,
         cadir = args.cadir,
         certs = certs,
+        ciphers_client = args.ciphers_client,
+        ciphers_server = args.ciphers_server,
         clientcerts = args.clientcerts,
         ignore_hosts = args.ignore_hosts,
         listen_host = args.addr,
@@ -487,7 +500,7 @@ def proxy_ssl_options(parser):
              'as the first entry. Can be passed multiple times.')
     group.add_argument(
         "--ciphers-client", action="store",
-        type=str, dest="ciphers_client", default=config.DEFAULT_CLIENT_CIPHERS,
+        type=str, dest="ciphers_client", default=DEFAULT_CLIENT_CIPHERS,
         help="Set supported ciphers for client connections. (OpenSSL Syntax)"
     )
     group.add_argument(
