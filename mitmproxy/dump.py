@@ -12,6 +12,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import builtins
 from mitmproxy import utils
+from mitmproxy import options
 from mitmproxy.builtins import dumper
 from netlib import tcp
 
@@ -20,7 +21,7 @@ class DumpError(Exception):
     pass
 
 
-class Options(flow.options.Options):
+class Options(options.Options):
     def __init__(
             self,
             keepserving=False,  # type: bool

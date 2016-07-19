@@ -2,7 +2,7 @@ from .. import tutils, mastertest
 from mitmproxy.builtins import anticomp
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy.flow import options
+from mitmproxy import options
 
 
 class TestAntiComp(mastertest.MasterTest):

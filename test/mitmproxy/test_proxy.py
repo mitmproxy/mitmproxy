@@ -3,10 +3,10 @@ import mock
 from OpenSSL import SSL
 
 from mitmproxy import cmdline
+from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.models.connections import ServerConnection
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
-from mitmproxy.flow import options
 from mitmproxy.proxy import config
 from netlib.exceptions import TcpDisconnect
 from pathod import test
