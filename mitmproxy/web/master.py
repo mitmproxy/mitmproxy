@@ -94,7 +94,7 @@ class WebState(flow.State):
 class Options(flow.options.Options):
     def __init__(
             self,
-            intercept=False,  # type: bool
+            intercept=None,  # type: Optional[str]
             wdebug=bool,  # type: bool
             wport=8081,  # type: int
             wiface="127.0.0.1",  # type: str
