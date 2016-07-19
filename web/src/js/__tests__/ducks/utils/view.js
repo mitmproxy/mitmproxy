@@ -14,7 +14,7 @@ describe('view reduce', () => {
         const result = createState([
             { id: 1 }
         ])
-        expect(reduce(state, view.updateFilter(state, item => item.id === 1))).toEqual(result)
+        expect(reduce(state, view.updateFilter(state.data, item => item.id === 1))).toEqual(result)
     })
 
     it('should sort items', () => {
@@ -72,7 +72,7 @@ describe('view reduce', () => {
             { id: 1, val: 1 },
             { id: 2, val: 3 }
         ])
-        expect(reduce(state, view.update(2, { id: 2, val: 3 }))).toEqual(result)
+        expect(reduce(state, view.update({ id: 2, val: 3 }))).toEqual(result)
     })
 
     it('should sort updated item', () => {
@@ -84,7 +84,7 @@ describe('view reduce', () => {
             { id: 2, val: 3 },
             { id: 1, val: 1 }
         ])
-        expect(reduce(state, view.update(2, { id: 2, val: 3 }, undefined, (a, b) => b.id - a.id))).toEqual(result)
+        expect(reduce(state, view.update({ id: 2, val: 3 }, undefined, (a, b) => b.id - a.id))).toEqual(result)
     })
 
     it('should filter updated item', () => {
@@ -96,7 +96,7 @@ describe('view reduce', () => {
             { id: 1, val: 1 }
         ])
         result.indexOf[2] = null
-        expect(reduce(state, view.update(2, { id: 2, val: 3 }, i => i.id === i.val))).toEqual(result)
+        expect(reduce(state, view.update({ id: 2, val: 3 }, i => i.id === i.val))).toEqual(result)
     })
 
     it('should remove item', () => {
@@ -119,7 +119,7 @@ describe('view reduce', () => {
         const result = createState([
             { id: 1 }
         ])
-        expect(reduce(state, view.receive({ data: [{ id: 1 }] }))).toEqual(result)
+        expect(reduce(state, view.receive([{ id: 1 }]))).toEqual(result)
     })
 
     it('should sort received items', () => {
@@ -131,7 +131,7 @@ describe('view reduce', () => {
             { id: 2 },
             { id: 1 }
         ])
-        expect(reduce(state, view.receive({ data: [{ id: 1 }, { id: 2 }] }, undefined, (a, b) => b.id - a.id))).toEqual(result)
+        expect(reduce(state, view.receive([{ id: 1 }, { id: 2 }], undefined, (a, b) => b.id - a.id))).toEqual(result)
     })
 
     it('should filter received', () => {
@@ -142,7 +142,7 @@ describe('view reduce', () => {
         const result = createState([
             { id: 1 }
         ])
-        expect(reduce(state, view.receive({ data: [{ id: 1 }, { id: 2 }] }, i => i.id === 1))).toEqual(result)
+        expect(reduce(state, view.receive([{ id: 1 }, { id: 2 }], i => i.id === 1))).toEqual(result)
     })
 })
 

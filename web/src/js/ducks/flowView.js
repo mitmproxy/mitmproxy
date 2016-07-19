@@ -1,12 +1,12 @@
-import Filt from '../../filt/filt'
-import { RequestUtils } from '../../flow/utils'
-import reduceView, * as viewActions from '../utils/view'
-import * as viewsActions from '../views'
+import reduceView, * as viewActions from './utils/view'
+import * as flowActions from './flows'
+import Filt from '../filt/filt'
+import { RequestUtils } from '../flow/utils'
 
-export const UPDATE_FILTER = 'FLOW_VIEWS_MAIN_UPDATE_FILTER'
-export const UPDATE_SORT = 'FLOW_VIEWS_MAIN_UPDATE_SORT'
-export const UPDATE_HIGHLIGHT = 'FLOW_VIEWS_MAIN_UPDATE_HIGHLIGHT'
-export const SELECT = 'FLOW_VIEWS_MAIN_SELECT'
+export const UPDATE_FILTER = 'FLOWVIEW_UPDATE_FILTER'
+export const UPDATE_SORT = 'FLOWVIEW_UPDATE_SORT'
+export const UPDATE_HIGHLIGHT = 'FLOWVIEW_UPDATE_HIGHLIGHT'
+
 
 const sortKeyFuns = {
 
@@ -29,12 +29,37 @@ const sortKeyFuns = {
     },
 }
 
+export function makeFilter(filter) {
+    if (!filter) {
+        return
+    }
+    return Filt.parse(filter)
+}
+
+export function makeSort({ column, desc }) {
+    const sortKeyFun = sortKeyFuns[column]
+    if (!sortKeyFun) {
+        return
+    }
+    return (a, b) => {
+        const ka = sortKeyFun(a)
+        const kb = sortKeyFun(b)
+        if (ka > kb) {
+            return desc ? -1 : 1
+        }
+        if (ka < kb) {
+            return desc ? 1 : -1
+        }
+        return 0
+    }
+}
+
+
 const defaultState = {
     highlight: null,
-    selected: [],
     filter: null,
     sort: { column: null, desc: false },
-    view: undefined,
+    ...reduceView(undefined, {})
 }
 
 export default function reduce(state = defaultState, action) {
@@ -46,44 +71,35 @@ export default function reduce(state = defaultState, action) {
                 highlight: action.highlight,
             }
 
-        case SELECT:
-            return {
-                ...state,
-                selected: [action.id]
-            }
-
         case UPDATE_FILTER:
             return {
-                ...state,
-                filter: action.filter,
-                view: reduceView(
-                    state.view,
+                ...reduceView(
+                    state,
                     viewActions.updateFilter(
-                        action.list,
+                        action.flows,
                         makeFilter(action.filter),
                         makeSort(state.sort)
                     )
                 ),
+                filter: action.filter,
             }
 
         case UPDATE_SORT:
             const sort = { column: action.column, desc: action.desc }
             return {
-                ...state,
-                sort,
-                view: reduceView(
-                    state.view,
+                ...reduceView(
+                    state,
                     viewActions.updateSort(
                         makeSort(sort)
                     )
                 ),
+                sort,
             }
 
-        case viewsActions.ADD:
+        case flowActions.ADD:
             return {
-                ...state,
-                view: reduceView(
-                    state.view,
+                ...reduceView(
+                    state,
                     viewActions.add(
                         action.item,
                         makeFilter(state.filter),
@@ -92,13 +108,11 @@ export default function reduce(state = defaultState, action) {
                 ),
             }
 
-        case viewsActions.UPDATE:
+        case flowActions.UPDATE:
             return {
-                ...state,
-                view: reduceView(
-                    state.view,
+                ...reduceView(
+                    state,
                     viewActions.update(
-                        action.id,
                         action.item,
                         makeFilter(state.filter),
                         makeSort(state.sort)
@@ -106,22 +120,20 @@ export default function reduce(state = defaultState, action) {
                 ),
             }
 
-        case viewsActions.REMOVE:
+        case flowActions.REMOVE:
             return {
-                ...state,
-                view: reduceView(
-                    state.view,
+                ...reduceView(
+                    state,
                     viewActions.remove(
                         action.id
                     )
                 ),
             }
 
-        case viewsActions.RECEIVE:
+        case flowActions.RECEIVE:
             return {
-                ...state,
-                view: reduceView(
-                    state.view,
+                ...reduceView(
+                    state,
                     viewActions.receive(
                         action.list,
                         makeFilter(state.filter),
@@ -132,8 +144,7 @@ export default function reduce(state = defaultState, action) {
 
         default:
             return {
-                ...state,
-                view: reduceView(state.view, action)
+                ...reduceView(state, action),
             }
     }
 }
@@ -143,7 +154,7 @@ export default function reduce(state = defaultState, action) {
  */
 export function updateFilter(filter) {
     return (dispatch, getState) => {
-        dispatch({ type: UPDATE_FILTER, filter, list: getState().flows.list })
+        dispatch({ type: UPDATE_FILTER, filter, flows: getState().flows.data })
     }
 }
 
@@ -161,62 +172,24 @@ export function updateSort(column, desc) {
     return { type: UPDATE_SORT, column, desc }
 }
 
-/**
- * @public
- */
-export function select(id) {
-    return (dispatch, getState) => {
-        dispatch({ type: SELECT, currentSelection: getState().flows.views.main.selected[0], id })
-    }
-}
 
 /**
  * @public
  */
 export function selectRelative(shift) {
     return (dispatch, getState) => {
-        let currentSelection = getState().flows.views.main.selected[0]
-        let id
-        if (shift === null){
-            id = null
-        } else if (!currentSelection) {
-            id = (action.shift < 0) ? 0 : state.view.data.length - 1
+        let currentSelectionIndex = getState().flowView.indexOf[getState().flows.selected[0]]
+        let minIndex = 0
+        let maxIndex = getState().flowView.data.length - 1
+        let newIndex
+        if (currentSelectionIndex === undefined) {
+            newIndex = (shift < 0) ? minIndex : maxIndex
         } else {
-            id = state.view.indexOf[currentSelection] + action.shift
-            id = Math.max(id, 0)
-            id = Math.min(id, state.view.data.length - 1)
+            newIndex = currentSelectionIndex + shift
+            newIndex = Math.max(newIndex, minIndex)
+            newIndex = Math.min(newIndex, maxIndex)
         }
-        dispatch({ type: SELECT, currentSelection, id })
-    }
-}
-
-/**
- * @private
- */
-function makeFilter(filter) {
-    if (!filter) {
-        return
-    }
-    return Filt.parse(filter)
-}
-
-/**
- * @private
- */
-function makeSort({ column, desc }) {
-    const sortKeyFun = sortKeyFuns[column]
-    if (!sortKeyFun) {
-        return
-    }
-    return (a, b) => {
-        const ka = sortKeyFun(a)
-        const kb = sortKeyFun(b)
-        if (ka > kb) {
-            return desc ? -1 : 1
-        }
-        if (ka < kb) {
-            return desc ? 1 : -1
-        }
-        return 0
+        let flow = getState().flowView.data[newIndex]
+        dispatch(flowActions.select(flow ? flow.id : undefined))
     }
 }

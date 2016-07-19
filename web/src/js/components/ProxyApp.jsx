@@ -60,7 +60,7 @@ export default connect(
         showEventLog: state.eventLog.visible,
         query: state.ui.query,
         panel: state.ui.panel,
-        selectedFlowId: state.flows.views.main.selected[0]
+        selectedFlowId: state.flows.selected[0]
     }),
     {
         appInit,

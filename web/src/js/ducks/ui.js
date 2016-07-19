@@ -1,18 +1,18 @@
-import { SELECT as SELECT_FLOW, selectRelative as selectFlowRelative } from './views/main'
+import { selectRelative as selectFlowRelative } from './flowView'
 import { Key } from '../utils.js'
-import * as flowsActions from '../ducks/flows'
+import * as flowsActions from './flows'
 
 export const SET_ACTIVE_MENU = 'UI_SET_ACTIVE_MENU'
 export const SET_CONTENT_VIEW = 'UI_SET_CONTENT_VIEW'
 export const SET_SELECTED_INPUT = 'UI_SET_SELECTED_INPUT'
 export const UPDATE_QUERY = 'UI_UPDATE_QUERY'
 export const SELECT_TAB = 'UI_SELECT_TAB'
-export const SELECT_TAB_RELATIVE = 'UI_SELECT_TAB_RELATIVE'
 export const SET_PROMPT = 'UI_SET_PROMPT'
 export const SET_DISPLAY_LARGE = 'UI_SET_DISPLAY_LARGE'
 
 const defaultState = {
     activeMenu: 'Start',
+    isFlowSelected: false,
     selectedInput: null,
     displayLarge: false,
     promptOpen: false,
@@ -30,20 +30,25 @@ export default function reducer(state = defaultState, action) {
                 activeMenu: action.activeMenu,
             }
 
-        case SELECT_FLOW:
-            if (action.flowId && !action.currentSelection) {
+        case flowsActions.SELECT:
+            if (action.flowIds.length && !state.isFlowSelected) {
                 return {
                     ...state,
                     displayLarge: false,
                     activeMenu: 'Flow',
+                    isFlowSelected: true,
                 }
             }
 
-            if (!action.flowId && state.activeMenu === 'Flow') {
+            if (!action.flowIds.length && state.isFlowSelected) {
+                let activeMenu = state.activeMenu
+                if (activeMenu == 'Flow') {
+                    activeMenu = 'Start'
+                }
                 return {
                     ...state,
-                    displayLarge: false,
-                    activeMenu: 'Start',
+                    activeMenu,
+                    isFlowSelected: false,
                 }
             }
 
@@ -74,19 +79,6 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 panel: action.panel
-            }
-
-        case SELECT_TAB_RELATIVE:
-            if (!action.flow || action.shift === null) {
-                return {
-                    ...state,
-                    panel: 'request'
-                }
-            }
-            const tabs = ['request', 'response', 'error'].filter(k => action.flow[k]).concat(['details'])
-            return {
-                ...state,
-                panel: tabs[(tabs.indexOf(state.panel) + action.shift + tabs.length) % tabs.length]
             }
 
         case SET_PROMPT:
@@ -126,13 +118,6 @@ export function selectTab(panel) {
     return { type: SELECT_TAB, panel }
 }
 
-export function selectTabRelative(shift) {
-    return (dispatch, getState) => {
-        let flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
-        dispatch({ type: SELECT_TAB_RELATIVE, shift, flow })
-    }
-}
-
 export function setPrompt(open) {
     return { type: SET_PROMPT, open }
 }
@@ -142,13 +127,17 @@ export function setDisplayLarge(displayLarge) {
 }
 
 export function onKeyDown(e) {
-    if(e.ctrlKey) {
-        return () => {}
+    if (e.ctrlKey) {
+        return () => {
+        }
     }
     var key = e.keyCode
     var shiftKey = e.shiftKey
     e.preventDefault()
     return (dispatch, getState) => {
+
+        const flow = getState().flows.byId[getState().flows.selected[0]]
+
         switch (key) {
 
             case Key.I:
@@ -191,20 +180,27 @@ export function onKeyDown(e) {
                 break
 
             case Key.ESC:
-                dispatch(selectFlowRelative(null))
-                dispatch(selectTabRelative(null))
+                dispatch(flowsActions.select(null))
                 break
 
-            case Key.H:
             case Key.LEFT:
-                dispatch(selectTabRelative(-1))
+            {
+                let tabs = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details']),
+                    currentTab = getState().ui.panel,
+                    nextTab = tabs[(tabs.indexOf(currentTab) - 1 + tabs.length) % tabs.length]
+                dispatch(selectTab(nextTab))
                 break
+            }
 
-            case Key.L:
             case Key.TAB:
             case Key.RIGHT:
-                dispatch(selectTabRelative(+1))
+            {
+                let tabs = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details']),
+                    currentTab = getState().ui.panel,
+                    nextTab = tabs[(tabs.indexOf(currentTab) + 1) % tabs.length]
+                dispatch(selectTab(nextTab))
                 break
+            }
 
             case Key.C:
                 if (shiftKey) {
@@ -212,8 +208,8 @@ export function onKeyDown(e) {
                 }
                 break
 
-            case Key.D: {
-                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+            case Key.D:
+            {
                 if (!flow) {
                     return
                 }
@@ -225,8 +221,8 @@ export function onKeyDown(e) {
                 break
             }
 
-            case Key.A: {
-                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+            case Key.A:
+            {
                 if (shiftKey) {
                     dispatch(flowsActions.acceptAll())
                 } else if (flow && flow.intercepted) {
@@ -235,16 +231,16 @@ export function onKeyDown(e) {
                 break
             }
 
-            case Key.R: {
-                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+            case Key.R:
+            {
                 if (!shiftKey && flow) {
                     dispatch(flowsActions.replay(flow))
                 }
                 break
             }
 
-            case Key.V: {
-                const flow = getState().flows.list.byId[getState().flows.views.main.selected[0]]
+            case Key.V:
+            {
                 if (!shiftKey && flow && flow.modified) {
                     dispatch(flowsActions.revert(flow))
                 }
@@ -256,7 +252,8 @@ export function onKeyDown(e) {
                 break
 
             default:
-                return () => {}
+                return () => {
+                }
         }
     }
 }

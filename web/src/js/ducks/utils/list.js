@@ -23,7 +23,7 @@ export default function reduce(state = defaultState, action) {
             }
 
         case UPDATE: {
-            const index = state.indexOf[action.id]
+            const index = state.indexOf[action.item.id]
 
             if (index == null) {
                 return state
@@ -36,7 +36,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 data,
-                byId: { ...state.byId, [action.id]: action.item }
+                byId: { ...state.byId, [action.item.id]: action.item }
             }
         }
 
@@ -86,8 +86,8 @@ export function add(item) {
 /**
  * @public
  */
-export function update(id, item) {
-    return { type: UPDATE, id, item }
+export function update(item) {
+    return { type: UPDATE, item }
 }
 
 /**

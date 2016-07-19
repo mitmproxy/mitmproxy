@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import classnames from 'classnames'
 import columns from './FlowColumns'
 
-import { updateSort } from '../../ducks/views/main'
+import { updateSort } from '../../ducks/flowView'
 
 FlowTableHead.propTypes = {
     updateSort: PropTypes.func.isRequired,
@@ -29,8 +29,8 @@ function FlowTableHead({ sortColumn, sortDesc, updateSort }) {
 
 export default connect(
     state => ({
-        sortDesc: state.flows.views.main.sort.desc,
-        sortColumn: state.flows.views.main.sort.column,
+        sortDesc: state.flowView.sort.desc,
+        sortColumn: state.flowView.sort.column,
     }),
     {
         updateSort

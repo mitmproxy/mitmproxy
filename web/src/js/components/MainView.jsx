@@ -1,12 +1,11 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Query } from '../actions.js'
-import { Key } from '../utils.js'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
 import * as flowsActions from '../ducks/flows'
-import { select as selectFlow, updateFilter, updateHighlight } from '../ducks/views/main'
+import { updateFilter, updateHighlight } from '../ducks/flowView'
 
 class MainView extends Component {
 
@@ -57,13 +56,13 @@ class MainView extends Component {
 
 export default connect(
     state => ({
-        flows: state.flows.views.main.view.data,
-        filter: state.flows.views.main.filter,
-        highlight: state.flows.views.main.highlight,
-        selectedFlow: state.flows.list.byId[state.flows.views.main.selected[0]]
+        flows: state.flowView.data,
+        filter: state.flowView.filter,
+        highlight: state.flowView.highlight,
+        selectedFlow: state.flows.byId[state.flows.selected[0]]
     }),
     {
-        selectFlow,
+        selectFlow: flowsActions.select,
         updateFilter,
         updateHighlight,
         updateFlow: flowsActions.update,
