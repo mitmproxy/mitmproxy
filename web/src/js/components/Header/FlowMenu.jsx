@@ -29,7 +29,7 @@ function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, rev
 
 export default connect(
     state => ({
-        flow: state.flows.list.byId[state.flows.views.main.selected[0]],
+        flow: state.flows.byId[state.flows.selected[0]],
     }),
     {
         acceptFlow: flowsActions.accept,

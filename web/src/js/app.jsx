@@ -12,7 +12,7 @@ import { add as addLog } from './ducks/eventLog'
 
 const middlewares = [thunk];
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
   const createLogger = require('redux-logger');
   middlewares.push(createLogger());
 }

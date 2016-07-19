@@ -1,23 +1,24 @@
 import { fetchApi } from '../utils'
 import reduceList, * as listActions from './utils/list'
-import reduceViews, * as viewsActions from './views'
+
 import * as msgQueueActions from './msgQueue'
 import * as websocketActions from './websocket'
 
 export const MSG_TYPE = 'UPDATE_FLOWS'
 export const DATA_URL = '/flows'
 
-export const ADD            = 'FLOWS_ADD'
-export const UPDATE         = 'FLOWS_UPDATE'
-export const REMOVE         = 'FLOWS_REMOVE'
-export const RECEIVE        = 'FLOWS_RECEIVE'
+export const ADD = 'FLOWS_ADD'
+export const UPDATE = 'FLOWS_UPDATE'
+export const REMOVE = 'FLOWS_REMOVE'
+export const RECEIVE = 'FLOWS_RECEIVE'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
-export const UNKNOWN_CMD    = 'FLOWS_UNKNOWN_CMD'
-export const FETCH_ERROR    = 'FLOWS_FETCH_ERROR'
+export const UNKNOWN_CMD = 'FLOWS_UNKNOWN_CMD'
+export const FETCH_ERROR = 'FLOWS_FETCH_ERROR'
+export const SELECT = 'FLOWS_SELECT'
 
 const defaultState = {
-    list: undefined,
-    views: undefined,
+    selected: [],
+    ...reduceList(undefined, {}),
 }
 
 export default function reduce(state = defaultState, action) {
@@ -26,37 +27,37 @@ export default function reduce(state = defaultState, action) {
         case ADD:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.add(action.item)),
-                views: reduceViews(state.views, viewsActions.add(action.item)),
+                ...reduceList(state, listActions.add(action.item)),
             }
 
         case UPDATE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.update(action.id, action.item)),
-                views: reduceViews(state.views, viewsActions.update(action.id, action.item)),
+                ...reduceList(state, listActions.update(action.item)),
             }
 
         case REMOVE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.remove(action.id)),
-                views: reduceViews(state.views, viewsActions.remove(action.id)),
+                ...reduceList(state, listActions.remove(action.id)),
             }
 
         case RECEIVE:
-            const list = reduceList(state.list, listActions.receive(action.list))
             return {
                 ...state,
-                list,
-                views: reduceViews(state.views, viewsActions.receive(list)),
+                ...reduceList(state, listActions.receive(action.list)),
+            }
+
+        case SELECT:
+            return {
+                ...state,
+                selected: action.flowIds
             }
 
         default:
             return {
                 ...state,
-                list: reduceList(state.list, action),
-                views: reduceViews(state.views, action),
+                ...reduceList(state, action),
             }
     }
 }
@@ -143,6 +144,15 @@ export function upload(file) {
     return { type: REQUEST_ACTION }
 }
 
+
+export function select(id) {
+    return {
+        type: SELECT,
+        flowIds: id ? [id] : []
+    }
+}
+
+
 /**
  * This action creater takes all WebSocket events
  *
@@ -152,16 +162,16 @@ export function handleWsMsg(msg) {
     switch (msg.cmd) {
 
         case websocketActions.CMD_ADD:
-            return addItem(msg.data)
+            return addFlow(msg.data)
 
         case websocketActions.CMD_UPDATE:
-            return updateItem(msg.data.id, msg.data)
+            return updateFlow(msg.data)
 
         case websocketActions.CMD_REMOVE:
-            return removeItem(msg.data.id)
+            return removeFlow(msg.data.id)
 
         case websocketActions.CMD_RESET:
-            return fetchData()
+            return fetchFlows()
 
         default:
             return { type: UNKNOWN_CMD, msg }
@@ -171,7 +181,7 @@ export function handleWsMsg(msg) {
 /**
  * @public websocket
  */
-export function fetchData() {
+export function fetchFlows() {
     return msgQueueActions.fetchData(MSG_TYPE)
 }
 
@@ -185,20 +195,20 @@ export function receiveData(list) {
 /**
  * @private
  */
-export function addItem(item) {
+export function addFlow(item) {
     return { type: ADD, item }
 }
 
 /**
  * @private
  */
-export function updateItem(id, item) {
-    return { type: UPDATE, id, item }
+export function updateFlow(item) {
+    return { type: UPDATE, item }
 }
 
 /**
  * @private
  */
-export function removeItem(id) {
+export function removeFlow(id) {
     return { type: REMOVE, id }
 }

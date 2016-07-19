@@ -15,8 +15,9 @@ const defaultState = {
 export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
-        case UPDATE_FILTER: {
-            const data = action.list.data.filter(action.filter).sort(action.sort)
+        case UPDATE_FILTER:
+        {
+            const data = action.list.filter(action.filter).sort(action.sort)
             return {
                 ...state,
                 data,
@@ -24,7 +25,8 @@ export default function reduce(state = defaultState, action) {
             }
         }
 
-        case UPDATE_SORT: {
+        case UPDATE_SORT:
+        {
             const data = [...state.data].sort(action.sort)
             return {
                 ...state,
@@ -51,13 +53,13 @@ export default function reduce(state = defaultState, action) {
                 ...sortedRemove(state, action.id),
             }
 
-        case UPDATE: {
-            if (state.indexOf[action.id] == null) {
+        case UPDATE:
+            if (state.indexOf[action.item.id] == null) {
                 return
             }
             const nextState = {
                 ...state,
-                ...sortedRemove(state, action.id),
+                ...sortedRemove(state, action.item.id),
             }
             if (!action.filter(action.item)) {
                 return nextState
@@ -66,10 +68,10 @@ export default function reduce(state = defaultState, action) {
                 ...nextState,
                 ...sortedInsert(nextState, action.item, action.sort)
             }
-        }
 
-        case RECEIVE: {
-            const data = action.list.data.filter(action.filter).sort(action.sort)
+        case RECEIVE:
+        {
+            const data = action.list.filter(action.filter).sort(action.sort)
             return {
                 ...state,
                 data,
@@ -94,8 +96,8 @@ export function add(item, filter = defaultFilter, sort = defaultSort) {
     return { type: ADD, item, filter, sort }
 }
 
-export function update(id, item, filter = defaultFilter, sort = defaultSort) {
-    return { type: UPDATE, id, item, filter, sort }
+export function update(item, filter = defaultFilter, sort = defaultSort) {
+    return { type: UPDATE, item, filter, sort }
 }
 
 export function remove(id) {

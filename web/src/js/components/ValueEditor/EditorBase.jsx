@@ -54,7 +54,6 @@ export default class EditorBase extends Component {
     render() {
         return (
             <this.props.tag
-                {...this.props}
                 tabIndex="0"
                 className={`inline-input ${this.props.className}`}
                 contentEditable={this.state.editable || undefined}

@@ -27,7 +27,7 @@ describe('list reduce', () => {
             { id: 1, val: 1 },
             { id: 2, val: 3 }
         ])
-        expect(reduce(state, list.update(2, { id: 2, val: 3 }))).toEqual(result)
+        expect(reduce(state, list.update({ id: 2, val: 3 }))).toEqual(result)
     })
 
     it('should remove item', () => {
