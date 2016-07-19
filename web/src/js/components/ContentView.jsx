@@ -1,12 +1,15 @@
 import React, { Component, PropTypes } from 'react'
+import { connect } from 'react-redux'
 import { MessageUtils } from '../flow/utils.js'
 import { ViewAuto, ViewImage } from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
 import ContentLoader from './ContentView/ContentLoader'
 import ViewSelector from './ContentView/ViewSelector'
-import ContentEditor from './ContentView/ContentEditor'
+import CodeEditor from './common/CodeEditor'
+import {setModifiedFlowContent} from '../ducks/flows'
 
-export default class ContentView extends Component {
+
+class ContentView extends Component {
 
     static propTypes = {
         // It may seem a bit weird at the first glance:
@@ -19,8 +22,7 @@ export default class ContentView extends Component {
 
     constructor(props, context) {
         super(props, context)
-
-        this.state = { displayLarge: false, View: ViewAuto, contentEditorClosed: true }
+        this.state = { displayLarge: false, View: ViewAuto}
         this.selectView = this.selectView.bind(this)
     }
 
@@ -50,7 +52,7 @@ export default class ContentView extends Component {
     }
 
     render() {
-        const { flow, message } = this.props
+        const { flow, message, setModifiedFlowContent, isFlowEditorOpen } = this.props
         const { displayLarge, View } = this.state
 
         if (message.contentLength === 0) {
@@ -67,15 +69,11 @@ export default class ContentView extends Component {
 
         return (
             <div>
-                 <ContentLoader flow={flow} message={message}>
-                    <ContentEditor
-                            onSave={content => {this.props.onContentChange(content);this.setState({contentEditorClosed : true});}}
-                            onOpen={() => this.setState({contentEditorClosed : false})}
-                            isClosed={this.state.contentEditorClosed}
-                            content=""
-                    />
-                </ContentLoader>
-                {this.state.contentEditorClosed && (<div>
+                {isFlowEditorOpen ? (
+                    <ContentLoader flow={flow} message={message}>
+                        <CodeEditor content="" onChange={content =>{setModifiedFlowContent(content)}}/>
+                    </ContentLoader>
+                ): (<div>
                     {View.textView ? (
                         <ContentLoader  flow={flow} message={message}>
                             <this.state.View content="" />
@@ -115,3 +113,9 @@ export default class ContentView extends Component {
         )
     }
 }
+export default connect(
+    state => (
+        {isFlowEditorOpen : state.ui.isFlowEditorOpen}
+    ), {
+        setModifiedFlowContent
+    })(ContentView)

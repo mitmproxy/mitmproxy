@@ -5,8 +5,16 @@ import Codemirror from 'react-codemirror';
 
 export default class CodeEditor extends Component{
      static propTypes = {
-        value: PropTypes.string.isRequired,
+        content: PropTypes.string.isRequired,
         onChange: PropTypes.func.isRequired,
+    }
+
+    constructor(props){
+        super(props)
+    }
+
+    componentWillMount(){
+        this.props.onChange(this.props.content)
     }
 
     render() {
@@ -15,7 +23,7 @@ export default class CodeEditor extends Component{
         };
         return (
             <div onKeyDown={e => e.stopPropagation()}>
-                <Codemirror value={this.props.value} onChange={this.props.onChange} options={options}/>
+                <Codemirror value={this.props.content} onChange={this.props.onChange} options={options}/>
             </div>
         )
     }

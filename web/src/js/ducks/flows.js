@@ -14,10 +14,12 @@ export const RECEIVE        = 'FLOWS_RECEIVE'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 export const UNKNOWN_CMD    = 'FLOWS_UNKNOWN_CMD'
 export const FETCH_ERROR    = 'FLOWS_FETCH_ERROR'
+export const SET_MODIFIED_FLOW_CONTENT = "FLOWS_SET_MODIFIED_FLOW"
 
 const defaultState = {
     list: undefined,
     views: undefined,
+    modifiedFlow: {headers: "", content: ""}
 }
 
 export default function reduce(state = defaultState, action) {
@@ -51,6 +53,12 @@ export default function reduce(state = defaultState, action) {
                 list,
                 views: reduceViews(state.views, viewsActions.receive(list)),
             }
+        case SET_MODIFIED_FLOW_CONTENT:
+            return{
+                ...state,
+                   modifiedFlow: {...state.modifiedFlow, content: action.content}
+            }
+
 
         default:
             return {
@@ -60,6 +68,17 @@ export default function reduce(state = defaultState, action) {
             }
     }
 }
+
+/**
+ * @public
+ */
+export function setModifiedFlowContent(content) {
+    return {
+        type: SET_MODIFIED_FLOW_CONTENT,
+        content
+    }
+}
+
 
 /**
  * @public
