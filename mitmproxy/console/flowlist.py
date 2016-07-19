@@ -120,7 +120,6 @@ class ConnectionItem(urwid.WidgetWrap):
             self.flow,
             self.f,
             hostheader = self.master.options.showhost,
-            marked=self.state.flow_marked(self.flow)
         )
 
     def selectable(self):
