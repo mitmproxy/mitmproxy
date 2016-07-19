@@ -79,6 +79,7 @@ class Flow(stateobject.StateObject):
         self.intercepted = False  # type: bool
         self._backup = None  # type: Optional[Flow]
         self.reply = None
+        self.marked = False  # type: bool
 
     _stateobject_attributes = dict(
         id=str,
@@ -86,7 +87,8 @@ class Flow(stateobject.StateObject):
         client_conn=ClientConnection,
         server_conn=ServerConnection,
         type=str,
-        intercepted=bool
+        intercepted=bool,
+        marked=bool,
     )
 
     def get_state(self):
