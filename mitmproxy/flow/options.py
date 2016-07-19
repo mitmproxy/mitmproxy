@@ -39,10 +39,12 @@ class Options(options.Options):
             replay_ignore_host=False,  # type: bool
 
             # Proxy options
+            add_upstream_certs_to_client_chain=False,  # type: bool
             body_size_limit=None,  # type: Optional[int]
             cadir = cmdline.CA_DIR,  # type: str
             certs = (),  # type: Sequence[Tuple[str, str]]
             clientcerts = None,  # type: Optional[str]
+            ignore_hosts = (),  # type: Sequence[str]
             listen_host = "",  # type: str
             listen_port = 8080,  # type: int
             mode = "regular",  # type: str
@@ -53,7 +55,7 @@ class Options(options.Options):
             ssl_verify_upstream_cert=False,  # type: bool
             ssl_verify_upstream_trusted_cadir=None,  # type: str
             ssl_verify_upstream_trusted_ca=None,  # type: str
-            add_upstream_certs_to_client_chain=False,  # type: bool
+            tcp_hosts = (),  # type: Sequence[str]
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -86,10 +88,12 @@ class Options(options.Options):
         self.replay_ignore_host = replay_ignore_host
 
         # Proxy options
+        self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
         self.body_size_limit = body_size_limit
         self.cadir = cadir
         self.certs = certs
         self.clientcerts = clientcerts
+        self.ignore_hosts = ignore_hosts
         self.listen_host = listen_host
         self.listen_port = listen_port
         self.mode = mode
@@ -100,5 +104,5 @@ class Options(options.Options):
         self.ssl_verify_upstream_cert = ssl_verify_upstream_cert
         self.ssl_verify_upstream_trusted_cadir = ssl_verify_upstream_trusted_cadir
         self.ssl_verify_upstream_trusted_ca = ssl_verify_upstream_trusted_ca
-        self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
+        self.tcp_hosts = tcp_hosts
         super(Options, self).__init__()

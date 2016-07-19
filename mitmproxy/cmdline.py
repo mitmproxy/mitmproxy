@@ -240,10 +240,12 @@ def get_common_options(args):
         replay_ignore_payload_params=args.replay_ignore_payload_params,
         replay_ignore_host=args.replay_ignore_host,
 
+        add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
         body_size_limit = body_size_limit,
         cadir = args.cadir,
         certs = certs,
         clientcerts = args.clientcerts,
+        ignore_hosts = args.ignore_hosts,
         listen_host = args.addr,
         listen_port = args.port,
         mode = mode,
@@ -254,7 +256,7 @@ def get_common_options(args):
         ssl_verify_upstream_cert = args.ssl_verify_upstream_cert,
         ssl_verify_upstream_trusted_cadir = args.ssl_verify_upstream_trusted_cadir,
         ssl_verify_upstream_trusted_ca = args.ssl_verify_upstream_trusted_ca,
-        add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
+        tcp_hosts = args.tcp_hosts,
     )
 
 

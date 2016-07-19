@@ -87,8 +87,6 @@ class ProxyConfig:
             options,
             no_upstream_cert=False,
             authenticator=None,
-            ignore_hosts=tuple(),
-            tcp_hosts=tuple(),
             http2=True,
             rawtcp=False,
             ciphers_client=DEFAULT_CLIENT_CIPHERS,
@@ -100,8 +98,6 @@ class ProxyConfig:
         self.ciphers_server = ciphers_server
         self.no_upstream_cert = no_upstream_cert
 
-        self.check_ignore = HostMatcher(ignore_hosts)
-        self.check_tcp = HostMatcher(tcp_hosts)
         self.http2 = http2
         self.rawtcp = rawtcp
         self.authenticator = authenticator
@@ -116,12 +112,17 @@ class ProxyConfig:
         else:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
 
+        self.check_ignore = None
+        self.check_tcp = None
         self.certstore = None
         self.clientcerts = None
         self.configure(options)
         options.changed.connect(self.configure)
 
     def configure(self, options):
+        self.check_ignore = HostMatcher(options.ignore_hosts)
+        self.check_tcp = HostMatcher(options.tcp_hosts)
+
         certstore_path = os.path.expanduser(options.cadir)
         if not os.path.exists(os.path.dirname(certstore_path)):
             raise exceptions.OptionsError(
@@ -204,8 +205,6 @@ def process_proxy_options(parser, options, args):
     return ProxyConfig(
         options,
         no_upstream_cert=args.no_upstream_cert,
-        ignore_hosts=args.ignore_hosts,
-        tcp_hosts=args.tcp_hosts,
         http2=args.http2,
         rawtcp=args.rawtcp,
         authenticator=authenticator,
