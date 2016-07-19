@@ -102,26 +102,27 @@ class ProxyConfig:
         self.rawtcp = rawtcp
         self.authenticator = authenticator
 
-        self.openssl_method_client, self.openssl_options_client = \
-            tcp.sslversion_choices[options.ssl_version_client]
-        self.openssl_method_server, self.openssl_options_server = \
-            tcp.sslversion_choices[options.ssl_version_server]
+        self.check_ignore = None
+        self.check_tcp = None
+        self.certstore = None
+        self.clientcerts = None
+        self.openssl_verification_mode_server = None
+        self.configure(options)
+        options.changed.connect(self.configure)
 
+    def configure(self, options):
         if options.ssl_verify_upstream_cert:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER
         else:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
 
-        self.check_ignore = None
-        self.check_tcp = None
-        self.certstore = None
-        self.clientcerts = None
-        self.configure(options)
-        options.changed.connect(self.configure)
-
-    def configure(self, options):
         self.check_ignore = HostMatcher(options.ignore_hosts)
         self.check_tcp = HostMatcher(options.tcp_hosts)
+
+        self.openssl_method_client, self.openssl_options_client = \
+            tcp.sslversion_choices[options.ssl_version_client]
+        self.openssl_method_server, self.openssl_options_server = \
+            tcp.sslversion_choices[options.ssl_version_server]
 
         certstore_path = os.path.expanduser(options.cadir)
         if not os.path.exists(os.path.dirname(certstore_path)):
