@@ -54,6 +54,10 @@ class WSGIAdaptor(object):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 
     def make_environ(self, flow, errsoc, **extra):
+        """
+        Raises:
+            ValueError, if the content-encoding is invalid.
+        """
         path = strutils.native(flow.request.path, "latin-1")
         if '?' in path:
             path_info, query = strutils.native(path, "latin-1").split('?', 1)

@@ -1,21 +1,32 @@
 from __future__ import absolute_import, print_function, division
 
-import base64
 import os
 import re
 
 import configargparse
 
+from mitmproxy import exceptions
 from mitmproxy import filt
-from mitmproxy.proxy import config
+from mitmproxy import platform
 from netlib import human
-from netlib import strutils
 from netlib import tcp
 from netlib import version
-from netlib.http import url
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
+CA_DIR = "~/.mitmproxy"
+
+# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
+# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
+DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:" \
+    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:" \
+    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:" \
+    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:" \
+    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:" \
+    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:" \
+    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:" \
+    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:" \
+    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
 
 
 class ParseException(Exception):
@@ -107,110 +118,164 @@ def parse_setheader(s):
     return _parse_hook(s)
 
 
-def parse_server_spec(spec):
-    try:
-        p = url.parse(spec)
-        if p[0] not in (b"http", b"https"):
-            raise ValueError()
-    except ValueError:
-        raise configargparse.ArgumentTypeError(
-            "Invalid server specification: %s" % spec
-        )
-
-    address = tcp.Address(p[1:3])
-    scheme = p[0].lower()
-    return config.ServerSpec(scheme, address)
-
-
-def parse_upstream_auth(auth):
-    pattern = re.compile(".+:")
-    if pattern.search(auth) is None:
-        raise configargparse.ArgumentTypeError(
-            "Invalid upstream auth specification: %s" % auth
-        )
-    return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
-
-
-def get_common_options(options):
+def get_common_options(args):
     stickycookie, stickyauth = None, None
-    if options.stickycookie_filt:
-        stickycookie = options.stickycookie_filt
+    if args.stickycookie_filt:
+        stickycookie = args.stickycookie_filt
 
-    if options.stickyauth_filt:
-        stickyauth = options.stickyauth_filt
+    if args.stickyauth_filt:
+        stickyauth = args.stickyauth_filt
 
-    stream_large_bodies = options.stream_large_bodies
+    stream_large_bodies = args.stream_large_bodies
     if stream_large_bodies:
         stream_large_bodies = human.parse_size(stream_large_bodies)
 
     reps = []
-    for i in options.replace:
+    for i in args.replace:
         try:
             p = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e)
+            raise exceptions.OptionsError(e)
         reps.append(p)
-    for i in options.replace_file:
+    for i in args.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e)
+            raise exceptions.OptionsError(e)
         try:
             v = open(path, "rb").read()
         except IOError as e:
-            raise configargparse.ArgumentTypeError(
+            raise exceptions.OptionsError(
                 "Could not read replace file: %s" % path
             )
         reps.append((patt, rex, v))
 
     setheaders = []
-    for i in options.setheader:
+    for i in args.setheader:
         try:
             p = parse_setheader(i)
         except ParseException as e:
-            raise configargparse.ArgumentTypeError(e)
+            raise exceptions.OptionsError(e)
         setheaders.append(p)
 
-    if options.outfile and options.outfile[0] == options.rfile:
-        if options.outfile[1] == "wb":
-            raise configargparse.ArgumentTypeError(
+    if args.outfile and args.outfile[0] == args.rfile:
+        if args.outfile[1] == "wb":
+            raise exceptions.OptionsError(
                 "Cannot use '{}' for both reading and writing flows. "
-                "Are you looking for --afile?".format(options.rfile)
+                "Are you looking for --afile?".format(args.rfile)
             )
         else:
-            raise configargparse.ArgumentTypeError(
+            raise exceptions.OptionsError(
                 "Cannot use '{}' for both reading and appending flows. "
                 "That would trigger an infinite loop."
             )
 
-    return dict(
-        app=options.app,
-        app_host=options.app_host,
-        app_port=options.app_port,
+    # Proxy config
+    certs = []
+    for i in args.certs:
+        parts = i.split("=", 1)
+        if len(parts) == 1:
+            parts = ["*", parts[0]]
+        certs.append(parts)
 
-        anticache=options.anticache,
-        anticomp=options.anticomp,
-        client_replay=options.client_replay,
-        kill=options.kill,
-        no_server=options.no_server,
-        refresh_server_playback=not options.norefresh,
-        rheaders=options.rheaders,
-        rfile=options.rfile,
+    body_size_limit = args.body_size_limit
+    if body_size_limit:
+        try:
+            body_size_limit = human.parse_size(body_size_limit)
+        except ValueError as e:
+            raise exceptions.OptionsError(
+                "Invalid body size limit specification: %s" % body_size_limit
+            )
+
+    # Establish proxy mode
+    c = 0
+    mode, upstream_server = "regular", None
+    if args.transparent_proxy:
+        c += 1
+        if not platform.resolver:
+            raise exceptions.OptionsError(
+                "Transparent mode not supported on this platform."
+            )
+        mode = "transparent"
+    if args.socks_proxy:
+        c += 1
+        mode = "socks5"
+    if args.reverse_proxy:
+        c += 1
+        mode = "reverse"
+        upstream_server = args.reverse_proxy
+    if args.upstream_proxy:
+        c += 1
+        mode = "upstream"
+        upstream_server = args.upstream_proxy
+    if c > 1:
+        raise exceptions.OptionsError(
+            "Transparent, SOCKS5, reverse and upstream proxy mode "
+            "are mutually exclusive. Read the docs on proxy modes "
+            "to understand why."
+        )
+    if args.add_upstream_certs_to_client_chain and args.no_upstream_cert:
+        raise exceptions.OptionsError(
+            "The no-upstream-cert and add-upstream-certs-to-client-chain "
+            "options are mutually exclusive. If no-upstream-cert is enabled "
+            "then the upstream certificate is not retrieved before generating "
+            "the client certificate chain."
+        )
+
+    return dict(
+        app=args.app,
+        app_host=args.app_host,
+        app_port=args.app_port,
+
+        anticache=args.anticache,
+        anticomp=args.anticomp,
+        client_replay=args.client_replay,
+        kill=args.kill,
+        no_server=args.no_server,
+        refresh_server_playback=not args.norefresh,
+        rheaders=args.rheaders,
+        rfile=args.rfile,
         replacements=reps,
         setheaders=setheaders,
-        server_replay=options.server_replay,
-        scripts=options.scripts,
+        server_replay=args.server_replay,
+        scripts=args.scripts,
         stickycookie=stickycookie,
         stickyauth=stickyauth,
         stream_large_bodies=stream_large_bodies,
-        showhost=options.showhost,
-        outfile=options.outfile,
-        verbosity=options.verbose,
-        nopop=options.nopop,
-        replay_ignore_content=options.replay_ignore_content,
-        replay_ignore_params=options.replay_ignore_params,
-        replay_ignore_payload_params=options.replay_ignore_payload_params,
-        replay_ignore_host=options.replay_ignore_host
+        showhost=args.showhost,
+        outfile=args.outfile,
+        verbosity=args.verbose,
+        nopop=args.nopop,
+        replay_ignore_content=args.replay_ignore_content,
+        replay_ignore_params=args.replay_ignore_params,
+        replay_ignore_payload_params=args.replay_ignore_payload_params,
+        replay_ignore_host=args.replay_ignore_host,
+
+        auth_nonanonymous = args.auth_nonanonymous,
+        auth_singleuser = args.auth_singleuser,
+        auth_htpasswd = args.auth_htpasswd,
+        add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
+        body_size_limit = body_size_limit,
+        cadir = args.cadir,
+        certs = certs,
+        ciphers_client = args.ciphers_client,
+        ciphers_server = args.ciphers_server,
+        clientcerts = args.clientcerts,
+        http2 = args.http2,
+        ignore_hosts = args.ignore_hosts,
+        listen_host = args.addr,
+        listen_port = args.port,
+        mode = mode,
+        no_upstream_cert = args.no_upstream_cert,
+        rawtcp = args.rawtcp,
+        upstream_server = upstream_server,
+        upstream_auth = args.upstream_auth,
+        ssl_version_client = args.ssl_version_client,
+        ssl_version_server = args.ssl_version_server,
+        ssl_verify_upstream_cert = args.ssl_verify_upstream_cert,
+        ssl_verify_upstream_trusted_cadir = args.ssl_verify_upstream_trusted_cadir,
+        ssl_verify_upstream_trusted_ca = args.ssl_verify_upstream_trusted_ca,
+        tcp_hosts = args.tcp_hosts,
     )
 
 
@@ -242,8 +307,8 @@ def basic_options(parser):
     )
     parser.add_argument(
         "--cadir",
-        action="store", type=str, dest="cadir", default=config.CA_DIR,
-        help="Location of the default mitmproxy CA files. (%s)" % config.CA_DIR
+        action="store", type=str, dest="cadir", default=CA_DIR,
+        help="Location of the default mitmproxy CA files. (%s)" % CA_DIR
     )
     parser.add_argument(
         "--host",
@@ -284,8 +349,8 @@ def basic_options(parser):
     )
     parser.add_argument(
         "-v", "--verbose",
-        action="store_const", dest="verbose", default=1, const=2,
-        help="Increase event log verbosity."
+        action="store_const", dest="verbose", default=2, const=3,
+        help="Increase log verbosity."
     )
     outfile = parser.add_mutually_exclusive_group()
     outfile.add_argument(
@@ -327,7 +392,7 @@ def proxy_modes(parser):
     group.add_argument(
         "-R", "--reverse",
         action="store",
-        type=parse_server_spec,
+        type=str,
         dest="reverse_proxy",
         default=None,
         help="""
@@ -350,7 +415,7 @@ def proxy_modes(parser):
     group.add_argument(
         "-U", "--upstream",
         action="store",
-        type=parse_server_spec,
+        type=str,
         dest="upstream_proxy",
         default=None,
         help="Forward all requests to upstream proxy server: http://host[:port]"
@@ -384,7 +449,7 @@ def proxy_options(parser):
         help="""
             Generic TCP SSL proxy mode for all hosts that match the pattern.
             Similar to --ignore, but SSL connections are intercepted. The
-            communication contents are printed to the event log in verbose mode.
+            communication contents are printed to the log in verbose mode.
         """
     )
     group.add_argument(
@@ -408,7 +473,7 @@ def proxy_options(parser):
     parser.add_argument(
         "--upstream-auth",
         action="store", dest="upstream_auth", default=None,
-        type=parse_upstream_auth,
+        type=str,
         help="""
             Proxy Authentication:
             username:password
@@ -441,7 +506,7 @@ def proxy_ssl_options(parser):
              'as the first entry. Can be passed multiple times.')
     group.add_argument(
         "--ciphers-client", action="store",
-        type=str, dest="ciphers_client", default=config.DEFAULT_CLIENT_CIPHERS,
+        type=str, dest="ciphers_client", default=DEFAULT_CLIENT_CIPHERS,
         help="Set supported ciphers for client connections. (OpenSSL Syntax)"
     )
     group.add_argument(
@@ -696,8 +761,8 @@ def mitmproxy():
         usage="%(prog)s [options]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(config.CA_DIR, "common.conf"),
-            os.path.join(config.CA_DIR, "mitmproxy.conf")
+            os.path.join(CA_DIR, "common.conf"),
+            os.path.join(CA_DIR, "mitmproxy.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
@@ -751,8 +816,8 @@ def mitmdump():
         usage="%(prog)s [options] [filter]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(config.CA_DIR, "common.conf"),
-            os.path.join(config.CA_DIR, "mitmdump.conf")
+            os.path.join(CA_DIR, "common.conf"),
+            os.path.join(CA_DIR, "mitmdump.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
@@ -781,8 +846,8 @@ def mitmweb():
         usage="%(prog)s [options]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(config.CA_DIR, "common.conf"),
-            os.path.join(config.CA_DIR, "mitmweb.conf")
+            os.path.join(CA_DIR, "common.conf"),
+            os.path.join(CA_DIR, "mitmweb.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True

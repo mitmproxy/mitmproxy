@@ -7,10 +7,6 @@ import FilterDocs from './FilterDocs'
 
 export default class FilterInput extends Component {
 
-    static contextTypes = {
-        returnFocus: React.PropTypes.func,
-    }
-
     constructor(props, context) {
         super(props, context)
 
@@ -91,7 +87,6 @@ export default class FilterInput extends Component {
 
     blur() {
         ReactDOM.findDOMNode(this.refs.input).blur()
-        this.context.returnFocus()
     }
 
     select() {

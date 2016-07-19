@@ -244,7 +244,7 @@ def _read_request_line(rfile):
         raise exceptions.HttpReadDisconnect("Client disconnected")
 
     try:
-        method, path, http_version = line.split(b" ")
+        method, path, http_version = line.split()
 
         if path == b"*" or path.startswith(b"/"):
             form = "relative"
@@ -291,8 +291,7 @@ def _read_response_line(rfile):
         raise exceptions.HttpReadDisconnect("Server disconnected")
 
     try:
-
-        parts = line.split(b" ", 2)
+        parts = line.split(None, 2)
         if len(parts) == 2:  # handle missing message gracefully
             parts.append(b"")
 

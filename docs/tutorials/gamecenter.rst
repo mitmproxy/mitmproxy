@@ -51,7 +51,7 @@ The contents of the submission are particularly interesting:
             <key>context</key>
             <integer>0</integer>
             <key>score-value</key>
-            <integer>0</integer>
+            <integer>55</integer>
             <key>timestamp</key>
             <integer>1363515361321</integer>
           </dict>

@@ -37,13 +37,14 @@ class Response(message.Message):
     An HTTP response.
     """
     def __init__(self, *args, **kwargs):
+        super(Response, self).__init__()
         self.data = ResponseData(*args, **kwargs)
 
     def __repr__(self):
-        if self.content:
+        if self.raw_content:
             details = "{}, {}".format(
                 self.headers.get("content-type", "unknown content type"),
-                human.pretty_size(len(self.content))
+                human.pretty_size(len(self.raw_content))
             )
         else:
             details = "no content"

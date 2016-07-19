@@ -36,25 +36,25 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Header Set Patterns",
                     "H",
-                    lambda: master.setheaders.count(),
+                    lambda: len(master.options.setheaders),
                     self.setheaders
                 ),
                 select.Option(
                     "Ignore Patterns",
                     "I",
-                    lambda: master.server.config.check_ignore,
-                    self.ignorepatterns
+                    lambda: master.options.ignore_hosts,
+                    self.ignore_hosts
                 ),
                 select.Option(
                     "Replacement Patterns",
                     "R",
-                    lambda: master.replacehooks.count(),
+                    lambda: len(master.options.replacements),
                     self.replacepatterns
                 ),
                 select.Option(
                     "Scripts",
                     "S",
-                    lambda: master.scripts,
+                    lambda: master.options.scripts,
                     self.scripts
                 ),
 
@@ -74,59 +74,59 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Show Host",
                     "w",
-                    lambda: master.showhost,
-                    self.toggle_showhost
+                    lambda: master.options.showhost,
+                    master.options.toggler("showhost")
                 ),
 
                 select.Heading("Network"),
                 select.Option(
                     "No Upstream Certs",
                     "U",
-                    lambda: master.server.config.no_upstream_cert,
-                    self.toggle_upstream_cert
+                    lambda: master.options.no_upstream_cert,
+                    master.options.toggler("no_upstream_cert")
                 ),
                 select.Option(
                     "TCP Proxying",
                     "T",
-                    lambda: master.server.config.check_tcp,
-                    self.tcp_proxy
+                    lambda: master.options.tcp_hosts,
+                    self.tcp_hosts
                 ),
 
                 select.Heading("Utility"),
                 select.Option(
                     "Anti-Cache",
                     "a",
-                    lambda: master.anticache,
-                    self.toggle_anticache
+                    lambda: master.options.anticache,
+                    master.options.toggler("anticache")
                 ),
                 select.Option(
                     "Anti-Compression",
                     "o",
-                    lambda: master.anticomp,
-                    self.toggle_anticomp
+                    lambda: master.options.anticomp,
+                    master.options.toggler("anticomp")
                 ),
                 select.Option(
                     "Kill Extra",
                     "x",
-                    lambda: master.killextra,
-                    self.toggle_killextra
+                    lambda: master.options.kill,
+                    master.options.toggler("kill")
                 ),
                 select.Option(
                     "No Refresh",
                     "f",
-                    lambda: not master.refresh_server_playback,
-                    self.toggle_refresh_server_playback
+                    lambda: not master.options.refresh_server_playback,
+                    master.options.toggler("refresh_server_playback")
                 ),
                 select.Option(
                     "Sticky Auth",
                     "A",
-                    lambda: master.stickyauth_txt,
+                    lambda: master.options.stickyauth,
                     self.sticky_auth
                 ),
                 select.Option(
                     "Sticky Cookies",
                     "t",
-                    lambda: master.stickycookie_txt,
+                    lambda: master.options.stickycookie,
                     self.sticky_cookie
                 ),
             ]
@@ -140,6 +140,7 @@ class Options(urwid.WidgetWrap):
         )
         self.master.loop.widget.footer.update("")
         signals.update_settings.connect(self.sig_update_settings)
+        master.options.changed.connect(self.sig_update_settings)
 
     def sig_update_settings(self, sender):
         self.lb.walker._modified()
@@ -151,19 +152,22 @@ class Options(urwid.WidgetWrap):
         return super(self.__class__, self).keypress(size, key)
 
     def clearall(self):
-        self.master.anticache = False
-        self.master.anticomp = False
-        self.master.killextra = False
-        self.master.showhost = False
-        self.master.refresh_server_playback = True
-        self.master.server.config.no_upstream_cert = False
-        self.master.setheaders.clear()
-        self.master.replacehooks.clear()
-        self.master.set_ignore_filter([])
-        self.master.set_tcp_filter([])
-        self.master.scripts = []
-        self.master.set_stickyauth(None)
-        self.master.set_stickycookie(None)
+        self.master.options.update(
+            anticache = False,
+            anticomp = False,
+            ignore_hosts = (),
+            tcp_hosts = (),
+            kill = False,
+            no_upstream_cert = False,
+            refresh_server_playback = True,
+            replacements = [],
+            scripts = [],
+            setheaders = [],
+            showhost = False,
+            stickyauth = None,
+            stickycookie = None,
+        )
+
         self.master.state.default_body_view = contentviews.get("Auto")
 
         signals.update_settings.send(self)
@@ -172,58 +176,39 @@ class Options(urwid.WidgetWrap):
             expire = 1
         )
 
-    def toggle_anticache(self):
-        self.master.anticache = not self.master.anticache
-
-    def toggle_anticomp(self):
-        self.master.anticomp = not self.master.anticomp
-
-    def toggle_killextra(self):
-        self.master.killextra = not self.master.killextra
-
-    def toggle_showhost(self):
-        self.master.showhost = not self.master.showhost
-
-    def toggle_refresh_server_playback(self):
-        self.master.refresh_server_playback = not self.master.refresh_server_playback
-
-    def toggle_upstream_cert(self):
-        self.master.server.config.no_upstream_cert = not self.master.server.config.no_upstream_cert
-        signals.update_settings.send(self)
-
     def setheaders(self):
-        def _set(*args, **kwargs):
-            self.master.setheaders.set(*args, **kwargs)
-            signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.SetHeadersEditor(
                 self.master,
-                self.master.setheaders.get_specs(),
-                _set
+                self.master.options.setheaders,
+                self.master.options.setter("setheaders")
             )
         )
 
-    def ignorepatterns(self):
-        def _set(ignore):
-            self.master.set_ignore_filter(ignore)
-            signals.update_settings.send(self)
+    def tcp_hosts(self):
         self.master.view_grideditor(
             grideditor.HostPatternEditor(
                 self.master,
-                self.master.get_ignore_filter(),
-                _set
+                self.master.options.tcp_hosts,
+                self.master.options.setter("tcp_hosts")
+            )
+        )
+
+    def ignore_hosts(self):
+        self.master.view_grideditor(
+            grideditor.HostPatternEditor(
+                self.master,
+                self.master.options.ignore_hosts,
+                self.master.options.setter("ignore_hosts")
             )
         )
 
     def replacepatterns(self):
-        def _set(*args, **kwargs):
-            self.master.replacehooks.set(*args, **kwargs)
-            signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.ReplaceEditor(
                 self.master,
-                self.master.replacehooks.get_specs(),
-                _set
+                self.master.options.replacements,
+                self.master.options.setter("replacements")
             )
         )
 
@@ -231,7 +216,7 @@ class Options(urwid.WidgetWrap):
         self.master.view_grideditor(
             grideditor.ScriptEditor(
                 self.master,
-                [[i.command] for i in self.master.scripts],
+                [[i] for i in self.master.options.scripts],
                 self.master.edit_scripts
             )
         )
@@ -246,30 +231,18 @@ class Options(urwid.WidgetWrap):
     def has_default_displaymode(self):
         return self.master.state.default_body_view.name != "Auto"
 
-    def tcp_proxy(self):
-        def _set(tcp):
-            self.master.set_tcp_filter(tcp)
-            signals.update_settings.send(self)
-        self.master.view_grideditor(
-            grideditor.HostPatternEditor(
-                self.master,
-                self.master.get_tcp_filter(),
-                _set
-            )
-        )
-
     def sticky_auth(self):
         signals.status_prompt.send(
             prompt = "Sticky auth filter",
-            text = self.master.stickyauth_txt,
-            callback = self.master.set_stickyauth
+            text = self.master.options.stickyauth,
+            callback = self.master.options.setter("stickyauth")
         )
 
     def sticky_cookie(self):
         signals.status_prompt.send(
             prompt = "Sticky cookie filter",
-            text = self.master.stickycookie_txt,
-            callback = self.master.set_stickycookie
+            text = self.master.options.stickycookie,
+            callback = self.master.options.setter("stickycookie")
         )
 
     def palette(self):

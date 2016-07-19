@@ -44,11 +44,11 @@ footer = [
 ]
 
 
-class EventListBox(urwid.ListBox):
+class LogBufferBox(urwid.ListBox):
 
     def __init__(self, master):
         self.master = master
-        urwid.ListBox.__init__(self, master.eventlist)
+        urwid.ListBox.__init__(self, master.logbuffer)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
@@ -56,7 +56,7 @@ class EventListBox(urwid.ListBox):
             self.master.clear_events()
             key = None
         elif key == "G":
-            self.set_focus(len(self.master.eventlist) - 1)
+            self.set_focus(len(self.master.logbuffer) - 1)
         elif key == "g":
             self.set_focus(0)
         return urwid.ListBox.keypress(self, size, key)
@@ -76,7 +76,7 @@ class BodyPile(urwid.Pile):
             [
                 FlowListBox(master),
                 urwid.Frame(
-                    EventListBox(master),
+                    LogBufferBox(master),
                     header = self.inactive_header
                 )
             ]
@@ -118,7 +118,7 @@ class ConnectionItem(urwid.WidgetWrap):
         return common.format_flow(
             self.flow,
             self.f,
-            hostheader = self.master.showhost,
+            hostheader = self.master.options.showhost,
             marked=self.state.flow_marked(self.flow)
         )
 
@@ -151,7 +151,7 @@ class ConnectionItem(urwid.WidgetWrap):
         if k == "a":
             self.master.start_server_playback(
                 [i.copy() for i in self.master.state.view],
-                self.master.killextra, self.master.rheaders,
+                self.master.options.kill, self.master.rheaders,
                 False, self.master.nopop,
                 self.master.options.replay_ignore_params,
                 self.master.options.replay_ignore_content,
@@ -161,7 +161,7 @@ class ConnectionItem(urwid.WidgetWrap):
         elif k == "t":
             self.master.start_server_playback(
                 [self.flow.copy()],
-                self.master.killextra, self.master.rheaders,
+                self.master.options.kill, self.master.rheaders,
                 False, self.master.nopop,
                 self.master.options.replay_ignore_params,
                 self.master.options.replay_ignore_content,
@@ -317,11 +317,9 @@ class FlowListWalker(urwid.ListWalker):
 class FlowListBox(urwid.ListBox):
 
     def __init__(self, master):
+        # type: (mitmproxy.console.master.ConsoleMaster) -> None
         self.master = master
-        urwid.ListBox.__init__(
-            self,
-            FlowListWalker(master, master.state)
-        )
+        super(FlowListBox, self).__init__(FlowListWalker(master, master.state))
 
     def get_method_raw(self, k):
         if k:
@@ -395,13 +393,13 @@ class FlowListBox(urwid.ListBox):
         elif key == "F":
             self.master.toggle_follow_flows()
         elif key == "W":
-            if self.master.stream:
-                self.master.stop_stream()
+            if self.master.options.outfile:
+                self.master.options.outfile = None
             else:
                 signals.status_prompt_path.send(
                     self,
-                    prompt = "Stream flows to",
-                    callback = self.master.start_stream_to_path
+                    prompt="Stream flows to",
+                    callback= lambda path: self.master.options.update(outfile=(path, "ab"))
                 )
         else:
             return urwid.ListBox.keypress(self, size, key)

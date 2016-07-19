@@ -118,6 +118,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
     @property
     def master(self):
+        # type: () -> mitmproxy.web.master.WebMaster
         return self.application.master
 
     @property
@@ -309,7 +310,7 @@ class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
 
-        if not message.content:
+        if not message.raw_content:
             raise APIError(400, "No content.")
 
         content_encoding = message.headers.get("Content-Encoding", None)
@@ -332,7 +333,7 @@ class FlowContent(RequestHandler):
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("X-Frame-Options", "DENY")
-        self.write(message.content)
+        self.write(message.raw_content)
 
 
 class Events(RequestHandler):
@@ -350,17 +351,17 @@ class Settings(RequestHandler):
         self.write(dict(
             data=dict(
                 version=version.VERSION,
-                mode=str(self.master.server.config.mode),
-                intercept=self.state.intercept_txt,
+                mode=str(self.master.options.mode),
+                intercept=self.master.options.intercept,
                 showhost=self.master.options.showhost,
-                no_upstream_cert=self.master.server.config.no_upstream_cert,
-                rawtcp=self.master.server.config.rawtcp,
-                http2=self.master.server.config.http2,
+                no_upstream_cert=self.master.options.no_upstream_cert,
+                rawtcp=self.master.options.rawtcp,
+                http2=self.master.options.http2,
                 anticache=self.master.options.anticache,
                 anticomp=self.master.options.anticomp,
-                stickyauth=self.master.stickyauth_txt,
-                stickycookie=self.master.stickycookie_txt,
-                stream= self.master.stream_large_bodies.max_size if self.master.stream_large_bodies else False
+                stickyauth=self.master.options.stickyauth,
+                stickycookie=self.master.options.stickycookie,
+                stream= self.master.options.stream_large_bodies
             )
         ))
 
@@ -368,19 +369,19 @@ class Settings(RequestHandler):
         update = {}
         for k, v in six.iteritems(self.json):
             if k == "intercept":
-                self.state.set_intercept(v)
+                self.master.options.intercept = v
                 update[k] = v
             elif k == "showhost":
                 self.master.options.showhost = v
                 update[k] = v
             elif k == "no_upstream_cert":
-                self.master.server.config.no_upstream_cert = v
+                self.master.options.no_upstream_cert = v
                 update[k] = v
             elif k == "rawtcp":
-                self.master.server.config.rawtcp = v
+                self.master.options.rawtcp = v
                 update[k] = v
             elif k == "http2":
-                self.master.server.config.http2 = v
+                self.master.options.http2 = v
                 update[k] = v
             elif k == "anticache":
                 self.master.options.anticache = v
@@ -389,13 +390,13 @@ class Settings(RequestHandler):
                 self.master.options.anticomp = v
                 update[k] = v
             elif k == "stickycookie":
-                self.master.set_stickycookie(v)
+                self.master.options.stickycookie = v
                 update[k] = v
             elif k == "stickyauth":
-                self.master.set_stickyauth(v)
+                self.master.options.stickyauth = v
                 update[k] = v
             elif k == "stream":
-                self.master.set_stream_large_bodies(v)
+                self.master.options.stream_large_bodies = v
                 update[k] = v
             else:
                 print("Warning: Unknown setting {}: {}".format(k, v))

@@ -28,9 +28,10 @@ class ActionBar(urwid.WidgetWrap):
         self.pathprompt = False
 
     def sig_message(self, sender, message, expire=None):
+        if self.prompting:
+            return
         w = urwid.Text(message)
         self._w = w
-        self.prompting = False
         if expire:
             def cb(*args):
                 if w == self._w:
@@ -116,12 +117,15 @@ class ActionBar(urwid.WidgetWrap):
 class StatusBar(urwid.WidgetWrap):
 
     def __init__(self, master, helptext):
-        self.master, self.helptext = master, helptext
+        # type: (mitmproxy.console.master.ConsoleMaster, object) -> None
+        self.master = master
+        self.helptext = helptext
         self.ab = ActionBar()
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        self._w = urwid.Pile([self.ib, self.ab])
+        super(StatusBar, self).__init__(urwid.Pile([self.ib, self.ab]))
         signals.update_settings.connect(self.sig_update_settings)
         signals.flowlist_change.connect(self.sig_update_settings)
+        master.options.changed.connect(self.sig_update_settings)
         self.redraw()
 
     def sig_update_settings(self, sender):
@@ -133,11 +137,11 @@ class StatusBar(urwid.WidgetWrap):
     def get_status(self):
         r = []
 
-        if self.master.setheaders.count():
+        if len(self.master.options.setheaders):
             r.append("[")
             r.append(("heading_key", "H"))
             r.append("eaders]")
-        if self.master.replacehooks.count():
+        if len(self.master.options.replacements):
             r.append("[")
             r.append(("heading_key", "R"))
             r.append("eplacing]")
@@ -152,14 +156,14 @@ class StatusBar(urwid.WidgetWrap):
                 r.append(":%s in file]" % self.master.server_playback.count())
             else:
                 r.append(":%s to go]" % self.master.server_playback.count())
-        if self.master.get_ignore_filter():
+        if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))
-            r.append("gnore:%d]" % len(self.master.get_ignore_filter()))
-        if self.master.get_tcp_filter():
+            r.append("gnore:%d]" % len(self.master.options.ignore_hosts))
+        if self.master.options.tcp_hosts:
             r.append("[")
             r.append(("heading_key", "T"))
-            r.append("CP:%d]" % len(self.master.get_tcp_filter()))
+            r.append("CP:%d]" % len(self.master.options.tcp_hosts))
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("heading_key", "i"))
@@ -172,31 +176,31 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "Marked Flows"))
             r.append("]")
-        if self.master.stickycookie_txt:
+        if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
-            r.append(":%s]" % self.master.stickycookie_txt)
-        if self.master.stickyauth_txt:
+            r.append(":%s]" % self.master.options.stickycookie)
+        if self.master.options.stickyauth:
             r.append("[")
             r.append(("heading_key", "u"))
-            r.append(":%s]" % self.master.stickyauth_txt)
+            r.append(":%s]" % self.master.options.stickyauth)
         if self.master.state.default_body_view.name != "Auto":
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.state.default_body_view.name)
 
         opts = []
-        if self.master.anticache:
+        if self.master.options.anticache:
             opts.append("anticache")
-        if self.master.anticomp:
+        if self.master.options.anticomp:
             opts.append("anticomp")
-        if self.master.showhost:
+        if self.master.options.showhost:
             opts.append("showhost")
-        if not self.master.refresh_server_playback:
+        if not self.master.options.refresh_server_playback:
             opts.append("norefresh")
-        if self.master.killextra:
+        if self.master.options.kill:
             opts.append("killextra")
-        if self.master.server.config.no_upstream_cert:
+        if self.master.options.no_upstream_cert:
             opts.append("no-upstream-cert")
         if self.master.state.follow_focus:
             opts.append("following")
@@ -210,21 +214,20 @@ class StatusBar(urwid.WidgetWrap):
         if opts:
             r.append("[%s]" % (":".join(opts)))
 
-        if self.master.server.config.mode in ["reverse", "upstream"]:
+        if self.master.options.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
             r.append("[dest:%s]" % netlib.http.url.unparse(
                 dst.scheme,
                 dst.address.host,
                 dst.address.port
             ))
-        if self.master.scripts:
+        if self.master.options.scripts:
             r.append("[")
             r.append(("heading_key", "s"))
-            r.append("cripts:%s]" % len(self.master.scripts))
-        # r.append("[lt:%0.3f]"%self.master.looptime)
+            r.append("cripts:%s]" % len(self.master.options.scripts))
 
-        if self.master.stream:
-            r.append("[W:%s]" % self.master.stream_path)
+        if self.master.options.outfile:
+            r.append("[W:%s]" % self.master.options.outfile[0])
 
         return r
 

@@ -9,7 +9,9 @@ from mitmproxy.proxy.server import ProxyServer
 import pathod.test
 import pathod.pathoc
 from mitmproxy import flow, controller
+from mitmproxy.flow import options
 from mitmproxy.cmdline import APP_HOST, APP_PORT
+from mitmproxy import builtins
 
 testapp = flask.Flask(__name__)
 
@@ -30,11 +32,11 @@ def errapp(environ, start_response):
 
 class TestMaster(flow.FlowMaster):
 
-    def __init__(self, config):
-        config.port = 0
+    def __init__(self, opts, config):
         s = ProxyServer(config)
         state = flow.State()
-        flow.FlowMaster.__init__(self, s, state)
+        flow.FlowMaster.__init__(self, opts, s, state)
+        self.addons.add(*builtins.default_addons())
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
@@ -42,7 +44,7 @@ class TestMaster(flow.FlowMaster):
     def clear_log(self):
         self.tlog = []
 
-    def add_event(self, message, level=None):
+    def add_log(self, message, level=None):
         self.tlog.append(message)
 
 
@@ -52,7 +54,8 @@ class ProxyThread(threading.Thread):
         threading.Thread.__init__(self)
         self.tmaster = tmaster
         self.name = "ProxyThread (%s:%s)" % (
-            tmaster.server.address.host, tmaster.server.address.port)
+            tmaster.server.address.host, tmaster.server.address.port
+        )
         controller.should_exit = False
 
     @property
@@ -75,7 +78,6 @@ class ProxyTestBase(object):
     ssl = None
     ssloptions = False
     no_upstream_cert = False
-    authenticator = None
     masterclass = TestMaster
     add_upstream_certs_to_client_chain = False
 
@@ -88,9 +90,9 @@ class ProxyTestBase(object):
             ssl=cls.ssl,
             ssloptions=cls.ssloptions)
 
-        cls.config = ProxyConfig(**cls.get_proxy_config())
-
-        tmaster = cls.masterclass(cls.config)
+        cnf, opts = cls.get_proxy_config()
+        cls.config = ProxyConfig(opts, **cnf)
+        tmaster = cls.masterclass(opts, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
@@ -117,11 +119,12 @@ class ProxyTestBase(object):
     @classmethod
     def get_proxy_config(cls):
         cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        return dict(
+        cnf = dict()
+        return cnf, options.Options(
+            listen_port=0,
+            cadir=cls.cadir,
             no_upstream_cert = cls.no_upstream_cert,
-            cadir = cls.cadir,
-            authenticator = cls.authenticator,
-            add_upstream_certs_to_client_chain = cls.add_upstream_certs_to_client_chain,
+            add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain
         )
 
 
@@ -196,9 +199,9 @@ class TransparentProxyTest(ProxyTestBase):
 
     @classmethod
     def get_proxy_config(cls):
-        d = ProxyTestBase.get_proxy_config()
-        d["mode"] = "transparent"
-        return d
+        d, opts = ProxyTestBase.get_proxy_config()
+        opts.mode = "transparent"
+        return d, opts
 
     def pathod(self, spec, sni=None):
         """
@@ -228,13 +231,17 @@ class ReverseProxyTest(ProxyTestBase):
 
     @classmethod
     def get_proxy_config(cls):
-        d = ProxyTestBase.get_proxy_config()
-        d["upstream_server"] = (
-            "https" if cls.ssl else "http",
-            ("127.0.0.1", cls.server.port)
+        d, opts = ProxyTestBase.get_proxy_config()
+        opts.upstream_server = "".join(
+            [
+                "https" if cls.ssl else "http",
+                "://",
+                "127.0.0.1:",
+                str(cls.server.port)
+            ]
         )
-        d["mode"] = "reverse"
-        return d
+        opts.mode = "reverse"
+        return d, opts
 
     def pathoc(self, sni=None):
         """
@@ -263,9 +270,9 @@ class SocksModeTest(HTTPProxyTest):
 
     @classmethod
     def get_proxy_config(cls):
-        d = ProxyTestBase.get_proxy_config()
-        d["mode"] = "socks5"
-        return d
+        d, opts = ProxyTestBase.get_proxy_config()
+        opts.mode = "socks5"
+        return d, opts
 
 
 class ChainProxyTest(ProxyTestBase):
@@ -284,15 +291,16 @@ class ChainProxyTest(ProxyTestBase):
         cls.chain = []
         super(ChainProxyTest, cls).setup_class()
         for _ in range(cls.n):
-            config = ProxyConfig(**cls.get_proxy_config())
-            tmaster = cls.masterclass(config)
+            cnf, opts = cls.get_proxy_config()
+            config = ProxyConfig(opts, **cnf)
+            tmaster = cls.masterclass(opts, config)
             proxy = ProxyThread(tmaster)
             proxy.start()
             cls.chain.insert(0, proxy)
 
         # Patch the orginal proxy to upstream mode
-        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(
-            **cls.get_proxy_config())
+        cnf, opts = cls.get_proxy_config()
+        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(opts, **cnf)
 
     @classmethod
     def teardown_class(cls):
@@ -308,13 +316,13 @@ class ChainProxyTest(ProxyTestBase):
 
     @classmethod
     def get_proxy_config(cls):
-        d = super(ChainProxyTest, cls).get_proxy_config()
+        d, opts = super(ChainProxyTest, cls).get_proxy_config()
         if cls.chain:  # First proxy is in normal mode.
-            d.update(
+            opts.update(
                 mode="upstream",
-                upstream_server=("http", ("127.0.0.1", cls.chain[0].port))
+                upstream_server="http://127.0.0.1:%s" % cls.chain[0].port
             )
-        return d
+        return d, opts
 
 
 class HTTPUpstreamProxyTest(ChainProxyTest, HTTPProxyTest):

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-from netlib.http import decoded
+import mock
+import six
+
 from netlib.tutils import tresp
+from netlib import http, tutils
 
 
 def _test_passthrough_attr(message, attr):
@@ -68,6 +71,15 @@ class TestMessage(object):
 
         assert resp != 0
 
+    def test_hash(self):
+        resp = tresp()
+        assert hash(resp)
+
+    def test_serializable(self):
+        resp = tresp()
+        resp2 = http.Response.from_state(resp.get_state())
+        assert resp == resp2
+
     def test_content_length_update(self):
         resp = tresp()
         resp.content = b"foo"
@@ -76,9 +88,9 @@ class TestMessage(object):
         resp.content = b""
         assert resp.data.content == b""
         assert resp.headers["content-length"] == "0"
-
-    def test_content_basic(self):
-        _test_passthrough_attr(tresp(), "content")
+        resp.raw_content = b"bar"
+        assert resp.data.content == b"bar"
+        assert resp.headers["content-length"] == "0"
 
     def test_headers(self):
         _test_passthrough_attr(tresp(), "headers")
@@ -89,65 +101,201 @@ class TestMessage(object):
     def test_timestamp_end(self):
         _test_passthrough_attr(tresp(), "timestamp_end")
 
-    def teste_http_version(self):
+    def test_http_version(self):
         _test_decoded_attr(tresp(), "http_version")
 
 
-class TestDecodedDecorator(object):
-
+class TestMessageContentEncoding(object):
     def test_simple(self):
         r = tresp()
-        assert r.content == b"message"
+        assert r.raw_content == b"message"
         assert "content-encoding" not in r.headers
-        assert r.encode("gzip")
+        r.encode("gzip")
 
         assert r.headers["content-encoding"]
-        assert r.content != b"message"
-        with decoded(r):
-            assert "content-encoding" not in r.headers
-            assert r.content == b"message"
-        assert r.headers["content-encoding"]
-        assert r.content != b"message"
+        assert r.raw_content != b"message"
+        assert r.content == b"message"
+        assert r.raw_content != b"message"
+
+        r.raw_content = b"foo"
+        with mock.patch("netlib.encoding.decode") as e:
+            assert r.content
+            assert e.call_count == 1
+            e.reset_mock()
+            assert r.content
+            assert e.call_count == 0
 
     def test_modify(self):
         r = tresp()
         assert "content-encoding" not in r.headers
-        assert r.encode("gzip")
+        r.encode("gzip")
 
-        with decoded(r):
-            r.content = b"foo"
-
-        assert r.content != b"foo"
+        r.content = b"foo"
+        assert r.raw_content != b"foo"
         r.decode()
-        assert r.content == b"foo"
+        assert r.raw_content == b"foo"
+
+        r.encode("identity")
+        with mock.patch("netlib.encoding.encode") as e:
+            r.content = b"foo"
+            assert e.call_count == 0
+            r.content = b"bar"
+            assert e.call_count == 1
+
+        with tutils.raises(TypeError):
+            r.content = u"foo"
 
     def test_unknown_ce(self):
         r = tresp()
         r.headers["content-encoding"] = "zopfli"
-        r.content = b"foo"
-        with decoded(r):
-            assert r.headers["content-encoding"]
-            assert r.content == b"foo"
+        r.raw_content = b"foo"
+        with tutils.raises(ValueError):
+            assert r.content
         assert r.headers["content-encoding"]
-        assert r.content == b"foo"
+        assert r.get_content(strict=False) == b"foo"
 
     def test_cannot_decode(self):
         r = tresp()
-        assert r.encode("gzip")
-        r.content = b"foo"
-        with decoded(r):
-            assert r.headers["content-encoding"]
-            assert r.content == b"foo"
+        r.encode("gzip")
+        r.raw_content = b"foo"
+        with tutils.raises(ValueError):
+            assert r.content
         assert r.headers["content-encoding"]
-        assert r.content != b"foo"
-        r.decode()
+        assert r.get_content(strict=False) == b"foo"
+
+        with tutils.raises(ValueError):
+            r.decode()
+        assert r.raw_content == b"foo"
+        assert "content-encoding" in r.headers
+
+        r.decode(strict=False)
         assert r.content == b"foo"
+        assert "content-encoding" not in r.headers
+
+    def test_none(self):
+        r = tresp(content=None)
+        assert r.content is None
+        r.content = b"foo"
+        assert r.content is not None
+        r.content = None
+        assert r.content is None
 
     def test_cannot_encode(self):
         r = tresp()
-        assert r.encode("gzip")
-        with decoded(r):
-            r.content = None
+        r.encode("gzip")
+        r.content = None
+        assert r.headers["content-encoding"]
+        assert r.raw_content is None
 
+        r.headers["content-encoding"] = "zopfli"
+        r.content = b"foo"
         assert "content-encoding" not in r.headers
-        assert r.content is None
+        assert r.raw_content == b"foo"
+
+        with tutils.raises(ValueError):
+            r.encode("zopfli")
+        assert r.raw_content == b"foo"
+        assert "content-encoding" not in r.headers
+
+
+class TestMessageText(object):
+    def test_simple(self):
+        r = tresp(content=b'\xfc')
+        assert r.raw_content == b"\xfc"
+        assert r.content == b"\xfc"
+        assert r.text == u"ü"
+
+        r.encode("gzip")
+        assert r.text == u"ü"
+        r.decode()
+        assert r.text == u"ü"
+
+        r.headers["content-type"] = "text/html; charset=latin1"
+        r.content = b"\xc3\xbc"
+        assert r.text == u"Ã¼"
+        r.headers["content-type"] = "text/html; charset=utf8"
+        assert r.text == u"ü"
+
+        r.encode("identity")
+        r.raw_content = b"foo"
+        with mock.patch("netlib.encoding.decode") as e:
+            assert r.text
+            assert e.call_count == 2
+            e.reset_mock()
+            assert r.text
+            assert e.call_count == 0
+
+    def test_guess_json(self):
+        r = tresp(content=b'"\xc3\xbc"')
+        r.headers["content-type"] = "application/json"
+        assert r.text == u'"ü"'
+
+    def test_none(self):
+        r = tresp(content=None)
+        assert r.text is None
+        r.text = u"foo"
+        assert r.text is not None
+        r.text = None
+        assert r.text is None
+
+    def test_modify(self):
+        r = tresp()
+
+        r.text = u"ü"
+        assert r.raw_content == b"\xfc"
+
+        r.headers["content-type"] = "text/html; charset=utf8"
+        r.text = u"ü"
+        assert r.raw_content == b"\xc3\xbc"
+        assert r.headers["content-length"] == "2"
+
+        r.encode("identity")
+        with mock.patch("netlib.encoding.encode") as e:
+            e.return_value = b""
+            r.text = u"ü"
+            assert e.call_count == 0
+            r.text = u"ä"
+            assert e.call_count == 2
+
+    def test_unknown_ce(self):
+        r = tresp()
+        r.headers["content-type"] = "text/html; charset=wtf"
+        r.raw_content = b"foo"
+        with tutils.raises(ValueError):
+            assert r.text == u"foo"
+        assert r.get_text(strict=False) == u"foo"
+
+    def test_cannot_decode(self):
+        r = tresp()
+        r.headers["content-type"] = "text/html; charset=utf8"
+        r.raw_content = b"\xFF"
+        with tutils.raises(ValueError):
+            assert r.text
+
+        assert r.get_text(strict=False) == u'\ufffd' if six.PY2 else '\udcff'
+
+    def test_cannot_encode(self):
+        r = tresp()
+        r.content = None
+        assert "content-type" not in r.headers
+        assert r.raw_content is None
+
+        r.headers["content-type"] = "text/html; charset=latin1; foo=bar"
+        r.text = u"☃"
+        assert r.headers["content-type"] == "text/html; charset=utf-8; foo=bar"
+        assert r.raw_content == b'\xe2\x98\x83'
+
+        r.headers["content-type"] = "gibberish"
+        r.text = u"☃"
+        assert r.headers["content-type"] == "text/plain; charset=utf-8"
+        assert r.raw_content == b'\xe2\x98\x83'
+
+        del r.headers["content-type"]
+        r.text = u"☃"
+        assert r.headers["content-type"] == "text/plain; charset=utf-8"
+        assert r.raw_content == b'\xe2\x98\x83'
+
+        r.headers["content-type"] = "text/html; charset=latin1"
+        r.text = u'\udcff'
+        assert r.headers["content-type"] == "text/html; charset=utf-8"
+        assert r.raw_content == b'\xed\xb3\xbf' if six.PY2 else b"\xFF"

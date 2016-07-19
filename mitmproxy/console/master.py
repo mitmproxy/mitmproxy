@@ -14,12 +14,15 @@ import traceback
 import weakref
 
 import urwid
+from typing import Optional  # noqa
 
+from mitmproxy import builtins
 from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
+from mitmproxy import utils
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -175,64 +178,37 @@ class ConsoleState(flow.State):
         self.add_flow_setting(flow, "marked", marked)
 
 
-class Options(object):
-    attributes = [
-        "app",
-        "app_domain",
-        "app_ip",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "eventlog",
-        "follow",
-        "keepserving",
-        "kill",
-        "intercept",
-        "limit",
-        "no_server",
-        "refresh_server_playback",
-        "rfile",
-        "scripts",
-        "showhost",
-        "replacements",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "wfile",
-        "nopop",
-        "palette",
-        "palette_transparent",
-        "no_mouse",
-        "outfile",
-    ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
+class Options(flow.options.Options):
+    def __init__(
+            self,
+            eventlog=False,  # type: bool
+            follow=False,  # type: bool
+            intercept=False,  # type: bool
+            limit=None,  # type: Optional[str]
+            palette=None,  # type: Optional[str]
+            palette_transparent=False,  # type: bool
+            no_mouse=False,  # type: bool
+            **kwargs
+    ):
+        self.eventlog = eventlog
+        self.follow = follow
+        self.intercept = intercept
+        self.limit = limit
+        self.palette = palette
+        self.palette_transparent = palette_transparent
+        self.no_mouse = no_mouse
+        super(Options, self).__init__(**kwargs)
 
 
 class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, server, ConsoleState())
+        flow.FlowMaster.__init__(self, options, server, ConsoleState())
         self.stream_path = None
-        self.options = options
-
-        if options.replacements:
-            for i in options.replacements:
-                self.replacehooks.add(*i)
-
-        if options.setheaders:
-            for i in options.setheaders:
-                self.setheaders.add(*i)
+        # This line is just for type hinting
+        self.options = self.options  # type: Options
+        self.options.errored.connect(self.options_error)
 
         r = self.set_intercept(options.intercept)
         if r:
@@ -242,30 +218,14 @@ class ConsoleMaster(flow.FlowMaster):
         if options.limit:
             self.set_limit(options.limit)
 
-        r = self.set_stickycookie(options.stickycookie)
-        if r:
-            print("Sticky cookies error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
-        r = self.set_stickyauth(options.stickyauth)
-        if r:
-            print("Sticky auth error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
         self.set_stream_large_bodies(options.stream_large_bodies)
 
-        self.refresh_server_playback = options.refresh_server_playback
-        self.anticache = options.anticache
-        self.anticomp = options.anticomp
-        self.killextra = options.kill
         self.rheaders = options.rheaders
         self.nopop = options.nopop
-        self.showhost = options.showhost
         self.palette = options.palette
         self.palette_transparent = options.palette_transparent
 
-        self.eventlog = options.eventlog
-        self.eventlist = urwid.SimpleListWalker([])
+        self.logbuffer = urwid.SimpleListWalker([])
         self.follow = options.follow
 
         if options.client_replay:
@@ -274,56 +234,49 @@ class ConsoleMaster(flow.FlowMaster):
         if options.server_replay:
             self.server_playback_path(options.server_replay)
 
-        if options.scripts:
-            for i in options.scripts:
-                try:
-                    self.load_script(i)
-                except exceptions.ScriptException as e:
-                    print("Script load error: {}".format(e), file=sys.stderr)
-                    sys.exit(1)
-
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1]
-            )
-            if err:
-                print("Stream file error: {}".format(err), file=sys.stderr)
-                sys.exit(1)
-
         self.view_stack = []
 
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
+
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
-        signals.sig_add_event.connect(self.sig_add_event)
+        signals.sig_add_log.connect(self.sig_add_log)
+        self.addons.add(*builtins.default_addons())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         signals.update_settings.send(self)
 
+    def options_error(self, opts, exc):
+        signals.status_message.send(
+            message=str(exc),
+            expire=1
+        )
+
     def load_script(self, command, use_reloader=True):
         # We default to using the reloader in the console ui.
         return super(ConsoleMaster, self).load_script(command, use_reloader)
 
-    def sig_add_event(self, sender, e, level):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.options.verbosity < needed:
+    def sig_add_log(self, sender, e, level):
+        if self.options.verbosity < utils.log_tier(level):
             return
 
         if level == "error":
+            signals.status_message.send(
+                message = "Error: %s" % str(e)
+            )
             e = urwid.Text(("error", str(e)))
         else:
             e = urwid.Text(str(e))
-        self.eventlist.append(e)
-        if len(self.eventlist) > EVENTLOG_SIZE:
-            self.eventlist.pop(0)
-        self.eventlist.set_focus(len(self.eventlist) - 1)
+        self.logbuffer.append(e)
+        if len(self.logbuffer) > EVENTLOG_SIZE:
+            self.logbuffer.pop(0)
+        self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
-    def add_event(self, e, level):
-        signals.add_event(e, level)
+    def add_log(self, e, level):
+        signals.add_log(e, level)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -354,25 +307,25 @@ class ConsoleMaster(flow.FlowMaster):
         status, val = s.run(method, f)
         if val:
             if status:
-                signals.add_event("Method %s return: %s" % (method, val), "debug")
+                signals.add_log("Method %s return: %s" % (method, val), "debug")
             else:
-                signals.add_event(
+                signals.add_log(
                     "Method %s error: %s" %
                     (method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
             return
-        signals.add_event("Running script on flow: %s" % command, "debug")
+        signals.add_log("Running script on flow: %s" % command, "debug")
 
         try:
-            s = script.Script(command, script.ScriptContext(self))
+            s = script.Script(command)
             s.load()
         except script.ScriptException as e:
             signals.status_message.send(
                 message='Error loading "{}".'.format(command)
             )
-            signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
+            signals.add_log('Error loading "{}":\n{}'.format(command, e), "error")
             return
 
         if f.request:
@@ -385,7 +338,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.flow_change.send(self, flow = f)
 
     def toggle_eventlog(self):
-        self.eventlog = not self.eventlog
+        self.options.eventlog = not self.options.eventlog
         signals.pop_view_state.send(self)
         self.view_flowlist()
 
@@ -416,7 +369,7 @@ class ConsoleMaster(flow.FlowMaster):
         if flows:
             self.start_server_playback(
                 flows,
-                self.killextra, self.rheaders,
+                self.options.kill, self.rheaders,
                 False, self.nopop,
                 self.options.replay_ignore_params,
                 self.options.replay_ignore_content,
@@ -512,7 +465,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.options.rfile:
             ret = self.load_flows_path(self.options.rfile)
             if ret and self.state.flow_count():
-                signals.add_event(
+                signals.add_log(
                     "File truncated or corrupted. "
                     "Loaded as many flows as possible.",
                     "error"
@@ -523,7 +476,7 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         self.loop.set_alarm_in(0.01, self.ticker)
-        if self.server.config.http2 and not tcp.HAS_ALPN:  # pragma: no cover
+        if self.options.http2 and not tcp.HAS_ALPN:  # pragma: no cover
             def http2err(*args, **kwargs):
                 signals.status_message.send(
                     message = "HTTP/2 disabled - OpenSSL 1.0.2+ required."
@@ -615,7 +568,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.state.follow_focus:
             self.state.set_focus(self.state.flow_count())
 
-        if self.eventlog:
+        if self.options.eventlog:
             body = flowlist.BodyPile(self)
         else:
             body = flowlist.FlowListBox(self)
@@ -652,7 +605,7 @@ class ConsoleMaster(flow.FlowMaster):
             return
         path = os.path.expanduser(path)
         try:
-            f = file(path, "wb")
+            f = open(path, "wb")
             fw = flow.FlowWriter(f)
             for i in flows:
                 fw.add(i)
@@ -705,20 +658,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.refresh_focus()
 
     def edit_scripts(self, scripts):
-        commands = [x[0] for x in scripts]  # remove outer array
-        if commands == [s.command for s in self.scripts]:
-            return
-
-        self.unload_scripts()
-        for command in commands:
-            try:
-                self.load_script(command)
-            except exceptions.ScriptException as e:
-                signals.status_message.send(
-                    message='Error loading "{}".'.format(command)
-                )
-                signals.add_event('Error loading "{}":\n{}'.format(command, e), "error")
-        signals.update_settings.send(self)
+        self.options.scripts = [x[0] for x in scripts]
 
     def stop_client_playback_prompt(self, a):
         if a != "n":
@@ -773,7 +713,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.flow_change.send(self, flow = f)
 
     def clear_events(self):
-        self.eventlist[:] = []
+        self.logbuffer[:] = []
 
     # Handlers
     @controller.handler
@@ -802,16 +742,16 @@ class ConsoleMaster(flow.FlowMaster):
         super(ConsoleMaster, self).tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        self.add_event("{client} {direction} tcp {direction} {server}".format(
+        self.add_log("{client} {direction} tcp {direction} {server}".format(
             client=repr(f.client_conn.address),
             server=repr(f.server_conn.address),
             direction=direction,
         ), "info")
-        self.add_event(strutils.bytes_to_escaped_str(message.content), "debug")
+        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
     def script_change(self, script):
         if super(ConsoleMaster, self).script_change(script):
-            signals.status_message.send(message='"{}" reloaded.'.format(script.filename))
+            signals.status_message.send(message='"{}" reloaded.'.format(script.path))
         else:
-            signals.status_message.send(message='Error reloading "{}".'.format(script.filename))
+            signals.status_message.send(message='Error reloading "{}".'.format(script.path))

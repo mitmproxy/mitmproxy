@@ -41,14 +41,14 @@ def get_server(dummy_server, options):
             sys.exit(1)
 
 
-def process_options(parser, options):
-    if options.sysinfo:
+def process_options(parser, options, args):
+    if args.sysinfo:
         print(debug.sysinfo())
         sys.exit(0)
-    if options.quiet:
-        options.verbose = 0
+    if args.quiet:
+        args.verbose = 0
     debug.register_info_dumpers()
-    return config.process_proxy_options(parser, options)
+    return config.ProxyConfig(options)
 
 
 def mitmproxy(args=None):  # pragma: no cover
@@ -62,21 +62,26 @@ def mitmproxy(args=None):  # pragma: no cover
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
-    options = parser.parse_args(args)
-    proxy_config = process_options(parser, options)
+    args = parser.parse_args(args)
 
-    console_options = console.master.Options(**cmdline.get_common_options(options))
-    console_options.palette = options.palette
-    console_options.palette_transparent = options.palette_transparent
-    console_options.eventlog = options.eventlog
-    console_options.follow = options.follow
-    console_options.intercept = options.intercept
-    console_options.limit = options.limit
-    console_options.no_mouse = options.no_mouse
+    try:
+        console_options = console.master.Options(
+            **cmdline.get_common_options(args)
+        )
+        console_options.palette = args.palette
+        console_options.palette_transparent = args.palette_transparent
+        console_options.eventlog = args.eventlog
+        console_options.follow = args.follow
+        console_options.intercept = args.intercept
+        console_options.limit = args.limit
+        console_options.no_mouse = args.no_mouse
 
-    server = get_server(console_options.no_server, proxy_config)
-
-    m = console.master.ConsoleMaster(server, console_options)
+        proxy_config = process_options(parser, console_options, args)
+        server = get_server(console_options.no_server, proxy_config)
+        m = console.master.ConsoleMaster(server, console_options)
+    except exceptions.OptionsError as e:
+        print("mitmproxy: %s" % e, file=sys.stderr)
+        sys.exit(1)
     try:
         m.run()
     except (KeyboardInterrupt, _thread.error):
@@ -89,19 +94,17 @@ def mitmdump(args=None):  # pragma: no cover
     version_check.check_pyopenssl_version()
 
     parser = cmdline.mitmdump()
-    options = parser.parse_args(args)
-    proxy_config = process_options(parser, options)
-    if options.quiet:
-        options.flow_detail = 0
-
-    dump_options = dump.Options(**cmdline.get_common_options(options))
-    dump_options.flow_detail = options.flow_detail
-    dump_options.keepserving = options.keepserving
-    dump_options.filtstr = " ".join(options.args) if options.args else None
-
-    server = get_server(dump_options.no_server, proxy_config)
+    args = parser.parse_args(args)
+    if args.quiet:
+        args.flow_detail = 0
 
     try:
+        dump_options = dump.Options(**cmdline.get_common_options(args))
+        dump_options.flow_detail = args.flow_detail
+        dump_options.keepserving = args.keepserving
+        dump_options.filtstr = " ".join(args.args) if args.args else None
+        proxy_config = process_options(parser, dump_options, args)
+        server = get_server(dump_options.no_server, proxy_config)
         master = dump.DumpMaster(server, dump_options)
 
         def cleankill(*args, **kwargs):
@@ -109,11 +112,14 @@ def mitmdump(args=None):  # pragma: no cover
 
         signal.signal(signal.SIGTERM, cleankill)
         master.run()
-    except dump.DumpError as e:
+    except (dump.DumpError, exceptions.OptionsError) as e:
         print("mitmdump: %s" % e, file=sys.stderr)
         sys.exit(1)
     except (KeyboardInterrupt, _thread.error):
         pass
+    if master.has_errored:
+        print("mitmdump: errors occurred during run", file=sys.stderr)
+        sys.exit(1)
 
 
 def mitmweb(args=None):  # pragma: no cover
@@ -123,21 +129,24 @@ def mitmweb(args=None):  # pragma: no cover
 
     parser = cmdline.mitmweb()
 
-    options = parser.parse_args(args)
-    proxy_config = process_options(parser, options)
+    args = parser.parse_args(args)
 
-    web_options = web.master.Options(**cmdline.get_common_options(options))
-    web_options.intercept = options.intercept
-    web_options.wdebug = options.wdebug
-    web_options.wiface = options.wiface
-    web_options.wport = options.wport
-    web_options.wsingleuser = options.wsingleuser
-    web_options.whtpasswd = options.whtpasswd
-    web_options.process_web_options(parser)
+    try:
+        web_options = web.master.Options(**cmdline.get_common_options(args))
+        web_options.intercept = args.intercept
+        web_options.wdebug = args.wdebug
+        web_options.wiface = args.wiface
+        web_options.wport = args.wport
+        web_options.wsingleuser = args.wsingleuser
+        web_options.whtpasswd = args.whtpasswd
+        web_options.process_web_options(parser)
 
-    server = get_server(web_options.no_server, proxy_config)
-
-    m = web.master.WebMaster(server, web_options)
+        proxy_config = process_options(parser, web_options, args)
+        server = get_server(web_options.no_server, proxy_config)
+        m = web.master.WebMaster(server, web_options)
+    except exceptions.OptionsError as e:
+        print("mitmweb: %s" % e, file=sys.stderr)
+        sys.exit(1)
     try:
         m.run()
     except (KeyboardInterrupt, _thread.error):

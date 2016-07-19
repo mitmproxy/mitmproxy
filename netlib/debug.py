@@ -7,8 +7,6 @@ import signal
 import platform
 import traceback
 
-import psutil
-
 from netlib import version
 
 from OpenSSL import SSL
@@ -19,7 +17,7 @@ def sysinfo():
         "Mitmproxy version: %s" % version.VERSION,
         "Python version: %s" % platform.python_version(),
         "Platform: %s" % platform.platform(),
-        "SSL version: %s" % SSL.SSLeay_version(SSL.SSLEAY_VERSION),
+        "SSL version: %s" % SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode(),
     ]
     d = platform.linux_distribution()
     t = "Linux distro: %s %s %s" % d
@@ -40,15 +38,32 @@ def sysinfo():
 
 
 def dump_info(sig, frm, file=sys.stdout):  # pragma: no cover
-    p = psutil.Process()
-
     print("****************************************************", file=file)
     print("Summary", file=file)
     print("=======", file=file)
-    print("num threads: ", p.num_threads(), file=file)
-    if hasattr(p, "num_fds"):
-        print("num fds: ", p.num_fds(), file=file)
-    print("memory: ", p.memory_info(), file=file)
+
+    try:
+        import psutil
+    except:
+        print("(psutil not installed, skipping some debug info)", file=file)
+    else:
+        p = psutil.Process()
+        print("num threads: ", p.num_threads(), file=file)
+        if hasattr(p, "num_fds"):
+            print("num fds: ", p.num_fds(), file=file)
+        print("memory: ", p.memory_info(), file=file)
+
+        print(file=file)
+        print("Files", file=file)
+        print("=====", file=file)
+        for i in p.open_files():
+            print(i, file=file)
+
+        print(file=file)
+        print("Connections", file=file)
+        print("===========", file=file)
+        for i in p.connections():
+            print(i, file=file)
 
     print(file=file)
     print("Threads", file=file)
@@ -62,18 +77,6 @@ def dump_info(sig, frm, file=sys.stdout):  # pragma: no cover
     bthreads.sort(key=lambda x: x._thread_started)
     for i in bthreads:
         print(i._threadinfo(), file=file)
-
-    print(file=file)
-    print("Files", file=file)
-    print("=====", file=file)
-    for i in p.open_files():
-        print(i, file=file)
-
-    print(file=file)
-    print("Connections", file=file)
-    print("===========", file=file)
-    for i in p.connections():
-        print(i, file=file)
 
     print("****************************************************", file=file)
 

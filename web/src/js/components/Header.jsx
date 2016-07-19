@@ -17,10 +17,10 @@ class Header extends Component {
     }
 
     render() {
-        const { updateLocation, query, selectedFlow, activeMenu} = this.props
+        const { query, selectedFlowId, activeMenu} = this.props
 
         let entries = [...Header.entries]
-        if(selectedFlow)
+        if(selectedFlowId)
             entries.push(FlowMenu)
 
         const Active = _.find(entries, (e) => e.title == activeMenu)
@@ -41,7 +41,6 @@ class Header extends Component {
                 <div className="menu">
                     <Active
                         ref="active"
-                        updateLocation={updateLocation}
                         query={query}
                     />
                 </div>
@@ -52,7 +51,7 @@ class Header extends Component {
 
 export default connect(
     state => ({
-        selectedFlow: state.flows.views.main.selected[0],
+        selectedFlowId: state.flows.selected[0],
         activeMenu: state.ui.activeMenu,
     }),
     {

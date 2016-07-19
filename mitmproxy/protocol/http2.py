@@ -78,7 +78,7 @@ class SafeH2Connection(connection.H2Connection):
                 self.send_data(stream_id, frame_chunk)
                 try:
                     self.conn.send(self.data_to_send())
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     raise e
                 finally:
                     self.lock.release()
@@ -130,6 +130,7 @@ class Http2Layer(base.Layer):
             [repr(event)]
         )
 
+        eid = None
         if hasattr(event, 'stream_id'):
             if is_server and event.stream_id % 2 == 1:
                 eid = self.server_to_client_stream_ids[event.stream_id]
@@ -137,112 +138,171 @@ class Http2Layer(base.Layer):
                 eid = event.stream_id
 
         if isinstance(event, events.RequestReceived):
-            headers = netlib.http.Headers([[k, v] for k, v in event.headers])
-            self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
-            self.streams[eid].timestamp_start = time.time()
-            self.streams[eid].no_body = (event.stream_ended is not None)
-            if event.priority_updated is not None:
-                self.streams[eid].priority_weight = event.priority_updated.weight
-                self.streams[eid].priority_depends_on = event.priority_updated.depends_on
-                self.streams[eid].priority_exclusive = event.priority_updated.exclusive
-                self.streams[eid].handled_priority_event = event.priority_updated
-            self.streams[eid].start()
+            return self._handle_request_received(eid, event)
         elif isinstance(event, events.ResponseReceived):
-            headers = netlib.http.Headers([[k, v] for k, v in event.headers])
-            self.streams[eid].queued_data_length = 0
-            self.streams[eid].timestamp_start = time.time()
-            self.streams[eid].response_headers = headers
-            self.streams[eid].response_arrived.set()
+            return self._handle_response_received(eid, event)
         elif isinstance(event, events.DataReceived):
-            if self.config.body_size_limit and self.streams[eid].queued_data_length > self.config.body_size_limit:
-                raise netlib.exceptions.HttpException("HTTP body too large. Limit is {}.".format(self.config.body_size_limit))
+            return self._handle_data_received(eid, event, source_conn)
+        elif isinstance(event, events.StreamEnded):
+            return self._handle_stream_ended(eid)
+        elif isinstance(event, events.StreamReset):
+            return self._handle_stream_reset(eid, event, is_server, other_conn)
+        elif isinstance(event, events.RemoteSettingsChanged):
+            return self._handle_remote_settings_changed(event, other_conn)
+        elif isinstance(event, events.ConnectionTerminated):
+            return self._handle_connection_terminated(event)
+        elif isinstance(event, events.PushedStreamReceived):
+            return self._handle_pushed_stream_received(event)
+        elif isinstance(event, events.PriorityUpdated):
+            return self._handle_priority_updated(eid, event)
+        elif isinstance(event, events.TrailersReceived):
+            raise NotImplementedError('TrailersReceived not implemented')
+
+        # fail-safe for unhandled events
+        return True
+
+    def _handle_request_received(self, eid, event):
+        headers = netlib.http.Headers([[k, v] for k, v in event.headers])
+        self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
+        self.streams[eid].timestamp_start = time.time()
+        self.streams[eid].no_body = (event.stream_ended is not None)
+        if event.priority_updated is not None:
+            self.streams[eid].priority_exclusive = event.priority_updated.exclusive
+            self.streams[eid].priority_depends_on = event.priority_updated.depends_on
+            self.streams[eid].priority_weight = event.priority_updated.weight
+            self.streams[eid].handled_priority_event = event.priority_updated
+        self.streams[eid].start()
+        return True
+
+    def _handle_response_received(self, eid, event):
+        headers = netlib.http.Headers([[k, v] for k, v in event.headers])
+        self.streams[eid].queued_data_length = 0
+        self.streams[eid].timestamp_start = time.time()
+        self.streams[eid].response_headers = headers
+        self.streams[eid].response_arrived.set()
+        return True
+
+    def _handle_data_received(self, eid, event, source_conn):
+        bsl = self.config.options.body_size_limit
+        if bsl and self.streams[eid].queued_data_length > bsl:
+            self.streams[eid].zombie = time.time()
+            source_conn.h2.safe_reset_stream(
+                event.stream_id,
+                h2.errors.REFUSED_STREAM
+            )
+            self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
+        else:
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
-            source_conn.h2.safe_increment_flow_control(event.stream_id, event.flow_controlled_length)
-        elif isinstance(event, events.StreamEnded):
-            self.streams[eid].timestamp_end = time.time()
-            self.streams[eid].data_finished.set()
-        elif isinstance(event, events.StreamReset):
-            self.streams[eid].zombie = time.time()
-            if eid in self.streams and event.error_code == 0x8:
-                if is_server:
-                    other_stream_id = self.streams[eid].client_stream_id
-                else:
-                    other_stream_id = self.streams[eid].server_stream_id
-                if other_stream_id is not None:
-                    other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
-        elif isinstance(event, events.RemoteSettingsChanged):
-            new_settings = dict([(id, cs.new_value) for (id, cs) in six.iteritems(event.changed_settings)])
-            other_conn.h2.safe_update_settings(new_settings)
-        elif isinstance(event, events.ConnectionTerminated):
-            if event.error_code == h2.errors.NO_ERROR:
-                # Do not immediately terminate the other connection.
-                # Some streams might be still sending data to the client.
-                return False
-            else:
-                # Something terrible has happened - kill everything!
-                self.client_conn.h2.close_connection(
-                    error_code=event.error_code,
-                    last_stream_id=event.last_stream_id,
-                    additional_data=event.additional_data
-                )
-                self.client_conn.send(self.client_conn.h2.data_to_send())
-                self._kill_all_streams()
-                return False
-        elif isinstance(event, events.PushedStreamReceived):
-            # pushed stream ids should be unique and not dependent on race conditions
-            # only the parent stream id must be looked up first
-            parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
-            with self.client_conn.h2.lock:
-                self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
-                self.client_conn.send(self.client_conn.h2.data_to_send())
-
-            headers = netlib.http.Headers([[k, v] for k, v in event.headers])
-            self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
-            self.streams[event.pushed_stream_id].timestamp_start = time.time()
-            self.streams[event.pushed_stream_id].pushed = True
-            self.streams[event.pushed_stream_id].parent_stream_id = parent_eid
-            self.streams[event.pushed_stream_id].timestamp_end = time.time()
-            self.streams[event.pushed_stream_id].request_data_finished.set()
-            self.streams[event.pushed_stream_id].start()
-        elif isinstance(event, events.PriorityUpdated):
-            if eid in self.streams:
-                if self.streams[eid].handled_priority_event is event:
-                    # This event was already handled during stream creation
-                    # HeadersFrame + Priority information as RequestReceived
-                    return True
-                if eid in self.streams:
-                    self.streams[eid].priority_weight = event.weight
-                    self.streams[eid].priority_depends_on = event.depends_on
-                    self.streams[eid].priority_exclusive = event.exclusive
-
-            stream_id = event.stream_id
-            if stream_id in self.streams.keys() and self.streams[stream_id].server_stream_id:
-                stream_id = self.streams[stream_id].server_stream_id
-
-            depends_on = event.depends_on
-            if depends_on in self.streams.keys() and self.streams[depends_on].server_stream_id:
-                depends_on = self.streams[depends_on].server_stream_id
-
-            with self.server_conn.h2.lock:
-                self.server_conn.h2.prioritize(
-                    stream_id,
-                    weight=event.weight,
-                    depends_on=depends_on,
-                    exclusive=event.exclusive
-                )
-                self.server_conn.send(self.server_conn.h2.data_to_send())
-        elif isinstance(event, events.TrailersReceived):
-            raise NotImplementedError()
-
+            source_conn.h2.safe_increment_flow_control(
+                event.stream_id,
+                event.flow_controlled_length
+            )
         return True
+
+    def _handle_stream_ended(self, eid):
+        self.streams[eid].timestamp_end = time.time()
+        self.streams[eid].data_finished.set()
+        return True
+
+    def _handle_stream_reset(self, eid, event, is_server, other_conn):
+        self.streams[eid].zombie = time.time()
+        if eid in self.streams and event.error_code == h2.errors.CANCEL:
+            if is_server:
+                other_stream_id = self.streams[eid].client_stream_id
+            else:
+                other_stream_id = self.streams[eid].server_stream_id
+            if other_stream_id is not None:
+                other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
+        return True
+
+    def _handle_remote_settings_changed(self, event, other_conn):
+        new_settings = dict([(key, cs.new_value) for (key, cs) in six.iteritems(event.changed_settings)])
+        other_conn.h2.safe_update_settings(new_settings)
+        return True
+
+    def _handle_connection_terminated(self, event):
+        if event.error_code != h2.errors.NO_ERROR:
+            # Something terrible has happened - kill everything!
+            self.client_conn.h2.close_connection(
+                error_code=event.error_code,
+                last_stream_id=event.last_stream_id,
+                additional_data=event.additional_data
+            )
+            self.client_conn.send(self.client_conn.h2.data_to_send())
+            self._kill_all_streams()
+        else:
+            """
+            Do not immediately terminate the other connection.
+            Some streams might be still sending data to the client.
+            """
+        return False
+
+    def _handle_pushed_stream_received(self, event):
+        # pushed stream ids should be unique and not dependent on race conditions
+        # only the parent stream id must be looked up first
+        parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
+        with self.client_conn.h2.lock:
+            self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
+            self.client_conn.send(self.client_conn.h2.data_to_send())
+
+        headers = netlib.http.Headers([[k, v] for k, v in event.headers])
+        self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
+        self.streams[event.pushed_stream_id].timestamp_start = time.time()
+        self.streams[event.pushed_stream_id].pushed = True
+        self.streams[event.pushed_stream_id].parent_stream_id = parent_eid
+        self.streams[event.pushed_stream_id].timestamp_end = time.time()
+        self.streams[event.pushed_stream_id].request_data_finished.set()
+        self.streams[event.pushed_stream_id].start()
+        return True
+
+    def _handle_priority_updated(self, eid, event):
+        if eid in self.streams and self.streams[eid].handled_priority_event is event:
+            # this event was already handled during stream creation
+            # HeadersFrame + Priority information as RequestReceived
+            return True
+
+        with self.server_conn.h2.lock:
+            mapped_stream_id = event.stream_id
+            if mapped_stream_id in self.streams and self.streams[mapped_stream_id].server_stream_id:
+                # if the stream is already up and running and was sent to the server
+                # use the mapped server stream id to update priority information
+                mapped_stream_id = self.streams[mapped_stream_id].server_stream_id
+
+            if eid in self.streams:
+                self.streams[eid].priority_exclusive = event.exclusive
+                self.streams[eid].priority_depends_on = event.depends_on
+                self.streams[eid].priority_weight = event.weight
+
+            self.server_conn.h2.prioritize(
+                mapped_stream_id,
+                weight=event.weight,
+                depends_on=self._map_depends_on_stream_id(mapped_stream_id, event.depends_on),
+                exclusive=event.exclusive
+            )
+            self.server_conn.send(self.server_conn.h2.data_to_send())
+        return True
+
+    def _map_depends_on_stream_id(self, stream_id, depends_on):
+        mapped_depends_on = depends_on
+        if mapped_depends_on in self.streams and self.streams[mapped_depends_on].server_stream_id:
+            # if the depends-on-stream is already up and running and was sent to the server
+            # use the mapped server stream id to update priority information
+            mapped_depends_on = self.streams[mapped_depends_on].server_stream_id
+        if stream_id == mapped_depends_on:
+            # looks like one of the streams wasn't opened yet
+            # prevent self-dependent streams which result in ProtocolError
+            mapped_depends_on += 2
+        return mapped_depends_on
 
     def _cleanup_streams(self):
         death_time = time.time() - 10
-        for stream_id in self.streams.keys():
-            zombie = self.streams[stream_id].zombie
-            if zombie and zombie <= death_time:
-                self.streams.pop(stream_id, None)
+
+        zombie_streams = [(stream_id, stream) for stream_id, stream in list(self.streams.items()) if stream.zombie]
+        outdated_streams = [stream_id for stream_id, stream in zombie_streams if stream.zombie <= death_time]
+
+        for stream_id in outdated_streams:  # pragma: no cover
+            self.streams.pop(stream_id, None)
 
     def _kill_all_streams(self):
         for stream in self.streams.values():
@@ -287,7 +347,7 @@ class Http2Layer(base.Layer):
                                 return
 
                     self._cleanup_streams()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
             self._kill_all_streams()
@@ -317,10 +377,19 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
 
         self.no_body = False
 
-        self.priority_weight = None
-        self.priority_depends_on = None
         self.priority_exclusive = None
+        self.priority_depends_on = None
+        self.priority_weight = None
         self.handled_priority_event = None
+
+    def check_close_connection(self, flow):
+        # This layer only handles a single stream.
+        # RFC 7540 8.1: An HTTP request/response exchange fully consumes a single stream.
+        return True
+
+    def set_server(self, *args, **kwargs):  # pragma: no cover
+        # do not mess with the server connection - all streams share it.
+        pass
 
     @property
     def data_queue(self):
@@ -412,8 +481,16 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         headers.insert(0, ":path", message.path)
         headers.insert(0, ":method", message.method)
         headers.insert(0, ":scheme", message.scheme)
-        self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
-        self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
+
+        priority_exclusive = None
+        priority_depends_on = None
+        priority_weight = None
+        if self.handled_priority_event:
+            # only send priority information if they actually came with the original HeadersFrame
+            # and not if they got updated before/after with a PriorityFrame
+            priority_exclusive = self.priority_exclusive
+            priority_depends_on = self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on)
+            priority_weight = self.priority_weight
 
         try:
             self.server_conn.h2.safe_send_headers(
@@ -421,11 +498,11 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
                 self.server_stream_id,
                 headers,
                 end_stream=self.no_body,
-                priority_weight=self.priority_weight,
-                priority_depends_on=self.priority_depends_on,
-                priority_exclusive=self.priority_exclusive,
+                priority_exclusive=priority_exclusive,
+                priority_depends_on=priority_depends_on,
+                priority_weight=priority_weight,
             )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise e
         finally:
             self.server_conn.h2.lock.release()
@@ -464,7 +541,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         while True:
             try:
                 yield self.response_data_queue.get(timeout=1)
-            except queue.Empty:
+            except queue.Empty:  # pragma: no cover
                 pass
             if self.response_data_finished.is_set():
                 if self.zombie:  # pragma: no cover
@@ -499,24 +576,12 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         if self.zombie:  # pragma: no cover
             raise exceptions.Http2ProtocolException("Zombie Stream")
 
-    def check_close_connection(self, flow):
-        # This layer only handles a single stream.
-        # RFC 7540 8.1: An HTTP request/response exchange fully consumes a single stream.
-        return True
-
-    def set_server(self, *args, **kwargs):  # pragma: no cover
-        # do not mess with the server connection - all streams share it.
-        pass
-
     def run(self):
-        self()
-
-    def __call__(self):
         layer = http.HttpLayer(self, self.mode)
 
         try:
             layer()
-        except exceptions.ProtocolException as e:
+        except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
 

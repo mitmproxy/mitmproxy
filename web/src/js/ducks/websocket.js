@@ -68,7 +68,7 @@ export function onConnect() {
     return dispatch => {
         dispatch({ type: CONNECTED })
         dispatch(settingsActions.fetchData())
-        dispatch(flowsActions.fetchData())
+        dispatch(flowsActions.fetchFlows())
         dispatch(eventLogActions.fetchData())
     }
 }

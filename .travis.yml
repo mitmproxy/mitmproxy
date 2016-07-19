@@ -20,6 +20,10 @@ matrix:
   include:
     - python: 3.5
       env: TOXENV=lint
+#    - os: osx
+#      osx_image: xcode7.3
+#      language: generic
+#      env: TOXENV=py35
     - python: 3.5
       env: TOXENV=py35
     - python: 3.5
@@ -28,12 +32,6 @@ matrix:
       env: TOXENV=py27
     - python: 2.7
       env: TOXENV=py27 NO_ALPN=1
-    - language: generic
-      os: osx
-      osx_image: xcode7.1
-      git:
-        depth: 9999999
-      env: TOXENV=py27
     - python: 3.5
       env: TOXENV=docs
   allow_failures:
@@ -44,20 +42,26 @@ install:
     if [[ $TRAVIS_OS_NAME == "osx" ]]
     then
       brew update || brew update # try again if it fails
-      brew outdated openssl || brew upgrade openssl
-      brew install python
+      brew upgrade
+      brew reinstall openssl
+      brew reinstall pyenv
+      eval "$(pyenv init -)"
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.2
+      pyenv global 3.5.2
+      pyenv shell 3.5.2
+      pip install -U pip setuptools wheel virtualenv
     fi
   - pip install tox
 
-script: set -o pipefail; tox -- --cov netlib --cov mitmproxy --cov pathod 2>&1 | grep -v Cryptography_locking_cb
+script: set -o pipefail; python -m tox -- --cov netlib --cov mitmproxy --cov pathod 2>&1 | grep -v Cryptography_locking_cb
 
 after_success:
   - |
     if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        pip install -U virtualenv
-        ./dev.sh
-        source venv/bin/activate
+        git fetch --unshallow
+        ./dev.sh 3.5
+        source venv3.5/bin/activate
         pip install -e ./release
         python ./release/rtool.py bdist
         python ./release/rtool.py upload-snapshot --bdist --wheel
@@ -71,4 +75,7 @@ notifications:
       on_failure: change
       on_start: never
 
-cache: pip
+cache:
+  directories:
+    - $HOME/.pyenv
+    - $HOME/.cache/pip

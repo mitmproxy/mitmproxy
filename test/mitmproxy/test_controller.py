@@ -25,7 +25,7 @@ class TestMaster(object):
                 # Speed up test
                 super(DummyMaster, self).tick(0)
 
-        m = DummyMaster()
+        m = DummyMaster(None)
         assert not m.should_exit.is_set()
         msg = TMsg()
         msg.reply = controller.DummyReply()
@@ -34,7 +34,7 @@ class TestMaster(object):
         assert m.should_exit.is_set()
 
     def test_server_simple(self):
-        m = controller.Master()
+        m = controller.Master(None)
         s = DummyServer(None)
         m.add_server(s)
         m.start()

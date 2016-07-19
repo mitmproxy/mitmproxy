@@ -57,8 +57,8 @@ def escape_control_characters(text, keep_spacing=True):
     Args:
         keep_spacing: If True, tabs and newlines will not be replaced.
     """
-    # type: (six.text_type) -> six.text_type
-    if not isinstance(text, six.text_type):
+    # type: (six.string_types) -> six.text_type
+    if not isinstance(text, six.string_types):
         raise ValueError("text type must be unicode but is {}".format(type(text).__name__))
 
     trans = _control_char_trans_newline if keep_spacing else _control_char_trans
@@ -146,7 +146,7 @@ def hexdump(s):
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i).encode()
+        offset = "{:0=10x}".format(i)
         part = s[i:i + 16]
         x = " ".join("{:0=2x}".format(i) for i in six.iterbytes(part))
         x = x.ljust(47)  # 16*2 + 15

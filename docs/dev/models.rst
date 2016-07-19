@@ -56,8 +56,6 @@ Datastructures
         :special-members:
         :no-undoc-members:
 
-    .. autoclass:: decoded
-
 .. automodule:: netlib.multidict
 
     .. autoclass:: MultiDictView

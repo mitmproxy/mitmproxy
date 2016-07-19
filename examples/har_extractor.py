@@ -2,6 +2,7 @@
     This inline script utilizes harparser.HAR from
     https://github.com/JustusW/harparser to generate a HAR log object.
 """
+import mitmproxy.ctx
 import six
 import sys
 import pytz
@@ -54,7 +55,13 @@ class _HARLog(HAR.log):
         return self.__page_list__
 
 
-def start(context):
+class Context(object):
+    pass
+
+context = Context()
+
+
+def start():
     """
         On start we create a HARLog instance. You will have to adapt this to
         suit your actual needs of HAR generation. As it will probably be
@@ -79,7 +86,7 @@ def start(context):
     context.seen_server = set()
 
 
-def response(context, flow):
+def response(flow):
     """
        Called when a server response has been received. At the time of this
        message both a request and a response are present and completely done.
@@ -133,7 +140,7 @@ def response(context, flow):
                             for k, v in flow.request.query or {}]
 
     response_body_size = len(flow.response.content)
-    response_body_decoded_size = len(flow.response.get_decoded_content())
+    response_body_decoded_size = len(flow.response.content)
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = HAR.entries({
@@ -201,7 +208,7 @@ def response(context, flow):
     context.HARLog.add(entry)
 
 
-def done(context):
+def done():
     """
         Called once on script shutdown, after any other events.
     """
@@ -212,17 +219,19 @@ def done(context):
     compressed_json_dump = context.HARLog.compress()
 
     if context.dump_file == '-':
-        context.log(pprint.pformat(json.loads(json_dump)))
+        mitmproxy.ctx.log(pprint.pformat(json.loads(json_dump)))
     elif context.dump_file.endswith('.zhar'):
-        file(context.dump_file, "w").write(compressed_json_dump)
+        with open(context.dump_file, "wb") as f:
+            f.write(compressed_json_dump)
     else:
-        file(context.dump_file, "w").write(json_dump)
-    context.log(
+        with open(context.dump_file, "wb") as f:
+            f.write(json_dump)
+    mitmproxy.ctx.log(
         "HAR log finished with %s bytes (%s bytes compressed)" % (
             len(json_dump), len(compressed_json_dump)
         )
     )
-    context.log(
+    mitmproxy.ctx.log(
         "Compression rate is %s%%" % str(
             100. * len(compressed_json_dump) / len(json_dump)
         )

@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, division
+
 from io import BytesIO
 from mock import Mock
+import pytest
+
 from netlib.exceptions import HttpException, HttpSyntaxException, HttpReadDisconnect, TcpDisconnect
 from netlib.http import Headers
 from netlib.http.http1.read import (
@@ -23,11 +26,18 @@ def test_get_header_tokens():
     assert get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
 
 
-def test_read_request():
-    rfile = BytesIO(b"GET / HTTP/1.1\r\n\r\nskip")
+@pytest.mark.parametrize("input", [
+    b"GET / HTTP/1.1\r\n\r\nskip",
+    b"GET  / HTTP/1.1\r\n\r\nskip",
+    b"GET  /  HTTP/1.1\r\n\r\nskip",
+    b"GET   /   HTTP/1.1   \r\n\r\nskip",
+])
+def test_read_request(input):
+    rfile = BytesIO(input)
     r = read_request(rfile)
     assert r.method == "GET"
     assert r.content == b""
+    assert r.http_version == "HTTP/1.1"
     assert r.timestamp_end
     assert rfile.read() == b"skip"
 
@@ -50,11 +60,19 @@ def test_read_request_head():
     assert rfile.read() == b"skip"
 
 
-def test_read_response():
+@pytest.mark.parametrize("input", [
+    b"HTTP/1.1 418 I'm a teapot\r\n\r\nbody",
+    b"HTTP/1.1   418 I'm a teapot\r\n\r\nbody",
+    b"HTTP/1.1   418   I'm a teapot\r\n\r\nbody",
+    b"HTTP/1.1   418   I'm a teapot   \r\n\r\nbody",
+])
+def test_read_response(input):
     req = treq()
-    rfile = BytesIO(b"HTTP/1.1 418 I'm a teapot\r\n\r\nbody")
+    rfile = BytesIO(input)
     r = read_response(rfile, req)
+    assert r.http_version == "HTTP/1.1"
     assert r.status_code == 418
+    assert r.reason == "I'm a teapot"
     assert r.content == b"body"
     assert r.timestamp_end
 

@@ -38,8 +38,9 @@ def test_escape_control_characters():
         u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
     )
 
-    with tutils.raises(ValueError):
-        strutils.escape_control_characters(b"foo")
+    if not six.PY2:
+        with tutils.raises(ValueError):
+            strutils.escape_control_characters(b"foo")
 
 
 def test_bytes_to_escaped_str():

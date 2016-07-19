@@ -35,7 +35,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 filters,
-                view: reduceView(state.view, viewActions.updateFilter(state.list, log => filters[log.level])),
+                view: reduceView(state.view, viewActions.updateFilter(state.list.data, log => filters[log.level])),
             }
 
         case ADD:
@@ -55,7 +55,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 list: reduceList(state.list, listActions.receive(action.list)),
-                view: reduceView(state.view, viewActions.receive(list, log => state.filters[log.level])),
+                view: reduceView(state.view, viewActions.receive(action.list, log => state.filters[log.level])),
             }
 
         default:

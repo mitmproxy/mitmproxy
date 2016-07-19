@@ -1,4 +1,4 @@
-def responseheaders(context, flow):
+def responseheaders(flow):
     """
     Enables streaming for all responses.
     """

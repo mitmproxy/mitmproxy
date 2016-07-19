@@ -52,9 +52,9 @@ If you want to contribute changes, keep on reading.
 Hacking
 -------
 
-To get started hacking on mitmproxy, make sure you have Python_ 2.7.x. with
+To get started hacking on mitmproxy, make sure you have Python_ 3.5.x or above with
 virtualenv_ installed (you can find installation instructions for virtualenv
-here_). Then do the following:
+`here <http://virtualenv.readthedocs.org/en/latest/>`_). Then do the following:
 
 .. code-block:: text
 
@@ -111,12 +111,12 @@ The following tox environments are relevant for local testing:
 .. code-block:: text
 
     tox -e py27  # runs all tests with Python 2.7
-    tox -e py35  # runs all tests with Python 3.5 (partial support only)
+    tox -e py35  # runs all tests with Python 3.5
     tox -e docs  # runs a does-it-compile check on the documentation
     tox -e lint  # runs the linter for coding style checks
 
-We are in the middle of transitioning to Python 3, so please make sure all tests
-pass in Python 2.7 and 3.5. Running `tox` ensure all necessary tests are executed.
+We support Python 2.7 and 3.5, so please make sure all tests pass in both
+environments. Running `tox` ensures all necessary tests are executed.
 
 
 Documentation
@@ -194,7 +194,6 @@ PR checks will fail and block merging. We are using this command to check for st
 
 .. _Python: https://www.python.org/
 .. _virtualenv: http://virtualenv.readthedocs.org/en/latest/
-.. _here: http://virtualenv.readthedocs.org/en/latest/installation.html
 .. _autoenv: https://github.com/kennethreitz/autoenv
 .. _.env: https://github.com/mitmproxy/mitmproxy/blob/master/.env
 .. _Sphinx: http://sphinx-doc.org/

@@ -6,6 +6,9 @@ import collections
 import tornado.httpserver
 import tornado.ioloop
 
+from typing import Optional  # noqa
+
+from mitmproxy import builtins
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -64,7 +67,7 @@ class WebState(flow.State):
         self._last_event_id = 0
         self.events = collections.deque(maxlen=1000)
 
-    def add_event(self, e, level):
+    def add_log(self, e, level):
         self._last_event_id += 1
         entry = {
             "id": self._last_event_id,
@@ -88,50 +91,28 @@ class WebState(flow.State):
         )
 
 
-class Options(object):
-    attributes = [
-        "app",
-        "app_domain",
-        "app_ip",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "eventlog",
-        "keepserving",
-        "kill",
-        "intercept",
-        "no_server",
-        "outfile",
-        "refresh_server_playback",
-        "rfile",
-        "scripts",
-        "showhost",
-        "replacements",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "stickycookie",
-        "stickyauth",
-        "stream_large_bodies",
-        "verbosity",
-        "wfile",
-        "nopop",
+class Options(flow.options.Options):
+    def __init__(
+            self,
+            intercept=None,  # type: Optional[str]
+            wdebug=bool,  # type: bool
+            wport=8081,  # type: int
+            wiface="127.0.0.1",  # type: str
+            wauthenticator=None,  # type: Optional[authentication.PassMan]
+            wsingleuser=None,  # type: Optional[str]
+            whtpasswd=None,  # type: Optional[str]
+            **kwargs
+    ):
+        self.wdebug = wdebug
+        self.wport = wport
+        self.wiface = wiface
+        self.wauthenticator = wauthenticator
+        self.wsingleuser = wsingleuser
+        self.whtpasswd = whtpasswd
+        self.intercept = intercept
+        super(Options, self).__init__(**kwargs)
 
-        "wdebug",
-        "wport",
-        "wiface",
-        "wauthenticator",
-        "wsingleuser",
-        "whtpasswd",
-    ]
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
-
+    # TODO: This doesn't belong here.
     def process_web_options(self, parser):
         if self.wsingleuser or self.whtpasswd:
             if self.wsingleuser:
@@ -153,14 +134,18 @@ class Options(object):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        self.options = options
-        super(WebMaster, self).__init__(server, WebState())
-        self.app = app.Application(self, self.options.wdebug, self.options.wauthenticator)
+        super(WebMaster, self).__init__(options, server, WebState())
+        self.addons.add(*builtins.default_addons())
+        self.app = app.Application(
+            self, self.options.wdebug, self.options.wauthenticator
+        )
+        # This line is just for type hinting
+        self.options = self.options  # type: Options
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
-                self.add_event(
+                self.add_log(
                     "Could not read flow file: %s" % v,
                     "error"
                 )
@@ -215,6 +200,6 @@ class WebMaster(flow.FlowMaster):
         super(WebMaster, self).error(f)
         return self._process_flow(f)
 
-    def add_event(self, e, level="info"):
-        super(WebMaster, self).add_event(e, level)
-        return self.state.add_event(e, level)
+    def add_log(self, e, level="info"):
+        super(WebMaster, self).add_log(e, level)
+        return self.state.add_log(e, level)

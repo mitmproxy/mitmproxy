@@ -9,6 +9,7 @@ import traceback
 
 import h2
 
+from mitmproxy.flow import options
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.cmdline import APP_HOST, APP_PORT
 
@@ -60,7 +61,10 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                 except HttpException:
                     print(traceback.format_exc())
                     assert False
+                except netlib.exceptions.TcpDisconnect:
+                    break
                 except:
+                    print(traceback.format_exc())
                     break
                 self.wfile.write(h2_conn.data_to_send())
                 self.wfile.flush()
@@ -70,8 +74,11 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                         if not self.server.handle_server_event(event, h2_conn, self.rfile, self.wfile):
                             done = True
                             break
+                    except netlib.exceptions.TcpDisconnect:
+                        done = True
                     except:
                         done = True
+                        print(traceback.format_exc())
                         break
 
     def handle_server_event(self, h2_conn, rfile, wfile):
@@ -81,30 +88,30 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
 class _Http2TestBase(object):
 
     @classmethod
-    def setup_class(self):
-        self.config = ProxyConfig(**self.get_proxy_config())
+    def setup_class(cls):
+        cls.masteroptions = options.Options()
+        cnf, opts = cls.get_proxy_config()
+        cls.config = ProxyConfig(opts, **cnf)
 
-        tmaster = tservers.TestMaster(self.config)
+        tmaster = tservers.TestMaster(opts, cls.config)
         tmaster.start_app(APP_HOST, APP_PORT)
-        self.proxy = tservers.ProxyThread(tmaster)
-        self.proxy.start()
+        cls.proxy = tservers.ProxyThread(tmaster)
+        cls.proxy.start()
 
     @classmethod
     def teardown_class(cls):
         cls.proxy.shutdown()
 
+    @classmethod
+    def get_proxy_config(cls):
+        opts = options.Options(listen_port=0, no_upstream_cert=False)
+        opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        d = dict()
+        return d, opts
+
     @property
     def master(self):
         return self.proxy.tmaster
-
-    @classmethod
-    def get_proxy_config(cls):
-        cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        return dict(
-            no_upstream_cert = False,
-            cadir = cls.cadir,
-            authenticator = None,
-        )
 
     def setup(self):
         self.master.clear_log()
@@ -112,8 +119,6 @@ class _Http2TestBase(object):
         self.server.server.handle_server_event = self.handle_server_event
 
     def _setup_connection(self):
-        self.config.http2 = True
-
         client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
@@ -138,11 +143,26 @@ class _Http2TestBase(object):
 
         return client, h2_conn
 
-    def _send_request(self, wfile, h2_conn, stream_id=1, headers=[], body=b''):
+    def _send_request(self,
+                      wfile,
+                      h2_conn,
+                      stream_id=1,
+                      headers=[],
+                      body=b'',
+                      end_stream=None,
+                      priority_exclusive=None,
+                      priority_depends_on=None,
+                      priority_weight=None):
+        if end_stream is None:
+            end_stream = (len(body) == 0)
+
         h2_conn.send_headers(
             stream_id=stream_id,
             headers=headers,
-            end_stream=(len(body) == 0),
+            end_stream=end_stream,
+            priority_exclusive=priority_exclusive,
+            priority_depends_on=priority_depends_on,
+            priority_weight=priority_weight,
         )
         if body:
             h2_conn.send_data(stream_id, body)
@@ -151,8 +171,7 @@ class _Http2TestBase(object):
         wfile.flush()
 
 
-@requires_alpn
-class TestSimple(_Http2TestBase, _Http2ServerBase):
+class _Http2Test(_Http2TestBase, _Http2ServerBase):
 
     @classmethod
     def setup_class(self):
@@ -164,6 +183,11 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         _Http2TestBase.teardown_class()
         _Http2ServerBase.teardown_class()
 
+
+@requires_alpn
+class TestSimple(_Http2Test):
+    request_body_buffer = b''
+
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
@@ -171,7 +195,7 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         elif isinstance(event, h2.events.RequestReceived):
             assert (b'client-foo', b'client-bar-1') in event.headers
             assert (b'client-foo', b'client-bar-2') in event.headers
-
+        elif isinstance(event, h2.events.StreamEnded):
             import warnings
             with warnings.catch_warnings():
                 # Ignore UnicodeWarning:
@@ -187,23 +211,107 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
                     ('föo', 'bär'),
                     ('X-Stream-ID', str(event.stream_id)),
                 ])
-            h2_conn.send_data(event.stream_id, b'foobar')
+            h2_conn.send_data(event.stream_id, b'response body')
+            h2_conn.end_stream(event.stream_id)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        elif isinstance(event, h2.events.DataReceived):
+            self.request_body_buffer += event.data
+        return True
+
+    def test_simple(self):
+        response_body_buffer = b''
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+                ('ClIeNt-FoO', 'client-bar-1'),
+                ('ClIeNt-FoO', 'client-bar-2'),
+            ],
+            body=b'request body')
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.DataReceived):
+                    response_body_buffer += event.data
+                elif isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.master.state.flows[0].response.status_code == 200
+        assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
+        assert self.master.state.flows[0].response.headers['föo'] == 'bär'
+        assert self.master.state.flows[0].response.body == b'response body'
+        assert self.request_body_buffer == b'request body'
+        assert response_body_buffer == b'response body'
+
+
+@requires_alpn
+class TestRequestWithPriority(_Http2Test):
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.RequestReceived):
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+
+                headers = [(':status', '200')]
+                if event.priority_updated:
+                    headers.append(('priority_exclusive', event.priority_updated.exclusive))
+                    headers.append(('priority_depends_on', event.priority_updated.depends_on))
+                    headers.append(('priority_weight', event.priority_updated.weight))
+                h2_conn.send_headers(event.stream_id, headers)
             h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
         return True
 
-    def test_simple(self):
+    def test_request_with_priority(self):
         client, h2_conn = self._setup_connection()
 
-        self._send_request(client.wfile, h2_conn, headers=[
-            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
-            (':method', 'GET'),
-            (':scheme', 'https'),
-            (':path', '/'),
-            ('ClIeNt-FoO', 'client-bar-1'),
-            ('ClIeNt-FoO', 'client-bar-2'),
-        ], body=b'my request body echoed back to me')
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+            priority_exclusive = True,
+            priority_depends_on = 42424242,
+            priority_weight = 42,
+        )
 
         done = False
         while not done:
@@ -226,44 +334,11 @@ class TestSimple(_Http2TestBase, _Http2ServerBase):
         client.wfile.flush()
 
         assert len(self.master.state.flows) == 1
-        assert self.master.state.flows[0].response.status_code == 200
-        assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
-        assert self.master.state.flows[0].response.headers['föo'] == 'bär'
-        assert self.master.state.flows[0].response.body == b'foobar'
+        assert self.master.state.flows[0].response.headers['priority_exclusive'] == 'True'
+        assert self.master.state.flows[0].response.headers['priority_depends_on'] == '42424242'
+        assert self.master.state.flows[0].response.headers['priority_weight'] == '42'
 
-
-@requires_alpn
-class TestWithBodies(_Http2TestBase, _Http2ServerBase):
-    tmp_data_buffer_foobar = b''
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
-
-    @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
-        if isinstance(event, h2.events.ConnectionTerminated):
-            return False
-        if isinstance(event, h2.events.DataReceived):
-            self.tmp_data_buffer_foobar += event.data
-        elif isinstance(event, h2.events.StreamEnded):
-            h2_conn.send_headers(1, [
-                (':status', '200'),
-            ])
-            h2_conn.send_data(1, self.tmp_data_buffer_foobar)
-            h2_conn.end_stream(1)
-            wfile.write(h2_conn.data_to_send())
-            wfile.flush()
-
-        return True
-
-    def test_with_bodies(self):
+    def test_request_without_priority(self):
         client, h2_conn = self._setup_connection()
 
         self._send_request(
@@ -275,7 +350,6 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
                 (':scheme', 'https'),
                 (':path', '/'),
             ],
-            body=b'foobar with request body',
         )
 
         done = False
@@ -298,21 +372,261 @@ class TestWithBodies(_Http2TestBase, _Http2ServerBase):
         client.wfile.write(h2_conn.data_to_send())
         client.wfile.flush()
 
-        assert self.master.state.flows[0].response.body == b'foobar with request body'
+        assert len(self.master.state.flows) == 1
+        assert 'priority_exclusive' not in self.master.state.flows[0].response.headers
+        assert 'priority_depends_on' not in self.master.state.flows[0].response.headers
+        assert 'priority_weight' not in self.master.state.flows[0].response.headers
 
 
 @requires_alpn
-class TestPushPromise(_Http2TestBase, _Http2ServerBase):
+class TestPriority(_Http2Test):
+    priority_data = None
 
     @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.PriorityUpdated):
+            self.priority_data = (event.exclusive, event.depends_on, event.weight)
+        elif isinstance(event, h2.events.RequestReceived):
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+
+                headers = [(':status', '200')]
+                h2_conn.send_headers(event.stream_id, headers)
+            h2_conn.end_stream(event.stream_id)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_priority(self):
+        client, h2_conn = self._setup_connection()
+
+        h2_conn.prioritize(1, exclusive=True, depends_on=0, weight=42)
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+        )
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.priority_data == (True, 0, 42)
+
+
+@requires_alpn
+class TestPriorityWithExistingStream(_Http2Test):
+    priority_data = []
 
     @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.PriorityUpdated):
+            self.priority_data.append((event.exclusive, event.depends_on, event.weight))
+        elif isinstance(event, h2.events.RequestReceived):
+            assert not event.priority_updated
+
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+
+                headers = [(':status', '200')]
+                h2_conn.send_headers(event.stream_id, headers)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        elif isinstance(event, h2.events.StreamEnded):
+            h2_conn.end_stream(event.stream_id)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_priority_with_existing_stream(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+            end_stream=False,
+        )
+
+        h2_conn.prioritize(1, exclusive=True, depends_on=0, weight=42)
+        h2_conn.end_stream(1)
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.priority_data == [(True, 0, 42)]
+
+
+@requires_alpn
+class TestStreamResetFromServer(_Http2Test):
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.RequestReceived):
+            h2_conn.reset_stream(event.stream_id, 0x8)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_request_with_priority(self):
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+        )
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamReset):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.master.state.flows[0].response is None
+
+
+@requires_alpn
+class TestBodySizeLimit(_Http2Test):
+
+    @classmethod
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        return True
+
+    def test_body_size_limit(self):
+        self.config.options.body_size_limit = 20
+
+        client, h2_conn = self._setup_connection()
+
+        self._send_request(
+            client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+            body=b'very long body over 20 characters long',
+        )
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                events = h2_conn.receive_data(raw)
+            except HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            client.wfile.write(h2_conn.data_to_send())
+            client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamReset):
+                    done = True
+
+        h2_conn.close_connection()
+        client.wfile.write(h2_conn.data_to_send())
+        client.wfile.flush()
+
+        assert len(self.master.state.flows) == 0
+
+
+@requires_alpn
+class TestPushPromise(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -465,17 +779,7 @@ class TestPushPromise(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+class TestConnectionLost(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -517,17 +821,12 @@ class TestConnectionLost(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
+class TestMaxConcurrentStreams(_Http2Test):
 
     @classmethod
     def setup_class(self):
         _Http2TestBase.setup_class()
         _Http2ServerBase.setup_class(h2_server_settings={h2.settings.MAX_CONCURRENT_STREAMS: 2})
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
@@ -583,17 +882,7 @@ class TestMaxConcurrentStreams(_Http2TestBase, _Http2ServerBase):
 
 
 @requires_alpn
-class TestConnectionTerminated(_Http2TestBase, _Http2ServerBase):
-
-    @classmethod
-    def setup_class(self):
-        _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class()
-
-    @classmethod
-    def teardown_class(self):
-        _Http2TestBase.teardown_class()
-        _Http2ServerBase.teardown_class()
+class TestConnectionTerminated(_Http2Test):
 
     @classmethod
     def handle_server_event(self, event, h2_conn, rfile, wfile):
