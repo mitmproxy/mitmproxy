@@ -182,7 +182,7 @@ export function selectRelative(shift) {
         let minIndex = 0
         let maxIndex = getState().flowView.data.length - 1
         let newIndex
-        if (!currentSelectionIndex) {
+        if (currentSelectionIndex === undefined) {
             newIndex = (shift < 0) ? minIndex : maxIndex
         } else {
             newIndex = currentSelectionIndex + shift

@@ -180,7 +180,7 @@ export function onKeyDown(e) {
                 break
 
             case Key.ESC:
-                dispatch(selectFlowRelative(null))
+                dispatch(flowsActions.select(null))
                 break
 
             case Key.LEFT:
