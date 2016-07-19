@@ -230,7 +230,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 )
         elif key == "U":
             for f in self.state.flows:
-                self.state.set_flow_marked(f, False)
+                f.marked = False
             signals.flowlist_change.send(self)
         elif key == "V":
             if not self.flow.modified():
