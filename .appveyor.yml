@@ -30,7 +30,7 @@ test_script:
 deploy_script:
   ps: |
     if(
-      ($Env:TOXENV -match "py27") -and
+      ($Env:TOXENV -match "py35") -and
       (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
       pip install -U virtualenv
