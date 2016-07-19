@@ -1,12 +1,12 @@
 from __future__ import absolute_import, print_function, division
 import copy
 
-from mitmproxy import options
+from mitmproxy import optmanager
 from mitmproxy import exceptions
 from netlib import tutils
 
 
-class TO(options.Options):
+class TO(optmanager.OptManager):
     def __init__(self, one=None, two=None):
         self.one = one
         self.two = two
@@ -93,8 +93,8 @@ def test_rollback():
 
 
 def test_repr():
-    assert repr(TO()) == "test.mitmproxy.test_options.TO({'one': None, 'two': None})"
-    assert repr(TO(one='x' * 60)) == """test.mitmproxy.test_options.TO({
+    assert repr(TO()) == "test.mitmproxy.test_optmanager.TO({'one': None, 'two': None})"
+    assert repr(TO(one='x' * 60)) == """test.mitmproxy.test_optmanager.TO({
     'one': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
     'two': None
 })"""

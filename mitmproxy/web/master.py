@@ -12,6 +12,7 @@ from mitmproxy import builtins
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import options
 from mitmproxy.web import app
 from netlib.http import authentication
 
@@ -91,7 +92,7 @@ class WebState(flow.State):
         )
 
 
-class Options(flow.options.Options):
+class Options(options.Options):
     def __init__(
             self,
             intercept=None,  # type: Optional[str]

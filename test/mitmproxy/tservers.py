@@ -8,9 +8,7 @@ from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 import pathod.test
 import pathod.pathoc
-from mitmproxy import flow, controller
-from mitmproxy.flow import options
-from mitmproxy.cmdline import APP_HOST, APP_PORT
+from mitmproxy import flow, controller, options
 from mitmproxy import builtins
 
 testapp = flask.Flask(__name__)
@@ -93,7 +91,7 @@ class ProxyTestBase(object):
         opts = cls.get_options()
         cls.config = ProxyConfig(opts)
         tmaster = cls.masterclass(opts, cls.config)
-        tmaster.start_app(APP_HOST, APP_PORT)
+        tmaster.start_app(options.APP_HOST, options.APP_PORT)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -160,11 +158,11 @@ class HTTPProxyTest(ProxyTestBase):
             p = pathod.pathoc.Pathoc(
                 ("127.0.0.1", self.proxy.port), True, fp=None
             )
-            p.connect((APP_HOST, APP_PORT))
+            p.connect((options.APP_HOST, options.APP_PORT))
             return p.request("get:'%s'" % page)
         else:
             p = self.pathoc()
-            return p.request("get:'http://%s%s'" % (APP_HOST, page))
+            return p.request("get:'http://%s%s'" % (options.APP_HOST, page))
 
 
 class TResolver:

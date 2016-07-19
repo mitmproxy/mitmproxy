@@ -23,6 +23,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import script
 from mitmproxy import utils
+import mitmproxy.options
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
 from mitmproxy.console import grideditor
@@ -178,7 +179,7 @@ class ConsoleState(flow.State):
         self.add_flow_setting(flow, "marked", marked)
 
 
-class Options(flow.options.Options):
+class Options(mitmproxy.options.Options):
     def __init__(
             self,
             eventlog=False,  # type: bool

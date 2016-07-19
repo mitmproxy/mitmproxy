@@ -3,8 +3,7 @@ import io
 
 import netlib.utils
 from netlib.http import Headers
-from mitmproxy import filt, controller, flow
-from mitmproxy.flow import options
+from mitmproxy import filt, controller, flow, options
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.models import Error
@@ -745,7 +744,7 @@ class TestFlowMaster:
         f = tutils.tflow(resp=True)
         pb = [tutils.tflow(resp=True), f]
         fm = flow.FlowMaster(
-            flow.options.Options(),
+            options.Options(),
             DummyServer(ProxyConfig(options.Options())),
             s
         )
@@ -776,7 +775,7 @@ class TestFlowMaster:
         f.response = HTTPResponse.wrap(netlib.tutils.tresp(content=f.request))
         pb = [f]
 
-        fm = flow.FlowMaster(flow.options.Options(), None, s)
+        fm = flow.FlowMaster(options.Options(), None, s)
         fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 

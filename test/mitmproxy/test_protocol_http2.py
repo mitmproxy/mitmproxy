@@ -9,9 +9,8 @@ import traceback
 
 import h2
 
-from mitmproxy.flow import options
+from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
-from mitmproxy.cmdline import APP_HOST, APP_PORT
 
 import netlib
 from ..netlib import tservers as netlib_tservers
@@ -94,7 +93,7 @@ class _Http2TestBase(object):
         cls.config = ProxyConfig(opts)
 
         tmaster = tservers.TestMaster(opts, cls.config)
-        tmaster.start_app(APP_HOST, APP_PORT)
+        tmaster.start_app(options.APP_HOST, options.APP_PORT)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
 

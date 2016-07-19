@@ -7,7 +7,6 @@ from mitmproxy.flow.modules import (
     AppRegistry, StreamLargeBodies, ClientPlaybackState, ServerPlaybackState
 )
 from mitmproxy.flow.state import State, FlowView
-from mitmproxy.flow import options
 
 # TODO: We may want to remove the imports from .modules and just expose "modules"
 
@@ -16,5 +15,5 @@ __all__ = [
     "FlowWriter", "FilteredFlowWriter", "FlowReader", "read_flows_from_paths",
     "FlowMaster",
     "AppRegistry", "StreamLargeBodies", "ClientPlaybackState",
-    "ServerPlaybackState", "State", "FlowView", "options",
+    "ServerPlaybackState", "State", "FlowView",
 ]

@@ -2,7 +2,7 @@ from .. import tutils, mastertest
 
 from mitmproxy.builtins import setheaders
 from mitmproxy.flow import state
-from mitmproxy.flow import options
+from mitmproxy import options
 
 
 class TestSetHeaders(mastertest.MasterTest):

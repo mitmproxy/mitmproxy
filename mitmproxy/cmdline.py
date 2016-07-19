@@ -8,25 +8,10 @@ import configargparse
 from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import platform
+from mitmproxy import options
 from netlib import human
 from netlib import tcp
 from netlib import version
-
-APP_HOST = "mitm.it"
-APP_PORT = 80
-CA_DIR = "~/.mitmproxy"
-
-# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
-DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:" \
-    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:" \
-    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:" \
-    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:" \
-    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:" \
-    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:" \
-    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:" \
-    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:" \
-    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
 
 
 class ParseException(Exception):
@@ -310,8 +295,8 @@ def basic_options(parser):
     )
     parser.add_argument(
         "--cadir",
-        action="store", type=str, dest="cadir", default=CA_DIR,
-        help="Location of the default mitmproxy CA files. (%s)" % CA_DIR
+        action="store", type=str, dest="cadir", default=options.CA_DIR,
+        help="Location of the default mitmproxy CA files. (%s)" % options.CA_DIR
     )
     parser.add_argument(
         "--host",
@@ -462,7 +447,7 @@ def proxy_options(parser):
     )
     group.add_argument(
         "-p", "--port",
-        action="store", type=int, dest="port", default=8080,
+        action="store", type=int, dest="port", default=options.LISTEN_PORT,
         help="Proxy service port."
     )
     group.add_argument(
@@ -509,7 +494,7 @@ def proxy_ssl_options(parser):
              'as the first entry. Can be passed multiple times.')
     group.add_argument(
         "--ciphers-client", action="store",
-        type=str, dest="ciphers_client", default=DEFAULT_CLIENT_CIPHERS,
+        type=str, dest="ciphers_client", default=options.DEFAULT_CLIENT_CIPHERS,
         help="Set supported ciphers for client connections. (OpenSSL Syntax)"
     )
     group.add_argument(
@@ -575,18 +560,18 @@ def onboarding_app(parser):
     )
     group.add_argument(
         "--app-host",
-        action="store", dest="app_host", default=APP_HOST, metavar="host",
+        action="store", dest="app_host", default=options.APP_HOST, metavar="host",
         help="""
             Domain to serve the onboarding app from. For transparent mode, use
             an IP when a DNS entry for the app domain is not present. Default:
             %s
-        """ % APP_HOST
+        """ % options.APP_HOST
     )
     group.add_argument(
         "--app-port",
         action="store",
         dest="app_port",
-        default=APP_PORT,
+        default=options.APP_PORT,
         type=int,
         metavar="80",
         help="Port to serve the onboarding app from."
@@ -764,8 +749,8 @@ def mitmproxy():
         usage="%(prog)s [options]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(CA_DIR, "common.conf"),
-            os.path.join(CA_DIR, "mitmproxy.conf")
+            os.path.join(options.CA_DIR, "common.conf"),
+            os.path.join(options.CA_DIR, "mitmproxy.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
@@ -819,8 +804,8 @@ def mitmdump():
         usage="%(prog)s [options] [filter]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(CA_DIR, "common.conf"),
-            os.path.join(CA_DIR, "mitmdump.conf")
+            os.path.join(options.CA_DIR, "common.conf"),
+            os.path.join(options.CA_DIR, "mitmdump.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
@@ -849,8 +834,8 @@ def mitmweb():
         usage="%(prog)s [options]",
         args_for_setting_config_path=["--conf"],
         default_config_files=[
-            os.path.join(CA_DIR, "common.conf"),
-            os.path.join(CA_DIR, "mitmweb.conf")
+            os.path.join(options.CA_DIR, "common.conf"),
+            os.path.join(options.CA_DIR, "mitmweb.conf")
         ],
         add_config_file_help=True,
         add_env_var_help=True
