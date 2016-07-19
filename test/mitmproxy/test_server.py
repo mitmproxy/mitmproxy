@@ -369,14 +369,14 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
 
     def test_verification_w_cadir(self):
         self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
-        self.config.openssl_trusted_cadir_server = tutils.test_data.path(
-            "data/trusted-cadir/")
-
+        self.config.options.ssl_verify_upstream_trusted_cadir = tutils.test_data.path(
+            "data/trusted-cadir/"
+        )
         self.pathoc()
 
     def test_verification_w_pemfile(self):
         self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
-        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+        self.config.options.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
         self.pathoc()
@@ -401,21 +401,21 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
 
     def test_default_verification_w_bad_cert(self):
         """Should use no verification."""
-        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+        self.config.options.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
         assert self._request().status_code == 242
 
     def test_no_verification_w_bad_cert(self):
         self.config.openssl_verification_mode_server = SSL.VERIFY_NONE
-        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+        self.config.options.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
         assert self._request().status_code == 242
 
     def test_verification_w_bad_cert(self):
         self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
-        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+        self.config.options.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
         assert self._request().status_code == 502

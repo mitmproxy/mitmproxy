@@ -161,8 +161,6 @@ class ProxyConfig:
             self.upstream_server = parse_server_spec(options.upstream_server)
         if options.upstream_auth:
             self.upstream_auth = parse_upstream_auth(options.upstream_auth)
-        self.openssl_trusted_cadir_server = options.ssl_verify_upstream_trusted_cadir
-        self.openssl_trusted_ca_server = options.ssl_verify_upstream_trusted_ca
 
 
 def process_proxy_options(parser, options, args):
