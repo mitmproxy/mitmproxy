@@ -7,7 +7,7 @@ import ContentView from '../ContentView'
 import ValueEditor from '../ValueEditor'
 import Headers from './Headers'
 import * as flowActions  from '../../ducks/flows'
-import FlowEditorButton from './FlowEditorButton.jsx'
+import FlowEditorButton from './FlowEditorButton'
 
 
 class RequestLine extends Component {

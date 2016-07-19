@@ -9,6 +9,9 @@ export const UPDATE_QUERY = 'UI_UPDATE_QUERY'
 export const SELECT_TAB = 'UI_SELECT_TAB'
 export const SET_PROMPT = 'UI_SET_PROMPT'
 export const SET_DISPLAY_LARGE = 'UI_SET_DISPLAY_LARGE'
+export const OPEN_FLOW_EDITOR= 'UI_OPEN_FLOW_EDITOR'
+export const CLOSE_FLOW_EDITOR = 'UI_CLOSE_FLOW_EDITOR'
+export const SET_MODIFIED_FLOW_CONTENT = 'UI_SET_MODIFIED_FLOW'
 
 const defaultState = {
     activeMenu: 'Start',
@@ -18,7 +21,9 @@ const defaultState = {
     promptOpen: false,
     contentView: 'ViewAuto',
     query: {},
-    panel: 'request'
+    panel: 'request',
+    modifiedFlow: {headers: "", content: ""},
+    isFlowEditorOpen: false
 }
 
 export default function reducer(state = defaultState, action) {
@@ -31,9 +36,10 @@ export default function reducer(state = defaultState, action) {
             }
 
         case flowsActions.SELECT:
+            let s = {...state, isFlowEditorOpen: false}
             if (action.flowIds.length && !state.isFlowSelected) {
                 return {
-                    ...state,
+                    ...s,
                     displayLarge: false,
                     activeMenu: 'Flow',
                     isFlowSelected: true,
@@ -46,14 +52,14 @@ export default function reducer(state = defaultState, action) {
                     activeMenu = 'Start'
                 }
                 return {
-                    ...state,
+                    ...s,
                     activeMenu,
                     isFlowSelected: false,
                 }
             }
 
             return {
-                ...state,
+                ...s,
                 displayLarge: false,
             }
 
@@ -78,6 +84,7 @@ export default function reducer(state = defaultState, action) {
         case SELECT_TAB:
             return {
                 ...state,
+                isFlowEditorOpen: false,
                 panel: action.panel
             }
 
@@ -92,7 +99,21 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 displayLarge: action.displayLarge,
             }
-
+        case OPEN_FLOW_EDITOR:
+            return {
+                ...state,
+                isFlowEditorOpen: true
+            }
+        case CLOSE_FLOW_EDITOR:
+            return {
+                ...state,
+                isFlowEditorOpen: false
+            }
+        case SET_MODIFIED_FLOW_CONTENT:
+            return{
+                ...state,
+                modifiedFlow: {...state.modifiedFlow, content: action.content}
+            }
         default:
             return state
     }
@@ -124,6 +145,18 @@ export function setPrompt(open) {
 
 export function setDisplayLarge(displayLarge) {
     return { type: SET_DISPLAY_LARGE, displayLarge }
+}
+
+export function openFlowEditor(){
+    return { type: OPEN_FLOW_EDITOR }
+}
+
+export function closeFlowEditor(){
+    return { type: CLOSE_FLOW_EDITOR }
+}
+
+export function setModifiedFlowContent(content) {
+    return { type: SET_MODIFIED_FLOW_CONTENT, content }
 }
 
 export function onKeyDown(e) {
