@@ -48,7 +48,7 @@ def process_options(parser, options, args):
     if args.quiet:
         args.verbose = 0
     debug.register_info_dumpers()
-    return config.process_proxy_options(parser, options, args)
+    return config.ProxyConfig(options)
 
 
 def mitmproxy(args=None):  # pragma: no cover

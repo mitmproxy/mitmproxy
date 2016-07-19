@@ -4,10 +4,10 @@ from OpenSSL import SSL
 
 from mitmproxy import cmdline
 from mitmproxy.proxy import ProxyConfig
-from mitmproxy.proxy.config import process_proxy_options
 from mitmproxy.models.connections import ServerConnection
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.flow import options
+from mitmproxy.proxy import config
 from netlib.exceptions import TcpDisconnect
 from pathod import test
 from netlib.http import http1
@@ -61,7 +61,7 @@ class TestProcessProxyOptions:
         cmdline.common_options(parser)
         args = parser.parse_args(args=args)
         opts = cmdline.get_common_options(args)
-        pconf = process_proxy_options(parser, options.Options(**opts), args)
+        pconf = config.ProxyConfig(options.Options(**opts))
         return parser, pconf
 
     def assert_err(self, err, *args):

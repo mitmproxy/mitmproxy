@@ -189,7 +189,3 @@ class ProxyConfig:
                 password_manager,
                 "mitmproxy"
             )
-
-
-def process_proxy_options(parser, options, args):
-    return ProxyConfig(options)
