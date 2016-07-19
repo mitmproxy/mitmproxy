@@ -7,7 +7,6 @@ export const UPDATE_FILTER = 'FLOW_VIEWS_MAIN_UPDATE_FILTER'
 export const UPDATE_SORT = 'FLOW_VIEWS_MAIN_UPDATE_SORT'
 export const UPDATE_HIGHLIGHT = 'FLOW_VIEWS_MAIN_UPDATE_HIGHLIGHT'
 export const SELECT = 'FLOW_VIEWS_MAIN_SELECT'
-export const SELECT_RELATIVE = 'SELECT_RELATIVE'
 
 const sortKeyFuns = {
 
@@ -51,27 +50,6 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 selected: [action.id]
-            }
-
-        case SELECT_RELATIVE:
-            if(action.shift === null) {
-                return {
-                    ...state,
-                    selected: []
-                }
-            }
-            let id = state.selected[0]
-            let index = 0
-            if(!id && action.shift < 0) {
-                index = state.view.data.length - 1
-            } else if(id) {
-                index = state.view.indexOf[id] + action.shift
-                index = index < 0 ? 0 : index
-                index = index > state.view.data.length - 1 ? state.view.data.length - 1 : index
-            }
-            return {
-                ...state,
-                selected: [state.view.data[index].id]
             }
 
         case UPDATE_FILTER:
@@ -197,7 +175,18 @@ export function select(id) {
  */
 export function selectRelative(shift) {
     return (dispatch, getState) => {
-        dispatch({ type: SELECT_RELATIVE, currentSelection: getState().flows.views.main.selected[0], shift })
+        let currentSelection = getState().flows.views.main.selected[0]
+        let id
+        if (shift === null){
+            id = null
+        } else if (!currentSelection) {
+            id = (action.shift < 0) ? 0 : state.view.data.length - 1
+        } else {
+            id = state.view.indexOf[currentSelection] + action.shift
+            id = Math.max(id, 0)
+            id = Math.min(id, state.view.data.length - 1)
+        }
+        dispatch({ type: SELECT, currentSelection, id })
     }
 }
 

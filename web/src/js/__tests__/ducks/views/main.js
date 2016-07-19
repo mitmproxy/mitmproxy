@@ -61,6 +61,7 @@ function createTestStore(defaultState) {
     )
 }
 
+// TODO: We should not duplicate our reducer logic here.
 function makeState(flows, selected) {
     const list = {
         data: flows,

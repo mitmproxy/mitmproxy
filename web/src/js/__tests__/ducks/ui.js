@@ -68,6 +68,8 @@ function createTestStore(state) {
     )
 }
 
+
+// TODO: We should not duplicate our reducer logic here.
 function makeState(flows, selected) {
     return {
         flows: {
