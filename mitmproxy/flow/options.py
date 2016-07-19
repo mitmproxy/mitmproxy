@@ -39,6 +39,9 @@ class Options(options.Options):
             replay_ignore_host=False,  # type: bool
 
             # Proxy options
+            auth_nonanonymous=False,  # type: bool
+            auth_singleuser=None,  # type: Optional[str]
+            auth_htpasswd=None,  # type: Optional[str]
             add_upstream_certs_to_client_chain=False,  # type: bool
             body_size_limit=None,  # type: Optional[int]
             cadir = cmdline.CA_DIR,  # type: str
@@ -93,6 +96,9 @@ class Options(options.Options):
         self.replay_ignore_host = replay_ignore_host
 
         # Proxy options
+        self.auth_nonanonymous = auth_nonanonymous
+        self.auth_singleuser = auth_singleuser
+        self.auth_htpasswd = auth_htpasswd
         self.add_upstream_certs_to_client_chain = add_upstream_certs_to_client_chain
         self.body_size_limit = body_size_limit
         self.cadir = cadir

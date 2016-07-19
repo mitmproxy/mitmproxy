@@ -251,6 +251,9 @@ def get_common_options(args):
         replay_ignore_payload_params=args.replay_ignore_payload_params,
         replay_ignore_host=args.replay_ignore_host,
 
+        auth_nonanonymous = args.auth_nonanonymous,
+        auth_singleuser = args.auth_singleuser,
+        auth_htpasswd = args.auth_htpasswd,
         add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
         body_size_limit = body_size_limit,
         cadir = args.cadir,

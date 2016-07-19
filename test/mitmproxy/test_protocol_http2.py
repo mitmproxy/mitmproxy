@@ -106,9 +106,7 @@ class _Http2TestBase(object):
     def get_proxy_config(cls):
         opts = options.Options(listen_port=0, no_upstream_cert=False)
         opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        d = dict(
-            authenticator=None,
-        )
+        d = dict()
         return d, opts
 
     @property

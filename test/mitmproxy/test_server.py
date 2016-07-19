@@ -298,13 +298,8 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
 
 
 class TestHTTPAuth(tservers.HTTPProxyTest):
-    authenticator = http.authentication.BasicProxyAuth(
-        http.authentication.PassManSingleUser(
-            "test",
-            "test"),
-        "realm")
-
     def test_auth(self):
+        self.master.options.auth_singleuser = "test:test"
         assert self.pathod("202").status_code == 407
         p = self.pathoc()
         ret = p.request("""

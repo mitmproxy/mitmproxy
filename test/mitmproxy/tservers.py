@@ -78,7 +78,6 @@ class ProxyTestBase(object):
     ssl = None
     ssloptions = False
     no_upstream_cert = False
-    authenticator = None
     masterclass = TestMaster
     add_upstream_certs_to_client_chain = False
 
@@ -120,9 +119,7 @@ class ProxyTestBase(object):
     @classmethod
     def get_proxy_config(cls):
         cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        cnf = dict(
-            authenticator = cls.authenticator,
-        )
+        cnf = dict()
         return cnf, options.Options(
             listen_port=0,
             cadir=cls.cadir,

@@ -70,15 +70,10 @@ def parse_upstream_auth(auth):
 
 class ProxyConfig:
 
-    def __init__(
-            self,
-            options,
-            authenticator=None,
-    ):
+    def __init__(self, options):
         self.options = options
 
-        self.authenticator = authenticator
-
+        self.authenticator = None
         self.check_ignore = None
         self.check_tcp = None
         self.certstore = None
@@ -88,6 +83,20 @@ class ProxyConfig:
         options.changed.connect(self.configure)
 
     def configure(self, options):
+        conflict = all(
+            [
+                options.add_upstream_certs_to_client_chain,
+                options.ssl_verify_upstream_cert
+            ]
+        )
+        if conflict:
+            raise exceptions.OptionsError(
+                "The verify-upstream-cert and add-upstream-certs-to-client-chain "
+                "options are mutually exclusive. If upstream certificates are verified "
+                "then extra upstream certificates are not available for inclusion "
+                "to the client chain."
+            )
+
         if options.ssl_verify_upstream_cert:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER
         else:
@@ -141,46 +150,46 @@ class ProxyConfig:
         if options.upstream_auth:
             self.upstream_auth = parse_upstream_auth(options.upstream_auth)
 
-
-def process_proxy_options(parser, options, args):
-    if args.add_upstream_certs_to_client_chain and args.ssl_verify_upstream_cert:
-        return parser.error(
-            "The verify-upstream-cert and add-upstream-certs-to-client-chain "
-            "options are mutually exclusive. If upstream certificates are verified "
-            "then extra upstream certificates are not available for inclusion "
-            "to the client chain."
+        self.authenticator = authentication.NullProxyAuth(None)
+        needsauth = any(
+            [
+                options.auth_nonanonymous,
+                options.auth_singleuser,
+                options.auth_htpasswd
+            ]
         )
-    if args.auth_nonanonymous or args.auth_singleuser or args.auth_htpasswd:
-        if args.transparent_proxy:
-            return parser.error("Proxy Authentication not supported in transparent mode.")
-
-        if args.socks_proxy:
-            return parser.error(
-                "Proxy Authentication not supported in SOCKS mode. "
-                "https://github.com/mitmproxy/mitmproxy/issues/738"
+        if needsauth:
+            if options.mode == "transparent":
+                raise exceptions.OptionsError(
+                    "Proxy Authentication not supported in transparent mode."
+                )
+            elif options.mode == "socks5":
+                raise exceptions.OptionsError(
+                    "Proxy Authentication not supported in SOCKS mode. "
+                    "https://github.com/mitmproxy/mitmproxy/issues/738"
+                )
+            elif options.auth_singleuser:
+                parts = options.auth_singleuser.split(':')
+                if len(parts) != 2:
+                    raise exceptions.OptionsError(
+                        "Invalid single-user specification. "
+                        "Please use the format username:password"
+                    )
+                password_manager = authentication.PassManSingleUser(*parts)
+            elif options.auth_nonanonymous:
+                password_manager = authentication.PassManNonAnon()
+            elif options.auth_htpasswd:
+                try:
+                    password_manager = authentication.PassManHtpasswd(
+                        options.auth_htpasswd
+                    )
+                except ValueError as v:
+                    raise exceptions.OptionsError(str(v))
+            self.authenticator = authentication.BasicProxyAuth(
+                password_manager,
+                "mitmproxy"
             )
 
-        if args.auth_singleuser:
-            if len(args.auth_singleuser.split(':')) != 2:
-                return parser.error(
-                    "Invalid single-user specification. Please use the format username:password"
-                )
-            username, password = args.auth_singleuser.split(':')
-            password_manager = authentication.PassManSingleUser(username, password)
-        elif args.auth_nonanonymous:
-            password_manager = authentication.PassManNonAnon()
-        elif args.auth_htpasswd:
-            try:
-                password_manager = authentication.PassManHtpasswd(
-                    args.auth_htpasswd
-                )
-            except ValueError as v:
-                return parser.error(v)
-        authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
-    else:
-        authenticator = authentication.NullProxyAuth(None)
 
-    return ProxyConfig(
-        options,
-        authenticator=authenticator,
-    )
+def process_proxy_options(parser, options, args):
+    return ProxyConfig(options)
