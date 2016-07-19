@@ -196,10 +196,7 @@ class ConnectionItem(urwid.WidgetWrap):
             self.master.state.set_focus_flow(f)
             signals.flowlist_change.send(self)
         elif key == "m":
-            if self.state.flow_marked(self.flow):
-                self.state.set_flow_marked(self.flow, False)
-            else:
-                self.state.set_flow_marked(self.flow, True)
+            self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
         elif key == "M":
             if self.state.mark_filter:
