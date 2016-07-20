@@ -202,7 +202,7 @@ class DumpFlows(RequestHandler):
     def post(self):
         self.state.clear()
 
-        content = self.request.files.values()[0][0]["body"]
+        content = self.request.files.values()[0][0].body
         bio = BytesIO(content)
         self.state.load_flows(FlowReader(bio).stream())
         bio.close()
@@ -292,6 +292,20 @@ class ReplayFlow(RequestHandler):
 
 
 class FlowContent(RequestHandler):
+
+    def post (self, flow_id, message):
+        # handle request later now just change response content
+
+        flow = self.flow
+        flow.backup()
+        content = self.request.files.values()[0][0].body
+        if (message == "response"):
+            with models.decoded(flow.response):
+                flow.response.content = content
+        elif(message == "request"):
+            with models.decoded(flow.request):
+                flow.request.content = content
+        self.state.update_flow(flow)
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)

@@ -28,7 +28,8 @@
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
-    "shallowequal": "^0.2.2"
+    "shallowequal": "^0.2.2",
+    "react-codemirror" : "^0.2.6"
   },
   "devDependencies": {
     "babel-core": "^6.7.7",

@@ -6,6 +6,9 @@ import { Key, formatTimeStamp } from '../../utils.js'
 import ContentView from '../ContentView'
 import ValueEditor from '../ValueEditor'
 import Headers from './Headers'
+import * as flowActions  from '../../ducks/flows'
+import FlowEditorButton from './FlowEditorButton'
+
 
 class RequestLine extends Component {
 
@@ -76,20 +79,25 @@ class ResponseLine extends Component {
 }
 
 export class Request extends Component {
-
-    render() {
+   render() {
         const { flow, updateFlow } = this.props
+        let onContentChange = content => flowActions.updateContent(this.props.flow, content, "request")
 
         return (
             <section className="request">
+                <FlowEditorButton onContentChange={onContentChange}/>
                 <RequestLine ref="requestLine" flow={flow} updateFlow={updateFlow} />
                 <Headers
                     ref="headers"
                     message={flow.request}
                     onChange={headers => updateFlow({ request: { headers } })}
                 />
+
                 <hr/>
-                <ContentView flow={flow} message={flow.request}/>
+                <ContentView flow={flow}
+                             onContentChange={onContentChange}
+                             message={flow.request}
+                />
             </section>
         )
     }
@@ -116,11 +124,14 @@ export class Request extends Component {
 
 export class Response extends Component {
 
+
     render() {
         const { flow, updateFlow } = this.props
+        let onContentChange = content => flowActions.updateContent(this.props.flow, content, "response")
 
         return (
             <section className="response">
+                <FlowEditorButton onContentChange={onContentChange}/>
                 <ResponseLine ref="responseLine" flow={flow} updateFlow={updateFlow} />
                 <Headers
                     ref="headers"
@@ -128,7 +139,10 @@ export class Response extends Component {
                     onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.response}/>
+                <ContentView flow={flow}
+                             onContentChange={onContentChange}
+                             message={flow.response}
+                />
             </section>
         )
     }

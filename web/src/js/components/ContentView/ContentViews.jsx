@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils.js'
 
+
 const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw]
 
 ViewImage.regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i

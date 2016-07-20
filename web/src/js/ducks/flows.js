@@ -16,6 +16,7 @@ export const UNKNOWN_CMD = 'FLOWS_UNKNOWN_CMD'
 export const FETCH_ERROR = 'FLOWS_FETCH_ERROR'
 export const SELECT = 'FLOWS_SELECT'
 
+
 const defaultState = {
     selected: [],
     ...reduceList(undefined, {}),
@@ -117,6 +118,16 @@ export function update(flow, data) {
     fetchApi.put(`/flows/${flow.id}`, data)
     return { type: REQUEST_ACTION }
 }
+
+export function updateContent(flow, file, type) {
+    const body = new FormData()
+    if (typeof file !== File)
+        file = new Blob([file], {type: 'plain/text'})
+    body.append('file', file)
+    fetchApi(`/flows/${flow.id}/${type}/content`, {method: 'post',  body} )
+    return { type: REQUEST_ACTION }
+}
+
 
 /**
  * @public

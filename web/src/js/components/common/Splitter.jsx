@@ -12,6 +12,7 @@ export default class Splitter extends Component {
         this.state = { applied: false, startX: false, startY: false }
 
         this.onMouseMove = this.onMouseMove.bind(this)
+        this.onMouseDown = this.onMouseDown.bind(this)
         this.onMouseUp = this.onMouseUp.bind(this)
         this.onDragEnd = this.onDragEnd.bind(this)
     }
