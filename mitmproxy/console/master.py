@@ -67,7 +67,6 @@ class ConsoleState(flow.State):
     def add_flow(self, f):
         super(ConsoleState, self).add_flow(f)
         self.update_focus()
-        self.set_flow_marked(f, False)
         return f
 
     def update_flow(self, f):
@@ -152,12 +151,6 @@ class ConsoleState(flow.State):
         else:
             self.focus = 0
         self.set_focus(self.focus)
-
-    def flow_marked(self, flow):
-        return self.get_flow_setting(flow, "marked", False)
-
-    def set_flow_marked(self, flow, marked):
-        self.add_flow_setting(flow, "marked", marked)
 
 
 class Options(mitmproxy.options.Options):
