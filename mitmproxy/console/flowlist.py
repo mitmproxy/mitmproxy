@@ -14,7 +14,7 @@ def _mkhelp():
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
-        ("C", "clear flow list or eventlog"),
+        ("C", "export flow to clipboard"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
@@ -24,14 +24,14 @@ def _mkhelp():
         ("m", "toggle flow mark"),
         ("M", "toggle marked flow view"),
         ("n", "create a new request"),
-        ("p", "export flow to file"),
-        ("P", "export flow to clipboard"),
+        ("E", "export flow to file"),
         ("r", "replay request"),
         ("U", "unmark all marked flows"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
         ("W", "stream flows to file"),
         ("X", "kill and delete flow, even if it's mid-intercept"),
+        ("z", "clear flow list or eventlog"),
         ("tab", "tab between eventlog and flow list"),
         ("enter", "view flow"),
         ("|", "run script on this flow"),
@@ -53,7 +53,7 @@ class LogBufferBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "C":
+        if key == "z":
             self.master.clear_events()
             key = None
         elif key == "G":
@@ -264,7 +264,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
-        elif key == "p":
+        elif key == "E":
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export to file",
@@ -272,7 +272,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = common.export_to_clip_or_file,
                 args = (None, self.flow, common.ask_save_path)
             )
-        elif key == "P":
+        elif key == "C":
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export to clipboard",
@@ -363,7 +363,7 @@ class FlowListBox(urwid.ListBox):
         if key == "A":
             self.master.accept_all()
             signals.flowlist_change.send(self)
-        elif key == "C":
+        elif key == "z":
             self.master.clear_flows()
         elif key == "e":
             self.master.toggle_eventlog()

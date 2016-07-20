@@ -33,6 +33,7 @@ def _mkhelp():
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
+        ("C", "export flow to clipboard"),
         ("D", "duplicate flow"),
         ("d", "delete flow"),
         ("e", "edit request/response"),
@@ -75,8 +76,7 @@ def _mkhelp():
          [("text", ": XML")]
          ),
         ("M", "change default body display mode"),
-        ("p", "export flow to file"),
-        ("P", "export flow to clipboard"),
+        ("E", "export flow to file"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
@@ -596,7 +596,7 @@ class FlowView(tabs.Tabs):
                 args = (self.flow,)
             )
 
-        if not conn and key in set(list("befgmxvzpP")):
+        if not conn and key in set(list("befgmxvzEC")):
             signals.status_message.send(
                 message = "Tab to the request or response",
                 expire = 1
@@ -659,7 +659,7 @@ class FlowView(tabs.Tabs):
                     callback = self.change_this_display_mode
                 )
                 key = None
-            elif key == "p":
+            elif key == "E":
                 if self.tab_offset == TAB_REQ:
                     scope = "q"
                 else:
@@ -671,7 +671,7 @@ class FlowView(tabs.Tabs):
                     callback = common.export_to_clip_or_file,
                     args = (scope, self.flow, common.ask_save_path)
                 )
-            elif key == "P":
+            elif key == "C":
                 if self.tab_offset == TAB_REQ:
                     scope = "q"
                 else:
