@@ -188,9 +188,9 @@ def load(file_handle):
 
 
 def parse(data_type, data):
+    # type: (int, bytes) -> TSerializable
     if six.PY2:
         data_type = ord(data_type)
-    # type: (int, bytes) -> TSerializable
     if data_type == ord(b','):
         return data
     if data_type == ord(b';'):

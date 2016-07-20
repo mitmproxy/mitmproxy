@@ -12,7 +12,7 @@ from typing import Union  # noqa
 
 
 def decode(obj, encoding, errors='strict'):
-    # type: (Union[str, bytes], str) -> Union[str, bytes]
+    # type: (Union[str, bytes], str, str) -> Union[str, bytes]
     """
     Decode the given input object
 
@@ -36,7 +36,7 @@ def decode(obj, encoding, errors='strict'):
 
 
 def encode(obj, encoding, errors='strict'):
-    # type: (Union[str, bytes], str) -> Union[str, bytes]
+    # type: (Union[str, bytes], str, str) -> Union[str, bytes]
     """
     Encode the given input object
 
