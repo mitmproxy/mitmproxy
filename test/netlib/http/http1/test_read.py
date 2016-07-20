@@ -13,6 +13,7 @@ from netlib.http.http1.read import (
     _read_headers, _read_chunked, get_header_tokens
 )
 from netlib.tutils import treq, tresp, raises
+from netlib import exceptions
 
 
 def test_get_header_tokens():
@@ -40,6 +41,14 @@ def test_read_request(input):
     assert r.http_version == "HTTP/1.1"
     assert r.timestamp_end
     assert rfile.read() == b"skip"
+
+
+@pytest.mark.parametrize("input", [
+    b"CONNECT :0 0",
+])
+def test_read_request_error(input):
+    rfile = BytesIO(input)
+    raises(exceptions.HttpException, read_request, rfile)
 
 
 def test_read_request_head():
