@@ -34,6 +34,7 @@ from mitmproxy.console import palettes
 from mitmproxy.console import signals
 from mitmproxy.console import statusbar
 from mitmproxy.console import window
+from mitmproxy.filt import FMarked
 from netlib import tcp, strutils
 
 EVENTLOG_SIZE = 500
@@ -48,7 +49,7 @@ class ConsoleState(flow.State):
         self.default_body_view = contentviews.get("Auto")
         self.flowsettings = weakref.WeakKeyDictionary()
         self.last_search = None
-        self.last_filter = None
+        self.last_filter = ""
         self.mark_filter = False
 
     def __setattr__(self, name, value):
@@ -123,36 +124,20 @@ class ConsoleState(flow.State):
         self.set_focus(self.focus)
         return ret
 
-    def filter_marked(self, m):
-        def actual_func(x):
-            if x.id in m:
-                return True
-            return False
-        return actual_func
-
     def enable_marked_filter(self):
         self.last_filter = self.limit_txt
-        marked_flows = []
-        for f in self.flows:
-            if self.flow_marked(f):
-                marked_flows.append(f.id)
+        marked_flows = [f for f in self.flows if f.marked]
         if len(marked_flows) > 0:
-            f = self.filter_marked(marked_flows)
-            self.view._close()
-            self.view = flow.FlowView(self.flows, f)
-            self.focus = 0
-            self.set_focus(self.focus)
+            self.last_filter = self.limit_txt
+            self.set_limit("~%s" % FMarked.code)
             self.mark_filter = True
+            self.set_focus(0)
 
     def disable_marked_filter(self):
-        if self.last_filter is None:
-            self.view = flow.FlowView(self.flows, None)
-        else:
-            self.set_limit(self.last_filter)
-        self.focus = 0
-        self.set_focus(self.focus)
-        self.last_filter = None
+        self.set_limit(self.last_filter)
+        self.last_filter = ""
         self.mark_filter = False
+        self.set_focus(0)
 
     def clear(self):
         marked_flows = []
