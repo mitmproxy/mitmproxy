@@ -140,16 +140,12 @@ class ConsoleState(flow.State):
         self.set_focus(0)
 
     def clear(self):
-        marked_flows = []
-        for f in self.flows:
-            if self.flow_marked(f):
-                marked_flows.append(f)
-
+        marked_flows = [f for f in self.state.view if f.marked]
         super(ConsoleState, self).clear()
 
         for f in marked_flows:
             self.add_flow(f)
-            self.set_flow_marked(f, True)
+            f.marked = True
 
         if len(self.flows.views) == 0:
             self.focus = None
