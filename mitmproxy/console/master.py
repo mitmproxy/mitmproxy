@@ -462,6 +462,7 @@ class ConsoleMaster(flow.FlowMaster):
             screen = self.ui,
             handle_mouse = not self.options.no_mouse,
         )
+        self.ab = statusbar.ActionBar()
 
         if self.options.rfile:
             ret = self.load_flows_path(self.options.rfile)

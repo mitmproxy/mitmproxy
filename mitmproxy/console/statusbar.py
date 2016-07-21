@@ -120,9 +120,8 @@ class StatusBar(urwid.WidgetWrap):
         # type: (mitmproxy.console.master.ConsoleMaster, object) -> None
         self.master = master
         self.helptext = helptext
-        self.ab = ActionBar()
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        super(StatusBar, self).__init__(urwid.Pile([self.ib, self.ab]))
+        super(StatusBar, self).__init__(urwid.Pile([self.ib, self.master.ab]))
         signals.update_settings.connect(self.sig_update_settings)
         signals.flowlist_change.connect(self.sig_update_settings)
         master.options.changed.connect(self.sig_update_settings)
@@ -132,7 +131,7 @@ class StatusBar(urwid.WidgetWrap):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
-        return self.ab.keypress(*args, **kwargs)
+        return self.master.ab.keypress(*args, **kwargs)
 
     def get_status(self):
         r = []
