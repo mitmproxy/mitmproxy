@@ -7,9 +7,9 @@ import urwid.util
 import six
 
 import netlib
-from mitmproxy import flow
 from mitmproxy import utils
 from mitmproxy.console import signals
+from mitmproxy.flow import export
 from netlib import human
 
 try:
@@ -129,6 +129,202 @@ else:
     SYMBOL_MARK = "[m]"
 
 
+# Save file to disk
+def save_data(path, data):
+    if not path:
+        return
+    try:
+        with open(path, "wb") as f:
+            f.write(data)
+    except IOError as v:
+        signals.status_message.send(message=v.strerror)
+
+
+def ask_save_overwrite(path, data):
+    if not path:
+        return
+    path = os.path.expanduser(path)
+    if os.path.exists(path):
+        def save_overwrite(k):
+            if k == "y":
+                save_data(path, data)
+
+        signals.status_prompt_onekey.send(
+            prompt = "'" + path + "' already exists. Overwrite?",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = save_overwrite
+        )
+    else:
+        save_data(path, data)
+
+
+def ask_save_path(data, prompt="File path"):
+    signals.status_prompt_path.send(
+        prompt = prompt,
+        callback = ask_save_overwrite,
+        args = (data, )
+    )
+
+
+def ask_scope_and_callback(flow, cb, *args):
+    request_has_content = flow.request and flow.request.raw_content
+    response_has_content = flow.response and flow.response.raw_content
+
+    if request_has_content and response_has_content:
+        signals.status_prompt_onekey.send(
+            prompt = "Save",
+            keys = (
+                ("request", "q"),
+                ("response", "s"),
+                ("both", "b"),
+            ),
+            callback = cb,
+            args = (flow,) + args
+        )
+    elif response_has_content:
+        cb("s", flow, *args)
+    else:
+        cb("q", flow, *args)
+
+
+def copy_to_clipboard_or_prompt(data):
+    # pyperclip calls encode('utf-8') on data to be copied without checking.
+    # if data are already encoded that way UnicodeDecodeError is thrown.
+    toclip = ""
+    try:
+        toclip = data.decode('utf-8')
+    except (UnicodeDecodeError):
+        toclip = data
+
+    try:
+        pyperclip.copy(toclip)
+    except (RuntimeError, UnicodeDecodeError, AttributeError, TypeError):
+        def save(k):
+            if k == "y":
+                ask_save_path(data, "Save data")
+        signals.status_prompt_onekey.send(
+            prompt = "Cannot copy data to clipboard. Save as file?",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = save
+        )
+
+
+def format_flow_data(key, scope, flow):
+    data = ""
+    if scope in ("q", "b"):
+        request = flow.request.copy()
+        request.decode(strict=False)
+        if request.content is None:
+            return None, "Request content is missing"
+        if key == "h":
+            data += netlib.http.http1.assemble_request(request)
+        elif key == "c":
+            data += request.get_content(strict=False)
+        else:
+            raise ValueError("Unknown key: {}".format(key))
+    if scope == "b" and flow.request.raw_content and flow.response:
+        # Add padding between request and response
+        data += "\r\n" * 2
+    if scope in ("s", "b") and flow.response:
+        response = flow.response.copy()
+        response.decode(strict=False)
+        if response.content is None:
+            return None, "Response content is missing"
+        if key == "h":
+            data += netlib.http.http1.assemble_response(response)
+        elif key == "c":
+            data += response.get_content(strict=False)
+        else:
+            raise ValueError("Unknown key: {}".format(key))
+    return data, False
+
+
+def handle_flow_data(scope, flow, key, writer):
+    """
+    key: _c_ontent, _h_eaders+content, _u_rl
+    scope: re_q_uest, re_s_ponse, _b_oth
+    writer: copy_to_clipboard_or_prompt, ask_save_path
+    """
+    data, err = format_flow_data(key, scope, flow)
+
+    if err:
+        signals.status_message.send(message=err)
+        return
+
+    if not data:
+        if scope == "q":
+            signals.status_message.send(message="No request content.")
+        elif scope == "s":
+            signals.status_message.send(message="No response content.")
+        else:
+            signals.status_message.send(message="No content.")
+        return
+
+    writer(data)
+
+
+def ask_save_body(scope, flow):
+    """
+    Save either the request or the response body to disk.
+
+    scope: re_q_uest, re_s_ponse, _b_oth, None (ask user if necessary)
+    """
+
+    request_has_content = flow.request and flow.request.raw_content
+    response_has_content = flow.response and flow.response.raw_content
+
+    if scope is None:
+        ask_scope_and_callback(flow, ask_save_body)
+    elif scope == "q" and request_has_content:
+        ask_save_path(
+            flow.request.get_content(strict=False),
+            "Save request content to"
+        )
+    elif scope == "s" and response_has_content:
+        ask_save_path(
+            flow.response.get_content(strict=False),
+            "Save response content to"
+        )
+    elif scope == "b" and request_has_content and response_has_content:
+        ask_save_path(
+            (flow.request.get_content(strict=False) + "\n" +
+             flow.response.get_content(strict=False)),
+            "Save request & response content to"
+        )
+    else:
+        signals.status_message.send(message="No content.")
+
+
+def export_to_clip_or_file(key, scope, flow, writer):
+    """
+    Export selected flow to clipboard or a file.
+
+    key:    _c_ontent, _h_eaders+content, _u_rl,
+            cu_r_l_command, _p_ython_code,
+            _l_ocust_code, locust_t_ask
+    scope:  None, _a_ll, re_q_uest, re_s_ponse
+    writer: copy_to_clipboard_or_prompt, ask_save_path
+    """
+
+    for _, exp_key, exporter in export.EXPORTERS:
+        if key == exp_key:
+            if exporter is None:  # 'c' & 'h'
+                if scope is None:
+                    ask_scope_and_callback(flow, handle_flow_data, key, writer)
+                else:
+                    handle_flow_data(scope, flow, key, writer)
+            else:  # other keys
+                writer(exporter(flow))
+
+flowcache = utils.LRUCache(800)
+
+
 def raw_format_flow(f, focus, extended):
     f = dict(f)
     pile = []
@@ -209,199 +405,6 @@ def raw_format_flow(f, focus, extended):
         )
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
-
-
-# Save file to disk
-def save_data(path, data):
-    if not path:
-        return
-    try:
-        with open(path, "wb") as f:
-            f.write(data)
-    except IOError as v:
-        signals.status_message.send(message=v.strerror)
-
-
-def ask_save_overwrite(path, data):
-    if not path:
-        return
-    path = os.path.expanduser(path)
-    if os.path.exists(path):
-        def save_overwrite(k):
-            if k == "y":
-                save_data(path, data)
-
-        signals.status_prompt_onekey.send(
-            prompt = "'" + path + "' already exists. Overwrite?",
-            keys = (
-                ("yes", "y"),
-                ("no", "n"),
-            ),
-            callback = save_overwrite
-        )
-    else:
-        save_data(path, data)
-
-
-def ask_save_path(prompt, data):
-    signals.status_prompt_path.send(
-        prompt = prompt,
-        callback = ask_save_overwrite,
-        args = (data, )
-    )
-
-
-def copy_flow_format_data(part, scope, flow):
-    if part == "u":
-        data = flow.request.url
-    else:
-        data = ""
-        if scope in ("q", "a"):
-            request = flow.request.copy()
-            request.decode(strict=False)
-            if request.content is None:
-                return None, "Request content is missing"
-            if part == "h":
-                data += netlib.http.http1.assemble_request(request)
-            elif part == "c":
-                data += request.content
-            else:
-                raise ValueError("Unknown part: {}".format(part))
-        if scope == "a" and flow.request.raw_content and flow.response:
-            # Add padding between request and response
-            data += "\r\n" * 2
-        if scope in ("s", "a") and flow.response:
-            response = flow.response.copy()
-            response.decode(strict=False)
-            if response.content is None:
-                return None, "Response content is missing"
-            if part == "h":
-                data += netlib.http.http1.assemble_response(response)
-            elif part == "c":
-                data += response.content
-            else:
-                raise ValueError("Unknown part: {}".format(part))
-    return data, False
-
-
-def export_prompt(k, f):
-    exporters = {
-        "c": flow.export.curl_command,
-        "p": flow.export.python_code,
-        "r": flow.export.raw_request,
-        "l": flow.export.locust_code,
-        "t": flow.export.locust_task,
-    }
-    if k in exporters:
-        copy_to_clipboard_or_prompt(exporters[k](f))
-
-
-def copy_to_clipboard_or_prompt(data):
-    # pyperclip calls encode('utf-8') on data to be copied without checking.
-    # if data are already encoded that way UnicodeDecodeError is thrown.
-    toclip = ""
-    try:
-        toclip = data.decode('utf-8')
-    except (UnicodeDecodeError):
-        toclip = data
-
-    try:
-        pyperclip.copy(toclip)
-    except (RuntimeError, UnicodeDecodeError, AttributeError, TypeError):
-        def save(k):
-            if k == "y":
-                ask_save_path("Save data", data)
-        signals.status_prompt_onekey.send(
-            prompt = "Cannot copy data to clipboard. Save as file?",
-            keys = (
-                ("yes", "y"),
-                ("no", "n"),
-            ),
-            callback = save
-        )
-
-
-def copy_flow(part, scope, flow, master, state):
-    """
-    part: _c_ontent, _h_eaders+content, _u_rl
-    scope: _a_ll, re_q_uest, re_s_ponse
-    """
-    data, err = copy_flow_format_data(part, scope, flow)
-
-    if err:
-        signals.status_message.send(message=err)
-        return
-
-    if not data:
-        if scope == "q":
-            signals.status_message.send(message="No request content to copy.")
-        elif scope == "s":
-            signals.status_message.send(message="No response content to copy.")
-        else:
-            signals.status_message.send(message="No contents to copy.")
-        return
-
-    copy_to_clipboard_or_prompt(data)
-
-
-def ask_copy_part(scope, flow, master, state):
-    choices = [
-        ("content", "c"),
-        ("headers+content", "h")
-    ]
-    if scope != "s":
-        choices.append(("url", "u"))
-
-    signals.status_prompt_onekey.send(
-        prompt = "Copy",
-        keys = choices,
-        callback = copy_flow,
-        args = (scope, flow, master, state)
-    )
-
-
-def ask_save_body(part, master, state, flow):
-    """
-    Save either the request or the response body to disk. part can either be
-    "q" (request), "s" (response) or None (ask user if necessary).
-    """
-
-    request_has_content = flow.request and flow.request.raw_content
-    response_has_content = flow.response and flow.response.raw_content
-
-    if part is None:
-        # We first need to determine whether we want to save the request or the
-        # response content.
-        if request_has_content and response_has_content:
-            signals.status_prompt_onekey.send(
-                prompt = "Save",
-                keys = (
-                    ("request", "q"),
-                    ("response", "s"),
-                ),
-                callback = ask_save_body,
-                args = (master, state, flow)
-            )
-        elif response_has_content:
-            ask_save_body("s", master, state, flow)
-        else:
-            ask_save_body("q", master, state, flow)
-
-    elif part == "q" and request_has_content:
-        ask_save_path(
-            "Save request content",
-            flow.request.get_content(strict=False),
-        )
-    elif part == "s" and response_has_content:
-        ask_save_path(
-            "Save response content",
-            flow.response.get_content(strict=False),
-        )
-    else:
-        signals.status_message.send(message="No content to save.")
-
-
-flowcache = utils.LRUCache(800)
 
 
 def format_flow(f, focus, extended=False, hostheader=False, marked=False):

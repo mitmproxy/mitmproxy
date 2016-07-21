@@ -5,6 +5,7 @@ import urwid
 import netlib.http.url
 from mitmproxy.console import common
 from mitmproxy.console import signals
+from mitmproxy.flow import export
 
 
 def _mkhelp():
@@ -13,10 +14,9 @@ def _mkhelp():
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
-        ("C", "clear flow list or eventlog"),
+        ("C", "export flow to clipboard"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
-        ("E", "export"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
         ("l", "set limit filter pattern"),
@@ -24,13 +24,14 @@ def _mkhelp():
         ("m", "toggle flow mark"),
         ("M", "toggle marked flow view"),
         ("n", "create a new request"),
-        ("P", "copy flow to clipboard"),
+        ("E", "export flow to file"),
         ("r", "replay request"),
         ("U", "unmark all marked flows"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
         ("W", "stream flows to file"),
         ("X", "kill and delete flow, even if it's mid-intercept"),
+        ("z", "clear flow list or eventlog"),
         ("tab", "tab between eventlog and flow list"),
         ("enter", "view flow"),
         ("|", "run script on this flow"),
@@ -52,7 +53,7 @@ class LogBufferBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "C":
+        if key == "z":
             self.master.clear_events()
             key = None
         elif key == "G":
@@ -151,8 +152,8 @@ class ConnectionItem(urwid.WidgetWrap):
         if k == "a":
             self.master.start_server_playback(
                 [i.copy() for i in self.master.state.view],
-                self.master.options.kill, self.master.rheaders,
-                False, self.master.nopop,
+                self.master.options.kill, self.master.options.rheaders,
+                False, self.master.options.nopop,
                 self.master.options.replay_ignore_params,
                 self.master.options.replay_ignore_content,
                 self.master.options.replay_ignore_payload_params,
@@ -161,8 +162,8 @@ class ConnectionItem(urwid.WidgetWrap):
         elif k == "t":
             self.master.start_server_playback(
                 [self.flow.copy()],
-                self.master.options.kill, self.master.rheaders,
-                False, self.master.nopop,
+                self.master.options.kill, self.master.options.rheaders,
+                False, self.master.options.nopop,
                 self.master.options.replay_ignore_params,
                 self.master.options.replay_ignore_content,
                 self.master.options.replay_ignore_payload_params,
@@ -263,24 +264,24 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
-        elif key == "P":
-            common.ask_copy_part("a", self.flow, self.master, self.state)
         elif key == "E":
             signals.status_prompt_onekey.send(
                 self,
-                prompt = "Export",
-                keys = (
-                    ("as curl command", "c"),
-                    ("as python code", "p"),
-                    ("as raw request", "r"),
-                    ("as locust code", "l"),
-                    ("as locust task", "t"),
-                ),
-                callback = common.export_prompt,
-                args = (self.flow,)
+                prompt = "Export to file",
+                keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                callback = common.export_to_clip_or_file,
+                args = (None, self.flow, common.ask_save_path)
+            )
+        elif key == "C":
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Export to clipboard",
+                keys = [(e[0], e[1]) for e in export.EXPORTERS],
+                callback = common.export_to_clip_or_file,
+                args = (None, self.flow, common.copy_to_clipboard_or_prompt)
             )
         elif key == "b":
-            common.ask_save_body(None, self.master, self.state, self.flow)
+            common.ask_save_body(None, self.flow)
         else:
             return key
 
@@ -362,7 +363,7 @@ class FlowListBox(urwid.ListBox):
         if key == "A":
             self.master.accept_all()
             signals.flowlist_change.send(self)
-        elif key == "C":
+        elif key == "z":
             self.master.clear_flows()
         elif key == "e":
             self.master.toggle_eventlog()

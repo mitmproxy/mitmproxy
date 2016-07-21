@@ -1,4 +1,3 @@
-from textwrap import dedent
 import re
 
 import netlib.tutils
@@ -70,41 +69,6 @@ class TestExportPythonCode():
         python_equals("data/test_flow_export/python_patch.py", export.python_code(flow))
 
 
-class TestRawRequest():
-    def test_get(self):
-        flow = tutils.tflow(req=req_get())
-        result = dedent("""
-            GET /path?a=foo&a=bar&b=baz HTTP/1.1\r
-            header: qvalue\r
-            content-length: 7\r
-            host: address:22\r
-            \r
-        """).strip(" ").lstrip()
-        assert export.raw_request(flow) == result
-
-    def test_post(self):
-        flow = tutils.tflow(req=req_post())
-        result = dedent("""
-            POST /path HTTP/1.1\r
-            host: address:22\r
-            \r
-            content
-        """).strip()
-        assert export.raw_request(flow) == result
-
-    def test_patch(self):
-        flow = tutils.tflow(req=req_patch())
-        result = dedent("""
-            PATCH /path?query=param HTTP/1.1\r
-            header: qvalue\r
-            content-length: 7\r
-            host: address:22\r
-            \r
-            content
-        """).strip()
-        assert export.raw_request(flow) == result
-
-
 class TestExportLocustCode():
     def test_get(self):
         flow = tutils.tflow(req=req_get())
@@ -153,3 +117,9 @@ class TestIsJson():
         headers = Headers(content_type="application/json")
         j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
         assert isinstance(j, dict)
+
+
+class TestURL():
+    def test_url(self):
+        flow = tutils.tflow()
+        assert export.url(flow) == "http://address:22/path"

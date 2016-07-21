@@ -82,7 +82,7 @@ _label_valid = re.compile(b"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
 def is_valid_host(host):
     # type: (bytes) -> bool
     """
-    Checks if a hostname is valid.
+        Checks if a hostname is valid.
     """
     try:
         host.decode("idna")
@@ -90,7 +90,7 @@ def is_valid_host(host):
         return False
     if len(host) > 255:
         return False
-    if host[-1] == b".":
+    if host and host[-1:] == b".":
         host = host[:-1]
     return all(_label_valid.match(x) for x in host.split(b"."))
 
