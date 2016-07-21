@@ -1,7 +1,9 @@
-import _ from "lodash";
+import _ from 'lodash'
+import React from 'react'
+import shallowEqual from 'shallowequal'
 
 window._ = _;
-window.React = require("react");
+window.React = React;
 
 export var Key = {
     UP: 38,
@@ -105,3 +107,16 @@ fetchApi.put = (url, json, options) => fetchApi(
         ...options
     }
 )
+
+export const pure = renderFn => class extends React.Component {
+    static displayName = renderFn.name
+
+    shouldComponentUpdate(nextProps) {
+        console.log(!shallowEqual(this.props, nextProps))
+        return !shallowEqual(this.props, nextProps)
+    }
+
+    render() {
+        return renderFn(this.props)
+    }
+}
