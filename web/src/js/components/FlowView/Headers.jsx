@@ -1,12 +1,21 @@
 import React, { Component, PropTypes } from 'react'
 import ReactDOM from 'react-dom'
-import ValueEditor from '../ValueEditor'
-import { Key } from '../../utils.js'
+import ValueEditor from '../ValueEditor/ValueEditor'
+import { Key } from '../../utils'
 
 class HeaderEditor extends Component {
 
+    constructor(props) {
+        super(props)
+        this.onKeyDown = this.onKeyDown.bind(this)
+    }
+
     render() {
-        return <ValueEditor ref="input" {...this.props} onKeyDown={this.onKeyDown} inline/>
+        let { onTab, ...props } = this.props
+        return <ValueEditor
+            {...props}
+            onKeyDown={this.onKeyDown}
+        />
     }
 
     focus() {
@@ -21,6 +30,7 @@ class HeaderEditor extends Component {
                     this.props.onRemove(e)
                 }
                 break
+            case Key.ENTER:
             case Key.TAB:
                 if (!e.shiftKey) {
                     this.props.onTab(e)
@@ -66,7 +76,12 @@ export default class Headers extends Component {
     onTab(row, col, e) {
         const headers = this.props.message.headers
 
-        if (row !== headers.length - 1 || col !== 1) {
+        if (col === 0) {
+            this._nextSel = `${row}-value`
+            return
+        }
+        if (row !== headers.length - 1) {
+            this._nextSel = `${row + 1}-key`
             return
         }
 
@@ -96,33 +111,35 @@ export default class Headers extends Component {
     }
 
     render() {
-        const { message } = this.props
+        const { message, readonly } = this.props
 
         return (
             <table className="header-table">
                 <tbody>
-                    {message.headers.map((header, i) => (
-                        <tr key={i}>
-                            <td className="header-name">
-                                <HeaderEditor
-                                    ref={`${i}-key`}
-                                    content={header[0]}
-                                    onDone={val => this.onChange(i, 0, val)}
-                                    onRemove={event => this.onRemove(i, 0, event)}
-                                    onTab={event => this.onTab(i, 0, event)}
-                                />:
-                            </td>
-                            <td className="header-value">
-                                <HeaderEditor
-                                    ref={`${i}-value`}
-                                    content={header[1]}
-                                    onDone={val => this.onChange(i, 1, val)}
-                                    onRemove={event => this.onRemove(i, 1, event)}
-                                    onTab={event => this.onTab(i, 1, event)}
-                                />
-                            </td>
-                        </tr>
-                    ))}
+                {message.headers.map((header, i) => (
+                    <tr key={i}>
+                        <td className="header-name">
+                            <HeaderEditor
+                                ref={`${i}-key`}
+                                content={header[0]}
+                                readonly={readonly}
+                                onDone={val => this.onChange(i, 0, val)}
+                                onRemove={event => this.onRemove(i, 0, event)}
+                                onTab={event => this.onTab(i, 0, event)}
+                            />:
+                        </td>
+                        <td className="header-value">
+                            <HeaderEditor
+                                ref={`${i}-value`}
+                                content={header[1]}
+                                readonly={readonly}
+                                onDone={val => this.onChange(i, 1, val)}
+                                onRemove={event => this.onRemove(i, 1, event)}
+                                onTab={event => this.onTab(i, 1, event)}
+                            />
+                        </td>
+                    </tr>
+                ))}
                 </tbody>
             </table>
         )

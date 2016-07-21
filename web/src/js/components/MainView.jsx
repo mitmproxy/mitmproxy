@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Query } from '../actions.js'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
@@ -12,19 +11,6 @@ class MainView extends Component {
     static propTypes = {
         highlight: PropTypes.string,
         sort: PropTypes.object,
-    }
-
-    /**
-     * @todo move to actions
-     * @todo replace with mapStateToProps
-     */
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.location.query[Query.SEARCH] !== nextProps.filter) {
-            this.props.updateFilter(nextProps.location.query[Query.SEARCH], false)
-        }
-        if (nextProps.location.query[Query.HIGHLIGHT] !== nextProps.highlight) {
-            this.props.updateHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
-        }
     }
 
     render() {
@@ -66,9 +52,5 @@ export default connect(
         updateFilter,
         updateHighlight,
         updateFlow: flowsActions.update,
-    },
-    undefined,
-    {
-        withRef: true
     }
 )(MainView)

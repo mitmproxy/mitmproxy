@@ -1,171 +1,179 @@
 import React, { Component, PropTypes } from 'react'
-import _ from 'lodash'
+import { connect } from 'react-redux'
 
-import { RequestUtils, isValidHttpVersion, parseUrl, parseHttpVersion } from '../../flow/utils.js'
-import { Key, formatTimeStamp } from '../../utils.js'
+
+import { RequestUtils, isValidHttpVersion, parseUrl } from '../../flow/utils.js'
+import { formatTimeStamp } from '../../utils.js'
 import ContentView from '../ContentView'
-import ValueEditor from '../ValueEditor'
+import ValidateEditor from '../ValueEditor/ValidateEditor'
+import ValueEditor from '../ValueEditor/ValueEditor'
+
 import Headers from './Headers'
-import * as flowActions  from '../../ducks/flows'
-import FlowEditorButton from './FlowEditorButton'
+import { startEdit, updateEdit } from '../../ducks/ui/flow'
+import ToggleEdit from './ToggleEdit'
 
-
-class RequestLine extends Component {
-
-    render() {
-        const { flow, updateFlow } = this.props
-
-        return (
-            <div className="first-line request-line">
+function RequestLine({ flow, readonly, updateFlow }) {
+    return (
+        <div className="first-line request-line">
+            <div>
                 <ValueEditor
-                    ref="method"
                     content={flow.request.method}
+                    readonly={readonly}
                     onDone={method => updateFlow({ request: { method } })}
-                    inline
                 />
                 &nbsp;
-                <ValueEditor
-                    ref="url"
+                <ValidateEditor
                     content={RequestUtils.pretty_url(flow.request)}
-                    onDone={url => updateFlow({ request: Object.assign({ path: '' }, parseUrl(url)) })}
+                    readonly={readonly}
+                    onDone={url => updateFlow({ request: {path: '', ...parseUrl(url)}})}
                     isValid={url => !!parseUrl(url).host}
-                    inline
                 />
                 &nbsp;
-                <ValueEditor
-                    ref="httpVersion"
+                <ValidateEditor
                     content={flow.request.http_version}
-                    onDone={ver => updateFlow({ request: { http_version: parseHttpVersion(ver) } })}
+                    readonly={readonly}
+                    onDone={http_version => updateFlow({ request: { http_version } })}
                     isValid={isValidHttpVersion}
-                    inline
                 />
             </div>
-        )
-    }
+        </div>
+    )
 }
 
-class ResponseLine extends Component {
-
-    render() {
-        const { flow, updateFlow } = this.props
-
-        return (
-            <div className="first-line response-line">
-                <ValueEditor
-                    ref="httpVersion"
-                    content={flow.response.http_version}
-                    onDone={nextVer => updateFlow({ response: { http_version: parseHttpVersion(nextVer) } })}
-                    isValid={isValidHttpVersion}
-                    inline
-                />
-                &nbsp;
-                <ValueEditor
-                    ref="code"
-                    content={flow.response.status_code + ''}
-                    onDone={code => updateFlow({ response: { code: parseInt(code) } })}
-                    isValid={code => /^\d+$/.test(code)}
-                    inline
-                />
-                &nbsp;
-                <ValueEditor
-                    ref="msg"
-                    content={flow.response.reason}
-                    onDone={msg => updateFlow({ response: { msg } })}
-                    inline
-                />
-            </div>
-        )
-    }
+function ResponseLine({ flow, readonly, updateFlow }) {
+    return (
+        <div className="first-line response-line">
+            <ValidateEditor
+                content={flow.response.http_version}
+                readonly={readonly}
+                onDone={nextVer => updateFlow({ response: { http_version: nextVer } })}
+                isValid={isValidHttpVersion}
+            />
+            &nbsp;
+            <ValidateEditor
+                content={flow.response.status_code + ''}
+                readonly={readonly}
+                onDone={code => updateFlow({ response: { code: parseInt(code) } })}
+                isValid={code => /^\d+$/.test(code)}
+            />
+            &nbsp;
+            <ValueEditor
+                content={flow.response.reason}
+                readonly={readonly}
+                onDone={msg => updateFlow({ response: { msg } })}
+            />
+        </div>
+    )
 }
+
+const Message = connect(
+    state => ({
+        flow: state.ui.flow.modifiedFlow || state.flows.byId[state.flows.selected[0]],
+        isEdit: !!state.ui.flow.modifiedFlow,
+    }),
+    {
+        updateFlow: updateEdit,
+    }
+)
 
 export class Request extends Component {
-   render() {
-        const { flow, updateFlow } = this.props
-        let onContentChange = content => flowActions.updateContent(this.props.flow, content, "request")
+    render() {
+        const { flow, isEdit, updateFlow } = this.props
 
         return (
             <section className="request">
-                <FlowEditorButton onContentChange={onContentChange}/>
-                <RequestLine ref="requestLine" flow={flow} updateFlow={updateFlow} />
+                <ToggleEdit/>
+                <RequestLine
+                    flow={flow}
+                    readonly={!isEdit}
+                    updateFlow={updateFlow}/>
                 <Headers
-                    ref="headers"
                     message={flow.request}
+                    readonly={!isEdit}
                     onChange={headers => updateFlow({ request: { headers } })}
                 />
 
                 <hr/>
-                <ContentView flow={flow}
-                             onContentChange={onContentChange}
-                             message={flow.request}
-                />
+                <ContentView flow={flow} message={flow.request}/>
             </section>
         )
     }
 
+
     edit(k) {
-        switch (k) {
-            case 'm':
-                this.refs.requestLine.refs.method.focus()
-                break
-            case 'u':
-                this.refs.requestLine.refs.url.focus()
-                break
-            case 'v':
-                this.refs.requestLine.refs.httpVersion.focus()
-                break
-            case 'h':
-                this.refs.headers.edit()
-                break
-            default:
-                throw new Error(`Unimplemented: ${k}`)
-        }
+        throw "unimplemented"
+        /*
+         switch (k) {
+         case 'm':
+         this.refs.requestLine.refs.method.focus()
+         break
+         case 'u':
+         this.refs.requestLine.refs.url.focus()
+         break
+         case 'v':
+         this.refs.requestLine.refs.httpVersion.focus()
+         break
+         case 'h':
+         this.refs.headers.edit()
+         break
+         default:
+         throw new Error(`Unimplemented: ${k}`)
+         }
+         */
     }
+
 }
 
+Request = Message(Request)
+
+
 export class Response extends Component {
-
-
     render() {
-        const { flow, updateFlow } = this.props
-        let onContentChange = content => flowActions.updateContent(this.props.flow, content, "response")
+        const { flow, isEdit, updateFlow } = this.props
 
         return (
             <section className="response">
-                <FlowEditorButton onContentChange={onContentChange}/>
-                <ResponseLine ref="responseLine" flow={flow} updateFlow={updateFlow} />
+                <ToggleEdit/>
+                <ResponseLine
+                    flow={flow}
+                    readonly={!isEdit}
+                    updateFlow={updateFlow}/>
                 <Headers
-                    ref="headers"
                     message={flow.response}
+                    readonly={!isEdit}
                     onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow}
-                             onContentChange={onContentChange}
-                             message={flow.response}
-                />
+                <ContentView flow={flow} message={flow.response}/>
             </section>
         )
     }
 
     edit(k) {
-        switch (k) {
-            case 'c':
-                this.refs.responseLine.refs.status_code.focus()
-                break
-            case 'm':
-                this.refs.responseLine.refs.msg.focus()
-                break
-            case 'v':
-                this.refs.responseLine.refs.httpVersion.focus()
-                break
-            case 'h':
-                this.refs.headers.edit()
-                break
-            default:
-                throw new Error(`'Unimplemented: ${k}`)
-        }
+        throw "unimplemented"
+        /*
+         switch (k) {
+         case 'c':
+         this.refs.responseLine.refs.status_code.focus()
+         break
+         case 'm':
+         this.refs.responseLine.refs.msg.focus()
+         break
+         case 'v':
+         this.refs.responseLine.refs.httpVersion.focus()
+         break
+         case 'h':
+         this.refs.headers.edit()
+         break
+         default:
+         throw new Error(`'Unimplemented: ${k}`)
+         }
+         */
     }
 }
+
+Response = Message(Response)
+
 
 ErrorView.propTypes = {
     flow: PropTypes.object.isRequired,

@@ -11,22 +11,19 @@ export const REQUEST_UPDATE = 'REQUEST_UPDATE'
 export const UNKNOWN_CMD    = 'SETTINGS_UNKNOWN_CMD'
 
 const defaultState = {
-    settings: {},
+
 }
 
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
 
         case RECEIVE:
-            return {
-                ...state,
-                settings: action.settings,
-            }
+            return action.settings
 
         case UPDATE:
             return {
                 ...state,
-                settings: { ...state.settings, ...action.settings },
+                ...action.settings,
             }
 
         default:

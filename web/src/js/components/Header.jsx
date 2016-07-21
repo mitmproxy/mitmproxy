@@ -6,7 +6,7 @@ import ViewMenu from './Header/ViewMenu'
 import OptionMenu from './Header/OptionMenu'
 import FileMenu from './Header/FileMenu'
 import FlowMenu from './Header/FlowMenu'
-import {setActiveMenu} from '../ducks/ui.js'
+import {setActiveMenu} from '../ducks/ui/header'
 
 class Header extends Component {
     static entries = [MainMenu, ViewMenu, OptionMenu]
@@ -17,7 +17,7 @@ class Header extends Component {
     }
 
     render() {
-        const { query, selectedFlowId, activeMenu} = this.props
+        const { selectedFlowId, activeMenu} = this.props
 
         let entries = [...Header.entries]
         if(selectedFlowId)
@@ -39,10 +39,7 @@ class Header extends Component {
                     ))}
                 </nav>
                 <div className="menu">
-                    <Active
-                        ref="active"
-                        query={query}
-                    />
+                    <Active/>
                 </div>
             </header>
         )
@@ -52,13 +49,9 @@ class Header extends Component {
 export default connect(
     state => ({
         selectedFlowId: state.flows.selected[0],
-        activeMenu: state.ui.activeMenu,
+        activeMenu: state.ui.header.activeMenu,
     }),
     {
         setActiveMenu,
-    },
-    null,
-    {
-        withRef: true,
     }
 )(Header)

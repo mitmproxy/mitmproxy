@@ -1,61 +1,66 @@
 import React, { Component, PropTypes } from 'react'
-import ReactDOM from 'react-dom'
-import {Key} from '../../utils.js'
+import _ from "lodash"
+import classnames from 'classnames'
 
-export default class EditorBase extends Component {
+import { Key } from '../../utils'
+
+export default class ValueEditor extends Component {
 
     static propTypes = {
         content: PropTypes.string.isRequired,
+        readonly: PropTypes.bool,
         onDone: PropTypes.func.isRequired,
-        contentToHtml: PropTypes.func,
-        nodeToContent: PropTypes.func,
-        onStop: PropTypes.func,
-        submitOnEnter: PropTypes.bool,
         className: PropTypes.string,
-        tag: PropTypes.string,
+        onInput: PropTypes.func,
+        onKeyDown: PropTypes.func,
     }
 
     static defaultProps = {
-        contentToHtml: content => _.escape(content),
-        nodeToContent: node => node.textContent,
-        submitOnEnter: true,
-        className: '',
-        tag: 'div',
-        onStop: _.noop,
-        onMouseDown: _.noop,
-        onBlur: _.noop,
-        onInput: _.noop,
+        onInput: () => {},
+        onKeyDown: () => {},
     }
 
     constructor(props) {
         super(props)
-        this.state = {editable: false}
+        this.state = { editable: false }
 
         this.onPaste = this.onPaste.bind(this)
         this.onMouseDown = this.onMouseDown.bind(this)
         this.onMouseUp = this.onMouseUp.bind(this)
         this.onFocus = this.onFocus.bind(this)
         this.onClick = this.onClick.bind(this)
-        this.stop = this.stop.bind(this)
+        this.blur = this.blur.bind(this)
         this.onBlur = this.onBlur.bind(this)
         this.reset = this.reset.bind(this)
         this.onKeyDown = this.onKeyDown.bind(this)
         this.onInput = this.onInput.bind(this)
     }
 
-    stop() {
+    blur() {
         // a stop would cause a blur as a side-effect.
         // but a blur event must trigger a stop as well.
         // to fix this, make stop = blur and do the actual stop in the onBlur handler.
-        ReactDOM.findDOMNode(this).blur()
-        this.props.onStop()
+        this.input.blur()
+    }
+
+    reset() {
+        this.input.innerHTML = _.escape(this.props.content)
     }
 
     render() {
+        let className = classnames(
+            'inline-input',
+            {
+                'readonly': this.props.readonly,
+                'editable': !this.props.readonly
+            },
+            this.props.className
+        )
         return (
-            <this.props.tag
-                tabIndex="0"
-                className={`inline-input ${this.props.className}`}
+            <div
+                ref={input => this.input = input}
+                tabIndex={!this.props.readonly && "0"}
+                className={className}
                 contentEditable={this.state.editable || undefined}
                 onFocus={this.onFocus}
                 onMouseDown={this.onMouseDown}
@@ -64,8 +69,8 @@ export default class EditorBase extends Component {
                 onKeyDown={this.onKeyDown}
                 onInput={this.onInput}
                 onPaste={this.onPaste}
-                dangerouslySetInnerHTML={{ __html: this.props.contentToHtml(this.props.content) }}
-            />
+                dangerouslySetInnerHTML={{ __html: _.escape(this.props.content) }}
+            ></div>
         )
     }
 
@@ -78,7 +83,6 @@ export default class EditorBase extends Component {
     onMouseDown(e) {
         this._mouseDown = true
         window.addEventListener('mouseup', this.onMouseUp)
-        this.props.onMouseDown(e)
     }
 
     onMouseUp() {
@@ -94,7 +98,7 @@ export default class EditorBase extends Component {
     }
 
     onFocus(e) {
-        if (this._mouseDown || this._ignore_events || this.state.editable) {
+        if (this._mouseDown || this._ignore_events || this.state.editable || this.props.readonly) {
             return
         }
 
@@ -114,31 +118,29 @@ export default class EditorBase extends Component {
             range = document.caretRangeFromPoint(e.clientX, e.clientY)
         } else {
             range = document.createRange()
-            range.selectNodeContents(ReactDOM.findDOMNode(this))
+            range.selectNodeContents(this.input)
         }
 
         this._ignore_events = true
         this.setState({ editable: true }, () => {
-            const node = ReactDOM.findDOMNode(this)
-            node.blur()
-            node.focus()
+            this.input.blur()
+            this.input.focus()
             this._ignore_events = false
+            range.selectNodeContents(this.input)
+            sel.removeAllRanges();
+            sel.addRange(range);
         })
     }
 
     onBlur(e) {
-        if (this._ignore_events) {
+        if (this._ignore_events || this.props.readonly) {
             return
         }
         window.getSelection().removeAllRanges() //make sure that selection is cleared on blur
         this.setState({ editable: false })
-        this.props.onDone(this.props.nodeToContent(ReactDOM.findDOMNode(this)))
-        this.props.onBlur(e)
+        this.props.onDone(this.input.textContent)
     }
 
-    reset() {
-        ReactDOM.findDOMNode(this).innerHTML = this.props.contentToHtml(this.props.content)
-    }
 
     onKeyDown(e) {
         e.stopPropagation()
@@ -146,20 +148,21 @@ export default class EditorBase extends Component {
             case Key.ESC:
                 e.preventDefault()
                 this.reset()
-                this.stop()
+                this.blur()
                 break
             case Key.ENTER:
-                if (this.props.submitOnEnter && !e.shiftKey) {
+                if (!e.shiftKey) {
                     e.preventDefault()
-                    this.stop()
+                    this.blur()
                 }
                 break
             default:
                 break
         }
+        this.props.onKeyDown(e)
     }
 
     onInput() {
-        this.props.onInput(this.props.nodeToContent(ReactDOM.findDOMNode(this)))
+        this.props.onInput(this.input.textContent)
     }
 }

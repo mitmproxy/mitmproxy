@@ -7,7 +7,7 @@ import { Request, Response, ErrorView as Error } from './FlowView/Messages'
 import Details from './FlowView/Details'
 import Prompt from './Prompt'
 
-import { setPrompt, selectTab } from '../ducks/ui'
+import { selectTab } from '../ducks/ui/flow'
 
 export default class FlowView extends Component {
 
@@ -90,9 +90,9 @@ export default class FlowView extends Component {
 export default connect(
     state => ({
         promptOpen: state.ui.promptOpen,
+        tab: state.ui.flow.tab
     }),
     {
-        setPrompt,
         selectTab,
     }
 )(FlowView)

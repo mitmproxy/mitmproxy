@@ -4,7 +4,7 @@ import websocket from './websocket'
 import flows from './flows'
 import flowView from './flowView'
 import settings from './settings'
-import ui from './ui'
+import ui from './ui/index'
 import msgQueue from './msgQueue'
 
 export default combineReducers({

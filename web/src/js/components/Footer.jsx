@@ -48,6 +48,6 @@ function Footer({ settings }) {
 
 export default connect(
     state => ({
-        settings: state.settings.settings,
+        settings: state.settings,
     })
 )(Footer)

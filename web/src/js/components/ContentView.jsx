@@ -5,7 +5,7 @@ import * as ContentViews from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
 import ContentLoader from './ContentView/ContentLoader'
 import ViewSelector from './ContentView/ViewSelector'
-import { setContentView, setDisplayLarge, setModifiedFlowContent } from '../ducks/ui'
+import { setContentView, displayLarge, updateEdit } from '../ducks/ui/flow'
 import CodeEditor from './common/CodeEditor'
 
 ContentView.propTypes = {
@@ -30,7 +30,7 @@ function ContentView(props) {
     }
 
     if (!displayLarge && ContentView.isContentTooLarge(message)) {
-        return <MetaViews.ContentTooLarge {...props} onClick={() => setDisplayLarge(true)}/>
+        return <MetaViews.ContentTooLarge {...props} onClick={displayLarge}/>
     }
 
     const View = ContentViews[contentView]
@@ -80,13 +80,13 @@ function ContentView(props) {
 
 export default connect(
     state => ({
-        contentView: state.ui.contentView,
-        displayLarge: state.ui.displayLarge,
-        isFlowEditorOpen : state.ui.isFlowEditorOpen
+        contentView: state.ui.flow.contentView,
+        displayLarge: state.ui.flow.displayLarge,
+        isFlowEditorOpen : !!state.ui.flow.modifiedFlow // FIXME
     }),
     {
         selectView: setContentView,
-        setDisplayLarge,
-        setModifiedFlowContent
+        displayLarge,
+        updateEdit,
     }
 )(ContentView)

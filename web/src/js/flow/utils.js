@@ -107,10 +107,3 @@ var isValidHttpVersion_regex = /^HTTP\/\d+(\.\d+)*$/i;
 export var isValidHttpVersion = function (httpVersion) {
     return isValidHttpVersion_regex.test(httpVersion);
 };
-
-export var parseHttpVersion = function (httpVersion) {
-    httpVersion = httpVersion.replace("HTTP/", "").split(".");
-    return _.map(httpVersion, function (x) {
-        return parseInt(x);
-    });
-};

@@ -1,92 +1,50 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import FilterInput from './FilterInput'
-import { Query } from '../../actions.js'
 import { update as updateSettings } from '../../ducks/settings'
-import { updateQuery, setSelectedInput } from '../../ducks/ui'
+import { updateFilter, updateHighlight } from '../../ducks/flowView'
 
-class MainMenu extends Component {
+MainMenu.title = "Start"
 
-    static title = 'Start'
-    static route = 'flows'
-
-    static propTypes = {
-        query: PropTypes.object.isRequired,
-        settings: PropTypes.object.isRequired,
-        updateSettings: PropTypes.func.isRequired,
-        updateQuery: PropTypes.func.isRequired,
-    }
-
-    constructor(props, context) {
-        super(props, context)
-        this.onSearchChange = this.onSearchChange.bind(this)
-        this.onHighlightChange = this.onHighlightChange.bind(this)
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if(this.refs[nextProps.selectedInput]) {
-            this.refs[nextProps.selectedInput].select()
-        }
-        this.props.setSelectedInput(undefined)
-    }
-
-    onSearchChange(val) {
-        this.props.updateQuery({ [Query.SEARCH]: val })
-    }
-
-    onHighlightChange(val) {
-        this.props.updateQuery({ [Query.HIGHLIGHT]: val })
-    }
-
-    render() {
-        const { query, settings, updateSettings } = this.props
-
-        return (
-            <div>
-                <div className="menu-row">
-                    <FilterInput
-                        ref="search"
-                        placeholder="Search"
-                        type="search"
-                        color="black"
-                        value={query[Query.SEARCH] || ''}
-                        onChange={this.onSearchChange}
-                    />
-                    <FilterInput
-                        ref="highlight"
-                        placeholder="Highlight"
-                        type="tag"
-                        color="hsl(48, 100%, 50%)"
-                        value={query[Query.HIGHLIGHT] || ''}
-                        onChange={this.onHighlightChange}
-                    />
-                    <FilterInput
-                        ref="intercept"
-                        placeholder="Intercept"
-                        type="pause"
-                        color="hsl(208, 56%, 53%)"
-                        value={settings.intercept || ''}
-                        onChange={intercept => updateSettings({ intercept })}
-                    />
-                </div>
-                <div className="clearfix"></div>
+export default function MainMenu() {
+    return (
+        <div>
+            <div className="menu-row">
+                <FlowFilterInput/>
+                <HighlightInput/>
+                <InterceptInput/>
             </div>
-        )
-    }
+            <div className="clearfix"></div>
+        </div>
+    )
 }
 
-export default connect(
+const InterceptInput = connect(
     state => ({
-        settings: state.settings.settings,
-        selectedInput: state.ui.selectedInput
+        value: state.settings.intercept || '',
+        placeholder: 'Intercept',
+        type: 'pause',
+        color: 'hsl(208, 56%, 53%)'
     }),
-    {
-        updateSettings,
-        updateQuery,
-        setSelectedInput
-    },
-    null,
-    {
-        withRef: true,
-    }
-)(MainMenu);
+    { onChange: intercept => updateSettings({ intercept }) }
+)(FilterInput);
+
+const FlowFilterInput = connect(
+    state => ({
+        value: state.flowView.filter || '',
+        placeholder: 'Search',
+        type: 'search',
+        color: 'black'
+    }),
+    { onChange: updateFilter }
+)(FilterInput);
+
+const HighlightInput = connect(
+    state => ({
+        value: state.flowView.highlight || '',
+        placeholder: 'Highlight',
+        type: 'tag',
+        color: 'hsl(48, 100%, 50%)'
+    }),
+    { onChange: updateHighlight }
+)(FilterInput);

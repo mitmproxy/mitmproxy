@@ -26,14 +26,14 @@
         word-break: break-all;
         max-height: 100px;
         overflow-y: auto;
+
+        .inline-input.editable {
+            border-color: rgba(255,255,255,0.5);
+        }
     }
     .request-line {
         margin-bottom: 2px;
     }
-    /*.request .response-line,
-    .response .request-line {
-        opacity: 0.7;
-    }*/
 
     hr {
         margin: 0 0 5px;
@@ -42,8 +42,14 @@
 }
 
 .inline-input {
-    margin: 0 -5px;
-    padding: 0 5px;
+    display: inline;
+    margin: 0 -3px;
+    padding: 0 3px;
+
+    border: solid transparent 1px;
+    &.editable {
+        border-color: #ccc;
+    }
 
     &[contenteditable] {
 

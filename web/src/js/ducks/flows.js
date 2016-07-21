@@ -67,56 +67,49 @@ export default function reduce(state = defaultState, action) {
  * @public
  */
 export function accept(flow) {
-    fetchApi(`/flows/${flow.id}/accept`, { method: 'POST' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi(`/flows/${flow.id}/accept`, { method: 'POST' })
 }
 
 /**
  * @public
  */
 export function acceptAll() {
-    fetchApi('/flows/accept', { method: 'POST' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi('/flows/accept', { method: 'POST' })
 }
 
 /**
  * @public
  */
 export function remove(flow) {
-    fetchApi(`/flows/${flow.id}`, { method: 'DELETE' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi(`/flows/${flow.id}`, { method: 'DELETE' })
 }
 
 /**
  * @public
  */
 export function duplicate(flow) {
-    fetchApi(`/flows/${flow.id}/duplicate`, { method: 'POST' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi(`/flows/${flow.id}/duplicate`, { method: 'POST' })
 }
 
 /**
  * @public
  */
 export function replay(flow) {
-    fetchApi(`/flows/${flow.id}/replay`, { method: 'POST' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi(`/flows/${flow.id}/replay`, { method: 'POST' })
 }
 
 /**
  * @public
  */
 export function revert(flow) {
-    fetchApi(`/flows/${flow.id}/revert`, { method: 'POST' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi(`/flows/${flow.id}/revert`, { method: 'POST' })
 }
 
 /**
  * @public
  */
 export function update(flow, data) {
-    fetchApi.put(`/flows/${flow.id}`, data)
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi.put(`/flows/${flow.id}`, data)
 }
 
 export function updateContent(flow, file, type) {
@@ -124,8 +117,7 @@ export function updateContent(flow, file, type) {
     if (typeof file !== File)
         file = new Blob([file], {type: 'plain/text'})
     body.append('file', file)
-    fetchApi(`/flows/${flow.id}/${type}/content`, {method: 'post',  body} )
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, {method: 'post',  body} )
 }
 
 
@@ -133,8 +125,7 @@ export function updateContent(flow, file, type) {
  * @public
  */
 export function clear() {
-    fetchApi('/clear', { method: 'POST' })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi('/clear', { method: 'POST' })
 }
 
 /**
@@ -151,8 +142,7 @@ export function download() {
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
-    fetchApi('/flows/dump', { method: 'post', body })
-    return { type: REQUEST_ACTION }
+    return dispatch => fetchApi('/flows/dump', { method: 'post', body })
 }
 
 
