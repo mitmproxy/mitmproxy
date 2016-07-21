@@ -124,13 +124,23 @@ class ConsoleState(flow.State):
         return ret
 
     def enable_marked_filter(self):
-        self.last_filter = self.limit_txt
         marked_flows = [f for f in self.flows if f.marked]
-        if len(marked_flows) > 0:
-            self.last_filter = self.limit_txt
-            self.set_limit("~%s" % FMarked.code)
-            self.mark_filter = True
+        if not marked_flows:
+            return
+
+        # Save Focus
+        last_focus, _ = self.get_focus()
+
+        self.last_filter = self.limit_txt
+        self.set_limit("~%s" % FMarked.code)
+
+        # Set Focus
+        if last_focus.marked:
+            self.set_focus_flow(last_focus)
+        else:
             self.set_focus(0)
+
+        self.mark_filter = True
 
     def disable_marked_filter(self):
         self.set_limit(self.last_filter)
