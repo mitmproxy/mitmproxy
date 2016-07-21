@@ -13,10 +13,6 @@ export default class CodeEditor extends Component{
         super(props)
     }
 
-    componentWillMount(){
-        this.props.onChange(this.props.content)
-    }
-
     render() {
         let options = {
             lineNumbers: true

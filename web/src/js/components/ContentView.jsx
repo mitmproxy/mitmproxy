@@ -18,7 +18,7 @@ ContentView.propTypes = {
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
 
 function ContentView(props) {
-    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge, onContentChange, readonly, isFlowEditorOpen } = props
+    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge, uploadContent, onContentChange, readonly } = props
 
     if (message.contentLength === 0) {
         return <MetaViews.ContentEmpty {...props}/>
@@ -38,10 +38,10 @@ function ContentView(props) {
         <div>
             {View.textView ? (
                 <ContentLoader flow={flow} message={message}>
-                    <View readonly={readonly} isFlowEditorOpen={isFlowEditorOpen} content="" />
+                    <View readonly={readonly} onChange={onContentChange} content="" />
                 </ContentLoader>
             ) : (
-                <View flow={flow} message={message} />
+                <View flow={flow} readonly={readonly} message={message} />
             )}
             <div className="view-options text-center">
                 <ViewSelector onSelectView={selectView} active={View} message={message}/>
@@ -62,7 +62,7 @@ function ContentView(props) {
                     ref={ref => ContentView.fileInput = ref}
                     className="hidden"
                     type="file"
-                    onChange={e => {if(e.target.files.length > 0) onContentChange(e.target.files[0])}}
+                    onChange={e => {if(e.target.files.length > 0) uploadContent(e.target.files[0])}}
                 />
             </div>
         </div>
@@ -73,7 +73,6 @@ export default connect(
     state => ({
         contentView: state.ui.flow.contentView,
         displayLarge: state.ui.flow.displayLarge,
-        isFlowEditorOpen : !!state.ui.flow.modifiedFlow // FIXME
     }),
     {
         selectView: setContentView,

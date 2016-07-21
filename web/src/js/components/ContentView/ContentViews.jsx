@@ -29,9 +29,8 @@ ViewRaw.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
 
-export function ViewRaw({ content, isFlowEditorOpen, readonly }) {
-    let showEditor = isFlowEditorOpen && !readonly
-    return showEditor ? <CodeEditor content={content} onChange={content =>alert(content)}/> : <pre>{content}</pre>
+export function ViewRaw({ content, readonly, onChange }) {
+    return readonly ? <pre>{content}</pre> : <CodeEditor content={content} onChange={onChange}/>
 }
 
 ViewJSON.textView = true
@@ -61,12 +60,12 @@ ViewAuto.propTypes = {
     flow: React.PropTypes.object.isRequired,
 }
 
-export function ViewAuto({ message, flow }) {
+export function ViewAuto({ message, flow, readonly }) {
     const View = ViewAuto.findView(message)
     if (View.textView) {
-        return <ContentLoader message={message} flow={flow}><View content="" /></ContentLoader>
+        return <ContentLoader message={message} flow={flow}><View readonly={readonly}  content="" /></ContentLoader>
     } else {
-        return <View message={message} flow={flow} />
+        return <View readonly={readonly} message={message} flow={flow} />
     }
 }
 

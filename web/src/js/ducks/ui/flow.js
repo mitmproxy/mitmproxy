@@ -88,9 +88,31 @@ export function updateEdit(update) {
     return { type: UPDATE_EDIT, update }
 }
 
-export function stopEdit(flow) {
+export function uploadContent(flow, content, type){
     return (dispatch) => {
-        dispatch(flowsActions.update(flow, flow)).then(() => {
+            dispatch(flowsActions.updateContent(flow, content, type)).then( () => {
+            dispatch(flowsActions.updateFlow(flow))
+            dispatch({ type: STOP_EDIT })
+        })
+    }
+}
+
+export function stopEdit(modified_flow, old_flow) {
+    //make diff of modified_flow and old_flow
+    return (dispatch) => {
+        let flow = {...modified_flow}
+
+        if (flow.response.content) {
+            dispatch(flowsActions.updateContent(flow, flow.response.content, "response"))
+            flow.response = _.omit(flow.response, "content")
+        }
+        if (flow.request.content) {
+            dispatch(flowsActions.updateContent(flow, flow.request.content, "request"))
+            flow.request = _.omit(flow.request, "content")
+        }
+
+
+        dispatch(flowsActions.update(flow)).then(() => {
             dispatch(flowsActions.updateFlow(flow))
             dispatch({ type: STOP_EDIT })
         })
