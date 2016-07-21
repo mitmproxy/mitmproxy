@@ -151,7 +151,7 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.server_playback:
             r.append("[")
             r.append(("heading_key", "splayback"))
-            if self.master.nopop:
+            if self.master.options.nopop:
                 r.append(":%s in file]" % self.master.server_playback.count())
             else:
                 r.append(":%s to go]" % self.master.server_playback.count())
