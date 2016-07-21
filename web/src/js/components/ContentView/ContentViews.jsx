@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils.js'
+import CodeEditor from '../common/CodeEditor'
 
 
 const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw]
@@ -28,8 +29,9 @@ ViewRaw.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
 
-export function ViewRaw({ content }) {
-    return <pre>{content}</pre>
+export function ViewRaw({ content, isFlowEditorOpen, readonly }) {
+    let showEditor = isFlowEditorOpen && !readonly
+    return showEditor ? <CodeEditor content={content} onChange={content =>alert(content)}/> : <pre>{content}</pre>
 }
 
 ViewJSON.textView = true

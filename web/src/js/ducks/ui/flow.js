@@ -22,7 +22,8 @@ export default function reducer(state = defaultState, action) {
         case START_EDIT:
             return {
                 ...state,
-                modifiedFlow: action.flow
+                modifiedFlow: action.flow,
+                contentView: 'ViewRaw'
             }
 
         case UPDATE_EDIT:

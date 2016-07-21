@@ -144,7 +144,11 @@ export class Response extends Component {
                     onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.response}/>
+                <ContentView
+                    readonly={!isEdit}
+                    flow={flow}
+                    message={flow.response}
+                />
             </section>
         )
     }
