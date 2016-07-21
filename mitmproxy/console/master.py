@@ -123,22 +123,43 @@ class ConsoleState(flow.State):
         self.set_focus(self.focus)
         return ret
 
+    def get_nearest_matching_flow(self, flow, filt):
+        fidx = self.view.index(flow)
+        dist = 1
+
+        fprev = fnext = True
+        while fprev or fnext:
+            fprev, _ = self.get_from_pos(fidx - dist)
+            fnext, _ = self.get_from_pos(fidx + dist)
+
+            if fprev and fprev.match(filt):
+                return fprev
+            elif fnext and fnext.match(filt):
+                return fnext
+
+            dist += 1
+
+        return None
+
     def enable_marked_filter(self):
         marked_flows = [f for f in self.flows if f.marked]
         if not marked_flows:
             return
 
+        marked_filter = "~%s" % FMarked.code
+
         # Save Focus
         last_focus, _ = self.get_focus()
+        nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
 
         self.last_filter = self.limit_txt
-        self.set_limit("~%s" % FMarked.code)
+        self.set_limit(marked_filter)
 
         # Set Focus
         if last_focus.marked:
             self.set_focus_flow(last_focus)
         else:
-            self.set_focus(0)
+            self.set_focus_flow(nearest_marked)
 
         self.mark_filter = True
 
