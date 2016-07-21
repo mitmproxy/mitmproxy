@@ -579,6 +579,12 @@ class HeaderEditor(GridEditor):
         text.append(urwid.Text([("text", "Special keys:\n")]))
         keys = [
             ("U", "add User-Agent header"),
+            ("p", "add 1 to the number"),
+            ("m", "subtract 1 from the number"),
+            ("E", "base64 encode the text"),
+            ("D", "base64 decode the text"),
+            ("n", "smart suggestions"),
+            ("u", "urldecode the text"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)
