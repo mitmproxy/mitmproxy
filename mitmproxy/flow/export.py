@@ -97,11 +97,6 @@ def python_code(flow):
     return code
 
 
-def raw_request(flow):
-    data = netlib.http.http1.assemble_request(flow.request)
-    return _native(data)
-
-
 def is_json(headers, content):
     # type: (netlib.http.Headers, bytes) -> bool
     if headers:
@@ -197,3 +192,18 @@ def locust_task(flow):
     task_code = code[start_task:end_task]
 
     return task_code
+
+
+def url(flow):
+    return flow.request.url
+
+
+EXPORTERS = [
+    ("content", "c", None),
+    ("headers+content", "h", None),
+    ("url", "u", url),
+    ("as curl command", "r", curl_command),
+    ("as python code", "p", python_code),
+    ("as locust code", "l", locust_code),
+    ("as locust task", "t", locust_task),
+]
