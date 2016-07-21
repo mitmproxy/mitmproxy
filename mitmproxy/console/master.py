@@ -155,7 +155,7 @@ class ConsoleState(flow.State):
         self.last_filter = self.limit_txt
         self.set_limit(marked_filter)
 
-        # Set Focus
+        # Restore Focus
         if last_focus.marked:
             self.set_focus_flow(last_focus)
         else:
@@ -164,10 +164,22 @@ class ConsoleState(flow.State):
         self.mark_filter = True
 
     def disable_marked_filter(self):
+        marked_filter = "~%s" % FMarked.code
+
+        # Save Focus
+        last_focus, _ = self.get_focus()
+        nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
+
         self.set_limit(self.last_filter)
         self.last_filter = ""
+
+        # Restore Focus
+        if last_focus.marked:
+            self.set_focus_flow(last_focus)
+        else:
+            self.set_focus_flow(nearest_marked)
+
         self.mark_filter = False
-        self.set_focus(0)
 
     def clear(self):
         marked_flows = [f for f in self.state.view if f.marked]
