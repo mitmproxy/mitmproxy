@@ -60,6 +60,7 @@ def convert_017_018(data):
     data = convert_unicode(data)
 
     data["server_conn"]["ip_address"] = data["server_conn"].pop("peer_address")
+    data["marked"] = False
     data["version"] = (0, 18)
     return data
 
