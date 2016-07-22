@@ -86,10 +86,10 @@ class ConsoleState(flow.State):
 
     def set_focus(self, idx):
         if self.view:
-            if idx >= len(self.view):
-                idx = len(self.view) - 1
-            elif idx < 0:
+            if idx is None or idx < 0:
                 idx = 0
+            elif idx >= len(self.view):
+                idx = len(self.view) - 1
             self.focus = idx
         else:
             self.focus = None
@@ -254,10 +254,6 @@ class ConsoleMaster(flow.FlowMaster):
             expire=1
         )
 
-    def load_script(self, command, use_reloader=True):
-        # We default to using the reloader in the console ui.
-        return super(ConsoleMaster, self).load_script(command, use_reloader)
-
     def sig_add_log(self, sender, e, level):
         if self.options.verbosity < utils.log_tier(level):
             return
@@ -352,7 +348,7 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             return flow.read_flows_from_paths(path)
         except exceptions.FlowReadException as e:
-            signals.status_message.send(message=e.strerror)
+            signals.status_message.send(message=str(e))
 
     def client_playback_path(self, path):
         if not isinstance(path, list):
@@ -748,10 +744,3 @@ class ConsoleMaster(flow.FlowMaster):
             direction=direction,
         ), "info")
         self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
-
-    @controller.handler
-    def script_change(self, script):
-        if super(ConsoleMaster, self).script_change(script):
-            signals.status_message.send(message='"{}" reloaded.'.format(script.path))
-        else:
-            signals.status_message.send(message='Error reloading "{}".'.format(script.path))

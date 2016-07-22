@@ -216,7 +216,7 @@ def copy_to_clipboard_or_prompt(data):
 
 
 def format_flow_data(key, scope, flow):
-    data = ""
+    data = b""
     if scope in ("q", "b"):
         request = flow.request.copy()
         request.decode(strict=False)
@@ -230,7 +230,7 @@ def format_flow_data(key, scope, flow):
             raise ValueError("Unknown key: {}".format(key))
     if scope == "b" and flow.request.raw_content and flow.response:
         # Add padding between request and response
-        data += "\r\n" * 2
+        data += b"\r\n" * 2
     if scope in ("s", "b") and flow.response:
         response = flow.response.copy()
         response.decode(strict=False)
@@ -293,7 +293,7 @@ def ask_save_body(scope, flow):
         )
     elif scope == "b" and request_has_content and response_has_content:
         ask_save_path(
-            (flow.request.get_content(strict=False) + "\n" +
+            (flow.request.get_content(strict=False) + b"\n" +
              flow.response.get_content(strict=False)),
             "Save request & response content to"
         )

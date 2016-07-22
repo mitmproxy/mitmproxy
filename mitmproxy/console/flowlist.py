@@ -193,7 +193,8 @@ class ConnectionItem(urwid.WidgetWrap):
             signals.flowlist_change.send(self)
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
-            self.master.view_flow(f)
+            self.master.state.set_focus_flow(f)
+            signals.flowlist_change.send(self)
         elif key == "m":
             if self.state.flow_marked(self.flow):
                 self.state.set_flow_marked(self.flow, False)
@@ -356,7 +357,8 @@ class FlowListBox(urwid.ListBox):
             return
         scheme, host, port, path = parts
         f = self.master.create_request(method, scheme, host, port, path)
-        self.master.view_flow(f)
+        self.master.state.set_focus_flow(f)
+        signals.flowlist_change.send(self)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
