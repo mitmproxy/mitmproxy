@@ -32,9 +32,6 @@ class MessageData(basetypes.Serializable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __hash__(self):
-        return hash(frozenset(self.__dict__.items()))
-
     def set_state(self, state):
         for k, v in state.items():
             if k == "headers":
@@ -76,9 +73,6 @@ class Message(basetypes.Serializable):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.data) ^ 1
 
     def get_state(self):
         return self.data.get_state()

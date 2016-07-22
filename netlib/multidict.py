@@ -79,9 +79,6 @@ class _MultiDict(MutableMapping, basetypes.Serializable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __hash__(self):
-        return hash(self.fields)
-
     def get_all(self, key):
         """
         Return the list of all values for a given key.
@@ -240,6 +237,9 @@ class ImmutableMultiDict(MultiDict):
         raise TypeError('{} objects are immutable'.format(self.__class__.__name__))
 
     __delitem__ = set_all = insert = _immutable
+
+    def __hash__(self):
+        return hash(self.fields)
 
     def with_delitem(self, key):
         """
