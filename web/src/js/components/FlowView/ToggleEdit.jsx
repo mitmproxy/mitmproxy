@@ -10,11 +10,11 @@ ToggleEdit.propTypes = {
     stopEdit: PropTypes.func.isRequired,
 }
 
-function ToggleEdit({ isEdit, startEdit, stopEdit, flow, old_flow }) {
+function ToggleEdit({ isEdit, startEdit, stopEdit, flow, modifiedFlow }) {
     return (
         <div className="edit-flow-container">
             {isEdit ?
-                <a className="edit-flow" onClick={() => stopEdit(flow, old_flow)}>
+                <a className="edit-flow" onClick={() => stopEdit(flow, modifiedFlow)}>
                     <i className="fa fa-check"/>
                 </a>
                 :
@@ -29,8 +29,8 @@ function ToggleEdit({ isEdit, startEdit, stopEdit, flow, old_flow }) {
 export default connect(
     state => ({
         isEdit: !!state.ui.flow.modifiedFlow,
-        flow: state.ui.flow.modifiedFlow || state.flows.byId[state.flows.selected[0]],
-        old_flow: state.flows.byId[state.flows.selected[0]]
+        modifiedFlow: state.ui.flow.modifiedFlow || state.flows.byId[state.flows.selected[0]],
+        flow: state.flows.byId[state.flows.selected[0]]
     }),
     {
         startEdit,

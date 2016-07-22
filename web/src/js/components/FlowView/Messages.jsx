@@ -68,7 +68,7 @@ function ResponseLine({ flow, readonly, updateFlow }) {
 
 const Message = connect(
     state => ({
-        flow: state.flows.byId[state.flows.selected[0]],
+        flow: state.ui.flow.modifiedFlow || state.flows.byId[state.flows.selected[0]],
         isEdit: !!state.ui.flow.modifiedFlow,
     }),
     {

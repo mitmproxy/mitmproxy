@@ -46,9 +46,13 @@ export default class ContentLoader extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.message !== this.props.message) {
+        let reload = nextProps.message !== this.props.message || nextProps.lastFileUpload !== this.props.lastFileUpload
+        let isUserEdit = !nextProps.readonly && nextProps.message.content
+
+        if (isUserEdit)
+            this.setState({content: nextProps.message.content})
+        else if(reload)
             this.requestContent(nextProps)
-        }
     }
 
     componentWillUnmount() {

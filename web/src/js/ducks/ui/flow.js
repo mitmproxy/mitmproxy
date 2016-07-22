@@ -1,4 +1,6 @@
 import * as flowsActions from '../flows'
+import { getDiff } from "../../utils"
+
 import _ from 'lodash'
 
 export const SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
@@ -6,13 +8,15 @@ export const SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              SET_TAB          = "UI_FLOWVIEW_SET_TAB",
              START_EDIT       = 'UI_FLOWVIEW_START_EDIT',
              UPDATE_EDIT      = 'UI_FLOWVIEW_UPDATE_EDIT',
-             STOP_EDIT        = 'UI_FLOWVIEW_STOP_EDIT'
+             STOP_EDIT        = 'UI_FLOWVIEW_STOP_EDIT',
+             UPLOAD_CONTENT   = 'UI_FLOWVIEW_UPLOAD_CONTENT'
 
 
 const defaultState = {
     displayLarge: false,
     modifiedFlow: false,
     contentView: 'ViewAuto',
+    lastFileUpload: false,
     tab: 'request',
 }
 
@@ -36,6 +40,12 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 modifiedFlow: false
+            }
+
+        case UPLOAD_CONTENT:
+            return {
+                ... state,
+                lastFileUpload: new Date()
             }
 
         case flowsActions.SELECT:
@@ -90,30 +100,25 @@ export function updateEdit(update) {
 
 export function uploadContent(flow, content, type){
     return (dispatch) => {
-            dispatch(flowsActions.updateContent(flow, content, type)).then( () => {
-            dispatch(flowsActions.updateFlow(flow))
-            dispatch({ type: STOP_EDIT })
-        })
+        dispatch(flowsActions.updateContent(flow, content, type))
+        dispatch({ type: UPLOAD_CONTENT })
     }
 }
 
-export function stopEdit(modified_flow, old_flow) {
-    //make diff of modified_flow and old_flow
+export function stopEdit(flow, modified_flow) {
+    let diff = getDiff(flow, modified_flow)
     return (dispatch) => {
-        let flow = {...modified_flow}
-
-        if (flow.response.content) {
-            dispatch(flowsActions.updateContent(flow, flow.response.content, "response"))
-            flow.response = _.omit(flow.response, "content")
+        if (diff.response && diff.response.content) {
+            dispatch(flowsActions.updateContent(flow, diff.response.content, "response"))
+            delete diff.response.content
         }
-        if (flow.request.content) {
-            dispatch(flowsActions.updateContent(flow, flow.request.content, "request"))
-            flow.request = _.omit(flow.request, "content")
+        if (diff.request && diff.request.content) {
+            dispatch(flowsActions.updateContent(flow, diff.request.content, "request"))
+            delete diff.request.content
         }
 
-
-        dispatch(flowsActions.update(flow)).then(() => {
-            dispatch(flowsActions.updateFlow(flow))
+        dispatch(flowsActions.update(flow, diff)).then(() => {
+            dispatch(flowsActions.updateFlow(modified_flow))
             dispatch({ type: STOP_EDIT })
         })
     }

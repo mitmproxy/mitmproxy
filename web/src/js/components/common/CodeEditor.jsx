@@ -3,24 +3,19 @@ import { render } from 'react-dom';
 import Codemirror from 'react-codemirror';
 
 
-export default class CodeEditor extends Component{
-     static propTypes = {
+CodeEditor.propTypes = {
         content: PropTypes.string.isRequired,
         onChange: PropTypes.func.isRequired,
-    }
+}
 
-    constructor(props){
-        super(props)
-    }
+export default function CodeEditor ( { content, onChange} ){
 
-    render() {
-        let options = {
-            lineNumbers: true
-        };
-        return (
-            <div onKeyDown={e => e.stopPropagation()}>
-                <Codemirror value={this.props.content} onChange={this.props.onChange} options={options}/>
-            </div>
-        )
-    }
+    let options = {
+        lineNumbers: true
+    };
+    return (
+        <div onKeyDown={e => e.stopPropagation()}>
+            <Codemirror value={content} onChange={onChange} options={options}/>
+        </div>
+    )
 }
