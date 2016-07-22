@@ -20,6 +20,8 @@ import logging
 import subprocess
 import sys
 
+from typing import Mapping  # noqa
+
 import html2text
 import lxml.etree
 import lxml.html
@@ -76,6 +78,7 @@ def pretty_json(s):
 
 
 def format_dict(d):
+    # type: (Mapping[Union[str,bytes], Union[str,bytes]]) -> Generator[Tuple[Union[str,bytes], Union[str,bytes]]]
     """
     Helper function that transforms the given dictionary into a list of
         ("key",   key  )
@@ -85,7 +88,7 @@ def format_dict(d):
     max_key_len = max(len(k) for k in d.keys())
     max_key_len = min(max_key_len, KEY_MAX)
     for key, value in d.items():
-        key += ":"
+        key += b":" if isinstance(key, bytes) else u":"
         key = key.ljust(max_key_len + 2)
         yield [
             ("header", key),
@@ -278,6 +281,10 @@ class ViewURLEncoded(View):
     content_types = ["application/x-www-form-urlencoded"]
 
     def __call__(self, data, **metadata):
+        try:
+            data = data.decode("ascii","strict")
+        except ValueError:
+            return None
         d = url.decode(data)
         return "URLEncoded form", format_dict(multidict.MultiDict(d))
 
