@@ -134,7 +134,11 @@ def save_data(path, data):
     if not path:
         return
     try:
-        with open(path, "wb") as f:
+        if isinstance(data, bytes):
+            mode = "wb"
+        else:
+            mode = "w"
+        with open(path, mode) as f:
             f.write(data)
     except IOError as v:
         signals.status_message.send(message=v.strerror)
@@ -193,10 +197,9 @@ def ask_scope_and_callback(flow, cb, *args):
 def copy_to_clipboard_or_prompt(data):
     # pyperclip calls encode('utf-8') on data to be copied without checking.
     # if data are already encoded that way UnicodeDecodeError is thrown.
-    toclip = ""
-    try:
-        toclip = data.decode('utf-8')
-    except (UnicodeDecodeError):
+    if isinstance(data, bytes):
+        toclip = data.decode("utf8", "replace")
+    else:
         toclip = data
 
     try:
