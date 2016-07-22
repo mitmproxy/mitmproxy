@@ -94,11 +94,21 @@ class ReloadHandler(watchdog.events.FileSystemEventHandler):
     def __init__(self, callback):
         self.callback = callback
 
+    def filter(self, event):
+        if event.is_directory:
+            return False
+        if os.path.basename(event.src_path).startswith("."):
+            return False
+        print(event.src_path)
+        return True
+
     def on_modified(self, event):
-        self.callback()
+        if self.filter(event):
+            self.callback()
 
     def on_created(self, event):
-        self.callback()
+        if self.filter(event):
+            self.callback()
 
 
 class Script:
