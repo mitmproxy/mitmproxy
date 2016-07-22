@@ -48,7 +48,7 @@ def test_load_script():
             "data/addonscripts/recorder.py"
         ), []
     )
-    assert ns.configure
+    assert ns.start
 
 
 class TestScript(mastertest.MasterTest):
