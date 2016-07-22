@@ -605,11 +605,11 @@ class FlowView(tabs.Tabs):
             if key == "b":
                 if self.tab_offset == TAB_REQ:
                     common.ask_save_body(
-                        "q", self.master, self.state, self.flow
+                        "q", self.flow
                     )
                 else:
                     common.ask_save_body(
-                        "s", self.master, self.state, self.flow
+                        "s", self.flow
                     )
             elif key == "e":
                 if self.tab_offset == TAB_REQ:
