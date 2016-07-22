@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
+import platform
+
 import urwid
 
 from mitmproxy import filt
@@ -9,7 +11,7 @@ from mitmproxy.console import signals
 from netlib import version
 
 footer = [
-    ("heading", 'mitmproxy v%s ' % version.VERSION),
+    ("heading", 'mitmproxy {} (Python {}) '.format(version.VERSION, platform.python_version())),
     ('heading_key', "q"), ":back ",
 ]
 
