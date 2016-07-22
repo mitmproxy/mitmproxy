@@ -189,15 +189,21 @@ class FlowView(tabs.Tabs):
                 limit = sys.maxsize
             else:
                 limit = contentviews.VIEW_CUTOFF
+
+            flow_modify_cache_invalidation = hash((
+                message.raw_content,
+                message.headers.fields,
+                getattr(message, "path", None),
+            ))
             return cache.get(
-                self._get_content_view,
+                # We move message into this partial function as it is not hashable.
+                lambda *args: self._get_content_view(message, *args),
                 viewmode,
-                message,
                 limit,
-                message  # Cache invalidation
+                flow_modify_cache_invalidation
             )
 
-    def _get_content_view(self, viewmode, message, max_lines, _):
+    def _get_content_view(self, message, viewmode, max_lines, _):
 
         try:
             content = message.content

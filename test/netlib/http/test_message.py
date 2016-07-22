@@ -71,10 +71,6 @@ class TestMessage(object):
 
         assert resp != 0
 
-    def test_hash(self):
-        resp = tresp()
-        assert hash(resp)
-
     def test_serializable(self):
         resp = tresp()
         resp2 = http.Response.from_state(resp.get_state())
