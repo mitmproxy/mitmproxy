@@ -16,6 +16,19 @@ import watchdog.events
 from watchdog.observers import polling
 
 
+class NS:
+    def __init__(self, ns):
+        self.__dict__["ns"] = ns
+
+    def __getattr__(self, key):
+        if key not in self.ns:
+            raise AttributeError("No such element: %s", key)
+        return self.ns[key]
+
+    def __setattr__(self, key, value):
+        self.__dict__["ns"][key] = value
+
+
 def parse_command(command):
     """
         Returns a (path, args) tuple.
@@ -74,7 +87,7 @@ def load_script(path, args):
     ns = {'__file__': os.path.abspath(path)}
     with scriptenv(path, args):
         exec(code, ns, ns)
-    return ns
+    return NS(ns)
 
 
 class ReloadHandler(watchdog.events.FileSystemEventHandler):
@@ -118,27 +131,29 @@ class Script:
         # It's possible for ns to be un-initialised if we failed during
         # configure
         if self.ns is not None and not self.dead:
-            func = self.ns.get(name)
+            func = getattr(self.ns, name, None)
             if func:
                 with scriptenv(self.path, self.args):
-                    func(*args, **kwargs)
+                    return func(*args, **kwargs)
 
     def reload(self):
         self.should_reload.set()
+
+    def load_script(self):
+        self.ns = load_script(self.path, self.args)
+        self.run("start")
 
     def tick(self):
         if self.should_reload.is_set():
             self.should_reload.clear()
             ctx.log.info("Reloading script: %s" % self.name)
-            self.ns = load_script(self.path, self.args)
-            self.start()
+            self.load_script()
             self.configure(self.last_options)
         else:
             self.run("tick")
 
     def start(self):
-        self.ns = load_script(self.path, self.args)
-        self.run("start")
+        self.load_script()
 
     def configure(self, options):
         self.last_options = options

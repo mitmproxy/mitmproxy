@@ -48,7 +48,7 @@ def test_load_script():
             "data/addonscripts/recorder.py"
         ), []
     )
-    assert ns["configure"]
+    assert ns.configure
 
 
 class TestScript(mastertest.MasterTest):
@@ -61,16 +61,16 @@ class TestScript(mastertest.MasterTest):
             )
         )
         m.addons.add(sc)
-        assert sc.ns["call_log"] == [
+        assert sc.ns.call_log == [
             ("solo", "start", (), {}),
             ("solo", "configure", (options.Options(),), {})
         ]
 
-        sc.ns["call_log"] = []
+        sc.ns.call_log = []
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)
 
-        recf = sc.ns["call_log"][0]
+        recf = sc.ns.call_log[0]
         assert recf[1] == "request"
 
     def test_reload(self):
