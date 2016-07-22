@@ -99,7 +99,6 @@ class ReloadHandler(watchdog.events.FileSystemEventHandler):
             return False
         if os.path.basename(event.src_path).startswith("."):
             return False
-        print(event.src_path)
         return True
 
     def on_modified(self, event):
@@ -151,7 +150,10 @@ class Script:
 
     def load_script(self):
         self.ns = load_script(self.path, self.args)
-        self.run("start")
+        ret = self.run("start")
+        if ret:
+            self.ns = ret
+            self.run("start")
 
     def tick(self):
         if self.should_reload.is_set():

@@ -116,6 +116,19 @@ class TestScript(mastertest.MasterTest):
         assert not fm.state.view[0].request.is_replay
         assert fm.state.view[1].request.is_replay
 
+    def test_addon(self):
+        s = state.State()
+        m = master.FlowMaster(options.Options(), None, s)
+        sc = script.Script(
+            tutils.test_data.path(
+                "data/addonscripts/addon.py"
+            )
+        )
+        m.addons.add(sc)
+        assert sc.ns.event_log == [
+            'scriptstart', 'addonstart', 'addonconfigure'
+        ]
+
 
 class TestScriptLoader(mastertest.MasterTest):
     def test_simple(self):
