@@ -615,6 +615,7 @@ class TestSerialize:
     def test_roundtrip(self):
         sio = io.BytesIO()
         f = tutils.tflow()
+        f.marked = True
         f.request.content = bytes(bytearray(range(256)))
         w = flow.FlowWriter(sio)
         w.add(f)
@@ -627,6 +628,7 @@ class TestSerialize:
         f2 = l[0]
         assert f2.get_state() == f.get_state()
         assert f2.request == f.request
+        assert f2.marked
 
     def test_load_flows(self):
         r = self._treader()
