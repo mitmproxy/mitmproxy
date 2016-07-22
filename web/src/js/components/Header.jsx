@@ -6,7 +6,7 @@ import ViewMenu from './Header/ViewMenu'
 import OptionMenu from './Header/OptionMenu'
 import FileMenu from './Header/FileMenu'
 import FlowMenu from './Header/FlowMenu'
-import {setActiveMenu} from '../ducks/ui/header'
+import { setActiveMenu } from '../ducks/ui/header'
 
 class Header extends Component {
     static entries = [MainMenu, ViewMenu, OptionMenu]
@@ -19,9 +19,10 @@ class Header extends Component {
     render() {
         const { selectedFlowId, activeMenu} = this.props
 
-        let entries = [...Header.entries]
-        if(selectedFlowId)
+        const entries = [...Header.entries]
+        if (selectedFlowId) {
             entries.push(FlowMenu)
+        }
 
         const Active = _.find(entries, (e) => e.title == activeMenu)
 

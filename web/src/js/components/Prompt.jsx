@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import ReactDOM from 'react-dom'
 import _ from 'lodash'
+import FocusHelper from './helpers/Focus'
 
 import {Key} from '../utils.js'
 
@@ -43,7 +44,7 @@ export default function Prompt({ prompt, done, options }) {
     }
 
     return (
-        <div tabIndex="0" onKeyDown={onKeyDown} className="prompt-dialog">
+        <div ref={FocusHelper(true)} tabIndex="0" onKeyDown={onKeyDown} className="prompt-dialog">
             <div className="prompt-content">
             {prompt || <strong>Select: </strong> }
             {opts.map(opt => {

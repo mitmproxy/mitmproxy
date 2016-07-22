@@ -2,6 +2,8 @@ import { Key } from '../../utils'
 import { selectRelative as selectFlowRelative } from '../flowView'
 import { selectTab } from './flow'
 import * as flowsActions from '../flows'
+import { setSelectedInput } from './focus'
+import { setPrompt } from './prompt'
 
 
 export function onKeyDown(e) {
@@ -18,6 +20,19 @@ export function onKeyDown(e) {
         const flow = getState().flows.byId[getState().flows.selected[0]]
 
         switch (key) {
+
+            case Key.I:
+                dispatch(setSelectedInput('intercept'))
+                break
+
+            case Key.L:
+                dispatch(setSelectedInput('search'))
+                break
+
+            case Key.H:
+                dispatch(setSelectedInput('highlight'))
+                break
+
             case Key.K:
             case Key.UP:
                 dispatch(selectFlowRelative(-1))
@@ -48,6 +63,29 @@ export function onKeyDown(e) {
             case Key.ESC:
                 dispatch(flowsActions.select(null))
                 break
+
+            case Key.E:
+            {
+                if (!flow) break
+                switch (getState().ui.flow.tab) {
+
+                    case 'request':
+                        return dispatch(setPrompt([
+                            'method',
+                            'url',
+                            { text: 'http version', key: 'v' },
+                            'header'
+                        ]))
+
+                    case 'response':
+                        return dispatch(setPrompt([
+                            { text: 'http version', key: 'v' },
+                            'code',
+                            'message',
+                            'header'
+                        ]))
+                }
+            }
 
             case Key.LEFT:
             {

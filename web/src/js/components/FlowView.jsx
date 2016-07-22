@@ -8,49 +8,31 @@ import Details from './FlowView/Details'
 import Prompt from './Prompt'
 
 import { selectTab } from '../ducks/ui/flow'
+import { setPrompt } from '../ducks/ui/prompt'
+import { setEditType } from '../ducks/ui/focus'
 
 export default class FlowView extends Component {
 
     static allTabs = { Request, Response, Error, Details }
 
-    constructor(props, context) {
-        super(props, context)
-        this.onPromptFinish = this.onPromptFinish.bind(this)
+    static focusTarget = {
+        request: {
+            m: 'method',
+            u: 'url',
+            v: 'httpVersion',
+            h: 'headers',
+        },
+        response: {
+            c: 'status_code',
+            m: 'msg',
+            v: 'httpVersion',
+            h: 'headers'
+        },
     }
 
-    onPromptFinish(edit) {
-        this.props.setPrompt(false)
-        if (edit && this.tabComponent) {
-            this.tabComponent.edit(edit)
-        }
-    }
-
-    getPromptOptions() {
-        switch (this.props.tab) {
-
-            case 'request':
-                return [
-                    'method',
-                    'url',
-                    { text: 'http version', key: 'v' },
-                    'header'
-                ]
-                break
-
-            case 'response':
-                return [
-                    { text: 'http version', key: 'v' },
-                    'code',
-                    'message',
-                    'header'
-                ]
-                break
-
-            case 'details':
-                return
-
-            default:
-                throw 'Unknown tab for edit: ' + this.props.tab
+    componentDidUpdate() {
+        if (this.props.editType) {
+            this.props.setEditType(null)
         }
     }
 
@@ -78,9 +60,12 @@ export default class FlowView extends Component {
                     active={active}
                     onSelectTab={this.props.selectTab}
                 />
-                <Tab ref={ tab => this.tabComponent = tab } flow={flow} updateFlow={updateFlow} />
-                {this.props.promptOpen && (
-                    <Prompt options={this.getPromptOptions()} done={this.onPromptFinish} />
+                <Tab editType={this.props.editType} flow={flow} updateFlow={updateFlow} />
+                {this.props.prompt && (
+                    <Prompt options={this.prompt} done={editType => {
+                        setPrompt(null)
+                        setEditType(FlowView.focusTarget[active][editType])
+                    }} />
                 )}
             </div>
         )
@@ -89,10 +74,13 @@ export default class FlowView extends Component {
 
 export default connect(
     state => ({
-        promptOpen: state.ui.promptOpen,
-        tab: state.ui.flow.tab
+        prompt: state.ui.prompt.options,
+        editType: state.ui.focus.editType,
+        tab: state.ui.flow.tab,
     }),
     {
         selectTab,
+        setPrompt,
+        setEditType,
     }
 )(FlowView)
