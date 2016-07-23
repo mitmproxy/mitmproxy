@@ -632,10 +632,6 @@ class ConsoleMaster(flow.FlowMaster):
     def save_flows(self, path):
         return self._write_flows(path, self.state.view)
 
-    def save_marked_flows(self, path):
-        marked_flows = [f for f in self.state.view if f.marked]
-        return self._write_flows(path, marked_flows)
-
     def load_flows_callback(self, path):
         if not path:
             return
