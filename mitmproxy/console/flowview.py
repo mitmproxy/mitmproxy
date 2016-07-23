@@ -566,7 +566,8 @@ class FlowView(tabs.Tabs):
             else:
                 self.view_next_flow(self.flow)
             f = self.flow
-            f.kill(self.master)
+            if not f.reply.acked:
+                f.kill(self.master)
             self.state.delete_flow(f)
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
