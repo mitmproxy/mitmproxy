@@ -48,7 +48,7 @@ def test_load_script():
             "data/addonscripts/recorder.py"
         ), []
     )
-    assert ns["configure"]
+    assert ns.start
 
 
 class TestScript(mastertest.MasterTest):
@@ -61,16 +61,16 @@ class TestScript(mastertest.MasterTest):
             )
         )
         m.addons.add(sc)
-        assert sc.ns["call_log"] == [
+        assert sc.ns.call_log == [
             ("solo", "start", (), {}),
             ("solo", "configure", (options.Options(),), {})
         ]
 
-        sc.ns["call_log"] = []
+        sc.ns.call_log = []
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)
 
-        recf = sc.ns["call_log"][0]
+        recf = sc.ns.call_log[0]
         assert recf[1] == "request"
 
     def test_reload(self):
@@ -115,6 +115,19 @@ class TestScript(mastertest.MasterTest):
         assert fm.state.flow_count() == 2
         assert not fm.state.view[0].request.is_replay
         assert fm.state.view[1].request.is_replay
+
+    def test_addon(self):
+        s = state.State()
+        m = master.FlowMaster(options.Options(), None, s)
+        sc = script.Script(
+            tutils.test_data.path(
+                "data/addonscripts/addon.py"
+            )
+        )
+        m.addons.add(sc)
+        assert sc.ns.event_log == [
+            'scriptstart', 'addonstart', 'addonconfigure'
+        ]
 
 
 class TestScriptLoader(mastertest.MasterTest):

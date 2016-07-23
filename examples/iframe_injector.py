@@ -3,26 +3,27 @@
 import sys
 from bs4 import BeautifulSoup
 
-iframe_url = None
+
+class Injector:
+    def __init__(self, iframe_url):
+        self.iframe_url = iframe_url
+
+    def response(self, flow):
+        if flow.request.host in self.iframe_url:
+            return
+        html = BeautifulSoup(flow.response.content, "lxml")
+        if html.body:
+            iframe = html.new_tag(
+                "iframe",
+                src=self.iframe_url,
+                frameborder=0,
+                height=0,
+                width=0)
+            html.body.insert(0, iframe)
+            flow.response.content = str(html).encode("utf8")
 
 
 def start():
     if len(sys.argv) != 2:
         raise ValueError('Usage: -s "iframe_injector.py url"')
-    global iframe_url
-    iframe_url = sys.argv[1]
-
-
-def response(flow):
-    if flow.request.host in iframe_url:
-        return
-    html = BeautifulSoup(flow.response.content, "lxml")
-    if html.body:
-        iframe = html.new_tag(
-            "iframe",
-            src=iframe_url,
-            frameborder=0,
-            height=0,
-            width=0)
-        html.body.insert(0, iframe)
-        flow.response.content = str(html).encode("utf8")
+    return Injector(sys.argv[1])
