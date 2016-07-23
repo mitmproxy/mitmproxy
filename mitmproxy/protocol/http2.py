@@ -584,6 +584,8 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
+        except exceptions.Kill:
+            self.log("Connection killed", "info")
 
         if not self.zombie:
             self.zombie = time.time()
