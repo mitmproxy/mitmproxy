@@ -82,6 +82,7 @@ def unparse(scheme, host, port, path=""):
 
 
 def encode(s):
+    # type: (six.text_type, bytes) -> str
     """
         Takes a list of (key, value) tuples and returns a urlencoded string.
     """

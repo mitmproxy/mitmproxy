@@ -6,6 +6,7 @@ import sys
 import traceback
 
 import urwid
+from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
 from mitmproxy import controller
@@ -105,7 +106,8 @@ footer = [
 class FlowViewHeader(urwid.WidgetWrap):
 
     def __init__(self, master, f):
-        self.master, self.flow = master, f
+        self.master = master  # type: "mitmproxy.console.master.ConsoleMaster"
+        self.flow = f  # type: models.HTTPFlow
         self._w = common.format_flow(
             f,
             False,
@@ -530,13 +532,6 @@ class FlowView(tabs.Tabs):
         )
         signals.flow_change.send(self, flow = self.flow)
 
-    def delete_body(self, t):
-        if self.tab_offset == TAB_REQ:
-            self.flow.request.content = None
-        else:
-            self.flow.response.content = None
-        signals.flow_change.send(self, flow = self.flow)
-
     def keypress(self, size, key):
         key = super(self.__class__, self).keypress(size, key)
 
@@ -545,6 +540,8 @@ class FlowView(tabs.Tabs):
             return
 
         key = common.shortcuts(key)
+
+        conn = None  # type: Optional[Union[models.HTTPRequest, models.HTTPResponse]]
         if self.tab_offset == TAB_REQ:
             conn = self.flow.request
         elif self.tab_offset == TAB_RESP:
@@ -691,15 +688,8 @@ class FlowView(tabs.Tabs):
                     args = (scope, self.flow, common.copy_to_clipboard_or_prompt)
                 )
             elif key == "x":
-                signals.status_prompt_onekey.send(
-                    prompt = "Delete body",
-                    keys = (
-                        ("completely", "c"),
-                        ("mark as missing", "m"),
-                    ),
-                    callback = self.delete_body
-                )
-                key = None
+                conn.content = None
+                signals.flow_change.send(self, flow=self.flow)
             elif key == "v":
                 if conn.raw_content:
                     t = conn.headers.get("content-type")
@@ -713,7 +703,9 @@ class FlowView(tabs.Tabs):
                 self.flow.backup()
                 e = conn.headers.get("content-encoding", "identity")
                 if e != "identity":
-                    if not conn.decode():
+                    try:
+                        conn.decode()
+                    except ValueError:
                         signals.status_message.send(
                             message = "Could not decode - invalid data?"
                         )
