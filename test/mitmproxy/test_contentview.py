@@ -59,10 +59,10 @@ class TestContentView:
         assert f[0] == "Query"
 
     def test_view_urlencoded(self):
-        d = url.encode([("one", "two"), ("three", "four")])
+        d = url.encode([("one", "two"), ("three", "four")]).encode()
         v = cv.ViewURLEncoded()
         assert v(d)
-        d = url.encode([("adsfa", "")])
+        d = url.encode([("adsfa", "")]).encode()
         v = cv.ViewURLEncoded()
         assert v(d)
 

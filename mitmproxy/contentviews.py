@@ -109,12 +109,16 @@ class View(object):
     prompt = ()
     content_types = []
 
-    def __call__(self, data, **metadata):
+    def __call__(
+            self,
+            data,  # type: bytes
+            **metadata
+    ):
         """
         Transform raw data into human-readable output.
 
         Args:
-            data: the data to decode/format as bytes.
+            data: the data to decode/format.
             metadata: optional keyword-only arguments for metadata. Implementations must not
                 rely on a given argument being present.
 
@@ -282,7 +286,7 @@ class ViewURLEncoded(View):
 
     def __call__(self, data, **metadata):
         try:
-            data = data.decode("ascii","strict")
+            data = data.decode("ascii", "strict")
         except ValueError:
             return None
         d = url.decode(data)
