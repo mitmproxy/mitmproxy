@@ -20,10 +20,10 @@ matrix:
   include:
     - python: 3.5
       env: TOXENV=lint
-#    - os: osx
-#      osx_image: xcode7.3
-#      language: generic
-#      env: TOXENV=py35
+    - os: osx
+      osx_image: xcode7.3
+      language: generic
+      env: TOXENV=py35
     - python: 3.5
       env: TOXENV=py35
     - python: 3.5
