@@ -19,7 +19,7 @@ class FileStreamer:
         self.stream = io.FilteredFlowWriter(f, filt)
         self.active_flows = set()
 
-    def configure(self, options):
+    def configure(self, options, updated):
         # We're already streaming - stop the previous stream and restart
         if self.stream:
             self.done()

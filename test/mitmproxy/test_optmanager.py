@@ -15,6 +15,8 @@ class TO(optmanager.OptManager):
 
 def test_options():
     o = TO(two="three")
+    assert o.keys() == set(["one", "two"])
+
     assert o.one is None
     assert o.two == "three"
     o.one = "one"
@@ -29,7 +31,7 @@ def test_options():
 
     rec = []
 
-    def sub(opts):
+    def sub(opts, updated):
         rec.append(copy.copy(opts))
 
     o.changed.connect(sub)
@@ -68,7 +70,7 @@ def test_rollback():
 
     rec = []
 
-    def sub(opts):
+    def sub(opts, updated):
         rec.append(copy.copy(opts))
 
     recerr = []
@@ -76,7 +78,7 @@ def test_rollback():
     def errsub(opts, **kwargs):
         recerr.append(kwargs)
 
-    def err(opts):
+    def err(opts, updated):
         if opts.one == "ten":
             raise exceptions.OptionsError()
 

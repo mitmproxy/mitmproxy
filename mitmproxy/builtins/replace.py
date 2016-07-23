@@ -8,7 +8,7 @@ class Replace:
     def __init__(self):
         self.lst = []
 
-    def configure(self, options):
+    def configure(self, options, updated):
         """
             .replacements is a list of tuples (fpat, rex, s):
 
