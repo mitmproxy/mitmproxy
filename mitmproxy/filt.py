@@ -39,9 +39,12 @@ import functools
 
 from mitmproxy.models.http import HTTPFlow
 from mitmproxy.models.tcp import TCPFlow
+from mitmproxy.models.flow import Flow
+
 from netlib import strutils
 
 import pyparsing as pp
+from typing import Callable
 
 
 def only(*types):
@@ -471,7 +474,11 @@ def _make():
 bnf = _make()
 
 
+TFilter = Callable[[Flow], bool]
+
+
 def parse(s):
+    # type: (str) -> TFilter
     try:
         filt = bnf.parseString(s, parseAll=True)[0]
         filt.pattern = s

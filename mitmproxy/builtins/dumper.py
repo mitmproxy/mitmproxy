@@ -5,6 +5,8 @@ import traceback
 
 import click
 
+import typing  # noqa
+
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -19,12 +21,25 @@ def indent(n, text):
     return "\n".join(pad + i for i in l)
 
 
-class Dumper():
+class Dumper(object):
     def __init__(self):
-        self.filter = None
-        self.flow_detail = None
-        self.outfp = None
-        self.showhost = None
+        self.filter = None  # type: filt.TFilter
+        self.flow_detail = None  # type: int
+        self.outfp = None  # type: typing.io.TextIO
+        self.showhost = None  # type: bool
+
+    def configure(self, options, updated):
+        if options.filtstr:
+            self.filter = filt.parse(options.filtstr)
+            if not self.filter:
+                raise exceptions.OptionsError(
+                    "Invalid filter expression: %s" % options.filtstr
+                )
+        else:
+            self.filter = None
+        self.flow_detail = options.flow_detail
+        self.outfp = options.tfile
+        self.showhost = options.showhost
 
     def echo(self, text, ident=None, **style):
         if ident:
@@ -59,7 +74,7 @@ class Dumper():
                 self.echo("")
 
                 try:
-                    type, lines = contentviews.get_content_view(
+                    _, lines = contentviews.get_content_view(
                         contentviews.get("Auto"),
                         content,
                         headers=getattr(message, "headers", None)
@@ -67,7 +82,7 @@ class Dumper():
                 except exceptions.ContentViewException:
                     s = "Content viewer failed: \n" + traceback.format_exc()
                     ctx.log.debug(s)
-                    type, lines = contentviews.get_content_view(
+                    _, lines = contentviews.get_content_view(
                         contentviews.get("Raw"),
                         content,
                         headers=getattr(message, "headers", None)
@@ -114,9 +129,8 @@ class Dumper():
         if flow.client_conn:
             client = click.style(
                 strutils.escape_control_characters(
-                    flow.client_conn.address.host
-                ),
-                bold=True
+                    repr(flow.client_conn.address)
+                )
             )
         elif flow.request.is_replay:
             client = click.style("[replay]", fg="yellow", bold=True)
@@ -139,17 +153,23 @@ class Dumper():
             url = flow.request.url
         url = click.style(strutils.escape_control_characters(url), bold=True)
 
-        httpversion = ""
+        http_version = ""
         if flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0"):
             # We hide "normal" HTTP 1.
-            httpversion = " " + flow.request.http_version
+            http_version = " " + flow.request.http_version
 
-        line = "{stickycookie}{client} {method} {url}{httpversion}".format(
-            stickycookie=stickycookie,
+        if self.flow_detail >= 2:
+            linebreak = "\n    "
+        else:
+            linebreak = ""
+
+        line = "{client}: {linebreak}{stickycookie}{method} {url}{http_version}".format(
             client=client,
+            stickycookie=stickycookie,
+            linebreak=linebreak,
             method=method,
             url=url,
-            httpversion=httpversion
+            http_version=http_version
         )
         self.echo(line)
 
@@ -185,9 +205,14 @@ class Dumper():
             size = human.pretty_size(len(flow.response.raw_content))
         size = click.style(size, bold=True)
 
-        arrows = click.style("    <<", bold=True)
+        arrows = click.style(" <<", bold=True)
+        if self.flow_detail == 1:
+            # This aligns the HTTP response code with the HTTP request method:
+            # 127.0.0.1:59519: GET http://example.com/
+            #               << 304 Not Modified 0b
+            arrows = " " * (len(repr(flow.client_conn.address)) - 2) + arrows
 
-        line = "{replay} {arrows} {code} {reason} {size}".format(
+        line = "{replay}{arrows} {code} {reason} {size}".format(
             replay=replay,
             arrows=arrows,
             code=code,
@@ -211,24 +236,11 @@ class Dumper():
     def match(self, f):
         if self.flow_detail == 0:
             return False
-        if not self.filt:
+        if not self.filter:
             return True
-        elif f.match(self.filt):
+        elif f.match(self.filter):
             return True
         return False
-
-    def configure(self, options, updated):
-        if options.filtstr:
-            self.filt = filt.parse(options.filtstr)
-            if not self.filt:
-                raise exceptions.OptionsError(
-                    "Invalid filter expression: %s" % options.filtstr
-                )
-        else:
-            self.filt = None
-        self.flow_detail = options.flow_detail
-        self.outfp = options.tfile
-        self.showhost = options.showhost
 
     def response(self, f):
         if self.match(f):
@@ -239,8 +251,7 @@ class Dumper():
             self.echo_flow(f)
 
     def tcp_message(self, f):
-        # FIXME: Filter should be applied here
-        if self.options.flow_detail == 0:
+        if not self.match(f):
             return
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"

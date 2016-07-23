@@ -51,8 +51,7 @@ else:
 
 def escape_control_characters(text, keep_spacing=True):
     """
-    Replace all unicode C1 control characters from the given text with their respective control pictures.
-    For example, a null byte is replaced with the unicode character "\u2400".
+    Replace all unicode C1 control characters from the given text with a single "."
 
     Args:
         keep_spacing: If True, tabs and newlines will not be replaced.
