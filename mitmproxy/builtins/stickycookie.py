@@ -32,7 +32,7 @@ class StickyCookie:
         self.jar = collections.defaultdict(dict)
         self.flt = None
 
-    def configure(self, options):
+    def configure(self, options, updated):
         if options.stickycookie:
             flt = filt.parse(options.stickycookie)
             if not flt:

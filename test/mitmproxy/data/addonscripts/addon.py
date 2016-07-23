@@ -9,11 +9,11 @@ class Addon:
     def start(self):
         event_log.append("addonstart")
 
-    def configure(self, options):
+    def configure(self, options, updated):
         event_log.append("addonconfigure")
 
 
-def configure(options):
+def configure(options, updated):
     event_log.append("addonconfigure")
 
 

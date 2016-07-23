@@ -242,7 +242,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
-        self.addons.add(*builtins.default_addons())
+        self.addons.add(options, *builtins.default_addons())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value

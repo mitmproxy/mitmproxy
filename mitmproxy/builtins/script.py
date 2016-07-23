@@ -159,15 +159,16 @@ class Script:
         if self.should_reload.is_set():
             self.should_reload.clear()
             ctx.log.info("Reloading script: %s" % self.name)
-            self.load_script()
-            self.configure(self.last_options)
+            self.ns = load_script(self.path, self.args)
+            self.start()
+            self.configure(self.last_options, self.last_options.keys())
         else:
             self.run("tick")
 
     def start(self):
         self.load_script()
 
-    def configure(self, options):
+    def configure(self, options, updated):
         self.last_options = options
         if not self.observer:
             self.observer = polling.PollingObserver()
@@ -177,7 +178,7 @@ class Script:
                 os.path.dirname(self.path) or "."
             )
             self.observer.start()
-        self.run("configure", options)
+        self.run("configure", options, updated)
 
     def done(self):
         self.run("done")
@@ -188,26 +189,27 @@ class ScriptLoader():
     """
         An addon that manages loading scripts from options.
     """
-    def configure(self, options):
-        for s in options.scripts:
-            if options.scripts.count(s) > 1:
-                raise exceptions.OptionsError("Duplicate script: %s" % s)
+    def configure(self, options, updated):
+        if "scripts" in updated:
+            for s in options.scripts:
+                if options.scripts.count(s) > 1:
+                    raise exceptions.OptionsError("Duplicate script: %s" % s)
 
-        for a in ctx.master.addons.chain[:]:
-            if isinstance(a, Script) and a.name not in options.scripts:
-                    ctx.log.info("Un-loading script: %s" % a.name)
-                    ctx.master.addons.remove(a)
+            for a in ctx.master.addons.chain[:]:
+                if isinstance(a, Script) and a.name not in options.scripts:
+                        ctx.log.info("Un-loading script: %s" % a.name)
+                        ctx.master.addons.remove(a)
 
-        current = {}
-        for a in ctx.master.addons.chain[:]:
-            if isinstance(a, Script):
-                current[a.name] = a
-                ctx.master.addons.chain.remove(a)
+            current = {}
+            for a in ctx.master.addons.chain[:]:
+                if isinstance(a, Script):
+                    current[a.name] = a
+                    ctx.master.addons.chain.remove(a)
 
-        for s in options.scripts:
-            if s in current:
-                ctx.master.addons.chain.append(current[s])
-            else:
-                ctx.log.info("Loading script: %s" % s)
-                sc = Script(s)
-                ctx.master.addons.add(sc)
+            for s in options.scripts:
+                if s in current:
+                    ctx.master.addons.chain.append(current[s])
+                else:
+                    ctx.log.info("Loading script: %s" % s)
+                    sc = Script(s)
+                    ctx.master.addons.add(options, sc)

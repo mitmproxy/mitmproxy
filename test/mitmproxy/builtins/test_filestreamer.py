@@ -20,16 +20,13 @@ class TestStream(mastertest.MasterTest):
                 return list(r.stream())
 
             s = state.State()
-            m = master.FlowMaster(
-                options.Options(
-                    outfile = (p, "wb")
-                ),
-                None,
-                s
+            o = options.Options(
+                outfile = (p, "wb")
             )
+            m = master.FlowMaster(o, None, s)
             sa = filestreamer.FileStreamer()
 
-            m.addons.add(sa)
+            m.addons.add(o, sa)
             f = tutils.tflow(resp=True)
             self.invoke(m, "request", f)
             self.invoke(m, "response", f)
@@ -39,7 +36,7 @@ class TestStream(mastertest.MasterTest):
 
             m.options.outfile = (p, "ab")
 
-            m.addons.add(sa)
+            m.addons.add(o, sa)
             f = tutils.tflow()
             self.invoke(m, "request", f)
             m.addons.remove(sa)

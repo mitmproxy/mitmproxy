@@ -79,10 +79,10 @@ class ProxyConfig:
         self.certstore = None
         self.clientcerts = None
         self.openssl_verification_mode_server = None
-        self.configure(options)
+        self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
 
-    def configure(self, options):
+    def configure(self, options, updated):
         conflict = all(
             [
                 options.add_upstream_certs_to_client_chain,

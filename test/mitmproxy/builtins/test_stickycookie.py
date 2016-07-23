@@ -14,22 +14,23 @@ def test_domain_match():
 class TestStickyCookie(mastertest.MasterTest):
     def mk(self):
         s = state.State()
-        m = master.FlowMaster(options.Options(stickycookie = ".*"), None, s)
+        o = options.Options(stickycookie = ".*")
+        m = master.FlowMaster(o, None, s)
         sc = stickycookie.StickyCookie()
-        m.addons.add(sc)
+        m.addons.add(o, sc)
         return s, m, sc
 
     def test_config(self):
         sc = stickycookie.StickyCookie()
+        o = options.Options(stickycookie = "~b")
         tutils.raises(
             "invalid filter",
-            sc.configure,
-            options.Options(stickycookie = "~b")
+            sc.configure, o, o.keys()
         )
 
     def test_simple(self):
         s, m, sc = self.mk()
-        m.addons.add(sc)
+        m.addons.add(m.options, sc)
 
         f = tutils.tflow(resp=True)
         f.response.headers["set-cookie"] = "foo=bar"

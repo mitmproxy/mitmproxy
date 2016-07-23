@@ -10,7 +10,7 @@ class StickyAuth:
         self.flt = None
         self.hosts = {}
 
-    def configure(self, options):
+    def configure(self, options, updated):
         if options.stickyauth:
             flt = filt.parse(options.stickyauth)
             if not flt:

@@ -8,9 +8,10 @@ from mitmproxy import options
 class TestStickyAuth(mastertest.MasterTest):
     def test_simple(self):
         s = state.State()
-        m = master.FlowMaster(options.Options(stickyauth = ".*"), None, s)
+        o = options.Options(stickyauth = ".*")
+        m = master.FlowMaster(o, None, s)
         sa = stickyauth.StickyAuth()
-        m.addons.add(sa)
+        m.addons.add(o, sa)
 
         f = tutils.tflow(resp=True)
         f.request.headers["authorization"] = "foo"

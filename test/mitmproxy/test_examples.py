@@ -27,10 +27,11 @@ class RaiseMaster(master.FlowMaster):
 
 
 def tscript(cmd, args=""):
+    o = options.Options()
     cmd = example_dir.path(cmd) + " " + args
-    m = RaiseMaster(options.Options(), None, state.State())
+    m = RaiseMaster(o, None, state.State())
     sc = script.Script(cmd)
-    m.addons.add(sc)
+    m.addons.add(o, sc)
     return m, sc
 
 

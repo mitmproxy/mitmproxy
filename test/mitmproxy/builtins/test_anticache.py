@@ -8,9 +8,10 @@ from mitmproxy import options
 class TestAntiCache(mastertest.MasterTest):
     def test_simple(self):
         s = state.State()
-        m = master.FlowMaster(options.Options(anticache = True), None, s)
+        o = options.Options(anticache = True)
+        m = master.FlowMaster(o, None, s)
         sa = anticache.AntiCache()
-        m.addons.add(sa)
+        m.addons.add(o, sa)
 
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)

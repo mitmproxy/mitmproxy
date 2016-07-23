@@ -6,7 +6,7 @@ class SetHeaders:
     def __init__(self):
         self.lst = []
 
-    def configure(self, options):
+    def configure(self, options, updated):
         """
             options.setheaders is a tuple of (fpatt, header, value)
 

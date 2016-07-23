@@ -13,16 +13,23 @@ class Addons(object):
         self.master = master
         master.options.changed.connect(self.options_update)
 
-    def options_update(self, options):
+    def options_update(self, options, updated):
         for i in self.chain:
             with self.master.handlecontext():
-                i.configure(options)
+                i.configure(options, updated)
 
-    def add(self, *addons):
+    def add(self, options, *addons):
+        if not addons:
+            raise ValueError("No adons specified.")
         self.chain.extend(addons)
         for i in addons:
             self.invoke_with_context(i, "start")
-            self.invoke_with_context(i, "configure", self.master.options)
+            self.invoke_with_context(
+                i,
+                "configure",
+                self.master.options,
+                self.master.options.keys()
+            )
 
     def remove(self, addon):
         self.chain = [i for i in self.chain if i is not addon]

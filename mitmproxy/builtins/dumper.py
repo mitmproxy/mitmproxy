@@ -217,7 +217,7 @@ class Dumper():
             return True
         return False
 
-    def configure(self, options):
+    def configure(self, options, updated):
         if options.filtstr:
             self.filt = filt.parse(options.filtstr)
             if not self.filt:

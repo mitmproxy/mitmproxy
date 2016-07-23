@@ -8,9 +8,10 @@ from mitmproxy import options
 class TestAntiComp(mastertest.MasterTest):
     def test_simple(self):
         s = state.State()
-        m = master.FlowMaster(options.Options(anticomp = True), None, s)
+        o = options.Options(anticomp = True)
+        m = master.FlowMaster(o, None, s)
         sa = anticomp.AntiComp()
-        m.addons.add(sa)
+        m.addons.add(o, sa)
 
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)
