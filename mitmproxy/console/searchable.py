@@ -78,9 +78,9 @@ class Searchable(urwid.ListBox):
                 return
         # Start search at focus + 1
         if backwards:
-            rng = xrange(len(self.body) - 1, -1, -1)
+            rng = range(len(self.body) - 1, -1, -1)
         else:
-            rng = xrange(1, len(self.body) + 1)
+            rng = range(1, len(self.body) + 1)
         for i in rng:
             off = (self.focus_position + i) % len(self.body)
             w = self.body[off]
