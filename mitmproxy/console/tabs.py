@@ -25,7 +25,7 @@ class Tab(urwid.WidgetWrap):
 class Tabs(urwid.WidgetWrap):
 
     def __init__(self, tabs, tab_offset=0):
-        urwid.WidgetWrap.__init__(self, "")
+        super(Tabs, self).__init__("")
         self.tab_offset = tab_offset
         self.tabs = tabs
         self.show()
