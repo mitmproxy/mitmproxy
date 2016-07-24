@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-import mock
 import six
 
 from netlib.tutils import tresp
@@ -113,14 +112,6 @@ class TestMessageContentEncoding(object):
         assert r.content == b"message"
         assert r.raw_content != b"message"
 
-        r.raw_content = b"foo"
-        with mock.patch("netlib.encoding.decode") as e:
-            assert r.content
-            assert e.call_count == 1
-            e.reset_mock()
-            assert r.content
-            assert e.call_count == 0
-
     def test_modify(self):
         r = tresp()
         assert "content-encoding" not in r.headers
@@ -130,13 +121,6 @@ class TestMessageContentEncoding(object):
         assert r.raw_content != b"foo"
         r.decode()
         assert r.raw_content == b"foo"
-
-        r.encode("identity")
-        with mock.patch("netlib.encoding.encode") as e:
-            r.content = b"foo"
-            assert e.call_count == 0
-            r.content = b"bar"
-            assert e.call_count == 1
 
         with tutils.raises(TypeError):
             r.content = u"foo"
@@ -212,15 +196,6 @@ class TestMessageText(object):
         r.headers["content-type"] = "text/html; charset=utf8"
         assert r.text == u"ü"
 
-        r.encode("identity")
-        r.raw_content = b"foo"
-        with mock.patch("netlib.encoding.decode") as e:
-            assert r.text
-            assert e.call_count == 2
-            e.reset_mock()
-            assert r.text
-            assert e.call_count == 0
-
     def test_guess_json(self):
         r = tresp(content=b'"\xc3\xbc"')
         r.headers["content-type"] = "application/json"
@@ -244,14 +219,6 @@ class TestMessageText(object):
         r.text = u"ü"
         assert r.raw_content == b"\xc3\xbc"
         assert r.headers["content-length"] == "2"
-
-        r.encode("identity")
-        with mock.patch("netlib.encoding.encode") as e:
-            e.return_value = b""
-            r.text = u"ü"
-            assert e.call_count == 0
-            r.text = u"ä"
-            assert e.call_count == 2
 
     def test_unknown_ce(self):
         r = tresp()
