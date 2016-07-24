@@ -126,7 +126,7 @@ export default class Headers extends Component {
                                 onDone={val => this.onChange(i, 0, val)}
                                 onRemove={event => this.onRemove(i, 0, event)}
                                 onTab={event => this.onTab(i, 0, event)}
-                            />:
+                            /><span className="header-colon">:</span>
                         </td>
                         <td className="header-value">
                             <HeaderEditor
