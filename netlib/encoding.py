@@ -4,6 +4,7 @@ Utility functions for decoding response bodies.
 from __future__ import absolute_import
 
 import codecs
+import collections
 from io import BytesIO
 import gzip
 import zlib
@@ -11,7 +12,15 @@ import zlib
 from typing import Union  # noqa
 
 
-def decode(obj, encoding, errors='strict'):
+# We have a shared single-element cache for encoding and decoding.
+# This is quite useful in practice, e.g.
+# flow.request.content = flow.request.content.replace(b"foo", b"bar")
+# does not require an .encode() call if content does not contain b"foo"
+CachedDecode = collections.namedtuple("CachedDecode", "encoded encoding errors decoded")
+_cache = CachedDecode(None, None, None, None)
+
+
+def decode(encoded, encoding, errors='strict'):
     # type: (Union[str, bytes], str, str) -> Union[str, bytes]
     """
     Decode the given input object
@@ -22,20 +31,31 @@ def decode(obj, encoding, errors='strict'):
     Raises:
         ValueError, if decoding fails.
     """
+    global _cache
+    cached = (
+        _cache.encoded == encoded and
+        _cache.encoding == encoding and
+        _cache.errors == errors
+    )
+    if cached:
+        return _cache.decoded
     try:
         try:
-            return custom_decode[encoding](obj)
+            decoded = custom_decode[encoding](encoded)
         except KeyError:
-            return codecs.decode(obj, encoding, errors)
+            decoded = codecs.decode(encoded, encoding, errors)
+        if encoding in ("gzip", "deflate"):
+            _cache = CachedDecode(encoded, encoding, errors, decoded)
+        return decoded
     except Exception as e:
         raise ValueError("{} when decoding {} with {}".format(
             type(e).__name__,
-            repr(obj)[:10],
+            repr(encoded)[:10],
             repr(encoding),
         ))
 
 
-def encode(obj, encoding, errors='strict'):
+def encode(decoded, encoding, errors='strict'):
     # type: (Union[str, bytes], str, str) -> Union[str, bytes]
     """
     Encode the given input object
@@ -46,15 +66,26 @@ def encode(obj, encoding, errors='strict'):
     Raises:
         ValueError, if encoding fails.
     """
+    global _cache
+    cached = (
+        _cache.decoded == decoded and
+        _cache.encoding == encoding and
+        _cache.errors == errors
+    )
+    if cached:
+        return _cache.encoded
     try:
         try:
-            return custom_encode[encoding](obj)
+            encoded = custom_encode[encoding](decoded)
         except KeyError:
-            return codecs.encode(obj, encoding, errors)
+            encoded = codecs.encode(decoded, encoding, errors)
+        if encoding in ("gzip", "deflate"):
+            _cache = CachedDecode(encoded, encoding, errors, decoded)
+        return encoded
     except Exception as e:
         raise ValueError("{} when encoding {} with {}".format(
             type(e).__name__,
-            repr(obj)[:10],
+            repr(decoded)[:10],
             repr(encoding),
         ))
 

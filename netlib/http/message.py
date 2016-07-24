@@ -49,23 +49,7 @@ class MessageData(basetypes.Serializable):
         return cls(**state)
 
 
-class CachedDecode(object):
-    __slots__ = ["encoded", "encoding", "strict", "decoded"]
-
-    def __init__(self, object, encoding, strict, decoded):
-        self.encoded = object
-        self.encoding = encoding
-        self.strict = strict
-        self.decoded = decoded
-
-no_cached_decode = CachedDecode(None, None, None, None)
-
-
 class Message(basetypes.Serializable):
-    def __init__(self):
-        self._content_cache = no_cached_decode  # type: CachedDecode
-        self._text_cache = no_cached_decode  # type: CachedDecode
-
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
@@ -126,25 +110,15 @@ class Message(basetypes.Serializable):
         if self.raw_content is None:
             return None
         ce = self.headers.get("content-encoding")
-        cached = (
-            self._content_cache.encoded == self.raw_content and
-            (self._content_cache.strict or not strict) and
-            self._content_cache.encoding == ce
-        )
-        if not cached:
-            is_strict = True
-            if ce:
-                try:
-                    decoded = encoding.decode(self.raw_content, ce)
-                except ValueError:
-                    if strict:
-                        raise
-                    is_strict = False
-                    decoded = self.raw_content
-            else:
-                decoded = self.raw_content
-            self._content_cache = CachedDecode(self.raw_content, ce, is_strict, decoded)
-        return self._content_cache.decoded
+        if ce:
+            try:
+                return encoding.decode(self.raw_content, ce)
+            except ValueError:
+                if strict:
+                    raise
+                return self.raw_content
+        else:
+            return self.raw_content
 
     def set_content(self, value):
         if value is None:
@@ -157,22 +131,13 @@ class Message(basetypes.Serializable):
                 .format(type(value).__name__)
             )
         ce = self.headers.get("content-encoding")
-        cached = (
-            self._content_cache.decoded == value and
-            self._content_cache.encoding == ce and
-            self._content_cache.strict
-        )
-        if not cached:
-            try:
-                encoded = encoding.encode(value, ce or "identity")
-            except ValueError:
-                # So we have an invalid content-encoding?
-                # Let's remove it!
-                del self.headers["content-encoding"]
-                ce = None
-                encoded = value
-            self._content_cache = CachedDecode(encoded, ce, True, value)
-        self.raw_content = self._content_cache.encoded
+        try:
+            self.raw_content = encoding.encode(value, ce or "identity")
+        except ValueError:
+            # So we have an invalid content-encoding?
+            # Let's remove it!
+            del self.headers["content-encoding"]
+            self.raw_content = value
         self.headers["content-length"] = str(len(self.raw_content))
 
     content = property(get_content, set_content)
@@ -244,22 +209,12 @@ class Message(basetypes.Serializable):
         enc = self._guess_encoding()
 
         content = self.get_content(strict)
-        cached = (
-            self._text_cache.encoded == content and
-            (self._text_cache.strict or not strict) and
-            self._text_cache.encoding == enc
-        )
-        if not cached:
-            is_strict = self._content_cache.strict
-            try:
-                decoded = encoding.decode(content, enc)
-            except ValueError:
-                if strict:
-                    raise
-                is_strict = False
-                decoded = self.content.decode("utf8", "replace" if six.PY2 else "surrogateescape")
-            self._text_cache = CachedDecode(content, enc, is_strict, decoded)
-        return self._text_cache.decoded
+        try:
+            return encoding.decode(content, enc)
+        except ValueError:
+            if strict:
+                raise
+            return content.decode("utf8", "replace" if six.PY2 else "surrogateescape")
 
     def set_text(self, text):
         if text is None:
@@ -267,23 +222,15 @@ class Message(basetypes.Serializable):
             return
         enc = self._guess_encoding()
 
-        cached = (
-            self._text_cache.decoded == text and
-            self._text_cache.encoding == enc and
-            self._text_cache.strict
-        )
-        if not cached:
-            try:
-                encoded = encoding.encode(text, enc)
-            except ValueError:
-                # Fall back to UTF-8 and update the content-type header.
-                ct = headers.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
-                ct[2]["charset"] = "utf-8"
-                self.headers["content-type"] = headers.assemble_content_type(*ct)
-                enc = "utf8"
-                encoded = text.encode(enc, "replace" if six.PY2 else "surrogateescape")
-            self._text_cache = CachedDecode(encoded, enc, True, text)
-        self.content = self._text_cache.encoded
+        try:
+            self.content = encoding.encode(text, enc)
+        except ValueError:
+            # Fall back to UTF-8 and update the content-type header.
+            ct = headers.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+            ct[2]["charset"] = "utf-8"
+            self.headers["content-type"] = headers.assemble_content_type(*ct)
+            enc = "utf8"
+            self.content = text.encode(enc, "replace" if six.PY2 else "surrogateescape")
 
     text = property(get_text, set_text)
 
