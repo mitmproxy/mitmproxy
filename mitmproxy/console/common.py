@@ -410,7 +410,7 @@ def raw_format_flow(f, focus, extended):
     return urwid.Pile(pile)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, marked=False):
+def format_flow(f, focus, extended=False, hostheader=False):
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.acked,
@@ -423,7 +423,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
 
         err_msg = f.error.msg if f.error else None,
 
-        marked = marked,
+        marked = f.marked,
     )
     if f.response:
         if f.response.raw_content:

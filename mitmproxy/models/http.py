@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 import cgi
 import warnings
-import six
 
 from mitmproxy.models.flow import Flow
 from netlib import version
@@ -210,24 +209,6 @@ class HTTPFlow(Flow):
         if self.response:
             f.response = self.response.copy()
         return f
-
-    def match(self, f):
-        """
-            Match this flow against a compiled filter expression. Returns True
-            if matched, False if not.
-
-            If f is a string, it will be compiled as a filter expression. If
-            the expression is invalid, ValueError is raised.
-        """
-        if isinstance(f, six.string_types):
-            from .. import filt
-
-            f = filt.parse(f)
-            if not f:
-                raise ValueError("Invalid filter expression.")
-        if f:
-            return f(self)
-        return True
 
     def replace(self, pattern, repl, *args, **kwargs):
         """

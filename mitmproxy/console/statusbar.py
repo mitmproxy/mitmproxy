@@ -171,10 +171,6 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "l"))
             r.append(":%s]" % self.master.state.limit_txt)
-        if self.master.state.mark_filter:
-            r.append("[")
-            r.append(("heading_key", "Marked Flows"))
-            r.append("]")
         if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))

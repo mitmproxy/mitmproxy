@@ -83,6 +83,14 @@ class FErr(_Action):
         return True if f.error else False
 
 
+class FMarked(_Action):
+    code = "marked"
+    help = "Match marked flows"
+
+    def __call__(self, f):
+        return f.marked
+
+
 class FHTTP(_Action):
     code = "http"
     help = "Match HTTP flows"
@@ -401,6 +409,7 @@ filt_unary = [
     FAsset,
     FErr,
     FHTTP,
+    FMarked,
     FReq,
     FResp,
     FTCP,
