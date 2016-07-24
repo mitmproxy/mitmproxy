@@ -632,7 +632,7 @@ class FlowView(tabs.Tabs):
                     message="Tab to the request or response",
                     expire=1
                 )
-        elif key in "bfgmxvzEC" and not conn:
+        elif key in set("bfgmxvzEC") and not conn:
             signals.status_message.send(
                 message = "Tab to the request or response",
                 expire = 1
