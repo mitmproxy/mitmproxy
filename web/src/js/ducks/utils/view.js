@@ -54,14 +54,30 @@ export default function reduce(state = defaultState, action) {
             }
 
         case UPDATE:
-            if (state.indexOf[action.item.id] == null) {
-                return
+            let hasOldItem = state.indexOf[action.item.id] !== null && state.indexOf[action.item.id] !== undefined
+            let hasNewItem = action.filter(action.item)
+            if (!hasNewItem && !hasOldItem) {
+                return state
             }
-            return {
-                ...state,
-                ...sortedUpdate(state, action.item, action.sort),
+            if (hasNewItem && !hasOldItem) {
+                return {
+                    ...state,
+                    ...sortedInsert(state, action.item, action.sort)
+                }
             }
-
+            if (!hasNewItem && hasOldItem) {
+                return {
+                    ...state,
+                    ...sortedRemove(state, action.item.id)
+                }
+            }
+            if (hasNewItem && hasOldItem) {
+                return {
+                    ...state,
+                    ...sortedUpdate(state, action.item, action.sort),
+                }
+            }
+            break;
         case RECEIVE:
         {
             const data = action.list.filter(action.filter).sort(action.sort)

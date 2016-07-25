@@ -10,3 +10,9 @@ export function createStore(parts) {
         applyMiddleware(...[thunk])
     )
 }
+
+describe('tutils', () => {
+	it('do nothing', () => {
+        return
+    })
+})
