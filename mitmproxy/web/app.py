@@ -251,11 +251,14 @@ class FlowHandler(RequestHandler):
                         request.port = int(v)
                     elif k == "headers":
                         request.headers.set_state(v)
+                    elif k == "content":
+                        request.text = v
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
 
             elif a == "response":
                 response = flow.response
+
                 for k, v in six.iteritems(b):
                     if k == "msg":
                         response.msg = str(v)
@@ -265,6 +268,8 @@ class FlowHandler(RequestHandler):
                         response.http_version = str(v)
                     elif k == "headers":
                         response.headers.set_state(v)
+                    elif k == "content":
+                        response.text = v
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
             else:

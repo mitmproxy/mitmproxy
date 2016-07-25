@@ -94,15 +94,6 @@ export function updateEdit(update) {
 export function stopEdit(flow, modified_flow) {
     let diff = getDiff(flow, modified_flow)
     return (dispatch) => {
-        if (diff.response && diff.response.content) {
-            dispatch(flowsActions.updateContent(flow, diff.response.content, "response"))
-            delete diff.response.content
-        }
-        if (diff.request && diff.request.content) {
-            dispatch(flowsActions.updateContent(flow, diff.request.content, "request"))
-            delete diff.request.content
-        }
-
         dispatch(flowsActions.update(flow, diff)).then(() => {
             dispatch(flowsActions.updateFlow(modified_flow))
             dispatch({ type: STOP_EDIT })
