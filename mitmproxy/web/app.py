@@ -5,6 +5,8 @@ import json
 import logging
 import os.path
 import re
+import hashlib
+
 
 import six
 import tornado.websocket
@@ -46,6 +48,7 @@ def convert_flow_to_json_dict(flow):
                 "http_version": flow.request.http_version,
                 "headers": tuple(flow.request.headers.items(True)),
                 "contentLength": len(flow.request.content) if flow.request.content is not None else None,
+                "contentHash": hashlib.sha256(flow.request.raw_content).hexdigest() if flow.request.content is not None else None,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
@@ -57,6 +60,7 @@ def convert_flow_to_json_dict(flow):
                 "reason": flow.response.reason,
                 "headers": tuple(flow.response.headers.items(True)),
                 "contentLength": len(flow.response.content) if flow.response.content is not None else None,
+                "contentHash": hashlib.sha256(flow.response.raw_content).hexdigest() if flow.response.content is not None else None,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
@@ -295,10 +299,11 @@ class ReplayFlow(RequestHandler):
 class FlowContent(RequestHandler):
 
     def post(self, flow_id, message):
-        self.flow.backup()
-        message = getattr(self.flow, message)
+        flow = self.flow
+        flow.backup()
+        message = getattr(flow, message)
         message.content = self.request.files.values()[0][0].body
-        self.state.update_flow(self.flow)
+        self.state.update_flow(flow)
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)

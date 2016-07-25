@@ -46,7 +46,7 @@ export default class ContentLoader extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        let reload = nextProps.message !== this.props.message || nextProps.lastFileUpload !== this.props.lastFileUpload
+        let reload = nextProps.message !== this.props.message
         let isUserEdit = !nextProps.readonly && nextProps.message.content
 
         if (isUserEdit)
