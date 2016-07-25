@@ -182,7 +182,7 @@ class ConsoleState(flow.State):
         self.mark_filter = False
 
     def clear(self):
-        marked_flows = [f for f in self.state.view if f.marked]
+        marked_flows = [f for f in self.view if f.marked]
         super(ConsoleState, self).clear()
 
         for f in marked_flows:
