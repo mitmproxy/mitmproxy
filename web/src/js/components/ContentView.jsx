@@ -40,7 +40,7 @@ function ContentView(props) {
                     <View readonly={readonly} onChange={onContentChange} content="" />
                 </ContentLoader>
             ) : (
-                <View flow={flow} readonly={readonly} content={content} message={message} />
+                <View flow={flow} readonly={readonly} onChange={onContentChange} content={content} message={message} />
             )}
             <div className="view-options text-center">
                 <ViewSelector onSelectView={selectView} active={View} message={message}/>
