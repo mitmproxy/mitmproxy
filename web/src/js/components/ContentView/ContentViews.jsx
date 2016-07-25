@@ -60,10 +60,10 @@ ViewAuto.propTypes = {
     flow: React.PropTypes.object.isRequired,
 }
 
-export function ViewAuto({ message, flow, readonly, lastFileUpload }) {
+export function ViewAuto({ message, flow, readonly }) {
     const View = ViewAuto.findView(message)
     if (View.textView) {
-        return <ContentLoader message={message} lastFileUpload={lastFileUpload} flow={flow}><View readonly={readonly}  content="" /></ContentLoader>
+        return <ContentLoader message={message} flow={flow}><View readonly={readonly}  content="" /></ContentLoader>
     } else {
         return <View readonly={readonly} message={message} flow={flow} />
     }

@@ -9,7 +9,8 @@ import ValidateEditor from '../ValueEditor/ValidateEditor'
 import ValueEditor from '../ValueEditor/ValueEditor'
 
 import Headers from './Headers'
-import { startEdit, updateEdit, uploadContent } from '../../ducks/ui/flow'
+import { startEdit, updateEdit } from '../../ducks/ui/flow'
+import * as FlowActions from '../../ducks/flows'
 import ToggleEdit from './ToggleEdit'
 
 function RequestLine({ flow, readonly, updateFlow }) {
@@ -73,7 +74,7 @@ const Message = connect(
     }),
     {
         updateFlow: updateEdit,
-        uploadContent: uploadContent
+        uploadContent: FlowActions.uploadContent
     }
 )
 

@@ -16,7 +16,6 @@ const defaultState = {
     displayLarge: false,
     modifiedFlow: false,
     contentView: 'ViewAuto',
-    lastFileUpload: false,
     tab: 'request',
 }
 
@@ -40,12 +39,6 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 modifiedFlow: false
-            }
-
-        case UPLOAD_CONTENT:
-            return {
-                ... state,
-                lastFileUpload: new Date()
             }
 
         case flowsActions.SELECT:
@@ -96,13 +89,6 @@ export function startEdit(flow) {
 
 export function updateEdit(update) {
     return { type: UPDATE_EDIT, update }
-}
-
-export function uploadContent(flow, content, type){
-    return (dispatch) => {
-        dispatch(flowsActions.updateContent(flow, content, type))
-        dispatch({ type: UPLOAD_CONTENT })
-    }
 }
 
 export function stopEdit(flow, modified_flow) {

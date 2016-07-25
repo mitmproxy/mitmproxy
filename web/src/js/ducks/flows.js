@@ -112,7 +112,7 @@ export function update(flow, data) {
     return dispatch => fetchApi.put(`/flows/${flow.id}`, data)
 }
 
-export function updateContent(flow, file, type) {
+export function uploadContent(flow, file, type) {
     const body = new FormData()
     if (typeof file !== File)
         file = new Blob([file], {type: 'plain/text'})
