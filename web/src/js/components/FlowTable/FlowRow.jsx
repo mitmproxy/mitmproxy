@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import classnames from 'classnames'
 import columns from './FlowColumns'
+import { pure } from '../../utils'
 
 FlowRow.propTypes = {
     onSelect: PropTypes.func.isRequired,
@@ -9,7 +10,7 @@ FlowRow.propTypes = {
     selected: PropTypes.bool,
 }
 
-export default function FlowRow({ flow, selected, highlighted, onSelect }) {
+function FlowRow({ flow, selected, highlighted, onSelect }) {
     const className = classnames({
         'selected': selected,
         'highlighted': highlighted,
@@ -19,10 +20,12 @@ export default function FlowRow({ flow, selected, highlighted, onSelect }) {
     })
 
     return (
-        <tr className={className} onClick={() => onSelect(flow)}>
+        <tr className={className} onClick={() => onSelect(flow.id)}>
             {columns.map(Column => (
                 <Column key={Column.name} flow={flow}/>
             ))}
         </tr>
     )
 }
+
+export default pure(FlowRow)

@@ -34,6 +34,7 @@ from mitmproxy.console import palettes
 from mitmproxy.console import signals
 from mitmproxy.console import statusbar
 from mitmproxy.console import window
+from mitmproxy.filt import FMarked
 from netlib import tcp, strutils
 
 EVENTLOG_SIZE = 500
@@ -48,7 +49,7 @@ class ConsoleState(flow.State):
         self.default_body_view = contentviews.get("Auto")
         self.flowsettings = weakref.WeakKeyDictionary()
         self.last_search = None
-        self.last_filter = None
+        self.last_filter = ""
         self.mark_filter = False
 
     def __setattr__(self, name, value):
@@ -66,7 +67,6 @@ class ConsoleState(flow.State):
     def add_flow(self, f):
         super(ConsoleState, self).add_flow(f)
         self.update_focus()
-        self.set_flow_marked(f, False)
         return f
 
     def update_flow(self, f):
@@ -86,10 +86,10 @@ class ConsoleState(flow.State):
 
     def set_focus(self, idx):
         if self.view:
-            if idx >= len(self.view):
-                idx = len(self.view) - 1
-            elif idx < 0:
+            if idx is None or idx < 0:
                 idx = 0
+            elif idx >= len(self.view):
+                idx = len(self.view) - 1
             self.focus = idx
         else:
             self.focus = None
@@ -123,60 +123,77 @@ class ConsoleState(flow.State):
         self.set_focus(self.focus)
         return ret
 
-    def filter_marked(self, m):
-        def actual_func(x):
-            if x.id in m:
-                return True
-            return False
-        return actual_func
+    def get_nearest_matching_flow(self, flow, filt):
+        fidx = self.view.index(flow)
+        dist = 1
+
+        fprev = fnext = True
+        while fprev or fnext:
+            fprev, _ = self.get_from_pos(fidx - dist)
+            fnext, _ = self.get_from_pos(fidx + dist)
+
+            if fprev and fprev.match(filt):
+                return fprev
+            elif fnext and fnext.match(filt):
+                return fnext
+
+            dist += 1
+
+        return None
 
     def enable_marked_filter(self):
+        marked_flows = [f for f in self.flows if f.marked]
+        if not marked_flows:
+            return
+
+        marked_filter = "~%s" % FMarked.code
+
+        # Save Focus
+        last_focus, _ = self.get_focus()
+        nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
+
         self.last_filter = self.limit_txt
-        marked_flows = []
-        for f in self.flows:
-            if self.flow_marked(f):
-                marked_flows.append(f.id)
-        if len(marked_flows) > 0:
-            f = self.filter_marked(marked_flows)
-            self.view._close()
-            self.view = flow.FlowView(self.flows, f)
-            self.focus = 0
-            self.set_focus(self.focus)
-            self.mark_filter = True
+        self.set_limit(marked_filter)
+
+        # Restore Focus
+        if last_focus.marked:
+            self.set_focus_flow(last_focus)
+        else:
+            self.set_focus_flow(nearest_marked)
+
+        self.mark_filter = True
 
     def disable_marked_filter(self):
-        if self.last_filter is None:
-            self.view = flow.FlowView(self.flows, None)
+        marked_filter = "~%s" % FMarked.code
+
+        # Save Focus
+        last_focus, _ = self.get_focus()
+        nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
+
+        self.set_limit(self.last_filter)
+        self.last_filter = ""
+
+        # Restore Focus
+        if last_focus.marked:
+            self.set_focus_flow(last_focus)
         else:
-            self.set_limit(self.last_filter)
-        self.focus = 0
-        self.set_focus(self.focus)
-        self.last_filter = None
+            self.set_focus_flow(nearest_marked)
+
         self.mark_filter = False
 
     def clear(self):
-        marked_flows = []
-        for f in self.flows:
-            if self.flow_marked(f):
-                marked_flows.append(f)
-
+        marked_flows = [f for f in self.view if f.marked]
         super(ConsoleState, self).clear()
 
         for f in marked_flows:
             self.add_flow(f)
-            self.set_flow_marked(f, True)
+            f.marked = True
 
         if len(self.flows.views) == 0:
             self.focus = None
         else:
             self.focus = 0
         self.set_focus(self.focus)
-
-    def flow_marked(self, flow):
-        return self.get_flow_setting(flow, "marked", False)
-
-    def set_flow_marked(self, flow, marked):
-        self.add_flow_setting(flow, "marked", marked)
 
 
 class Options(mitmproxy.options.Options):
@@ -242,7 +259,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
-        self.addons.add(*builtins.default_addons())
+        self.addons.add(options, *builtins.default_addons())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -253,10 +270,6 @@ class ConsoleMaster(flow.FlowMaster):
             message=str(exc),
             expire=1
         )
-
-    def load_script(self, command, use_reloader=True):
-        # We default to using the reloader in the console ui.
-        return super(ConsoleMaster, self).load_script(command, use_reloader)
 
     def sig_add_log(self, sender, e, level):
         if self.options.verbosity < utils.log_tier(level):
@@ -352,7 +365,7 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             return flow.read_flows_from_paths(path)
         except exceptions.FlowReadException as e:
-            signals.status_message.send(message=e.strerror)
+            signals.status_message.send(message=str(e))
 
     def client_playback_path(self, path):
         if not isinstance(path, list):
@@ -619,13 +632,6 @@ class ConsoleMaster(flow.FlowMaster):
     def save_flows(self, path):
         return self._write_flows(path, self.state.view)
 
-    def save_marked_flows(self, path):
-        marked_flows = []
-        for f in self.state.view:
-            if self.state.flow_marked(f):
-                marked_flows.append(f)
-        return self._write_flows(path, marked_flows)
-
     def load_flows_callback(self, path):
         if not path:
             return
@@ -748,10 +754,3 @@ class ConsoleMaster(flow.FlowMaster):
             direction=direction,
         ), "info")
         self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
-
-    @controller.handler
-    def script_change(self, script):
-        if super(ConsoleMaster, self).script_change(script):
-            signals.status_message.send(message='"{}" reloaded.'.format(script.path))
-        else:
-            signals.status_message.send(message='Error reloading "{}".'.format(script.path))

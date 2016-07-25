@@ -15,26 +15,27 @@ class TestDumper(mastertest.MasterTest):
         d = dumper.Dumper()
         sio = StringIO()
 
-        d.configure(dump.Options(tfile = sio, flow_detail = 0))
+        updated = set(["tfile", "flow_detail"])
+        d.configure(dump.Options(tfile = sio, flow_detail = 0), updated)
         d.response(tutils.tflow())
         assert not sio.getvalue()
 
-        d.configure(dump.Options(tfile = sio, flow_detail = 4))
+        d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         d.response(tutils.tflow())
         assert sio.getvalue()
 
         sio = StringIO()
-        d.configure(dump.Options(tfile = sio, flow_detail = 4))
+        d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         d.response(tutils.tflow(resp=True))
         assert "<<" in sio.getvalue()
 
         sio = StringIO()
-        d.configure(dump.Options(tfile = sio, flow_detail = 4))
+        d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         d.response(tutils.tflow(err=True))
         assert "<<" in sio.getvalue()
 
         sio = StringIO()
-        d.configure(dump.Options(tfile = sio, flow_detail = 4))
+        d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         flow = tutils.tflow()
         flow.request = netlib.tutils.treq()
         flow.request.stickycookie = True
@@ -47,7 +48,7 @@ class TestDumper(mastertest.MasterTest):
         assert sio.getvalue()
 
         sio = StringIO()
-        d.configure(dump.Options(tfile = sio, flow_detail = 4))
+        d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         flow = tutils.tflow(resp=netlib.tutils.tresp(content=b"{"))
         flow.response.headers["content-type"] = "application/json"
         flow.response.status_code = 400
@@ -55,7 +56,7 @@ class TestDumper(mastertest.MasterTest):
         assert sio.getvalue()
 
         sio = StringIO()
-        d.configure(dump.Options(tfile = sio))
+        d.configure(dump.Options(tfile = sio), updated)
         flow = tutils.tflow()
         flow.request.content = None
         flow.response = models.HTTPResponse.wrap(netlib.tutils.tresp())
@@ -72,15 +73,13 @@ class TestContentView(mastertest.MasterTest):
 
         s = state.State()
         sio = StringIO()
-        m = mastertest.RecordingMaster(
-            dump.Options(
-                flow_detail=4,
-                verbosity=3,
-                tfile=sio,
-            ),
-            None, s
+        o = dump.Options(
+            flow_detail=4,
+            verbosity=3,
+            tfile=sio,
         )
+        m = mastertest.RecordingMaster(o, None, s)
         d = dumper.Dumper()
-        m.addons.add(d)
+        m.addons.add(o, d)
         self.invoke(m, "response", tutils.tflow())
         assert "Content viewer failed" in m.event_log[0][1]

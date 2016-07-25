@@ -39,9 +39,12 @@ import functools
 
 from mitmproxy.models.http import HTTPFlow
 from mitmproxy.models.tcp import TCPFlow
+from mitmproxy.models.flow import Flow
+
 from netlib import strutils
 
 import pyparsing as pp
+from typing import Callable
 
 
 def only(*types):
@@ -78,6 +81,14 @@ class FErr(_Action):
 
     def __call__(self, f):
         return True if f.error else False
+
+
+class FMarked(_Action):
+    code = "marked"
+    help = "Match marked flows"
+
+    def __call__(self, f):
+        return f.marked
 
 
 class FHTTP(_Action):
@@ -398,6 +409,7 @@ filt_unary = [
     FAsset,
     FErr,
     FHTTP,
+    FMarked,
     FReq,
     FResp,
     FTCP,
@@ -471,7 +483,11 @@ def _make():
 bnf = _make()
 
 
+TFilter = Callable[[Flow], bool]
+
+
 def parse(s):
+    # type: (str) -> TFilter
     try:
         filt = bnf.parseString(s, parseAll=True)[0]
         filt.pattern = s

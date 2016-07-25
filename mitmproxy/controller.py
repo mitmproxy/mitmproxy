@@ -37,8 +37,6 @@ Events = frozenset([
     "configure",
     "done",
     "tick",
-
-    "script_change",
 ])
 
 

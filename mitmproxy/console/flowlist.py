@@ -120,22 +120,16 @@ class ConnectionItem(urwid.WidgetWrap):
             self.flow,
             self.f,
             hostheader = self.master.options.showhost,
-            marked=self.state.flow_marked(self.flow)
         )
 
     def selectable(self):
         return True
 
     def save_flows_prompt(self, k):
-        if k == "a":
+        if k == "l":
             signals.status_prompt_path.send(
-                prompt = "Save all flows to",
+                prompt = "Save listed flows to",
                 callback = self.master.save_flows
-            )
-        elif k == "m":
-            signals.status_prompt_path.send(
-                prompt = "Save marked flows to",
-                callback = self.master.save_marked_flows
             )
         else:
             signals.status_prompt_path.send(
@@ -188,17 +182,16 @@ class ConnectionItem(urwid.WidgetWrap):
             self.flow.accept_intercept(self.master)
             signals.flowlist_change.send(self)
         elif key == "d":
-            self.flow.kill(self.master)
+            if not self.flow.reply.acked:
+                self.flow.kill(self.master)
             self.state.delete_flow(self.flow)
             signals.flowlist_change.send(self)
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
-            self.master.view_flow(f)
+            self.master.state.set_focus_flow(f)
+            signals.flowlist_change.send(self)
         elif key == "m":
-            if self.state.flow_marked(self.flow):
-                self.state.set_flow_marked(self.flow, False)
-            else:
-                self.state.set_flow_marked(self.flow, True)
+            self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
         elif key == "M":
             if self.state.mark_filter:
@@ -233,7 +226,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 )
         elif key == "U":
             for f in self.state.flows:
-                self.state.set_flow_marked(f, False)
+                f.marked = False
             signals.flowlist_change.send(self)
         elif key == "V":
             if not self.flow.modified():
@@ -247,14 +240,14 @@ class ConnectionItem(urwid.WidgetWrap):
                 self,
                 prompt = "Save",
                 keys = (
-                    ("all flows", "a"),
+                    ("listed flows", "l"),
                     ("this flow", "t"),
-                    ("marked flows", "m"),
                 ),
                 callback = self.save_flows_prompt,
             )
         elif key == "X":
-            self.flow.kill(self.master)
+            if not self.flow.reply.acked:
+                self.flow.kill(self.master)
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
@@ -356,7 +349,8 @@ class FlowListBox(urwid.ListBox):
             return
         scheme, host, port, path = parts
         f = self.master.create_request(method, scheme, host, port, path)
-        self.master.view_flow(f)
+        self.master.state.set_focus_flow(f)
+        signals.flowlist_change.send(self)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)

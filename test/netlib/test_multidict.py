@@ -45,7 +45,7 @@ class TestMultiDict(object):
         assert md["foo"] == "bar"
 
         with tutils.raises(KeyError):
-            md["bar"]
+            assert md["bar"]
 
         md_multi = TMultiDict(
             [("foo", "a"), ("foo", "b")]
@@ -100,6 +100,15 @@ class TestMultiDict(object):
         assert not TMultiDict() != TMultiDict()
         assert TMultiDict() != self._multi()
         assert TMultiDict() != 42
+
+    def test_hash(self):
+        """
+        If a class defines mutable objects and implements an __eq__() method,
+        it should not implement __hash__(), since the implementation of hashable
+        collections requires that a key's hash value is immutable.
+        """
+        with tutils.raises(TypeError):
+            assert hash(TMultiDict())
 
     def test_get_all(self):
         md = self._multi()
@@ -196,6 +205,9 @@ class TestImmutableMultiDict(object):
 
         with tutils.raises(TypeError):
             md.add("foo", "bar")
+
+    def test_hash(self):
+        assert hash(TImmutableMultiDict())
 
     def test_with_delitem(self):
         md = TImmutableMultiDict([("foo", "bar")])

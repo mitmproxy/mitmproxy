@@ -13,8 +13,9 @@ class TAddon:
 
 
 def test_simple():
-    m = controller.Master(options.Options())
+    o = options.Options()
+    m = controller.Master(o)
     a = addons.Addons(m)
-    a.add(TAddon("one"))
+    a.add(o, TAddon("one"))
     assert a.has_addon("one")
     assert not a.has_addon("two")

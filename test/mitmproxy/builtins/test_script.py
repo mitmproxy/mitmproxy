@@ -48,39 +48,41 @@ def test_load_script():
             "data/addonscripts/recorder.py"
         ), []
     )
-    assert ns["configure"]
+    assert ns.start
 
 
 class TestScript(mastertest.MasterTest):
     def test_simple(self):
         s = state.State()
-        m = master.FlowMaster(options.Options(), None, s)
+        o = options.Options()
+        m = master.FlowMaster(o, None, s)
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/recorder.py"
             )
         )
-        m.addons.add(sc)
-        assert sc.ns["call_log"] == [
+        m.addons.add(o, sc)
+        assert sc.ns.call_log == [
             ("solo", "start", (), {}),
-            ("solo", "configure", (options.Options(),), {})
+            ("solo", "configure", (o, o.keys()), {})
         ]
 
-        sc.ns["call_log"] = []
+        sc.ns.call_log = []
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)
 
-        recf = sc.ns["call_log"][0]
+        recf = sc.ns.call_log[0]
         assert recf[1] == "request"
 
     def test_reload(self):
         s = state.State()
-        m = mastertest.RecordingMaster(options.Options(), None, s)
+        o = options.Options()
+        m = mastertest.RecordingMaster(o, None, s)
         with tutils.tmpdir():
             with open("foo.py", "w"):
                 pass
             sc = script.Script("foo.py")
-            m.addons.add(sc)
+            m.addons.add(o, sc)
 
             for _ in range(100):
                 with open("foo.py", "a") as f:
@@ -93,19 +95,22 @@ class TestScript(mastertest.MasterTest):
 
     def test_exception(self):
         s = state.State()
-        m = mastertest.RecordingMaster(options.Options(), None, s)
+        o = options.Options()
+        m = mastertest.RecordingMaster(o, None, s)
         sc = script.Script(
             tutils.test_data.path("data/addonscripts/error.py")
         )
-        m.addons.add(sc)
+        m.addons.add(o, sc)
         f = tutils.tflow(resp=True)
         self.invoke(m, "request", f)
         assert m.event_log[0][0] == "error"
 
     def test_duplicate_flow(self):
         s = state.State()
-        fm = master.FlowMaster(None, None, s)
+        o = options.Options()
+        fm = master.FlowMaster(o, None, s)
         fm.addons.add(
+            o,
             script.Script(
                 tutils.test_data.path("data/addonscripts/duplicate_flow.py")
             )
@@ -116,6 +121,20 @@ class TestScript(mastertest.MasterTest):
         assert not fm.state.view[0].request.is_replay
         assert fm.state.view[1].request.is_replay
 
+    def test_addon(self):
+        s = state.State()
+        o = options.Options()
+        m = master.FlowMaster(o, None, s)
+        sc = script.Script(
+            tutils.test_data.path(
+                "data/addonscripts/addon.py"
+            )
+        )
+        m.addons.add(o, sc)
+        assert sc.ns.event_log == [
+            'scriptstart', 'addonstart', 'addonconfigure'
+        ]
+
 
 class TestScriptLoader(mastertest.MasterTest):
     def test_simple(self):
@@ -123,7 +142,7 @@ class TestScriptLoader(mastertest.MasterTest):
         o = options.Options(scripts=[])
         m = master.FlowMaster(o, None, s)
         sc = script.ScriptLoader()
-        m.addons.add(sc)
+        m.addons.add(o, sc)
         assert len(m.addons) == 1
         o.update(
             scripts = [
@@ -139,7 +158,7 @@ class TestScriptLoader(mastertest.MasterTest):
         o = options.Options(scripts=["one", "one"])
         m = master.FlowMaster(o, None, s)
         sc = script.ScriptLoader()
-        tutils.raises(exceptions.OptionsError, m.addons.add, sc)
+        tutils.raises(exceptions.OptionsError, m.addons.add, o, sc)
 
     def test_order(self):
         rec = tutils.test_data.path("data/addonscripts/recorder.py")
@@ -154,7 +173,7 @@ class TestScriptLoader(mastertest.MasterTest):
         )
         m = mastertest.RecordingMaster(o, None, s)
         sc = script.ScriptLoader()
-        m.addons.add(sc)
+        m.addons.add(o, sc)
 
         debug = [(i[0], i[1]) for i in m.event_log if i[0] == "debug"]
         assert debug == [

@@ -42,8 +42,8 @@ class DumpMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, flow.State())
         self.has_errored = False
-        self.addons.add(*builtins.default_addons())
-        self.addons.add(dumper.Dumper())
+        self.addons.add(options, *builtins.default_addons())
+        self.addons.add(options, dumper.Dumper())
         # This line is just for type hinting
         self.options = self.options  # type: Options
         self.replay_ignore_params = options.replay_ignore_params

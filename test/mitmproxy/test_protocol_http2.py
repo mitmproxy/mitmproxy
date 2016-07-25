@@ -30,7 +30,7 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
 requires_alpn = pytest.mark.skipif(
     not netlib.tcp.HAS_ALPN,
-    reason="requires OpenSSL with ALPN support")
+    reason='requires OpenSSL with ALPN support')
 
 
 class _Http2ServerBase(netlib_tservers.ServerTestBase):
@@ -80,7 +80,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                         print(traceback.format_exc())
                         break
 
-    def handle_server_event(self, h2_conn, rfile, wfile):
+    def handle_server_event(self, event, h2_conn, rfile, wfile):
         raise NotImplementedError()
 
 
@@ -88,7 +88,6 @@ class _Http2TestBase(object):
 
     @classmethod
     def setup_class(cls):
-        cls.masteroptions = options.Options()
         opts = cls.get_options()
         cls.config = ProxyConfig(opts)
 
@@ -145,12 +144,14 @@ class _Http2TestBase(object):
                       wfile,
                       h2_conn,
                       stream_id=1,
-                      headers=[],
+                      headers=None,
                       body=b'',
                       end_stream=None,
                       priority_exclusive=None,
                       priority_depends_on=None,
                       priority_weight=None):
+        if headers is None:
+            headers = []
         if end_stream is None:
             end_stream = (len(body) == 0)
 
@@ -172,12 +173,12 @@ class _Http2TestBase(object):
 class _Http2Test(_Http2TestBase, _Http2ServerBase):
 
     @classmethod
-    def setup_class(self):
+    def setup_class(cls):
         _Http2TestBase.setup_class()
         _Http2ServerBase.setup_class()
 
     @classmethod
-    def teardown_class(self):
+    def teardown_class(cls):
         _Http2TestBase.teardown_class()
         _Http2ServerBase.teardown_class()
 
@@ -187,7 +188,7 @@ class TestSimple(_Http2Test):
     request_body_buffer = b''
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
@@ -214,7 +215,7 @@ class TestSimple(_Http2Test):
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
         elif isinstance(event, h2.events.DataReceived):
-            self.request_body_buffer += event.data
+            cls.request_body_buffer += event.data
         return True
 
     def test_simple(self):
@@ -225,7 +226,7 @@ class TestSimple(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -269,7 +270,7 @@ class TestSimple(_Http2Test):
 class TestRequestWithPriority(_Http2Test):
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
@@ -301,14 +302,14 @@ class TestRequestWithPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
             ],
-            priority_exclusive = True,
-            priority_depends_on = 42424242,
-            priority_weight = 42,
+            priority_exclusive=True,
+            priority_depends_on=42424242,
+            priority_weight=42,
         )
 
         done = False
@@ -343,7 +344,7 @@ class TestRequestWithPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -381,11 +382,11 @@ class TestPriority(_Http2Test):
     priority_data = None
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.PriorityUpdated):
-            self.priority_data = (event.exclusive, event.depends_on, event.weight)
+            cls.priority_data = (event.exclusive, event.depends_on, event.weight)
         elif isinstance(event, h2.events.RequestReceived):
             import warnings
             with warnings.catch_warnings():
@@ -415,7 +416,7 @@ class TestPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -451,11 +452,11 @@ class TestPriorityWithExistingStream(_Http2Test):
     priority_data = []
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.PriorityUpdated):
-            self.priority_data.append((event.exclusive, event.depends_on, event.weight))
+            cls.priority_data.append((event.exclusive, event.depends_on, event.weight))
         elif isinstance(event, h2.events.RequestReceived):
             assert not event.priority_updated
 
@@ -486,7 +487,7 @@ class TestPriorityWithExistingStream(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -527,7 +528,7 @@ class TestPriorityWithExistingStream(_Http2Test):
 class TestStreamResetFromServer(_Http2Test):
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
@@ -543,7 +544,7 @@ class TestStreamResetFromServer(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -578,7 +579,7 @@ class TestStreamResetFromServer(_Http2Test):
 class TestBodySizeLimit(_Http2Test):
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         return True
@@ -592,7 +593,7 @@ class TestBodySizeLimit(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -627,7 +628,7 @@ class TestBodySizeLimit(_Http2Test):
 class TestPushPromise(_Http2Test):
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
@@ -637,14 +638,14 @@ class TestPushPromise(_Http2Test):
 
             h2_conn.send_headers(1, [(':status', '200')])
             h2_conn.push_stream(1, 2, [
-                (':authority', "127.0.0.1:%s" % self.port),
+                (':authority', "127.0.0.1:{}".format(cls.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/pushed_stream_foo'),
                 ('foo', 'bar')
             ])
             h2_conn.push_stream(1, 4, [
-                (':authority', "127.0.0.1:%s" % self.port),
+                (':authority', "127.0.0.1:{}".format(cls.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/pushed_stream_bar'),
@@ -675,7 +676,7 @@ class TestPushPromise(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -728,7 +729,7 @@ class TestPushPromise(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -780,7 +781,7 @@ class TestPushPromise(_Http2Test):
 class TestConnectionLost(_Http2Test):
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.RequestReceived):
             h2_conn.send_headers(1, [(':status', '200')])
             wfile.write(h2_conn.data_to_send())
@@ -791,7 +792,7 @@ class TestConnectionLost(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -822,12 +823,12 @@ class TestConnectionLost(_Http2Test):
 class TestMaxConcurrentStreams(_Http2Test):
 
     @classmethod
-    def setup_class(self):
+    def setup_class(cls):
         _Http2TestBase.setup_class()
         _Http2ServerBase.setup_class(h2_server_settings={h2.settings.MAX_CONCURRENT_STREAMS: 2})
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
@@ -848,7 +849,7 @@ class TestMaxConcurrentStreams(_Http2Test):
             # this will exceed MAX_CONCURRENT_STREAMS on the server connection
             # and cause mitmproxy to throttle stream creation to the server
             self._send_request(client.wfile, h2_conn, stream_id=id, headers=[
-                (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -883,7 +884,7 @@ class TestMaxConcurrentStreams(_Http2Test):
 class TestConnectionTerminated(_Http2Test):
 
     @classmethod
-    def handle_server_event(self, event, h2_conn, rfile, wfile):
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.RequestReceived):
             h2_conn.close_connection(error_code=5, last_stream_id=42, additional_data=b'foobar')
             wfile.write(h2_conn.data_to_send())
@@ -894,7 +895,7 @@ class TestConnectionTerminated(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, headers=[
-            (':authority', "127.0.0.1:%s" % self.server.server.address.port),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),

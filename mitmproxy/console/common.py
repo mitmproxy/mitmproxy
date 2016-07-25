@@ -134,7 +134,11 @@ def save_data(path, data):
     if not path:
         return
     try:
-        with open(path, "wb") as f:
+        if isinstance(data, bytes):
+            mode = "wb"
+        else:
+            mode = "w"
+        with open(path, mode) as f:
             f.write(data)
     except IOError as v:
         signals.status_message.send(message=v.strerror)
@@ -193,10 +197,9 @@ def ask_scope_and_callback(flow, cb, *args):
 def copy_to_clipboard_or_prompt(data):
     # pyperclip calls encode('utf-8') on data to be copied without checking.
     # if data are already encoded that way UnicodeDecodeError is thrown.
-    toclip = ""
-    try:
-        toclip = data.decode('utf-8')
-    except (UnicodeDecodeError):
+    if isinstance(data, bytes):
+        toclip = data.decode("utf8", "replace")
+    else:
         toclip = data
 
     try:
@@ -216,7 +219,7 @@ def copy_to_clipboard_or_prompt(data):
 
 
 def format_flow_data(key, scope, flow):
-    data = ""
+    data = b""
     if scope in ("q", "b"):
         request = flow.request.copy()
         request.decode(strict=False)
@@ -230,7 +233,7 @@ def format_flow_data(key, scope, flow):
             raise ValueError("Unknown key: {}".format(key))
     if scope == "b" and flow.request.raw_content and flow.response:
         # Add padding between request and response
-        data += "\r\n" * 2
+        data += b"\r\n" * 2
     if scope in ("s", "b") and flow.response:
         response = flow.response.copy()
         response.decode(strict=False)
@@ -293,7 +296,7 @@ def ask_save_body(scope, flow):
         )
     elif scope == "b" and request_has_content and response_has_content:
         ask_save_path(
-            (flow.request.get_content(strict=False) + "\n" +
+            (flow.request.get_content(strict=False) + b"\n" +
              flow.response.get_content(strict=False)),
             "Save request & response content to"
         )
@@ -407,7 +410,7 @@ def raw_format_flow(f, focus, extended):
     return urwid.Pile(pile)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, marked=False):
+def format_flow(f, focus, extended=False, hostheader=False):
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.acked,
@@ -420,7 +423,7 @@ def format_flow(f, focus, extended=False, hostheader=False, marked=False):
 
         err_msg = f.error.msg if f.error else None,
 
-        marked = marked,
+        marked = f.marked,
     )
     if f.response:
         if f.response.raw_content:

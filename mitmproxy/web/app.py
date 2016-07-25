@@ -234,7 +234,8 @@ class AcceptFlow(RequestHandler):
 class FlowHandler(RequestHandler):
 
     def delete(self, flow_id):
-        self.flow.kill(self.master)
+        if not self.flow.reply.acked:
+            self.flow.kill(self.master)
         self.state.delete_flow(self.flow)
 
     def put(self, flow_id):

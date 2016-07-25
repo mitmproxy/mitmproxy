@@ -35,7 +35,7 @@ class OptManager(object):
         self.__dict__["_initialized"] = True
 
     @contextlib.contextmanager
-    def rollback(self):
+    def rollback(self, updated):
         old = self._opts.copy()
         try:
             yield
@@ -44,7 +44,7 @@ class OptManager(object):
             self.errored.send(self, exc=e)
             # Rollback
             self.__dict__["_opts"] = old
-            self.changed.send(self)
+            self.changed.send(self, updated=updated)
 
     def __eq__(self, other):
         return self._opts == other._opts
@@ -62,22 +62,22 @@ class OptManager(object):
         if not self._initialized:
             self._opts[attr] = value
             return
-        if attr not in self._opts:
-            raise KeyError("No such option: %s" % attr)
-        with self.rollback():
-            self._opts[attr] = value
-            self.changed.send(self)
+        self.update(**{attr: value})
+
+    def keys(self):
+        return set(self._opts.keys())
 
     def get(self, k, d=None):
         return self._opts.get(k, d)
 
     def update(self, **kwargs):
+        updated = set(kwargs.keys())
         for k in kwargs:
             if k not in self._opts:
                 raise KeyError("No such option: %s" % k)
-        with self.rollback():
+        with self.rollback(updated):
             self._opts.update(kwargs)
-            self.changed.send(self)
+            self.changed.send(self, updated=updated)
 
     def setter(self, attr):
         """

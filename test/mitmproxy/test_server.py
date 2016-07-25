@@ -291,7 +291,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
         s = script.Script(
             tutils.test_data.path("data/addonscripts/stream_modify.py")
         )
-        self.master.addons.add(s)
+        self.master.addons.add(self.master.options, s)
         d = self.pathod('200:b"foo"')
         assert d.content == b"bar"
         self.master.addons.remove(s)
@@ -523,7 +523,7 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
         s = script.Script(
             tutils.test_data.path("data/addonscripts/tcp_stream_modify.py")
         )
-        self.master.addons.add(s)
+        self.master.addons.add(self.master.options, s)
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()

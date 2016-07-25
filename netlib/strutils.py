@@ -51,8 +51,7 @@ else:
 
 def escape_control_characters(text, keep_spacing=True):
     """
-    Replace all unicode C1 control characters from the given text with their respective control pictures.
-    For example, a null byte is replaced with the unicode character "\u2400".
+    Replace all unicode C1 control characters from the given text with a single "."
 
     Args:
         keep_spacing: If True, tabs and newlines will not be replaced.
@@ -99,6 +98,9 @@ def bytes_to_escaped_str(data, keep_spacing=False):
 def escaped_str_to_bytes(data):
     """
     Take an escaped string and return the unescaped bytes equivalent.
+
+    Raises:
+        ValueError, if the escape sequence is invalid.
     """
     if not isinstance(data, six.string_types):
         if six.PY2:

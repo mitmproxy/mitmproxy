@@ -23,7 +23,7 @@ class TestConcurrent(mastertest.MasterTest):
                 "data/addonscripts/concurrent_decorator.py"
             )
         )
-        m.addons.add(sc)
+        m.addons.add(m.options, sc)
         f1, f2 = tutils.tflow(), tutils.tflow()
         self.invoke(m, "request", f1)
         self.invoke(m, "request", f2)

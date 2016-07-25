@@ -22,7 +22,7 @@ class MainView extends Component {
                     flows={flows}
                     selected={selectedFlow}
                     highlight={highlight}
-                    onSelect={flow => this.props.selectFlow(flow.id)}
+                    onSelect={this.props.selectFlow}
                 />
                 {selectedFlow && [
                     <Splitter key="splitter"/>,

@@ -11,7 +11,7 @@ def start():
     mitmproxy.ctx.log("start")
 
 
-def configure(options):
+def configure(options, updated):
     """
         Called once on script startup before any other events, and whenever options changes.
     """

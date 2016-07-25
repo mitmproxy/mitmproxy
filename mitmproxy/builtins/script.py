@@ -16,6 +16,19 @@ import watchdog.events
 from watchdog.observers import polling
 
 
+class NS:
+    def __init__(self, ns):
+        self.__dict__["ns"] = ns
+
+    def __getattr__(self, key):
+        if key not in self.ns:
+            raise AttributeError("No such element: %s", key)
+        return self.ns[key]
+
+    def __setattr__(self, key, value):
+        self.__dict__["ns"][key] = value
+
+
 def parse_command(command):
     """
         Returns a (path, args) tuple.
@@ -74,18 +87,27 @@ def load_script(path, args):
     ns = {'__file__': os.path.abspath(path)}
     with scriptenv(path, args):
         exec(code, ns, ns)
-    return ns
+    return NS(ns)
 
 
 class ReloadHandler(watchdog.events.FileSystemEventHandler):
     def __init__(self, callback):
         self.callback = callback
 
+    def filter(self, event):
+        if event.is_directory:
+            return False
+        if os.path.basename(event.src_path).startswith("."):
+            return False
+        return True
+
     def on_modified(self, event):
-        self.callback()
+        if self.filter(event):
+            self.callback()
 
     def on_created(self, event):
-        self.callback()
+        if self.filter(event):
+            self.callback()
 
 
 class Script:
@@ -118,13 +140,20 @@ class Script:
         # It's possible for ns to be un-initialised if we failed during
         # configure
         if self.ns is not None and not self.dead:
-            func = self.ns.get(name)
+            func = getattr(self.ns, name, None)
             if func:
                 with scriptenv(self.path, self.args):
-                    func(*args, **kwargs)
+                    return func(*args, **kwargs)
 
     def reload(self):
         self.should_reload.set()
+
+    def load_script(self):
+        self.ns = load_script(self.path, self.args)
+        ret = self.run("start")
+        if ret:
+            self.ns = ret
+            self.run("start")
 
     def tick(self):
         if self.should_reload.is_set():
@@ -132,15 +161,14 @@ class Script:
             ctx.log.info("Reloading script: %s" % self.name)
             self.ns = load_script(self.path, self.args)
             self.start()
-            self.configure(self.last_options)
+            self.configure(self.last_options, self.last_options.keys())
         else:
             self.run("tick")
 
     def start(self):
-        self.ns = load_script(self.path, self.args)
-        self.run("start")
+        self.load_script()
 
-    def configure(self, options):
+    def configure(self, options, updated):
         self.last_options = options
         if not self.observer:
             self.observer = polling.PollingObserver()
@@ -150,7 +178,7 @@ class Script:
                 os.path.dirname(self.path) or "."
             )
             self.observer.start()
-        self.run("configure", options)
+        self.run("configure", options, updated)
 
     def done(self):
         self.run("done")
@@ -161,26 +189,27 @@ class ScriptLoader():
     """
         An addon that manages loading scripts from options.
     """
-    def configure(self, options):
-        for s in options.scripts:
-            if options.scripts.count(s) > 1:
-                raise exceptions.OptionsError("Duplicate script: %s" % s)
+    def configure(self, options, updated):
+        if "scripts" in updated:
+            for s in options.scripts:
+                if options.scripts.count(s) > 1:
+                    raise exceptions.OptionsError("Duplicate script: %s" % s)
 
-        for a in ctx.master.addons.chain[:]:
-            if isinstance(a, Script) and a.name not in options.scripts:
-                    ctx.log.info("Un-loading script: %s" % a.name)
-                    ctx.master.addons.remove(a)
+            for a in ctx.master.addons.chain[:]:
+                if isinstance(a, Script) and a.name not in options.scripts:
+                        ctx.log.info("Un-loading script: %s" % a.name)
+                        ctx.master.addons.remove(a)
 
-        current = {}
-        for a in ctx.master.addons.chain[:]:
-            if isinstance(a, Script):
-                current[a.name] = a
-                ctx.master.addons.chain.remove(a)
+            current = {}
+            for a in ctx.master.addons.chain[:]:
+                if isinstance(a, Script):
+                    current[a.name] = a
+                    ctx.master.addons.chain.remove(a)
 
-        for s in options.scripts:
-            if s in current:
-                ctx.master.addons.chain.append(current[s])
-            else:
-                ctx.log.info("Loading script: %s" % s)
-                sc = Script(s)
-                ctx.master.addons.add(sc)
+            for s in options.scripts:
+                if s in current:
+                    ctx.master.addons.chain.append(current[s])
+                else:
+                    ctx.log.info("Loading script: %s" % s)
+                    sc = Script(s)
+                    ctx.master.addons.add(options, sc)

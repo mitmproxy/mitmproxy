@@ -8,19 +8,20 @@ from mitmproxy import options
 class TestSetHeaders(mastertest.MasterTest):
     def mkmaster(self, **opts):
         s = state.State()
-        m = mastertest.RecordingMaster(options.Options(**opts), None, s)
+        o = options.Options(**opts)
+        m = mastertest.RecordingMaster(o, None, s)
         sh = setheaders.SetHeaders()
-        m.addons.add(sh)
+        m.addons.add(o, sh)
         return m, sh
 
     def test_configure(self):
         sh = setheaders.SetHeaders()
+        o = options.Options(
+            setheaders = [("~b", "one", "two")]
+        )
         tutils.raises(
             "invalid setheader filter pattern",
-            sh.configure,
-            options.Options(
-                setheaders = [("~b", "one", "two")]
-            )
+            sh.configure, o, o.keys()
         )
 
     def test_setheaders(self):

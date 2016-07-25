@@ -124,7 +124,7 @@ class StatusBar(urwid.WidgetWrap):
         super(StatusBar, self).__init__(urwid.Pile([self.ib, self.master.ab]))
         signals.update_settings.connect(self.sig_update_settings)
         signals.flowlist_change.connect(self.sig_update_settings)
-        master.options.changed.connect(self.sig_update_settings)
+        master.options.changed.connect(lambda sender, updated: self.sig_update_settings(sender))
         self.redraw()
 
     def sig_update_settings(self, sender):
@@ -171,10 +171,6 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "l"))
             r.append(":%s]" % self.master.state.limit_txt)
-        if self.master.state.mark_filter:
-            r.append("[")
-            r.append(("heading_key", "Marked Flows"))
-            r.append("]")
         if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
