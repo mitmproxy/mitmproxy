@@ -231,7 +231,8 @@ class Dumper(object):
             self._echo_message(f.response)
 
         if f.error:
-            self.echo(" << {}".format(f.error.msg), bold=True, fg="red")
+            msg = strutils.escape_control_characters(f.error.msg)
+            self.echo(" << {}".format(msg), bold=True, fg="red")
 
     def match(self, f):
         if self.flow_detail == 0:
