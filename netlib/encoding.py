@@ -33,6 +33,7 @@ def decode(encoded, encoding, errors='strict'):
     """
     global _cache
     cached = (
+        isinstance(encoded, bytes) and
         _cache.encoded == encoded and
         _cache.encoding == encoding and
         _cache.errors == errors
@@ -68,6 +69,7 @@ def encode(decoded, encoding, errors='strict'):
     """
     global _cache
     cached = (
+        isinstance(decoded, bytes) and
         _cache.decoded == decoded and
         _cache.encoding == encoding and
         _cache.errors == errors
