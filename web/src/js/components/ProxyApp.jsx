@@ -13,6 +13,11 @@ class ProxyAppMain extends Component {
         router: PropTypes.object.isRequired,
     }
 
+    constructor(props, context) {
+        super(props, context)
+        this.onKeyDown = this.onKeyDown.bind(this)
+    }
+
     componentWillMount() {
         this.props.appInit(this.context.router)
         window.addEventListener('keydown', this.props.onKeyDown);
@@ -24,15 +29,6 @@ class ProxyAppMain extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        /*
-        FIXME: improve react-router -> redux integration.
-        if (nextProps.location.query[Query.SEARCH] !== nextProps.filter) {
-            this.props.updateFilter(nextProps.location.query[Query.SEARCH], false)
-        }
-        if (nextProps.location.query[Query.HIGHLIGHT] !== nextProps.highlight) {
-            this.props.updateHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
-        }
-        */
         if (nextProps.query === this.props.query && nextProps.selectedFlowId === this.props.selectedFlowId && nextProps.panel === this.props.panel) {
             return
         }
