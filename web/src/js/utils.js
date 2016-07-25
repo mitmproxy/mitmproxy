@@ -109,13 +109,12 @@ fetchApi.put = (url, json, options) => fetchApi(
 
 export function getDiff(obj1, obj2) {
     let result = {...obj2};
-    _.forIn(obj1, (value, key) => {
-    	  if(_.isEqual(obj2[key], obj1[key]))
+    for(let key in obj1) {
+        if(_.isEqual(obj2[key], obj1[key]))
             result[key] = undefined;
-        else if(typeof Array.isArray(obj2[key]) && Array.isArray(obj2[key]))
-            result[key] = {...obj2[key]};
-        else if(typeof obj2[key] == 'object' && typeof obj1[key] == 'object')
+        else if(!(Array.isArray(obj2[key]) && Array.isArray(obj1[key])) &&
+                typeof obj2[key] == 'object' && typeof obj1[key] == 'object')
             result[key] = getDiff(obj1[key], obj2[key]);
-    });
+    }
     return result;
 }
