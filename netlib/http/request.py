@@ -253,14 +253,13 @@ class Request(message.Message):
         )
 
     def _get_query(self):
-        _, _, _, _, query, _ = urllib.parse.urlparse(self.url)
+        query = urllib.parse.urlparse(self.url).query
         return tuple(netlib.http.url.decode(query))
 
-    def _set_query(self, value):
-        query = netlib.http.url.encode(value)
-        scheme, netloc, path, params, _, fragment = urllib.parse.urlparse(self.url)
-        _, _, _, self.path = netlib.http.url.parse(
-            urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
+    def _set_query(self, query_data):
+        query = netlib.http.url.encode(query_data)
+        _, _, path, params, _, fragment = urllib.parse.urlparse(self.url)
+        self.path = urllib.parse.urlunparse(["", "", path, params, query, fragment])
 
     @query.setter
     def query(self, value):
@@ -296,19 +295,18 @@ class Request(message.Message):
         The URL's path components as a tuple of strings.
         Components are unquoted.
         """
-        _, _, path, _, _, _ = urllib.parse.urlparse(self.url)
+        path = urllib.parse.urlparse(self.url).path
         # This needs to be a tuple so that it's immutable.
         # Otherwise, this would fail silently:
         #   request.path_components.append("foo")
-        return tuple(urllib.parse.unquote(i) for i in path.split("/") if i)
+        return tuple(netlib.http.url.unquote(i) for i in path.split("/") if i)
 
     @path_components.setter
     def path_components(self, components):
-        components = map(lambda x: urllib.parse.quote(x, safe=""), components)
+        components = map(lambda x: netlib.http.url.quote(x, safe=""), components)
         path = "/" + "/".join(components)
-        scheme, netloc, _, params, query, fragment = urllib.parse.urlparse(self.url)
-        _, _, _, self.path = netlib.http.url.parse(
-            urllib.parse.urlunparse([scheme, netloc, path, params, query, fragment]))
+        _, _, _, params, query, fragment = urllib.parse.urlparse(self.url)
+        self.path = urllib.parse.urlunparse(["", "", path, params, query, fragment])
 
     def anticache(self):
         """
@@ -365,13 +363,13 @@ class Request(message.Message):
                 pass
         return ()
 
-    def _set_urlencoded_form(self, value):
+    def _set_urlencoded_form(self, form_data):
         """
         Sets the body to the URL-encoded form data, and adds the appropriate content-type header.
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = netlib.http.url.encode(value).encode()
+        self.content = netlib.http.url.encode(form_data).encode()
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):

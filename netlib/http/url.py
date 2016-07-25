@@ -82,19 +82,51 @@ def unparse(scheme, host, port, path=""):
 
 
 def encode(s):
-    # type: (six.text_type, bytes) -> str
+    # type: Sequence[Tuple[str,str]] -> str
     """
         Takes a list of (key, value) tuples and returns a urlencoded string.
     """
-    s = [tuple(i) for i in s]
-    return urllib.parse.urlencode(s, False)
+    if six.PY2:
+        return urllib.parse.urlencode(s, False)
+    else:
+        return urllib.parse.urlencode(s, False, errors="surrogateescape")
 
 
 def decode(s):
     """
-        Takes a urlencoded string and returns a list of (key, value) tuples.
+        Takes a urlencoded string and returns a list of surrogate-escaped (key, value) tuples.
     """
-    return urllib.parse.parse_qsl(s, keep_blank_values=True)
+    if six.PY2:
+        return urllib.parse.parse_qsl(s, keep_blank_values=True)
+    else:
+        return urllib.parse.parse_qsl(s, keep_blank_values=True, errors='surrogateescape')
+
+
+def quote(b, safe="/"):
+    """
+    Returns:
+        An ascii-encodable str.
+    """
+    # type: (str) -> str
+    if six.PY2:
+        return urllib.parse.quote(b, safe=safe)
+    else:
+        return urllib.parse.quote(b, safe=safe, errors="surrogateescape")
+
+
+def unquote(s):
+    """
+    Args:
+        s: A surrogate-escaped str
+    Returns:
+        A surrogate-escaped str
+    """
+    # type: (str) -> str
+
+    if six.PY2:
+        return urllib.parse.unquote(s)
+    else:
+        return urllib.parse.unquote(s, errors="surrogateescape")
 
 
 def hostport(scheme, host, port):

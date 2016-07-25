@@ -98,6 +98,9 @@ def bytes_to_escaped_str(data, keep_spacing=False):
 def escaped_str_to_bytes(data):
     """
     Take an escaped string and return the unescaped bytes equivalent.
+
+    Raises:
+        ValueError, if the escape sequence is invalid.
     """
     if not isinstance(data, six.string_types):
         if six.PY2:
