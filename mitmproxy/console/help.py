@@ -49,12 +49,11 @@ class HelpView(urwid.ListBox):
 
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
-            ("c", "client replay of HTTP requests"),
             ("i", "set interception pattern"),
             ("o", "options"),
             ("q", "quit / return to previous page"),
             ("Q", "quit without confirm prompt"),
-            ("S", "server replay of HTTP responses"),
+            ("R", "replay of HTTP requests/responses"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)
