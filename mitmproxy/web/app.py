@@ -47,8 +47,8 @@ def convert_flow_to_json_dict(flow):
                 "path": flow.request.path,
                 "http_version": flow.request.http_version,
                 "headers": tuple(flow.request.headers.items(True)),
-                "contentLength": len(flow.request.content) if flow.request.content is not None else None,
-                "contentHash": hashlib.sha256(flow.request.raw_content).hexdigest() if flow.request.content is not None else None,
+                "contentLength": len(flow.request.raw_content) if flow.request.raw_content is not None else None,
+                "contentHash": hashlib.sha256(flow.request.raw_content).hexdigest() if flow.request.raw_content is not None else None,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
@@ -59,8 +59,8 @@ def convert_flow_to_json_dict(flow):
                 "status_code": flow.response.status_code,
                 "reason": flow.response.reason,
                 "headers": tuple(flow.response.headers.items(True)),
-                "contentLength": len(flow.response.content) if flow.response.content is not None else None,
-                "contentHash": hashlib.sha256(flow.response.raw_content).hexdigest() if flow.response.content is not None else None,
+                "contentLength": len(flow.response.raw_content) if flow.response.raw_content is not None else None,
+                "contentHash": hashlib.sha256(flow.response.raw_content).hexdigest() if flow.response.raw_content is not None else None,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
@@ -304,11 +304,10 @@ class ReplayFlow(RequestHandler):
 class FlowContent(RequestHandler):
 
     def post(self, flow_id, message):
-        flow = self.flow
-        flow.backup()
-        message = getattr(flow, message)
+        self.flow.backup()
+        message = getattr(self.flow, message)
         message.content = self.request.files.values()[0][0].body
-        self.state.update_flow(flow)
+        self.state.update_flow(self.flow)
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
