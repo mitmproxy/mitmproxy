@@ -52,15 +52,13 @@ class Column(object):
 
 
 class Cell(urwid.WidgetWrap):
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
     def get_data(self):
         """
         Raises:
             ValueError, if the current content is invalid.
         """
-        pass
+        raise NotImplementedError()
 
     def selectable(self):
         return True
