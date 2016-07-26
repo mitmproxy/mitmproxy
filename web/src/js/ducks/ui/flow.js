@@ -8,7 +8,6 @@ export const SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              SET_TAB          = "UI_FLOWVIEW_SET_TAB",
              START_EDIT       = 'UI_FLOWVIEW_START_EDIT',
              UPDATE_EDIT      = 'UI_FLOWVIEW_UPDATE_EDIT',
-             STOP_EDIT        = 'UI_FLOWVIEW_STOP_EDIT',
              UPLOAD_CONTENT   = 'UI_FLOWVIEW_UPLOAD_CONTENT'
 
 
@@ -34,18 +33,27 @@ export default function reducer(state = defaultState, action) {
                 modifiedFlow: _.merge({}, state.modifiedFlow, action.update)
             }
 
-        case STOP_EDIT:
-            return {
-                ...state,
-                modifiedFlow: false
-            }
-
         case flowsActions.SELECT:
             return {
                 ...state,
                 modifiedFlow: false,
                 displayLarge: false,
             }
+
+        case flowsActions.UPDATE:
+            // There is no explicit "stop edit" event.
+            // We stop editing when we receive an update for
+            // the currently edited flow from the server
+            if (action.item.id === state.modifiedFlow.id) {
+                return {
+                    ...state,
+                    modifiedFlow: false,
+                    displayLarge: false,
+                }
+            } else {
+                return state
+            }
+
 
         case SET_TAB:
             return {
@@ -90,12 +98,7 @@ export function updateEdit(update) {
     return { type: UPDATE_EDIT, update }
 }
 
-export function stopEdit(flow, modified_flow) {
-    let diff = getDiff(flow, modified_flow)
-    return (dispatch) => {
-        dispatch(flowsActions.update(flow, diff)).then(() => {
-            dispatch(flowsActions.updateFlow(modified_flow))
-            dispatch({ type: STOP_EDIT })
-        })
-    }
+export function stopEdit(flow, modifiedFlow) {
+    let diff = getDiff(flow, modifiedFlow)
+    return flowsActions.update(flow, diff)
 }

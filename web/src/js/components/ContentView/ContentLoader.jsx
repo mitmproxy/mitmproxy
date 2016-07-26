@@ -45,11 +45,11 @@ export default View => class extends React.Component {
             this.state.request.abort()
         }
         // We have a few special cases where we do not need to make an HTTP request.
-        if(props.message.contentLength === 0 || props.message.contentLength === null){
-            return this.setState({request: undefined, content: ""})
-        }
         if(props.message.content !== undefined) {
             return this.setState({request: undefined, content: props.message.content})
+        }
+        if(props.message.contentLength === 0 || props.message.contentLength === null){
+            return this.setState({request: undefined, content: ""})
         }
 
         let requestUrl = MessageUtils.getContentURL(props.flow, props.message)
