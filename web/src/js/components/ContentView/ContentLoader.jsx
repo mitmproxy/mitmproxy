@@ -41,6 +41,10 @@ export default View => class extends React.Component {
         if (this.state.request) {
             this.state.request.abort()
         }
+        if(props.message.contentLength === 0 || props.message.contentLength === null){
+            return this.setState({request: undefined, content: ""})
+        }
+
         let requestUrl = MessageUtils.getContentURL(props.flow, props.message)
 
         // We use XMLHttpRequest instead of fetch() because fetch() is not (yet) abortable.
@@ -75,7 +79,7 @@ export default View => class extends React.Component {
     }
 
     render() {
-        return this.state.content ? (
+        return this.state.content !== undefined ? (
             <View content={this.state.content} {...this.props}/>
         ) : (
             <div className="text-center">

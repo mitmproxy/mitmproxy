@@ -35,7 +35,7 @@ export default function ViewSelector({ message }) {
     return (
         <div className="view-selector btn-group btn-group-xs">
 
-            <ViewButton name="AutoView">auto: {autoViewName}</ViewButton>
+            <ViewButton name="ViewAuto">auto: {autoViewName}</ViewButton>
 
             {Object.keys(ContentViews).map(name =>
                 name !== "ViewAuto" &&

@@ -19,17 +19,17 @@ ContentView.propTypes = {
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
 
 function ContentView(props) {
-    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge, uploadContent, onContentChange, readonly } = props
+    const { flow, message, contentView, isDisplayLarge, displayLarge, uploadContent, onContentChange, readonly } = props
 
-    if (message.contentLength === 0) {
+    if (message.contentLength === 0 && readonly) {
         return <MetaViews.ContentEmpty {...props}/>
     }
 
-    if (message.contentLength === null) {
+    if (message.contentLength === null && readonly) {
         return <MetaViews.ContentMissing {...props}/>
     }
 
-    if (!displayLarge && ContentView.isContentTooLarge(message)) {
+    if (!isDisplayLarge && ContentView.isContentTooLarge(message)) {
         return <MetaViews.ContentTooLarge {...props} onClick={displayLarge}/>
     }
 
@@ -39,7 +39,7 @@ function ContentView(props) {
             <View flow={flow} message={message} readonly={readonly} onChange={onContentChange}/>
 
             <div className="view-options text-center">
-                <ViewSelector onSelectView={selectView} active={View} message={message}/>
+                <ViewSelector message={message}/>
                 &nbsp;
                 <DownloadContentButton flow={flow} message={message}/>
                 &nbsp;
@@ -52,10 +52,9 @@ function ContentView(props) {
 export default connect(
     state => ({
         contentView: state.ui.flow.contentView,
-        displayLarge: state.ui.flow.displayLarge,
+        isDisplayLarge: state.ui.flow.displayLarge,
     }),
     {
-        selectView: setContentView,
         displayLarge,
         updateEdit
     }
