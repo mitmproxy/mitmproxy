@@ -22,12 +22,15 @@ export default View => class extends React.Component {
     }
 
     componentWillMount() {
-        this.startRequest(this.props)
+        this.updateContent(this.props)
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.message.contentHash !== this.props.message.contentHash) {
-            this.startRequest(nextProps)
+        if (
+            nextProps.message.content !== this.props.message.content ||
+            nextProps.message.contentHash !== this.props.message.contentHash
+        ) {
+            this.updateContent(nextProps)
         }
     }
 
@@ -37,12 +40,16 @@ export default View => class extends React.Component {
         }
     }
 
-    startRequest(props) {
+    updateContent(props) {
         if (this.state.request) {
             this.state.request.abort()
         }
+        // We have a few special cases where we do not need to make an HTTP request.
         if(props.message.contentLength === 0 || props.message.contentLength === null){
             return this.setState({request: undefined, content: ""})
+        }
+        if(props.message.content !== undefined) {
+            return this.setState({request: undefined, content: props.message.content})
         }
 
         let requestUrl = MessageUtils.getContentURL(props.flow, props.message)
