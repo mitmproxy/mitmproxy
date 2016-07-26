@@ -31,7 +31,7 @@ from PIL import Image
 from six import BytesIO
 
 from mitmproxy import exceptions
-from mitmproxy.contrib import jsbeautifier
+import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
 from netlib import multidict
@@ -398,7 +398,7 @@ class ViewJavaScript(View):
     def __call__(self, data, **metadata):
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
-        res = jsbeautifier.beautify(data, opts)
+        res = jsbeautifier.beautify(data.decode(), opts)
         return "JavaScript", format_text(res)
 
 

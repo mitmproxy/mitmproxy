@@ -111,6 +111,7 @@ setup(
         ],
         'contentviews': [
             "cssutils>=1.0.1, <1.1",
+            "jsbeautifier>=1.6.3"
             # TODO: Find Python 3 replacements
             # "protobuf>=2.6.1, <2.7",
             # "pyamf>=0.8.0, <0.9",
