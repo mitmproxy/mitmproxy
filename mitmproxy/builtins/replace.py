@@ -13,8 +13,8 @@ class Replace:
             .replacements is a list of tuples (fpat, rex, s):
 
             fpatt: a string specifying a filter pattern.
-            rex: a regular expression.
-            s: the replacement string
+            rex: a regular expression, as bytes.
+            s: the replacement string, as bytes
         """
         lst = []
         for fpatt, rex, s in options.replacements:

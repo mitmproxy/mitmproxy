@@ -390,13 +390,12 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def spawn_editor(self, data):
-        fd, name = tempfile.mkstemp('', "mproxy")
+        text = not isinstance(data, bytes)
+        fd, name = tempfile.mkstemp('', "mproxy", text=text)
         os.write(fd, data)
         os.close(fd)
-        c = os.environ.get("EDITOR")
         # if no EDITOR is set, assume 'vi'
-        if not c:
-            c = "vi"
+        c = os.environ.get("EDITOR") or "vi"
         cmd = shlex.split(c)
         cmd.append(name)
         self.ui.stop()
@@ -404,10 +403,11 @@ class ConsoleMaster(flow.FlowMaster):
             subprocess.call(cmd)
         except:
             signals.status_message.send(
-                message = "Can't start editor: %s" % " ".join(c)
+                message="Can't start editor: %s" % " ".join(c)
             )
         else:
-            data = open(name, "rb").read()
+            with open(name, "r" if text else "rb") as f:
+                data = f.read()
         self.ui.start()
         os.unlink(name)
         return data
@@ -570,7 +570,7 @@ class ConsoleMaster(flow.FlowMaster):
                 self,
                 ge,
                 None,
-                statusbar.StatusBar(self, grideditor.FOOTER),
+                statusbar.StatusBar(self, grideditor.base.FOOTER),
                 ge.make_help()
             )
         )
