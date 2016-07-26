@@ -59,7 +59,7 @@ export default class ValueEditor extends Component {
         return (
             <div
                 ref={input => this.input = input}
-                tabIndex={!this.props.readonly && "0"}
+                tabIndex={this.props.readonly ? undefined : 0}
                 className={className}
                 contentEditable={this.state.editable || undefined}
                 onFocus={this.onFocus}

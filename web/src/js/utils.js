@@ -108,11 +108,22 @@ fetchApi.put = (url, json, options) => fetchApi(
     }
 )
 
+export function getDiff(obj1, obj2) {
+    let result = {...obj2};
+    for(let key in obj1) {
+        if(_.isEqual(obj2[key], obj1[key]))
+            result[key] = undefined
+        else if(!(Array.isArray(obj2[key]) && Array.isArray(obj1[key])) &&
+                typeof obj2[key] == 'object' && typeof obj1[key] == 'object')
+            result[key] = getDiff(obj1[key], obj2[key])
+    }
+    return result
+}
+
 export const pure = renderFn => class extends React.Component {
     static displayName = renderFn.name
 
     shouldComponentUpdate(nextProps) {
-        console.log(!shallowEqual(this.props, nextProps))
         return !shallowEqual(this.props, nextProps)
     }
 

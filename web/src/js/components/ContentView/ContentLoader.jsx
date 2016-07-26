@@ -1,53 +1,36 @@
 import React, { Component, PropTypes } from 'react'
 import { MessageUtils } from '../../flow/utils.js'
-// This is the only place where we use jQuery.
-// Remove when possible.
-import $ from "jquery"
 
-export default class ContentLoader extends Component {
+export default View => class extends React.Component {
+
+    static displayName = View.displayName || View.name
+    static matches = View.matches
 
     static propTypes = {
+        ...View.propTypes,
+        content: PropTypes.string,  // mark as non-required
         flow: PropTypes.object.isRequired,
         message: PropTypes.object.isRequired,
     }
 
-    constructor(props, context) {
-        super(props, context)
-        this.state = { content: null, request: null }
-    }
-
-    requestContent(nextProps) {
-        if (this.state.request) {
-            this.state.request.abort()
+    constructor(props) {
+        super(props)
+        this.state = {
+            content: undefined,
+            request: undefined,
         }
-
-        const requestUrl = MessageUtils.getContentURL(nextProps.flow, nextProps.message)
-        const request = $.get(requestUrl)
-
-        this.setState({ content: null, request })
-
-        request
-            .done(content => {
-                this.setState({ content })
-            })
-            .fail((xhr, textStatus, errorThrown) => {
-                if (textStatus === 'abort') {
-                    return
-                }
-                this.setState({ content: `AJAX Error: ${textStatus}\r\n${errorThrown}` })
-            })
-            .always(() => {
-                this.setState({ request: null })
-            })
     }
 
     componentWillMount() {
-        this.requestContent(this.props)
+        this.updateContent(this.props)
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.message !== this.props.message) {
-            this.requestContent(nextProps)
+        if (
+            nextProps.message.content !== this.props.message.content ||
+            nextProps.message.contentHash !== this.props.message.contentHash
+        ) {
+            this.updateContent(nextProps)
         }
     }
 
@@ -57,15 +40,58 @@ export default class ContentLoader extends Component {
         }
     }
 
+    updateContent(props) {
+        if (this.state.request) {
+            this.state.request.abort()
+        }
+        // We have a few special cases where we do not need to make an HTTP request.
+        if(props.message.content !== undefined) {
+            return this.setState({request: undefined, content: props.message.content})
+        }
+        if(props.message.contentLength === 0 || props.message.contentLength === null){
+            return this.setState({request: undefined, content: ""})
+        }
+
+        let requestUrl = MessageUtils.getContentURL(props.flow, props.message)
+
+        // We use XMLHttpRequest instead of fetch() because fetch() is not (yet) abortable.
+        let request = new XMLHttpRequest();
+        request.addEventListener("load", this.requestComplete.bind(this, request));
+        request.addEventListener("error", this.requestFailed.bind(this, request));
+        request.open("GET", requestUrl);
+        request.send();
+        this.setState({ request, content: undefined })
+    }
+
+    requestComplete(request, e) {
+        if (request !== this.state.request) {
+            return // Stale request
+        }
+        this.setState({
+            content: request.responseText,
+            request: undefined
+        })
+    }
+
+    requestFailed(request, e) {
+        if (request !== this.state.request) {
+            return // Stale request
+        }
+        console.error(e)
+        // FIXME: Better error handling
+        this.setState({
+            content: "Error getting content.",
+            request: undefined
+        })
+    }
+
     render() {
-        return this.state.content ? (
-            React.cloneElement(this.props.children, {
-                content: this.state.content
-            })
+        return this.state.content !== undefined ? (
+            <View content={this.state.content} {...this.props}/>
         ) : (
             <div className="text-center">
                 <i className="fa fa-spinner fa-spin"></i>
             </div>
         )
     }
-}
+};

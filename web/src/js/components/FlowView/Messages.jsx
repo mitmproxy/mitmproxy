@@ -10,6 +10,7 @@ import ValueEditor from '../ValueEditor/ValueEditor'
 
 import Headers from './Headers'
 import { startEdit, updateEdit } from '../../ducks/ui/flow'
+import * as FlowActions from '../../ducks/flows'
 import ToggleEdit from './ToggleEdit'
 
 function RequestLine({ flow, readonly, updateFlow }) {
@@ -73,12 +74,13 @@ const Message = connect(
     }),
     {
         updateFlow: updateEdit,
+        uploadContent: FlowActions.uploadContent
     }
 )
 
 export class Request extends Component {
     render() {
-        const { flow, isEdit, updateFlow } = this.props
+        const { flow, isEdit, updateFlow, uploadContent } = this.props
 
         return (
             <section className="request">
@@ -94,7 +96,12 @@ export class Request extends Component {
                 />
 
                 <hr/>
-                <ContentView flow={flow} message={flow.request}/>
+                <ContentView
+                    readonly={!isEdit}
+                    flow={flow}
+                    onContentChange={content => updateFlow({ request: {content}})}
+                    uploadContent={content => uploadContent(flow, content, "request")}
+                    message={flow.request}/>
             </section>
         )
     }
@@ -129,7 +136,7 @@ Request = Message(Request)
 
 export class Response extends Component {
     render() {
-        const { flow, isEdit, updateFlow } = this.props
+        const { flow, isEdit, updateFlow, uploadContent } = this.props
 
         return (
             <section className="response">
@@ -144,7 +151,13 @@ export class Response extends Component {
                     onChange={headers => updateFlow({ response: { headers } })}
                 />
                 <hr/>
-                <ContentView flow={flow} message={flow.response}/>
+                <ContentView
+                    readonly={!isEdit}
+                    flow={flow}
+                    onContentChange={content => updateFlow({ response: {content}})}
+                    uploadContent={content => uploadContent(flow, content, "response")}
+                    message={flow.response}
+                />
             </section>
         )
     }

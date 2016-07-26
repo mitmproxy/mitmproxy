@@ -5,6 +5,8 @@ import json
 import logging
 import os.path
 import re
+import hashlib
+
 
 import six
 import tornado.websocket
@@ -45,7 +47,8 @@ def convert_flow_to_json_dict(flow):
                 "path": flow.request.path,
                 "http_version": flow.request.http_version,
                 "headers": tuple(flow.request.headers.items(True)),
-                "contentLength": len(flow.request.content) if flow.request.content is not None else None,
+                "contentLength": len(flow.request.raw_content) if flow.request.raw_content is not None else None,
+                "contentHash": hashlib.sha256(flow.request.raw_content).hexdigest() if flow.request.raw_content is not None else None,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
@@ -56,7 +59,8 @@ def convert_flow_to_json_dict(flow):
                 "status_code": flow.response.status_code,
                 "reason": flow.response.reason,
                 "headers": tuple(flow.response.headers.items(True)),
-                "contentLength": len(flow.response.content) if flow.response.content is not None else None,
+                "contentLength": len(flow.response.raw_content) if flow.response.raw_content is not None else None,
+                "contentHash": hashlib.sha256(flow.response.raw_content).hexdigest() if flow.response.raw_content is not None else None,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
@@ -248,11 +252,14 @@ class FlowHandler(RequestHandler):
                         request.port = int(v)
                     elif k == "headers":
                         request.headers.set_state(v)
+                    elif k == "content":
+                        request.text = v
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
 
             elif a == "response":
                 response = flow.response
+
                 for k, v in six.iteritems(b):
                     if k == "msg":
                         response.msg = str(v)
@@ -262,6 +269,8 @@ class FlowHandler(RequestHandler):
                         response.http_version = str(v)
                     elif k == "headers":
                         response.headers.set_state(v)
+                    elif k == "content":
+                        response.text = v
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
             else:

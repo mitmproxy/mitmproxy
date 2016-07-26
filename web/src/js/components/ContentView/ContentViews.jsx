@@ -1,19 +1,16 @@
 import React, { PropTypes } from 'react'
 import ContentLoader from './ContentLoader'
-import { MessageUtils } from '../../flow/utils.js'
+import { MessageUtils } from '../../flow/utils'
+import CodeEditor from './CodeEditor'
 
 
-const views = [ViewAuto, ViewImage, ViewJSON, ViewRaw]
-
-ViewImage.regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i
-ViewImage.matches = msg => ViewImage.regex.test(MessageUtils.getContentType(msg))
-
+const isImage = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i
+ViewImage.matches = msg => isImage.test(MessageUtils.getContentType(msg))
 ViewImage.propTypes = {
     flow: PropTypes.object.isRequired,
     message: PropTypes.object.isRequired,
 }
-
-export function ViewImage({ flow, message }) {
+function ViewImage({ flow, message }) {
     return (
         <div className="flowview-image">
             <img src={MessageUtils.getContentURL(flow, message)} alt="preview" className="img-thumbnail"/>
@@ -21,26 +18,23 @@ export function ViewImage({ flow, message }) {
     )
 }
 
-ViewRaw.textView = true
-ViewRaw.matches = () => true
 
+ViewRaw.matches = () => true
 ViewRaw.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
-
-export function ViewRaw({ content }) {
-    return <pre>{content}</pre>
+function ViewRaw({ content, readonly, onChange }) {
+    return readonly ? <pre>{content}</pre> : <CodeEditor content={content} onChange={onChange}/>
 }
+ViewRaw = ContentLoader(ViewRaw)
 
-ViewJSON.textView = true
-ViewJSON.regex = /^application\/json$/i
-ViewJSON.matches = msg => ViewJSON.regex.test(MessageUtils.getContentType(msg))
 
+const isJSON = /^application\/json$/i
+ViewJSON.matches = msg => isJSON.test(MessageUtils.getContentType(msg))
 ViewJSON.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
-
-export function ViewJSON({ content }) {
+function ViewJSON({ content }) {
     let json = content
     try {
         json = JSON.stringify(JSON.parse(content), null, 2);
@@ -49,23 +43,18 @@ export function ViewJSON({ content }) {
     }
     return <pre>{json}</pre>
 }
+ViewJSON = ContentLoader(ViewJSON)
 
 
 ViewAuto.matches = () => false
-ViewAuto.findView = msg => views.find(v => v.matches(msg)) || views[views.length - 1]
-
+ViewAuto.findView = msg => [ViewImage, ViewJSON, ViewRaw].find(v => v.matches(msg)) || ViewRaw
 ViewAuto.propTypes = {
     message: React.PropTypes.object.isRequired,
     flow: React.PropTypes.object.isRequired,
 }
-
-export function ViewAuto({ message, flow }) {
+function ViewAuto({ message, flow, readonly, onChange }) {
     const View = ViewAuto.findView(message)
-    if (View.textView) {
-        return <ContentLoader message={message} flow={flow}><View content="" /></ContentLoader>
-    } else {
-        return <View message={message} flow={flow} />
-    }
+    return <View message={message} flow={flow} readonly={readonly} onChange={onChange}/>
 }
 
-export default views
+export { ViewImage, ViewRaw, ViewAuto, ViewJSON }

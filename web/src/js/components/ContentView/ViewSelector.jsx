@@ -1,28 +1,47 @@
 import React, { PropTypes } from 'react'
 import classnames from 'classnames'
-import views, { ViewAuto } from './ContentViews'
+import { connect } from 'react-redux'
+import * as ContentViews from './ContentViews'
+import { setContentView } from "../../ducks/ui/flow";
+
+
+function ViewButton({ name, setContentView, children, activeView }) {
+    return (
+        <button
+            onClick={() => setContentView(name)}
+            className={classnames('btn btn-default', { active: name === activeView })}>
+            {children}
+        </button>
+    )
+}
+ViewButton = connect(state => ({
+    activeView: state.ui.flow.contentView
+}), {
+    setContentView
+})(ViewButton)
+
 
 ViewSelector.propTypes = {
-    active: PropTypes.func.isRequired,
     message: PropTypes.object.isRequired,
-    onSelectView: PropTypes.func.isRequired,
 }
+export default function ViewSelector({ message }) {
 
-export default function ViewSelector({ active, message, onSelectView }) {
+    let autoView = ContentViews.ViewAuto.findView(message)
+    let autoViewName = (autoView.displayName || autoView.name)
+        .toLowerCase()
+        .replace('view', '')
+        .replace(/ContentLoader\((.+)\)/,"$1")
+
     return (
         <div className="view-selector btn-group btn-group-xs">
-            {views.map(View => (
-                <button
-                    key={View.name}
-                    onClick={() => onSelectView(View.name)}
-                    className={classnames('btn btn-default', { active: View === active })}>
-                    {View === ViewAuto ? (
-                        `auto: ${ViewAuto.findView(message).name.toLowerCase().replace('view', '')}`
-                    ) : (
-                        View.name.toLowerCase().replace('view', '')
-                    )}
-                </button>
-            ))}
+
+            <ViewButton name="ViewAuto">auto: {autoViewName}</ViewButton>
+
+            {Object.keys(ContentViews).map(name =>
+                name !== "ViewAuto" &&
+                <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
+            )}
+
         </div>
     )
 }

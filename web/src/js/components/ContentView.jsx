@@ -1,12 +1,12 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { MessageUtils } from '../flow/utils.js'
 import * as ContentViews from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
-import ContentLoader from './ContentView/ContentLoader'
 import ViewSelector from './ContentView/ViewSelector'
+import UploadContentButton from './ContentView/UploadContentButton'
+import DownloadContentButton from './ContentView/DownloadContentButton'
+
 import { setContentView, displayLarge, updateEdit } from '../ducks/ui/flow'
-import CodeEditor from './common/CodeEditor'
 
 ContentView.propTypes = {
     // It may seem a bit weird at the first glance:
@@ -19,61 +19,32 @@ ContentView.propTypes = {
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
 
 function ContentView(props) {
-    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge, onContentChange, isFlowEditorOpen, setModifiedFlowContent } = props
+    const { flow, message, contentView, isDisplayLarge, displayLarge, uploadContent, onContentChange, readonly } = props
 
-    if (message.contentLength === 0) {
+    if (message.contentLength === 0 && readonly) {
         return <MetaViews.ContentEmpty {...props}/>
     }
 
-    if (message.contentLength === null) {
+    if (message.contentLength === null && readonly) {
         return <MetaViews.ContentMissing {...props}/>
     }
 
-    if (!displayLarge && ContentView.isContentTooLarge(message)) {
+    if (!isDisplayLarge && ContentView.isContentTooLarge(message)) {
         return <MetaViews.ContentTooLarge {...props} onClick={displayLarge}/>
     }
 
     const View = ContentViews[contentView]
-
     return (
         <div>
-            {isFlowEditorOpen ? (
-                <ContentLoader flow={flow} message={message}>
-                        <CodeEditor content="" onChange={content =>{setModifiedFlowContent(content)}}/>
-                    </ContentLoader>
-            ): (
-                <div>
-                    {View.textView ? (
-                        <ContentLoader flow={flow} message={message}>
-                            <View content="" />
-                        </ContentLoader>
-                    ) : (
-                        <View flow={flow} message={message} />
-                    )}
-                    <div className="view-options text-center">
-                        <ViewSelector onSelectView={selectView} active={View} message={message}/>
-                        &nbsp;
-                        <a className="btn btn-default btn-xs"
-                           href={MessageUtils.getContentURL(flow, message)}
-                           title="Download the content of the flow.">
-                            <i className="fa fa-download"/>
-                        </a>
-                        &nbsp;
-                        <a  className="btn btn-default btn-xs"
-                            onClick={() => ContentView.fileInput.click()}
-                            title="Upload a file to replace the content."
-                        >
-                            <i className="fa fa-upload"/>
-                        </a>
-                        <input
-                            ref={ref => ContentView.fileInput = ref}
-                            className="hidden"
-                            type="file"
-                            onChange={e => {if(e.target.files.length > 0) onContentChange(e.target.files[0])}}
-                        />
-                    </div>
-                </div>
-            )}
+            <View flow={flow} message={message} readonly={readonly} onChange={onContentChange}/>
+
+            <div className="view-options text-center">
+                <ViewSelector message={message}/>
+                &nbsp;
+                <DownloadContentButton flow={flow} message={message}/>
+                &nbsp;
+                <UploadContentButton uploadContent={uploadContent}/>
+            </div>
         </div>
     )
 }
@@ -81,12 +52,10 @@ function ContentView(props) {
 export default connect(
     state => ({
         contentView: state.ui.flow.contentView,
-        displayLarge: state.ui.flow.displayLarge,
-        isFlowEditorOpen : !!state.ui.flow.modifiedFlow // FIXME
+        isDisplayLarge: state.ui.flow.displayLarge,
     }),
     {
-        selectView: setContentView,
         displayLarge,
-        updateEdit,
+        updateEdit
     }
 )(ContentView)
