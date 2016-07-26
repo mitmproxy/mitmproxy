@@ -77,7 +77,6 @@ export default function reduce(state = defaultState, action) {
                     ...sortedUpdate(state, action.item, action.sort),
                 }
             }
-            break;
         case RECEIVE:
         {
             const data = action.list.filter(action.filter).sort(action.sort)
