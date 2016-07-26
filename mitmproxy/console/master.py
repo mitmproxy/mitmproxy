@@ -13,6 +13,7 @@ import tempfile
 import traceback
 import weakref
 
+import six
 import urwid
 from typing import Optional  # noqa
 
@@ -392,8 +393,13 @@ class ConsoleMaster(flow.FlowMaster):
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp('', "mproxy", text=text)
-        os.write(fd, data)
-        os.close(fd)
+        if six.PY2:
+            os.close(fd)
+            with open(name, "w" if text else "wb") as f:
+                f.write(data)
+        else:
+            with open(fd, "w" if text else "wb") as f:
+                f.write(data)
         # if no EDITOR is set, assume 'vi'
         c = os.environ.get("EDITOR") or "vi"
         cmd = shlex.split(c)
