@@ -124,7 +124,6 @@ export const pure = renderFn => class extends React.Component {
     static displayName = renderFn.name
 
     shouldComponentUpdate(nextProps) {
-        console.log(!shallowEqual(this.props, nextProps))
         return !shallowEqual(this.props, nextProps)
     }
 

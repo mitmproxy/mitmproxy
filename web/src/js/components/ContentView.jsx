@@ -1,10 +1,11 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { MessageUtils } from '../flow/utils.js'
 import * as ContentViews from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
-import ContentLoader from './ContentView/ContentLoader'
 import ViewSelector from './ContentView/ViewSelector'
+import UploadContentButton from './ContentView/UploadContentButton'
+import DownloadContentButton from './ContentView/DownloadContentButton'
+
 import { setContentView, displayLarge, updateEdit } from '../ducks/ui/flow'
 
 ContentView.propTypes = {
@@ -18,7 +19,7 @@ ContentView.propTypes = {
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
 
 function ContentView(props) {
-    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge, uploadContent, onContentChange, content, readonly } = props
+    const { flow, message, contentView, selectView, displayLarge, setDisplayLarge, uploadContent, onContentChange, readonly } = props
 
     if (message.contentLength === 0) {
         return <MetaViews.ContentEmpty {...props}/>
@@ -35,34 +36,14 @@ function ContentView(props) {
     const View = ContentViews[contentView]
     return (
         <div>
-            {View.textView ? (
-                <ContentLoader flow={flow}  readonly={readonly} message={message}>
-                    <View readonly={readonly} onChange={onContentChange} content="" />
-                </ContentLoader>
-            ) : (
-                <View flow={flow} readonly={readonly} onChange={onContentChange} content={content} message={message} />
-            )}
+            <View flow={flow} message={message} readonly={readonly} onChange={onContentChange}/>
+
             <div className="view-options text-center">
                 <ViewSelector onSelectView={selectView} active={View} message={message}/>
                 &nbsp;
-                <a className="btn btn-default btn-xs"
-                   href={MessageUtils.getContentURL(flow, message)}
-                   title="Download the content of the flow.">
-                    <i className="fa fa-download"/>
-                </a>
+                <DownloadContentButton flow={flow} message={message}/>
                 &nbsp;
-                <a  className="btn btn-default btn-xs"
-                    onClick={() => ContentView.fileInput.click()}
-                    title="Upload a file to replace the content."
-                >
-                    <i className="fa fa-upload"/>
-                </a>
-                <input
-                    ref={ref => ContentView.fileInput = ref}
-                    className="hidden"
-                    type="file"
-                    onChange={e => {if(e.target.files.length > 0) uploadContent(e.target.files[0])}}
-                />
+                <UploadContentButton uploadContent={uploadContent}/>
             </div>
         </div>
     )

@@ -11,15 +11,13 @@
       "<rootDir>/src/js"
     ],
     "unmockedModulePathPatterns": [
-      "react",
-      "jquery"
+      "react"
     ]
   },
   "dependencies": {
     "bootstrap": "^3.3.6",
     "classnames": "^2.2.5",
     "flux": "^2.1.1",
-    "jquery": "^2.2.3",
     "lodash": "^4.11.2",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
@@ -29,7 +27,7 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "shallowequal": "^0.2.2",
-    "react-codemirror" : "^0.2.6"
+    "react-codemirror": "^0.2.6"
   },
   "devDependencies": {
     "babel-core": "^6.7.7",
@@ -55,7 +53,9 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-util": "^3.0.7",
     "jest": "^12.1.1",
-    "react-addons-test-utils": "^15.1.0",
+    "react": "^15.2.1",
+    "react-addons-test-utils": "^15.2.1",
+    "react-dom": "^15.2.1",
     "uglifyify": "^3.0.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
