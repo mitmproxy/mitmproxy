@@ -80,7 +80,7 @@ setup(
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.11",
         "six>=1.10, <1.11",
-        "tornado>=4.3, <4.4",
+        "tornado>=4.3, <4.5",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
     ],
@@ -116,9 +116,9 @@ setup(
             # "pyamf>=0.8.0, <0.9",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1, <4.5",
+            "beautifulsoup4>=4.4.1, <4.6",
             "harparser>=0.2, <0.3",
-            "pytz>=2015.07.0, <=2016.4",
+            "pytz>=2015.07.0, <=2016.6.1",
         ]
     }
 )
