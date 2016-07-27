@@ -24,7 +24,7 @@ ViewButton = connect(state => ({
 ViewSelector.propTypes = {
     message: PropTypes.object.isRequired,
 }
-export default function ViewSelector({ message }) {
+function ViewSelector({ message, contentViews }) {
 
     let autoView = ContentViews.ViewAuto.findView(message)
     let autoViewName = (autoView.displayName || autoView.name)
@@ -42,6 +42,15 @@ export default function ViewSelector({ message }) {
                 <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
             )}
 
+            {contentViews.map(name =>
+                <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
+            )}
+
         </div>
     )
 }
+
+export default connect (
+    state => ({
+        contentViews: state.settings.contentViews
+    }))(ViewSelector)

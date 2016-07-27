@@ -57,4 +57,14 @@ function ViewAuto({ message, flow, readonly, onChange }) {
     return <View message={message} flow={flow} readonly={readonly} onChange={onChange}/>
 }
 
-export { ViewImage, ViewRaw, ViewAuto, ViewJSON }
+function ViewServer({contentView, content}){
+    return <div>
+            <pre>load from server this view: {contentView}</pre>
+            <pre>{content}</pre>
+        </div>
+
+}
+
+ViewServer = ContentLoader(ViewServer)
+
+export { ViewImage, ViewRaw, ViewAuto, ViewJSON, ViewServer }

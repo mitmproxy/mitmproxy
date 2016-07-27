@@ -33,10 +33,10 @@ function ContentView(props) {
         return <MetaViews.ContentTooLarge {...props} onClick={displayLarge}/>
     }
 
-    const View = ContentViews[contentView]
+    const View = ContentViews[contentView] || ContentViews['ViewServer']
     return (
         <div>
-            <View flow={flow} message={message} readonly={readonly} onChange={onContentChange}/>
+            <View flow={flow} message={message} contentView={contentView} readonly={readonly} onChange={onContentChange}/>
 
             <div className="view-options text-center">
                 <ViewSelector message={message}/>
