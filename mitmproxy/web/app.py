@@ -314,6 +314,7 @@ class FlowContent(RequestHandler):
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
+        contentview = self.get_argument("content_view", "raw", True)
 
         if not message.raw_content:
             raise APIError(400, "No content.")
