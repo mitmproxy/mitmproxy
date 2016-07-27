@@ -16,7 +16,9 @@ from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import filt
 from mitmproxy import models
+from mitmproxy import contentviews
 from netlib import version
+
 
 
 def convert_flow_to_json_dict(flow):
@@ -364,7 +366,8 @@ class Settings(RequestHandler):
                 anticomp=self.master.options.anticomp,
                 stickyauth=self.master.options.stickyauth,
                 stickycookie=self.master.options.stickycookie,
-                stream= self.master.options.stream_large_bodies
+                stream= self.master.options.stream_large_bodies,
+                contentViews= map(lambda v : v.name, contentviews.views)
             )
         ))
 
