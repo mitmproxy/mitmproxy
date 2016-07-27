@@ -67,10 +67,12 @@ setup(
         "configargparse>=0.10, <0.11",
         "construct>=2.5.2, <2.6",
         "cryptography>=1.3, <1.5",
+        "cssutils>=1.0.1, <1.1",
         "Flask>=0.10.1, <0.12",
         "h2>=2.4.0, <3",
         "html2text>=2016.1.8, <=2016.5.29",
         "hyperframe>=4.0.1, <5",
+        "jsbeautifier>=1.6.3"
         "lxml>=3.5.0, <=3.6.0",  # no wheels for 3.6.1 yet.
         "Pillow>=3.2, <3.4",
         "passlib>=1.6.5, <1.7",
@@ -110,8 +112,6 @@ setup(
             "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
-            "cssutils>=1.0.1, <1.1",
-            "jsbeautifier>=1.6.3"
             # TODO: Find Python 3 replacements
             # "protobuf>=2.6.1, <2.7",
             # "pyamf>=0.8.0, <0.9",
