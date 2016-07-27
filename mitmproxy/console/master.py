@@ -257,6 +257,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
+        signals.replace_view_state.connect(self.sig_replace_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(options, *builtins.default_addons())
@@ -295,7 +296,19 @@ class ConsoleMaster(flow.FlowMaster):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
 
+    def sig_replace_view_state(self, sender):
+        """
+            A view has been pushed onto the stack, and is intended to replace
+            the current view rather tha creating a new stack entry.
+        """
+        if len(self.view_stack) > 1:
+            del self.view_stack[1]
+
     def sig_pop_view_state(self, sender):
+        """
+            Pop the top view off the view stack. If no more views will be left
+            after this, prompt for exit.
+        """
         if len(self.view_stack) > 1:
             self.view_stack.pop()
             self.loop.widget = self.view_stack[-1]
@@ -311,6 +324,9 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def sig_push_view_state(self, sender, window):
+        """
+            Push a new view onto the view stack.
+        """
         self.view_stack.append(window)
         self.loop.widget = window
         self.loop.draw_screen()
@@ -351,8 +367,8 @@ class ConsoleMaster(flow.FlowMaster):
 
     def toggle_eventlog(self):
         self.options.eventlog = not self.options.eventlog
-        signals.pop_view_state.send(self)
         self.view_flowlist()
+        signals.replace_view_state.send(self)
 
     def _readflows(self, path):
         """
