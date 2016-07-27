@@ -118,5 +118,6 @@ class DumpMaster(flow.FlowMaster):
 
     def run(self):  # pragma: no cover
         if self.options.rfile and not self.options.keepserving:
+            self.addons.done()
             return
         super(DumpMaster, self).run()
