@@ -54,21 +54,29 @@ export default function reduce(state = defaultState, action) {
             }
 
         case UPDATE:
-            if (state.indexOf[action.item.id] == null) {
-                return
+            let hasOldItem = state.indexOf[action.item.id] !== null && state.indexOf[action.item.id] !== undefined
+            let hasNewItem = action.filter(action.item)
+            if (!hasNewItem && !hasOldItem) {
+                return state
             }
-            const nextState = {
-                ...state,
-                ...sortedRemove(state, action.item.id),
+            if (hasNewItem && !hasOldItem) {
+                return {
+                    ...state,
+                    ...sortedInsert(state, action.item, action.sort)
+                }
             }
-            if (!action.filter(action.item)) {
-                return nextState
+            if (!hasNewItem && hasOldItem) {
+                return {
+                    ...state,
+                    ...sortedRemove(state, action.item.id)
+                }
             }
-            return {
-                ...nextState,
-                ...sortedInsert(nextState, action.item, action.sort)
+            if (hasNewItem && hasOldItem) {
+                return {
+                    ...state,
+                    ...sortedUpdate(state, action.item, action.sort),
+                }
             }
-
         case RECEIVE:
         {
             const data = action.list.filter(action.filter).sort(action.sort)
@@ -110,7 +118,7 @@ export function receive(list, filter = defaultFilter, sort = defaultSort) {
 
 function sortedInsert(state, item, sort) {
     const index = sortedIndex(state.data, item, sort)
-    const data = [...state.data]
+    const data = [ ...state.data ]
     const indexOf = { ...state.indexOf }
 
     data.splice(index, 0, item)
@@ -131,6 +139,28 @@ function sortedRemove(state, id) {
         indexOf[data[i].id] = i
     }
 
+    return { data, indexOf }
+}
+
+function sortedUpdate(state, item, sort) {
+    let data = [ ...state.data ]
+    let indexOf = { ...state.indexOf }
+    let index = indexOf[item.id]
+    data[index] = item
+    while (index + 1 < data.length && sort(data[index], data[index + 1]) > 0) {
+        data[index] = data[index + 1]
+        data[index + 1] = item
+        indexOf[item.id] = index + 1
+        indexOf[data[index].id] = index
+        ++index
+    }
+    while (index > 0 && sort(data[index], data[index - 1]) < 0) {
+        data[index] = data[index - 1]
+        data[index - 1] = item
+        indexOf[item.id] = index - 1
+        indexOf[data[index].id] = index
+        --index
+    }
     return { data, indexOf }
 }
 

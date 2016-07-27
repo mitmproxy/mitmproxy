@@ -66,11 +66,13 @@ describe('view reduce', () => {
     it('should update item', () => {
         const state = createState([
             { id: 1, val: 1 },
-            { id: 2, val: 2 }
+            { id: 2, val: 2 },
+            { id: 3, val: 3 }
         ])
         const result = createState([
             { id: 1, val: 1 },
-            { id: 2, val: 3 }
+            { id: 2, val: 3 },
+            { id: 3, val: 3 }
         ])
         expect(reduce(state, view.update({ id: 2, val: 3 }))).toEqual(result)
     })
