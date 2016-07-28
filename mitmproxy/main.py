@@ -92,6 +92,7 @@ def mitmdump(args=None):  # pragma: no cover
     if args.quiet:
         args.flow_detail = 0
 
+    master = None
     try:
         dump_options = dump.Options(**cmdline.get_common_options(args))
         dump_options.flow_detail = args.flow_detail
@@ -110,7 +111,7 @@ def mitmdump(args=None):  # pragma: no cover
         sys.exit(1)
     except (KeyboardInterrupt, _thread.error):
         pass
-    if master.has_errored:
+    if master is None or master.has_errored:
         print("mitmdump: errors occurred during run", file=sys.stderr)
         sys.exit(1)
 
