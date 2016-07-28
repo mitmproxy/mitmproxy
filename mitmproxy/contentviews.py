@@ -30,8 +30,10 @@ from PIL import ExifTags
 from PIL import Image
 from six import BytesIO
 
+import cssutils
+import jsbeautifier
+
 from mitmproxy import exceptions
-from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
 from netlib import multidict
@@ -44,17 +46,6 @@ try:
 except ImportError:  # pragma no cover
     pyamf = None
 
-try:
-    import cssutils
-except ImportError:  # pragma no cover
-    cssutils = None
-else:
-    cssutils.log.setLevel(logging.CRITICAL)
-
-    cssutils.ser.prefs.keepComments = True
-    cssutils.ser.prefs.omitLastSemicolon = False
-    cssutils.ser.prefs.indentClosingBrace = False
-    cssutils.ser.prefs.validOnly = False
 
 # Default view cutoff *in lines*
 VIEW_CUTOFF = 512
@@ -271,7 +262,7 @@ class ViewHTMLOutline(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        data = data.decode("utf-8")
+        data = data.decode("utf-8", "replace")
         h = html2text.HTML2Text(baseurl="")
         h.ignore_images = True
         h.body_width = 0
@@ -398,6 +389,7 @@ class ViewJavaScript(View):
     def __call__(self, data, **metadata):
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
+        data = data.decode("utf-8", "replace")
         res = jsbeautifier.beautify(data, opts)
         return "JavaScript", format_text(res)
 
@@ -410,11 +402,14 @@ class ViewCSS(View):
     ]
 
     def __call__(self, data, **metadata):
-        if cssutils:
-            sheet = cssutils.parseString(data)
-            beautified = sheet.cssText
-        else:
-            beautified = data
+        cssutils.log.setLevel(logging.CRITICAL)
+        cssutils.ser.prefs.keepComments = True
+        cssutils.ser.prefs.omitLastSemicolon = False
+        cssutils.ser.prefs.indentClosingBrace = False
+        cssutils.ser.prefs.validOnly = False
+
+        sheet = cssutils.parseString(data)
+        beautified = sheet.cssText
 
         return "CSS", format_text(beautified)
 
