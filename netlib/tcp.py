@@ -431,23 +431,6 @@ def close_socket(sock):
     sock.close()
 
 
-class SSLVerificationError:
-    def __init__(self, errno, depth, message=None):
-        self.errno = errno
-        self.depth = depth
-        if message:
-            self.message = message
-        else:
-            self.message = strutils.native(SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(errno)), "utf8")
-
-    def __str__(self):
-        return "Certificate Verification Error: {} (errno: {}, depth: {})".format(
-            self.message,
-            self.errno,
-            self.depth
-        )
-
-
 class _Connection(object):
 
     rbufsize = -1
@@ -628,7 +611,7 @@ class TCPClient(_Connection):
         self.source_address = source_address
         self.cert = None
         self.server_certs = []
-        self.ssl_verification_error = None  # type: Optional[SSLVerificationError]
+        self.ssl_verification_error = None  # type: Optional[exceptions.InvalidCertificateException]
         self.sni = None
 
     @property
