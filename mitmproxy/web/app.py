@@ -14,6 +14,7 @@ import tornado.web
 from io import BytesIO
 from mitmproxy.flow import FlowWriter, FlowReader
 
+from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import models
 from mitmproxy import contentviews
@@ -305,6 +306,36 @@ class ReplayFlow(RequestHandler):
 
 
 class FlowContent(RequestHandler):
+    def _get_content_view(self, message, viewmode):
+
+        try:
+            content = message.content
+            if content != message.raw_content:
+                enc = "[decoded {}]".format(
+                    message.headers.get("content-encoding")
+                )
+            else:
+                enc = None
+        except ValueError:
+            content = message.raw_content
+            enc = "[cannot decode]"
+        try:
+            query = None
+            if isinstance(message, models.HTTPRequest):
+                query = message.query
+            description, lines = contentviews.get_content_view(
+                viewmode, content, headers=message.headers, query=query
+            )
+        except exceptions.ContentViewException:
+            description, lines = contentviews.get_content_view(
+                contentviews.get("Raw"), content, headers=message.headers
+            )
+            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
+
+        if enc:
+            description = " ".join([enc, description])
+
+        return description, lines
 
     def post(self, flow_id, message):
         self.flow.backup()
@@ -314,7 +345,6 @@ class FlowContent(RequestHandler):
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
-        contentview = self.get_argument("content_view", "raw", True)
 
         if not message.raw_content:
             raise APIError(400, "No content.")
@@ -339,7 +369,21 @@ class FlowContent(RequestHandler):
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("X-Frame-Options", "DENY")
-        self.write(message.raw_content)
+
+        cv = self.get_argument("cv", None)
+        if cv:
+            self.set_header("Content-Encoding", "")
+            viewmode = next(v for v in contentviews.views if v.name == cv)
+            description, lines  = self._get_content_view(
+                 message, viewmode
+            )
+
+            self.write(dict(
+               lines=list(lines),
+               description=description
+            ))
+        else:
+            self.write(message.raw_content)
 
 
 class Events(RequestHandler):
@@ -368,7 +412,7 @@ class Settings(RequestHandler):
                 stickyauth=self.master.options.stickyauth,
                 stickycookie=self.master.options.stickycookie,
                 stream= self.master.options.stream_large_bodies,
-                contentViews= map(lambda v : v.name, contentviews.views)
+                contentViews= [v.name for v in contentviews.views]
             )
         ))
 

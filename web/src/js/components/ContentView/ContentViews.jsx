@@ -28,26 +28,8 @@ function ViewRaw({ content, readonly, onChange }) {
 }
 ViewRaw = ContentLoader(ViewRaw)
 
-
-const isJSON = /^application\/json$/i
-ViewJSON.matches = msg => isJSON.test(MessageUtils.getContentType(msg))
-ViewJSON.propTypes = {
-    content: React.PropTypes.string.isRequired,
-}
-function ViewJSON({ content }) {
-    let json = content
-    try {
-        json = JSON.stringify(JSON.parse(content), null, 2);
-    } catch (e) {
-        // @noop
-    }
-    return <pre>{json}</pre>
-}
-ViewJSON = ContentLoader(ViewJSON)
-
-
 ViewAuto.matches = () => false
-ViewAuto.findView = msg => [ViewImage, ViewJSON, ViewRaw].find(v => v.matches(msg)) || ViewRaw
+ViewAuto.findView = msg => [ViewImage, ViewRaw].find(v => v.matches(msg)) || ViewRaw
 ViewAuto.propTypes = {
     message: React.PropTypes.object.isRequired,
     flow: React.PropTypes.object.isRequired,
@@ -57,14 +39,26 @@ function ViewAuto({ message, flow, readonly, onChange }) {
     return <View message={message} flow={flow} readonly={readonly} onChange={onChange}/>
 }
 
-function ViewServer({contentView, content}){
+function ViewServer({content, contentView}){
+    let data = JSON.parse(content)
     return <div>
-            <pre>load from server this view: {contentView}</pre>
-            <pre>{content}</pre>
+            {contentView != data.description &&
+                <div className="alert alert-warning">{data.description}</div>
+            }
+            <pre>
+                {data.lines.map((line, i) =>
+                    <div key={`line${i}`}>
+                        {line.map((tuple, j) =>
+                            <span key={`tuple${j}`} className={tuple[0]}>
+                                {tuple[1]}
+                            </span>
+                        )}
+                    </div>
+                )}
+            </pre>
         </div>
-
 }
 
 ViewServer = ContentLoader(ViewServer)
 
-export { ViewImage, ViewRaw, ViewAuto, ViewJSON, ViewServer }
+export { ViewImage, ViewRaw, ViewAuto, ViewServer }

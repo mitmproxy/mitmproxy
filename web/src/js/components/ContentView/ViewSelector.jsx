@@ -38,7 +38,7 @@ function ViewSelector({ message, contentViews }) {
             <ViewButton name="ViewAuto">auto: {autoViewName}</ViewButton>
 
             {Object.keys(ContentViews).map(name =>
-                name !== "ViewAuto" &&
+                name !== "ViewAuto" && name !== "ViewServer" && 
                 <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
             )}
 

@@ -35,7 +35,7 @@ function ContentView(props) {
 
     const View = ContentViews[contentView] || ContentViews['ViewServer']
     return (
-        <div>
+        <div className="contentview">
             <View flow={flow} message={message} contentView={contentView} readonly={readonly} onChange={onContentChange}/>
 
             <div className="view-options text-center">

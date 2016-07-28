@@ -49,8 +49,8 @@ export var MessageUtils = {
         } else if (message === flow.response) {
             message = "response";
         }
-        return "/flows/" + flow.id + "/" + message + "/content" +  (view ? "?content_view="+view : "");
-    },
+        return `/flows/${flow.id}/${message}/content` +  (view ? `?cv=${view}` : '');
+    }
 };
 
 export var RequestUtils = _.extend(MessageUtils, {
