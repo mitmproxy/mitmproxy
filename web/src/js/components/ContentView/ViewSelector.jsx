@@ -35,10 +35,8 @@ function ViewSelector({ message, contentViews }) {
     return (
         <div className="view-selector btn-group btn-group-xs">
 
-            <ViewButton name="ViewAuto">auto: {autoViewName}</ViewButton>
-
             {Object.keys(ContentViews).map(name =>
-                name !== "ViewAuto" && name !== "ViewServer" && 
+                name === "ViewRaw"  &&
                 <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
             )}
 

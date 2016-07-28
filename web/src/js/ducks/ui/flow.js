@@ -14,7 +14,7 @@ export const SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
 const defaultState = {
     displayLarge: false,
     modifiedFlow: false,
-    contentView: 'ViewAuto',
+    contentView: 'Auto',
     tab: 'request',
 }
 

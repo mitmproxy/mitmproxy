@@ -39,8 +39,11 @@ function ViewAuto({ message, flow, readonly, onChange }) {
     return <View message={message} flow={flow} readonly={readonly} onChange={onChange}/>
 }
 
-function ViewServer({content, contentView}){
+
+function ViewServer({content, contentView, message, flow}){
     let data = JSON.parse(content)
+    let showImage = isImage.test(MessageUtils.getContentType(message))
+
     return <div>
             {contentView != data.description &&
                 <div className="alert alert-warning">{data.description}</div>
@@ -56,6 +59,11 @@ function ViewServer({content, contentView}){
                     </div>
                 )}
             </pre>
+            {showImage &&
+                <div className="flowview-image">
+                    <img src={MessageUtils.getContentURL(flow, message)} alt="preview" className="img-thumbnail"/>
+                </div>
+            }
         </div>
 }
 
