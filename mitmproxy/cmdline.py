@@ -260,7 +260,7 @@ def get_common_options(args):
         upstream_auth = args.upstream_auth,
         ssl_version_client = args.ssl_version_client,
         ssl_version_server = args.ssl_version_server,
-        ssl_verify_upstream_cert = args.ssl_verify_upstream_cert,
+        ssl_insecure = args.ssl_insecure,
         ssl_verify_upstream_trusted_cadir = args.ssl_verify_upstream_trusted_cadir,
         ssl_verify_upstream_trusted_ca = args.ssl_verify_upstream_trusted_ca,
         tcp_hosts = args.tcp_hosts,
@@ -519,10 +519,9 @@ def proxy_ssl_options(parser):
              "that will be served to the proxy client, as extras."
     )
     group.add_argument(
-        "--verify-upstream-cert", default=False,
-        action="store_true", dest="ssl_verify_upstream_cert",
-        help="Verify upstream server SSL/TLS certificates and fail if invalid "
-             "or not present."
+        "--insecure", default=False,
+        action="store_true", dest="ssl_insecure",
+        help="Do not verify upstream server SSL/TLS certificates."
     )
     group.add_argument(
         "--upstream-trusted-cadir", default=None, action="store",

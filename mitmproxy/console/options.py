@@ -8,6 +8,7 @@ from mitmproxy.console import grideditor
 from mitmproxy.console import palettes
 from mitmproxy.console import select
 from mitmproxy.console import signals
+from OpenSSL import SSL
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
@@ -90,6 +91,12 @@ class Options(urwid.WidgetWrap):
                     "T",
                     lambda: master.options.tcp_hosts,
                     self.tcp_hosts
+                ),
+                select.Option(
+                    "Don't Verify SSL/TLS Certificates",
+                    "V",
+                    lambda: master.server.config.ssl_insecure,
+                    master.options.toggler("ssl_insecure")
                 ),
 
                 select.Heading("Utility"),

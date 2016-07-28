@@ -102,7 +102,11 @@ class _Http2TestBase(object):
 
     @classmethod
     def get_options(cls):
-        opts = options.Options(listen_port=0, no_upstream_cert=False)
+        opts = options.Options(
+            listen_port=0,
+            no_upstream_cert=False,
+            ssl_insecure=True
+        )
         opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return opts
 

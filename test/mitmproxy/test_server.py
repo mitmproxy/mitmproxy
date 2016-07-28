@@ -2,7 +2,6 @@ import os
 import socket
 import time
 import types
-from OpenSSL import SSL
 from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.tcp import Address
 
@@ -15,6 +14,7 @@ from pathod import pathoc, pathod
 
 from mitmproxy.builtins import script
 from mitmproxy import controller
+from mitmproxy import options
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 from mitmproxy.models import Error, HTTPResponse, HTTPFlow
 
@@ -350,6 +350,15 @@ class TestHTTPSCertfile(tservers.HTTPProxyTest, CommonMixin):
         assert self.pathod("304")
 
 
+class TestHTTPSSecureByDefault:
+    def test_secure_by_default(self):
+        """
+        Certificate verification should be turned on by default.
+        """
+        default_opts = options.Options()
+        assert not default_opts.ssl_insecure
+
+
 class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
 
     """
@@ -360,11 +369,12 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
         cn=b"trusted-cert",
         certs=[
             ("trusted-cert", tutils.test_data.path("data/trusted-server.crt"))
-        ])
+        ]
+    )
 
     def test_verification_w_cadir(self):
         self.config.options.update(
-            ssl_verify_upstream_cert = True,
+            ssl_insecure = False,
             ssl_verify_upstream_trusted_cadir = tutils.test_data.path(
                 "data/trusted-cadir/"
             )
@@ -372,10 +382,12 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
         self.pathoc()
 
     def test_verification_w_pemfile(self):
-        self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
-        self.config.options.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-            "data/trusted-cadir/trusted-ca.pem")
-
+        self.config.options.update(
+            ssl_insecure = False,
+            ssl_verify_upstream_trusted_ca = tutils.test_data.path(
+                "data/trusted-cadir/trusted-ca.pem"
+            ),
+        )
         self.pathoc()
 
 
@@ -396,18 +408,9 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
         # We need to make an actual request because the upstream connection is lazy-loaded.
         return p.request("get:/p/242")
 
-    def test_default_verification_w_bad_cert(self):
-        """Should use no verification."""
-        self.config.options.update(
-            ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-                "data/trusted-cadir/trusted-ca.pem"
-            )
-        )
-        assert self._request().status_code == 242
-
     def test_no_verification_w_bad_cert(self):
         self.config.options.update(
-            ssl_verify_upstream_cert = False,
+            ssl_insecure = True,
             ssl_verify_upstream_trusted_ca = tutils.test_data.path(
                 "data/trusted-cadir/trusted-ca.pem"
             )
@@ -416,7 +419,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
 
     def test_verification_w_bad_cert(self):
         self.config.options.update(
-            ssl_verify_upstream_cert = True,
+            ssl_insecure = False,
             ssl_verify_upstream_trusted_ca = tutils.test_data.path(
                 "data/trusted-cadir/trusted-ca.pem"
             )

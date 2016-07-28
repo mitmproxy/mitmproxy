@@ -120,7 +120,8 @@ class ProxyTestBase(object):
         return options.Options(
             listen_port=0,
             cadir=cls.cadir,
-            add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain
+            add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain,
+            ssl_insecure=True,
         )
 
 
