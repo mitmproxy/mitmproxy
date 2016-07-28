@@ -213,7 +213,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
 
             # Verification errors should be saved even if connection isn't aborted
             # aborted
-            assert c.ssl_verification_error is not None
+            assert c.ssl_verification_error
 
             testval = b"echo!\n"
             c.wfile.write(testval)
@@ -226,7 +226,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
             c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
 
             # Verification errors should be saved even if connection isn't aborted
-            assert c.ssl_verification_error is not None
+            assert c.ssl_verification_error
 
             testval = b"echo!\n"
             c.wfile.write(testval)
@@ -243,11 +243,11 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
                     ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
                 )
 
-            assert c.ssl_verification_error is not None
+            assert c.ssl_verification_error
 
             # Unknown issuing certificate authority for first certificate
-            assert c.ssl_verification_error['errno'] == 18
-            assert c.ssl_verification_error['depth'] == 0
+            assert "errno: 18" in str(c.ssl_verification_error)
+            assert "depth: 0" in str(c.ssl_verification_error)
 
 
 class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
@@ -276,7 +276,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
                     verify_options=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
                 )
-            assert c.ssl_verification_error is not None
+            assert c.ssl_verification_error
 
 
 class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):

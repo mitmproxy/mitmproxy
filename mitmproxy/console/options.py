@@ -8,7 +8,6 @@ from mitmproxy.console import grideditor
 from mitmproxy.console import palettes
 from mitmproxy.console import select
 from mitmproxy.console import signals
-from OpenSSL import SSL
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",

@@ -104,7 +104,7 @@ class DumpMaster(flow.FlowMaster):
             click.secho(
                 e,
                 file=self.options.tfile,
-                fg="red" if level == "error" else None,
+                fg=dict(error="red", warn="yellow").get(level),
                 dim=(level == "debug"),
                 err=(level == "error")
             )

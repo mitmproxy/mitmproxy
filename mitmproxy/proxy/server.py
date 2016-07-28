@@ -125,11 +125,14 @@ class ConnectionHandler(object):
                 self.log(
                     "Client Handshake failed. "
                     "The client may not trust the proxy's certificate for {}.".format(e.server),
-                    "error"
+                    "warn"
                 )
                 self.log(repr(e), "debug")
+            elif isinstance(e, exceptions.InvalidServerCertificate):
+                self.log(str(e), "warn")
+                self.log("Invalid certificate, closing connection. Pass --insecure to disable validation.", "warn")
             else:
-                self.log(repr(e), "info")
+                self.log(repr(e), "warn")
 
                 self.log(traceback.format_exc(), "debug")
             # If an error propagates to the topmost level,
