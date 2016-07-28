@@ -262,7 +262,7 @@ class ViewHTMLOutline(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        data = data.decode("utf-8")
+        data = data.decode("utf-8", "replace")
         h = html2text.HTML2Text(baseurl="")
         h.ignore_images = True
         h.body_width = 0
@@ -389,7 +389,8 @@ class ViewJavaScript(View):
     def __call__(self, data, **metadata):
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
-        res = jsbeautifier.beautify(strutils.native(data), opts)
+        data = data.decode("utf-8", "replace")
+        res = jsbeautifier.beautify(data, opts)
         return "JavaScript", format_text(res)
 
 

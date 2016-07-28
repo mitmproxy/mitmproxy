@@ -78,6 +78,7 @@ class TestContentView:
         v = cv.ViewHTMLOutline()
         s = b"<html><br><br></br><p>one</p></html>"
         assert v(s)
+        assert v(b'\xfe')
 
     def test_view_json(self):
         cv.VIEW_CUTOFF = 100
@@ -106,9 +107,10 @@ class TestContentView:
 
     def test_view_javascript(self):
         v = cv.ViewJavaScript()
-        assert v("[1, 2, 3]")
-        assert v("[1, 2, 3")
-        assert v("function(a){[1, 2, 3]}")
+        assert v(b"[1, 2, 3]")
+        assert v(b"[1, 2, 3")
+        assert v(b"function(a){[1, 2, 3]}")
+        assert v(b"\xfe")  # invalid utf-8
 
     def test_view_css(self):
         v = cv.ViewCSS()
