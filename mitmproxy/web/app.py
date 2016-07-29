@@ -306,36 +306,6 @@ class ReplayFlow(RequestHandler):
 
 
 class FlowContent(RequestHandler):
-    def _get_content_view(self, message, viewmode):
-
-        try:
-            content = message.content
-            if content != message.raw_content:
-                enc = "[decoded {}]".format(
-                    message.headers.get("content-encoding")
-                )
-            else:
-                enc = None
-        except ValueError:
-            content = message.raw_content
-            enc = "[cannot decode]"
-        try:
-            query = None
-            if isinstance(message, models.HTTPRequest):
-                query = message.query
-            description, lines = contentviews.get_content_view(
-                viewmode, content, headers=message.headers, query=query
-            )
-        except exceptions.ContentViewException:
-            description, lines = contentviews.get_content_view(
-                contentviews.get("Raw"), content, headers=message.headers
-            )
-            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
-
-        if enc:
-            description = " ".join([enc, description])
-
-        return description, lines
 
     def post(self, flow_id, message):
         self.flow.backup()
@@ -369,21 +339,69 @@ class FlowContent(RequestHandler):
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("X-Frame-Options", "DENY")
+        self.write(message.raw_content)
 
-        cv = self.get_argument("cv", None)
-        if cv:
-            self.set_header("Content-Encoding", "")
-            viewmode = next(v for v in contentviews.views if v.name == cv)
-            description, lines  = self._get_content_view(
-                 message, viewmode
+class FlowContentView(RequestHandler):
+    def _get_content_view(self, message, viewmode):
+
+        try:
+            content = message.content
+            if content != message.raw_content:
+                enc = "[decoded {}]".format(
+                    message.headers.get("content-encoding")
+                )
+            else:
+                enc = None
+        except ValueError:
+            content = message.raw_content
+            enc = "[cannot decode]"
+        try:
+            query = None
+            if isinstance(message, models.HTTPRequest):
+                query = message.query
+            description, lines = contentviews.get_content_view(
+                viewmode, content, headers=message.headers, query=query
             )
+        except exceptions.ContentViewException:
+            description, lines = contentviews.get_content_view(
+                contentviews.get("Raw"), content, headers=message.headers
+            )
+            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
 
-            self.write(dict(
-               lines=list(lines),
-               description=description
-            ))
-        else:
-            self.write(message.raw_content)
+        if enc:
+            description = " ".join([enc, description])
+
+        return description, lines
+
+    def get(self, flow_id, message, content_view):
+        message = getattr(self.flow, message)
+
+        original_cd = message.headers.get("Content-Disposition", None)
+        filename = None
+        if original_cd:
+            filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)
+            if filename:
+                filename = filename.group(1)
+        if not filename:
+            filename = self.flow.request.path.split("?")[0].split("/")[-1]
+
+        filename = re.sub(r"[^\w\" \.\-\(\)]", "", filename)
+        cd = "attachment; filename={}".format(filename)
+        self.set_header("Content-Disposition", cd)
+        self.set_header("Content-Type", "application/json")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("X-Frame-Options", "DENY")
+
+        self.set_header("Content-Encoding", "")
+
+        description, lines  = self._get_content_view(
+             message, contentviews.get(content_view.replace('_', ' '))
+        )
+
+        self.write(dict(
+           lines=list(lines),
+           description=description
+        ))
 
 
 class Events(RequestHandler):
@@ -412,7 +430,7 @@ class Settings(RequestHandler):
                 stickyauth=self.master.options.stickyauth,
                 stickycookie=self.master.options.stickycookie,
                 stream= self.master.options.stream_large_bodies,
-                contentViews= [v.name for v in contentviews.views]
+                contentViews= [v.name.replace(' ', '_') for v in contentviews.views]
             )
         ))
 
@@ -477,6 +495,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)", FlowContentView),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
         ]

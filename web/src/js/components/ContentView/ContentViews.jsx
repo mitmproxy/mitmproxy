@@ -18,31 +18,19 @@ function ViewImage({ flow, message }) {
     )
 }
 
-
-ViewRaw.matches = () => true
-ViewRaw.propTypes = {
+Edit.propTypes = {
     content: React.PropTypes.string.isRequired,
 }
-function ViewRaw({ content, readonly, onChange }) {
-    return readonly ? <pre>{content}</pre> : <CodeEditor content={content} onChange={onChange}/>
-}
-ViewRaw = ContentLoader(ViewRaw)
 
-ViewAuto.matches = () => false
-ViewAuto.findView = msg => [ViewImage, ViewRaw].find(v => v.matches(msg)) || ViewRaw
-ViewAuto.propTypes = {
-    message: React.PropTypes.object.isRequired,
-    flow: React.PropTypes.object.isRequired,
+function Edit({ content, onChange }) {
+    return <CodeEditor content={content} onChange={onChange}/>
 }
-function ViewAuto({ message, flow, readonly, onChange }) {
-    const View = ViewAuto.findView(message)
-    return <View message={message} flow={flow} readonly={readonly} onChange={onChange}/>
-}
+Edit = ContentLoader(Edit)
 
 
-function ViewServer({content, contentView, message, flow}){
+function ViewServer(props){
+    const {content, contentView, message} = props
     let data = JSON.parse(content)
-    let showImage = isImage.test(MessageUtils.getContentType(message))
 
     return <div>
             {contentView != data.description &&
@@ -59,14 +47,12 @@ function ViewServer({content, contentView, message, flow}){
                     </div>
                 )}
             </pre>
-            {showImage &&
-                <div className="flowview-image">
-                    <img src={MessageUtils.getContentURL(flow, message)} alt="preview" className="img-thumbnail"/>
-                </div>
+            {ViewImage.matches(message) &&
+                <ViewImage {...props} />
             }
         </div>
 }
 
 ViewServer = ContentLoader(ViewServer)
 
-export { ViewImage, ViewRaw, ViewAuto, ViewServer }
+export { Edit, ViewServer, ViewImage }

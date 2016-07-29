@@ -24,25 +24,18 @@ ViewButton = connect(state => ({
 ViewSelector.propTypes = {
     message: PropTypes.object.isRequired,
 }
-function ViewSelector({ message, contentViews }) {
-
-    let autoView = ContentViews.ViewAuto.findView(message)
-    let autoViewName = (autoView.displayName || autoView.name)
-        .toLowerCase()
-        .replace('view', '')
-        .replace(/ContentLoader\((.+)\)/,"$1")
-
+function ViewSelector({contentViews, isEdit }) {
+    let edit = ContentViews.Edit.displayName
     return (
         <div className="view-selector btn-group btn-group-xs">
 
-            {Object.keys(ContentViews).map(name =>
-                name === "ViewRaw"  &&
-                <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
+            {contentViews.map(name =>
+                <ViewButton key={name} name={name}>{name.toLowerCase().replace('_', ' ')}</ViewButton>
             )}
 
-            {contentViews.map(name =>
-                <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
-            )}
+            {isEdit &&
+                <ViewButton key={edit} name={edit}>{edit.toLowerCase()}</ViewButton>
+            }
 
         </div>
     )
@@ -50,5 +43,6 @@ function ViewSelector({ message, contentViews }) {
 
 export default connect (
     state => ({
-        contentViews: state.settings.contentViews
+        contentViews: state.settings.contentViews,
+        isEdit: !!state.ui.flow.modifiedFlow,
     }))(ViewSelector)

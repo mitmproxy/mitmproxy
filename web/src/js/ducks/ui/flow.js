@@ -19,12 +19,14 @@ const defaultState = {
 }
 
 export default function reducer(state = defaultState, action) {
+    let wasInEditMode = !!(state.modifiedFlow)
     switch (action.type) {
 
         case START_EDIT:
             return {
                 ...state,
                 modifiedFlow: action.flow,
+                contentView: 'Edit'
             }
 
         case UPDATE_EDIT:
@@ -38,6 +40,7 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 modifiedFlow: false,
                 displayLarge: false,
+                contentView: (wasInEditMode ? 'Auto' : state.contentView)
             }
 
         case flowsActions.UPDATE:
@@ -49,6 +52,7 @@ export default function reducer(state = defaultState, action) {
                     ...state,
                     modifiedFlow: false,
                     displayLarge: false,
+                    contentView: (wasInEditMode ? 'Auto' : state.contentView)
                 }
             } else {
                 return state
