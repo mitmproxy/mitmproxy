@@ -14,7 +14,6 @@ import tornado.web
 from io import BytesIO
 from mitmproxy.flow import FlowWriter, FlowReader
 
-from mitmproxy import exceptions
 from mitmproxy import filt
 from mitmproxy import models
 from mitmproxy import contentviews
@@ -342,36 +341,6 @@ class FlowContent(RequestHandler):
         self.write(message.raw_content)
 
 class FlowContentView(RequestHandler):
-    def _get_content_view(self, message, viewmode):
-
-        try:
-            content = message.content
-            if content != message.raw_content:
-                enc = "[decoded {}]".format(
-                    message.headers.get("content-encoding")
-                )
-            else:
-                enc = None
-        except ValueError:
-            content = message.raw_content
-            enc = "[cannot decode]"
-        try:
-            query = None
-            if isinstance(message, models.HTTPRequest):
-                query = message.query
-            description, lines = contentviews.get_content_view(
-                viewmode, content, headers=message.headers, query=query
-            )
-        except exceptions.ContentViewException:
-            description, lines = contentviews.get_content_view(
-                contentviews.get("Raw"), content, headers=message.headers
-            )
-            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
-
-        if enc:
-            description = " ".join([enc, description])
-
-        return description, lines
 
     def get(self, flow_id, message, content_view):
         message = getattr(self.flow, message)
@@ -394,7 +363,7 @@ class FlowContentView(RequestHandler):
 
         self.set_header("Content-Encoding", "")
 
-        description, lines  = self._get_content_view(
+        description, lines  = contentviews.get_content_view_with_message_encoding(
              message, contentviews.get(content_view.replace('_', ' '))
         )
 

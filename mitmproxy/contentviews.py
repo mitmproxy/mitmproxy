@@ -19,6 +19,7 @@ import json
 import logging
 import subprocess
 import sys
+import math
 
 from typing import Mapping  # noqa
 
@@ -30,6 +31,7 @@ from PIL import ExifTags
 from PIL import Image
 from six import BytesIO
 
+from mitmproxy import models
 from mitmproxy import exceptions
 from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
@@ -616,6 +618,36 @@ def safe_to_print(lines, encoding="utf8"):
             clean_line.append((style, text))
         yield clean_line
 
+
+def get_content_view_with_message_encoding(message, viewmode):
+    try:
+        content = message.content
+        if content != message.raw_content:
+            enc = "[decoded {}]".format(
+                message.headers.get("content-encoding")
+            )
+        else:
+            enc = None
+    except ValueError:
+        content = message.raw_content
+        enc = "[cannot decode]"
+    try:
+        query = None
+        if isinstance(message, models.HTTPRequest):
+            query = message.query
+        description, lines = get_content_view(
+            viewmode, content, headers=message.headers, query=query
+        )
+    except exceptions.ContentViewException:
+        description, lines = get_content_view(
+            get("Raw"), content, headers=message.headers
+        )
+        description = description.replace("Raw", "Couldn't parse: falling back to Raw")
+
+    if enc:
+        description = " ".join([enc, description])
+
+    return description, lines
 
 def get_content_view(viewmode, data, **metadata):
     """
