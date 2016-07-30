@@ -8,6 +8,7 @@ import collections
 from io import BytesIO
 import gzip
 import zlib
+import brotli
 
 from typing import Union  # noqa
 
@@ -45,7 +46,7 @@ def decode(encoded, encoding, errors='strict'):
             decoded = custom_decode[encoding](encoded)
         except KeyError:
             decoded = codecs.decode(encoded, encoding, errors)
-        if encoding in ("gzip", "deflate"):
+        if encoding in ("gzip", "deflate", "br"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return decoded
     except Exception as e:
@@ -81,7 +82,7 @@ def encode(decoded, encoding, errors='strict'):
             encoded = custom_encode[encoding](decoded)
         except KeyError:
             encoded = codecs.encode(decoded, encoding, errors)
-        if encoding in ("gzip", "deflate"):
+        if encoding in ("gzip", "deflate", "br"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return encoded
     except Exception as e:
@@ -113,6 +114,14 @@ def encode_gzip(content):
     return s.getvalue()
 
 
+def decode_brotli(content):
+    return brotli.decompress(content)
+
+
+def encode_brotli(content):
+    return brotli.compress(content)
+
+
 def decode_deflate(content):
     """
         Returns decompressed data for DEFLATE. Some servers may respond with
@@ -139,11 +148,13 @@ custom_decode = {
     "identity": identity,
     "gzip": decode_gzip,
     "deflate": decode_deflate,
+    "br": decode_brotli,
 }
 custom_encode = {
     "identity": identity,
     "gzip": encode_gzip,
     "deflate": encode_deflate,
+    "br": encode_brotli,
 }
 
 __all__ = ["encode", "decode"]
