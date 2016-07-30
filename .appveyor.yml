@@ -31,12 +31,12 @@ deploy_script:
   ps: |
     if(
       ($Env:TOXENV -match "py35") -and
-      (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
+      (($Env:APPVEYOR_REPO_BRANCH -match "builds") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
       pip install -U virtualenv
       .\dev.ps1
-      cmd /c "python .\release\rtool.py bdist 2>&1"
-      python .\release\rtool.py upload-snapshot --bdist
+      cmd /c "python -u .\release\rtool.py bdist 2>&1"
+      python -u .\release\rtool.py upload-snapshot --bdist --wheel
     }
 
 cache:
