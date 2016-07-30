@@ -5,10 +5,10 @@ environment:
   CI_DEPS: codecov>=2.0.5
   CI_COMMANDS: codecov
   matrix:
-    - PYTHON: "C:\\Python27"
-      TOXENV: "py27"
     - PYTHON: "C:\\Python35"
       TOXENV: "py35"
+    - PYTHON: "C:\\Python27"
+      TOXENV: "py27"
 
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
@@ -31,7 +31,7 @@ deploy_script:
   ps: |
     if(
       ($Env:TOXENV -match "py35") -and
-      (($Env:APPVEYOR_REPO_BRANCH -match "builds") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
+      (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
       pip install -U virtualenv
       .\dev.ps1

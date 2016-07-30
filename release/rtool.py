@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
-from os.path import join, normpath, dirname, exists, basename
+from os.path import join, abspath, normpath, dirname, exists, basename
 
 import click
 import pysftp
@@ -34,7 +34,7 @@ else:
     def Archive(name):
         return tarfile.open(name, "w:gz")
 
-ROOT_DIR = normpath(join(dirname(__file__), ".."))
+ROOT_DIR = abspath(join(dirname(__file__), ".."))
 RELEASE_DIR = join(ROOT_DIR, "release")
 
 BUILD_DIR = join(RELEASE_DIR, "build")

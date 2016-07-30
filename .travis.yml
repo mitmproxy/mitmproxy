@@ -57,7 +57,7 @@ script: set -o pipefail; python -m tox -- --cov netlib --cov mitmproxy --cov pat
 
 after_success:
   - |
-    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "builds" || -n $TRAVIS_TAG) ]]
+    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
         git fetch --unshallow
         ./dev.sh 3.5
