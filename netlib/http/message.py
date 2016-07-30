@@ -248,7 +248,7 @@ class Message(basetypes.Serializable):
 
     def encode(self, e):
         """
-        Encodes body with the encoding e, where e is "gzip", "deflate" or "identity".
+        Encodes body with the encoding e, where e is "gzip", "deflate", "identity", or "br".
         Any existing content-encodings are overwritten,
         the content is not decoded beforehand.
 

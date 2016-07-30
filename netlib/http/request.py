@@ -337,7 +337,7 @@ class Request(message.Message):
             self.headers["accept-encoding"] = (
                 ', '.join(
                     e
-                    for e in {"gzip", "identity", "deflate"}
+                    for e in {"gzip", "identity", "deflate", "br"}
                     if e in accept_encoding
                 )
             )
