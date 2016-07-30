@@ -504,13 +504,13 @@ class TestState:
         c = flow.State()
         f = tutils.tflow()
         c.add_flow(f)
-        c.set_limit("~e")
+        c.set_view_filter("~e")
         assert not c.view
         f.error = tutils.terr()
         assert c.update_flow(f)
         assert c.view
 
-    def test_set_limit(self):
+    def test_set_view_filter(self):
         c = flow.State()
 
         f = tutils.tflow()
@@ -519,24 +519,24 @@ class TestState:
         c.add_flow(f)
         assert len(c.view) == 1
 
-        c.set_limit("~s")
-        assert c.limit_txt == "~s"
+        c.set_view_filter("~s")
+        assert c.filter_txt == "~s"
         assert len(c.view) == 0
         f.response = HTTPResponse.wrap(netlib.tutils.tresp())
         c.update_flow(f)
         assert len(c.view) == 1
-        c.set_limit(None)
+        c.set_view_filter(None)
         assert len(c.view) == 1
 
         f = tutils.tflow()
         c.add_flow(f)
         assert len(c.view) == 2
-        c.set_limit("~q")
+        c.set_view_filter("~q")
         assert len(c.view) == 1
-        c.set_limit("~s")
+        c.set_view_filter("~s")
         assert len(c.view) == 1
 
-        assert "Invalid" in c.set_limit("~")
+        assert "Invalid" in c.set_view_filter("~")
 
     def test_set_intercept(self):
         c = flow.State()

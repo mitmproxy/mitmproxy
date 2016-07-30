@@ -68,7 +68,7 @@ def mitmproxy(args=None):  # pragma: no cover
         console_options.eventlog = args.eventlog
         console_options.follow = args.follow
         console_options.intercept = args.intercept
-        console_options.limit = args.limit
+        console_options.filter = args.filter
         console_options.no_mouse = args.no_mouse
 
         server = process_options(parser, console_options, args)

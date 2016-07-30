@@ -80,7 +80,7 @@ def _mkhelp():
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
-        ("w", "save all flows matching current limit"),
+        ("w", "save all flows matching current view filter"),
         ("W", "save this flow"),
         ("x", "delete body"),
         ("z", "encode/decode a request/response"),

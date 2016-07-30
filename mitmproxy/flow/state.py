@@ -191,7 +191,7 @@ class State(object):
         self.intercept = None
 
     @property
-    def limit_txt(self):
+    def filter_txt(self):
         return getattr(self.view.filt, "pattern", None)
 
     def flow_count(self):
@@ -225,8 +225,8 @@ class State(object):
     def load_flows(self, flows):
         self.flows._extend(flows)
 
-    def set_limit(self, txt):
-        if txt == self.limit_txt:
+    def set_view_filter(self, txt):
+        if txt == self.filter_txt:
             return
         if txt:
             f = filt.parse(txt)
