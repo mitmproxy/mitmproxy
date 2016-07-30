@@ -48,8 +48,11 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"\b") == r"\x08"
     assert strutils.bytes_to_escaped_str(br"&!?=\)") == r"&!?=\\)"
     assert strutils.bytes_to_escaped_str(b'\xc3\xbc') == r"\xc3\xbc"
-    assert strutils.bytes_to_escaped_str(b"'") == r"\'"
+    assert strutils.bytes_to_escaped_str(b"'") == r"'"
     assert strutils.bytes_to_escaped_str(b'"') == r'"'
+
+    assert strutils.bytes_to_escaped_str(b"'", escape_single_quotes=True) == r"\'"
+    assert strutils.bytes_to_escaped_str(b'"', escape_single_quotes=True) == r'"'
 
     assert strutils.bytes_to_escaped_str(b"\r\n\t") == "\\r\\n\\t"
     assert strutils.bytes_to_escaped_str(b"\r\n\t", True) == "\r\n\t"

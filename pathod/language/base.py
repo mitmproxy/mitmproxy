@@ -136,7 +136,7 @@ class TokValueLiteral(_TokValueLiteral):
 
     def spec(self):
         inner = strutils.bytes_to_escaped_str(self.val)
-        inner = inner.replace(r"\'", r"\x27")
+        inner = inner.replace(r"'", r"\x27")
         return "'" + inner + "'"
 
 
@@ -148,7 +148,7 @@ class TokValueNakedLiteral(_TokValueLiteral):
         return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
-        return strutils.bytes_to_escaped_str(self.val)
+        return strutils.bytes_to_escaped_str(self.val, escape_single_quotes=True)
 
 
 class TokValueGenerate(Token):
@@ -166,7 +166,7 @@ class TokValueGenerate(Token):
 
     def freeze(self, settings):
         g = self.get_generator(settings)
-        return TokValueLiteral(strutils.bytes_to_escaped_str(g[:]))
+        return TokValueLiteral(strutils.bytes_to_escaped_str(g[:], escape_single_quotes=True))
 
     @classmethod
     def expr(cls):
@@ -578,4 +578,4 @@ class NestedMessage(Token):
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
-        return self.__class__(TokValueLiteral(strutils.bytes_to_escaped_str(f.encode())))
+        return self.__class__(TokValueLiteral(strutils.bytes_to_escaped_str(f.encode(), escape_single_quotes=True)))
