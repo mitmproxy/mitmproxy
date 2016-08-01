@@ -75,8 +75,8 @@ class ConsoleState(flow.State):
         self.update_focus()
         return f
 
-    def set_limit(self, limit):
-        ret = super(ConsoleState, self).set_limit(limit)
+    def set_view_filter(self, txt):
+        ret = super(ConsoleState, self).set_view_filter(txt)
         self.set_focus(self.focus)
         return ret
 
@@ -153,8 +153,8 @@ class ConsoleState(flow.State):
         last_focus, _ = self.get_focus()
         nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
 
-        self.last_filter = self.limit_txt
-        self.set_limit(marked_filter)
+        self.last_filter = self.filter_txt
+        self.set_view_filter(marked_filter)
 
         # Restore Focus
         if last_focus.marked:
@@ -171,7 +171,7 @@ class ConsoleState(flow.State):
         last_focus, _ = self.get_focus()
         nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
 
-        self.set_limit(self.last_filter)
+        self.set_view_filter(self.last_filter)
         self.last_filter = ""
 
         # Restore Focus
@@ -203,7 +203,7 @@ class Options(mitmproxy.options.Options):
             eventlog=False,  # type: bool
             follow=False,  # type: bool
             intercept=False,  # type: bool
-            limit=None,  # type: Optional[str]
+            filter=None,  # type: Optional[str]
             palette=None,  # type: Optional[str]
             palette_transparent=False,  # type: bool
             no_mouse=False,  # type: bool
@@ -212,7 +212,7 @@ class Options(mitmproxy.options.Options):
         self.eventlog = eventlog
         self.follow = follow
         self.intercept = intercept
-        self.limit = limit
+        self.filter = filter
         self.palette = palette
         self.palette_transparent = palette_transparent
         self.no_mouse = no_mouse
@@ -234,8 +234,8 @@ class ConsoleMaster(flow.FlowMaster):
             print("Intercept error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
-        if options.limit:
-            self.set_limit(options.limit)
+        if options.filter:
+            self.set_view_filter(options.filter)
 
         self.set_stream_large_bodies(options.stream_large_bodies)
 
@@ -672,8 +672,8 @@ class ConsoleMaster(flow.FlowMaster):
     def accept_all(self):
         self.state.accept_all(self)
 
-    def set_limit(self, txt):
-        v = self.state.set_limit(txt)
+    def set_view_filter(self, txt):
+        v = self.state.set_view_filter(txt)
         signals.flowlist_change.send(self)
         return v
 

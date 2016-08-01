@@ -18,8 +18,8 @@ def _mkhelp():
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
+        ("f", "filter view"),
         ("F", "toggle follow flow list"),
-        ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("m", "toggle flow mark"),
         ("M", "toggle marked flow view"),
@@ -367,11 +367,11 @@ class FlowListBox(urwid.ListBox):
         elif key == "G":
             self.master.state.set_focus(self.master.state.flow_count())
             signals.flowlist_change.send(self)
-        elif key == "l":
+        elif key == "f":
             signals.status_prompt.send(
-                prompt = "Limit",
-                text = self.master.state.limit_txt,
-                callback = self.master.set_limit
+                prompt = "Filter View",
+                text = self.master.state.filter_txt,
+                callback = self.master.set_view_filter
             )
         elif key == "L":
             signals.status_prompt_path.send(

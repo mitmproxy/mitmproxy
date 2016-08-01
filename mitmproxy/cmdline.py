@@ -772,7 +772,7 @@ def mitmproxy():
         help="Show event log."
     )
     parser.add_argument(
-        "-f", "--follow",
+        "--follow",
         action="store_true", dest="follow",
         help="Follow flow list."
     )
@@ -791,9 +791,9 @@ def mitmproxy():
         help="Intercept filter expression."
     )
     group.add_argument(
-        "-l", "--limit", action="store",
-        type=str, dest="limit", default=None,
-        help="Limit filter expression."
+        "-f", "--filter", action="store",
+        type=str, dest="filter", default=None,
+        help="Filter view expression."
     )
     return parser
 
