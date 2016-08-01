@@ -37,11 +37,11 @@ METHOD_OPTIONS = [
 
 re_phone = re.compile(r'\b\d{10}\b')
 
-re_email = re.compile(r'[^@\/=\?]+(@|%40)[^@\/=\?]+\.[^@\/=\?]+')
+re_email = re.compile(r'[^@\/=\?]+(@|%40)[^@\/=\?]+\.[^@\/=\?\ ]+')
 
 re_userid = re.compile(r'\b\d{4,7}\b')
 
-re_phone_or_email_or_userid = re.compile(r'(?:\b\d{10}\b)|(?:[^@\/=\?]+(@|%40)[^@\/=\?]+\.[^@\/=\?]+)|(?:\b\d{4,8}\b)')
+re_phone_or_email_or_userid = re.compile(r'(?:\b\d{10}\b)|(?:[^@\/=\?\ ]+(@|%40)[^@\/=\?]+\.[^@\/=\?]+)|(?:\b\d{4,8}\b)')
 
 
 def is_keypress(k):
@@ -206,12 +206,13 @@ def raw_format_flow(f, focus, extended):
 
     if "resp_code" in f:
         codes = {
+	    1: "code_200",
             2: "code_200",
             3: "code_300",
             4: "code_400",
             5: "code_500",
         }
-        ccol = codes.get(f["resp_code"] / 100, "code_other")
+        ccol = codes.get(f["resp_code"] // 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, ccol))
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
