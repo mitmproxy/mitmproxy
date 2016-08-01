@@ -379,7 +379,7 @@ def raw_format_flow(f, focus, extended):
             4: "code_400",
             5: "code_500",
         }
-        ccol = codes.get(f["resp_code"] / 100, "code_other")
+        ccol = codes.get(f["resp_code"] // 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, ccol))
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
