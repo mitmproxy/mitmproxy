@@ -207,35 +207,9 @@ class FlowView(tabs.Tabs):
 
     def _get_content_view(self, message, viewmode, max_lines, _):
 
-        try:
-            content = message.content
-            if content != message.raw_content:
-                enc = "[decoded {}]".format(
-                    message.headers.get("content-encoding")
-                )
-            else:
-                enc = None
-        except ValueError:
-            content = message.raw_content
-            enc = "[cannot decode]"
-        try:
-            query = None
-            if isinstance(message, models.HTTPRequest):
-                query = message.query
-            description, lines = contentviews.get_content_view(
-                viewmode, content, headers=message.headers, query=query
-            )
-        except exceptions.ContentViewException:
-            s = "Content viewer failed: \n" + traceback.format_exc()
-            signals.add_log(s, "error")
-            description, lines = contentviews.get_content_view(
-                contentviews.get("Raw"), content, headers=message.headers
-            )
-            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
-
-        if enc:
-            description = " ".join([enc, description])
-
+        description, lines = contentviews.get_content_view_with_message_encoding(
+            message, viewmode
+        )
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, models.HTTPRequest):
             description = "No request content (press tab to view response)"

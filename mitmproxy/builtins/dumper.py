@@ -73,20 +73,10 @@ class Dumper(object):
             elif content:
                 self.echo("")
 
-                try:
-                    _, lines = contentviews.get_content_view(
-                        contentviews.get("Auto"),
-                        content,
-                        headers=getattr(message, "headers", None)
-                    )
-                except exceptions.ContentViewException:
-                    s = "Content viewer failed: \n" + traceback.format_exc()
-                    ctx.log.debug(s)
-                    _, lines = contentviews.get_content_view(
-                        contentviews.get("Raw"),
-                        content,
-                        headers=getattr(message, "headers", None)
-                    )
+                _, lines = contentviews.get_content_view_with_message_encoding(
+                    message,
+                    contentviews.get("Auto")
+                )
 
                 styles = dict(
                     highlight=dict(bold=True),
