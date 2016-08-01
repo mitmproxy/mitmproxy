@@ -277,11 +277,11 @@ class ConsoleMaster(flow.FlowMaster):
         if self.options.verbosity < utils.log_tier(level):
             return
 
-        if level == "error":
+        if level in ("error", "warn"):
             signals.status_message.send(
-                message = "Error: %s" % str(e)
+                message = "{}: {}".format(level.title(), e)
             )
-            e = urwid.Text(("error", str(e)))
+            e = urwid.Text((level, str(e)))
         else:
             e = urwid.Text(str(e))
         self.logbuffer.append(e)

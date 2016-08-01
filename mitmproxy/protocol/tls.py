@@ -543,25 +543,12 @@ class TlsLayer(base.Layer):
             )
             tls_cert_err = self.server_conn.ssl_verification_error
             if tls_cert_err is not None:
-                self.log(
-                    "TLS verification failed for upstream server at depth %s with error: %s" %
-                    (tls_cert_err['depth'], tls_cert_err['errno']),
-                    "error")
-                self.log("Ignoring server verification error, continuing with connection", "error")
+                self.log(str(tls_cert_err), "warn")
+                self.log("Ignoring server verification error, continuing with connection", "warn")
         except netlib.exceptions.InvalidCertificateException as e:
-            tls_cert_err = self.server_conn.ssl_verification_error
-            self.log(
-                "TLS verification failed for upstream server at depth %s with error: %s" %
-                (tls_cert_err['depth'], tls_cert_err['errno']),
-                "error")
-            self.log("Aborting connection attempt", "error")
             six.reraise(
-                exceptions.TlsProtocolException,
-                exceptions.TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
-                    address=repr(self.server_conn.address),
-                    sni=self.server_sni,
-                    e=repr(e),
-                )),
+                exceptions.InvalidServerCertificate,
+                exceptions.InvalidServerCertificate(str(e)),
                 sys.exc_info()[2]
             )
         except netlib.exceptions.TlsException as e:

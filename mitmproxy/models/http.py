@@ -225,7 +225,7 @@ class HTTPFlow(Flow):
 
 
 def make_error_response(status_code, message, headers=None):
-    response = status_codes.RESPONSES.get(status_code, "Unknown").encode()
+    response = status_codes.RESPONSES.get(status_code, "Unknown")
     body = """
         <html>
             <head>

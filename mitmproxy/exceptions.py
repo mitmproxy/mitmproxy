@@ -44,6 +44,12 @@ class ClientHandshakeException(TlsProtocolException):
         self.server = server
 
 
+class InvalidServerCertificate(TlsProtocolException):
+    def __repr__(self):
+        # In contrast to most others, this is a user-facing error which needs to look good.
+        return str(self)
+
+
 class Socks5ProtocolException(ProtocolException):
     pass
 

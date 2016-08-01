@@ -91,6 +91,12 @@ class Options(urwid.WidgetWrap):
                     lambda: master.options.tcp_hosts,
                     self.tcp_hosts
                 ),
+                select.Option(
+                    "Don't Verify SSL/TLS Certificates",
+                    "V",
+                    lambda: master.server.config.ssl_insecure,
+                    master.options.toggler("ssl_insecure")
+                ),
 
                 select.Heading("Utility"),
                 select.Option(
