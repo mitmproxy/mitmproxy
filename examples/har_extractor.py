@@ -137,7 +137,7 @@ def response(flow):
         flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
 
     request_query_string = [{"name": k, "value": v}
-                            for k, v in flow.request.query or {}]
+                            for k, v in flow.request.query.items() or {}]
 
     response_body_size = len(flow.response.content)
     response_body_decoded_size = len(flow.response.content)
@@ -240,7 +240,7 @@ def done():
 
 def format_cookies(obj):
     if obj:
-        return [{"name": k.strip(), "value": v[0]} for k, v in obj.items()]
+        return [{"name": k.strip(), "value": v} for k, v in obj.items()]
     return ""
 
 
