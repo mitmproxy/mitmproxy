@@ -94,7 +94,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Don't Verify SSL/TLS Certificates",
                     "V",
-                    lambda: master.server.config.ssl_insecure,
+                    lambda: master.options.ssl_insecure,
                     master.options.toggler("ssl_insecure")
                 ),
 
@@ -140,15 +140,17 @@ class Options(urwid.WidgetWrap):
         title = urwid.Text("Options")
         title = urwid.Padding(title, align="left", width=("relative", 100))
         title = urwid.AttrWrap(title, "heading")
-        self._w = urwid.Frame(
+        w = urwid.Frame(
             self.lb,
             header = title
         )
+        super(Options, self).__init__(w)
+
         self.master.loop.widget.footer.update("")
         signals.update_settings.connect(self.sig_update_settings)
-        master.options.changed.connect(lambda sender, updated: self.sig_update_settings(sender))
+        master.options.changed.connect(self.sig_update_settings)
 
-    def sig_update_settings(self, sender):
+    def sig_update_settings(self, sender, updated=None):
         self.lb.walker._modified()
 
     def keypress(self, size, key):
