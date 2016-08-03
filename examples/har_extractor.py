@@ -137,10 +137,10 @@ def response(flow):
         flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
 
     request_query_string = [{"name": k, "value": v}
-                            for k, v in flow.request.query or {}]
+                            for k, v in flow.request.query.items() or {}]
 
-    response_body_size = len(flow.response.content)
-    response_body_decoded_size = len(flow.response.content)
+    response_body_size = len(unicode(flow.response.content, errors='replace'))
+    response_body_decoded_size = len(unicode(flow.response.content, errors='replace'))
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = HAR.entries({
@@ -160,7 +160,7 @@ def response(flow):
             "status": flow.response.status_code,
             "statusText": flow.response.reason,
             "httpVersion": flow.response.http_version,
-            "cookies": format_cookies(flow.response.cookies),
+            "cookies": format_response_cookies(flow.response.cookies),
             "headers": format_headers(flow.response.headers),
             "content": {
                 "size": response_body_size,
@@ -174,6 +174,9 @@ def response(flow):
         "cache": {},
         "timings": timings,
     })
+
+    if flow.request.method == "POST":
+        entry["request"]["postData"] = format_post_data(flow.request)
 
     # If the current url is in the page list of context.HARLog or
     # does not have a referrer, we add it as a new pages object.
@@ -237,10 +240,25 @@ def done():
         )
     )
 
+def format_response_cookies(obj):
+    if obj:
+        ret = []
+	for k,v in obj.items():
+            c = {"name": k.strip()}
+            c["value"] = v.value
+	    c["domain"] = "" if v.attrs.get("domain", None) is None else v.attrs["domain"]
+	    other_fields = ["path", "expires", "domain", "httpOnly", "secure", "comment"]
+	    for field in other_fields:
+                if field in v.attrs:
+	            c[field] = True if v.attrs[field] is None else v.attrs[field] 
+            ret.append(c)
+        return ret
+    return ""
+
 
 def format_cookies(obj):
     if obj:
-        return [{"name": k.strip(), "value": v[0]} for k, v in obj.items()]
+        return [{"name": k.strip(), "value": v} for k, v in obj.items()]
     return ""
 
 
@@ -249,7 +267,22 @@ def format_headers(obj):
         return [{"name": k, "value": v} for k, v in obj.fields]
     return ""
 
+def format_params(obj):
+    if obj:
+        return [{"name": k, "value": unicode(v, errors='ignore')} for k, v in obj.items()]
+    return ""
 
+def format_post_data(obj):
+    content_type = obj.headers.get("content-type", "")
+    post_data = {"mimeType" : content_type}
+    is_valid_content_type = "application/x-www-form-urlencoded" in content_type.lower() 
+    if is_valid_content_type:
+        post_data["params"] = format_params(obj.urlencoded_form)
+    
+    post_data["text"] = unicode(obj.content, errors='ignore')
+    return post_data
+        
+	
 def print_attributes(obj, filter_string=None, hide_privates=False):
     """
         Useful helper method to quickly get all attributes of an object and its
