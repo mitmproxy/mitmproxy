@@ -14,7 +14,7 @@ ShowFullContentButton.propTypes = {
 function ShowFullContentButton ( {setShowFullContent, showFullContent} ){
 
     return (
-        !showFullContent && <Button isXs={true} onClick={() => setShowFullContent(true)} text="Show full content"/>
+        !showFullContent && <Button className="view-all-content-btn" isXs={true} onClick={() => setShowFullContent(true)} text="Show full content"/>
     )
 }
 
