@@ -35,7 +35,6 @@ def start():
                 "version": "0.1",
                 "comment": "mitmproxy version %s" % version.MITMPROXY
             },
-            "pages": [],
             "entries": []
         }
     })
