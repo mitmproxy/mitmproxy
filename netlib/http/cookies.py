@@ -185,8 +185,7 @@ def parse_set_cookie_headers(headers):
     for header in headers:
         cookies = parse_set_cookie_header(header)
         if cookies:
-            for cookie in cookies:
-                name, value, attrs = cookie
+            for name, value, attrs in cookies:
                 ret.append((name, SetCookie(value, attrs)))
     return ret
 
@@ -221,6 +220,8 @@ def parse_set_cookie_header(line):
 
     if cookies:
         return cookies
+    else:
+        return None
 
 
 def format_set_cookie_header(name, value, attrs):
