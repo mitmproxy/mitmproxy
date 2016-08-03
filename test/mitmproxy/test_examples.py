@@ -1,16 +1,19 @@
 import json
+import os
 
 import six
-import sys
-import os.path
-from mitmproxy.flow import master
-from mitmproxy.flow import state
+
 from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy.builtins import script
+from mitmproxy.flow import master
+from mitmproxy.flow import state
+
 import netlib.utils
+
 from netlib import tutils as netutils
 from netlib.http import Headers
+
 from . import tutils, mastertest
 
 example_dir = netlib.utils.Data(__name__).push("../../examples")
@@ -98,30 +101,34 @@ class TestScripts(mastertest.MasterTest):
         m.request(f)
         assert f.request.host == "mitmproxy.org"
 
-    def test_har_extractor(self):
-        if sys.version_info >= (3, 0):
-            with tutils.raises("does not work on Python 3"):
-                tscript("har_extractor.py")
-            return
 
+class TestHARDump(mastertest.MasterTest):
+
+    def setup(self):
+        times = dict(
+            timestamp_start=746203272,
+            timestamp_end=746203272,
+        )
+
+        # Create a dummy flow for testing
+        self.req_get = tutils.tflow(
+            req=netutils.treq(method=b'GET', content=b'', **times),
+            resp=netutils.tresp(**times)
+        )
+
+    def test_no_file_arg(self):
         with tutils.raises(ScriptError):
-            tscript("har_extractor.py")
+            tscript("har_dump.py")
 
+    def test_simple(self):
         with tutils.tmpdir() as tdir:
-            times = dict(
-                timestamp_start=746203272,
-                timestamp_end=746203272,
-            )
+            path = os.path.join(tdir, "somefile")
 
-            path = os.path.join(tdir, "file")
-            m, sc = tscript("har_extractor.py", six.moves.shlex_quote(path))
-            f = tutils.tflow(
-                req=netutils.treq(**times),
-                resp=netutils.tresp(**times)
-            )
-            m.response(f)
+            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            self.invoke(m, "response", self.req_get)
             m.addons.remove(sc)
 
-            with open(path, "rb") as f:
-                test_data = json.load(f)
-            assert len(test_data["log"]["pages"]) == 1
+            with open(path, "rb") as inp:
+                har = json.load(inp)
+
+        assert len(har["log"]["entries"]) == 1
