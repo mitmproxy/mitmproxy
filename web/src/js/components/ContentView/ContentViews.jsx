@@ -1,4 +1,6 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes, Component } from 'react'
+import { connect } from 'react-redux'
+import { setContentViewDescription, setShowFullContent } from '../../ducks/ui/flow'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils'
 import CodeEditor from './CodeEditor'
@@ -27,32 +29,63 @@ function Edit({ content, onChange }) {
 }
 Edit = ContentLoader(Edit)
 
+class ViewServer extends Component {
+    constructor(props){
+        super(props)
+        this.maxLines = 80
+    }
 
-function ViewServer(props){
-    const {content, contentView, message} = props
-    let data = JSON.parse(content)
+    componentWillMount(){
+        this.setContentView(this.props)
+    }
+    componentWillReceiveProps(nextProps){
+        this.setContentView(nextProps)
+    }
+    setContentView(props){
+        try {
+            this.data = JSON.parse(props.content)
+        }catch(err) {
+            this.data= {lines: [], description: err.message}
+        }
 
-    return <div>
-            {contentView != data.description &&
-                <div className="alert alert-warning">{data.description}</div>
-            }
-            <pre>
-                {data.lines.map((line, i) =>
-                    <div key={`line${i}`}>
-                        {line.map((tuple, j) =>
-                            <span key={`tuple${j}`} className={tuple[0]}>
-                                {tuple[1]}
-                            </span>
-                        )}
-                    </div>
-                )}
-            </pre>
+        props.setContentViewDescription(props.contentView != this.data.description ? this.data.description : '')
+
+        let isFullContentShown = this.data.lines.length < this.maxLines
+        if (isFullContentShown) props.setShowFullContent(true)
+    }
+    render() {
+        const {content, contentView, message} = this.props
+
+        let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, this.maxLines)
+
+        return <div>
+                <pre>
+                    {lines.map((line, i) =>
+                        <div key={`line${i}`}>
+                            {line.map((tuple, j) =>
+                                <span key={`tuple${j}`} className={tuple[0]}>
+                                    {tuple[1]}
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </pre>
             {ViewImage.matches(message) &&
-                <ViewImage {...props} />
+            <ViewImage {...this.props} />
             }
         </div>
+    }
+
 }
 
-ViewServer = ContentLoader(ViewServer)
+ViewServer = connect(
+    state => ({
+        showFullContent: state.ui.flow.showFullContent
+    }),
+    {
+        setContentViewDescription,
+        setShowFullContent
+    }
+)(ContentLoader(ViewServer))
 
 export { Edit, ViewServer, ViewImage }

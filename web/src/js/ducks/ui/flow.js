@@ -3,16 +3,22 @@ import { getDiff } from "../../utils"
 
 import _ from 'lodash'
 
-export const SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
-             DISPLAY_LARGE    = 'UI_FLOWVIEW_DISPLAY_LARGE',
-             SET_TAB          = "UI_FLOWVIEW_SET_TAB",
-             START_EDIT       = 'UI_FLOWVIEW_START_EDIT',
-             UPDATE_EDIT      = 'UI_FLOWVIEW_UPDATE_EDIT',
-             UPLOAD_CONTENT   = 'UI_FLOWVIEW_UPLOAD_CONTENT'
+export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
+             DISPLAY_LARGE                  = 'UI_FLOWVIEW_DISPLAY_LARGE',
+             SET_TAB                        = "UI_FLOWVIEW_SET_TAB",
+             START_EDIT                     = 'UI_FLOWVIEW_START_EDIT',
+             UPDATE_EDIT                    = 'UI_FLOWVIEW_UPDATE_EDIT',
+             UPLOAD_CONTENT                 = 'UI_FLOWVIEW_UPLOAD_CONTENT',
+             SET_SHOW_FULL_CONTENT          = 'UI_SET_SHOW_FULL_CONTENT',
+             SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION",
+             SET_CONTENT_VIEW_SELECTOR      = "UI_SET_CONTENT_VIEW_SELECTOR"
 
 
 const defaultState = {
     displayLarge: false,
+    contentViewDescription: '',
+    showFullContent: false,
+    isContentViewSelectorOpen: false,
     modifiedFlow: false,
     contentView: 'Auto',
     tab: 'request',
@@ -26,7 +32,8 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 modifiedFlow: action.flow,
-                contentView: 'Edit'
+                contentView: 'Edit',
+                showFullContent: true
             }
 
         case UPDATE_EDIT:
@@ -40,7 +47,9 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 modifiedFlow: false,
                 displayLarge: false,
-                contentView: (wasInEditMode ? 'Auto' : state.contentView)
+                contentView: (wasInEditMode ? 'Auto' : state.contentView),
+                viewDescription: '',
+                showFullContent: false,
             }
 
         case flowsActions.UPDATE:
@@ -52,24 +61,46 @@ export default function reducer(state = defaultState, action) {
                     ...state,
                     modifiedFlow: false,
                     displayLarge: false,
-                    contentView: (wasInEditMode ? 'Auto' : state.contentView)
+                    contentView: (wasInEditMode ? 'Auto' : state.contentView),
+                    viewDescription: '',
+                    showFullContent: false
                 }
             } else {
                 return state
             }
 
+        case SET_CONTENT_VIEW_DESCRIPTION:
+            return {
+                ...state,
+                viewDescription: action.description
+            }
+
+        case SET_SHOW_FULL_CONTENT:
+            return {
+                ...state,
+                showFullContent: action.show
+            }
+
+
+        case SET_CONTENT_VIEW_SELECTOR:
+            return {
+                ...state,
+                isContentViewSelectorOpen: action.contentViewSelector
+            }
 
         case SET_TAB:
             return {
                 ...state,
                 tab: action.tab,
                 displayLarge: false,
+                showFullContent: false
             }
 
         case SET_CONTENT_VIEW:
             return {
                 ...state,
                 contentView: action.contentView,
+                showFullContent: action.contentView == 'Edit'
             }
 
         case DISPLAY_LARGE:
@@ -96,6 +127,22 @@ export function selectTab(tab) {
 
 export function startEdit(flow) {
     return { type: START_EDIT, flow }
+}
+
+export function updateEdit(update) {
+    return { type: UPDATE_EDIT, update }
+}
+
+export function setContentViewDescription(description) {
+    return { type: SET_CONTENT_VIEW_DESCRIPTION, description }
+}
+
+export function setShowFullContent(show) {
+    return { type: SET_SHOW_FULL_CONTENT, show }
+}
+
+export function setContentViewSelectorOpen(open){
+    return {type: SET_CONTENT_VIEW_SELECTOR, contentViewSelector: open}
 }
 
 export function updateEdit(update) {

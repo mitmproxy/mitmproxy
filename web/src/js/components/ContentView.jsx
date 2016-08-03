@@ -5,6 +5,7 @@ import * as MetaViews from './ContentView/MetaViews'
 import ViewSelector from './ContentView/ViewSelector'
 import UploadContentButton from './ContentView/UploadContentButton'
 import DownloadContentButton from './ContentView/DownloadContentButton'
+import ShowFullContentButton from './ContentView/ShowFullContentButton'
 
 import { setContentView, displayLarge, updateEdit } from '../ducks/ui/flow'
 
@@ -19,7 +20,7 @@ ContentView.propTypes = {
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
 
 function ContentView(props) {
-    const { flow, message, contentView, isDisplayLarge, displayLarge, uploadContent, onContentChange, readonly } = props
+    const { flow, message, contentView, isDisplayLarge, displayLarge, uploadContent, onContentChange, readonly, contentViewDescription } = props
 
     if (message.contentLength === 0 && readonly) {
         return <MetaViews.ContentEmpty {...props}/>
@@ -37,13 +38,15 @@ function ContentView(props) {
     return (
         <div className="contentview">
             <View flow={flow} message={message} contentView={contentView} readonly={readonly} onChange={onContentChange}/>
-
-            <div className="view-options text-center">
+            <ShowFullContentButton/>
+            <div className="view-options">
                 <ViewSelector message={message}/>
                 &nbsp;
                 <DownloadContentButton flow={flow} message={message}/>
                 &nbsp;
                 <UploadContentButton uploadContent={uploadContent}/>
+                &nbsp;
+                <span>{contentViewDescription}</span>
             </div>
         </div>
     )
@@ -53,6 +56,7 @@ export default connect(
     state => ({
         contentView: state.ui.flow.contentView,
         isDisplayLarge: state.ui.flow.displayLarge,
+        contentViewDescription: state.ui.flow.viewDescription
     }),
     {
         displayLarge,
