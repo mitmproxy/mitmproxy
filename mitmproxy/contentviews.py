@@ -14,31 +14,27 @@ requests, the query parameters are passed as the ``query`` keyword argument.
 """
 from __future__ import absolute_import, print_function, division
 
+import cssutils
 import datetime
+import html2text
+import jsbeautifier
 import json
 import logging
-import subprocess
-import sys
-import math
-
-from typing import Mapping  # noqa
-
-import html2text
 import lxml.etree
 import lxml.html
 import six
+import subprocess
+import traceback
 from PIL import ExifTags
 from PIL import Image
-from six import BytesIO
-
-from mitmproxy import models
 from mitmproxy import exceptions
-from mitmproxy.contrib import jsbeautifier
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
 from netlib import multidict
-from netlib.http import url
 from netlib import strutils
+from netlib.http import url
+from six import BytesIO
+from typing import Mapping  # noqa
 
 try:
     import pyamf
@@ -46,17 +42,6 @@ try:
 except ImportError:  # pragma no cover
     pyamf = None
 
-try:
-    import cssutils
-except ImportError:  # pragma no cover
-    cssutils = None
-else:
-    cssutils.log.setLevel(logging.CRITICAL)
-
-    cssutils.ser.prefs.keepComments = True
-    cssutils.ser.prefs.omitLastSemicolon = False
-    cssutils.ser.prefs.indentClosingBrace = False
-    cssutils.ser.prefs.validOnly = False
 
 # Default view cutoff *in lines*
 VIEW_CUTOFF = 512
@@ -273,7 +258,7 @@ class ViewHTMLOutline(View):
     content_types = ["text/html"]
 
     def __call__(self, data, **metadata):
-        data = data.decode("utf-8")
+        data = data.decode("utf-8", "replace")
         h = html2text.HTML2Text(baseurl="")
         h.ignore_images = True
         h.body_width = 0
@@ -400,6 +385,7 @@ class ViewJavaScript(View):
     def __call__(self, data, **metadata):
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
+        data = data.decode("utf-8", "replace")
         res = jsbeautifier.beautify(data, opts)
         return "JavaScript", format_text(res)
 
@@ -412,11 +398,14 @@ class ViewCSS(View):
     ]
 
     def __call__(self, data, **metadata):
-        if cssutils:
-            sheet = cssutils.parseString(data)
-            beautified = sheet.cssText
-        else:
-            beautified = data
+        cssutils.log.setLevel(logging.CRITICAL)
+        cssutils.ser.prefs.keepComments = True
+        cssutils.ser.prefs.omitLastSemicolon = False
+        cssutils.ser.prefs.indentClosingBrace = False
+        cssutils.ser.prefs.validOnly = False
+
+        sheet = cssutils.parseString(data)
+        beautified = sheet.cssText
 
         return "CSS", format_text(beautified)
 
@@ -619,35 +608,38 @@ def safe_to_print(lines, encoding="utf8"):
         yield clean_line
 
 
-def get_content_view_with_message_encoding(message, viewmode):
+def get_message_content_view(viewmode, message):
+    """
+    Like get_content_view, but also handles message encoding.
+    """
     try:
         content = message.content
-        if content != message.raw_content:
+    except ValueError:
+        content = message.raw_content
+        enc = "[cannot decode]"
+    else:
+        if isinstance(message, http.Message) and content != message.raw_content:
             enc = "[decoded {}]".format(
                 message.headers.get("content-encoding")
             )
         else:
             enc = None
-    except ValueError:
-        content = message.raw_content
-        enc = "[cannot decode]"
-    try:
-        query = None
-        if isinstance(message, models.HTTPRequest):
-            query = message.query
-        description, lines = get_content_view(
-            viewmode, content, headers=message.headers, query=query
-        )
-    except exceptions.ContentViewException:
-        description, lines = get_content_view(
-            get("Raw"), content, headers=message.headers
-        )
-        description = description.replace("Raw", "Couldn't parse: falling back to Raw")
+
+    if content is None:
+        return "", iter([[("error", "content missing")]]), None
+
+    query = message.query if isinstance(message, http.Request) else None
+    headers = message.headers if isinstance(message, http.Message) else None
+
+    description, lines, error = get_content_view(
+        viewmode, content, headers=headers, query=query
+    )
 
     if enc:
-        description = " ".join([enc, description])
+        description = "{} {}".format(enc, description)
 
-    return description, lines
+    return description, lines, error
+
 
 def get_content_view(viewmode, data, **metadata):
     """
@@ -656,24 +648,24 @@ def get_content_view(viewmode, data, **metadata):
             data, **metadata: arguments passed to View instance.
 
         Returns:
-            A (description, content generator) tuple.
+            A (description, content generator, error) tuple.
+            If the content view raised an exception generating the view,
+            the exception is returned in error and the flow is formatted in raw mode.
             In contrast to calling the views directly, text is always safe-to-print unicode.
-
-        Raises:
-            ContentViewException, if the content view threw an error.
     """
     try:
         ret = viewmode(data, **metadata)
+        if ret is None:
+            ret = "Couldn't parse: falling back to Raw", get("Raw")(data, **metadata)[1]
+        desc, content = ret
+        error = None
     # Third-party viewers can fail in unexpected ways...
-    except Exception as e:
-        six.reraise(
-            exceptions.ContentViewException,
-            exceptions.ContentViewException(str(e)),
-            sys.exc_info()[2]
-        )
-    if not ret:
+    except Exception:
         desc = "Couldn't parse: falling back to Raw"
         _, content = get("Raw")(data, **metadata)
-    else:
-        desc, content = ret
-    return desc, safe_to_print(content)
+        error = "{} Content viewer failed: \n{}".format(
+            getattr(viewmode, "name"),
+            traceback.format_exc()
+        )
+
+    return desc, safe_to_print(content), error

@@ -80,7 +80,7 @@ def _mkhelp():
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
-        ("w", "save all flows matching current limit"),
+        ("w", "save all flows matching current view filter"),
         ("W", "save this flow"),
         ("x", "delete body"),
         ("z", "encode/decode a request/response"),
@@ -206,10 +206,11 @@ class FlowView(tabs.Tabs):
             )
 
     def _get_content_view(self, message, viewmode, max_lines, _):
-
-        description, lines = contentviews.get_content_view_with_message_encoding(
-            message, viewmode
+        description, lines, error = contentviews.get_message_content_view(
+            viewmode, message
         )
+        if error:
+            signals.add_log(error, "error")
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, models.HTTPRequest):
             description = "No request content (press tab to view response)"
@@ -687,6 +688,7 @@ class FlowView(tabs.Tabs):
                     keys = (
                         ("gzip", "z"),
                         ("deflate", "d"),
+                        ("brotli", "b"),
                     ),
                     callback = self.encode_callback,
                     args = (conn,)
@@ -700,6 +702,7 @@ class FlowView(tabs.Tabs):
         encoding_map = {
             "z": "gzip",
             "d": "deflate",
+            "b": "brotli",
         }
         conn.encode(encoding_map[key])
         signals.flow_change.send(self, flow = self.flow)
