@@ -20,7 +20,7 @@ class Addons(object):
 
     def add(self, options, *addons):
         if not addons:
-            raise ValueError("No adons specified.")
+            raise ValueError("No addons specified.")
         self.chain.extend(addons)
         for i in addons:
             self.invoke_with_context(i, "start")
