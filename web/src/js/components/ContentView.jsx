@@ -39,7 +39,7 @@ function ContentView(props) {
         <div className="contentview">
             <View flow={flow} message={message} contentView={contentView} readonly={readonly} onChange={onContentChange}/>
             <ShowFullContentButton/>
-            <div className="view-options">
+            <div className="view-options footer navbar-fixed-bottom">
                 <ViewSelector message={message}/>
                 &nbsp;
                 <DownloadContentButton flow={flow} message={message}/>

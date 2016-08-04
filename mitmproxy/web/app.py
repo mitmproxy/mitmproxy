@@ -363,9 +363,11 @@ class FlowContentView(RequestHandler):
 
         self.set_header("Content-Encoding", "")
 
-        description, lines  = contentviews.get_content_view_with_message_encoding(
-             message, contentviews.get(content_view.replace('_', ' '))
+        description, lines, error = contentviews.get_message_content_view(
+            contentviews.get(content_view.replace('_', ' ')), message
         )
+#        if error:
+#           add event log
 
         self.write(dict(
            lines=list(lines),
