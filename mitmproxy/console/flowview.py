@@ -3,14 +3,12 @@ from __future__ import absolute_import, print_function, division
 import math
 import os
 import sys
-import traceback
 
 import urwid
 from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
 from mitmproxy import controller
-from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy import utils
 from mitmproxy.console import common
