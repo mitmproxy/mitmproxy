@@ -13,6 +13,8 @@ import pytz
 import mitmproxy
 from mitmproxy import version
 
+from netlib.http import cookies
+
 HAR = {}
 
 
@@ -44,8 +46,6 @@ def response(flow):
     """
        Called when a server response has been received.
     """
-    entries = HAR["log"]["entries"]
-
     # TODO: SSL and Connect Timings
 
     # Calculate raw timings from timestamps.
@@ -78,14 +78,14 @@ def response(flow):
     response_body_decoded_size = len(flow.response.content)
     response_body_compression = response_body_decoded_size - response_body_size
 
-    entries.append({
+    HAR["log"]["entries"].append({
         "startedDateTime": started_date_time,
         "time": full_time,
         "request": {
             "method": flow.request.method,
             "url": flow.request.url,
             "httpVersion": flow.request.http_version,
-            "cookies": name_value(flow.request.cookies),
+            "cookies": format_request_cookies(flow.request.cookies.fields),
             "headers": name_value(flow.request.headers),
             "queryString": name_value(flow.request.query or {}),
             "headersSize": len(str(flow.request.headers)),
@@ -95,7 +95,7 @@ def response(flow):
             "status": flow.response.status_code,
             "statusText": flow.response.reason,
             "httpVersion": flow.response.http_version,
-            "cookies": name_value(flow.response.cookies),
+            "cookies": format_response_cookies(flow.response.cookies.fields),
             "headers": name_value(flow.response.headers),
             "content": {
                 "size": response_body_size,
@@ -125,6 +125,30 @@ def done():
             f.write(json.dumps(HAR, indent=2))
 
     # TODO: Log results via mitmproxy.ctx.log
+
+
+def format_cookies(cookies):
+    cookie_list = []
+
+    for name, value, attrs in cookies:
+        cookie_har = {
+            "name": name,
+            "value": value,
+        }
+        cookie_har.update(attrs)
+        # print(attrs)
+
+        cookie_list.append(cookie_har)
+
+    return cookie_list
+
+
+def format_request_cookies(fields):
+    return format_cookies(cookies.group_cookies(fields))
+
+
+def format_response_cookies(fields):
+    return format_cookies((c[0], c[1].value, c[1].attrs) for c in fields)
 
 
 def name_value(obj):
