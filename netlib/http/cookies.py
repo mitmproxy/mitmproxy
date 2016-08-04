@@ -26,6 +26,12 @@ variants. Serialization follows RFC6265.
     http://tools.ietf.org/html/rfc2965
 """
 
+_cookie_params = set((
+    'expires', 'path', 'comment', 'max-age',
+    'secure', 'httponly', 'version',
+))
+
+
 # TODO: Disallow LHS-only Cookie values
 
 
@@ -287,3 +293,28 @@ def is_expired(cookie_attrs):
         pass
 
     return expires or max_age
+
+
+def group_cookies(pairs):
+    """
+    Converts a list of pairs to a (name, value, attrs) for each cookie.
+    """
+
+    if not pairs:
+        return []
+
+    cookie_list = []
+
+    # First pair is always a new cookie
+    name, value = pairs[0]
+    attrs = []
+
+    for k, v in pairs[1:]:
+        if k.lower() in _cookie_params:
+            attrs.append((k, v))
+        else:
+            cookie_list.append((name, value, CookieAttrs(attrs)))
+            name, value, attrs = k, v, []
+
+    cookie_list.append((name, value, CookieAttrs(attrs)))
+    return cookie_list
