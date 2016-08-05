@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { RequestUtils, isValidHttpVersion, parseUrl } from '../../flow/utils.js'
 import { formatTimeStamp } from '../../utils.js'
 import ContentView from '../ContentView'
+import ContentViewOptions from '../ContentView/ContentViewOptions'
 import ValidateEditor from '../ValueEditor/ValidateEditor'
 import ValueEditor from '../ValueEditor/ValueEditor'
 
@@ -81,27 +82,35 @@ const Message = connect(
 export class Request extends Component {
     render() {
         const { flow, isEdit, updateFlow, uploadContent } = this.props
-
+        let noContent =  !isEdit && (flow.request.contentLength == 0 || flow.request.contentLength == null)
         return (
-            <section className="request">
-                <ToggleEdit/>
-                <RequestLine
-                    flow={flow}
-                    readonly={!isEdit}
-                    updateFlow={updateFlow}/>
-                <Headers
-                    message={flow.request}
-                    readonly={!isEdit}
-                    onChange={headers => updateFlow({ request: { headers } })}
-                />
+            <section className="request flowview-container">
+                <div className="flowview-body">
+                    <ToggleEdit/>
+                    <RequestLine
+                        flow={flow}
+                        readonly={!isEdit}
+                        updateFlow={updateFlow}/>
+                    <Headers
+                        message={flow.request}
+                        readonly={!isEdit}
+                        onChange={headers => updateFlow({ request: { headers } })}
+                    />
 
-                <hr/>
-                <ContentView
-                    readonly={!isEdit}
-                    flow={flow}
-                    onContentChange={content => updateFlow({ request: {content}})}
-                    uploadContent={content => uploadContent(flow, content, "request")}
-                    message={flow.request}/>
+                    <hr/>
+                    <ContentView
+                        readonly={!isEdit}
+                        flow={flow}
+                        onContentChange={content => updateFlow({ request: {content}})}
+                        message={flow.request}/>
+                </div>
+                <div hidden={noContent} className="flowview-footer">
+                    <ContentViewOptions
+                        flow={flow}
+                        readonly={!isEdit}
+                        message={flow.request}
+                        uploadContent={content => uploadContent(flow, content, "request")}/>
+                </div>
             </section>
         )
     }
@@ -137,27 +146,36 @@ Request = Message(Request)
 export class Response extends Component {
     render() {
         const { flow, isEdit, updateFlow, uploadContent } = this.props
+        let noContent =  !isEdit && (flow.response.contentLength == 0 || flow.response.contentLength == null)
 
         return (
-            <section className="response">
-                <ToggleEdit/>
-                <ResponseLine
-                    flow={flow}
-                    readonly={!isEdit}
-                    updateFlow={updateFlow}/>
-                <Headers
-                    message={flow.response}
-                    readonly={!isEdit}
-                    onChange={headers => updateFlow({ response: { headers } })}
-                />
-                <hr/>
-                <ContentView
-                    readonly={!isEdit}
-                    flow={flow}
-                    onContentChange={content => updateFlow({ response: {content}})}
-                    uploadContent={content => uploadContent(flow, content, "response")}
-                    message={flow.response}
-                />
+            <section className="response flowview-container">
+                <div className="flowview-body">
+                    <ToggleEdit/>
+                    <ResponseLine
+                        flow={flow}
+                        readonly={!isEdit}
+                        updateFlow={updateFlow}/>
+                    <Headers
+                        message={flow.response}
+                        readonly={!isEdit}
+                        onChange={headers => updateFlow({ response: { headers } })}
+                    />
+                    <hr/>
+                    <ContentView
+                        readonly={!isEdit}
+                        flow={flow}
+                        onContentChange={content => updateFlow({ response: {content}})}
+                        message={flow.response}
+                    />
+                </div>
+                <div hidden={noContent} className="flowview-footer">
+                    <ContentViewOptions
+                        flow={flow}
+                        message={flow.response}
+                        uploadContent={content => uploadContent(flow, content, "response")}
+                        readonly={!isEdit}/>
+                </div>
             </section>
         )
     }

@@ -30,9 +30,8 @@ function Edit({ content, onChange }) {
 Edit = ContentLoader(Edit)
 
 class ViewServer extends Component {
-    constructor(props){
-        super(props)
-        this.maxLines = 80
+    static defaultProps = {
+        maxLines: 80,
     }
 
     componentWillMount(){
@@ -50,14 +49,12 @@ class ViewServer extends Component {
 
         props.setContentViewDescription(props.contentView != this.data.description ? this.data.description : '')
 
-        let isFullContentShown = this.data.lines.length < this.maxLines
+        let isFullContentShown = this.data.lines.length < props.maxLines
         if (isFullContentShown) props.setShowFullContent(true)
     }
     render() {
-        const {content, contentView, message} = this.props
-
-        let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, this.maxLines)
-
+        const {content, contentView, message, maxLines} = this.props
+        let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, maxLines)
         return <div>
                 <pre>
                     {lines.map((line, i) =>

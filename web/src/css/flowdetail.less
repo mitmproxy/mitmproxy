@@ -5,8 +5,7 @@
 
 .flow-detail {
     width: 100%;
-    overflow-x: auto;
-    overflow-y: scroll;
+    overflow:hidden;
 
     nav {
         background-color: #F2F2F2;
@@ -41,6 +40,28 @@
 
 }
 
+.flowview-container{
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    height:95%;
+}
+
+.flowview-body{
+    position:relative;
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 5px 12px 0;
+}
+
+.flowview-footer{
+    flex: 0 0 auto;
+    box-shadow: 0 0 3px gray;
+    padding: 2px;
+    margin: 0;
+    height:23px;
+}
+
 .inline-input {
     display: inline;
     margin: 0 -3px;
@@ -64,13 +85,9 @@
     }
 }
 
-.view-options {
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
-
 .view-all-content-btn{
     float: right;
+    margin-bottom: 12px;
 }
 
 .flow-detail table {
