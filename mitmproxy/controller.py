@@ -222,12 +222,17 @@ def handler(f):
         # Reset the handled flag - it's common for us to feed the same object
         # through handlers repeatedly, so we don't want this to persist across
         # calls.
-        if message.reply.handled:
+        if handling:
+            if not message.reply.taken:
+                message.reply.commit()
             message.reply.handled = False
         return ret
     # Mark this function as a handler wrapper
     wrapper.__dict__["__handler"] = True
     return wrapper
+
+
+NO_REPLY = object()
 
 
 class Reply(object):
@@ -241,6 +246,8 @@ class Reply(object):
         self.q = queue.Queue()
         # Has this message been acked?
         self.acked = False
+        # What's the ack message?
+        self.ack_message = NO_REPLY
         # Has the user taken responsibility for ack-ing?
         self.taken = False
         # Has a handler taken responsibility for ack-ing?
@@ -258,8 +265,21 @@ class Reply(object):
     def send(self, msg):
         if self.acked:
             raise exceptions.ControlException("Message already acked.")
+        if self.ack_message != NO_REPLY:
+            # We may have overrides for this later.
+            raise exceptions.ControlException("Message already has a response.")
         self.acked = True
-        self.q.put(msg)
+        self.ack_message = msg
+        if self.taken:
+            self.commit()
+
+    def commit(self):
+        """
+        This is called by the handler to actually send the ack message.
+        """
+        if self.ack_message == NO_REPLY:
+            raise exceptions.ControlException("Message has no response.")
+        self.q.put(self.ack_message)
 
     def __del__(self):
         if not self.acked:
