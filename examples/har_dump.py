@@ -170,14 +170,4 @@ def name_value(obj):
     """
         Convert (key, value) pairs to HAR format.
     """
-
-    items = []
-    if hasattr(obj, 'fields'):
-        items = obj.fields
-    elif hasattr(obj, 'items'):
-        items = obj.items()
-
-    if items:
-        return [{"name": k, "value": v} for k, v in items]
-    else:
-        return ""
+    return [{"name": k, "value": v} for k, v in obj.items()]
