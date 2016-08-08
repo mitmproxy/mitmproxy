@@ -11,8 +11,8 @@ from datetime import datetime
 import pytz
 
 import mitmproxy
-from mitmproxy import version
 
+from netlib import version
 from netlib.http import cookies
 
 HAR = {}
