@@ -269,6 +269,32 @@ def refresh_set_cookie_header(c, delta):
     return ret
 
 
+def get_expiration_ts(cookie_attrs):
+    """
+        Determines the time when the cookie will be expired.
+
+        Considering both 'expires' and 'max-age' parameters.
+
+        Returns: timestamp of when the cookie will expire.
+                 None, if no expiration time is set.
+    """
+    if 'expires' in cookie_attrs:
+        e = email.utils.parsedate_tz(cookie_attrs["expires"])
+        if e:
+            return email.utils.mktime_tz(e)
+
+    elif 'max-age' in cookie_attrs:
+        try:
+            max_age = int(cookie_attrs['Max-Age'])
+        except ValueError:
+            pass
+        else:
+            now_ts = time.time()
+            return now_ts + max_age
+
+    return None
+
+
 def is_expired(cookie_attrs):
     """
         Determines whether a cookie has expired.

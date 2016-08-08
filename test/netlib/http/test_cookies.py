@@ -1,5 +1,9 @@
+import time
+
 from netlib.http import cookies
 from netlib.tutils import raises
+
+import mock
 
 
 def test_read_token():
@@ -245,6 +249,22 @@ def test_refresh_cookie():
     assert cookies.refresh_set_cookie_header(c, 0)
     c = "foo/bar=bla"
     assert cookies.refresh_set_cookie_header(c, 0)
+
+
+@mock.patch('time.time')
+def test_get_expiration_ts(*args):
+    # Freeze time
+    now_ts = 17
+    time.time.return_value = now_ts
+
+    CA = cookies.CookieAttrs
+    F = cookies.get_expiration_ts
+
+    assert F(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == 0
+    assert F(CA([("Expires", "Thu, 24-Aug-2063 00:00:00 GMT")])) == 2955139200
+
+    assert F(CA([("Max-Age", "0")])) == now_ts
+    assert F(CA([("Max-Age", "31")])) == now_ts + 31
 
 
 def test_is_expired():
