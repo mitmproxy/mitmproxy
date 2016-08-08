@@ -302,23 +302,14 @@ def is_expired(cookie_attrs):
         Returns: boolean
     """
 
-    # See if 'expires' time is in the past
-    expires = False
-    if 'expires' in cookie_attrs:
-        e = email.utils.parsedate_tz(cookie_attrs["expires"])
-        if e:
-            exp_ts = email.utils.mktime_tz(e)
-            now_ts = time.time()
-            expires = exp_ts < now_ts
+    exp_ts = get_expiration_ts(cookie_attrs)
+    now_ts = time.time()
 
-    # or if Max-Age is 0
-    max_age = False
-    try:
-        max_age = int(cookie_attrs.get('Max-Age', 1)) == 0
-    except ValueError:
-        pass
-
-    return expires or max_age
+    # If no expiration information was provided with the cookie
+    if exp_ts is None:
+        return False
+    else:
+        return exp_ts <= now_ts
 
 
 def group_cookies(pairs):
