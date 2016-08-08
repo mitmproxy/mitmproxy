@@ -63,7 +63,7 @@ class Column(base.Column):
             o = editor.walker.get_current_value()
             if o is not None:
                 n = editor.master.spawn_editor(o.encode("string-escape"))
-                n = utils.clean_hanging_newline(n)
+                n = strutils.clean_hanging_newline(n)
                 editor.walker.set_current_value(n)
                 
         elif key == "D":
