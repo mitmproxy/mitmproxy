@@ -128,7 +128,7 @@ class TestHARDump(mastertest.MasterTest):
             self.invoke(m, "response", self.req_get)
             m.addons.remove(sc)
 
-            with open(path, "rb") as inp:
+            with open(path, "r") as inp:
                 har = json.load(inp)
 
         assert len(har["log"]["entries"]) == 1

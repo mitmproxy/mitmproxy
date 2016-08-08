@@ -120,7 +120,7 @@ def done():
         mitmproxy.ctx.log(pprint.pformat(HAR))
     # TODO: .zhar compression
     else:
-        with open(dump_file, "wb") as f:
+        with open(dump_file, "w") as f:
             f.write(json.dumps(HAR, indent=2))
 
     # TODO: Log results via mitmproxy.ctx.log
