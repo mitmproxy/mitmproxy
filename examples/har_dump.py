@@ -70,8 +70,7 @@ def response(flow):
     # Timings set to -1 will be ignored as per spec.
     full_time = sum(v for v in timings.values() if v > -1)
 
-    started_date_time = datetime.utcfromtimestamp(
-        flow.request.timestamp_start).replace(tzinfo=pytz.timezone("UTC")).isoformat()
+    started_date_time = format_datetime(datetime.utcfromtimestamp(flow.request.timestamp_start))
 
     # Size calculations
     response_body_size = len(flow.response.content)
@@ -127,6 +126,10 @@ def done():
     # TODO: Log results via mitmproxy.ctx.log
 
 
+def format_datetime(dt):
+    return dt.replace(tzinfo=pytz.timezone("UTC")).isoformat()
+
+
 def format_cookies(cookies):
     cookie_list = []
 
@@ -135,8 +138,20 @@ def format_cookies(cookies):
             "name": name,
             "value": value,
         }
-        cookie_har.update(attrs)
-        # print(attrs)
+
+        # HAR only needs some attributes
+        for key in ["path", "domain", "comment"]:
+            if key in attrs:
+                cookie_har[key] = attrs[key]
+
+        # These keys need to be boolean!
+        for key in ["httpOnly", "secure"]:
+            cookie_har[key] = bool(key in attrs)
+
+        # Expiration time needs to be formatted
+        expire_ts = cookies.get_expiration_ts(attrs)
+        if expire_ts:
+            cookie_har["expires"] = format_datetime(datetime.fromtimestamp(expire_ts))
 
         cookie_list.append(cookie_har)
 
