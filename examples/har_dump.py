@@ -93,7 +93,7 @@ def response(flow):
     response_body_decoded_size = len(flow.response.content)
     response_body_compression = response_body_decoded_size - response_body_size
 
-    HAR["log"]["entries"].append({
+    entry = {
         "startedDateTime": started_date_time,
         "time": full_time,
         "request": {
@@ -123,7 +123,16 @@ def response(flow):
         },
         "cache": {},
         "timings": timings,
-    })
+    }
+
+    if flow.request.method == "POST":
+        entry["request"]["postData"] = {
+            "mimeType": flow.request.headers.get("Content-Type", "").split(";")[0],
+            "text": flow.request.content,
+            "params": name_value(flow.request.urlencoded_form)
+        }
+
+    HAR["log"]["entries"].append(entry)
 
 
 def done():
