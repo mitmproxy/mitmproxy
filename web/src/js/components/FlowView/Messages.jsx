@@ -216,7 +216,7 @@ ErrorView.propTypes = {
 
 export function ErrorView({ flow }) {
     return (
-        <section>
+        <section className="error">
             <div className="alert alert-warning">
                 {flow.error.msg}
                 <div>

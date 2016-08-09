@@ -16,8 +16,23 @@
     section {
         display: flex;
         flex-direction: column;
-        padding: 0 !important;
+        >article{
+            overflow: auto;
+            padding: 5px 12px 0;
+        }
+        >footer {
+            box-shadow: 0 0 3px gray;
+            padding: 2px;
+            margin: 0;
+            height:23px;
+        }
     }
+
+    section.detail section.error{
+        overflow: auto;
+        padding: 5px 12px 0;
+    }
+
 
     .first-line {
         .monospace();
@@ -41,19 +56,6 @@
     hr {
         margin: 0 0 5px;
     }
-
-    article {
-        overflow: auto;
-        padding: 5px 12px 0;
-    }
-
-    footer {
-        box-shadow: 0 0 3px gray;
-        padding: 2px;
-        margin: 0;
-        height:23px;
-    }
-
 }
 
 
