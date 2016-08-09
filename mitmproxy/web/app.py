@@ -345,24 +345,6 @@ class FlowContentView(RequestHandler):
     def get(self, flow_id, message, content_view):
         message = getattr(self.flow, message)
 
-        original_cd = message.headers.get("Content-Disposition", None)
-        filename = None
-        if original_cd:
-            filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)
-            if filename:
-                filename = filename.group(1)
-        if not filename:
-            filename = self.flow.request.path.split("?")[0].split("/")[-1]
-
-        filename = re.sub(r"[^\w\" \.\-\(\)]", "", filename)
-        cd = "attachment; filename={}".format(filename)
-        self.set_header("Content-Disposition", cd)
-        self.set_header("Content-Type", "application/json")
-        self.set_header("X-Content-Type-Options", "nosniff")
-        self.set_header("X-Frame-Options", "DENY")
-
-        self.set_header("Content-Encoding", "")
-
         description, lines, error = contentviews.get_message_content_view(
             contentviews.get(content_view.replace('_', ' ')), message
         )

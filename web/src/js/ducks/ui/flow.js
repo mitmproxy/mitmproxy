@@ -10,15 +10,13 @@ export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              UPDATE_EDIT                    = 'UI_FLOWVIEW_UPDATE_EDIT',
              UPLOAD_CONTENT                 = 'UI_FLOWVIEW_UPLOAD_CONTENT',
              SET_SHOW_FULL_CONTENT          = 'UI_SET_SHOW_FULL_CONTENT',
-             SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION",
-             SET_CONTENT_VIEW_SELECTOR      = "UI_SET_CONTENT_VIEW_SELECTOR"
+             SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION"
 
 
 const defaultState = {
     displayLarge: false,
     contentViewDescription: '',
     showFullContent: false,
-    isContentViewSelectorOpen: false,
     modifiedFlow: false,
     contentView: 'Auto',
     tab: 'request',
@@ -81,13 +79,6 @@ export default function reducer(state = defaultState, action) {
                 showFullContent: action.show
             }
 
-
-        case SET_CONTENT_VIEW_SELECTOR:
-            return {
-                ...state,
-                isContentViewSelectorOpen: action.contentViewSelector
-            }
-
         case SET_TAB:
             return {
                 ...state,
@@ -139,10 +130,6 @@ export function setContentViewDescription(description) {
 
 export function setShowFullContent(show) {
     return { type: SET_SHOW_FULL_CONTENT, show }
-}
-
-export function setContentViewSelectorOpen(open){
-    return {type: SET_CONTENT_VIEW_SELECTOR, contentViewSelector: open}
 }
 
 export function updateEdit(update) {

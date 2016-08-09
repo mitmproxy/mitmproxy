@@ -14,7 +14,9 @@
     }
 
     section {
-        padding: 5px 12px;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
     }
 
     .first-line {
@@ -40,25 +42,20 @@
         margin: 0 0 5px;
     }
 
+    article {
+        overflow: auto;
+        padding: 5px 12px 0;
+    }
+
+    footer {
+        box-shadow: 0 0 3px gray;
+        padding: 2px;
+        margin: 0;
+        height:23px;
+    }
+
 }
 
-.flowview-container{
-    display: flex;
-    flex-direction: column;
-    padding: 0 !important;
-}
-
-.flowview-body{
-    overflow: auto;
-    padding: 5px 12px 0;
-}
-
-.flowview-footer{
-    box-shadow: 0 0 3px gray;
-    padding: 2px;
-    margin: 0;
-    height:23px;
-}
 
 .inline-input {
     display: inline;

@@ -7,9 +7,9 @@ Button.propTypes = {
     icon: PropTypes.string
 }
 
-export default function Button({ onClick, text, icon, disabled, isXs, className }) {
+export default function Button({ onClick, text, icon, disabled, className }) {
     return (
-        <div className={classnames(className, 'btn btn-default', { 'btn-xs': isXs})}
+        <div className={classnames(className, 'btn btn-default')}
              onClick={onClick}
              disabled={disabled}>
             {icon && (<i className={"fa fa-fw " + icon}/> )}

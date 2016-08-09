@@ -2,8 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import classnames from 'classnames'
 import { connect } from 'react-redux'
 import * as ContentViews from './ContentViews'
-import { setContentView, setContentViewSelectorOpen } from "../../ducks/ui/flow";
-
+import { setContentView } from "../../ducks/ui/flow";
 
 function ViewItem({ name, setContentView, children }) {
     return (
@@ -29,24 +28,25 @@ class ViewSelector extends Component {
       constructor(props, context) {
         super(props, context)
         this.close = this.close.bind(this)
+        this.state = {open: false}
     }
     close() {
-        this.props.setContentViewSelectorOpen(false)
+        this.setState({open: false})
         document.removeEventListener('click', this.close)
     }
 
     onDropdown(e){
         e.preventDefault()
-        this.props.setContentViewSelectorOpen(!this.props.isContentViewSelectorOpen)
+        this.setState({open: !this.state.open})
         document.addEventListener('click', this.close)
     }
 
     render() {
-        const {contentViews, activeView, isEdit, isContentViewSelectorOpen, setContentViewSelectorOpen, setContentView} = this.props
+        const {contentViews, activeView, isEdit, setContentView} = this.props
         let edit = ContentViews.Edit.displayName
 
         return (
-            <div className={classnames('dropup pull-left', { open: isContentViewSelectorOpen })}>
+            <div className={classnames('dropup pull-left', { open: this.state.open })}>
                 <a className="btn btn-default btn-xs"
                    onClick={ e => this.onDropdown(e) }
                    href="#">
@@ -74,9 +74,7 @@ export default connect (
         contentViews: state.settings.contentViews,
         activeView: state.ui.flow.contentView,
         isEdit: !!state.ui.flow.modifiedFlow,
-        isContentViewSelectorOpen: state.ui.flow.isContentViewSelectorOpen
     }), {
         setContentView,
-        setContentViewSelectorOpen
     }
 )(ViewSelector)

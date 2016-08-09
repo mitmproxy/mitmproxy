@@ -37,6 +37,7 @@ class ViewServer extends Component {
     componentWillMount(){
         this.setContentView(this.props)
     }
+
     componentWillReceiveProps(nextProps){
         this.setContentView(nextProps)
     }

@@ -84,8 +84,8 @@ export class Request extends Component {
         const { flow, isEdit, updateFlow, uploadContent } = this.props
         let noContent =  !isEdit && (flow.request.contentLength == 0 || flow.request.contentLength == null)
         return (
-            <section className="request flowview-container">
-                <div className="flowview-body">
+            <section className="request">
+                <article>
                     <ToggleEdit/>
                     <RequestLine
                         flow={flow}
@@ -103,14 +103,16 @@ export class Request extends Component {
                         flow={flow}
                         onContentChange={content => updateFlow({ request: {content}})}
                         message={flow.request}/>
-                </div>
-                <div hidden={noContent} className="flowview-footer">
-                    <ContentViewOptions
-                        flow={flow}
-                        readonly={!isEdit}
-                        message={flow.request}
-                        uploadContent={content => uploadContent(flow, content, "request")}/>
-                </div>
+                </article>
+                {!noContent &&
+                    <footer>
+                        <ContentViewOptions
+                            flow={flow}
+                            readonly={!isEdit}
+                            message={flow.request}
+                            uploadContent={content => uploadContent(flow, content, "request")}/>
+                    </footer>
+                }
             </section>
         )
     }
@@ -149,8 +151,8 @@ export class Response extends Component {
         let noContent =  !isEdit && (flow.response.contentLength == 0 || flow.response.contentLength == null)
 
         return (
-            <section className="response flowview-container">
-                <div className="flowview-body">
+            <section className="response">
+                <article>
                     <ToggleEdit/>
                     <ResponseLine
                         flow={flow}
@@ -168,14 +170,16 @@ export class Response extends Component {
                         onContentChange={content => updateFlow({ response: {content}})}
                         message={flow.response}
                     />
-                </div>
-                <div hidden={noContent} className="flowview-footer">
-                    <ContentViewOptions
-                        flow={flow}
-                        message={flow.response}
-                        uploadContent={content => uploadContent(flow, content, "response")}
-                        readonly={!isEdit}/>
-                </div>
+                </article>
+                {!noContent &&
+                    <footer >
+                        <ContentViewOptions
+                            flow={flow}
+                            message={flow.response}
+                            uploadContent={content => uploadContent(flow, content, "response")}
+                            readonly={!isEdit}/>
+                    </footer>
+                }
             </section>
         )
     }
