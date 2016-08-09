@@ -207,32 +207,29 @@ def handler(f):
         # acking is ours. If not, it's someone else's and we ignore it.
         handling = False
         # We're the first handler - ack responsibility is ours
-        if not message.reply.handled:
+        if message.reply.state == "unhandled":
             handling = True
-            message.reply.handled = True
+            message.reply.handle()
 
         with master.handlecontext():
             ret = f(master, message)
             if handling:
                 master.addons(f.__name__, message)
 
-        if handling and not message.reply.acked and not message.reply.taken:
-            message.reply.ack()
-
         # Reset the handled flag - it's common for us to feed the same object
         # through handlers repeatedly, so we don't want this to persist across
         # calls.
-        if handling:
-            if not message.reply.taken:
-                message.reply.commit()
-            message.reply.handled = False
+        if handling and not message.reply.taken:
+            if message.reply.value == NO_REPLY:
+                message.reply.ack()
+            message.reply.commit()
         return ret
     # Mark this function as a handler wrapper
     wrapper.__dict__["__handler"] = True
     return wrapper
 
 
-NO_REPLY = object()
+NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
 
 
 class Reply(object):
@@ -244,14 +241,37 @@ class Reply(object):
     def __init__(self, obj):
         self.obj = obj
         self.q = queue.Queue()
-        # Has this message been acked?
-        self.acked = False
-        # What's the ack message?
-        self.ack_message = NO_REPLY
-        # Has the user taken responsibility for ack-ing?
-        self.taken = False
-        # Has a handler taken responsibility for ack-ing?
-        self.handled = False
+
+        self.state = "unhandled"  # "unhandled" -> "handled" -> "taken" -> "committed"
+        self.value = NO_REPLY  # holds the reply value. May change before things are actually commited.
+
+    def handle(self):
+        """
+        Reply are handled by controller.handlers, which may be nested. The first handler takes
+        responsibility and handles the reply.
+        """
+        if self.state != "unhandled":
+            raise exceptions.ControlException("Message is {}, but expected it to be unhandled.".format(self.state))
+        self.state = "handled"
+
+    def take(self):
+        """
+        Scripts or other parties make "take" a reply out of a normal flow.
+        For example, intercepted flows are taken out so that the connection thread does not proceed.
+        """
+        if self.state != "handled":
+            raise exceptions.ControlException("Message is {}, but expected it to be handled.".format(self.state))
+        self.state = "taken"
+
+    def commit(self):
+        """
+        Ultimately, messages are commited. This is done either automatically by the handler
+        if the message is not taken or manually by the entity which called .take().
+        """
+        if self.state != "taken":
+            raise exceptions.ControlException("Message is {}, but expected it to be taken.".format(self.state))
+        self.state = "committed"
+        self.q.put(self.value)
 
     def ack(self):
         self.send(self.obj)
@@ -259,52 +279,32 @@ class Reply(object):
     def kill(self):
         self.send(exceptions.Kill)
 
-    def take(self):
-        self.taken = True
-
     def send(self, msg):
-        if self.acked:
-            raise exceptions.ControlException("Message already acked.")
-        if self.ack_message != NO_REPLY:
-            # We may have overrides for this later.
-            raise exceptions.ControlException("Message already has a response.")
-        self.acked = True
-        self.ack_message = msg
-        if self.taken:
-            self.commit()
-
-    def commit(self):
-        """
-        This is called by the handler to actually send the ack message.
-        """
-        if self.ack_message == NO_REPLY:
-            raise exceptions.ControlException("Message has no response.")
-        self.q.put(self.ack_message)
+        if self.state not in ("handled", "taken"):
+            raise exceptions.ControlException(
+                "Reply is currently {}, did not expect a call to .send().".format(self.state)
+            )
+        if self.value is not NO_REPLY:
+            raise exceptions.ControlException("There is already a reply for this message.")
+        self.value = msg
 
     def __del__(self):
-        if not self.acked:
+        if self.state != "comitted":
             # This will be ignored by the interpreter, but emit a warning
-            raise exceptions.ControlException("Un-acked message: %s" % self.obj)
+            raise exceptions.ControlException("Uncomitted message: %s" % self.obj)
 
 
-class DummyReply(object):
+class DummyReply(Reply):
     """
-    A reply object that does nothing. Useful when we need an object to seem
-    like it has a channel, and during testing.
+    A reply object that is not connected to anything. In contrast to regular Reply objects,
+    DummyReply objects are reset to "unhandled" after a commit so that they can be used
+    multiple times. Useful when we need an object to seem like it has a channel,
+    and during testing.
     """
     def __init__(self):
-        self.acked = False
-        self.taken = False
-        self.handled = False
+        super(DummyReply, self).__init__(None)
 
-    def kill(self):
-        self.send(None)
-
-    def ack(self):
-        self.send(None)
-
-    def take(self):
-        self.taken = True
-
-    def send(self, msg):
-        self.acked = True
+    def commit(self):
+        super(DummyReply, self).commit()
+        self.state = "unhandled"
+        self.value = NO_REPLY
