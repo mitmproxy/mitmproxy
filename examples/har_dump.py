@@ -17,6 +17,10 @@ from netlib.http import cookies
 
 HAR = {}
 
+# A list of server seen till now is maintained so we can avoid
+# using 'connect' time for entries that use an existing connection.
+SERVERS_SEEN = set()
+
 
 def start():
     """
@@ -46,21 +50,33 @@ def response(flow):
     """
        Called when a server response has been received.
     """
-    # TODO: SSL and Connect Timings
 
-    # Calculate raw timings from timestamps.
+    # -1 indicates that these values do not apply to current request
+    ssl_time = -1
+    connect_time = -1
 
-    # DNS timings can not be calculated for lack of a way to measure it.
-    # The same goes for HAR blocked.
+    if flow.server_conn and flow.server_conn not in SERVERS_SEEN:
+        connect_time = (flow.server_conn.timestamp_tcp_setup -
+                        flow.server_conn.timestamp_start)
 
+        if flow.server_conn.timestamp_ssl_setup is not None:
+            ssl_time = (flow.server_conn.timestamp_ssl_setup -
+                        flow.server_conn.timestamp_tcp_setup)
+
+        SERVERS_SEEN.add(flow.server_conn)
+
+    # Calculate raw timings from timestamps. DNS timings can not be calculated
+    # for lack of a way to measure it. The same goes for HAR blocked.
     # mitmproxy will open a server connection as soon as it receives the host
     # and port from the client connection. So, the time spent waiting is actually
-    # spent waiting between request.timestamp_end and response.timestamp_start thus it
-    # correlates to HAR wait instead.
+    # spent waiting between request.timestamp_end and response.timestamp_start
+    # thus it correlates to HAR wait instead.
     timings_raw = {
         'send': flow.request.timestamp_end - flow.request.timestamp_start,
         'receive': flow.response.timestamp_end - flow.response.timestamp_start,
         'wait': flow.response.timestamp_start - flow.request.timestamp_end,
+        'connect': connect_time,
+        'ssl': ssl_time,
     }
 
     # HAR timings are integers in ms, so we re-encode the raw timings to that format.
