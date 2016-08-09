@@ -120,10 +120,12 @@ def done():
         mitmproxy.ctx.log(pprint.pformat(HAR))
     # TODO: .zhar compression
     else:
-        with open(dump_file, "w") as f:
-            f.write(json.dumps(HAR, indent=2))
+        json_dump = json.dumps(HAR, indent=2)
 
-    # TODO: Log results via mitmproxy.ctx.log
+        with open(dump_file, "w") as f:
+            f.write(json_dump)
+
+        mitmproxy.ctx.log("HAR log finished (wrote %s bytes to file)" % len(json_dump))
 
 
 def format_datetime(dt):
