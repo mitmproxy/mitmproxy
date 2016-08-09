@@ -21,6 +21,18 @@ def test_gzip():
         encoding.decode(b"bogus", "gzip")
 
 
+def test_brotli():
+    assert b"string" == encoding.decode(
+        encoding.encode(
+            b"string",
+            "br"
+        ),
+        "br"
+    )
+    with tutils.raises(ValueError):
+        encoding.decode(b"bogus", "br")
+
+
 def test_deflate():
     assert b"string" == encoding.decode(
         encoding.encode(

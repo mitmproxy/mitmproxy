@@ -5,10 +5,10 @@ environment:
   CI_DEPS: codecov>=2.0.5
   CI_COMMANDS: codecov
   matrix:
-    - PYTHON: "C:\\Python27"
-      TOXENV: "py27"
     - PYTHON: "C:\\Python35"
       TOXENV: "py35"
+    - PYTHON: "C:\\Python27"
+      TOXENV: "py27"
 
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
@@ -35,8 +35,8 @@ deploy_script:
       ) {
       pip install -U virtualenv
       .\dev.ps1
-      cmd /c "python .\release\rtool.py bdist 2>&1"
-      python .\release\rtool.py upload-snapshot --bdist
+      cmd /c "python -u .\release\rtool.py bdist 2>&1"
+      python -u .\release\rtool.py upload-snapshot --bdist --wheel
     }
 
 cache:

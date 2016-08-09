@@ -104,7 +104,7 @@ class DumpMaster(flow.FlowMaster):
             click.secho(
                 e,
                 file=self.options.tfile,
-                fg="red" if level == "error" else None,
+                fg=dict(error="red", warn="yellow").get(level),
                 dim=(level == "debug"),
                 err=(level == "error")
             )
@@ -118,5 +118,6 @@ class DumpMaster(flow.FlowMaster):
 
     def run(self):  # pragma: no cover
         if self.options.rfile and not self.options.keepserving:
+            self.addons.done()
             return
         super(DumpMaster, self).run()

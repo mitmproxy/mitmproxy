@@ -8,6 +8,10 @@ import time
 import traceback
 
 import binascii
+
+from typing import Optional  # noqa
+
+from netlib import strutils
 from six.moves import range
 
 import certifi
@@ -35,7 +39,7 @@ EINTR = 4
 if os.environ.get("NO_ALPN"):
     HAS_ALPN = False
 else:
-    HAS_ALPN = OpenSSL._util.lib.Cryptography_HAS_ALPN
+    HAS_ALPN = SSL._lib.Cryptography_HAS_ALPN
 
 # To enable all SSL methods use: SSLv23
 # then add options to disable certain methods
@@ -287,16 +291,7 @@ class Reader(_FileLike):
                 raise exceptions.TcpException(repr(e))
         elif isinstance(self.o, SSL.Connection):
             try:
-                if tuple(int(x) for x in OpenSSL.__version__.split(".")[:2]) > (0, 15):
-                    return self.o.recv(length, socket.MSG_PEEK)
-                else:
-                    # TODO: remove once a new version is released
-                    # Polyfill for pyOpenSSL <= 0.15.1
-                    # Taken from https://github.com/pyca/pyopenssl/commit/1d95dea7fea03c7c0df345a5ea30c12d8a0378d2
-                    buf = SSL._ffi.new("char[]", length)
-                    result = SSL._lib.SSL_peek(self.o._ssl, buf, length)
-                    self.o._raise_ssl_error(self.o._ssl, result)
-                    return SSL._ffi.buffer(buf, result)[:]
+                return self.o.recv(length, socket.MSG_PEEK)
             except SSL.Error as e:
                 six.reraise(exceptions.TlsException, exceptions.TlsException(str(e)), sys.exc_info()[2])
         else:
@@ -511,6 +506,7 @@ class _Connection(object):
                             alpn_protos=None,
                             alpn_select=None,
                             alpn_select_callback=None,
+                            sni=None,
                             ):
         """
         Creates an SSL Context.
@@ -532,8 +528,14 @@ class _Connection(object):
         if verify_options is not None:
             def verify_cert(conn, x509, errno, err_depth, is_cert_verified):
                 if not is_cert_verified:
-                    self.ssl_verification_error = dict(errno=errno,
-                                                       depth=err_depth)
+                    self.ssl_verification_error = exceptions.InvalidCertificateException(
+                        "Certificate Verification Error for {}: {} (errno: {}, depth: {})".format(
+                            sni,
+                            strutils.native(SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(errno)), "utf8"),
+                            errno,
+                            err_depth
+                        )
+                    )
                 return is_cert_verified
 
             context.set_verify(verify_options, verify_cert)
@@ -609,7 +611,7 @@ class TCPClient(_Connection):
         self.source_address = source_address
         self.cert = None
         self.server_certs = []
-        self.ssl_verification_error = None
+        self.ssl_verification_error = None  # type: Optional[exceptions.InvalidCertificateException]
         self.sni = None
 
     @property
@@ -671,6 +673,7 @@ class TCPClient(_Connection):
 
         context = self.create_ssl_context(
             alpn_protos=alpn_protos,
+            sni=sni,
             **sslctx_kwargs
         )
         self.connection = SSL.Connection(context, self.connection)
@@ -682,14 +685,14 @@ class TCPClient(_Connection):
             self.connection.do_handshake()
         except SSL.Error as v:
             if self.ssl_verification_error:
-                raise exceptions.InvalidCertificateException("SSL handshake error: %s" % repr(v))
+                raise self.ssl_verification_error
             else:
                 raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
         else:
             # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
             # certificate validation failure
-            if verification_mode == SSL.VERIFY_PEER and self.ssl_verification_error is not None:
-                raise exceptions.InvalidCertificateException("SSL handshake error: certificate verify failed")
+            if verification_mode == SSL.VERIFY_PEER and self.ssl_verification_error:
+                raise self.ssl_verification_error
 
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
 
@@ -710,9 +713,14 @@ class TCPClient(_Connection):
                 hostname = "no-hostname"
             ssl_match_hostname.match_hostname(crt, hostname)
         except (ValueError, ssl_match_hostname.CertificateError) as e:
-            self.ssl_verification_error = dict(depth=0, errno="Invalid Hostname")
+            self.ssl_verification_error = exceptions.InvalidCertificateException(
+                "Certificate Verification Error for {}: {}".format(
+                    sni or repr(self.address),
+                    str(e)
+                )
+            )
             if verification_mode == SSL.VERIFY_PEER:
-                raise exceptions.InvalidCertificateException("Presented certificate for {} is not valid: {}".format(sni, str(e)))
+                raise self.ssl_verification_error
 
         self.ssl_established = True
         self.rfile.set_descriptor(self.connection)

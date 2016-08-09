@@ -83,24 +83,18 @@ class ProxyConfig:
         options.changed.connect(self.configure)
 
     def configure(self, options, updated):
-        conflict = all(
-            [
-                options.add_upstream_certs_to_client_chain,
-                options.ssl_verify_upstream_cert
-            ]
-        )
-        if conflict:
+        # type: (mitmproxy.options.Options, Any) -> None
+        if options.add_upstream_certs_to_client_chain and not options.ssl_insecure:
             raise exceptions.OptionsError(
-                "The verify-upstream-cert and add-upstream-certs-to-client-chain "
-                "options are mutually exclusive. If upstream certificates are verified "
-                "then extra upstream certificates are not available for inclusion "
-                "to the client chain."
+                "The verify-upstream-cert requires certificate verification to be disabled. "
+                "If upstream certificates are verified then extra upstream certificates are "
+                "not available for inclusion to the client chain."
             )
 
-        if options.ssl_verify_upstream_cert:
-            self.openssl_verification_mode_server = SSL.VERIFY_PEER
-        else:
+        if options.ssl_insecure:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
+        else:
+            self.openssl_verification_mode_server = SSL.VERIFY_PEER
 
         self.check_ignore = HostMatcher(options.ignore_hosts)
         self.check_tcp = HostMatcher(options.tcp_hosts)

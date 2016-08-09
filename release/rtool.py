@@ -1,29 +1,30 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import absolute_import, print_function, division
-from os.path import join
+
 import contextlib
+import fnmatch
 import os
+import platform
+import runpy
+import shlex
 import shutil
 import subprocess
-import re
-import shlex
-import runpy
-import zipfile
+import sys
 import tarfile
-import platform
+import zipfile
+from os.path import join, abspath, normpath, dirname, exists, basename
+
 import click
 import pysftp
-import fnmatch
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
-import sys
-
 if platform.system() == "Windows":
     VENV_BIN = "Scripts"
 else:
     VENV_BIN = "bin"
 
+# ZipFile and tarfile have slightly different APIs. Fix that.
 if platform.system() == "Windows":
     def Archive(name):
         a = zipfile.ZipFile(name, "w")
@@ -33,13 +34,13 @@ else:
     def Archive(name):
         return tarfile.open(name, "w:gz")
 
-RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
-DIST_DIR = join(RELEASE_DIR, "dist")
-ROOT_DIR = os.path.normpath(join(RELEASE_DIR, ".."))
-RELEASE_SPEC_DIR = join(RELEASE_DIR, "specs")
-VERSION_FILE = join(ROOT_DIR, "netlib/version.py")
+ROOT_DIR = abspath(join(dirname(__file__), ".."))
+RELEASE_DIR = join(ROOT_DIR, "release")
 
 BUILD_DIR = join(RELEASE_DIR, "build")
+DIST_DIR = join(RELEASE_DIR, "dist")
+
+PYINSTALLER_SPEC = join(RELEASE_DIR, "specs")
 PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
 PYINSTALLER_DIST = join(BUILD_DIR, "binaries")
 
@@ -47,27 +48,35 @@ VENV_DIR = join(BUILD_DIR, "venv")
 VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
 VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 
-project = {
-    "name": "mitmproxy",
-    "tools": ["pathod", "pathoc", "mitmproxy", "mitmdump", "mitmweb"],
-    "bdists": {
-        "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-        "pathod": ["pathoc", "pathod"]
-    },
-    "dir": ROOT_DIR,
-    "python_version": "py2.py3",
+# Project Configuration
+VERSION_FILE = join(ROOT_DIR, "netlib", "version.py")
+PROJECT_NAME = "mitmproxy"
+PYTHON_VERSION = "py2.py3"
+BDISTS = {
+    "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
+    "pathod": ["pathoc", "pathod"]
 }
 if platform.system() == "Windows":
-    project["tools"].remove("mitmproxy")
-    project["bdists"]["mitmproxy"].remove("mitmproxy")
+    BDISTS["mitmproxy"].remove("mitmproxy")
+
+TOOLS = [
+    tool
+    for tools in BDISTS.values()
+    for tool in tools
+]
 
 
-def get_version():
+def get_version() -> str:
     return runpy.run_path(VERSION_FILE)["VERSION"]
 
 
-def get_snapshot_version():
-    last_tag, tag_dist, commit = git("describe --tags --long").strip().rsplit(b"-", 2)
+def git(args: str) -> str:
+    with chdir(ROOT_DIR):
+        return subprocess.check_output(["git"] + shlex.split(args)).decode()
+
+
+def get_snapshot_version() -> str:
+    last_tag, tag_dist, commit = git("describe --tags --long").strip().rsplit("-", 2)
     tag_dist = int(tag_dist)
     if tag_dist == 0:
         return get_version()
@@ -76,11 +85,11 @@ def get_snapshot_version():
         return "{version}dev{tag_dist:04}-0x{commit}".format(
             version=get_version(),  # this should already be the next version
             tag_dist=tag_dist,
-            commit=commit.decode()
+            commit=commit
         )
 
 
-def archive_name(project):
+def archive_name(bdist: str) -> str:
     platform_tag = {
         "Darwin": "osx",
         "Windows": "win32",
@@ -91,18 +100,18 @@ def archive_name(project):
     else:
         ext = "tar.gz"
     return "{project}-{version}-{platform}.{ext}".format(
-        project=project,
+        project=bdist,
         version=get_version(),
         platform=platform_tag,
         ext=ext
     )
 
 
-def wheel_name():
+def wheel_name() -> str:
     return "{project}-{version}-{py_version}-none-any.whl".format(
-        project=project["name"],
+        project=PROJECT_NAME,
         version=get_version(),
-        py_version=project["python_version"]
+        py_version=PYTHON_VERSION
     )
 
 
@@ -119,16 +128,11 @@ def empty_pythonpath():
 
 
 @contextlib.contextmanager
-def chdir(path):
+def chdir(path: str):
     old_dir = os.getcwd()
     os.chdir(path)
     yield
     os.chdir(old_dir)
-
-
-def git(args):
-    with chdir(ROOT_DIR):
-        return subprocess.check_output(["git"] + shlex.split(args))
 
 
 @click.group(chain=True)
@@ -147,95 +151,79 @@ def contributors():
     with chdir(ROOT_DIR):
         print("Updating CONTRIBUTORS...")
         contributors_data = git("shortlog -n -s")
-        with open("CONTRIBUTORS", "w") as f:
-            f.write(contributors_data)
+        with open("CONTRIBUTORS", "wb") as f:
+            f.write(contributors_data.encode())
 
 
-@cli.command("set-version")
-@click.argument('version')
-def set_version(version):
+@cli.command("wheel")
+def make_wheel():
     """
-    Update version information
-    """
-    print("Update versions...")
-    version = ", ".join(version.split("."))
-    print("Update %s..." % VERSION_FILE)
-    with open(VERSION_FILE, "rb") as f:
-        content = f.read()
-    new_content = re.sub(
-        r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version,
-        content
-    )
-    with open(VERSION_FILE, "wb") as f:
-        f.write(new_content)
-
-
-@cli.command("wheels")
-def wheels():
-    """
-    Build wheels
+    Build wheel
     """
     with empty_pythonpath():
-        print("Building release...")
-        if os.path.exists(DIST_DIR):
+        if exists(DIST_DIR):
             shutil.rmtree(DIST_DIR)
 
-        print("Creating wheel for %s ..." % project["name"])
+        print("Creating wheel...")
         subprocess.check_call(
             [
                 "python", "./setup.py", "-q",
                 "bdist_wheel", "--dist-dir", DIST_DIR, "--universal"
             ],
-            cwd=project["dir"]
+            cwd=ROOT_DIR
         )
 
         print("Creating virtualenv for test install...")
-        if os.path.exists(VENV_DIR):
+        if exists(VENV_DIR):
             shutil.rmtree(VENV_DIR)
         subprocess.check_call(["virtualenv", "-q", VENV_DIR])
 
         with chdir(DIST_DIR):
-            print("Installing %s..." % project["name"])
+            print("Install wheel into virtualenv...")
             # lxml...
             if platform.system() == "Windows" and sys.version_info[0] == 3:
-                subprocess.check_call([VENV_PIP, "install", "-q", "https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl"])
+                subprocess.check_call(
+                    [VENV_PIP, "install", "-q", "https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl"]
+                )
             subprocess.check_call([VENV_PIP, "install", "-q", wheel_name()])
 
-            print("Running binaries...")
-            for tool in project["tools"]:
+            print("Running tools...")
+            for tool in TOOLS:
                 tool = join(VENV_DIR, VENV_BIN, tool)
                 print("> %s --version" % tool)
-                print(subprocess.check_output([tool, "--version"]))
+                print(subprocess.check_output([tool, "--version"]).decode())
 
             print("Virtualenv available for further testing:")
-            print("source %s" % os.path.normpath(join(VENV_DIR, VENV_BIN, "activate")))
+            print("source %s" % normpath(join(VENV_DIR, VENV_BIN, "activate")))
 
 
 @cli.command("bdist")
-@click.option("--use-existing-wheels/--no-use-existing-wheels", default=False)
+@click.option("--use-existing-wheel/--no-use-existing-wheel", default=False)
 @click.argument("pyinstaller_version", envvar="PYINSTALLER_VERSION", default="PyInstaller~=3.1.1")
+@click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION", default="setuptools>=25.1.0,!=25.1.1")
 @click.pass_context
-def bdist(ctx, use_existing_wheels, pyinstaller_version):
+def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version):
     """
     Build a binary distribution
     """
-    if os.path.exists(PYINSTALLER_TEMP):
+    if exists(PYINSTALLER_TEMP):
         shutil.rmtree(PYINSTALLER_TEMP)
-    if os.path.exists(PYINSTALLER_DIST):
+    if exists(PYINSTALLER_DIST):
         shutil.rmtree(PYINSTALLER_DIST)
 
-    if not use_existing_wheels:
-        ctx.invoke(wheels)
+    if not use_existing_wheel:
+        ctx.invoke(make_wheel)
 
-    print("Installing PyInstaller...")
-    subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version])
+    print("Installing PyInstaller and setuptools...")
+    subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version, setuptools_version])
+    print(subprocess.check_output([VENV_PIP, "freeze"]).decode())
 
-    for bdist_project, tools in project["bdists"].items():
-        with Archive(join(DIST_DIR, archive_name(bdist_project))) as archive:
+    for bdist, tools in BDISTS.items():
+        with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
             for tool in tools:
                 # This is PyInstaller, so it messes up paths.
                 # We need to make sure that we are in the spec folder.
-                with chdir(RELEASE_SPEC_DIR):
+                with chdir(PYINSTALLER_SPEC):
                     print("Building %s binary..." % tool)
                     subprocess.check_call(
                         [
@@ -255,10 +243,10 @@ def bdist(ctx, use_existing_wheels, pyinstaller_version):
                 if platform.system() == "Windows":
                     executable += ".exe"
                 print("> %s --version" % executable)
-                subprocess.check_call([executable, "--version"])
+                print(subprocess.check_output([executable, "--version"]).decode())
 
-                archive.add(executable, os.path.basename(executable))
-        print("Packed {}.".format(archive_name(bdist_project)))
+                archive.add(executable, basename(executable))
+        print("Packed {}.".format(archive_name(bdist)))
 
 
 @cli.command("upload-release")
@@ -298,89 +286,49 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
                            username=user,
                            private_key=private_key,
                            private_key_pass=private_key_password) as sftp:
-
-            dir_name = "snapshots/v{}".format(get_version())
-            sftp.makedirs(dir_name)
-            with sftp.cd(dir_name):
-                files = []
-                if wheel:
-                    files.append(wheel_name())
-                for bdist in project["bdists"].keys():
+        dir_name = "snapshots/v{}".format(get_version())
+        sftp.makedirs(dir_name)
+        with sftp.cd(dir_name):
+            files = []
+            if wheel:
+                files.append(wheel_name())
+            if bdist:
+                for bdist in BDISTS.keys():
                     files.append(archive_name(bdist))
 
-                for f in files:
-                    local_path = join(DIST_DIR, f)
-                    remote_filename = f.replace(get_version(), get_snapshot_version())
-                    symlink_path = "../{}".format(f.replace(get_version(), "latest"))
+            for f in files:
+                local_path = join(DIST_DIR, f)
+                remote_filename = f.replace(get_version(), get_snapshot_version())
+                symlink_path = "../{}".format(f.replace(get_version(), "latest"))
 
-                    # Delete old versions
-                    old_version = f.replace(get_version(), "*")
-                    for f_old in sftp.listdir():
-                        if fnmatch.fnmatch(f_old, old_version):
-                            print("Removing {}...".format(f_old))
-                            sftp.remove(f_old)
+                # Upload new version
+                print("Uploading {} as {}...".format(f, remote_filename))
+                with click.progressbar(length=os.stat(local_path).st_size) as bar:
+                    # We hide the file during upload
+                    sftp.put(
+                        local_path,
+                        "." + remote_filename,
+                        callback=lambda done, total: bar.update(done - bar.pos)
+                    )
 
-                    # Upload new version
-                    print("Uploading {} as {}...".format(f, remote_filename))
-                    with click.progressbar(length=os.stat(local_path).st_size) as bar:
-                        sftp.put(
-                            local_path,
-                            "." + remote_filename,
-                            callback=lambda done, total: bar.update(done - bar.pos)
-                        )
-                        # We hide the file during upload.
-                        sftp.rename("." + remote_filename, remote_filename)
+                # Delete old versions
+                old_version = f.replace(get_version(), "*")
+                for f_old in sftp.listdir():
+                    if fnmatch.fnmatch(f_old, old_version):
+                        print("Removing {}...".format(f_old))
+                        sftp.remove(f_old)
 
-                    # update symlink for the latest release
-                    if sftp.lexists(symlink_path):
-                        print("Removing {}...".format(symlink_path))
-                        sftp.remove(symlink_path)
+                # Show new version
+                sftp.rename("." + remote_filename, remote_filename)
+
+                # update symlink for the latest release
+                if sftp.lexists(symlink_path):
+                    print("Removing {}...".format(symlink_path))
+                    sftp.remove(symlink_path)
+                if f != wheel_name():
+                    # "latest" isn't a proper wheel version, so this could not be installed.
+                    # https://github.com/mitmproxy/mitmproxy/issues/1065
                     sftp.symlink("v{}/{}".format(get_version(), remote_filename), symlink_path)
-
-
-@cli.command("wizard")
-@click.option('--next-version', prompt=True)
-@click.option('--username', prompt="PyPI Username")
-@click.password_option(confirmation_prompt=False, prompt="PyPI Password")
-@click.option('--repository', default="pypi")
-@click.pass_context
-def wizard(ctx, next_version, username, password, repository):
-    """
-    Interactive Release Wizard
-    """
-    is_dirty = git("status --porcelain")
-    if is_dirty:
-        raise RuntimeError("Repository is not clean.")
-
-    # update contributors file
-    ctx.invoke(contributors)
-
-    # Build test release
-    ctx.invoke(bdist)
-
-    try:
-        click.confirm("Please test the release now. Is it ok?", abort=True)
-    except click.Abort:
-        # undo changes
-        git("checkout CONTRIBUTORS")
-        raise
-
-    # Everything ok - let's ship it!
-    git("tag v{}".format(get_version()))
-    git("push --tags")
-    ctx.invoke(
-        upload_release,
-        username=username, password=password, repository=repository
-    )
-
-    click.confirm("Now please wait until CI has built binaries. Finished?")
-
-    # version bump commit
-    ctx.invoke(set_version, version=next_version)
-    git("commit -a -m \"bump version\"")
-    git("push")
-
-    click.echo("All done!")
 
 
 if __name__ == "__main__":

@@ -1,8 +1,9 @@
 import sys
+import re
 
 resolver = None
 
-if sys.platform == "linux2":
+if re.match(r"linux(?:2)?", sys.platform):
     from . import linux
     resolver = linux.Resolver
 elif sys.platform == "darwin":

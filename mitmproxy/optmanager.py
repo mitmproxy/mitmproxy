@@ -86,7 +86,10 @@ class OptManager(object):
         """
         if attr not in self._opts:
             raise KeyError("No such option: %s" % attr)
-        return lambda x: self.__setattr__(attr, x)
+
+        def setter(x):
+            setattr(self, attr, x)
+        return setter
 
     def toggler(self, attr):
         """
@@ -95,7 +98,10 @@ class OptManager(object):
         """
         if attr not in self._opts:
             raise KeyError("No such option: %s" % attr)
-        return lambda: self.__setattr__(attr, not getattr(self, attr))
+
+        def toggle():
+            setattr(self, attr, not getattr(self, attr))
+        return toggle
 
     def __repr__(self):
         options = pprint.pformat(self._opts, indent=4).strip(" {}")

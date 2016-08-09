@@ -48,6 +48,7 @@ class PEM(tornado.web.RequestHandler):
 
     def get(self):
         p = os.path.join(self.request.master.options.cadir, self.filename)
+        p = os.path.expanduser(p)
         self.set_header("Content-Type", "application/x-x509-ca-cert")
         self.set_header(
             "Content-Disposition",

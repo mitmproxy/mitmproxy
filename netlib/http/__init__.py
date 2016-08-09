@@ -9,6 +9,7 @@ from netlib.http import http1, http2, status_codes, multipart
 __all__ = [
     "Request",
     "Response",
+    "Message",
     "Headers", "parse_content_type",
     "decoded",
     "http1", "http2", "status_codes", "multipart",

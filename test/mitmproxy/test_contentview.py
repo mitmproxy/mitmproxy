@@ -224,7 +224,7 @@ def test_get_content_view():
         view_auto.side_effect = ValueError
 
         desc, lines, err = cv.get_content_view(
-            cv.get("JSON"),
+            cv.get("Auto"),
             b"[1, 2",
         )
         assert err

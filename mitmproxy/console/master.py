@@ -75,8 +75,8 @@ class ConsoleState(flow.State):
         self.update_focus()
         return f
 
-    def set_limit(self, limit):
-        ret = super(ConsoleState, self).set_limit(limit)
+    def set_view_filter(self, txt):
+        ret = super(ConsoleState, self).set_view_filter(txt)
         self.set_focus(self.focus)
         return ret
 
@@ -153,8 +153,8 @@ class ConsoleState(flow.State):
         last_focus, _ = self.get_focus()
         nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
 
-        self.last_filter = self.limit_txt
-        self.set_limit(marked_filter)
+        self.last_filter = self.filter_txt
+        self.set_view_filter(marked_filter)
 
         # Restore Focus
         if last_focus.marked:
@@ -171,7 +171,7 @@ class ConsoleState(flow.State):
         last_focus, _ = self.get_focus()
         nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
 
-        self.set_limit(self.last_filter)
+        self.set_view_filter(self.last_filter)
         self.last_filter = ""
 
         # Restore Focus
@@ -203,7 +203,7 @@ class Options(mitmproxy.options.Options):
             eventlog=False,  # type: bool
             follow=False,  # type: bool
             intercept=False,  # type: bool
-            limit=None,  # type: Optional[str]
+            filter=None,  # type: Optional[str]
             palette=None,  # type: Optional[str]
             palette_transparent=False,  # type: bool
             no_mouse=False,  # type: bool
@@ -212,7 +212,7 @@ class Options(mitmproxy.options.Options):
         self.eventlog = eventlog
         self.follow = follow
         self.intercept = intercept
-        self.limit = limit
+        self.filter = filter
         self.palette = palette
         self.palette_transparent = palette_transparent
         self.no_mouse = no_mouse
@@ -234,8 +234,8 @@ class ConsoleMaster(flow.FlowMaster):
             print("Intercept error: {}".format(r), file=sys.stderr)
             sys.exit(1)
 
-        if options.limit:
-            self.set_limit(options.limit)
+        if options.filter:
+            self.set_view_filter(options.filter)
 
         self.set_stream_large_bodies(options.stream_large_bodies)
 
@@ -258,6 +258,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
+        signals.replace_view_state.connect(self.sig_replace_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(options, *builtins.default_addons())
@@ -276,11 +277,11 @@ class ConsoleMaster(flow.FlowMaster):
         if self.options.verbosity < utils.log_tier(level):
             return
 
-        if level == "error":
+        if level in ("error", "warn"):
             signals.status_message.send(
-                message = "Error: %s" % str(e)
+                message = "{}: {}".format(level.title(), e)
             )
-            e = urwid.Text(("error", str(e)))
+            e = urwid.Text((level, str(e)))
         else:
             e = urwid.Text(str(e))
         self.logbuffer.append(e)
@@ -296,7 +297,19 @@ class ConsoleMaster(flow.FlowMaster):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
 
+    def sig_replace_view_state(self, sender):
+        """
+            A view has been pushed onto the stack, and is intended to replace
+            the current view rather tha creating a new stack entry.
+        """
+        if len(self.view_stack) > 1:
+            del self.view_stack[1]
+
     def sig_pop_view_state(self, sender):
+        """
+            Pop the top view off the view stack. If no more views will be left
+            after this, prompt for exit.
+        """
         if len(self.view_stack) > 1:
             self.view_stack.pop()
             self.loop.widget = self.view_stack[-1]
@@ -312,6 +325,9 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def sig_push_view_state(self, sender, window):
+        """
+            Push a new view onto the view stack.
+        """
         self.view_stack.append(window)
         self.loop.widget = window
         self.loop.draw_screen()
@@ -352,8 +368,8 @@ class ConsoleMaster(flow.FlowMaster):
 
     def toggle_eventlog(self):
         self.options.eventlog = not self.options.eventlog
-        signals.pop_view_state.send(self)
         self.view_flowlist()
+        signals.replace_view_state.send(self)
 
     def _readflows(self, path):
         """
@@ -656,8 +672,8 @@ class ConsoleMaster(flow.FlowMaster):
     def accept_all(self):
         self.state.accept_all(self)
 
-    def set_limit(self, txt):
-        v = self.state.set_limit(txt)
+    def set_view_filter(self, txt):
+        v = self.state.set_view_filter(txt)
         signals.flowlist_change.send(self)
         return v
 

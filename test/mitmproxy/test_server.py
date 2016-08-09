@@ -2,21 +2,20 @@ import os
 import socket
 import time
 import types
-from OpenSSL import SSL
-from netlib.exceptions import HttpReadDisconnect, HttpException
-from netlib.tcp import Address
 
 import netlib.tutils
+from mitmproxy import controller
+from mitmproxy import options
+from mitmproxy.builtins import script
+from mitmproxy.models import Error, HTTPResponse, HTTPFlow
+from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
+from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.http import authentication, http1
+from netlib.tcp import Address
 from netlib.tutils import raises
 from pathod import pathoc, pathod
-
-from mitmproxy.builtins import script
-from mitmproxy import controller
-from mitmproxy.proxy.config import HostMatcher, parse_server_spec
-from mitmproxy.models import Error, HTTPResponse, HTTPFlow
 
 from . import tutils, tservers
 
@@ -350,6 +349,15 @@ class TestHTTPSCertfile(tservers.HTTPProxyTest, CommonMixin):
         assert self.pathod("304")
 
 
+class TestHTTPSSecureByDefault:
+    def test_secure_by_default(self):
+        """
+        Certificate verification should be turned on by default.
+        """
+        default_opts = options.Options()
+        assert not default_opts.ssl_insecure
+
+
 class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
 
     """
@@ -357,26 +365,35 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
     """
     ssl = True
     ssloptions = pathod.SSLOptions(
-        cn=b"trusted-cert",
+        cn=b"example.mitmproxy.org",
         certs=[
-            ("trusted-cert", tutils.test_data.path("data/trusted-server.crt"))
-        ])
+            ("example.mitmproxy.org", tutils.test_data.path("data/servercert/trusted-leaf.pem"))
+        ]
+    )
+
+    def _request(self):
+        p = self.pathoc(sni="example.mitmproxy.org")
+        return p.request("get:/p/242")
 
     def test_verification_w_cadir(self):
         self.config.options.update(
-            ssl_verify_upstream_cert = True,
-            ssl_verify_upstream_trusted_cadir = tutils.test_data.path(
-                "data/trusted-cadir/"
-            )
+            ssl_insecure=False,
+            ssl_verify_upstream_trusted_cadir=tutils.test_data.path(
+                "data/servercert/"
+            ),
+            ssl_verify_upstream_trusted_ca=None,
         )
-        self.pathoc()
+        assert self._request().status_code == 242
 
     def test_verification_w_pemfile(self):
-        self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
-        self.config.options.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-            "data/trusted-cadir/trusted-ca.pem")
-
-        self.pathoc()
+        self.config.options.update(
+            ssl_insecure=False,
+            ssl_verify_upstream_trusted_cadir=None,
+            ssl_verify_upstream_trusted_ca=tutils.test_data.path(
+                "data/servercert/trusted-root.pem"
+            ),
+        )
+        assert self._request().status_code == 242
 
 
 class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
@@ -386,42 +403,36 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     """
     ssl = True
     ssloptions = pathod.SSLOptions(
-        cn=b"untrusted-cert",
+        cn=b"example.mitmproxy.org",
         certs=[
-            ("untrusted-cert", tutils.test_data.path("data/untrusted-server.crt"))
+            ("example.mitmproxy.org", tutils.test_data.path("data/servercert/self-signed.pem"))
         ])
 
     def _request(self):
-        p = self.pathoc()
-        # We need to make an actual request because the upstream connection is lazy-loaded.
+        p = self.pathoc(sni="example.mitmproxy.org")
         return p.request("get:/p/242")
 
-    def test_default_verification_w_bad_cert(self):
-        """Should use no verification."""
-        self.config.options.update(
-            ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-                "data/trusted-cadir/trusted-ca.pem"
-            )
+    @classmethod
+    def get_options(cls):
+        opts = super(tservers.HTTPProxyTest, cls).get_options()
+        opts.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
+            "data/servercert/trusted-root.pem"
         )
-        assert self._request().status_code == 242
+        return opts
 
     def test_no_verification_w_bad_cert(self):
-        self.config.options.update(
-            ssl_verify_upstream_cert = False,
-            ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-                "data/trusted-cadir/trusted-ca.pem"
-            )
-        )
-        assert self._request().status_code == 242
+        self.config.options.ssl_insecure = True
+        r = self._request()
+        assert r.status_code == 242
 
     def test_verification_w_bad_cert(self):
-        self.config.options.update(
-            ssl_verify_upstream_cert = True,
-            ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-                "data/trusted-cadir/trusted-ca.pem"
-            )
-        )
-        assert self._request().status_code == 502
+        # We only test for a single invalid cert here.
+        # Actual testing of different root-causes (invalid hostname, expired, ...)
+        # is done in netlib.
+        self.config.options.ssl_insecure = False
+        r = self._request()
+        assert r.status_code == 502
+        assert b"Certificate Verification Error" in r.raw_content
 
 
 class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
@@ -1021,11 +1032,11 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 class AddUpstreamCertsToClientChainMixin:
 
     ssl = True
-    servercert = tutils.test_data.path("data/trusted-server.crt")
+    servercert = tutils.test_data.path("data/servercert/trusted-root.pem")
     ssloptions = pathod.SSLOptions(
-        cn=b"trusted-cert",
+        cn=b"example.mitmproxy.org",
         certs=[
-            (b"trusted-cert", servercert)
+            (b"example.mitmproxy.org", servercert)
         ]
     )
 

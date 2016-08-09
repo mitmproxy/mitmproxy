@@ -69,7 +69,7 @@ def escape_control_characters(text, keep_spacing=True):
     return text.translate(trans)
 
 
-def bytes_to_escaped_str(data, keep_spacing=False):
+def bytes_to_escaped_str(data, keep_spacing=False, escape_single_quotes=False):
     """
     Take bytes and return a safe string that can be displayed to the user.
 
@@ -86,6 +86,8 @@ def bytes_to_escaped_str(data, keep_spacing=False):
     # We always insert a double-quote here so that we get a single-quoted string back
     # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
     ret = repr(b'"' + data).lstrip("b")[2:-1]
+    if not escape_single_quotes:
+        ret = re.sub(r"(?<!\\)(\\\\)*\\'", lambda m: (m.group(1) or "") + "'", ret)
     if keep_spacing:
         ret = re.sub(
             r"(?<!\\)(\\\\)*\\([nrt])",

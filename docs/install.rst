@@ -13,7 +13,7 @@ This was tested on a fully patched installation of Ubuntu 14.04.
 
 .. code:: bash
 
-   sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg8-dev zlib1g-dev
+   sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg8-dev zlib1g-dev g++
    sudo pip install mitmproxy  # or pip install --user mitmproxy
 
 Once installation is complete you can run :ref:`mitmproxy` or :ref:`mitmdump` from a terminal.

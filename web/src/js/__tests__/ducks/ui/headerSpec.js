@@ -1,10 +1,10 @@
-jest.unmock('../../ducks/ui')
-jest.unmock('../../ducks/flows')
+jest.unmock('../../../ducks/ui/header')
+jest.unmock('../../../ducks/flows')
 
-import reducer, { setActiveMenu } from '../../ducks/ui'
-import * as flowActions from '../../ducks/flows'
+import reducer, { setActiveMenu } from '../../../ducks/ui/header'
+import * as flowActions from '../../../ducks/flows'
 
-describe('ui reducer', () => {
+describe('header reducer', () => {
     it('should return the initial state', () => {
         expect(reducer(undefined, {}).activeMenu).toEqual('Start')
     })

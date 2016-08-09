@@ -61,13 +61,13 @@ def scriptenv(path, args):
     try:
         yield
     except Exception:
-        _, _, tb = sys.exc_info()
+        etype, value, tb = sys.exc_info()
         scriptdir = os.path.dirname(os.path.abspath(path))
         for i, s in enumerate(reversed(traceback.extract_tb(tb))):
             tb = tb.tb_next
             if not os.path.abspath(s[0]).startswith(scriptdir):
                 break
-        ctx.log.error("Script error: %s" % "".join(traceback.format_tb(tb)))
+        ctx.log.error("Script error: %s" % "".join(traceback.format_exception(etype, value, tb)))
     finally:
         sys.argv = oldargs
         sys.path.pop()
