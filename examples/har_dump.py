@@ -132,6 +132,9 @@ def response(flow):
             "params": name_value(flow.request.urlencoded_form)
         }
 
+    if flow.server_conn:
+        entry["serverIPAddress"] = str(flow.server_conn.ip_address.address[0])
+
     HAR["log"]["entries"].append(entry)
 
 
