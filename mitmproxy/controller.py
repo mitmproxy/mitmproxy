@@ -185,6 +185,7 @@ class Channel(object):
             if g == exceptions.Kill:
                 raise exceptions.Kill()
             return g
+        m.reply._state = "committed"  # suppress error message in __del__
         raise exceptions.Kill()
 
     def tell(self, mtype, m):
@@ -219,10 +220,15 @@ def handler(f):
         # Reset the handled flag - it's common for us to feed the same object
         # through handlers repeatedly, so we don't want this to persist across
         # calls.
-        if handling and not message.reply.taken:
-            if message.reply.value == NO_REPLY:
+        if handling and message.reply.state == "handled":
+            message.reply.take()
+            if not message.reply.has_message:
                 message.reply.ack()
             message.reply.commit()
+
+            # DummyReplys may be reused multiple times.
+            if isinstance(message.reply, DummyReply):
+                message.reply.reset()
         return ret
     # Mark this function as a handler wrapper
     wrapper.__dict__["__handler"] = True
@@ -240,7 +246,7 @@ class Reply(object):
     """
     def __init__(self, obj):
         self.obj = obj
-        self.q = queue.Queue()
+        self.q = queue.Queue()  # type: queue.Queue
 
         self._state = "unhandled"  # "unhandled" -> "handled" -> "taken" -> "committed"
         self.value = NO_REPLY  # holds the reply value. May change before things are actually commited.
@@ -259,13 +265,17 @@ class Reply(object):
         """
         return self._state
 
+    @property
+    def has_message(self):
+        return self.value != NO_REPLY
+
     def handle(self):
         """
         Reply are handled by controller.handlers, which may be nested. The first handler takes
         responsibility and handles the reply.
         """
         if self.state != "unhandled":
-            raise exceptions.ControlException("Message is {}, but expected it to be unhandled.".format(self.state))
+            raise exceptions.ControlException("Reply is {}, but expected it to be unhandled.".format(self.state))
         self._state = "handled"
 
     def take(self):
@@ -274,7 +284,7 @@ class Reply(object):
         For example, intercepted flows are taken out so that the connection thread does not proceed.
         """
         if self.state != "handled":
-            raise exceptions.ControlException("Message is {}, but expected it to be handled.".format(self.state))
+            raise exceptions.ControlException("Reply is {}, but expected it to be handled.".format(self.state))
         self._state = "taken"
 
     def commit(self):
@@ -283,42 +293,48 @@ class Reply(object):
         if the message is not taken or manually by the entity which called .take().
         """
         if self.state != "taken":
-            raise exceptions.ControlException("Message is {}, but expected it to be taken.".format(self.state))
+            raise exceptions.ControlException("Reply is {}, but expected it to be taken.".format(self.state))
+        if not self.has_message:
+            raise exceptions.ControlException("There is no reply message.")
         self._state = "committed"
         self.q.put(self.value)
 
-    def ack(self):
-        self.send(self.obj)
+    def ack(self, force=False):
+        self.send(self.obj, force)
 
-    def kill(self):
-        self.send(exceptions.Kill)
+    def kill(self, force=False):
+        self.send(exceptions.Kill, force)
 
-    def send(self, msg):
+    def send(self, msg, force=False):
         if self.state not in ("handled", "taken"):
             raise exceptions.ControlException(
-                "Reply is currently {}, did not expect a call to .send().".format(self.state)
+                "Reply is {}, did not expect a call to .send().".format(self.state)
             )
-        if self.value is not NO_REPLY:
-            raise exceptions.ControlException("There is already a reply for this message.")
+        if self.has_message and not force:
+            raise exceptions.ControlException("There is already a reply message.")
         self.value = msg
 
     def __del__(self):
-        if self.state != "comitted":
+        if self.state != "committed":
             # This will be ignored by the interpreter, but emit a warning
-            raise exceptions.ControlException("Uncomitted message: %s" % self.obj)
+            raise exceptions.ControlException("Uncommitted reply: %s" % self.obj)
 
 
 class DummyReply(Reply):
     """
     A reply object that is not connected to anything. In contrast to regular Reply objects,
-    DummyReply objects are reset to "unhandled" after a commit so that they can be used
+    DummyReply objects are reset to "unhandled" at the end of an handler so that they can be used
     multiple times. Useful when we need an object to seem like it has a channel,
     and during testing.
     """
     def __init__(self):
         super(DummyReply, self).__init__(None)
 
-    def commit(self):
-        super(DummyReply, self).commit()
+    def reset(self):
+        if self.state != "committed":
+            raise exceptions.ControlException("Uncommitted reply: %s" % self.obj)
         self._state = "unhandled"
         self.value = NO_REPLY
+
+    def __del__(self):
+        pass

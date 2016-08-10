@@ -31,9 +31,9 @@ class SetHeaders:
                 hdrs.add(header, value)
 
     def request(self, flow):
-        if not flow.reply.acked:
+        if not flow.reply.has_message:
             self.run(flow, flow.request.headers)
 
     def response(self, flow):
-        if not flow.reply.acked:
+        if not flow.reply.has_message:
             self.run(flow, flow.response.headers)

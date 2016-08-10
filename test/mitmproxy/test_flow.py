@@ -375,6 +375,7 @@ class TestHTTPFlow(object):
         s = flow.State()
         fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow()
+        f.reply.handle()
         f.intercept(mock.Mock())
         f.kill(fm)
         for i in s.view:
@@ -385,6 +386,7 @@ class TestHTTPFlow(object):
         fm = flow.FlowMaster(None, None, s)
 
         f = tutils.tflow()
+        f.reply.handle()
         f.intercept(fm)
 
         s.killall(fm)
@@ -393,11 +395,11 @@ class TestHTTPFlow(object):
 
     def test_accept_intercept(self):
         f = tutils.tflow()
-
+        f.reply.handle()
         f.intercept(mock.Mock())
-        assert not f.reply.acked
+        assert f.reply.state == "taken"
         f.accept_intercept(mock.Mock())
-        assert f.reply.acked
+        assert f.reply.state == "committed"
 
     def test_replace_unicode(self):
         f = tutils.tflow(resp=True)
@@ -735,7 +737,6 @@ class TestFlowMaster:
         fm.clientdisconnect(f.client_conn)
 
         f.error = Error("msg")
-        f.error.reply = controller.DummyReply()
         fm.error(f)
 
         fm.shutdown()

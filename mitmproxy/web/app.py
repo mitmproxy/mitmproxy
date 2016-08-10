@@ -234,7 +234,7 @@ class AcceptFlow(RequestHandler):
 class FlowHandler(RequestHandler):
 
     def delete(self, flow_id):
-        if not self.flow.reply.acked:
+        if self.flow.reply.state != "committed":
             self.flow.kill(self.master)
         self.state.delete_flow(self.flow)
 
@@ -438,6 +438,7 @@ class Application(tornado.web.Application):
             xsrf_cookies=True,
             cookie_secret=os.urandom(256),
             debug=debug,
+            autoreload=False,
             wauthenticator=wauthenticator,
         )
         super(Application, self).__init__(handlers, **settings)

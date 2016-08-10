@@ -183,7 +183,6 @@ class WebMaster(flow.FlowMaster):
         if self.state.intercept and self.state.intercept(
                 f) and not f.request.is_replay:
             f.intercept(self)
-            f.reply.take()
         return f
 
     @controller.handler

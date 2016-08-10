@@ -314,8 +314,7 @@ class FlowMaster(controller.Master):
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
-        if not f.reply.acked:
-            self.process_new_request(f)
+        self.process_new_request(f)
         return f
 
     @controller.handler
@@ -331,9 +330,8 @@ class FlowMaster(controller.Master):
     @controller.handler
     def response(self, f):
         self.state.update_flow(f)
-        if not f.reply.acked:
-            if self.client_playback:
-                self.client_playback.clear(f)
+        if self.client_playback:
+            self.client_playback.clear(f)
         return f
 
     def handle_intercept(self, f):

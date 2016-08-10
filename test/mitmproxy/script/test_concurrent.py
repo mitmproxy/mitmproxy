@@ -29,7 +29,7 @@ class TestConcurrent(mastertest.MasterTest):
         self.invoke(m, "request", f2)
         start = time.time()
         while time.time() - start < 5:
-            if f1.reply.acked and f2.reply.acked:
+            if f1.reply.state == f2.reply.state == "committed":
                 return
         raise ValueError("Script never acked")
 

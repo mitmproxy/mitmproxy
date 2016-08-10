@@ -12,13 +12,11 @@ class MasterTest:
         with master.handlecontext():
             func = getattr(master, handler)
             func(*message)
-        if message:
-            message[0].reply = controller.DummyReply()
 
     def cycle(self, master, content):
         f = tutils.tflow(req=netlib.tutils.treq(content=content))
         l = proxy.Log("connect")
-        l.reply = mock.MagicMock()
+        l.reply = controller.DummyReply()
         master.log(l)
         self.invoke(master, "clientconnect", f.client_conn)
         self.invoke(master, "clientconnect", f.client_conn)

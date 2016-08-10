@@ -148,13 +148,13 @@ class FlowView(tabs.Tabs):
         signals.flow_change.connect(self.sig_flow_change)
 
     def tab_request(self):
-        if self.flow.intercepted and not self.flow.reply.acked and not self.flow.response:
+        if self.flow.intercepted and not self.flow.response:
             return "Request intercepted"
         else:
             return "Request"
 
     def tab_response(self):
-        if self.flow.intercepted and not self.flow.reply.acked and self.flow.response:
+        if self.flow.intercepted and self.flow.response:
             return "Response intercepted"
         else:
             return "Response"
@@ -379,7 +379,6 @@ class FlowView(tabs.Tabs):
                     self.flow.request.http_version,
                     200, b"OK", Headers(), b""
                 )
-                self.flow.response.reply = controller.DummyReply()
             message = self.flow.response
 
         self.flow.backup()
