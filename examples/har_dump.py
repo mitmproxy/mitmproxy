@@ -6,6 +6,7 @@ This inline script can be used to dump flows as HAR files.
 import pprint
 import json
 import sys
+import base64
 
 from datetime import datetime
 import pytz
@@ -13,6 +14,7 @@ import pytz
 import mitmproxy
 
 from netlib import version
+from netlib import strutils
 from netlib.http import cookies
 
 HAR = {}
@@ -88,8 +90,8 @@ def response(flow):
 
     started_date_time = format_datetime(datetime.utcfromtimestamp(flow.request.timestamp_start))
 
-    # Size calculations
-    response_body_size = len(flow.response.content)
+    # Response body size and encoding
+    response_body_size = len(flow.response.raw_content)
     response_body_decoded_size = len(flow.response.content)
     response_body_compression = response_body_decoded_size - response_body_size
 
@@ -124,6 +126,13 @@ def response(flow):
         "cache": {},
         "timings": timings,
     }
+
+    # Store binay data as base64
+    if strutils.is_mostly_bin(flow.response.content):
+        entry["response"]["content"]["text"] = base64.b64encode(flow.response.content)
+        entry["response"]["content"]["encoding"] = "base64"
+    else:
+        entry["response"]["content"]["text"] = flow.response.content
 
     if flow.request.method == "POST":
         entry["request"]["postData"] = {
