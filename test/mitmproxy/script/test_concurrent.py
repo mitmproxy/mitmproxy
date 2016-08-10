@@ -25,8 +25,8 @@ class TestConcurrent(mastertest.MasterTest):
         )
         m.addons.add(m.options, sc)
         f1, f2 = tutils.tflow(), tutils.tflow()
-        self.invoke(m, "request", f1)
-        self.invoke(m, "request", f2)
+        m.request(f1)
+        m.request(f2)
         start = time.time()
         while time.time() - start < 5:
             if f1.reply.state == f2.reply.state == "committed":

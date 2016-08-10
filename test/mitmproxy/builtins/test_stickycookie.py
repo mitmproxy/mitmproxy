@@ -34,23 +34,23 @@ class TestStickyCookie(mastertest.MasterTest):
 
         f = tutils.tflow(resp=True)
         f.response.headers["set-cookie"] = "foo=bar"
-        self.invoke(m, "request", f)
+        m.request(f)
 
         f.reply.acked = False
-        self.invoke(m, "response", f)
+        m.response(f)
 
         assert sc.jar
         assert "cookie" not in f.request.headers
 
         f = f.copy()
         f.reply.acked = False
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.headers["cookie"] == "foo=bar"
 
     def _response(self, s, m, sc, cookie, host):
         f = tutils.tflow(req=ntutils.treq(host=host, port=80), resp=True)
         f.response.headers["Set-Cookie"] = cookie
-        self.invoke(m, "response", f)
+        m.response(f)
         return f
 
     def test_response(self):
@@ -79,7 +79,7 @@ class TestStickyCookie(mastertest.MasterTest):
         c2 = "othercookie=helloworld; Path=/"
         f = self._response(s, m, sc, c1, "www.google.com")
         f.response.headers["Set-Cookie"] = c2
-        self.invoke(m, "response", f)
+        m.response(f)
         googlekey = list(sc.jar.keys())[0]
         assert len(sc.jar[googlekey].keys()) == 2
 
@@ -96,7 +96,7 @@ class TestStickyCookie(mastertest.MasterTest):
         ]
         for c in cs:
             f.response.headers["Set-Cookie"] = c
-            self.invoke(m, "response", f)
+            m.response(f)
         googlekey = list(sc.jar.keys())[0]
         assert len(sc.jar[googlekey].keys()) == len(cs)
 
@@ -108,7 +108,7 @@ class TestStickyCookie(mastertest.MasterTest):
         c2 = "somecookie=newvalue; Path=/"
         f = self._response(s, m, sc, c1, "www.google.com")
         f.response.headers["Set-Cookie"] = c2
-        self.invoke(m, "response", f)
+        m.response(f)
         googlekey = list(sc.jar.keys())[0]
         assert len(sc.jar[googlekey].keys()) == 1
         assert list(sc.jar[googlekey]["somecookie"].items())[0][1] == "newvalue"
@@ -120,7 +120,7 @@ class TestStickyCookie(mastertest.MasterTest):
         # by setting the expire time in the past
         f = self._response(s, m, sc, "duffer=zafar; Path=/", "www.google.com")
         f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
-        self.invoke(m, "response", f)
+        m.response(f)
         assert not sc.jar.keys()
 
     def test_request(self):
@@ -128,5 +128,5 @@ class TestStickyCookie(mastertest.MasterTest):
 
         f = self._response(s, m, sc, "SSID=mooo", "www.google.com")
         assert "cookie" not in f.request.headers
-        self.invoke(m, "request", f)
+        m.request(f)
         assert "cookie" in f.request.headers

@@ -33,12 +33,12 @@ class TestSetHeaders(mastertest.MasterTest):
         )
         f = tutils.tflow()
         f.request.headers["one"] = "xxx"
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.headers["one"] == "two"
 
         f = tutils.tflow(resp=True)
         f.response.headers["one"] = "xxx"
-        self.invoke(m, "response", f)
+        m.response(f)
         assert f.response.headers["one"] == "three"
 
         m, sh = self.mkmaster(
@@ -50,7 +50,7 @@ class TestSetHeaders(mastertest.MasterTest):
         f = tutils.tflow(resp=True)
         f.request.headers["one"] = "xxx"
         f.response.headers["one"] = "xxx"
-        self.invoke(m, "response", f)
+        m.response(f)
         assert f.response.headers.get_all("one") == ["two", "three"]
 
         m, sh = self.mkmaster(
@@ -61,5 +61,5 @@ class TestSetHeaders(mastertest.MasterTest):
         )
         f = tutils.tflow()
         f.request.headers["one"] = "xxx"
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.headers.get_all("one") == ["two", "three"]

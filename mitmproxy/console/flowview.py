@@ -8,7 +8,6 @@ import urwid
 from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
-from mitmproxy import controller
 from mitmproxy import models
 from mitmproxy import utils
 from mitmproxy.console import common
@@ -537,7 +536,7 @@ class FlowView(tabs.Tabs):
             else:
                 self.view_next_flow(self.flow)
             f = self.flow
-            if not f.reply.acked:
+            if f.killable:
                 f.kill(self.master)
             self.state.delete_flow(f)
         elif key == "D":

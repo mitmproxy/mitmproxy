@@ -14,10 +14,10 @@ class TestAntiComp(mastertest.MasterTest):
         m.addons.add(o, sa)
 
         f = tutils.tflow(resp=True)
-        self.invoke(m, "request", f)
+        m.request(f)
 
         f = tutils.tflow(resp=True)
 
         f.request.headers["Accept-Encoding"] = "foobar"
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.headers["Accept-Encoding"] == "identity"

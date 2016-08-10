@@ -187,6 +187,7 @@ class TestDummyReply(object):
             reply.ack()
             reply.take()
             reply.commit()
+            reply.mark_reset()
             reply.reset()
         assert reply.state == "unhandled"
 
@@ -196,6 +197,8 @@ class TestDummyReply(object):
         reply.ack()
         reply.take()
         reply.commit()
+        reply.mark_reset()
+        assert reply.state == "committed"
         reply.reset()
         assert reply.state == "unhandled"
 

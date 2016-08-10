@@ -234,7 +234,7 @@ class AcceptFlow(RequestHandler):
 class FlowHandler(RequestHandler):
 
     def delete(self, flow_id):
-        if self.flow.reply.state != "committed":
+        if self.flow.killable:
             self.flow.kill(self.master)
         self.state.delete_flow(self.flow)
 

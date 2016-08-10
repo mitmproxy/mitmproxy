@@ -1,5 +1,3 @@
-import mock
-
 from . import tutils
 import netlib.tutils
 
@@ -8,24 +6,19 @@ from mitmproxy import flow, proxy, models, controller
 
 
 class MasterTest:
-    def invoke(self, master, handler, *message):
-        with master.handlecontext():
-            func = getattr(master, handler)
-            func(*message)
 
     def cycle(self, master, content):
         f = tutils.tflow(req=netlib.tutils.treq(content=content))
         l = proxy.Log("connect")
         l.reply = controller.DummyReply()
         master.log(l)
-        self.invoke(master, "clientconnect", f.client_conn)
-        self.invoke(master, "clientconnect", f.client_conn)
-        self.invoke(master, "serverconnect", f.server_conn)
-        self.invoke(master, "request", f)
+        master.clientconnect(f.client_conn)
+        master.serverconnect(f.server_conn)
+        master.request(f)
         if not f.error:
             f.response = models.HTTPResponse.wrap(netlib.tutils.tresp(content=content))
-            self.invoke(master, "response", f)
-        self.invoke(master, "clientdisconnect", f)
+            master.response(f)
+        master.clientdisconnect(f)
         return f
 
     def dummy_cycle(self, master, n, content):

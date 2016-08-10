@@ -234,7 +234,7 @@ class FlowMaster(controller.Master):
             pb = self.do_server_playback(f)
             if not pb and self.kill_nonreplay:
                 self.add_log("Killed {}".format(f.request.url), "info")
-                f.kill(self)
+                f.reply.kill()
 
     def replay_request(self, f, block=False):
         """

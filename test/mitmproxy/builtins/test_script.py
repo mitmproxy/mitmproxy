@@ -69,7 +69,7 @@ class TestScript(mastertest.MasterTest):
 
         sc.ns.call_log = []
         f = tutils.tflow(resp=True)
-        self.invoke(m, "request", f)
+        m.request(f)
 
         recf = sc.ns.call_log[0]
         assert recf[1] == "request"
@@ -102,7 +102,7 @@ class TestScript(mastertest.MasterTest):
         )
         m.addons.add(o, sc)
         f = tutils.tflow(resp=True)
-        self.invoke(m, "request", f)
+        m.request(f)
         assert m.event_log[0][0] == "error"
 
     def test_duplicate_flow(self):

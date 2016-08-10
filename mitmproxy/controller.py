@@ -203,6 +203,12 @@ def handler(f):
         if not hasattr(message, "reply"):
             raise exceptions.ControlException("Message %s has no reply attribute" % message)
 
+        # DummyReplys may be reused multiple times.
+        # We only clear them up on the next handler so that we can access value and
+        # state in the meantime.
+        if isinstance(message.reply, DummyReply):
+            message.reply.reset()
+
         # The following ensures that inheritance with wrapped handlers in the
         # base class works. If we're the first handler, then responsibility for
         # acking is ours. If not, it's someone else's and we ignore it.
@@ -228,7 +234,7 @@ def handler(f):
 
             # DummyReplys may be reused multiple times.
             if isinstance(message.reply, DummyReply):
-                message.reply.reset()
+                message.reply.mark_reset()
         return ret
     # Mark this function as a handler wrapper
     wrapper.__dict__["__handler"] = True
@@ -268,6 +274,10 @@ class Reply(object):
     @property
     def has_message(self):
         return self.value != NO_REPLY
+
+    @property
+    def done(self):
+        return self.state == "committed"
 
     def handle(self):
         """
@@ -329,12 +339,17 @@ class DummyReply(Reply):
     """
     def __init__(self):
         super(DummyReply, self).__init__(None)
+        self._should_reset = False
 
-    def reset(self):
+    def mark_reset(self):
         if self.state != "committed":
             raise exceptions.ControlException("Uncommitted reply: %s" % self.obj)
-        self._state = "unhandled"
-        self.value = NO_REPLY
+        self._should_reset = True
+
+    def reset(self):
+        if self._should_reset:
+            self._state = "unhandled"
+            self.value = NO_REPLY
 
     def __del__(self):
         pass

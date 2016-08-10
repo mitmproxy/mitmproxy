@@ -149,13 +149,17 @@ class Flow(stateobject.StateObject):
             self.set_state(self._backup)
             self._backup = None
 
+    @property
+    def killable(self):
+        return self.reply and self.reply.state in {"handled", "taken"}
+
     def kill(self, master):
         """
             Kill this request.
         """
         self.error = Error("Connection killed")
         self.intercepted = False
-        # reply.state should only be handled or taken here.
+        # reply.state should only be "handled" or "taken" here.
         # if none of this is the case, .take() will raise an exception.
         if self.reply.state != "taken":
             self.reply.take()

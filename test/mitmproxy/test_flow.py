@@ -3,9 +3,9 @@ import io
 
 import netlib.utils
 from netlib.http import Headers
-from mitmproxy import filt, controller, flow, options
+from mitmproxy import filt, flow, options
 from mitmproxy.contrib import tnetstring
-from mitmproxy.exceptions import FlowReadException
+from mitmproxy.exceptions import FlowReadException, Kill
 from mitmproxy.models import Error
 from mitmproxy.models import Flow
 from mitmproxy.models import HTTPFlow
@@ -372,14 +372,16 @@ class TestHTTPFlow(object):
         assert f.get_state() == f2.get_state()
 
     def test_kill(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
+        fm = mock.Mock()
         f = tutils.tflow()
         f.reply.handle()
-        f.intercept(mock.Mock())
+        f.intercept(fm)
+        assert fm.handle_intercept.called
+        assert f.killable
         f.kill(fm)
-        for i in s.view:
-            assert "killed" in str(i.error)
+        assert not f.killable
+        assert fm.error.called
+        assert f.reply.value == Kill
 
     def test_killall(self):
         s = flow.State()
@@ -835,8 +837,8 @@ class TestFlowMaster:
 
         f = tutils.tflow()
         f.request.host = "nonexistent"
-        fm.process_new_request(f)
-        assert "killed" in f.error.msg
+        fm.request(f)
+        assert f.reply.value == Kill
 
 
 class TestRequest:

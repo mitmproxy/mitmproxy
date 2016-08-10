@@ -28,8 +28,8 @@ class TestStream(mastertest.MasterTest):
 
             m.addons.add(o, sa)
             f = tutils.tflow(resp=True)
-            self.invoke(m, "request", f)
-            self.invoke(m, "response", f)
+            m.request(f)
+            m.response(f)
             m.addons.remove(sa)
 
             assert r()[0].response
@@ -38,6 +38,6 @@ class TestStream(mastertest.MasterTest):
 
             m.addons.add(o, sa)
             f = tutils.tflow()
-            self.invoke(m, "request", f)
+            m.request(f)
             m.addons.remove(sa)
             assert not r()[1].response

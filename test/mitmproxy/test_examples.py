@@ -39,7 +39,7 @@ class TestScripts(mastertest.MasterTest):
     def test_add_header(self):
         m, _ = tscript("add_header.py")
         f = tutils.tflow(resp=netutils.tresp())
-        self.invoke(m, "response", f)
+        m.response(f)
         assert f.response.headers["newheader"] == "foo"
 
     def test_custom_contentviews(self):
@@ -54,9 +54,9 @@ class TestScripts(mastertest.MasterTest):
             tscript("iframe_injector.py")
 
         m, sc = tscript("iframe_injector.py", "http://example.org/evil_iframe")
-        flow = tutils.tflow(resp=netutils.tresp(content=b"<html>mitmproxy</html>"))
-        self.invoke(m, "response", flow)
-        content = flow.response.content
+        f = tutils.tflow(resp=netutils.tresp(content=b"<html>mitmproxy</html>"))
+        m.response(f)
+        content = f.response.content
         assert b'iframe' in content and b'evil_iframe' in content
 
     def test_modify_form(self):
@@ -64,23 +64,23 @@ class TestScripts(mastertest.MasterTest):
 
         form_header = Headers(content_type="application/x-www-form-urlencoded")
         f = tutils.tflow(req=netutils.treq(headers=form_header))
-        self.invoke(m, "request", f)
+        m.request(f)
 
         assert f.request.urlencoded_form[b"mitmproxy"] == b"rocks"
 
         f.request.headers["content-type"] = ""
-        self.invoke(m, "request", f)
+        m.request(f)
         assert list(f.request.urlencoded_form.items()) == [(b"foo", b"bar")]
 
     def test_modify_querystring(self):
         m, sc = tscript("modify_querystring.py")
         f = tutils.tflow(req=netutils.treq(path="/search?q=term"))
 
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.query["mitmproxy"] == "rocks"
 
         f.request.path = "/"
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.query["mitmproxy"] == "rocks"
 
     def test_modify_response_body(self):
@@ -89,13 +89,13 @@ class TestScripts(mastertest.MasterTest):
 
         m, sc = tscript("modify_response_body.py", "mitmproxy rocks")
         f = tutils.tflow(resp=netutils.tresp(content=b"I <3 mitmproxy"))
-        self.invoke(m, "response", f)
+        m.response(f)
         assert f.response.content == b"I <3 rocks"
 
     def test_redirect_requests(self):
         m, sc = tscript("redirect_requests.py")
         f = tutils.tflow(req=netutils.treq(host="example.org"))
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.host == "mitmproxy.org"
 
     def test_har_extractor(self):
@@ -119,7 +119,7 @@ class TestScripts(mastertest.MasterTest):
                 req=netutils.treq(**times),
                 resp=netutils.tresp(**times)
             )
-            self.invoke(m, "response", f)
+            m.response(f)
             m.addons.remove(sc)
 
             with open(path, "rb") as f:
