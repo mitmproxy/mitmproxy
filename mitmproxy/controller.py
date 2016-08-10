@@ -242,8 +242,22 @@ class Reply(object):
         self.obj = obj
         self.q = queue.Queue()
 
-        self.state = "unhandled"  # "unhandled" -> "handled" -> "taken" -> "committed"
+        self._state = "unhandled"  # "unhandled" -> "handled" -> "taken" -> "committed"
         self.value = NO_REPLY  # holds the reply value. May change before things are actually commited.
+
+    @property
+    def state(self):
+        """
+        The state the reply is currently in. A normal reply object goes sequentially through the following lifecycle:
+
+            1. unhandled: Initial State.
+            2. handled: The reply object has been handled by the topmost handler function.
+            3. taken: The reply object has been taken to be commited.
+            4. committed: The reply has been sent back to the requesting party.
+
+        This attribute is read-only and can only be modified by calling one of state transition functions.
+        """
+        return self._state
 
     def handle(self):
         """
@@ -252,7 +266,7 @@ class Reply(object):
         """
         if self.state != "unhandled":
             raise exceptions.ControlException("Message is {}, but expected it to be unhandled.".format(self.state))
-        self.state = "handled"
+        self._state = "handled"
 
     def take(self):
         """
@@ -261,7 +275,7 @@ class Reply(object):
         """
         if self.state != "handled":
             raise exceptions.ControlException("Message is {}, but expected it to be handled.".format(self.state))
-        self.state = "taken"
+        self._state = "taken"
 
     def commit(self):
         """
@@ -270,7 +284,7 @@ class Reply(object):
         """
         if self.state != "taken":
             raise exceptions.ControlException("Message is {}, but expected it to be taken.".format(self.state))
-        self.state = "committed"
+        self._state = "committed"
         self.q.put(self.value)
 
     def ack(self):
@@ -306,5 +320,5 @@ class DummyReply(Reply):
 
     def commit(self):
         super(DummyReply, self).commit()
-        self.state = "unhandled"
+        self._state = "unhandled"
         self.value = NO_REPLY
