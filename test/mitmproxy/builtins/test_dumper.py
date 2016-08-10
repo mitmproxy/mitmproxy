@@ -80,5 +80,5 @@ class TestContentView(mastertest.MasterTest):
         m = mastertest.RecordingMaster(o, None, s)
         d = dumper.Dumper()
         m.addons.add(o, d)
-        self.invoke(m, "response", tutils.tflow())
+        m.response(tutils.tflow())
         assert "Content viewer failed" in m.event_log[0][1]

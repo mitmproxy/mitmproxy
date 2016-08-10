@@ -8,7 +8,6 @@ import urwid
 from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
-from mitmproxy import controller
 from mitmproxy import models
 from mitmproxy import utils
 from mitmproxy.console import common
@@ -148,13 +147,13 @@ class FlowView(tabs.Tabs):
         signals.flow_change.connect(self.sig_flow_change)
 
     def tab_request(self):
-        if self.flow.intercepted and not self.flow.reply.acked and not self.flow.response:
+        if self.flow.intercepted and not self.flow.response:
             return "Request intercepted"
         else:
             return "Request"
 
     def tab_response(self):
-        if self.flow.intercepted and not self.flow.reply.acked and self.flow.response:
+        if self.flow.intercepted and self.flow.response:
             return "Response intercepted"
         else:
             return "Response"
@@ -379,7 +378,6 @@ class FlowView(tabs.Tabs):
                     self.flow.request.http_version,
                     200, b"OK", Headers(), b""
                 )
-                self.flow.response.reply = controller.DummyReply()
             message = self.flow.response
 
         self.flow.backup()
@@ -538,7 +536,7 @@ class FlowView(tabs.Tabs):
             else:
                 self.view_next_flow(self.flow)
             f = self.flow
-            if not f.reply.acked:
+            if f.killable:
                 f.kill(self.master)
             self.state.delete_flow(f)
         elif key == "D":

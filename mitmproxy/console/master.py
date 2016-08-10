@@ -736,7 +736,6 @@ class ConsoleMaster(flow.FlowMaster):
         )
         if should_intercept:
             f.intercept(self)
-            f.reply.take()
         signals.flowlist_change.send(self)
         signals.flow_change.send(self, flow = f)
 
