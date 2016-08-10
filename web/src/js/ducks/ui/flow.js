@@ -10,7 +10,8 @@ export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              UPDATE_EDIT                    = 'UI_FLOWVIEW_UPDATE_EDIT',
              UPLOAD_CONTENT                 = 'UI_FLOWVIEW_UPLOAD_CONTENT',
              SET_SHOW_FULL_CONTENT          = 'UI_SET_SHOW_FULL_CONTENT',
-             SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION"
+             SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION",
+             SET_CONTENT                    = "UI_SET_CONTENT"
 
 
 const defaultState = {
@@ -20,6 +21,8 @@ const defaultState = {
     modifiedFlow: false,
     contentView: 'Auto',
     tab: 'request',
+    content: [],
+    maxContentLines: 80,
 }
 
 export default function reducer(state = defaultState, action) {
@@ -94,6 +97,14 @@ export default function reducer(state = defaultState, action) {
                 showFullContent: action.contentView == 'Edit'
             }
 
+        case SET_CONTENT:
+            let isFullContentShown = action.content.length < state.maxContentLines
+            return {
+                ...state,
+                content: action.content,
+                showFullContent: isFullContentShown
+            }
+
         case DISPLAY_LARGE:
             return {
                 ...state,
@@ -134,6 +145,10 @@ export function setShowFullContent(show) {
 
 export function updateEdit(update) {
     return { type: UPDATE_EDIT, update }
+}
+
+export function setContent(content){
+    return { type: SET_CONTENT, content}
 }
 
 export function stopEdit(flow, modifiedFlow) {

@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
-import { setContentViewDescription, setShowFullContent } from '../../ducks/ui/flow'
+import { setContentViewDescription, setContent } from '../../ducks/ui/flow'
 import ContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils'
 import CodeEditor from './CodeEditor'
@@ -30,28 +30,25 @@ function Edit({ content, onChange }) {
 Edit = ContentLoader(Edit)
 
 class ViewServer extends Component {
-    static defaultProps = {
-        maxLines: 80,
-    }
 
     componentWillMount(){
         this.setContentView(this.props)
     }
 
     componentWillReceiveProps(nextProps){
-        this.setContentView(nextProps)
+        if (nextProps.content != this.props.content) {
+            this.setContentView(nextProps)
+        }
     }
     setContentView(props){
         try {
             this.data = JSON.parse(props.content)
         }catch(err) {
-            this.data= {lines: [], description: err.message}
+            this.data = {lines: [], description: err.message}
         }
 
         props.setContentViewDescription(props.contentView != this.data.description ? this.data.description : '')
-
-        let isFullContentShown = this.data.lines.length < props.maxLines
-        if (isFullContentShown) props.setShowFullContent(true)
+        props.setContent(this.data.lines)
     }
     render() {
         const {content, contentView, message, maxLines} = this.props
@@ -78,11 +75,12 @@ class ViewServer extends Component {
 
 ViewServer = connect(
     state => ({
-        showFullContent: state.ui.flow.showFullContent
+        showFullContent: state.ui.flow.showFullContent,
+        maxLines: state.ui.flow.maxContentLines
     }),
     {
         setContentViewDescription,
-        setShowFullContent
+        setContent
     }
 )(ContentLoader(ViewServer))
 
