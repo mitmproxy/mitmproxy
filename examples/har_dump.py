@@ -7,6 +7,7 @@ import pprint
 import json
 import sys
 import base64
+import zlib
 
 from datetime import datetime
 import pytz
@@ -155,14 +156,16 @@ def done():
 
     if dump_file == '-':
         mitmproxy.ctx.log(pprint.pformat(HAR))
-    # TODO: .zhar compression
     else:
         json_dump = json.dumps(HAR, indent=2)
+
+        if dump_file.endswith('.zhar'):
+            json_dump = zlib.compress(json_dump, 9)
 
         with open(dump_file, "w") as f:
             f.write(json_dump)
 
-        mitmproxy.ctx.log("HAR log finished (wrote %s bytes to file)" % len(json_dump))
+        mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
 
 def format_datetime(dt):
