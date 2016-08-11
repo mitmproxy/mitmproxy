@@ -261,7 +261,7 @@ def test_get_expiration_ts(*args):
     F = cookies.get_expiration_ts
 
     assert F(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == 0
-    assert F(CA([("Expires", "Thu, 24-Aug-2063 00:00:00 GMT")])) == 2955139200
+    assert F(CA([("Expires", "Fri, 24-Aug-2063 00:00:00 GMT")])) == 2955139200
 
     assert F(CA([("Max-Age", "0")])) == now_ts
     assert F(CA([("Max-Age", "31")])) == now_ts + 31
@@ -280,9 +280,9 @@ def test_is_expired():
     # or both
     assert cookies.is_expired(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT"), ("Max-Age", "0")]))
 
-    assert not cookies.is_expired(CA([("Expires", "Thu, 24-Aug-2063 00:00:00 GMT")]))
+    assert not cookies.is_expired(CA([("Expires", "Fri, 24-Aug-2063 00:00:00 GMT")]))
     assert not cookies.is_expired(CA([("Max-Age", "1")]))
-    assert not cookies.is_expired(CA([("Expires", "Thu, 15-Jul-2068 00:00:00 GMT"), ("Max-Age", "1")]))
+    assert not cookies.is_expired(CA([("Expires", "Sun, 15-Jul-2068 00:00:00 GMT"), ("Max-Age", "1")]))
 
     assert not cookies.is_expired(CA([("Max-Age", "nan")]))
     assert not cookies.is_expired(CA([("Expires", "false")]))

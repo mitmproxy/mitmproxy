@@ -13,6 +13,7 @@ import netlib.utils
 
 from netlib import tutils as netutils
 from netlib.http import Headers
+from netlib.http import cookies
 
 from . import tutils, mastertest
 
@@ -102,7 +103,7 @@ class TestScripts(mastertest.MasterTest):
         assert f.request.host == "mitmproxy.org"
 
 
-class TestHARDump(mastertest.MasterTest):
+class TestHARDump():
 
     def setup(self):
         times = dict(
@@ -125,10 +126,29 @@ class TestHARDump(mastertest.MasterTest):
             path = os.path.join(tdir, "somefile")
 
             m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
-            self.invoke(m, "response", self.req_get)
+            m.addons.invoke(m, "response", self.req_get)
             m.addons.remove(sc)
 
             with open(path, "r") as inp:
                 har = json.load(inp)
 
         assert len(har["log"]["entries"]) == 1
+
+    def test_format_cookies(self):
+        m, sc = tscript("har_dump.py", "-")
+        format_cookies = sc.ns.ns["format_cookies"]
+
+        CA = cookies.CookieAttrs
+
+        f = format_cookies([("n", "v", CA([("k", "v")]))])[0]
+        assert f['name'] == "n"
+        assert f['value'] == "v"
+        assert not f['httpOnly']
+        assert not f['secure']
+
+        f = format_cookies([("n", "v", CA([("httponly", None), ("secure", None)]))])[0]
+        assert f['httpOnly']
+        assert f['secure']
+
+        f = format_cookies([("n", "v", CA([("expires", "Fri, 24-Aug-2063 00:00:00 GMT")]))])[0]
+        assert f['expires'] == "2063-08-24T05:30:00+00:00"
