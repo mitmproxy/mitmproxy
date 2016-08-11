@@ -172,10 +172,10 @@ def format_datetime(dt):
     return dt.replace(tzinfo=pytz.timezone("UTC")).isoformat()
 
 
-def format_cookies(cookies):
-    cookie_list = []
+def format_cookies(cookie_list):
+    rv = []
 
-    for name, value, attrs in cookies:
+    for name, value, attrs in cookie_list:
         cookie_har = {
             "name": name,
             "value": value,
@@ -192,12 +192,12 @@ def format_cookies(cookies):
 
         # Expiration time needs to be formatted
         expire_ts = cookies.get_expiration_ts(attrs)
-        if expire_ts:
+        if expire_ts is not None:
             cookie_har["expires"] = format_datetime(datetime.fromtimestamp(expire_ts))
 
-        cookie_list.append(cookie_har)
+        rv.append(cookie_har)
 
-    return cookie_list
+    return rv
 
 
 def format_request_cookies(fields):
