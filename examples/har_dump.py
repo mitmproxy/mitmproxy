@@ -135,7 +135,7 @@ def response(flow):
     else:
         entry["response"]["content"]["text"] = flow.response.content
 
-    if flow.request.method == "POST":
+    if flow.request.method in ["POST", "PUT", "PATCH"]:
         entry["request"]["postData"] = {
             "mimeType": flow.request.headers.get("Content-Type", "").split(";")[0],
             "text": flow.request.content,
