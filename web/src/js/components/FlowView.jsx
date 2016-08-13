@@ -71,7 +71,7 @@ export default class FlowView extends Component {
         const Tab = FlowView.allTabs[_.capitalize(active)]
 
         return (
-            <div className="flow-detail" onScroll={this.adjustHead}>
+            <div className="flow-detail">
                 <Nav
                     flow={flow}
                     tabs={tabs}

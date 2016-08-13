@@ -43,14 +43,14 @@ export var MessageUtils = {
         }
         return false;
     },
-    getContentURL: function (flow, message) {
+    getContentURL: function (flow, message, view) {
         if (message === flow.request) {
             message = "request";
         } else if (message === flow.response) {
             message = "response";
         }
-        return "/flows/" + flow.id + "/" + message + "/content";
-    },
+        return `/flows/${flow.id}/${message}/content` +  (view ? `/${view}` : '');
+    }
 };
 
 export var RequestUtils = _.extend(MessageUtils, {
