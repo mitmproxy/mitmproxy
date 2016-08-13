@@ -109,15 +109,6 @@ class Http2Layer(base.Layer):
         self.server_conn.send(self.server_conn.h2.data_to_send())
         self.active_conns.append(self.server_conn.connection)
 
-    def connect(self):  # pragma: no cover
-        raise exceptions.Http2ProtocolException("HTTP2 layer should already have a connection.")
-
-    def set_server(self):  # pragma: no cover
-        raise exceptions.Http2ProtocolException("Cannot change server for HTTP2 connections.")
-
-    def disconnect(self):  # pragma: no cover
-        raise exceptions.Http2ProtocolException("Cannot dis- or reconnect in HTTP2 connections.")
-
     def next_layer(self):  # pragma: no cover
         # WebSockets over HTTP/2?
         # CONNECT for proxying?
@@ -382,14 +373,19 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.priority_weight = None
         self.handled_priority_event = None
 
+    def connect(self):  # pragma: no cover
+        raise exceptions.Http2ProtocolException("HTTP2 layer should already have a connection.")
+
+    def disconnect(self):  # pragma: no cover
+        raise exceptions.Http2ProtocolException("Cannot dis- or reconnect in HTTP2 connections.")
+
+    def set_server(self, address):  # pragma: no cover
+        raise exceptions.SetServerNotAllowedException(repr(address))
+
     def check_close_connection(self, flow):
         # This layer only handles a single stream.
         # RFC 7540 8.1: An HTTP request/response exchange fully consumes a single stream.
         return True
-
-    def set_server(self, *args, **kwargs):  # pragma: no cover
-        # do not mess with the server connection - all streams share it.
-        pass
 
     @property
     def data_queue(self):
@@ -584,6 +580,8 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")
+        except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
+            self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
         except exceptions.Kill:
             self.log("Connection killed", "info")
 

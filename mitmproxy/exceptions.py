@@ -103,6 +103,10 @@ class ControlException(ProxyException):
     pass
 
 
+class SetServerNotAllowedException(ProxyException):
+    pass
+
+
 class OptionsError(Exception):
     pass
 
