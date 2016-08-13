@@ -313,6 +313,22 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
         assert ret.status_code == 202
 
 
+class TestHTTPReverseAuth(tservers.ReverseProxyTest):
+    def test_auth(self):
+        self.master.options.auth_singleuser = "test:test"
+        assert self.pathod("202").status_code == 401
+        p = self.pathoc()
+        ret = p.request("""
+            get
+            '/p/202'
+            h'%s'='%s'
+        """ % (
+            http.authentication.BasicWebsiteAuth.AUTH_HEADER,
+            authentication.assemble_http_basic_auth("basic", "test", "test")
+        ))
+        assert ret.status_code == 202
+
+
 class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
