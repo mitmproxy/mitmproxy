@@ -105,16 +105,16 @@ class TestScripts(mastertest.MasterTest):
 
 class TestHARDump():
 
-    def setup(self):
+    def flow(self, resp_content=b'message'):
         times = dict(
             timestamp_start=746203272,
             timestamp_end=746203272,
         )
 
         # Create a dummy flow for testing
-        self.req_get = tutils.tflow(
-            req=netutils.treq(method=b'GET', content=b'', **times),
-            resp=netutils.tresp(**times)
+        return tutils.tflow(
+            req=netutils.treq(method=b'GET', **times),
+            resp=netutils.tresp(content=resp_content, **times)
         )
 
     def test_no_file_arg(self):
@@ -126,13 +126,26 @@ class TestHARDump():
             path = os.path.join(tdir, "somefile")
 
             m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
-            m.addons.invoke(m, "response", self.req_get)
+            m.addons.invoke(m, "response", self.flow())
             m.addons.remove(sc)
 
             with open(path, "r") as inp:
                 har = json.load(inp)
 
         assert len(har["log"]["entries"]) == 1
+
+    def test_base64(self):
+        with tutils.tmpdir() as tdir:
+            path = os.path.join(tdir, "somefile")
+
+            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m.addons.invoke(m, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10))
+            m.addons.remove(sc)
+
+            with open(path, "r") as inp:
+                har = json.load(inp)
+
+        assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
     def test_format_cookies(self):
         m, sc = tscript("har_dump.py", "-")
