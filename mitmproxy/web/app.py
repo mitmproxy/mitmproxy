@@ -20,7 +20,6 @@ from mitmproxy import contentviews
 from netlib import version
 
 
-
 def convert_flow_to_json_dict(flow):
     # type: (models.Flow) -> dict
     """
@@ -340,6 +339,7 @@ class FlowContent(RequestHandler):
         self.set_header("X-Frame-Options", "DENY")
         self.write(message.raw_content)
 
+
 class FlowContentView(RequestHandler):
 
     def get(self, flow_id, message, content_view):
@@ -352,8 +352,8 @@ class FlowContentView(RequestHandler):
 #           add event log
 
         self.write(dict(
-           lines=list(lines),
-           description=description
+            lines=list(lines),
+            description=description
         ))
 
 
