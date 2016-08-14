@@ -573,6 +573,9 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
             chunks
         )
 
+    def __call__(self):
+        raise EnvironmentError('Http2SingleStreamLayer must be run as thread')
+
     def run(self):
         layer = http.HttpLayer(self, self.mode)
 
