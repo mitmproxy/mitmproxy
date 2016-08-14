@@ -130,10 +130,11 @@ def response(flow):
 
     # Store binay data as base64
     if strutils.is_mostly_bin(flow.response.content):
-        entry["response"]["content"]["text"] = base64.b64encode(flow.response.content)
+        b64 = base64.b64encode(flow.response.content)
+        entry["response"]["content"]["text"] = b64.decode('ascii')
         entry["response"]["content"]["encoding"] = "base64"
     else:
-        entry["response"]["content"]["text"] = flow.response.content
+        entry["response"]["content"]["text"] = flow.response.text
 
     if flow.request.method in ["POST", "PUT", "PATCH"]:
         entry["request"]["postData"] = {
