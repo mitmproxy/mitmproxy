@@ -289,20 +289,44 @@ def test_is_expired():
 
 
 def test_group_cookies():
-    def group(cookie):
-        return cookies.group_cookies(cookies.parse_cookie_header(c))
+    CA = cookies.CookieAttrs
+    groups = [
+        [
+            "one=uno; foo=bar; foo=baz",
+            [
+                ('one', 'uno', CA([])),
+                ('foo', 'bar', CA([])),
+                ('foo', 'baz', CA([]))
+            ]
+        ],
+        [
+            "one=uno; Path=/; foo=bar; Max-Age=0; foo=baz; expires=24-08-1993",
+            [
+                ('one', 'uno', CA([('Path', '/')])),
+                ('foo', 'bar', CA([('Max-Age', '0')])),
+                ('foo', 'baz', CA([('expires', '24-08-1993')]))
+            ]
+        ],
+        [
+            "one=uno;",
+            [
+                ('one', 'uno', CA([]))
+            ]
+        ],
+        [
+            "one=uno; Path=/; Max-Age=0; Expires=24-08-1993",
+            [
+                ('one', 'uno', CA([('Path', '/'), ('Max-Age', '0'), ('Expires', '24-08-1993')]))
+            ]
+        ],
+        [
+            "path=val; Path=/",
+            [
+                ('path', 'val', CA([('Path', '/')]))
+            ]
+        ]
+    ]
 
-    c = "one=uno; foo=bar; foo=baz"
-    assert len(group(c)) == 3
-
-    c = "one=uno; Path=/; foo=bar; Max-Age=0; foo=baz; expires=24-08-1993"
-    assert len(group(c)) == 3
-
-    c = "one=uno;"
-    assert len(group(c)) == 1
-
-    c = "one=uno; Path=/; Max-Age=0; Expires=24-08-1993"
-    assert len(group(c)) == 1
-
-    c = "path=val; Path=/"
-    assert group(c) == [("path", "val", cookies.CookieAttrs([("Path", "/")]))]
+    for c, expected in groups:
+        observed = cookies.group_cookies(cookies.parse_cookie_header(c))
+        assert observed == expected
