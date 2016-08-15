@@ -7,7 +7,7 @@
     "start": "gulp"
   },
   "jest": {
-    "testRegex": "__tests__/.*\\Spec.js$",
+    "testRegex": "__tests__/.*Spec.js$",
     "testPathDirs": [
       "<rootDir>/src/js"
     ],
