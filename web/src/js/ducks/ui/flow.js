@@ -58,7 +58,7 @@ export default function reducer(state = defaultState, action) {
         case SET_TAB:
             return {
                 ...state,
-                tab: action.tab,
+                tab: action.tab ? action.tab : 'request',
                 displayLarge: false,
             }
 
