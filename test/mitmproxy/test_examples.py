@@ -163,5 +163,5 @@ class TestHARDump():
         assert f['httpOnly']
         assert f['secure']
 
-        f = format_cookies([("n", "v", CA([("expires", "Fri, 24-Aug-2063 00:00:00 GMT")]))])[0]
-        assert f['expires'] == "2063-08-24T05:30:00+00:00"
+        f = format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
+        assert f['expires'] == "2037-08-24T05:30:00+00:00"
