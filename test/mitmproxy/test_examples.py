@@ -1,16 +1,20 @@
 import json
+import os
 
 import six
-import sys
-import os.path
-from mitmproxy.flow import master
-from mitmproxy.flow import state
+
 from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy.builtins import script
+from mitmproxy.flow import master
+from mitmproxy.flow import state
+
 import netlib.utils
+
 from netlib import tutils as netutils
 from netlib.http import Headers
+from netlib.http import cookies
+
 from . import tutils, mastertest
 
 example_dir = netlib.utils.Data(__name__).push("../../examples")
@@ -98,30 +102,66 @@ class TestScripts(mastertest.MasterTest):
         m.request(f)
         assert f.request.host == "mitmproxy.org"
 
-    def test_har_extractor(self):
-        if sys.version_info >= (3, 0):
-            with tutils.raises("does not work on Python 3"):
-                tscript("har_extractor.py")
-            return
 
+class TestHARDump():
+
+    def flow(self, resp_content=b'message'):
+        times = dict(
+            timestamp_start=746203272,
+            timestamp_end=746203272,
+        )
+
+        # Create a dummy flow for testing
+        return tutils.tflow(
+            req=netutils.treq(method=b'GET', **times),
+            resp=netutils.tresp(content=resp_content, **times)
+        )
+
+    def test_no_file_arg(self):
         with tutils.raises(ScriptError):
-            tscript("har_extractor.py")
+            tscript("har_dump.py")
 
+    def test_simple(self):
         with tutils.tmpdir() as tdir:
-            times = dict(
-                timestamp_start=746203272,
-                timestamp_end=746203272,
-            )
+            path = os.path.join(tdir, "somefile")
 
-            path = os.path.join(tdir, "file")
-            m, sc = tscript("har_extractor.py", six.moves.shlex_quote(path))
-            f = tutils.tflow(
-                req=netutils.treq(**times),
-                resp=netutils.tresp(**times)
-            )
-            m.response(f)
+            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m.addons.invoke(m, "response", self.flow())
             m.addons.remove(sc)
 
-            with open(path, "rb") as f:
-                test_data = json.load(f)
-            assert len(test_data["log"]["pages"]) == 1
+            with open(path, "r") as inp:
+                har = json.load(inp)
+
+        assert len(har["log"]["entries"]) == 1
+
+    def test_base64(self):
+        with tutils.tmpdir() as tdir:
+            path = os.path.join(tdir, "somefile")
+
+            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m.addons.invoke(m, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10))
+            m.addons.remove(sc)
+
+            with open(path, "r") as inp:
+                har = json.load(inp)
+
+        assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
+
+    def test_format_cookies(self):
+        m, sc = tscript("har_dump.py", "-")
+        format_cookies = sc.ns.ns["format_cookies"]
+
+        CA = cookies.CookieAttrs
+
+        f = format_cookies([("n", "v", CA([("k", "v")]))])[0]
+        assert f['name'] == "n"
+        assert f['value'] == "v"
+        assert not f['httpOnly']
+        assert not f['secure']
+
+        f = format_cookies([("n", "v", CA([("httponly", None), ("secure", None)]))])[0]
+        assert f['httpOnly']
+        assert f['secure']
+
+        f = format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
+        assert f['expires']

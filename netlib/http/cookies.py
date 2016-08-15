@@ -26,6 +26,12 @@ variants. Serialization follows RFC6265.
     http://tools.ietf.org/html/rfc2965
 """
 
+_cookie_params = set((
+    'expires', 'path', 'comment', 'max-age',
+    'secure', 'httponly', 'version',
+))
+
+
 # TODO: Disallow LHS-only Cookie values
 
 
@@ -263,6 +269,32 @@ def refresh_set_cookie_header(c, delta):
     return ret
 
 
+def get_expiration_ts(cookie_attrs):
+    """
+        Determines the time when the cookie will be expired.
+
+        Considering both 'expires' and 'max-age' parameters.
+
+        Returns: timestamp of when the cookie will expire.
+                 None, if no expiration time is set.
+    """
+    if 'expires' in cookie_attrs:
+        e = email.utils.parsedate_tz(cookie_attrs["expires"])
+        if e:
+            return email.utils.mktime_tz(e)
+
+    elif 'max-age' in cookie_attrs:
+        try:
+            max_age = int(cookie_attrs['Max-Age'])
+        except ValueError:
+            pass
+        else:
+            now_ts = time.time()
+            return now_ts + max_age
+
+    return None
+
+
 def is_expired(cookie_attrs):
     """
         Determines whether a cookie has expired.
@@ -270,20 +302,36 @@ def is_expired(cookie_attrs):
         Returns: boolean
     """
 
-    # See if 'expires' time is in the past
-    expires = False
-    if 'expires' in cookie_attrs:
-        e = email.utils.parsedate_tz(cookie_attrs["expires"])
-        if e:
-            exp_ts = email.utils.mktime_tz(e)
-            now_ts = time.time()
-            expires = exp_ts < now_ts
+    exp_ts = get_expiration_ts(cookie_attrs)
+    now_ts = time.time()
 
-    # or if Max-Age is 0
-    max_age = False
-    try:
-        max_age = int(cookie_attrs.get('Max-Age', 1)) == 0
-    except ValueError:
-        pass
+    # If no expiration information was provided with the cookie
+    if exp_ts is None:
+        return False
+    else:
+        return exp_ts <= now_ts
 
-    return expires or max_age
+
+def group_cookies(pairs):
+    """
+    Converts a list of pairs to a (name, value, attrs) for each cookie.
+    """
+
+    if not pairs:
+        return []
+
+    cookie_list = []
+
+    # First pair is always a new cookie
+    name, value = pairs[0]
+    attrs = []
+
+    for k, v in pairs[1:]:
+        if k.lower() in _cookie_params:
+            attrs.append((k, v))
+        else:
+            cookie_list.append((name, value, CookieAttrs(attrs)))
+            name, value, attrs = k, v, []
+
+    cookie_list.append((name, value, CookieAttrs(attrs)))
+    return cookie_list

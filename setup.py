@@ -119,7 +119,6 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.6",
-            "harparser>=0.2, <0.3",
             "pytz>=2015.07.0, <=2016.6.1",
         ]
     }
