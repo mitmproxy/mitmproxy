@@ -179,7 +179,13 @@ class ProxyConfig:
                     )
                 except ValueError as v:
                     raise exceptions.OptionsError(str(v))
-            self.authenticator = authentication.BasicProxyAuth(
-                password_manager,
-                "mitmproxy"
-            )
+            if options.mode == "reverse":
+                self.authenticator = authentication.BasicWebsiteAuth(
+                    password_manager,
+                    self.upstream_server.address
+                )
+            else:
+                self.authenticator = authentication.BasicProxyAuth(
+                    password_manager,
+                    "mitmproxy"
+                )

@@ -50,9 +50,9 @@ class NullProxyAuth(object):
         return {}
 
 
-class BasicProxyAuth(NullProxyAuth):
-    CHALLENGE_HEADER = 'Proxy-Authenticate'
-    AUTH_HEADER = 'Proxy-Authorization'
+class BasicAuth(NullProxyAuth):
+    CHALLENGE_HEADER = None
+    AUTH_HEADER = None
 
     def __init__(self, password_manager, realm):
         NullProxyAuth.__init__(self, password_manager)
@@ -78,6 +78,16 @@ class BasicProxyAuth(NullProxyAuth):
 
     def auth_challenge_headers(self):
         return {self.CHALLENGE_HEADER: 'Basic realm="%s"' % self.realm}
+
+
+class BasicWebsiteAuth(BasicAuth):
+    CHALLENGE_HEADER = 'WWW-Authenticate'
+    AUTH_HEADER = 'Authorization'
+
+
+class BasicProxyAuth(BasicAuth):
+    CHALLENGE_HEADER = 'Proxy-Authenticate'
+    AUTH_HEADER = 'Proxy-Authorization'
 
 
 class PassMan(object):

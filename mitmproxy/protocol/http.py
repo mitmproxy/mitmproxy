@@ -132,6 +132,8 @@ class HttpLayer(base.Layer):
         # We cannot rely on server_conn.tls_established,
         # see https://github.com/mitmproxy/mitmproxy/issues/925
         self.__initial_server_tls = None
+        # Requests happening after CONNECT do not need Proxy-Authorization headers.
+        self.http_authenticated = False
 
     def __call__(self):
         if self.mode == "transparent":
@@ -146,7 +148,7 @@ class HttpLayer(base.Layer):
                 # Proxy Authentication conceptually does not work in transparent mode.
                 # We catch this misconfiguration on startup. Here, we sort out requests
                 # after a successful CONNECT request (which do not need to be validated anymore)
-                if self.mode != "transparent" and not self.authenticate(request):
+                if not (self.http_authenticated or self.authenticate(request)):
                     return
 
                 # Make sure that the incoming request matches our expectations
@@ -239,6 +241,7 @@ class HttpLayer(base.Layer):
             return self.set_server(address)
 
     def handle_regular_mode_connect(self, request):
+        self.http_authenticated = True
         self.set_server((request.host, request.port))
         self.send_response(models.make_connect_response(request.data.http_version))
         layer = self.ctx.next_layer(self)
@@ -397,10 +400,17 @@ class HttpLayer(base.Layer):
             if self.config.authenticator.authenticate(request.headers):
                 self.config.authenticator.clean(request.headers)
             else:
-                self.send_response(models.make_error_response(
-                    407,
-                    "Proxy Authentication Required",
-                    http.Headers(**self.config.authenticator.auth_challenge_headers())
-                ))
+                if self.mode == "transparent":
+                    self.send_response(models.make_error_response(
+                        401,
+                        "Authentication Required",
+                        http.Headers(**self.config.authenticator.auth_challenge_headers())
+                    ))
+                else:
+                    self.send_response(models.make_error_response(
+                        407,
+                        "Proxy Authentication Required",
+                        http.Headers(**self.config.authenticator.auth_challenge_headers())
+                    ))
                 return False
         return True
