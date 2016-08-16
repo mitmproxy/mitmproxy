@@ -41,17 +41,17 @@ function OptionMenu({ settings, updateSettings }) {
                 />
                 <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
                     checked={!!settings.stickyauth}
-                    txt={settings.stickyauth || ''}
+                    txt={settings.stickyauth}
                     onToggleChanged={txt => updateSettings({ stickyauth: !settings.stickyauth ? txt : null })}
                 />
                 <ToggleInputButton name="stickycookie" placeholder="Sticky cookie filter"
                     checked={!!settings.stickycookie}
-                    txt={settings.stickycookie || ''}
+                    txt={settings.stickycookie}
                     onToggleChanged={txt => updateSettings({ stickycookie: !settings.stickycookie ? txt : null })}
                 />
                 <ToggleInputButton name="stream" placeholder="stream..."
                     checked={!!settings.stream}
-                    txt={settings.stream || ''}
+                    txt={settings.stream}
                     inputType="number"
                     onToggleChanged={txt => updateSettings({ stream: !settings.stream ? txt : null })}
                 />
