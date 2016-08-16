@@ -369,8 +369,10 @@ class TlsLayer(base.Layer):
             not self.config.options.no_upstream_cert and
             (
                 self.config.options.add_upstream_certs_to_client_chain or
-                self._client_hello.alpn_protocols or
-                not self._client_hello.sni
+                self._client_tls and (
+                    self._client_hello.alpn_protocols or
+                    not self._client_hello.sni
+                )
             )
         )
         establish_server_tls_now = (
@@ -434,7 +436,7 @@ class TlsLayer(base.Layer):
         if self._custom_server_sni is False:
             return None
         else:
-            return self._custom_server_sni or self._client_hello.sni
+            return self._custom_server_sni or self._client_hello and self._client_hello.sni
 
     @property
     def alpn_for_client_connection(self):
@@ -509,21 +511,18 @@ class TlsLayer(base.Layer):
     def _establish_tls_with_server(self):
         self.log("Establish TLS with server", "debug")
         try:
-            # We only support http/1.1 and h2.
-            # If the server only supports spdy (next to http/1.1), it may select that
-            # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
-            def deprecated_http2_variant(x):
-                return x.startswith(b"h2-") or x.startswith(b"spdy")
-
-            if self._client_hello.alpn_protocols:
-                alpn = [x for x in self._client_hello.alpn_protocols if not deprecated_http2_variant(x)]
-            else:
-                alpn = None
-            if alpn and b"h2" in alpn and not self.config.options.http2:
-                alpn.remove(b"h2")
+            alpn = None
+            if self._client_tls:
+                if self._client_hello.alpn_protocols:
+                    # We only support http/1.1 and h2.
+                    # If the server only supports spdy (next to http/1.1), it may select that
+                    # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
+                    alpn = [x for x in self._client_hello.alpn_protocols if not (x.startswith(b"h2-") or x.startswith(b"spdy"))]
+                if alpn and b"h2" in alpn and not self.config.options.http2:
+                    alpn.remove(b"h2")
 
             ciphers_server = self.config.options.ciphers_server
-            if not ciphers_server:
+            if not ciphers_server and self._client_tls:
                 ciphers_server = []
                 for id in self._client_hello.cipher_suites:
                     if id in CIPHER_ID_NAME_MAP.keys():
@@ -562,7 +561,8 @@ class TlsLayer(base.Layer):
                 sys.exc_info()[2]
             )
 
-        self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
+        proto = self.alpn_for_client_connection.decode() if self.alpn_for_client_connection else '-'
+        self.log("ALPN selected by server: {}".format(proto), "debug")
 
     def _find_cert(self):
         """
