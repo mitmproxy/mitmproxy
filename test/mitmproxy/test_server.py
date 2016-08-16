@@ -472,6 +472,11 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
     reverse = True
 
 
+class TestReverseSSL(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
+    reverse = True
+    ssl = True
+
+
 class TestSocks5(tservers.SocksModeTest):
 
     def test_simple(self):
