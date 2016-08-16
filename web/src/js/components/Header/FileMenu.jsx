@@ -1,9 +1,18 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import classnames from 'classnames'
+import FileChooser from '../common/FileChooser'
 import * as flowsActions from '../../ducks/flows'
 
+
+
 class FileMenu extends Component {
+
+    static propTypes = {
+        clearFlows: PropTypes.func.isRequired,
+        loadFlows: PropTypes.func.isRequired,
+        saveFlows: PropTypes.func.isRequired
+    }
 
     constructor(props, context) {
         super(props, context)
@@ -45,12 +54,8 @@ class FileMenu extends Component {
         this.fileInput.click()
     }
 
-    onOpenFile(e) {
-        e.preventDefault()
-        if (e.target.files.length > 0) {
-            this.props.loadFlows(e.target.files[0])
-            this.fileInput.value = ''
-        }
+    onOpenFile(file) {
+        this.props.loadFlows(file)
     }
 
     onSaveClick(e) {
@@ -70,15 +75,10 @@ class FileMenu extends Component {
                         </a>
                     </li>
                     <li>
-                        <a href="#" onClick={this.onOpenClick}>
-                            <i className="fa fa-fw fa-folder-open"></i>
-                            Open...
-                        </a>
-                        <input
-                            ref={ref => this.fileInput = ref}
-                            className="hidden"
-                            type="file"
-                            onChange={this.onOpenFile}
+                        <FileChooser
+                            icon="fa-folder-open"
+                            text="Open..."
+                            onOpenFile={this.onOpenFile}
                         />
                     </li>
                     <li>
