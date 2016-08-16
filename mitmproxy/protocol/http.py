@@ -7,12 +7,15 @@ import traceback
 import h2.exceptions
 import six
 
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy.protocol import base
+from .websockets import WebSocketsLayer
+
+import netlib.exceptions
 from netlib import http
 from netlib import tcp
+from netlib import websockets
 
 
 class _HttpTransmissionLayer(base.Layer):
@@ -189,6 +192,21 @@ class HttpLayer(base.Layer):
             self.process_request_hook(flow)
 
             try:
+                # WebSockets
+                if websockets.check_handshake(request.headers):
+                    if websockets.check_client_version(request.headers):
+                        layer = WebSocketsLayer(self, request)
+                        layer()
+                        return
+                    else:
+                        # we only support RFC6455 with WebSockets version 13
+                        self.send_response(models.make_error_response(
+                            400,
+                            http.status_codes.RESPONSES.get(400),
+                            http.Headers(sec_websocket_version="13")
+                        ))
+                        return
+
                 if not flow.response:
                     self.establish_server_connection(
                         flow.request.host,

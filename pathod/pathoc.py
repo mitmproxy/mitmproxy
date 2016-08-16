@@ -139,7 +139,7 @@ class WebsocketFrameReader(basethread.BaseThread):
                         except exceptions.TcpDisconnect:
                             return
                         self.frames_queue.put(frm)
-                        log("<< %s" % frm.header.human_readable())
+                        log("<< %s" % repr(frm.header))
                         if self.ws_read_limit is not None:
                             self.ws_read_limit -= 1
                         starttime = time.time()

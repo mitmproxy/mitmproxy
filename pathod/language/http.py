@@ -198,7 +198,7 @@ class Response(_HTTPMessage):
                     1,
                     StatusCode(101)
                 )
-            headers = netlib.websockets.WebsocketsProtocol.server_handshake_headers(
+            headers = netlib.websockets.server_handshake_headers(
                 settings.websocket_key
             )
             for i in headers.fields:
@@ -310,7 +310,7 @@ class Request(_HTTPMessage):
                     1,
                     Method("get")
                 )
-            for i in netlib.websockets.WebsocketsProtocol.client_handshake_headers().fields:
+            for i in netlib.websockets.client_handshake_headers().fields:
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
