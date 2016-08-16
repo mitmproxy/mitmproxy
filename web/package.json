@@ -7,7 +7,7 @@
     "start": "gulp"
   },
   "jest": {
-    "testRegex": "__tests__/.*\\Spec.js$",
+    "testRegex": "__tests__/.*Spec.js$",
     "testPathDirs": [
       "<rootDir>/src/js"
     ],
@@ -19,16 +19,16 @@
     "bootstrap": "^3.3.6",
     "classnames": "^2.2.5",
     "flux": "^2.1.1",
+    "history": "^3.0.0",
     "lodash": "^4.11.2",
     "react": "^15.1.0",
+    "react-codemirror": "^0.2.6",
     "react-dom": "^15.1.0",
     "react-redux": "^4.4.5",
-    "react-router": "^2.4.0",
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
-    "shallowequal": "^0.2.2",
-    "react-codemirror": "^0.2.6"
+    "shallowequal": "^0.2.2"
   },
   "devDependencies": {
     "babel-core": "^6.7.7",

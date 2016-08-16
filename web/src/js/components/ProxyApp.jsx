@@ -1,58 +1,77 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
+import { createHashHistory, useQueries } from 'history'
 
 import { init as appInit, destruct as appDestruct } from '../ducks/app'
 import { onKeyDown } from '../ducks/ui/keyboard'
+import { updateFilter, updateHighlight } from '../ducks/flowView'
+import { selectTab } from '../ducks/ui/flow'
+import { select as selectFlow } from '../ducks/flows'
+import { Query } from '../actions'
+import MainView from './MainView'
 import Header from './Header'
 import EventLog from './EventLog'
 import Footer from './Footer'
 
 class ProxyAppMain extends Component {
 
-    static contextTypes = {
-        router: PropTypes.object.isRequired,
+    flushToStore(location) {
+        const components = location.pathname.split('/').filter(v => v)
+        const query = location.query || {}
+
+        if (components.length > 2) {
+            this.props.selectFlow(components[1])
+            this.props.selectTab(components[2])
+        } else {
+            this.props.selectFlow(null)
+            this.props.selectTab(null)
+        }
+
+        this.props.updateFilter(query[Query.SEARCH])
+        this.props.updateHighlight(query[Query.HIGHLIGHT])
+    }
+
+    flushToHistory(props) {
+        const query = { ...query }
+
+        if (props.filter) {
+            query[Query.SEARCH] = props.filter
+        }
+
+        if (props.highlight) {
+            query[Query.HIGHLIGHT] = props.highlight
+        }
+
+        if (props.selectedFlowId) {
+            this.history.push({ pathname: `/flows/${props.selectedFlowId}/${props.tab}`, query })
+        } else {
+            this.history.push({ pathname: '/flows', query })
+        }
     }
 
     componentWillMount() {
-        this.props.appInit(this.context.router)
+        this.props.appInit()
+        this.history = useQueries(createHashHistory)()
+        this.unlisten = this.history.listen(location => this.flushToStore(location))
         window.addEventListener('keydown', this.props.onKeyDown);
     }
 
     componentWillUnmount() {
-        this.props.appDestruct(this.context.router)
+        this.props.appDestruct()
+        this.unlisten()
         window.removeEventListener('keydown', this.props.onKeyDown);
     }
 
     componentWillReceiveProps(nextProps) {
-        /*
-        FIXME: improve react-router -> redux integration.
-        if (nextProps.location.query[Query.SEARCH] !== nextProps.filter) {
-            this.props.updateFilter(nextProps.location.query[Query.SEARCH], false)
-        }
-        if (nextProps.location.query[Query.HIGHLIGHT] !== nextProps.highlight) {
-            this.props.updateHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
-        }
-        */
-        if (nextProps.query === this.props.query && nextProps.selectedFlowId === this.props.selectedFlowId && nextProps.panel === this.props.panel) {
-            return
-        }
-        if (nextProps.selectedFlowId) {
-            this.context.router.replace({ pathname: `/flows/${nextProps.selectedFlowId}/${nextProps.panel}`, query: nextProps.query })
-        } else {
-            this.context.router.replace({ pathname: '/flows', query: nextProps.query })
-        }
-
+        this.flushToHistory(nextProps)
     }
 
     render() {
-        const { showEventLog, location, children, query } = this.props
+        const { showEventLog, location, filter, highlight } = this.props
         return (
             <div id="container" tabIndex="0">
                 <Header/>
-                {React.cloneElement(
-                    children,
-                    { ref: 'view', location, query }
-                )}
+                <MainView />
                 {showEventLog && (
                     <EventLog key="eventlog"/>
                 )}
@@ -65,13 +84,18 @@ class ProxyAppMain extends Component {
 export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
-        query: state.flowView.filter,
-        panel: state.ui.flow.tab,
+        filter: state.flowView.filter,
+        highlight: state.flowView.highlight,
+        tab: state.ui.flow.tab,
         selectedFlowId: state.flows.selected[0]
     }),
     {
         appInit,
         appDestruct,
-        onKeyDown
+        onKeyDown,
+        updateFilter,
+        updateHighlight,
+        selectTab,
+        selectFlow
     }
 )(ProxyAppMain)
