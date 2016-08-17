@@ -210,5 +210,8 @@ export function updateFlow(item) {
  * @private
  */
 export function removeFlow(id) {
-    return { type: REMOVE, id }
+    return (dispatch) => {
+        dispatch(select())
+        dispatch({ type: REMOVE, id })
+    }
 }

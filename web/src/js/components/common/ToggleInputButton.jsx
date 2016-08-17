@@ -6,7 +6,7 @@ export default class ToggleInputButton extends Component {
 
     static propTypes = {
         name: PropTypes.string.isRequired,
-        txt: PropTypes.string.isRequired,
+        txt: PropTypes.string,
         onToggleChanged: PropTypes.func.isRequired,
         checked: PropTypes.bool.isRequired,
         placeholder: PropTypes.string.isRequired,
@@ -15,7 +15,7 @@ export default class ToggleInputButton extends Component {
 
     constructor(props) {
         super(props)
-        this.state = { txt: props.txt }
+        this.state = { txt: props.txt || '' }
     }
 
     onKeyDown(e) {
@@ -41,7 +41,7 @@ export default class ToggleInputButton extends Component {
                     className="form-control"
                     placeholder={placeholder}
                     disabled={checked}
-                    value={this.state.txt || ''}
+                    value={this.state.txt}
                     type={inputType || 'text'}
                     onChange={e => this.setState({ txt: e.target.value })}
                     onKeyDown={e => this.onKeyDown(e)}
