@@ -1,5 +1,4 @@
-import React, { Component, PropTypes } from 'react'
-import { render } from 'react-dom';
+import React, {PropTypes} from 'react'
 import Codemirror from 'react-codemirror';
 
 
