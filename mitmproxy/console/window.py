@@ -27,7 +27,7 @@ class Window(urwid.Frame):
         if not k:
             if args[1] == "mouse drag":
                 signals.status_message.send(
-                    message = "Hold down shift, alt or ctrl to select text.",
+                    message = "Hold down fn, shift, alt or ctrl to select text or use the --no-mouse parameter.",
                     expire = 1
                 )
             elif args[1] == "mouse press" and args[2] == 4:
