@@ -7,7 +7,7 @@ import { setContentView } from "../../ducks/ui/flow";
 function ViewItem({ name, setContentView, children }) {
     return (
         <li>
-            <a href="#" onClick={() => setContentView(name)}>
+            <a href="#" onClick={e => {e.preventDefault(); setContentView(name)}}>
                 {children}
             </a>
         </li>
