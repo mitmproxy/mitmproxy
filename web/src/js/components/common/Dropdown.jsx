@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import classnames from 'classnames'
 
+export function Divider () { return  <hr className="divider"/>}
+
 export default class Dropdown extends Component {
 
     static propTypes = {
@@ -43,12 +45,7 @@ export default class Dropdown extends Component {
                     {text}
                 </a>
                 <ul className="dropdown-menu" role="menu">
-                    {children.map(item =>
-                        item.name == "divider" ?
-                            <li role="presentation" className="divider"/>
-                        :
-                            <li> {item} </li>
-                    )}
+                    {children.map ( (item, i) =>  <li key={i}> {item} </li> )}
                 </ul>
             </div>
         )
