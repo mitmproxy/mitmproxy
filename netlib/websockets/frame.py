@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import os
 import struct
 import io
-import warnings
 
 import six
 
@@ -10,7 +9,7 @@ from netlib import tcp
 from netlib import strutils
 from netlib import utils
 from netlib import human
-from netlib.websockets import protocol
+from .masker import Masker
 
 
 MAX_16_BIT_INT = (1 << 16)
@@ -18,6 +17,7 @@ MAX_64_BIT_INT = (1 << 64)
 
 DEFAULT = object()
 
+# RFC 6455, Section 5.2 - Base Framing Protocol
 OPCODE = utils.BiDi(
     CONTINUE=0x00,
     TEXT=0x01,
@@ -25,6 +25,23 @@ OPCODE = utils.BiDi(
     CLOSE=0x08,
     PING=0x09,
     PONG=0x0a
+)
+
+# RFC 6455, Section 7.4.1 - Defined Status Codes
+CLOSE_REASON = utils.BiDi(
+    NORMAL_CLOSURE=1000,
+    GOING_AWAY=1001,
+    PROTOCOL_ERROR=1002,
+    UNSUPPORTED_DATA=1003,
+    RESERVED=1004,
+    RESERVED_NO_STATUS=1005,
+    RESERVED_ABNORMAL_CLOSURE=1006,
+    INVALID_PAYLOAD_DATA=1007,
+    POLICY_VIOLATION=1008,
+    MESSAGE_TOO_BIG=1009,
+    MANDATORY_EXTENSION=1010,
+    INTERNAL_ERROR=1011,
+    RESERVED_TLS_HANDHSAKE_FAILED=1015,
 )
 
 
@@ -103,10 +120,6 @@ class FrameHeader(object):
             vals.append(" %s" % human.pretty_size(self.payload_length))
         return "".join(vals)
 
-    def human_readable(self):
-        warnings.warn("FrameHeader.to_bytes is deprecated, use bytes(frame_header) instead.", DeprecationWarning)
-        return repr(self)
-
     def __bytes__(self):
         first_byte = utils.setbit(0, 7, self.fin)
         first_byte = utils.setbit(first_byte, 6, self.rsv1)
@@ -128,16 +141,15 @@ class FrameHeader(object):
             # '!Q' = pack as 64 bit unsigned long long
             # add 8 bytes extended payload length
             b += struct.pack('!Q', self.payload_length)
+        else:
+            raise ValueError("Payload length exceeds 64bit integer")
+
         if self.masking_key:
             b += self.masking_key
         return b
 
     if six.PY2:
         __str__ = __bytes__
-
-    def to_bytes(self):
-        warnings.warn("FrameHeader.to_bytes is deprecated, use bytes(frame_header) instead.", DeprecationWarning)
-        return bytes(self)
 
     @classmethod
     def from_file(cls, fp):
@@ -151,19 +163,17 @@ class FrameHeader(object):
         rsv1 = utils.getbit(first_byte, 6)
         rsv2 = utils.getbit(first_byte, 5)
         rsv3 = utils.getbit(first_byte, 4)
-        # grab right-most 4 bits
-        opcode = first_byte & 15
+        opcode = first_byte & 0xF
         mask_bit = utils.getbit(second_byte, 7)
-        # grab the next 7 bits
-        length_code = second_byte & 127
+        length_code = second_byte & 0x7F
 
-        # payload_lengthy > 125 indicates you need to read more bytes
+        # payload_length > 125 indicates you need to read more bytes
         # to get the actual payload length
         if length_code <= 125:
             payload_length = length_code
         elif length_code == 126:
             payload_length, = struct.unpack("!H", fp.safe_read(2))
-        elif length_code == 127:
+        else:  # length_code == 127:
             payload_length, = struct.unpack("!Q", fp.safe_read(8))
 
         # masking key only present if mask bit set
@@ -191,58 +201,36 @@ class FrameHeader(object):
 
 
 class Frame(object):
-
     """
-        Represents one websockets frame.
-        Constructor takes human readable forms of the frame components
-        from_bytes() is also avaliable.
+    Represents a single WebSockets frame.
+    Constructor takes human readable forms of the frame components.
+    from_bytes() reads from a file-like object to create a new Frame.
 
-        WebSockets Frame as defined in RFC6455
+    WebSockets Frame as defined in RFC6455
 
-          0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         +-+-+-+-+-------+-+-------------+-------------------------------+
-         |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-         |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-         |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-         | |1|2|3|       |K|             |                               |
-         +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-         |     Extended payload length continued, if payload len == 127  |
-         + - - - - - - - - - - - - - - - +-------------------------------+
-         |                               |Masking-key, if MASK set to 1  |
-         +-------------------------------+-------------------------------+
-         | Masking-key (continued)       |          Payload Data         |
-         +-------------------------------- - - - - - - - - - - - - - - - +
-         :                     Payload Data continued ...                :
-         + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-         |                     Payload Data continued ...                |
-         +---------------------------------------------------------------+
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-------+-+-------------+-------------------------------+
+      |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+      |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+      |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+      | |1|2|3|       |K|             |                               |
+      +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+      |     Extended payload length continued, if payload len == 127  |
+      + - - - - - - - - - - - - - - - +-------------------------------+
+      |                               |Masking-key, if MASK set to 1  |
+      +-------------------------------+-------------------------------+
+      | Masking-key (continued)       |          Payload Data         |
+      +-------------------------------- - - - - - - - - - - - - - - - +
+      :                     Payload Data continued ...                :
+      + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+      |                     Payload Data continued ...                |
+      +---------------------------------------------------------------+
     """
 
     def __init__(self, payload=b"", **kwargs):
         self.payload = payload
         kwargs["payload_length"] = kwargs.get("payload_length", len(payload))
         self.header = FrameHeader(**kwargs)
-
-    @classmethod
-    def default(cls, message, from_client=False):
-        """
-          Construct a basic websocket frame from some default values.
-          Creates a non-fragmented text frame.
-        """
-        if from_client:
-            mask_bit = 1
-            masking_key = os.urandom(4)
-        else:
-            mask_bit = 0
-            masking_key = None
-
-        return cls(
-            message,
-            fin=1,  # final frame
-            opcode=OPCODE.TEXT,  # text
-            mask=mask_bit,
-            masking_key=masking_key,
-        )
 
     @classmethod
     def from_bytes(cls, bytestring):
@@ -258,32 +246,19 @@ class Frame(object):
             ret = ret + "\nPayload:\n" + strutils.bytes_to_escaped_str(self.payload)
         return ret
 
-    def human_readable(self):
-        warnings.warn("Frame.to_bytes is deprecated, use bytes(frame) instead.", DeprecationWarning)
-        return repr(self)
-
     def __bytes__(self):
         """
             Serialize the frame to wire format. Returns a string.
         """
         b = bytes(self.header)
         if self.header.masking_key:
-            b += protocol.Masker(self.header.masking_key)(self.payload)
+            b += Masker(self.header.masking_key)(self.payload)
         else:
             b += self.payload
         return b
 
     if six.PY2:
         __str__ = __bytes__
-
-    def to_bytes(self):
-        warnings.warn("FrameHeader.to_bytes is deprecated, use bytes(frame_header) instead.", DeprecationWarning)
-        return bytes(self)
-
-    def to_file(self, writer):
-        warnings.warn("Frame.to_file is deprecated, use wfile.write(bytes(frame)) instead.", DeprecationWarning)
-        writer.write(bytes(self))
-        writer.flush()
 
     @classmethod
     def from_file(cls, fp):
@@ -297,20 +272,11 @@ class Frame(object):
         payload = fp.safe_read(header.payload_length)
 
         if header.mask == 1 and header.masking_key:
-            payload = protocol.Masker(header.masking_key)(payload)
+            payload = Masker(header.masking_key)(payload)
 
-        return cls(
-            payload,
-            fin=header.fin,
-            opcode=header.opcode,
-            mask=header.mask,
-            payload_length=header.payload_length,
-            masking_key=header.masking_key,
-            rsv1=header.rsv1,
-            rsv2=header.rsv2,
-            rsv3=header.rsv3,
-            length_code=header.length_code
-        )
+        frame = cls(payload)
+        frame.header = header
+        return frame
 
     def __eq__(self, other):
         if isinstance(other, Frame):
