@@ -130,6 +130,7 @@ class _Http2TestBase(object):
             b"\r\n" % (self.server.server.address.port, self.server.server.address.port)
         )
         client.wfile.flush()
+        # TODO: rewrite as http.Request object with http.assemble_request
 
         # read CONNECT response
         while client.rfile.readline() != b"\r\n":
