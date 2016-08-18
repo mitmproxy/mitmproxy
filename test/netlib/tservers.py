@@ -100,7 +100,8 @@ class ServerTestBase(object):
 
     @classmethod
     def makeserver(cls, **kwargs):
-        return _TServer(cls.ssl, cls.q, cls.handler, cls.addr, **kwargs)
+        ssl = kwargs.pop('ssl', cls.ssl)
+        return _TServer(ssl, cls.q, cls.handler, cls.addr, **kwargs)
 
     @classmethod
     def teardown_class(cls):
