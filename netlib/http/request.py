@@ -20,8 +20,20 @@ host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
 class RequestData(message.MessageData):
-    def __init__(self, first_line_format, method, scheme, host, port, path, http_version, headers=(), content=None,
-                 timestamp_start=None, timestamp_end=None):
+    def __init__(
+        self,
+        first_line_format,
+        method,
+        scheme,
+        host,
+        port,
+        path,
+        http_version,
+        headers=(),
+        content=None,
+        timestamp_start=None,
+        timestamp_end=None
+    ):
         if isinstance(method, six.text_type):
             method = method.encode("ascii", "strict")
         if isinstance(scheme, six.text_type):
