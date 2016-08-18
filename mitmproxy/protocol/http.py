@@ -158,7 +158,6 @@ class HttpLayer(base.Layer):
                 if self.mode == "regular" and request.first_line_format == "authority":
                     self.handle_regular_mode_connect(request)
                     return
-
             except netlib.exceptions.HttpReadDisconnect:
                 # don't throw an error for disconnects that happen before/between requests.
                 return
@@ -170,13 +169,18 @@ class HttpLayer(base.Layer):
             try:
                 flow = models.HTTPFlow(self.client_conn, self.server_conn, live=self)
                 flow.request = request
+
                 # set upstream auth
                 if self.mode == "upstream" and self.config.upstream_auth is not None:
                     flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
                 self.process_request_hook(flow)
 
                 if not flow.response:
-                    self.establish_server_connection(flow)
+                    self.establish_server_connection(
+                        flow.request.host,
+                        flow.request.port,
+                        flow.request.scheme
+                    )
                     self.get_response_from_server(flow)
                 else:
                     # response was set by an inline script.
@@ -227,9 +231,9 @@ class HttpLayer(base.Layer):
             request.body = b"".join(self.read_request_body(request))
         return request
 
-    def send_error_response(self, code, message):
+    def send_error_response(self, code, message, headers=None):
         try:
-            response = models.make_error_response(code, message)
+            response = models.make_error_response(code, message, headers)
             self.send_response(response)
         except (netlib.exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
             self.log(traceback.format_exc(), "debug")
@@ -343,9 +347,9 @@ class HttpLayer(base.Layer):
             flow.response = request_reply
             return
 
-    def establish_server_connection(self, flow):
-        address = tcp.Address((flow.request.host, flow.request.port))
-        tls = (flow.request.scheme == "https")
+    def establish_server_connection(self, host, port, scheme):
+        address = tcp.Address((host, port))
+        tls = (scheme == "https")
 
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
