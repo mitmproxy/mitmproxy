@@ -6,7 +6,7 @@ MANIFEST
 *.swp
 *.swo
 *.egg-info/
-.coverage
+.coverage*
 .idea
 .cache/
 .tox*/
