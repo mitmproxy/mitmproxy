@@ -243,7 +243,6 @@ class FlowHandler(RequestHandler):
         flow = self.flow
         flow.backup()
         for a, b in six.iteritems(self.json):
-
             if a == "request":
                 request = flow.request
                 for k, v in six.iteritems(b):
@@ -260,7 +259,6 @@ class FlowHandler(RequestHandler):
 
             elif a == "response":
                 response = flow.response
-
                 for k, v in six.iteritems(b):
                     if k == "msg":
                         response.msg = str(v)

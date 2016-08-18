@@ -185,7 +185,7 @@ var Query = exports.Query = {
     SHOW_EVENTLOG: "e"
 };
 
-},{"./dispatcher.js":46}],3:[function(require,module,exports){
+},{"./dispatcher.js":48}],3:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -203,15 +203,9 @@ var _reduxThunk = require('redux-thunk');
 
 var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 
-var _reactRouter = require('react-router');
-
 var _ProxyApp = require('./components/ProxyApp');
 
 var _ProxyApp2 = _interopRequireDefault(_ProxyApp);
-
-var _MainView = require('./components/MainView');
-
-var _MainView2 = _interopRequireDefault(_MainView);
 
 var _index = require('./ducks/index');
 
@@ -241,23 +235,13 @@ document.addEventListener('DOMContentLoaded', function () {
     (0, _reactDom.render)(_react2.default.createElement(
         _reactRedux.Provider,
         { store: store },
-        _react2.default.createElement(
-            _reactRouter.Router,
-            { history: _reactRouter.hashHistory },
-            _react2.default.createElement(_reactRouter.Redirect, { from: '/', to: '/flows' }),
-            _react2.default.createElement(
-                _reactRouter.Route,
-                { path: '/', component: _ProxyApp2.default },
-                _react2.default.createElement(_reactRouter.Route, { path: 'flows', component: _MainView2.default }),
-                _react2.default.createElement(_reactRouter.Route, { path: 'flows/:flowId/:detailTab', component: _MainView2.default })
-            )
-        )
+        _react2.default.createElement(_ProxyApp2.default, null)
     ), document.getElementById("mitmproxy"));
 });
 
 }).call(this,require('_process'))
 
-},{"./components/MainView":35,"./components/ProxyApp":37,"./ducks/eventLog":48,"./ducks/index":51,"_process":1,"react":"react","react-dom":"react-dom","react-redux":"react-redux","react-router":"react-router","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
+},{"./components/ProxyApp":37,"./ducks/eventLog":50,"./ducks/index":53,"_process":1,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -343,7 +327,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateEdit: _flow.updateEdit
 })(ContentView);
 
-},{"../ducks/ui/flow":54,"./ContentView/ContentViews":8,"./ContentView/MetaViews":10,"./ContentView/ShowFullContentButton":11,"react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
+},{"../ducks/ui/flow":56,"./ContentView/ContentViews":8,"./ContentView/MetaViews":10,"./ContentView/ShowFullContentButton":11,"react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -354,8 +338,6 @@ exports.default = CodeEditor;
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
-
-var _reactDom = require('react-dom');
 
 var _reactCodemirror = require('react-codemirror');
 
@@ -385,7 +367,7 @@ function CodeEditor(_ref) {
     );
 }
 
-},{"react":"react","react-codemirror":"react-codemirror","react-dom":"react-dom"}],6:[function(require,module,exports){
+},{"react":"react","react-codemirror":"react-codemirror"}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -514,7 +496,7 @@ exports.default = function (View) {
     }), _temp;
 };
 
-},{"../../flow/utils.js":62,"react":"react"}],7:[function(require,module,exports){
+},{"../../flow/utils.js":64,"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -660,7 +642,9 @@ var ViewServer = function (_Component) {
     }, {
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
-            this.setContentView(nextProps);
+            if (nextProps.content != this.props.content) {
+                this.setContentView(nextProps);
+            }
         }
     }, {
         key: 'setContentView',
@@ -672,9 +656,7 @@ var ViewServer = function (_Component) {
             }
 
             props.setContentViewDescription(props.contentView != this.data.description ? this.data.description : '');
-
-            var isFullContentShown = this.data.lines.length < props.maxLines;
-            if (isFullContentShown) props.setShowFullContent(true);
+            props.setContent(this.data.lines);
         }
     }, {
         key: 'render',
@@ -696,11 +678,13 @@ var ViewServer = function (_Component) {
                         return _react2.default.createElement(
                             'div',
                             { key: 'line' + i },
-                            line.map(function (tuple, j) {
+                            line.map(function (element, j) {
+                                var style = void 0,
+                                    text = element;
                                 return _react2.default.createElement(
                                     'span',
-                                    { key: 'tuple' + j, className: tuple[0] },
-                                    tuple[1]
+                                    { key: 'tuple' + j, className: style },
+                                    element
                                 );
                             })
                         );
@@ -714,25 +698,29 @@ var ViewServer = function (_Component) {
     return ViewServer;
 }(_react.Component);
 
-ViewServer.defaultProps = {
-    maxLines: 80
+ViewServer.propTypes = {
+    showFullContent: _react.PropTypes.bool.isRequired,
+    maxLines: _react.PropTypes.number.isRequired,
+    setContentViewDescription: _react.PropTypes.func.isRequired,
+    setContent: _react.PropTypes.func.isRequired
 };
 
 
 exports.ViewServer = ViewServer = (0, _reactRedux.connect)(function (state) {
     return {
-        showFullContent: state.ui.flow.showFullContent
+        showFullContent: state.ui.flow.showFullContent,
+        maxLines: state.ui.flow.maxContentLines
     };
 }, {
     setContentViewDescription: _flow.setContentViewDescription,
-    setShowFullContent: _flow.setShowFullContent
+    setContent: _flow.setContent
 })((0, _ContentLoader2.default)(ViewServer));
 
 exports.Edit = Edit;
 exports.ViewServer = ViewServer;
 exports.ViewImage = ViewImage;
 
-},{"../../ducks/ui/flow":54,"../../flow/utils":62,"./CodeEditor":5,"./ContentLoader":6,"react":"react","react-redux":"react-redux"}],9:[function(require,module,exports){
+},{"../../ducks/ui/flow":56,"../../flow/utils":64,"./CodeEditor":5,"./ContentLoader":6,"react":"react","react-redux":"react-redux"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -763,7 +751,7 @@ function DownloadContentButton(_ref) {
     );
 }
 
-},{"../../flow/utils":62,"react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils":64,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -844,7 +832,7 @@ function ContentTooLarge(_ref3) {
     );
 }
 
-},{"../../utils.js":63,"./DownloadContentButton":9,"./UploadContentButton":12,"react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":65,"./DownloadContentButton":9,"./UploadContentButton":12,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -875,30 +863,54 @@ ShowFullContentButton.propTypes = {
 function ShowFullContentButton(_ref) {
     var setShowFullContent = _ref.setShowFullContent;
     var showFullContent = _ref.showFullContent;
+    var visibleLines = _ref.visibleLines;
+    var contentLines = _ref.contentLines;
 
 
-    return !showFullContent && _react2.default.createElement(_Button2.default, { className: 'view-all-content-btn btn-xs', onClick: function onClick() {
-            return setShowFullContent(true);
-        }, text: 'Show full content' });
+    return !showFullContent && _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(_Button2.default, { className: 'view-all-content-btn btn-xs', onClick: function onClick() {
+                return setShowFullContent(true);
+            }, text: 'Show full content' }),
+        _react2.default.createElement(
+            'span',
+            { className: 'pull-right' },
+            ' ',
+            visibleLines,
+            '/',
+            contentLines,
+            ' are visible   '
+        )
+    );
 }
 
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
-        showFullContent: state.ui.flow.showFullContent
+        showFullContent: state.ui.flow.showFullContent,
+        visibleLines: state.ui.flow.maxContentLines,
+        contentLines: state.ui.flow.content.length
+
     };
 }, {
     setShowFullContent: _flow.setShowFullContent
 })(ShowFullContentButton);
 
-},{"../../ducks/ui/flow":54,"../common/Button":40,"react":"react","react-dom":"react-dom","react-redux":"react-redux"}],12:[function(require,module,exports){
-"use strict";
+},{"../../ducks/ui/flow":56,"../common/Button":40,"react":"react","react-dom":"react-dom","react-redux":"react-redux"}],12:[function(require,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.default = UploadContentButton;
 
-var _react = require("react");
+var _react = require('react');
+
+var _FileChooser = require('../common/FileChooser');
+
+var _FileChooser2 = _interopRequireDefault(_FileChooser);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 UploadContentButton.propTypes = {
     uploadContent: _react.PropTypes.func.isRequired
@@ -910,43 +922,23 @@ function UploadContentButton(_ref) {
 
     var fileInput = void 0;
 
-    return React.createElement(
-        "a",
-        { className: "btn btn-default btn-xs",
-            onClick: function onClick() {
-                return fileInput.click();
-            },
-            title: "Upload a file to replace the content." },
-        React.createElement("i", { className: "fa fa-upload" }),
-        React.createElement("input", {
-            ref: function ref(_ref2) {
-                return fileInput = _ref2;
-            },
-            className: "hidden",
-            type: "file",
-            onChange: function onChange(e) {
-                if (e.target.files.length > 0) uploadContent(e.target.files[0]);
-            }
-        })
-    );
+    return React.createElement(_FileChooser2.default, {
+        icon: 'fa-upload',
+        title: 'Upload a file to replace the content.',
+        onOpenFile: uploadContent,
+        className: 'btn btn-default btn-xs' });
 }
 
-},{"react":"react"}],13:[function(require,module,exports){
+},{"../common/FileChooser":42,"react":"react"}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
-
-var _classnames = require('classnames');
-
-var _classnames2 = _interopRequireDefault(_classnames);
 
 var _reactRedux = require('react-redux');
 
@@ -956,122 +948,64 @@ var ContentViews = _interopRequireWildcard(_ContentViews);
 
 var _flow = require('../../ducks/ui/flow');
 
+var _Dropdown = require('../common/Dropdown');
+
+var _Dropdown2 = _interopRequireDefault(_Dropdown);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+ViewSelector.propTypes = {
+    contentViews: _react.PropTypes.array.isRequired,
+    activeView: _react.PropTypes.string.isRequired,
+    isEdit: _react.PropTypes.bool.isRequired,
+    setContentView: _react.PropTypes.func.isRequired
+};
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function ViewItem(_ref) {
-    var name = _ref.name;
+function ViewSelector(_ref) {
+    var contentViews = _ref.contentViews;
+    var activeView = _ref.activeView;
+    var isEdit = _ref.isEdit;
     var setContentView = _ref.setContentView;
-    var children = _ref.children;
+
+    var edit = ContentViews.Edit.displayName;
+    var inner = _react2.default.createElement(
+        'span',
+        null,
+        ' ',
+        _react2.default.createElement(
+            'b',
+            null,
+            'View:'
+        ),
+        ' ',
+        activeView,
+        _react2.default.createElement('span', { className: 'caret' }),
+        ' '
+    );
 
     return _react2.default.createElement(
-        'li',
-        null,
-        _react2.default.createElement(
+        _Dropdown2.default,
+        { dropup: true, className: 'pull-left', btnClass: 'btn btn-default btn-xs', text: inner },
+        contentViews.map(function (name) {
+            return _react2.default.createElement(
+                'a',
+                { href: '#', key: name, onClick: function onClick(e) {
+                        e.preventDefault();setContentView(name);
+                    } },
+                name.toLowerCase().replace('_', ' ')
+            );
+        }),
+        isEdit && _react2.default.createElement(
             'a',
-            { href: '#', onClick: function onClick() {
-                    return setContentView(name);
+            { href: '#', onClick: function onClick(e) {
+                    e.preventDefault();setContentView(edit);
                 } },
-            children
+            edit.toLowerCase()
         )
     );
 }
-
-/*ViewSelector.propTypes = {
-    contentViews: PropTypes.array.isRequired,
-    activeView: PropTypes.string.isRequired,
-    isEdit: PropTypes.bool.isRequired,
-    isContentViewSelectorOpen: PropTypes.bool.isRequired,
-    setContentViewSelectorOpen: PropTypes.func.isRequired
-}*/
-
-var ViewSelector = function (_Component) {
-    _inherits(ViewSelector, _Component);
-
-    function ViewSelector(props, context) {
-        _classCallCheck(this, ViewSelector);
-
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ViewSelector).call(this, props, context));
-
-        _this.close = _this.close.bind(_this);
-        _this.state = { open: false };
-        return _this;
-    }
-
-    _createClass(ViewSelector, [{
-        key: 'close',
-        value: function close() {
-            this.setState({ open: false });
-            document.removeEventListener('click', this.close);
-        }
-    }, {
-        key: 'onDropdown',
-        value: function onDropdown(e) {
-            e.preventDefault();
-            this.setState({ open: !this.state.open });
-            document.addEventListener('click', this.close);
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this2 = this;
-
-            var _props = this.props;
-            var contentViews = _props.contentViews;
-            var activeView = _props.activeView;
-            var isEdit = _props.isEdit;
-            var setContentView = _props.setContentView;
-
-            var edit = ContentViews.Edit.displayName;
-
-            return _react2.default.createElement(
-                'div',
-                { className: (0, _classnames2.default)('dropup pull-left', { open: this.state.open }) },
-                _react2.default.createElement(
-                    'a',
-                    { className: 'btn btn-default btn-xs',
-                        onClick: function onClick(e) {
-                            return _this2.onDropdown(e);
-                        },
-                        href: '#' },
-                    _react2.default.createElement(
-                        'b',
-                        null,
-                        'View:'
-                    ),
-                    ' ',
-                    activeView,
-                    _react2.default.createElement('span', { className: 'caret' })
-                ),
-                _react2.default.createElement(
-                    'ul',
-                    { className: 'dropdown-menu', role: 'menu' },
-                    contentViews.map(function (name) {
-                        return _react2.default.createElement(
-                            ViewItem,
-                            { key: name, setContentView: setContentView, name: name },
-                            name.toLowerCase().replace('_', ' ')
-                        );
-                    }),
-                    isEdit && _react2.default.createElement(
-                        ViewItem,
-                        { key: edit, setContentView: setContentView, name: edit },
-                        edit.toLowerCase()
-                    )
-                )
-            );
-        }
-    }]);
-
-    return ViewSelector;
-}(_react.Component);
 
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
@@ -1083,7 +1017,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setContentView: _flow.setContentView
 })(ViewSelector);
 
-},{"../../ducks/ui/flow":54,"./ContentViews":8,"classnames":"classnames","react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
+},{"../../ducks/ui/flow":56,"../common/Dropdown":41,"./ContentViews":8,"react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1210,7 +1144,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     toggleFilter: _eventLog.toggleFilter
 })(EventLog);
 
-},{"../ducks/eventLog":48,"./EventLog/EventList":15,"./common/ToggleButton":42,"react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
+},{"../ducks/eventLog":50,"./EventLog/EventList":15,"./common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1357,7 +1291,7 @@ function LogIcon(_ref) {
 
 exports.default = (0, _AutoScroll2.default)(EventLogList);
 
-},{"../helpers/AutoScroll":44,"../helpers/VirtualScroll":45,"react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],16:[function(require,module,exports){
+},{"../helpers/AutoScroll":46,"../helpers/VirtualScroll":47,"react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1548,7 +1482,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../filt/filt":61,"./FlowTable/FlowRow":18,"./FlowTable/FlowTableHead":19,"./helpers/AutoScroll":44,"./helpers/VirtualScroll":45,"react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],17:[function(require,module,exports){
+},{"../filt/filt":63,"./FlowTable/FlowRow":18,"./FlowTable/FlowTableHead":19,"./helpers/AutoScroll":46,"./helpers/VirtualScroll":47,"react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1705,7 +1639,7 @@ TimeColumn.headerName = 'Time';
 
 exports.default = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, SizeColumn, TimeColumn];
 
-},{"../../flow/utils.js":62,"../../utils.js":63,"classnames":"classnames","react":"react"}],18:[function(require,module,exports){
+},{"../../flow/utils.js":64,"../../utils.js":65,"classnames":"classnames","react":"react"}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1762,7 +1696,7 @@ function FlowRow(_ref) {
 
 exports.default = (0, _utils.pure)(FlowRow);
 
-},{"../../utils":63,"./FlowColumns":17,"classnames":"classnames","react":"react"}],19:[function(require,module,exports){
+},{"../../utils":65,"./FlowColumns":17,"classnames":"classnames","react":"react"}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1826,7 +1760,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateSort: _flowView.updateSort
 })(FlowTableHead);
 
-},{"../../ducks/flowView":49,"./FlowColumns":17,"classnames":"classnames","react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
+},{"../../ducks/flowView":51,"./FlowColumns":17,"classnames":"classnames","react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1966,7 +1900,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     selectTab: _flow.selectTab
 })(FlowView);
 
-},{"../ducks/ui/flow":54,"./FlowView/Details":21,"./FlowView/Messages":23,"./FlowView/Nav":24,"./Prompt":36,"lodash":"lodash","react":"react","react-redux":"react-redux"}],21:[function(require,module,exports){
+},{"../ducks/ui/flow":56,"./FlowView/Details":21,"./FlowView/Messages":23,"./FlowView/Nav":24,"./Prompt":36,"lodash":"lodash","react":"react","react-redux":"react-redux"}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2171,7 +2105,7 @@ function Details(_ref5) {
 
     return _react2.default.createElement(
         'section',
-        null,
+        { className: 'detail' },
         _react2.default.createElement(
             'h4',
             null,
@@ -2189,7 +2123,7 @@ function Details(_ref5) {
     );
 }
 
-},{"../../utils.js":63,"lodash":"lodash","react":"react"}],22:[function(require,module,exports){
+},{"../../utils.js":65,"lodash":"lodash","react":"react"}],22:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2430,7 +2364,7 @@ Headers.propTypes = {
 };
 exports.default = Headers;
 
-},{"../../utils":63,"../ValueEditor/ValueEditor":39,"react":"react","react-dom":"react-dom"}],23:[function(require,module,exports){
+},{"../../utils":65,"../ValueEditor/ValueEditor":39,"react":"react","react-dom":"react-dom"}],23:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2774,7 +2708,7 @@ function ErrorView(_ref3) {
 
     return _react2.default.createElement(
         'section',
-        null,
+        { className: 'error' },
         _react2.default.createElement(
             'div',
             { className: 'alert alert-warning' },
@@ -2792,7 +2726,7 @@ function ErrorView(_ref3) {
     );
 }
 
-},{"../../ducks/flows":50,"../../ducks/ui/flow":54,"../../flow/utils.js":62,"../../utils.js":63,"../ContentView":4,"../ContentView/ContentViewOptions":7,"../ValueEditor/ValidateEditor":38,"../ValueEditor/ValueEditor":39,"./Headers":22,"./ToggleEdit":25,"react":"react","react-redux":"react-redux"}],24:[function(require,module,exports){
+},{"../../ducks/flows":52,"../../ducks/ui/flow":56,"../../flow/utils.js":64,"../../utils.js":65,"../ContentView":4,"../ContentView/ContentViewOptions":7,"../ValueEditor/ValidateEditor":38,"../ValueEditor/ValueEditor":39,"./Headers":22,"./ToggleEdit":25,"react":"react","react-redux":"react-redux"}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2927,7 +2861,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     stopEdit: _flow.stopEdit
 })(ToggleEdit);
 
-},{"../../ducks/ui/flow":54,"react":"react","react-redux":"react-redux"}],26:[function(require,module,exports){
+},{"../../ducks/ui/flow":56,"react":"react","react-redux":"react-redux"}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2950,69 +2884,80 @@ Footer.propTypes = {
 
 function Footer(_ref) {
     var settings = _ref.settings;
+    var mode = settings.mode;
+    var intercept = settings.intercept;
+    var showhost = settings.showhost;
+    var no_upstream_cert = settings.no_upstream_cert;
+    var rawtcp = settings.rawtcp;
+    var http2 = settings.http2;
+    var anticache = settings.anticache;
+    var anticomp = settings.anticomp;
+    var stickyauth = settings.stickyauth;
+    var stickycookie = settings.stickycookie;
+    var stream = settings.stream;
 
     return _react2.default.createElement(
         'footer',
         null,
-        settings.mode && settings.mode != "regular" && _react2.default.createElement(
+        mode && mode != "regular" && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
-            settings.mode,
+            mode,
             ' mode'
         ),
-        settings.intercept && _react2.default.createElement(
+        intercept && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'Intercept: ',
-            settings.intercept
+            intercept
         ),
-        settings.showhost && _react2.default.createElement(
+        showhost && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'showhost'
         ),
-        settings.no_upstream_cert && _react2.default.createElement(
+        no_upstream_cert && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'no-upstream-cert'
         ),
-        settings.rawtcp && _react2.default.createElement(
+        rawtcp && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'raw-tcp'
         ),
-        !settings.http2 && _react2.default.createElement(
+        !http2 && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'no-http2'
         ),
-        settings.anticache && _react2.default.createElement(
+        anticache && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'anticache'
         ),
-        settings.anticomp && _react2.default.createElement(
+        anticomp && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'anticomp'
         ),
-        settings.stickyauth && _react2.default.createElement(
+        stickyauth && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'stickyauth: ',
-            settings.stickyauth
+            stickyauth
         ),
-        settings.stickycookie && _react2.default.createElement(
+        stickycookie && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'stickycookie: ',
-            settings.stickycookie
+            stickycookie
         ),
-        settings.stream && _react2.default.createElement(
+        stream && _react2.default.createElement(
             'span',
             { className: 'label label-success' },
             'stream: ',
-            (0, _utils.formatSize)(settings.stream)
+            (0, _utils.formatSize)(stream)
         )
     );
 }
@@ -3023,7 +2968,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     };
 })(Footer);
 
-},{"../utils.js":63,"react":"react","react-redux":"react-redux"}],27:[function(require,module,exports){
+},{"../utils.js":65,"react":"react","react-redux":"react-redux"}],27:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3148,14 +3093,12 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setActiveMenu: _header.setActiveMenu
 })(Header);
 
-},{"../ducks/ui/header":55,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":33,"./Header/ViewMenu":34,"classnames":"classnames","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
+},{"../ducks/ui/header":57,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":33,"./Header/ViewMenu":34,"classnames":"classnames","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require('react');
 
@@ -3163,9 +3106,13 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
-var _classnames = require('classnames');
+var _FileChooser = require('../common/FileChooser');
 
-var _classnames2 = _interopRequireDefault(_classnames);
+var _FileChooser2 = _interopRequireDefault(_FileChooser);
+
+var _Dropdown = require('../common/Dropdown');
+
+var _Dropdown2 = _interopRequireDefault(_Dropdown);
 
 var _flows = require('../../ducks/flows');
 
@@ -3175,150 +3122,57 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+FileMenu.propTypes = {
+    clearFlows: _react.PropTypes.func.isRequired,
+    loadFlows: _react.PropTypes.func.isRequired,
+    saveFlows: _react.PropTypes.func.isRequired
+};
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+FileMenu.onNewClick = function (e, clearFlows) {
+    e.preventDefault();
+    if (confirm('Delete all flows?')) clearFlows();
+};
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function FileMenu(_ref) {
+    var clearFlows = _ref.clearFlows;
+    var loadFlows = _ref.loadFlows;
+    var saveFlows = _ref.saveFlows;
 
-var FileMenu = function (_Component) {
-    _inherits(FileMenu, _Component);
-
-    function FileMenu(props, context) {
-        _classCallCheck(this, FileMenu);
-
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FileMenu).call(this, props, context));
-
-        _this.state = { show: false };
-
-        _this.close = _this.close.bind(_this);
-        _this.onFileClick = _this.onFileClick.bind(_this);
-        _this.onNewClick = _this.onNewClick.bind(_this);
-        _this.onOpenClick = _this.onOpenClick.bind(_this);
-        _this.onOpenFile = _this.onOpenFile.bind(_this);
-        _this.onSaveClick = _this.onSaveClick.bind(_this);
-        return _this;
-    }
-
-    _createClass(FileMenu, [{
-        key: 'close',
-        value: function close() {
-            this.setState({ show: false });
-            document.removeEventListener('click', this.close);
-        }
-    }, {
-        key: 'onFileClick',
-        value: function onFileClick(e) {
-            e.preventDefault();
-
-            if (this.state.show) {
-                return;
+    return _react2.default.createElement(
+        _Dropdown2.default,
+        { className: 'pull-left', btnClass: 'special', text: 'mitmproxy' },
+        _react2.default.createElement(
+            'a',
+            { href: '#', onClick: function onClick(e) {
+                    return FileMenu.onNewClick(e, clearFlows);
+                } },
+            _react2.default.createElement('i', { className: 'fa fa-fw fa-file' }),
+            'New'
+        ),
+        _react2.default.createElement(_FileChooser2.default, {
+            icon: 'fa-folder-open',
+            text: 'Open...',
+            onOpenFile: function onOpenFile(file) {
+                return loadFlows(file);
             }
-
-            document.addEventListener('click', this.close);
-            this.setState({ show: true });
-        }
-    }, {
-        key: 'onNewClick',
-        value: function onNewClick(e) {
-            e.preventDefault();
-            if (confirm('Delete all flows?')) {
-                this.props.clearFlows();
-            }
-        }
-    }, {
-        key: 'onOpenClick',
-        value: function onOpenClick(e) {
-            e.preventDefault();
-            this.fileInput.click();
-        }
-    }, {
-        key: 'onOpenFile',
-        value: function onOpenFile(e) {
-            e.preventDefault();
-            if (e.target.files.length > 0) {
-                this.props.loadFlows(e.target.files[0]);
-                this.fileInput.value = '';
-            }
-        }
-    }, {
-        key: 'onSaveClick',
-        value: function onSaveClick(e) {
-            e.preventDefault();
-            this.props.saveFlows();
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this2 = this;
-
-            return _react2.default.createElement(
-                'div',
-                { className: (0, _classnames2.default)('dropdown pull-left', { open: this.state.show }) },
-                _react2.default.createElement(
-                    'a',
-                    { href: '#', className: 'special', onClick: this.onFileClick },
-                    'mitmproxy'
-                ),
-                _react2.default.createElement(
-                    'ul',
-                    { className: 'dropdown-menu', role: 'menu' },
-                    _react2.default.createElement(
-                        'li',
-                        null,
-                        _react2.default.createElement(
-                            'a',
-                            { href: '#', onClick: this.onNewClick },
-                            _react2.default.createElement('i', { className: 'fa fa-fw fa-file' }),
-                            'New'
-                        )
-                    ),
-                    _react2.default.createElement(
-                        'li',
-                        null,
-                        _react2.default.createElement(
-                            'a',
-                            { href: '#', onClick: this.onOpenClick },
-                            _react2.default.createElement('i', { className: 'fa fa-fw fa-folder-open' }),
-                            'Open...'
-                        ),
-                        _react2.default.createElement('input', {
-                            ref: function ref(_ref) {
-                                return _this2.fileInput = _ref;
-                            },
-                            className: 'hidden',
-                            type: 'file',
-                            onChange: this.onOpenFile
-                        })
-                    ),
-                    _react2.default.createElement(
-                        'li',
-                        null,
-                        _react2.default.createElement(
-                            'a',
-                            { href: '#', onClick: this.onSaveClick },
-                            _react2.default.createElement('i', { className: 'fa fa-fw fa-floppy-o' }),
-                            'Save...'
-                        )
-                    ),
-                    _react2.default.createElement('li', { role: 'presentation', className: 'divider' }),
-                    _react2.default.createElement(
-                        'li',
-                        null,
-                        _react2.default.createElement(
-                            'a',
-                            { href: 'http://mitm.it/', target: '_blank' },
-                            _react2.default.createElement('i', { className: 'fa fa-fw fa-external-link' }),
-                            'Install Certificates...'
-                        )
-                    )
-                )
-            );
-        }
-    }]);
-
-    return FileMenu;
-}(_react.Component);
+        }),
+        _react2.default.createElement(
+            'a',
+            { href: '#', onClick: function onClick(e) {
+                    e.preventDefault();saveFlows();
+                } },
+            _react2.default.createElement('i', { className: 'fa fa-fw fa-floppy-o' }),
+            'Save...'
+        ),
+        _react2.default.createElement(_Dropdown.Divider, null),
+        _react2.default.createElement(
+            'a',
+            { href: 'http://mitm.it/', target: '_blank' },
+            _react2.default.createElement('i', { className: 'fa fa-fw fa-external-link' }),
+            'Install Certificates...'
+        )
+    );
+}
 
 exports.default = (0, _reactRedux.connect)(null, {
     clearFlows: flowsActions.clear,
@@ -3326,7 +3180,7 @@ exports.default = (0, _reactRedux.connect)(null, {
     saveFlows: flowsActions.download
 })(FileMenu);
 
-},{"../../ducks/flows":50,"classnames":"classnames","react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
+},{"../../ducks/flows":52,"../common/Dropdown":41,"../common/FileChooser":42,"react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3437,7 +3291,7 @@ FilterDocs.xhr = null;
 FilterDocs.doc = null;
 exports.default = FilterDocs;
 
-},{"../../utils":63,"react":"react"}],30:[function(require,module,exports){
+},{"../../utils":65,"react":"react"}],30:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3631,7 +3485,7 @@ var FilterInput = function (_Component) {
 
 exports.default = FilterInput;
 
-},{"../../filt/filt":61,"../../utils.js":63,"./FilterDocs":29,"classnames":"classnames","react":"react","react-dom":"react-dom"}],31:[function(require,module,exports){
+},{"../../filt/filt":63,"../../utils.js":65,"./FilterDocs":29,"classnames":"classnames","react":"react","react-dom":"react-dom"}],31:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3661,7 +3515,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 FlowMenu.title = 'Flow';
 
 FlowMenu.propTypes = {
-    flow: _react.PropTypes.object.isRequired
+    flow: _react.PropTypes.object.isRequired,
+    acceptFlow: _react.PropTypes.func.isRequired,
+    replayFlow: _react.PropTypes.func.isRequired,
+    duplicateFlow: _react.PropTypes.func.isRequired,
+    removeFlow: _react.PropTypes.func.isRequired,
+    revertFlow: _react.PropTypes.func.isRequired
 };
 
 function FlowMenu(_ref) {
@@ -3671,7 +3530,6 @@ function FlowMenu(_ref) {
     var duplicateFlow = _ref.duplicateFlow;
     var removeFlow = _ref.removeFlow;
     var revertFlow = _ref.revertFlow;
-
 
     return _react2.default.createElement(
         'div',
@@ -3714,7 +3572,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     revertFlow: flowsActions.revert
 })(FlowMenu);
 
-},{"../../ducks/flows":50,"../../flow/utils.js":62,"../common/Button":40,"react":"react","react-redux":"react-redux"}],32:[function(require,module,exports){
+},{"../../ducks/flows":52,"../../flow/utils.js":64,"../common/Button":40,"react":"react","react-redux":"react-redux"}],32:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3784,7 +3642,7 @@ var HighlightInput = (0, _reactRedux.connect)(function (state) {
     };
 }, { onChange: _flowView.updateHighlight })(_FilterInput2.default);
 
-},{"../../ducks/flowView":49,"../../ducks/settings":53,"./FilterInput":30,"react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
+},{"../../ducks/flowView":51,"../../ducks/settings":55,"./FilterInput":30,"react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3864,21 +3722,21 @@ function OptionMenu(_ref) {
             }),
             _react2.default.createElement(_ToggleInputButton2.default, { name: 'stickyauth', placeholder: 'Sticky auth filter',
                 checked: !!settings.stickyauth,
-                txt: settings.stickyauth || '',
+                txt: settings.stickyauth,
                 onToggleChanged: function onToggleChanged(txt) {
                     return updateSettings({ stickyauth: !settings.stickyauth ? txt : null });
                 }
             }),
             _react2.default.createElement(_ToggleInputButton2.default, { name: 'stickycookie', placeholder: 'Sticky cookie filter',
                 checked: !!settings.stickycookie,
-                txt: settings.stickycookie || '',
+                txt: settings.stickycookie,
                 onToggleChanged: function onToggleChanged(txt) {
                     return updateSettings({ stickycookie: !settings.stickycookie ? txt : null });
                 }
             }),
             _react2.default.createElement(_ToggleInputButton2.default, { name: 'stream', placeholder: 'stream...',
                 checked: !!settings.stream,
-                txt: settings.stream || '',
+                txt: settings.stream,
                 inputType: 'number',
                 onToggleChanged: function onToggleChanged(txt) {
                     return updateSettings({ stream: !settings.stream ? txt : null });
@@ -3897,7 +3755,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateSettings: _settings.update
 })(OptionMenu);
 
-},{"../../ducks/settings":53,"../common/ToggleButton":42,"../common/ToggleInputButton":43,"react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
+},{"../../ducks/settings":55,"../common/ToggleButton":44,"../common/ToggleInputButton":45,"react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3950,7 +3808,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     toggleEventLog: _eventLog.toggleVisibility
 })(ViewMenu);
 
-},{"../../ducks/eventLog":48,"../common/ToggleButton":42,"react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
+},{"../../ducks/eventLog":50,"../common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4025,8 +3883,7 @@ var MainView = function (_Component) {
                 selectedFlow && [_react2.default.createElement(_Splitter2.default, { key: 'splitter' }), _react2.default.createElement(_FlowView2.default, {
                     key: 'flowDetails',
                     ref: 'flowDetails',
-                    tab: this.props.routeParams.detailTab,
-                    query: this.props.query,
+                    tab: this.props.tab,
                     updateFlow: function updateFlow(data) {
                         return _this2.props.updateFlow(selectedFlow, data);
                     },
@@ -4048,7 +3905,8 @@ exports.default = (0, _reactRedux.connect)(function (state) {
         flows: state.flowView.data,
         filter: state.flowView.filter,
         highlight: state.flowView.highlight,
-        selectedFlow: state.flows.byId[state.flows.selected[0]]
+        selectedFlow: state.flows.byId[state.flows.selected[0]],
+        tab: state.ui.flow.tab
     };
 }, {
     selectFlow: flowsActions.select,
@@ -4057,7 +3915,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateFlow: flowsActions.update
 })(MainView);
 
-},{"../ducks/flowView":49,"../ducks/flows":50,"./FlowTable":16,"./FlowView":20,"./common/Splitter":41,"react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
+},{"../ducks/flowView":51,"../ducks/flows":52,"./FlowTable":16,"./FlowView":20,"./common/Splitter":43,"react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4158,12 +4016,14 @@ function Prompt(_ref) {
     );
 }
 
-},{"../utils.js":63,"lodash":"lodash","react":"react","react-dom":"react-dom"}],37:[function(require,module,exports){
+},{"../utils.js":65,"lodash":"lodash","react":"react","react-dom":"react-dom"}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -4173,9 +4033,23 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
+var _history = require('history');
+
 var _app = require('../ducks/app');
 
 var _keyboard = require('../ducks/ui/keyboard');
+
+var _flowView = require('../ducks/flowView');
+
+var _flow = require('../ducks/ui/flow');
+
+var _flows = require('../ducks/flows');
+
+var _actions = require('../actions');
+
+var _MainView = require('./MainView');
+
+var _MainView2 = _interopRequireDefault(_MainView);
 
 var _Header = require('./Header');
 
@@ -4207,37 +4081,66 @@ var ProxyAppMain = function (_Component) {
     }
 
     _createClass(ProxyAppMain, [{
+        key: 'flushToStore',
+        value: function flushToStore(location) {
+            var components = location.pathname.split('/').filter(function (v) {
+                return v;
+            });
+            var query = location.query || {};
+
+            if (components.length > 2) {
+                this.props.selectFlow(components[1]);
+                this.props.selectTab(components[2]);
+            } else {
+                this.props.selectFlow(null);
+                this.props.selectTab(null);
+            }
+
+            this.props.updateFilter(query[_actions.Query.SEARCH]);
+            this.props.updateHighlight(query[_actions.Query.HIGHLIGHT]);
+        }
+    }, {
+        key: 'flushToHistory',
+        value: function flushToHistory(props) {
+            var query = _extends({}, query);
+
+            if (props.filter) {
+                query[_actions.Query.SEARCH] = props.filter;
+            }
+
+            if (props.highlight) {
+                query[_actions.Query.HIGHLIGHT] = props.highlight;
+            }
+
+            if (props.selectedFlowId) {
+                this.history.push({ pathname: '/flows/' + props.selectedFlowId + '/' + props.tab, query: query });
+            } else {
+                this.history.push({ pathname: '/flows', query: query });
+            }
+        }
+    }, {
         key: 'componentWillMount',
         value: function componentWillMount() {
-            this.props.appInit(this.context.router);
+            var _this2 = this;
+
+            this.props.appInit();
+            this.history = (0, _history.useQueries)(_history.createHashHistory)();
+            this.unlisten = this.history.listen(function (location) {
+                return _this2.flushToStore(location);
+            });
             window.addEventListener('keydown', this.props.onKeyDown);
         }
     }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
-            this.props.appDestruct(this.context.router);
+            this.props.appDestruct();
+            this.unlisten();
             window.removeEventListener('keydown', this.props.onKeyDown);
         }
     }, {
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
-            /*
-            FIXME: improve react-router -> redux integration.
-            if (nextProps.location.query[Query.SEARCH] !== nextProps.filter) {
-                this.props.updateFilter(nextProps.location.query[Query.SEARCH], false)
-            }
-            if (nextProps.location.query[Query.HIGHLIGHT] !== nextProps.highlight) {
-                this.props.updateHighlight(nextProps.location.query[Query.HIGHLIGHT], false)
-            }
-            */
-            if (nextProps.query === this.props.query && nextProps.selectedFlowId === this.props.selectedFlowId && nextProps.panel === this.props.panel) {
-                return;
-            }
-            if (nextProps.selectedFlowId) {
-                this.context.router.replace({ pathname: '/flows/' + nextProps.selectedFlowId + '/' + nextProps.panel, query: nextProps.query });
-            } else {
-                this.context.router.replace({ pathname: '/flows', query: nextProps.query });
-            }
+            this.flushToHistory(nextProps);
         }
     }, {
         key: 'render',
@@ -4245,14 +4148,14 @@ var ProxyAppMain = function (_Component) {
             var _props = this.props;
             var showEventLog = _props.showEventLog;
             var location = _props.location;
-            var children = _props.children;
-            var query = _props.query;
+            var filter = _props.filter;
+            var highlight = _props.highlight;
 
             return _react2.default.createElement(
                 'div',
                 { id: 'container', tabIndex: '0' },
                 _react2.default.createElement(_Header2.default, null),
-                _react2.default.cloneElement(children, { ref: 'view', location: location, query: query }),
+                _react2.default.createElement(_MainView2.default, null),
                 showEventLog && _react2.default.createElement(_EventLog2.default, { key: 'eventlog' }),
                 _react2.default.createElement(_Footer2.default, null)
             );
@@ -4262,23 +4165,25 @@ var ProxyAppMain = function (_Component) {
     return ProxyAppMain;
 }(_react.Component);
 
-ProxyAppMain.contextTypes = {
-    router: _react.PropTypes.object.isRequired
-};
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
         showEventLog: state.eventLog.visible,
-        query: state.flowView.filter,
-        panel: state.ui.flow.tab,
+        filter: state.flowView.filter,
+        highlight: state.flowView.highlight,
+        tab: state.ui.flow.tab,
         selectedFlowId: state.flows.selected[0]
     };
 }, {
     appInit: _app.init,
     appDestruct: _app.destruct,
-    onKeyDown: _keyboard.onKeyDown
+    onKeyDown: _keyboard.onKeyDown,
+    updateFilter: _flowView.updateFilter,
+    updateHighlight: _flowView.updateHighlight,
+    selectTab: _flow.selectTab,
+    selectFlow: _flows.select
 })(ProxyAppMain);
 
-},{"../ducks/app":47,"../ducks/ui/keyboard":57,"./EventLog":14,"./Footer":26,"./Header":27,"react":"react","react-redux":"react-redux"}],38:[function(require,module,exports){
+},{"../actions":2,"../ducks/app":49,"../ducks/flowView":51,"../ducks/flows":52,"../ducks/ui/flow":56,"../ducks/ui/keyboard":59,"./EventLog":14,"./Footer":26,"./Header":27,"./MainView":35,"history":"history","react":"react","react-redux":"react-redux"}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4587,7 +4492,7 @@ ValueEditor.defaultProps = {
 };
 exports.default = ValueEditor;
 
-},{"../../utils":63,"classnames":"classnames","lodash":"lodash","react":"react"}],40:[function(require,module,exports){
+},{"../../utils":65,"classnames":"classnames","lodash":"lodash","react":"react"}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4629,6 +4534,168 @@ function Button(_ref) {
 }
 
 },{"classnames":"classnames","react":"react"}],41:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+exports.Divider = Divider;
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _classnames = require('classnames');
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function Divider() {
+    return _react2.default.createElement('hr', { className: 'divider' });
+}
+
+var Dropdown = function (_Component) {
+    _inherits(Dropdown, _Component);
+
+    function Dropdown(props, context) {
+        _classCallCheck(this, Dropdown);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Dropdown).call(this, props, context));
+
+        _this.state = { open: false };
+        _this.close = _this.close.bind(_this);
+        _this.open = _this.open.bind(_this);
+        return _this;
+    }
+
+    _createClass(Dropdown, [{
+        key: 'close',
+        value: function close() {
+            this.setState({ open: false });
+            document.removeEventListener('click', this.close);
+        }
+    }, {
+        key: 'open',
+        value: function open(e) {
+            e.preventDefault();
+            if (this.state.open) {
+                return;
+            }
+            this.setState({ open: !this.state.open });
+            document.addEventListener('click', this.close);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _props = this.props;
+            var dropup = _props.dropup;
+            var className = _props.className;
+            var btnClass = _props.btnClass;
+            var text = _props.text;
+            var children = _props.children;
+
+            return _react2.default.createElement(
+                'div',
+                { className: (0, _classnames2.default)(dropup ? 'dropup' : 'dropdown', className, { open: this.state.open }) },
+                _react2.default.createElement(
+                    'a',
+                    { href: '#', className: btnClass,
+                        onClick: this.open },
+                    text
+                ),
+                _react2.default.createElement(
+                    'ul',
+                    { className: 'dropdown-menu', role: 'menu' },
+                    children.map(function (item, i) {
+                        return _react2.default.createElement(
+                            'li',
+                            { key: i },
+                            ' ',
+                            item,
+                            ' '
+                        );
+                    })
+                )
+            );
+        }
+    }]);
+
+    return Dropdown;
+}(_react.Component);
+
+Dropdown.propTypes = {
+    dropup: _react.PropTypes.bool,
+    className: _react.PropTypes.string,
+    btnClass: _react.PropTypes.string.isRequired
+};
+Dropdown.defaultProps = {
+    dropup: false
+};
+exports.default = Dropdown;
+
+},{"classnames":"classnames","react":"react"}],42:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = FileChooser;
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+FileChooser.propTypes = {
+    icon: _react.PropTypes.string,
+    text: _react.PropTypes.string,
+    className: _react.PropTypes.string,
+    title: _react.PropTypes.string,
+    onOpenFile: _react.PropTypes.func.isRequired
+};
+
+function FileChooser(_ref) {
+    var icon = _ref.icon;
+    var text = _ref.text;
+    var className = _ref.className;
+    var title = _ref.title;
+    var onOpenFile = _ref.onOpenFile;
+
+    var fileInput = void 0;
+    return _react2.default.createElement(
+        'a',
+        { href: '#', onClick: function onClick() {
+                return fileInput.click();
+            },
+            className: className,
+            title: title },
+        _react2.default.createElement('i', { className: 'fa fa-fw ' + icon }),
+        text,
+        _react2.default.createElement('input', {
+            ref: function ref(_ref2) {
+                return fileInput = _ref2;
+            },
+            className: 'hidden',
+            type: 'file',
+            onChange: function onChange(e) {
+                e.preventDefault();if (e.target.files.length > 0) onOpenFile(e.target.files[0]);fileInput = "";
+            }
+        })
+    );
+}
+
+},{"react":"react"}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4773,7 +4840,7 @@ var Splitter = function (_Component) {
 Splitter.defaultProps = { axis: 'x' };
 exports.default = Splitter;
 
-},{"classnames":"classnames","react":"react","react-dom":"react-dom"}],42:[function(require,module,exports){
+},{"classnames":"classnames","react":"react","react-dom":"react-dom"}],44:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4807,7 +4874,7 @@ function ToggleButton(_ref) {
     );
 }
 
-},{"react":"react"}],43:[function(require,module,exports){
+},{"react":"react"}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4842,16 +4909,11 @@ var ToggleInputButton = function (_Component) {
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ToggleInputButton).call(this, props));
 
-        _this.state = { txt: props.txt };
+        _this.state = { txt: props.txt || '' };
         return _this;
     }
 
     _createClass(ToggleInputButton, [{
-        key: 'onChange',
-        value: function onChange(e) {
-            this.setState({ txt: e.target.value });
-        }
-    }, {
         key: 'onKeyDown',
         value: function onKeyDown(e) {
             e.stopPropagation();
@@ -4864,6 +4926,13 @@ var ToggleInputButton = function (_Component) {
         value: function render() {
             var _this2 = this;
 
+            var _props = this.props;
+            var checked = _props.checked;
+            var onToggleChanged = _props.onToggleChanged;
+            var name = _props.name;
+            var inputType = _props.inputType;
+            var placeholder = _props.placeholder;
+
             return _react2.default.createElement(
                 'div',
                 { className: 'input-group toggle-input-btn' },
@@ -4871,24 +4940,24 @@ var ToggleInputButton = function (_Component) {
                     'span',
                     { className: 'input-group-btn',
                         onClick: function onClick() {
-                            return _this2.props.onToggleChanged(_this2.state.txt);
+                            return onToggleChanged(_this2.state.txt);
                         } },
                     _react2.default.createElement(
                         'div',
-                        { className: (0, _classnames2.default)('btn', this.props.checked ? 'btn-primary' : 'btn-default') },
-                        _react2.default.createElement('span', { className: (0, _classnames2.default)('fa', this.props.checked ? 'fa-check-square-o' : 'fa-square-o') }),
+                        { className: (0, _classnames2.default)('btn', checked ? 'btn-primary' : 'btn-default') },
+                        _react2.default.createElement('span', { className: (0, _classnames2.default)('fa', checked ? 'fa-check-square-o' : 'fa-square-o') }),
                         ' ',
-                        this.props.name
+                        name
                     )
                 ),
                 _react2.default.createElement('input', {
                     className: 'form-control',
-                    placeholder: this.props.placeholder,
-                    disabled: this.props.checked,
+                    placeholder: placeholder,
+                    disabled: checked,
                     value: this.state.txt,
-                    type: this.props.inputType,
+                    type: inputType || 'text',
                     onChange: function onChange(e) {
-                        return _this2.onChange(e);
+                        return _this2.setState({ txt: e.target.value });
                     },
                     onKeyDown: function onKeyDown(e) {
                         return _this2.onKeyDown(e);
@@ -4903,12 +4972,15 @@ var ToggleInputButton = function (_Component) {
 
 ToggleInputButton.propTypes = {
     name: _react.PropTypes.string.isRequired,
-    txt: _react.PropTypes.string.isRequired,
-    onToggleChanged: _react.PropTypes.func.isRequired
+    txt: _react.PropTypes.string,
+    onToggleChanged: _react.PropTypes.func.isRequired,
+    checked: _react.PropTypes.bool.isRequired,
+    placeholder: _react.PropTypes.string.isRequired,
+    inputType: _react.PropTypes.string
 };
 exports.default = ToggleInputButton;
 
-},{"../../utils":63,"classnames":"classnames","react":"react"}],44:[function(require,module,exports){
+},{"../../utils":65,"classnames":"classnames","react":"react"}],46:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4974,7 +5046,7 @@ exports.default = function (Component) {
     }(Component), _class.displayName = Component.name, _temp), Component);
 };
 
-},{"react":"react","react-dom":"react-dom"}],45:[function(require,module,exports){
+},{"react":"react","react-dom":"react-dom"}],47:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5053,7 +5125,7 @@ function calcVScroll(opts) {
     return { start: start, end: end, paddingTop: paddingTop, paddingBottom: paddingBottom };
 }
 
-},{}],46:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5082,7 +5154,7 @@ AppDispatcher.dispatchServerAction = function (action) {
     this.dispatch(action);
 };
 
-},{"flux":"flux"}],47:[function(require,module,exports){
+},{"flux":"flux"}],49:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5124,7 +5196,7 @@ function destruct() {
     };
 }
 
-},{"./websocket":60}],48:[function(require,module,exports){
+},{"./websocket":62}],50:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5301,7 +5373,7 @@ function receiveData(list) {
     return { type: RECEIVE, list: list };
 }
 
-},{"./msgQueue":52,"./utils/list":58,"./utils/view":59,"./websocket":60}],49:[function(require,module,exports){
+},{"./msgQueue":54,"./utils/list":60,"./utils/view":61,"./websocket":62}],51:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5489,7 +5561,7 @@ function selectRelative(shift) {
     };
 }
 
-},{"../filt/filt":61,"../flow/utils":62,"./flows":50,"./utils/view":59}],50:[function(require,module,exports){
+},{"../filt/filt":63,"../flow/utils":64,"./flows":52,"./utils/view":61}],52:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5743,10 +5815,13 @@ function updateFlow(item) {
  * @private
  */
 function removeFlow(id) {
-    return { type: REMOVE, id: id };
+    return function (dispatch) {
+        dispatch(select());
+        dispatch({ type: REMOVE, id: id });
+    };
 }
 
-},{"../utils":63,"./msgQueue":52,"./utils/list":58,"./websocket":60}],51:[function(require,module,exports){
+},{"../utils":65,"./msgQueue":54,"./utils/list":60,"./websocket":62}],53:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5795,7 +5870,7 @@ exports.default = (0, _redux.combineReducers)({
     msgQueue: _msgQueue2.default
 });
 
-},{"./eventLog":48,"./flowView":49,"./flows":50,"./msgQueue":52,"./settings":53,"./ui/index":56,"./websocket":60,"redux":"redux"}],52:[function(require,module,exports){
+},{"./eventLog":50,"./flowView":51,"./flows":52,"./msgQueue":54,"./settings":55,"./ui/index":58,"./websocket":62,"redux":"redux"}],54:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5963,7 +6038,7 @@ function fetchError(type, error) {
     return _ref = { type: FETCH_ERROR }, _defineProperty(_ref, 'type', type), _defineProperty(_ref, 'error', error), _ref;
 }
 
-},{"../utils":63,"./eventLog":48,"./flows":50,"./settings":53,"./websocket":60}],53:[function(require,module,exports){
+},{"../utils":65,"./eventLog":50,"./flows":52,"./settings":55,"./websocket":62}],55:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6063,13 +6138,13 @@ function updateSettings(settings) {
     return { type: UPDATE, settings: settings };
 }
 
-},{"../utils":63,"./msgQueue":52,"./websocket":60}],54:[function(require,module,exports){
+},{"../utils":65,"./msgQueue":54,"./websocket":62}],56:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.SET_CONTENT_VIEW_DESCRIPTION = exports.SET_SHOW_FULL_CONTENT = exports.UPLOAD_CONTENT = exports.UPDATE_EDIT = exports.START_EDIT = exports.SET_TAB = exports.DISPLAY_LARGE = exports.SET_CONTENT_VIEW = undefined;
+exports.SET_CONTENT = exports.SET_CONTENT_VIEW_DESCRIPTION = exports.SET_SHOW_FULL_CONTENT = exports.UPLOAD_CONTENT = exports.UPDATE_EDIT = exports.START_EDIT = exports.SET_TAB = exports.DISPLAY_LARGE = exports.SET_CONTENT_VIEW = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -6082,6 +6157,7 @@ exports.updateEdit = updateEdit;
 exports.setContentViewDescription = setContentViewDescription;
 exports.setShowFullContent = setShowFullContent;
 exports.updateEdit = updateEdit;
+exports.setContent = setContent;
 exports.stopEdit = stopEdit;
 
 var _flows = require('../flows');
@@ -6105,7 +6181,8 @@ var SET_CONTENT_VIEW = exports.SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW'
     UPDATE_EDIT = exports.UPDATE_EDIT = 'UI_FLOWVIEW_UPDATE_EDIT',
     UPLOAD_CONTENT = exports.UPLOAD_CONTENT = 'UI_FLOWVIEW_UPLOAD_CONTENT',
     SET_SHOW_FULL_CONTENT = exports.SET_SHOW_FULL_CONTENT = 'UI_SET_SHOW_FULL_CONTENT',
-    SET_CONTENT_VIEW_DESCRIPTION = exports.SET_CONTENT_VIEW_DESCRIPTION = "UI_SET_CONTENT_VIEW_DESCRIPTION";
+    SET_CONTENT_VIEW_DESCRIPTION = exports.SET_CONTENT_VIEW_DESCRIPTION = "UI_SET_CONTENT_VIEW_DESCRIPTION",
+    SET_CONTENT = exports.SET_CONTENT = "UI_SET_CONTENT";
 
 var defaultState = {
     displayLarge: false,
@@ -6113,7 +6190,9 @@ var defaultState = {
     showFullContent: false,
     modifiedFlow: false,
     contentView: 'Auto',
-    tab: 'request'
+    tab: 'request',
+    content: [],
+    maxContentLines: 80
 };
 
 function reducer() {
@@ -6172,7 +6251,7 @@ function reducer() {
 
         case SET_TAB:
             return _extends({}, state, {
-                tab: action.tab,
+                tab: action.tab ? action.tab : 'request',
                 displayLarge: false,
                 showFullContent: false
             });
@@ -6181,6 +6260,13 @@ function reducer() {
             return _extends({}, state, {
                 contentView: action.contentView,
                 showFullContent: action.contentView == 'Edit'
+            });
+
+        case SET_CONTENT:
+            var isFullContentShown = action.content.length < state.maxContentLines;
+            return _extends({}, state, {
+                content: action.content,
+                showFullContent: isFullContentShown
             });
 
         case DISPLAY_LARGE:
@@ -6224,12 +6310,16 @@ function updateEdit(update) {
     return { type: UPDATE_EDIT, update: update };
 }
 
+function setContent(content) {
+    return { type: SET_CONTENT, content: content };
+}
+
 function stopEdit(flow, modifiedFlow) {
     var diff = (0, _utils.getDiff)(flow, modifiedFlow);
     return flowsActions.update(flow, diff);
 }
 
-},{"../../utils":63,"../flows":50,"lodash":"lodash"}],55:[function(require,module,exports){
+},{"../../utils":65,"../flows":52,"lodash":"lodash"}],57:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6296,7 +6386,7 @@ function setActiveMenu(activeMenu) {
     return { type: SET_ACTIVE_MENU, activeMenu: activeMenu };
 }
 
-},{"../flows":50}],56:[function(require,module,exports){
+},{"../flows":52}],58:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6320,7 +6410,7 @@ exports.default = (0, _redux.combineReducers)({
     header: _header2.default
 });
 
-},{"./flow":54,"./header":55,"redux":"redux"}],57:[function(require,module,exports){
+},{"./flow":56,"./header":57,"redux":"redux"}],59:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6460,7 +6550,7 @@ function onKeyDown(e) {
     };
 }
 
-},{"../../utils":63,"../flowView":49,"../flows":50,"./flow":54}],58:[function(require,module,exports){
+},{"../../utils":65,"../flowView":51,"../flows":52,"./flow":56}],60:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6595,7 +6685,7 @@ function receive(list) {
     return { type: RECEIVE, list: list };
 }
 
-},{"lodash":"lodash"}],59:[function(require,module,exports){
+},{"lodash":"lodash"}],61:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6676,15 +6766,20 @@ function reduce() {
             return _extends({}, state, sortedRemove(state, action.id));
 
         case UPDATE:
-            if (state.indexOf[action.item.id] == null) {
-                return;
+            var hasOldItem = state.indexOf[action.item.id] !== null && state.indexOf[action.item.id] !== undefined;
+            var hasNewItem = action.filter(action.item);
+            if (!hasNewItem && !hasOldItem) {
+                return state;
             }
-            var nextState = _extends({}, state, sortedRemove(state, action.item.id));
-            if (!action.filter(action.item)) {
-                return nextState;
+            if (hasNewItem && !hasOldItem) {
+                return _extends({}, state, sortedInsert(state, action.item, action.sort));
             }
-            return _extends({}, nextState, sortedInsert(nextState, action.item, action.sort));
-
+            if (!hasNewItem && hasOldItem) {
+                return _extends({}, state, sortedRemove(state, action.item.id));
+            }
+            if (hasNewItem && hasOldItem) {
+                return _extends({}, state, sortedUpdate(state, action.item, action.sort));
+            }
         case RECEIVE:
             {
                 var _data2 = action.list.filter(action.filter).sort(action.sort);
@@ -6765,6 +6860,28 @@ function sortedRemove(state, id) {
     return { data: data, indexOf: indexOf };
 }
 
+function sortedUpdate(state, item, sort) {
+    var data = [].concat(_toConsumableArray(state.data));
+    var indexOf = _extends({}, state.indexOf);
+    var index = indexOf[item.id];
+    data[index] = item;
+    while (index + 1 < data.length && sort(data[index], data[index + 1]) > 0) {
+        data[index] = data[index + 1];
+        data[index + 1] = item;
+        indexOf[item.id] = index + 1;
+        indexOf[data[index].id] = index;
+        ++index;
+    }
+    while (index > 0 && sort(data[index], data[index - 1]) < 0) {
+        data[index] = data[index - 1];
+        data[index - 1] = item;
+        indexOf[item.id] = index - 1;
+        indexOf[data[index].id] = index;
+        --index;
+    }
+    return { data: data, indexOf: indexOf };
+}
+
 function sortedIndex(list, item, sort) {
     var low = 0;
     var high = list.length;
@@ -6789,7 +6906,7 @@ function defaultSort(a, b) {
     return 0;
 }
 
-},{"lodash":"lodash"}],60:[function(require,module,exports){
+},{"lodash":"lodash"}],62:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6930,7 +7047,7 @@ function onError(error) {
     };
 }
 
-},{"../actions.js":2,"../dispatcher.js":46,"./eventLog":48,"./flows":50,"./msgQueue":52,"./settings":53}],61:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":48,"./eventLog":50,"./flows":52,"./msgQueue":54,"./settings":55}],63:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -8834,7 +8951,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":62}],62:[function(require,module,exports){
+},{"../flow/utils.js":64}],64:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -8953,7 +9070,7 @@ var isValidHttpVersion = exports.isValidHttpVersion = function isValidHttpVersio
     return isValidHttpVersion_regex.test(httpVersion);
 };
 
-},{"lodash":"lodash"}],63:[function(require,module,exports){
+},{"lodash":"lodash"}],65:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
