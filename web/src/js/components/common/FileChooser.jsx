@@ -11,7 +11,7 @@ FileChooser.propTypes = {
 export default function FileChooser({ icon, text, className, title, onOpenFile }) {
     let fileInput;
     return (
-        <a onClick={() => fileInput.click()}
+        <a href='#' onClick={() => fileInput.click()}
            className={className}
            title={title}>
             <i className={'fa fa-fw ' + icon}></i>
