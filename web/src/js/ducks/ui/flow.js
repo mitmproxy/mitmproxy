@@ -16,7 +16,7 @@ export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
 
 const defaultState = {
     displayLarge: false,
-    contentViewDescription: '',
+    viewDescription: '',
     showFullContent: false,
     modifiedFlow: false,
     contentView: 'Auto',
@@ -27,6 +27,10 @@ const defaultState = {
 
 export default function reducer(state = defaultState, action) {
     let wasInEditMode = !!(state.modifiedFlow)
+
+    let content = action.content || state.content
+    let isFullContentShown = content && content.length <= state.maxContentLines
+
     switch (action.type) {
 
         case START_EDIT:
@@ -49,8 +53,7 @@ export default function reducer(state = defaultState, action) {
                 modifiedFlow: false,
                 displayLarge: false,
                 contentView: (wasInEditMode ? 'Auto' : state.contentView),
-                viewDescription: '',
-                showFullContent: false,
+                showFullContent: isFullContentShown,
             }
 
         case flowsActions.UPDATE:
@@ -63,7 +66,6 @@ export default function reducer(state = defaultState, action) {
                     modifiedFlow: false,
                     displayLarge: false,
                     contentView: (wasInEditMode ? 'Auto' : state.contentView),
-                    viewDescription: '',
                     showFullContent: false
                 }
             } else {
@@ -79,7 +81,7 @@ export default function reducer(state = defaultState, action) {
         case SET_SHOW_FULL_CONTENT:
             return {
                 ...state,
-                showFullContent: action.show
+                showFullContent: true
             }
 
         case SET_TAB:
@@ -98,7 +100,6 @@ export default function reducer(state = defaultState, action) {
             }
 
         case SET_CONTENT:
-            let isFullContentShown = action.content.length < state.maxContentLines
             return {
                 ...state,
                 content: action.content,
@@ -139,12 +140,8 @@ export function setContentViewDescription(description) {
     return { type: SET_CONTENT_VIEW_DESCRIPTION, description }
 }
 
-export function setShowFullContent(show) {
-    return { type: SET_SHOW_FULL_CONTENT, show }
-}
-
-export function updateEdit(update) {
-    return { type: UPDATE_EDIT, update }
+export function setShowFullContent() {
+    return { type: SET_SHOW_FULL_CONTENT }
 }
 
 export function setContent(content){
