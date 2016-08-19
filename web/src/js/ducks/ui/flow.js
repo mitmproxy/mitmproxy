@@ -152,6 +152,5 @@ export function setContent(content){
 }
 
 export function stopEdit(flow, modifiedFlow) {
-    let diff = getDiff(flow, modifiedFlow)
-    return flowsActions.update(flow, diff)
+    return flowsActions.update(flow, getDiff(flow, modifiedFlow))
 }

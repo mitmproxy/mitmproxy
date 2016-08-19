@@ -6,9 +6,7 @@ UploadContentButton.propTypes = {
 }
 
 export default function UploadContentButton({ uploadContent }) {
-
-    let fileInput;
-
+    
     return (
         <FileChooser
             icon="fa-upload"

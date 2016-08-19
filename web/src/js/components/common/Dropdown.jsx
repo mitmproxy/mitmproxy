@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import classnames from 'classnames'
 
-export function Divider () { return  <hr className="divider"/>}
+export const Divider = () => <hr className="divider"/>
 
 export default class Dropdown extends Component {
 
