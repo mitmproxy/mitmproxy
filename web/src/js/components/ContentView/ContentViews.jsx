@@ -67,10 +67,10 @@ class ViewServer extends Component {
                     {lines.map((line, i) =>
                         <div key={`line${i}`}>
                             {line.map((element, j) => {
-                                let style, text = element
+                                let [style, text] = element
                                 return (
                                     <span key={`tuple${j}`} className={style}>
-                                        {element}
+                                        {text}
                                     </span>
                                 )
                             })}
