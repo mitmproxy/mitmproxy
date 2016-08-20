@@ -32,8 +32,6 @@ METHOD_OPTIONS = [
     ("edit raw", "e"),
 ]
 
-MAX_URL_LEN = 200
-
 
 def is_keypress(k):
     """
@@ -330,7 +328,7 @@ def export_to_clip_or_file(key, scope, flow, writer):
 flowcache = utils.LRUCache(800)
 
 
-def raw_format_flow(f, focus, extended, short_urls):
+def raw_format_flow(f, focus, extended, truncate_urls):
     f = dict(f)
     pile = []
     req = []
@@ -363,8 +361,8 @@ def raw_format_flow(f, focus, extended, short_urls):
     url = f["req_url"]
 
     # TODO: Add a configuration setting that disables this behaviour?
-    if short_urls and len(url) > MAX_URL_LEN:
-        url = url[:MAX_URL_LEN] + "..."
+    if truncate_urls and len(url) > truncate_urls:
+        url = url[:truncate_urls] + "..."
 
     if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
         url += " " + f["req_http_version"]
@@ -417,7 +415,7 @@ def raw_format_flow(f, focus, extended, short_urls):
     return urwid.Pile(pile)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, short_urls=True):
+def format_flow(f, focus, extended=False, hostheader=False, truncate_urls=False):
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.state == "committed",
@@ -461,5 +459,5 @@ def format_flow(f, focus, extended=False, hostheader=False, short_urls=True):
         tuple(sorted(d.items())),
         focus,
         extended,
-        short_urls,
+        truncate_urls,
     )

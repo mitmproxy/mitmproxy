@@ -104,22 +104,24 @@ class FlowViewHeader(urwid.WidgetWrap):
     def __init__(self, master, f):
         self.master = master  # type: "mitmproxy.console.master.ConsoleMaster"
         self.flow = f  # type: models.HTTPFlow
+        cols, _ = self.master.ui.get_cols_rows()
         self._w = common.format_flow(
             f,
             False,
             extended=True,
-            short_urls=False,
+            truncate_urls=cols,
             hostheader=self.master.options.showhost
         )
         signals.flow_change.connect(self.sig_flow_change)
 
     def sig_flow_change(self, sender, flow):
+        cols, _ = self.master.ui.get_cols_rows()
         if flow == self.flow:
             self._w = common.format_flow(
                 flow,
                 False,
                 extended=True,
-                short_urls=False,
+                truncate_urls=cols,
                 hostheader=self.master.options.showhost
             )
 
