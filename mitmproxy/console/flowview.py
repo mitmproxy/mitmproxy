@@ -108,6 +108,7 @@ class FlowViewHeader(urwid.WidgetWrap):
             f,
             False,
             extended=True,
+            short_urls=False,
             hostheader=self.master.options.showhost
         )
         signals.flow_change.connect(self.sig_flow_change)
@@ -118,6 +119,7 @@ class FlowViewHeader(urwid.WidgetWrap):
                 flow,
                 False,
                 extended=True,
+                short_urls=False,
                 hostheader=self.master.options.showhost
             )
 
