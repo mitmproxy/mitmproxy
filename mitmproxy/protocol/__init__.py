@@ -29,8 +29,10 @@ from __future__ import absolute_import, print_function, division
 
 from .base import Layer, ServerConnectionMixin
 from .http import UpstreamConnectLayer
+from .http import HttpLayer
 from .http1 import Http1Layer
 from .http2 import Http2Layer
+from .websockets import WebSocketsLayer
 from .rawtcp import RawTCPLayer
 from .tls import TlsClientHello
 from .tls import TlsLayer
@@ -40,7 +42,9 @@ __all__ = [
     "Layer", "ServerConnectionMixin",
     "TlsLayer", "is_tls_record_magic", "TlsClientHello",
     "UpstreamConnectLayer",
+    "HttpLayer",
     "Http1Layer",
     "Http2Layer",
+    "WebSocketsLayer",
     "RawTCPLayer",
 ]

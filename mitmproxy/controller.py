@@ -28,6 +28,8 @@ Events = frozenset([
     "response",
     "responseheaders",
 
+    "websockets_handshake",
+
     "next_layer",
 
     "error",
