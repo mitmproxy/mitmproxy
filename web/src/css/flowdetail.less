@@ -5,16 +5,34 @@
 
 .flow-detail {
     width: 100%;
-    overflow-x: auto;
-    overflow-y: scroll;
+    overflow:hidden;
+    display: flex;
+    flex-direction: column;
 
     nav {
         background-color: #F2F2F2;
     }
 
     section {
-        padding: 5px 12px;
+        display: flex;
+        flex-direction: column;
+        >article{
+            overflow: auto;
+            padding: 5px 12px 0;
+        }
+        >footer {
+            box-shadow: 0 0 3px gray;
+            padding: 2px;
+            margin: 0;
+            height:23px;
+        }
     }
+
+    section.detail, section.error{
+        overflow: auto;
+        padding: 5px 12px 0;
+    }
+
 
     .first-line {
         .monospace();
@@ -38,8 +56,8 @@
     hr {
         margin: 0 0 5px;
     }
-
 }
+
 
 .inline-input {
     display: inline;
@@ -64,8 +82,9 @@
     }
 }
 
-.view-options {
-    margin-top: 10px;
+.view-all-content-btn{
+    float: right;
+    margin-bottom: 12px;
 }
 
 .flow-detail table {

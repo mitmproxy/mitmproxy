@@ -149,13 +149,22 @@ class Flow(stateobject.StateObject):
             self.set_state(self._backup)
             self._backup = None
 
+    @property
+    def killable(self):
+        return self.reply and self.reply.state in {"handled", "taken"}
+
     def kill(self, master):
         """
             Kill this request.
         """
         self.error = Error("Connection killed")
         self.intercepted = False
-        self.reply.kill()
+        # reply.state should only be "handled" or "taken" here.
+        # if none of this is the case, .take() will raise an exception.
+        if self.reply.state != "taken":
+            self.reply.take()
+        self.reply.kill(force=True)
+        self.reply.commit()
         master.error(self)
 
     def intercept(self, master):
@@ -166,6 +175,7 @@ class Flow(stateobject.StateObject):
         if self.intercepted:
             return
         self.intercepted = True
+        self.reply.take()
         master.handle_intercept(self)
 
     def accept_intercept(self, master):
@@ -176,6 +186,7 @@ class Flow(stateobject.StateObject):
             return
         self.intercepted = False
         self.reply.ack()
+        self.reply.commit()
         master.handle_accept_intercept(self)
 
     def match(self, f):

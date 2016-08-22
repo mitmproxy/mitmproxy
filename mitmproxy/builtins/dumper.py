@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
 import itertools
-import traceback
 
 import click
 
@@ -63,30 +62,12 @@ class Dumper(object):
             )
             self.echo(headers, ident=4)
         if self.flow_detail >= 3:
-            try:
-                content = message.content
-            except ValueError:
-                content = message.get_content(strict=False)
-
-            if content is None:
-                self.echo("(content missing)", ident=4)
-            elif content:
-                self.echo("")
-
-                try:
-                    _, lines = contentviews.get_content_view(
-                        contentviews.get("Auto"),
-                        content,
-                        headers=getattr(message, "headers", None)
-                    )
-                except exceptions.ContentViewException:
-                    s = "Content viewer failed: \n" + traceback.format_exc()
-                    ctx.log.debug(s)
-                    _, lines = contentviews.get_content_view(
-                        contentviews.get("Raw"),
-                        content,
-                        headers=getattr(message, "headers", None)
-                    )
+                _, lines, error = contentviews.get_message_content_view(
+                    contentviews.get("Auto"),
+                    message
+                )
+                if error:
+                    ctx.log.debug(error)
 
                 styles = dict(
                     highlight=dict(bold=True),
@@ -105,13 +86,13 @@ class Dumper(object):
                 else:
                     lines_to_echo = lines
 
-                lines_to_echo = list(lines_to_echo)
-
                 content = u"\r\n".join(
                     u"".join(colorful(line)) for line in lines_to_echo
                 )
+                if content:
+                    self.echo("")
+                    self.echo(content)
 
-                self.echo(content)
                 if next(lines, None):
                     self.echo("(cut off)", ident=4, dim=True)
 

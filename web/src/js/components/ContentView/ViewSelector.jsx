@@ -1,47 +1,80 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes, Component } from 'react'
 import classnames from 'classnames'
 import { connect } from 'react-redux'
 import * as ContentViews from './ContentViews'
 import { setContentView } from "../../ducks/ui/flow";
 
-
-function ViewButton({ name, setContentView, children, activeView }) {
+function ViewItem({ name, setContentView, children }) {
     return (
-        <button
-            onClick={() => setContentView(name)}
-            className={classnames('btn btn-default', { active: name === activeView })}>
-            {children}
-        </button>
+        <li>
+            <a href="#" onClick={() => setContentView(name)}>
+                {children}
+            </a>
+        </li>
     )
 }
-ViewButton = connect(state => ({
-    activeView: state.ui.flow.contentView
-}), {
-    setContentView
-})(ViewButton)
 
 
-ViewSelector.propTypes = {
-    message: PropTypes.object.isRequired,
+/*ViewSelector.propTypes = {
+    contentViews: PropTypes.array.isRequired,
+    activeView: PropTypes.string.isRequired,
+    isEdit: PropTypes.bool.isRequired,
+    isContentViewSelectorOpen: PropTypes.bool.isRequired,
+    setContentViewSelectorOpen: PropTypes.func.isRequired
+}*/
+
+
+class ViewSelector extends Component {
+      constructor(props, context) {
+        super(props, context)
+        this.close = this.close.bind(this)
+        this.state = {open: false}
+    }
+    close() {
+        this.setState({open: false})
+        document.removeEventListener('click', this.close)
+    }
+
+    onDropdown(e){
+        e.preventDefault()
+        this.setState({open: !this.state.open})
+        document.addEventListener('click', this.close)
+    }
+
+    render() {
+        const {contentViews, activeView, isEdit, setContentView} = this.props
+        let edit = ContentViews.Edit.displayName
+
+        return (
+            <div className={classnames('dropup pull-left', { open: this.state.open })}>
+                <a className="btn btn-default btn-xs"
+                   onClick={ e => this.onDropdown(e) }
+                   href="#">
+                    <b>View:</b> {activeView}<span className="caret"></span>
+                </a>
+                <ul className="dropdown-menu" role="menu">
+                    {contentViews.map(name =>
+                        <ViewItem key={name} setContentView={setContentView} name={name}>
+                            {name.toLowerCase().replace('_', ' ')}
+                        </ViewItem>
+                    )}
+                    {isEdit &&
+                    <ViewItem key={edit} setContentView={setContentView} name={edit}>
+                        {edit.toLowerCase()}
+                    </ViewItem>
+                    }
+                </ul>
+            </div>
+        )
+    }
 }
-export default function ViewSelector({ message }) {
 
-    let autoView = ContentViews.ViewAuto.findView(message)
-    let autoViewName = (autoView.displayName || autoView.name)
-        .toLowerCase()
-        .replace('view', '')
-        .replace(/ContentLoader\((.+)\)/,"$1")
-
-    return (
-        <div className="view-selector btn-group btn-group-xs">
-
-            <ViewButton name="ViewAuto">auto: {autoViewName}</ViewButton>
-
-            {Object.keys(ContentViews).map(name =>
-                name !== "ViewAuto" &&
-                <ViewButton key={name} name={name}>{name.toLowerCase().replace('view', '')}</ViewButton>
-            )}
-
-        </div>
-    )
-}
+export default connect (
+    state => ({
+        contentViews: state.settings.contentViews,
+        activeView: state.ui.flow.contentView,
+        isEdit: !!state.ui.flow.modifiedFlow,
+    }), {
+        setContentView,
+    }
+)(ViewSelector)

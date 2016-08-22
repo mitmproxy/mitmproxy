@@ -41,9 +41,9 @@ class Replace:
                     f.request.replace(rex, s)
 
     def request(self, flow):
-        if not flow.reply.acked:
+        if not flow.reply.has_message:
             self.execute(flow)
 
     def response(self, flow):
-        if not flow.reply.acked:
+        if not flow.reply.has_message:
             self.execute(flow)

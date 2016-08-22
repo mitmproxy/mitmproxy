@@ -14,31 +14,27 @@ requests, the query parameters are passed as the ``query`` keyword argument.
 """
 from __future__ import absolute_import, print_function, division
 
+import cssutils
 import datetime
+import html2text
+import jsbeautifier
 import json
 import logging
-import subprocess
-import sys
-
-from typing import Mapping  # noqa
-
-import html2text
 import lxml.etree
 import lxml.html
 import six
+import subprocess
+import traceback
 from PIL import ExifTags
 from PIL import Image
-from six import BytesIO
-
-import cssutils
-import jsbeautifier
-
 from mitmproxy import exceptions
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
 from netlib import multidict
-from netlib.http import url
 from netlib import strutils
+from netlib.http import url
+from six import BytesIO
+from typing import Mapping  # noqa
 
 try:
     import pyamf
@@ -612,6 +608,39 @@ def safe_to_print(lines, encoding="utf8"):
         yield clean_line
 
 
+def get_message_content_view(viewmode, message):
+    """
+    Like get_content_view, but also handles message encoding.
+    """
+    try:
+        content = message.content
+    except ValueError:
+        content = message.raw_content
+        enc = "[cannot decode]"
+    else:
+        if isinstance(message, http.Message) and content != message.raw_content:
+            enc = "[decoded {}]".format(
+                message.headers.get("content-encoding")
+            )
+        else:
+            enc = None
+
+    if content is None:
+        return "", iter([[("error", "content missing")]]), None
+
+    query = message.query if isinstance(message, http.Request) else None
+    headers = message.headers if isinstance(message, http.Message) else None
+
+    description, lines, error = get_content_view(
+        viewmode, content, headers=headers, query=query
+    )
+
+    if enc:
+        description = "{} {}".format(enc, description)
+
+    return description, lines, error
+
+
 def get_content_view(viewmode, data, **metadata):
     """
         Args:
@@ -619,24 +648,24 @@ def get_content_view(viewmode, data, **metadata):
             data, **metadata: arguments passed to View instance.
 
         Returns:
-            A (description, content generator) tuple.
+            A (description, content generator, error) tuple.
+            If the content view raised an exception generating the view,
+            the exception is returned in error and the flow is formatted in raw mode.
             In contrast to calling the views directly, text is always safe-to-print unicode.
-
-        Raises:
-            ContentViewException, if the content view threw an error.
     """
     try:
         ret = viewmode(data, **metadata)
+        if ret is None:
+            ret = "Couldn't parse: falling back to Raw", get("Raw")(data, **metadata)[1]
+        desc, content = ret
+        error = None
     # Third-party viewers can fail in unexpected ways...
-    except Exception as e:
-        six.reraise(
-            exceptions.ContentViewException,
-            exceptions.ContentViewException(str(e)),
-            sys.exc_info()[2]
-        )
-    if not ret:
+    except Exception:
         desc = "Couldn't parse: falling back to Raw"
         _, content = get("Raw")(data, **metadata)
-    else:
-        desc, content = ret
-    return desc, safe_to_print(content)
+        error = "{} Content viewer failed: \n{}".format(
+            getattr(viewmode, "name"),
+            traceback.format_exc()
+        )
+
+    return desc, safe_to_print(content), error

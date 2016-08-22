@@ -16,6 +16,7 @@ from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import filt
 from mitmproxy import models
+from mitmproxy import contentviews
 from netlib import version
 
 
@@ -234,7 +235,7 @@ class AcceptFlow(RequestHandler):
 class FlowHandler(RequestHandler):
 
     def delete(self, flow_id):
-        if not self.flow.reply.acked:
+        if self.flow.killable:
             self.flow.kill(self.master)
         self.state.delete_flow(self.flow)
 
@@ -339,6 +340,23 @@ class FlowContent(RequestHandler):
         self.write(message.raw_content)
 
 
+class FlowContentView(RequestHandler):
+
+    def get(self, flow_id, message, content_view):
+        message = getattr(self.flow, message)
+
+        description, lines, error = contentviews.get_message_content_view(
+            contentviews.get(content_view.replace('_', ' ')), message
+        )
+#        if error:
+#           add event log
+
+        self.write(dict(
+            lines=list(lines),
+            description=description
+        ))
+
+
 class Events(RequestHandler):
 
     def get(self):
@@ -364,7 +382,8 @@ class Settings(RequestHandler):
                 anticomp=self.master.options.anticomp,
                 stickyauth=self.master.options.stickyauth,
                 stickycookie=self.master.options.stickycookie,
-                stream= self.master.options.stream_large_bodies
+                stream= self.master.options.stream_large_bodies,
+                contentViews= [v.name.replace(' ', '_') for v in contentviews.views]
             )
         ))
 
@@ -429,6 +448,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)", FlowContentView),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
         ]
@@ -438,6 +458,7 @@ class Application(tornado.web.Application):
             xsrf_cookies=True,
             cookie_secret=os.urandom(256),
             debug=debug,
+            autoreload=False,
             wauthenticator=wauthenticator,
         )
         super(Application, self).__init__(handlers, **settings)

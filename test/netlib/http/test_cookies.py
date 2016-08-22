@@ -1,5 +1,9 @@
+import time
+
 from netlib.http import cookies
 from netlib.tutils import raises
+
+import mock
 
 
 def test_read_token():
@@ -247,6 +251,22 @@ def test_refresh_cookie():
     assert cookies.refresh_set_cookie_header(c, 0)
 
 
+@mock.patch('time.time')
+def test_get_expiration_ts(*args):
+    # Freeze time
+    now_ts = 17
+    time.time.return_value = now_ts
+
+    CA = cookies.CookieAttrs
+    F = cookies.get_expiration_ts
+
+    assert F(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == 0
+    assert F(CA([("Expires", "Mon, 24-Aug-2037 00:00:00 GMT")])) == 2134684800
+
+    assert F(CA([("Max-Age", "0")])) == now_ts
+    assert F(CA([("Max-Age", "31")])) == now_ts + 31
+
+
 def test_is_expired():
     CA = cookies.CookieAttrs
 
@@ -260,9 +280,53 @@ def test_is_expired():
     # or both
     assert cookies.is_expired(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT"), ("Max-Age", "0")]))
 
-    assert not cookies.is_expired(CA([("Expires", "Thu, 24-Aug-2063 00:00:00 GMT")]))
+    assert not cookies.is_expired(CA([("Expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))
     assert not cookies.is_expired(CA([("Max-Age", "1")]))
-    assert not cookies.is_expired(CA([("Expires", "Thu, 15-Jul-2068 00:00:00 GMT"), ("Max-Age", "1")]))
+    assert not cookies.is_expired(CA([("Expires", "Wed, 15-Jul-2037 00:00:00 GMT"), ("Max-Age", "1")]))
 
     assert not cookies.is_expired(CA([("Max-Age", "nan")]))
     assert not cookies.is_expired(CA([("Expires", "false")]))
+
+
+def test_group_cookies():
+    CA = cookies.CookieAttrs
+    groups = [
+        [
+            "one=uno; foo=bar; foo=baz",
+            [
+                ('one', 'uno', CA([])),
+                ('foo', 'bar', CA([])),
+                ('foo', 'baz', CA([]))
+            ]
+        ],
+        [
+            "one=uno; Path=/; foo=bar; Max-Age=0; foo=baz; expires=24-08-1993",
+            [
+                ('one', 'uno', CA([('Path', '/')])),
+                ('foo', 'bar', CA([('Max-Age', '0')])),
+                ('foo', 'baz', CA([('expires', '24-08-1993')]))
+            ]
+        ],
+        [
+            "one=uno;",
+            [
+                ('one', 'uno', CA([]))
+            ]
+        ],
+        [
+            "one=uno; Path=/; Max-Age=0; Expires=24-08-1993",
+            [
+                ('one', 'uno', CA([('Path', '/'), ('Max-Age', '0'), ('Expires', '24-08-1993')]))
+            ]
+        ],
+        [
+            "path=val; Path=/",
+            [
+                ('path', 'val', CA([('Path', '/')]))
+            ]
+        ]
+    ]
+
+    for c, expected in groups:
+        observed = cookies.group_cookies(cookies.parse_cookie_header(c))
+        assert observed == expected

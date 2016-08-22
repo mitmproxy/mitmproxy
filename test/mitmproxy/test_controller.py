@@ -1,3 +1,4 @@
+from test.mitmproxy import tutils
 from threading import Thread, Event
 
 from mock import Mock
@@ -5,7 +6,7 @@ from mock import Mock
 from mitmproxy import controller
 from six.moves import queue
 
-from mitmproxy.exceptions import Kill
+from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy.proxy import DummyServer
 from netlib.tutils import raises
 
@@ -55,7 +56,7 @@ class TestChannel(object):
     def test_tell(self):
         q = queue.Queue()
         channel = controller.Channel(q, Event())
-        m = Mock()
+        m = Mock(name="test_tell")
         channel.tell("test", m)
         assert q.get() == ("test", m)
         assert m.reply
@@ -66,12 +67,15 @@ class TestChannel(object):
         def reply():
             m, obj = q.get()
             assert m == "test"
+            obj.reply.handle()
             obj.reply.send(42)
+            obj.reply.take()
+            obj.reply.commit()
 
         Thread(target=reply).start()
 
         channel = controller.Channel(q, Event())
-        assert channel.ask("test", Mock()) == 42
+        assert channel.ask("test", Mock(name="test_ask_simple")) == 42
 
     def test_ask_shutdown(self):
         q = queue.Queue()
@@ -79,31 +83,125 @@ class TestChannel(object):
         done.set()
         channel = controller.Channel(q, done)
         with raises(Kill):
-            channel.ask("test", Mock())
-
-
-class TestDummyReply(object):
-    def test_simple(self):
-        reply = controller.DummyReply()
-        assert not reply.acked
-        reply.ack()
-        assert reply.acked
+            channel.ask("test", Mock(name="test_ask_shutdown"))
 
 
 class TestReply(object):
     def test_simple(self):
         reply = controller.Reply(42)
-        assert not reply.acked
+        assert reply.state == "unhandled"
+
+        reply.handle()
+        assert reply.state == "handled"
+
         reply.send("foo")
-        assert reply.acked
+        assert reply.value == "foo"
+
+        reply.take()
+        assert reply.state == "taken"
+
+        with tutils.raises(queue.Empty):
+            reply.q.get_nowait()
+        reply.commit()
+        assert reply.state == "committed"
         assert reply.q.get() == "foo"
 
-    def test_default(self):
-        reply = controller.Reply(42)
+    def test_kill(self):
+        reply = controller.Reply(43)
+        reply.handle()
+        reply.kill()
+        reply.take()
+        reply.commit()
+        assert reply.q.get() == Kill
+
+    def test_ack(self):
+        reply = controller.Reply(44)
+        reply.handle()
         reply.ack()
-        assert reply.q.get() == 42
+        reply.take()
+        reply.commit()
+        assert reply.q.get() == 44
 
     def test_reply_none(self):
-        reply = controller.Reply(42)
+        reply = controller.Reply(45)
+        reply.handle()
         reply.send(None)
+        reply.take()
+        reply.commit()
         assert reply.q.get() is None
+
+    def test_commit_no_reply(self):
+        reply = controller.Reply(46)
+        reply.handle()
+        reply.take()
+        with tutils.raises(ControlException):
+            reply.commit()
+        reply.ack()
+        reply.commit()
+
+    def test_double_send(self):
+        reply = controller.Reply(47)
+        reply.handle()
+        reply.send(1)
+        with tutils.raises(ControlException):
+            reply.send(2)
+        reply.take()
+        reply.commit()
+
+    def test_state_transitions(self):
+        states = {"unhandled", "handled", "taken", "committed"}
+        accept = {
+            "handle": {"unhandled"},
+            "take": {"handled"},
+            "commit": {"taken"},
+            "ack": {"handled", "taken"},
+        }
+        for fn, ok in accept.items():
+            for state in states:
+                r = controller.Reply(48)
+                r._state = state
+                if fn == "commit":
+                    r.value = 49
+                if state in ok:
+                    getattr(r, fn)()
+                else:
+                    with tutils.raises(ControlException):
+                        getattr(r, fn)()
+                r._state = "committed"  # hide warnings on deletion
+
+    def test_del(self):
+        reply = controller.Reply(47)
+        with tutils.raises(ControlException):
+            reply.__del__()
+        reply.handle()
+        reply.ack()
+        reply.take()
+        reply.commit()
+
+
+class TestDummyReply(object):
+    def test_simple(self):
+        reply = controller.DummyReply()
+        for _ in range(2):
+            reply.handle()
+            reply.ack()
+            reply.take()
+            reply.commit()
+            reply.mark_reset()
+            reply.reset()
+        assert reply.state == "unhandled"
+
+    def test_reset(self):
+        reply = controller.DummyReply()
+        reply.handle()
+        reply.ack()
+        reply.take()
+        reply.commit()
+        reply.mark_reset()
+        assert reply.state == "committed"
+        reply.reset()
+        assert reply.state == "unhandled"
+
+    def test_del(self):
+        reply = controller.DummyReply()
+        reply.__del__()

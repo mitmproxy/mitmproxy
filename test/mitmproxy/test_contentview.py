@@ -1,3 +1,4 @@
+import mock
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 from netlib.http import url
@@ -5,6 +6,7 @@ from netlib import multidict
 
 import mitmproxy.contentviews as cv
 from . import tutils
+import netlib.tutils
 
 try:
     import pyamf
@@ -180,43 +182,6 @@ Larry
         assert f[0] == "Query"
         assert [x for x in f[1]] == [[("header", "foo: "), ("text", "bar")]]
 
-    def test_get_content_view(self):
-        r = cv.get_content_view(
-            cv.get("Raw"),
-            b"[1, 2, 3]",
-            headers=Headers(content_type="application/json")
-        )
-        assert "Raw" in r[0]
-
-        r = cv.get_content_view(
-            cv.get("Auto"),
-            b"[1, 2, 3]",
-            headers=Headers(content_type="application/json")
-        )
-        assert r[0] == "JSON"
-
-        r = cv.get_content_view(
-            cv.get("Auto"),
-            b"[1, 2",
-            headers=Headers(content_type="application/json")
-        )
-        assert "Raw" in r[0]
-
-        r = cv.get_content_view(
-            cv.get("Auto"),
-            b"[1, 2, 3]",
-            headers=Headers(content_type="application/vnd.api+json")
-        )
-        assert r[0] == "JSON"
-
-        tutils.raises(
-            ContentViewException,
-            cv.get_content_view,
-            cv.get("AMF"),
-            b"[1, 2",
-            headers=Headers()
-        )
-
     def test_add_cv(self):
         class TestContentView(cv.View):
             name = "test"
@@ -231,6 +196,57 @@ Larry
             cv.add,
             tcv
         )
+
+
+def test_get_content_view():
+    desc, lines, err = cv.get_content_view(
+        cv.get("Raw"),
+        b"[1, 2, 3]",
+    )
+    assert "Raw" in desc
+    assert list(lines)
+    assert not err
+
+    desc, lines, err = cv.get_content_view(
+        cv.get("Auto"),
+        b"[1, 2, 3]",
+        headers=Headers(content_type="application/json")
+    )
+    assert desc == "JSON"
+
+    desc, lines, err = cv.get_content_view(
+        cv.get("JSON"),
+        b"[1, 2",
+    )
+    assert "Couldn't parse" in desc
+
+    with mock.patch("mitmproxy.contentviews.ViewAuto.__call__") as view_auto:
+        view_auto.side_effect = ValueError
+
+        desc, lines, err = cv.get_content_view(
+            cv.get("Auto"),
+            b"[1, 2",
+        )
+        assert err
+        assert "Couldn't parse" in desc
+
+
+def test_get_message_content_view():
+    r = netlib.tutils.treq()
+    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    assert desc == "Raw"
+
+    r.encode("gzip")
+    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    assert desc == "[decoded gzip] Raw"
+
+    r.headers["content-encoding"] = "deflate"
+    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    assert desc == "[cannot decode] Raw"
+
+    r.content = None
+    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    assert list(lines) == [[("error", "content missing")]]
 
 
 if pyamf:

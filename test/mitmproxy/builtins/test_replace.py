@@ -43,10 +43,10 @@ class TestReplace(mastertest.MasterTest):
 
         f = tutils.tflow()
         f.request.content = b"foo"
-        self.invoke(m, "request", f)
+        m.request(f)
         assert f.request.content == b"bar"
 
         f = tutils.tflow(resp=True)
         f.response.content = b"foo"
-        self.invoke(m, "response", f)
+        m.response(f)
         assert f.response.content == b"bar"

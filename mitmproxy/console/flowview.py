@@ -3,14 +3,11 @@ from __future__ import absolute_import, print_function, division
 import math
 import os
 import sys
-import traceback
 
 import urwid
 from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
-from mitmproxy import controller
-from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy import utils
 from mitmproxy.console import common
@@ -150,13 +147,13 @@ class FlowView(tabs.Tabs):
         signals.flow_change.connect(self.sig_flow_change)
 
     def tab_request(self):
-        if self.flow.intercepted and not self.flow.reply.acked and not self.flow.response:
+        if self.flow.intercepted and not self.flow.response:
             return "Request intercepted"
         else:
             return "Request"
 
     def tab_response(self):
-        if self.flow.intercepted and not self.flow.reply.acked and self.flow.response:
+        if self.flow.intercepted and self.flow.response:
             return "Response intercepted"
         else:
             return "Response"
@@ -206,36 +203,11 @@ class FlowView(tabs.Tabs):
             )
 
     def _get_content_view(self, message, viewmode, max_lines, _):
-
-        try:
-            content = message.content
-            if content != message.raw_content:
-                enc = "[decoded {}]".format(
-                    message.headers.get("content-encoding")
-                )
-            else:
-                enc = None
-        except ValueError:
-            content = message.raw_content
-            enc = "[cannot decode]"
-        try:
-            query = None
-            if isinstance(message, models.HTTPRequest):
-                query = message.query
-            description, lines = contentviews.get_content_view(
-                viewmode, content, headers=message.headers, query=query
-            )
-        except exceptions.ContentViewException:
-            s = "Content viewer failed: \n" + traceback.format_exc()
-            signals.add_log(s, "error")
-            description, lines = contentviews.get_content_view(
-                contentviews.get("Raw"), content, headers=message.headers
-            )
-            description = description.replace("Raw", "Couldn't parse: falling back to Raw")
-
-        if enc:
-            description = " ".join([enc, description])
-
+        description, lines, error = contentviews.get_message_content_view(
+            viewmode, message
+        )
+        if error:
+            signals.add_log(error, "error")
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, models.HTTPRequest):
             description = "No request content (press tab to view response)"
@@ -406,7 +378,6 @@ class FlowView(tabs.Tabs):
                     self.flow.request.http_version,
                     200, b"OK", Headers(), b""
                 )
-                self.flow.response.reply = controller.DummyReply()
             message = self.flow.response
 
         self.flow.backup()
@@ -565,7 +536,7 @@ class FlowView(tabs.Tabs):
             else:
                 self.view_next_flow(self.flow)
             f = self.flow
-            if not f.reply.acked:
+            if f.killable:
                 f.kill(self.master)
             self.state.delete_flow(f)
         elif key == "D":

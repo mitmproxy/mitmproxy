@@ -445,7 +445,7 @@ flowcache = utils.LRUCache(800)
 def format_flow(f, focus, extended=False, hostheader=False):
     d = dict(
         intercepted = f.intercepted,
-        acked = f.reply.acked,
+        acked = f.reply.state == "committed",
 
         req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay,

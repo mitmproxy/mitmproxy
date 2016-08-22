@@ -28,7 +28,8 @@ export default View => class extends React.Component {
     componentWillReceiveProps(nextProps) {
         if (
             nextProps.message.content !== this.props.message.content ||
-            nextProps.message.contentHash !== this.props.message.contentHash
+            nextProps.message.contentHash !== this.props.message.contentHash ||
+            nextProps.contentView !== this.props.contentView
         ) {
             this.updateContent(nextProps)
         }
@@ -52,7 +53,7 @@ export default View => class extends React.Component {
             return this.setState({request: undefined, content: ""})
         }
 
-        let requestUrl = MessageUtils.getContentURL(props.flow, props.message)
+        let requestUrl = MessageUtils.getContentURL(props.flow, props.message, (View.name == 'ViewServer' ? props.contentView : undefined))
 
         // We use XMLHttpRequest instead of fetch() because fetch() is not (yet) abortable.
         let request = new XMLHttpRequest();

@@ -14,7 +14,7 @@ export default function CodeEditor ( { content, onChange} ){
         lineNumbers: true
     };
     return (
-        <div onKeyDown={e => e.stopPropagation()}>
+        <div className="codeeditor" onKeyDown={e => e.stopPropagation()}>
             <Codemirror value={content} onChange={onChange} options={options}/>
         </div>
     )

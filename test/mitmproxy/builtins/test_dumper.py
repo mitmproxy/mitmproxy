@@ -15,7 +15,7 @@ class TestDumper(mastertest.MasterTest):
         d = dumper.Dumper()
         sio = StringIO()
 
-        updated = set(["tfile", "flow_detail"])
+        updated = {"tfile", "flow_detail"}
         d.configure(dump.Options(tfile = sio, flow_detail = 0), updated)
         d.response(tutils.tflow())
         assert not sio.getvalue()
@@ -66,10 +66,9 @@ class TestDumper(mastertest.MasterTest):
 
 
 class TestContentView(mastertest.MasterTest):
-    @mock.patch("mitmproxy.contentviews.get_content_view")
-    def test_contentview(self, get_content_view):
-        se = exceptions.ContentViewException(""), ("x", iter([]))
-        get_content_view.side_effect = se
+    @mock.patch("mitmproxy.contentviews.ViewAuto.__call__")
+    def test_contentview(self, view_auto):
+        view_auto.side_effect = exceptions.ContentViewException("")
 
         s = state.State()
         sio = StringIO()
@@ -81,5 +80,5 @@ class TestContentView(mastertest.MasterTest):
         m = mastertest.RecordingMaster(o, None, s)
         d = dumper.Dumper()
         m.addons.add(o, d)
-        self.invoke(m, "response", tutils.tflow())
+        m.response(tutils.tflow())
         assert "Content viewer failed" in m.event_log[0][1]

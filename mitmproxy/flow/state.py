@@ -178,7 +178,7 @@ class FlowStore(FlowList):
 
     def kill_all(self, master):
         for f in self._list:
-            if not f.reply.acked:
+            if f.killable:
                 f.kill(master)
 
 

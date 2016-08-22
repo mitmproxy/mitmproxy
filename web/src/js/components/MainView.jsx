@@ -29,8 +29,7 @@ class MainView extends Component {
                     <FlowView
                         key="flowDetails"
                         ref="flowDetails"
-                        tab={this.props.routeParams.detailTab}
-                        query={this.props.query}
+                        tab={this.props.tab}
                         updateFlow={data => this.props.updateFlow(selectedFlow, data)}
                         flow={selectedFlow}
                     />
@@ -45,7 +44,8 @@ export default connect(
         flows: state.flowView.data,
         filter: state.flowView.filter,
         highlight: state.flowView.highlight,
-        selectedFlow: state.flows.byId[state.flows.selected[0]]
+        selectedFlow: state.flows.byId[state.flows.selected[0]],
+        tab: state.ui.flow.tab,
     }),
     {
         selectFlow: flowsActions.select,

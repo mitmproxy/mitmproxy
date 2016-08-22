@@ -182,7 +182,7 @@ class ConnectionItem(urwid.WidgetWrap):
             self.flow.accept_intercept(self.master)
             signals.flowlist_change.send(self)
         elif key == "d":
-            if not self.flow.reply.acked:
+            if self.flow.killable:
                 self.flow.kill(self.master)
             self.state.delete_flow(self.flow)
             signals.flowlist_change.send(self)
@@ -246,7 +246,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.save_flows_prompt,
             )
         elif key == "X":
-            if not self.flow.reply.acked:
+            if self.flow.killable:
                 self.flow.kill(self.master)
         elif key == "enter":
             if self.flow.request:

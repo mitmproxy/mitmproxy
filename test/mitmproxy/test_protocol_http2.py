@@ -849,15 +849,15 @@ class TestMaxConcurrentStreams(_Http2Test):
     def test_max_concurrent_streams(self):
         client, h2_conn = self._setup_connection()
         new_streams = [1, 3, 5, 7, 9, 11]
-        for id in new_streams:
+        for stream_id in new_streams:
             # this will exceed MAX_CONCURRENT_STREAMS on the server connection
             # and cause mitmproxy to throttle stream creation to the server
-            self._send_request(client.wfile, h2_conn, stream_id=id, headers=[
+            self._send_request(client.wfile, h2_conn, stream_id=stream_id, headers=[
                 (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
-                ('X-Stream-ID', str(id)),
+                ('X-Stream-ID', str(stream_id)),
             ])
 
         ended_streams = 0

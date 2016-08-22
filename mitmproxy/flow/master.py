@@ -233,7 +233,8 @@ class FlowMaster(controller.Master):
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb and self.kill_nonreplay:
-                f.kill(self)
+                self.add_log("Killed {}".format(f.request.url), "info")
+                f.reply.kill()
 
     def replay_request(self, f, block=False):
         """
@@ -313,8 +314,7 @@ class FlowMaster(controller.Master):
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
-        if not f.reply.acked:
-            self.process_new_request(f)
+        self.process_new_request(f)
         return f
 
     @controller.handler
@@ -330,9 +330,8 @@ class FlowMaster(controller.Master):
     @controller.handler
     def response(self, f):
         self.state.update_flow(f)
-        if not f.reply.acked:
-            if self.client_playback:
-                self.client_playback.clear(f)
+        if self.client_playback:
+            self.client_playback.clear(f)
         return f
 
     def handle_intercept(self, f):
