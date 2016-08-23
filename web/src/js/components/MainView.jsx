@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
+import FlowContextMenu from './FlowContextMenu'
 import * as flowsActions from '../ducks/flows'
 import { updateFilter, updateHighlight } from '../ducks/flowView'
 
@@ -19,11 +20,13 @@ class MainView extends Component {
             <div className="main-view">
                 <FlowTable
                     ref="flowTable"
+                    attributes={{ className: 'flow-table' }}
                     flows={flows}
                     selected={selectedFlow}
                     highlight={highlight}
                     onSelect={this.props.selectFlow}
                 />
+                <FlowContextMenu flow={selectedFlow} />
                 {selectedFlow && [
                     <Splitter key="splitter"/>,
                     <FlowView
@@ -49,8 +52,8 @@ export default connect(
     }),
     {
         selectFlow: flowsActions.select,
+        updateFlow: flowsActions.update,
         updateFilter,
         updateHighlight,
-        updateFlow: flowsActions.update,
     }
 )(MainView)

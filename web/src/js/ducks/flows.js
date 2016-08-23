@@ -145,14 +145,15 @@ export function upload(file) {
     return dispatch => fetchApi('/flows/dump', { method: 'post', body })
 }
 
-
+/**
+ * @public
+ */
 export function select(id) {
     return {
         type: SELECT,
         flowIds: id ? [id] : []
     }
 }
-
 
 /**
  * This action creater takes all WebSocket events

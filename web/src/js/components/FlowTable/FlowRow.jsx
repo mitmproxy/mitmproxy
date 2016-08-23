@@ -5,12 +5,13 @@ import { pure } from '../../utils'
 
 FlowRow.propTypes = {
     onSelect: PropTypes.func.isRequired,
+    onContextMenu: PropTypes.func.isRequired,
     flow: PropTypes.object.isRequired,
     highlighted: PropTypes.bool,
     selected: PropTypes.bool,
 }
 
-function FlowRow({ flow, selected, highlighted, onSelect }) {
+function FlowRow({ flow, selected, highlighted, onSelect, onContextMenu }) {
     const className = classnames({
         'selected': selected,
         'highlighted': highlighted,
@@ -20,7 +21,7 @@ function FlowRow({ flow, selected, highlighted, onSelect }) {
     })
 
     return (
-        <tr className={className} onClick={() => onSelect(flow.id)}>
+        <tr className={className} onClick={onSelect} onContextMenu={onContextMenu}>
             {columns.map(Column => (
                 <Column key={Column.name} flow={flow}/>
             ))}

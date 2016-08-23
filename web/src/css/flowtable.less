@@ -10,8 +10,14 @@
 
 .flow-table {
     width: 100%;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    height: 100%;
+    overflow: hidden;
+
+    .flow-table-content {
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
 
     table {
         width: 100%;
