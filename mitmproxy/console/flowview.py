@@ -374,10 +374,7 @@ class FlowView(tabs.Tabs):
             message = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = models.HTTPResponse(
-                    self.flow.request.http_version,
-                    200, b"OK", Headers(), b""
-                )
+                self.flow.response = models.HTTPResponse.make(200, b"")
             message = self.flow.response
 
         self.flow.backup()

@@ -1,14 +1,19 @@
 from __future__ import absolute_import, print_function, division
 
-from email.utils import parsedate_tz, formatdate, mktime_tz
-import time
 import six
-
+import time
+from email.utils import parsedate_tz, formatdate, mktime_tz
+from netlib import human
+from netlib import multidict
 from netlib.http import cookies
 from netlib.http import headers as nheaders
 from netlib.http import message
-from netlib import multidict
-from netlib import human
+from netlib.http import status_codes
+from typing import AnyStr  # noqa
+from typing import Dict  # noqa
+from typing import Iterable  # noqa
+from typing import Tuple  # noqa
+from typing import Union  # noqa
 
 
 class ResponseData(message.MessageData):
@@ -53,6 +58,45 @@ class Response(message.Message):
             reason=self.reason,
             details=details
         )
+
+    @classmethod
+    def make(
+            cls,
+            status_code=200,  # type: int
+            content=b"",  # type: AnyStr
+            headers=()  # type: Union[Dict[AnyStr, AnyStr], Iterable[Tuple[bytes, bytes]]]
+    ):
+        """
+        Simplified API for creating response objects.
+        """
+        resp = cls(
+            b"HTTP/1.1",
+            status_code,
+            status_codes.RESPONSES.get(status_code, "").encode(),
+            (),
+            None
+        )
+        # Assign this manually to update the content-length header.
+        if isinstance(content, bytes):
+            resp.content = content
+        elif isinstance(content, str):
+            resp.text = content
+        else:
+            raise TypeError("Expected content to be str or bytes, but is {}.".format(
+                type(content).__name__
+            ))
+
+        # Headers can be list or dict, we differentiate here.
+        if isinstance(headers, dict):
+            resp.headers = nheaders.Headers(**headers)
+        elif isinstance(headers, Iterable):
+            resp.headers = nheaders.Headers(headers)
+        else:
+            raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
+                type(headers).__name__
+            ))
+
+        return resp
 
     @property
     def status_code(self):
