@@ -275,10 +275,6 @@ class Reply(object):
     def has_message(self):
         return self.value != NO_REPLY
 
-    @property
-    def done(self):
-        return self.state == "committed"
-
     def handle(self):
         """
         Reply are handled by controller.handlers, which may be nested. The first handler takes
