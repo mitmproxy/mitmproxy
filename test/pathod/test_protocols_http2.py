@@ -5,7 +5,7 @@ import hyperframe
 from netlib import tcp, http
 from netlib.tutils import raises
 from netlib.exceptions import TcpDisconnect
-from netlib.http.http2 import framereader
+from netlib.http import http2
 
 from ..netlib import tservers as netlib_tservers
 
@@ -112,11 +112,11 @@ class TestPerformServerConnectionPreface(netlib_tservers.ServerTestBase):
             self.wfile.flush()
 
             # check empty settings frame
-            raw = framereader.http2_read_raw_frame(self.rfile)
+            raw = http2.read_raw_frame(self.rfile)
             assert raw == codecs.decode('00000c040000000000000200000000000300000001', 'hex_codec')
 
             # check settings acknowledgement
-            raw = framereader.http2_read_raw_frame(self.rfile)
+            raw = http2.read_raw_frame(self.rfile)
             assert raw == codecs.decode('000000040100000000', 'hex_codec')
 
             # send settings acknowledgement

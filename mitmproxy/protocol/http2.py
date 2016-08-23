@@ -325,7 +325,7 @@ class Http2Layer(base.Layer):
 
                     with source_conn.h2.lock:
                         try:
-                            raw_frame = b''.join(http2.framereader.http2_read_raw_frame(source_conn.rfile))
+                            raw_frame = b''.join(http2.read_raw_frame(source_conn.rfile))
                         except:
                             # read frame failed: connection closed
                             self._kill_all_streams()
