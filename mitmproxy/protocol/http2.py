@@ -128,7 +128,7 @@ class Http2Layer(base.Layer):
                 eid = event.stream_id
 
         if isinstance(event, events.RequestReceived):
-            return self._handle_request_received(eid, event)
+            return self._handle_request_received(eid, event, source_conn.h2)
         elif isinstance(event, events.ResponseReceived):
             return self._handle_response_received(eid, event)
         elif isinstance(event, events.DataReceived):
@@ -140,7 +140,7 @@ class Http2Layer(base.Layer):
         elif isinstance(event, events.RemoteSettingsChanged):
             return self._handle_remote_settings_changed(event, other_conn)
         elif isinstance(event, events.ConnectionTerminated):
-            return self._handle_connection_terminated(event)
+            return self._handle_connection_terminated(event, is_server)
         elif isinstance(event, events.PushedStreamReceived):
             return self._handle_pushed_stream_received(event)
         elif isinstance(event, events.PriorityUpdated):
@@ -151,9 +151,9 @@ class Http2Layer(base.Layer):
         # fail-safe for unhandled events
         return True
 
-    def _handle_request_received(self, eid, event):
+    def _handle_request_received(self, eid, event, h2_connection):
         headers = netlib.http.Headers([[k, v] for k, v in event.headers])
-        self.streams[eid] = Http2SingleStreamLayer(self, eid, headers)
+        self.streams[eid] = Http2SingleStreamLayer(self, h2_connection, eid, headers)
         self.streams[eid].timestamp_start = time.time()
         self.streams[eid].no_body = (event.stream_ended is not None)
         if event.priority_updated is not None:
@@ -211,7 +211,7 @@ class Http2Layer(base.Layer):
         other_conn.h2.safe_update_settings(new_settings)
         return True
 
-    def _handle_connection_terminated(self, event):
+    def _handle_connection_terminated(self, event, is_server):
         if event.error_code != h2.errors.NO_ERROR:
             # Something terrible has happened - kill everything!
             self.client_conn.h2.close_connection(
@@ -221,6 +221,11 @@ class Http2Layer(base.Layer):
             )
             self.client_conn.send(self.client_conn.h2.data_to_send())
             self._kill_all_streams()
+            self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
+                    "server" if is_server else "client",
+                    event.error_code,
+                    event.last_stream_id,
+                    event.additional_data), "info")
         else:
             """
             Do not immediately terminate the other connection.
@@ -326,6 +331,10 @@ class Http2Layer(base.Layer):
                             self._kill_all_streams()
                             return
 
+                        if source_conn.h2.state_machine.state == h2.connection.ConnectionState.CLOSED:
+                            self.log("HTTP/2 connection entered closed state already", "debug")
+                            return
+
                         incoming_events = source_conn.h2.receive_data(raw_frame)
                         source_conn.send(source_conn.h2.data_to_send())
 
@@ -355,10 +364,11 @@ def detect_zombie_stream(func):
 
 class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread):
 
-    def __init__(self, ctx, stream_id, request_headers):
+    def __init__(self, ctx, h2_connection, stream_id, request_headers):
         super(Http2SingleStreamLayer, self).__init__(
             ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
         )
+        self.h2_connection = h2_connection
         self.zombie = None
         self.client_stream_id = stream_id
         self.server_stream_id = None
