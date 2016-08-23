@@ -142,7 +142,7 @@ class Http2Layer(base.Layer):
         elif isinstance(event, events.ConnectionTerminated):
             return self._handle_connection_terminated(event, is_server)
         elif isinstance(event, events.PushedStreamReceived):
-            return self._handle_pushed_stream_received(event)
+            return self._handle_pushed_stream_received(event, source_conn.h2)
         elif isinstance(event, events.PriorityUpdated):
             return self._handle_priority_updated(eid, event)
         elif isinstance(event, events.TrailersReceived):
@@ -212,6 +212,12 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_connection_terminated(self, event, is_server):
+        self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
+            "server" if is_server else "client",
+            event.error_code,
+            event.last_stream_id,
+            event.additional_data), "info")
+
         if event.error_code != h2.errors.NO_ERROR:
             # Something terrible has happened - kill everything!
             self.client_conn.h2.close_connection(
@@ -221,11 +227,6 @@ class Http2Layer(base.Layer):
             )
             self.client_conn.send(self.client_conn.h2.data_to_send())
             self._kill_all_streams()
-            self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
-                    "server" if is_server else "client",
-                    event.error_code,
-                    event.last_stream_id,
-                    event.additional_data), "info")
         else:
             """
             Do not immediately terminate the other connection.
@@ -233,7 +234,7 @@ class Http2Layer(base.Layer):
             """
         return False
 
-    def _handle_pushed_stream_received(self, event):
+    def _handle_pushed_stream_received(self, event, h2_connection):
         # pushed stream ids should be unique and not dependent on race conditions
         # only the parent stream id must be looked up first
         parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
@@ -242,7 +243,7 @@ class Http2Layer(base.Layer):
             self.client_conn.send(self.client_conn.h2.data_to_send())
 
         headers = netlib.http.Headers([[k, v] for k, v in event.headers])
-        self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, event.pushed_stream_id, headers)
+        self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, h2_connection, event.pushed_stream_id, headers)
         self.streams[event.pushed_stream_id].timestamp_start = time.time()
         self.streams[event.pushed_stream_id].pushed = True
         self.streams[event.pushed_stream_id].parent_stream_id = parent_eid
@@ -260,7 +261,7 @@ class Http2Layer(base.Layer):
         with self.server_conn.h2.lock:
             mapped_stream_id = event.stream_id
             if mapped_stream_id in self.streams and self.streams[mapped_stream_id].server_stream_id:
-                # if the stream is already up and running and was sent to the server
+                # if the stream is already up and running and was sent to the server,
                 # use the mapped server stream id to update priority information
                 mapped_stream_id = self.streams[mapped_stream_id].server_stream_id
 

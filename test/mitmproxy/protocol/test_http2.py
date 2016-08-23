@@ -33,6 +33,11 @@ requires_alpn = pytest.mark.skipif(
     reason='requires OpenSSL with ALPN support')
 
 
+# inspect the log:
+#   for msg in self.proxy.tmaster.tlog:
+#       print(msg)
+
+
 class _Http2ServerBase(netlib_tservers.ServerTestBase):
     ssl = dict(alpn_select=b'h2')
 
