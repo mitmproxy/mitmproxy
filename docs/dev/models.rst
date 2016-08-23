@@ -39,6 +39,8 @@ Datastructures
 
     .. autoclass:: Response
 
+        .. automethod:: make
+
         .. rubric:: Data
         .. autoattribute:: http_version
         .. autoattribute:: status_code

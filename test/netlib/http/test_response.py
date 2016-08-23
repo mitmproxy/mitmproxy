@@ -5,6 +5,7 @@ import email
 import time
 
 from netlib.http import Headers
+from netlib.http import Response
 from netlib.http.cookies import CookieAttrs
 from netlib.tutils import raises, tresp
 from .test_message import _test_passthrough_attr, _test_decoded_attr
@@ -27,6 +28,25 @@ class TestResponseCore(object):
         assert repr(response) == "Response(200 OK, unknown content type, 7b)"
         response.content = None
         assert repr(response) == "Response(200 OK, no content)"
+
+    def test_make(self):
+        r = Response.make()
+        assert r.status_code == 200
+        assert r.content == b""
+
+        Response.make(content=b"foo")
+        Response.make(content="foo")
+        with raises(TypeError):
+            Response.make(content=42)
+
+        r = Response.make(headers=[(b"foo", b"bar")])
+        assert r.headers["foo"] == "bar"
+
+        r = Response.make(headers=({"foo": "baz"}))
+        assert r.headers["foo"] == "baz"
+
+        with raises(TypeError):
+            Response.make(headers=42)
 
     def test_status_code(self):
         _test_passthrough_attr(tresp(), "status_code")
