@@ -1,103 +1,46 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import classnames from 'classnames'
+import FileChooser from '../common/FileChooser'
+import Dropdown, {Divider} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
 
-class FileMenu extends Component {
+FileMenu.propTypes = {
+    clearFlows: PropTypes.func.isRequired,
+    loadFlows: PropTypes.func.isRequired,
+    saveFlows: PropTypes.func.isRequired
+}
 
-    constructor(props, context) {
-        super(props, context)
-        this.state = { show: false }
+FileMenu.onNewClick = (e, clearFlows) => {
+    e.preventDefault();
+    if (confirm('Delete all flows?'))
+        clearFlows()
+}
 
-        this.close = this.close.bind(this)
-        this.onFileClick = this.onFileClick.bind(this)
-        this.onNewClick = this.onNewClick.bind(this)
-        this.onOpenClick = this.onOpenClick.bind(this)
-        this.onOpenFile = this.onOpenFile.bind(this)
-        this.onSaveClick = this.onSaveClick.bind(this)
-    }
+function FileMenu ({clearFlows, loadFlows, saveFlows}) {
+     return (
+        <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
+            <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
+                <i className="fa fa-fw fa-file"></i>
+                New
+            </a>
+            <FileChooser
+                icon="fa-folder-open"
+                text="Open..."
+                onOpenFile={file => loadFlows(file)}
+            />
+            <a href="#" onClick={e =>{ e.preventDefault(); saveFlows();}}>
+                <i className="fa fa-fw fa-floppy-o"></i>
+                Save...
+            </a>
 
-    close() {
-        this.setState({ show: false })
-        document.removeEventListener('click', this.close)
-    }
+            <Divider/>
 
-    onFileClick(e) {
-        e.preventDefault()
-
-        if (this.state.show) {
-            return
-        }
-
-        document.addEventListener('click', this.close)
-        this.setState({ show: true })
-    }
-
-    onNewClick(e) {
-        e.preventDefault()
-        if (confirm('Delete all flows?')) {
-            this.props.clearFlows()
-        }
-    }
-
-    onOpenClick(e) {
-        e.preventDefault()
-        this.fileInput.click()
-    }
-
-    onOpenFile(e) {
-        e.preventDefault()
-        if (e.target.files.length > 0) {
-            this.props.loadFlows(e.target.files[0])
-            this.fileInput.value = ''
-        }
-    }
-
-    onSaveClick(e) {
-        e.preventDefault()
-        this.props.saveFlows()
-    }
-
-    render() {
-        return (
-            <div className={classnames('dropdown pull-left', { open: this.state.show })}>
-                <a href="#" className="special" onClick={this.onFileClick}>mitmproxy</a>
-                <ul className="dropdown-menu" role="menu">
-                    <li>
-                        <a href="#" onClick={this.onNewClick}>
-                            <i className="fa fa-fw fa-file"></i>
-                            New
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" onClick={this.onOpenClick}>
-                            <i className="fa fa-fw fa-folder-open"></i>
-                            Open...
-                        </a>
-                        <input
-                            ref={ref => this.fileInput = ref}
-                            className="hidden"
-                            type="file"
-                            onChange={this.onOpenFile}
-                        />
-                    </li>
-                    <li>
-                        <a href="#" onClick={this.onSaveClick}>
-                            <i className="fa fa-fw fa-floppy-o"></i>
-                            Save...
-                        </a>
-                    </li>
-                    <li role="presentation" className="divider"></li>
-                    <li>
-                        <a href="http://mitm.it/" target="_blank">
-                            <i className="fa fa-fw fa-external-link"></i>
-                            Install Certificates...
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        )
-    }
+            <a href="http://mitm.it/" target="_blank">
+                <i className="fa fa-fw fa-external-link"></i>
+                Install Certificates...
+            </a>
+        </Dropdown>
+    )
 }
 
 export default connect(

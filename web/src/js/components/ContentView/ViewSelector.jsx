@@ -1,72 +1,36 @@
 import React, { PropTypes, Component } from 'react'
-import classnames from 'classnames'
 import { connect } from 'react-redux'
 import * as ContentViews from './ContentViews'
-import { setContentView } from "../../ducks/ui/flow";
-
-function ViewItem({ name, setContentView, children }) {
-    return (
-        <li>
-            <a href="#" onClick={() => setContentView(name)}>
-                {children}
-            </a>
-        </li>
-    )
-}
+import { setContentView } from '../../ducks/ui/flow';
+import Dropdown from '../common/Dropdown'
 
 
-/*ViewSelector.propTypes = {
+ViewSelector.propTypes = {
     contentViews: PropTypes.array.isRequired,
     activeView: PropTypes.string.isRequired,
     isEdit: PropTypes.bool.isRequired,
-    isContentViewSelectorOpen: PropTypes.bool.isRequired,
-    setContentViewSelectorOpen: PropTypes.func.isRequired
-}*/
+    setContentView: PropTypes.func.isRequired
+}
 
+function ViewSelector ({contentViews, activeView, isEdit, setContentView}){
+    let edit = ContentViews.Edit.displayName
+    let inner = <span> <b>View:</b> {activeView}<span className="caret"></span> </span>
 
-class ViewSelector extends Component {
-      constructor(props, context) {
-        super(props, context)
-        this.close = this.close.bind(this)
-        this.state = {open: false}
-    }
-    close() {
-        this.setState({open: false})
-        document.removeEventListener('click', this.close)
-    }
-
-    onDropdown(e){
-        e.preventDefault()
-        this.setState({open: !this.state.open})
-        document.addEventListener('click', this.close)
-    }
-
-    render() {
-        const {contentViews, activeView, isEdit, setContentView} = this.props
-        let edit = ContentViews.Edit.displayName
-
-        return (
-            <div className={classnames('dropup pull-left', { open: this.state.open })}>
-                <a className="btn btn-default btn-xs"
-                   onClick={ e => this.onDropdown(e) }
-                   href="#">
-                    <b>View:</b> {activeView}<span className="caret"></span>
+    return (
+        <Dropdown dropup className="pull-left" btnClass="btn btn-default btn-xs" text={inner}>
+            {contentViews.map(name =>
+                <a href="#" key={name} onClick={e => {e.preventDefault(); setContentView(name)}}>
+                    {name.toLowerCase().replace('_', ' ')}
                 </a>
-                <ul className="dropdown-menu" role="menu">
-                    {contentViews.map(name =>
-                        <ViewItem key={name} setContentView={setContentView} name={name}>
-                            {name.toLowerCase().replace('_', ' ')}
-                        </ViewItem>
-                    )}
-                    {isEdit &&
-                    <ViewItem key={edit} setContentView={setContentView} name={edit}>
-                        {edit.toLowerCase()}
-                    </ViewItem>
-                    }
-                </ul>
-            </div>
-        )
-    }
+                )
+            }
+            {isEdit &&
+                <a href="#" onClick={e => {e.preventDefault(); setContentView(edit)}}>
+                    {edit.toLowerCase()}
+                </a>
+            }
+        </Dropdown>
+    )
 }
 
 export default connect (

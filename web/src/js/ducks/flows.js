@@ -1,5 +1,6 @@
 import { fetchApi } from '../utils'
 import reduceList, * as listActions from './utils/list'
+import { selectRelative } from './flowView'
 
 import * as msgQueueActions from './msgQueue'
 import * as websocketActions from './websocket'
@@ -210,5 +211,14 @@ export function updateFlow(item) {
  * @private
  */
 export function removeFlow(id) {
-    return { type: REMOVE, id }
+    return (dispatch, getState) => {
+        let currentIndex = getState().flowView.indexOf[getState().flows.selected[0]]
+        let maxIndex = getState().flowView.data.length - 1
+        let deleteLastEntry = maxIndex == 0
+        if (deleteLastEntry)
+            dispatch(select())
+        else
+            dispatch(selectRelative(currentIndex == maxIndex ? -1 : 1) )
+        dispatch({ type: REMOVE, id })
+    }
 }

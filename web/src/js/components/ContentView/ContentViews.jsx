@@ -30,6 +30,12 @@ function Edit({ content, onChange }) {
 Edit = ContentLoader(Edit)
 
 class ViewServer extends Component {
+    static propTypes  = {
+        showFullContent: PropTypes.bool.isRequired,
+        maxLines: PropTypes.number.isRequired,
+        setContentViewDescription : PropTypes.func.isRequired,
+        setContent: PropTypes.func.isRequired
+    }
 
     componentWillMount(){
         this.setContentView(this.props)
@@ -40,6 +46,7 @@ class ViewServer extends Component {
             this.setContentView(nextProps)
         }
     }
+
     setContentView(props){
         try {
             this.data = JSON.parse(props.content)
@@ -50,25 +57,31 @@ class ViewServer extends Component {
         props.setContentViewDescription(props.contentView != this.data.description ? this.data.description : '')
         props.setContent(this.data.lines)
     }
+
     render() {
         const {content, contentView, message, maxLines} = this.props
         let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, maxLines)
-        return <div>
+        return (
+            <div>
                 <pre>
                     {lines.map((line, i) =>
                         <div key={`line${i}`}>
-                            {line.map((tuple, j) =>
-                                <span key={`tuple${j}`} className={tuple[0]}>
-                                    {tuple[1]}
-                                </span>
-                            )}
+                            {line.map((element, j) => {
+                                let [style, text] = element
+                                return (
+                                    <span key={`tuple${j}`} className={style}>
+                                        {text}
+                                    </span>
+                                )
+                            })}
                         </div>
                     )}
                 </pre>
-            {ViewImage.matches(message) &&
-            <ViewImage {...this.props} />
-            }
-        </div>
+                {ViewImage.matches(message) &&
+                <ViewImage {...this.props} />
+                }
+            </div>
+        )
     }
 
 }

@@ -107,14 +107,15 @@ fetchApi.put = (url, json, options) => fetchApi(
         ...options
     }
 )
-
+// deep comparison of two json objects (dicts). arrays are handeled as a single value.
+// return: json object including only the changed keys value pairs.
 export function getDiff(obj1, obj2) {
     let result = {...obj2};
     for(let key in obj1) {
         if(_.isEqual(obj2[key], obj1[key]))
             result[key] = undefined
-        else if(!(Array.isArray(obj2[key]) && Array.isArray(obj1[key])) &&
-                typeof obj2[key] == 'object' && typeof obj1[key] == 'object')
+        else if(Object.prototype.toString.call(obj2[key]) === '[object Object]' &&
+                Object.prototype.toString.call(obj1[key]) === '[object Object]' )
             result[key] = getDiff(obj1[key], obj2[key])
     }
     return result

@@ -8,10 +8,14 @@ FlowMenu.title = 'Flow'
 
 FlowMenu.propTypes = {
     flow: PropTypes.object.isRequired,
+    acceptFlow: PropTypes.func.isRequired,
+    replayFlow: PropTypes.func.isRequired,
+    duplicateFlow: PropTypes.func.isRequired,
+    removeFlow: PropTypes.func.isRequired,
+    revertFlow: PropTypes.func.isRequired
 }
 
 function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
-
     return (
         <div>
             <div className="menu-row">
