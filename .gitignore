@@ -19,3 +19,15 @@ bower_components
 *.map
 sslkeylogfile.log
 .tox/
+
+# ZIP
+
+*.zip
+
+# XLS
+
+*.xls
+
+# JSON
+
+*.json

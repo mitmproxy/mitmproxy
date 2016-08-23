@@ -12,6 +12,9 @@ from mitmproxy.console import signals
 from mitmproxy.flow import export
 from netlib import human
 
+import re
+
+
 try:
     import pyperclip
 except:
@@ -32,6 +35,14 @@ METHOD_OPTIONS = [
     ("edit raw", "e"),
 ]
 
+re_phone = re.compile(r'\b\d{10}\b')
+
+re_email = re.compile(r'[^@\/=\?]+(@|%40)[^@\/=\?]+\.[^@\/=\?\ ]+')
+
+re_userid = re.compile(r'\b\d{4,7}\b')
+
+re_phone_or_email_or_userid = re.compile(r'(?:\b\d{10}\b)|(?:[^@\/=\?\ ]+(@|%40)[^@\/=\?]+\.[^@\/=\?]+)|(?:\b\d{4,8}\b)')
+
 
 def is_keypress(k):
     """
@@ -39,6 +50,26 @@ def is_keypress(k):
     """
     if isinstance(k, six.string_types):
         return True
+
+
+def highlight_regex(str, regex, textattr="text", regexattr="key"):
+    """
+        Like highlight key, this highlights a given regex
+    """
+    l = []
+
+    ss = regex.finditer(str)
+
+    prev = 0
+    for i in ss:
+        span_tup = i.span()
+        l.append((textattr, str[prev:span_tup[0]]))
+        l.append((regexattr, str[span_tup[0]:span_tup[1]]))
+        prev = span_tup[1]
+
+    l.append((textattr, str[prev:]))
+
+    return l
 
 
 def highlight_key(str, key, textattr="text", keyattr="key"):
@@ -127,6 +158,89 @@ else:
     SYMBOL_REPLAY = u"[r]"
     SYMBOL_RETURN = u"<-"
     SYMBOL_MARK = "[m]"
+
+
+def raw_format_flow(f, focus, extended):
+    f = dict(f)
+    pile = []
+    req = []
+    if extended:
+        req.append(
+            fcol(
+                human.format_timestamp(f["req_timestamp"]),
+                "highlight"
+            )
+        )
+    else:
+        req.append(fcol(">>" if focus else "  ", "focus"))
+
+    if f["marked"]:
+        req.append(fcol(SYMBOL_MARK, "mark"))
+
+    if f["req_is_replay"]:
+        req.append(fcol(SYMBOL_REPLAY, "replay"))
+    req.append(fcol(f["req_method"], "method"))
+
+    preamble = sum(i[1] for i in req) + len(req) - 1
+
+    if f["intercepted"] and not f["acked"]:
+        uc = "intercept"
+    elif "resp_code" in f or "err_msg" in f:
+        uc = "text"
+    else:
+        uc = "title"
+
+    url = f["req_url"]
+    if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
+        url += " " + f["req_http_version"]
+    req.append(
+        urwid.Text(highlight_regex(url, re_phone_or_email_or_userid, uc))
+    )
+
+    pile.append(urwid.Columns(req, dividechars=1))
+
+    resp = []
+    resp.append(
+        ("fixed", preamble, urwid.Text(""))
+    )
+
+    if "resp_code" in f:
+        codes = {
+	    1: "code_200",
+            2: "code_200",
+            3: "code_300",
+            4: "code_400",
+            5: "code_500",
+        }
+        ccol = codes.get(f["resp_code"] // 100, "code_other")
+        resp.append(fcol(SYMBOL_RETURN, ccol))
+        if f["resp_is_replay"]:
+            resp.append(fcol(SYMBOL_REPLAY, "replay"))
+        resp.append(fcol(f["resp_code"], ccol))
+        if extended:
+            resp.append(fcol(f["resp_reason"], ccol))
+        if f["intercepted"] and f["resp_code"] and not f["acked"]:
+            rc = "intercept"
+        else:
+            rc = "text"
+
+        if f["resp_ctype"]:
+            resp.append(fcol(f["resp_ctype"], rc))
+        resp.append(fcol(f["resp_clen"], rc))
+        resp.append(fcol(f["roundtrip"], rc))
+
+    elif f["err_msg"]:
+        resp.append(fcol(SYMBOL_RETURN, "error"))
+        resp.append(
+            urwid.Text([
+                (
+                    "error",
+                    f["err_msg"]
+                )
+            ])
+        )
+    pile.append(urwid.Columns(resp, dividechars=1))
+    return urwid.Pile(pile)
 
 
 # Save file to disk
@@ -326,88 +440,6 @@ def export_to_clip_or_file(key, scope, flow, writer):
                 writer(exporter(flow))
 
 flowcache = utils.LRUCache(800)
-
-
-def raw_format_flow(f, focus, extended):
-    f = dict(f)
-    pile = []
-    req = []
-    if extended:
-        req.append(
-            fcol(
-                human.format_timestamp(f["req_timestamp"]),
-                "highlight"
-            )
-        )
-    else:
-        req.append(fcol(">>" if focus else "  ", "focus"))
-
-    if f["marked"]:
-        req.append(fcol(SYMBOL_MARK, "mark"))
-
-    if f["req_is_replay"]:
-        req.append(fcol(SYMBOL_REPLAY, "replay"))
-    req.append(fcol(f["req_method"], "method"))
-
-    preamble = sum(i[1] for i in req) + len(req) - 1
-
-    if f["intercepted"] and not f["acked"]:
-        uc = "intercept"
-    elif "resp_code" in f or "err_msg" in f:
-        uc = "text"
-    else:
-        uc = "title"
-
-    url = f["req_url"]
-    if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
-        url += " " + f["req_http_version"]
-    req.append(
-        urwid.Text([(uc, url)])
-    )
-
-    pile.append(urwid.Columns(req, dividechars=1))
-
-    resp = []
-    resp.append(
-        ("fixed", preamble, urwid.Text(""))
-    )
-
-    if "resp_code" in f:
-        codes = {
-            2: "code_200",
-            3: "code_300",
-            4: "code_400",
-            5: "code_500",
-        }
-        ccol = codes.get(f["resp_code"] // 100, "code_other")
-        resp.append(fcol(SYMBOL_RETURN, ccol))
-        if f["resp_is_replay"]:
-            resp.append(fcol(SYMBOL_REPLAY, "replay"))
-        resp.append(fcol(f["resp_code"], ccol))
-        if extended:
-            resp.append(fcol(f["resp_reason"], ccol))
-        if f["intercepted"] and f["resp_code"] and not f["acked"]:
-            rc = "intercept"
-        else:
-            rc = "text"
-
-        if f["resp_ctype"]:
-            resp.append(fcol(f["resp_ctype"], rc))
-        resp.append(fcol(f["resp_clen"], rc))
-        resp.append(fcol(f["roundtrip"], rc))
-
-    elif f["err_msg"]:
-        resp.append(fcol(SYMBOL_RETURN, "error"))
-        resp.append(
-            urwid.Text([
-                (
-                    "error",
-                    f["err_msg"]
-                )
-            ])
-        )
-    pile.append(urwid.Columns(resp, dividechars=1))
-    return urwid.Pile(pile)
 
 
 def format_flow(f, focus, extended=False, hostheader=False):

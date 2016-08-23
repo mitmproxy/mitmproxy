@@ -16,6 +16,12 @@ from typing import Sequence  # noqa
 from typing import Tuple  # noqa
 
 FOOTER = [
+    ('heading_key', "p"), ":plus1 ",
+    ('heading_key', "m"), ":minus1 ",
+    ('heading_key', "E"), ":b64encode ",
+    ('heading_key', "D"), ":b64decode ",
+    ('heading_key', "n"), ":smart ",
+    ('heading_key', "u"), ":urldecode ",
     ('heading_key', "enter"), ":edit ",
     ('heading_key', "q"), ":back ",
 ]
