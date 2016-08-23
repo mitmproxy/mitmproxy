@@ -422,10 +422,11 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.request_queued_data_length = v
 
     def raise_zombie(self, pre_command=None):
-        if self.zombie is not None:
+        connection_closed = self.h2_connection.state_machine.state == h2.connection.ConnectionState.CLOSED
+        if self.zombie is not None or connection_closed:
             if pre_command is not None:
                 pre_command()
-            raise exceptions.Http2ProtocolException("Zombie Stream")
+            raise exceptions.Http2ZombieException("Connection already dead")
 
     @detect_zombie_stream
     def read_request(self):
@@ -582,6 +583,8 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
 
         try:
             layer()
+        except exceptions.Http2ZombieException as e:  # pragma: no cover
+            pass
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
             self.log(traceback.format_exc(), "debug")

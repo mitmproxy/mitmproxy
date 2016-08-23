@@ -61,6 +61,9 @@ class HttpProtocolException(ProtocolException):
 class Http2ProtocolException(ProtocolException):
     pass
 
+class Http2ZombieException(ProtocolException):
+    pass
+
 
 class ServerException(ProxyException):
     pass
