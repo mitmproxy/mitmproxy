@@ -20,7 +20,7 @@ function FlowRow({ flow, selected, highlighted, onSelect }) {
     })
 
     return (
-        <tr className={className} onClick={() => onSelect(flow.id)}>
+        <tr className={className} onClick={event => onSelect(flow.id, event.ctrlKey, event.shiftKey)}>
             {columns.map(Column => (
                 <Column key={Column.name} flow={flow}/>
             ))}

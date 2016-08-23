@@ -6,37 +6,38 @@ import FlowView from './FlowView'
 import * as flowsActions from '../ducks/flows'
 import { updateFilter, updateHighlight } from '../ducks/flowView'
 
-class MainView extends Component {
+MainView.propTypes = {
+    flows: PropTypes.array.isRequired,
+    selectedFlow: PropTypes.object.isRequired,
+    selectedFlowIds: PropTypes.array.isRequired,
+    highlight: PropTypes.string,
+    highlight: PropTypes.string,
+    sort: PropTypes.object,
+}
 
-    static propTypes = {
-        highlight: PropTypes.string,
-        sort: PropTypes.object,
-    }
-
-    render() {
-        const { flows, selectedFlow, highlight } = this.props
-        return (
-            <div className="main-view">
-                <FlowTable
-                    ref="flowTable"
-                    flows={flows}
-                    selected={selectedFlow}
-                    highlight={highlight}
-                    onSelect={this.props.selectFlow}
+function MainView({ flows, selectedFlow, highlight, selectedFlowIds }) {
+    return (
+        <div className="main-view">
+            <FlowTable
+                ref="flowTable"
+                flows={flows}
+                selected={selectedFlow}
+                selectedFlowIds={selectedFlowIds}
+                highlight={highlight}
+                onSelect={(id, ctrl) => this.props.selectFlow(id, selectedFlowIds, ctrl)}
+            />
+            {selectedFlow && [
+                <Splitter key="splitter"/>,
+                <FlowView
+                    key="flowDetails"
+                    ref="flowDetails"
+                    tab={this.props.tab}
+                    updateFlow={data => this.props.updateFlow(selectedFlow, data)}
+                    flow={selectedFlow}
                 />
-                {selectedFlow && [
-                    <Splitter key="splitter"/>,
-                    <FlowView
-                        key="flowDetails"
-                        ref="flowDetails"
-                        tab={this.props.tab}
-                        updateFlow={data => this.props.updateFlow(selectedFlow, data)}
-                        flow={selectedFlow}
-                    />
-                ]}
-            </div>
-        )
-    }
+            ]}
+        </div>
+    )
 }
 
 export default connect(
@@ -45,6 +46,7 @@ export default connect(
         filter: state.flowView.filter,
         highlight: state.flowView.highlight,
         selectedFlow: state.flows.byId[state.flows.selected[0]],
+        selectedFlowIds: state.flows.selected,
         tab: state.ui.flow.tab,
     }),
     {

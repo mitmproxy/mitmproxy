@@ -53,7 +53,7 @@ export default function reduce(state = defaultState, action) {
         case SELECT:
             return {
                 ...state,
-                selected: action.flowIds
+                selected: action.selectedFlowIds,
             }
 
         default:
@@ -145,14 +145,20 @@ export function upload(file) {
     return dispatch => fetchApi('/flows/dump', { method: 'post', body })
 }
 
-
-export function select(id) {
-    return {
-        type: SELECT,
-        flowIds: id ? [id] : []
+/**
+ * @public
+ */
+export function select(id, selectedFlowIds, ctrl) {
+    if (!ctrl) {
+        return { type: SELECT, selectedFlowIds: id ? [id] : [] }
     }
+    const ids = selectedFlowIds.filter(flowId => id != flowId)
+    if (ids.length != selectedFlowIds.length) {
+        // deselect flow item
+        return { type: SELECT, selectedFlowIds: ids }
+    }
+    return { type: SELECT, selectedFlowIds: [...ids, id] }
 }
-
 
 /**
  * This action creater takes all WebSocket events

@@ -31,19 +31,19 @@ class ProxyAppMain extends Component {
         this.props.updateHighlight(query[Query.HIGHLIGHT])
     }
 
-    flushToHistory(props) {
+    flushToHistory(nextProps) {
         const query = { ...query }
 
-        if (props.filter) {
-            query[Query.SEARCH] = props.filter
+        if (nextProps.filter) {
+            query[Query.SEARCH] = nextProps.filter
         }
 
-        if (props.highlight) {
-            query[Query.HIGHLIGHT] = props.highlight
+        if (nextProps.highlight) {
+            query[Query.HIGHLIGHT] = nextProps.highlight
         }
 
-        if (props.selectedFlowId) {
-            this.history.push({ pathname: `/flows/${props.selectedFlowId}/${props.tab}`, query })
+        if (nextProps.selectedFlowId) {
+            this.history.push({ pathname: `/flows/${nextProps.selectedFlowId}/${nextProps.tab}`, query })
         } else {
             this.history.push({ pathname: '/flows', query })
         }
@@ -53,13 +53,14 @@ class ProxyAppMain extends Component {
         this.props.appInit()
         this.history = useQueries(createHashHistory)()
         this.unlisten = this.history.listen(location => this.flushToStore(location))
-        window.addEventListener('keydown', this.props.onKeyDown);
+        this.flushToStore(this.history.getCurrentLocation())
+        window.addEventListener('keydown', this.props.onKeyDown)
     }
 
     componentWillUnmount() {
         this.props.appDestruct()
         this.unlisten()
-        window.removeEventListener('keydown', this.props.onKeyDown);
+        window.removeEventListener('keydown', this.props.onKeyDown)
     }
 
     componentWillReceiveProps(nextProps) {
@@ -67,12 +68,11 @@ class ProxyAppMain extends Component {
     }
 
     render() {
-        const { showEventLog, location, filter, highlight } = this.props
         return (
             <div id="container" tabIndex="0">
                 <Header/>
                 <MainView />
-                {showEventLog && (
+                {this.props.showEventLog && (
                     <EventLog key="eventlog"/>
                 )}
                 <Footer />
@@ -84,10 +84,6 @@ class ProxyAppMain extends Component {
 export default connect(
     state => ({
         showEventLog: state.eventLog.visible,
-        filter: state.flowView.filter,
-        highlight: state.flowView.highlight,
-        tab: state.ui.flow.tab,
-        selectedFlowId: state.flows.selected[0]
     }),
     {
         appInit,
