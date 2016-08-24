@@ -203,6 +203,9 @@ class CookieAttributeEditor(base.GridEditor):
         col_text.Column("Value"),
     ]
 
+    def data_in(self, data):
+        return [(k, v or "") for k, v in data]
+
     def data_out(self, data):
         ret = []
         for i in data:
