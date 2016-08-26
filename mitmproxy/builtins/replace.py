@@ -36,9 +36,9 @@ class Replace:
         for rex, s, cpatt in self.lst:
             if cpatt(f):
                 if f.response:
-                    f.response.replace(rex, s, re.DOTALL)
+                    f.response.replace(rex, s, flags=re.DOTALL)
                 else:
-                    f.request.replace(rex, s, re.DOTALL)
+                    f.request.replace(rex, s, flags=re.DOTALL)
 
     def request(self, flow):
         if not flow.reply.has_message:
