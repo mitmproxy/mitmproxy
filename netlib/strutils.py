@@ -121,6 +121,9 @@ def escaped_str_to_bytes(data):
 
 def is_mostly_bin(s):
     # type: (bytes) -> bool
+    if not s or len(s) == 0:
+        return False
+
     return sum(
         i < 9 or 13 < i < 32 or 126 < i
         for i in six.iterbytes(s[:100])
