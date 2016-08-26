@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, print_function, division
 
 import os
@@ -328,11 +330,11 @@ def export_to_clip_or_file(key, scope, flow, writer):
 flowcache = utils.LRUCache(800)
 
 
-def raw_format_flow(f, focus, extended):
+def raw_format_flow(f):
     f = dict(f)
     pile = []
     req = []
-    if extended:
+    if f["extended"]:
         req.append(
             fcol(
                 human.format_timestamp(f["req_timestamp"]),
@@ -340,7 +342,7 @@ def raw_format_flow(f, focus, extended):
             )
         )
     else:
-        req.append(fcol(">>" if focus else "  ", "focus"))
+        req.append(fcol(">>" if f["focus"] else "  ", "focus"))
 
     if f["marked"]:
         req.append(fcol(SYMBOL_MARK, "mark"))
@@ -359,6 +361,10 @@ def raw_format_flow(f, focus, extended):
         uc = "title"
 
     url = f["req_url"]
+
+    if f["max_url_len"] and len(url) > f["max_url_len"]:
+        url = url[:f["max_url_len"]] + "…"
+
     if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
         url += " " + f["req_http_version"]
     req.append(
@@ -384,7 +390,7 @@ def raw_format_flow(f, focus, extended):
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
         resp.append(fcol(f["resp_code"], ccol))
-        if extended:
+        if f["extended"]:
             resp.append(fcol(f["resp_reason"], ccol))
         if f["intercepted"] and f["resp_code"] and not f["acked"]:
             rc = "intercept"
@@ -410,8 +416,12 @@ def raw_format_flow(f, focus, extended):
     return urwid.Pile(pile)
 
 
-def format_flow(f, focus, extended=False, hostheader=False):
+def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
     d = dict(
+        focus=focus,
+        extended=extended,
+        max_url_len=max_url_len,
+
         intercepted = f.intercepted,
         acked = f.reply.state == "committed",
 
@@ -449,7 +459,5 @@ def format_flow(f, focus, extended=False, hostheader=False):
             d["resp_ctype"] = t.split(";")[0]
         else:
             d["resp_ctype"] = ""
-    return flowcache.get(
-        raw_format_flow,
-        tuple(sorted(d.items())), focus, extended
-    )
+
+    return flowcache.get(raw_format_flow, tuple(sorted(d.items())))

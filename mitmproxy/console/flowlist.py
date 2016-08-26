@@ -116,10 +116,12 @@ class ConnectionItem(urwid.WidgetWrap):
         urwid.WidgetWrap.__init__(self, w)
 
     def get_text(self):
+        cols, _ = self.master.ui.get_cols_rows()
         return common.format_flow(
             self.flow,
             self.f,
-            hostheader = self.master.options.showhost,
+            hostheader=self.master.options.showhost,
+            max_url_len=cols,
         )
 
     def selectable(self):
