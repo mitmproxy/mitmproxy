@@ -85,6 +85,7 @@ def test_escaped_str_to_bytes():
 def test_is_mostly_bin():
     assert not strutils.is_mostly_bin(b"foo\xFF")
     assert strutils.is_mostly_bin(b"foo" + b"\xFF" * 10)
+    assert not strutils.is_mostly_bin("")
 
 
 def test_is_xml():
