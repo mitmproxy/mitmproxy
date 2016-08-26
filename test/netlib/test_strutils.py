@@ -87,6 +87,7 @@ def test_is_mostly_bin():
     assert strutils.is_mostly_bin(b"foo" + b"\xFF" * 10)
     assert not strutils.is_mostly_bin("")
 
+
 def test_is_xml():
     assert not strutils.is_xml(b"foo")
     assert strutils.is_xml(b"<foo")
