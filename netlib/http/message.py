@@ -278,7 +278,7 @@ class Message(basetypes.Serializable):
             self.content, replacements = re.subn(
                 pattern, repl, self.content, flags=flags, count=count
             )
-        replacements += self.headers.replace(pattern, repl, flags)
+        replacements += self.headers.replace(pattern, repl, flags=flags, count=count)
         return replacements
 
     # Legacy
