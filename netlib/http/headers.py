@@ -158,7 +158,7 @@ class Headers(multidict.MultiDict):
         else:
             return super(Headers, self).items()
 
-    def replace(self, pattern, repl, flags=0):
+    def replace(self, pattern, repl, flags=0, count=0):
         """
         Replaces a regular expression pattern with repl in each "name: value"
         header line.
@@ -175,7 +175,7 @@ class Headers(multidict.MultiDict):
 
         fields = []
         for name, value in self.fields:
-            line, n = pattern.subn(repl, name + b": " + value)
+            line, n = pattern.subn(repl, name + b": " + value, count=count)
             try:
                 name, value = line.split(b": ", 1)
             except ValueError:
@@ -183,6 +183,7 @@ class Headers(multidict.MultiDict):
                 # There's not much we can do about this, so we just keep the header as-is.
                 pass
             else:
+                count -= n
                 replacements += n
             fields.append((name, value))
         self.fields = tuple(fields)
