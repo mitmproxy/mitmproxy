@@ -185,6 +185,8 @@ class Headers(multidict.MultiDict):
             else:
                 count -= n
                 replacements += n
+                if count == 0:
+                    break;
             fields.append((name, value))
         self.fields = tuple(fields)
         return replacements
