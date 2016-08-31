@@ -172,6 +172,7 @@ class Headers(multidict.MultiDict):
             repl = strutils.escaped_str_to_bytes(repl)
         pattern = re.compile(pattern, flags)
         replacements = 0
+        flag_count = count > 0
 
         fields = []
         for name, value in self.fields:
@@ -183,10 +184,13 @@ class Headers(multidict.MultiDict):
                 # There's not much we can do about this, so we just keep the header as-is.
                 pass
             else:
-                count -= n
                 replacements += n
-                if count == 0:
-                    break;
+                
+                if flag_count:
+                    count -= n
+                    if count == 0:
+                        break;
+                                  
             fields.append((name, value))
         self.fields = tuple(fields)
         return replacements
