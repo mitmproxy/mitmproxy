@@ -103,7 +103,7 @@ class TestMessage(object):
         r = tresp()
         r.content = b"foofootoo"
         r.replace(b"foo", "gg")
-        assert r.content == b"ggggtoo"      
+        assert r.content == b"ggggtoo"
 
         r.content = b"foofootoo"
         r.replace(b"foo", "gg", count=1)

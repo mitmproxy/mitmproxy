@@ -174,7 +174,6 @@ class Headers(multidict.MultiDict):
         replacements = 0
         flag_count = count > 0
         fields = []
-        
         for name, value in self.fields:
             line, n = pattern.subn(repl, name + b": " + value, count=count)
             try:
@@ -188,7 +187,7 @@ class Headers(multidict.MultiDict):
                 if flag_count:
                     count -= n
                     if count == 0:
-                        break                                  
+                        break
             fields.append((name, value))
         self.fields = tuple(fields)
         return replacements
