@@ -77,8 +77,9 @@ class TestHeaders(object):
 
     def test_replace_with_count(self):
         headers = Headers(Host="foobarfoo.com", Accept="foo/bar")
-        replacements = headers.replace("foo","bar",count=1)
+        replacements = headers.replace("foo", "bar", count=1)
         assert replacements == 1
+
 
 def test_parse_content_type():
     p = parse_content_type

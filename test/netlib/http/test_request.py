@@ -29,11 +29,11 @@ class TestRequestCore(object):
     def replace(self):
         r = treq()
         r.path = b"foobarfoo"
-        r.replace(b"foo","bar")
+        r.replace(b"foo", "bar")
         assert r.path == b"barbarbar"
 
         r.path = b"foobarfoo"
-        r.replace(b"foo","bar",count=1)
+        r.replace(b"foo", "bar", count=1)
         assert r.path == b"barbarfoo"
 
     def test_first_line_format(self):
@@ -96,6 +96,7 @@ class TestRequestCore(object):
         request.headers["Host"] = "foo"
         request.host = "example.org"
         assert request.headers["Host"] == "example.org"
+
 
 class TestRequestUtils(object):
     """

@@ -102,12 +102,13 @@ class TestMessage(object):
     def test_replace(self):
         r = tresp()
         r.content = b"foofootoo"
-        r.replace(b"foo","gg")
-        assert r.content == b"ggggtoo"        
+        r.replace(b"foo", "gg")
+        assert r.content == b"ggggtoo"      
 
         r.content = b"foofootoo"
-        r.replace(b"foo","gg",count=1)
+        r.replace(b"foo", "gg", count=1)
         assert r.content == b"ggfootoo"
+
 
 class TestMessageContentEncoding(object):
     def test_simple(self):
