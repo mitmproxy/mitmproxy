@@ -26,6 +26,16 @@ class TestRequestCore(object):
         request.host = None
         assert repr(request) == "Request(GET /path)"
 
+    def replace(self):
+        r = treq()
+        r.path = b"foobarfoo"
+        r.replace(b"foo", "bar")
+        assert r.path == b"barbarbar"
+
+        r.path = b"foobarfoo"
+        r.replace(b"foo", "bar", count=1)
+        assert r.path == b"barbarfoo"
+
     def test_first_line_format(self):
         _test_passthrough_attr(treq(), "first_line_format")
 

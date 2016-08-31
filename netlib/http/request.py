@@ -80,7 +80,7 @@ class Request(message.Message):
             self.method, hostport, path
         )
 
-    def replace(self, pattern, repl, flags=0):
+    def replace(self, pattern, repl, flags=0, count=0):
         """
             Replaces a regular expression pattern with repl in the headers, the
             request path and the body of the request. Encoded content will be
@@ -94,9 +94,9 @@ class Request(message.Message):
         if isinstance(repl, six.text_type):
             repl = strutils.escaped_str_to_bytes(repl)
 
-        c = super(Request, self).replace(pattern, repl, flags)
+        c = super(Request, self).replace(pattern, repl, flags, count)
         self.path, pc = re.subn(
-            pattern, repl, self.data.path, flags=flags
+            pattern, repl, self.data.path, flags=flags, count=count
         )
         c += pc
         return c

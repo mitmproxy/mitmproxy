@@ -260,7 +260,7 @@ class Message(basetypes.Serializable):
         if "content-encoding" not in self.headers:
             raise ValueError("Invalid content encoding {}".format(repr(e)))
 
-    def replace(self, pattern, repl, flags=0):
+    def replace(self, pattern, repl, flags=0, count=0):
         """
         Replaces a regular expression pattern with repl in both the headers
         and the body of the message. Encoded body will be decoded
@@ -276,9 +276,9 @@ class Message(basetypes.Serializable):
         replacements = 0
         if self.content:
             self.content, replacements = re.subn(
-                pattern, repl, self.content, flags=flags
+                pattern, repl, self.content, flags=flags, count=count
             )
-        replacements += self.headers.replace(pattern, repl, flags)
+        replacements += self.headers.replace(pattern, repl, flags=flags, count=count)
         return replacements
 
     # Legacy
