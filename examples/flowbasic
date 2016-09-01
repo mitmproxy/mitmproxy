@@ -32,8 +32,8 @@ class MyMaster(flow.FlowMaster):
         print("error", f)
 
     @controller.handler
-    def log(self, f):
-        print("log", f)
+    def log(self, l):
+        print("log", l.msg)
 
 opts = options.Options(cadir="~/.mitmproxy/")
 config = ProxyConfig(opts)
