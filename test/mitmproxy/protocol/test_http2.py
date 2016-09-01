@@ -13,11 +13,11 @@ from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
 import netlib
-from ..netlib import tservers as netlib_tservers
+from ...netlib import tservers as netlib_tservers
 from netlib.exceptions import HttpException
 from netlib.http.http2 import framereader
 
-from . import tservers
+from .. import tservers
 
 import logging
 logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)
