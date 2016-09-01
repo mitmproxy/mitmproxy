@@ -142,39 +142,53 @@ class HttpLayer(base.Layer):
         while True:
             try:
                 request = self.get_request_from_client()
-                self.log("request", "debug", [repr(request)])
-
-                # Handle Proxy Authentication
-                # Proxy Authentication conceptually does not work in transparent mode.
-                # We catch this misconfiguration on startup. Here, we sort out requests
-                # after a successful CONNECT request (which do not need to be validated anymore)
-                if not (self.http_authenticated or self.authenticate(request)):
-                    return
-
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
+            except netlib.exceptions.HttpReadDisconnect:
+                # don't throw an error for disconnects that happen before/between requests.
+                return
+            except netlib.exceptions.HttpException as e:
+                # We optimistically guess there might be an HTTP client on the
+                # other end
+                self.send_error_response(400, repr(e))
+                self.log(
+                    "request",
+                    "warn",
+                    "HTTP protocol error in client request: %s" % e
+                )
+                return
 
+            self.log("request", "debug", [repr(request)])
+
+            # Handle Proxy Authentication
+            # Proxy Authentication conceptually does not work in transparent mode.
+            # We catch this misconfiguration on startup. Here, we sort out requests
+            # after a successful CONNECT request (which do not need to be validated anymore)
+            if not (self.http_authenticated or self.authenticate(request)):
+                return
+
+            flow = models.HTTPFlow(self.client_conn, self.server_conn, live=self)
+            flow.request = request
+
+            try:
                 # Regular Proxy Mode: Handle CONNECT
                 if self.mode == "regular" and request.first_line_format == "authority":
                     self.handle_regular_mode_connect(request)
                     return
-            except netlib.exceptions.HttpReadDisconnect:
-                # don't throw an error for disconnects that happen before/between requests.
+            except (exceptions.ProtocolException, netlib.exceptions.NetlibException) as e:
+                # HTTPS tasting means that ordinary errors like resolution and
+                # connection errors can happen here.
+                self.send_error_response(502, repr(e))
+                flow.error = models.Error(str(e))
+                self.channel.ask("error", flow)
                 return
-            except netlib.exceptions.NetlibException as e:
-                self.send_error_response(400, repr(e))
-                six.reraise(exceptions.ProtocolException, exceptions.ProtocolException(
-                    "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
+
+            # set upstream auth
+            if self.mode == "upstream" and self.config.upstream_auth is not None:
+                flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
+            self.process_request_hook(flow)
 
             try:
-                flow = models.HTTPFlow(self.client_conn, self.server_conn, live=self)
-                flow.request = request
-
-                # set upstream auth
-                if self.mode == "upstream" and self.config.upstream_auth is not None:
-                    flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
-                self.process_request_hook(flow)
-
                 if not flow.response:
                     self.establish_server_connection(
                         flow.request.host,
@@ -209,11 +223,9 @@ class HttpLayer(base.Layer):
 
             except (exceptions.ProtocolException, netlib.exceptions.NetlibException) as e:
                 self.send_error_response(502, repr(e))
-
                 if not flow.response:
                     flow.error = models.Error(str(e))
                     self.channel.ask("error", flow)
-                    self.log(traceback.format_exc(), "debug")
                     return
                 else:
                     six.reraise(exceptions.ProtocolException, exceptions.ProtocolException(
