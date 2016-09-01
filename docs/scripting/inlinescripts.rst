@@ -126,6 +126,18 @@ HTTP Events
     :param HTTPFlow flow: The flow containing the error.
         It is guaranteed to have non-None ``error`` attribute.
 
+WebSockets Events
+^^^^^^^^^^^^^^^^^
+
+.. py:function:: websockets_handshake(context, flow)
+
+    Called when a client wants to establish a WebSockets connection.
+    The WebSockets-specific headers can be manipulated to manipulate the handshake.
+    The ``flow`` object is guaranteed to have a non-None ``request`` attribute.
+
+    :param HTTPFlow flow: The flow containing the request which has been received.
+        The object is guaranteed to have a non-None ``request`` attribute.
+
 TCP Events
 ^^^^^^^^^^
 

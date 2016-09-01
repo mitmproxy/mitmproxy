@@ -7,12 +7,14 @@ import traceback
 import h2.exceptions
 import six
 
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy.protocol import base
+
+import netlib.exceptions
 from netlib import http
 from netlib import tcp
+from netlib import websockets
 
 
 class _HttpTransmissionLayer(base.Layer):
@@ -189,6 +191,11 @@ class HttpLayer(base.Layer):
             self.process_request_hook(flow)
 
             try:
+                if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
+                    # we only support RFC6455 with WebSockets version 13
+                    # allow inline scripts to manupulate the client handshake
+                    self.channel.ask("websockets_handshake", flow)
+
                 if not flow.response:
                     self.establish_server_connection(
                         flow.request.host,
@@ -212,7 +219,7 @@ class HttpLayer(base.Layer):
                 # It may be useful to pass additional args (such as the upgrade header)
                 # to next_layer in the future
                 if flow.response.status_code == 101:
-                    layer = self.ctx.next_layer(self)
+                    layer = self.ctx.next_layer(self, flow)
                     layer()
                     return
 

@@ -334,6 +334,10 @@ class FlowMaster(controller.Master):
             self.client_playback.clear(f)
         return f
 
+    @controller.handler
+    def websockets_handshake(self, f):
+        return f
+
     def handle_intercept(self, f):
         self.state.update_flow(f)
 

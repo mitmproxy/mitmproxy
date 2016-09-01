@@ -20,7 +20,7 @@ class WebsocketsProtocol:
                     lg("Error reading websocket frame: %s" % e)
                     return None, None
                 ended = time.time()
-                lg(frm.human_readable())
+                lg(repr(frm))
             retlog = dict(
                 type="inbound",
                 protocol="websockets",
