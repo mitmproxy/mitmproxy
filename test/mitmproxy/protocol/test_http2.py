@@ -15,7 +15,7 @@ from mitmproxy.proxy.config import ProxyConfig
 import netlib
 from ...netlib import tservers as netlib_tservers
 from netlib.exceptions import HttpException
-from netlib.http import http2
+from netlib.http import http1, http2
 
 from .. import tservers
 
@@ -129,13 +129,18 @@ class _Http2TestBase(object):
         client.connect()
 
         # send CONNECT request
-        client.wfile.write(
-            b"CONNECT localhost:%d HTTP/1.1\r\n"
-            b"Host: localhost:%d\r\n"
-            b"\r\n" % (self.server.server.address.port, self.server.server.address.port)
-        )
+        client.wfile.write(http1.assemble_request(netlib.http.Request(
+            'authority',
+            b'CONNECT',
+            b'',
+            b'localhost',
+            self.server.server.address.port,
+            b'/',
+            b'HTTP/1.1',
+            [(b'host', b'localhost:%d' % self.server.server.address.port)],
+            b'',
+        )))
         client.wfile.flush()
-        # TODO: rewrite as http.Request object with http.assemble_request
 
         # read CONNECT response
         while client.rfile.readline() != b"\r\n":
