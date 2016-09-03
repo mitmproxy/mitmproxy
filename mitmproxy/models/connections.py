@@ -123,8 +123,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         timestamp_end: Connection end timestamp
     """
 
-    def __init__(self, address, source_address=None):
-        tcp.TCPClient.__init__(self, address, source_address)
+    def __init__(self, address, source_address=None, spoof_source_address=None):
+        tcp.TCPClient.__init__(self, address, source_address, spoof_source_address)
 
         self.via = None
         self.timestamp_start = None

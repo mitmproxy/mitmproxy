@@ -255,6 +255,7 @@ def get_common_options(args):
         listen_port = args.port,
         mode = mode,
         no_upstream_cert = args.no_upstream_cert,
+        spoof_source_address = args.spoof_source_address,
         rawtcp = args.rawtcp,
         upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
@@ -474,7 +475,11 @@ def proxy_options(parser):
                         "Disabled by default. "
                         "Default value will change in a future version."
                         )
-
+    group.add_argument(
+        "--spoof-source-address",
+        action="store_true", dest="spoof_source_address",
+        help="Use client's IP for the server-side connection"
+    )
 
 def proxy_ssl_options(parser):
     # TODO: Agree to consistently either use "upstream" or "server".
