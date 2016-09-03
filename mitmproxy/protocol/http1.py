@@ -17,6 +17,10 @@ class Http1Layer(http._HttpTransmissionLayer):
         )
         return models.HTTPRequest.wrap(req)
 
+    def read_request_headers(self):
+        resp = http1.read_request_head(self.client_conn.rfile)
+        return models.HTTPRequest.wrap(resp)
+
     def read_request_body(self, request):
         expected_size = http1.expected_http_body_size(request)
         return http1.read_body(
@@ -28,6 +32,16 @@ class Http1Layer(http._HttpTransmissionLayer):
     def send_request(self, request):
         self.server_conn.wfile.write(http1.assemble_request(request))
         self.server_conn.wfile.flush()
+
+    def send_request_headers(self, request):
+        raw = http1.assemble_request_head(request)
+        self.server_conn.wfile.write(raw)
+        self.server_conn.wfile.flush()
+
+    def send_request_body(self, request, chunks):
+        for chunk in http1.assemble_body(request.headers, chunks):
+            self.server_conn.wfile.write(chunk)
+            self.server_conn.wfile.flush()
 
     def read_response_headers(self):
         resp = http1.read_response_head(self.server_conn.rfile)

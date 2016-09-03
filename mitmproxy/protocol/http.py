@@ -242,12 +242,11 @@ class HttpLayer(base.Layer):
                     flow.live = False
 
     def get_request_from_client(self):
-        request = self.read_request()
+        request = self.read_request_headers()
         if request.headers.get("expect", "").lower() == "100-continue":
             # TODO: We may have to use send_response_headers for HTTP2 here.
             self.send_response(models.expect_continue_response)
             request.headers.pop("expect")
-            request.body = b"".join(self.read_request_body(request))
         return request
 
     def send_error_response(self, code, message, headers=None):
@@ -295,7 +294,24 @@ class HttpLayer(base.Layer):
 
     def get_response_from_server(self, flow):
         def get_response():
-            self.send_request(flow.request)
+            if not flow.request.stream:
+                # no streaming:
+                # we already received the full request from the client and can
+                # send it to the server straight away.
+                self.send_request(flow.request)
+            else:
+                # streaming:
+                # First send the headers and then transfer the request incrementally
+                self.send_request_headers(flow.request)
+                chunks = self.read_request_body(
+                    flow.request
+                )
+                if callable(flow.request.stream):
+                    chunks = flow.request.stream(chunks)
+                self.send_request_body(flow.request, chunks)
+                flow.request.timestamp_end = time.time()
+
+            # Then, start read the response
             flow.response = self.read_response_headers()
 
         try:
@@ -348,6 +364,21 @@ class HttpLayer(base.Layer):
         # For authority-form requests, we only need to determine the request scheme.
         # For relative-form requests, we need to determine host and port as
         # well.
+
+        # Process request headers and read body if not in a stream case
+        # call the appropriate script hook - this is an opportunity for an
+        # inline script to set flow.stream = True
+        flow = self.channel.ask("requestheaders", flow)
+
+        if flow.request.stream:
+            flow.request.data.content = None
+        else:
+            flow.request.data.content = b"".join(self.read_request_body(
+                flow.request
+            ))
+        flow.request.timestamp_end = time.time()
+        # End of process request headers
+
         if self.mode == "regular":
             pass  # only absolute-form at this point, nothing to do here.
         elif self.mode == "upstream":

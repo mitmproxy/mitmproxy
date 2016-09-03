@@ -318,6 +318,16 @@ class FlowMaster(controller.Master):
         return f
 
     @controller.handler
+    def requestheaders(self, f):
+        try:
+            if self.stream_large_bodies:
+                self.stream_large_bodies.run(f, False)
+        except netlib.exceptions.HttpException:
+            f.reply.kill()
+            return
+        return f
+
+    @controller.handler
     def responseheaders(self, f):
         try:
             if self.stream_large_bodies:

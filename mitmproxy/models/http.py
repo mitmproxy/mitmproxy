@@ -70,6 +70,7 @@ class HTTPRequest(MessageMixin, Request):
 
         # Is this request replayed?
         self.is_replay = is_replay
+        self.stream = False
 
     def get_state(self):
         state = super(HTTPRequest, self).get_state()

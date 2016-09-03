@@ -365,6 +365,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.response_headers = None
         self.pushed = False
 
+        self.request_arrived = threading.Event()
         self.request_data_queue = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
@@ -451,8 +452,40 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
             timestamp_end=self.timestamp_end,
         )
 
-    def read_request_body(self, request):  # pragma: no cover
-        raise NotImplementedError()
+    @detect_zombie_stream
+    def read_request_headers(self):
+        self.request_arrived.wait()
+
+        self.raise_zombie()
+
+        first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_headers)
+
+        return models.HTTPRequest(
+            first_line_format,
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            b"HTTP/2.0",
+            headers=self.request_headers,
+            content=None,
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end,
+        )
+
+    @detect_zombie_stream
+    def read_request_body(self, request):
+        while True:
+            try:
+                yield self.request_data_queue.get(timeout=1)
+            except queue.Empty:
+                pass
+            if self.request_data_finished.is_set():
+                while self.request_data_queue.qsize() > 0:
+                    yield self.request_data_queue.get()
+                break
+            self.raise_zombie()
 
     @detect_zombie_stream
     def send_request(self, message):
@@ -515,6 +548,72 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
                 self.raise_zombie,
                 self.server_stream_id,
                 [message.body]
+            )
+
+    # WIP
+    @detect_zombie_stream
+    def send_request_headers(self, request):
+        if self.pushed:
+            # nothing to do here
+            return
+
+        while True:
+            self.raise_zombie()
+            self.server_conn.h2.lock.acquire()
+
+            max_streams = self.server_conn.h2.remote_settings.max_concurrent_streams
+            if self.server_conn.h2.open_outbound_streams + 1 >= max_streams:
+                # wait until we get a free slot for a new outgoing stream
+                self.server_conn.h2.lock.release()
+                time.sleep(0.1)
+                continue
+
+            # keep the lock
+            break
+
+        # We must not assign a stream id if we are already a zombie.
+        self.raise_zombie()
+
+        self.server_stream_id = self.server_conn.h2.get_next_available_stream_id()
+        self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
+
+        headers = message.headers.copy()
+        headers.insert(0, ":path", message.path)
+        headers.insert(0, ":method", message.method)
+        headers.insert(0, ":scheme", message.scheme)
+
+        priority_exclusive = None
+        priority_depends_on = None
+        priority_weight = None
+        if self.handled_priority_event:
+            # only send priority information if they actually came with the original HeadersFrame
+            # and not if they got updated before/after with a PriorityFrame
+            priority_exclusive = self.priority_exclusive
+            priority_depends_on = self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on)
+            priority_weight = self.priority_weight
+
+        try:
+            self.server_conn.h2.safe_send_headers(
+                self.raise_zombie,
+                self.server_stream_id,
+                headers,
+                end_stream=self.no_body,
+                priority_exclusive=priority_exclusive,
+                priority_depends_on=priority_depends_on,
+                priority_weight=priority_weight,
+            )
+        except Exception as e:  # pragma: no cover
+            raise e
+        finally:
+            self.server_conn.h2.lock.release()
+
+    @detect_zombie_stream
+    def send_request_body(self, _request, chunks):
+        if not self.no_body:
+            self.server_conn.h2.safe_send_body(
+                self.raise_zombie,
+                self.server_stream_id,
+                chunks
             )
 
     @detect_zombie_stream
