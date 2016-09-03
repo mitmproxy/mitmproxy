@@ -37,7 +37,7 @@ def sysinfo():
     return "\n".join(data)
 
 
-def dump_info(sig, frm, file=sys.stdout):  # pragma: no cover
+def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
     print("****************************************************", file=file)
     print("Summary", file=file)
     print("=======", file=file)
@@ -81,7 +81,7 @@ def dump_info(sig, frm, file=sys.stdout):  # pragma: no cover
     print("****************************************************", file=file)
 
 
-def dump_stacks(signal, frame, file=sys.stdout):
+def dump_stacks(signal=None, frame=None, file=sys.stdout):
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
     code = []
     for threadId, stack in sys._current_frames().items():
