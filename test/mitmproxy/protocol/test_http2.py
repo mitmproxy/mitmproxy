@@ -15,7 +15,7 @@ from mitmproxy.proxy.config import ProxyConfig
 import netlib
 from ...netlib import tservers as netlib_tservers
 from netlib.exceptions import HttpException
-from netlib.http.http2 import framereader
+from netlib.http import http1, http2
 
 from .. import tservers
 
@@ -31,6 +31,11 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 requires_alpn = pytest.mark.skipif(
     not netlib.tcp.HAS_ALPN,
     reason='requires OpenSSL with ALPN support')
+
+
+# inspect the log:
+#   for msg in self.proxy.tmaster.tlog:
+#       print(msg)
 
 
 class _Http2ServerBase(netlib_tservers.ServerTestBase):
@@ -55,7 +60,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
             done = False
             while not done:
                 try:
-                    raw = b''.join(framereader.http2_read_raw_frame(self.rfile))
+                    raw = b''.join(http2.read_raw_frame(self.rfile))
                     events = h2_conn.receive_data(raw)
                 except HttpException:
                     print(traceback.format_exc())
@@ -124,11 +129,17 @@ class _Http2TestBase(object):
         client.connect()
 
         # send CONNECT request
-        client.wfile.write(
-            b"CONNECT localhost:%d HTTP/1.1\r\n"
-            b"Host: localhost:%d\r\n"
-            b"\r\n" % (self.server.server.address.port, self.server.server.address.port)
-        )
+        client.wfile.write(http1.assemble_request(netlib.http.Request(
+            'authority',
+            b'CONNECT',
+            b'',
+            b'localhost',
+            self.server.server.address.port,
+            b'/',
+            b'HTTP/1.1',
+            [(b'host', b'localhost:%d' % self.server.server.address.port)],
+            b'',
+        )))
         client.wfile.flush()
 
         # read CONNECT response
@@ -242,7 +253,7 @@ class TestSimple(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -319,7 +330,7 @@ class TestRequestWithPriority(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -358,7 +369,7 @@ class TestRequestWithPriority(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -430,7 +441,7 @@ class TestPriority(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -507,7 +518,7 @@ class TestPriorityWithExistingStream(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -558,7 +569,7 @@ class TestStreamResetFromServer(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -608,7 +619,7 @@ class TestBodySizeLimit(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -693,7 +704,7 @@ class TestPushPromise(_Http2Test):
         responses = 0
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -746,7 +757,7 @@ class TestPushPromise(_Http2Test):
         responses = 0
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -806,7 +817,7 @@ class TestConnectionLost(_Http2Test):
         done = False
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 h2_conn.receive_data(raw)
             except HttpException:
                 print(traceback.format_exc())
@@ -863,7 +874,7 @@ class TestMaxConcurrentStreams(_Http2Test):
         ended_streams = 0
         while ended_streams != len(new_streams):
             try:
-                header, body = framereader.http2_read_raw_frame(client.rfile)
+                header, body = http2.read_raw_frame(client.rfile)
                 events = h2_conn.receive_data(b''.join([header, body]))
             except:
                 break
@@ -909,7 +920,7 @@ class TestConnectionTerminated(_Http2Test):
         connection_terminated_event = None
         while not done:
             try:
-                raw = b''.join(framereader.http2_read_raw_frame(client.rfile))
+                raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
                 for event in events:
                     if isinstance(event, h2.events.ConnectionTerminated):
