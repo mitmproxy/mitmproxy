@@ -107,6 +107,7 @@ setup(
             "pytest-cov>=2.2.1, <3",
             "pytest-timeout>=1.0.0, <2",
             "pytest-xdist>=1.14, <2",
+            "pytest-faulthandler>=1.3.0, <2",
             "sphinx>=1.3.5, <1.5",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.4.0, <0.5",
