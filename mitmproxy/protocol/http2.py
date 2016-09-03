@@ -440,7 +440,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
 
     def raise_zombie(self, pre_command=None):
         connection_closed = self.h2_connection.state_machine.state == h2.connection.ConnectionState.CLOSED
-        if self.zombie is not None or connection_closed:
+        if self.zombie is not None or not hasattr(self.server_conn, 'h2') or connection_closed:
             if pre_command is not None:
                 pre_command()
             raise exceptions.Http2ZombieException("Connection already dead")
@@ -527,6 +527,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         except Exception as e:  # pragma: no cover
             raise e
         finally:
+            self.raise_zombie()
             self.server_conn.h2.lock.release()
 
         if not self.no_body:
