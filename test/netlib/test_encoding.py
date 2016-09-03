@@ -1,4 +1,6 @@
 import mock
+import pytest
+
 from netlib import encoding, tutils
 
 
@@ -9,47 +11,32 @@ def test_identity():
         encoding.encode(b"string", "nonexistent encoding")
 
 
-def test_gzip():
-    assert b"string" == encoding.decode(
+@pytest.mark.parametrize("encoder", [
+    'gzip',
+    'br',
+    'deflate',
+])
+def test_encoders(encoder):
+    assert "" == encoding.decode("", encoder)
+    assert b"" == encoding.decode(b"", encoder)
+
+    assert "string" == encoding.decode(
         encoding.encode(
-            b"string",
-            "gzip"
+            "string",
+            encoder
         ),
-        "gzip"
+        encoder
     )
-    with tutils.raises(ValueError):
-        encoding.decode(b"bogus", "gzip")
-
-
-def test_brotli():
     assert b"string" == encoding.decode(
         encoding.encode(
             b"string",
-            "br"
+            encoder
         ),
-        "br"
+        encoder
     )
-    with tutils.raises(ValueError):
-        encoding.decode(b"bogus", "br")
 
-
-def test_deflate():
-    assert b"string" == encoding.decode(
-        encoding.encode(
-            b"string",
-            "deflate"
-        ),
-        "deflate"
-    )
-    assert b"string" == encoding.decode(
-        encoding.encode(
-            b"string",
-            "deflate"
-        )[2:-4],
-        "deflate"
-    )
     with tutils.raises(ValueError):
-        encoding.decode(b"bogus", "deflate")
+        encoding.decode(b"bogus", encoder)
 
 
 def test_cache():
