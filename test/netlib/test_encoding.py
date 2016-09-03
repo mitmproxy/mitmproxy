@@ -36,7 +36,7 @@ def test_encoders(encoder):
     )
 
     with tutils.raises(ValueError):
-        encoding.decode(b"bogus", encoder)
+        encoding.decode(b"foobar", encoder)
 
 
 def test_cache():
