@@ -731,10 +731,11 @@ class TCPClient(_Connection):
         try:
             connection = socket.socket(self.address.family, socket.SOCK_STREAM)
             if self.spoof_source_address:
-                if os.geteuid() != 0:
-                    raise RuntimeError("Insufficient privileges to set socket option")
-                else:
+                try:
                     connection.setsockopt(socket.SOL_IP, 19, 1)
+                except socket.error as e:
+                    raise exceptions.ProtocolException(
+                        "Failed to spoof the source address: " + e.strerror)
             if self.source_address:
                 connection.bind(self.source_address())
             connection.connect(self.address())
@@ -874,6 +875,7 @@ class BaseHandler(_Connection):
 
 
 class Counter:
+
     def __init__(self):
         self._count = 0
         self._lock = threading.Lock()

@@ -478,7 +478,7 @@ def proxy_options(parser):
     group.add_argument(
         "--spoof-source-address",
         action="store_true", dest="spoof_source_address",
-        help="Use client's IP for the server-side connection"
+        help="Use the client's IP for server-side connections"
     )
 
 def proxy_ssl_options(parser):

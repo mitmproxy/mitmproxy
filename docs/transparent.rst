@@ -1,5 +1,6 @@
 .. _transparent:
 
+====================
 Transparent Proxying
 ====================
 
@@ -19,6 +20,21 @@ destination of the TCP connection.
 
 At the moment, mitmproxy supports transparent proxying on OSX Lion and above,
 and all current flavors of Linux.
+
+Fully transparent mode
+=======
+By default mitmproxy will use its own local ip address for its server-side connections.
+In case this isn't desired, the --spoof-source-address argument can be used to
+use the client's ip address for server-side connections.
+
+This mode does require root privileges though. There's a wrapper in the examples directory
+called 'mitmproxy_shim.c', which will enable you to use this mode with dropped priviliges.
+It can be used as follows:
+
+gcc examples/mitmproxy_shim.c -o mitmproxy_shim -lcap
+sudo chown root:root mitmproxy_shim
+sudo chmod u+s mitmproxy_shim
+./mitmproxy_shim $(which mitmproxy) -T --spoof-source-address
 
 .. _iptables: http://www.netfilter.org/
 .. _pf: https://en.wikipedia.org/wiki/PF_\(firewall\)
