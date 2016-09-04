@@ -5,7 +5,9 @@ from __future__ import absolute_import
 
 import codecs
 import collections
+import six
 from io import BytesIO
+
 import gzip
 import zlib
 import brotli
@@ -32,6 +34,9 @@ def decode(encoded, encoding, errors='strict'):
     Raises:
         ValueError, if decoding fails.
     """
+    if len(encoded) == 0:
+        return encoded
+
     global _cache
     cached = (
         isinstance(encoded, bytes) and
@@ -49,11 +54,14 @@ def decode(encoded, encoding, errors='strict'):
         if encoding in ("gzip", "deflate", "br"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return decoded
+    except TypeError:
+        raise
     except Exception as e:
-        raise ValueError("{} when decoding {} with {}".format(
+        raise ValueError("{} when decoding {} with {}: {}".format(
             type(e).__name__,
             repr(encoded)[:10],
             repr(encoding),
+            repr(e),
         ))
 
 
@@ -68,6 +76,9 @@ def encode(decoded, encoding, errors='strict'):
     Raises:
         ValueError, if encoding fails.
     """
+    if len(decoded) == 0:
+        return decoded
+
     global _cache
     cached = (
         isinstance(decoded, bytes) and
@@ -79,17 +90,23 @@ def encode(decoded, encoding, errors='strict'):
         return _cache.encoded
     try:
         try:
-            encoded = custom_encode[encoding](decoded)
+            value = decoded
+            if not six.PY2 and isinstance(value, six.string_types):
+                value = decoded.encode()
+            encoded = custom_encode[encoding](value)
         except KeyError:
             encoded = codecs.encode(decoded, encoding, errors)
         if encoding in ("gzip", "deflate", "br"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return encoded
+    except TypeError:
+        raise
     except Exception as e:
-        raise ValueError("{} when encoding {} with {}".format(
+        raise ValueError("{} when encoding {} with {}: {}".format(
             type(e).__name__,
             repr(decoded)[:10],
             repr(encoding),
+            repr(e),
         ))
 
 
