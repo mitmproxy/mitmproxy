@@ -729,10 +729,15 @@ class TCPClient(_Connection):
 
     def connect(self):
         try:
-            connection = socket.socket(self.address.family, socket.SOCK_STREAM)
+            if not self.connection:
+                connection = socket.socket(self.address.family, socket.SOCK_STREAM)
+            else:
+                connection = self.connection
+
             if self.spoof_source_address:
                 try:
-                    connection.setsockopt(socket.SOL_IP, 19, 1)
+                    if not connection.getsockopt(socket.SOL_IP, 19):
+                        connection.setsockopt(socket.SOL_IP, 19, 1)
                 except socket.error as e:
                     raise exceptions.ProtocolException(
                         "Failed to spoof the source address: " + e.strerror)

@@ -112,7 +112,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     Attributes:
         address: Remote address. Can be both a domain or an IP address.
         ip_address: Resolved remote IP address.
-        source_address: Local IP address
+        source_address: Local IP address or client's source IP address.
         ssl_established: True if TLS is established, False otherwise
         cert: The certificate presented by the remote during the TLS handshake
         sni: Server Name Indication sent by the proxy during the TLS handshake
