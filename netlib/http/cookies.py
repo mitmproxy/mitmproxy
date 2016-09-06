@@ -128,6 +128,15 @@ def _read_cookie_pairs(s, off=0):
             break
 
     return pairs, off
+
+
+def _read_set_cookie_pairs(s, off=0):
+    """
+        Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
+
+        off: start offset
+        specials: attributes that are treated specially
+    """
     cookies = []
     pairs = []
 
@@ -140,10 +149,12 @@ def _read_cookie_pairs(s, off=0):
             if off < len(s) and s[off] == "=":
                 rhs, off = _read_value(s, off + 1, ";,")
 
-                # expires values can contain commas in them so they need to
-                # be handled separately.
+                # Special handliing of attributes
                 if lhs.lower() == "expires":
-                    # This is a heuristic we use to determine whether we've
+                    # 'expires' values can contain commas in them so they need to
+                    # be handled separately.
+
+                    # '3' is just a heuristic we use to determine whether we've
                     # only read a part of the datetime and should read more.
                     if len(rhs) <= 3:
                         trail, off = _read_value(s, off + 1, ";,")
@@ -163,6 +174,7 @@ def _read_cookie_pairs(s, off=0):
 
     if pairs or not cookies:
         cookies.append(pairs)
+
     return cookies, off
 
 
