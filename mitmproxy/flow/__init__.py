@@ -4,16 +4,14 @@ from mitmproxy.flow import export, modules
 from mitmproxy.flow.io import FlowWriter, FilteredFlowWriter, FlowReader, read_flows_from_paths
 from mitmproxy.flow.master import FlowMaster
 from mitmproxy.flow.modules import (
-    AppRegistry, StreamLargeBodies, ClientPlaybackState, ServerPlaybackState
+    AppRegistry, StreamLargeBodies, ClientPlaybackState
 )
 from mitmproxy.flow.state import State, FlowView
-
-# TODO: We may want to remove the imports from .modules and just expose "modules"
 
 __all__ = [
     "export", "modules",
     "FlowWriter", "FilteredFlowWriter", "FlowReader", "read_flows_from_paths",
     "FlowMaster",
     "AppRegistry", "StreamLargeBodies", "ClientPlaybackState",
-    "ServerPlaybackState", "State", "FlowView",
+    "State", "FlowView",
 ]

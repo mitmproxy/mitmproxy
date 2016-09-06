@@ -50,7 +50,7 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def test_replay(self):
         o = dump.Options(server_replay=["nonexistent"], kill=True)
-        tutils.raises(dump.DumpError, dump.DumpMaster, None, o)
+        tutils.raises(exceptions.OptionsError, dump.DumpMaster, None, o)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")

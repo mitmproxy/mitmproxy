@@ -1,13 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
-import hashlib
-
-from six.moves import urllib
-
 from mitmproxy import controller
 from netlib import wsgi
 from netlib import version
-from netlib import strutils
 from netlib.http import http1
 
 
@@ -84,95 +79,3 @@ class ClientPlaybackState:
                 master.request(self.current)
                 if self.current.response:
                     master.response(self.current)
-
-
-class ServerPlaybackState:
-    def __init__(
-            self,
-            headers,
-            flows,
-            exit,
-            nopop,
-            ignore_params,
-            ignore_content,
-            ignore_payload_params,
-            ignore_host):
-        """
-            headers: Case-insensitive list of request headers that should be
-            included in request-response matching.
-        """
-        self.headers = headers
-        self.exit = exit
-        self.nopop = nopop
-        self.ignore_params = ignore_params
-        self.ignore_content = ignore_content
-        self.ignore_payload_params = [strutils.always_bytes(x) for x in (ignore_payload_params or ())]
-        self.ignore_host = ignore_host
-        self.fmap = {}
-        for i in flows:
-            if i.response:
-                l = self.fmap.setdefault(self._hash(i), [])
-                l.append(i)
-
-    def count(self):
-        return sum(len(i) for i in self.fmap.values())
-
-    def _hash(self, flow):
-        """
-            Calculates a loose hash of the flow request.
-        """
-        r = flow.request
-
-        _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
-        queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
-
-        key = [
-            str(r.port),
-            str(r.scheme),
-            str(r.method),
-            str(path),
-        ]
-
-        if not self.ignore_content:
-            form_contents = r.urlencoded_form or r.multipart_form
-            if self.ignore_payload_params and form_contents:
-                key.extend(
-                    p for p in form_contents.items(multi=True)
-                    if p[0] not in self.ignore_payload_params
-                )
-            else:
-                key.append(str(r.raw_content))
-
-        if not self.ignore_host:
-            key.append(r.host)
-
-        filtered = []
-        ignore_params = self.ignore_params or []
-        for p in queriesArray:
-            if p[0] not in ignore_params:
-                filtered.append(p)
-        for p in filtered:
-            key.append(p[0])
-            key.append(p[1])
-
-        if self.headers:
-            headers = []
-            for i in self.headers:
-                v = r.headers.get(i)
-                headers.append((i, v))
-            key.append(headers)
-        return hashlib.sha256(repr(key).encode("utf8", "surrogateescape")).digest()
-
-    def next_flow(self, request):
-        """
-            Returns the next flow object, or None if no matching flow was
-            found.
-        """
-        l = self.fmap.get(self._hash(request))
-        if not l:
-            return None
-
-        if self.nopop:
-            return l[0]
-        else:
-            return l.pop(0)

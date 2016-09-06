@@ -29,15 +29,8 @@ class FlowMaster(controller.Master):
         if server:
             self.add_server(server)
         self.state = state
-        self.server_playback = None  # type: Optional[modules.ServerPlaybackState]
         self.client_playback = None  # type: Optional[modules.ClientPlaybackState]
-        self.kill_nonreplay = False
-
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
-        self.replay_ignore_params = False
-        self.replay_ignore_content = None
-        self.replay_ignore_host = False
-
         self.apps = modules.AppRegistry()
 
     def start_app(self, host, port):
@@ -62,56 +55,6 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(
-            self,
-            flows,
-            kill,
-            headers,
-            exit,
-            nopop,
-            ignore_params,
-            ignore_content,
-            ignore_payload_params,
-            ignore_host):
-        """
-            flows: List of flows.
-            kill: Boolean, should we kill requests not part of the replay?
-            ignore_params: list of parameters to ignore in server replay
-            ignore_content: true if request content should be ignored in server replay
-            ignore_payload_params: list of content params to ignore in server replay
-            ignore_host: true if request host should be ignored in server replay
-        """
-        self.server_playback = modules.ServerPlaybackState(
-            headers,
-            flows,
-            exit,
-            nopop,
-            ignore_params,
-            ignore_content,
-            ignore_payload_params,
-            ignore_host)
-        self.kill_nonreplay = kill
-
-    def stop_server_playback(self):
-        self.server_playback = None
-
-    def do_server_playback(self, flow):
-        """
-            This method should be called by child classes in the request
-            handler. Returns True if playback has taken place, None if not.
-        """
-        if self.server_playback:
-            rflow = self.server_playback.next_flow(flow)
-            if not rflow:
-                return None
-            response = rflow.response.copy()
-            response.is_replay = True
-            if self.options.refresh_server_playback:
-                response.refresh()
-            flow.response = response
-            return True
-        return None
-
     def tick(self, timeout):
         if self.client_playback:
             stop = (
@@ -126,17 +69,6 @@ class FlowMaster(controller.Master):
             else:
                 self.client_playback.tick(self)
 
-        if self.server_playback:
-            stop = (
-                self.server_playback.count() == 0 and
-                self.state.active_flow_count() == 0 and
-                not self.kill_nonreplay
-            )
-            exit = self.server_playback.exit
-            if stop:
-                self.stop_server_playback()
-                if exit:
-                    self.shutdown()
         return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
@@ -229,13 +161,6 @@ class FlowMaster(controller.Master):
         except IOError as v:
             raise exceptions.FlowReadException(v.strerror)
 
-    def process_new_request(self, f):
-        if self.server_playback:
-            pb = self.do_server_playback(f)
-            if not pb and self.kill_nonreplay:
-                self.add_log("Killed {}".format(f.request.url), "info")
-                f.reply.kill()
-
     def replay_request(self, f, block=False):
         """
             Returns None if successful, or error message if not.
@@ -256,7 +181,8 @@ class FlowMaster(controller.Master):
 
             f.response = None
             f.error = None
-            self.process_new_request(f)
+            # FIXME: process through all addons?
+            # self.process_new_request(f)
             rt = http_replay.RequestReplayThread(
                 self.server.config,
                 f,
@@ -314,7 +240,6 @@ class FlowMaster(controller.Master):
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
-        self.process_new_request(f)
         return f
 
     @controller.handler
