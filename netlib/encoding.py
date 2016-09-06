@@ -34,7 +34,7 @@ def decode(encoded, encoding, errors='strict'):
     Raises:
         ValueError, if decoding fails.
     """
-    if len(encoded) == 0 or encoding == "none":
+    if len(encoded) == 0:
         return encoded
 
     global _cache
@@ -76,7 +76,7 @@ def encode(decoded, encoding, errors='strict'):
     Raises:
         ValueError, if encoding fails.
     """
-    if len(decoded) == 0 or encoding == "none":
+    if len(decoded) == 0:
         return decoded
 
     global _cache
@@ -162,12 +162,14 @@ def encode_deflate(content):
 
 
 custom_decode = {
+    "none": identity,
     "identity": identity,
     "gzip": decode_gzip,
     "deflate": decode_deflate,
     "br": decode_brotli,
 }
 custom_encode = {
+    "none": identity,
     "identity": identity,
     "gzip": encode_gzip,
     "deflate": encode_deflate,

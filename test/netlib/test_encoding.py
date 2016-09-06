@@ -4,16 +4,15 @@ import pytest
 from netlib import encoding, tutils
 
 
-def test_identity():
-    assert b"string" == encoding.decode(b"string", "identity")
-    assert b"string" == encoding.encode(b"string", "identity")
+@pytest.mark.parametrize("encoder", [
+    'identity',
+    'none',
+])
+def test_identity(encoder):
+    assert b"string" == encoding.decode(b"string", encoder)
+    assert b"string" == encoding.encode(b"string", encoder)
     with tutils.raises(ValueError):
         encoding.encode(b"string", "nonexistent encoding")
-
-
-def test_none():
-    assert b"string" == encoding.decode(b"string", "none")
-    assert b"string" == encoding.encode(b"string", "none")
 
 
 @pytest.mark.parametrize("encoder", [
