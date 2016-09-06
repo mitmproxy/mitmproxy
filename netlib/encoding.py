@@ -34,7 +34,7 @@ def decode(encoded, encoding, errors='strict'):
     Raises:
         ValueError, if decoding fails.
     """
-    if len(encoded) == 0:
+    if len(encoded) == 0 or encoding == "none":
         return encoded
 
     global _cache
