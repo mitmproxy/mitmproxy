@@ -162,12 +162,14 @@ def encode_deflate(content):
 
 
 custom_decode = {
+    "none": identity,
     "identity": identity,
     "gzip": decode_gzip,
     "deflate": decode_deflate,
     "br": decode_brotli,
 }
 custom_encode = {
+    "none": identity,
     "identity": identity,
     "gzip": encode_gzip,
     "deflate": encode_deflate,
