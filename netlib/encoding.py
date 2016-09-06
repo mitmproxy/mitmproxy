@@ -76,7 +76,7 @@ def encode(decoded, encoding, errors='strict'):
     Raises:
         ValueError, if encoding fails.
     """
-    if len(decoded) == 0:
+    if len(decoded) == 0 or encoding == "none":
         return decoded
 
     global _cache
