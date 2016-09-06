@@ -5,51 +5,51 @@ from netlib.tutils import raises
 
 import mock
 
-pairs = [
+cookie_pairs = [
     [
         "",
-        [[]]
+        []
     ],
     [
         "one=uno",
-        [[["one", "uno"]]]
+        [["one", "uno"]]
     ],
     [
         "one",
-        [[["one", None]]]
+        [["one", None]]
     ],
     [
         "one=uno; two=due",
-        [[["one", "uno"], ["two", "due"]]]
+        [["one", "uno"], ["two", "due"]]
     ],
     [
         'one="uno"; two="\due"',
-        [[["one", "uno"], ["two", "due"]]]
+        [["one", "uno"], ["two", "due"]]
     ],
     [
         'one="un\\"o"',
-        [[["one", 'un"o']]]
+        [["one", 'un"o']]
     ],
     [
         'one="uno,due"',
-        [[["one", 'uno,due']]]
+        [["one", 'uno,due']]
     ],
     [
         "one=uno; two; three=tre",
-        [[["one", "uno"], ["two", None], ["three", "tre"]]]
+        [["one", "uno"], ["two", None], ["three", "tre"]]
     ],
     [
         "_lvs2=zHai1+Hq+Tc2vmc2r4GAbdOI5Jopg3EwsdUT9g=; "
         "_rcc2=53VdltWl+Ov6ordflA==;",
-        [[
+        [
             ["_lvs2", "zHai1+Hq+Tc2vmc2r4GAbdOI5Jopg3EwsdUT9g="],
             ["_rcc2", "53VdltWl+Ov6ordflA=="]
-        ]]
+        ]
     ]
 ]
 
 
-def test_read_token():
+def test_read_key():
     tokens = [
         [("foo", 0), ("foo", 3)],
         [("foo", 1), ("oo", 3)],
@@ -60,7 +60,7 @@ def test_read_token():
         [(" foo=bar", 1), ("foo", 4)],
     ]
     for q, a in tokens:
-        assert cookies._read_token(*q) == a
+        assert cookies._read_key(*q) == a
 
 
 def test_read_quoted_string():
@@ -76,56 +76,58 @@ def test_read_quoted_string():
         assert cookies._read_quoted_string(*q) == a
 
 
-def test_read_pairs():
+def test_read_cookie_pairs():
     vals = [
         [
             "one",
-            [[["one", None]]]
+            [["one", None]]
         ],
         [
             "one=two",
-            [[["one", "two"]]]
+            [["one", "two"]]
         ],
         [
             "one=",
-            [[["one", ""]]]
+            [["one", ""]]
         ],
         [
             'one="two"',
-            [[["one", "two"]]]
+            [["one", "two"]]
         ],
         [
             'one="two"; three=four',
-            [[["one", "two"], ["three", "four"]]]
+            [["one", "two"], ["three", "four"]]
         ],
         [
             'one="two"; three=four; five',
-            [[["one", "two"], ["three", "four"], ["five", None]]]
+            [["one", "two"], ["three", "four"], ["five", None]]
         ],
         [
             'one="\\"two"; three=four',
-            [[["one", '"two'], ["three", "four"]]]
+            [["one", '"two'], ["three", "four"]]
         ],
     ]
     for s, lst in vals:
-        ret, off = cookies._read_pairs(s)
+        ret, off = cookies._read_cookie_pairs(s)
         assert ret == lst
 
 
 def test_pairs_roundtrips():
-    for s, expected in pairs:
-        ret, off = cookies._read_pairs(s)
+    for s, expected in cookie_pairs:
+        ret, off = cookies._read_cookie_pairs(s)
         assert ret == expected
-        s2 = cookies._format_pairs(expected[0])
-        ret, off = cookies._read_pairs(s2)
+
+        s2 = cookies._format_pairs(expected)
+        ret, off = cookies._read_cookie_pairs(s2)
         assert ret == expected
 
 
 def test_cookie_roundtrips():
-    for s, expected in pairs:
+    for s, expected in cookie_pairs:
         ret = cookies.parse_cookie_header(s)
         assert ret == expected
-        s2 = cookies.format_cookie_header(expected[0])
+
+        s2 = cookies.format_cookie_header(expected)
         ret = cookies.parse_cookie_header(s2)
         assert ret == expected
 
@@ -176,11 +178,11 @@ def test_parse_set_cookie_pairs():
         ],
     ]
     for s, expected in pairs:
-        ret = cookies._parse_set_cookie_pairs(s)
+        ret, off = cookies._read_set_cookie_pairs(s)
         assert ret == expected
 
         s2 = cookies._format_set_cookie_pairs(expected[0])
-        ret2 = cookies._parse_set_cookie_pairs(s2)
+        ret2, off = cookies._read_set_cookie_pairs(s2)
         assert ret2 == expected
 
 
@@ -211,6 +213,7 @@ def test_parse_set_cookie_header():
             assert ret[0][0] == expected[0][0]
             assert ret[0][1] == expected[0][1]
             assert ret[0][2].items(multi=True) == expected[0][2]
+
             s2 = cookies.format_set_cookie_header(*ret[0])
             ret2 = cookies.parse_set_cookie_header(s2)
             assert ret2[0][0] == expected[0][0]
