@@ -11,6 +11,11 @@ def test_identity():
         encoding.encode(b"string", "nonexistent encoding")
 
 
+def test_none():
+    assert b"string" == encoding.decode(b"string", "none")
+    assert b"string" == encoding.encode(b"string", "none")
+
+
 @pytest.mark.parametrize("encoder", [
     'gzip',
     'br',
