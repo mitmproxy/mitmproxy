@@ -103,12 +103,31 @@ def _read_value(s, start, delims):
         return _read_until(s, start, delims)
 
 
-def _read_pairs(s, off=0):
+def _read_cookie_pairs(s, off=0):
     """
-        Read pairs of lhs=rhs values while handling multiple cookies.
+        Read pairs of lhs=rhs values from Cookie headers.
 
         off: start offset
     """
+    pairs = []
+
+    while True:
+        lhs, off = _read_key(s, off)
+        lhs = lhs.lstrip()
+
+        if lhs:
+            rhs = None
+            if off < len(s) and s[off] == "=":
+                rhs, off = _read_value(s, off + 1, ";")
+
+            pairs.append([lhs, rhs])
+
+        off += 1
+
+        if not off < len(s):
+            break
+
+    return pairs, off
     cookies = []
     pairs = []
 
@@ -185,7 +204,7 @@ def _parse_set_cookie_pairs(s):
         For Set-Cookie, we support multiple cookies as described in RFC2109.
         This function therefore returns a list of lists.
     """
-    pairs, off_ = _read_pairs(s)
+    pairs, off_ = _read_cookie_pairs(line)
     return pairs
 
 
