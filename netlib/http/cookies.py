@@ -28,8 +28,21 @@ _cookie_params = set((
     'secure', 'httponly', 'version',
 ))
 
+ESCAPE = re.compile(r"([\"\\])")
 
-# TODO: Disallow LHS-only Cookie values
+
+class CookieAttrs(multidict.ImmutableMultiDict):
+    @staticmethod
+    def _kconv(key):
+        return key.lower()
+
+    @staticmethod
+    def _reduce_values(values):
+        # See the StickyCookieTest for a weird cookie that only makes sense
+        # if we take the last part.
+        return values[-1]
+
+SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
 
 
 def _read_until(s, start, term):
@@ -90,7 +103,6 @@ def _read_value(s, start, delims):
         return _read_until(s, start, delims)
 
 
-# TODO: Disallow LHS-only Cookie values
 def _read_pairs(s, off=0):
     """
         Read pairs of lhs=rhs values while handling multiple cookies.
@@ -145,9 +157,6 @@ def _has_special(s):
     return False
 
 
-ESCAPE = re.compile(r"([\"\\])")
-
-
 def _format_pairs(lst, specials=(), sep="; "):
     """
         specials: A lower-cased list of keys that will not be quoted.
@@ -190,19 +199,6 @@ def parse_set_cookie_headers(headers):
     return ret
 
 
-class CookieAttrs(multidict.ImmutableMultiDict):
-    @staticmethod
-    def _kconv(key):
-        return key.lower()
-
-    @staticmethod
-    def _reduce_values(values):
-        # See the StickyCookieTest for a weird cookie that only makes sense
-        # if we take the last part.
-        return values[-1]
-
-
-SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
 
 
 def parse_set_cookie_header(line):
