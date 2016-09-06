@@ -57,13 +57,6 @@ def _read_until(s, start, term):
     return s[start:i + 1], i + 1
 
 
-def _read_token(s, start):
-    """
-        Read a token - the LHS of a token/value pair in a cookie.
-    """
-    return _read_until(s, start, ",;=")
-
-
 def _read_quoted_string(s, start):
     """
         start: offset to the first quote of the string to be read
@@ -91,6 +84,13 @@ def _read_quoted_string(s, start):
     return "".join(ret), i + 1
 
 
+def _read_key(s, start, delims=";="):
+    """
+        Read a key - the LHS of a token/value pair in a cookie.
+    """
+    return _read_until(s, start, delims)
+
+
 def _read_value(s, start, delims):
     """
         Reads a value - the RHS of a token/value pair in a cookie.
@@ -113,7 +113,7 @@ def _read_pairs(s, off=0):
     pairs = []
 
     while True:
-        lhs, off = _read_token(s, off)
+        lhs, off = _read_key(s, off, ";=,")
         lhs = lhs.lstrip()
 
         if lhs:
