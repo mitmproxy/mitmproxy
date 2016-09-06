@@ -211,13 +211,48 @@ def _format_set_cookie_pairs(lst):
     )
 
 
-def _parse_set_cookie_pairs(s):
+def parse_cookie_header(line):
     """
-        For Set-Cookie, we support multiple cookies as described in RFC2109.
-        This function therefore returns a list of lists.
+        Parse a Cookie header value.
+        Returns a list of (lhs, rhs) tuples.
     """
     pairs, off_ = _read_cookie_pairs(line)
     return pairs
+
+
+def parse_cookie_headers(cookie_headers):
+    cookie_list = []
+    for header in cookie_headers:
+        cookie_list.extend(parse_cookie_header(header)[0])
+    return cookie_list
+
+
+def format_cookie_header(lst):
+    """
+        Formats a Cookie header value.
+    """
+    return _format_pairs(lst)
+
+
+def parse_set_cookie_header(line):
+    """
+        Parse a Set-Cookie header value
+
+        Returns a list of (name, value, attrs) tuple for each cokie, or None.
+        Where attrs is a CookieAttrs dict of attributes. No attempt is made
+        to parse attribute values - they are treated purely as strings.
+    """
+    cookie_pairs, off = _read_set_cookie_pairs(line)
+
+    cookies = [
+        (pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:]))
+        for pairs in cookie_pairs if pairs
+    ]
+
+    if cookies:
+        return cookies
+    else:
+        return None
 
 
 def parse_set_cookie_headers(headers):
@@ -230,27 +265,6 @@ def parse_set_cookie_headers(headers):
     return ret
 
 
-
-
-def parse_set_cookie_header(line):
-    """
-        Parse a Set-Cookie header value
-
-        Returns a list of (name, value, attrs) tuple for each cokie, or None.
-        Where attrs is a CookieAttrs dict of attributes. No attempt is made
-        to parse attribute values - they are treated purely as strings.
-    """
-    cookies = [
-        (pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:]))
-        for pairs in _parse_set_cookie_pairs(line) if pairs
-    ]
-
-    if cookies:
-        return cookies
-    else:
-        return None
-
-
 def format_set_cookie_header(name, value, attrs):
     """
         Formats a Set-Cookie header value.
@@ -260,29 +274,6 @@ def format_set_cookie_header(name, value, attrs):
         attrs.fields if hasattr(attrs, "fields") else attrs
     )
     return _format_set_cookie_pairs(pairs)
-
-
-def parse_cookie_headers(cookie_headers):
-    cookie_list = []
-    for header in cookie_headers:
-        cookie_list.extend(parse_cookie_header(header)[0])
-    return cookie_list
-
-
-def parse_cookie_header(line):
-    """
-        Parse a Cookie header value.
-        Returns a list of (lhs, rhs) tuples.
-    """
-    pairs, off_ = _read_pairs(line)
-    return pairs
-
-
-def format_cookie_header(lst):
-    """
-        Formats a Cookie header value.
-    """
-    return _format_pairs(lst)
 
 
 def refresh_set_cookie_header(c, delta):
