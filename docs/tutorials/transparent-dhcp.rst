@@ -70,12 +70,15 @@ DHCP and TFTP) services to a small-scale network.
 3. Redirect traffic to mitmproxy
 ------------------------------------------
 
-To redirect traffic to mitmproxy, we need to add two iptables rules:
+To redirect traffic to mitmproxy, we need to add two iptables
+rules. Note the ``mitm_account``, this is the account that you will
+run ``mitmproxy`` with, hence the account doing these iptables must be
+different than ``mitm_account``.
 
 .. code-block:: none
 
-    iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j REDIRECT --to-port 8080
-    iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 443 -j REDIRECT --to-port 8080
+    iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitm_account --dport 80 -j REDIRECT --to-port 8080
+    iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitm_account --dport 443 -j REDIRECT --to-port 8080
 
 4. Run mitmproxy
 ----------------
