@@ -381,7 +381,10 @@ class TlsLayer(base.Layer):
         )
 
         if self._client_tls and establish_server_tls_now:
-            self._establish_tls_with_client_and_server()
+            try:
+                self._establish_tls_with_client_and_server()
+            except netlib.exceptions.TlsException as e:
+                self.log("Your libssl does not support this ssl version. May have been removed for security reasons.")
         elif self._client_tls:
             self._establish_tls_with_client()
         elif establish_server_tls_now:
