@@ -59,18 +59,6 @@ class DumpMaster(flow.FlowMaster):
                   "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
                   file=sys.stderr)
 
-        if options.server_replay:
-            self.start_server_playback(
-                self._readflow(options.server_replay),
-                options.kill, options.rheaders,
-                not options.keepserving,
-                options.nopop,
-                options.replay_ignore_params,
-                options.replay_ignore_content,
-                options.replay_ignore_payload_params,
-                options.replay_ignore_host
-            )
-
         if options.client_replay:
             self.start_client_playback(
                 self._readflow(options.client_replay),

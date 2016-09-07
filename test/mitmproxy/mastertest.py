@@ -5,6 +5,10 @@ from mitmproxy.flow import master
 from mitmproxy import flow, proxy, models, controller
 
 
+class TestMaster:
+    pass
+
+
 class MasterTest:
 
     def cycle(self, master, content):
@@ -16,7 +20,9 @@ class MasterTest:
         master.serverconnect(f.server_conn)
         master.request(f)
         if not f.error:
-            f.response = models.HTTPResponse.wrap(netlib.tutils.tresp(content=content))
+            f.response = models.HTTPResponse.wrap(
+                netlib.tutils.tresp(content=content)
+            )
             master.response(f)
         master.clientdisconnect(f)
         return f
