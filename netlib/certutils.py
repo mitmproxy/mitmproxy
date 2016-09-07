@@ -116,6 +116,20 @@ def dummy_cert(privkey, cacert, commonname, sans):
     return SSLCert(cert)
 
 
+def check_outdated_ca(ca):
+    """
+        Checks whether certificate is outdated or not.
+
+        ca: cert
+
+        Returns True if expired, else False.
+    """
+    if ca.has_expired():
+        return True
+    else:
+        return False
+
+
 # DNTree did not pass TestCertStore.test_sans_change and is temporarily replaced by a simple dict.
 #
 # class _Node(UserDict.UserDict):

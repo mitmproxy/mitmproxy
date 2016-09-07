@@ -153,3 +153,13 @@ class TestSSLCert:
             d = f.read()
         s = certutils.SSLCert.from_der(d)
         assert s.cn
+
+    def test_outdated_ca(self):
+        with tutils.tmpdir() as d:
+            cert = certutils.create_ca("OUTDATED", "OUTDATED", 0)
+            outdated_status = certutils.check_outdated_ca(cert[1])
+            assert outdated_status
+
+            cert = certutils.create_ca("NOTOUTDATED", "NOTOUTDATED", 500)
+            outdated_status = certutils.check_outdated_ca(cert[1])
+            assert outdated_status
