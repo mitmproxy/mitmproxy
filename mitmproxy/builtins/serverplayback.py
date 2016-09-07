@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 from six.moves import urllib
 import hashlib
 
+from netlib import strutils
 from mitmproxy import exceptions, flow, ctx
 
 
@@ -38,10 +39,13 @@ class ServerPlayback(object):
         if not self.options.replay_ignore_content:
             form_contents = r.urlencoded_form or r.multipart_form
             if self.options.replay_ignore_payload_params and form_contents:
-                key.extend(
-                    p for p in form_contents.items(multi=True)
-                    if p[0] not in self.options.replay_ignore_payload_params
-                )
+                params = [
+                    strutils.always_bytes(i)
+                    for i in self.options.replay_ignore_payload_params
+                ]
+                for p in form_contents.items(multi=True):
+                    if p[0] not in params:
+                        key.append(p)
             else:
                 key.append(str(r.raw_content))
 
@@ -63,7 +67,9 @@ class ServerPlayback(object):
                 v = r.headers.get(i)
                 headers.append((i, v))
             key.append(headers)
-        return hashlib.sha256(repr(key).encode("utf8", "surrogateescape")).digest()
+        return hashlib.sha256(
+            repr(key).encode("utf8", "surrogateescape")
+        ).digest()
 
     def next_flow(self, request):
         """
