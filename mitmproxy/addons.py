@@ -4,7 +4,7 @@ import pprint
 
 
 def _get_name(itm):
-    return getattr(itm, "name", itm.__class__.__name__)
+    return getattr(itm, "name", itm.__class__.__name__.lower())
 
 
 class Addons(object):
@@ -12,6 +12,11 @@ class Addons(object):
         self.chain = []
         self.master = master
         master.options.changed.connect(self.options_update)
+
+    def get(self, name):
+        for i in self.chain:
+            if name == _get_name(i):
+                return i
 
     def options_update(self, options, updated):
         for i in self.chain:
