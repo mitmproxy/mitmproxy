@@ -148,13 +148,13 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "cplayback"))
             r.append(":%s to go]" % self.master.client_playback.count())
-        if self.master.server_playback:
+        if self.master.options.server_replay:
             r.append("[")
             r.append(("heading_key", "splayback"))
             if self.master.options.nopop:
-                r.append(":%s in file]" % self.master.server_playback.count())
+                r.append(":%s in file]" % self.master.options.server_replay.count())
             else:
-                r.append(":%s to go]" % self.master.server_playback.count())
+                r.append(":%s to go]" % self.master.options.server_replay.count())
         if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))

@@ -248,9 +248,6 @@ class ConsoleMaster(flow.FlowMaster):
         if options.client_replay:
             self.client_playback_path(options.client_replay)
 
-        if options.server_replay:
-            self.server_playback_path(options.server_replay)
-
         self.view_stack = []
 
         if options.app:
