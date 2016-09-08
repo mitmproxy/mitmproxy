@@ -88,13 +88,14 @@ class ServerPlayback(object):
 
     def configure(self, options, updated):
         self.options = options
-        if options.server_replay and "server_replay" in updated:
-            try:
-                flows = flow.read_flows_from_paths(options.server_replay)
-            except exceptions.FlowReadException as e:
-                raise exceptions.OptionsError(str(e))
+        if "server_replay" in updated:
             self.clear()
-            self.load(flows)
+            if options.server_replay:
+                try:
+                    flows = flow.read_flows_from_paths(options.server_replay)
+                except exceptions.FlowReadException as e:
+                    raise exceptions.OptionsError(str(e))
+                self.load(flows)
 
         # FIXME: These options have to be renamed to something more sensible -
         # prefixed with serverplayback_ where appropriate, and playback_ where

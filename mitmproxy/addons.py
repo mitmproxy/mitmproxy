@@ -14,6 +14,11 @@ class Addons(object):
         master.options.changed.connect(self.options_update)
 
     def get(self, name):
+        """
+            Retrieve an addon by name. Addon names are equal to the .name
+            attribute on the instance, or the lower case class name if that
+            does not exist.
+        """
         for i in self.chain:
             if name == _get_name(i):
                 return i
@@ -43,14 +48,6 @@ class Addons(object):
     def done(self):
         for i in self.chain:
             self.invoke_with_context(i, "done")
-
-    def has_addon(self, name):
-        """
-            Is an addon with this name registered?
-        """
-        for i in self.chain:
-            if _get_name(i) == name:
-                return True
 
     def __len__(self):
         return len(self.chain)
