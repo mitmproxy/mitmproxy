@@ -1,4 +1,5 @@
 import re
+import os.path
 
 from mitmproxy import exceptions
 from mitmproxy import filt
@@ -17,8 +18,9 @@ class Replace:
             s: the replacement string, as bytes
         """
         lst = []
-        for fpatt, rex, s in options.replacements:
+        for fpatt, rex, s in options.replacements:            
             cpatt = filt.parse(fpatt)
+            file_repl = False
             if not cpatt:
                 raise exceptions.OptionsError(
                     "Invalid filter pattern: %s" % fpatt
@@ -29,16 +31,30 @@ class Replace:
                 raise exceptions.OptionsError(
                     "Invalid regular expression: %s - %s" % (rex, str(e))
                 )
-            lst.append((rex, s, cpatt))
+            if s[0:7] == "file://":
+                file_repl = True
+                if not os.path.isfile(s[7:]):
+                    raise exceptions.OptionsError(
+                        "File not found : %s" % s[7:]
+                    )
+                else:
+                    s=s[7:]    
+            lst.append((rex, s, cpatt, file_repl))
         self.lst = lst
 
     def execute(self, f):
-        for rex, s, cpatt in self.lst:
+        for rex, s, cpatt, file_repl in self.lst:
             if cpatt(f):
-                if f.response:
-                    f.response.replace(rex, s)
+                if not file_repl:
+                    if f.response:
+                        f.response.replace(rex, s)
+                    else:
+                        f.request.replace(rex, s)
                 else:
-                    f.request.replace(rex, s)
+                    if f.response:
+                        f.response.replace_from_file(rex, s)
+                    else:
+                        f.request.replace_from_file(rex, s)
 
     def request(self, flow):
         if not flow.reply.has_message:

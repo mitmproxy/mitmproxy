@@ -260,6 +260,26 @@ class Message(basetypes.Serializable):
         if "content-encoding" not in self.headers:
             raise ValueError("Invalid content encoding {}".format(repr(e)))
 
+    def replace_from_file(self, pattern, repl, flags=0, count=0):
+
+        if isinstance(pattern, six.text_type):
+            pattern = strutils.escaped_str_to_bytes(pattern)
+        
+        replacements = 0
+
+        with open(repl) as f:
+            repl_chunk = f.read()
+            if isinstance(repl_chunk, six.text_type):
+                repl_chunk = strutils.escaped_str_to_bytes(repl_chunk)
+            if self.content:
+                self.content, replacements = re.subn(
+                    pattern, repl_chunk, self.content, flags=flags, count=count
+                )
+            replacements += self.headers.replace(pattern, repl_chunk, flags=flags, count=count)           
+            return replacements
+
+        return replacements
+
     def replace(self, pattern, repl, flags=0, count=0):
         """
         Replaces a regular expression pattern with repl in both the headers

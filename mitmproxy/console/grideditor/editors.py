@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 import re
 import urwid
+import os.path
 from mitmproxy import filt
 from mitmproxy.builtins import script
 from mitmproxy import exceptions
@@ -88,6 +89,10 @@ class ReplaceEditor(base.GridEditor):
                 re.compile(val)
             except re.error:
                 return "Invalid regular expression."
+        elif col == 2:
+            if val[0:7] == "file://":
+                if not os.path.isfile(val[7:]):
+                    return "The file not found"
         return False
 
 
