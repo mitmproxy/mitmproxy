@@ -218,7 +218,7 @@ def get_common_options(args):
         anticache=args.anticache,
         anticomp=args.anticomp,
         client_replay=args.client_replay,
-        kill=args.kill,
+        replay_kill_extra=args.replay_kill_extra,
         no_server=args.no_server,
         refresh_server_playback=not args.norefresh,
         rheaders=args.rheaders,
@@ -594,8 +594,8 @@ def server_replay(parser):
         help="Replay server responses from a saved file."
     )
     group.add_argument(
-        "-k", "--kill",
-        action="store_true", dest="kill", default=False,
+        "-k", "--replay-kill-extra",
+        action="store_true", dest="replay_kill_extra", default=False,
         help="Kill extra requests during replay."
     )
     group.add_argument(

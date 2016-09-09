@@ -101,7 +101,6 @@ class ServerPlayback(object):
         # prefixed with serverplayback_ where appropriate, and playback_ where
         # they're shared with client playback.
         #
-        # options.kill
         # options.rheaders,
         # options.nopop,
         # options.replay_ignore_params,
@@ -125,7 +124,7 @@ class ServerPlayback(object):
                 if not self.flowmap and not self.options.keepserving:
                     self.final_flow = f
                     self.stop = True
-            elif self.options.kill:
+            elif self.options.replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url

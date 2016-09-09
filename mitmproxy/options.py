@@ -30,7 +30,7 @@ class Options(optmanager.OptManager):
             anticache=False,  # type: bool
             anticomp=False,  # type: bool
             client_replay=None,  # type: Optional[str]
-            kill=False,  # type: bool
+            replay_kill_extra=False,  # type: bool
             keepserving=True,  # type: bool
             no_server=False,  # type: bool
             nopop=False,  # type: bool
@@ -89,7 +89,7 @@ class Options(optmanager.OptManager):
         self.anticomp = anticomp
         self.client_replay = client_replay
         self.keepserving = keepserving
-        self.kill = kill
+        self.replay_kill_extra = replay_kill_extra
         self.no_server = no_server
         self.nopop = nopop
         self.refresh_server_playback = refresh_server_playback

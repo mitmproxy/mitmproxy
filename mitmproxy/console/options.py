@@ -114,7 +114,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Kill Extra",
                     "x",
-                    lambda: master.options.kill,
+                    lambda: master.options.replay_kill_extra,
                     master.options.toggler("kill")
                 ),
                 select.Option(
@@ -165,7 +165,7 @@ class Options(urwid.WidgetWrap):
             anticomp = False,
             ignore_hosts = (),
             tcp_hosts = (),
-            kill = False,
+            replay_kill_extra = False,
             no_upstream_cert = False,
             refresh_server_playback = True,
             replacements = [],

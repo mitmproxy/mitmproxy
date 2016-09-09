@@ -270,7 +270,7 @@ class TestServerPlayback:
     def test_server_playback_kill(self):
         state = flow.State()
         s = serverplayback.ServerPlayback()
-        o = options.Options(refresh_server_playback = True, kill=True)
+        o = options.Options(refresh_server_playback = True, replay_kill_extra=True)
         m = mastertest.RecordingMaster(o, None, state)
         m.addons.add(o, s)
 

@@ -148,7 +148,7 @@ class ConnectionItem(urwid.WidgetWrap):
         if k == "a":
             self.master.start_server_playback(
                 [i.copy() for i in self.master.state.view],
-                self.master.options.kill, self.master.options.rheaders,
+                self.master.options.replay_kill_extra, self.master.options.rheaders,
                 False, self.master.options.nopop,
                 self.master.options.replay_ignore_params,
                 self.master.options.replay_ignore_content,
@@ -158,7 +158,7 @@ class ConnectionItem(urwid.WidgetWrap):
         elif k == "t":
             self.master.start_server_playback(
                 [self.flow.copy()],
-                self.master.options.kill, self.master.options.rheaders,
+                self.master.options.replay_kill_extra, self.master.options.rheaders,
                 False, self.master.options.nopop,
                 self.master.options.replay_ignore_params,
                 self.master.options.replay_ignore_content,
