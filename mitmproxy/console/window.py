@@ -57,13 +57,11 @@ class Window(urwid.Frame):
                     callback = self.master.stop_client_playback_prompt,
                 )
         elif k == "s":
-            if not self.master.server_playback:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Server replay path",
-                    callback = self.master.server_playback_path
-                )
-            else:
+            a = self.master.addons.get("serverplayback")
+            if a.count():
+                def stop_server_playback(response):
+                    if response == "y":
+                        self.master.options.server_replay = []
                 signals.status_prompt_onekey.send(
                     self,
                     prompt = "Stop current server replay?",
@@ -71,7 +69,13 @@ class Window(urwid.Frame):
                         ("yes", "y"),
                         ("no", "n"),
                     ),
-                    callback = self.master.stop_server_playback_prompt,
+                    callback = stop_server_playback
+                )
+            else:
+                signals.status_prompt_path.send(
+                    self,
+                    prompt = "Server playback path",
+                    callback = lambda x: self.master.options.setter("server_replay")([x])
                 )
 
     def keypress(self, size, k):

@@ -4,7 +4,7 @@ import pprint
 
 
 def _get_name(itm):
-    return getattr(itm, "name", itm.__class__.__name__)
+    return getattr(itm, "name", itm.__class__.__name__.lower())
 
 
 class Addons(object):
@@ -12,6 +12,16 @@ class Addons(object):
         self.chain = []
         self.master = master
         master.options.changed.connect(self.options_update)
+
+    def get(self, name):
+        """
+            Retrieve an addon by name. Addon names are equal to the .name
+            attribute on the instance, or the lower case class name if that
+            does not exist.
+        """
+        for i in self.chain:
+            if name == _get_name(i):
+                return i
 
     def options_update(self, options, updated):
         for i in self.chain:
@@ -38,14 +48,6 @@ class Addons(object):
     def done(self):
         for i in self.chain:
             self.invoke_with_context(i, "done")
-
-    def has_addon(self, name):
-        """
-            Is an addon with this name registered?
-        """
-        for i in self.chain:
-            if _get_name(i) == name:
-                return True
 
     def __len__(self):
         return len(self.chain)
