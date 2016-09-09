@@ -3,6 +3,7 @@ import threading
 import tempfile
 import flask
 import mock
+import sys
 
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
@@ -10,6 +11,7 @@ import pathod.test
 import pathod.pathoc
 from mitmproxy import flow, controller, options
 from mitmproxy import builtins
+import netlib.exceptions
 
 testapp = flask.Flask(__name__)
 
@@ -104,6 +106,14 @@ class ProxyTestBase(object):
         cls.server.shutdown()
         cls.server2.shutdown()
 
+    def teardown(self):
+        try:
+            self.server.wait_for_silence()
+        except netlib.exceptions.Timeout:
+            # FIXME: Track down the Windows sync issues
+            if sys.platform != "win32":
+                raise
+
     def setup(self):
         self.master.clear_log()
         self.master.state.clear()
@@ -125,6 +135,15 @@ class ProxyTestBase(object):
         )
 
 
+class LazyPathoc(pathod.pathoc.Pathoc):
+    def __init__(self, lazy_connect, *args, **kwargs):
+        self.lazy_connect = lazy_connect
+        pathod.pathoc.Pathoc.__init__(self, *args, **kwargs)
+
+    def connect(self):
+        return pathod.pathoc.Pathoc.connect(self, self.lazy_connect)
+
+
 class HTTPProxyTest(ProxyTestBase):
 
     def pathoc_raw(self):
@@ -134,14 +153,14 @@ class HTTPProxyTest(ProxyTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = pathod.pathoc.Pathoc(
+        if self.ssl:
+            conn = ("127.0.0.1", self.server.port)
+        else:
+            conn = None
+        return LazyPathoc(
+            conn,
             ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
         )
-        if self.ssl:
-            p.connect(("127.0.0.1", self.server.port))
-        else:
-            p.connect()
-        return p
 
     def pathod(self, spec, sni=None):
         """
@@ -152,18 +171,20 @@ class HTTPProxyTest(ProxyTestBase):
             q = "get:'/p/%s'" % spec
         else:
             q = "get:'%s/p/%s'" % (self.server.urlbase, spec)
-        return p.request(q)
+        with p.connect():
+            return p.request(q)
 
     def app(self, page):
         if self.ssl:
             p = pathod.pathoc.Pathoc(
                 ("127.0.0.1", self.proxy.port), True, fp=None
             )
-            p.connect((options.APP_HOST, options.APP_PORT))
-            return p.request("get:'%s'" % page)
+            with p.connect((options.APP_HOST, options.APP_PORT)):
+                return p.request("get:'%s'" % page)
         else:
             p = self.pathoc()
-            return p.request("get:'http://%s%s'" % (options.APP_HOST, page))
+            with p.connect():
+                return p.request("get:'http://%s%s'" % (options.APP_HOST, page))
 
 
 class TResolver:
@@ -210,7 +231,8 @@ class TransparentProxyTest(ProxyTestBase):
         else:
             p = self.pathoc()
             q = "get:'/p/%s'" % spec
-        return p.request(q)
+        with p.connect():
+            return p.request(q)
 
     def pathoc(self, sni=None):
         """
@@ -219,7 +241,6 @@ class TransparentProxyTest(ProxyTestBase):
         p = pathod.pathoc.Pathoc(
             ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
         )
-        p.connect()
         return p
 
 
@@ -247,7 +268,6 @@ class ReverseProxyTest(ProxyTestBase):
         p = pathod.pathoc.Pathoc(
             ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
         )
-        p.connect()
         return p
 
     def pathod(self, spec, sni=None):
@@ -260,7 +280,8 @@ class ReverseProxyTest(ProxyTestBase):
         else:
             p = self.pathoc()
             q = "get:'/p/%s'" % spec
-        return p.request(q)
+        with p.connect():
+            return p.request(q)
 
 
 class SocksModeTest(HTTPProxyTest):

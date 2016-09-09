@@ -248,9 +248,6 @@ class ConsoleMaster(flow.FlowMaster):
         if options.client_replay:
             self.client_playback_path(options.client_replay)
 
-        if options.server_replay:
-            self.server_playback_path(options.server_replay)
-
         self.view_stack = []
 
         if options.app:
@@ -390,21 +387,6 @@ class ConsoleMaster(flow.FlowMaster):
         flows = self._readflows(path)
         if flows:
             self.start_client_playback(flows, False)
-
-    def server_playback_path(self, path):
-        if not isinstance(path, list):
-            path = [path]
-        flows = self._readflows(path)
-        if flows:
-            self.start_server_playback(
-                flows,
-                self.options.kill, self.options.rheaders,
-                False, self.options.nopop,
-                self.options.replay_ignore_params,
-                self.options.replay_ignore_content,
-                self.options.replay_ignore_payload_params,
-                self.options.replay_ignore_host
-            )
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
