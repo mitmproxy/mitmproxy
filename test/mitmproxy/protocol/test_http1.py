@@ -18,14 +18,15 @@ class TestInvalidRequests(tservers.HTTPProxyTest):
 
     def test_double_connect(self):
         p = self.pathoc()
-        r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
+        with p.connect():
+            r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
         assert r.status_code == 400
         assert b"Invalid HTTP request form" in r.content
 
     def test_relative_request(self):
         p = self.pathoc_raw()
-        p.connect()
-        r = p.request("get:/p/200")
+        with p.connect():
+            r = p.request("get:/p/200")
         assert r.status_code == 400
         assert b"Invalid HTTP request form" in r.content
 
@@ -61,5 +62,8 @@ class TestHeadContentLength(tservers.HTTPProxyTest):
 
     def test_head_content_length(self):
         p = self.pathoc()
-        resp = p.request("""head:'%s/p/200:h"Content-Length"="42"'""" % self.server.urlbase)
+        with p.connect():
+            resp = p.request(
+                """head:'%s/p/200:h"Content-Length"="42"'""" % self.server.urlbase
+            )
         assert resp.headers["Content-Length"] == "42"
