@@ -33,7 +33,7 @@ class Options(optmanager.OptManager):
             replay_kill_extra=False,  # type: bool
             keepserving=True,  # type: bool
             no_server=False,  # type: bool
-            nopop=False,  # type: bool
+            server_replay_nopop=False,  # type: bool
             refresh_server_playback=False,  # type: bool
             rfile=None,  # type: Optional[str]
             scripts=(),  # type: Sequence[str]
@@ -91,7 +91,7 @@ class Options(optmanager.OptManager):
         self.keepserving = keepserving
         self.replay_kill_extra = replay_kill_extra
         self.no_server = no_server
-        self.nopop = nopop
+        self.server_replay_nopop = server_replay_nopop
         self.refresh_server_playback = refresh_server_playback
         self.rfile = rfile
         self.scripts = scripts

@@ -233,7 +233,7 @@ def get_common_options(args):
         showhost=args.showhost,
         outfile=args.outfile,
         verbosity=args.verbose,
-        nopop=args.nopop,
+        server_replay_nopop=args.server_replay_nopop,
         replay_ignore_content=args.replay_ignore_content,
         replay_ignore_params=args.replay_ignore_params,
         replay_ignore_payload_params=args.replay_ignore_payload_params,
@@ -614,7 +614,7 @@ def server_replay(parser):
     )
     group.add_argument(
         "--no-pop",
-        action="store_true", dest="nopop", default=False,
+        action="store_true", dest="server_replay_nopop", default=False,
         help="Disable response pop from response flow. "
              "This makes it possible to replay same response multiple times."
     )

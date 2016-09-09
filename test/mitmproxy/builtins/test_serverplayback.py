@@ -167,9 +167,9 @@ class TestServerPlayback:
 
         assert not s.next_flow(r)
 
-    def test_load_with_nopop(self):
+    def test_load_with_server_replay_nopop(self):
         s = serverplayback.ServerPlayback()
-        s.configure(options.Options(nopop=True), [])
+        s.configure(options.Options(server_replay_nopop=True), [])
 
         r = tutils.tflow(resp=True)
         r.request.headers["key"] = "one"

@@ -78,7 +78,7 @@ class ServerPlayback(object):
         """
         hsh = self._hash(request)
         if hsh in self.flowmap:
-            if self.options.nopop:
+            if self.options.server_replay_nopop:
                 return self.flowmap[hsh][0]
             else:
                 ret = self.flowmap[hsh].pop(0)
@@ -101,8 +101,7 @@ class ServerPlayback(object):
         # prefixed with serverplayback_ where appropriate, and playback_ where
         # they're shared with client playback.
         #
-        # options.server_replay_use_headers,
-        # options.nopop,
+        # options.server_replay_nopop,
         # options.replay_ignore_params,
         # options.replay_ignore_content,
         # options.replay_ignore_payload_params,
