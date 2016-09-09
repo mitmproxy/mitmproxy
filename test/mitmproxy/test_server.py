@@ -91,11 +91,11 @@ class CommonMixin:
 
     def test_invalid_http(self):
         t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
-        t.connect()
-        t.wfile.write(b"invalid\r\n\r\n")
-        t.wfile.flush()
-        line = t.rfile.readline()
-        assert (b"Bad Request" in line) or (b"Bad Gateway" in line)
+        with t.connect():
+            t.wfile.write(b"invalid\r\n\r\n")
+            t.wfile.flush()
+            line = t.rfile.readline()
+            assert (b"Bad Request" in line) or (b"Bad Gateway" in line)
 
     def test_sni(self):
         if not self.ssl:
@@ -215,10 +215,10 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
 
     def test_invalid_connect(self):
         t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
-        t.connect()
-        t.wfile.write(b"CONNECT invalid\n\n")
-        t.wfile.flush()
-        assert b"Bad Request" in t.rfile.readline()
+        with t.connect():
+            t.wfile.write(b"CONNECT invalid\n\n")
+            t.wfile.flush()
+            assert b"Bad Request" in t.rfile.readline()
 
     def test_upstream_ssl_error(self):
         p = self.pathoc()
