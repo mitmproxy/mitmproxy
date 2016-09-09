@@ -150,20 +150,20 @@ class ConnectionItem(urwid.WidgetWrap):
                 [i.copy() for i in self.master.state.view],
                 self.master.options.replay_kill_extra, self.master.options.server_replay_use_headers,
                 False, self.master.options.server_replay_nopop,
-                self.master.options.replay_ignore_params,
-                self.master.options.replay_ignore_content,
-                self.master.options.replay_ignore_payload_params,
-                self.master.options.replay_ignore_host
+                self.master.options.server_replay_ignore_params,
+                self.master.options.server_replay_ignore_content,
+                self.master.options.server_replay_ignore_payload_params,
+                self.master.options.server_replay_ignore_host
             )
         elif k == "t":
             self.master.start_server_playback(
                 [self.flow.copy()],
                 self.master.options.replay_kill_extra, self.master.options.server_replay_use_headers,
                 False, self.master.options.server_replay_nopop,
-                self.master.options.replay_ignore_params,
-                self.master.options.replay_ignore_content,
-                self.master.options.replay_ignore_payload_params,
-                self.master.options.replay_ignore_host
+                self.master.options.server_replay_ignore_params,
+                self.master.options.server_replay_ignore_content,
+                self.master.options.server_replay_ignore_payload_params,
+                self.master.options.server_replay_ignore_host
             )
         else:
             signals.status_prompt_path.send(

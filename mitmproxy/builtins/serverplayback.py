@@ -36,12 +36,12 @@ class ServerPlayback(object):
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
         key = [str(r.port), str(r.scheme), str(r.method), str(path)]
-        if not self.options.replay_ignore_content:
+        if not self.options.server_replay_ignore_content:
             form_contents = r.urlencoded_form or r.multipart_form
-            if self.options.replay_ignore_payload_params and form_contents:
+            if self.options.server_replay_ignore_payload_params and form_contents:
                 params = [
                     strutils.always_bytes(i)
-                    for i in self.options.replay_ignore_payload_params
+                    for i in self.options.server_replay_ignore_payload_params
                 ]
                 for p in form_contents.items(multi=True):
                     if p[0] not in params:
@@ -49,11 +49,11 @@ class ServerPlayback(object):
             else:
                 key.append(str(r.raw_content))
 
-        if not self.options.replay_ignore_host:
+        if not self.options.server_replay_ignore_host:
             key.append(r.host)
 
         filtered = []
-        ignore_params = self.options.replay_ignore_params or []
+        ignore_params = self.options.server_replay_ignore_params or []
         for p in queriesArray:
             if p[0] not in ignore_params:
                 filtered.append(p)
@@ -96,16 +96,6 @@ class ServerPlayback(object):
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
                 self.load(flows)
-
-        # FIXME: These options have to be renamed to something more sensible -
-        # prefixed with serverplayback_ where appropriate, and playback_ where
-        # they're shared with client playback.
-        #
-        # options.server_replay_nopop,
-        # options.replay_ignore_params,
-        # options.replay_ignore_content,
-        # options.replay_ignore_payload_params,
-        # options.replay_ignore_host
 
     def tick(self):
         if self.stop and not self.final_flow.live:

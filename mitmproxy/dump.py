@@ -46,11 +46,11 @@ class DumpMaster(flow.FlowMaster):
         self.addons.add(options, dumper.Dumper())
         # This line is just for type hinting
         self.options = self.options  # type: Options
-        self.replay_ignore_params = options.replay_ignore_params
-        self.replay_ignore_content = options.replay_ignore_content
-        self.replay_ignore_host = options.replay_ignore_host
+        self.server_replay_ignore_params = options.server_replay_ignore_params
+        self.server_replay_ignore_content = options.server_replay_ignore_content
+        self.server_replay_ignore_host = options.server_replay_ignore_host
         self.refresh_server_playback = options.refresh_server_playback
-        self.replay_ignore_payload_params = options.replay_ignore_payload_params
+        self.server_replay_ignore_payload_params = options.server_replay_ignore_payload_params
 
         self.set_stream_large_bodies(options.stream_large_bodies)
 

@@ -234,10 +234,10 @@ def get_common_options(args):
         outfile=args.outfile,
         verbosity=args.verbose,
         server_replay_nopop=args.server_replay_nopop,
-        replay_ignore_content=args.replay_ignore_content,
-        replay_ignore_params=args.replay_ignore_params,
-        replay_ignore_payload_params=args.replay_ignore_payload_params,
-        replay_ignore_host=args.replay_ignore_host,
+        server_replay_ignore_content=args.server_replay_ignore_content,
+        server_replay_ignore_params=args.server_replay_ignore_params,
+        server_replay_ignore_payload_params=args.server_replay_ignore_payload_params,
+        server_replay_ignore_host=args.server_replay_ignore_host,
 
         auth_nonanonymous = args.auth_nonanonymous,
         auth_singleuser = args.auth_singleuser,
@@ -621,14 +621,14 @@ def server_replay(parser):
     payload = group.add_mutually_exclusive_group()
     payload.add_argument(
         "--replay-ignore-content",
-        action="store_true", dest="replay_ignore_content", default=False,
+        action="store_true", dest="server_replay_ignore_content", default=False,
         help="""
             Ignore request's content while searching for a saved flow to replay
         """
     )
     payload.add_argument(
         "--replay-ignore-payload-param",
-        action="append", dest="replay_ignore_payload_params", type=str,
+        action="append", dest="server_replay_ignore_payload_params", type=str,
         help="""
             Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
             be ignored while searching for a saved flow to replay.
@@ -638,7 +638,7 @@ def server_replay(parser):
 
     group.add_argument(
         "--replay-ignore-param",
-        action="append", dest="replay_ignore_params", type=str,
+        action="append", dest="server_replay_ignore_params", type=str,
         help="""
             Request's parameters to be ignored while searching for a saved flow
             to replay. Can be passed multiple times.
@@ -647,7 +647,7 @@ def server_replay(parser):
     group.add_argument(
         "--replay-ignore-host",
         action="store_true",
-        dest="replay_ignore_host",
+        dest="server_replay_ignore_host",
         default=False,
         help="Ignore request's destination host while searching for a saved flow to replay")
 

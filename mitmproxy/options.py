@@ -47,10 +47,10 @@ class Options(optmanager.OptManager):
             stream_large_bodies=None,  # type: Optional[str]
             verbosity=2,  # type: int
             outfile=None,  # type: Tuple[str, str]
-            replay_ignore_content=False,  # type: bool
-            replay_ignore_params=(),  # type: Sequence[str]
-            replay_ignore_payload_params=(),  # type: Sequence[str]
-            replay_ignore_host=False,  # type: bool
+            server_replay_ignore_content=False,  # type: bool
+            server_replay_ignore_params=(),  # type: Sequence[str]
+            server_replay_ignore_payload_params=(),  # type: Sequence[str]
+            server_replay_ignore_host=False,  # type: bool
 
             # Proxy options
             auth_nonanonymous=False,  # type: bool
@@ -105,10 +105,10 @@ class Options(optmanager.OptManager):
         self.stream_large_bodies = stream_large_bodies
         self.verbosity = verbosity
         self.outfile = outfile
-        self.replay_ignore_content = replay_ignore_content
-        self.replay_ignore_params = replay_ignore_params
-        self.replay_ignore_payload_params = replay_ignore_payload_params
-        self.replay_ignore_host = replay_ignore_host
+        self.server_replay_ignore_content = server_replay_ignore_content
+        self.server_replay_ignore_params = server_replay_ignore_params
+        self.server_replay_ignore_payload_params = server_replay_ignore_payload_params
+        self.server_replay_ignore_host = server_replay_ignore_host
 
         # Proxy options
         self.auth_nonanonymous = auth_nonanonymous
