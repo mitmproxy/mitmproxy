@@ -39,7 +39,7 @@ class Options(optmanager.OptManager):
             scripts=(),  # type: Sequence[str]
             showhost=False,  # type: bool
             replacements=(),  # type: Sequence[Tuple[str, str, str]]
-            rheaders=(),  # type: Sequence[str]
+            server_replay_use_headers=(),  # type: Sequence[str]
             setheaders=(),  # type: Sequence[Tuple[str, str, str]]
             server_replay=None,  # type: Optional[str]
             stickycookie=None,  # type: Optional[str]
@@ -97,7 +97,7 @@ class Options(optmanager.OptManager):
         self.scripts = scripts
         self.showhost = showhost
         self.replacements = replacements
-        self.rheaders = rheaders
+        self.server_replay_use_headers = server_replay_use_headers
         self.setheaders = setheaders
         self.server_replay = server_replay
         self.stickycookie = stickycookie

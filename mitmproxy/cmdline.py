@@ -221,7 +221,7 @@ def get_common_options(args):
         replay_kill_extra=args.replay_kill_extra,
         no_server=args.no_server,
         refresh_server_playback=not args.norefresh,
-        rheaders=args.rheaders,
+        server_replay_use_headers=args.server_replay_use_headers,
         rfile=args.rfile,
         replacements=reps,
         setheaders=setheaders,
@@ -599,8 +599,8 @@ def server_replay(parser):
         help="Kill extra requests during replay."
     )
     group.add_argument(
-        "--rheader",
-        action="append", dest="rheaders", type=str,
+        "--server-replay-use-header",
+        action="append", dest="server_replay_use_headers", type=str,
         help="Request headers to be considered during replay. "
              "Can be passed multiple times."
     )

@@ -61,9 +61,9 @@ class ServerPlayback(object):
             key.append(p[0])
             key.append(p[1])
 
-        if self.options.rheaders:
+        if self.options.server_replay_use_headers:
             headers = []
-            for i in self.options.rheaders:
+            for i in self.options.server_replay_use_headers:
                 v = r.headers.get(i)
                 headers.append((i, v))
             key.append(headers)
@@ -101,7 +101,7 @@ class ServerPlayback(object):
         # prefixed with serverplayback_ where appropriate, and playback_ where
         # they're shared with client playback.
         #
-        # options.rheaders,
+        # options.server_replay_use_headers,
         # options.nopop,
         # options.replay_ignore_params,
         # options.replay_ignore_content,

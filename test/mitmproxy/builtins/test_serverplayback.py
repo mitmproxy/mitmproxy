@@ -127,7 +127,7 @@ class TestServerPlayback:
 
     def test_headers(self):
         s = serverplayback.ServerPlayback()
-        s.configure(options.Options(rheaders=["foo"]), [])
+        s.configure(options.Options(server_replay_use_headers=["foo"]), [])
 
         r = tutils.tflow(resp=True)
         r.request.headers["foo"] = "bar"
