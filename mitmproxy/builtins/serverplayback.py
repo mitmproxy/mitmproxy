@@ -36,12 +36,12 @@ class ServerPlayback(object):
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
         key = [str(r.port), str(r.scheme), str(r.method), str(path)]
-        if not self.options.replay_ignore_content:
+        if not self.options.server_replay_ignore_content:
             form_contents = r.urlencoded_form or r.multipart_form
-            if self.options.replay_ignore_payload_params and form_contents:
+            if self.options.server_replay_ignore_payload_params and form_contents:
                 params = [
                     strutils.always_bytes(i)
-                    for i in self.options.replay_ignore_payload_params
+                    for i in self.options.server_replay_ignore_payload_params
                 ]
                 for p in form_contents.items(multi=True):
                     if p[0] not in params:
@@ -49,11 +49,11 @@ class ServerPlayback(object):
             else:
                 key.append(str(r.raw_content))
 
-        if not self.options.replay_ignore_host:
+        if not self.options.server_replay_ignore_host:
             key.append(r.host)
 
         filtered = []
-        ignore_params = self.options.replay_ignore_params or []
+        ignore_params = self.options.server_replay_ignore_params or []
         for p in queriesArray:
             if p[0] not in ignore_params:
                 filtered.append(p)
@@ -61,9 +61,9 @@ class ServerPlayback(object):
             key.append(p[0])
             key.append(p[1])
 
-        if self.options.rheaders:
+        if self.options.server_replay_use_headers:
             headers = []
-            for i in self.options.rheaders:
+            for i in self.options.server_replay_use_headers:
                 v = r.headers.get(i)
                 headers.append((i, v))
             key.append(headers)
@@ -78,7 +78,7 @@ class ServerPlayback(object):
         """
         hsh = self._hash(request)
         if hsh in self.flowmap:
-            if self.options.nopop:
+            if self.options.server_replay_nopop:
                 return self.flowmap[hsh][0]
             else:
                 ret = self.flowmap[hsh].pop(0)
@@ -97,18 +97,6 @@ class ServerPlayback(object):
                     raise exceptions.OptionsError(str(e))
                 self.load(flows)
 
-        # FIXME: These options have to be renamed to something more sensible -
-        # prefixed with serverplayback_ where appropriate, and playback_ where
-        # they're shared with client playback.
-        #
-        # options.kill
-        # options.rheaders,
-        # options.nopop,
-        # options.replay_ignore_params,
-        # options.replay_ignore_content,
-        # options.replay_ignore_payload_params,
-        # options.replay_ignore_host
-
     def tick(self):
         if self.stop and not self.final_flow.live:
             ctx.master.shutdown()
@@ -125,7 +113,7 @@ class ServerPlayback(object):
                 if not self.flowmap and not self.options.keepserving:
                     self.final_flow = f
                     self.stop = True
-            elif self.options.kill:
+            elif self.options.replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url

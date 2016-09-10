@@ -22,7 +22,7 @@ class TestServerPlayback:
 
     def test_ignore_host(self):
         sp = serverplayback.ServerPlayback()
-        sp.configure(options.Options(replay_ignore_host=True), [])
+        sp.configure(options.Options(server_replay_ignore_host=True), [])
 
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
@@ -35,7 +35,7 @@ class TestServerPlayback:
 
     def test_ignore_content(self):
         s = serverplayback.ServerPlayback()
-        s.configure(options.Options(replay_ignore_content=False), [])
+        s.configure(options.Options(server_replay_ignore_content=False), [])
 
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
@@ -46,7 +46,7 @@ class TestServerPlayback:
         r2.request.content = b"bar"
         assert not s._hash(r) == s._hash(r2)
 
-        s.configure(options.Options(replay_ignore_content=True), [])
+        s.configure(options.Options(server_replay_ignore_content=True), [])
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
         r.request.content = b"foo"
@@ -63,8 +63,8 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(
             options.Options(
-                replay_ignore_content=True,
-                replay_ignore_payload_params=[
+                server_replay_ignore_content=True,
+                server_replay_ignore_payload_params=[
                     "param1", "param2"
                 ]
             ),
@@ -87,8 +87,8 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(
             options.Options(
-                replay_ignore_content=False,
-                replay_ignore_payload_params=[
+                server_replay_ignore_content=False,
+                server_replay_ignore_payload_params=[
                     "param1", "param2"
                 ]
             ),
@@ -127,7 +127,7 @@ class TestServerPlayback:
 
     def test_headers(self):
         s = serverplayback.ServerPlayback()
-        s.configure(options.Options(rheaders=["foo"]), [])
+        s.configure(options.Options(server_replay_use_headers=["foo"]), [])
 
         r = tutils.tflow(resp=True)
         r.request.headers["foo"] = "bar"
@@ -167,9 +167,9 @@ class TestServerPlayback:
 
         assert not s.next_flow(r)
 
-    def test_load_with_nopop(self):
+    def test_load_with_server_replay_nopop(self):
         s = serverplayback.ServerPlayback()
-        s.configure(options.Options(nopop=True), [])
+        s.configure(options.Options(server_replay_nopop=True), [])
 
         r = tutils.tflow(resp=True)
         r.request.headers["key"] = "one"
@@ -187,7 +187,7 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(
             options.Options(
-                replay_ignore_params=["param1", "param2"]
+                server_replay_ignore_params=["param1", "param2"]
             ),
             []
         )
@@ -208,7 +208,7 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(
             options.Options(
-                replay_ignore_payload_params=["param1", "param2"]
+                server_replay_ignore_payload_params=["param1", "param2"]
             ),
             []
         )
@@ -270,7 +270,7 @@ class TestServerPlayback:
     def test_server_playback_kill(self):
         state = flow.State()
         s = serverplayback.ServerPlayback()
-        o = options.Options(refresh_server_playback = True, kill=True)
+        o = options.Options(refresh_server_playback = True, replay_kill_extra=True)
         m = mastertest.RecordingMaster(o, None, state)
         m.addons.add(o, s)
 
