@@ -264,7 +264,7 @@ class Message(basetypes.Serializable):
 
         if isinstance(pattern, six.text_type):
             pattern = strutils.escaped_str_to_bytes(pattern)
-        
+
         replacements = 0
 
         with open(repl) as f:
@@ -275,7 +275,7 @@ class Message(basetypes.Serializable):
                 self.content, replacements = re.subn(
                     pattern, repl_chunk, self.content, flags=flags, count=count
                 )
-            replacements += self.headers.replace(pattern, repl_chunk, flags=flags, count=count)           
+            replacements += self.headers.replace(pattern, repl_chunk, flags=flags, count=count)
             return replacements
 
         return replacements

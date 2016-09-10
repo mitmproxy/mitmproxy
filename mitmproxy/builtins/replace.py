@@ -18,7 +18,7 @@ class Replace:
             s: the replacement string, as bytes
         """
         lst = []
-        for fpatt, rex, s in options.replacements:            
+        for fpatt, rex, s in options.replacements:
             cpatt = filt.parse(fpatt)
             file_repl = False
             if not cpatt:
@@ -38,7 +38,7 @@ class Replace:
                         "File not found : %s" % s[7:]
                     )
                 else:
-                    s=s[7:]    
+                    s = s[7:]
             lst.append((rex, s, cpatt, file_repl))
         self.lst = lst
 
