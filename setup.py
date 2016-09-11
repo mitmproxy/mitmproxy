@@ -85,7 +85,7 @@ setup(
         "tornado>=4.3, <4.5",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
-        "brotlipy>=0.5.1, <0.6",
+        "brotlipy>=0.5.1, <0.7",
     ],
     extras_require={
         ':sys_platform == "win32"': [
