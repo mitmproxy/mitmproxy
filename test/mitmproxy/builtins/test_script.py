@@ -137,6 +137,31 @@ class TestScript(mastertest.MasterTest):
 
 
 class TestScriptLoader(mastertest.MasterTest):
+    def test_run_once(self):
+        s = state.State()
+        o = options.Options(scripts=[])
+        m = master.FlowMaster(o, None, s)
+        sl = script.ScriptLoader()
+        m.addons.add(o, sl)
+
+        f = tutils.tflow(resp=True)
+        with m.handlecontext():
+            sc = sl.run_once(
+                tutils.test_data.path(
+                    "data/addonscripts/recorder.py"
+                ), [f]
+            )
+        evts = [i[1] for i in sc.ns.call_log]
+        assert evts == ['start', 'request', 'responseheaders', 'response', 'done']
+
+        with m.handlecontext():
+            tutils.raises(
+                "file not found",
+                sl.run_once,
+                "nonexistent",
+                [f]
+            )
+
     def test_simple(self):
         s = state.State()
         o = options.Options(scripts=[])

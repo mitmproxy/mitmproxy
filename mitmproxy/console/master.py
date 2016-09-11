@@ -22,7 +22,6 @@ from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import script
 from mitmproxy import utils
 import mitmproxy.options
 from mitmproxy.console import flowlist
@@ -329,39 +328,13 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop.widget = window
         self.loop.draw_screen()
 
-    def _run_script_method(self, method, s, f):
-        status, val = s.run(method, f)
-        if val:
-            if status:
-                signals.add_log("Method %s return: %s" % (method, val), "debug")
-            else:
-                signals.add_log(
-                    "Method %s error: %s" %
-                    (method, val[1]), "error")
-
     def run_script_once(self, command, f):
-        if not command:
-            return
-        signals.add_log("Running script on flow: %s" % command, "debug")
-
+        sc = self.addons.get("scriptloader")
         try:
-            s = script.Script(command)
-            s.load()
-        except script.ScriptException as e:
-            signals.status_message.send(
-                message='Error loading "{}".'.format(command)
-            )
-            signals.add_log('Error loading "{}":\n{}'.format(command, e), "error")
-            return
-
-        if f.request:
-            self._run_script_method("request", s, f)
-        if f.response:
-            self._run_script_method("response", s, f)
-        if f.error:
-            self._run_script_method("error", s, f)
-        s.unload()
-        signals.flow_change.send(self, flow = f)
+            with self.handlecontext():
+                sc.run_once(command, [f])
+        except mitmproxy.exceptions.AddonError as e:
+            signals.add_log("Script error: %s" % e, "warn")
 
     def toggle_eventlog(self):
         self.options.eventlog = not self.options.eventlog
