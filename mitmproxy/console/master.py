@@ -244,9 +244,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.logbuffer = urwid.SimpleListWalker([])
         self.follow = options.follow
 
-        if options.client_replay:
-            self.client_playback_path(options.client_replay)
-
         self.view_stack = []
 
         if options.app:
@@ -353,13 +350,6 @@ class ConsoleMaster(flow.FlowMaster):
             return flow.read_flows_from_paths(path)
         except exceptions.FlowReadException as e:
             signals.status_message.send(message=str(e))
-
-    def client_playback_path(self, path):
-        if not isinstance(path, list):
-            path = [path]
-        flows = self._readflows(path)
-        if flows:
-            self.start_client_playback(flows, False)
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)

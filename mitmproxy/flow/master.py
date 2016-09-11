@@ -53,7 +53,6 @@ class FlowMaster(controller.Master):
         if server:
             self.add_server(server)
         self.state = state
-        self.client_playback = None  # type: Optional[modules.ClientPlaybackState]
         self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.apps = modules.AppRegistry()
 
@@ -70,29 +69,7 @@ class FlowMaster(controller.Master):
         else:
             self.stream_large_bodies = False
 
-    def start_client_playback(self, flows, exit):
-        """
-            flows: List of flows.
-        """
-        self.client_playback = modules.ClientPlaybackState(flows, exit)
-
-    def stop_client_playback(self):
-        self.client_playback = None
-
     def tick(self, timeout):
-        if self.client_playback:
-            stop = (
-                self.client_playback.done() and
-                self.state.active_flow_count() == 0
-            )
-            exit = self.client_playback.exit
-            if stop:
-                self.stop_client_playback()
-                if exit:
-                    self.shutdown()
-            else:
-                self.client_playback.tick(self)
-
         return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
@@ -168,35 +145,47 @@ class FlowMaster(controller.Master):
 
     def replay_request(self, f, block=False):
         """
-            Returns None if successful, or error message if not.
+            Returns an http_replay.RequestReplayThred object.
+            May raise exceptions.ReplayError.
         """
         if f.live:
-            return "Can't replay live request."
-        if f.intercepted:
-            return "Can't replay while intercepting..."
-        if f.request.raw_content is None:
-            return "Can't replay request with missing content..."
-        if f.request:
-            f.backup()
-            f.request.is_replay = True
-
-            # TODO: We should be able to remove this.
-            if "Content-Length" in f.request.headers:
-                f.request.headers["Content-Length"] = str(len(f.request.raw_content))
-
-            f.response = None
-            f.error = None
-            # FIXME: process through all addons?
-            # self.process_new_request(f)
-            rt = http_replay.RequestReplayThread(
-                self.server.config,
-                f,
-                self.event_queue,
-                self.should_exit
+            raise exceptions.ReplayError(
+                "Can't replay live flow."
             )
-            rt.start()  # pragma: no cover
-            if block:
-                rt.join()
+        if f.intercepted:
+            raise exceptions.ReplayError(
+                "Can't replay intercepted flow."
+            )
+        if f.request.raw_content is None:
+            raise exceptions.ReplayError(
+                "Can't replay flow with missing content."
+            )
+        if not f.request:
+            raise exceptions.ReplayError(
+                "Can't replay flow with missing request."
+            )
+
+        f.backup()
+        f.request.is_replay = True
+
+        # TODO: We should be able to remove this.
+        if "Content-Length" in f.request.headers:
+            f.request.headers["Content-Length"] = str(len(f.request.raw_content))
+
+        f.response = None
+        f.error = None
+        # FIXME: process through all addons?
+        # self.process_new_request(f)
+        rt = http_replay.RequestReplayThread(
+            self.server.config,
+            f,
+            self.event_queue,
+            self.should_exit
+        )
+        rt.start()  # pragma: no cover
+        if block:
+            rt.join()
+        return rt
 
     @controller.handler
     def log(self, l):
@@ -225,9 +214,6 @@ class FlowMaster(controller.Master):
     @controller.handler
     def error(self, f):
         self.state.update_flow(f)
-        if self.client_playback:
-            self.client_playback.clear(f)
-        return f
 
     @controller.handler
     def request(self, f):
@@ -245,7 +231,6 @@ class FlowMaster(controller.Master):
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
-        return f
 
     @controller.handler
     def responseheaders(self, f):
@@ -255,18 +240,14 @@ class FlowMaster(controller.Master):
         except netlib.exceptions.HttpException:
             f.reply.kill()
             return
-        return f
 
     @controller.handler
     def response(self, f):
         self.state.update_flow(f)
-        if self.client_playback:
-            self.client_playback.clear(f)
-        return f
 
     @controller.handler
     def websockets_handshake(self, f):
-        return f
+        pass
 
     def handle_intercept(self, f):
         self.state.update_flow(f)

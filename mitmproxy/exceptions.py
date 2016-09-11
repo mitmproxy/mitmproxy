@@ -117,3 +117,7 @@ class OptionsError(Exception):
 
 class AddonError(Exception):
     pass
+
+
+class ReplayError(Exception):
+    pass

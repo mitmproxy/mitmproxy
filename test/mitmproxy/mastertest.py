@@ -1,8 +1,10 @@
+import contextlib
+
 from . import tutils
 import netlib.tutils
 
 from mitmproxy.flow import master
-from mitmproxy import flow, proxy, models, controller
+from mitmproxy import flow, proxy, models, controller, options
 
 
 class TestMaster:
@@ -47,3 +49,12 @@ class RecordingMaster(master.FlowMaster):
 
     def add_log(self, e, level):
         self.event_log.append((level, e))
+
+
+@contextlib.contextmanager
+def mockctx():
+    state = flow.State()
+    o = options.Options(refresh_server_playback = True, keepserving=False)
+    m = RecordingMaster(o, proxy.DummyServer(o), state)
+    with m.handlecontext():
+        yield
