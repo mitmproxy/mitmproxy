@@ -66,11 +66,13 @@ class ConsoleState(flow.State):
 
     def add_flow(self, f):
         super(ConsoleState, self).add_flow(f)
+        signals.flowlist_change.send(self)
         self.update_focus()
         return f
 
     def update_flow(self, f):
         super(ConsoleState, self).update_flow(f)
+        signals.flowlist_change.send(self)
         self.update_focus()
         return f
 
