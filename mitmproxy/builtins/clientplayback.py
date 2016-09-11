@@ -6,6 +6,7 @@ class ClientPlayback:
         self.flows = None
         self.current = None
         self.keepserving = None
+        self.has_replayed = False
 
     def count(self):
         if self.flows:
@@ -32,5 +33,7 @@ class ClientPlayback:
             self.current = None
         if self.flows and not self.current:
             self.current = ctx.master.replay_request(self.flows.pop(0))
-        if not self.flows and not self.current and not self.keepserving:
-            ctx.master.shutdown()
+            self.has_replayed = True
+        if self.has_replayed:
+            if not self.flows and not self.current and not self.keepserving:
+                ctx.master.shutdown()

@@ -57,20 +57,13 @@ class FlowMaster(controller.Master):
         self.apps = modules.AppRegistry()
 
     def start_app(self, host, port):
-        self.apps.add(
-            app.mapp,
-            host,
-            port
-        )
+        self.apps.add(app.mapp, host, port)
 
     def set_stream_large_bodies(self, max_size):
         if max_size is not None:
             self.stream_large_bodies = modules.StreamLargeBodies(max_size)
         else:
             self.stream_large_bodies = False
-
-    def tick(self, timeout):
-        return super(FlowMaster, self).tick(timeout)
 
     def duplicate_flow(self, f):
         """
@@ -267,10 +260,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def tcp_error(self, flow):
-        self.add_log("Error in TCP connection to {}: {}".format(
-            repr(flow.server_conn.address),
-            flow.error
-        ), "info")
+        pass
 
     @controller.handler
     def tcp_close(self, flow):
