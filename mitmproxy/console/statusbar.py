@@ -136,6 +136,8 @@ class StatusBar(urwid.WidgetWrap):
     def get_status(self):
         r = []
 
+        sreplay = self.master.addons.get("serverplayback")
+
         if len(self.master.options.setheaders):
             r.append("[")
             r.append(("heading_key", "H"))
@@ -148,11 +150,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "cplayback"))
             r.append(":%s]" % self.master.client_playback.count())
-        if self.master.options.server_replay:
+        if sreplay.count():
             r.append("[")
             r.append(("heading_key", "splayback"))
-            a = self.master.addons.get("serverplayback")
-            r.append(":%s]" % a.count())
+            r.append(":%s]" % sreplay.count())
         if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))
