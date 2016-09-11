@@ -10,6 +10,7 @@ import traceback
 from mitmproxy import exceptions
 from mitmproxy import controller
 from mitmproxy import ctx
+from mitmproxy.flow import master as flowmaster
 
 
 import watchdog.events
@@ -67,7 +68,11 @@ def scriptenv(path, args):
             tb = tb.tb_next
             if not os.path.abspath(s[0]).startswith(scriptdir):
                 break
-        ctx.log.error("Script error: %s" % "".join(traceback.format_exception(etype, value, tb)))
+        ctx.log.error(
+            "Script error: %s" % "".join(
+                traceback.format_exception(etype, value, tb)
+            )
+        )
     finally:
         sys.argv = oldargs
         sys.path.pop()
@@ -189,6 +194,15 @@ class ScriptLoader():
     """
         An addon that manages loading scripts from options.
     """
+    def run_once(self, command, flows):
+        sc = Script(command)
+        sc.load_script()
+        for f in flows:
+            for evt, o in flowmaster.event_sequence(f):
+                sc.run(evt, o)
+        sc.done()
+        return sc
+
     def configure(self, options, updated):
         if "scripts" in updated:
             for s in options.scripts:

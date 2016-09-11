@@ -15,6 +15,30 @@ from mitmproxy.onboarding import app
 from mitmproxy.protocol import http_replay
 
 
+def event_sequence(f):
+    if isinstance(f, models.HTTPFlow):
+        if f.request:
+            yield "request", f
+        if f.response:
+            yield "responseheaders", f
+            yield "response", f
+        if f.error:
+            yield "error", f
+    elif isinstance(f, models.TCPFlow):
+        messages = f.messages
+        f.messages = []
+        f.reply = controller.DummyReply()
+        yield "tcp_open", f
+        while messages:
+            f.messages.append(messages.pop(0))
+            yield "tcp_message", f
+        if f.error:
+            yield "tcp_error", f
+        yield "tcp_close", f
+    else:
+        raise NotImplementedError
+
+
 class FlowMaster(controller.Master):
 
     @property
@@ -114,28 +138,9 @@ class FlowMaster(controller.Master):
                 f.request.host = self.server.config.upstream_server.address.host
                 f.request.port = self.server.config.upstream_server.address.port
                 f.request.scheme = self.server.config.upstream_server.scheme
-
-            f.reply = controller.DummyReply()
-            if f.request:
-                self.request(f)
-            if f.response:
-                self.responseheaders(f)
-                self.response(f)
-            if f.error:
-                self.error(f)
-        elif isinstance(f, models.TCPFlow):
-            messages = f.messages
-            f.messages = []
-            f.reply = controller.DummyReply()
-            self.tcp_open(f)
-            while messages:
-                f.messages.append(messages.pop(0))
-                self.tcp_message(f)
-            if f.error:
-                self.tcp_error(f)
-            self.tcp_close(f)
-        else:
-            raise NotImplementedError()
+        f.reply = controller.DummyReply()
+        for e, o in event_sequence(f):
+            getattr(self, e)(o)
 
     def load_flows(self, fr):
         """
