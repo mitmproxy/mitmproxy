@@ -53,7 +53,7 @@ class HelpView(urwid.ListBox):
             ("o", "options"),
             ("q", "quit / return to previous page"),
             ("Q", "quit without confirm prompt"),
-            ("R", "replay of HTTP requests/responses"),
+            ("R", "replay of requests/responses from file"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)
