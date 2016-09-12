@@ -60,7 +60,7 @@ class CommonMixin:
         # Disconnect error
         l.request.path = "/p/305:d0"
         rt = self.master.replay_request(l, block=True)
-        assert not rt
+        assert rt
         if isinstance(self, tservers.HTTPUpstreamProxyTest):
             assert l.response.status_code == 502
         else:
@@ -72,7 +72,7 @@ class CommonMixin:
         # In upstream mode with ssl, the replay will fail as we cannot establish
         # SSL with the upstream proxy.
         rt = self.master.replay_request(l, block=True)
-        assert not rt
+        assert rt
         if isinstance(self, tservers.HTTPUpstreamProxyTest):
             assert l.response.status_code == 502
         else:

@@ -37,39 +37,6 @@ def test_app_registry():
     assert ar.get(r)
 
 
-class TestClientPlaybackState:
-
-    def test_tick(self):
-        first = tutils.tflow()
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
-        fm.start_client_playback([first, tutils.tflow()], True)
-        c = fm.client_playback
-        c.testing = True
-
-        assert not c.done()
-        assert not s.flow_count()
-        assert c.count() == 2
-        c.tick(fm)
-        assert s.flow_count()
-        assert c.count() == 1
-
-        c.tick(fm)
-        assert c.count() == 1
-
-        c.clear(c.current)
-        c.tick(fm)
-        assert c.count() == 0
-        c.clear(c.current)
-        assert c.done()
-
-        fm.state.clear()
-        fm.tick(timeout=0)
-
-        fm.stop_client_playback()
-        assert not fm.client_playback
-
-
 class TestHTTPFlow(object):
 
     def test_copy(self):
@@ -477,13 +444,13 @@ class TestFlowMaster:
         fm = flow.FlowMaster(None, None, s)
         f = tutils.tflow(resp=True)
         f.request.content = None
-        assert "missing" in fm.replay_request(f)
+        tutils.raises("missing", fm.replay_request, f)
 
         f.intercepted = True
-        assert "intercepting" in fm.replay_request(f)
+        tutils.raises("intercepted", fm.replay_request, f)
 
         f.live = True
-        assert "live" in fm.replay_request(f)
+        tutils.raises("live", fm.replay_request, f)
 
     def test_duplicate_flow(self):
         s = flow.State()
@@ -520,26 +487,6 @@ class TestFlowMaster:
         fm.error(f)
 
         fm.shutdown()
-
-    def test_client_playback(self):
-        s = flow.State()
-
-        f = tutils.tflow(resp=True)
-        pb = [tutils.tflow(resp=True), f]
-        fm = flow.FlowMaster(
-            options.Options(),
-            DummyServer(ProxyConfig(options.Options())),
-            s
-        )
-        assert not fm.start_client_playback(pb, False)
-        fm.client_playback.testing = True
-
-        assert not fm.state.flow_count()
-        fm.tick(0)
-        assert fm.state.flow_count()
-
-        f.error = Error("error")
-        fm.error(f)
 
 
 class TestRequest:

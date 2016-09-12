@@ -45,7 +45,6 @@ class TestDumpMaster(mastertest.MasterTest):
         m = dump.DumpMaster(None, o)
         f = tutils.tflow(err=True)
         m.error(f)
-        assert m.error(f)
         assert "error" in o.tfile.getvalue()
 
     def test_replay(self):

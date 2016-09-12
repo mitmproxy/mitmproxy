@@ -180,9 +180,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 self.state.enable_marked_filter()
             signals.flowlist_change.send(self)
         elif key == "r":
-            r = self.master.replay_request(self.flow)
-            if r:
-                signals.status_message.send(message=r)
+            self.master.replay_request(self.flow)
             signals.flowlist_change.send(self)
         elif key == "S":
             def stop_server_playback(response):
