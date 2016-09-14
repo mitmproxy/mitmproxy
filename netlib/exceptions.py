@@ -59,5 +59,6 @@ class InvalidCertificateException(TlsException):
 class Timeout(TcpException):
     pass
 
+
 class ProtocolException(NetlibException):
     pass

@@ -481,6 +481,7 @@ def proxy_options(parser):
         help="Use the client's IP for server-side connections"
     )
 
+
 def proxy_ssl_options(parser):
     # TODO: Agree to consistently either use "upstream" or "server".
     group = parser.add_argument_group("SSL")

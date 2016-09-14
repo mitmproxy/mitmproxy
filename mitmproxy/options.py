@@ -69,7 +69,7 @@ class Options(optmanager.OptManager):
             mode = "regular",  # type: str
             no_upstream_cert = False,  # type: bool
             rawtcp = False,  # type: bool
-            spoof_source_address = False, # type: bool
+            spoof_source_address = False,  # type: bool
             upstream_server = "",  # type: str
             upstream_auth = "",  # type: str
             ssl_version_client="secure",  # type: str
