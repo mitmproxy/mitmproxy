@@ -26,7 +26,8 @@ def response(flow):
     flow.response.content = flow.response.content.replace('https://', 'http://')
 
     # strip meta tag upgrade-insecure-requests in response body
-    flow.response.content = re.sub('<meta.*http-equiv=["\']Content-Security-Policy[\'"].*upgrade-insecure-requests.*?>','', flow.response.content, flags=re.IGNORECASE)	
+    csp_meta_tag_pattern = '<meta.*http-equiv=["\']Content-Security-Policy[\'"].*upgrade-insecure-requests.*?>'
+    flow.response.content = re.sub(csp_meta_tag_pattern, '', flow.response.content, flags=re.IGNORECASE)
 
     # strip links in 'Location' header
     if flow.response.headers.get('Location', '').startswith('https://'):
@@ -35,7 +36,7 @@ def response(flow):
         if hostname:
             secure_hosts.add(hostname)
         flow.response.headers['Location'] = location.replace('https://', 'http://', 1)
-	
+
     # strip upgrade-insecure-requests in Content-Security-Policy header
     if re.search('upgrade-insecure-requests', flow.response.headers.get('Content-Security-Policy', ''), flags=re.IGNORECASE):
         csp = flow.response.headers['Content-Security-Policy']
