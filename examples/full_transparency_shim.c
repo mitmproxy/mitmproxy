@@ -7,6 +7,14 @@
 #include <unistd.h>
 #include <errno.h>
 
+/* This setuid wrapper can be used to run mitmproxy in full transparency mode, as a normal user.
+ * It will set the required capabilities (CAP_NET_RAW), drop privileges, and will then run argv[1]
+ * with the same capabilities.
+ *
+ * It can be compiled as follows:
+ * gcc examples/mitmproxy_shim.c -o mitmproxy_shim -lcap
+*/
+
 int set_caps(cap_t cap_struct, cap_value_t *cap_list, size_t bufsize) {
 	int cap_count = bufsize / sizeof(cap_list[0]);
 
