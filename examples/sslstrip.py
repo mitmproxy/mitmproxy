@@ -16,8 +16,8 @@ def request(flow):
 
 
 def response(flow):
-    flow.request.headers.pop('Strict-Transport-Security', None)
-    flow.request.headers.pop('Public-Key-Pins', None)
+    flow.response.headers.pop('Strict-Transport-Security', None)
+    flow.response.headers.pop('Public-Key-Pins', None)
 
     # strip links in response body
     flow.response.content = flow.response.content.replace('https://', 'http://')
