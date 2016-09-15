@@ -22,7 +22,8 @@ At the moment, mitmproxy supports transparent proxying on OSX Lion and above,
 and all current flavors of Linux.
 
 Fully transparent mode
-=======
+======================
+
 By default mitmproxy will use its own local ip address for its server-side connections.
 In case this isn't desired, the --spoof-source-address argument can be used to
 use the client's ip address for server-side connections. The following config is
