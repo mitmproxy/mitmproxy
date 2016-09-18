@@ -115,7 +115,7 @@ class Options(urwid.WidgetWrap):
                     "Kill Extra",
                     "x",
                     lambda: master.options.replay_kill_extra,
-                    master.options.toggler("kill")
+                    master.options.toggler("replay_kill_extra")
                 ),
                 select.Option(
                     "No Refresh",
