@@ -223,7 +223,7 @@ def parse_cookie_header(line):
 def parse_cookie_headers(cookie_headers):
     cookie_list = []
     for header in cookie_headers:
-        cookie_list.extend(parse_cookie_header(header)[0])
+        cookie_list.extend(parse_cookie_header(header))
     return cookie_list
 
 
