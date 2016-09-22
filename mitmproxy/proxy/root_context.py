@@ -4,7 +4,6 @@ import sys
 
 import six
 
-from netlib import websockets
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import protocol
@@ -33,7 +32,7 @@ class RootContext(object):
         self.channel = channel
         self.config = config
 
-    def next_layer(self, top_layer, flow=None):
+    def next_layer(self, top_layer):
         """
         This function determines the next layer in the protocol stack.
 
@@ -43,22 +42,10 @@ class RootContext(object):
         Returns:
             The next layer
         """
-        layer = self._next_layer(top_layer, flow)
+        layer = self._next_layer(top_layer)
         return self.channel.ask("next_layer", layer)
 
-    def _next_layer(self, top_layer, flow):
-        if flow is not None:
-            # We already have a flow, try to derive the next information from it
-
-            # Check for WebSockets handshake
-            is_websockets = (
-                flow and
-                websockets.check_handshake(flow.request.headers) and
-                websockets.check_handshake(flow.response.headers)
-            )
-            if isinstance(top_layer, protocol.HttpLayer) and is_websockets:
-                return protocol.WebSocketsLayer(top_layer, flow)
-
+    def _next_layer(self, top_layer):
         try:
             d = top_layer.client_conn.rfile.peek(3)
         except netlib.exceptions.TcpException as e:
