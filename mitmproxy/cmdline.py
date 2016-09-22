@@ -1,14 +1,12 @@
 from __future__ import absolute_import, print_function, division
 
+import configargparse
 import os
 import re
-
-import configargparse
-
 from mitmproxy import exceptions
 from mitmproxy import filt
-from mitmproxy import platform
 from mitmproxy import options
+from mitmproxy import platform
 from netlib import human
 from netlib import tcp
 from netlib import version
@@ -257,6 +255,7 @@ def get_common_options(args):
         no_upstream_cert = args.no_upstream_cert,
         spoof_source_address = args.spoof_source_address,
         rawtcp = args.rawtcp,
+        websockets = args.websockets,
         upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
         ssl_version_client = args.ssl_version_client,
@@ -475,6 +474,13 @@ def proxy_options(parser):
                         "Disabled by default. "
                         "Default value will change in a future version."
                         )
+    websockets = group.add_mutually_exclusive_group()
+    websockets.add_argument("--websockets", action="store_true", dest="websockets")
+    websockets.add_argument("--no-websockets", action="store_false", dest="websockets",
+                            help="Explicitly enable/disable experimental WebSocket support. "
+                                 "Disabled by default as messages are only printed to the event log and not retained. "
+                                 "Default value will change in a future version."
+                            )
     group.add_argument(
         "--spoof-source-address",
         action="store_true", dest="spoof_source_address",
