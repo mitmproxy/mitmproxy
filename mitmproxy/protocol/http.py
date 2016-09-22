@@ -8,13 +8,14 @@ import time
 import traceback
 from mitmproxy import exceptions
 from mitmproxy import models
-from mitmproxy import protocol
+from mitmproxy.protocol import base
+from mitmproxy.protocol import websockets as pwebsockets
 from netlib import http
 from netlib import tcp
 from netlib import websockets
 
 
-class _HttpTransmissionLayer(protocol.base.Layer):
+class _HttpTransmissionLayer(base.Layer):
 
     def read_request(self):
         raise NotImplementedError()
@@ -79,7 +80,7 @@ class ConnectServerConnection(object):
         __nonzero__ = __bool__
 
 
-class UpstreamConnectLayer(protocol.base.Layer):
+class UpstreamConnectLayer(base.Layer):
 
     def __init__(self, ctx, connect_request):
         super(UpstreamConnectLayer, self).__init__(ctx)
@@ -119,7 +120,7 @@ class UpstreamConnectLayer(protocol.base.Layer):
         self.server_conn.address = address
 
 
-class HttpLayer(protocol.base.Layer):
+class HttpLayer(base.Layer):
 
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
@@ -449,7 +450,7 @@ class HttpLayer(protocol.base.Layer):
             )
 
         if is_websockets and self.config.options.websockets:
-            layer = protocol.WebSocketsLayer(self, flow)
+            layer = pwebsockets.WebSocketsLayer(self, flow)
         else:
             layer = self.ctx.next_layer(self)
 
