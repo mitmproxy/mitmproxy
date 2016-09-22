@@ -8,7 +8,10 @@ import six
 def always_bytes(unicode_or_bytes, *encode_args):
     if isinstance(unicode_or_bytes, six.text_type):
         return unicode_or_bytes.encode(*encode_args)
-    return unicode_or_bytes
+    elif isinstance(unicode_or_bytes, bytes) or unicode_or_bytes is None:
+        return unicode_or_bytes
+    else:
+        raise TypeError("Expected str or bytes, but got {}.".format(type(unicode_or_bytes).__name__))
 
 
 def native(s, *encoding_opts):

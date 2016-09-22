@@ -43,6 +43,15 @@ class TestHeaders(object):
         with raises(TypeError):
             Headers([[b"Host", u"not-bytes"]])
 
+    def test_set(self):
+        headers = Headers()
+        headers[u"foo"] = u"1"
+        headers[b"bar"] = b"2"
+        headers["baz"] = b"3"
+        with raises(TypeError):
+            headers["foobar"] = 42
+        assert len(headers) == 3
+
     def test_bytes(self):
         headers = Headers(Host="example.com")
         assert bytes(headers) == b"Host: example.com\r\n"
