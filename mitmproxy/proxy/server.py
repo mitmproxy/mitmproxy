@@ -132,7 +132,7 @@ class ConnectionHandler(object):
                 self.log(str(e), "warn")
                 self.log("Invalid certificate, closing connection. Pass --insecure to disable validation.", "warn")
             else:
-                self.log(repr(e), "warn")
+                self.log(str(e), "warn")
 
                 self.log(traceback.format_exc(), "debug")
             # If an error propagates to the topmost level,
