@@ -484,14 +484,12 @@ class _Connection(object):
         if not isinstance(self.connection, SSL.Connection):
             if not getattr(self.wfile, "closed", False):
                 try:
-                    if self.wfile:
-                        self.wfile.flush()
-                        self.wfile.close()
+                    self.wfile.flush()
+                    self.wfile.close()
                 except exceptions.TcpDisconnect:
                     pass
 
-            if self.rfile:
-                self.rfile.close()
+            self.rfile.close()
         else:
             try:
                 self.connection.shutdown()
@@ -731,11 +729,7 @@ class TCPClient(_Connection):
 
     def connect(self):
         try:
-            # Allow the socket to be manipulated by using the server_conn stub.
-            if not self.connection:
-                connection = socket.socket(self.address.family, socket.SOCK_STREAM)
-            else:
-                connection = self.connection
+            connection = socket.socket(self.address.family, socket.SOCK_STREAM)
 
             if self.spoof_source_address:
                 try:
@@ -744,7 +738,8 @@ class TCPClient(_Connection):
                         connection.setsockopt(socket.SOL_IP, 19, 1)
                 except socket.error as e:
                     raise exceptions.TcpException(
-                        "Failed to spoof the source address: " + e.strerror)
+                        "Failed to spoof the source address: " + e.strerror
+                    )
             if self.source_address:
                 connection.bind(self.source_address())
             connection.connect(self.address())
