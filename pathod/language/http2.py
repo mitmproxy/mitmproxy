@@ -189,7 +189,7 @@ class Response(_HTTP2Message):
 
             resp = http.Response(
                 b'HTTP/2.0',
-                self.status_code.string(),
+                int(self.status_code.string()),
                 b'',
                 headers,
                 body,
