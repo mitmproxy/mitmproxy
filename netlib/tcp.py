@@ -731,6 +731,7 @@ class TCPClient(_Connection):
 
     def connect(self):
         try:
+            # Allow the socket to be manipulated by using the server_conn stub.
             if not self.connection:
                 connection = socket.socket(self.address.family, socket.SOCK_STREAM)
             else:
