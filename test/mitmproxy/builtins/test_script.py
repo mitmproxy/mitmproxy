@@ -1,10 +1,12 @@
-import time
+import traceback
 
-from mitmproxy.builtins import script
+import sys
+import time
 from mitmproxy import exceptions
+from mitmproxy import options
+from mitmproxy.builtins import script
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy import options
 
 from .. import tutils, mastertest
 
@@ -104,6 +106,10 @@ class TestScript(mastertest.MasterTest):
         f = tutils.tflow(resp=True)
         m.request(f)
         assert m.event_log[0][0] == "error"
+        assert len(m.event_log[0][1].splitlines()) == 6
+        assert 'addonscripts/error.py", line 7, in request' in m.event_log[0][1]
+        assert 'addonscripts/error.py", line 3, in mkerr' in m.event_log[0][1]
+        assert m.event_log[0][1].endswith("ValueError: Error!\n")
 
     def test_duplicate_flow(self):
         s = state.State()
@@ -134,6 +140,24 @@ class TestScript(mastertest.MasterTest):
         assert sc.ns.event_log == [
             'scriptstart', 'addonstart', 'addonconfigure'
         ]
+
+
+class TestCutTraceback:
+    def raise_(self, i):
+        if i > 0:
+            self.raise_(i - 1)
+        raise RuntimeError()
+
+    def test_simple(self):
+        try:
+            self.raise_(4)
+        except RuntimeError:
+            tb = sys.exc_info()[2]
+            tb_cut = script.cut_traceback(tb, "test_simple")
+            assert len(traceback.extract_tb(tb_cut)) == 5
+
+            tb_cut2 = script.cut_traceback(tb, "nonexistent")
+            assert len(traceback.extract_tb(tb_cut2)) == len(traceback.extract_tb(tb))
 
 
 class TestScriptLoader(mastertest.MasterTest):
