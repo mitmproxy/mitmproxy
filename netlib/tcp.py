@@ -738,10 +738,11 @@ class TCPClient(_Connection):
 
             if self.spoof_source_address:
                 try:
+                    # 19 is `IP_TRANSPARENT`, which is only available on Python 3.3+ on some OSes
                     if not connection.getsockopt(socket.SOL_IP, 19):
                         connection.setsockopt(socket.SOL_IP, 19, 1)
                 except socket.error as e:
-                    raise exceptions.ProtocolException(
+                    raise exceptions.TcpException(
                         "Failed to spoof the source address: " + e.strerror)
             if self.source_address:
                 connection.bind(self.source_address())
