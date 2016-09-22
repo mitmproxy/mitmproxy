@@ -244,6 +244,7 @@ class FHeadResponse(_Rex):
 class FBod(_Rex):
     code = "b"
     help = "Body"
+    flags = re.DOTALL
 
     @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
@@ -264,6 +265,7 @@ class FBod(_Rex):
 class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
+    flags = re.DOTALL
 
     @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
@@ -280,6 +282,7 @@ class FBodRequest(_Rex):
 class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
+    flags = re.DOTALL
 
     @only(HTTPFlow, TCPFlow)
     def __call__(self, f):
