@@ -153,12 +153,13 @@ class HttpLayer(base.Layer):
                 # We optimistically guess there might be an HTTP client on the
                 # other end
                 self.send_error_response(400, repr(e))
-                self.log(
-                    "request",
-                    "warn",
-                    "HTTP protocol error in client request: %s" % e
+                six.reraise(
+                    exceptions.ProtocolException,
+                    exceptions.ProtocolException(
+                        "HTTP protocol error in client request: {}".format(e)
+                    ),
+                    sys.exc_info()[2]
                 )
-                return
 
             self.log("request", "debug", [repr(request)])
 

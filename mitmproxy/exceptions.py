@@ -27,6 +27,10 @@ class Kill(ProxyException):
 
 
 class ProtocolException(ProxyException):
+    """
+    ProtocolExceptions are caused by invalid user input, unavailable network resources,
+    or other events that are outside of our influence.
+    """
     pass
 
 
