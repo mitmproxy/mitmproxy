@@ -163,12 +163,8 @@ class ServerConnectionMixin(object):
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
 
-        if self.config.options.spoof_source_address:
-            self.server_conn = models.ServerConnection(
-                address, (self.ctx.client_conn.address.host, 0), True)
-        else:
-            self.server_conn = models.ServerConnection(
-                address, (self.server_conn.source_address.host, 0))
+        self.server_conn = models.ServerConnection(address,
+                (self.server_conn.source_address.host, 0), self.config.options.spoof_source_address)
 
     def connect(self):
         """
