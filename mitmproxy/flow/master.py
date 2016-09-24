@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 import os
 import sys
 
-from typing import List, Optional, Set  # noqa
+from typing import Optional  # noqa
 
 import netlib.exceptions
 from mitmproxy import controller
@@ -138,37 +138,44 @@ class FlowMaster(controller.Master):
 
     def replay_request(self, f, block=False):
         """
-            Returns an http_replay.RequestReplayThred object.
-            May raise exceptions.ReplayError.
+        Replay a HTTP request to receive a new response from the server.
+
+        Args:
+            f: The flow to replay.
+            block: If True, this function will wait for the replay to finish.
+                This causes a deadlock if activated in the main thread.
+
+        Returns:
+            The thread object doing the replay.
+
+        Raises:
+            exceptions.ReplayException, if the flow is in a state
+            where it is ineligible for replay.
         """
+
         if f.live:
-            raise exceptions.ReplayError(
+            raise exceptions.ReplayException(
                 "Can't replay live flow."
             )
         if f.intercepted:
-            raise exceptions.ReplayError(
+            raise exceptions.ReplayException(
                 "Can't replay intercepted flow."
             )
         if f.request.raw_content is None:
-            raise exceptions.ReplayError(
+            raise exceptions.ReplayException(
                 "Can't replay flow with missing content."
             )
         if not f.request:
-            raise exceptions.ReplayError(
+            raise exceptions.ReplayException(
                 "Can't replay flow with missing request."
             )
 
         f.backup()
         f.request.is_replay = True
 
-        # TODO: We should be able to remove this.
-        if "Content-Length" in f.request.headers:
-            f.request.headers["Content-Length"] = str(len(f.request.raw_content))
-
         f.response = None
         f.error = None
-        # FIXME: process through all addons?
-        # self.process_new_request(f)
+
         rt = http_replay.RequestReplayThread(
             self.server.config,
             f,
