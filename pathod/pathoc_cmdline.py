@@ -210,8 +210,8 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     reqs = []
     for r in args.requests:
         if os.path.isfile(r):
-            data = open(r).read()
-            r = data
+            with open(r) as f:
+                r = f.read()
         try:
             reqs.append(language.parse_pathoc(r, args.use_http2))
         except language.ParseException as v:

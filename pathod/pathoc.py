@@ -536,11 +536,11 @@ def main(args):  # pragma: no cover
                             if ret and args.oneshot:
                                 return
                             # We consume the queue when we can, so it doesn't build up.
-                            for i_ in p.wait(timeout=0, finish=False):
+                            for _ in p.wait(timeout=0, finish=False):
                                 pass
                         except exceptions.NetlibException:
                             break
-                    for i_ in p.wait(timeout=0.01, finish=True):
+                    for _ in p.wait(timeout=0.01, finish=True):
                         pass
             except exceptions.TcpException as v:
                 print(str(v), file=sys.stderr)
