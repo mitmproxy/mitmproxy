@@ -50,7 +50,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     )
     parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
-        help='Repeat N times. If 0 repeat for ever.'
+        help='Repeat N times. Pass -1 to repeat infinitely.'
     )
     parser.add_argument(
         "-w", dest='wait', default=0, type=float, metavar="N",
