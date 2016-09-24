@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 import urwid
 
 import netlib.http.url
+from mitmproxy import exceptions
 from mitmproxy.console import common
 from mitmproxy.console import signals
 from mitmproxy.flow import export
@@ -180,7 +181,10 @@ class ConnectionItem(urwid.WidgetWrap):
                 self.state.enable_marked_filter()
             signals.flowlist_change.send(self)
         elif key == "r":
-            self.master.replay_request(self.flow)
+            try:
+                self.master.replay_request(self.flow)
+            except exceptions.ReplayException as e:
+                signals.add_log("Replay error: %s" % e, "warn")
             signals.flowlist_change.send(self)
         elif key == "S":
             def stop_server_playback(response):
