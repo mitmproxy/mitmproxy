@@ -39,7 +39,7 @@ class TestReplace(mastertest.MasterTest):
         )
         m = master.FlowMaster(o, None, s)
         sa = replace.Replace()
-        m.addons.add(o, sa)
+        m.addons.add(sa)
 
         f = tutils.tflow()
         f.request.content = b"foo"

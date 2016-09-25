@@ -249,4 +249,4 @@ class ScriptLoader():
                 else:
                     ctx.log.info("Loading script: %s" % s)
                     sc = Script(s)
-                    ctx.master.addons.add(options, sc)
+                    ctx.master.addons.add(sc)

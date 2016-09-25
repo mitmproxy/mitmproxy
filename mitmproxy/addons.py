@@ -11,7 +11,7 @@ class Addons(object):
     def __init__(self, master):
         self.chain = []
         self.master = master
-        master.options.changed.connect(self.options_update)
+        master.options.changed.connect(self._options_update)
 
     def get(self, name):
         """
@@ -23,12 +23,12 @@ class Addons(object):
             if name == _get_name(i):
                 return i
 
-    def options_update(self, options, updated):
+    def _options_update(self, options, updated):
         for i in self.chain:
             with self.master.handlecontext():
                 i.configure(options, updated)
 
-    def add(self, options, *addons):
+    def add(self, *addons):
         if not addons:
             raise ValueError("No addons specified.")
         self.chain.extend(addons)

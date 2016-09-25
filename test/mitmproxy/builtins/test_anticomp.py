@@ -11,7 +11,7 @@ class TestAntiComp(mastertest.MasterTest):
         o = options.Options(anticomp = True)
         m = master.FlowMaster(o, None, s)
         sa = anticomp.AntiComp()
-        m.addons.add(o, sa)
+        m.addons.add(sa)
 
         f = tutils.tflow(resp=True)
         m.request(f)
