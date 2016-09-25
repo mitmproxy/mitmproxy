@@ -1,7 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import sys
-
 from typing import Optional  # noqa
 import typing  # noqa
 
@@ -49,12 +47,17 @@ class DumpMaster(flow.FlowMaster):
         self.set_stream_large_bodies(options.stream_large_bodies)
 
         if not self.options.no_server and server:
-            print("Proxy server listening at http://{}".format(server.address))
+            self.add_log(
+                "Proxy server listening at http://{}".format(server.address),
+                "info"
+            )
 
         if self.server and self.options.http2 and not tcp.HAS_ALPN:  # pragma: no cover
-            print("ALPN support missing (OpenSSL 1.0.2+ required)!\n"
-                  "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
-                  file=sys.stderr)
+            self.add_log(
+                "ALPN support missing (OpenSSL 1.0.2+ required)!\n"
+                "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
+                "error"
+            )
 
         if options.rfile:
             try:

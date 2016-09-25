@@ -64,13 +64,13 @@ setup(
         "blinker>=1.4, <1.5",
         "click>=6.2, <7.0",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
-        "configargparse>=0.10, <0.11",
+        "configargparse>=0.10, <0.12",
         "construct>=2.5.2, <2.6",
         "cryptography>=1.3, <1.6",
         "cssutils>=1.0.1, <1.1",
         "Flask>=0.10.1, <0.12",
         "h2>=2.4.1, <3",
-        "html2text>=2016.1.8, <=2016.5.29",
+        "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=4.0.1, <5",
         "jsbeautifier>=1.6.3, <1.7",
         "lxml>=3.5.0, <=3.6.0",  # no wheels for 3.6.1 yet.
@@ -103,7 +103,7 @@ setup(
         'dev': [
             "tox>=2.3, <3",
             "mock>=2.0, <2.1",
-            "pytest>=2.8.7, <3",
+            "pytest>=3, <3.1",
             "pytest-cov>=2.2.1, <3",
             "pytest-timeout>=1.0.0, <2",
             "pytest-xdist>=1.14, <2",
