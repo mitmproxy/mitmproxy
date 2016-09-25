@@ -48,7 +48,7 @@ class DumpMaster(flow.FlowMaster):
         self.options = self.options  # type: Options
         self.set_stream_large_bodies(options.stream_large_bodies)
 
-        if not self.options.no_server:
+        if not self.options.no_server and server:
             print("Proxy server listening at http://{}".format(server.address))
 
         if self.server and self.options.http2 and not tcp.HAS_ALPN:  # pragma: no cover
