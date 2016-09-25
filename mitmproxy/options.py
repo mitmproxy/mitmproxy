@@ -41,7 +41,7 @@ class Options(optmanager.OptManager):
             replacements=(),  # type: Sequence[Tuple[str, str, str]]
             server_replay_use_headers=(),  # type: Sequence[str]
             setheaders=(),  # type: Sequence[Tuple[str, str, str]]
-            server_replay=None,  # type: Optional[str]
+            server_replay=None,  # type: Sequence[str]
             stickycookie=None,  # type: Optional[str]
             stickyauth=None,  # type: Optional[str]
             stream_large_bodies=None,  # type: Optional[str]
