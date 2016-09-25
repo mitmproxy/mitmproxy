@@ -3,7 +3,6 @@ from six.moves import cStringIO as StringIO
 
 from mitmproxy import dump, flow, exceptions
 from . import tutils, mastertest
-import mock
 
 
 class TestDumpMaster(mastertest.MasterTest):
@@ -102,8 +101,7 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def test_app(self):
         o = dump.Options(app=True)
-        s = mock.MagicMock()
-        m = dump.DumpMaster(s, o)
+        m = dump.DumpMaster(None, o)
         assert len(m.apps.apps) == 1
 
     def test_replacements(self):

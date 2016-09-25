@@ -478,21 +478,31 @@ class Pathoc(tcp.TCPClient):
 
 
 def main(args):  # pragma: no cover
-    memo = set([])
-    trycount = 0
+    memo = set()
     p = None
+
+    if args.repeat == 1:
+        requests = args.requests
+    else:
+        # If we are replaying more than once, we must convert the request generators to lists
+        # or they will be exhausted after the first run.
+        # This is bad for the edge-case where get:/:x10000000 (see 0da3e51) is combined with -n 2,
+        # but does not matter otherwise.
+        requests = [list(x) for x in args.requests]
+
     try:
-        cnt = 0
+        requests_done = 0
         while True:
-            if cnt == args.repeat and args.repeat != 0:
+            if requests_done == args.repeat:
                 break
-            if args.wait and cnt != 0:
+            if args.wait and requests_done > 0:
                 time.sleep(args.wait)
 
-            cnt += 1
-            playlist = itertools.chain(*args.requests)
+            requests_done += 1
             if args.random:
-                playlist = random.choice(args.requests)
+                playlist = random.choice(requests)
+            else:
+                playlist = itertools.chain.from_iterable(requests)
             p = Pathoc(
                 (args.host, args.port),
                 ssl=args.ssl,
@@ -536,11 +546,11 @@ def main(args):  # pragma: no cover
                             if ret and args.oneshot:
                                 return
                             # We consume the queue when we can, so it doesn't build up.
-                            for i_ in p.wait(timeout=0, finish=False):
+                            for _ in p.wait(timeout=0, finish=False):
                                 pass
                         except exceptions.NetlibException:
                             break
-                    for i_ in p.wait(timeout=0.01, finish=True):
+                    for _ in p.wait(timeout=0.01, finish=True):
                         pass
             except exceptions.TcpException as v:
                 print(str(v), file=sys.stderr)

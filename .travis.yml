@@ -53,7 +53,7 @@ install:
     fi
   - pip install tox
 
-script: tox -- --cov netlib --cov mitmproxy --cov pathod
+script: tox -- --cov netlib --cov mitmproxy --cov pathod -v
 
 after_success:
   - |

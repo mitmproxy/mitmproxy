@@ -11,7 +11,7 @@ class TestSetHeaders(mastertest.MasterTest):
         o = options.Options(**opts)
         m = mastertest.RecordingMaster(o, None, s)
         sh = setheaders.SetHeaders()
-        m.addons.add(o, sh)
+        m.addons.add(sh)
         return m, sh
 
     def test_configure(self):

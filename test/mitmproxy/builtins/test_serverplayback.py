@@ -242,7 +242,7 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         o = options.Options(refresh_server_playback = True, keepserving=False)
         m = mastertest.RecordingMaster(o, None, state)
-        m.addons.add(o, s)
+        m.addons.add(s)
 
         f = tutils.tflow()
         f.response = netlib.tutils.tresp(content=f.request.content)
@@ -272,7 +272,7 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         o = options.Options(refresh_server_playback = True, replay_kill_extra=True)
         m = mastertest.RecordingMaster(o, None, state)
-        m.addons.add(o, s)
+        m.addons.add(s)
 
         f = tutils.tflow()
         f.response = netlib.tutils.tresp(content=f.request.content)

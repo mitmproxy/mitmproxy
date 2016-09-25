@@ -26,7 +26,7 @@ class TestStream(mastertest.MasterTest):
             m = master.FlowMaster(o, None, s)
             sa = filestreamer.FileStreamer()
 
-            m.addons.add(o, sa)
+            m.addons.add(sa)
             f = tutils.tflow(resp=True)
             m.request(f)
             m.response(f)
@@ -36,7 +36,7 @@ class TestStream(mastertest.MasterTest):
 
             m.options.outfile = (p, "ab")
 
-            m.addons.add(o, sa)
+            m.addons.add(sa)
             f = tutils.tflow()
             m.request(f)
             m.addons.remove(sa)

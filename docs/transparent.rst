@@ -1,5 +1,6 @@
 .. _transparent:
 
+====================
 Transparent Proxying
 ====================
 
@@ -19,6 +20,34 @@ destination of the TCP connection.
 
 At the moment, mitmproxy supports transparent proxying on OSX Lion and above,
 and all current flavors of Linux.
+
+Fully transparent mode
+======================
+
+By default mitmproxy will use its own local ip address for its server-side connections.
+In case this isn't desired, the --spoof-source-address argument can be used to
+use the client's ip address for server-side connections. The following config is
+required for this mode to work:
+
+    CLIENT_NET=192.168.1.0/24
+    TABLE_ID=100
+    MARK=1
+
+    echo "$TABLE_ID     mitmproxy" >> /etc/iproute2/rt_tables
+    iptables -t mangle -A PREROUTING -d $CLIENT_NET -j MARK --set-mark $MARK
+    iptables -t nat -A PREROUTING -p tcp -s $CLIENT_NET --match multiport --dports 80,443 -j REDIRECT --to-port 8080
+
+    ip rule add fwmark $MARK lookup $TABLE_ID
+    ip route add local $CLIENT_NET dev lo table $TABLE_ID
+
+This mode does require root privileges though. There's a wrapper in the examples directory
+called 'mitmproxy_shim.c', which will enable you to use this mode with dropped priviliges.
+It can be used as follows:
+
+    gcc examples/mitmproxy_shim.c -o mitmproxy_shim -lcap
+    sudo chown root:root mitmproxy_shim
+    sudo chmod u+s mitmproxy_shim
+    ./mitmproxy_shim $(which mitmproxy) -T --spoof-source-address
 
 .. _iptables: http://www.netfilter.org/
 .. _pf: https://en.wikipedia.org/wiki/PF_\(firewall\)

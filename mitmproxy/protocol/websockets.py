@@ -1,14 +1,12 @@
 from __future__ import absolute_import, print_function, division
 
+import netlib.exceptions
 import socket
 import struct
-
 from OpenSSL import SSL
-
 from mitmproxy import exceptions
 from mitmproxy.protocol import base
-
-import netlib.exceptions
+from netlib import strutils
 from netlib import tcp
 from netlib import websockets
 
@@ -49,22 +47,28 @@ class WebSocketsLayer(base.Layer):
         self.server_extensions = websockets.get_extensions(self._flow.response.headers)
 
     def _handle_frame(self, frame, source_conn, other_conn, is_server):
+        sender = "server" if is_server else "client"
         self.log(
-            "WebSockets Frame received from {}".format("server" if is_server else "client"),
+            "WebSockets Frame received from {}".format(sender),
             "debug",
             [repr(frame)]
         )
 
         if frame.header.opcode & 0x8 == 0:
+            self.log(
+                "{direction} websocket {direction} {server}".format(
+                    server=repr(self.server_conn.address),
+                    direction="<-" if is_server else "->",
+                ),
+                "info",
+                strutils.bytes_to_escaped_str(frame.payload, keep_spacing=True).splitlines()
+            )
             # forward the data frame to the other side
             other_conn.send(bytes(frame))
-            self.log("WebSockets frame received by {}: {}".format(is_server, frame), "debug")
         elif frame.header.opcode in (websockets.OPCODE.PING, websockets.OPCODE.PONG):
             # just forward the ping/pong to the other side
             other_conn.send(bytes(frame))
         elif frame.header.opcode == websockets.OPCODE.CLOSE:
-            other_conn.send(bytes(frame))
-
             code = '(status code missing)'
             msg = None
             reason = '(message missing)'
@@ -73,11 +77,13 @@ class WebSocketsLayer(base.Layer):
                 msg = websockets.CLOSE_REASON.get_name(code, default='unknown status code')
             if len(frame.payload) > 2:
                 reason = frame.payload[2:]
-            self.log("WebSockets connection closed: {} {}, {}".format(code, msg, reason), "info")
+            self.log("WebSockets connection closed by {}: {} {}, {}".format(sender, code, msg, reason), "info")
 
+            other_conn.send(bytes(frame))
             # close the connection
             return False
         else:
+            self.log("Unknown WebSockets frame received from {}".format(sender), "info", [repr(frame)])
             # unknown frame - just forward it
             other_conn.send(bytes(frame))
 

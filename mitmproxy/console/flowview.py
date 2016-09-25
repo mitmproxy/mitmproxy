@@ -5,6 +5,7 @@ import os
 import sys
 
 import urwid
+from mitmproxy import exceptions
 from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
@@ -544,7 +545,10 @@ class FlowView(tabs.Tabs):
         elif key == "p":
             self.view_prev_flow(self.flow)
         elif key == "r":
-            self.master.replay_request(self.flow)
+            try:
+                self.master.replay_request(self.flow)
+            except exceptions.ReplayException as e:
+                signals.add_log("Replay error: %s" % e, "warn")
             signals.flow_change.send(self, flow = self.flow)
         elif key == "V":
             if self.flow.modified():

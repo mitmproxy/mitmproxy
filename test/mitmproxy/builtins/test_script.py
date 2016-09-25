@@ -1,10 +1,12 @@
-import time
+import traceback
 
-from mitmproxy.builtins import script
+import sys
+import time
 from mitmproxy import exceptions
+from mitmproxy import options
+from mitmproxy.builtins import script
 from mitmproxy.flow import master
 from mitmproxy.flow import state
-from mitmproxy import options
 
 from .. import tutils, mastertest
 
@@ -61,7 +63,7 @@ class TestScript(mastertest.MasterTest):
                 "data/addonscripts/recorder.py"
             )
         )
-        m.addons.add(o, sc)
+        m.addons.add(sc)
         assert sc.ns.call_log == [
             ("solo", "start", (), {}),
             ("solo", "configure", (o, o.keys()), {})
@@ -82,7 +84,7 @@ class TestScript(mastertest.MasterTest):
             with open("foo.py", "w"):
                 pass
             sc = script.Script("foo.py")
-            m.addons.add(o, sc)
+            m.addons.add(sc)
 
             for _ in range(100):
                 with open("foo.py", "a") as f:
@@ -100,17 +102,20 @@ class TestScript(mastertest.MasterTest):
         sc = script.Script(
             tutils.test_data.path("data/addonscripts/error.py")
         )
-        m.addons.add(o, sc)
+        m.addons.add(sc)
         f = tutils.tflow(resp=True)
         m.request(f)
         assert m.event_log[0][0] == "error"
+        assert len(m.event_log[0][1].splitlines()) == 6
+        assert 'addonscripts/error.py", line 7, in request' in m.event_log[0][1]
+        assert 'addonscripts/error.py", line 3, in mkerr' in m.event_log[0][1]
+        assert m.event_log[0][1].endswith("ValueError: Error!\n")
 
     def test_duplicate_flow(self):
         s = state.State()
         o = options.Options()
         fm = master.FlowMaster(o, None, s)
         fm.addons.add(
-            o,
             script.Script(
                 tutils.test_data.path("data/addonscripts/duplicate_flow.py")
             )
@@ -130,10 +135,28 @@ class TestScript(mastertest.MasterTest):
                 "data/addonscripts/addon.py"
             )
         )
-        m.addons.add(o, sc)
+        m.addons.add(sc)
         assert sc.ns.event_log == [
             'scriptstart', 'addonstart', 'addonconfigure'
         ]
+
+
+class TestCutTraceback:
+    def raise_(self, i):
+        if i > 0:
+            self.raise_(i - 1)
+        raise RuntimeError()
+
+    def test_simple(self):
+        try:
+            self.raise_(4)
+        except RuntimeError:
+            tb = sys.exc_info()[2]
+            tb_cut = script.cut_traceback(tb, "test_simple")
+            assert len(traceback.extract_tb(tb_cut)) == 5
+
+            tb_cut2 = script.cut_traceback(tb, "nonexistent")
+            assert len(traceback.extract_tb(tb_cut2)) == len(traceback.extract_tb(tb))
 
 
 class TestScriptLoader(mastertest.MasterTest):
@@ -142,7 +165,7 @@ class TestScriptLoader(mastertest.MasterTest):
         o = options.Options(scripts=[])
         m = master.FlowMaster(o, None, s)
         sl = script.ScriptLoader()
-        m.addons.add(o, sl)
+        m.addons.add(sl)
 
         f = tutils.tflow(resp=True)
         with m.handlecontext():
@@ -167,7 +190,7 @@ class TestScriptLoader(mastertest.MasterTest):
         o = options.Options(scripts=[])
         m = master.FlowMaster(o, None, s)
         sc = script.ScriptLoader()
-        m.addons.add(o, sc)
+        m.addons.add(sc)
         assert len(m.addons) == 1
         o.update(
             scripts = [
@@ -198,7 +221,7 @@ class TestScriptLoader(mastertest.MasterTest):
         )
         m = mastertest.RecordingMaster(o, None, s)
         sc = script.ScriptLoader()
-        m.addons.add(o, sc)
+        m.addons.add(sc)
 
         debug = [(i[0], i[1]) for i in m.event_log if i[0] == "debug"]
         assert debug == [

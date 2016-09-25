@@ -34,6 +34,11 @@ class TestResponseCore(object):
         assert r.status_code == 200
         assert r.content == b""
 
+        r = Response.make(418, "teatime")
+        assert r.status_code == 418
+        assert r.content == b"teatime"
+        assert r.headers["content-length"] == "7"
+
         Response.make(content=b"foo")
         Response.make(content="foo")
         with raises(TypeError):

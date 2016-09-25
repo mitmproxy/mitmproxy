@@ -8,6 +8,8 @@ def test_always_bytes():
     assert strutils.always_bytes("foo") == b"foo"
     with tutils.raises(ValueError):
         strutils.always_bytes(u"\u2605", "ascii")
+    with tutils.raises(TypeError):
+        strutils.always_bytes(42, "ascii")
 
 
 def test_native():

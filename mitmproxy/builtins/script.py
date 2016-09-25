@@ -53,6 +53,33 @@ def parse_command(command):
     return args[0], args[1:]
 
 
+def cut_traceback(tb, func_name):
+    """
+    Cut off a traceback at the function with the given name.
+    The func_name's frame is excluded.
+
+    Args:
+        tb: traceback object, as returned by sys.exc_info()[2]
+        func_name: function name
+
+    Returns:
+        Reduced traceback.
+    """
+    tb_orig = tb
+
+    for _, _, fname, _ in traceback.extract_tb(tb):
+        tb = tb.tb_next
+        if fname == func_name:
+            break
+
+    if tb is None:
+        # We could not find the method, take the full stack trace.
+        # This may happen on some Python interpreters/flavors (e.g. PyInstaller).
+        return tb_orig
+    else:
+        return tb
+
+
 @contextlib.contextmanager
 def scriptenv(path, args):
     oldargs = sys.argv
@@ -63,11 +90,7 @@ def scriptenv(path, args):
         yield
     except Exception:
         etype, value, tb = sys.exc_info()
-        scriptdir = os.path.dirname(os.path.abspath(path))
-        for i, s in enumerate(reversed(traceback.extract_tb(tb))):
-            tb = tb.tb_next
-            if not os.path.abspath(s[0]).startswith(scriptdir):
-                break
+        tb = cut_traceback(tb, "scriptenv").tb_next
         ctx.log.error(
             "Script error: %s" % "".join(
                 traceback.format_exception(etype, value, tb)
@@ -226,4 +249,4 @@ class ScriptLoader():
                 else:
                     ctx.log.info("Loading script: %s" % s)
                     sc = Script(s)
-                    ctx.master.addons.add(options, sc)
+                    ctx.master.addons.add(sc)

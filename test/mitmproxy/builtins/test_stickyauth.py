@@ -11,7 +11,7 @@ class TestStickyAuth(mastertest.MasterTest):
         o = options.Options(stickyauth = ".*")
         m = master.FlowMaster(o, None, s)
         sa = stickyauth.StickyAuth()
-        m.addons.add(o, sa)
+        m.addons.add(sa)
 
         f = tutils.tflow(resp=True)
         f.request.headers["authorization"] = "foo"
