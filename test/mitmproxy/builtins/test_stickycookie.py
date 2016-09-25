@@ -17,7 +17,7 @@ class TestStickyCookie(mastertest.MasterTest):
         o = options.Options(stickycookie = ".*")
         m = master.FlowMaster(o, None, s)
         sc = stickycookie.StickyCookie()
-        m.addons.add(o, sc)
+        m.addons.add(sc)
         return s, m, sc
 
     def test_config(self):
@@ -30,7 +30,7 @@ class TestStickyCookie(mastertest.MasterTest):
 
     def test_simple(self):
         s, m, sc = self.mk()
-        m.addons.add(m.options, sc)
+        m.addons.add(sc)
 
         f = tutils.tflow(resp=True)
         f.response.headers["set-cookie"] = "foo=bar"

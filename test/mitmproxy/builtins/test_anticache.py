@@ -11,7 +11,7 @@ class TestAntiCache(mastertest.MasterTest):
         o = options.Options(anticache = True)
         m = master.FlowMaster(o, None, s)
         sa = anticache.AntiCache()
-        m.addons.add(o, sa)
+        m.addons.add(sa)
 
         f = tutils.tflow(resp=True)
         m.request(f)
