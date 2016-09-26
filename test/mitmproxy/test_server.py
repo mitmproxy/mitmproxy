@@ -101,10 +101,16 @@ class CommonMixin:
         if not self.ssl:
             return
 
+        if getattr(self, 'reverse', False):
+            # In reverse proxy mode, we expect to use the upstream host as our SNI value
+            expected_sni = "127.0.0.1"
+        else:
+            expected_sni = "testserver.com"
+
         f = self.pathod("304", sni="testserver.com")
         assert f.status_code == 304
         log = self.server.last_log()
-        assert log["request"]["sni"] == "testserver.com"
+        assert log["request"]["sni"] == expected_sni
 
 
 class TcpMixin:

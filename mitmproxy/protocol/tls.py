@@ -326,12 +326,12 @@ class TlsLayer(base.Layer):
           the server connection.
     """
 
-    def __init__(self, ctx, client_tls, server_tls):
+    def __init__(self, ctx, client_tls, server_tls, custom_server_sni = None):
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
 
-        self._custom_server_sni = None
+        self._custom_server_sni = custom_server_sni
         self._client_hello = None  # type: TlsClientHello
 
     def __call__(self):
