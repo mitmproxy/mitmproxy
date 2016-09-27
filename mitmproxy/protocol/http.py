@@ -184,6 +184,10 @@ class HttpLayer(base.Layer):
                 self.channel.ask("error", flow)
                 return
 
+            # update host header in reverse proxy mode
+            if self.mode == "reverse":
+                flow.request.headers["Host"] = self.config.upstream_server.address.host
+
             # set upstream auth
             if self.mode == "upstream" and self.config.upstream_auth is not None:
                 flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
