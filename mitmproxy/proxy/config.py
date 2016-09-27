@@ -142,6 +142,8 @@ class ProxyConfig:
         self.upstream_auth = None
         if options.upstream_server:
             self.upstream_server = parse_server_spec(options.upstream_server)
+            if options.mode == "reverse" and not any(header[1] == "Host" for header in options.setheaders):
+                options.setheaders += (["~q", "Host", self.upstream_server.address.host],)
         if options.upstream_auth:
             self.upstream_auth = parse_upstream_auth(options.upstream_auth)
 

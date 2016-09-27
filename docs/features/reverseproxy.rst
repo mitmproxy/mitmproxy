@@ -29,29 +29,14 @@ them to what the server expects.
 Host Header
 -----------
 
-In reverse proxy mode, mitmproxy does not rewrite the host header. While often useful, this
-may lead to issues with public web servers. For example, consider the following scenario:
+In reverse proxy mode, mitmproxy automatically rewrites the Host header to match the
+upstream server. This allows mitmproxy to easily connect to existing endpoints on the
+open web (e.g. ``mitmproxy -R https://example.com``).
 
-.. code-block:: none
-    :emphasize-lines: 5
+However, keep in mind that absolute URLs within the returned document or HTTP redirects will
+NOT be rewritten by mitmproxy. This means that if you click on a link for "http://example.com"
+in the returned web page, you will be taken directly to that URL, bypassing mitmproxy.
 
-    >>> mitmdump -d -R http://example.com/
-    >>> curl http://localhost:8080/
-
-    >> GET https://example.com/
-        Host: localhost:8080
-        User-Agent: curl/7.35.0
-        [...]
-
-    << 404 Not Found 345B
-
-Since the Host header doesn't match "example.com", an error is returned.
-There are two ways to solve this:
-
-1. Modify the hosts file of your OS so that "example.com" resolves to your proxy's IP.
-   Then, access example.com directly. Make sure that your proxy can still resolve the original IP
-   or specify an IP in mitmproxy.
-2. Use mitmproxy's :ref:`setheaders` feature to rewrite the host header:
-   ``--setheader :~q:Host:example.com``.
-   However, keep in mind that absolute URLs within the returned document or HTTP redirects will
-   cause the client application to bypass the proxy.
+One possible way to address this is to modify the hosts file of your OS so that "example.com"
+resolves to your proxy's IP, and then access the proxy by going directly to example.com.
+Make sure that your proxy can still resolve the original IP, or specify an IP in mitmproxy.
