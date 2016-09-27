@@ -154,8 +154,11 @@ def _read_set_cookie_pairs(s, off=0):
                     # 'expires' values can contain commas in them so they need to
                     # be handled separately.
 
+                    # We actually bank on the fact that the expires value WILL
+                    # contain a comma. Things will fail, if they don't.
+
                     # '3' is just a heuristic we use to determine whether we've
-                    # only read a part of the datetime and should read more.
+                    # only read a part of the expires value and we should read more.
                     if len(rhs) <= 3:
                         trail, off = _read_value(s, off + 1, ";,")
                         rhs = rhs + "," + trail
