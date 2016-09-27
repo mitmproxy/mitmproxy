@@ -348,12 +348,9 @@ class HttpLayer(base.Layer):
         elif self.mode == "upstream":
             pass
         else:
-            # Setting request.host also updates the host header, which we want to preserve
-            host_header = flow.request.headers.get("host", None)
-            flow.request.host = self.__initial_server_conn.address.host
-            flow.request.port = self.__initial_server_conn.address.port
-            if host_header:
-                flow.request.headers["host"] = host_header
+            # Don't set .host directly, that would update the host header.
+            flow.request.data.host = self.__initial_server_conn.address.host
+            flow.request.data.port = self.__initial_server_conn.address.port
             flow.request.scheme = "https" if self.__initial_server_tls else "http"
 
         request_reply = self.channel.ask("request", flow)
@@ -380,10 +377,10 @@ class HttpLayer(base.Layer):
                 raise exceptions.HttpProtocolException("Cannot change scheme in upstream proxy mode.")
             """
             # This is a very ugly (untested) workaround to solve a very ugly problem.
-            if self.server_conn and self.server_conn.tls_established and not ssl:
+            if self.server_conn and self.server_conn.tls_established and not tls:
                 self.disconnect()
                 self.connect()
-            elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
+            elif tls and not hasattr(self, "connected_to") or self.connected_to != address:
                 if self.server_conn.tls_established:
                     self.disconnect()
                     self.connect()
