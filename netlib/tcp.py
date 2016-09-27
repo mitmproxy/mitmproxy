@@ -727,9 +727,13 @@ class TCPClient(_Connection):
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
+    def makesocket(self):
+        # some parties (cuckoo sandbox) need to hook this
+        return socket.socket(self.address.family, socket.SOCK_STREAM)
+
     def connect(self):
         try:
-            connection = socket.socket(self.address.family, socket.SOCK_STREAM)
+            connection = self.makesocket()
 
             if self.spoof_source_address:
                 try:
