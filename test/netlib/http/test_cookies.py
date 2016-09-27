@@ -187,6 +187,11 @@ def test_parse_set_cookie_pairs():
 
 
 def test_parse_set_cookie_header():
+    def set_cookie_equal(obs, exp):
+        assert obs[0] == exp[0]
+        assert obs[1] == exp[1]
+        assert obs[2].items(multi=True) == exp[2]
+
     vals = [
         [
             "", None
@@ -196,29 +201,61 @@ def test_parse_set_cookie_header():
         ],
         [
             "one=uno",
-            [("one", "uno", ())]
+            [
+                ("one", "uno", ())
+            ]
         ],
         [
             "one=uno; foo=bar",
-            [("one", "uno", (("foo", "bar"),))]
+            [
+                ("one", "uno", (("foo", "bar"),))
+            ]
         ],
         [
             "one=uno; foo=bar; foo=baz",
-            [("one", "uno", (("foo", "bar"), ("foo", "baz")))]
+            [
+                ("one", "uno", (("foo", "bar"), ("foo", "baz")))
+            ]
+        ],
+        # Comma Separated Variant of Set-Cookie Headers
+        [
+            "foo=bar, doo=dar",
+            [
+                ("foo", "bar", ()),
+                ("doo", "dar", ()),
+            ]
+        ],
+        [
+            "foo=bar; path=/, doo=dar; roo=rar; zoo=zar",
+            [
+                ("foo", "bar", (("path", "/"),)),
+                ("doo", "dar", (("roo", "rar"), ("zoo", "zar"))),
+            ]
+        ],
+        [
+            "foo=bar; expires=Mon, 24 Aug 2037",
+            [
+                ("foo", "bar", (("expires", "Mon, 24 Aug 2037"),)),
+            ]
+        ],
+        [
+            "foo=bar; expires=Mon, 24 Aug 2037 00:00:00 GMT, doo=dar",
+            [
+                ("foo", "bar", (("expires", "Mon, 24 Aug 2037 00:00:00 GMT"),)),
+                ("doo", "dar", ()),
+            ]
         ],
     ]
     for s, expected in vals:
         ret = cookies.parse_set_cookie_header(s)
         if expected:
-            assert ret[0][0] == expected[0][0]
-            assert ret[0][1] == expected[0][1]
-            assert ret[0][2].items(multi=True) == expected[0][2]
+            for i in range(len(expected)):
+                set_cookie_equal(ret[i], expected[i])
 
-            s2 = cookies.format_set_cookie_header(*ret[0])
+            s2 = cookies.format_set_cookie_header(ret)
             ret2 = cookies.parse_set_cookie_header(s2)
-            assert ret2[0][0] == expected[0][0]
-            assert ret2[0][1] == expected[0][1]
-            assert ret2[0][2].items(multi=True) == expected[0][2]
+            for i in range(len(expected)):
+                set_cookie_equal(ret2[i], expected[i])
         else:
             assert ret is None
 
