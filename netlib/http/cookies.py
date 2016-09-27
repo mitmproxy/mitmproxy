@@ -188,12 +188,12 @@ def _has_special(s):
     return False
 
 
-def _format_pairs(lst, specials=(), sep="; "):
+def _format_pairs(pairs, specials=(), sep="; "):
     """
         specials: A lower-cased list of keys that will not be quoted.
     """
     vals = []
-    for k, v in lst:
+    for k, v in pairs:
         if v is None:
             vals.append(k)
         else:
@@ -256,24 +256,33 @@ def parse_set_cookie_header(line):
 
 
 def parse_set_cookie_headers(headers):
-    ret = []
+    rv = []
     for header in headers:
         cookies = parse_set_cookie_header(header)
         if cookies:
             for name, value, attrs in cookies:
-                ret.append((name, SetCookie(value, attrs)))
-    return ret
+                rv.append((name, SetCookie(value, attrs)))
+    return rv
 
 
-def format_set_cookie_header(name, value, attrs):
+def format_set_cookie_header(set_cookies):
     """
         Formats a Set-Cookie header value.
     """
-    pairs = [(name, value)]
-    pairs.extend(
-        attrs.fields if hasattr(attrs, "fields") else attrs
-    )
-    return _format_set_cookie_pairs(pairs)
+
+    rv = []
+
+    for set_cookie in set_cookies:
+        name, value, attrs = set_cookie
+
+        pairs = [(name, value)]
+        pairs.extend(
+            attrs.fields if hasattr(attrs, "fields") else attrs
+        )
+
+        rv.append(_format_set_cookie_pairs(pairs))
+
+    return ", ".join(rv)
 
 
 def refresh_set_cookie_header(c, delta):
@@ -303,10 +312,10 @@ def refresh_set_cookie_header(c, delta):
             # For now, we just ignore this.
             attrs = attrs.with_delitem("expires")
 
-    ret = format_set_cookie_header(name, value, attrs)
-    if not ret:
+    rv = format_set_cookie_header([(name, value, attrs)])
+    if not rv:
         raise ValueError("Invalid Cookie")
-    return ret
+    return rv
 
 
 def get_expiration_ts(cookie_attrs):

@@ -155,7 +155,7 @@ class Response(message.Message):
     def _set_cookies(self, value):
         cookie_headers = []
         for k, v in value:
-            header = cookies.format_set_cookie_header(k, v[0], v[1])
+            header = cookies.format_set_cookie_header([(k, v[0], v[1])])
             cookie_headers.append(header)
         self.headers.set_all("set-cookie", cookie_headers)
 
