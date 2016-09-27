@@ -470,7 +470,7 @@ class TestFlowMaster:
             DummyServer(ProxyConfig(options.Options())),
             s
         )
-        assert not fm.new_request("GET", "http", "example.com", 80, "/")
+        assert fm.new_request("GET", "http", "example.com", 80, "/")
 
     def test_create_flow(self):
         s = flow.State()
