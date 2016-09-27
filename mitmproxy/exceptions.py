@@ -7,9 +7,6 @@ See also: http://lucumr.pocoo.org/2014/10/16/on-error-handling/
 """
 from __future__ import absolute_import, print_function, division
 
-import sys
-import traceback
-
 
 class ProxyException(Exception):
 
@@ -30,6 +27,10 @@ class Kill(ProxyException):
 
 
 class ProtocolException(ProxyException):
+    """
+    ProtocolExceptions are caused by invalid user input, unavailable network resources,
+    or other events that are outside of our influence.
+    """
     pass
 
 
@@ -76,27 +77,6 @@ class ContentViewException(ProxyException):
 
 class ReplayException(ProxyException):
     pass
-
-
-class ScriptException(ProxyException):
-
-    @classmethod
-    def from_exception_context(cls, cut_tb=1):
-        """
-        Must be called while the current stack handles an exception.
-
-        Args:
-            cut_tb: remove N frames from the stack trace to hide internal calls.
-        """
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-
-        while cut_tb > 0:
-            exc_traceback = exc_traceback.tb_next
-            cut_tb -= 1
-
-        tb = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-
-        return cls(tb)
 
 
 class FlowReadException(ProxyException):

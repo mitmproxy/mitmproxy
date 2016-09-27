@@ -605,7 +605,7 @@ class ConnectionCloser(object):
 
 class TCPClient(_Connection):
 
-    def __init__(self, address, source_address=None):
+    def __init__(self, address, source_address=None, spoof_source_address=None):
         super(TCPClient, self).__init__(None)
         self.address = address
         self.source_address = source_address
@@ -613,6 +613,7 @@ class TCPClient(_Connection):
         self.server_certs = []
         self.ssl_verification_error = None  # type: Optional[exceptions.InvalidCertificateException]
         self.sni = None
+        self.spoof_source_address = spoof_source_address
 
     @property
     def address(self):
@@ -729,6 +730,16 @@ class TCPClient(_Connection):
     def connect(self):
         try:
             connection = socket.socket(self.address.family, socket.SOCK_STREAM)
+
+            if self.spoof_source_address:
+                try:
+                    # 19 is `IP_TRANSPARENT`, which is only available on Python 3.3+ on some OSes
+                    if not connection.getsockopt(socket.SOL_IP, 19):
+                        connection.setsockopt(socket.SOL_IP, 19, 1)
+                except socket.error as e:
+                    raise exceptions.TcpException(
+                        "Failed to spoof the source address: " + e.strerror
+                    )
             if self.source_address:
                 connection.bind(self.source_address())
             connection.connect(self.address())

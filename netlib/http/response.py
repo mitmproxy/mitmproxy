@@ -84,15 +84,6 @@ class Response(message.Message):
             (),
             None
         )
-        # Assign this manually to update the content-length header.
-        if isinstance(content, bytes):
-            resp.content = content
-        elif isinstance(content, str):
-            resp.text = content
-        else:
-            raise TypeError("Expected content to be str or bytes, but is {}.".format(
-                type(content).__name__
-            ))
 
         # Headers can be list or dict, we differentiate here.
         if isinstance(headers, dict):
@@ -102,6 +93,16 @@ class Response(message.Message):
         else:
             raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
                 type(headers).__name__
+            ))
+
+        # Assign this manually to update the content-length header.
+        if isinstance(content, bytes):
+            resp.content = content
+        elif isinstance(content, str):
+            resp.text = content
+        else:
+            raise TypeError("Expected content to be str or bytes, but is {}.".format(
+                type(content).__name__
             ))
 
         return resp

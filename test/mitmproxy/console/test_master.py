@@ -107,7 +107,7 @@ def test_format_keyvals():
 
 
 def test_options():
-    assert console.master.Options(kill=True)
+    assert console.master.Options(replay_kill_extra=True)
 
 
 class TestMaster(mastertest.MasterTest):

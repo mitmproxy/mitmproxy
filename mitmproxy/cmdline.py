@@ -1,14 +1,12 @@
 from __future__ import absolute_import, print_function, division
 
+import configargparse
 import os
 import re
-
-import configargparse
-
 from mitmproxy import exceptions
 from mitmproxy import filt
-from mitmproxy import platform
 from mitmproxy import options
+from mitmproxy import platform
 from netlib import human
 from netlib import tcp
 from netlib import version
@@ -218,10 +216,10 @@ def get_common_options(args):
         anticache=args.anticache,
         anticomp=args.anticomp,
         client_replay=args.client_replay,
-        kill=args.kill,
+        replay_kill_extra=args.replay_kill_extra,
         no_server=args.no_server,
         refresh_server_playback=not args.norefresh,
-        rheaders=args.rheaders,
+        server_replay_use_headers=args.server_replay_use_headers,
         rfile=args.rfile,
         replacements=reps,
         setheaders=setheaders,
@@ -233,11 +231,11 @@ def get_common_options(args):
         showhost=args.showhost,
         outfile=args.outfile,
         verbosity=args.verbose,
-        nopop=args.nopop,
-        replay_ignore_content=args.replay_ignore_content,
-        replay_ignore_params=args.replay_ignore_params,
-        replay_ignore_payload_params=args.replay_ignore_payload_params,
-        replay_ignore_host=args.replay_ignore_host,
+        server_replay_nopop=args.server_replay_nopop,
+        server_replay_ignore_content=args.server_replay_ignore_content,
+        server_replay_ignore_params=args.server_replay_ignore_params,
+        server_replay_ignore_payload_params=args.server_replay_ignore_payload_params,
+        server_replay_ignore_host=args.server_replay_ignore_host,
 
         auth_nonanonymous = args.auth_nonanonymous,
         auth_singleuser = args.auth_singleuser,
@@ -255,7 +253,9 @@ def get_common_options(args):
         listen_port = args.port,
         mode = mode,
         no_upstream_cert = args.no_upstream_cert,
+        spoof_source_address = args.spoof_source_address,
         rawtcp = args.rawtcp,
+        websockets = args.websockets,
         upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
         ssl_version_client = args.ssl_version_client,
@@ -474,6 +474,18 @@ def proxy_options(parser):
                         "Disabled by default. "
                         "Default value will change in a future version."
                         )
+    websockets = group.add_mutually_exclusive_group()
+    websockets.add_argument("--websockets", action="store_true", dest="websockets")
+    websockets.add_argument("--no-websockets", action="store_false", dest="websockets",
+                            help="Explicitly enable/disable experimental WebSocket support. "
+                                 "Disabled by default as messages are only printed to the event log and not retained. "
+                                 "Default value will change in a future version."
+                            )
+    group.add_argument(
+        "--spoof-source-address",
+        action="store_true", dest="spoof_source_address",
+        help="Use the client's IP for server-side connections"
+    )
 
 
 def proxy_ssl_options(parser):
@@ -594,13 +606,13 @@ def server_replay(parser):
         help="Replay server responses from a saved file."
     )
     group.add_argument(
-        "-k", "--kill",
-        action="store_true", dest="kill", default=False,
+        "-k", "--replay-kill-extra",
+        action="store_true", dest="replay_kill_extra", default=False,
         help="Kill extra requests during replay."
     )
     group.add_argument(
-        "--rheader",
-        action="append", dest="rheaders", type=str,
+        "--server-replay-use-header",
+        action="append", dest="server_replay_use_headers", type=str,
         help="Request headers to be considered during replay. "
              "Can be passed multiple times."
     )
@@ -614,21 +626,21 @@ def server_replay(parser):
     )
     group.add_argument(
         "--no-pop",
-        action="store_true", dest="nopop", default=False,
+        action="store_true", dest="server_replay_nopop", default=False,
         help="Disable response pop from response flow. "
              "This makes it possible to replay same response multiple times."
     )
     payload = group.add_mutually_exclusive_group()
     payload.add_argument(
         "--replay-ignore-content",
-        action="store_true", dest="replay_ignore_content", default=False,
+        action="store_true", dest="server_replay_ignore_content", default=False,
         help="""
             Ignore request's content while searching for a saved flow to replay
         """
     )
     payload.add_argument(
         "--replay-ignore-payload-param",
-        action="append", dest="replay_ignore_payload_params", type=str,
+        action="append", dest="server_replay_ignore_payload_params", type=str,
         help="""
             Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
             be ignored while searching for a saved flow to replay.
@@ -638,7 +650,7 @@ def server_replay(parser):
 
     group.add_argument(
         "--replay-ignore-param",
-        action="append", dest="replay_ignore_params", type=str,
+        action="append", dest="server_replay_ignore_params", type=str,
         help="""
             Request's parameters to be ignored while searching for a saved flow
             to replay. Can be passed multiple times.
@@ -647,7 +659,7 @@ def server_replay(parser):
     group.add_argument(
         "--replay-ignore-host",
         action="store_true",
-        dest="replay_ignore_host",
+        dest="server_replay_ignore_host",
         default=False,
         help="Ignore request's destination host while searching for a saved flow to replay")
 

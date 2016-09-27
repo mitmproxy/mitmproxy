@@ -14,6 +14,7 @@ if six.PY2:  # pragma: no cover
         return x
 
     def _always_bytes(x):
+        strutils.always_bytes(x, "utf-8", "replace")  # raises a TypeError if x != str/bytes/None.
         return x
 else:
     # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.

@@ -136,6 +136,9 @@ class StatusBar(urwid.WidgetWrap):
     def get_status(self):
         r = []
 
+        sreplay = self.master.addons.get("serverplayback")
+        creplay = self.master.addons.get("clientplayback")
+
         if len(self.master.options.setheaders):
             r.append("[")
             r.append(("heading_key", "H"))
@@ -144,17 +147,14 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "R"))
             r.append("eplacing]")
-        if self.master.client_playback:
+        if creplay.count():
             r.append("[")
             r.append(("heading_key", "cplayback"))
-            r.append(":%s to go]" % self.master.client_playback.count())
-        if self.master.server_playback:
+            r.append(":%s]" % creplay.count())
+        if sreplay.count():
             r.append("[")
             r.append(("heading_key", "splayback"))
-            if self.master.options.nopop:
-                r.append(":%s in file]" % self.master.server_playback.count())
-            else:
-                r.append(":%s to go]" % self.master.server_playback.count())
+            r.append(":%s]" % sreplay.count())
         if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))
@@ -193,7 +193,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("showhost")
         if not self.master.options.refresh_server_playback:
             opts.append("norefresh")
-        if self.master.options.kill:
+        if self.master.options.replay_kill_extra:
             opts.append("killextra")
         if self.master.options.no_upstream_cert:
             opts.append("no-upstream-cert")

@@ -10,6 +10,7 @@ import traceback
 from mitmproxy import exceptions
 from mitmproxy import controller
 from mitmproxy import ctx
+from mitmproxy.flow import master as flowmaster
 
 
 import watchdog.events
@@ -52,6 +53,33 @@ def parse_command(command):
     return args[0], args[1:]
 
 
+def cut_traceback(tb, func_name):
+    """
+    Cut off a traceback at the function with the given name.
+    The func_name's frame is excluded.
+
+    Args:
+        tb: traceback object, as returned by sys.exc_info()[2]
+        func_name: function name
+
+    Returns:
+        Reduced traceback.
+    """
+    tb_orig = tb
+
+    for _, _, fname, _ in traceback.extract_tb(tb):
+        tb = tb.tb_next
+        if fname == func_name:
+            break
+
+    if tb is None:
+        # We could not find the method, take the full stack trace.
+        # This may happen on some Python interpreters/flavors (e.g. PyInstaller).
+        return tb_orig
+    else:
+        return tb
+
+
 @contextlib.contextmanager
 def scriptenv(path, args):
     oldargs = sys.argv
@@ -62,12 +90,12 @@ def scriptenv(path, args):
         yield
     except Exception:
         etype, value, tb = sys.exc_info()
-        scriptdir = os.path.dirname(os.path.abspath(path))
-        for i, s in enumerate(reversed(traceback.extract_tb(tb))):
-            tb = tb.tb_next
-            if not os.path.abspath(s[0]).startswith(scriptdir):
-                break
-        ctx.log.error("Script error: %s" % "".join(traceback.format_exception(etype, value, tb)))
+        tb = cut_traceback(tb, "scriptenv").tb_next
+        ctx.log.error(
+            "Script error: %s" % "".join(
+                traceback.format_exception(etype, value, tb)
+            )
+        )
     finally:
         sys.argv = oldargs
         sys.path.pop()
@@ -189,6 +217,15 @@ class ScriptLoader():
     """
         An addon that manages loading scripts from options.
     """
+    def run_once(self, command, flows):
+        sc = Script(command)
+        sc.load_script()
+        for f in flows:
+            for evt, o in flowmaster.event_sequence(f):
+                sc.run(evt, o)
+        sc.done()
+        return sc
+
     def configure(self, options, updated):
         if "scripts" in updated:
             for s in options.scripts:
@@ -212,4 +249,4 @@ class ScriptLoader():
                 else:
                     ctx.log.info("Loading script: %s" % s)
                     sc = Script(s)
-                    ctx.master.addons.add(options, sc)
+                    ctx.master.addons.add(sc)

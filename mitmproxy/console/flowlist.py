@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 import urwid
 
 import netlib.http.url
+from mitmproxy import exceptions
 from mitmproxy.console import common
 from mitmproxy.console import signals
 from mitmproxy.flow import export
@@ -18,14 +19,15 @@ def _mkhelp():
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
+        ("E", "export flow to file"),
         ("f", "filter view"),
         ("F", "toggle follow flow list"),
         ("L", "load saved flows"),
         ("m", "toggle flow mark"),
         ("M", "toggle marked flow view"),
         ("n", "create a new request"),
-        ("E", "export flow to file"),
         ("r", "replay request"),
+        ("S", "server replay request/s"),
         ("U", "unmark all marked flows"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
@@ -140,36 +142,13 @@ class ConnectionItem(urwid.WidgetWrap):
                 args = (self.flow,)
             )
 
-    def stop_server_playback_prompt(self, a):
-        if a != "n":
-            self.master.stop_server_playback()
-
     def server_replay_prompt(self, k):
+        a = self.master.addons.get("serverplayback")
         if k == "a":
-            self.master.start_server_playback(
-                [i.copy() for i in self.master.state.view],
-                self.master.options.kill, self.master.options.rheaders,
-                False, self.master.options.nopop,
-                self.master.options.replay_ignore_params,
-                self.master.options.replay_ignore_content,
-                self.master.options.replay_ignore_payload_params,
-                self.master.options.replay_ignore_host
-            )
+            a.load([i.copy() for i in self.master.state.view])
         elif k == "t":
-            self.master.start_server_playback(
-                [self.flow.copy()],
-                self.master.options.kill, self.master.options.rheaders,
-                False, self.master.options.nopop,
-                self.master.options.replay_ignore_params,
-                self.master.options.replay_ignore_content,
-                self.master.options.replay_ignore_payload_params,
-                self.master.options.replay_ignore_host
-            )
-        else:
-            signals.status_prompt_path.send(
-                prompt = "Server replay path",
-                callback = self.master.server_playback_path
-            )
+            a.load([self.flow.copy()])
+        signals.update_settings.send(self)
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
@@ -202,29 +181,33 @@ class ConnectionItem(urwid.WidgetWrap):
                 self.state.enable_marked_filter()
             signals.flowlist_change.send(self)
         elif key == "r":
-            r = self.master.replay_request(self.flow)
-            if r:
-                signals.status_message.send(message=r)
+            try:
+                self.master.replay_request(self.flow)
+            except exceptions.ReplayException as e:
+                signals.add_log("Replay error: %s" % e, "warn")
             signals.flowlist_change.send(self)
         elif key == "S":
-            if not self.master.server_playback:
-                signals.status_prompt_onekey.send(
-                    prompt = "Server Replay",
-                    keys = (
-                        ("all flows", "a"),
-                        ("this flow", "t"),
-                        ("file", "f"),
-                    ),
-                    callback = self.server_replay_prompt,
-                )
-            else:
+            def stop_server_playback(response):
+                if response == "y":
+                    self.master.options.server_replay = []
+            a = self.master.addons.get("serverplayback")
+            if a.count():
                 signals.status_prompt_onekey.send(
                     prompt = "Stop current server replay?",
                     keys = (
                         ("yes", "y"),
                         ("no", "n"),
                     ),
-                    callback = self.stop_server_playback_prompt,
+                    callback = stop_server_playback,
+                )
+            else:
+                signals.status_prompt_onekey.send(
+                    prompt = "Server Replay",
+                    keys = (
+                        ("all flows", "a"),
+                        ("this flow", "t"),
+                    ),
+                    callback = self.server_replay_prompt,
                 )
         elif key == "U":
             for f in self.state.flows:

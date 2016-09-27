@@ -232,6 +232,14 @@ class Dumper(object):
         if self.match(f):
             self.echo_flow(f)
 
+    def tcp_error(self, f):
+        self.echo(
+            "Error in TCP connection to {}: {}".format(
+                repr(f.server_conn.address), f.error
+            ),
+            fg="red"
+        )
+
     def tcp_message(self, f):
         if not self.match(f):
             return

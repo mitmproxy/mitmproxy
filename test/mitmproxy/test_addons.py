@@ -17,5 +17,5 @@ def test_simple():
     m = controller.Master(o)
     a = addons.Addons(m)
     a.add(o, TAddon("one"))
-    assert a.has_addon("one")
-    assert not a.has_addon("two")
+    assert a.get("one")
+    assert not a.get("two")

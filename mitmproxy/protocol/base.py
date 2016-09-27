@@ -114,7 +114,15 @@ class ServerConnectionMixin(object):
 
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
-        self.server_conn = models.ServerConnection(server_address, (self.config.options.listen_host, 0))
+
+        self.server_conn = None
+        if self.config.options.spoof_source_address:
+            self.server_conn = models.ServerConnection(
+                server_address, (self.ctx.client_conn.address.host, 0), True)
+        else:
+            self.server_conn = models.ServerConnection(
+                server_address, (self.config.options.listen_host, 0))
+
         self.__check_self_connect()
 
     def __check_self_connect(self):
@@ -151,11 +159,15 @@ class ServerConnectionMixin(object):
         """
         self.log("serverdisconnect", "debug", [repr(self.server_conn.address)])
         address = self.server_conn.address
-        source_address = self.server_conn.source_address
         self.server_conn.finish()
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
-        self.server_conn = models.ServerConnection(address, (source_address.host, 0))
+
+        self.server_conn = models.ServerConnection(
+            address,
+            (self.server_conn.source_address.host, 0),
+            self.config.options.spoof_source_address
+        )
 
     def connect(self):
         """

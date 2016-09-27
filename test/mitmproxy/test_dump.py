@@ -3,7 +3,6 @@ from six.moves import cStringIO as StringIO
 
 from mitmproxy import dump, flow, exceptions
 from . import tutils, mastertest
-import mock
 
 
 class TestDumpMaster(mastertest.MasterTest):
@@ -45,18 +44,17 @@ class TestDumpMaster(mastertest.MasterTest):
         m = dump.DumpMaster(None, o)
         f = tutils.tflow(err=True)
         m.error(f)
-        assert m.error(f)
         assert "error" in o.tfile.getvalue()
 
     def test_replay(self):
-        o = dump.Options(server_replay=["nonexistent"], kill=True)
-        tutils.raises(dump.DumpError, dump.DumpMaster, None, o)
+        o = dump.Options(server_replay=["nonexistent"], replay_kill_extra=True)
+        tutils.raises(exceptions.OptionsError, dump.DumpMaster, None, o)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
             self.flowfile(p)
 
-            o = dump.Options(server_replay=[p], kill=True)
+            o = dump.Options(server_replay=[p], replay_kill_extra=True)
             o.verbosity = 0
             o.flow_detail = 0
             m = dump.DumpMaster(None, o)
@@ -64,13 +62,13 @@ class TestDumpMaster(mastertest.MasterTest):
             self.cycle(m, b"content")
             self.cycle(m, b"content")
 
-            o = dump.Options(server_replay=[p], kill=False)
+            o = dump.Options(server_replay=[p], replay_kill_extra=False)
             o.verbosity = 0
             o.flow_detail = 0
             m = dump.DumpMaster(None, o)
             self.cycle(m, b"nonexistent")
 
-            o = dump.Options(client_replay=[p], kill=False)
+            o = dump.Options(client_replay=[p], replay_kill_extra=False)
             o.verbosity = 0
             o.flow_detail = 0
             m = dump.DumpMaster(None, o)
@@ -103,8 +101,7 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def test_app(self):
         o = dump.Options(app=True)
-        s = mock.MagicMock()
-        m = dump.DumpMaster(s, o)
+        m = dump.DumpMaster(None, o)
         assert len(m.apps.apps) == 1
 
     def test_replacements(self):

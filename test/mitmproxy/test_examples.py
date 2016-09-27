@@ -35,7 +35,7 @@ def tscript(cmd, args=""):
     cmd = example_dir.path(cmd) + " " + args
     m = RaiseMaster(o, None, state.State())
     sc = script.Script(cmd)
-    m.addons.add(o, sc)
+    m.addons.add(sc)
     return m, sc
 
 

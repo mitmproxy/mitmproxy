@@ -67,6 +67,7 @@ class P12(tornado.web.RequestHandler):
 
     def get(self):
         p = os.path.join(self.request.master.options.cadir, self.filename)
+        p = os.path.expanduser(p)
         self.set_header("Content-Type", "application/x-pkcs12")
         self.set_header(
             "Content-Disposition",

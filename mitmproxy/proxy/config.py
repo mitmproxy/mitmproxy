@@ -10,6 +10,7 @@ import six
 from OpenSSL import SSL, crypto
 
 from mitmproxy import exceptions
+from mitmproxy import options as moptions  # noqa
 from netlib import certutils
 from netlib import tcp
 from netlib.http import authentication
@@ -71,7 +72,7 @@ def parse_upstream_auth(auth):
 class ProxyConfig:
 
     def __init__(self, options):
-        self.options = options
+        self.options = options  # type: moptions.Options
 
         self.authenticator = None
         self.check_ignore = None
@@ -83,7 +84,7 @@ class ProxyConfig:
         options.changed.connect(self.configure)
 
     def configure(self, options, updated):
-        # type: (mitmproxy.options.Options, Any) -> None
+        # type: (moptions.Options, Any) -> None
         if options.add_upstream_certs_to_client_chain and not options.ssl_insecure:
             raise exceptions.OptionsError(
                 "The verify-upstream-cert requires certificate verification to be disabled. "

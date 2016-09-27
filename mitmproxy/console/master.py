@@ -22,7 +22,6 @@ from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import script
 from mitmproxy import utils
 import mitmproxy.options
 from mitmproxy.console import flowlist
@@ -67,11 +66,13 @@ class ConsoleState(flow.State):
 
     def add_flow(self, f):
         super(ConsoleState, self).add_flow(f)
+        signals.flowlist_change.send(self)
         self.update_focus()
         return f
 
     def update_flow(self, f):
         super(ConsoleState, self).update_flow(f)
+        signals.flowlist_change.send(self)
         self.update_focus()
         return f
 
@@ -245,12 +246,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.logbuffer = urwid.SimpleListWalker([])
         self.follow = options.follow
 
-        if options.client_replay:
-            self.client_playback_path(options.client_replay)
-
-        if options.server_replay:
-            self.server_playback_path(options.server_replay)
-
         self.view_stack = []
 
         if options.app:
@@ -261,7 +256,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.replace_view_state.connect(self.sig_replace_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
-        self.addons.add(options, *builtins.default_addons())
+        self.addons.add(*builtins.default_addons())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -332,39 +327,13 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop.widget = window
         self.loop.draw_screen()
 
-    def _run_script_method(self, method, s, f):
-        status, val = s.run(method, f)
-        if val:
-            if status:
-                signals.add_log("Method %s return: %s" % (method, val), "debug")
-            else:
-                signals.add_log(
-                    "Method %s error: %s" %
-                    (method, val[1]), "error")
-
     def run_script_once(self, command, f):
-        if not command:
-            return
-        signals.add_log("Running script on flow: %s" % command, "debug")
-
+        sc = self.addons.get("scriptloader")
         try:
-            s = script.Script(command)
-            s.load()
-        except script.ScriptException as e:
-            signals.status_message.send(
-                message='Error loading "{}".'.format(command)
-            )
-            signals.add_log('Error loading "{}":\n{}'.format(command, e), "error")
-            return
-
-        if f.request:
-            self._run_script_method("request", s, f)
-        if f.response:
-            self._run_script_method("response", s, f)
-        if f.error:
-            self._run_script_method("error", s, f)
-        s.unload()
-        signals.flow_change.send(self, flow = f)
+            with self.handlecontext():
+                sc.run_once(command, [f])
+        except mitmproxy.exceptions.AddonError as e:
+            signals.add_log("Script error: %s" % e, "warn")
 
     def toggle_eventlog(self):
         self.options.eventlog = not self.options.eventlog
@@ -383,28 +352,6 @@ class ConsoleMaster(flow.FlowMaster):
             return flow.read_flows_from_paths(path)
         except exceptions.FlowReadException as e:
             signals.status_message.send(message=str(e))
-
-    def client_playback_path(self, path):
-        if not isinstance(path, list):
-            path = [path]
-        flows = self._readflows(path)
-        if flows:
-            self.start_client_playback(flows, False)
-
-    def server_playback_path(self, path):
-        if not isinstance(path, list):
-            path = [path]
-        flows = self._readflows(path)
-        if flows:
-            self.start_server_playback(
-                flows,
-                self.options.kill, self.options.rheaders,
-                False, self.options.nopop,
-                self.options.replay_ignore_params,
-                self.options.replay_ignore_content,
-                self.options.replay_ignore_payload_params,
-                self.options.replay_ignore_host
-            )
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)

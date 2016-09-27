@@ -8,6 +8,8 @@ from mitmproxy.builtins import stickycookie
 from mitmproxy.builtins import script
 from mitmproxy.builtins import replace
 from mitmproxy.builtins import setheaders
+from mitmproxy.builtins import serverplayback
+from mitmproxy.builtins import clientplayback
 
 
 def default_addons():
@@ -20,4 +22,6 @@ def default_addons():
         filestreamer.FileStreamer(),
         replace.Replace(),
         setheaders.SetHeaders(),
+        serverplayback.ServerPlayback(),
+        clientplayback.ClientPlayback(),
     ]

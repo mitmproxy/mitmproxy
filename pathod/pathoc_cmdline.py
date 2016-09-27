@@ -50,7 +50,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     )
     parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
-        help='Repeat N times. If 0 repeat for ever.'
+        help='Repeat N times. Pass -1 to repeat infinitely.'
     )
     parser.add_argument(
         "-w", dest='wait', default=0, type=float, metavar="N",
@@ -210,8 +210,8 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     reqs = []
     for r in args.requests:
         if os.path.isfile(r):
-            data = open(r).read()
-            r = data
+            with open(r) as f:
+                r = f.read()
         try:
             reqs.append(language.parse_pathoc(r, args.use_http2))
         except language.ParseException as v:

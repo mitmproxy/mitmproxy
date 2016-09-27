@@ -22,6 +22,7 @@ class RequestReplayThread(basethread.BaseThread):
             processed.
         """
         self.config, self.flow = config, flow
+        flow.live = True
         if event_queue:
             self.channel = controller.Channel(event_queue, should_exit)
         else:
@@ -33,6 +34,7 @@ class RequestReplayThread(basethread.BaseThread):
     def run(self):
         r = self.flow.request
         first_line_format_backup = r.first_line_format
+        server = None
         try:
             self.flow.response = None
 
@@ -103,3 +105,6 @@ class RequestReplayThread(basethread.BaseThread):
             self.channel.tell("log", Log(traceback.format_exc(), "error"))
         finally:
             r.first_line_format = first_line_format_backup
+            self.flow.live = False
+            if server:
+                server.finish()

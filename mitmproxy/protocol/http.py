@@ -1,17 +1,15 @@
 from __future__ import absolute_import, print_function, division
 
-import time
-import sys
-import traceback
-
 import h2.exceptions
+import netlib.exceptions
 import six
-
+import sys
+import time
+import traceback
 from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy.protocol import base
-
-import netlib.exceptions
+from mitmproxy.protocol import websockets as pwebsockets
 from netlib import http
 from netlib import tcp
 from netlib import websockets
@@ -153,12 +151,13 @@ class HttpLayer(base.Layer):
                 # We optimistically guess there might be an HTTP client on the
                 # other end
                 self.send_error_response(400, repr(e))
-                self.log(
-                    "request",
-                    "warn",
-                    "HTTP protocol error in client request: %s" % e
+                six.reraise(
+                    exceptions.ProtocolException,
+                    exceptions.ProtocolException(
+                        "HTTP protocol error in client request: {}".format(e)
+                    ),
+                    sys.exc_info()[2]
                 )
-                return
 
             self.log("request", "debug", [repr(request)])
 
@@ -192,8 +191,8 @@ class HttpLayer(base.Layer):
 
             try:
                 if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
-                    # we only support RFC6455 with WebSockets version 13
-                    # allow inline scripts to manupulate the client handshake
+                    # We only support RFC6455 with WebSockets version 13
+                    # allow inline scripts to manipulate the client handshake
                     self.channel.ask("websockets_handshake", flow)
 
                 if not flow.response:
@@ -216,12 +215,8 @@ class HttpLayer(base.Layer):
                     return
 
                 # Handle 101 Switching Protocols
-                # It may be useful to pass additional args (such as the upgrade header)
-                # to next_layer in the future
                 if flow.response.status_code == 101:
-                    layer = self.ctx.next_layer(self, flow)
-                    layer()
-                    return
+                    return self.handle_101_switching_protocols(flow)
 
                 # Upstream Proxy Mode: Handle CONNECT
                 if flow.request.first_line_format == "authority" and flow.response.status_code == 200:
@@ -353,12 +348,9 @@ class HttpLayer(base.Layer):
         elif self.mode == "upstream":
             pass
         else:
-            # Setting request.host also updates the host header, which we want to preserve
-            host_header = flow.request.headers.get("host", None)
-            flow.request.host = self.__initial_server_conn.address.host
-            flow.request.port = self.__initial_server_conn.address.port
-            if host_header:
-                flow.request.headers["host"] = host_header
+            # Don't set .host directly, that would update the host header.
+            flow.request.data.host = self.__initial_server_conn.address.host
+            flow.request.data.port = self.__initial_server_conn.address.port
             flow.request.scheme = "https" if self.__initial_server_tls else "http"
 
         request_reply = self.channel.ask("request", flow)
@@ -385,10 +377,10 @@ class HttpLayer(base.Layer):
                 raise exceptions.HttpProtocolException("Cannot change scheme in upstream proxy mode.")
             """
             # This is a very ugly (untested) workaround to solve a very ugly problem.
-            if self.server_conn and self.server_conn.tls_established and not ssl:
+            if self.server_conn and self.server_conn.tls_established and not tls:
                 self.disconnect()
                 self.connect()
-            elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
+            elif tls and not hasattr(self, "connected_to") or self.connected_to != address:
                 if self.server_conn.tls_established:
                     self.disconnect()
                     self.connect()
@@ -437,3 +429,26 @@ class HttpLayer(base.Layer):
                     ))
                 return False
         return True
+
+    def handle_101_switching_protocols(self, flow):
+        """
+        Handle a successful HTTP 101 Switching Protocols Response, received after e.g. a WebSocket upgrade request.
+        """
+        # Check for WebSockets handshake
+        is_websockets = (
+            flow and
+            websockets.check_handshake(flow.request.headers) and
+            websockets.check_handshake(flow.response.headers)
+        )
+        if is_websockets and not self.config.options.websockets:
+            self.log(
+                "Client requested WebSocket connection, but the protocol is currently disabled in mitmproxy.",
+                "info"
+            )
+
+        if is_websockets and self.config.options.websockets:
+            layer = pwebsockets.WebSocketsLayer(self, flow)
+        else:
+            layer = self.ctx.next_layer(self)
+
+        layer()
