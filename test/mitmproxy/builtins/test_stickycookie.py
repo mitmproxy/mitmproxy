@@ -92,7 +92,6 @@ class TestStickyCookie(mastertest.MasterTest):
             "foo/bar=hello",
             "foo:bar=world",
             "foo@bar=fizz",
-            "foo,bar=buzz",
         ]
         for c in cs:
             f.response.headers["Set-Cookie"] = c

@@ -14,12 +14,9 @@ information. Duplicate cookies are preserved in parsing, and can be set in
 formatting. We do attempt to escape and quote values where needed, but will not
 reject data that violate the specs.
 
-Parsing accepts the formats in RFC6265 and partially RFC2109 and RFC2965. We do
-not parse the comma-separated variant of Set-Cookie that allows multiple
-cookies to be set in a single header. Technically this should be feasible, but
-it turns out that violations of RFC6265 that makes the parsing problem
-indeterminate are much more common than genuine occurences of the multi-cookie
-variants. Serialization follows RFC6265.
+Parsing accepts the formats in RFC6265 and partially RFC2109 and RFC2965. We
+also parse the comma-separated variant of Set-Cookie that allows multiple
+cookies to be set in a single header. Serialization follows RFC6265.
 
     http://tools.ietf.org/html/rfc6265
     http://tools.ietf.org/html/rfc2109
@@ -31,8 +28,21 @@ _cookie_params = set((
     'secure', 'httponly', 'version',
 ))
 
+ESCAPE = re.compile(r"([\"\\])")
 
-# TODO: Disallow LHS-only Cookie values
+
+class CookieAttrs(multidict.ImmutableMultiDict):
+    @staticmethod
+    def _kconv(key):
+        return key.lower()
+
+    @staticmethod
+    def _reduce_values(values):
+        # See the StickyCookieTest for a weird cookie that only makes sense
+        # if we take the last part.
+        return values[-1]
+
+SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
 
 
 def _read_until(s, start, term):
@@ -45,13 +55,6 @@ def _read_until(s, start, term):
         if s[i] in term:
             return s[start:i], i
     return s[start:i + 1], i + 1
-
-
-def _read_token(s, start):
-    """
-        Read a token - the LHS of a token/value pair in a cookie.
-    """
-    return _read_until(s, start, ";=")
 
 
 def _read_quoted_string(s, start):
@@ -81,12 +84,16 @@ def _read_quoted_string(s, start):
     return "".join(ret), i + 1
 
 
+def _read_key(s, start, delims=";="):
+    """
+        Read a key - the LHS of a token/value pair in a cookie.
+    """
+    return _read_until(s, start, delims)
+
+
 def _read_value(s, start, delims):
     """
         Reads a value - the RHS of a token/value pair in a cookie.
-
-        special: If the value is special, commas are premitted. Else comma
-        terminates. This helps us support old and new style values.
     """
     if start >= len(s):
         return "", start
@@ -96,27 +103,82 @@ def _read_value(s, start, delims):
         return _read_until(s, start, delims)
 
 
-def _read_pairs(s, off=0):
+def _read_cookie_pairs(s, off=0):
     """
-        Read pairs of lhs=rhs values.
+        Read pairs of lhs=rhs values from Cookie headers.
 
         off: start offset
-        specials: a lower-cased list of keys that may contain commas
     """
-    vals = []
+    pairs = []
+
     while True:
-        lhs, off = _read_token(s, off)
+        lhs, off = _read_key(s, off)
         lhs = lhs.lstrip()
+
         if lhs:
             rhs = None
-            if off < len(s):
-                if s[off] == "=":
-                    rhs, off = _read_value(s, off + 1, ";")
-            vals.append([lhs, rhs])
+            if off < len(s) and s[off] == "=":
+                rhs, off = _read_value(s, off + 1, ";")
+
+            pairs.append([lhs, rhs])
+
         off += 1
+
         if not off < len(s):
             break
-    return vals, off
+
+    return pairs, off
+
+
+def _read_set_cookie_pairs(s, off=0):
+    """
+        Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
+
+        off: start offset
+        specials: attributes that are treated specially
+    """
+    cookies = []
+    pairs = []
+
+    while True:
+        lhs, off = _read_key(s, off, ";=,")
+        lhs = lhs.lstrip()
+
+        if lhs:
+            rhs = None
+            if off < len(s) and s[off] == "=":
+                rhs, off = _read_value(s, off + 1, ";,")
+
+                # Special handliing of attributes
+                if lhs.lower() == "expires":
+                    # 'expires' values can contain commas in them so they need to
+                    # be handled separately.
+
+                    # We actually bank on the fact that the expires value WILL
+                    # contain a comma. Things will fail, if they don't.
+
+                    # '3' is just a heuristic we use to determine whether we've
+                    # only read a part of the expires value and we should read more.
+                    if len(rhs) <= 3:
+                        trail, off = _read_value(s, off + 1, ";,")
+                        rhs = rhs + "," + trail
+
+            pairs.append([lhs, rhs])
+
+            # comma marks the beginning of a new cookie
+            if off < len(s) and s[off] == ",":
+                cookies.append(pairs)
+                pairs = []
+
+        off += 1
+
+        if not off < len(s):
+            break
+
+    if pairs or not cookies:
+        cookies.append(pairs)
+
+    return cookies, off
 
 
 def _has_special(s):
@@ -129,15 +191,12 @@ def _has_special(s):
     return False
 
 
-ESCAPE = re.compile(r"([\"\\])")
-
-
-def _format_pairs(lst, specials=(), sep="; "):
+def _format_pairs(pairs, specials=(), sep="; "):
     """
         specials: A lower-cased list of keys that will not be quoted.
     """
     vals = []
-    for k, v in lst:
+    for k, v in pairs:
         if v is None:
             vals.append(k)
         else:
@@ -155,62 +214,13 @@ def _format_set_cookie_pairs(lst):
     )
 
 
-def _parse_set_cookie_pairs(s):
+def parse_cookie_header(line):
     """
-        For Set-Cookie, we support multiple cookies as described in RFC2109.
-        This function therefore returns a list of lists.
+        Parse a Cookie header value.
+        Returns a list of (lhs, rhs) tuples.
     """
-    pairs, off_ = _read_pairs(s)
+    pairs, off_ = _read_cookie_pairs(line)
     return pairs
-
-
-def parse_set_cookie_headers(headers):
-    ret = []
-    for header in headers:
-        v = parse_set_cookie_header(header)
-        if v:
-            name, value, attrs = v
-            ret.append((name, SetCookie(value, attrs)))
-    return ret
-
-
-class CookieAttrs(multidict.ImmutableMultiDict):
-    @staticmethod
-    def _kconv(key):
-        return key.lower()
-
-    @staticmethod
-    def _reduce_values(values):
-        # See the StickyCookieTest for a weird cookie that only makes sense
-        # if we take the last part.
-        return values[-1]
-
-
-SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
-
-
-def parse_set_cookie_header(line):
-    """
-        Parse a Set-Cookie header value
-
-        Returns a (name, value, attrs) tuple, or None, where attrs is an
-        CookieAttrs dict of attributes. No attempt is made to parse attribute
-        values - they are treated purely as strings.
-    """
-    pairs = _parse_set_cookie_pairs(line)
-    if pairs:
-        return pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:])
-
-
-def format_set_cookie_header(name, value, attrs):
-    """
-        Formats a Set-Cookie header value.
-    """
-    pairs = [(name, value)]
-    pairs.extend(
-        attrs.fields if hasattr(attrs, "fields") else attrs
-    )
-    return _format_set_cookie_pairs(pairs)
 
 
 def parse_cookie_headers(cookie_headers):
@@ -220,20 +230,62 @@ def parse_cookie_headers(cookie_headers):
     return cookie_list
 
 
-def parse_cookie_header(line):
-    """
-        Parse a Cookie header value.
-        Returns a list of (lhs, rhs) tuples.
-    """
-    pairs, off_ = _read_pairs(line)
-    return pairs
-
-
 def format_cookie_header(lst):
     """
         Formats a Cookie header value.
     """
     return _format_pairs(lst)
+
+
+def parse_set_cookie_header(line):
+    """
+        Parse a Set-Cookie header value
+
+        Returns a list of (name, value, attrs) tuple for each cokie, or None.
+        Where attrs is a CookieAttrs dict of attributes. No attempt is made
+        to parse attribute values - they are treated purely as strings.
+    """
+    cookie_pairs, off = _read_set_cookie_pairs(line)
+
+    cookies = [
+        (pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:]))
+        for pairs in cookie_pairs if pairs
+    ]
+
+    if cookies:
+        return cookies
+    else:
+        return None
+
+
+def parse_set_cookie_headers(headers):
+    rv = []
+    for header in headers:
+        cookies = parse_set_cookie_header(header)
+        if cookies:
+            for name, value, attrs in cookies:
+                rv.append((name, SetCookie(value, attrs)))
+    return rv
+
+
+def format_set_cookie_header(set_cookies):
+    """
+        Formats a Set-Cookie header value.
+    """
+
+    rv = []
+
+    for set_cookie in set_cookies:
+        name, value, attrs = set_cookie
+
+        pairs = [(name, value)]
+        pairs.extend(
+            attrs.fields if hasattr(attrs, "fields") else attrs
+        )
+
+        rv.append(_format_set_cookie_pairs(pairs))
+
+    return ", ".join(rv)
 
 
 def refresh_set_cookie_header(c, delta):
@@ -245,7 +297,7 @@ def refresh_set_cookie_header(c, delta):
         A refreshed Set-Cookie string
     """
 
-    name, value, attrs = parse_set_cookie_header(c)
+    name, value, attrs = parse_set_cookie_header(c)[0]
     if not name or not value:
         raise ValueError("Invalid Cookie")
 
@@ -263,10 +315,10 @@ def refresh_set_cookie_header(c, delta):
             # For now, we just ignore this.
             attrs = attrs.with_delitem("expires")
 
-    ret = format_set_cookie_header(name, value, attrs)
-    if not ret:
+    rv = format_set_cookie_header([(name, value, attrs)])
+    if not rv:
         raise ValueError("Invalid Cookie")
-    return ret
+    return rv
 
 
 def get_expiration_ts(cookie_attrs):
