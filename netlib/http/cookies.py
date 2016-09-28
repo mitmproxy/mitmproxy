@@ -241,21 +241,16 @@ def parse_set_cookie_header(line):
     """
         Parse a Set-Cookie header value
 
-        Returns a list of (name, value, attrs) tuple for each cokie, or None.
-        Where attrs is a CookieAttrs dict of attributes. No attempt is made
-        to parse attribute values - they are treated purely as strings.
+        Returns a list of (name, value, attrs) tuples, where attrs is a
+        CookieAttrs dict of attributes. No attempt is made to parse attribute
+        values - they are treated purely as strings.
     """
     cookie_pairs, off = _read_set_cookie_pairs(line)
-
     cookies = [
         (pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:]))
         for pairs in cookie_pairs if pairs
     ]
-
-    if cookies:
-        return cookies
-    else:
-        return None
+    return cookies
 
 
 def parse_set_cookie_headers(headers):

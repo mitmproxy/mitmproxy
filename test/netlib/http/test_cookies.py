@@ -194,10 +194,10 @@ def test_parse_set_cookie_header():
 
     vals = [
         [
-            "", None
+            "", []
         ],
         [
-            ";", None
+            ";", []
         ],
         [
             "one=uno",
@@ -257,7 +257,7 @@ def test_parse_set_cookie_header():
             for i in range(len(expected)):
                 set_cookie_equal(ret2[i], expected[i])
         else:
-            assert ret is None
+            assert not ret
 
 
 def test_refresh_cookie():
