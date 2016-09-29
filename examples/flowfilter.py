@@ -1,12 +1,12 @@
 # This scripts demonstrates how to use mitmproxy's filter pattern in scripts.
-# Usage: mitmdump -s "filt.py FILTER"
+# Usage: mitmdump -s "filter.py FILTER"
 import sys
-from mitmproxy import filt
+from mitmproxy import filter
 
 
 class Filter:
     def __init__(self, spec):
-        self.filter = filt.parse(spec)
+        self.filter = filter.parse(spec)
 
     def response(self, flow):
         if flow.match(self.filter):

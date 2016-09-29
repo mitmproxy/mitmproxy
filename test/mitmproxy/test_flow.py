@@ -3,7 +3,7 @@ import io
 
 import netlib.utils
 from netlib.http import Headers
-from mitmproxy import filt, flow, options
+from mitmproxy import flowfilter, flow, options
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, Kill
 from mitmproxy.models import Error
@@ -400,8 +400,8 @@ class TestSerialize:
 
     def test_filter(self):
         sio = io.BytesIO()
-        fl = filt.parse("~c 200")
-        w = flow.FilteredFlowWriter(sio, fl)
+        flt = flowfilter.parse("~c 200")
+        w = flow.FilteredFlowWriter(sio, flt)
 
         f = tutils.tflow(resp=True)
         f.response.status_code = 200

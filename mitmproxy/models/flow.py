@@ -189,20 +189,20 @@ class Flow(stateobject.StateObject):
         self.reply.commit()
         master.handle_accept_intercept(self)
 
-    def match(self, f):
+    def match(self, flt):
         """
-            Match this flow against a compiled filter expression. Returns True
-            if matched, False if not.
+            Matches a flow against a compiled filter expression.
+            Returns True if matched, False if not.
 
-            If f is a string, it will be compiled as a filter expression. If
-            the expression is invalid, ValueError is raised.
+            If flt is a string, it will be compiled as a filter expression.
+            If the expression is invalid, ValueError is raised.
         """
-        if isinstance(f, six.string_types):
-            from .. import filt
+        if isinstance(flt, six.string_types):
+            from ..flowfilter import parse
 
-            f = filt.parse(f)
-            if not f:
+            flt = parse(flt)
+            if not flt:
                 raise ValueError("Invalid filter expression.")
-        if f:
-            return f(self)
+        if flt:
+            return flt(self)
         return True

@@ -5,7 +5,7 @@ from abc import abstractmethod, ABCMeta
 import six
 from typing import List  # noqa
 
-from mitmproxy import filt
+from mitmproxy import flowfilter
 from mitmproxy import models  # noqa
 
 
@@ -53,11 +53,11 @@ def _pos(*args):
 
 
 class FlowView(FlowList):
-    def __init__(self, store, filt=None):
+    def __init__(self, store, flt=None):
         super(FlowView, self).__init__()
-        if not filt:
-            filt = _pos
-        self._build(store, filt)
+        if not flt:
+            flt = _pos
+        self._build(store, flt)
 
         self.store = store
         self.store.views.append(self)
@@ -65,9 +65,9 @@ class FlowView(FlowList):
     def _close(self):
         self.store.views.remove(self)
 
-    def _build(self, flows, filt=None):
-        if filt:
-            self.filt = filt
+    def _build(self, flows, flt=None):
+        if flt:
+            self.filt = flt
         self._list = list(filter(self.filt, flows))
 
     def _add(self, f):
@@ -229,21 +229,21 @@ class State(object):
         if txt == self.filter_txt:
             return
         if txt:
-            f = filt.parse(txt)
-            if not f:
+            flt = flowfilter.parse(txt)
+            if not flt:
                 return "Invalid filter expression."
             self.view._close()
-            self.view = FlowView(self.flows, f)
+            self.view = FlowView(self.flows, flt)
         else:
             self.view._close()
             self.view = FlowView(self.flows, None)
 
     def set_intercept(self, txt):
         if txt:
-            f = filt.parse(txt)
-            if not f:
+            flt = flowfilter.parse(txt)
+            if not flt:
                 return "Invalid filter expression."
-            self.intercept = f
+            self.intercept = flt
         else:
             self.intercept = None
 

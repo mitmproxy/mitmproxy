@@ -8,7 +8,7 @@ Filter expressions consist of the following operators:
 
 .. documentedlist::
     :header: "Expression" "Description"
-    :listobject: mitmproxy.filt.help
+    :listobject: mitmproxy.flowfilter.help
 
 - Regexes are Python-style
 - Regexes can be specified as quoted strings
@@ -36,4 +36,3 @@ Anything but requests with a text/html content type:
 .. code-block:: none
 
     !(~q & ~t "text/html")
-

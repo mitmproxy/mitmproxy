@@ -1,7 +1,7 @@
 from six.moves import cStringIO as StringIO
 from mock import patch
 
-from mitmproxy import filt
+from mitmproxy import flowfilter
 
 from . import tutils
 
@@ -14,64 +14,64 @@ class TestParsing:
         assert c.getvalue()
 
     def test_parse_err(self):
-        assert filt.parse("~h [") is None
+        assert flowfilter.parse("~h [") is None
 
     def test_simple(self):
-        assert not filt.parse("~b")
-        assert filt.parse("~q")
-        assert filt.parse("~c 10")
-        assert filt.parse("~m foobar")
-        assert filt.parse("~u foobar")
-        assert filt.parse("~q ~c 10")
-        p = filt.parse("~q ~c 10")
+        assert not flowfilter.parse("~b")
+        assert flowfilter.parse("~q")
+        assert flowfilter.parse("~c 10")
+        assert flowfilter.parse("~m foobar")
+        assert flowfilter.parse("~u foobar")
+        assert flowfilter.parse("~q ~c 10")
+        p = flowfilter.parse("~q ~c 10")
         self._dump(p)
         assert len(p.lst) == 2
 
     def test_naked_url(self):
-        a = filt.parse("foobar ~h rex")
+        a = flowfilter.parse("foobar ~h rex")
         assert a.lst[0].expr == "foobar"
         assert a.lst[1].expr == "rex"
         self._dump(a)
 
     def test_quoting(self):
-        a = filt.parse("~u 'foo ~u bar' ~u voing")
+        a = flowfilter.parse("~u 'foo ~u bar' ~u voing")
         assert a.lst[0].expr == "foo ~u bar"
         assert a.lst[1].expr == "voing"
         self._dump(a)
 
-        a = filt.parse("~u foobar")
+        a = flowfilter.parse("~u foobar")
         assert a.expr == "foobar"
 
-        a = filt.parse(r"~u 'foobar\"\''")
+        a = flowfilter.parse(r"~u 'foobar\"\''")
         assert a.expr == "foobar\"'"
 
-        a = filt.parse(r'~u "foo \'bar"')
+        a = flowfilter.parse(r'~u "foo \'bar"')
         assert a.expr == "foo 'bar"
 
     def test_nesting(self):
-        a = filt.parse("(~u foobar & ~h voing)")
+        a = flowfilter.parse("(~u foobar & ~h voing)")
         assert a.lst[0].expr == "foobar"
         self._dump(a)
 
     def test_not(self):
-        a = filt.parse("!~h test")
+        a = flowfilter.parse("!~h test")
         assert a.itm.expr == "test"
-        a = filt.parse("!(~u test & ~h bar)")
+        a = flowfilter.parse("!(~u test & ~h bar)")
         assert a.itm.lst[0].expr == "test"
         self._dump(a)
 
     def test_binaryops(self):
-        a = filt.parse("~u foobar | ~h voing")
-        isinstance(a, filt.FOr)
+        a = flowfilter.parse("~u foobar | ~h voing")
+        isinstance(a, flowfilter.FOr)
         self._dump(a)
 
-        a = filt.parse("~u foobar & ~h voing")
-        isinstance(a, filt.FAnd)
+        a = flowfilter.parse("~u foobar & ~h voing")
+        isinstance(a, flowfilter.FAnd)
         self._dump(a)
 
     def test_wideops(self):
-        a = filt.parse("~hq 'header: qvalue'")
-        assert isinstance(a, filt.FHeadRequest)
+        a = flowfilter.parse("~hq 'header: qvalue'")
+        assert isinstance(a, flowfilter.FHeadRequest)
         self._dump(a)
 
 
@@ -87,7 +87,7 @@ class TestMatchingHTTPFlow:
         return tutils.tflow(err=True)
 
     def q(self, q, o):
-        return filt.parse(q)(o)
+        return flowfilter.parse(q)(o)
 
     def test_http(self):
         s = self.req()
@@ -263,7 +263,7 @@ class TestMatchingTCPFlow:
         return tutils.ttcpflow(err=True)
 
     def q(self, q, o):
-        return filt.parse(q)(o)
+        return flowfilter.parse(q)(o)
 
     def test_tcp(self):
         f = self.flow()
@@ -387,7 +387,7 @@ class TestMatchingDummyFlow:
         return tutils.tdummyflow(err=True)
 
     def q(self, q, o):
-        return filt.parse(q)(o)
+        return flowfilter.parse(q)(o)
 
     def test_filters(self):
         e = self.err()
@@ -439,4 +439,4 @@ def test_pyparsing_bug(extract_tb):
     """https://github.com/mitmproxy/mitmproxy/issues/1087"""
     # The text is a string with leading and trailing whitespace stripped; if the source is not available it is None.
     extract_tb.return_value = [("", 1, "test", None)]
-    assert filt.parse("test")
+    assert flowfilter.parse("test")

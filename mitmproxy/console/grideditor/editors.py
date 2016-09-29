@@ -1,9 +1,9 @@
 from __future__ import absolute_import, print_function, division
 import re
 import urwid
-from mitmproxy import filt
-from mitmproxy.builtins import script
 from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy.builtins import script
 from mitmproxy.console import common
 from mitmproxy.console.grideditor import base
 from mitmproxy.console.grideditor import col_bytes
@@ -81,7 +81,7 @@ class ReplaceEditor(base.GridEditor):
 
     def is_error(self, col, val):
         if col == 0:
-            if not filt.parse(val):
+            if not flowfilter.parse(val):
                 return "Invalid filter specification."
         elif col == 1:
             try:
@@ -101,7 +101,7 @@ class SetHeadersEditor(base.GridEditor):
 
     def is_error(self, col, val):
         if col == 0:
-            if not filt.parse(val):
+            if not flowfilter.parse(val):
                 return "Invalid filter specification"
         return False
 
