@@ -9,3 +9,7 @@
     max-width: 100%;
     overflow: visible;
 }
+
+.wy-menu-vertical header, .wy-menu-vertical p.caption {
+    color: #e0e0e0;
+}
