@@ -82,9 +82,6 @@
     dev/architecture
     dev/testing
     dev/sslkeylogfile
-    dev/protocols
-    dev/proxy
-    dev/exceptions
 
 ..  Indices and tables
     ==================
