@@ -135,7 +135,7 @@ mitmproxy. Mitmproxy then uses the provided certificate for interception of the
 specified domains instead of generating a certificate signed by its own CA.
 
 The certificate file is expected to be in the PEM format.  You can include
-intermediary certificates right below your leaf certificate, so that you PEM
+intermediary certificates right below your leaf certificate, so that your PEM
 file roughly looks like this:
 
 .. code-block:: none

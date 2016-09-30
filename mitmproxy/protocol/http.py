@@ -185,8 +185,11 @@ class HttpLayer(base.Layer):
                 return
 
             # update host header in reverse proxy mode
-            if self.mode == "reverse":
-                flow.request.headers["Host"] = self.config.upstream_server.address.host
+            if self.config.options.mode == "reverse":
+                if six.PY2:
+                    flow.request.headers["Host"] = self.config.upstream_server.address.host.encode()
+                else:
+                    flow.request.headers["Host"] = self.config.upstream_server.address.host
 
             # set upstream auth
             if self.mode == "upstream" and self.config.upstream_auth is not None:
