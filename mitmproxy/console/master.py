@@ -635,14 +635,6 @@ class ConsoleMaster(flow.FlowMaster):
     def edit_scripts(self, scripts):
         self.options.scripts = [x[0] for x in scripts]
 
-    def stop_client_playback_prompt(self, a):
-        if a != "n":
-            self.stop_client_playback()
-
-    def stop_server_playback_prompt(self, a):
-        if a != "n":
-            self.stop_server_playback()
-
     def quit(self, a):
         if a != "n":
             raise urwid.ExitMainLoop

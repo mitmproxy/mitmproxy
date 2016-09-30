@@ -40,13 +40,11 @@ class Window(urwid.Frame):
 
     def handle_replay(self, k):
         if k == "c":
-            if not self.master.client_playback:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Client replay path",
-                    callback = self.master.client_playback_path
-                )
-            else:
+            creplay = self.master.addons.get("clientplayback")
+            if self.master.options.client_replay and creplay.count():
+                def stop_client_playback_prompt(a):
+                    if a != "n":
+                        self.master.options.client_replay = None
                 signals.status_prompt_onekey.send(
                     self,
                     prompt = "Stop current client replay?",
@@ -54,7 +52,13 @@ class Window(urwid.Frame):
                         ("yes", "y"),
                         ("no", "n"),
                     ),
-                    callback = self.master.stop_client_playback_prompt,
+                    callback = stop_client_playback_prompt
+                )
+            else:
+                signals.status_prompt_path.send(
+                    self,
+                    prompt = "Client replay path",
+                    callback = lambda x: self.master.options.setter("client_replay")([x])
                 )
         elif k == "s":
             a = self.master.addons.get("serverplayback")
