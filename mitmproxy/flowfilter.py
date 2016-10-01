@@ -36,6 +36,7 @@ from __future__ import absolute_import, print_function, division
 import re
 import sys
 import functools
+import six
 
 from mitmproxy.models.http import HTTPFlow
 from mitmproxy.models.tcp import TCPFlow
@@ -501,16 +502,15 @@ def parse(s):
         return None
 
 
-def match(self, flow, flt):
+def match(flow, flt):
     """
-        Match a flow against a compiled filter expression.
+        Matches a flow against a compiled filter expression.
         Returns True if matched, False if not.
 
         If flt is a string, it will be compiled as a filter expression.
         If the expression is invalid, ValueError is raised.
     """
     if isinstance(flt, six.string_types):
-
         flt = parse(flt)
         if not flt:
             raise ValueError("Invalid filter expression.")

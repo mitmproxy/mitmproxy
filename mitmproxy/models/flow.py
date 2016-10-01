@@ -189,20 +189,9 @@ class Flow(stateobject.StateObject):
         self.reply.commit()
         master.handle_accept_intercept(self)
 
-    def match(self, flt):
-        """
-            Matches a flow against a compiled filter expression.
-            Returns True if matched, False if not.
+    def match(self, f):
+        import warnings
+        warnings.warn(".match() is deprecated, please use flowfilter.match(some_flow, some_filter) instead.", DeprecationWarning)
 
-            If flt is a string, it will be compiled as a filter expression.
-            If the expression is invalid, ValueError is raised.
-        """
-        if isinstance(flt, six.string_types):
-            from ..flowfilter import parse
-
-            flt = parse(flt)
-            if not flt:
-                raise ValueError("Invalid filter expression.")
-        if flt:
-            return flt(self)
-        return True
+        from mitmproxy import flowfilter
+        return flowfilter.match(self, f)
