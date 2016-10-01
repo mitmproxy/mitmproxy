@@ -187,6 +187,10 @@ class FlowMaster(controller.Master):
             rt.join()
         return rt
 
+    def new_request(self, method, scheme, host, port, path, block=False):
+        f = self.create_request(method, scheme, host, port, path)
+        return self.replay_request(f, block)
+
     @controller.handler
     def log(self, l):
         self.add_log(l.msg, l.level)
