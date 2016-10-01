@@ -22,6 +22,7 @@ from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import flowfilter
 from mitmproxy import utils
 import mitmproxy.options
 from mitmproxy.console import flowlist
@@ -134,9 +135,9 @@ class ConsoleState(flow.State):
             fprev, _ = self.get_from_pos(fidx - dist)
             fnext, _ = self.get_from_pos(fidx + dist)
 
-            if fprev and fprev.match(filt):
+            if fprev and flowfilter.match(fprev, filt):
                 return fprev
-            elif fnext and fnext.match(filt):
+            elif fnext and flowfilter.match(fnext, filt):
                 return fnext
 
             dist += 1
@@ -669,7 +670,7 @@ class ConsoleMaster(flow.FlowMaster):
     def process_flow(self, f):
         should_intercept = any(
             [
-                self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay,
+                self.state.intercept and flowfilter.match(f, self.state.intercept) and not f.request.is_replay,
                 f.intercepted,
             ]
         )

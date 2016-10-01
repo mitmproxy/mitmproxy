@@ -22,6 +22,6 @@ class StickyAuth:
         host = flow.request.host
         if "authorization" in flow.request.headers:
             self.hosts[host] = flow.request.headers["authorization"]
-        elif flow.match(self.flt):
+        elif flowfilter.match(flow, self.flt):
             if host in self.hosts:
                 flow.request.headers["authorization"] = self.hosts[host]

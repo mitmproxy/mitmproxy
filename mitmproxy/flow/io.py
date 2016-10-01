@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 import os
 
 from mitmproxy import exceptions
+from mitmproxy import flowfilter
 from mitmproxy import models
 from mitmproxy.contrib import tnetstring
 from mitmproxy.flow import io_compat
@@ -60,7 +61,7 @@ class FilteredFlowWriter:
         self.filt = filt
 
     def add(self, f):
-        if self.filt and not f.match(self.filt):
+        if self.filt and not flowfilter.match(f, self.filt):
             return
         d = f.get_state()
         tnetstring.dump(d, self.fo)

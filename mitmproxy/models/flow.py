@@ -8,8 +8,6 @@ from mitmproxy import stateobject
 from mitmproxy.models.connections import ClientConnection
 from mitmproxy.models.connections import ServerConnection
 
-import six
-
 from netlib import version
 from typing import Optional  # noqa
 
@@ -188,10 +186,3 @@ class Flow(stateobject.StateObject):
         self.reply.ack()
         self.reply.commit()
         master.handle_accept_intercept(self)
-
-    def match(self, f):
-        import warnings
-        warnings.warn(".match() is deprecated, please use flowfilter.match(some_flow, some_filter) instead.", DeprecationWarning)
-
-        from mitmproxy import flowfilter
-        return flowfilter.match(self, f)

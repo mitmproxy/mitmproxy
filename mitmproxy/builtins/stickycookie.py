@@ -64,7 +64,7 @@ class StickyCookie:
     def request(self, flow):
         if self.flt:
             l = []
-            if flow.match(self.flt):
+            if flowfilter.match(flow, self.flt):
                 for domain, port, path in self.jar.keys():
                     match = [
                         domain_match(flow.request.host, domain),

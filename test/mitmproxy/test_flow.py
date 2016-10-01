@@ -68,14 +68,14 @@ class TestHTTPFlow(object):
 
     def test_match(self):
         f = tutils.tflow(resp=True)
-        assert not f.match("~b test")
-        assert f.match(None)
-        assert not f.match("~b test")
+        assert not flowfilter.match(f, "~b test")
+        assert flowfilter.match(f, None)
+        assert not flowfilter.match(f, "~b test")
 
         f = tutils.tflow(err=True)
-        assert f.match("~e")
+        assert flowfilter.match(f, "~e")
 
-        tutils.raises(ValueError, f.match, "~")
+        tutils.raises(ValueError, flowfilter.match, f, "~")
 
     def test_backup(self):
         f = tutils.tflow()
@@ -195,14 +195,14 @@ class TestTCPFlow:
 
     def test_match(self):
         f = tutils.ttcpflow()
-        assert not f.match("~b nonexistent")
-        assert f.match(None)
-        assert not f.match("~b nonexistent")
+        assert not flowfilter.match(f, "~b nonexistent")
+        assert flowfilter.match(f, None)
+        assert not flowfilter.match(f, "~b nonexistent")
 
         f = tutils.ttcpflow(err=True)
-        assert f.match("~e")
+        assert flowfilter.match(f, "~e")
 
-        tutils.raises(ValueError, f.match, "~")
+        tutils.raises(ValueError, flowfilter.match, f, "~")
 
 
 class TestState:
