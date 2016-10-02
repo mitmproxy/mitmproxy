@@ -30,6 +30,9 @@ Events = frozenset([
 
     "websocket_handshake",
 
+    "h2_settings",
+    "h2_push_promise",
+
     "next_layer",
 
     "configure",

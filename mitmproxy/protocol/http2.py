@@ -136,7 +136,7 @@ class Http2Layer(base.Layer):
         elif isinstance(event, events.StreamReset):
             return self._handle_stream_reset(eid, event, is_server, other_conn)
         elif isinstance(event, events.RemoteSettingsChanged):
-            return self._handle_remote_settings_changed(event, other_conn)
+            return self._handle_remote_settings_changed(event, is_server, other_conn)
         elif isinstance(event, events.ConnectionTerminated):
             return self._handle_connection_terminated(event, is_server)
         elif isinstance(event, events.PushedStreamReceived):
@@ -205,7 +205,13 @@ class Http2Layer(base.Layer):
                 other_conn.h2.safe_reset_stream(other_stream_id, event.error_code)
         return True
 
-    def _handle_remote_settings_changed(self, event, other_conn):
+    def _handle_remote_settings_changed(self, event, is_server, other_conn):
+        class H2SettingsMessage(object):
+            def __init__(self, is_server, changed_settings):
+                self.is_server = is_server
+                self.changed_settings = changed_settings
+
+        self.channel.ask("h2_settings", H2SettingsMessage(is_server, event.changed_settings))
         new_settings = dict([(key, cs.new_value) for (key, cs) in event.changed_settings.items()])
         other_conn.h2.safe_update_settings(new_settings)
         return True
@@ -234,6 +240,12 @@ class Http2Layer(base.Layer):
         return False
 
     def _handle_pushed_stream_received(self, event, h2_connection):
+        self.channel.ask("h2_push_promise", event)
+        if hasattr(event, "kill") and event.kill:
+            # This does NOT take care of sending RST_STREAM!
+            # Drop push-promise, but keep connection alive.
+            return True
+
         # pushed stream ids should be unique and not dependent on race conditions
         # only the parent stream id must be looked up first
         parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
