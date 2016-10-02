@@ -174,12 +174,12 @@ class PathodHandler(tcp.BaseHandler):
 
             m = utils.MemBool()
 
-            valid_websockets_handshake = websockets.check_handshake(headers)
+            valid_websocket_handshake = websockets.check_handshake(headers)
             self.settings.websocket_key = websockets.get_client_key(headers)
 
             # If this is a websocket initiation, we respond with a proper
             # server response, unless over-ridden.
-            if valid_websockets_handshake:
+            if valid_websocket_handshake:
                 anchor_gen = language.parse_pathod("ws")
             else:
                 anchor_gen = None
@@ -226,7 +226,7 @@ class PathodHandler(tcp.BaseHandler):
                 spec,
                 lg
             )
-            if nexthandler and valid_websockets_handshake:
+            if nexthandler and valid_websocket_handshake:
                 self.protocol = protocols.websockets.WebsocketsProtocol(self)
                 return self.protocol.handle_websocket, retlog
             else:

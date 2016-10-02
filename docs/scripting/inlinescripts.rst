@@ -128,7 +128,7 @@ HTTP Events
 WebSockets Events
 ^^^^^^^^^^^^^^^^^
 
-.. py:function:: websockets_handshake(context, flow)
+.. py:function:: websocket_handshake(context, flow)
 
     Called when a client wants to establish a WebSockets connection.
     The WebSockets-specific headers can be manipulated to manipulate the handshake.

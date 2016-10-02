@@ -200,7 +200,7 @@ class HttpLayer(base.Layer):
                 if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
                     # We only support RFC6455 with WebSockets version 13
                     # allow inline scripts to manipulate the client handshake
-                    self.channel.ask("websockets_handshake", flow)
+                    self.channel.ask("websocket_handshake", flow)
 
                 if not flow.response:
                     self.establish_server_connection(

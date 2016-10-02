@@ -28,7 +28,7 @@ Events = frozenset([
     "response",
     "responseheaders",
 
-    "websockets_handshake",
+    "websocket_handshake",
 
     "next_layer",
 

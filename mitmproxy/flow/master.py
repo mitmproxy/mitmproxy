@@ -246,7 +246,7 @@ class FlowMaster(controller.Master):
         self.state.update_flow(f)
 
     @controller.handler
-    def websockets_handshake(self, f):
+    def websocket_handshake(self, f):
         pass
 
     def handle_intercept(self, f):
