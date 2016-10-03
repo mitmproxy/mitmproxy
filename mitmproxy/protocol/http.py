@@ -16,22 +16,22 @@ from netlib import websockets
 
 
 class _HttpTransmissionLayer(base.Layer):
-
-    def read_request(self):
+    def read_request_headers(self):
         raise NotImplementedError()
 
     def read_request_body(self, request):
         raise NotImplementedError()
 
+    def read_request(self):
+        request = self.read_request_headers()
+        request.data.content = b"".join(
+            self.read_request_body(request)
+        )
+        request.timestamp_end = time.time()
+        return request
+
     def send_request(self, request):
         raise NotImplementedError()
-
-    def read_response(self, request):
-        response = self.read_response_headers()
-        response.data.content = b"".join(
-            self.read_response_body(request, response)
-        )
-        return response
 
     def read_response_headers(self):
         raise NotImplementedError()
@@ -39,6 +39,13 @@ class _HttpTransmissionLayer(base.Layer):
     def read_response_body(self, request, response):
         raise NotImplementedError()
         yield "this is a generator"  # pragma: no cover
+
+    def read_response(self, request):
+        response = self.read_response_headers()
+        response.data.content = b"".join(
+            self.read_response_body(request, response)
+        )
+        return response
 
     def send_response(self, response):
         if response.data.content is None:
@@ -140,8 +147,9 @@ class HttpLayer(base.Layer):
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
+            flow = models.HTTPFlow(self.client_conn, self.server_conn, live=self)
             try:
-                request = self.get_request_from_client()
+                request = self.get_request_from_client(flow)
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
             except netlib.exceptions.HttpReadDisconnect:
@@ -168,7 +176,6 @@ class HttpLayer(base.Layer):
             if not (self.http_authenticated or self.authenticate(request)):
                 return
 
-            flow = models.HTTPFlow(self.client_conn, self.server_conn, live=self)
             flow.request = request
 
             try:
@@ -243,13 +250,16 @@ class HttpLayer(base.Layer):
                 if flow:
                     flow.live = False
 
-    def get_request_from_client(self):
+    def get_request_from_client(self, flow):
         request = self.read_request()
+        flow.request = request
+        flow = self.channel.ask("requestheaders", flow)
         if request.headers.get("expect", "").lower() == "100-continue":
             # TODO: We may have to use send_response_headers for HTTP2 here.
             self.send_response(models.expect_continue_response)
             request.headers.pop("expect")
             request.body = b"".join(self.read_request_body(request))
+            request.timestamp_end = time.time()
         return request
 
     def send_error_response(self, code, message, headers=None):

@@ -25,6 +25,7 @@ Events = frozenset([
     "tcp_close",
 
     "request",
+    "requestheaders",
     "response",
     "responseheaders",
 

@@ -18,6 +18,7 @@ from mitmproxy.protocol import http_replay
 def event_sequence(f):
     if isinstance(f, models.HTTPFlow):
         if f.request:
+            yield "requestheaders", f
             yield "request", f
         if f.response:
             yield "responseheaders", f
@@ -214,6 +215,10 @@ class FlowMaster(controller.Master):
     @controller.handler
     def error(self, f):
         self.state.update_flow(f)
+
+    @controller.handler
+    def requestheaders(self, f):
+        pass
 
     @controller.handler
     def request(self, f):
