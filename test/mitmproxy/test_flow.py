@@ -463,15 +463,6 @@ class TestFlowMaster:
         assert s.flow_count() == 2
         assert s.index(f2) == 1
 
-    def test_new_request(self):
-        s = flow.State()
-        fm = flow.FlowMaster(
-            options.Options(),
-            DummyServer(ProxyConfig(options.Options())),
-            s
-        )
-        assert fm.new_request("GET", "http", "example.com", 80, "/")
-
     def test_create_flow(self):
         s = flow.State()
         fm = flow.FlowMaster(None, None, s)
