@@ -4,7 +4,7 @@ import configargparse
 import os
 import re
 from mitmproxy import exceptions
-from mitmproxy import filt
+from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy import platform
 from netlib import human
@@ -32,7 +32,7 @@ def _parse_hook(s):
     if not a:
         raise ParseException("Empty clause: %s" % str(patt))
 
-    if not filt.parse(patt):
+    if not flowfilter.parse(patt):
         raise ParseException("Malformed filter pattern: %s" % patt)
 
     return patt, a, b

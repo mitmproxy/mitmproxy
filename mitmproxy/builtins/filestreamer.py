@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 import os.path
 
 from mitmproxy import exceptions
+from mitmproxy import flowfilter
 from mitmproxy.flow import io
 
 
@@ -25,17 +26,17 @@ class FileStreamer:
             self.done()
 
         if options.outfile:
-            filt = None
+            flt = None
             if options.get("filtstr"):
-                filt = filt.parse(options.filtstr)
-                if not filt:
+                flt = flowfilter.parse(options.filtstr)
+                if not flt:
                     raise exceptions.OptionsError(
                         "Invalid filter specification: %s" % options.filtstr
                     )
             path, mode = options.outfile
             if mode not in ("wb", "ab"):
                 raise exceptions.OptionsError("Invalid mode.")
-            err = self.start_stream_to_path(path, mode, filt)
+            err = self.start_stream_to_path(path, mode, flt)
             if err:
                 raise exceptions.OptionsError(err)
 

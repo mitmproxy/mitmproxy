@@ -3,7 +3,7 @@ import io
 
 import netlib.utils
 from netlib.http import Headers
-from mitmproxy import filt, flow, options
+from mitmproxy import flowfilter, flow, options
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, Kill
 from mitmproxy.models import Error
@@ -68,14 +68,14 @@ class TestHTTPFlow(object):
 
     def test_match(self):
         f = tutils.tflow(resp=True)
-        assert not f.match("~b test")
-        assert f.match(None)
-        assert not f.match("~b test")
+        assert not flowfilter.match("~b test", f)
+        assert flowfilter.match(None, f)
+        assert not flowfilter.match("~b test", f)
 
         f = tutils.tflow(err=True)
-        assert f.match("~e")
+        assert flowfilter.match("~e", f)
 
-        tutils.raises(ValueError, f.match, "~")
+        tutils.raises(ValueError, flowfilter.match, "~", f)
 
     def test_backup(self):
         f = tutils.tflow()
@@ -195,14 +195,14 @@ class TestTCPFlow:
 
     def test_match(self):
         f = tutils.ttcpflow()
-        assert not f.match("~b nonexistent")
-        assert f.match(None)
-        assert not f.match("~b nonexistent")
+        assert not flowfilter.match("~b nonexistent", f)
+        assert flowfilter.match(None, f)
+        assert not flowfilter.match("~b nonexistent", f)
 
         f = tutils.ttcpflow(err=True)
-        assert f.match("~e")
+        assert flowfilter.match("~e", f)
 
-        tutils.raises(ValueError, f.match, "~")
+        tutils.raises(ValueError, flowfilter.match, "~", f)
 
 
 class TestState:
@@ -400,8 +400,8 @@ class TestSerialize:
 
     def test_filter(self):
         sio = io.BytesIO()
-        fl = filt.parse("~c 200")
-        w = flow.FilteredFlowWriter(sio, fl)
+        flt = flowfilter.parse("~c 200")
+        w = flow.FilteredFlowWriter(sio, flt)
 
         f = tutils.tflow(resp=True)
         f.response.status_code = 200

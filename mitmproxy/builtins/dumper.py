@@ -9,7 +9,7 @@ import typing  # noqa
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import exceptions
-from mitmproxy import filt
+from mitmproxy import flowfilter
 from netlib import human
 from netlib import strutils
 
@@ -22,14 +22,14 @@ def indent(n, text):
 
 class Dumper(object):
     def __init__(self):
-        self.filter = None  # type: filt.TFilter
+        self.filter = None  # type: flowfilter.TFilter
         self.flow_detail = None  # type: int
         self.outfp = None  # type: typing.io.TextIO
         self.showhost = None  # type: bool
 
     def configure(self, options, updated):
         if options.filtstr:
-            self.filter = filt.parse(options.filtstr)
+            self.filter = flowfilter.parse(options.filtstr)
             if not self.filter:
                 raise exceptions.OptionsError(
                     "Invalid filter expression: %s" % options.filtstr
@@ -220,7 +220,7 @@ class Dumper(object):
             return False
         if not self.filter:
             return True
-        elif f.match(self.filter):
+        elif flowfilter.match(self.filter, f):
             return True
         return False
 

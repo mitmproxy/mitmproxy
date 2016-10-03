@@ -8,8 +8,6 @@ from mitmproxy import stateobject
 from mitmproxy.models.connections import ClientConnection
 from mitmproxy.models.connections import ServerConnection
 
-import six
-
 from netlib import version
 from typing import Optional  # noqa
 
@@ -188,21 +186,3 @@ class Flow(stateobject.StateObject):
         self.reply.ack()
         self.reply.commit()
         master.handle_accept_intercept(self)
-
-    def match(self, f):
-        """
-            Match this flow against a compiled filter expression. Returns True
-            if matched, False if not.
-
-            If f is a string, it will be compiled as a filter expression. If
-            the expression is invalid, ValueError is raised.
-        """
-        if isinstance(f, six.string_types):
-            from .. import filt
-
-            f = filt.parse(f)
-            if not f:
-                raise ValueError("Invalid filter expression.")
-        if f:
-            return f(self)
-        return True

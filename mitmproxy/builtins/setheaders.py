@@ -1,5 +1,5 @@
 from mitmproxy import exceptions
-from mitmproxy import filt
+from mitmproxy import flowfilter
 
 
 class SetHeaders:
@@ -15,19 +15,19 @@ class SetHeaders:
             value: Header value string
         """
         for fpatt, header, value in options.setheaders:
-            cpatt = filt.parse(fpatt)
-            if not cpatt:
+            flt = flowfilter.parse(fpatt)
+            if not flt:
                 raise exceptions.OptionsError(
                     "Invalid setheader filter pattern %s" % fpatt
                 )
-            self.lst.append((fpatt, header, value, cpatt))
+            self.lst.append((fpatt, header, value, flt))
 
     def run(self, f, hdrs):
-        for _, header, value, cpatt in self.lst:
-            if cpatt(f):
+        for _, header, value, flt in self.lst:
+            if flt(f):
                 hdrs.pop(header, None)
-        for _, header, value, cpatt in self.lst:
-            if cpatt(f):
+        for _, header, value, flt in self.lst:
+            if flt(f):
                 hdrs.add(header, value)
 
     def request(self, flow):

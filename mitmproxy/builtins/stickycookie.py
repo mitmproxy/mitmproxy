@@ -3,7 +3,7 @@ from six.moves import http_cookiejar
 from netlib.http import cookies
 
 from mitmproxy import exceptions
-from mitmproxy import filt
+from mitmproxy import flowfilter
 
 
 def ckey(attrs, f):
@@ -34,7 +34,7 @@ class StickyCookie:
 
     def configure(self, options, updated):
         if options.stickycookie:
-            flt = filt.parse(options.stickycookie)
+            flt = flowfilter.parse(options.stickycookie)
             if not flt:
                 raise exceptions.OptionsError(
                     "stickycookie: invalid filter expression: %s" % options.stickycookie
@@ -64,7 +64,7 @@ class StickyCookie:
     def request(self, flow):
         if self.flt:
             l = []
-            if flow.match(self.flt):
+            if flowfilter.match(self.flt, flow):
                 for domain, port, path in self.jar.keys():
                     match = [
                         domain_match(flow.request.host, domain),
