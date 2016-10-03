@@ -112,7 +112,6 @@ class RootContext(object):
         """
         Send a log message to the master.
         """
-
         full_msg = [
             "{}: {}".format(repr(self.client_conn.address), msg)
         ]

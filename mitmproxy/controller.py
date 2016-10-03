@@ -90,10 +90,11 @@ class Master(object):
             mitmproxy_ctx.master = None
             mitmproxy_ctx.log = None
 
-    def add_log(self, e, level="info"):
+    def add_log(self, e, level):
         """
             level: debug, info, warn, error
         """
+        pass
 
     def add_server(self, server):
         # We give a Channel to the server which can be used to communicate with the master

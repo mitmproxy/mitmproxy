@@ -162,6 +162,7 @@ class Http2Layer(base.Layer):
             self.streams[eid].priority_weight = event.priority_updated.weight
             self.streams[eid].handled_priority_event = event.priority_updated
         self.streams[eid].start()
+        self.streams[eid].request_arrived.set()
         return True
 
     def _handle_response_received(self, eid, event):
@@ -248,6 +249,7 @@ class Http2Layer(base.Layer):
         self.streams[event.pushed_stream_id].pushed = True
         self.streams[event.pushed_stream_id].parent_stream_id = parent_eid
         self.streams[event.pushed_stream_id].timestamp_end = time.time()
+        self.streams[event.pushed_stream_id].request_arrived.set()
         self.streams[event.pushed_stream_id].request_data_finished.set()
         self.streams[event.pushed_stream_id].start()
         return True
@@ -376,6 +378,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.timestamp_start = None
         self.timestamp_end = None
 
+        self.request_arrived = threading.Event()
         self.request_data_queue = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
@@ -396,6 +399,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         if not self.zombie:
             self.zombie = time.time()
             self.request_data_finished.set()
+            self.request_arrived.set()
             self.response_arrived.set()
             self.response_data_finished.set()
 
@@ -446,16 +450,10 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
             raise exceptions.Http2ZombieException("Connection already dead")
 
     @detect_zombie_stream
-    def read_request(self):
-        self.request_data_finished.wait()
-
-        data = []
-        while self.request_data_queue.qsize() > 0:
-            data.append(self.request_data_queue.get())
-        data = b"".join(data)
-
+    def read_request_headers(self):
+        self.request_arrived.wait()
+        self.raise_zombie()
         first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_headers)
-
         return models.HTTPRequest(
             first_line_format,
             method,
@@ -465,13 +463,18 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
             path,
             b"HTTP/2.0",
             self.request_headers,
-            data,
+            None,
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
         )
 
-    def read_request_body(self, request):  # pragma: no cover
-        raise NotImplementedError()
+    @detect_zombie_stream
+    def read_request_body(self, request):
+        self.request_data_finished.wait()
+        data = []
+        while self.request_data_queue.qsize() > 0:
+            data.append(self.request_data_queue.get())
+        return data
 
     @detect_zombie_stream
     def send_request(self, message):
