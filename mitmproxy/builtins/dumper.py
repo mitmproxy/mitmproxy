@@ -220,7 +220,7 @@ class Dumper(object):
             return False
         if not self.filter:
             return True
-        elif flowfilter.match(f, self.filter):
+        elif flowfilter.match(self.filter, f):
             return True
         return False
 

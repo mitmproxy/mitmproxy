@@ -502,7 +502,7 @@ def parse(s):
         return None
 
 
-def match(flow, flt):
+def match(flt, flow):
     """
         Matches a flow against a compiled filter expression.
         Returns True if matched, False if not.

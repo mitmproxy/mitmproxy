@@ -126,7 +126,7 @@ class ConsoleState(flow.State):
         self.set_focus(self.focus)
         return ret
 
-    def get_nearest_matching_flow(self, flow, filt):
+    def get_nearest_matching_flow(self, flow, flt):
         fidx = self.view.index(flow)
         dist = 1
 
@@ -135,9 +135,9 @@ class ConsoleState(flow.State):
             fprev, _ = self.get_from_pos(fidx - dist)
             fnext, _ = self.get_from_pos(fidx + dist)
 
-            if fprev and flowfilter.match(fprev, filt):
+            if fprev and flowfilter.match(flt, fprev):
                 return fprev
-            elif fnext and flowfilter.match(fnext, filt):
+            elif fnext and flowfilter.match(flt, fnext):
                 return fnext
 
             dist += 1
@@ -670,14 +670,14 @@ class ConsoleMaster(flow.FlowMaster):
     def process_flow(self, f):
         should_intercept = any(
             [
-                self.state.intercept and flowfilter.match(f, self.state.intercept) and not f.request.is_replay,
+                self.state.intercept and flowfilter.match(self.state.intercept, f) and not f.request.is_replay,
                 f.intercepted,
             ]
         )
         if should_intercept:
             f.intercept(self)
         signals.flowlist_change.send(self)
-        signals.flow_change.send(self, flow = f)
+        signals.flow_change.send(self, flow=f)
 
     def clear_events(self):
         self.logbuffer[:] = []
