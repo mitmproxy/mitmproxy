@@ -817,7 +817,7 @@ class BaseHandler(_Connection):
             until then we're conservative.
         """
 
-        context = self._create_ssl_context(**sslctx_kwargs)
+        context = self._create_ssl_context(ca_pemfile=chain_file, **sslctx_kwargs)
 
         context.use_privatekey(key)
         if isinstance(cert, certutils.SSLCert):
@@ -839,10 +839,6 @@ class BaseHandler(_Connection):
                 # Return true to prevent cert verification error
                 return True
             context.set_verify(SSL.VERIFY_PEER, save_cert)
-
-        # Cert Verify
-        if chain_file:
-            context.load_verify_locations(chain_file)
 
         if dhparams:
             SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)
