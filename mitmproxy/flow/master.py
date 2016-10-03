@@ -18,6 +18,7 @@ from mitmproxy.protocol import http_replay
 def event_sequence(f):
     if isinstance(f, models.HTTPFlow):
         if f.request:
+            yield "requestheaders", f
             yield "request", f
         if f.response:
             yield "responseheaders", f
@@ -216,6 +217,10 @@ class FlowMaster(controller.Master):
         self.state.update_flow(f)
 
     @controller.handler
+    def requestheaders(self, f):
+        pass
+
+    @controller.handler
     def request(self, f):
         if f.live:
             app = self.apps.get(f.request)
@@ -246,7 +251,7 @@ class FlowMaster(controller.Master):
         self.state.update_flow(f)
 
     @controller.handler
-    def websockets_handshake(self, f):
+    def websocket_handshake(self, f):
         pass
 
     def handle_intercept(self, f):

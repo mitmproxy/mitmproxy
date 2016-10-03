@@ -11,11 +11,10 @@ class Http1Layer(http._HttpTransmissionLayer):
         super(Http1Layer, self).__init__(ctx)
         self.mode = mode
 
-    def read_request(self):
-        req = http1.read_request(
-            self.client_conn.rfile, body_size_limit=self.config.options.body_size_limit
+    def read_request_headers(self):
+        return models.HTTPRequest.wrap(
+            http1.read_request_head(self.client_conn.rfile)
         )
-        return models.HTTPRequest.wrap(req)
 
     def read_request_body(self, request):
         expected_size = http1.expected_http_body_size(request)

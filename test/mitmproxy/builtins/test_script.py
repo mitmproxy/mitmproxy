@@ -175,7 +175,7 @@ class TestScriptLoader(mastertest.MasterTest):
                 ), [f]
             )
         evts = [i[1] for i in sc.ns.call_log]
-        assert evts == ['start', 'request', 'responseheaders', 'response', 'done']
+        assert evts == ['start', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
 
         with m.handlecontext():
             tutils.raises(
