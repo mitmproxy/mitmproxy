@@ -807,8 +807,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
     def request(self, f):
-        resp = HTTPResponse.wrap(netlib.tutils.tresp())
-        f.reply.send(resp)
+        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -889,7 +888,7 @@ class MasterIncomplete(tservers.TestMaster):
     def request(self, f):
         resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = None
-        f.reply.send(resp)
+        f.response = resp
 
 
 class TestIncompleteResponse(tservers.HTTPProxyTest):

@@ -219,10 +219,10 @@ class HttpLayer(base.Layer):
                 else:
                     # response was set by an inline script.
                     # we now need to emulate the responseheaders hook.
-                    flow = self.channel.ask("responseheaders", flow)
+                    self.channel.ask("responseheaders", flow)
 
                 self.log("response", "debug", [repr(flow.response)])
-                flow = self.channel.ask("response", flow)
+                self.channel.ask("response", flow)
                 self.send_response_to_client(flow)
 
                 if self.check_close_connection(flow):
@@ -253,7 +253,7 @@ class HttpLayer(base.Layer):
     def get_request_from_client(self, flow):
         request = self.read_request()
         flow.request = request
-        flow = self.channel.ask("requestheaders", flow)
+        self.channel.ask("requestheaders", flow)
         if request.headers.get("expect", "").lower() == "100-continue":
             # TODO: We may have to use send_response_headers for HTTP2 here.
             self.send_response(models.expect_continue_response)
@@ -339,7 +339,7 @@ class HttpLayer(base.Layer):
 
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
-        flow = self.channel.ask("responseheaders", flow)
+        self.channel.ask("responseheaders", flow)
 
         if flow.response.stream:
             flow.response.data.content = None
@@ -372,11 +372,7 @@ class HttpLayer(base.Layer):
             if host_header:
                 flow.request.headers["host"] = host_header
             flow.request.scheme = "https" if self.__initial_server_tls else "http"
-
-        request_reply = self.channel.ask("request", flow)
-        if isinstance(request_reply, models.HTTPResponse):
-            flow.response = request_reply
-            return
+        self.channel.ask("request", flow)
 
     def establish_server_connection(self, host, port, scheme):
         address = tcp.Address((host, port))
