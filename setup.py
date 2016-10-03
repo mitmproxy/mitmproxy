@@ -74,7 +74,7 @@ setup(
         "hyperframe>=4.0.1, <5",
         "jsbeautifier>=1.6.3, <1.7",
         "lxml>=3.5.0, <=3.6.0",  # no wheels for 3.6.1 yet.
-        "Pillow>=3.2, <3.4",
+        "Pillow>=3.2, <3.5",
         "passlib>=1.6.5, <1.7",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
@@ -120,7 +120,7 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.6",
-            "pytz>=2015.07.0, <=2016.6.1",
+            "pytz>=2015.07.0, <=2016.7",
         ]
     }
 )
