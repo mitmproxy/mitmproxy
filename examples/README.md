@@ -41,27 +41,27 @@
 
 **stickycookies**             An example of writing a custom proxy with mitmproxy.
 
-**tcp_message.py**
+**tcp_message.py**            Modifies packets containing "foo" to "bar".
 
-**ull_transparency_shim.c**
+**full_transparency_shim.c**  This setuid wrapper can be used to run mitmproxy in full transparency mode, as a normal user.
 
-**pathod**
+**pathod**  Testing the requests module with a single pathod instance started for the test suite.
 
-**tream_modify.py** 
+**stream_modify.py** This inline script modifies a streamed response.
 
-**tls_passthrough.py**
+**tls_passthrough.py** This inline script allows conditional TLS Interception based on a user-defined strategy.
 
 **custom_contentviews.py**    
 
-**flowbasic**          
+**flowbasic**     This example shows how to build a proxy based on mitmproxy's Flow primitives.     
 
-**har_dump.py**                 
+**har_dump.py**    This inline script can be used to dump flows as HAR files.             
 
-**remote_debug.py**       
+**remote_debug.py**     This script enables remote debugging of the mitmproxy *UI* with PyCharm.  
 
-**stream.py**                    
+**stream.py**          Enables streaming for all responses.          
 
-**flowfilter.py**      
+**flowfilter.py**      This scripts demonstrates how to use mitmproxy's filter pattern in scripts.
 
 **sslstrip.py** 
 
