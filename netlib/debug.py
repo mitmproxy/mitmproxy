@@ -91,7 +91,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
     itms = list(d.items())
     itms.sort(key=lambda x: x[1])
     for i in itms[-20:]:
-        print(i[1], i[0])
+        print(i[1], i[0], file=file)
     print("****************************************************", file=file)
 
     if not testing:
