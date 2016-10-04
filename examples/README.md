@@ -3,7 +3,7 @@
 
 
 ## Inline Script examples
-add_header.py   *Simple script that just adds a header to every request.
+add_header.py   *Simple script that just adds a header to every request.*
 
 change_upstream_proxy.py  *Dynamically change the upstream proxy.*
 
