@@ -35,6 +35,11 @@
 
 **upsidedownternet.py**       Rewrites traffic to turn images upside down.
 
+**stream_modify.py** This inline script modifies a streamed response.
+
+**tls_passthrough.py** This inline script allows conditional TLS Interception based on a user-defined strategy.
+
+**har_dump.py**    This inline script can be used to dump flows as HAR files.
 
 ## Mitmproxy Examples
 **flowbasic**                 Basic use of mitmproxy as a library.
@@ -47,15 +52,9 @@
 
 **pathod**  Testing the requests module with a single pathod instance started for the test suite.
 
-**stream_modify.py** This inline script modifies a streamed response.
-
-**tls_passthrough.py** This inline script allows conditional TLS Interception based on a user-defined strategy.
-
 **custom_contentviews.py**    
 
-**flowbasic**     This example shows how to build a proxy based on mitmproxy's Flow primitives.     
-
-**har_dump.py**    This inline script can be used to dump flows as HAR files.             
+**flowbasic**     This example shows how to build a proxy based on mitmproxy's Flow primitives.                  
 
 **remote_debug.py**     This script enables remote debugging of the mitmproxy *UI* with PyCharm.  
 
