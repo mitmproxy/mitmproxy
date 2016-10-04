@@ -1,6 +1,10 @@
-# Some inline scripts may require additional dependencies, which can be installed using
+# MITMProxy Examples
+Here you will find a bunch of examples on how to better impliment mitmproxy in your environment.
+Please note that some inline scripts may require additional dependencies, which can be installed using
 `pip install mitmproxy[examples]`
-
+If you are having trouble with getting a script to run please take the time to review its code and correct any issues that
+may be relevent to your environment. Below you will find a basic break down of scripts and their uses. These scripts can be found
+in the Beginner and Complex folders which each describe their respective difficulty to utilize.
 
 ## Inline Script examples
 **add_header.py**   Simple script that just adds a header to every request.
