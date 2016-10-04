@@ -25,7 +25,7 @@ Should give output something like this:
     > mitmproxy/controller      69      0   100%
     > mitmproxy/dump           150      0   100%
     > mitmproxy/encoding        39      0   100%
-    > mitmproxy/filt           201      0   100%
+    > mitmproxy/flowfilter     201      0   100%
     > mitmproxy/flow           891      0   100%
     > mitmproxy/proxy          427      0   100%
     > mitmproxy/script          27      0   100%

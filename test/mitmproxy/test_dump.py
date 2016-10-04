@@ -10,12 +10,12 @@ class TestDumpMaster(mastertest.MasterTest):
         mastertest.MasterTest.dummy_cycle(self, master, n, content)
         return master.options.tfile.getvalue()
 
-    def mkmaster(self, filt, **options):
+    def mkmaster(self, flt, **options):
         if "verbosity" not in options:
             options["verbosity"] = 0
         if "flow_detail" not in options:
             options["flow_detail"] = 0
-        o = dump.Options(filtstr=filt, tfile=StringIO(), **options)
+        o = dump.Options(filtstr=flt, tfile=StringIO(), **options)
         return dump.DumpMaster(None, o)
 
     def test_basic(self):

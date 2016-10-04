@@ -67,17 +67,17 @@ class FlowView(FlowList):
 
     def _build(self, flows, flt=None):
         if flt:
-            self.filt = flt
-        self._list = list(filter(self.filt, flows))
+            self.filter = flt
+        self._list = list(filter(self.filter, flows))
 
     def _add(self, f):
-        if self.filt(f):
+        if self.filter(f):
             self._list.append(f)
 
     def _update(self, f):
         if f not in self._list:
             self._add(f)
-        elif not self.filt(f):
+        elif not self.filter(f):
             self._remove(f)
 
     def _remove(self, f):
@@ -187,12 +187,12 @@ class State(object):
         self.flows = FlowStore()
         self.view = FlowView(self.flows, None)
 
-        # These are compiled filt expressions:
+        # These are compiled filter expressions:
         self.intercept = None
 
     @property
     def filter_txt(self):
-        return getattr(self.view.filt, "pattern", None)
+        return getattr(self.view.filter, "pattern", None)
 
     def flow_count(self):
         return len(self.flows)

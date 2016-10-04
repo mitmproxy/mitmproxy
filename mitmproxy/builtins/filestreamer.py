@@ -11,13 +11,13 @@ class FileStreamer:
         self.stream = None
         self.active_flows = set()  # type: Set[models.Flow]
 
-    def start_stream_to_path(self, path, mode, filt):
+    def start_stream_to_path(self, path, mode, flt):
         path = os.path.expanduser(path)
         try:
             f = open(path, mode)
         except IOError as v:
             return str(v)
-        self.stream = io.FilteredFlowWriter(f, filt)
+        self.stream = io.FilteredFlowWriter(f, flt)
         self.active_flows = set()
 
     def configure(self, options, updated):
