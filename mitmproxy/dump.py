@@ -35,7 +35,7 @@ class Options(options.Options):
 class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, options, server, flow.State())
+        flow.FlowMaster.__init__(self, options, server, flow.DummyState())
         self.has_errored = False
         self.addons.add(*builtins.default_addons())
         self.addons.add(dumper.Dumper())
@@ -81,13 +81,6 @@ class DumpMaster(flow.FlowMaster):
     def log(self, e):
         if e.level == "error":
             self.has_errored = True
-
-    @controller.handler
-    def request(self, f):
-        f = super(DumpMaster, self).request(f)
-        if f:
-            self.state.delete_flow(f)
-        return f
 
     def run(self):  # pragma: no cover
         if self.options.rfile and not self.options.keepserving:
