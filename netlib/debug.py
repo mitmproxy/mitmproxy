@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
+import gc
 import os
 import sys
 import threading
@@ -37,7 +38,7 @@ def sysinfo():
     return "\n".join(data)
 
 
-def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
+def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragma: no cover
     print("****************************************************", file=file)
     print("Summary", file=file)
     print("=======", file=file)
@@ -78,10 +79,26 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
     for i in bthreads:
         print(i._threadinfo(), file=file)
 
+    print()
+    print("Memory", file=file)
+    print("=======", file=file)
+    gc.collect()
+    d = {}
+    for i in gc.get_objects():
+        t = str(type(i))
+        if "mitmproxy" in t or "netlib" in t:
+            d[t] = d.setdefault(t, 0) + 1
+    itms = list(d.items())
+    itms.sort(key=lambda x: x[1])
+    for i in itms[-20:]:
+        print(i[1], i[0])
     print("****************************************************", file=file)
 
+    if not testing:
+        sys.exit(1)
 
-def dump_stacks(signal=None, frame=None, file=sys.stdout):
+
+def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
     code = []
     for threadId, stack in sys._current_frames().items():
@@ -95,6 +112,8 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout):
             if line:
                 code.append("  %s" % (line.strip()))
     print("\n".join(code), file=file)
+    if not testing:
+        sys.exit(1)
 
 
 def register_info_dumpers():

@@ -6,13 +6,13 @@ from netlib import debug
 
 def test_dump_info():
     cs = StringIO()
-    debug.dump_info(None, None, file=cs)
+    debug.dump_info(None, None, file=cs, testing=True)
     assert cs.getvalue()
 
 
 def test_dump_stacks():
     cs = StringIO()
-    debug.dump_stacks(None, None, file=cs)
+    debug.dump_stacks(None, None, file=cs, testing=True)
     assert cs.getvalue()
 
 
