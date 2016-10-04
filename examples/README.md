@@ -42,17 +42,26 @@ flowbasic                 Basic use of mitmproxy as a library.
 stickycookies             An example of writing a custom proxy with mitmproxy.
 
 tcp_message.py
+
 ull_transparency_shim.c
 
 pathod          
 tream_modify.py  
+
 tls_passthrough.py
+
 custom_contentviews.py    
+
 flowbasic          
+
 har_dump.py                 
+
 remote_debug.py       
+
 stream.py                    
+
 flowfilter.py      
+
 sslstrip.py 
 
 # Misc
