@@ -267,3 +267,13 @@ class State(object):
 
     def killall(self, master):
         self.flows.kill_all(master)
+
+
+class DummyState:
+    flows = ()
+
+    def add_flow(self, *args, **kwargs):
+        pass
+
+    def update_flow(self, *args, **kwargs):
+        pass
