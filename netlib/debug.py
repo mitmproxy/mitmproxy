@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
+import gc
 import os
 import sys
 import threading
@@ -78,6 +79,19 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
     for i in bthreads:
         print(i._threadinfo(), file=file)
 
+    print()
+    print("Memory", file=file)
+    print("=======", file=file)
+    gc.collect()
+    d = {}
+    for i in gc.get_objects():
+        t = str(type(i))
+        if "mitmproxy" in t or "netlib" in t:
+            d[t] = d.setdefault(t, 0) + 1
+    itms = list(d.items())
+    itms.sort(key=lambda x: x[1])
+    for i in itms[-20:]:
+        print(i[1], i[0])
     print("****************************************************", file=file)
 
 
