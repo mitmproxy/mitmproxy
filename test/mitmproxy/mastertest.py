@@ -4,7 +4,7 @@ from . import tutils
 import netlib.tutils
 
 from mitmproxy.flow import master
-from mitmproxy import flow, proxy, models, controller, options
+from mitmproxy import flow, proxy, models, options
 
 
 class TestMaster:
@@ -15,9 +15,6 @@ class MasterTest:
 
     def cycle(self, master, content):
         f = tutils.tflow(req=netlib.tutils.treq(content=content))
-        l = proxy.Log("connect")
-        l.reply = controller.DummyReply()
-        master.log(l)
         master.clientconnect(f.client_conn)
         master.serverconnect(f.server_conn)
         master.request(f)

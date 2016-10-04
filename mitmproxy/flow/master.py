@@ -190,7 +190,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def log(self, l):
-        self.add_log(l.msg, l.level)
+        pass
 
     @controller.handler
     def clientconnect(self, root_layer):
