@@ -44,8 +44,9 @@ class TestMaster(flow.FlowMaster):
     def clear_log(self):
         self.tlog = []
 
-    def add_log(self, message, level=None):
-        self.tlog.append(message)
+    @controller.handler
+    def log(self, e):
+        self.tlog.append(e.msg)
 
 
 class ProxyThread(threading.Thread):

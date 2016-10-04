@@ -3,15 +3,12 @@ from __future__ import absolute_import, print_function, division
 from typing import Optional  # noqa
 import typing  # noqa
 
-import click
-
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import builtins
-from mitmproxy import utils
 from mitmproxy import options
-from mitmproxy.builtins import dumper
+from mitmproxy.builtins import dumper, termlog
 from netlib import tcp
 
 
@@ -42,6 +39,7 @@ class DumpMaster(flow.FlowMaster):
         self.has_errored = False
         self.addons.add(*builtins.default_addons())
         self.addons.add(dumper.Dumper())
+        self.addons.add(termlog.TermLog())
         # This line is just for type hinting
         self.options = self.options  # type: Options
         self.set_stream_large_bodies(options.stream_large_bodies)
@@ -79,17 +77,10 @@ class DumpMaster(flow.FlowMaster):
         except exceptions.FlowReadException as e:
             raise DumpError(str(e))
 
-    def add_log(self, e, level="info"):
-        if level == "error":
+    @controller.handler
+    def log(self, e):
+        if e.level == "error":
             self.has_errored = True
-        if self.options.verbosity >= utils.log_tier(level):
-            click.secho(
-                e,
-                file=self.options.tfile,
-                fg=dict(error="red", warn="yellow").get(level),
-                dim=(level == "debug"),
-                err=(level == "error")
-            )
 
     @controller.handler
     def request(self, f):

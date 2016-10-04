@@ -15,8 +15,8 @@ class CallLogger:
                 lg = (self.name, attr, args, kwargs)
                 if attr != "log":
                     ctx.log.info(str(lg))
-                self.call_log.append(lg)
-                ctx.log.debug("%s %s" % (self.name, attr))
+                    self.call_log.append(lg)
+                    ctx.log.debug("%s %s" % (self.name, attr))
             return prox
         raise AttributeError
 

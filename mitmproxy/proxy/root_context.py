@@ -5,6 +5,7 @@ import sys
 import six
 
 import netlib.exceptions
+from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import protocol
 from mitmproxy.proxy import modes
@@ -118,7 +119,7 @@ class RootContext(object):
         for i in subs:
             full_msg.append("  -> " + i)
         full_msg = "\n".join(full_msg)
-        self.channel.tell("log", Log(full_msg, level))
+        self.channel.tell("log", controller.LogEntry(full_msg, level))
 
     @property
     def layers(self):
@@ -126,9 +127,3 @@ class RootContext(object):
 
     def __repr__(self):
         return "RootContext"
-
-
-class Log(object):
-    def __init__(self, msg, level="info"):
-        self.msg = msg
-        self.level = level

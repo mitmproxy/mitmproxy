@@ -9,6 +9,7 @@ import six
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
+from mitmproxy import controller
 from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
 from netlib import tcp
@@ -155,4 +156,4 @@ class ConnectionHandler(object):
 
     def log(self, msg, level):
         msg = "{}: {}".format(repr(self.client_conn.address), msg)
-        self.channel.tell("log", root_context.Log(msg, level))
+        self.channel.tell("log", controller.LogEntry(msg, level))
