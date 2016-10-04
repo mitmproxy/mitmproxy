@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+"""
+    This example shows how to build a proxy based on mitmproxy's Flow
+    primitives.
+
+    Heads Up: In the majority of cases, you want to use inline scripts.
+
+    Note that request and response messages are not automatically replied to,
+    so we need to implement handlers to do this.
+"""
+from mitmproxy import flow, controller, options
+from mitmproxy.proxy import ProxyServer, ProxyConfig
+
+
+class MyMaster(flow.FlowMaster):
+    def run(self):
+        try:
+            flow.FlowMaster.run(self)
+        except KeyboardInterrupt:
+            self.shutdown()
+
+    @controller.handler
+    def request(self, f):
+        print("request", f)
+
+    @controller.handler
+    def response(self, f):
+        print("response", f)
+
+    @controller.handler
+    def error(self, f):
+        print("error", f)
+
+    @controller.handler
+    def log(self, l):
+        print("log", l.msg)
+
+opts = options.Options(cadir="~/.mitmproxy/")
+config = ProxyConfig(opts)
+state = flow.State()
+server = ProxyServer(config)
+m = MyMaster(opts, server, state)
+m.run()
