@@ -38,7 +38,7 @@ def sysinfo():
     return "\n".join(data)
 
 
-def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
+def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragma: no cover
     print("****************************************************", file=file)
     print("Summary", file=file)
     print("=======", file=file)
@@ -94,8 +94,11 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
         print(i[1], i[0])
     print("****************************************************", file=file)
 
+    if not testing:
+        sys.exit(1)
 
-def dump_stacks(signal=None, frame=None, file=sys.stdout):
+
+def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
     code = []
     for threadId, stack in sys._current_frames().items():
@@ -109,6 +112,8 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout):
             if line:
                 code.append("  %s" % (line.strip()))
     print("\n".join(code), file=file)
+    if not testing:
+        sys.exit(1)
 
 
 def register_info_dumpers():
