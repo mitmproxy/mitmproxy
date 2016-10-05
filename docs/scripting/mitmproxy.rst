@@ -21,6 +21,6 @@ requests using a tool like curl, which will then seem to be part of the
 authenticated session.
 
 
-.. literalinclude:: ../../examples/stickycookies
-   :caption: examples/stickycookies
+.. literalinclude:: ../../examples/beginner/stickycookies
+   :caption: examples/beginner/stickycookies
    :language: python

@@ -9,6 +9,6 @@ canonical documentation for the library is in the code, and can be accessed
 using pydoc.
 
 
-.. literalinclude:: ../../examples/pathod/libpathod_pathoc.py
-   :caption: examples/pathod/libpathod_pathoc.py
+.. literalinclude:: ../../examples/complex/pathod/libpathod_pathoc.py
+   :caption: examples/complex/pathod/libpathod_pathoc.py
    :language: python
