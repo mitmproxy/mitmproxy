@@ -74,6 +74,31 @@ class TestCertStore:
             cert, key, chain_file = ca.get_cert(b"foo.bar.com", [b"*.baz.com"])
             assert b"*.baz.com" in cert.altnames
 
+    def test_expire(self):
+        with tutils.tmpdir() as d:
+            ca = certutils.CertStore.from_store(d, "test")
+            ca.STORE_CAP = 3
+            ca.get_cert(b"one.com", [])
+            ca.get_cert(b"two.com", [])
+            ca.get_cert(b"three.com", [])
+
+            assert (b"one.com", ()) in ca.certs
+            assert (b"two.com", ()) in ca.certs
+            assert (b"three.com", ()) in ca.certs
+
+            ca.get_cert(b"one.com", [])
+
+            assert (b"one.com", ()) in ca.certs
+            assert (b"two.com", ()) in ca.certs
+            assert (b"three.com", ()) in ca.certs
+
+            ca.get_cert(b"four.com", [])
+
+            assert (b"one.com", ()) not in ca.certs
+            assert (b"two.com", ()) in ca.certs
+            assert (b"three.com", ()) in ca.certs
+            assert (b"four.com", ()) in ca.certs
+
     def test_overrides(self):
         with tutils.tmpdir() as d:
             ca1 = certutils.CertStore.from_store(os.path.join(d, "ca1"), "test")

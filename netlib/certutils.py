@@ -169,6 +169,7 @@ class CertStore(object):
     """
         Implements an in-memory certificate store.
     """
+    STORE_CAP = 100
 
     def __init__(
             self,
@@ -181,6 +182,15 @@ class CertStore(object):
         self.default_chain_file = default_chain_file
         self.dhparams = dhparams
         self.certs = dict()
+        self.expire_queue = []
+
+    def expire(self, entry):
+        self.expire_queue.append(entry)
+        if len(self.expire_queue) > self.STORE_CAP:
+            d = self.expire_queue.pop(0)
+            for k, v in list(self.certs.items()):
+                if v == d:
+                    del self.certs[k]
 
     @staticmethod
     def load_dhparam(path):
@@ -342,6 +352,7 @@ class CertStore(object):
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file)
             self.certs[(commonname, tuple(sans))] = entry
+            self.expire(entry)
 
         return entry.cert, entry.privatekey, entry.chain_file
 
