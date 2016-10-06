@@ -172,6 +172,8 @@ def load(file_handle):
     #  Read the length prefix one char at a time.
     #  Note that the netstring spec explicitly forbids padding zeros.
     c = file_handle.read(1)
+    if c == b"":  # we want to detect this special case.
+        raise ValueError("not a tnetstring: empty file")
     data_length = b""
     while c.isdigit():
         data_length += c
