@@ -19,10 +19,10 @@ Events = frozenset([
     "serverconnect",
     "serverdisconnect",
 
-    "tcp_open",
+    "tcp_start",
     "tcp_message",
     "tcp_error",
-    "tcp_close",
+    "tcp_end",
 
     "request",
     "requestheaders",

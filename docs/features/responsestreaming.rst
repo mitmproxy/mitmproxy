@@ -35,10 +35,10 @@ command-line       ``--stream SIZE``
 Customizing Response Streaming
 ------------------------------
 
-You can also use an :ref:`inlinescripts` to customize exactly
-which responses are streamed.
+You can also use a script to customize exactly which responses are streamed.
 
-Responses that should be tagged for streaming by setting their ``.stream`` attribute to ``True``:
+Responses that should be tagged for streaming by setting their ``.stream``
+attribute to ``True``:
 
 .. literalinclude:: ../../examples/stream.py
    :caption: examples/stream.py

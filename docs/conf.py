@@ -1,11 +1,16 @@
 import sys
 import os
+import importlib
+import inspect
 sys.path.insert(0, os.path.abspath('..'))
 import netlib.version
+
 
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
+    'sphinx.ext.extlinks',
+    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinxcontrib.documentedlist'
@@ -156,7 +161,7 @@ html_static_path = ['_static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
@@ -188,6 +193,44 @@ html_static_path = ['_static']
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'mitmproxydoc'
+
+
+# FIXME: change master to dynamic version before release
+extlinks = dict(
+    src = ('https://github.com/mitmproxy/mitmproxy/blob/master/%s', '')
+)
+
+
+MODULE = "/mitmproxy/"
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    module, fullname = info['module'], info['fullname']
+    # TODO: attributes/properties don't have modules, maybe try to look
+    #       them up based on their cached host object?
+    if not module:
+        return None
+    obj = importlib.import_module(module)
+    for item in fullname.split('.'):
+        obj = getattr(obj, item, None)
+    if obj is None:
+        return None
+    try:
+        obj = getattr(obj, '_orig')
+    except AttributeError:
+        pass
+    try:
+        obj_source_path = inspect.getsourcefile(obj)
+        _, line = inspect.getsourcelines(obj)
+    except (TypeError, IOError):
+        # obj doesn't have a module, or something
+        return None
+    off = obj_source_path.rfind(MODULE)
+    mpath = obj_source_path[off + len(MODULE):]
+    print(obj_source_path, mpath)
+    return "https://github.com/mitmproxy/mitmproxy/blob/master/%s" % mpath
+
 
 def setup(app):
     app.add_stylesheet('theme_overrides.css')

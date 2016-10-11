@@ -40,11 +40,11 @@ class FileStreamer:
             if err:
                 raise exceptions.OptionsError(err)
 
-    def tcp_open(self, flow):
+    def tcp_start(self, flow):
         if self.stream:
             self.active_flows.add(flow)
 
-    def tcp_close(self, flow):
+    def tcp_end(self, flow):
         if self.stream:
             self.stream.add(flow)
             self.active_flows.discard(flow)
