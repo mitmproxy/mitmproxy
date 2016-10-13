@@ -160,12 +160,12 @@ For example, you can generate a certificate in this format using these instructi
 
 Now, you can run mitmproxy with the generated certificate:
 
-**For all domain names**::
-``--cert *=cert.pem``::
+####For all domain names
+``--cert *=cert.pem``
 Mitmproxy then uses the provided certificate (cert.pem) for interception of
 all the traffic instead of generating a certificate signed by its own CA.
 
-**For specific domain names**
+####For specific domain names
 ``--cert *.example.com=cert.pem``
 Mitmproxy then uses the provided certificate for interception of the
 specified domain instead of generating a certificate signed by its own CA.
