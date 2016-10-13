@@ -12,9 +12,10 @@ class HTTPRequest(http.Request):
 
     """
     A mitmproxy HTTP request.
-    This is a very thin wrapper on top of :py:class:`netlib.http.Request` and
-    may be removed in the future.
     """
+
+    # This is a very thin wrapper on top of :py:class:`netlib.http.Request` and
+    # may be removed in the future.
 
     def __init__(
             self,
@@ -98,9 +99,9 @@ class HTTPResponse(http.Response):
 
     """
     A mitmproxy HTTP response.
-    This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
-    may be removed in the future.
     """
+    # This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
+    # may be removed in the future.
 
     def __init__(
             self,
@@ -148,29 +149,30 @@ class HTTPResponse(http.Response):
 class HTTPFlow(flow.Flow):
 
     """
-    A HTTPFlow is a collection of objects representing a single HTTP
+    An HTTPFlow is a collection of objects representing a single HTTP
     transaction.
-
-    Attributes:
-        request: :py:class:`HTTPRequest` object
-        response: :py:class:`HTTPResponse` object
-        error: :py:class:`Error` object
-        server_conn: :py:class:`ServerConnection` object
-        client_conn: :py:class:`ClientConnection` object
-        intercepted: Is this flow currently being intercepted?
-        live: Does this flow have a live client connection?
-
-    Note that it's possible for a Flow to have both a response and an error
-    object. This might happen, for instance, when a response was received
-    from the server, but there was an error sending it back to the client.
     """
 
     def __init__(self, client_conn, server_conn, live=None):
         super(HTTPFlow, self).__init__("http", client_conn, server_conn, live)
+
         self.request = None
-        """@type: HTTPRequest"""
+        """ :py:class:`HTTPRequest` object """
         self.response = None
-        """@type: HTTPResponse"""
+        """ :py:class:`HTTPResponse` object """
+        self.error = None
+        """ :py:class:`Error` object
+
+        Note that it's possible for a Flow to have both a response and an error
+        object. This might happen, for instance, when a response was received
+        from the server, but there was an error sending it back to the client.
+        """
+        self.server_conn = server_conn
+        """ :py:class:`ServerConnection` object """
+        self.client_conn = client_conn
+        """:py:class:`ClientConnection` object """
+        self.intercepted = False
+        """ Is this flow currently being intercepted? """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(

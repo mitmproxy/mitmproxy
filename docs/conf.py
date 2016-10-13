@@ -195,20 +195,19 @@ html_show_sourcelink = False
 htmlhelp_basename = 'mitmproxydoc'
 
 
+SRCBASE = "https://github.com/mitmproxy/mitmproxy/blob/master"
+
+
 # FIXME: change master to dynamic version before release
 extlinks = dict(
-    src = ('https://github.com/mitmproxy/mitmproxy/blob/master/%s', '')
+    src = (SRCBASE + r"/%s", '')
 )
 
-
-MODULE = "/mitmproxy/"
 
 def linkcode_resolve(domain, info):
     if domain != 'py':
         return None
     module, fullname = info['module'], info['fullname']
-    # TODO: attributes/properties don't have modules, maybe try to look
-    #       them up based on their cached host object?
     if not module:
         return None
     obj = importlib.import_module(module)
@@ -217,19 +216,19 @@ def linkcode_resolve(domain, info):
     if obj is None:
         return None
     try:
-        obj = getattr(obj, '_orig')
-    except AttributeError:
-        pass
-    try:
-        obj_source_path = inspect.getsourcefile(obj)
+        spath = inspect.getsourcefile(obj)
         _, line = inspect.getsourcelines(obj)
     except (TypeError, IOError):
-        # obj doesn't have a module, or something
         return None
-    off = obj_source_path.rfind(MODULE)
-    mpath = obj_source_path[off + len(MODULE):]
-    print(obj_source_path, mpath)
-    return "https://github.com/mitmproxy/mitmproxy/blob/master/%s" % mpath
+    if spath.rfind("netlib") > -1:
+        off = spath.rfind("netlib")
+        mpath = spath[off:]
+    elif spath.rfind("mitmproxy") > -1:
+        off = spath.rfind("mitmproxy")
+        mpath = spath[off:]
+    else:
+        return None
+    return SRCBASE + "/%s#L%s" % (mpath, line)
 
 
 def setup(app):
