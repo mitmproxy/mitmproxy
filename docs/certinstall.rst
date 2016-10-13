@@ -130,9 +130,8 @@ mitmproxy-ca-cert.cer Same file as .pem, but with an extension expected by some 
 Using a custom certificate
 --------------------------
 
-You can use your own certificate by passing the ``--cert`` option to
-mitmproxy. Mitmproxy then uses the provided certificate for interception of the
-specified domains instead of generating a certificate signed by its own CA.
+You can use your own certificate by passing the ``--cert [domain=]path_to_certificate`` option to
+mitmproxy.
 
 The certificate file is expected to be in the PEM format.  You can include
 intermediary certificates right below your leaf certificate, so that your PEM
@@ -158,6 +157,18 @@ For example, you can generate a certificate in this format using these instructi
 >>> openssl req -new -x509 -key cert.key -out cert.crt
     (Specify the mitm domain as Common Name, e.g. *.google.com)
 >>> cat cert.key cert.crt > cert.pem
+
+Now, you can run mitmproxy with the generated certificate:
+
+**For all domain names**
+``--cert *=cert.pem``
+Mitmproxy then uses the provided certificate (cert.pem) for interception of
+all the traffic instead of generating a certificate signed by its own CA.
+
+**For specific domain names**
+``--cert *.example.com=cert.pem``
+Mitmproxy then uses the provided certificate for interception of the
+specified domain instead of generating a certificate signed by its own CA.
 >>> mitmproxy --cert=cert.pem
 
 
