@@ -131,7 +131,7 @@ Using a custom certificate
 --------------------------
 
 You can use your own certificate by passing the ``--cert [domain=]path_to_certificate`` option to
-mitmproxy.Mitmproxy then uses the provided certificate for interception of the
+mitmproxy. Mitmproxy then uses the provided certificate for interception of the
 specified domain instead of generating a certificate signed by its own CA.
 
 The certificate file is expected to be in the PEM format.  You can include
