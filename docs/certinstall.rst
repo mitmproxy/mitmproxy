@@ -131,7 +131,8 @@ Using a custom certificate
 --------------------------
 
 You can use your own certificate by passing the ``--cert [domain=]path_to_certificate`` option to
-mitmproxy.
+mitmproxy.Mitmproxy then uses the provided certificate for interception of the
+specified domain instead of generating a certificate signed by its own CA.
 
 The certificate file is expected to be in the PEM format.  You can include
 intermediary certificates right below your leaf certificate, so that your PEM
@@ -160,18 +161,15 @@ For example, you can generate a certificate in this format using these instructi
 
 Now, you can run mitmproxy with the generated certificate:
 
-#### For all domain names
-``--cert *=cert.pem``
+**For all domain names**
 
-Mitmproxy then uses the provided certificate (cert.pem) for interception of
-all the traffic instead of generating a certificate signed by its own CA.
+``>>>mitmproxy --cert *=cert.pem``
 
-#### For specific domain names
-``--cert *.example.com=cert.pem``
+**For specific domain names**
 
-Mitmproxy then uses the provided certificate for interception of the
-specified domain instead of generating a certificate signed by its own CA.
->>> mitmproxy --cert=cert.pem
+``>>>mitmproxy --cert *.example.com=cert.pem``
+
+**Note:** ``*.example.com`` is for all the subdomains. You can also use ``www.example.com`` for a particular subdomain.
 
 
 Using a custom certificate authority
