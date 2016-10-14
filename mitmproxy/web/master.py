@@ -82,6 +82,9 @@ class WebState(flow.State):
             data=entry
         )
 
+    def update_flow(self, flow):
+        self.view._update(flow)
+
     def clear(self):
         super(WebState, self).clear()
         self.events.clear()
