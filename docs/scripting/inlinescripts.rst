@@ -11,8 +11,8 @@ module that exposes a set of event methods. Here's a complete mitmproxy script
 that adds a new header to every HTTP response before it is returned to the
 client:
 
-.. literalinclude:: ../../examples/add_header.py
-   :caption: examples/add_header.py
+.. literalinclude:: ../../examples/beginner/add_header.py
+   :caption: examples/beginner/add_header.py
    :language: python
 
 All events that deal with an HTTP request get an instance of :py:class:`~mitmproxy.models.HTTPFlow`,
@@ -149,7 +149,7 @@ TCP Events
 
     The sender and receiver are identifiable. The message is user-modifiable.
 
-    :param TcpMessage tcp_msg: see *examples/tcp_message.py*
+    :param TcpMessage tcp_msg: see *examples/complex/tcp_message.py*
 
 API
 ---
@@ -188,8 +188,8 @@ While that's usually a very desirable behaviour, blocking scripts can be run thr
 :py:obj:`mitmproxy.script.concurrent` decorator.
 **If your script does not block, you should avoid the overhead of the decorator.**
 
-.. literalinclude:: ../../examples/nonblocking.py
-   :caption: examples/nonblocking.py
+.. literalinclude:: ../../examples/complex/nonblocking.py
+   :caption: examples/complex/nonblocking.py
    :language: python
 
 Make scripts configurable with arguments
@@ -199,8 +199,8 @@ Sometimes, you want to pass runtime arguments to the inline script. This can be 
 surrounding the script call with quotes, e.g. ```mitmdump -s 'script.py --foo 42'``.
 The arguments are then exposed in the start event:
 
-.. literalinclude:: ../../examples/modify_response_body.py
-   :caption: examples/modify_response_body.py
+.. literalinclude:: ../../examples/beginner/modify_response_body.py
+   :caption: examples/beginner/modify_response_body.py
    :language: python
 
 Running scripts on saved flows

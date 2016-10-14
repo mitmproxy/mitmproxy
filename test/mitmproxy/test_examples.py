@@ -41,13 +41,13 @@ def tscript(cmd, args=""):
 
 class TestScripts(mastertest.MasterTest):
     def test_add_header(self):
-        m, _ = tscript("add_header.py")
+        m, _ = tscript("beginner/add_header.py")
         f = tutils.tflow(resp=netutils.tresp())
         m.response(f)
         assert f.response.headers["newheader"] == "foo"
 
     def test_custom_contentviews(self):
-        m, sc = tscript("custom_contentviews.py")
+        m, sc = tscript("beginner/custom_contentviews.py")
         pig = contentviews.get("pig_latin_HTML")
         _, fmt = pig(b"<html>test!</html>")
         assert any(b'esttay!' in val[0][1] for val in fmt)
@@ -55,16 +55,16 @@ class TestScripts(mastertest.MasterTest):
 
     def test_iframe_injector(self):
         with tutils.raises(ScriptError):
-            tscript("iframe_injector.py")
+            tscript("beginner/iframe_injector.py")
 
-        m, sc = tscript("iframe_injector.py", "http://example.org/evil_iframe")
+        m, sc = tscript("beginner/iframe_injector.py", "http://example.org/evil_iframe")
         f = tutils.tflow(resp=netutils.tresp(content=b"<html>mitmproxy</html>"))
         m.response(f)
         content = f.response.content
         assert b'iframe' in content and b'evil_iframe' in content
 
     def test_modify_form(self):
-        m, sc = tscript("modify_form.py")
+        m, sc = tscript("beginner/modify_form.py")
 
         form_header = Headers(content_type="application/x-www-form-urlencoded")
         f = tutils.tflow(req=netutils.treq(headers=form_header))
@@ -77,7 +77,7 @@ class TestScripts(mastertest.MasterTest):
         assert list(f.request.urlencoded_form.items()) == [(b"foo", b"bar")]
 
     def test_modify_querystring(self):
-        m, sc = tscript("modify_querystring.py")
+        m, sc = tscript("beginner/modify_querystring.py")
         f = tutils.tflow(req=netutils.treq(path="/search?q=term"))
 
         m.request(f)
@@ -89,15 +89,15 @@ class TestScripts(mastertest.MasterTest):
 
     def test_modify_response_body(self):
         with tutils.raises(ScriptError):
-            tscript("modify_response_body.py")
+            tscript("beginner/modify_response_body.py")
 
-        m, sc = tscript("modify_response_body.py", "mitmproxy rocks")
+        m, sc = tscript("beginner/modify_response_body.py", "mitmproxy rocks")
         f = tutils.tflow(resp=netutils.tresp(content=b"I <3 mitmproxy"))
         m.response(f)
         assert f.response.content == b"I <3 rocks"
 
     def test_redirect_requests(self):
-        m, sc = tscript("redirect_requests.py")
+        m, sc = tscript("beginner/redirect_requests.py")
         f = tutils.tflow(req=netutils.treq(host="example.org"))
         m.request(f)
         assert f.request.host == "mitmproxy.org"
@@ -119,13 +119,13 @@ class TestHARDump():
 
     def test_no_file_arg(self):
         with tutils.raises(ScriptError):
-            tscript("har_dump.py")
+            tscript("complex/har_dump.py")
 
     def test_simple(self):
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m, sc = tscript("complex/har_dump.py", six.moves.shlex_quote(path))
             m.addons.invoke(m, "response", self.flow())
             m.addons.remove(sc)
 
@@ -138,7 +138,7 @@ class TestHARDump():
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m, sc = tscript("complex/har_dump.py", six.moves.shlex_quote(path))
             m.addons.invoke(m, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10))
             m.addons.remove(sc)
 
@@ -148,7 +148,7 @@ class TestHARDump():
         assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
     def test_format_cookies(self):
-        m, sc = tscript("har_dump.py", "-")
+        m, sc = tscript("complex/har_dump.py", "-")
         format_cookies = sc.ns.ns["format_cookies"]
 
         CA = cookies.CookieAttrs
