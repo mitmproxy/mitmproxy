@@ -122,3 +122,16 @@ class TestMaster(mastertest.MasterTest):
         for i in (1, 2, 3):
             self.dummy_cycle(m, 1, b"")
             assert len(m.state.flows) == i
+
+    def test_intercept(self):
+        """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
+        m = self.mkmaster(intercept="~b bar")
+        f = tutils.tflow(req=netlib.tutils.treq(content=b"foo"))
+        m.request(f)
+        assert not m.state.flows[0].intercepted
+        f = tutils.tflow(req=netlib.tutils.treq(content=b"bar"))
+        m.request(f)
+        assert m.state.flows[1].intercepted
+        f = tutils.tflow(resp=netlib.tutils.tresp(content=b"bar"))
+        m.request(f)
+        assert m.state.flows[2].intercepted

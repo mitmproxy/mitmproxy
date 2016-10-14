@@ -685,24 +685,18 @@ class ConsoleMaster(flow.FlowMaster):
     # Handlers
     @controller.handler
     def error(self, f):
-        f = flow.FlowMaster.error(self, f)
-        if f:
-            self.process_flow(f)
-        return f
+        super(ConsoleMaster, self).error(f)
+        self.process_flow(f)
 
     @controller.handler
     def request(self, f):
-        f = flow.FlowMaster.request(self, f)
-        if f:
-            self.process_flow(f)
-        return f
+        super(ConsoleMaster, self).request(f)
+        self.process_flow(f)
 
     @controller.handler
     def response(self, f):
-        f = flow.FlowMaster.response(self, f)
-        if f:
-            self.process_flow(f)
-        return f
+        super(ConsoleMaster, self).response(f)
+        self.process_flow(f)
 
     @controller.handler
     def tcp_message(self, f):
