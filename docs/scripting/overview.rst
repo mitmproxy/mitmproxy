@@ -74,17 +74,23 @@ Whenever a handler is called, mitpmroxy rewrites the script environment so that
 it sees its own arguments as if it was invoked from the command-line.
 
 
-Running scripts in parallel
----------------------------
+Logging and the context
+-----------------------
 
-We have a single flow primitive, so when a script is blocking, other requests are not processed.
-While that's usually a very desirable behaviour, blocking scripts can be run threaded by using the
-:py:obj:`mitmproxy.script.concurrent` decorator.
-**If your script does not block, you should avoid the overhead of the decorator.**
+Scripts should not output straight to stderr or stdout. Instead, the `log
+<api.html#mitmproxy.controller.Log>`_ object on the ``ctx`` contexzt module
+should be used, so that the mitmproxy host program can handle output
+appropriately. So, mitmdump can print colorised sript output to the terminal,
+and mitmproxy console can place script output in the event buffer.
 
-.. literalinclude:: ../../examples/nonblocking.py
-   :caption: examples/nonblocking.py
+Here's how this looks:
+
+.. literalinclude:: ../../examples/logging.py
+   :caption: :src:`examples/logging.py`
    :language: python
+
+The ``ctx`` module also exposes the mitmproxy master object at ``ctx.master``
+for advanced usage.
 
 
 Running scripts on saved flows
@@ -101,11 +107,20 @@ In this case, there are no client connections, and the events are run in the fol
 If the flow doesn't have a **response** or **error** associated with it, the matching events will
 be skipped.
 
-Spaces in the script path
--------------------------
 
-By default, spaces are interpreted as a separator between the inline script and its arguments
-(e.g. ``-s 'foo.py 42'``). Consequently, the script path needs to be wrapped in a separate pair of
-quotes if it contains spaces: ``-s '\'./foo bar/baz.py\' 42'``.
+Concurrency
+-----------
 
-.. _GitHub: https://github.com/mitmproxy/mitmproxy
+We have a single flow primitive, so when a script is blocking, other requests
+are not processed. While that's usually a very desirable behaviour, blocking
+scripts can be run threaded by using the :py:obj:`mitmproxy.script.concurrent`
+decorator.
+
+.. literalinclude:: ../../examples/nonblocking.py
+   :caption: :src:`examples/nonblocking.py`
+   :language: python
+
+
+
+Developing scripts
+------------------

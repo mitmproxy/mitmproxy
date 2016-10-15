@@ -52,7 +52,6 @@
     :caption: Scripting
 
     scripting/overview
-    scripting/context
     scripting/events
     scripting/api
 
