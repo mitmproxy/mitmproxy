@@ -1,12 +1,16 @@
 .. _overview:
 
-Overview
-=========
+Introduction
+============
 
 Mitmproxy has a powerful scripting API that allows you to control almost any
 aspect of traffic being proxied. In fact, much of mitmproxy's own core
 functionality is implemented using the exact same API exposed to scripters (see
 :src:`mitmproxy/builtins`).
+
+
+A simple example
+----------------
 
 Scripting is event driven, with named handlers on the script object called at
 appropriate points of mitmproxy's operation. Here's a complete mitmproxy script
@@ -17,18 +21,57 @@ client:
    :caption: :src:`examples/add_header.py`
    :language: python
 
-All events that deal with an HTTP request get an instance of
-:py:class:`~mitmproxy.models.HTTPFlow`, which we can use to manipulate the
-response itself. We can now run this script using mitmdump or mitmproxy as
-follows:
+All events that deal with an HTTP request get an instance of `HTTPFlow
+<api.html#mitmproxy.models.http.HTTPFlow>`_, which we can use to manipulate the
+response itself. We can now run this script using mitmdump, and the new header
+will be added to all responses passing through the proxy:
 
 >>> mitmdump -s add_header.py
 
-The new header will be added to all responses passing through the proxy.
+
+Using classes
+-------------
+
+In the example above, the script object is the ``add_header`` module itself.
+That is, the handlers are declared at the global level of the script. This is
+great for quick hacks, but soon becomes limiting as scripts become more
+sophisticated.
+
+When a script first starts up, the `start <events.html#start>`_, event is
+called before anything else happens. You can replace the current script object
+by returning it from this handler. Here's how this looks when applied to the
+example above:
+
+.. literalinclude:: ../../examples/classes.py
+   :caption: :src:`examples/classes.py`
+   :language: python
+
+So here, we're using a module-level script to "boot up" into a class instance.
+From this point on, the module-level script is removed from the handler chain,
+and is replaced by the class instance.
 
 
-mitmproxy comes with a variety of example inline scripts, which demonstrate
-many basic tasks.
+Handling arguments
+------------------
+
+Scripts can handle their own command-line arguments, just like any other Python
+program. Let's build on the example above to do something slightly more
+sophisticated - replace one value with another in all responses. Mitmproxy's
+`HTTPRequest <api.html#mitmproxy.models.http.HTTPRequest>`_ and `HTTPResponse
+<api.html#mitmproxy.models.http.HTTPResponse>`_ objects have a handy `replace
+<api.html#mitmproxy.models.http.HTTPResponse.replace>`_ method that takes care
+of all the details for us.
+
+.. literalinclude:: ../../examples/arguments.py
+   :caption: :src:`examples/arguments.py`
+   :language: python
+
+We can now call this script on the command-line like this:
+
+>>> mitmdump -dd -s "./arguments.py html faketml"
+
+Whenever a handler is called, mitpmroxy rewrites the script environment so that
+it sees its own arguments as if it was invoked from the command-line.
 
 
 Running scripts in parallel
@@ -41,17 +84,6 @@ While that's usually a very desirable behaviour, blocking scripts can be run thr
 
 .. literalinclude:: ../../examples/nonblocking.py
    :caption: examples/nonblocking.py
-   :language: python
-
-Make scripts configurable with arguments
-----------------------------------------
-
-Sometimes, you want to pass runtime arguments to the inline script. This can be simply done by
-surrounding the script call with quotes, e.g. ```mitmdump -s 'script.py --foo 42'``.
-The arguments are then exposed in the start event:
-
-.. literalinclude:: ../../examples/modify_response_body.py
-   :caption: examples/modify_response_body.py
    :language: python
 
 

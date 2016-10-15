@@ -24,7 +24,6 @@ class Error(stateobject.StateObject):
 
         Exposes the following attributes:
 
-            flow: Flow object
             msg: Message describing the error
             timestamp: Seconds since the epoch
     """

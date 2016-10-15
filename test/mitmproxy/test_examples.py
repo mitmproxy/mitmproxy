@@ -87,11 +87,8 @@ class TestScripts(mastertest.MasterTest):
         m.request(f)
         assert f.request.query["mitmproxy"] == "rocks"
 
-    def test_modify_response_body(self):
-        with tutils.raises(ScriptError):
-            tscript("modify_response_body.py")
-
-        m, sc = tscript("modify_response_body.py", "mitmproxy rocks")
+    def test_arguments(self):
+        m, sc = tscript("arguments.py", "mitmproxy rocks")
         f = tutils.tflow(resp=netutils.tresp(content=b"I <3 mitmproxy"))
         m.response(f)
         assert f.response.content == b"I <3 rocks"
