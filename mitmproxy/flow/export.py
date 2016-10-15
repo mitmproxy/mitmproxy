@@ -39,7 +39,8 @@ def curl_command(flow):
     if request.method != "GET":
         data += "-X %s " % request.method
 
-    full_url = request.scheme + "://" + request.host + request.path
+    port = "" if request.port == 80 else ":%d" % request.port
+    full_url = request.scheme + "://" + request.host + port + request.path
     data += "'%s'" % full_url
 
     if request.content:
@@ -63,7 +64,8 @@ def python_code(flow):
     """).strip()
 
     components = [urllib.parse.quote(c, safe="") for c in flow.request.path_components]
-    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
+    port = "" if flow.request.port == 80 else ":%d" % flow.request.port
+    url = flow.request.scheme + "://" + flow.request.host + port + "/" + "/".join(components)
 
     args = ""
     headers = ""
