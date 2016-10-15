@@ -37,9 +37,9 @@ class DumpMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server, flow.DummyState())
         self.has_errored = False
-        self.addons.add(*builtins.default_addons())
         self.addons.add(dumper.Dumper())
         self.addons.add(termlog.TermLog())
+        self.addons.add(*builtins.default_addons())
         # This line is just for type hinting
         self.options = self.options  # type: Options
         self.set_stream_large_bodies(options.stream_large_bodies)
