@@ -88,6 +88,8 @@ def scriptenv(path, args):
     sys.path.append(script_dir)
     try:
         yield
+    except SystemExit as v:
+        ctx.log.error("Script exited with code %s" % v.code)
     except Exception:
         etype, value, tb = sys.exc_info()
         tb = cut_traceback(tb, "scriptenv").tb_next
