@@ -1,7 +1,9 @@
-import sys
-import os
 import importlib
 import inspect
+import os
+import subprocess
+import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 import netlib.version
 
@@ -194,11 +196,20 @@ html_show_sourcelink = False
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'mitmproxydoc'
 
+last_tag, tag_dist, commit = (
+    subprocess.check_output(["git", "describe", "--tags", "--long"])
+        .decode()
+        .strip()
+        .rsplit("-", 2)
+)
+tag_dist = int(tag_dist)
+if tag_dist == 0:
+    tag = last_tag
+else:
+    tag = "master"
 
-SRCBASE = "https://github.com/mitmproxy/mitmproxy/blob/master"
+SRCBASE = "https://github.com/mitmproxy/mitmproxy/blob/{}".format(tag)
 
-
-# FIXME: change master to dynamic version before release
 extlinks = dict(
     src = (SRCBASE + r"/%s", '')
 )
