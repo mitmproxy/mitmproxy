@@ -65,6 +65,11 @@ def convert_017_018(data):
     return data
 
 
+def convert_018_019(data):
+    data["version"] = (0, 19)
+    return data
+
+
 def _convert_dict_keys(o):
     # type: (Any) -> Any
     if isinstance(o, dict):
@@ -116,6 +121,7 @@ converters = {
     (0, 15): convert_015_016,
     (0, 16): convert_016_017,
     (0, 17): convert_017_018,
+    (0, 18): convert_018_019,
 }
 
 
