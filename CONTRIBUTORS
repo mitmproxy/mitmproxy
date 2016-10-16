@@ -1,88 +1,98 @@
-  2118	Aldo Cortesi
-  1666	Maximilian Hils
-   450	Thomas Kriechbaumer
-   210	Shadab Zafar
-    94	Jason
+  2184	Aldo Cortesi
+  1745	Maximilian Hils
+   507	Thomas Kriechbaumer
+   258	Shadab Zafar
+    97	Jason
     83	Marcelo Glezer
-    36	Clemens
+    68	Clemens
     28	Jim Shaver
     18	Henrik Nordstrom
     16	Matthew Shao
-    14	David Weinstein
     14	Pedro Worcel
+    14	David Weinstein
     13	Thomas Roth
-    11	Jake Drahos
-    11	Justus Wingert
     11	Stephen Altamirano
-    10	András Veres-Szentkirályi
-    10	Chris Czub
+    11	Jake Drahos
+    11	arjun23496
+    11	Justus Wingert
     10	Sandor Nemes
     10	Zohar Lorberbaum
+    10	András Veres-Szentkirályi
+    10	Chris Czub
+    10	smill
+     9	ikoz
      9	Kyle Morton
      9	Legend Tang
      9	Rouli
-     9	ikoz
-     8	Chandler Abraham
      8	Jason A. Novak
+     8	Chandler Abraham
      7	Alexis Hildebrandt
-     7	Brad Peabody
      7	Matthias Urlichs
+     7	Brad Peabody
      7	dufferzafar
      6	Felix Yan
-     5	Choongwoo Han
-     5	Sam Cleveland
      5	Tomaz Muraus
-     5	Will Coster
      5	elitest
      5	iroiro123
-     4	Bryan Bishop
+     5	Sam Cleveland
+     5	Choongwoo Han
+     5	Will Coster
+     4	root
      4	Clemens Brunner
-     4	Marc Liyanage
-     4	Michael J. Bazzinotti
+     4	Schamper
      4	Valtteri Virtanen
      4	Wade 524
      4	Youhei Sakurai
-     4	root
+     4	Bryan Bishop
+     4	Marc Liyanage
+     4	Michael J. Bazzinotti
      4	yonder
-     3	Benjamin Lee
-     3	Chris Neasbitt
      3	Eli Shvartsman
+     3	Chris Neasbitt
      3	Guillem Anguera
-     3	Kyle Manna
      3	MatthewShao
      3	Ryan Welton
+     3	smill@cuckoo.sh
+     3	Manish Kumar
+     3	Benjamin Lee
+     3	Ryan Laughlin
      3	Zack B
+     3	Kyle Manna
      3	redfast00
      3	requires.io
-     2	Anant
-     2	Bennett Blodinger
-     2	Colin Bendell
-     2	Cory Benfield
-     2	Heikki Hannikainen
-     2	Israel Nir
-     2	Jaime Soriano Pastor
-     2	Jim Lloyd
-     2	Krzysztof Bielicki
-     2	Mark E. Haase
-     2	Michael Frister
-     2	Nick Badger
-     2	Niko Kommenda
-     2	Paul
-     2	Rob Wills
-     2	Sean Coates
-     2	Steven Van Acker
-     2	Terry Long
-     2	Wade Catron
-     2	alts
      2	isra17
      2	israel
+     2	Colin Bendell
      2	jpkrause
+     2	Paul
      2	lilydjwg
-     2	strohu
+     2	Michael Frister
      2	依云
-     1	Aditya
+     2	Jaime Soriano Pastor
+     2	Nick Badger
+     2	Rob Wills
+     2	Heikki Hannikainen
+     2	Vincent Haupert
+     2	strohu
+     2	Wade Catron
+     2	Krzysztof Bielicki
+     2	Sachin Kelkar
+     2	Israel Nir
+     2	Anant
+     2	alts
+     2	Doug Freed
+     2	Niko Kommenda
+     2	Terry Long
+     2	Mark E. Haase
+     2	Steven Van Acker
+     2	Jim Lloyd
+     2	Bennett Blodinger
+     2	Sean Coates
+     2	Cory Benfield
+     1	Sergey Chipiga
      1	Andrey Plotnikov
      1	Andy Smith
+     1	Angelo Agatino Nicolosi
      1	Anthony Zhang
      1	BSalita
      1	Ben Lerner
@@ -93,7 +103,6 @@
      1	Dan Wilbraham
      1	David Dworken
      1	David Shaw
-     1	Doug Freed
      1	Doug Lethin
      1	Drake Caraker
      1	Eric Entzel
@@ -131,10 +140,10 @@
      1	Rory McCann
      1	Rune Halvorsen
      1	Ryo Onodera
-     1	Sachin Kelkar
      1	Sahn Lam
+     1	Sanchit Sokhey
      1	Seppo Yli-Olli
-     1	Sergey Chipiga
+     1	Aditya
      1	Stefan Wärting
      1	Steve Phillips
      1	Steven Noble
@@ -145,12 +154,14 @@
      1	Thiago Arrais
      1	Tim Becker
      1	Timothy Elliott
+     1	Tyler St. Onge
      1	Ulrich Petri
      1	Vyacheslav Bakhmutov
      1	Wes Turner
      1	Yoginski
      1	Yuangxuan Wang
      1	capt8bit
+     1	chhsiao90
      1	cle1000
      1	davidpshaw
      1	deployable
@@ -161,8 +172,10 @@
      1	meeee
      1	michaeljau
      1	peralta
+     1	phackt
      1	phil plante
      1	sentient07
      1	sethp-jive
      1	starenka
+     1	vulnminer
      1	vzvu3k6k
