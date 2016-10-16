@@ -1,0 +1,141 @@
+.. _overview:
+
+Overview
+========
+
+Mitmproxy has a powerful scripting API that allows you to control almost any
+aspect of traffic being proxied. In fact, much of mitmproxy's own core
+functionality is implemented using the exact same API exposed to scripters (see
+:src:`mitmproxy/builtins`).
+
+
+A simple example
+----------------
+
+Scripting is event driven, with named handlers on the script object called at
+appropriate points of mitmproxy's operation. Here's a complete mitmproxy script
+that adds a new header to every HTTP response before it is returned to the
+client:
+
+.. literalinclude:: ../../examples/add_header.py
+   :caption: :src:`examples/add_header.py`
+   :language: python
+
+All events that deal with an HTTP request get an instance of `HTTPFlow
+<api.html#mitmproxy.models.http.HTTPFlow>`_, which we can use to manipulate the
+response itself. We can now run this script using mitmdump, and the new header
+will be added to all responses passing through the proxy:
+
+>>> mitmdump -s add_header.py
+
+
+Using classes
+-------------
+
+In the example above, the script object is the ``add_header`` module itself.
+That is, the handlers are declared at the global level of the script. This is
+great for quick hacks, but soon becomes limiting as scripts become more
+sophisticated.
+
+When a script first starts up, the `start <events.html#start>`_, event is
+called before anything else happens. You can replace the current script object
+by returning it from this handler. Here's how this looks when applied to the
+example above:
+
+.. literalinclude:: ../../examples/classes.py
+   :caption: :src:`examples/classes.py`
+   :language: python
+
+So here, we're using a module-level script to "boot up" into a class instance.
+From this point on, the module-level script is removed from the handler chain,
+and is replaced by the class instance.
+
+
+Handling arguments
+------------------
+
+Scripts can handle their own command-line arguments, just like any other Python
+program. Let's build on the example above to do something slightly more
+sophisticated - replace one value with another in all responses. Mitmproxy's
+`HTTPRequest <api.html#mitmproxy.models.http.HTTPRequest>`_ and `HTTPResponse
+<api.html#mitmproxy.models.http.HTTPResponse>`_ objects have a handy `replace
+<api.html#mitmproxy.models.http.HTTPResponse.replace>`_ method that takes care
+of all the details for us.
+
+.. literalinclude:: ../../examples/arguments.py
+   :caption: :src:`examples/arguments.py`
+   :language: python
+
+We can now call this script on the command-line like this:
+
+>>> mitmdump -dd -s "./arguments.py html faketml"
+
+Whenever a handler is called, mitpmroxy rewrites the script environment so that
+it sees its own arguments as if it was invoked from the command-line.
+
+
+Logging and the context
+-----------------------
+
+Scripts should not output straight to stderr or stdout. Instead, the `log
+<api.html#mitmproxy.controller.Log>`_ object on the ``ctx`` contexzt module
+should be used, so that the mitmproxy host program can handle output
+appropriately. So, mitmdump can print colorised sript output to the terminal,
+and mitmproxy console can place script output in the event buffer.
+
+Here's how this looks:
+
+.. literalinclude:: ../../examples/logging.py
+   :caption: :src:`examples/logging.py`
+   :language: python
+
+The ``ctx`` module also exposes the mitmproxy master object at ``ctx.master``
+for advanced usage.
+
+
+Running scripts on saved flows
+------------------------------
+
+When a flow is loaded from disk, the sequence of events that the flow would
+have gone through on the wire is partially replayed. So, for instance, an HTTP
+flow loaded from disk will trigger `requestheaders
+<events.html#requestheaders>`_,  `request <events.html#request>`_,
+`responseheaders <events.html#responseheaders>`_ and  `response
+<events.html#response>`_ in order. We can use this behaviour to transform saved
+traffic using scripts. For example, we can invoke the replacer script from
+above on saved traffic as follows:
+
+>>> mitmdump -dd -s "./arguments.py html fakehtml" -r saved -w changed
+
+This command starts the ``arguments`` script, reads all the flows from
+``saved`` transforming them in the process, then writes them all to
+``changed``.
+
+The mitmproxy console tool provides interactive ways to run transforming
+scripts on flows - for instance, you can run a one-shot script on a single flow
+through the ``|`` (pipe) shortcut.
+
+
+Concurrency
+-----------
+
+The mitmproxy script mechanism is single threaded, and the proxy blocks while
+script handlers execute. This hugely simplifies the most common case, where
+handlers are light-weight and the blocking doesn't have a performance impact.
+It's possible to implement a concurrent mechanism on top of the blocking
+framework, and mitmproxy includes a handy example of this that is fit for most
+purposes. You can use it as follows:
+
+.. literalinclude:: ../../examples/nonblocking.py
+   :caption: :src:`examples/nonblocking.py`
+   :language: python
+
+
+Developing scripts
+------------------
+
+Mitmprxoy monitors scripts for modifications, and reloads them on change. When
+this happens, the script is shut down (the `done <events.html#done>`_  event is
+called), and the new instance is started up as if the script had just been
+loaded (the `start <events.html#start>`_ and `configure
+<events.html#configure>`_ events are called).

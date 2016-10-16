@@ -19,10 +19,10 @@ Events = frozenset([
     "serverconnect",
     "serverdisconnect",
 
-    "tcp_open",
+    "tcp_start",
     "tcp_message",
     "tcp_error",
-    "tcp_close",
+    "tcp_end",
 
     "request",
     "requestheaders",
@@ -49,23 +49,38 @@ class LogEntry(object):
 
 
 class Log(object):
+    """
+        The central logger, exposed to scripts as mitmproxy.ctx.log.
+    """
     def __init__(self, master):
         self.master = master
 
-    def __call__(self, text, level="info"):
-        self.master.add_log(text, level)
-
     def debug(self, txt):
+        """
+            Log with level debug.
+        """
         self(txt, "debug")
 
     def info(self, txt):
+        """
+            Log with level info.
+        """
         self(txt, "info")
 
     def warn(self, txt):
+        """
+            Log with level warn.
+        """
         self(txt, "warn")
 
     def error(self, txt):
+        """
+            Log with level error.
+        """
         self(txt, "error")
+
+    def __call__(self, text, level="info"):
+        self.master.add_log(text, level)
 
 
 class Master(object):

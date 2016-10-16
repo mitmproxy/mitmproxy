@@ -35,5 +35,5 @@ the :kbd:`o` options shortcut within :program:`mitmproxy`.
 
 ================== ===========
 command-line       ``-S path``
-mitmproxy shortcut :kbd:`S`
+mitmproxy shortcut :kbd:`R` then :kbd:`s`
 ================== ===========

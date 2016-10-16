@@ -14,5 +14,5 @@ You may want to use client-side replay in conjunction with the
 
 ================== ===========
 command-line       ``-c path``
-mitmproxy shortcut :kbd:`c`
+mitmproxy shortcut :kbd:`R` then :kbd:`c`
 ================== ===========

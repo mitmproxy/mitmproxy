@@ -23,7 +23,7 @@ class RawTCPLayer(base.Layer):
 
         if not self.ignore:
             flow = models.TCPFlow(self.client_conn, self.server_conn, self)
-            self.channel.ask("tcp_open", flow)
+            self.channel.ask("tcp_start", flow)
 
         buf = memoryview(bytearray(self.chunk_size))
 
@@ -64,4 +64,4 @@ class RawTCPLayer(base.Layer):
                 self.channel.tell("tcp_error", flow)
         finally:
             if not self.ignore:
-                self.channel.tell("tcp_close", flow)
+                self.channel.tell("tcp_end", flow)

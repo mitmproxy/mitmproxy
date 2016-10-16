@@ -16,6 +16,6 @@ def test_simple():
     o = options.Options()
     m = controller.Master(o)
     a = addons.Addons(m)
-    a.add(o, TAddon("one"))
+    a.add(TAddon("one"))
     assert a.get("one")
     assert not a.get("two")

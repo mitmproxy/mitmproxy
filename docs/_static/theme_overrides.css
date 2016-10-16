@@ -4,6 +4,10 @@
     white-space: normal;
 }
 
+.wy-table-responsive > table > tbody > tr > td {
+    vertical-align: top !important;
+}
+
 .wy-table-responsive {
     margin-bottom: 24px;
     max-width: 100%;
@@ -12,4 +16,29 @@
 
 .wy-menu-vertical header, .wy-menu-vertical p.caption {
     color: #e0e0e0;
+}
+
+.code-block-caption {
+    height: 1.5em;
+}
+
+.code-block-caption .caption-text {
+    font-size: 0.8em;
+    float: right;
+}
+
+.code-block-caption .headerlink {
+    display: none !important;
+}
+
+.function .headerlink {
+    display: none !important;
+}
+
+dl .reference.internal {
+    display: none !important;
+}
+
+dl .headerlink {
+    display: none !important;
 }

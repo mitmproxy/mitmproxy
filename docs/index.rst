@@ -51,9 +51,9 @@
     :hidden:
     :caption: Scripting
 
-    scripting/inlinescripts
-    dev/models
-    scripting/mitmproxy
+    scripting/overview
+    scripting/events
+    scripting/api
 
 
 .. toctree::

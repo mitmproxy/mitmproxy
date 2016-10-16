@@ -1,15 +1,4 @@
 
-General build and release utilities for the mitmproxy, netlib and pathod
-projects. These tools assume a directory structure with all repositories at the
-same level, for example:
-
-    /src
-        /mitmproxy
-        /netlib
-        /pathod
-        /release
-
-
 # Release policies
 
   - By default, every release is a new minor (`0.x`) release and it will be

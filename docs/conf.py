@@ -1,11 +1,18 @@
-import sys
+import importlib
+import inspect
 import os
+import subprocess
+import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 import netlib.version
+
 
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
+    'sphinx.ext.extlinks',
+    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinxcontrib.documentedlist'
@@ -156,7 +163,7 @@ html_static_path = ['_static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
@@ -188,6 +195,52 @@ html_static_path = ['_static']
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'mitmproxydoc'
+
+last_tag, tag_dist, commit = (
+    subprocess.check_output(["git", "describe", "--tags", "--long"])
+        .decode()
+        .strip()
+        .rsplit("-", 2)
+)
+tag_dist = int(tag_dist)
+if tag_dist == 0:
+    tag = last_tag
+else:
+    tag = "master"
+
+SRCBASE = "https://github.com/mitmproxy/mitmproxy/blob/{}".format(tag)
+
+extlinks = dict(
+    src = (SRCBASE + r"/%s", '')
+)
+
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    module, fullname = info['module'], info['fullname']
+    if not module:
+        return None
+    obj = importlib.import_module(module)
+    for item in fullname.split('.'):
+        obj = getattr(obj, item, None)
+    if obj is None:
+        return None
+    try:
+        spath = inspect.getsourcefile(obj)
+        _, line = inspect.getsourcelines(obj)
+    except (TypeError, IOError):
+        return None
+    if spath.rfind("netlib") > -1:
+        off = spath.rfind("netlib")
+        mpath = spath[off:]
+    elif spath.rfind("mitmproxy") > -1:
+        off = spath.rfind("mitmproxy")
+        mpath = spath[off:]
+    else:
+        return None
+    return SRCBASE + "/%s#L%s" % (mpath, line)
+
 
 def setup(app):
     app.add_stylesheet('theme_overrides.css')

@@ -4,7 +4,7 @@ from netlib.http import decoded
 from .connections import ClientConnection, ServerConnection
 from .flow import Flow, Error
 from .http import (
-    HTTPFlow, HTTPRequest, HTTPResponse, Headers,
+    HTTPFlow, HTTPRequest, HTTPResponse,
     make_error_response, make_connect_request, make_connect_response, expect_continue_response
 )
 from .tcp import TCPFlow
@@ -15,7 +15,7 @@ FLOW_TYPES = dict(
 )
 
 __all__ = [
-    "HTTPFlow", "HTTPRequest", "HTTPResponse", "Headers", "decoded",
+    "HTTPFlow", "HTTPRequest", "HTTPResponse", "decoded",
     "make_error_response", "make_connect_request",
     "make_connect_response", "expect_continue_response",
     "ClientConnection", "ServerConnection",

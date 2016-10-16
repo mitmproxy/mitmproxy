@@ -1,36 +1,21 @@
 from __future__ import absolute_import, print_function, division
 
 import cgi
-import warnings
 
-from mitmproxy.models.flow import Flow
+from mitmproxy.models import flow
+from netlib import http
 from netlib import version
-from netlib.http import Headers
-from netlib.http import Request
-from netlib.http import Response
-from netlib.http import status_codes
-from netlib.tcp import Address
+from netlib import tcp
 
 
-class MessageMixin(object):
-
-    def get_decoded_content(self):
-        """
-            Returns the decoded content based on the current Content-Encoding
-            header.
-            Doesn't change the message iteself or its headers.
-        """
-        warnings.warn(".get_decoded_content() is deprecated, please use .content directly instead.", DeprecationWarning)
-        return self.content
-
-
-class HTTPRequest(MessageMixin, Request):
+class HTTPRequest(http.Request):
 
     """
     A mitmproxy HTTP request.
-    This is a very thin wrapper on top of :py:class:`netlib.http.Request` and
-    may be removed in the future.
     """
+
+    # This is a very thin wrapper on top of :py:class:`netlib.http.Request` and
+    # may be removed in the future.
 
     def __init__(
             self,
@@ -49,7 +34,7 @@ class HTTPRequest(MessageMixin, Request):
             stickycookie=False,
             stickyauth=False,
     ):
-        Request.__init__(
+        http.Request.__init__(
             self,
             first_line_format,
             method,
@@ -110,13 +95,13 @@ class HTTPRequest(MessageMixin, Request):
         return id(self)
 
 
-class HTTPResponse(MessageMixin, Response):
+class HTTPResponse(http.Response):
 
     """
     A mitmproxy HTTP response.
-    This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
-    may be removed in the future.
     """
+    # This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
+    # may be removed in the future.
 
     def __init__(
             self,
@@ -129,7 +114,7 @@ class HTTPResponse(MessageMixin, Response):
             timestamp_end=None,
             is_replay=False
     ):
-        Response.__init__(
+        http.Response.__init__(
             self,
             http_version,
             status_code,
@@ -161,34 +146,35 @@ class HTTPResponse(MessageMixin, Response):
         return resp
 
 
-class HTTPFlow(Flow):
+class HTTPFlow(flow.Flow):
 
     """
-    A HTTPFlow is a collection of objects representing a single HTTP
+    An HTTPFlow is a collection of objects representing a single HTTP
     transaction.
-
-    Attributes:
-        request: :py:class:`HTTPRequest` object
-        response: :py:class:`HTTPResponse` object
-        error: :py:class:`Error` object
-        server_conn: :py:class:`ServerConnection` object
-        client_conn: :py:class:`ClientConnection` object
-        intercepted: Is this flow currently being intercepted?
-        live: Does this flow have a live client connection?
-
-    Note that it's possible for a Flow to have both a response and an error
-    object. This might happen, for instance, when a response was received
-    from the server, but there was an error sending it back to the client.
     """
 
     def __init__(self, client_conn, server_conn, live=None):
         super(HTTPFlow, self).__init__("http", client_conn, server_conn, live)
-        self.request = None
-        """@type: HTTPRequest"""
-        self.response = None
-        """@type: HTTPResponse"""
 
-    _stateobject_attributes = Flow._stateobject_attributes.copy()
+        self.request = None
+        """ :py:class:`HTTPRequest` object """
+        self.response = None
+        """ :py:class:`HTTPResponse` object """
+        self.error = None
+        """ :py:class:`Error` object
+
+        Note that it's possible for a Flow to have both a response and an error
+        object. This might happen, for instance, when a response was received
+        from the server, but there was an error sending it back to the client.
+        """
+        self.server_conn = server_conn
+        """ :py:class:`ServerConnection` object """
+        self.client_conn = client_conn
+        """:py:class:`ClientConnection` object """
+        self.intercepted = False
+        """ Is this flow currently being intercepted? """
+
+    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(
         request=HTTPRequest,
         response=HTTPResponse
@@ -225,7 +211,7 @@ class HTTPFlow(Flow):
 
 
 def make_error_response(status_code, message, headers=None):
-    response = status_codes.RESPONSES.get(status_code, "Unknown")
+    response = http.status_codes.RESPONSES.get(status_code, "Unknown")
     body = """
         <html>
             <head>
@@ -237,7 +223,7 @@ def make_error_response(status_code, message, headers=None):
     body = body.encode("utf8", "replace")
 
     if not headers:
-        headers = Headers(
+        headers = http.Headers(
             Server=version.MITMPROXY,
             Connection="close",
             Content_Length=str(len(body)),
@@ -254,10 +240,10 @@ def make_error_response(status_code, message, headers=None):
 
 
 def make_connect_request(address):
-    address = Address.wrap(address)
+    address = tcp.Address.wrap(address)
     return HTTPRequest(
         "authority", b"CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
-        Headers(), b""
+        http.Headers(), b""
     )
 
 
@@ -268,8 +254,10 @@ def make_connect_response(http_version):
         http_version,
         200,
         b"Connection established",
-        Headers(),
+        http.Headers(),
         b"",
     )
 
-expect_continue_response = HTTPResponse(b"HTTP/1.1", 100, b"Continue", Headers(), b"")
+expect_continue_response = HTTPResponse(
+    b"HTTP/1.1", 100, b"Continue", http.Headers(), b""
+)
