@@ -1,3 +1,51 @@
+16 October 2016: mitmproxy 0.18
+
+    * Python 3 Compatibility for mitmproxy and pathod (Shadab Zafar, GSoC 2016)
+
+    * Major improvements to mitmweb (Clemens Brunner & Jason Hao, GSoC 2016)
+
+    * Internal Core Refactor: Separation of most features into isolated Addons
+
+    * Initial Support for WebSockets
+
+    * Improved HTTP/2 Support
+
+    * Reverse Proxy Mode now automatically adjusts host headers and TLS Server Name Indication
+
+    * Improved HAR export
+
+    * Improved export functionality for curl, python code, raw http etc.
+
+    * Flow URLs are now truncated in the console for better visibility
+
+    * New filters for TCP, HTTP and marked flows.
+
+    * Mitmproxy now handles comma-separated Cookie headers
+
+    * Merge mitmproxy and pathod documentation
+
+    * Mitmdump now sanitizes its console output to not include control characters
+
+    * Improved message body handling for HTTP messages:
+      .raw_content provides the message body as seen on the wire
+      .content provides the decompressed body (e.g. un-gzipped)
+      .text provides the body decompressed and decoded body
+
+    * New HTTP Message getters/setters for cookies and form contents.
+
+    * Add ability to view only marked flows in mitmproxy
+
+    * Improved Script Reloader (Always use polling, watch for whole directory)
+
+    * Use tox for testing
+
+    * Unicode support for tnetstrings
+
+    * Add dumpfile converters for mitmproxy versions 0.11 and 0.12
+
+    * Numerous bugfixes
+
+
 9 April 2016: mitmproxy 0.17
 
     * Simplify repository and release structure. mitmproxy now comes as a single package, including netlib and pathod.
