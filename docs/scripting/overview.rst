@@ -105,38 +105,37 @@ flow loaded from disk will trigger `requestheaders
 traffic using scripts. For example, we can invoke the replacer script from
 above on saved traffic as follows:
 
->>> mitmdump -dd -s "./arguments.py html faketml"
+>>> mitmdump -dd -s "./arguments.py html fakehtml" -r saved -w changed
 
+This command starts the ``arguments`` script, reads all the flows from
+``saved`` transforming them in the process, then writes them all to
+``changed``.
 
-
-
-
-:py:class:`~mitmproxy.models.Flow`
-objects that are already complete.  This happens when you start a script, and
-then load a saved set of flows from a file (see the "scripted data
-transformation" example :ref:`here <mitmdump>`). It also happens when you run a
-one-shot script on a single flow through the ``|`` (pipe) shortcut in
-mitmproxy.
-
-In this case, there are no client connections, and the events are run in the following order:
-**start**, **request**, **responseheaders**, **response**, **error**, **done**.
-If the flow doesn't have a **response** or **error** associated with it, the matching events will
-be skipped.
+The mitmproxy console tool provides interactive ways to run transforming
+scripts on flows - for instance, you can run a one-shot script on a single flow
+through the ``|`` (pipe) shortcut.
 
 
 Concurrency
 -----------
 
-We have a single flow primitive, so when a script is blocking, other requests
-are not processed. While that's usually a very desirable behaviour, blocking
-scripts can be run threaded by using the :py:obj:`mitmproxy.script.concurrent`
-decorator.
+The mitmproxy script mechanism is single threaded, and the proxy blocks while
+script handlers execute. This hugely simplifies the most common case, where
+handlers are light-weight and the blocking doesn't have a performance impact.
+It's possible to implement a concurrent mechanism on top of the blocking
+framework, and mitmproxy includes a handy example of this that is fit for most
+purposes. You can use it as follows:
 
 .. literalinclude:: ../../examples/nonblocking.py
    :caption: :src:`examples/nonblocking.py`
    :language: python
 
 
-
 Developing scripts
 ------------------
+
+Mitmprxoy monitors scripts for modifications, and reloads them on change. When
+this happens, the script is shut down (the `done <events.html#done>`_  event is
+called), and the new instance is started up as if the script had just been
+loaded (the `start <events.html#start>`_ and `configure
+<events.html#configure>`_ events are called).

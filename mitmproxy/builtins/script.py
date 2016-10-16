@@ -267,7 +267,7 @@ class ScriptLoader():
 
             ochain = ctx.master.addons.chain
             pos = ochain.index(self)
-            ctx.master.addons.chain = ochain[:pos+1] + ordered + ochain[pos+1:]
+            ctx.master.addons.chain = ochain[:pos + 1] + ordered + ochain[pos + 1:]
 
             for s in newscripts:
                 ctx.master.addons.startup(s)
