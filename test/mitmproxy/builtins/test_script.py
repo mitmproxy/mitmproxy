@@ -237,12 +237,8 @@ class TestScriptLoader(mastertest.MasterTest):
             "%s %s" % (rec, "b"),
         ]
         debug = [(i[0], i[1]) for i in m.event_log if i[0] == "debug"]
-        assert debug == [
-            ('debug', 'c configure'),
-            ('debug', 'a configure'),
-            ('debug', 'b configure'),
-        ]
-        m.event_log[:] = []
+        # No events, only order has changed
+        assert debug == []
 
         o.scripts = [
             "%s %s" % (rec, "x"),

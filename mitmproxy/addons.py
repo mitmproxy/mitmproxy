@@ -28,20 +28,32 @@ class Addons(object):
             with self.master.handlecontext():
                 i.configure(options, updated)
 
+    def startup(self, s):
+        """
+            Run startup events on addon.
+        """
+        self.invoke_with_context(s, "start")
+        self.invoke_with_context(
+            s,
+            "configure",
+            self.master.options,
+            self.master.options.keys()
+        )
+
     def add(self, *addons):
+        """
+            Add addons to the end of the chain, and run their startup events.
+        """
         if not addons:
             raise ValueError("No addons specified.")
         self.chain.extend(addons)
         for i in addons:
-            self.invoke_with_context(i, "start")
-            self.invoke_with_context(
-                i,
-                "configure",
-                self.master.options,
-                self.master.options.keys()
-            )
+            self.startup(i)
 
     def remove(self, addon):
+        """
+            Remove an addon from the chain, and run its done events.
+        """
         self.chain = [i for i in self.chain if i is not addon]
         self.invoke_with_context(addon, "done")
 
