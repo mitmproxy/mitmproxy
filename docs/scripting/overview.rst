@@ -1,7 +1,7 @@
 .. _overview:
 
-Introduction
-============
+Overview
+========
 
 Mitmproxy has a powerful scripting API that allows you to control almost any
 aspect of traffic being proxied. In fact, much of mitmproxy's own core
@@ -96,11 +96,27 @@ for advanced usage.
 Running scripts on saved flows
 ------------------------------
 
-Sometimes, we want to run a script on :py:class:`~mitmproxy.models.Flow` objects that are already
-complete.  This happens when you start a script, and then load a saved set of flows from a file
-(see the "scripted data transformation" example :ref:`here <mitmdump>`).
-It also happens when you run a one-shot script on a single flow through the ``|`` (pipe) shortcut
-in mitmproxy.
+When a flow is loaded from disk, the sequence of events that the flow would
+have gone through on the wire is partially replayed. So, for instance, an HTTP
+flow loaded from disk will trigger `requestheaders
+<events.html#requestheaders>`_,  `request <events.html#request>`_,
+`responseheaders <events.html#responseheaders>`_ and  `response
+<events.html#response>`_ in order. We can use this behaviour to transform saved
+traffic using scripts. For example, we can invoke the replacer script from
+above on saved traffic as follows:
+
+>>> mitmdump -dd -s "./arguments.py html faketml"
+
+
+
+
+
+:py:class:`~mitmproxy.models.Flow`
+objects that are already complete.  This happens when you start a script, and
+then load a saved set of flows from a file (see the "scripted data
+transformation" example :ref:`here <mitmdump>`). It also happens when you run a
+one-shot script on a single flow through the ``|`` (pipe) shortcut in
+mitmproxy.
 
 In this case, there are no client connections, and the events are run in the following order:
 **start**, **request**, **responseheaders**, **response**, **error**, **done**.
