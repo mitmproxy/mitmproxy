@@ -23,6 +23,18 @@ FOOTER_EDITING = [
 ]
 
 
+class Cell(urwid.WidgetWrap):
+    def get_data(self):
+        """
+        Raises:
+            ValueError, if the current content is invalid.
+        """
+        raise NotImplementedError()
+
+    def selectable(self):
+        return True
+
+
 class Column(object, metaclass=abc.ABCMeta):
     subeditor = None
 
@@ -45,24 +57,12 @@ class Column(object, metaclass=abc.ABCMeta):
         return key
 
 
-class Cell(urwid.WidgetWrap):
-    def get_data(self):
-        """
-        Raises:
-            ValueError, if the current content is invalid.
-        """
-        raise NotImplementedError()
-
-    def selectable(self):
-        return True
-
-
 class GridRow(urwid.WidgetWrap):
     def __init__(
             self,
             focused: Optional[int],
             editing: bool,
-            editor: GridEditor,
+            editor: "GridEditor",
             values: Tuple[Iterable[bytes], Container[int]]
     ):
         self.focused = focused
@@ -117,7 +117,7 @@ class GridWalker(urwid.ListWalker):
     def __init__(
             self,
             lst: Iterable[list],
-            editor: GridEditor
+            editor: "GridEditor"
     ):
         self.lst = [(i, set()) for i in lst]
         self.editor = editor
