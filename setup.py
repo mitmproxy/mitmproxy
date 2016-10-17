@@ -105,8 +105,8 @@ setup(
             "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
-            # TODO: Find Python 3 replacements
-            # "protobuf>=2.6.1, <2.7",
+            "protobuf>=3.1.0, <3.2",
+            # TODO: Find Python 3 replacement
             # "pyamf>=0.8.0, <0.9",
         ],
         'examples': [
