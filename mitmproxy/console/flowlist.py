@@ -166,7 +166,7 @@ class ConnectionItem(urwid.WidgetWrap):
             self.state.delete_flow(self.flow)
             signals.flowlist_change.send(self)
         elif key == "D":
-            f = self.master.duplicate_flow(self.flow)
+            f = self.master.state.duplicate_flow(self.flow)
             self.master.state.set_focus_flow(f)
             signals.flowlist_change.send(self)
         elif key == "m":

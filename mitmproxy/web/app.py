@@ -275,7 +275,7 @@ class FlowHandler(RequestHandler):
 class DuplicateFlow(RequestHandler):
 
     def post(self, flow_id):
-        self.master.duplicate_flow(self.flow)
+        self.master.state.duplicate_flow(self.flow)
 
 
 class RevertFlow(RequestHandler):

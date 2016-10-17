@@ -261,6 +261,15 @@ class State:
     def killall(self, master):
         self.flows.kill_all(master)
 
+    def duplicate_flow(self, f):
+        """
+            Duplicate flow, and insert it into state without triggering any of
+            the normal flow events.
+        """
+        f2 = f.copy()
+        self.add_flow(f2)
+        return f2
+
 
 class DummyState:
     flows = ()

@@ -57,15 +57,6 @@ class FlowMaster(controller.Master):
     def start_app(self, host, port):
         self.apps.add(app.mapp, host, port)
 
-    def duplicate_flow(self, f):
-        """
-            Duplicate flow, and insert it into state without triggering any of
-            the normal flow events.
-        """
-        f2 = f.copy()
-        self.state.add_flow(f2)
-        return f2
-
     def create_request(self, method, scheme, host, port, path):
         """
             this method creates a new artificial and minimalist request also adds it to flowlist
