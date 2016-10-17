@@ -53,6 +53,7 @@ class HTTPRequest(http.Request):
 
         # Is this request replayed?
         self.is_replay = is_replay
+        self.stream = None
 
     def get_state(self):
         state = super().get_state()
@@ -125,7 +126,7 @@ class HTTPResponse(http.Response):
 
         # Is this request replayed?
         self.is_replay = is_replay
-        self.stream = False
+        self.stream = None
 
     @classmethod
     def wrap(self, response):
