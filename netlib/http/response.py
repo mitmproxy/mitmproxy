@@ -8,11 +8,11 @@ from netlib.http import cookies
 from netlib.http import headers as nheaders
 from netlib.http import message
 from netlib.http import status_codes
-from typing import AnyStr  # noqa
-from typing import Dict  # noqa
-from typing import Iterable  # noqa
-from typing import Tuple  # noqa
-from typing import Union  # noqa
+from typing import AnyStr
+from typing import Dict
+from typing import Iterable
+from typing import Tuple
+from typing import Union
 
 
 class ResponseData(message.MessageData):
@@ -69,9 +69,9 @@ class Response(message.Message):
     @classmethod
     def make(
             cls,
-            status_code=200,  # type: int
-            content=b"",  # type: AnyStr
-            headers=()  # type: Union[Dict[AnyStr, AnyStr], Iterable[Tuple[bytes, bytes]]]
+            status_code: int=200,
+            content: AnyStr=b"",
+            headers: Union[Dict[AnyStr, AnyStr], Iterable[Tuple[bytes, bytes]]]=()
     ):
         """
         Simplified API for creating response objects.
@@ -130,8 +130,7 @@ class Response(message.Message):
         self.data.reason = message._always_bytes(reason)
 
     @property
-    def cookies(self):
-        # type: () -> multidict.MultiDictView
+    def cookies(self) -> multidict.MultiDictView:
         """
         The response cookies. A possibly empty
         :py:class:`~netlib.multidict.MultiDictView`, where the keys are cookie

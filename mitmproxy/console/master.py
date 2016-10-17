@@ -13,9 +13,8 @@ import tempfile
 import traceback
 import weakref
 
-import six
 import urwid
-from typing import Optional  # noqa
+from typing import Optional
 
 from mitmproxy import builtins
 from mitmproxy import contentviews
@@ -202,13 +201,13 @@ class ConsoleState(flow.State):
 class Options(mitmproxy.options.Options):
     def __init__(
             self,
-            eventlog=False,  # type: bool
-            follow=False,  # type: bool
-            intercept=False,  # type: bool
-            filter=None,  # type: Optional[str]
-            palette=None,  # type: Optional[str]
-            palette_transparent=False,  # type: bool
-            no_mouse=False,  # type: bool
+            eventlog: bool = False,
+            follow: bool = False,
+            intercept: bool = False,
+            filter: Optional[str] = None,
+            palette: Optional[str] = None,
+            palette_transparent: bool = False,
+            no_mouse: bool = False,
             **kwargs
     ):
         self.eventlog = eventlog
@@ -357,13 +356,8 @@ class ConsoleMaster(flow.FlowMaster):
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp('', "mproxy", text=text)
-        if six.PY2:
-            os.close(fd)
-            with open(name, "w" if text else "wb") as f:
-                f.write(data)
-        else:
-            with open(fd, "w" if text else "wb") as f:
-                f.write(data)
+        with open(fd, "w" if text else "wb") as f:
+            f.write(data)
         # if no EDITOR is set, assume 'vi'
         c = os.environ.get("EDITOR") or "vi"
         cmd = shlex.split(c)

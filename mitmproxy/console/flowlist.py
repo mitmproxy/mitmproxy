@@ -295,8 +295,7 @@ class FlowListWalker(urwid.ListWalker):
 
 class FlowListBox(urwid.ListBox):
 
-    def __init__(self, master):
-        # type: (mitmproxy.console.master.ConsoleMaster) -> None
+    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster"):
         self.master = master
         super(FlowListBox, self).__init__(FlowListWalker(master, master.state))
 

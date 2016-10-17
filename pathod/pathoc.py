@@ -4,13 +4,12 @@ import sys
 import os
 import itertools
 import hashlib
-from six.moves import queue
+import queue
 import random
 import select
 import time
 
 import OpenSSL.crypto
-import six
 import logging
 
 from netlib.tutils import treq
@@ -250,9 +249,9 @@ class Pathoc(tcp.TCPClient):
             if resp.status_code != 200:
                 raise exceptions.HttpException("Unexpected status code: %s" % resp.status_code)
         except exceptions.HttpException as e:
-            six.reraise(PathocError, PathocError(
+            raise PathocError(
                 "Proxy CONNECT failed: %s" % repr(e)
-            ))
+            )
 
     def socks_connect(self, connect_to):
         try:

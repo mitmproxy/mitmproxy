@@ -1,4 +1,3 @@
-import six
 from netlib import tutils
 from netlib.http import url
 
@@ -58,10 +57,7 @@ def test_unparse():
     assert url.unparse("https", "foo.com", 443, "") == "https://foo.com"
 
 
-if six.PY2:
-    surrogates = bytes(bytearray(range(256)))
-else:
-    surrogates = bytes(range(256)).decode("utf8", "surrogateescape")
+surrogates = bytes(range(256)).decode("utf8", "surrogateescape")
 
 surrogates_quoted = (
     '%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F'

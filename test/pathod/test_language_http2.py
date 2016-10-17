@@ -1,4 +1,4 @@
-from six import BytesIO
+import io
 
 from netlib import tcp
 from netlib.http import user_agents
@@ -26,7 +26,7 @@ def default_settings():
 
 
 def test_make_error_response():
-    d = BytesIO()
+    d = io.BytesIO()
     s = http2.make_error_response("foo", "bar")
     language.serve(s, d, default_settings())
 
@@ -85,7 +85,7 @@ class TestRequest:
         assert r[1].method.string() == b"GET"
 
     def test_render_simple(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = parse_request("GET:'/foo'")
         assert language.serve(
             r,
@@ -127,7 +127,7 @@ class TestRequest:
         assert r.headers[0].values(default_settings()) == (b"user-agent", user_agents.get_by_shortcut('a')[2].encode())
 
     def test_render_with_headers(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = parse_request('GET:/foo:h"foo"="bar"')
         assert language.serve(
             r,
@@ -143,7 +143,7 @@ class TestRequest:
         assert r.values(default_settings())
 
     def test_render_with_body(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = parse_request("GET:'/foo':bfoobar")
         assert language.serve(
             r,
@@ -200,7 +200,7 @@ class TestResponse:
         assert r.body.string() == b"foobar"
 
     def test_render_simple(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = parse_response('200')
         assert language.serve(
             r,
@@ -209,7 +209,7 @@ class TestResponse:
         )
 
     def test_render_with_headers(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = parse_response('200:h"foo"="bar"')
         assert language.serve(
             r,
@@ -218,7 +218,7 @@ class TestResponse:
         )
 
     def test_render_with_body(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = parse_response('200:bfoobar')
         assert language.serve(
             r,

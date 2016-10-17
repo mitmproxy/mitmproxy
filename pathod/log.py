@@ -1,7 +1,5 @@
 import time
 
-import six
-
 from netlib import strutils, human
 
 
@@ -52,7 +50,7 @@ class LogCtx(object):
                 timestamp = self.timestamp
             )
         if exc_value:
-            six.reraise(exc_type, exc_value, traceback)
+            raise exc_value
 
     def suppress(self):
         self.suppressed = True

@@ -79,7 +79,6 @@ setup(
         "pyparsing>=2.1.3, <2.2",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <2.12",
-        "six>=1.10, <1.11",
         "tornado>=4.3, <4.5",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
@@ -87,7 +86,7 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "pydivert>=0.0.7, <0.1",
+            "pydivert>=0.0.7, <2.0",
         ],
         ':sys_platform != "win32"': [
         ],

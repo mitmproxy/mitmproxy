@@ -1,8 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
 
 import threading
-from six.moves import queue
-from io import StringIO
+import queue
+import io
 import OpenSSL
 
 from netlib import tcp
@@ -80,7 +80,7 @@ class _TServer(tcp.TCPServer):
         h.finish()
 
     def handle_error(self, connection, client_address, fp=None):
-        s = StringIO()
+        s = io.StringIO()
         tcp.TCPServer.handle_error(self, connection, client_address, s)
         self.q.put(s.getvalue())
 

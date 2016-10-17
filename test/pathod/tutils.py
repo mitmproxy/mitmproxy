@@ -2,9 +2,8 @@ import tempfile
 import re
 import shutil
 import requests
-from six.moves import cStringIO as StringIO
-from six.moves import urllib
-from six import BytesIO
+import io
+import urllib
 
 from netlib import tcp
 from netlib import utils
@@ -20,7 +19,7 @@ def treader(bytes):
     """
         Construct a tcp.Read object from bytes.
     """
-    fp = BytesIO(bytes)
+    fp = io.BytesIO(bytes)
     return tcp.Reader(fp)
 
 
@@ -79,7 +78,7 @@ class DaemonTests(object):
         return resp
 
     def getpath(self, path, params=None):
-        logfp = StringIO()
+        logfp = io.StringIO()
         c = pathoc.Pathoc(
             ("localhost", self.d.port),
             ssl=self.ssl,
@@ -92,7 +91,7 @@ class DaemonTests(object):
             return resp
 
     def get(self, spec):
-        logfp = StringIO()
+        logfp = io.StringIO()
         c = pathoc.Pathoc(
             ("localhost", self.d.port),
             ssl=self.ssl,
@@ -118,7 +117,7 @@ class DaemonTests(object):
         """
         if ssl is None:
             ssl = self.ssl
-        logfp = StringIO()
+        logfp = io.StringIO()
         c = pathoc.Pathoc(
             ("localhost", self.d.port),
             ssl=ssl,
@@ -148,6 +147,6 @@ test_data = utils.Data(__name__)
 
 def render(r, settings=language.Settings()):
     r = r.resolve(settings)
-    s = BytesIO()
+    s = io.BytesIO()
     assert language.serve(r, s, settings)
     return s.getvalue()

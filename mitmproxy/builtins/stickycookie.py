@@ -1,5 +1,6 @@
 import collections
-from six.moves import http_cookiejar
+from http import cookiejar
+
 from netlib.http import cookies
 
 from mitmproxy import exceptions
@@ -20,9 +21,9 @@ def ckey(attrs, f):
 
 
 def domain_match(a, b):
-    if http_cookiejar.domain_match(a, b):
+    if cookiejar.domain_match(a, b):
         return True
-    elif http_cookiejar.domain_match(a, b.strip(".")):
+    elif cookiejar.domain_match(a, b.strip(".")):
         return True
     return False
 

@@ -489,8 +489,7 @@ bnf = _make()
 TFilter = Callable[[Flow], bool]
 
 
-def parse(s):
-    # type: (str) -> TFilter
+def parse(s: str) -> TFilter:
     try:
         flt = bnf.parseString(s, parseAll=True)[0]
         flt.pattern = s

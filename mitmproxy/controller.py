@@ -3,8 +3,7 @@ from __future__ import absolute_import, print_function, division
 import functools
 import threading
 import contextlib
-
-from six.moves import queue
+import queue
 
 from mitmproxy import addons
 from mitmproxy import options

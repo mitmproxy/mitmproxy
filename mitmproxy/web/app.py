@@ -8,7 +8,6 @@ import re
 import hashlib
 
 
-import six
 import tornado.websocket
 import tornado.web
 from io import BytesIO
@@ -20,8 +19,7 @@ from mitmproxy import contentviews
 from netlib import version
 
 
-def convert_flow_to_json_dict(flow):
-    # type: (models.Flow) -> dict
+def convert_flow_to_json_dict(flow: models.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
 
@@ -123,8 +121,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         return self.application.master.state
 
     @property
-    def master(self):
-        # type: () -> mitmproxy.web.master.WebMaster
+    def master(self) -> "mitmproxy.web.master.WebMaster":
         return self.application.master
 
     @property
@@ -242,10 +239,10 @@ class FlowHandler(RequestHandler):
     def put(self, flow_id):
         flow = self.flow
         flow.backup()
-        for a, b in six.iteritems(self.json):
+        for a, b in self.json.items():
             if a == "request":
                 request = flow.request
-                for k, v in six.iteritems(b):
+                for k, v in b.items():
                     if k in ["method", "scheme", "host", "path", "http_version"]:
                         setattr(request, k, str(v))
                     elif k == "port":
@@ -259,7 +256,7 @@ class FlowHandler(RequestHandler):
 
             elif a == "response":
                 response = flow.response
-                for k, v in six.iteritems(b):
+                for k, v in b.items():
                     if k == "msg":
                         response.msg = str(v)
                     elif k == "code":
@@ -387,7 +384,7 @@ class Settings(RequestHandler):
 
     def put(self):
         update = {}
-        for k, v in six.iteritems(self.json):
+        for k, v in self.json.items():
             if k == "intercept":
                 self.master.options.intercept = v
                 update[k] = v

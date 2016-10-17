@@ -41,14 +41,12 @@ all other strings are returned as plain bytes.
 """
 
 import collections
-import six
-from typing import io, Union, Tuple  # noqa
+from typing import io, Union, Tuple
 
 TSerializable = Union[None, bool, int, float, bytes, list, tuple, dict]
 
 
-def dumps(value):
-    # type: (TSerializable) -> bytes
+def dumps(value: TSerializable) -> bytes:
     """
     This function dumps a python object as a tnetstring.
     """
@@ -60,8 +58,7 @@ def dumps(value):
     return b''.join(q)
 
 
-def dump(value, file_handle):
-    # type: (TSerializable, io.BinaryIO) -> None
+def dump(value: TSerializable, file_handle: io.BinaryIO) -> None:
     """
     This function dumps a python object as a tnetstring and
     writes it to the given file.
@@ -69,8 +66,7 @@ def dump(value, file_handle):
     file_handle.write(dumps(value))
 
 
-def _rdumpq(q, size, value):
-    # type: (collections.deque, int, TSerializable) -> int
+def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
     """
     Dump value as a tnetstring, to a deque instance, last chunks first.
 
@@ -96,7 +92,7 @@ def _rdumpq(q, size, value):
     elif value is False:
         write(b'5:false!')
         return size + 8
-    elif isinstance(value, six.integer_types):
+    elif isinstance(value, int):
         data = str(value).encode()
         ldata = len(data)
         span = str(ldata).encode()
@@ -153,16 +149,14 @@ def _rdumpq(q, size, value):
         raise ValueError("unserializable object: {} ({})".format(value, type(value)))
 
 
-def loads(string):
-    # type: (bytes) -> TSerializable
+def loads(string: bytes) -> TSerializable:
     """
     This function parses a tnetstring into a python object.
     """
     return pop(string)[0]
 
 
-def load(file_handle):
-    # type: (io.BinaryIO) -> TSerializable
+def load(file_handle: io.BinaryIO) -> TSerializable:
     """load(file) -> object
 
     This function reads a tnetstring from a file and parses it into a
@@ -189,18 +183,20 @@ def load(file_handle):
     return parse(data_type, data)
 
 
+<<<<<<< HEAD
 def parse(data_type, data):
     # type: (int, bytes) -> TSerializable
+=======
+def parse(data_type: int, data: bytes) -> TSerializable:
     if six.PY2:
         data_type = ord(data_type)
+>>>>>>> such-types
     if data_type == ord(b','):
         return data
     if data_type == ord(b';'):
         return data.decode("utf8")
     if data_type == ord(b'#'):
         try:
-            if six.PY2:
-                return long(data)
             return int(data)
         except ValueError:
             raise ValueError("not a tnetstring: invalid integer literal: {}".format(data))
@@ -236,8 +232,7 @@ def parse(data_type, data):
     raise ValueError("unknown type tag: {}".format(data_type))
 
 
-def pop(data):
-    # type: (bytes) -> Tuple[TSerializable, bytes]
+def pop(data: bytes) -> Tuple[TSerializable, bytes]:
     """
     This function parses a tnetstring into a python object.
     It returns a tuple giving the parsed object and a string

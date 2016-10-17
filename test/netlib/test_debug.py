@@ -1,17 +1,17 @@
 from __future__ import (absolute_import, print_function, division)
-from six.moves import cStringIO as StringIO
+import io
 
 from netlib import debug
 
 
 def test_dump_info():
-    cs = StringIO()
+    cs = io.StringIO()
     debug.dump_info(None, None, file=cs, testing=True)
     assert cs.getvalue()
 
 
 def test_dump_stacks():
-    cs = StringIO()
+    cs = io.StringIO()
     debug.dump_stacks(None, None, file=cs, testing=True)
     assert cs.getvalue()
 

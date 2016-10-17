@@ -1,9 +1,9 @@
 import operator
 import os
 import abc
+import functools
 import pyparsing as pp
 
-from six.moves import reduce
 from netlib import strutils
 from netlib import human
 
@@ -171,14 +171,14 @@ class TokValueGenerate(Token):
     def expr(cls):
         e = pp.Literal("@").suppress() + v_integer
 
-        u = reduce(
+        u = functools.reduce(
             operator.or_,
             [pp.Literal(i) for i in human.SIZE_UNITS.keys()]
         ).leaveWhitespace()
         e = e + pp.Optional(u, default=None)
 
         s = pp.Literal(",").suppress()
-        s += reduce(
+        s += functools.reduce(
             operator.or_,
             [pp.Literal(i) for i in generators.DATATYPES.keys()]
         )

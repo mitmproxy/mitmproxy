@@ -6,10 +6,9 @@ import traceback
 import functools
 
 import h2.exceptions
-import six
 from h2 import connection
 from h2 import events
-from six.moves import queue
+import queue
 
 import netlib.exceptions
 from mitmproxy import exceptions
@@ -208,7 +207,7 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
-        new_settings = dict([(key, cs.new_value) for (key, cs) in six.iteritems(event.changed_settings)])
+        new_settings = dict([(key, cs.new_value) for (key, cs) in event.changed_settings.items()])
         other_conn.h2.safe_update_settings(new_settings)
         return True
 

@@ -1,7 +1,6 @@
-from six.moves import cStringIO as StringIO
+import io
 import time
-
-from six.moves import queue
+import queue
 
 from . import pathod
 from netlib import basethread
@@ -12,7 +11,7 @@ class Daemon:
 
     def __init__(self, ssl=None, **daemonargs):
         self.q = queue.Queue()
-        self.logfp = StringIO()
+        self.logfp = io.StringIO()
         daemonargs["logfp"] = self.logfp
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()

@@ -67,14 +67,20 @@ class Flow(stateobject.StateObject):
     This class is usually subclassed for each protocol, e.g. HTTPFlow.
     """
 
-    def __init__(self, type, client_conn, server_conn, live=None):
+    def __init__(
+            self,
+            type: str,
+            client_conn: ClientConnection,
+            server_conn: ServerConnection,
+            live=None
+    ):
         self.type = type
         self.id = str(uuid.uuid4())
-        self.client_conn = client_conn  # type: ClientConnection
-        self.server_conn = server_conn  # type: ServerConnection
+        self.client_conn = client_conn
+        self.server_conn = server_conn
         self.live = live
 
-        self.error = None  # type: Error
+        self.error = None  # type: Optional[Error]
         self.intercepted = False  # type: bool
         self._backup = None  # type: Optional[Flow]
         self.reply = None

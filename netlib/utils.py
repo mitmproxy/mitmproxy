@@ -79,8 +79,7 @@ class Data(object):
 _label_valid = re.compile(b"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
 
 
-def is_valid_host(host):
-    # type: (bytes) -> bool
+def is_valid_host(host: bytes) -> bool:
     """
         Checks if a hostname is valid.
     """

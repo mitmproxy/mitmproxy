@@ -1,5 +1,5 @@
 from io import BytesIO
-from six.moves import queue
+import queue
 import time
 import socket
 import random
