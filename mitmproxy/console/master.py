@@ -236,8 +236,6 @@ class ConsoleMaster(flow.FlowMaster):
         if options.filter:
             self.set_view_filter(options.filter)
 
-        self.set_stream_large_bodies(options.stream_large_bodies)
-
         self.palette = options.palette
         self.palette_transparent = options.palette_transparent
 

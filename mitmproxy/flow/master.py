@@ -3,7 +3,6 @@ import sys
 
 from typing import Optional  # noqa
 
-import netlib.exceptions
 from netlib import http
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -53,17 +52,10 @@ class FlowMaster(controller.Master):
         if server:
             self.add_server(server)
         self.state = state
-        self.stream_large_bodies = None  # type: Optional[modules.StreamLargeBodies]
         self.apps = modules.AppRegistry()
 
     def start_app(self, host, port):
         self.apps.add(app.mapp, host, port)
-
-    def set_stream_large_bodies(self, max_size):
-        if max_size is not None:
-            self.stream_large_bodies = modules.StreamLargeBodies(max_size)
-        else:
-            self.stream_large_bodies = False
 
     def duplicate_flow(self, f):
         """
@@ -238,12 +230,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def responseheaders(self, f):
-        try:
-            if self.stream_large_bodies:
-                self.stream_large_bodies.run(f, False)
-        except netlib.exceptions.HttpException:
-            f.reply.kill()
-            return
+        pass
 
     @controller.handler
     def response(self, f):

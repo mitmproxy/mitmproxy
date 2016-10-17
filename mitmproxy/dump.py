@@ -40,7 +40,6 @@ class DumpMaster(flow.FlowMaster):
         self.addons.add(dumper.Dumper())
         # This line is just for type hinting
         self.options = self.options  # type: Options
-        self.set_stream_large_bodies(options.stream_large_bodies)
 
         if not self.options.no_server and server:
             self.add_log(

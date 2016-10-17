@@ -1,6 +1,5 @@
 from netlib import wsgi
 from netlib import version
-from netlib.http import http1
 
 
 class AppRegistry:
@@ -28,17 +27,3 @@ class AppRegistry:
         if "host" in request.headers:
             host = request.headers["host"]
             return self.apps.get((host, request.port), None)
-
-
-class StreamLargeBodies:
-    def __init__(self, max_size):
-        self.max_size = max_size
-
-    def run(self, flow, is_request):
-        r = flow.request if is_request else flow.response
-        expected_size = http1.expected_http_body_size(
-            flow.request, flow.response if not is_request else None
-        )
-        if not r.raw_content and not (0 <= expected_size <= self.max_size):
-            # r.stream may already be a callable, which we want to preserve.
-            r.stream = r.stream or True

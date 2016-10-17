@@ -288,18 +288,6 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
             resp = p.request("get:'http://foo':h':foo'='bar'")
         assert resp.status_code == 400
 
-    def test_stream(self):
-        self.master.set_stream_large_bodies(1024 * 2)
-
-        self.pathod("200:b@1k")
-        assert not self.master.state.view[-1].response.stream
-        assert len(self.master.state.view[-1].response.content) == 1024 * 1
-
-        self.pathod("200:b@3k")
-        assert self.master.state.view[-1].response.stream
-        assert self.master.state.view[-1].response.content is None
-        self.master.set_stream_large_bodies(None)
-
     def test_stream_modify(self):
         s = script.Script(
             tutils.test_data.path("data/addonscripts/stream_modify.py")
