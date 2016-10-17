@@ -2,6 +2,8 @@ import traceback
 
 import sys
 import time
+
+import re
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy.builtins import script
@@ -107,8 +109,8 @@ class TestScript(mastertest.MasterTest):
         m.request(f)
         assert m.event_log[0][0] == "error"
         assert len(m.event_log[0][1].splitlines()) == 6
-        assert 'addonscripts/error.py", line 7, in request' in m.event_log[0][1]
-        assert 'addonscripts/error.py", line 3, in mkerr' in m.event_log[0][1]
+        assert re.search('addonscripts/error.py", line \d+, in request', m.event_log[0][1])
+        assert re.search('addonscripts/error.py", line \d+, in mkerr', m.event_log[0][1])
         assert m.event_log[0][1].endswith("ValueError: Error!\n")
 
     def test_duplicate_flow(self):
