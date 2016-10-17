@@ -536,7 +536,7 @@ class FlowView(tabs.Tabs):
                 f.kill(self.master)
             self.state.delete_flow(f)
         elif key == "D":
-            f = self.master.duplicate_flow(self.flow)
+            f = self.master.state.duplicate_flow(self.flow)
             signals.pop_view_state.send(self)
             self.master.view_flow(f)
             signals.status_message.send(message="Duplicated.")
