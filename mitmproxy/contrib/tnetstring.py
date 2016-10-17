@@ -183,8 +183,7 @@ def load(file_handle: io.BinaryIO) -> TSerializable:
     return parse(data_type, data)
 
 
-def parse(data_type: int, data: bytes):
-    # type: (int, bytes) -> TSerializable
+def parse(data_type: int, data: bytes) -> TSerializable:
     if data_type == ord(b','):
         return data
     if data_type == ord(b';'):
