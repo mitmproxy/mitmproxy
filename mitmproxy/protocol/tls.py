@@ -407,7 +407,7 @@ class TlsLayer(base.Layer):
             self._establish_tls_with_server()
 
     def set_server_tls(self, server_tls, sni=None):
-        # type: (bool, Union[six.text_type, None, False]) -> None
+        # type: (bool, Union[str, None, False]) -> None
         """
         Set the TLS settings for the next server connection that will be established.
         This function will not alter an existing connection.

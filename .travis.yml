@@ -28,10 +28,6 @@ matrix:
       env: TOXENV=py35 BDIST=1
     - python: 3.5
       env: TOXENV=py35 NO_ALPN=1
-    - python: 2.7
-      env: TOXENV=py27
-    - python: 2.7
-      env: TOXENV=py27 NO_ALPN=1
     - python: 3.5
       env: TOXENV=docs
   allow_failures:

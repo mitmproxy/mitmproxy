@@ -3,7 +3,6 @@ import os
 import abc
 import pyparsing as pp
 
-import six
 from six.moves import reduce
 from netlib import strutils
 from netlib import human
@@ -342,7 +341,7 @@ class OptionsOrValue(_Component):
         # it to be canonical. The user can specify a different case by using a
         # string value literal.
         self.option_used = False
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             for i in self.options:
                 # Find the exact option value in a case-insensitive way
                 if i.lower() == value.lower():

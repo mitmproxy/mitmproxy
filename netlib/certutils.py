@@ -3,7 +3,6 @@ import os
 import ssl
 import time
 import datetime
-from six.moves import filter
 import ipaddress
 
 import sys

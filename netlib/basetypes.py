@@ -1,9 +1,7 @@
-import six
 import abc
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Serializable(object):
+class Serializable(metaclass=abc.ABCMeta):
     """
     Abstract Base Class that defines an API to save an object's state and restore it later on.
     """

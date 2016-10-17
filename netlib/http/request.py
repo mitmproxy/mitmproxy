@@ -1,9 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import re
-
-import six
-from six.moves import urllib
+import urllib
 
 from netlib import multidict
 from netlib import strutils
@@ -34,19 +32,19 @@ class RequestData(message.MessageData):
         timestamp_start=None,
         timestamp_end=None
     ):
-        if isinstance(method, six.text_type):
+        if isinstance(method, str):
             method = method.encode("ascii", "strict")
-        if isinstance(scheme, six.text_type):
+        if isinstance(scheme, str):
             scheme = scheme.encode("ascii", "strict")
-        if isinstance(host, six.text_type):
+        if isinstance(host, str):
             host = host.encode("idna", "strict")
-        if isinstance(path, six.text_type):
+        if isinstance(path, str):
             path = path.encode("ascii", "strict")
-        if isinstance(http_version, six.text_type):
+        if isinstance(http_version, str):
             http_version = http_version.encode("ascii", "strict")
         if not isinstance(headers, nheaders.Headers):
             headers = nheaders.Headers(headers)
-        if isinstance(content, six.text_type):
+        if isinstance(content, str):
             raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
 
         self.first_line_format = first_line_format
@@ -89,9 +87,9 @@ class Request(message.Message):
             Returns:
                 The number of replacements made.
         """
-        if isinstance(pattern, six.text_type):
+        if isinstance(pattern, str):
             pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, six.text_type):
+        if isinstance(repl, str):
             repl = strutils.escaped_str_to_bytes(repl)
 
         c = super(Request, self).replace(pattern, repl, flags, count)
@@ -147,10 +145,6 @@ class Request(message.Message):
 
         Setting the host attribute also updates the host header, if present.
         """
-
-        if six.PY2:  # pragma: no cover
-            return self.data.host
-
         if not self.data.host:
             return self.data.host
         try:
@@ -160,7 +154,7 @@ class Request(message.Message):
 
     @host.setter
     def host(self, host):
-        if isinstance(host, six.text_type):
+        if isinstance(host, str):
             try:
                 # There's no non-strict mode for IDNA encoding.
                 # We don't want this operation to fail though, so we try

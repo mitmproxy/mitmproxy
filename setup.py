@@ -30,8 +30,6 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: Implementation :: CPython",
@@ -92,13 +90,6 @@ setup(
             "pydivert>=0.0.7, <0.1",
         ],
         ':sys_platform != "win32"': [
-        ],
-        # Do not use a range operator here: https://bitbucket.org/pypa/setuptools/issues/380
-        # Ubuntu Trusty and other still ship with setuptools < 17.1
-        ':python_version == "2.7"': [
-            "enum34>=1.0.4, <2",
-            "ipaddress>=1.0.15, <1.1",
-            "typing==3.5.2.2",
         ],
         'dev': [
             "tox>=2.3, <3",

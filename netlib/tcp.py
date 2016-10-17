@@ -12,11 +12,9 @@ import binascii
 from typing import Optional  # noqa
 
 from netlib import strutils
-from six.moves import range
 
 import certifi
 from backports import ssl_match_hostname
-import six
 import OpenSSL
 from OpenSSL import SSL
 
@@ -30,10 +28,7 @@ from netlib import basethread
 # the latest version of pyOpenSSL is actually installed.
 version_check.check_pyopenssl_version()
 
-if six.PY2:
-    socket_fileobject = socket._fileobject
-else:
-    socket_fileobject = socket.SocketIO
+socket_fileobject = socket.SocketIO
 
 EINTR = 4
 if os.environ.get("NO_ALPN"):
@@ -293,7 +288,7 @@ class Reader(_FileLike):
             try:
                 return self.o.recv(length, socket.MSG_PEEK)
             except SSL.Error as e:
-                six.reraise(exceptions.TlsException, exceptions.TlsException(str(e)), sys.exc_info()[2])
+                raise exceptions.TlsException(str(e))
         else:
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
@@ -445,12 +440,8 @@ class _Connection(object):
         # as it may just return what's left in the buffer and not all the bytes we want.
         # As a workaround, we just use unbuffered sockets directly.
         # https://mail.python.org/pipermail/python-dev/2009-June/089986.html
-        if six.PY2:
-            self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
-            self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
-        else:
-            self.rfile = Reader(socket.SocketIO(self.connection, "rb"))
-            self.wfile = Writer(socket.SocketIO(self.connection, "wb"))
+        self.rfile = Reader(socket.SocketIO(self.connection, "rb"))
+        self.wfile = Writer(socket.SocketIO(self.connection, "wb"))
 
     def __init__(self, connection):
         if connection:
@@ -968,8 +959,8 @@ class TCPServer(object):
         """
         # If a thread has persisted after interpreter exit, the module might be
         # none.
-        if traceback and six:
-            exc = six.text_type(traceback.format_exc())
+        if traceback:
+            exc = str(traceback.format_exc())
             print(u'-' * 40, file=fp)
             print(
                 u"Error in processing of request from %s" % repr(client_address), file=fp)

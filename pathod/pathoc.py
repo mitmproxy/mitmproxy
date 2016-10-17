@@ -461,7 +461,7 @@ class Pathoc(tcp.TCPClient):
 
             May raise a exceptions.NetlibException
         """
-        if isinstance(r, six.string_types):
+        if isinstance(r, str):
             r = next(language.parse_pathoc(r, self.use_http2))
 
         if isinstance(r, language.http.Request):
