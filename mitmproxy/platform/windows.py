@@ -10,8 +10,8 @@ import time
 import configargparse
 from pydivert import enum
 from pydivert import windivert
-from six.moves import cPickle as pickle
-from six.moves import socketserver
+import pickle
+import socketserver
 
 PROXY_API_PORT = 8085
 

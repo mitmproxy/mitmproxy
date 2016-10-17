@@ -41,7 +41,6 @@ all other strings are returned as plain bytes.
 """
 
 import collections
-import six
 from typing import io, Union, Tuple  # noqa
 
 TSerializable = Union[None, bool, int, float, bytes, list, tuple, dict]
@@ -96,7 +95,7 @@ def _rdumpq(q, size, value):
     elif value is False:
         write(b'5:false!')
         return size + 8
-    elif isinstance(value, six.integer_types):
+    elif isinstance(value, int):
         data = str(value).encode()
         ldata = len(data)
         span = str(ldata).encode()
@@ -191,16 +190,12 @@ def load(file_handle):
 
 def parse(data_type, data):
     # type: (int, bytes) -> TSerializable
-    if six.PY2:
-        data_type = ord(data_type)
     if data_type == ord(b','):
         return data
     if data_type == ord(b';'):
         return data.decode("utf8")
     if data_type == ord(b'#'):
         try:
-            if six.PY2:
-                return long(data)
             return int(data)
         except ValueError:
             raise ValueError("not a tnetstring: invalid integer literal: {}".format(data))

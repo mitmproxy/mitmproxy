@@ -2,15 +2,13 @@ from __future__ import absolute_import, print_function, division
 
 from abc import abstractmethod, ABCMeta
 
-import six
 from typing import List  # noqa
 
 from mitmproxy import flowfilter
 from mitmproxy import models  # noqa
 
 
-@six.add_metaclass(ABCMeta)
-class FlowList(object):
+class FlowList(metaclass=ABCMeta):
     def __init__(self):
         self._list = []  # type: List[models.Flow]
 
@@ -25,9 +23,6 @@ class FlowList(object):
 
     def __bool__(self):
         return bool(self._list)
-
-    if six.PY2:
-        __nonzero__ = __bool__
 
     def __len__(self):
         return len(self._list)

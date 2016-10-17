@@ -4,8 +4,6 @@ import os
 import signal
 import sys
 
-from six.moves import _thread  # PY3: We only need _thread.error, which is an alias of RuntimeError in 3.3+
-
 from mitmproxy import cmdline
 from mitmproxy import exceptions
 from mitmproxy.proxy import config
@@ -78,7 +76,7 @@ def mitmproxy(args=None):  # pragma: no cover
         sys.exit(1)
     try:
         m.run()
-    except (KeyboardInterrupt, _thread.error):
+    except (KeyboardInterrupt, RuntimeError):
         pass
 
 
@@ -109,7 +107,7 @@ def mitmdump(args=None):  # pragma: no cover
     except (dump.DumpError, exceptions.OptionsError) as e:
         print("mitmdump: %s" % e, file=sys.stderr)
         sys.exit(1)
-    except (KeyboardInterrupt, _thread.error):
+    except (KeyboardInterrupt, RuntimeError):
         pass
     if master is None or master.has_errored:
         print("mitmdump: errors occurred during run", file=sys.stderr)
@@ -142,5 +140,5 @@ def mitmweb(args=None):  # pragma: no cover
         sys.exit(1)
     try:
         m.run()
-    except (KeyboardInterrupt, _thread.error):
+    except (KeyboardInterrupt, RuntimeError):
         pass

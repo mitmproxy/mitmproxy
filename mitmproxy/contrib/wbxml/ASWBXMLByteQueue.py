@@ -5,7 +5,7 @@
 Inspired by EAS Inspector for Fiddler
 https://easinspectorforfiddler.codeplex.com
 
------ The MIT License (MIT) ----- 
+----- The MIT License (MIT) -----
 Filename: ASWBXMLByteQueue.py
 Copyright (c) 2014, David P. Shaw
 
@@ -27,25 +27,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 '''
-from six.moves.queue import Queue
+from queue import Queue
 import logging
 
 class ASWBXMLByteQueue(Queue):
 
     def __init__(self, wbxmlBytes):
-        
+
         self.bytesDequeued = 0
         self.bytesEnqueued = 0
-        
+
         Queue.__init__(self)
 
         for byte in wbxmlBytes:
             self.put(ord(byte))
             self.bytesEnqueued += 1
-        
-        
+
+
         logging.debug("Array byte count: %d, enqueued: %d" % (self.qsize(), self.bytesEnqueued))
-    
+
     """
     Created to debug the dequeueing of bytes
     """
@@ -54,18 +54,18 @@ class ASWBXMLByteQueue(Queue):
         self.bytesDequeued += 1
         logging.debug("Dequeued byte 0x{0:X} ({1} total)".format(singleByte, self.bytesDequeued))
         return singleByte
-    
+
     """
     Return true if the continuation bit is set in the byte
     """
     def checkContinuationBit(self, byteval):
         continuationBitmask = 0x80
         return (continuationBitmask & byteval) != 0
-    
+
     def dequeueMultibyteInt(self):
         iReturn = 0
         singleByte = 0xFF
-         
+
         while True:
             iReturn <<= 7
             if (self.qsize() == 0):
@@ -100,4 +100,3 @@ class ASWBXMLByteQueue(Queue):
                     break
 
         return strReturn
-

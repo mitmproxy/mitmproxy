@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import six
 from typing import Any
 from typing import List
 
@@ -34,7 +33,7 @@ class StateObject(netlib.basetypes.Serializable):
         Retrieve object state.
         """
         state = {}
-        for attr, cls in six.iteritems(self._stateobject_attributes):
+        for attr, cls in self._stateobject_attributes.items():
             val = getattr(self, attr)
             if val is None:
                 state[attr] = None
@@ -51,7 +50,7 @@ class StateObject(netlib.basetypes.Serializable):
         Load object state from data returned by a get_state call.
         """
         state = state.copy()
-        for attr, cls in six.iteritems(self._stateobject_attributes):
+        for attr, cls in self._stateobject_attributes.items():
             val = state.pop(attr)
             if val is None:
                 setattr(self, attr, val)

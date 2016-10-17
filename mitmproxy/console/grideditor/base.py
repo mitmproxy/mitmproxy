@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division
 import abc
 import copy
 
-import six
 import urwid
 from mitmproxy.console import common
 from mitmproxy.console import signals
@@ -24,8 +23,7 @@ FOOTER_EDITING = [
 ]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Column(object):
+class Column(object, metaclass=abc.ABCMeta):
     subeditor = None
 
     def __init__(self, heading):

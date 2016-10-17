@@ -2,8 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 import h2.exceptions
 import netlib.exceptions
-import six
-import sys
 import time
 import traceback
 from mitmproxy import exceptions
@@ -83,9 +81,6 @@ class ConnectServerConnection(object):
     def __bool__(self):
         return bool(self.via)
 
-    if six.PY2:
-        __nonzero__ = __bool__
-
 
 class UpstreamConnectLayer(base.Layer):
 
@@ -159,12 +154,8 @@ class HttpLayer(base.Layer):
                 # We optimistically guess there might be an HTTP client on the
                 # other end
                 self.send_error_response(400, repr(e))
-                six.reraise(
-                    exceptions.ProtocolException,
-                    exceptions.ProtocolException(
-                        "HTTP protocol error in client request: {}".format(e)
-                    ),
-                    sys.exc_info()[2]
+                raise exceptions.ProtocolException(
+                    "HTTP protocol error in client request: {}".format(e)
                 )
 
             self.log("request", "debug", [repr(request)])
@@ -193,10 +184,7 @@ class HttpLayer(base.Layer):
 
             # update host header in reverse proxy mode
             if self.config.options.mode == "reverse":
-                if six.PY2:
-                    flow.request.headers["Host"] = self.config.upstream_server.address.host.encode()
-                else:
-                    flow.request.headers["Host"] = self.config.upstream_server.address.host
+                flow.request.headers["Host"] = self.config.upstream_server.address.host
 
             # set upstream auth
             if self.mode == "upstream" and self.config.upstream_auth is not None:
@@ -244,8 +232,9 @@ class HttpLayer(base.Layer):
                     self.channel.ask("error", flow)
                     return
                 else:
-                    six.reraise(exceptions.ProtocolException, exceptions.ProtocolException(
-                        "Error in HTTP connection: %s" % repr(e)), sys.exc_info()[2])
+                    raise exceptions.ProtocolException(
+                        "Error in HTTP connection: %s" % repr(e)
+                    )
             finally:
                 if flow:
                     flow.live = False

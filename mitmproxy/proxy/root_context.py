@@ -1,9 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import sys
-
-import six
-
 import netlib.exceptions
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -50,7 +46,7 @@ class RootContext(object):
         try:
             d = top_layer.client_conn.rfile.peek(3)
         except netlib.exceptions.TcpException as e:
-            six.reraise(exceptions.ProtocolException, exceptions.ProtocolException(str(e)), sys.exc_info()[2])
+            raise exceptions.ProtocolException(str(e))
         client_tls = protocol.is_tls_record_magic(d)
 
         # 1. check for --ignore
@@ -101,7 +97,7 @@ class RootContext(object):
         is_ascii = (
             len(d) == 3 and
             # expect A-Za-z
-            all(65 <= x <= 90 or 97 <= x <= 122 for x in six.iterbytes(d))
+            all(65 <= x <= 90 or 97 <= x <= 122 for x in d)
         )
         if self.config.options.rawtcp and not is_ascii:
             return protocol.RawTCPLayer(top_layer)

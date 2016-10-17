@@ -4,8 +4,6 @@ import time
 import copy
 import os
 
-import six
-
 from mitmproxy import stateobject
 from netlib import certutils
 from netlib import tcp
@@ -46,9 +44,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
     def __bool__(self):
         return bool(self.connection) and not self.finished
-
-    if six.PY2:
-        __nonzero__ = __bool__
 
     def __repr__(self):
         return "<ClientConnection: {ssl}{address}>".format(
@@ -135,9 +130,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
     def __bool__(self):
         return bool(self.connection) and not self.finished
-
-    if six.PY2:
-        __nonzero__ = __bool__
 
     def __repr__(self):
         if self.ssl_established and self.sni:

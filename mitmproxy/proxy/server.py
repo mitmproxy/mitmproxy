@@ -4,8 +4,6 @@ import socket
 import sys
 import traceback
 
-import six
-
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
@@ -46,10 +44,8 @@ class ProxyServer(tcp.TCPServer):
                 (config.options.listen_host, config.options.listen_port)
             )
         except socket.error as e:
-            six.reraise(
-                exceptions.ServerException,
-                exceptions.ServerException('Error starting proxy server: ' + repr(e)),
-                sys.exc_info()[2]
+            raise exceptions.ServerException(
+                'Error starting proxy server: ' + repr(e)
             )
         self.channel = None
 
