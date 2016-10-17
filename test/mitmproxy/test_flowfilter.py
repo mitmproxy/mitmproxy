@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+import io
 from mock import patch
 
 from mitmproxy import flowfilter
@@ -9,7 +9,7 @@ from . import tutils
 class TestParsing:
 
     def _dump(self, x):
-        c = StringIO()
+        c = io.StringIO()
         x.dump(fp=c)
         assert c.getvalue()
 

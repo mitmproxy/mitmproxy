@@ -1,5 +1,5 @@
 import re
-from six.moves import urllib
+import urllib
 
 # set of SSL/TLS capable hosts
 secure_hosts = set()

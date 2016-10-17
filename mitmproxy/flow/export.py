@@ -2,21 +2,15 @@ from __future__ import absolute_import, print_function, division
 
 import json
 import re
-from textwrap import dedent
-
-import six
-from six.moves import urllib
+import textwrap
+import urllib
 
 import netlib.http
 
 
 def _native(s):
-    if six.PY2:
-        if isinstance(s, str):
-            return s.encode()
-    else:
-        if isinstance(s, bytes):
-            return s.decode()
+    if isinstance(s, bytes):
+        return s.decode()
     return s
 
 
@@ -49,7 +43,7 @@ def curl_command(flow):
 
 
 def python_code(flow):
-    code = dedent("""
+    code = textwrap.dedent("""
         import requests
 
         url = '{url}'
@@ -110,7 +104,7 @@ def is_json(headers, content):
 
 
 def locust_code(flow):
-    code = dedent("""
+    code = textwrap.dedent("""
         from locust import HttpLocust, TaskSet, task
 
         class UserBehavior(TaskSet):

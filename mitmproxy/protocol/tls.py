@@ -1,10 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 import struct
-import sys
 
 import construct
-import six
 
 import netlib.exceptions
 from mitmproxy import exceptions
@@ -214,20 +212,12 @@ def is_tls_record_magic(d):
 
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
-    if six.PY2:
-        return (
-            len(d) == 3 and
-            d[0] == '\x16' and
-            d[1] == '\x03' and
-            d[2] in ('\x00', '\x01', '\x02', '\x03')
-        )
-    else:
-        return (
-            len(d) == 3 and
-            d[0] == 0x16 and
-            d[1] == 0x03 and
-            0x0 <= d[2] <= 0x03
-        )
+    return (
+        len(d) == 3 and
+        d[0] == 0x16 and
+        d[1] == 0x03 and
+        0x0 <= d[2] <= 0x03
+    )
 
 
 def get_client_hello(client_conn):
@@ -467,7 +457,7 @@ class TlsLayer(base.Layer):
                 self._establish_tls_with_client()
             except:
                 pass
-            six.reraise(*sys.exc_info())
+            raise
 
         self._establish_tls_with_client()
 
@@ -497,15 +487,11 @@ class TlsLayer(base.Layer):
             # raises ann error.
             self.client_conn.rfile.peek(1)
         except netlib.exceptions.TlsException as e:
-            six.reraise(
-                exceptions.ClientHandshakeException,
-                exceptions.ClientHandshakeException(
-                    "Cannot establish TLS with client (sni: {sni}): {e}".format(
-                        sni=self._client_hello.sni, e=repr(e)
-                    ),
-                    self._client_hello.sni or repr(self.server_conn.address)
+            raise exceptions.ClientHandshakeException(
+                "Cannot establish TLS with client (sni: {sni}): {e}".format(
+                    sni=self._client_hello.sni, e=repr(e)
                 ),
-                sys.exc_info()[2]
+                self._client_hello.sni or repr(self.server_conn.address)
             )
 
     def _establish_tls_with_server(self):
@@ -545,20 +531,14 @@ class TlsLayer(base.Layer):
                 self.log(str(tls_cert_err), "warn")
                 self.log("Ignoring server verification error, continuing with connection", "warn")
         except netlib.exceptions.InvalidCertificateException as e:
-            six.reraise(
-                exceptions.InvalidServerCertificate,
-                exceptions.InvalidServerCertificate(str(e)),
-                sys.exc_info()[2]
-            )
+            raise exceptions.InvalidServerCertificate(str(e))
         except netlib.exceptions.TlsException as e:
-            six.reraise(
-                exceptions.TlsProtocolException,
-                exceptions.TlsProtocolException("Cannot establish TLS with {address} (sni: {sni}): {e}".format(
+            raise exceptions.TlsProtocolException(
+                "Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),
                     sni=self.server_sni,
-                    e=repr(e),
-                )),
-                sys.exc_info()[2]
+                    e=repr(e)
+                )
             )
 
         proto = self.alpn_for_client_connection.decode() if self.alpn_for_client_connection else '-'

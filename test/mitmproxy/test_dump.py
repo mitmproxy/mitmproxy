@@ -1,5 +1,5 @@
 import os
-from six.moves import cStringIO as StringIO
+import io
 
 from mitmproxy import dump, flow, exceptions
 from . import tutils, mastertest
@@ -15,7 +15,7 @@ class TestDumpMaster(mastertest.MasterTest):
             options["verbosity"] = 0
         if "flow_detail" not in options:
             options["flow_detail"] = 0
-        o = dump.Options(filtstr=flt, tfile=StringIO(), **options)
+        o = dump.Options(filtstr=flt, tfile=io.StringIO(), **options)
         return dump.DumpMaster(None, o)
 
     def test_basic(self):
@@ -38,7 +38,7 @@ class TestDumpMaster(mastertest.MasterTest):
 
     def test_error(self):
         o = dump.Options(
-            tfile=StringIO(),
+            tfile=io.StringIO(),
             flow_detail=1
         )
         m = dump.DumpMaster(None, o)
@@ -107,7 +107,7 @@ class TestDumpMaster(mastertest.MasterTest):
     def test_replacements(self):
         o = dump.Options(
             replacements=[(".*", "content", "foo")],
-            tfile = StringIO(),
+            tfile = io.StringIO(),
         )
         o.verbosity = 0
         o.flow_detail = 0
@@ -118,7 +118,7 @@ class TestDumpMaster(mastertest.MasterTest):
     def test_setheader(self):
         o = dump.Options(
             setheaders=[(".*", "one", "two")],
-            tfile=StringIO()
+            tfile=io.StringIO()
         )
         o.verbosity = 0
         o.flow_detail = 0

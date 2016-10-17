@@ -10,7 +10,7 @@ from netlib import certutils
 from netlib import websockets
 from netlib import version
 
-from six.moves import urllib
+import urllib
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \
     TlsException
 

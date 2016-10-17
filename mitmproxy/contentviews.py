@@ -16,24 +16,26 @@ from __future__ import absolute_import, print_function, division
 
 import cssutils
 import datetime
-import html2text
-import jsbeautifier
 import json
 import logging
-import lxml.etree
-import lxml.html
 import subprocess
 import traceback
+import io
+from typing import Mapping  # noqa
+
+import lxml.etree
+import lxml.html
 from PIL import ExifTags
 from PIL import Image
+import html2text
+import jsbeautifier
+
 from mitmproxy import exceptions
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
 from netlib import multidict
 from netlib import strutils
 from netlib.http import url
-from six import BytesIO
-from typing import Mapping  # noqa
 
 try:
     import pyamf
@@ -422,7 +424,7 @@ class ViewImage(View):
 
     def __call__(self, data, **metadata):
         try:
-            img = Image.open(BytesIO(data))
+            img = Image.open(io.BytesIO(data))
         except IOError:
             return None
         parts = [

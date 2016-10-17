@@ -6,7 +6,6 @@ import os
 import re
 from netlib import strutils
 
-import six
 from OpenSSL import SSL, crypto
 
 from mitmproxy import exceptions
@@ -37,9 +36,6 @@ class HostMatcher(object):
 
     def __bool__(self):
         return bool(self.patterns)
-
-    if six.PY2:
-        __nonzero__ = __bool__
 
 
 ServerSpec = collections.namedtuple("ServerSpec", "scheme address")

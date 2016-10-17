@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+import io
 
 from pathod import pathod
 from netlib import tcp
@@ -10,7 +10,7 @@ from . import tutils
 class TestPathod(object):
 
     def test_logging(self):
-        s = StringIO()
+        s = io.StringIO()
         p = pathod.Pathod(("127.0.0.1", 0), logfp=s)
         assert len(p.get_log()) == 0
         id = p.add_log(dict(s="foo"))

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-import six
-
 from netlib.tutils import tresp
 from netlib import http, tutils
 
@@ -245,7 +243,7 @@ class TestMessageText(object):
         with tutils.raises(ValueError):
             assert r.text
 
-        assert r.get_text(strict=False) == u'\ufffd' if six.PY2 else '\udcff'
+        assert r.get_text(strict=False) == '\udcff'
 
     def test_cannot_encode(self):
         r = tresp()
@@ -271,4 +269,4 @@ class TestMessageText(object):
         r.headers["content-type"] = "text/html; charset=latin1"
         r.text = u'\udcff'
         assert r.headers["content-type"] == "text/html; charset=utf-8"
-        assert r.raw_content == b'\xed\xb3\xbf' if six.PY2 else b"\xFF"
+        assert r.raw_content == b"\xFF"

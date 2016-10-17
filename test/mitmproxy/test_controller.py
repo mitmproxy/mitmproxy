@@ -4,7 +4,7 @@ from threading import Thread, Event
 from mock import Mock
 
 from mitmproxy import controller
-from six.moves import queue
+import queue
 
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy.proxy import DummyServer

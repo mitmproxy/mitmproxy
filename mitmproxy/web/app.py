@@ -8,7 +8,6 @@ import re
 import hashlib
 
 
-import six
 import tornado.websocket
 import tornado.web
 from io import BytesIO
@@ -242,10 +241,10 @@ class FlowHandler(RequestHandler):
     def put(self, flow_id):
         flow = self.flow
         flow.backup()
-        for a, b in six.iteritems(self.json):
+        for a, b in self.json.items():
             if a == "request":
                 request = flow.request
-                for k, v in six.iteritems(b):
+                for k, v in b.items():
                     if k in ["method", "scheme", "host", "path", "http_version"]:
                         setattr(request, k, str(v))
                     elif k == "port":
@@ -259,7 +258,7 @@ class FlowHandler(RequestHandler):
 
             elif a == "response":
                 response = flow.response
-                for k, v in six.iteritems(b):
+                for k, v in b.items():
                     if k == "msg":
                         response.msg = str(v)
                     elif k == "code":
@@ -387,7 +386,7 @@ class Settings(RequestHandler):
 
     def put(self):
         update = {}
-        for k, v in six.iteritems(self.json):
+        for k, v in self.json.items():
             if k == "intercept":
                 self.master.options.intercept = v
                 update[k] = v

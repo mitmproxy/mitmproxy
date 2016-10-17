@@ -1,9 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import sys
-
-import six
-
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
@@ -184,12 +180,8 @@ class ServerConnectionMixin(object):
         try:
             self.server_conn.connect()
         except netlib.exceptions.TcpException as e:
-            six.reraise(
-                exceptions.ProtocolException,
-                exceptions.ProtocolException(
-                    "Server connection to {} failed: {}".format(
-                        repr(self.server_conn.address), str(e)
-                    )
-                ),
-                sys.exc_info()[2]
+            raise exceptions.ProtocolException(
+                "Server connection to {} failed: {}".format(
+                    repr(self.server_conn.address), str(e)
+                )
             )
