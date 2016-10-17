@@ -1,4 +1,3 @@
-
 from netlib import wsgi
 from netlib import version
 from netlib.http import http1

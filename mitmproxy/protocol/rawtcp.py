@@ -1,4 +1,3 @@
-
 import socket
 
 from OpenSSL import SSL

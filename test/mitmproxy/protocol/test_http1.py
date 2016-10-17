@@ -1,4 +1,3 @@
-
 from netlib.http import http1
 from netlib.tcp import TCPClient
 from netlib.tutils import treq

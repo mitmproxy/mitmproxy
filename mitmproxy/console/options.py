@@ -1,4 +1,3 @@
-
 import urwid
 
 from mitmproxy import contentviews

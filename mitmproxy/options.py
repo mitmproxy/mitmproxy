@@ -1,4 +1,3 @@
-
 from typing import Tuple, Optional, Sequence
 
 from mitmproxy import optmanager

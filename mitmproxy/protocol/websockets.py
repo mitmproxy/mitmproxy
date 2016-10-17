@@ -1,4 +1,3 @@
-
 import netlib.exceptions
 import socket
 import struct

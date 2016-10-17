@@ -1,5 +1,3 @@
-
-
 class AntiCache:
     def __init__(self):
         self.enabled = False

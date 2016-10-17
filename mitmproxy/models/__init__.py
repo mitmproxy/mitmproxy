@@ -1,4 +1,3 @@
-
 from netlib.http import decoded
 from .connections import ClientConnection, ServerConnection
 from .flow import Flow, Error

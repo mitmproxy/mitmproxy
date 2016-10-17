@@ -1,4 +1,3 @@
-
 import click
 
 from mitmproxy import utils

@@ -1,4 +1,3 @@
-
 import urwid
 
 import netlib.http.url

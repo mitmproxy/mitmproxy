@@ -1,4 +1,3 @@
-
 def mkerr():
     raise ValueError("Error!")
 

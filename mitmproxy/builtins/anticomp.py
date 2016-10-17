@@ -1,5 +1,3 @@
-
-
 class AntiComp:
     def __init__(self):
         self.enabled = False

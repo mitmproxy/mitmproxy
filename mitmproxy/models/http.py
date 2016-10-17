@@ -1,4 +1,3 @@
-
 import cgi
 
 from mitmproxy.models import flow

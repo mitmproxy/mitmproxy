@@ -1,4 +1,3 @@
-
 from .. import tutils, mastertest
 
 import os.path

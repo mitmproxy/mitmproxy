@@ -1,4 +1,3 @@
-
 import mailcap
 import mimetypes
 import os

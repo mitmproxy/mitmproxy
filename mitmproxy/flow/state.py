@@ -1,4 +1,3 @@
-
 from abc import abstractmethod, ABCMeta
 
 from typing import List  # noqa

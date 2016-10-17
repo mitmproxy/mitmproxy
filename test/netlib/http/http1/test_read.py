@@ -1,4 +1,3 @@
-
 from io import BytesIO
 from mock import Mock
 import pytest

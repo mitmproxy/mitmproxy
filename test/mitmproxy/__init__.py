@@ -1,4 +1,3 @@
-
 # Silence third-party modules
 import logging
 logging.getLogger("hyper").setLevel(logging.WARNING)

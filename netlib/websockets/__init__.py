@@ -1,4 +1,3 @@
-
 from .frame import FrameHeader
 from .frame import Frame
 from .frame import OPCODE

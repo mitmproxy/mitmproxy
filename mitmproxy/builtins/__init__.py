@@ -1,4 +1,3 @@
-
 from mitmproxy.builtins import anticache
 from mitmproxy.builtins import anticomp
 from mitmproxy.builtins import filestreamer

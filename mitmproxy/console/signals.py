@@ -1,4 +1,3 @@
-
 import blinker
 
 # Show a status message in the action bar

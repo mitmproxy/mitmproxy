@@ -1,4 +1,3 @@
-
 import struct
 from typing import Optional  # noqa
 from typing import Union

@@ -1,5 +1,3 @@
-
-
 class Masker:
     """
     Data sent from the server must be masked to prevent malicious clients

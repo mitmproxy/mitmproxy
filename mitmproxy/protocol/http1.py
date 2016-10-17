@@ -1,4 +1,3 @@
-
 from mitmproxy import models
 from mitmproxy.protocol import http
 from netlib.http import http1
