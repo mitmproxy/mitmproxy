@@ -11,8 +11,7 @@ def request(flow):
 
     # Method 1: Answer with a locally generated response
     if flow.request.pretty_host.endswith("example.com"):
-        resp = HTTPResponse.make(200, b"Hello World", {"Content-Type": "text/html"})
-        flow.reply.send(resp)
+        flow.response = HTTPResponse.make(200, b"Hello World", {"Content-Type": "text/html"})
 
     # Method 2: Redirect the request to a different server
     if flow.request.pretty_host.endswith("example.org"):
