@@ -3,7 +3,6 @@ Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
 very common source of error. Check before every start that both versions
 are somewhat okay.
 """
-from __future__ import division, absolute_import, print_function
 import sys
 import inspect
 import os.path

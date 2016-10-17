@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import contextlib
 import blinker
@@ -11,7 +10,7 @@ from mitmproxy import exceptions
 """
 
 
-class OptManager(object):
+class OptManager:
     """
         .changed is a blinker Signal that triggers whenever options are
         updated. If any handler in the chain raises an exceptions.OptionsError
@@ -25,7 +24,7 @@ class OptManager(object):
         # Initialize instance._opts before __init__ is called.
         # This allows us to call super().__init__() last, which then sets
         # ._initialized = True as the final operation.
-        instance = super(OptManager, cls).__new__(cls)
+        instance = super().__new__(cls)
         instance.__dict__["_opts"] = {}
         return instance
 

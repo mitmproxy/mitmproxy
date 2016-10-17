@@ -7,7 +7,7 @@ from netlib.exceptions import HttpException, TlsException
 from . import tutils
 
 
-class TestPathod(object):
+class TestPathod:
 
     def test_logging(self):
         s = io.StringIO()

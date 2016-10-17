@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import struct
 from typing import Optional  # noqa
@@ -248,7 +247,7 @@ def get_client_hello(client_conn):
     return client_hello
 
 
-class TlsClientHello(object):
+class TlsClientHello:
 
     def __init__(self, raw_client_hello):
         self._client_hello = _constructs.ClientHello.parse(raw_client_hello)
@@ -318,7 +317,7 @@ class TlsLayer(base.Layer):
     """
 
     def __init__(self, ctx, client_tls, server_tls, custom_server_sni = None):
-        super(TlsLayer, self).__init__(ctx)
+        super().__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
 

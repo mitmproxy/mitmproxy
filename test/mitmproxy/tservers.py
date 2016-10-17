@@ -74,7 +74,7 @@ class ProxyThread(threading.Thread):
         self.tmaster.shutdown()
 
 
-class ProxyTestBase(object):
+class ProxyTestBase:
     # Test Configuration
     ssl = None
     ssloptions = False
@@ -203,7 +203,7 @@ class TransparentProxyTest(ProxyTestBase):
 
     @classmethod
     def setup_class(cls):
-        super(TransparentProxyTest, cls).setup_class()
+        super().setup_class()
 
         cls._resolver = mock.patch(
             "mitmproxy.platform.resolver",
@@ -214,7 +214,7 @@ class TransparentProxyTest(ProxyTestBase):
     @classmethod
     def teardown_class(cls):
         cls._resolver.stop()
-        super(TransparentProxyTest, cls).teardown_class()
+        super().teardown_class()
 
     @classmethod
     def get_options(cls):
@@ -308,7 +308,7 @@ class ChainProxyTest(ProxyTestBase):
     @classmethod
     def setup_class(cls):
         cls.chain = []
-        super(ChainProxyTest, cls).setup_class()
+        super().setup_class()
         for _ in range(cls.n):
             opts = cls.get_options()
             config = ProxyConfig(opts)
@@ -323,19 +323,19 @@ class ChainProxyTest(ProxyTestBase):
 
     @classmethod
     def teardown_class(cls):
-        super(ChainProxyTest, cls).teardown_class()
+        super().teardown_class()
         for proxy in cls.chain:
             proxy.shutdown()
 
     def setup(self):
-        super(ChainProxyTest, self).setup()
+        super().setup()
         for proxy in self.chain:
             proxy.tmaster.clear_log()
             proxy.tmaster.state.clear()
 
     @classmethod
     def get_options(cls):
-        opts = super(ChainProxyTest, cls).get_options()
+        opts = super().get_options()
         if cls.chain:  # First proxy is in normal mode.
             opts.update(
                 mode="upstream",

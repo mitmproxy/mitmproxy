@@ -51,7 +51,7 @@ class TestPathCompleter:
         assert c.final == s
 
 
-class TestPathEdit():
+class TestPathEdit:
 
     def test_keypress(self):
 

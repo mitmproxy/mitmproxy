@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import os
 import sys
@@ -51,7 +50,7 @@ class FlowMaster(controller.Master):
             return self.servers[0]
 
     def __init__(self, options, server, state):
-        super(FlowMaster, self).__init__(options)
+        super().__init__(options)
         if server:
             self.add_server(server)
         self.state = state

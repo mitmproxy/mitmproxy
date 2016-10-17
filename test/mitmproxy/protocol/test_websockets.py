@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import pytest
 import os
@@ -44,7 +43,7 @@ class _WebSocketsServerBase(netlib_tservers.ServerTestBase):
                 traceback.print_exc()
 
 
-class _WebSocketsTestBase(object):
+class _WebSocketsTestBase:
 
     @classmethod
     def setup_class(cls):

@@ -18,7 +18,7 @@ DATATYPES = dict(
 )
 
 
-class TransformGenerator(object):
+class TransformGenerator:
 
     """
         Perform a byte-by-byte transform another generator - that is, for each
@@ -54,7 +54,7 @@ def rand_byte(chars):
     return bytes([random.choice(chars)])
 
 
-class RandomGenerator(object):
+class RandomGenerator:
 
     def __init__(self, dtype, length):
         self.dtype = dtype
@@ -73,7 +73,7 @@ class RandomGenerator(object):
         return "%s random from %s" % (self.length, self.dtype)
 
 
-class FileGenerator(object):
+class FileGenerator:
 
     def __init__(self, path):
         self.path = path

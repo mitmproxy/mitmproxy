@@ -3,7 +3,7 @@ import sys
 import netlib.utils
 
 
-class MemBool(object):
+class MemBool:
 
     """
         Truth-checking with a memory, for use in chained if statements.

@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, print_function, division)
 import argparse
 import binascii
 
@@ -23,7 +22,7 @@ def assemble_http_basic_auth(scheme, username, password):
     return scheme + " " + v
 
 
-class NullProxyAuth(object):
+class NullProxyAuth:
 
     """
         No proxy auth at all (returns empty challange headers)
@@ -90,7 +89,7 @@ class BasicProxyAuth(BasicAuth):
     AUTH_HEADER = 'Proxy-Authorization'
 
 
-class PassMan(object):
+class PassMan:
 
     def test(self, username_, password_token_):
         return False

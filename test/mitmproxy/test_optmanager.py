@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 import copy
 
 from mitmproxy import optmanager
@@ -10,7 +9,7 @@ class TO(optmanager.OptManager):
     def __init__(self, one=None, two=None):
         self.one = one
         self.two = two
-        super(TO, self).__init__()
+        super().__init__()
 
 
 def test_options():

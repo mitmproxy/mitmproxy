@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 import os.path
 import re
 import importlib
@@ -20,7 +19,7 @@ def getbit(byte, offset):
     return bool(byte & mask)
 
 
-class BiDi(object):
+class BiDi:
 
     """
         A wee utility class for keeping bi-directional mappings, like field
@@ -49,7 +48,7 @@ class BiDi(object):
         return self.values.get(n, default)
 
 
-class Data(object):
+class Data:
 
     def __init__(self, name):
         m = importlib.import_module(name)

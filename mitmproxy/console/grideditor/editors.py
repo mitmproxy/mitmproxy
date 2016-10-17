@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 import re
 import urwid
 from mitmproxy import exceptions
@@ -29,7 +28,7 @@ class HeaderEditor(base.GridEditor):
     ]
 
     def make_help(self):
-        h = super(HeaderEditor, self).make_help()
+        h = super().make_help()
         text = [
             urwid.Text([("text", "Special keys:\n")])
         ]
@@ -106,7 +105,7 @@ class SetHeadersEditor(base.GridEditor):
         return False
 
     def make_help(self):
-        h = super(SetHeadersEditor, self).make_help()
+        h = super().make_help()
         text = [
             urwid.Text([("text", "Special keys:\n")])
         ]

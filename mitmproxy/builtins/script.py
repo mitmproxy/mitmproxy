@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import contextlib
 import os
@@ -215,7 +214,7 @@ class Script:
         self.dead = True
 
 
-class ScriptLoader():
+class ScriptLoader:
     """
         An addon that manages loading scripts from options.
     """

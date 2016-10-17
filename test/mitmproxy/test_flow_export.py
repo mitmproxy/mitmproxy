@@ -31,7 +31,7 @@ def req_patch():
     return netlib.tutils.treq(method=b'PATCH', path=b"/path?query=param")
 
 
-class TestExportCurlCommand():
+class TestExportCurlCommand:
     def test_get(self):
         flow = tutils.tflow(req=req_get())
         result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address/path?a=foo&a=bar&b=baz'"""
@@ -48,7 +48,7 @@ class TestExportCurlCommand():
         assert export.curl_command(flow) == result
 
 
-class TestExportPythonCode():
+class TestExportPythonCode:
     def test_get(self):
         flow = tutils.tflow(req=req_get())
         python_equals("data/test_flow_export/python_get.py", export.python_code(flow))
@@ -69,7 +69,7 @@ class TestExportPythonCode():
         python_equals("data/test_flow_export/python_patch.py", export.python_code(flow))
 
 
-class TestExportLocustCode():
+class TestExportLocustCode:
     def test_get(self):
         flow = tutils.tflow(req=req_get())
         python_equals("data/test_flow_export/locust_get.py", export.locust_code(flow))
@@ -86,7 +86,7 @@ class TestExportLocustCode():
         python_equals("data/test_flow_export/locust_patch.py", export.locust_code(flow))
 
 
-class TestExportLocustTask():
+class TestExportLocustTask:
     def test_get(self):
         flow = tutils.tflow(req=req_get())
         python_equals("data/test_flow_export/locust_task_get.py", export.locust_task(flow))
@@ -100,7 +100,7 @@ class TestExportLocustTask():
         python_equals("data/test_flow_export/locust_task_patch.py", export.locust_task(flow))
 
 
-class TestIsJson():
+class TestIsJson:
     def test_empty(self):
         assert export.is_json(None, None) is False
 
@@ -119,7 +119,7 @@ class TestIsJson():
         assert isinstance(j, dict)
 
 
-class TestURL():
+class TestURL:
     def test_url(self):
         flow = tutils.tflow()
         assert export.url(flow) == "http://address:22/path"

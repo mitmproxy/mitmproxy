@@ -12,7 +12,6 @@ use. For HTTP, the message headers are passed as the ``headers`` keyword argumen
 requests, the query parameters are passed as the ``query`` keyword argument.
 
 """
-from __future__ import absolute_import, print_function, division
 
 import datetime
 import io
@@ -93,7 +92,7 @@ def format_text(text):
         yield [("text", line)]
 
 
-class View(object):
+class View:
     name = None
     prompt = ()
     content_types = []
@@ -309,7 +308,6 @@ if pyamf:
             data = input.readObject()
             self["data"] = data
 
-
     def pyamf_class_loader(s):
         for i in pyamf.CLASS_LOADERS:
             if i != pyamf_class_loader:
@@ -318,9 +316,7 @@ if pyamf:
                     return v
         return DummyObject
 
-
     pyamf.register_class_loader(pyamf_class_loader)
-
 
     class ViewAMF(View):
         name = "AMF"

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import copy
 import logging
 import os
@@ -30,7 +29,7 @@ class PathodError(Exception):
     pass
 
 
-class SSLOptions(object):
+class SSLOptions:
     def __init__(
         self,
         confdir=CONFDIR,

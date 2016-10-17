@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import functools
 import threading
@@ -41,13 +40,13 @@ Events = frozenset([
 ])
 
 
-class LogEntry(object):
+class LogEntry:
     def __init__(self, msg, level):
         self.msg = msg
         self.level = level
 
 
-class Log(object):
+class Log:
     """
         The central logger, exposed to scripts as mitmproxy.ctx.log.
     """
@@ -82,7 +81,7 @@ class Log(object):
         self.master.add_log(text, level)
 
 
-class Master(object):
+class Master:
     """
         The master handles mitmproxy's main event loop.
     """
@@ -177,7 +176,7 @@ class ServerThread(basethread.BaseThread):
     def __init__(self, server):
         self.server = server
         address = getattr(self.server, "address", None)
-        super(ServerThread, self).__init__(
+        super().__init__(
             "ServerThread ({})".format(repr(address))
         )
 
@@ -185,7 +184,7 @@ class ServerThread(basethread.BaseThread):
         self.server.serve_forever()
 
 
-class Channel(object):
+class Channel:
     """
         The only way for the proxy server to communicate with the master
         is to use the channel it has been given.
@@ -272,7 +271,7 @@ def handler(f):
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
 
 
-class Reply(object):
+class Reply:
     """
     Messages sent through a channel are decorated with a "reply" attribute.
     This object is used to respond to the message through the return
@@ -362,7 +361,7 @@ class DummyReply(Reply):
     and during testing.
     """
     def __init__(self):
-        super(DummyReply, self).__init__(None)
+        super().__init__(None)
         self._should_reset = False
 
     def mark_reset(self):

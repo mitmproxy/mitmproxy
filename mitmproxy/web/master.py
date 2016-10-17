@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import sys
 import collections
@@ -24,10 +23,10 @@ class Stop(Exception):
 class WebFlowView(flow.FlowView):
 
     def __init__(self, store):
-        super(WebFlowView, self).__init__(store, None)
+        super().__init__(store, None)
 
     def _add(self, f):
-        super(WebFlowView, self)._add(f)
+        super()._add(f)
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="add",
@@ -35,7 +34,7 @@ class WebFlowView(flow.FlowView):
         )
 
     def _update(self, f):
-        super(WebFlowView, self)._update(f)
+        super()._update(f)
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="update",
@@ -43,7 +42,7 @@ class WebFlowView(flow.FlowView):
         )
 
     def _remove(self, f):
-        super(WebFlowView, self)._remove(f)
+        super()._remove(f)
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="remove",
@@ -51,7 +50,7 @@ class WebFlowView(flow.FlowView):
         )
 
     def _recalculate(self, flows):
-        super(WebFlowView, self)._recalculate(flows)
+        super()._recalculate(flows)
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",
             cmd="reset"
@@ -61,7 +60,7 @@ class WebFlowView(flow.FlowView):
 class WebState(flow.State):
 
     def __init__(self):
-        super(WebState, self).__init__()
+        super().__init__()
         self.view._close()
         self.view = WebFlowView(self.flows)
 
@@ -83,7 +82,7 @@ class WebState(flow.State):
         )
 
     def clear(self):
-        super(WebState, self).clear()
+        super().clear()
         self.events.clear()
         app.ClientConnection.broadcast(
             type="UPDATE_EVENTLOG",
@@ -111,7 +110,7 @@ class Options(options.Options):
         self.wsingleuser = wsingleuser
         self.whtpasswd = whtpasswd
         self.intercept = intercept
-        super(Options, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # TODO: This doesn't belong here.
     def process_web_options(self, parser):
@@ -135,7 +134,7 @@ class Options(options.Options):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        super(WebMaster, self).__init__(options, server, WebState())
+        super().__init__(options, server, WebState())
         self.addons.add(*builtins.default_addons())
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator
@@ -187,19 +186,19 @@ class WebMaster(flow.FlowMaster):
 
     @controller.handler
     def request(self, f):
-        super(WebMaster, self).request(f)
+        super().request(f)
         return self._process_flow(f)
 
     @controller.handler
     def response(self, f):
-        super(WebMaster, self).response(f)
+        super().response(f)
         return self._process_flow(f)
 
     @controller.handler
     def error(self, f):
-        super(WebMaster, self).error(f)
+        super().error(f)
         return self._process_flow(f)
 
     def add_log(self, e, level="info"):
-        super(WebMaster, self).add_log(e, level)
+        super().add_log(e, level)
         return self.state.add_log(e, level)

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from netlib import wsgi
 from netlib import version
@@ -32,7 +31,7 @@ class AppRegistry:
             return self.apps.get((host, request.port), None)
 
 
-class StreamLargeBodies(object):
+class StreamLargeBodies:
     def __init__(self, max_size):
         self.max_size = max_size
 

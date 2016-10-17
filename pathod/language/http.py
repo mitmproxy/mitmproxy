@@ -53,7 +53,7 @@ class Method(base.OptionsOrValue):
     ]
 
 
-class _HeaderMixin(object):
+class _HeaderMixin:
     unique_name = None
 
     def format_header(self, key, value):

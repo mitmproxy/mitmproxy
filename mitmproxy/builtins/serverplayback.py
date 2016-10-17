@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 import urllib
 import hashlib
 
@@ -6,7 +5,7 @@ from netlib import strutils
 from mitmproxy import exceptions, flow, ctx
 
 
-class ServerPlayback(object):
+class ServerPlayback:
     def __init__(self):
         self.options = None
 

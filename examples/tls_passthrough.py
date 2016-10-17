@@ -20,7 +20,6 @@ Example:
 
 Authors: Maximilian Hils, Matthew Tuusberg
 """
-from __future__ import absolute_import, print_function, division
 import collections
 import random
 
@@ -38,7 +37,7 @@ class InterceptionResult(Enum):
     skipped = None
 
 
-class _TlsStrategy(object):
+class _TlsStrategy:
     """
     Abstract base class for interception strategies.
     """

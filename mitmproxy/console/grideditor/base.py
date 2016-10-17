@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import abc
 import copy
@@ -35,7 +34,7 @@ class Cell(urwid.WidgetWrap):
         return True
 
 
-class Column(object, metaclass=abc.ABCMeta):
+class Column(metaclass=abc.ABCMeta):
     subeditor = None
 
     def __init__(self, heading):
@@ -95,7 +94,7 @@ class GridRow(urwid.WidgetWrap):
         )
         if focused is not None:
             w.set_focus_column(focused)
-        super(GridRow, self).__init__(w)
+        super().__init__(w)
 
     def keypress(self, s, k):
         if self.edit_col:
@@ -127,7 +126,7 @@ class GridWalker(urwid.ListWalker):
 
     def _modified(self):
         self.editor.show_empty_msg()
-        return super(GridWalker, self)._modified()
+        return super()._modified()
 
     def add_value(self, lst):
         self.lst.append(
@@ -245,7 +244,7 @@ class GridWalker(urwid.ListWalker):
 
 class GridListBox(urwid.ListBox):
     def __init__(self, lw):
-        super(GridListBox, self).__init__(lw)
+        super().__init__(lw)
 
 
 FIRST_WIDTH_MAX = 40
@@ -301,7 +300,7 @@ class GridEditor(urwid.WidgetWrap):
             self.lb,
             header=urwid.Pile([title, h])
         )
-        super(GridEditor, self).__init__(w)
+        super().__init__(w)
         self.master.loop.widget.footer.update("")
         self.show_empty_msg()
 

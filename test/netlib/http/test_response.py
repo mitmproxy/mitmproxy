@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import email
 
@@ -11,7 +10,7 @@ from netlib.tutils import raises, tresp
 from .test_message import _test_passthrough_attr, _test_decoded_attr
 
 
-class TestResponseData(object):
+class TestResponseData:
     def test_init(self):
         with raises(ValueError):
             tresp(headers="foobar")
@@ -19,7 +18,7 @@ class TestResponseData(object):
         assert isinstance(tresp(headers=()).headers, Headers)
 
 
-class TestResponseCore(object):
+class TestResponseCore:
     """
     Tests for builtins and the attributes that are directly proxied from the data structure
     """
@@ -60,7 +59,7 @@ class TestResponseCore(object):
         _test_decoded_attr(tresp(), "reason")
 
 
-class TestResponseUtils(object):
+class TestResponseUtils:
     """
     Tests for additional convenience methods.
     """

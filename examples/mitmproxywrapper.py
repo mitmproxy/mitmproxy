@@ -15,7 +15,7 @@ import os
 import sys
 
 
-class Wrapper(object):
+class Wrapper:
     def __init__(self, port, extra_arguments=None):
         self.port = port
         self.extra_arguments = extra_arguments

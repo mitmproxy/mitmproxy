@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 from mitmproxy import exceptions
 import pprint
 
@@ -7,7 +6,7 @@ def _get_name(itm):
     return getattr(itm, "name", itm.__class__.__name__.lower())
 
 
-class Addons(object):
+class Addons:
     def __init__(self, master):
         self.chain = []
         self.master = master

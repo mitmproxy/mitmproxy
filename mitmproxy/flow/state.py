@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from abc import abstractmethod, ABCMeta
 
@@ -49,7 +48,7 @@ def _pos(*args):
 
 class FlowView(FlowList):
     def __init__(self, store, flt=None):
-        super(FlowView, self).__init__()
+        super().__init__()
         if not flt:
             flt = _pos
         self._build(store, flt)
@@ -90,7 +89,7 @@ class FlowStore(FlowList):
     """
 
     def __init__(self):
-        super(FlowStore, self).__init__()
+        super().__init__()
         self._set = set()  # Used for O(1) lookups
         self.views = []
         self._recalculate_views()
@@ -177,7 +176,7 @@ class FlowStore(FlowList):
                 f.kill(master)
 
 
-class State(object):
+class State:
     def __init__(self):
         self.flows = FlowStore()
         self.view = FlowView(self.flows, None)

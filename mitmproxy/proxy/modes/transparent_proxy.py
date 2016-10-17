@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from mitmproxy import exceptions
 from mitmproxy import platform
@@ -8,7 +7,7 @@ from mitmproxy import protocol
 class TransparentProxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __init__(self, ctx):
-        super(TransparentProxy, self).__init__(ctx)
+        super().__init__(ctx)
         self.resolver = platform.resolver()
 
     def __call__(self):

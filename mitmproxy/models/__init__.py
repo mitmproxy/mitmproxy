@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from netlib.http import decoded
 from .connections import ClientConnection, ServerConnection

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import re
 import warnings
@@ -283,7 +282,7 @@ class Message(basetypes.Serializable):
         self.content = body
 
 
-class decoded(object):
+class decoded:
     """
     Deprecated: You can now directly use :py:attr:`content`.
     :py:attr:`raw_content` has the encoded content.

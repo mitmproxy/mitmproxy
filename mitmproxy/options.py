@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from typing import Tuple, Optional, Sequence
 
@@ -141,4 +140,4 @@ class Options(optmanager.OptManager):
         self.ssl_verify_upstream_trusted_cadir = ssl_verify_upstream_trusted_cadir
         self.ssl_verify_upstream_trusted_ca = ssl_verify_upstream_trusted_ca
         self.tcp_hosts = tcp_hosts
-        super(Options, self).__init__()
+        super().__init__()

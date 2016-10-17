@@ -1,4 +1,3 @@
-from __future__ import print_function
 import contextlib
 import sys
 import os
@@ -34,7 +33,7 @@ class PathocError(Exception):
     pass
 
 
-class SSLInfo(object):
+class SSLInfo:
 
     def __init__(self, certchain, cipher, alp):
         self.certchain, self.cipher, self.alp = certchain, cipher, alp

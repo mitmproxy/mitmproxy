@@ -1,6 +1,5 @@
 # coding=utf-8
 
-from __future__ import (absolute_import, print_function, division)
 
 import pytest
 import os
@@ -89,7 +88,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
         raise NotImplementedError()
 
 
-class _Http2TestBase(object):
+class _Http2TestBase:
 
     @classmethod
     def setup_class(cls):

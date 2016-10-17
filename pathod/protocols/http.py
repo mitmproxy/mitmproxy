@@ -4,7 +4,7 @@ from netlib.http import http1
 from .. import language
 
 
-class HTTPProtocol(object):
+class HTTPProtocol:
     def __init__(self, pathod_handler):
         self.pathod_handler = pathod_handler
 

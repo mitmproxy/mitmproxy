@@ -1,18 +1,17 @@
-from __future__ import absolute_import, print_function, division
 
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import models
 
 
-class _LayerCodeCompletion(object):
+class _LayerCodeCompletion:
 
     """
     Dummy class that provides type hinting in PyCharm, which simplifies development a lot.
     """
 
     def __init__(self, **mixin_args):  # pragma: no cover
-        super(_LayerCodeCompletion, self).__init__(**mixin_args)
+        super().__init__(**mixin_args)
         if True:
             return
         self.config = None
@@ -58,7 +57,7 @@ class Layer(_LayerCodeCompletion):
 
         :type: :py:class:`Layer`
         """
-        super(Layer, self).__init__(**mixin_args)
+        super().__init__(**mixin_args)
 
     def __call__(self):
         """Logic of the layer.
@@ -88,7 +87,7 @@ class Layer(_LayerCodeCompletion):
         return type(self).__name__
 
 
-class ServerConnectionMixin(object):
+class ServerConnectionMixin:
 
     """
     Mixin that provides a layer with the capabilities to manage a server connection.
@@ -109,7 +108,7 @@ class ServerConnectionMixin(object):
     """
 
     def __init__(self, server_address=None):
-        super(ServerConnectionMixin, self).__init__()
+        super().__init__()
 
         self.server_conn = None
         if self.config.options.spoof_source_address:

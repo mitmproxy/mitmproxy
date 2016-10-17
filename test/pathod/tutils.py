@@ -23,7 +23,7 @@ def treader(bytes):
     return tcp.Reader(fp)
 
 
-class DaemonTests(object):
+class DaemonTests:
     nohang = False
     ssl = False
     timeout = None

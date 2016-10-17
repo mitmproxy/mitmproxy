@@ -18,7 +18,7 @@ class ApacheBenchThread(Thread):
 
     def __init__(self, concurrency):
         self.concurrency = concurrency
-        super(ApacheBenchThread, self).__init__()
+        super().__init__()
 
     def run(self):
         time.sleep(2)

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import netlib.exceptions
 import socket
@@ -35,7 +34,7 @@ class WebSocketsLayer(base.Layer):
     """
 
     def __init__(self, ctx, flow):
-        super(WebSocketsLayer, self).__init__(ctx)
+        super().__init__(ctx)
         self._flow = flow
 
         self.client_key = websockets.get_client_key(self._flow.request.headers)

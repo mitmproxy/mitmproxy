@@ -15,7 +15,7 @@ class TMsg:
     pass
 
 
-class TestMaster(object):
+class TestMaster:
     def test_simple(self):
         class DummyMaster(controller.Master):
             @controller.handler
@@ -24,7 +24,7 @@ class TestMaster(object):
 
             def tick(self, timeout):
                 # Speed up test
-                super(DummyMaster, self).tick(0)
+                super().tick(0)
 
         m = DummyMaster(None)
         assert not m.should_exit.is_set()
@@ -44,7 +44,7 @@ class TestMaster(object):
         m.shutdown()
 
 
-class TestServerThread(object):
+class TestServerThread:
     def test_simple(self):
         m = Mock()
         t = controller.ServerThread(m)
@@ -52,7 +52,7 @@ class TestServerThread(object):
         assert m.serve_forever.called
 
 
-class TestChannel(object):
+class TestChannel:
     def test_tell(self):
         q = queue.Queue()
         channel = controller.Channel(q, Event())
@@ -86,7 +86,7 @@ class TestChannel(object):
             channel.ask("test", Mock(name="test_ask_shutdown"))
 
 
-class TestReply(object):
+class TestReply:
     def test_simple(self):
         reply = controller.Reply(42)
         assert reply.state == "unhandled"
@@ -179,7 +179,7 @@ class TestReply(object):
         reply.commit()
 
 
-class TestDummyReply(object):
+class TestDummyReply:
     def test_simple(self):
         reply = controller.DummyReply()
         for _ in range(2):

@@ -4,7 +4,7 @@ from netlib.http.headers import Headers, parse_content_type, assemble_content_ty
 from netlib.tutils import raises
 
 
-class TestHeaders(object):
+class TestHeaders:
     def _2host(self):
         return Headers(
             (

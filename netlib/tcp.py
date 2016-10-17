@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, print_function, division)
 import os
 import select
 import socket
@@ -72,7 +71,7 @@ sslversion_choices = {
 }
 
 
-class SSLKeyLogger(object):
+class SSLKeyLogger:
 
     def __init__(self, filename):
         self.filename = filename
@@ -111,7 +110,7 @@ log_ssl_key = SSLKeyLogger.create_logfun(
     os.getenv("MITMPROXY_SSLKEYLOGFILE") or os.getenv("SSLKEYLOGFILE"))
 
 
-class _FileLike(object):
+class _FileLike:
     BLOCKSIZE = 1024 * 32
 
     def __init__(self, o):
@@ -426,7 +425,7 @@ def close_socket(sock):
     sock.close()
 
 
-class _Connection(object):
+class _Connection:
 
     rbufsize = -1
     wbufsize = -1
@@ -574,7 +573,7 @@ class _Connection(object):
         return context
 
 
-class ConnectionCloser(object):
+class ConnectionCloser:
     def __init__(self, conn):
         self.conn = conn
         self._canceled = False
@@ -597,7 +596,7 @@ class ConnectionCloser(object):
 class TCPClient(_Connection):
 
     def __init__(self, address, source_address=None, spoof_source_address=None):
-        super(TCPClient, self).__init__(None)
+        super().__init__(None)
         self.address = address
         self.source_address = source_address
         self.cert = None
@@ -769,7 +768,7 @@ class BaseHandler(_Connection):
     """
 
     def __init__(self, connection, address, server):
-        super(BaseHandler, self).__init__(connection)
+        super().__init__(connection)
         self.address = Address.wrap(address)
         self.server = server
         self.clientcert = None
@@ -888,7 +887,7 @@ class Counter:
             self._count -= 1
 
 
-class TCPServer(object):
+class TCPServer:
     request_queue_size = 20
 
     def __init__(self, address):

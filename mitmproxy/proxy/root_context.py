@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import netlib.exceptions
 from mitmproxy import controller
@@ -7,7 +6,7 @@ from mitmproxy import protocol
 from mitmproxy.proxy import modes
 
 
-class RootContext(object):
+class RootContext:
 
     """
     The outermost context provided to the root layer.

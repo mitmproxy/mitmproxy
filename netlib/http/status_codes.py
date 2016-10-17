@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 CONTINUE = 100
 SWITCHING = 101

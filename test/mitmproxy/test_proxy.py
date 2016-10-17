@@ -14,7 +14,7 @@ from netlib.http import http1
 from . import tutils
 
 
-class TestServerConnection(object):
+class TestServerConnection:
 
     def test_simple(self):
         self.d = test.Daemon()

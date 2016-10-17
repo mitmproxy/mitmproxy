@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 import urwid
 from mitmproxy.console.grideditor import base
 from mitmproxy.console import signals
@@ -7,7 +6,7 @@ from netlib.http import cookies
 
 class Column(base.Column):
     def __init__(self, heading, subeditor):
-        super(Column, self).__init__(heading)
+        super().__init__(heading)
         self.subeditor = subeditor
 
     def Edit(self, data):
@@ -45,7 +44,7 @@ class Display(base.Cell):
     def __init__(self, data):
         p = cookies._format_pairs(data, sep="\n")
         w = urwid.Text(p)
-        super(Display, self).__init__(w)
+        super().__init__(w)
 
     def get_data(self):
         pass

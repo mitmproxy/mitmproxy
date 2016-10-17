@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 from netlib.http.request import Request
 from netlib.http.response import Response
 from netlib.http.message import Message

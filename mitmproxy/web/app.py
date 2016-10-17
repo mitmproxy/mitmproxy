@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import base64
 import json
@@ -73,7 +72,7 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
-class BasicAuth(object):
+class BasicAuth:
 
     def set_auth_headers(self):
         self.set_status(401)
@@ -98,7 +97,7 @@ class BasicAuth(object):
 class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
     def set_default_headers(self):
-        super(RequestHandler, self).set_default_headers()
+        super().set_default_headers()
         self.set_header("Server", version.MITMPROXY)
         self.set_header("X-Frame-Options", "DENY")
         self.add_header("X-XSS-Protection", "1; mode=block")
@@ -137,7 +136,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         if "exc_info" in kwargs and isinstance(kwargs["exc_info"][1], APIError):
             self.finish(kwargs["exc_info"][1].log_message)
         else:
-            super(RequestHandler, self).write_error(status_code, **kwargs)
+            super().write_error(status_code, **kwargs)
 
 
 class IndexHandler(RequestHandler):
@@ -456,4 +455,4 @@ class Application(tornado.web.Application):
             autoreload=False,
             wauthenticator=wauthenticator,
         )
-        super(Application, self).__init__(handlers, **settings)
+        super().__init__(handlers, **settings)

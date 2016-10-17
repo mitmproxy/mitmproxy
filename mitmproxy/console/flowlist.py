@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import urwid
 
@@ -297,7 +296,7 @@ class FlowListBox(urwid.ListBox):
 
     def __init__(self, master: "mitmproxy.console.master.ConsoleMaster"):
         self.master = master
-        super(FlowListBox, self).__init__(FlowListWalker(master, master.state))
+        super().__init__(FlowListWalker(master, master.state))
 
     def get_method_raw(self, k):
         if k:

@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, print_function, division)
 
 import threading
 import queue
@@ -85,7 +84,7 @@ class _TServer(tcp.TCPServer):
         self.q.put(s.getvalue())
 
 
-class ServerTestBase(object):
+class ServerTestBase:
     ssl = None
     handler = None
     addr = ("localhost", 0)

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 from netlib.exceptions import HttpException
 from netlib.http import Headers
 from netlib.http.http1.assemble import (

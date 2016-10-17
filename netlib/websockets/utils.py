@@ -3,7 +3,6 @@ Collection of WebSockets Protocol utility functions (RFC6455)
 Spec: https://tools.ietf.org/html/rfc6455
 """
 
-from __future__ import absolute_import
 
 import base64
 import hashlib

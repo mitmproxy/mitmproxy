@@ -99,7 +99,7 @@ class TestScripts(mastertest.MasterTest):
         assert f.request.host == "mitmproxy.org"
 
 
-class TestHARDump():
+class TestHARDump:
 
     def flow(self, resp_content=b'message'):
         times = dict(

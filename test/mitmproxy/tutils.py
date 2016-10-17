@@ -52,7 +52,7 @@ class DummyFlow(Flow):
     """A flow that is neither HTTP nor TCP."""
 
     def __init__(self, client_conn, server_conn, live=None):
-        super(DummyFlow, self).__init__("dummy", client_conn, server_conn, live)
+        super().__init__("dummy", client_conn, server_conn, live)
 
 
 def tdummyflow(client_conn=True, server_conn=True, err=None):

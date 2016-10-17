@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import os
 import struct
 import io
@@ -43,7 +42,7 @@ CLOSE_REASON = utils.BiDi(
 )
 
 
-class FrameHeader(object):
+class FrameHeader:
 
     def __init__(
         self,
@@ -193,7 +192,7 @@ class FrameHeader(object):
         return False
 
 
-class Frame(object):
+class Frame:
     """
     Represents a single WebSockets frame.
     Constructor takes human readable forms of the frame components.

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import netlib.exceptions
 from mitmproxy import exceptions
@@ -10,7 +9,7 @@ from netlib import tcp
 class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
 
     def __init__(self, ctx):
-        super(Socks5Proxy, self).__init__(ctx)
+        super().__init__(ctx)
 
     def __call__(self):
         try:
