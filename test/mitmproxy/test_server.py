@@ -536,6 +536,18 @@ class TestSocks5(tservers.SocksModeTest):
         assert b"SOCKS5 mode failure" in f.content
 
 
+class TestSocks5SSL(tservers.SocksModeTest):
+    ssl = True
+
+    def test_simple(self):
+        p = self.pathoc_raw()
+        with p.connect():
+            p.socks_connect(("localhost", self.server.port))
+            p.convert_to_ssl()
+            f = p.request("get:/p/200")
+        assert f.status_code == 200
+
+
 class TestHttps2Http(tservers.ReverseProxyTest):
 
     @classmethod
