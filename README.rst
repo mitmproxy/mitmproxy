@@ -23,8 +23,7 @@ Documentation & Help
 General information, tutorials, and precompiled binaries can be found on the mitmproxy
 and pathod websites.
 
-|mitmproxy_site| |pathod_site|
-
+|mitmproxy_site|
 
 The latest documentation for mitmproxy is also available on ReadTheDocs.
 
@@ -151,10 +150,6 @@ PR checks will fail and block merging. We are using this command to check for st
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
-
-.. |pathod_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-pathod.net-blue.svg
-    :target: https://pathod.net/
-    :alt: pathod.net
 
 .. |mitmproxy_docs| image:: https://readthedocs.org/projects/mitmproxy/badge/
     :target: http://docs.mitmproxy.org/en/latest/
