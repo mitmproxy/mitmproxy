@@ -2,7 +2,6 @@ import string
 import random
 import mmap
 
-import six
 import sys
 
 DATATYPES = dict(
@@ -52,8 +51,6 @@ def rand_byte(chars):
     """
     # bytearray has consistent behaviour on both Python 2 and 3
     # while bytes does not
-    if six.PY2:
-        return random.choice(chars)
     return bytes([random.choice(chars)])
 
 
