@@ -72,7 +72,7 @@ def raises(expected_exception, obj=None, *args, **kwargs):
             raise AssertionError("No exception raised. Return value: {}".format(ret))
 
 
-class RaisesContext(object):
+class RaisesContext():
     def __init__(self, expected_exception):
         self.expected_exception = expected_exception
 

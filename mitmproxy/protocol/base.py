@@ -5,7 +5,7 @@ from mitmproxy import exceptions
 from mitmproxy import models
 
 
-class _LayerCodeCompletion(object):
+class _LayerCodeCompletion():
 
     """
     Dummy class that provides type hinting in PyCharm, which simplifies development a lot.
@@ -88,7 +88,7 @@ class Layer(_LayerCodeCompletion):
         return type(self).__name__
 
 
-class ServerConnectionMixin(object):
+class ServerConnectionMixin():
 
     """
     Mixin that provides a layer with the capabilities to manage a server connection.

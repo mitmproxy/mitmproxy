@@ -15,14 +15,14 @@ import netlib.http.request
 from .. import language
 
 
-class TCPHandler(object):
+class TCPHandler():
 
     def __init__(self, rfile, wfile=None):
         self.rfile = rfile
         self.wfile = wfile
 
 
-class HTTP2StateProtocol(object):
+class HTTP2StateProtocol():
 
     ERROR_CODES = utils.BiDi(
         NO_ERROR=0x0,
@@ -403,7 +403,7 @@ class HTTP2StateProtocol(object):
         return stream_id, headers, body
 
 
-class HTTP2Protocol(object):
+class HTTP2Protocol():
 
     def __init__(self, pathod_handler):
         self.pathod_handler = pathod_handler

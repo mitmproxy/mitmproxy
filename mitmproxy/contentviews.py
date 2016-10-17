@@ -93,7 +93,7 @@ def format_text(text):
         yield [("text", line)]
 
 
-class View(object):
+class View():
     name = None
     prompt = ()
     content_types = []

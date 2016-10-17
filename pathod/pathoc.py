@@ -34,7 +34,7 @@ class PathocError(Exception):
     pass
 
 
-class SSLInfo(object):
+class SSLInfo():
 
     def __init__(self, certchain, cipher, alp):
         self.certchain, self.cipher, self.alp = certchain, cipher, alp

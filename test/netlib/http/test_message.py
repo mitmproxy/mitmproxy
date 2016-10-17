@@ -36,7 +36,7 @@ def _test_decoded_attr(message, attr):
     assert getattr(message.data, attr) == b"FOO\xBF\x00BAR"
 
 
-class TestMessageData(object):
+class TestMessageData():
     def test_eq_ne(self):
         data = tresp(timestamp_start=42, timestamp_end=42).data
         same = tresp(timestamp_start=42, timestamp_end=42).data
@@ -50,7 +50,7 @@ class TestMessageData(object):
         assert data != 0
 
 
-class TestMessage(object):
+class TestMessage():
 
     def test_init(self):
         resp = tresp()
@@ -108,7 +108,7 @@ class TestMessage(object):
         assert r.content == b"ggfootoo"
 
 
-class TestMessageContentEncoding(object):
+class TestMessageContentEncoding():
     def test_simple(self):
         r = tresp()
         assert r.raw_content == b"message"
@@ -186,7 +186,7 @@ class TestMessageContentEncoding(object):
         assert "content-encoding" not in r.headers
 
 
-class TestMessageText(object):
+class TestMessageText():
     def test_simple(self):
         r = tresp(content=b'\xfc')
         assert r.raw_content == b"\xfc"

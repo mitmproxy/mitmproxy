@@ -15,7 +15,7 @@ from . import pf
 """
 
 
-class Resolver(object):
+class Resolver():
     STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
 
     def original_addr(self, csock):

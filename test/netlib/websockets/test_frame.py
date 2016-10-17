@@ -6,7 +6,7 @@ from netlib import websockets
 from netlib import tutils
 
 
-class TestFrameHeader(object):
+class TestFrameHeader():
 
     @pytest.mark.parametrize("input,expected", [
         (0, '0100'),
@@ -123,7 +123,7 @@ class TestFrameHeader(object):
         assert f.masking_key
 
 
-class TestFrame(object):
+class TestFrame():
     def test_equality(self):
         f = websockets.Frame(payload=b'1234')
         f2 = websockets.Frame(payload=b'1234')

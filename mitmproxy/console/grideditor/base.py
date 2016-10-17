@@ -35,7 +35,7 @@ class Cell(urwid.WidgetWrap):
         return True
 
 
-class Column(object, metaclass=abc.ABCMeta):
+class Column(metaclass=abc.ABCMeta):
     subeditor = None
 
     def __init__(self, heading):

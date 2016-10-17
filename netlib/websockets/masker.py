@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 
-class Masker(object):
+class Masker():
     """
     Data sent from the server must be masked to prevent malicious clients
     from sending data over the wire in predictable patterns.

@@ -6,7 +6,7 @@ from netlib.tutils import treq, raises
 from .test_message import _test_decoded_attr, _test_passthrough_attr
 
 
-class TestRequestData(object):
+class TestRequestData():
     def test_init(self):
         with raises(ValueError):
             treq(headers="foobar")
@@ -14,7 +14,7 @@ class TestRequestData(object):
         assert isinstance(treq(headers=()).headers, Headers)
 
 
-class TestRequestCore(object):
+class TestRequestCore():
     """
     Tests for builtins and the attributes that are directly proxied from the data structure
     """
@@ -92,7 +92,7 @@ class TestRequestCore(object):
         assert request.headers["Host"] == "example.org"
 
 
-class TestRequestUtils(object):
+class TestRequestUtils():
     """
     Tests for additional convenience methods.
     """

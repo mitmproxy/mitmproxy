@@ -58,7 +58,7 @@ def only(*types):
     return decorator
 
 
-class _Token(object):
+class _Token():
 
     def dump(self, indent=0, fp=sys.stdout):
         print("{spacing}{name}{expr}".format(

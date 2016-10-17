@@ -283,7 +283,7 @@ class Message(basetypes.Serializable):
         self.content = body
 
 
-class decoded(object):
+class decoded():
     """
     Deprecated: You can now directly use :py:attr:`content`.
     :py:attr:`raw_content` has the encoded content.

@@ -30,7 +30,7 @@ class PathodError(Exception):
     pass
 
 
-class SSLOptions(object):
+class SSLOptions():
     def __init__(
         self,
         confdir=CONFDIR,

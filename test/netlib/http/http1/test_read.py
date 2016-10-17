@@ -104,7 +104,7 @@ def test_read_response_head():
     assert rfile.read() == b"skip"
 
 
-class TestReadBody(object):
+class TestReadBody():
     def test_chunked(self):
         rfile = BytesIO(b"3\r\nfoo\r\n0\r\n\r\nbar")
         body = b"".join(read_body(rfile, None))
@@ -289,7 +289,7 @@ def test_check_http_version():
         _check_http_version(b"HTTP/1.b")
 
 
-class TestReadHeaders(object):
+class TestReadHeaders():
     @staticmethod
     def _read(data):
         return _read_headers(BytesIO(data))

@@ -16,7 +16,7 @@ import socketserver
 PROXY_API_PORT = 8085
 
 
-class Resolver(object):
+class Resolver():
 
     def __init__(self):
         TransparentProxy.setup()
@@ -111,7 +111,7 @@ def MIB_TCPTABLE2(size):
     return _MIB_TCPTABLE2()
 
 
-class TransparentProxy(object):
+class TransparentProxy():
 
     """
     Transparent Windows Proxy for mitmproxy based on WinDivert/PyDivert.

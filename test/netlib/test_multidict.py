@@ -2,7 +2,7 @@ from netlib import tutils
 from netlib.multidict import MultiDict, ImmutableMultiDict, MultiDictView
 
 
-class _TMulti(object):
+class _TMulti():
     @staticmethod
     def _kconv(key):
         return key.lower()
@@ -16,7 +16,7 @@ class TImmutableMultiDict(_TMulti, ImmutableMultiDict):
     pass
 
 
-class TestMultiDict(object):
+class TestMultiDict():
     @staticmethod
     def _multi():
         return TMultiDict((
@@ -194,7 +194,7 @@ class TestMultiDict(object):
         assert md == md2
 
 
-class TestImmutableMultiDict(object):
+class TestImmutableMultiDict():
     def test_modify(self):
         md = TImmutableMultiDict()
         with tutils.raises(TypeError):
@@ -224,7 +224,7 @@ class TestImmutableMultiDict(object):
         assert md.with_insert(0, "foo", "bar").fields == (("foo", "bar"),)
 
 
-class TParent(object):
+class TParent():
     def __init__(self):
         self.vals = tuple()
 
@@ -235,7 +235,7 @@ class TParent(object):
         return self.vals
 
 
-class TestMultiDictView(object):
+class TestMultiDictView():
     def test_modify(self):
         p = TParent()
         tv = MultiDictView(p.getter, p.setter)

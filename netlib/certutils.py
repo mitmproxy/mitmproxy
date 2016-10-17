@@ -155,7 +155,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
 #         return current.value
 
 
-class CertStoreEntry(object):
+class CertStoreEntry():
 
     def __init__(self, cert, privatekey, chain_file):
         self.cert = cert
@@ -163,7 +163,7 @@ class CertStoreEntry(object):
         self.chain_file = chain_file
 
 
-class CertStore(object):
+class CertStore():
 
     """
         Implements an in-memory certificate store.

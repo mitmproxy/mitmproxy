@@ -73,7 +73,7 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
-class BasicAuth(object):
+class BasicAuth():
 
     def set_auth_headers(self):
         self.set_status(401)

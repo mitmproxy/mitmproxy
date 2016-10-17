@@ -16,7 +16,7 @@ class NetlibException(Exception):
         super(NetlibException, self).__init__(message)
 
 
-class Disconnect(object):
+class Disconnect():
     """Immediate EOF"""
 
 

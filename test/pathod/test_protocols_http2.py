@@ -169,7 +169,7 @@ class TestPerformClientConnectionPreface(netlib_tservers.ServerTestBase):
             assert protocol.connection_preface_performed
 
 
-class TestClientStreamIds(object):
+class TestClientStreamIds():
     c = tcp.TCPClient(("127.0.0.1", 0))
     protocol = HTTP2StateProtocol(c)
 
@@ -183,7 +183,7 @@ class TestClientStreamIds(object):
         assert self.protocol.current_stream_id == 5
 
 
-class TestserverstreamIds(object):
+class TestserverstreamIds():
     c = tcp.TCPClient(("127.0.0.1", 0))
     protocol = HTTP2StateProtocol(c, is_server=True)
 
@@ -230,7 +230,7 @@ class TestApplySettings(netlib_tservers.ServerTestBase):
                 hyperframe.frame.SettingsFrame.INITIAL_WINDOW_SIZE] == 'deadbeef'
 
 
-class TestCreateHeaders(object):
+class TestCreateHeaders():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_create_headers(self):
@@ -267,7 +267,7 @@ class TestCreateHeaders(object):
         assert bytes[2] == codecs.decode('00000209040000000163d5', 'hex_codec')
 
 
-class TestCreateBody(object):
+class TestCreateBody():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_create_body_empty(self):
@@ -422,7 +422,7 @@ class TestReadEmptyResponse(netlib_tservers.ServerTestBase):
             assert resp.content == b''
 
 
-class TestAssembleRequest(object):
+class TestAssembleRequest():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_request_simple(self):
@@ -476,7 +476,7 @@ class TestAssembleRequest(object):
             codecs.decode('000006000100000001666f6f626172', 'hex_codec')
 
 
-class TestAssembleResponse(object):
+class TestAssembleResponse():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_simple(self):

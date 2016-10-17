@@ -41,13 +41,13 @@ Events = frozenset([
 ])
 
 
-class LogEntry(object):
+class LogEntry():
     def __init__(self, msg, level):
         self.msg = msg
         self.level = level
 
 
-class Log(object):
+class Log():
     """
         The central logger, exposed to scripts as mitmproxy.ctx.log.
     """
@@ -82,7 +82,7 @@ class Log(object):
         self.master.add_log(text, level)
 
 
-class Master(object):
+class Master():
     """
         The master handles mitmproxy's main event loop.
     """
@@ -185,7 +185,7 @@ class ServerThread(basethread.BaseThread):
         self.server.serve_forever()
 
 
-class Channel(object):
+class Channel():
     """
         The only way for the proxy server to communicate with the master
         is to use the channel it has been given.
@@ -272,7 +272,7 @@ def handler(f):
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
 
 
-class Reply(object):
+class Reply():
     """
     Messages sent through a channel are decorated with a "reply" attribute.
     This object is used to respond to the message through the return

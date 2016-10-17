@@ -11,7 +11,7 @@ from mitmproxy import exceptions
 """
 
 
-class OptManager(object):
+class OptManager():
     """
         .changed is a blinker Signal that triggers whenever options are
         updated. If any handler in the chain raises an exceptions.OptionsError

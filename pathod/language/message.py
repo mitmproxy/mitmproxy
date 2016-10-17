@@ -5,7 +5,7 @@ from netlib import strutils
 LOG_TRUNCATE = 1024
 
 
-class Message(object):
+class Message():
     __metaclass__ = abc.ABCMeta
     logattrs = []
 
