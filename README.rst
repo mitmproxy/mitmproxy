@@ -103,8 +103,8 @@ requirements installed, and you can simply run the test suite:
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage.
 
-You can also use `tox` to run a full suite of tests in Python 2.7 and 3.5,
-including a quick test to check documentation and code linting.
+You can also use `tox` to run the full suite of tests, including a quick test
+to check documentation and code linting.
 
 The following tox environments are relevant for local testing:
 
@@ -113,9 +113,6 @@ The following tox environments are relevant for local testing:
     tox -e py35  # runs all tests with Python 3.5
     tox -e docs  # runs a does-it-compile check on the documentation
     tox -e lint  # runs the linter for coding style checks
-
-We support Python 2.7 and 3.5, so please make sure all tests pass in both
-environments. Running `tox` ensures all necessary tests are executed.
 
 
 Documentation
