@@ -1,15 +1,13 @@
 from .. import tutils, mastertest
 from mitmproxy.builtins import stickyauth
 from mitmproxy.flow import master
-from mitmproxy.flow import state
 from mitmproxy import options
 
 
 class TestStickyAuth(mastertest.MasterTest):
     def test_simple(self):
-        s = state.State()
         o = options.Options(stickyauth = ".*")
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sa = stickyauth.StickyAuth()
         m.addons.add(sa)
 

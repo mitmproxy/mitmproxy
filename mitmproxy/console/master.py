@@ -222,7 +222,9 @@ class ConsoleMaster(flow.FlowMaster):
     palette = []
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, options, server, ConsoleState())
+        flow.FlowMaster.__init__(self, options, server)
+        self.state = ConsoleState()
+        self.addons.add(self.state)
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options

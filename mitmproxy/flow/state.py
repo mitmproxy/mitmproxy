@@ -277,13 +277,12 @@ class State:
     def resume(self, f):
         self.update_flow(f)
 
+    def error(self, f):
+        self.update_flow(f)
 
+    def request(self, f):
+        if f not in self.flows:  # don't add again on replay
+            self.add_flow(f)
 
-class DummyState:
-    flows = ()
-
-    def add_flow(self, *args, **kwargs):
-        pass
-
-    def update_flow(self, *args, **kwargs):
-        pass
+    def response(self, f):
+        self.update_flow(f)

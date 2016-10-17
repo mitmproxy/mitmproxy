@@ -3,7 +3,6 @@ import io
 from .. import tutils, mastertest
 
 from mitmproxy.builtins import dumper
-from mitmproxy.flow import state
 from mitmproxy import exceptions
 from mitmproxy import dump
 from mitmproxy import models
@@ -71,14 +70,13 @@ class TestContentView(mastertest.MasterTest):
     def test_contentview(self, view_auto):
         view_auto.side_effect = exceptions.ContentViewException("")
 
-        s = state.State()
         sio = io.StringIO()
         o = dump.Options(
             flow_detail=4,
             verbosity=3,
             tfile=sio,
         )
-        m = mastertest.RecordingMaster(o, None, s)
+        m = mastertest.RecordingMaster(o, None)
         d = dumper.Dumper()
         m.addons.add(d)
         m.response(tutils.tflow())

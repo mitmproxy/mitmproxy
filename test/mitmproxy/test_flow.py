@@ -130,7 +130,8 @@ class TestHTTPFlow:
     def test_killall(self):
         srv = DummyServer(None)
         s = flow.State()
-        fm = flow.FlowMaster(None, srv, s)
+        fm = flow.FlowMaster(None, srv)
+        fm.addons.add(s)
 
         f = tutils.tflow()
         f.reply.handle()
@@ -382,7 +383,8 @@ class TestSerialize:
     def test_load_flows(self):
         r = self._treader()
         s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
+        fm = flow.FlowMaster(None, None)
+        fm.addons.add(s)
         fm.load_flows(r)
         assert len(s.flows) == 6
 
@@ -394,7 +396,8 @@ class TestSerialize:
             upstream_server="https://use-this-domain"
         )
         conf = ProxyConfig(opts)
-        fm = flow.FlowMaster(opts, DummyServer(conf), s)
+        fm = flow.FlowMaster(opts, DummyServer(conf))
+        fm.addons.add(s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"
 
@@ -440,8 +443,7 @@ class TestSerialize:
 class TestFlowMaster:
 
     def test_replay(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
+        fm = flow.FlowMaster(None, None)
         f = tutils.tflow(resp=True)
         f.request.content = None
         tutils.raises("missing", fm.replay_request, f)
@@ -453,13 +455,13 @@ class TestFlowMaster:
         tutils.raises("live", fm.replay_request, f)
 
     def test_create_flow(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
+        fm = flow.FlowMaster(None, None)
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
+        fm = flow.FlowMaster(None, None)
+        fm.addons.add(s)
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
         f.request = HTTPRequest.wrap(netlib.tutils.treq())

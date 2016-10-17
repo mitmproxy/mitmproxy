@@ -1,5 +1,4 @@
 from .. import tutils, mastertest
-from mitmproxy.flow import state
 from mitmproxy.flow import master
 from mitmproxy import options
 
@@ -8,9 +7,8 @@ from mitmproxy.builtins import streambodies
 
 class TestStreamBodies(mastertest.MasterTest):
     def test_simple(self):
-        s = state.DummyState()
         o = options.Options(stream_large_bodies = 10)
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sa = streambodies.StreamBodies()
         m.addons.add(sa)
 

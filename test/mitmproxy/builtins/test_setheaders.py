@@ -1,15 +1,13 @@
 from .. import tutils, mastertest
 
 from mitmproxy.builtins import setheaders
-from mitmproxy.flow import state
 from mitmproxy import options
 
 
 class TestSetHeaders(mastertest.MasterTest):
     def mkmaster(self, **opts):
-        s = state.State()
         o = options.Options(**opts)
-        m = mastertest.RecordingMaster(o, None, s)
+        m = mastertest.RecordingMaster(o, None)
         sh = setheaders.SetHeaders()
         m.addons.add(sh)
         return m, sh

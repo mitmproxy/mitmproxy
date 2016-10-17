@@ -1,13 +1,12 @@
 import os
 import socket
 import time
-import types
 
 import netlib.tutils
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.builtins import script
-from mitmproxy.models import Error, HTTPResponse, HTTPFlow
+from mitmproxy.models import HTTPResponse, HTTPFlow
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
@@ -986,6 +985,17 @@ class TestUpstreamProxySSL(
         assert self.chain[1].tmaster.state.flow_count() == 1
 
 
+class RequestKiller:
+    def __init__(self, exclude):
+        self.exclude = exclude
+        self.k = 0
+
+    def request(self, f):
+        self.k += 1
+        if self.k not in self.exclude:
+            f.reply.kill()
+
+
 class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
     ssl = True
 
@@ -995,39 +1005,18 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         If we have a disconnect on a secure connection that's transparently proxified to
         an upstream http proxy, we need to send the CONNECT request again.
         """
-
-        def kill_requests(master, attr, exclude):
-            k = [0]  # variable scope workaround: put into array
-            _func = getattr(master, attr)
-
-            @controller.handler
-            def handler(*args):
-                f = args[-1]
-                k[0] += 1
-                if not (k[0] in exclude):
-                    f.client_conn.finish()
-                    f.error = Error("terminated")
-                    f.reply.kill()
-                return _func(f)
-
-            setattr(master, attr, types.MethodType(handler, master))
-
-        kill_requests(
-            self.chain[1].tmaster,
-            "request",
-            exclude = [
-                # fail first request
-                2,  # allow second request
-            ]
+        self.chain[1].tmaster.addons.add(
+            RequestKiller([2])
         )
-
-        kill_requests(self.chain[0].tmaster, "request",
-                      exclude=[
-                          1,  # CONNECT
-                          # fail first request
-                          3,  # reCONNECT
-                          4,  # request
-        ])
+        self.chain[0].tmaster.addons.add(
+            RequestKiller(
+                [
+                    1,  # CONNECT
+                    3,  # reCONNECT
+                    4   # request
+                ]
+            )
+        )
 
         p = self.pathoc()
         with p.connect():

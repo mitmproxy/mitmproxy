@@ -7,6 +7,7 @@ import sys
 
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
+from mitmproxy.flow import state
 import pathod.test
 import pathod.pathoc
 from mitmproxy import flow, controller, options
@@ -34,8 +35,9 @@ class TestMaster(flow.FlowMaster):
 
     def __init__(self, opts, config):
         s = ProxyServer(config)
-        state = flow.State()
-        flow.FlowMaster.__init__(self, opts, s, state)
+        flow.FlowMaster.__init__(self, opts, s)
+        self.state = state.State()
+        self.addons.add(self.state)
         self.addons.add(*builtins.default_addons())
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
@@ -116,8 +118,8 @@ class ProxyTestBase:
                 raise
 
     def setup(self):
-        self.master.clear_log()
         self.master.state.clear()
+        self.master.clear_log()
         self.server.clear_log()
         self.server2.clear_log()
 

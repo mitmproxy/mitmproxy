@@ -4,7 +4,6 @@ import os.path
 
 from mitmproxy.builtins import filestreamer
 from mitmproxy.flow import master, FlowReader
-from mitmproxy.flow import state
 from mitmproxy import options
 
 
@@ -17,11 +16,10 @@ class TestStream(mastertest.MasterTest):
                 r = FlowReader(open(p, "rb"))
                 return list(r.stream())
 
-            s = state.State()
             o = options.Options(
                 outfile = (p, "wb")
             )
-            m = master.FlowMaster(o, None, s)
+            m = master.FlowMaster(o, None)
             sa = filestreamer.FileStreamer()
 
             m.addons.add(sa)

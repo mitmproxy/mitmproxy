@@ -133,7 +133,9 @@ class Options(options.Options):
 class WebMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        super().__init__(options, server, WebState())
+        super().__init__(options, server)
+        self.state = WebState()
+        self.addons.add(self.state)
         self.addons.add(*builtins.default_addons())
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator
