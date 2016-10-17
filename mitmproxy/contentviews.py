@@ -22,7 +22,6 @@ import json
 import logging
 import lxml.etree
 import lxml.html
-import six
 import subprocess
 import traceback
 from PIL import ExifTags
@@ -56,7 +55,7 @@ def pretty_json(s):
     except ValueError:
         return None
     pretty = json.dumps(p, sort_keys=True, indent=4, ensure_ascii=False)
-    if isinstance(pretty, six.text_type):
+    if isinstance(pretty, str):
         # json.dumps _may_ decide to return unicode, if the JSON object is not ascii.
         # From limited testing this is always valid utf8 (otherwise json.loads will fail earlier),
         # so we can just re-encode it here.

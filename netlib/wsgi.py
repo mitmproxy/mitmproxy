@@ -2,9 +2,8 @@ from __future__ import (absolute_import, print_function, division)
 
 import time
 import traceback
-import six
-from io import BytesIO
-from six.moves import urllib
+import urllib
+import io
 
 from netlib import http, tcp, strutils
 
@@ -67,7 +66,7 @@ class WSGIAdaptor(object):
         environ = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': strutils.native(flow.request.scheme, "latin-1"),
-            'wsgi.input': BytesIO(flow.request.content or b""),
+            'wsgi.input': io.BytesIO(flow.request.content or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,
@@ -139,7 +138,7 @@ class WSGIAdaptor(object):
         def start_response(status, headers, exc_info=None):
             if exc_info:
                 if state["headers_sent"]:
-                    six.reraise(*exc_info)
+                    raise exc_info[1]
             elif state["status"]:
                 raise AssertionError('Response already started')
             state["status"] = status
@@ -148,7 +147,7 @@ class WSGIAdaptor(object):
                 self.error_page(soc, state["headers_sent"], traceback.format_tb(exc_info[2]))
                 state["headers_sent"] = True
 
-        errs = six.BytesIO()
+        errs = io.BytesIO()
         try:
             dataiter = self.app(
                 self.make_environ(request, errs, **env), start_response

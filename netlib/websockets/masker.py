@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import six
-
 
 class Masker(object):
     """
@@ -19,10 +17,7 @@ class Masker(object):
     def mask(self, offset, data):
         result = bytearray(data)
         for i in range(len(data)):
-            if six.PY2:
-                result[i] ^= ord(self.key[offset % 4])
-            else:
-                result[i] ^= self.key[offset % 4]
+            result[i] ^= self.key[offset % 4]
             offset += 1
         result = bytes(result)
         return result

@@ -2,11 +2,9 @@ from __future__ import absolute_import, print_function, division
 import re
 import codecs
 
-import six
-
 
 def always_bytes(unicode_or_bytes, *encode_args):
-    if isinstance(unicode_or_bytes, six.text_type):
+    if isinstance(unicode_or_bytes, str):
         return unicode_or_bytes.encode(*encode_args)
     elif isinstance(unicode_or_bytes, bytes) or unicode_or_bytes is None:
         return unicode_or_bytes
@@ -21,14 +19,10 @@ def native(s, *encoding_opts):
 
     https://www.python.org/dev/peps/pep-3333/#a-note-on-string-types
     """
-    if not isinstance(s, (six.binary_type, six.text_type)):
+    if not isinstance(s, (bytes, str)):
         raise TypeError("%r is neither bytes nor unicode" % s)
-    if six.PY2:
-        if isinstance(s, six.text_type):
-            return s.encode(*encoding_opts)
-    else:
-        if isinstance(s, six.binary_type):
-            return s.decode(*encoding_opts)
+    if isinstance(s, bytes):
+        return s.decode(*encoding_opts)
     return s
 
 
@@ -45,11 +39,8 @@ for x in ("\r", "\n", "\t"):
     del _control_char_trans_newline[ord(x)]
 
 
-if six.PY2:
-    pass
-else:
-    _control_char_trans = str.maketrans(_control_char_trans)
-    _control_char_trans_newline = str.maketrans(_control_char_trans_newline)
+_control_char_trans = str.maketrans(_control_char_trans)
+_control_char_trans_newline = str.maketrans(_control_char_trans_newline)
 
 
 def escape_control_characters(text, keep_spacing=True):
@@ -59,16 +50,11 @@ def escape_control_characters(text, keep_spacing=True):
     Args:
         keep_spacing: If True, tabs and newlines will not be replaced.
     """
-    # type: (six.string_types) -> six.text_type
-    if not isinstance(text, six.string_types):
+    # type: (str) -> str
+    if not isinstance(text, str):
         raise ValueError("text type must be unicode but is {}".format(type(text).__name__))
 
     trans = _control_char_trans_newline if keep_spacing else _control_char_trans
-    if six.PY2:
-        return u"".join(
-            six.unichr(trans.get(ord(ch), ord(ch)))
-            for ch in text
-        )
     return text.translate(trans)
 
 
@@ -107,15 +93,8 @@ def escaped_str_to_bytes(data):
     Raises:
         ValueError, if the escape sequence is invalid.
     """
-    if not isinstance(data, six.string_types):
-        if six.PY2:
-            raise ValueError("data must be str or unicode, but is {}".format(data.__class__.__name__))
+    if not isinstance(data, str):
         raise ValueError("data must be str, but is {}".format(data.__class__.__name__))
-
-    if six.PY2:
-        if isinstance(data, unicode):
-            data = data.encode("utf8")
-        return data.decode("string-escape")
 
     # This one is difficult - we use an undocumented Python API here
     # as per http://stackoverflow.com/a/23151714/934719
@@ -129,7 +108,7 @@ def is_mostly_bin(s):
 
     return sum(
         i < 9 or 13 < i < 32 or 126 < i
-        for i in six.iterbytes(s[:100])
+        for i in s[:100]
     ) / len(s[:100]) > 0.3
 
 
@@ -158,7 +137,7 @@ def hexdump(s):
     for i in range(0, len(s), 16):
         offset = "{:0=10x}".format(i)
         part = s[i:i + 16]
-        x = " ".join("{:0=2x}".format(i) for i in six.iterbytes(part))
+        x = " ".join("{:0=2x}".format(i) for i in part)
         x = x.ljust(47)  # 16*2 + 15
         part_repr = native(escape_control_characters(
             part.decode("ascii", "replace").replace(u"\ufffd", u"."),

@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import six
 import time
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from netlib import human
@@ -27,13 +26,13 @@ class ResponseData(message.MessageData):
         timestamp_start=None,
         timestamp_end=None
     ):
-        if isinstance(http_version, six.text_type):
+        if isinstance(http_version, str):
             http_version = http_version.encode("ascii", "strict")
-        if isinstance(reason, six.text_type):
+        if isinstance(reason, str):
             reason = reason.encode("ascii", "strict")
         if not isinstance(headers, nheaders.Headers):
             headers = nheaders.Headers(headers)
-        if isinstance(content, six.text_type):
+        if isinstance(content, str):
             raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
 
         self.http_version = http_version

@@ -3,26 +3,19 @@ from __future__ import absolute_import, print_function, division
 import re
 
 import collections
-import six
 from netlib import multidict
 from netlib import strutils
 
 # See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 
-if six.PY2:  # pragma: no cover
-    def _native(x):
-        return x
 
-    def _always_bytes(x):
-        strutils.always_bytes(x, "utf-8", "replace")  # raises a TypeError if x != str/bytes/None.
-        return x
-else:
-    # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-    def _native(x):
-        return x.decode("utf-8", "surrogateescape")
+# While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
+def _native(x):
+    return x.decode("utf-8", "surrogateescape")
 
-    def _always_bytes(x):
-        return strutils.always_bytes(x, "utf-8", "surrogateescape")
+
+def _always_bytes(x):
+    return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
 class Headers(multidict.MultiDict):
@@ -93,7 +86,7 @@ class Headers(multidict.MultiDict):
         # content_type -> content-type
         headers = {
             _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)
-            for name, value in six.iteritems(headers)
+            for name, value in headers.items()
         }
         self.update(headers)
 
@@ -112,9 +105,6 @@ class Headers(multidict.MultiDict):
             return b"\r\n".join(b": ".join(field) for field in self.fields) + b"\r\n"
         else:
             return b""
-
-    if six.PY2:  # pragma: no cover
-        __str__ = __bytes__
 
     def __delitem__(self, key):
         key = _always_bytes(key)
@@ -167,9 +157,9 @@ class Headers(multidict.MultiDict):
         Returns:
             The number of replacements made.
         """
-        if isinstance(pattern, six.text_type):
+        if isinstance(pattern, str):
             pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, six.text_type):
+        if isinstance(repl, str):
             repl = strutils.escaped_str_to_bytes(repl)
         pattern = re.compile(pattern, flags)
         replacements = 0

@@ -12,10 +12,10 @@ import netlib.http
 
 def _native(s):
     if six.PY2:
-        if isinstance(s, six.text_type):
+        if isinstance(s, str):
             return s.encode()
     else:
-        if isinstance(s, six.binary_type):
+        if isinstance(s, bytes):
             return s.decode()
     return s
 

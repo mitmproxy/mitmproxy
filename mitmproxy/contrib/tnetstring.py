@@ -121,7 +121,7 @@ def _rdumpq(q, size, value):
         write(b':')
         write(span)
         return size + 2 + len(span) + ldata
-    elif isinstance(value, six.text_type):
+    elif isinstance(value, str):
         data = value.encode("utf8")
         ldata = len(data)
         span = str(ldata).encode()

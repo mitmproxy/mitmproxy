@@ -3,24 +3,17 @@ from __future__ import absolute_import, print_function, division
 import re
 import warnings
 
-import six
-
 from netlib import encoding, strutils, basetypes
 from netlib.http import headers
 
-if six.PY2:  # pragma: no cover
-    def _native(x):
-        return x
 
-    def _always_bytes(x):
-        return x
-else:
-    # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-    def _native(x):
-        return x.decode("utf-8", "surrogateescape")
+# While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
+def _native(x):
+    return x.decode("utf-8", "surrogateescape")
 
-    def _always_bytes(x):
-        return strutils.always_bytes(x, "utf-8", "surrogateescape")
+
+def _always_bytes(x):
+    return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
 class MessageData(basetypes.Serializable):
@@ -194,7 +187,7 @@ class Message(basetypes.Serializable):
             return "latin-1"
 
     def get_text(self, strict=True):
-        # type: (bool) -> six.text_type
+        # type: (bool) -> str
         """
         The HTTP message body decoded with both content-encoding header (e.g. gzip)
         and content-type header charset.
@@ -214,7 +207,7 @@ class Message(basetypes.Serializable):
         except ValueError:
             if strict:
                 raise
-            return content.decode("utf8", "replace" if six.PY2 else "surrogateescape")
+            return content.decode("utf8", "surrogateescape")
 
     def set_text(self, text):
         if text is None:
@@ -230,7 +223,7 @@ class Message(basetypes.Serializable):
             ct[2]["charset"] = "utf-8"
             self.headers["content-type"] = headers.assemble_content_type(*ct)
             enc = "utf8"
-            self.content = text.encode(enc, "replace" if six.PY2 else "surrogateescape")
+            self.content = text.encode(enc, "surrogateescape")
 
     text = property(get_text, set_text)
 
@@ -269,9 +262,9 @@ class Message(basetypes.Serializable):
         Returns:
             The number of replacements made.
         """
-        if isinstance(pattern, six.text_type):
+        if isinstance(pattern, str):
             pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, six.text_type):
+        if isinstance(repl, str):
             repl = strutils.escaped_str_to_bytes(repl)
         replacements = 0
         if self.content:

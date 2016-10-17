@@ -205,7 +205,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.wfile.flush()
 
     def establish_ssl(self, clientcerts, sni, **kwargs):
-        if sni and not isinstance(sni, six.string_types):
+        if sni and not isinstance(sni, str):
             raise ValueError("sni must be str, not " + type(sni).__name__)
         clientcert = None
         if clientcerts:

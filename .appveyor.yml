@@ -7,8 +7,6 @@ environment:
   matrix:
     - PYTHON: "C:\\Python35"
       TOXENV: "py35"
-    - PYTHON: "C:\\Python27"
-      TOXENV: "py27"
 
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=

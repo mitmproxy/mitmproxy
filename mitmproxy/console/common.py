@@ -6,7 +6,6 @@ import os
 
 import urwid
 import urwid.util
-import six
 
 import netlib
 from mitmproxy import utils
@@ -39,7 +38,7 @@ def is_keypress(k):
     """
         Is this input event a keypress?
     """
-    if isinstance(k, six.string_types):
+    if isinstance(k, str):
         return True
 
 
@@ -110,7 +109,7 @@ def shortcuts(k):
 
 
 def fcol(s, attr):
-    s = six.text_type(s)
+    s = str(s)
     return (
         "fixed",
         len(s),
