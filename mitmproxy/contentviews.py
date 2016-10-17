@@ -14,22 +14,24 @@ requests, the query parameters are passed as the ``query`` keyword argument.
 """
 from __future__ import absolute_import, print_function, division
 
-import cssutils
 import datetime
+import io
 import json
 import logging
 import subprocess
 import traceback
-import io
-from typing import Mapping  # noqa
+from typing import Generator
+from typing import Mapping
+from typing import Tuple
+from typing import Union
 
+import cssutils
+import html2text
+import jsbeautifier
 import lxml.etree
 import lxml.html
 from PIL import ExifTags
 from PIL import Image
-import html2text
-import jsbeautifier
-
 from mitmproxy import exceptions
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
@@ -43,15 +45,13 @@ try:
 except ImportError:  # pragma no cover
     pyamf = None
 
-
 # Default view cutoff *in lines*
 VIEW_CUTOFF = 512
 
 KEY_MAX = 30
 
 
-def pretty_json(s):
-    # type: (bytes) -> bytes
+def pretty_json(s: bytes) -> bytes:
     try:
         p = json.loads(s.decode('utf-8'))
     except ValueError:
@@ -65,8 +65,9 @@ def pretty_json(s):
     return pretty
 
 
-def format_dict(d):
-    # type: (Mapping[Union[str,bytes], Union[str,bytes]]) -> Generator[Tuple[Union[str,bytes], Union[str,bytes]]]
+def format_dict(
+        d: Mapping[Union[str, bytes], Union[str, bytes]]
+) -> Generator[Tuple[Union[str, bytes], Union[str, bytes]], None, None]:
     """
     Helper function that transforms the given dictionary into a list of
         ("key",   key  )
@@ -99,7 +100,7 @@ class View(object):
 
     def __call__(
             self,
-            data,  # type: bytes
+            data: bytes,
             **metadata
     ):
         """
@@ -301,13 +302,13 @@ class ViewMultipart(View):
 
 if pyamf:
     class DummyObject(dict):
-
         def __init__(self, alias):
             dict.__init__(self)
 
         def __readamf__(self, input):
             data = input.readObject()
             self["data"] = data
+
 
     def pyamf_class_loader(s):
         for i in pyamf.CLASS_LOADERS:
@@ -317,7 +318,9 @@ if pyamf:
                     return v
         return DummyObject
 
+
     pyamf.register_class_loader(pyamf_class_loader)
+
 
     class ViewAMF(View):
         name = "AMF"
@@ -450,7 +453,6 @@ class ViewImage(View):
 
 
 class ViewProtobuf(View):
-
     """Human friendly view of protocol buffers
     The view uses the protoc compiler to decode the binary
     """
@@ -514,7 +516,6 @@ class ViewWBXML(View):
     ]
 
     def __call__(self, data, **metadata):
-
         try:
             parser = ASCommandResponse.ASCommandResponse(data)
             parsedContent = parser.xmlString

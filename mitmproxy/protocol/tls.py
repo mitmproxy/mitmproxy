@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, division
 
 import struct
+from typing import Optional  # noqa
+from typing import Union
 
 import construct
-
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy.contrib.tls import _constructs
@@ -322,7 +323,7 @@ class TlsLayer(base.Layer):
         self._server_tls = server_tls
 
         self._custom_server_sni = custom_server_sni
-        self._client_hello = None  # type: TlsClientHello
+        self._client_hello = None  # type: Optional[TlsClientHello]
 
     def __call__(self):
         """
@@ -396,8 +397,7 @@ class TlsLayer(base.Layer):
         if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
-    def set_server_tls(self, server_tls, sni=None):
-        # type: (bool, Union[str, None, False]) -> None
+    def set_server_tls(self, server_tls: bool, sni: Union[str, None, bool]=None) -> None:
         """
         Set the TLS settings for the next server connection that will be established.
         This function will not alter an existing connection.

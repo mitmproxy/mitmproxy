@@ -11,7 +11,7 @@ import gzip
 import zlib
 import brotli
 
-from typing import Union  # noqa
+from typing import Union
 
 
 # We have a shared single-element cache for encoding and decoding.
@@ -22,8 +22,7 @@ CachedDecode = collections.namedtuple("CachedDecode", "encoded encoding errors d
 _cache = CachedDecode(None, None, None, None)
 
 
-def decode(encoded, encoding, errors='strict'):
-    # type: (Union[str, bytes], str, str) -> Union[str, bytes]
+def decode(encoded: Union[str, bytes], encoding: str, errors: str='strict') -> Union[str, bytes]:
     """
     Decode the given input object
 
@@ -64,8 +63,7 @@ def decode(encoded, encoding, errors='strict'):
         ))
 
 
-def encode(decoded, encoding, errors='strict'):
-    # type: (Union[str, bytes], str, str) -> Union[str, bytes]
+def encode(decoded: Union[str, bytes], encoding: str, errors: str='strict') -> Union[str, bytes]:
     """
     Encode the given input object
 

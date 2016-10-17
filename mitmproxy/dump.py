@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
-from typing import Optional  # noqa
-import typing  # noqa
+import typing
+from typing import Optional
 
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -19,10 +19,10 @@ class DumpError(Exception):
 class Options(options.Options):
     def __init__(
             self,
-            keepserving=False,  # type: bool
-            filtstr=None,  # type: Optional[str]
-            flow_detail=1,  # type: int
-            tfile=None,  # type: Optional[typing.io.TextIO]
+            keepserving: bool = False,
+            filtstr: Optional[str] = None,
+            flow_detail: int = 1,
+            tfile: Optional[typing.io.TextIO] = None,
             **kwargs
     ):
         self.filtstr = filtstr

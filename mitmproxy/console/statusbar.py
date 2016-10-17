@@ -116,8 +116,7 @@ class ActionBar(urwid.WidgetWrap):
 
 class StatusBar(urwid.WidgetWrap):
 
-    def __init__(self, master, helptext):
-        # type: (mitmproxy.console.master.ConsoleMaster, object) -> None
+    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", helptext):
         self.master = master
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))

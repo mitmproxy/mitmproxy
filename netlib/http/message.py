@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 import re
 import warnings
+from typing import Optional
 
 from netlib import encoding, strutils, basetypes
 from netlib.http import headers
@@ -77,8 +78,7 @@ class Message(basetypes.Serializable):
         self.data.headers = h
 
     @property
-    def raw_content(self):
-        # type: () -> bytes
+    def raw_content(self) -> bytes:
         """
         The raw (encoded) HTTP message body
 
@@ -90,8 +90,7 @@ class Message(basetypes.Serializable):
     def raw_content(self, content):
         self.data.content = content
 
-    def get_content(self, strict=True):
-        # type: (bool) -> bytes
+    def get_content(self, strict: bool=True) -> bytes:
         """
         The HTTP message body decoded with the content-encoding header (e.g. gzip)
 
@@ -168,14 +167,12 @@ class Message(basetypes.Serializable):
     def timestamp_end(self, timestamp_end):
         self.data.timestamp_end = timestamp_end
 
-    def _get_content_type_charset(self):
-        # type: () -> Optional[str]
+    def _get_content_type_charset(self) -> Optional[str]:
         ct = headers.parse_content_type(self.headers.get("content-type", ""))
         if ct:
             return ct[2].get("charset")
 
-    def _guess_encoding(self):
-        # type: () -> str
+    def _guess_encoding(self) -> str:
         enc = self._get_content_type_charset()
         if enc:
             return enc
@@ -186,8 +183,7 @@ class Message(basetypes.Serializable):
             # We may also want to check for HTML meta tags here at some point.
             return "latin-1"
 
-    def get_text(self, strict=True):
-        # type: (bool) -> str
+    def get_text(self, strict: bool=True) -> str:
         """
         The HTTP message body decoded with both content-encoding header (e.g. gzip)
         and content-type header charset.

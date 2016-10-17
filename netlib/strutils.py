@@ -43,14 +43,13 @@ _control_char_trans = str.maketrans(_control_char_trans)
 _control_char_trans_newline = str.maketrans(_control_char_trans_newline)
 
 
-def escape_control_characters(text, keep_spacing=True):
+def escape_control_characters(text: str, keep_spacing=True) -> str:
     """
     Replace all unicode C1 control characters from the given text with a single "."
 
     Args:
         keep_spacing: If True, tabs and newlines will not be replaced.
     """
-    # type: (str) -> str
     if not isinstance(text, str):
         raise ValueError("text type must be unicode but is {}".format(type(text).__name__))
 
@@ -101,8 +100,7 @@ def escaped_str_to_bytes(data):
     return codecs.escape_decode(data)[0]
 
 
-def is_mostly_bin(s):
-    # type: (bytes) -> bool
+def is_mostly_bin(s: bytes) -> bool:
     if not s or len(s) == 0:
         return False
 
@@ -112,8 +110,7 @@ def is_mostly_bin(s):
     ) / len(s[:100]) > 0.3
 
 
-def is_xml(s):
-    # type: (bytes) -> bool
+def is_xml(s: bytes) -> bool:
     return s.strip().startswith(b"<")
 
 

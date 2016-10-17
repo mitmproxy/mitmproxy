@@ -102,9 +102,9 @@ footer = [
 
 class FlowViewHeader(urwid.WidgetWrap):
 
-    def __init__(self, master, f):
-        self.master = master  # type: "mitmproxy.console.master.ConsoleMaster"
-        self.flow = f  # type: models.HTTPFlow
+    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", f: models.HTTPFlow):
+        self.master = master
+        self.flow = f
         self._w = common.format_flow(
             f,
             False,

@@ -248,8 +248,7 @@ class Request(message.Message):
         return netlib.http.url.unparse(self.scheme, self.pretty_host, self.port, self.path)
 
     @property
-    def query(self):
-        # type: () -> multidict.MultiDictView
+    def query(self) -> multidict.MultiDictView:
         """
         The request query string as an :py:class:`~netlib.multidict.MultiDictView` object.
         """
@@ -272,8 +271,7 @@ class Request(message.Message):
         self._set_query(value)
 
     @property
-    def cookies(self):
-        # type: () -> multidict.MultiDictView
+    def cookies(self) -> multidict.MultiDictView:
         """
         The request cookies.
 

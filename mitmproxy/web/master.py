@@ -6,7 +6,7 @@ import collections
 import tornado.httpserver
 import tornado.ioloop
 
-from typing import Optional  # noqa
+from typing import Optional
 
 from mitmproxy import builtins
 from mitmproxy import controller
@@ -95,13 +95,13 @@ class WebState(flow.State):
 class Options(options.Options):
     def __init__(
             self,
-            intercept=None,  # type: Optional[str]
-            wdebug=bool,  # type: bool
-            wport=8081,  # type: int
-            wiface="127.0.0.1",  # type: str
-            wauthenticator=None,  # type: Optional[authentication.PassMan]
-            wsingleuser=None,  # type: Optional[str]
-            whtpasswd=None,  # type: Optional[str]
+            intercept: Optional[str] = None,
+            wdebug: bool = bool,
+            wport: int = 8081,
+            wiface: str = "127.0.0.1",
+            wauthenticator: Optional[authentication.PassMan] = None,
+            wsingleuser: Optional[str] = None,
+            whtpasswd: Optional[str] = None,
             **kwargs
     ):
         self.wdebug = wdebug
