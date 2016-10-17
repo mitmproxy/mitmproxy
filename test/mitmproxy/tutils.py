@@ -7,7 +7,7 @@ import sys
 from contextlib import contextmanager
 from unittest.case import SkipTest
 
-from six.moves import cStringIO as StringIO
+import io
 
 import netlib.utils
 import netlib.tutils
@@ -203,7 +203,7 @@ raises = netlib.tutils.raises
 
 @contextmanager
 def capture_stderr(command, *args, **kwargs):
-    out, sys.stderr = sys.stderr, StringIO()
+    out, sys.stderr = sys.stderr, io.StringIO()
     command(*args, **kwargs)
     yield sys.stderr.getvalue()
     sys.stderr = out

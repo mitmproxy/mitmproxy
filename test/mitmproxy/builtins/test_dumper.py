@@ -1,5 +1,6 @@
+import io
+
 from .. import tutils, mastertest
-from six.moves import cStringIO as StringIO
 
 from mitmproxy.builtins import dumper
 from mitmproxy.flow import state
@@ -13,7 +14,7 @@ import mock
 class TestDumper(mastertest.MasterTest):
     def test_simple(self):
         d = dumper.Dumper()
-        sio = StringIO()
+        sio = io.StringIO()
 
         updated = {"tfile", "flow_detail"}
         d.configure(dump.Options(tfile = sio, flow_detail = 0), updated)
@@ -24,17 +25,17 @@ class TestDumper(mastertest.MasterTest):
         d.response(tutils.tflow())
         assert sio.getvalue()
 
-        sio = StringIO()
+        sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         d.response(tutils.tflow(resp=True))
         assert "<<" in sio.getvalue()
 
-        sio = StringIO()
+        sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         d.response(tutils.tflow(err=True))
         assert "<<" in sio.getvalue()
 
-        sio = StringIO()
+        sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         flow = tutils.tflow()
         flow.request = netlib.tutils.treq()
@@ -47,7 +48,7 @@ class TestDumper(mastertest.MasterTest):
         d.response(flow)
         assert sio.getvalue()
 
-        sio = StringIO()
+        sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         flow = tutils.tflow(resp=netlib.tutils.tresp(content=b"{"))
         flow.response.headers["content-type"] = "application/json"
@@ -55,7 +56,7 @@ class TestDumper(mastertest.MasterTest):
         d.response(flow)
         assert sio.getvalue()
 
-        sio = StringIO()
+        sio = io.StringIO()
         d.configure(dump.Options(tfile = sio), updated)
         flow = tutils.tflow()
         flow.request.content = None
@@ -71,7 +72,7 @@ class TestContentView(mastertest.MasterTest):
         view_auto.side_effect = exceptions.ContentViewException("")
 
         s = state.State()
-        sio = StringIO()
+        sio = io.StringIO()
         o = dump.Options(
             flow_detail=4,
             verbosity=3,

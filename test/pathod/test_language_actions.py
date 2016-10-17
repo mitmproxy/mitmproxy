@@ -1,4 +1,4 @@
-from six import BytesIO
+import io
 
 from pathod.language import actions, parse_pathoc, parse_pathod, serve
 
@@ -60,7 +60,7 @@ class TestInject:
         assert v.offset == "r"
 
     def test_serve(self):
-        s = BytesIO()
+        s = io.BytesIO()
         r = next(parse_pathod("400:i0,'foo'"))
         assert serve(r, s, {})
 

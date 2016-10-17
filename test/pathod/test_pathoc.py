@@ -1,5 +1,4 @@
-from six.moves import cStringIO as StringIO
-from six import BytesIO
+import io
 from mock import Mock
 
 from netlib import http
@@ -21,7 +20,7 @@ def test_response():
 
 class PathocTestDaemon(tutils.DaemonTests):
     def tval(self, requests, timeout=None, showssl=False, **kwargs):
-        s = StringIO()
+        s = io.StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             ssl=self.ssl,
@@ -71,7 +70,7 @@ class TestDaemonSSL(PathocTestDaemon):
         assert log[0]["request"]["clientcert"]["keyinfo"]
 
     def test_http2_without_ssl(self):
-        fp = StringIO()
+        fp = io.StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             use_http2=True,
@@ -171,15 +170,15 @@ class TestDaemon(PathocTestDaemon):
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = BytesIO(), BytesIO()
+        c.rfile, c.wfile = io.BytesIO(), io.BytesIO()
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = BytesIO(
+        c.rfile = io.BytesIO(
             b"HTTP/1.1 500 OK\r\n"
         )
         with raises("connect failed"):
             c.http_connect(to)
-        c.rfile = BytesIO(
+        c.rfile = io.BytesIO(
             b"HTTP/1.1 200 OK\r\n"
         )
         c.http_connect(to)
@@ -187,7 +186,7 @@ class TestDaemon(PathocTestDaemon):
     def test_socks_connect(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
-        c.rfile, c.wfile = tutils.treader(b""), BytesIO()
+        c.rfile, c.wfile = tutils.treader(b""), io.BytesIO()
         tutils.raises(pathoc.PathocError, c.socks_connect, to)
 
         c.rfile = tutils.treader(

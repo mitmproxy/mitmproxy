@@ -1,4 +1,4 @@
-from six.moves import socketserver
+import socketserver
 from time import sleep
 
 

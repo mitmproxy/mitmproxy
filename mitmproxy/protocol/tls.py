@@ -535,10 +535,11 @@ class TlsLayer(base.Layer):
         except netlib.exceptions.TlsException as e:
             raise exceptions.TlsProtocolException(
                 "Cannot establish TLS with {address} (sni: {sni}): {e}".format(
-                address=repr(self.server_conn.address),
-                sni=self.server_sni,
-                e=repr(e),
-            ))
+                    address=repr(self.server_conn.address),
+                    sni=self.server_sni,
+                    e=repr(e)
+                )
+            )
 
         proto = self.alpn_for_client_connection.decode() if self.alpn_for_client_connection else '-'
         self.log("ALPN selected by server: {}".format(proto), "debug")

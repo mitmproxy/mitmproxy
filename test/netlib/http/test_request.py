@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-import six
-
 from netlib.http import Headers
 from netlib.tutils import treq, raises
 from .test_message import _test_decoded_attr, _test_passthrough_attr
@@ -57,10 +55,6 @@ class TestRequestCore(object):
         assert req.data.path is None
 
     def test_host(self):
-        if six.PY2:
-            from unittest import SkipTest
-            raise SkipTest()
-
         request = treq()
         assert request.host == request.data.host.decode("idna")
 

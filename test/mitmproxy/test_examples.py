@@ -1,7 +1,6 @@
 import json
 import os
-
-import six
+import shlex
 
 from mitmproxy import options
 from mitmproxy import contentviews
@@ -122,7 +121,7 @@ class TestHARDump():
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m, sc = tscript("har_dump.py", shlex.quote(path))
             m.addons.invoke(m, "response", self.flow())
             m.addons.remove(sc)
 
@@ -135,7 +134,7 @@ class TestHARDump():
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", six.moves.shlex_quote(path))
+            m, sc = tscript("har_dump.py", shlex.quote(path))
             m.addons.invoke(m, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10))
             m.addons.remove(sc)
 

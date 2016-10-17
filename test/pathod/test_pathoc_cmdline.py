@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+import io
 import mock
 
 from pathod import pathoc_cmdline as cmdline
@@ -9,7 +9,7 @@ from . import tutils
 @mock.patch("argparse.ArgumentParser.error")
 def test_pathoc(perror):
     assert cmdline.args_pathoc(["pathoc", "foo.com", "get:/"])
-    s = StringIO()
+    s = io.StringIO()
     with tutils.raises(SystemExit):
         cmdline.args_pathoc(["pathoc", "--show-uas"], s, s)
 
