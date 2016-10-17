@@ -20,8 +20,7 @@ from mitmproxy import contentviews
 from netlib import version
 
 
-def convert_flow_to_json_dict(flow):
-    # type: (models.Flow) -> dict
+def convert_flow_to_json_dict(flow: models.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
 
@@ -123,8 +122,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         return self.application.master.state
 
     @property
-    def master(self):
-        # type: () -> mitmproxy.web.master.WebMaster
+    def master(self) -> "mitmproxy.web.master.WebMaster":
         return self.application.master
 
     @property

@@ -1,19 +1,19 @@
 from __future__ import absolute_import, print_function, division
+
 import abc
 import copy
-
-import six
-import urwid
-from mitmproxy.console import common
-from mitmproxy.console import signals
-
-from typing import Any  # noqa
-from typing import Callable  # noqa
+from typing import Any
+from typing import Callable
 from typing import Container  # noqa
 from typing import Iterable  # noqa
 from typing import Optional  # noqa
 from typing import Sequence  # noqa
 from typing import Tuple  # noqa
+
+import six
+import urwid
+from mitmproxy.console import common
+from mitmproxy.console import signals
 
 FOOTER = [
     ('heading_key', "enter"), ":edit ",
@@ -22,33 +22,6 @@ FOOTER = [
 FOOTER_EDITING = [
     ('heading_key', "esc"), ":stop editing ",
 ]
-
-
-@six.add_metaclass(abc.ABCMeta)
-class Column(object):
-    subeditor = None
-
-    def __init__(self, heading):
-        self.heading = heading
-
-    @abc.abstractmethod
-    def Display(self, data):
-        # type: () -> Cell
-        pass
-
-    @abc.abstractmethod
-    def Edit(self, data):
-        # type: () -> Cell
-        pass
-
-    @abc.abstractmethod
-    def blank(self):
-        # type: () -> Any
-        pass
-
-    def keypress(self, key, editor):
-        # type: (str, GridEditor) -> Optional[str]
-        return key
 
 
 class Cell(urwid.WidgetWrap):
@@ -60,17 +33,40 @@ class Cell(urwid.WidgetWrap):
         """
         raise NotImplementedError()
 
-    def selectable(self):
+    def selectable(self) -> bool:
         return True
+
+
+@six.add_metaclass(abc.ABCMeta)
+class Column(object):
+    subeditor = None
+
+    def __init__(self, heading):
+        self.heading = heading
+
+    @abc.abstractmethod
+    def Display(self, data) -> Cell:
+        pass
+
+    @abc.abstractmethod
+    def Edit(self, data) -> Cell:
+        pass
+
+    @abc.abstractmethod
+    def blank(self) -> Any:
+        pass
+
+    def keypress(self, key: str, editor: "GridEditor") -> Optional[str]:
+        return key
 
 
 class GridRow(urwid.WidgetWrap):
     def __init__(
             self,
-            focused,  # type: Optional[int]
-            editing,  # type: bool
-            editor,  # type: GridEditor
-            values  # type: Tuple[Iterable[bytes], Container[int]
+            focused: Optional[int],
+            editing: bool,
+            editor: "GridEditor",
+            values: Tuple[Iterable[bytes], Container[int]]
     ):
         self.focused = focused
         self.editor = editor
@@ -123,8 +119,8 @@ class GridWalker(urwid.ListWalker):
 
     def __init__(
             self,
-            lst,  # type: Iterable[list]
-            editor  # type: GridEditor
+            lst: Iterable[list],
+            editor: "GridEditor"
     ):
         self.lst = [(i, set()) for i in lst]
         self.editor = editor
@@ -265,9 +261,9 @@ class GridEditor(urwid.WidgetWrap):
 
     def __init__(
             self,
-            master,  # type: "mitmproxy.console.master.ConsoleMaster"
-            value,  # type: Any
-            callback,  # type: Callable[..., None]
+            master: "mitmproxy.console.master.ConsoleMaster",
+            value: Any,
+            callback: Callable[..., None],
             *cb_args,
             **cb_kwargs
     ):
@@ -370,23 +366,20 @@ class GridEditor(urwid.WidgetWrap):
         elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
 
-    def data_out(self, data):
-        # type: (Sequence[list]) -> Any
+    def data_out(self, data: Sequence[list]) -> Any:
         """
             Called on raw list data, before data is returned through the
             callback.
         """
         return data
 
-    def data_in(self, data):
-        # type: (Any) -> Iterable[list]
+    def data_in(self, data: Any) -> Iterable[list]:
         """
             Called to prepare provided data.
         """
         return data
 
-    def is_error(self, col, val):
-        # type: (int, Any) -> Optional[str]
+    def is_error(self, col: int, val: Any) -> Optional[str]:
         """
             Return None, or a string error message.
         """

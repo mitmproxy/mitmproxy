@@ -1,6 +1,8 @@
 from __future__ import absolute_import, print_function, division
+
+from typing import Tuple, Optional, Sequence
+
 from mitmproxy import optmanager
-from typing import Tuple, Optional, Sequence  # noqa
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -24,62 +26,61 @@ class Options(optmanager.OptManager):
     def __init__(
             self,
             # TODO: rename to onboarding_app_*
-            app=True,  # type: bool
-            app_host=APP_HOST,  # type: str
-            app_port=APP_PORT,  # type: int
-            anticache=False,  # type: bool
-            anticomp=False,  # type: bool
-            client_replay=None,  # type: Optional[str]
-            replay_kill_extra=False,  # type: bool
-            keepserving=True,  # type: bool
-            no_server=False,  # type: bool
-            server_replay_nopop=False,  # type: bool
-            refresh_server_playback=False,  # type: bool
-            rfile=None,  # type: Optional[str]
-            scripts=(),  # type: Sequence[str]
-            showhost=False,  # type: bool
-            replacements=(),  # type: Sequence[Tuple[str, str, str]]
-            server_replay_use_headers=(),  # type: Sequence[str]
-            setheaders=(),  # type: Sequence[Tuple[str, str, str]]
-            server_replay=None,  # type: Sequence[str]
-            stickycookie=None,  # type: Optional[str]
-            stickyauth=None,  # type: Optional[str]
-            stream_large_bodies=None,  # type: Optional[str]
-            verbosity=2,  # type: int
-            outfile=None,  # type: Tuple[str, str]
-            server_replay_ignore_content=False,  # type: bool
-            server_replay_ignore_params=(),  # type: Sequence[str]
-            server_replay_ignore_payload_params=(),  # type: Sequence[str]
-            server_replay_ignore_host=False,  # type: bool
-
+            app: bool = True,
+            app_host: str = APP_HOST,
+            app_port: int = APP_PORT,
+            anticache: bool = False,
+            anticomp: bool = False,
+            client_replay: Optional[str] = None,
+            replay_kill_extra: bool = False,
+            keepserving: bool = True,
+            no_server: bool = False,
+            server_replay_nopop: bool = False,
+            refresh_server_playback: bool = False,
+            rfile: Optional[str] = None,
+            scripts: Sequence[str] = (),
+            showhost: bool = False,
+            replacements: Sequence[Tuple[str, str, str]] = (),
+            server_replay_use_headers: Sequence[str] = (),
+            setheaders: Sequence[Tuple[str, str, str]] = (),
+            server_replay: Sequence[str] = None,
+            stickycookie: Optional[str] = None,
+            stickyauth: Optional[str] = None,
+            stream_large_bodies: Optional[str] = None,
+            verbosity: int = 2,
+            outfile: Tuple[str, str] = None,
+            server_replay_ignore_content: bool = False,
+            server_replay_ignore_params: Sequence[str] = (),
+            server_replay_ignore_payload_params: Sequence[str] = (),
+            server_replay_ignore_host: bool = False,
             # Proxy options
-            auth_nonanonymous=False,  # type: bool
-            auth_singleuser=None,  # type: Optional[str]
-            auth_htpasswd=None,  # type: Optional[str]
-            add_upstream_certs_to_client_chain=False,  # type: bool
-            body_size_limit=None,  # type: Optional[int]
-            cadir = CA_DIR,  # type: str
-            certs = (),  # type: Sequence[Tuple[str, str]]
-            ciphers_client = DEFAULT_CLIENT_CIPHERS,   # type: str
-            ciphers_server = None,   # type: Optional[str]
-            clientcerts = None,  # type: Optional[str]
-            http2 = True,  # type: bool
-            ignore_hosts = (),  # type: Sequence[str]
-            listen_host = "",  # type: str
-            listen_port = LISTEN_PORT,  # type: int
-            mode = "regular",  # type: str
-            no_upstream_cert = False,  # type: bool
-            rawtcp = False,  # type: bool
-            websockets = False,  # type: bool
-            spoof_source_address = False,  # type: bool
-            upstream_server = "",  # type: str
-            upstream_auth = "",  # type: str
-            ssl_version_client="secure",  # type: str
-            ssl_version_server="secure",  # type: str
-            ssl_insecure=False,  # type: bool
-            ssl_verify_upstream_trusted_cadir=None,  # type: str
-            ssl_verify_upstream_trusted_ca=None,  # type: str
-            tcp_hosts = (),  # type: Sequence[str]
+            auth_nonanonymous: bool = False,
+            auth_singleuser: Optional[str] = None,
+            auth_htpasswd: Optional[str] = None,
+            add_upstream_certs_to_client_chain: bool = False,
+            body_size_limit: Optional[int] = None,
+            cadir: str = CA_DIR,
+            certs: Sequence[Tuple[str, str]] = (),
+            ciphers_client: str=DEFAULT_CLIENT_CIPHERS,
+            ciphers_server: Optional[str]=None,
+            clientcerts: Optional[str] = None,
+            http2: bool = True,
+            ignore_hosts: Sequence[str] = (),
+            listen_host: str = "",
+            listen_port: int = LISTEN_PORT,
+            mode: str = "regular",
+            no_upstream_cert: bool = False,
+            rawtcp: bool = False,
+            websockets: bool = False,
+            spoof_source_address: bool = False,
+            upstream_server: str = "",
+            upstream_auth: str = "",
+            ssl_version_client: str = "secure",
+            ssl_version_server: str = "secure",
+            ssl_insecure: bool = False,
+            ssl_verify_upstream_trusted_cadir: str = None,
+            ssl_verify_upstream_trusted_ca: str = None,
+            tcp_hosts: Sequence[str] = ()
     ):
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.

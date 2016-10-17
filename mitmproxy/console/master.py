@@ -15,7 +15,7 @@ import weakref
 
 import six
 import urwid
-from typing import Optional  # noqa
+from typing import Optional
 
 from mitmproxy import builtins
 from mitmproxy import contentviews
@@ -202,13 +202,13 @@ class ConsoleState(flow.State):
 class Options(mitmproxy.options.Options):
     def __init__(
             self,
-            eventlog=False,  # type: bool
-            follow=False,  # type: bool
-            intercept=False,  # type: bool
-            filter=None,  # type: Optional[str]
-            palette=None,  # type: Optional[str]
-            palette_transparent=False,  # type: bool
-            no_mouse=False,  # type: bool
+            eventlog: bool = False,
+            follow: bool = False,
+            intercept: bool = False,
+            filter: Optional[str] = None,
+            palette: Optional[str] = None,
+            palette_transparent: bool = False,
+            no_mouse: bool = False,
             **kwargs
     ):
         self.eventlog = eventlog

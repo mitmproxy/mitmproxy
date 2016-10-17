@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import os
+from typing import Callable, Optional
 
 import urwid
 from mitmproxy.console import signals
@@ -8,8 +9,7 @@ from mitmproxy.console.grideditor import base
 from netlib import strutils
 
 
-def read_file(filename, callback, escaped):
-    # type: (str, Callable[...,None], bool) -> Optional[str]
+def read_file(filename: str, callback: Callable[..., None], escaped: bool) -> Optional[str]:
     if not filename:
         return
 
@@ -70,27 +70,24 @@ class Column(base.Column):
 
 
 class Display(base.Cell):
-    def __init__(self, data):
-        # type: (bytes) -> Display
+    def __init__(self, data: bytes):
         self.data = data
         escaped = strutils.bytes_to_escaped_str(data)
         w = urwid.Text(escaped, wrap="any")
         super(Display, self).__init__(w)
 
-    def get_data(self):
+    def get_data(self) -> bytes:
         return self.data
 
 
 class Edit(base.Cell):
-    def __init__(self, data):
-        # type: (bytes) -> Edit
+    def __init__(self, data: bytes):
         data = strutils.bytes_to_escaped_str(data)
         w = urwid.Edit(edit_text=data, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")
         super(Edit, self).__init__(w)
 
-    def get_data(self):
-        # type: () -> bytes
+    def get_data(self) -> bytes:
         txt = self._w.get_text()[0].strip()
         try:
             return strutils.escaped_str_to_bytes(txt)

@@ -97,8 +97,7 @@ def python_code(flow):
     return code
 
 
-def is_json(headers, content):
-    # type: (netlib.http.Headers, bytes) -> bool
+def is_json(headers: netlib.http.Headers, content: bytes) -> bool:
     if headers:
         ct = netlib.http.parse_content_type(headers.get("content-type", ""))
         if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":

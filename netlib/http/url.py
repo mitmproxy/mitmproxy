@@ -1,4 +1,6 @@
 import urllib
+from typing import Sequence
+from typing import Tuple
 
 from netlib import utils
 
@@ -80,8 +82,7 @@ def unparse(scheme, host, port, path=""):
     return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
-def encode(s):
-    # type: Sequence[Tuple[str,str]] -> str
+def encode(s: Sequence[Tuple[str, str]]) -> str:
     """
         Takes a list of (key, value) tuples and returns a urlencoded string.
     """
@@ -95,23 +96,21 @@ def decode(s):
     return urllib.parse.parse_qsl(s, keep_blank_values=True, errors='surrogateescape')
 
 
-def quote(b, safe="/"):
+def quote(b: str, safe: str="/") -> str:
     """
     Returns:
         An ascii-encodable str.
     """
-    # type: (str) -> str
     return urllib.parse.quote(b, safe=safe, errors="surrogateescape")
 
 
-def unquote(s):
+def unquote(s: str) -> str:
     """
     Args:
         s: A surrogate-escaped str
     Returns:
         A surrogate-escaped str
     """
-    # type: (str) -> str
     return urllib.parse.unquote(s, errors="surrogateescape")
 
 

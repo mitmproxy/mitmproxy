@@ -27,13 +27,12 @@ class Column(col_bytes.Column):
 
 # This is the same for both edit and display.
 class EncodingMixin(object):
-    def __init__(self, data, encoding_args):
-        # type: (str) -> TDisplay
+    def __init__(self, data: str, encoding_args):
         self.encoding_args = encoding_args
         data = data.encode(*self.encoding_args)
         super(EncodingMixin, self).__init__(data)
 
-    def get_data(self):
+    def get_data(self) -> str:
         data = super(EncodingMixin, self).get_data()
         try:
             return data.decode(*self.encoding_args)
