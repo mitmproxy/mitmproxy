@@ -231,12 +231,6 @@ class FlowMaster(controller.Master):
     def websocket_handshake(self, f):
         pass
 
-    def handle_intercept(self, f):
-        self.state.update_flow(f)
-
-    def handle_accept_intercept(self, f):
-        self.state.update_flow(f)
-
     @controller.handler
     def tcp_start(self, flow):
         # TODO: This would break mitmproxy currently.

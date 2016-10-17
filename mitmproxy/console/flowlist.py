@@ -158,7 +158,7 @@ class ConnectionItem(urwid.WidgetWrap):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
         if key == "a":
-            self.flow.accept_intercept(self.master)
+            self.flow.resume(self.master)
             signals.flowlist_change.send(self)
         elif key == "d":
             if self.flow.killable:

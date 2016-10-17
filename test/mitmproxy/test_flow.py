@@ -121,7 +121,6 @@ class TestHTTPFlow:
         f = tutils.tflow()
         f.reply.handle()
         f.intercept(fm)
-        assert fm.handle_intercept.called
         assert f.killable
         f.kill(fm)
         assert not f.killable
@@ -129,8 +128,9 @@ class TestHTTPFlow:
         assert f.reply.value == Kill
 
     def test_killall(self):
+        srv = DummyServer(None)
         s = flow.State()
-        fm = flow.FlowMaster(None, None, s)
+        fm = flow.FlowMaster(None, srv, s)
 
         f = tutils.tflow()
         f.reply.handle()
@@ -140,12 +140,12 @@ class TestHTTPFlow:
         for i in s.view:
             assert "killed" in str(i.error)
 
-    def test_accept_intercept(self):
+    def test_resume(self):
         f = tutils.tflow()
         f.reply.handle()
         f.intercept(mock.Mock())
         assert f.reply.state == "taken"
-        f.accept_intercept(mock.Mock())
+        f.resume(mock.Mock())
         assert f.reply.state == "committed"
 
     def test_replace_unicode(self):

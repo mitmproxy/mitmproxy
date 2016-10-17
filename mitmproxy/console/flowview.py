@@ -519,7 +519,7 @@ class FlowView(tabs.Tabs):
             # Pass scroll events to the wrapped widget
             self._w.keypress(size, key)
         elif key == "a":
-            self.flow.accept_intercept(self.master)
+            self.flow.resume(self.master)
             signals.flow_change.send(self, flow = self.flow)
         elif key == "A":
             self.master.accept_all()
