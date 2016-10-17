@@ -32,7 +32,7 @@ class AppRegistry:
             return self.apps.get((host, request.port), None)
 
 
-class StreamLargeBodies():
+class StreamLargeBodies:
     def __init__(self, max_size):
         self.max_size = max_size
 

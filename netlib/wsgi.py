@@ -8,20 +8,20 @@ import io
 from netlib import http, tcp, strutils
 
 
-class ClientConn():
+class ClientConn:
 
     def __init__(self, address):
         self.address = tcp.Address.wrap(address)
 
 
-class Flow():
+class Flow:
 
     def __init__(self, address, request):
         self.client_conn = ClientConn(address)
         self.request = request
 
 
-class Request():
+class Request:
 
     def __init__(self, scheme, method, path, http_version, headers, content):
         self.scheme, self.method, self.path = scheme, method, path
@@ -47,7 +47,7 @@ def date_time_string():
     return s
 
 
-class WSGIAdaptor():
+class WSGIAdaptor:
 
     def __init__(self, app, domain, port, sversion):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion

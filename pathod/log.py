@@ -13,7 +13,7 @@ def write_raw(fp, lines, timestamp=True):
         fp.flush()
 
 
-class LogCtx():
+class LogCtx:
 
     def __init__(self, fp, hex, timestamp, rfile, wfile):
         self.lines = []

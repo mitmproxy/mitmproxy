@@ -4,7 +4,7 @@ from netlib import http
 from netlib import websockets
 
 
-class TestUtils():
+class TestUtils:
 
     def test_client_handshake_headers(self):
         h = websockets.client_handshake_headers(version='42')

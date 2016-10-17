@@ -23,7 +23,7 @@ def assemble_http_basic_auth(scheme, username, password):
     return scheme + " " + v
 
 
-class NullProxyAuth():
+class NullProxyAuth:
 
     """
         No proxy auth at all (returns empty challange headers)
@@ -90,7 +90,7 @@ class BasicProxyAuth(BasicAuth):
     AUTH_HEADER = 'Proxy-Authorization'
 
 
-class PassMan():
+class PassMan:
 
     def test(self, username_, password_token_):
         return False

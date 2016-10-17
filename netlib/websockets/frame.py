@@ -43,7 +43,7 @@ CLOSE_REASON = utils.BiDi(
 )
 
 
-class FrameHeader():
+class FrameHeader:
 
     def __init__(
         self,
@@ -193,7 +193,7 @@ class FrameHeader():
         return False
 
 
-class Frame():
+class Frame:
     """
     Represents a single WebSockets frame.
     Constructor takes human readable forms of the frame components.

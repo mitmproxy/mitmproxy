@@ -20,7 +20,7 @@ from netlib.http import url
 CONF_BASENAME = "mitmproxy"
 
 
-class HostMatcher():
+class HostMatcher:
 
     def __init__(self, patterns=tuple()):
         self.patterns = list(patterns)

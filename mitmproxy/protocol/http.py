@@ -61,7 +61,7 @@ class _HttpTransmissionLayer(base.Layer):
         raise NotImplementedError()
 
 
-class ConnectServerConnection():
+class ConnectServerConnection:
 
     """
     "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.

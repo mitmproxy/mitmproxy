@@ -52,7 +52,7 @@ USERNAME_PASSWORD_VERSION = utils.BiDi(
 )
 
 
-class ClientGreeting():
+class ClientGreeting:
     __slots__ = ("ver", "methods")
 
     def __init__(self, ver, methods):
@@ -89,7 +89,7 @@ class ClientGreeting():
         f.write(self.methods.tostring())
 
 
-class ServerGreeting():
+class ServerGreeting:
     __slots__ = ("ver", "method")
 
     def __init__(self, ver, method):
@@ -117,7 +117,7 @@ class ServerGreeting():
         f.write(struct.pack("!BB", self.ver, self.method))
 
 
-class UsernamePasswordAuth():
+class UsernamePasswordAuth:
     __slots__ = ("ver", "username", "password")
 
     def __init__(self, ver, username, password):
@@ -147,7 +147,7 @@ class UsernamePasswordAuth():
         f.write(self.password.encode())
 
 
-class UsernamePasswordAuthResponse():
+class UsernamePasswordAuthResponse:
     __slots__ = ("ver", "status")
 
     def __init__(self, ver, status):
@@ -170,7 +170,7 @@ class UsernamePasswordAuthResponse():
         f.write(struct.pack("!BB", self.ver, self.status))
 
 
-class Message():
+class Message:
     __slots__ = ("ver", "msg", "atyp", "addr")
 
     def __init__(self, ver, msg, atyp, addr):

@@ -62,7 +62,7 @@ class ProxyServer(tcp.TCPServer):
         h.handle()
 
 
-class ConnectionHandler():
+class ConnectionHandler:
 
     def __init__(self, client_conn, client_address, config, channel):
         self.config = config

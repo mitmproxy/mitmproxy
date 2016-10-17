@@ -6,7 +6,7 @@ from netlib import strutils
 from mitmproxy import exceptions, flow, ctx
 
 
-class ServerPlayback():
+class ServerPlayback:
     def __init__(self):
         self.options = None
 

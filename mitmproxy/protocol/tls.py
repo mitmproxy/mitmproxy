@@ -248,7 +248,7 @@ def get_client_hello(client_conn):
     return client_hello
 
 
-class TlsClientHello():
+class TlsClientHello:
 
     def __init__(self, raw_client_hello):
         self._client_hello = _constructs.ClientHello.parse(raw_client_hello)

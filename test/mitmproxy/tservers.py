@@ -74,7 +74,7 @@ class ProxyThread(threading.Thread):
         self.tmaster.shutdown()
 
 
-class ProxyTestBase():
+class ProxyTestBase:
     # Test Configuration
     ssl = None
     ssloptions = False

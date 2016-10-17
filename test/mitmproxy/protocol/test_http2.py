@@ -89,7 +89,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
         raise NotImplementedError()
 
 
-class _Http2TestBase():
+class _Http2TestBase:
 
     @classmethod
     def setup_class(cls):

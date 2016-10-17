@@ -7,7 +7,7 @@ def _get_name(itm):
     return getattr(itm, "name", itm.__class__.__name__.lower())
 
 
-class Addons():
+class Addons:
     def __init__(self, master):
         self.chain = []
         self.master = master

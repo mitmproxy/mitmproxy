@@ -72,7 +72,7 @@ sslversion_choices = {
 }
 
 
-class SSLKeyLogger():
+class SSLKeyLogger:
 
     def __init__(self, filename):
         self.filename = filename
@@ -111,7 +111,7 @@ log_ssl_key = SSLKeyLogger.create_logfun(
     os.getenv("MITMPROXY_SSLKEYLOGFILE") or os.getenv("SSLKEYLOGFILE"))
 
 
-class _FileLike():
+class _FileLike:
     BLOCKSIZE = 1024 * 32
 
     def __init__(self, o):
@@ -426,7 +426,7 @@ def close_socket(sock):
     sock.close()
 
 
-class _Connection():
+class _Connection:
 
     rbufsize = -1
     wbufsize = -1
@@ -574,7 +574,7 @@ class _Connection():
         return context
 
 
-class ConnectionCloser():
+class ConnectionCloser:
     def __init__(self, conn):
         self.conn = conn
         self._canceled = False
@@ -888,7 +888,7 @@ class Counter:
             self._count -= 1
 
 
-class TCPServer():
+class TCPServer:
     request_queue_size = 20
 
     def __init__(self, address):

@@ -26,7 +26,7 @@ class Column(col_bytes.Column):
 
 
 # This is the same for both edit and display.
-class EncodingMixin():
+class EncodingMixin:
     def __init__(self, data, encoding_args):
         # type: (str) -> TDisplay
         self.encoding_args = encoding_args

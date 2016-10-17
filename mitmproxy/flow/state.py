@@ -177,7 +177,7 @@ class FlowStore(FlowList):
                 f.kill(master)
 
 
-class State():
+class State:
     def __init__(self):
         self.flows = FlowStore()
         self.view = FlowView(self.flows, None)

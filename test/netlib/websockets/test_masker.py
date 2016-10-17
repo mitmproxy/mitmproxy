@@ -4,7 +4,7 @@ import pytest
 from netlib import websockets
 
 
-class TestMasker():
+class TestMasker:
 
     @pytest.mark.parametrize("input,expected", [
         ([b"a"], '00'),

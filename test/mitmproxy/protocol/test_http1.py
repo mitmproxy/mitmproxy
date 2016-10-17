@@ -6,7 +6,7 @@ from netlib.tutils import treq
 from .. import tutils, tservers
 
 
-class TestHTTPFlow():
+class TestHTTPFlow:
 
     def test_repr(self):
         f = tutils.tflow(resp=True, err=True)

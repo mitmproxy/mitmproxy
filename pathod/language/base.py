@@ -10,7 +10,7 @@ from netlib import human
 from . import generators, exceptions
 
 
-class Settings():
+class Settings:
 
     def __init__(
         self,
@@ -60,7 +60,7 @@ v_naked_literal = pp.MatchFirst(
 )
 
 
-class Token():
+class Token:
 
     """
         A token in the specification language. Tokens are immutable. The token

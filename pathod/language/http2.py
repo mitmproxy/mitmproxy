@@ -40,7 +40,7 @@ def get_header(val, headers):
     return None
 
 
-class _HeaderMixin():
+class _HeaderMixin:
     unique_name = None
 
     def values(self, settings):

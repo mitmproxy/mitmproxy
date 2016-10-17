@@ -37,7 +37,7 @@ def test_app_registry():
     assert ar.get(r)
 
 
-class TestHTTPFlow():
+class TestHTTPFlow:
 
     def test_copy(self):
         f = tutils.tflow(resp=True)

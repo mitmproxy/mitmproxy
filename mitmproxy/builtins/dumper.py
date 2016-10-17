@@ -20,7 +20,7 @@ def indent(n, text):
     return "\n".join(pad + i for i in l)
 
 
-class Dumper():
+class Dumper:
     def __init__(self):
         self.filter = None  # type: flowfilter.TFilter
         self.flow_detail = None  # type: int

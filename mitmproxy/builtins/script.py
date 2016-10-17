@@ -215,7 +215,7 @@ class Script:
         self.dead = True
 
 
-class ScriptLoader():
+class ScriptLoader:
     """
         An addon that manages loading scripts from options.
     """

@@ -7,7 +7,7 @@ from mitmproxy import protocol
 from mitmproxy.proxy import modes
 
 
-class RootContext():
+class RootContext:
 
     """
     The outermost context provided to the root layer.

@@ -38,7 +38,7 @@ class InterceptionResult(Enum):
     skipped = None
 
 
-class _TlsStrategy():
+class _TlsStrategy:
     """
     Abstract base class for interception strategies.
     """

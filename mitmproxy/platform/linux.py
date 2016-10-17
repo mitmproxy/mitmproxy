@@ -5,7 +5,7 @@ import struct
 SO_ORIGINAL_DST = 80
 
 
-class Resolver():
+class Resolver:
 
     def original_addr(self, csock):
         odestdata = csock.getsockopt(socket.SOL_IP, SO_ORIGINAL_DST, 16)
