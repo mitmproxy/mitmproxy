@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import urwid
 
@@ -144,7 +143,7 @@ class Options(urwid.WidgetWrap):
             self.lb,
             header = title
         )
-        super(Options, self).__init__(w)
+        super().__init__(w)
 
         self.master.loop.widget.footer.update("")
         signals.update_settings.connect(self.sig_update_settings)
@@ -157,7 +156,7 @@ class Options(urwid.WidgetWrap):
         if key == "C":
             self.clearall()
             return None
-        return super(self.__class__, self).keypress(size, key)
+        return super().keypress(size, key)
 
     def clearall(self):
         self.master.options.update(

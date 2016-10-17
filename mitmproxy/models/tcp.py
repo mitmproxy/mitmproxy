@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import time
 
@@ -43,7 +42,7 @@ class TCPFlow(Flow):
     """
 
     def __init__(self, client_conn, server_conn, live=None):
-        super(TCPFlow, self).__init__("tcp", client_conn, server_conn, live)
+        super().__init__("tcp", client_conn, server_conn, live)
         self.messages = []  # type: List[TCPMessage]
 
     _stateobject_attributes = Flow._stateobject_attributes.copy()

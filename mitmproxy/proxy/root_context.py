@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import netlib.exceptions
 from mitmproxy import controller

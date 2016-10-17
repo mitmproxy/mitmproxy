@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import re
 
@@ -77,7 +76,7 @@ class Headers(multidict.MultiDict):
                 If ``**headers`` contains multiple keys that have equal ``.lower()`` s,
                 the behavior is undefined.
         """
-        super(Headers, self).__init__(fields)
+        super().__init__(fields)
 
         for key, value in self.fields:
             if not isinstance(key, bytes) or not isinstance(value, bytes):
@@ -108,10 +107,10 @@ class Headers(multidict.MultiDict):
 
     def __delitem__(self, key):
         key = _always_bytes(key)
-        super(Headers, self).__delitem__(key)
+        super().__delitem__(key)
 
     def __iter__(self):
-        for x in super(Headers, self).__iter__():
+        for x in super().__iter__():
             yield _native(x)
 
     def get_all(self, name):
@@ -123,7 +122,7 @@ class Headers(multidict.MultiDict):
         name = _always_bytes(name)
         return [
             _native(x) for x in
-            super(Headers, self).get_all(name)
+            super().get_all(name)
         ]
 
     def set_all(self, name, values):
@@ -133,12 +132,12 @@ class Headers(multidict.MultiDict):
         """
         name = _always_bytes(name)
         values = [_always_bytes(x) for x in values]
-        return super(Headers, self).set_all(name, values)
+        return super().set_all(name, values)
 
     def insert(self, index, key, value):
         key = _always_bytes(key)
         value = _always_bytes(value)
-        super(Headers, self).insert(index, key, value)
+        super().insert(index, key, value)
 
     def items(self, multi=False):
         if multi:
@@ -147,7 +146,7 @@ class Headers(multidict.MultiDict):
                 for k, v in self.fields
             )
         else:
-            return super(Headers, self).items()
+            return super().items()
 
     def replace(self, pattern, repl, flags=0, count=0):
         """

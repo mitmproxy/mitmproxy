@@ -449,7 +449,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
 
     @classmethod
     def get_options(cls):
-        opts = super(tservers.HTTPProxyTest, cls).get_options()
+        opts = super().get_options()
         opts.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
             "data/servercert/trusted-root.pem"
         )
@@ -540,7 +540,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
 
     @classmethod
     def get_options(cls):
-        opts = super(TestHttps2Http, cls).get_options()
+        opts = super().get_options()
         s = parse_server_spec(opts.upstream_server)
         opts.upstream_server = "http://%s" % s.address
         return opts
@@ -700,13 +700,13 @@ class MasterRedirectRequest(tservers.TestMaster):
 
             # This is the actual redirection.
             f.request.port = self.redirect_port
-        super(MasterRedirectRequest, self).request(f)
+        super().request(f)
 
     @controller.handler
     def response(self, f):
         f.response.content = bytes(f.client_conn.address.port)
         f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
-        super(MasterRedirectRequest, self).response(f)
+        super().response(f)
 
 
 class TestRedirectRequest(tservers.HTTPProxyTest):
@@ -954,19 +954,19 @@ class TestUpstreamProxySSL(
         delattr(self, "_ignore_%s_backup" % attr)
 
     def _ignore_on(self):
-        super(TestUpstreamProxySSL, self)._ignore_on()
+        super()._ignore_on()
         self._host_pattern_on("ignore")
 
     def _ignore_off(self):
-        super(TestUpstreamProxySSL, self)._ignore_off()
+        super()._ignore_off()
         self._host_pattern_off("ignore")
 
     def _tcpproxy_on(self):
-        super(TestUpstreamProxySSL, self)._tcpproxy_on()
+        super()._tcpproxy_on()
         self._host_pattern_on("tcp")
 
     def _tcpproxy_off(self):
-        super(TestUpstreamProxySSL, self)._tcpproxy_off()
+        super()._tcpproxy_off()
         self._host_pattern_off("tcp")
 
     def test_simple(self):
@@ -1110,7 +1110,7 @@ class TestHTTPSAddUpstreamCertsToClientChainTrue(
     """
     @classmethod
     def get_options(cls):
-        opts = super(tservers.HTTPProxyTest, cls).get_options()
+        opts = super().get_options()
         opts.add_upstream_certs_to_client_chain = True
         return opts
 
@@ -1125,6 +1125,6 @@ class TestHTTPSAddUpstreamCertsToClientChainFalse(
     """
     @classmethod
     def get_options(cls):
-        opts = super(tservers.HTTPProxyTest, cls).get_options()
+        opts = super().get_options()
         opts.add_upstream_certs_to_client_chain = False
         return opts

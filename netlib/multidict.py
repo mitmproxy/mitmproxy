@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from abc import ABCMeta, abstractmethod
 
@@ -163,7 +162,7 @@ class _MultiDict(MutableMapping, basetypes.Serializable, metaclass=ABCMeta):
         if multi:
             return self.fields
         else:
-            return super(_MultiDict, self).items()
+            return super().items()
 
     def collect(self):
         """
@@ -215,7 +214,7 @@ class _MultiDict(MutableMapping, basetypes.Serializable, metaclass=ABCMeta):
 
 class MultiDict(_MultiDict):
     def __init__(self, fields=()):
-        super(MultiDict, self).__init__()
+        super().__init__()
         self.fields = tuple(
             tuple(i) for i in fields
         )
@@ -244,6 +243,7 @@ class ImmutableMultiDict(MultiDict, metaclass=ABCMeta):
             An updated ImmutableMultiDict. The original object will not be modified.
         """
         ret = self.copy()
+        # FIXME: This is filthy...
         super(ImmutableMultiDict, ret).__delitem__(key)
         return ret
 
@@ -253,6 +253,7 @@ class ImmutableMultiDict(MultiDict, metaclass=ABCMeta):
             An updated ImmutableMultiDict. The original object will not be modified.
         """
         ret = self.copy()
+        # FIXME: This is filthy...
         super(ImmutableMultiDict, ret).set_all(key, values)
         return ret
 
@@ -262,6 +263,7 @@ class ImmutableMultiDict(MultiDict, metaclass=ABCMeta):
             An updated ImmutableMultiDict. The original object will not be modified.
         """
         ret = self.copy()
+        # FIXME: This is filthy...
         super(ImmutableMultiDict, ret).insert(index, key, value)
         return ret
 
@@ -275,7 +277,7 @@ class MultiDictView(_MultiDict):
     def __init__(self, getter, setter):
         self._getter = getter
         self._setter = setter
-        super(MultiDictView, self).__init__()
+        super().__init__()
 
     @staticmethod
     def _kconv(key):

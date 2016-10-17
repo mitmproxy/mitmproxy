@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import typing
 from typing import Optional
@@ -29,7 +28,7 @@ class Options(options.Options):
         self.flow_detail = flow_detail
         self.keepserving = keepserving
         self.tfile = tfile
-        super(Options, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class DumpMaster(flow.FlowMaster):
@@ -86,4 +85,4 @@ class DumpMaster(flow.FlowMaster):
         if self.options.rfile and not self.options.keepserving:
             self.addons.done()
             return
-        super(DumpMaster, self).run()
+        super().run()

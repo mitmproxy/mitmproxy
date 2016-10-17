@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import math
 import os
@@ -134,7 +133,7 @@ class FlowView(tabs.Tabs):
 
     def __init__(self, master, state, flow, tab_offset):
         self.master, self.state, self.flow = master, state, flow
-        super(FlowView, self).__init__(
+        super().__init__(
             [
                 (self.tab_request, self.view_request),
                 (self.tab_response, self.view_response),
@@ -508,7 +507,7 @@ class FlowView(tabs.Tabs):
         elif self.tab_offset == TAB_RESP:
             conn = self.flow.response
 
-        key = super(self.__class__, self).keypress(size, key)
+        key = super().keypress(size, key)
 
         # Special case: Space moves over to the next flow.
         # We need to catch that before applying common.shortcuts()

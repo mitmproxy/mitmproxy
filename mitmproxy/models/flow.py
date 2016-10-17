@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import time
 import copy
@@ -97,7 +96,7 @@ class Flow(stateobject.StateObject):
     )
 
     def get_state(self):
-        d = super(Flow, self).get_state()
+        d = super().get_state()
         d.update(version=version.IVERSION)
         if self._backup and self._backup != d:
             d.update(backup=self._backup)
@@ -107,7 +106,7 @@ class Flow(stateobject.StateObject):
         state.pop("version")
         if "backup" in state:
             self._backup = state.pop("backup")
-        super(Flow, self).set_state(state)
+        super().set_state(state)
 
     @classmethod
     def from_state(cls, state):

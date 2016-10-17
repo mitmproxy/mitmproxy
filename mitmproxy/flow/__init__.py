@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from mitmproxy.flow import export, modules
 from mitmproxy.flow.io import FlowWriter, FilteredFlowWriter, FlowReader, read_flows_from_paths

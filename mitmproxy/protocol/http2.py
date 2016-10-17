@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import threading
 import time
@@ -24,7 +23,7 @@ from netlib.http import http2
 class SafeH2Connection(connection.H2Connection):
 
     def __init__(self, conn, *args, **kwargs):
-        super(SafeH2Connection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.conn = conn
         self.lock = threading.RLock()
 
@@ -89,7 +88,7 @@ class SafeH2Connection(connection.H2Connection):
 class Http2Layer(base.Layer):
 
     def __init__(self, ctx, mode):
-        super(Http2Layer, self).__init__(ctx)
+        super().__init__(ctx)
         self.mode = mode
         self.streams = dict()
         self.server_to_client_stream_ids = dict([(0, 0)])
@@ -363,7 +362,7 @@ def detect_zombie_stream(func):
 class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread):
 
     def __init__(self, ctx, h2_connection, stream_id, request_headers):
-        super(Http2SingleStreamLayer, self).__init__(
+        super().__init__(
             ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
         )
         self.h2_connection = h2_connection

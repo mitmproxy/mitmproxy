@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 import time
 
 import copy
@@ -27,7 +26,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         # Eventually, this object is restored from state. We don't have a
         # connection then.
         if client_connection:
-            super(ClientConnection, self).__init__(client_connection, address, server)
+            super().__init__(client_connection, address, server)
         else:
             self.connection = None
             self.server = None
@@ -91,11 +90,11 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         ))
 
     def convert_to_ssl(self, *args, **kwargs):
-        super(ClientConnection, self).convert_to_ssl(*args, **kwargs)
+        super().convert_to_ssl(*args, **kwargs)
         self.timestamp_ssl_setup = time.time()
 
     def finish(self):
-        super(ClientConnection, self).finish()
+        super().finish()
         self.timestamp_end = time.time()
 
 

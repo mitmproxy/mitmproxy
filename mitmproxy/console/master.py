@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import mailcap
 import mimetypes
@@ -65,19 +64,19 @@ class ConsoleState(flow.State):
         return d.get(key, default)
 
     def add_flow(self, f):
-        super(ConsoleState, self).add_flow(f)
+        super().add_flow(f)
         signals.flowlist_change.send(self)
         self.update_focus()
         return f
 
     def update_flow(self, f):
-        super(ConsoleState, self).update_flow(f)
+        super().update_flow(f)
         signals.flowlist_change.send(self)
         self.update_focus()
         return f
 
     def set_view_filter(self, txt):
-        ret = super(ConsoleState, self).set_view_filter(txt)
+        ret = super().set_view_filter(txt)
         self.set_focus(self.focus)
         return ret
 
@@ -121,7 +120,7 @@ class ConsoleState(flow.State):
             self.focus -= 1
         if self.focus < 0:
             self.focus = None
-        ret = super(ConsoleState, self).delete_flow(f)
+        ret = super().delete_flow(f)
         self.set_focus(self.focus)
         return ret
 
@@ -185,7 +184,7 @@ class ConsoleState(flow.State):
 
     def clear(self):
         marked_flows = [f for f in self.view if f.marked]
-        super(ConsoleState, self).clear()
+        super().clear()
 
         for f in marked_flows:
             self.add_flow(f)
@@ -217,7 +216,7 @@ class Options(mitmproxy.options.Options):
         self.palette = palette
         self.palette_transparent = palette_transparent
         self.no_mouse = no_mouse
-        super(Options, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class ConsoleMaster(flow.FlowMaster):
@@ -679,22 +678,22 @@ class ConsoleMaster(flow.FlowMaster):
     # Handlers
     @controller.handler
     def error(self, f):
-        super(ConsoleMaster, self).error(f)
+        super().error(f)
         self.process_flow(f)
 
     @controller.handler
     def request(self, f):
-        super(ConsoleMaster, self).request(f)
+        super().request(f)
         self.process_flow(f)
 
     @controller.handler
     def response(self, f):
-        super(ConsoleMaster, self).response(f)
+        super().response(f)
         self.process_flow(f)
 
     @controller.handler
     def tcp_message(self, f):
-        super(ConsoleMaster, self).tcp_message(f)
+        super().tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
         self.add_log("{client} {direction} tcp {direction} {server}".format(

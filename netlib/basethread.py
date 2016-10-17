@@ -4,7 +4,7 @@ import threading
 
 class BaseThread(threading.Thread):
     def __init__(self, name, *args, **kwargs):
-        super(BaseThread, self).__init__(name=name, *args, **kwargs)
+        super().__init__(name=name, *args, **kwargs)
         self._thread_started = time.time()
 
     def _threadinfo(self):

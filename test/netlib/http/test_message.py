@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
 
 from netlib.tutils import tresp
 from netlib import http, tutils

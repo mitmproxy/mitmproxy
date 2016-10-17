@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import os.path
 
@@ -120,7 +119,7 @@ class StatusBar(urwid.WidgetWrap):
         self.master = master
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        super(StatusBar, self).__init__(urwid.Pile([self.ib, self.master.ab]))
+        super().__init__(urwid.Pile([self.ib, self.master.ab]))
         signals.update_settings.connect(self.sig_update_settings)
         signals.flowlist_change.connect(self.sig_update_settings)
         master.options.changed.connect(self.sig_update_settings)

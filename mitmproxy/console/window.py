@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import urwid
 
@@ -23,7 +22,7 @@ class Window(urwid.Frame):
 
     def mouse_event(self, *args, **kwargs):
         # args: (size, event, button, col, row)
-        k = super(self.__class__, self).mouse_event(*args, **kwargs)
+        k = super().mouse_event(*args, **kwargs)
         if not k:
             if args[1] == "mouse drag":
                 signals.status_message.send(
@@ -83,7 +82,7 @@ class Window(urwid.Frame):
                 )
 
     def keypress(self, size, k):
-        k = super(self.__class__, self).keypress(size, k)
+        k = super().keypress(size, k)
         if k == "?":
             self.master.view_help(self.helpctx)
         elif k == "i":

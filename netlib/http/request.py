@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import re
 import urllib
@@ -65,7 +64,7 @@ class Request(message.Message):
     An HTTP request.
     """
     def __init__(self, *args, **kwargs):
-        super(Request, self).__init__()
+        super().__init__()
         self.data = RequestData(*args, **kwargs)
 
     def __repr__(self):
@@ -92,7 +91,7 @@ class Request(message.Message):
         if isinstance(repl, str):
             repl = strutils.escaped_str_to_bytes(repl)
 
-        c = super(Request, self).replace(pattern, repl, flags, count)
+        c = super().replace(pattern, repl, flags, count)
         self.path, pc = re.subn(
             pattern, repl, self.data.path, flags=flags, count=count
         )

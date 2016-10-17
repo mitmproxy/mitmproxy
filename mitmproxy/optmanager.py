@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import contextlib
 import blinker
@@ -25,7 +24,7 @@ class OptManager:
         # Initialize instance._opts before __init__ is called.
         # This allows us to call super().__init__() last, which then sets
         # ._initialized = True as the final operation.
-        instance = super(OptManager, cls).__new__(cls)
+        instance = super().__new__(cls)
         instance.__dict__["_opts"] = {}
         return instance
 

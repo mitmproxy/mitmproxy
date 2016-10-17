@@ -1,7 +1,6 @@
 """
 Utility functions for decoding response bodies.
 """
-from __future__ import absolute_import
 
 import codecs
 import collections

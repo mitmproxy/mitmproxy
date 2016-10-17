@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import socket
 
@@ -16,7 +15,7 @@ class RawTCPLayer(base.Layer):
 
     def __init__(self, ctx, ignore=False):
         self.ignore = ignore
-        super(RawTCPLayer, self).__init__(ctx)
+        super().__init__(ctx)
 
     def __call__(self):
         self.connect()

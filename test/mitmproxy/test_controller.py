@@ -24,7 +24,7 @@ class TestMaster:
 
             def tick(self, timeout):
                 # Speed up test
-                super(DummyMaster, self).tick(0)
+                super().tick(0)
 
         m = DummyMaster(None)
         assert not m.should_exit.is_set()

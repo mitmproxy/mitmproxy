@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import urwid
 
@@ -44,7 +43,7 @@ class Searchable(urwid.ListBox):
             self.set_focus(len(self.walker) - 1)
             self.walker._modified()
         else:
-            return super(self.__class__, self).keypress(size, key)
+            return super().keypress(size, key)
 
     def set_search(self, text):
         self.state.last_search = text

@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, print_function, division)
 import os
 import select
 import socket
@@ -597,7 +596,7 @@ class ConnectionCloser:
 class TCPClient(_Connection):
 
     def __init__(self, address, source_address=None, spoof_source_address=None):
-        super(TCPClient, self).__init__(None)
+        super().__init__(None)
         self.address = address
         self.source_address = source_address
         self.cert = None
@@ -769,7 +768,7 @@ class BaseHandler(_Connection):
     """
 
     def __init__(self, connection, address, server):
-        super(BaseHandler, self).__init__(connection)
+        super().__init__(connection)
         self.address = Address.wrap(address)
         self.server = server
         self.clientcert = None

@@ -5,7 +5,6 @@ Every Exception mitmproxy raises shall be a subclass of ProxyException.
 
 See also: http://lucumr.pocoo.org/2014/10/16/on-error-handling/
 """
-from __future__ import absolute_import, print_function, division
 
 
 class ProxyException(Exception):
@@ -15,7 +14,7 @@ class ProxyException(Exception):
     """
 
     def __init__(self, message=None):
-        super(ProxyException, self).__init__(message)
+        super().__init__(message)
 
 
 class Kill(ProxyException):
@@ -41,7 +40,7 @@ class TlsProtocolException(ProtocolException):
 class ClientHandshakeException(TlsProtocolException):
 
     def __init__(self, message, server):
-        super(ClientHandshakeException, self).__init__(message)
+        super().__init__(message)
         self.server = server
 
 

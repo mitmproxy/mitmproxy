@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import time
 from email.utils import parsedate_tz, formatdate, mktime_tz
@@ -49,7 +48,7 @@ class Response(message.Message):
     An HTTP response.
     """
     def __init__(self, *args, **kwargs):
-        super(Response, self).__init__()
+        super().__init__()
         self.data = ResponseData(*args, **kwargs)
 
     def __repr__(self):

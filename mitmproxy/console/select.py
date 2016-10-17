@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import urwid
 
@@ -120,4 +119,4 @@ class Select(urwid.ListBox):
             self.keymap[key].activate()
             self.set_focus(self.options.index(self.keymap[key]))
             return None
-        return super(self.__class__, self).keypress(size, key)
+        return super().keypress(size, key)

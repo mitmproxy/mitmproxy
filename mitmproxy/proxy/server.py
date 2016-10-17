@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import socket
 import sys
@@ -40,7 +39,7 @@ class ProxyServer(tcp.TCPServer):
         """
         self.config = config
         try:
-            super(ProxyServer, self).__init__(
+            super().__init__(
                 (config.options.listen_host, config.options.listen_port)
             )
         except socket.error as e:

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 from mitmproxy import models
 from mitmproxy.protocol import http
@@ -8,7 +7,7 @@ from netlib.http import http1
 class Http1Layer(http._HttpTransmissionLayer):
 
     def __init__(self, ctx, mode):
-        super(Http1Layer, self).__init__(ctx)
+        super().__init__(ctx)
         self.mode = mode
 
     def read_request_headers(self):

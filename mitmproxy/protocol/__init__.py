@@ -28,7 +28,6 @@ should be established as late as possible; this makes server replay without any
 outgoing connections possible.
 """
 
-from __future__ import absolute_import, print_function, division
 
 from .base import Layer, ServerConnectionMixin
 from .http import UpstreamConnectLayer

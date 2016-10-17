@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import os
 from typing import Callable, Optional
@@ -74,7 +73,7 @@ class Display(base.Cell):
         self.data = data
         escaped = strutils.bytes_to_escaped_str(data)
         w = urwid.Text(escaped, wrap="any")
-        super(Display, self).__init__(w)
+        super().__init__(w)
 
     def get_data(self) -> bytes:
         return self.data
@@ -85,7 +84,7 @@ class Edit(base.Cell):
         data = strutils.bytes_to_escaped_str(data)
         w = urwid.Edit(edit_text=data, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")
-        super(Edit, self).__init__(w)
+        super().__init__(w)
 
     def get_data(self) -> bytes:
         txt = self._w.get_text()[0].strip()

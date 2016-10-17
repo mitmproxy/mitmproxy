@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import h2.exceptions
 import netlib.exceptions
@@ -85,7 +84,7 @@ class ConnectServerConnection:
 class UpstreamConnectLayer(base.Layer):
 
     def __init__(self, ctx, connect_request):
-        super(UpstreamConnectLayer, self).__init__(ctx)
+        super().__init__(ctx)
         self.connect_request = connect_request
         self.server_conn = ConnectServerConnection(
             (connect_request.host, connect_request.port),
@@ -125,7 +124,7 @@ class UpstreamConnectLayer(base.Layer):
 class HttpLayer(base.Layer):
 
     def __init__(self, ctx, mode):
-        super(HttpLayer, self).__init__(ctx)
+        super().__init__(ctx)
         self.mode = mode
 
         self.__initial_server_conn = None

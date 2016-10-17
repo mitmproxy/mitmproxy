@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import cgi
 
@@ -57,7 +56,7 @@ class HTTPRequest(http.Request):
         self.is_replay = is_replay
 
     def get_state(self):
-        state = super(HTTPRequest, self).get_state()
+        state = super().get_state()
         state.update(
             stickycookie=self.stickycookie,
             stickyauth=self.stickyauth,
@@ -69,7 +68,7 @@ class HTTPRequest(http.Request):
         self.stickycookie = state.pop("stickycookie")
         self.stickyauth = state.pop("stickyauth")
         self.is_replay = state.pop("is_replay")
-        super(HTTPRequest, self).set_state(state)
+        super().set_state(state)
 
     @classmethod
     def wrap(self, request):
@@ -154,7 +153,7 @@ class HTTPFlow(flow.Flow):
     """
 
     def __init__(self, client_conn, server_conn, live=None):
-        super(HTTPFlow, self).__init__("http", client_conn, server_conn, live)
+        super().__init__("http", client_conn, server_conn, live)
 
         self.request = None
         """ :py:class:`HTTPRequest` object """
@@ -189,7 +188,7 @@ class HTTPFlow(flow.Flow):
         return s.format(flow=self)
 
     def copy(self):
-        f = super(HTTPFlow, self).copy()
+        f = super().copy()
         if self.request:
             f.request = self.request.copy()
         if self.response:

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import functools
 import threading
@@ -177,7 +176,7 @@ class ServerThread(basethread.BaseThread):
     def __init__(self, server):
         self.server = server
         address = getattr(self.server, "address", None)
-        super(ServerThread, self).__init__(
+        super().__init__(
             "ServerThread ({})".format(repr(address))
         )
 
@@ -362,7 +361,7 @@ class DummyReply(Reply):
     and during testing.
     """
     def __init__(self):
-        super(DummyReply, self).__init__(None)
+        super().__init__(None)
         self._should_reset = False
 
     def mark_reset(self):

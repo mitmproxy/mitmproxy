@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import urwid
 
@@ -25,7 +24,7 @@ class Tab(urwid.WidgetWrap):
 class Tabs(urwid.WidgetWrap):
 
     def __init__(self, tabs, tab_offset=0):
-        super(Tabs, self).__init__("")
+        super().__init__("")
         self.tab_offset = tab_offset
         self.tabs = tabs
         self.show()

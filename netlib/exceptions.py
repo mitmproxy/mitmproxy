@@ -5,7 +5,6 @@ Every Exception netlib raises shall be a subclass of NetlibException.
 
 See also: http://lucumr.pocoo.org/2014/10/16/on-error-handling/
 """
-from __future__ import absolute_import, print_function, division
 
 
 class NetlibException(Exception):
@@ -13,7 +12,7 @@ class NetlibException(Exception):
     Base class for all exceptions thrown by netlib.
     """
     def __init__(self, message=None):
-        super(NetlibException, self).__init__(message)
+        super().__init__(message)
 
 
 class Disconnect:

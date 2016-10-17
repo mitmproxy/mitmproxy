@@ -31,7 +31,6 @@
         ~c CODE     Response code.
         rex         Equivalent to ~u rex
 """
-from __future__ import absolute_import, print_function, division
 
 import re
 import sys
@@ -373,7 +372,7 @@ class FAnd(_Token):
         self.lst = lst
 
     def dump(self, indent=0, fp=sys.stdout):
-        super(FAnd, self).dump(indent, fp)
+        super().dump(indent, fp)
         for i in self.lst:
             i.dump(indent + 1, fp)
 
@@ -387,7 +386,7 @@ class FOr(_Token):
         self.lst = lst
 
     def dump(self, indent=0, fp=sys.stdout):
-        super(FOr, self).dump(indent, fp)
+        super().dump(indent, fp)
         for i in self.lst:
             i.dump(indent + 1, fp)
 
@@ -401,7 +400,7 @@ class FNot(_Token):
         self.itm = itm[0]
 
     def dump(self, indent=0, fp=sys.stdout):
-        super(FNot, self).dump(indent, fp)
+        super().dump(indent, fp)
         self.itm.dump(indent + 1, fp)
 
     def __call__(self, f):

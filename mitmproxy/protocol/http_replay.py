@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, division
 
 import traceback
 
@@ -27,7 +26,7 @@ class RequestReplayThread(basethread.BaseThread):
             self.channel = controller.Channel(event_queue, should_exit)
         else:
             self.channel = None
-        super(RequestReplayThread, self).__init__(
+        super().__init__(
             "RequestReplay (%s)" % flow.request.url
         )
 

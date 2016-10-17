@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, print_function, division)
 import struct
 import array
 import ipaddress
@@ -8,7 +7,7 @@ from netlib import tcp, utils
 
 class SocksError(Exception):
     def __init__(self, code, message):
-        super(SocksError, self).__init__(message)
+        super().__init__(message)
         self.code = code
 
 VERSION = utils.BiDi(
