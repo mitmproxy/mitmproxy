@@ -1,5 +1,4 @@
-import six
-from six.moves import urllib
+import urllib
 
 from netlib import utils
 
@@ -41,7 +40,7 @@ def parse(url):
     if not parsed.hostname:
         raise ValueError("No hostname given")
 
-    if isinstance(url, six.binary_type):
+    if isinstance(url, bytes):
         host = parsed.hostname
 
         # this should not raise a ValueError,
@@ -86,20 +85,14 @@ def encode(s):
     """
         Takes a list of (key, value) tuples and returns a urlencoded string.
     """
-    if six.PY2:
-        return urllib.parse.urlencode(s, False)
-    else:
-        return urllib.parse.urlencode(s, False, errors="surrogateescape")
+    return urllib.parse.urlencode(s, False, errors="surrogateescape")
 
 
 def decode(s):
     """
         Takes a urlencoded string and returns a list of surrogate-escaped (key, value) tuples.
     """
-    if six.PY2:
-        return urllib.parse.parse_qsl(s, keep_blank_values=True)
-    else:
-        return urllib.parse.parse_qsl(s, keep_blank_values=True, errors='surrogateescape')
+    return urllib.parse.parse_qsl(s, keep_blank_values=True, errors='surrogateescape')
 
 
 def quote(b, safe="/"):
@@ -108,10 +101,7 @@ def quote(b, safe="/"):
         An ascii-encodable str.
     """
     # type: (str) -> str
-    if six.PY2:
-        return urllib.parse.quote(b, safe=safe)
-    else:
-        return urllib.parse.quote(b, safe=safe, errors="surrogateescape")
+    return urllib.parse.quote(b, safe=safe, errors="surrogateescape")
 
 
 def unquote(s):
@@ -122,11 +112,7 @@ def unquote(s):
         A surrogate-escaped str
     """
     # type: (str) -> str
-
-    if six.PY2:
-        return urllib.parse.unquote(s)
-    else:
-        return urllib.parse.unquote(s, errors="surrogateescape")
+    return urllib.parse.unquote(s, errors="surrogateescape")
 
 
 def hostport(scheme, host, port):
@@ -136,7 +122,7 @@ def hostport(scheme, host, port):
     if (port, scheme) in [(80, "http"), (443, "https"), (80, b"http"), (443, b"https")]:
         return host
     else:
-        if isinstance(host, six.binary_type):
+        if isinstance(host, bytes):
             return b"%s:%d" % (host, port)
         else:
             return "%s:%d" % (host, port)

@@ -4,7 +4,6 @@ import os
 import time
 import shutil
 from contextlib import contextmanager
-import six
 import sys
 
 from netlib import utils, tcp, http
@@ -31,20 +30,20 @@ def tmpdir(*args, **kwargs):
 
 
 def _check_exception(expected, actual, exc_tb):
-    if isinstance(expected, six.string_types):
+    if isinstance(expected, str):
         if expected.lower() not in str(actual).lower():
-            six.reraise(AssertionError, AssertionError(
+            raise AssertionError(
                 "Expected %s, but caught %s" % (
                     repr(expected), repr(actual)
                 )
-            ), exc_tb)
+            )
     else:
         if not isinstance(actual, expected):
-            six.reraise(AssertionError, AssertionError(
+            raise AssertionError(
                 "Expected %s, but caught %s %s" % (
                     expected.__name__, actual.__class__.__name__, repr(actual)
                 )
-            ), exc_tb)
+            )
 
 
 def raises(expected_exception, obj=None, *args, **kwargs):

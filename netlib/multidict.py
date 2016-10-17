@@ -8,12 +8,10 @@ try:
 except ImportError:  # pragma: no cover
     from collections import MutableMapping  # Workaround for Python < 3.3
 
-import six
 from netlib import basetypes
 
 
-@six.add_metaclass(ABCMeta)
-class _MultiDict(MutableMapping, basetypes.Serializable):
+class _MultiDict(MutableMapping, basetypes.Serializable, metaclass=ABCMeta):
     def __repr__(self):
         fields = (
             repr(field)
@@ -231,8 +229,7 @@ class MultiDict(_MultiDict):
         return key
 
 
-@six.add_metaclass(ABCMeta)
-class ImmutableMultiDict(MultiDict):
+class ImmutableMultiDict(MultiDict, metaclass=ABCMeta):
     def _immutable(self, *_):
         raise TypeError('{} objects are immutable'.format(self.__class__.__name__))
 

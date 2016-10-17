@@ -5,7 +5,6 @@ from __future__ import absolute_import
 
 import codecs
 import collections
-import six
 from io import BytesIO
 
 import gzip
@@ -91,7 +90,7 @@ def encode(decoded, encoding, errors='strict'):
     try:
         try:
             value = decoded
-            if not six.PY2 and isinstance(value, six.string_types):
+            if isinstance(value, str):
                 value = decoded.encode()
             encoded = custom_encode[encoding](value)
         except KeyError:

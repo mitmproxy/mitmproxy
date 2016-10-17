@@ -7,7 +7,6 @@ from __future__ import division, absolute_import, print_function
 import sys
 import inspect
 import os.path
-import six
 
 import OpenSSL
 
@@ -15,7 +14,7 @@ PYOPENSSL_MIN_VERSION = (0, 15)
 
 
 def check_pyopenssl_version(min_version=PYOPENSSL_MIN_VERSION, fp=sys.stderr):
-    min_version_str = u".".join(six.text_type(x) for x in min_version)
+    min_version_str = u".".join(str(x) for x in min_version)
     try:
         v = tuple(int(x) for x in OpenSSL.__version__.split(".")[:2])
     except ValueError:

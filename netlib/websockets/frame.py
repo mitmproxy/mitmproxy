@@ -3,8 +3,6 @@ import os
 import struct
 import io
 
-import six
-
 from netlib import tcp
 from netlib import strutils
 from netlib import utils
@@ -129,7 +127,7 @@ class FrameHeader(object):
 
         second_byte = utils.setbit(self.length_code, 7, self.mask)
 
-        b = six.int2byte(first_byte) + six.int2byte(second_byte)
+        b = bytes([first_byte, second_byte])
 
         if self.payload_length < 126:
             pass
@@ -148,17 +146,12 @@ class FrameHeader(object):
             b += self.masking_key
         return b
 
-    if six.PY2:
-        __str__ = __bytes__
-
     @classmethod
     def from_file(cls, fp):
         """
           read a websockets frame header
         """
-        first_byte = six.byte2int(fp.safe_read(1))
-        second_byte = six.byte2int(fp.safe_read(1))
-
+        first_byte, second_byte = fp.safe_read(2)
         fin = utils.getbit(first_byte, 7)
         rsv1 = utils.getbit(first_byte, 6)
         rsv2 = utils.getbit(first_byte, 5)
@@ -256,9 +249,6 @@ class Frame(object):
         else:
             b += self.payload
         return b
-
-    if six.PY2:
-        __str__ = __bytes__
 
     @classmethod
     def from_file(cls, fp):
