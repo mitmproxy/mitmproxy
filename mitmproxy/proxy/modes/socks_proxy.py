@@ -1,9 +1,7 @@
-
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import protocol
 from netlib import socks
-from netlib import tcp
 
 
 class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
