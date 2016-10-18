@@ -1,19 +1,18 @@
 import cgi
 
-from mitmproxy import flow
 from mitmproxy import connections  # noqa
-from netlib import http
-from netlib import version
-from netlib import tcp
+from mitmproxy import flow
+from mitmproxy import version
+from mitmproxy.net import http
+from mitmproxy.net import tcp
 
 
 class HTTPRequest(http.Request):
-
     """
     A mitmproxy HTTP request.
     """
 
-    # This is a very thin wrapper on top of :py:class:`netlib.http.Request` and
+    # This is a very thin wrapper on top of :py:class:`mitmproxy.net.http.Request` and
     # may be removed in the future.
 
     def __init__(
@@ -74,7 +73,7 @@ class HTTPRequest(http.Request):
     @classmethod
     def wrap(self, request):
         """
-        Wraps an existing :py:class:`netlib.http.Request`.
+        Wraps an existing :py:class:`mitmproxy.net.http.Request`.
         """
         req = HTTPRequest(
             first_line_format=request.data.first_line_format,
@@ -96,11 +95,11 @@ class HTTPRequest(http.Request):
 
 
 class HTTPResponse(http.Response):
-
     """
     A mitmproxy HTTP response.
     """
-    # This is a very thin wrapper on top of :py:class:`netlib.http.Response` and
+
+    # This is a very thin wrapper on top of :py:class:`mitmproxy.net.http.Response` and
     # may be removed in the future.
 
     def __init__(
@@ -132,7 +131,7 @@ class HTTPResponse(http.Response):
     @classmethod
     def wrap(self, response):
         """
-        Wraps an existing :py:class:`netlib.http.Response`.
+        Wraps an existing :py:class:`mitmproxy.net.http.Response`.
         """
         resp = HTTPResponse(
             http_version=response.data.http_version,
@@ -147,7 +146,6 @@ class HTTPResponse(http.Response):
 
 
 class HTTPFlow(flow.Flow):
-
     """
     An HTTPFlow is a collection of objects representing a single HTTP
     transaction.
@@ -257,6 +255,7 @@ def make_connect_response(http_version):
         http.Headers(),
         b"",
     )
+
 
 expect_continue_response = HTTPResponse(
     b"HTTP/1.1", 100, b"Continue", http.Headers(), b""

@@ -1,8 +1,8 @@
 import mock
 import io
 
-import netlib.utils
-from netlib.http import Headers
+import mitmproxy.test.tutils
+from mitmproxy.net.http import Headers
 import mitmproxy.io
 from mitmproxy import flowfilter, options
 from mitmproxy.addons import state
@@ -59,7 +59,7 @@ class TestHTTPFlow:
 
     def test_backup(self):
         f = tutils.tflow()
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         f.request.content = b"foo"
         assert not f.modified()
         f.backup()
@@ -212,7 +212,7 @@ class TestState:
         assert c.add_flow(newf)
         assert c.active_flow_count() == 2
 
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         assert c.update_flow(f)
         assert c.flow_count() == 2
         assert c.active_flow_count() == 1
@@ -220,7 +220,7 @@ class TestState:
         assert not c.update_flow(None)
         assert c.active_flow_count() == 1
 
-        newf.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        newf.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         assert c.update_flow(newf)
         assert c.active_flow_count() == 0
 
@@ -252,7 +252,7 @@ class TestState:
         c.set_view_filter("~s")
         assert c.filter_txt == "~s"
         assert len(c.view) == 0
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         c.update_flow(f)
         assert len(c.view) == 1
         c.set_view_filter(None)
@@ -284,7 +284,7 @@ class TestState:
     def _add_response(self, state):
         f = tutils.tflow()
         state.add_flow(f)
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         state.update_flow(f)
 
     def _add_error(self, state):
@@ -444,11 +444,11 @@ class TestFlowMaster:
         fm.addons.add(s)
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
-        f.request = http.HTTPRequest.wrap(netlib.tutils.treq())
+        f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
         fm.request(f)
         assert s.flow_count() == 1
 
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         fm.response(f)
         assert s.flow_count() == 1
 
@@ -473,7 +473,7 @@ class TestRequest:
         assert r.get_state() == r2.get_state()
 
     def test_get_url(self):
-        r = http.HTTPRequest.wrap(netlib.tutils.treq())
+        r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
 
         assert r.url == "http://address:22/path"
 
@@ -494,7 +494,7 @@ class TestRequest:
         assert r.pretty_url == "https://foo.com:22/path"
 
     def test_replace(self):
-        r = http.HTTPRequest.wrap(netlib.tutils.treq())
+        r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
         r.path = "path/foo"
         r.headers["Foo"] = "fOo"
         r.content = b"afoob"
@@ -504,7 +504,7 @@ class TestRequest:
         assert r.headers["boo"] == "boo"
 
     def test_constrain_encoding(self):
-        r = http.HTTPRequest.wrap(netlib.tutils.treq())
+        r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
         r.headers["accept-encoding"] = "gzip, oink"
         r.constrain_encoding()
         assert "oink" not in r.headers["accept-encoding"]
@@ -514,7 +514,7 @@ class TestRequest:
         assert "oink" not in r.headers["accept-encoding"]
 
     def test_get_content_type(self):
-        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         resp.headers = Headers(content_type="text/plain")
         assert resp.headers["content-type"] == "text/plain"
 
@@ -528,7 +528,7 @@ class TestResponse:
         assert resp2.get_state() == resp.get_state()
 
     def test_replace(self):
-        r = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        r = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         r.headers["Foo"] = "fOo"
         r.content = b"afoob"
         assert r.replace("foo(?i)", "boo") == 3
@@ -536,7 +536,7 @@ class TestResponse:
         assert r.headers["boo"] == "boo"
 
     def test_get_content_type(self):
-        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         resp.headers = Headers(content_type="text/plain")
         assert resp.headers["content-type"] == "text/plain"
 

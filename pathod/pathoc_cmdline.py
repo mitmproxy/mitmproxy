@@ -3,9 +3,9 @@ import argparse
 import os
 import os.path
 
-from netlib import tcp
-from netlib import version
-from netlib.http import user_agents
+from mitmproxy.net import tcp
+from mitmproxy import version
+from mitmproxy.net.http import user_agents
 from . import pathoc, language
 
 

@@ -1,7 +1,7 @@
 import re
 
-import netlib.tutils
-from netlib.http import Headers
+import mitmproxy.test.tutils
+from mitmproxy.net.http import Headers
 from mitmproxy import export  # heh
 from . import tutils
 
@@ -20,15 +20,15 @@ def python_equals(testdata, text):
 
 
 def req_get():
-    return netlib.tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz")
+    return mitmproxy.test.tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz")
 
 
 def req_post():
-    return netlib.tutils.treq(method=b'POST', headers=())
+    return mitmproxy.test.tutils.treq(method=b'POST', headers=())
 
 
 def req_patch():
-    return netlib.tutils.treq(method=b'PATCH', path=b"/path?query=param")
+    return mitmproxy.test.tutils.treq(method=b'PATCH', path=b"/path?query=param")
 
 
 class TestExportCurlCommand:

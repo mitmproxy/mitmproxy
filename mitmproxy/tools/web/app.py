@@ -15,7 +15,7 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import contentviews
 from mitmproxy import io
-from netlib import version
+from mitmproxy import version
 
 
 def convert_flow_to_json_dict(flow: flow.Flow) -> dict:

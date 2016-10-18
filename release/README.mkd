@@ -7,7 +7,7 @@
   - Only if an emergency bugfix is needed, we push a new `0.x.y` bugfix release
     for a single project. This matches with what we do in `setup.py`:
 
-        "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
+        "mitmproxy>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
 
 
 # Release Checklist

@@ -6,7 +6,7 @@ from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 
-from netlib import version
+from mitmproxy import version
 
 footer = [
     ("heading", 'mitmproxy {} (Python {}) '.format(version.VERSION, platform.python_version())),

@@ -4,16 +4,16 @@ import os
 import re
 from typing import Any
 
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 from OpenSSL import SSL, crypto
 
 from mitmproxy import exceptions
 from mitmproxy import options as moptions
-from netlib import certutils
-from netlib import tcp
-from netlib.http import authentication
-from netlib.http import url
+from mitmproxy import certs
+from mitmproxy.net import tcp
+from mitmproxy.net.http import authentication
+from mitmproxy.net.http import url
 
 CONF_BASENAME = "mitmproxy"
 
@@ -106,7 +106,7 @@ class ProxyConfig:
                 "Certificate Authority parent directory does not exist: %s" %
                 os.path.dirname(options.cadir)
             )
-        self.certstore = certutils.CertStore.from_store(
+        self.certstore = certs.CertStore.from_store(
             certstore_path,
             CONF_BASENAME
         )

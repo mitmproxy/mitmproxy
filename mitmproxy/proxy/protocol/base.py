@@ -1,4 +1,3 @@
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import connections
 
@@ -177,7 +176,7 @@ class ServerConnectionMixin:
         self.channel.ask("serverconnect", self.server_conn)
         try:
             self.server_conn.connect()
-        except netlib.exceptions.TcpException as e:
+        except exceptions.TcpException as e:
             raise exceptions.ProtocolException(
                 "Server connection to {} failed: {}".format(
                     repr(self.server_conn.address), str(e)

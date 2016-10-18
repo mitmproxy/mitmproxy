@@ -2,12 +2,12 @@ import abc
 
 import pyparsing as pp
 
-from netlib.http import url
-import netlib.websockets
-from netlib.http import status_codes, user_agents
+from mitmproxy.net.http import url
+import mitmproxy.net.websockets
+from mitmproxy.net.http import status_codes, user_agents
 from . import base, exceptions, actions, message
 
-# TODO: use netlib.semantics.protocol assemble method,
+# TODO: use mitmproxy.net.semantics.protocol assemble method,
 # instead of duplicating the HTTP on-the-wire representation here.
 # see http2 language for an example
 
@@ -198,7 +198,7 @@ class Response(_HTTPMessage):
                     1,
                     StatusCode(101)
                 )
-            headers = netlib.websockets.server_handshake_headers(
+            headers = mitmproxy.net.websockets.server_handshake_headers(
                 settings.websocket_key
             )
             for i in headers.fields:
@@ -310,7 +310,7 @@ class Request(_HTTPMessage):
                     1,
                     Method("get")
                 )
-            for i in netlib.websockets.client_handshake_headers().fields:
+            for i in mitmproxy.net.websockets.client_handshake_headers().fields:
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(

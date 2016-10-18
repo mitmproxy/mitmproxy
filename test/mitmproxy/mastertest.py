@@ -1,7 +1,7 @@
 import contextlib
 
 from . import tutils
-import netlib.tutils
+import mitmproxy.test.tutils
 
 from mitmproxy import master
 from mitmproxy import io
@@ -17,13 +17,13 @@ class TestMaster:
 class MasterTest:
 
     def cycle(self, master, content):
-        f = tutils.tflow(req=netlib.tutils.treq(content=content))
+        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=content))
         master.clientconnect(f.client_conn)
         master.serverconnect(f.server_conn)
         master.request(f)
         if not f.error:
             f.response = http.HTTPResponse.wrap(
-                netlib.tutils.tresp(content=content)
+                mitmproxy.test.tutils.tresp(content=content)
             )
             master.response(f)
         master.clientdisconnect(f)

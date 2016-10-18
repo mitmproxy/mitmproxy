@@ -2,11 +2,11 @@ import os.path
 
 import urwid
 
-import netlib.http.url
+import mitmproxy.net.http.url
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
-from netlib import human
+from mitmproxy.utils import human
 
 
 class ActionBar(urwid.WidgetWrap):
@@ -208,7 +208,7 @@ class StatusBar(urwid.WidgetWrap):
 
         if self.master.options.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.upstream_server
-            r.append("[dest:%s]" % netlib.http.url.unparse(
+            r.append("[dest:%s]" % mitmproxy.net.http.url.unparse(
                 dst.scheme,
                 dst.address.host,
                 dst.address.port

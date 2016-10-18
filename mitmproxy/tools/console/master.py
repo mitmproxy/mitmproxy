@@ -21,7 +21,7 @@ from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io
 from mitmproxy import flowfilter
-from mitmproxy import utils
+from mitmproxy import log
 from mitmproxy.addons import state
 import mitmproxy.options
 from mitmproxy.tools.console import flowlist
@@ -35,7 +35,9 @@ from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import window
 from mitmproxy.flowfilter import FMarked
-from netlib import tcp, strutils
+from mitmproxy.utils import strutils
+
+from mitmproxy.net import tcp
 
 EVENTLOG_SIZE = 500
 
@@ -266,7 +268,7 @@ class ConsoleMaster(master.Master):
         )
 
     def sig_add_log(self, sender, e, level):
-        if self.options.verbosity < utils.log_tier(level):
+        if self.options.verbosity < log.log_tier(level):
             return
 
         if level in ("error", "warn"):
