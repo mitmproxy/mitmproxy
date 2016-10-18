@@ -160,9 +160,6 @@ class WebMaster(flow.FlowMaster):
                 print("Stream file error: {}".format(err), file=sys.stderr)
                 sys.exit(1)
 
-        if self.options.app:
-            self.start_app(self.options.app_host, self.options.app_port)
-
     def run(self):  # pragma: no cover
 
         iol = tornado.ioloop.IOLoop.instance()

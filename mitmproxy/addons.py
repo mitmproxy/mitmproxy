@@ -12,6 +12,13 @@ class Addons:
         self.master = master
         master.options.changed.connect(self._options_update)
 
+    def clear(self):
+        """
+            Remove all addons.
+        """
+        self.done()
+        self.chain = []
+
     def get(self, name):
         """
             Retrieve an addon by name. Addon names are equal to the .name
@@ -43,8 +50,6 @@ class Addons:
         """
             Add addons to the end of the chain, and run their startup events.
         """
-        if not addons:
-            raise ValueError("No addons specified.")
         self.chain.extend(addons)
         for i in addons:
             self.startup(i)

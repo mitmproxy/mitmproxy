@@ -1,7 +1,10 @@
-from . import tservers
+from mitmproxy.builtins import onboarding
+from .. import tservers
 
 
 class TestApp(tservers.HTTPProxyTest):
+    def addons(self):
+        return [onboarding.Onboarding()]
 
     def test_basic(self):
         assert self.app("/").status_code == 200

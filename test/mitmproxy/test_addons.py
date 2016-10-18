@@ -18,3 +18,5 @@ def test_simple():
     a.add(TAddon("one"))
     assert a.get("one")
     assert not a.get("two")
+    a.clear()
+    assert not a.chain

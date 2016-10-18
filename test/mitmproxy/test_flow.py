@@ -17,26 +17,6 @@ from mitmproxy.models.connections import ClientConnection
 from . import tutils
 
 
-def test_app_registry():
-    ar = flow.AppRegistry()
-    ar.add("foo", "domain", 80)
-
-    r = HTTPRequest.wrap(netlib.tutils.treq())
-    r.host = "domain"
-    r.port = 80
-    assert ar.get(r)
-
-    r.port = 81
-    assert not ar.get(r)
-
-    r = HTTPRequest.wrap(netlib.tutils.treq())
-    r.host = "domain2"
-    r.port = 80
-    assert not ar.get(r)
-    r.headers["host"] = "domain"
-    assert ar.get(r)
-
-
 class TestHTTPFlow:
 
     def test_copy(self):

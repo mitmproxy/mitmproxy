@@ -96,7 +96,6 @@ class _Http2TestBase:
         cls.config = ProxyConfig(opts)
 
         tmaster = tservers.TestMaster(opts, cls.config)
-        tmaster.start_app(options.APP_HOST, options.APP_PORT)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -119,8 +118,7 @@ class _Http2TestBase:
         return self.proxy.tmaster
 
     def setup(self):
-        self.master.clear_log()
-        self.master.state.clear()
+        self.master.reset([])
         self.server.server.handle_server_event = self.handle_server_event
 
     def _setup_connection(self):

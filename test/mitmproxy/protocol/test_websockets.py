@@ -50,7 +50,6 @@ class _WebSocketsTestBase:
         cls.config = ProxyConfig(opts)
 
         tmaster = tservers.TestMaster(opts, cls.config)
-        tmaster.start_app(options.APP_HOST, options.APP_PORT)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -74,8 +73,7 @@ class _WebSocketsTestBase:
         return self.proxy.tmaster
 
     def setup(self):
-        self.master.clear_log()
-        self.master.state.clear()
+        self.master.reset([])
         self.server.server.handle_websockets = self.handle_websockets
 
     def _setup_connection(self):

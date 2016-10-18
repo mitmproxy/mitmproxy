@@ -99,11 +99,6 @@ class TestDumpMaster(mastertest.MasterTest):
             self.mkmaster("~u foo", verbosity=1), 1, b""
         )
 
-    def test_app(self):
-        o = dump.Options(app=True)
-        m = dump.DumpMaster(None, o)
-        assert len(m.apps.apps) == 1
-
     def test_replacements(self):
         o = dump.Options(
             replacements=[(".*", "content", "foo")],

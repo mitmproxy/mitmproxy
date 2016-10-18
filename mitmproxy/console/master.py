@@ -246,9 +246,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.view_stack = []
 
-        if options.app:
-            self.start_app(self.options.app_host, self.options.app_port)
-
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.replace_view_state.connect(self.sig_replace_view_state)
