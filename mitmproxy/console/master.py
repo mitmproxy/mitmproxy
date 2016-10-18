@@ -224,7 +224,6 @@ class ConsoleMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, options, server)
         self.state = ConsoleState()
-        self.addons.add(self.state)
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -252,6 +251,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(*builtins.default_addons())
+        self.addons.add(self.state)
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value

@@ -1,4 +1,5 @@
 from mitmproxy import ctx
+from mitmproxy import exceptions
 
 from netlib import wsgi
 from netlib import version
@@ -30,6 +31,7 @@ class WSGIApp:
         if err:
             ctx.log.warn("Error in wsgi app. %s" % err, "error")
         flow.reply.kill()
+        raise exceptions.AddonHalt()
 
     def request(self, f):
         if (f.request.pretty_host, f.request.port) == (self.host, self.port):
