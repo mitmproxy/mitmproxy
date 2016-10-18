@@ -1,15 +1,11 @@
 import os
 import sys
 
-from typing import Optional  # noqa
-
 from netlib import http
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy.flow import io
-from mitmproxy.flow import modules
-from mitmproxy.onboarding import app
 from mitmproxy.protocol import http_replay
 
 
@@ -51,10 +47,6 @@ class FlowMaster(controller.Master):
         super().__init__(options)
         if server:
             self.add_server(server)
-        self.apps = modules.AppRegistry()
-
-    def start_app(self, host, port):
-        self.apps.add(app.mapp, host, port)
 
     def create_request(self, method, scheme, host, port, path):
         """
@@ -203,18 +195,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def request(self, f):
-        if f.live:
-            app = self.apps.get(f.request)
-            if app:
-                err = app.serve(
-                    f,
-                    f.client_conn.wfile,
-                    **{"mitmproxy.master": self}
-                )
-                if err:
-                    self.add_log("Error in wsgi app. %s" % err, "error")
-                f.reply.kill()
-                return
+        pass
 
     @controller.handler
     def responseheaders(self, f):

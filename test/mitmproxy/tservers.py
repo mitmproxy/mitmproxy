@@ -1,7 +1,6 @@
 import os.path
 import threading
 import tempfile
-import flask
 import mock
 import sys
 
@@ -13,36 +12,25 @@ import pathod.pathoc
 from mitmproxy import flow, controller, options
 import netlib.exceptions
 
-testapp = flask.Flask(__name__)
-
-
-@testapp.route("/")
-def hello():
-    return "testapp"
-
-
-@testapp.route("/error")
-def error():
-    raise ValueError("An exception...")
-
-
-def errapp(environ, start_response):
-    raise ValueError("errapp")
-
 
 class TestMaster(flow.FlowMaster):
 
     def __init__(self, opts, config):
         s = ProxyServer(config)
         flow.FlowMaster.__init__(self, opts, s)
+
+    def clear_addons(self, addons):
+        self.addons.clear()
         self.state = state.State()
         self.addons.add(self.state)
-        self.apps.add(testapp, "testapp", 80)
-        self.apps.add(errapp, "errapp", 80)
-        self.clear_log()
+        self.addons.add(*addons)
 
     def clear_log(self):
         self.tlog = []
+
+    def reset(self, addons):
+        self.clear_addons(addons)
+        self.clear_log()
 
     @controller.handler
     def log(self, e):
@@ -94,7 +82,6 @@ class ProxyTestBase:
         opts = cls.get_options()
         cls.config = ProxyConfig(opts)
         tmaster = cls.masterclass(opts, cls.config)
-        tmaster.start_app(options.APP_HOST, options.APP_PORT)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -116,8 +103,7 @@ class ProxyTestBase:
                 raise
 
     def setup(self):
-        self.master.state.clear()
-        self.master.clear_log()
+        self.master.reset(self.addons())
         self.server.clear_log()
         self.server2.clear_log()
 
@@ -134,6 +120,12 @@ class ProxyTestBase:
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain,
             ssl_insecure=True,
         )
+
+    def addons(self):
+        """
+            Can be over-ridden to add a standard set of addons to tests.
+        """
+        return []
 
 
 class LazyPathoc(pathod.pathoc.Pathoc):
@@ -330,8 +322,7 @@ class ChainProxyTest(ProxyTestBase):
     def setup(self):
         super().setup()
         for proxy in self.chain:
-            proxy.tmaster.clear_log()
-            proxy.tmaster.state.clear()
+            proxy.tmaster.reset(self.addons())
 
     @classmethod
     def get_options(cls):

@@ -61,9 +61,6 @@ class DumpMaster(flow.FlowMaster):
                 self.add_log("Flow file corrupted.", "error")
                 raise DumpError(v)
 
-        if self.options.app:
-            self.start_app(self.options.app_host, self.options.app_port)
-
     def _readflow(self, paths):
         """
         Utitility function that reads a list of flows

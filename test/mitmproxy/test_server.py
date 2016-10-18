@@ -201,23 +201,7 @@ class TcpMixin:
         # assert any("306" in m for m in self.master.tlog)
 
 
-class AppMixin:
-
-    def test_app(self):
-        ret = self.app("/")
-        assert ret.status_code == 200
-        assert b"mitmproxy" in ret.content
-
-
-class TestHTTP(tservers.HTTPProxyTest, CommonMixin, AppMixin):
-
-    def test_app_err(self):
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("get:'http://errapp/'")
-        assert ret.status_code == 500
-        assert b"ValueError" in ret.content
-
+class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
     def test_invalid_connect(self):
         t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
         with t.connect():
@@ -897,7 +881,7 @@ class TestIncompleteResponse(tservers.HTTPProxyTest):
         assert self.pathod("200").status_code == 502
 
 
-class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest, CommonMixin, AppMixin):
+class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest, CommonMixin):
     ssl = False
 
 
