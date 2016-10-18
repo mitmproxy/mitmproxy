@@ -2,6 +2,7 @@ import abc
 
 import pyparsing as pp
 
+from netlib.http import url
 import netlib.websockets
 from netlib.http import status_codes, user_agents
 from . import base, exceptions, actions, message
@@ -318,7 +319,7 @@ class Request(_HTTPMessage):
                         )
                     )
         if not self.raw:
-            if not get_header("Content-Length", self.headers):
+            if not get_header(b"Content-Length", self.headers):
                 if self.body:
                     length = sum(
                         len(i) for i in self.body.values(settings)
@@ -330,11 +331,21 @@ class Request(_HTTPMessage):
                         )
                     )
             if settings.request_host:
-                if not get_header("Host", self.headers):
+                if not get_header(b"Host", self.headers):
+                    h = settings.request_host
+                    if self.path:
+                        path = b"".join(self.path.values({})).decode(
+                            "ascii", errors="ignore"
+                        )
+                        try:
+                            _, h, _, _ = url.parse(path)
+                            h = h.decode("ascii", errors="ignore")
+                        except ValueError:
+                            pass
                     tokens.append(
                         Header(
                             base.TokValueLiteral("Host"),
-                            base.TokValueLiteral(settings.request_host)
+                            base.TokValueLiteral(h)
                         )
                     )
         intermediate = self.__class__(tokens)
