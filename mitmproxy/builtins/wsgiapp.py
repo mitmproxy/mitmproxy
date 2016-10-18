@@ -5,6 +5,10 @@ from netlib import version
 
 
 class WSGIApp:
+    """
+        An addon that hosts a WSGI app withing mitproxy, at a specified
+        hostname and port.
+    """
     def __init__(self, app, host, port):
         self.app, self.host, self.port = app, host, port
 
