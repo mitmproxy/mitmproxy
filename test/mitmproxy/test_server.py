@@ -900,19 +900,6 @@ class TestIncompleteResponse(tservers.HTTPProxyTest):
 class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest, CommonMixin, AppMixin):
     ssl = False
 
-    def test_order(self):
-        self.proxy.tmaster.options.replacements = [
-            ("~q", "foo", "bar"),
-            ("~q", "bar", "baz"),
-            ("~q", "foo", "oh noes!"),
-            ("~s", "baz", "ORLY")
-        ]
-        p = self.pathoc()
-        with p.connect():
-            req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
-        assert req.content == b"ORLY"
-        assert req.status_code == 418
-
 
 class TestUpstreamProxySSL(
         tservers.HTTPUpstreamProxyTest,
