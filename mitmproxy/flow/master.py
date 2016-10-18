@@ -231,6 +231,14 @@ class FlowMaster(controller.Master):
     def websocket_handshake(self, f):
         pass
 
+    @controller.handler
+    def h2_settings(self, settings):
+        pass
+
+    @controller.handler
+    def h2_push_promise(self, event):
+        pass
+
     def handle_intercept(self, f):
         self.state.update_flow(f)
 
