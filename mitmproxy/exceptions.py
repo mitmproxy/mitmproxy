@@ -96,3 +96,7 @@ class OptionsError(Exception):
 
 class AddonError(Exception):
     pass
+
+
+class AddonHalt(Exception):
+    pass

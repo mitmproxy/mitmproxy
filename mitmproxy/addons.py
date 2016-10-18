@@ -86,4 +86,7 @@ class Addons:
 
     def __call__(self, name, *args, **kwargs):
         for i in self.chain:
-            self.invoke(i, name, *args, **kwargs)
+            try:
+                self.invoke(i, name, *args, **kwargs)
+            except exceptions.AddonHalt:
+                return
