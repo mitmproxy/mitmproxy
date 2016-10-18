@@ -6,7 +6,6 @@ from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy.builtins import script
 from mitmproxy.flow import master
-from mitmproxy.flow import state
 
 import netlib.utils
 
@@ -32,7 +31,7 @@ class RaiseMaster(master.FlowMaster):
 def tscript(cmd, args=""):
     o = options.Options()
     cmd = example_dir.path(cmd) + " " + args
-    m = RaiseMaster(o, None, state.State())
+    m = RaiseMaster(o, None)
     sc = script.Script(cmd)
     m.addons.add(sc)
     return m, sc

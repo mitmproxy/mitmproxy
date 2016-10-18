@@ -167,7 +167,7 @@ class FlowStore(FlowList):
     # TODO: Should accept_all operate on views or on all flows?
     def accept_all(self, master):
         for f in self._list:
-            f.accept_intercept(master)
+            f.resume(master)
 
     def kill_all(self, master):
         for f in self._list:
@@ -270,12 +270,19 @@ class State:
         self.add_flow(f2)
         return f2
 
+    # Event handlers
+    def intercept(self, f):
+        self.update_flow(f)
 
-class DummyState:
-    flows = ()
+    def resume(self, f):
+        self.update_flow(f)
 
-    def add_flow(self, *args, **kwargs):
-        pass
+    def error(self, f):
+        self.update_flow(f)
 
-    def update_flow(self, *args, **kwargs):
-        pass
+    def request(self, f):
+        if f not in self.flows:  # don't add again on replay
+            self.add_flow(f)
+
+    def response(self, f):
+        self.update_flow(f)

@@ -50,8 +50,7 @@ class RecordingMaster(master.FlowMaster):
 
 @contextlib.contextmanager
 def mockctx():
-    state = flow.State()
     o = options.Options(refresh_server_playback = True, keepserving=False)
-    m = RecordingMaster(o, proxy.DummyServer(o), state)
+    m = RecordingMaster(o, proxy.DummyServer(o))
     with m.handlecontext():
         yield

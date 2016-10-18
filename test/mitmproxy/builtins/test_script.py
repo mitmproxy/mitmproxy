@@ -8,7 +8,6 @@ from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy.builtins import script
 from mitmproxy.flow import master
-from mitmproxy.flow import state
 
 from .. import tutils, mastertest
 
@@ -57,9 +56,8 @@ def test_load_script():
 
 class TestScript(mastertest.MasterTest):
     def test_simple(self):
-        s = state.State()
         o = options.Options()
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/recorder.py"
@@ -79,9 +77,8 @@ class TestScript(mastertest.MasterTest):
         assert recf[1] == "request"
 
     def test_reload(self):
-        s = state.State()
         o = options.Options()
-        m = mastertest.RecordingMaster(o, None, s)
+        m = mastertest.RecordingMaster(o, None)
         with tutils.tmpdir():
             with open("foo.py", "w"):
                 pass
@@ -98,9 +95,8 @@ class TestScript(mastertest.MasterTest):
             raise AssertionError("Change event not detected.")
 
     def test_exception(self):
-        s = state.State()
         o = options.Options()
-        m = mastertest.RecordingMaster(o, None, s)
+        m = mastertest.RecordingMaster(o, None)
         sc = script.Script(
             tutils.test_data.path("data/addonscripts/error.py")
         )
@@ -113,25 +109,9 @@ class TestScript(mastertest.MasterTest):
         assert re.search('addonscripts/error.py", line \d+, in mkerr', m.event_log[0][1])
         assert m.event_log[0][1].endswith("ValueError: Error!\n")
 
-    def test_duplicate_flow(self):
-        s = state.State()
-        o = options.Options()
-        fm = master.FlowMaster(o, None, s)
-        fm.addons.add(
-            script.Script(
-                tutils.test_data.path("data/addonscripts/duplicate_flow.py")
-            )
-        )
-        f = tutils.tflow()
-        fm.request(f)
-        assert fm.state.flow_count() == 2
-        assert not fm.state.view[0].request.is_replay
-        assert fm.state.view[1].request.is_replay
-
     def test_addon(self):
-        s = state.State()
         o = options.Options()
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/addon.py"
@@ -163,9 +143,8 @@ class TestCutTraceback:
 
 class TestScriptLoader(mastertest.MasterTest):
     def test_run_once(self):
-        s = state.State()
         o = options.Options(scripts=[])
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sl = script.ScriptLoader()
         m.addons.add(sl)
 
@@ -188,9 +167,8 @@ class TestScriptLoader(mastertest.MasterTest):
             )
 
     def test_simple(self):
-        s = state.State()
         o = options.Options(scripts=[])
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sc = script.ScriptLoader()
         m.addons.add(sc)
         assert len(m.addons) == 1
@@ -204,16 +182,14 @@ class TestScriptLoader(mastertest.MasterTest):
         assert len(m.addons) == 1
 
     def test_dupes(self):
-        s = state.State()
         o = options.Options(scripts=["one", "one"])
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sc = script.ScriptLoader()
         tutils.raises(exceptions.OptionsError, m.addons.add, o, sc)
 
     def test_order(self):
         rec = tutils.test_data.path("data/addonscripts/recorder.py")
 
-        s = state.State()
         o = options.Options(
             scripts = [
                 "%s %s" % (rec, "a"),
@@ -221,7 +197,7 @@ class TestScriptLoader(mastertest.MasterTest):
                 "%s %s" % (rec, "c"),
             ]
         )
-        m = mastertest.RecordingMaster(o, None, s)
+        m = mastertest.RecordingMaster(o, None)
         sc = script.ScriptLoader()
         m.addons.add(sc)
 

@@ -25,7 +25,7 @@ class Addons:
     def _options_update(self, options, updated):
         for i in self.chain:
             with self.master.handlecontext():
-                i.configure(options, updated)
+                self.invoke_with_context(i, "configure", options, updated)
 
     def startup(self, s):
         """

@@ -224,7 +224,7 @@ class AcceptFlows(RequestHandler):
 class AcceptFlow(RequestHandler):
 
     def post(self, flow_id):
-        self.flow.accept_intercept(self.master)
+        self.flow.resume(self.master)
 
 
 class FlowHandler(RequestHandler):

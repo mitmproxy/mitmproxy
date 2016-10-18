@@ -33,7 +33,7 @@ class Options(options.Options):
 class DumpMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
-        flow.FlowMaster.__init__(self, options, server, flow.DummyState())
+        flow.FlowMaster.__init__(self, options, server)
         self.has_errored = False
         self.addons.add(termlog.TermLog())
         self.addons.add(*builtins.default_addons())

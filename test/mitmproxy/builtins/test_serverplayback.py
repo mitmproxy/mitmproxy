@@ -4,7 +4,6 @@ import netlib.tutils
 from mitmproxy.builtins import serverplayback
 from mitmproxy import options
 from mitmproxy import exceptions
-from mitmproxy import flow
 
 
 class TestServerPlayback:
@@ -238,10 +237,9 @@ class TestServerPlayback:
         assert not s._hash(r) == s._hash(r2)
 
     def test_server_playback_full(self):
-        state = flow.State()
         s = serverplayback.ServerPlayback()
         o = options.Options(refresh_server_playback = True, keepserving=False)
-        m = mastertest.RecordingMaster(o, None, state)
+        m = mastertest.RecordingMaster(o, None)
         m.addons.add(s)
 
         f = tutils.tflow()
@@ -268,10 +266,9 @@ class TestServerPlayback:
         assert s.stop
 
     def test_server_playback_kill(self):
-        state = flow.State()
         s = serverplayback.ServerPlayback()
         o = options.Options(refresh_server_playback = True, replay_kill_extra=True)
-        m = mastertest.RecordingMaster(o, None, state)
+        m = mastertest.RecordingMaster(o, None)
         m.addons.add(s)
 
         f = tutils.tflow()

@@ -1,15 +1,13 @@
 from .. import tutils, mastertest
 from mitmproxy.builtins import anticomp
 from mitmproxy.flow import master
-from mitmproxy.flow import state
 from mitmproxy import options
 
 
 class TestAntiComp(mastertest.MasterTest):
     def test_simple(self):
-        s = state.State()
         o = options.Options(anticomp = True)
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sa = anticomp.AntiComp()
         m.addons.add(sa)
 

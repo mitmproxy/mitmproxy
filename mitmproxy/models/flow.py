@@ -170,16 +170,16 @@ class Flow(stateobject.StateObject):
 
     def intercept(self, master):
         """
-            Intercept this Flow. Processing will stop until accept_intercept is
+            Intercept this Flow. Processing will stop until resume is
             called.
         """
         if self.intercepted:
             return
         self.intercepted = True
         self.reply.take()
-        master.handle_intercept(self)
+        master.addons("intercept", self)
 
-    def accept_intercept(self, master):
+    def resume(self, master):
         """
             Continue with the flow - called after an intercept().
         """
@@ -188,4 +188,4 @@ class Flow(stateobject.StateObject):
         self.intercepted = False
         self.reply.ack()
         self.reply.commit()
-        master.handle_accept_intercept(self)
+        master.addons("intercept", self)

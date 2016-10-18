@@ -1,7 +1,6 @@
 from .. import tutils, mastertest
 from mitmproxy.builtins import replace
 from mitmproxy.flow import master
-from mitmproxy.flow import state
 from mitmproxy import options
 
 
@@ -30,14 +29,13 @@ class TestReplace(mastertest.MasterTest):
         )
 
     def test_simple(self):
-        s = state.State()
         o = options.Options(
             replacements = [
                 ("~q", "foo", "bar"),
                 ("~s", "foo", "bar"),
             ]
         )
-        m = master.FlowMaster(o, None, s)
+        m = master.FlowMaster(o, None)
         sa = replace.Replace()
         m.addons.add(sa)
 

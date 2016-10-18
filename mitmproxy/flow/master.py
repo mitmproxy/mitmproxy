@@ -47,11 +47,10 @@ class FlowMaster(controller.Master):
         if len(self.servers) > 0:
             return self.servers[0]
 
-    def __init__(self, options, server, state):
+    def __init__(self, options, server):
         super().__init__(options)
         if server:
             self.add_server(server)
-        self.state = state
         self.apps = modules.AppRegistry()
 
     def start_app(self, host, port):
@@ -196,7 +195,7 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def error(self, f):
-        self.state.update_flow(f)
+        pass
 
     @controller.handler
     def requestheaders(self, f):
@@ -216,8 +215,6 @@ class FlowMaster(controller.Master):
                     self.add_log("Error in wsgi app. %s" % err, "error")
                 f.reply.kill()
                 return
-        if f not in self.state.flows:  # don't add again on replay
-            self.state.add_flow(f)
 
     @controller.handler
     def responseheaders(self, f):
@@ -225,22 +222,14 @@ class FlowMaster(controller.Master):
 
     @controller.handler
     def response(self, f):
-        self.state.update_flow(f)
+        pass
 
     @controller.handler
     def websocket_handshake(self, f):
         pass
 
-    def handle_intercept(self, f):
-        self.state.update_flow(f)
-
-    def handle_accept_intercept(self, f):
-        self.state.update_flow(f)
-
     @controller.handler
     def tcp_start(self, flow):
-        # TODO: This would break mitmproxy currently.
-        # self.state.add_flow(flow)
         pass
 
     @controller.handler
