@@ -95,7 +95,7 @@ def mitmdump(args=None):  # pragma: no cover
         dump_options.keepserving = args.keepserving
         dump_options.filtstr = " ".join(args.args) if args.args else None
         server = process_options(parser, dump_options, args)
-        master = dump.DumpMaster(server, dump_options)
+        master = dump.DumpMaster(dump_options, server)
 
         def cleankill(*args, **kwargs):
             master.shutdown()
@@ -132,7 +132,7 @@ def mitmweb(args=None):  # pragma: no cover
         web_options.process_web_options(parser)
 
         server = process_options(parser, web_options, args)
-        m = web.master.WebMaster(server, web_options)
+        m = web.master.WebMaster(web_options, server)
     except exceptions.OptionsError as e:
         print("mitmweb: %s" % e, file=sys.stderr)
         sys.exit(1)

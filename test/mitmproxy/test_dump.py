@@ -1,7 +1,7 @@
 import os
 import io
 
-from mitmproxy import dump, flow, exceptions
+from mitmproxy import dump, flow, exceptions, proxy
 from . import tutils, mastertest
 
 
@@ -16,7 +16,7 @@ class TestDumpMaster(mastertest.MasterTest):
         if "flow_detail" not in options:
             options["flow_detail"] = 0
         o = dump.Options(filtstr=flt, tfile=io.StringIO(), **options)
-        return dump.DumpMaster(None, o)
+        return dump.DumpMaster(o, proxy.DummyServer())
 
     def test_basic(self):
         for i in (1, 2, 3):
@@ -41,14 +41,14 @@ class TestDumpMaster(mastertest.MasterTest):
             tfile=io.StringIO(),
             flow_detail=1
         )
-        m = dump.DumpMaster(None, o)
+        m = dump.DumpMaster(o, proxy.DummyServer())
         f = tutils.tflow(err=True)
         m.error(f)
         assert "error" in o.tfile.getvalue()
 
     def test_replay(self):
         o = dump.Options(server_replay=["nonexistent"], replay_kill_extra=True)
-        tutils.raises(exceptions.OptionsError, dump.DumpMaster, None, o)
+        tutils.raises(exceptions.OptionsError, dump.DumpMaster, o, proxy.DummyServer())
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
@@ -57,7 +57,7 @@ class TestDumpMaster(mastertest.MasterTest):
             o = dump.Options(server_replay=[p], replay_kill_extra=True)
             o.verbosity = 0
             o.flow_detail = 0
-            m = dump.DumpMaster(None, o)
+            m = dump.DumpMaster(o, proxy.DummyServer())
 
             self.cycle(m, b"content")
             self.cycle(m, b"content")
@@ -65,13 +65,13 @@ class TestDumpMaster(mastertest.MasterTest):
             o = dump.Options(server_replay=[p], replay_kill_extra=False)
             o.verbosity = 0
             o.flow_detail = 0
-            m = dump.DumpMaster(None, o)
+            m = dump.DumpMaster(o, proxy.DummyServer())
             self.cycle(m, b"nonexistent")
 
             o = dump.Options(client_replay=[p], replay_kill_extra=False)
             o.verbosity = 0
             o.flow_detail = 0
-            m = dump.DumpMaster(None, o)
+            m = dump.DumpMaster(o, proxy.DummyServer())
 
     def test_read(self):
         with tutils.tmpdir() as t:
@@ -106,7 +106,7 @@ class TestDumpMaster(mastertest.MasterTest):
         )
         o.verbosity = 0
         o.flow_detail = 0
-        m = dump.DumpMaster(None, o)
+        m = dump.DumpMaster(o, proxy.DummyServer())
         f = self.cycle(m, b"content")
         assert f.request.content == b"foo"
 
@@ -117,7 +117,7 @@ class TestDumpMaster(mastertest.MasterTest):
         )
         o.verbosity = 0
         o.flow_detail = 0
-        m = dump.DumpMaster(None, o)
+        m = dump.DumpMaster(o, proxy.DummyServer())
         f = self.cycle(m, b"content")
         assert f.request.headers["one"] == "two"
 

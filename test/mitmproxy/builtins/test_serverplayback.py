@@ -3,6 +3,7 @@ from .. import tutils, mastertest
 import netlib.tutils
 from mitmproxy.builtins import serverplayback
 from mitmproxy import options
+from mitmproxy import proxy
 from mitmproxy import exceptions
 
 
@@ -239,7 +240,7 @@ class TestServerPlayback:
     def test_server_playback_full(self):
         s = serverplayback.ServerPlayback()
         o = options.Options(refresh_server_playback = True, keepserving=False)
-        m = mastertest.RecordingMaster(o, None)
+        m = mastertest.RecordingMaster(o, proxy.DummyServer())
         m.addons.add(s)
 
         f = tutils.tflow()
@@ -268,7 +269,7 @@ class TestServerPlayback:
     def test_server_playback_kill(self):
         s = serverplayback.ServerPlayback()
         o = options.Options(refresh_server_playback = True, replay_kill_extra=True)
-        m = mastertest.RecordingMaster(o, None)
+        m = mastertest.RecordingMaster(o, proxy.DummyServer())
         m.addons.add(s)
 
         f = tutils.tflow()

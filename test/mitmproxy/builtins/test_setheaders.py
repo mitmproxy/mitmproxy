@@ -2,12 +2,13 @@ from .. import tutils, mastertest
 
 from mitmproxy.builtins import setheaders
 from mitmproxy import options
+from mitmproxy import proxy
 
 
 class TestSetHeaders(mastertest.MasterTest):
     def mkmaster(self, **opts):
         o = options.Options(**opts)
-        m = mastertest.RecordingMaster(o, None)
+        m = mastertest.RecordingMaster(o, proxy.DummyServer())
         sh = setheaders.SetHeaders()
         m.addons.add(sh)
         return m, sh

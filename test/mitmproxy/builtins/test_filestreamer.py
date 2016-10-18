@@ -5,6 +5,7 @@ import os.path
 from mitmproxy.builtins import filestreamer
 from mitmproxy.flow import master, FlowReader
 from mitmproxy import options
+from mitmproxy import proxy
 
 
 class TestStream(mastertest.MasterTest):
@@ -19,7 +20,7 @@ class TestStream(mastertest.MasterTest):
             o = options.Options(
                 outfile = (p, "wb")
             )
-            m = master.FlowMaster(o, None)
+            m = master.FlowMaster(o, proxy.DummyServer())
             sa = filestreamer.FileStreamer()
 
             m.addons.add(sa)

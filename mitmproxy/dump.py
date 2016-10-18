@@ -32,7 +32,7 @@ class Options(options.Options):
 
 class DumpMaster(flow.FlowMaster):
 
-    def __init__(self, server, options):
+    def __init__(self, options, server):
         flow.FlowMaster.__init__(self, options, server)
         self.has_errored = False
         self.addons.add(termlog.TermLog())
@@ -41,7 +41,7 @@ class DumpMaster(flow.FlowMaster):
         # This line is just for type hinting
         self.options = self.options  # type: Options
 
-        if not self.options.no_server and server:
+        if not self.options.no_server:
             self.add_log(
                 "Proxy server listening at http://{}".format(server.address),
                 "info"

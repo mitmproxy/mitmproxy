@@ -7,7 +7,7 @@ from mitmproxy import controller
 import queue
 
 from mitmproxy.exceptions import Kill, ControlException
-from mitmproxy.proxy import DummyServer
+from mitmproxy import proxy
 from netlib.tutils import raises
 
 
@@ -26,7 +26,7 @@ class TestMaster:
                 # Speed up test
                 super().tick(0)
 
-        m = DummyMaster(None)
+        m = DummyMaster(None, proxy.DummyServer(None))
         assert not m.should_exit.is_set()
         msg = TMsg()
         msg.reply = controller.DummyReply()
@@ -35,9 +35,7 @@ class TestMaster:
         assert m.should_exit.is_set()
 
     def test_server_simple(self):
-        m = controller.Master(None)
-        s = DummyServer(None)
-        m.add_server(s)
+        m = controller.Master(None, proxy.DummyServer(None))
         m.start()
         m.shutdown()
         m.start()

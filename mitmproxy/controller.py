@@ -87,14 +87,14 @@ class Master:
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self, opts, *servers):
+    def __init__(self, opts, server):
         self.options = opts or options.Options()
         self.addons = addons.Addons(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
-        self.servers = []
-        for i in servers:
-            self.add_server(i)
+        self.server = server
+        channel = Channel(self.event_queue, self.should_exit)
+        server.set_channel(channel)
 
     @contextlib.contextmanager
     def handlecontext(self):
@@ -121,16 +121,9 @@ class Master:
         with self.handlecontext():
             self.addons("log", LogEntry(e, level))
 
-    def add_server(self, server):
-        # We give a Channel to the server which can be used to communicate with the master
-        channel = Channel(self.event_queue, self.should_exit)
-        server.set_channel(channel)
-        self.servers.append(server)
-
     def start(self):
         self.should_exit.clear()
-        for server in self.servers:
-            ServerThread(server).start()
+        ServerThread(self.server).start()
 
     def run(self):
         self.start()
@@ -168,8 +161,7 @@ class Master:
         return changed
 
     def shutdown(self):
-        for server in self.servers:
-            server.shutdown()
+        self.server.shutdown()
         self.should_exit.set()
         self.addons.done()
 

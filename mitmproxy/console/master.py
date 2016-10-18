@@ -221,7 +221,7 @@ class Options(mitmproxy.options.Options):
 class ConsoleMaster(flow.FlowMaster):
     palette = []
 
-    def __init__(self, server, options):
+    def __init__(self, options, server):
         flow.FlowMaster.__init__(self, options, server)
         self.state = ConsoleState()
         self.stream_path = None

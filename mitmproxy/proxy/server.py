@@ -15,8 +15,9 @@ from netlib.http import http1
 class DummyServer:
     bound = False
 
-    def __init__(self, config):
+    def __init__(self, config=None):
         self.config = config
+        self.address = "dummy"
 
     def set_channel(self, channel):
         pass

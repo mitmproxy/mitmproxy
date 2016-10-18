@@ -4,6 +4,7 @@ import shlex
 
 from mitmproxy import options
 from mitmproxy import contentviews
+from mitmproxy import proxy
 from mitmproxy.builtins import script
 from mitmproxy.flow import master
 
@@ -31,7 +32,7 @@ class RaiseMaster(master.FlowMaster):
 def tscript(cmd, args=""):
     o = options.Options()
     cmd = example_dir.path(cmd) + " " + args
-    m = RaiseMaster(o, None)
+    m = RaiseMaster(o, proxy.DummyServer())
     sc = script.Script(cmd)
     m.addons.add(sc)
     return m, sc

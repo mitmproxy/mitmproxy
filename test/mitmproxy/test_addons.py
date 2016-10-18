@@ -1,6 +1,7 @@
 from mitmproxy import addons
 from mitmproxy import controller
 from mitmproxy import options
+from mitmproxy import proxy
 
 
 class TAddon:
@@ -13,7 +14,7 @@ class TAddon:
 
 def test_simple():
     o = options.Options()
-    m = controller.Master(o)
+    m = controller.Master(o, proxy.DummyServer(o))
     a = addons.Addons(m)
     a.add(TAddon("one"))
     assert a.get("one")
