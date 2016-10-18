@@ -100,25 +100,6 @@ class TestExportLocustTask:
         python_equals("data/test_flow_export/locust_task_patch.py", export.locust_task(flow))
 
 
-class TestIsJson:
-    def test_empty(self):
-        assert export.is_json(None, None) is False
-
-    def test_json_type(self):
-        headers = Headers(content_type="application/json")
-        assert export.is_json(headers, b"foobar") is False
-
-    def test_valid(self):
-        headers = Headers(content_type="application/foobar")
-        j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
-        assert j is False
-
-    def test_valid2(self):
-        headers = Headers(content_type="application/json")
-        j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
-        assert isinstance(j, dict)
-
-
 class TestURL:
     def test_url(self):
         flow = tutils.tflow()
