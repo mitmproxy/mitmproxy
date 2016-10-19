@@ -29,7 +29,7 @@ class WSGIApp:
             **{"mitmproxy.master": ctx.master}
         )
         if err:
-            ctx.log.warn("Error in wsgi app. %s" % err, "error")
+            ctx.log.error("Error in wsgi app. %s" % err)
         flow.reply.kill()
         raise exceptions.AddonHalt()
 

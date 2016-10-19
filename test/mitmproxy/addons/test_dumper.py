@@ -2,7 +2,7 @@ import io
 
 from .. import tutils, mastertest
 
-from mitmproxy.builtins import dumper
+from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy import dump
 from mitmproxy import models

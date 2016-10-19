@@ -1,5 +1,5 @@
-from mitmproxy.builtins import wsgiapp
-from mitmproxy.builtins.onboardingapp import app
+from mitmproxy.addons import wsgiapp
+from mitmproxy.addons.onboardingapp import app
 
 
 class Onboarding(wsgiapp.WSGIApp):

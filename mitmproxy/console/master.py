@@ -14,7 +14,7 @@ import weakref
 import urwid
 from typing import Optional
 
-from mitmproxy import builtins
+from mitmproxy import addons
 from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -22,6 +22,7 @@ from mitmproxy import master
 from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import utils
+from mitmproxy.addons import state
 import mitmproxy.options
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
@@ -39,10 +40,10 @@ from netlib import tcp, strutils
 EVENTLOG_SIZE = 500
 
 
-class ConsoleState(flow.State):
+class ConsoleState(state.State):
 
     def __init__(self):
-        flow.State.__init__(self)
+        state.State.__init__(self)
         self.focus = None
         self.follow_focus = None
         self.default_body_view = contentviews.get("Auto")
@@ -251,7 +252,7 @@ class ConsoleMaster(master.Master):
         signals.replace_view_state.connect(self.sig_replace_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
-        self.addons.add(*builtins.default_addons())
+        self.addons.add(*addons.default_addons())
         self.addons.add(self.state)
 
     def __setattr__(self, name, value):

@@ -5,7 +5,7 @@ import shlex
 from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy import proxy
-from mitmproxy.builtins import script
+from mitmproxy.addons import script
 from mitmproxy import master
 
 import netlib.utils

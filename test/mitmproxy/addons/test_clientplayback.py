@@ -1,6 +1,6 @@
 import mock
 
-from mitmproxy.builtins import clientplayback
+from mitmproxy.addons import clientplayback
 from mitmproxy import options
 
 from .. import tutils, mastertest

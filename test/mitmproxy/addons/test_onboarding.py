@@ -1,4 +1,4 @@
-from mitmproxy.builtins import onboarding
+from mitmproxy.addons import onboarding
 from .. import tservers
 
 

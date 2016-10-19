@@ -1,5 +1,5 @@
 from .. import tutils, mastertest
-from mitmproxy.builtins import stickycookie
+from mitmproxy.addons import stickycookie
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy

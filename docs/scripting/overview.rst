@@ -6,7 +6,7 @@ Overview
 Mitmproxy has a powerful scripting API that allows you to control almost any
 aspect of traffic being proxied. In fact, much of mitmproxy's own core
 functionality is implemented using the exact same API exposed to scripters (see
-:src:`mitmproxy/builtins`).
+:src:`mitmproxy/addons`).
 
 
 A simple example

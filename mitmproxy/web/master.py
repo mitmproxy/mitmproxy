@@ -6,10 +6,10 @@ import tornado.ioloop
 
 from typing import Optional
 
-from mitmproxy import builtins
+from mitmproxy import addons
 from mitmproxy import controller
 from mitmproxy import exceptions
-from mitmproxy import flow
+from mitmproxy.addons import state
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.web import app
@@ -20,7 +20,7 @@ class Stop(Exception):
     pass
 
 
-class WebFlowView(flow.FlowView):
+class WebFlowView(state.FlowView):
 
     def __init__(self, store):
         super().__init__(store, None)
@@ -57,7 +57,7 @@ class WebFlowView(flow.FlowView):
         )
 
 
-class WebState(flow.State):
+class WebState(state.State):
 
     def __init__(self):
         super().__init__()
@@ -136,7 +136,7 @@ class WebMaster(master.Master):
     def __init__(self, options, server):
         super().__init__(options, server)
         self.state = WebState()
-        self.addons.add(*builtins.default_addons())
+        self.addons.add(*addons.default_addons())
         self.addons.add(self.state)
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator

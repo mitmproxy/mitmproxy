@@ -38,7 +38,7 @@ def main(profiler, clock_type, concurrency):
 
     if profiler == "yappi":
         yappi.set_clock_type(clock_type)
-        yappi.start(builtins=True)
+        yappi.start(addons=True)
 
     print("Start mitmdump...")
     mitmdump(["-k", "-q", "-S", "1024example"])

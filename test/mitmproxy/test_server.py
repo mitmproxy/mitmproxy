@@ -5,7 +5,7 @@ import time
 import netlib.tutils
 from mitmproxy import controller
 from mitmproxy import options
-from mitmproxy.builtins import script
+from mitmproxy.addons import script
 from mitmproxy.models import HTTPResponse, HTTPFlow
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 from netlib import tcp, http, socks

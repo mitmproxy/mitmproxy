@@ -1,5 +1,5 @@
 from .. import tutils, mastertest
-from mitmproxy.builtins import anticache
+from mitmproxy.addons import anticache
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy

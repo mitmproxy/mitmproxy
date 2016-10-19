@@ -15,7 +15,7 @@ class TestRequestData:
 
 class TestRequestCore:
     """
-    Tests for builtins and the attributes that are directly proxied from the data structure
+    Tests for addons and the attributes that are directly proxied from the data structure
     """
     def test_repr(self):
         request = treq()

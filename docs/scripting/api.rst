@@ -11,8 +11,8 @@ API
     - `mitmproxy.models.http.HTTPResponse <#mitmproxy.models.http.HTTPResponse>`_
     - `mitmproxy.models.http.HTTPFlow <#mitmproxy.models.http.HTTPFlow>`_
 - Logging
-    - `mitmproxy.controller.Log <#mitmproxy.controller.Log>`_
-    - `mitmproxy.controller.LogEntry <#mitmproxy.controller.LogEntry>`_
+    - `mitmproxy.log.Log <#mitmproxy.controller.Log>`_
+    - `mitmproxy.log.LogEntry <#mitmproxy.controller.LogEntry>`_
 
 
 Errors
@@ -36,5 +36,7 @@ HTTP
 Logging
 --------
 
-.. autoclass:: mitmproxy.controller.Log
+.. autoclass:: mitmproxy.log.Log
+    :inherited-members:
+.. autoclass:: mitmproxy.log.LogEntry
     :inherited-members:

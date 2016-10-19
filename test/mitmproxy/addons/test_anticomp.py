@@ -1,5 +1,5 @@
 from .. import tutils, mastertest
-from mitmproxy.builtins import anticomp
+from mitmproxy.addons import anticomp
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy

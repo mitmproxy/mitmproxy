@@ -3,7 +3,7 @@ from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
 
-from mitmproxy.builtins import streambodies
+from mitmproxy.addons import streambodies
 
 
 class TestStreamBodies(mastertest.MasterTest):

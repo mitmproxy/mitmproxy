@@ -4,10 +4,10 @@ from typing import Optional
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import builtins
+from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
-from mitmproxy.builtins import dumper, termlog
+from mitmproxy.addons import dumper, termlog
 from netlib import tcp
 
 
@@ -37,7 +37,7 @@ class DumpMaster(master.Master):
         master.Master.__init__(self, options, server)
         self.has_errored = False
         self.addons.add(termlog.TermLog())
-        self.addons.add(*builtins.default_addons())
+        self.addons.add(*addons.default_addons())
         self.addons.add(dumper.Dumper())
         # This line is just for type hinting
         self.options = self.options  # type: Options

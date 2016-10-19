@@ -7,7 +7,7 @@ import sys
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy import master
-from mitmproxy.flow import state
+from mitmproxy.addons import state
 import pathod.test
 import pathod.pathoc
 from mitmproxy import controller, options

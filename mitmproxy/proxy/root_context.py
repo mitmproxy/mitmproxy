@@ -1,5 +1,5 @@
 import netlib.exceptions
-from mitmproxy import controller
+from mitmproxy import log
 from mitmproxy import exceptions
 from mitmproxy import protocol
 from mitmproxy.proxy import modes
@@ -113,7 +113,7 @@ class RootContext:
         for i in subs:
             full_msg.append("  -> " + i)
         full_msg = "\n".join(full_msg)
-        self.channel.tell("log", controller.LogEntry(full_msg, level))
+        self.channel.tell("log", log.LogEntry(full_msg, level))
 
     @property
     def layers(self):

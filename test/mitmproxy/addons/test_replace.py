@@ -1,5 +1,5 @@
 from .. import tutils, mastertest, tservers
-from mitmproxy.builtins import replace
+from mitmproxy.addons import replace
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
