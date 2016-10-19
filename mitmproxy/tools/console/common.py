@@ -7,7 +7,7 @@ import urwid
 import urwid.util
 
 import netlib
-from mitmproxy import utils
+from mitmproxy.utils import lrucache
 from mitmproxy.tools.console import signals
 from mitmproxy import export
 from netlib import human
@@ -325,7 +325,7 @@ def export_to_clip_or_file(key, scope, flow, writer):
             else:  # other keys
                 writer(exporter(flow))
 
-flowcache = utils.LRUCache(800)
+flowcache = lrucache.LRUCache(800)
 
 
 def raw_format_flow(f):

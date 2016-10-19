@@ -16,6 +16,7 @@ from mitmproxy import connections
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy.utils import data
 
 
 def _skip_windows(*args):
@@ -208,4 +209,4 @@ def capture_stderr(command, *args, **kwargs):
     sys.stderr = out
 
 
-test_data = netlib.utils.Data(__name__)
+test_data = data.Data(__name__)

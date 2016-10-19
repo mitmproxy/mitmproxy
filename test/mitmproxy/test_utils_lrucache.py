@@ -1,12 +1,4 @@
 from mitmproxy import utils
-from . import tutils
-
-utils.CERT_SLEEP_TIME = 0
-
-
-def test_pkg_data():
-    assert utils.pkg_data.path("tools/console")
-    tutils.raises("does not exist", utils.pkg_data.path, "nonexistent")
 
 
 def test_LRUCache():

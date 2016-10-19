@@ -6,7 +6,9 @@ import shutil
 from contextlib import contextmanager
 import sys
 
-from netlib import utils, tcp, http
+from mitmproxy.utils import data
+from netlib import tcp
+from netlib import http
 
 
 def treader(bytes):
@@ -87,7 +89,7 @@ class RaisesContext:
         return True
 
 
-test_data = utils.Data(__name__)
+test_data = data.Data(__name__)
 # FIXME: Temporary workaround during repo merge.
 test_data.dirname = os.path.join(test_data.dirname, "..", "test", "netlib")
 

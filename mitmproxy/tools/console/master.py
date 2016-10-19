@@ -21,7 +21,7 @@ from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io
 from mitmproxy import flowfilter
-from mitmproxy import utils
+from mitmproxy import log
 from mitmproxy.addons import state
 import mitmproxy.options
 from mitmproxy.tools.console import flowlist
@@ -266,7 +266,7 @@ class ConsoleMaster(master.Master):
         )
 
     def sig_add_log(self, sender, e, level):
-        if self.options.verbosity < utils.log_tier(level):
+        if self.options.verbosity < log.log_tier(level):
             return
 
         if level in ("error", "warn"):
