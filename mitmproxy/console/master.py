@@ -18,6 +18,7 @@ from mitmproxy import builtins
 from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
+from mitmproxy import master
 from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import utils
@@ -218,11 +219,11 @@ class Options(mitmproxy.options.Options):
         super().__init__(**kwargs)
 
 
-class ConsoleMaster(flow.FlowMaster):
+class ConsoleMaster(master.Master):
     palette = []
 
     def __init__(self, options, server):
-        flow.FlowMaster.__init__(self, options, server)
+        master.Master.__init__(self, options, server)
         self.state = ConsoleState()
         self.stream_path = None
         # This line is just for type hinting
@@ -600,7 +601,7 @@ class ConsoleMaster(flow.FlowMaster):
     def load_flows_path(self, path):
         reterr = None
         try:
-            flow.FlowMaster.load_flows_file(self, path)
+            master.Master.load_flows_file(self, path)
         except exceptions.FlowReadException as e:
             reterr = str(e)
         signals.flowlist_change.send(self)
@@ -631,7 +632,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def shutdown(self):
         self.state.killall(self)
-        flow.FlowMaster.shutdown(self)
+        master.Master.shutdown(self)
 
     def clear_flows(self):
         self.state.clear()

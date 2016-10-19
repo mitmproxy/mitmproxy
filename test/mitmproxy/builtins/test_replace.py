@@ -1,6 +1,6 @@
 from .. import tutils, mastertest, tservers
 from mitmproxy.builtins import replace
-from mitmproxy.flow import master
+from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
 
@@ -36,7 +36,7 @@ class TestReplace(mastertest.MasterTest):
                 ("~s", "foo", "bar"),
             ]
         )
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sa = replace.Replace()
         m.addons.add(sa)
 

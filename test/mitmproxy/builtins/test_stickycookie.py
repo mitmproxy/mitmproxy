@@ -1,6 +1,6 @@
 from .. import tutils, mastertest
 from mitmproxy.builtins import stickycookie
-from mitmproxy.flow import master
+from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
 from netlib import tutils as ntutils
@@ -14,7 +14,7 @@ def test_domain_match():
 class TestStickyCookie(mastertest.MasterTest):
     def mk(self):
         o = options.Options(stickycookie = ".*")
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sc = stickycookie.StickyCookie()
         m.addons.add(sc)
         return m, sc

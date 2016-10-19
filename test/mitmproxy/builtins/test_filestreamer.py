@@ -3,7 +3,8 @@ from .. import tutils, mastertest
 import os.path
 
 from mitmproxy.builtins import filestreamer
-from mitmproxy.flow import master, FlowReader
+from mitmproxy import master
+from mitmproxy.flow import io
 from mitmproxy import options
 from mitmproxy import proxy
 
@@ -14,13 +15,13 @@ class TestStream(mastertest.MasterTest):
             p = os.path.join(tdir, "foo")
 
             def r():
-                r = FlowReader(open(p, "rb"))
+                r = io.FlowReader(open(p, "rb"))
                 return list(r.stream())
 
             o = options.Options(
                 outfile = (p, "wb")
             )
-            m = master.FlowMaster(o, proxy.DummyServer())
+            m = master.Master(o, proxy.DummyServer())
             sa = filestreamer.FileStreamer()
 
             m.addons.add(sa)

@@ -8,7 +8,7 @@ from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy.builtins import script
-from mitmproxy.flow import master
+from mitmproxy import master
 
 from .. import tutils, mastertest
 
@@ -58,7 +58,7 @@ def test_load_script():
 class TestScript(mastertest.MasterTest):
     def test_simple(self):
         o = options.Options()
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/recorder.py"
@@ -112,7 +112,7 @@ class TestScript(mastertest.MasterTest):
 
     def test_addon(self):
         o = options.Options()
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/addon.py"
@@ -145,7 +145,7 @@ class TestCutTraceback:
 class TestScriptLoader(mastertest.MasterTest):
     def test_run_once(self):
         o = options.Options(scripts=[])
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sl = script.ScriptLoader()
         m.addons.add(sl)
 
@@ -169,7 +169,7 @@ class TestScriptLoader(mastertest.MasterTest):
 
     def test_simple(self):
         o = options.Options(scripts=[])
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
         m.addons.add(sc)
         assert len(m.addons) == 1
@@ -184,7 +184,7 @@ class TestScriptLoader(mastertest.MasterTest):
 
     def test_dupes(self):
         o = options.Options(scripts=["one", "one"])
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
         tutils.raises(exceptions.OptionsError, m.addons.add, o, sc)
 

@@ -11,6 +11,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import options
+from mitmproxy import master
 from mitmproxy.web import app
 from netlib.http import authentication
 
@@ -130,7 +131,7 @@ class Options(options.Options):
             self.wauthenticator = None
 
 
-class WebMaster(flow.FlowMaster):
+class WebMaster(master.Master):
 
     def __init__(self, options, server):
         super().__init__(options, server)

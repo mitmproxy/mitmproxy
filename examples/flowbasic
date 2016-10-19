@@ -12,10 +12,10 @@ from mitmproxy import flow, controller, options
 from mitmproxy.proxy import ProxyServer, ProxyConfig
 
 
-class MyMaster(flow.FlowMaster):
+class MyMaster(master.Master):
     def run(self):
         try:
-            flow.FlowMaster.run(self)
+            master.Master.run(self)
         except KeyboardInterrupt:
             self.shutdown()
 

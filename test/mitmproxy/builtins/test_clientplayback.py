@@ -25,7 +25,7 @@ class TestClientPlayback:
         cp.keepserving = False
         cp.flows = None
         cp.current = None
-        with mock.patch("mitmproxy.controller.Master.shutdown") as sd:
+        with mock.patch("mitmproxy.master.Master.shutdown") as sd:
             with mastertest.mockctx():
                 cp.tick()
             sd.assert_called()
