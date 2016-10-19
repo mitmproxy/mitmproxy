@@ -6,7 +6,7 @@ from mitmproxy.tools import cmdline
 from mitmproxy import exceptions
 from mitmproxy.proxy import config
 from mitmproxy.proxy import server
-from netlib import version_check
+from mitmproxy.utils import version_check
 from mitmproxy.utils import debug
 
 

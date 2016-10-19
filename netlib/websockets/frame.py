@@ -4,7 +4,7 @@ import io
 
 from netlib import tcp
 from mitmproxy.utils import strutils
-from netlib import utils
+from mitmproxy.utils import bits
 from mitmproxy.utils import human
 from mitmproxy.types import bidi
 from .masker import Masker
@@ -119,13 +119,13 @@ class FrameHeader:
         return "".join(vals)
 
     def __bytes__(self):
-        first_byte = utils.setbit(0, 7, self.fin)
-        first_byte = utils.setbit(first_byte, 6, self.rsv1)
-        first_byte = utils.setbit(first_byte, 5, self.rsv2)
-        first_byte = utils.setbit(first_byte, 4, self.rsv3)
+        first_byte = bits.setbit(0, 7, self.fin)
+        first_byte = bits.setbit(first_byte, 6, self.rsv1)
+        first_byte = bits.setbit(first_byte, 5, self.rsv2)
+        first_byte = bits.setbit(first_byte, 4, self.rsv3)
         first_byte = first_byte | self.opcode
 
-        second_byte = utils.setbit(self.length_code, 7, self.mask)
+        second_byte = bits.setbit(self.length_code, 7, self.mask)
 
         b = bytes([first_byte, second_byte])
 
@@ -152,12 +152,12 @@ class FrameHeader:
           read a websockets frame header
         """
         first_byte, second_byte = fp.safe_read(2)
-        fin = utils.getbit(first_byte, 7)
-        rsv1 = utils.getbit(first_byte, 6)
-        rsv2 = utils.getbit(first_byte, 5)
-        rsv3 = utils.getbit(first_byte, 4)
+        fin = bits.getbit(first_byte, 7)
+        rsv1 = bits.getbit(first_byte, 6)
+        rsv2 = bits.getbit(first_byte, 5)
+        rsv3 = bits.getbit(first_byte, 4)
         opcode = first_byte & 0xF
-        mask_bit = utils.getbit(second_byte, 7)
+        mask_bit = bits.getbit(second_byte, 7)
         length_code = second_byte & 0x7F
 
         # payload_length > 125 indicates you need to read more bytes

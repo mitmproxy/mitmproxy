@@ -18,7 +18,7 @@ import OpenSSL
 from OpenSSL import SSL
 
 from netlib import certutils
-from netlib import version_check
+from mitmproxy.utils import version_check
 from mitmproxy.types import serializable
 from netlib import exceptions
 from mitmproxy.types import basethread

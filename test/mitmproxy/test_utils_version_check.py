@@ -1,6 +1,6 @@
 import io
 import mock
-from netlib import version_check
+from mitmproxy.utils import version_check
 
 
 @mock.patch("sys.exit")
