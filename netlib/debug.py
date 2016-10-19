@@ -6,7 +6,7 @@ import signal
 import platform
 import traceback
 
-from netlib import version
+from mitmproxy import version
 
 from OpenSSL import SSL
 

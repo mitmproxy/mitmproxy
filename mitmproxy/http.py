@@ -2,7 +2,7 @@ import cgi
 
 from mitmproxy import flow
 from netlib import http
-from netlib import version
+from mitmproxy import version
 from netlib import tcp
 
 

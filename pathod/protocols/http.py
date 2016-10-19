@@ -1,4 +1,4 @@
-from netlib import version
+from mitmproxy import version
 from netlib.exceptions import TlsException
 from netlib.http import http1
 from .. import language

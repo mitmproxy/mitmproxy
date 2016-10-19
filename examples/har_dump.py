@@ -14,7 +14,7 @@ import pytz
 
 import mitmproxy
 
-from netlib import version
+from mitmproxy import version
 from netlib import strutils
 from netlib.http import cookies
 

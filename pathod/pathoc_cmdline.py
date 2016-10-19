@@ -4,7 +4,7 @@ import os
 import os.path
 
 from netlib import tcp
-from netlib import version
+from mitmproxy import version
 from netlib.http import user_agents
 from . import pathoc, language
 

@@ -7,7 +7,7 @@ from mitmproxy import options
 from mitmproxy import platform
 from netlib import human
 from netlib import tcp
-from netlib import version
+from mitmproxy import version
 
 
 class ParseException(Exception):

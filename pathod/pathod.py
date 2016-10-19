@@ -7,7 +7,7 @@ import threading
 from netlib import tcp
 from netlib import certutils
 from netlib import websockets
-from netlib import version
+from mitmproxy import version
 
 import urllib
 from netlib.exceptions import HttpException, HttpReadDisconnect, TcpTimeout, TcpDisconnect, \

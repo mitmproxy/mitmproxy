@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from codecs import open
 import os
 
-from netlib import version
+from mitmproxy import version
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/

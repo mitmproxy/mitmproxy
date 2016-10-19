@@ -2,7 +2,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 
 from netlib import wsgi
-from netlib import version
+from mitmproxy import version
 
 
 class WSGIApp:
