@@ -5,6 +5,7 @@ from OpenSSL import SSL
 import netlib.tcp
 from mitmproxy import tcp
 from mitmproxy import flow
+from mitmproxy import exceptions
 from mitmproxy.proxy.protocol import base
 
 
