@@ -13,13 +13,17 @@ import logging
 
 from netlib.tutils import treq
 from mitmproxy.utils import strutils
-from netlib import tcp, certutils, websockets, socks
+from netlib import tcp
+from mitmproxy import certs
+from netlib import websockets
+from netlib import socks
 from netlib import exceptions
 from netlib.http import http1
 from mitmproxy.types import basethread
 
-from . import log, language
-from .protocols import http2
+from pathod import log
+from pathod import language
+from pathod.protocols import http2
 
 
 logging.getLogger("hpack").setLevel(logging.WARNING)
@@ -76,7 +80,7 @@ class SSLInfo:
             }
             t = types.get(pk.type(), "Uknown")
             parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
-            s = certutils.SSLCert(i)
+            s = certs.SSLCert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(strutils.native(n, "utf8") for n in s.altnames))
         return "\n".join(parts)

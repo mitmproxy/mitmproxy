@@ -4,7 +4,7 @@ import copy
 import os
 
 from mitmproxy import stateobject
-from netlib import certutils
+from mitmproxy import certs
 from netlib import tcp
 
 
@@ -57,7 +57,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     _stateobject_attributes = dict(
         address=tcp.Address,
         ssl_established=bool,
-        clientcert=certutils.SSLCert,
+        clientcert=certs.SSLCert,
         timestamp_start=float,
         timestamp_ssl_setup=float,
         timestamp_end=float,
@@ -151,7 +151,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ip_address=tcp.Address,
         source_address=tcp.Address,
         ssl_established=bool,
-        cert=certutils.SSLCert,
+        cert=certs.SSLCert,
         sni=str,
         timestamp_start=float,
         timestamp_tcp_setup=float,

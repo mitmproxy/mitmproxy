@@ -17,7 +17,7 @@ from backports import ssl_match_hostname
 import OpenSSL
 from OpenSSL import SSL
 
-from netlib import certutils
+from mitmproxy import certs
 from mitmproxy.utils import version_check
 from mitmproxy.types import serializable
 from netlib import exceptions
@@ -685,11 +685,11 @@ class TCPClient(_Connection):
             if verification_mode == SSL.VERIFY_PEER and self.ssl_verification_error:
                 raise self.ssl_verification_error
 
-        self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
+        self.cert = certs.SSLCert(self.connection.get_peer_certificate())
 
         # Keep all server certificates in a list
         for i in self.connection.get_peer_cert_chain():
-            self.server_certs.append(certutils.SSLCert(i))
+            self.server_certs.append(certs.SSLCert(i))
 
         # Validate TLS Hostname
         try:
@@ -782,7 +782,7 @@ class BaseHandler(_Connection):
                            extra_chain_certs=None,
                            **sslctx_kwargs):
         """
-            cert: A certutils.SSLCert object or the path to a certificate
+            cert: A certs.SSLCert object or the path to a certificate
             chain file.
 
             handle_sni: SNI handler, should take a connection object. Server
@@ -810,7 +810,7 @@ class BaseHandler(_Connection):
         context = self._create_ssl_context(ca_pemfile=chain_file, **sslctx_kwargs)
 
         context.use_privatekey(key)
-        if isinstance(cert, certutils.SSLCert):
+        if isinstance(cert, certs.SSLCert):
             context.use_certificate(cert.x509)
         else:
             context.use_certificate_chain_file(cert)
@@ -825,7 +825,7 @@ class BaseHandler(_Connection):
 
         if request_client_cert:
             def save_cert(conn_, cert, errno_, depth_, preverify_ok_):
-                self.clientcert = certutils.SSLCert(cert)
+                self.clientcert = certs.SSLCert(cert)
                 # Return true to prevent cert verification error
                 return True
             context.set_verify(SSL.VERIFY_PEER, save_cert)

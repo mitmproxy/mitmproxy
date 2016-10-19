@@ -9,13 +9,16 @@ from mitmproxy.addons import script
 from mitmproxy import http
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 import netlib.http
-from netlib import tcp, socks
-from netlib.certutils import SSLCert
-from netlib.exceptions import HttpReadDisconnect, HttpException
-from netlib.http import authentication, http1
+from netlib import tcp
+from netlib import socks
+from mitmproxy import certs
+from netlib import exceptions
+from netlib.http import authentication
+from netlib.http import http1
 from netlib.tcp import Address
 from netlib.tutils import raises
-from pathod import pathoc, pathod
+from pathod import pathoc
+from pathod import pathod
 
 from . import tutils, tservers
 
@@ -144,9 +147,9 @@ class TcpMixin:
 
         # Test that we get the original SSL cert
         if self.ssl:
-            i_cert = SSLCert(i.sslinfo.certchain[0])
-            i2_cert = SSLCert(i2.sslinfo.certchain[0])
-            n_cert = SSLCert(n.sslinfo.certchain[0])
+            i_cert = certs.SSLCert(i.sslinfo.certchain[0])
+            i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
+            n_cert = certs.SSLCert(n.sslinfo.certchain[0])
 
             assert i_cert == i2_cert
             assert i_cert != n_cert
@@ -156,7 +159,7 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        with raises(HttpException):
+        with raises(exceptions.HttpException):
             self.pathod(spec)  # pathoc tries to parse answer as HTTP
 
         self._ignore_off()
@@ -190,9 +193,9 @@ class TcpMixin:
 
         # Test that we get the original SSL cert
         if self.ssl:
-            i_cert = SSLCert(i.sslinfo.certchain[0])
-            i2_cert = SSLCert(i2.sslinfo.certchain[0])
-            n_cert = SSLCert(n.sslinfo.certchain[0])
+            i_cert = certs.SSLCert(i.sslinfo.certchain[0])
+            i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
+            n_cert = certs.SSLCert(n.sslinfo.certchain[0])
 
             assert i_cert == i2_cert == n_cert
 
@@ -830,7 +833,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        with raises(HttpReadDisconnect):
+        with raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
@@ -847,7 +850,7 @@ class TestKillResponse(tservers.HTTPProxyTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        with raises(HttpReadDisconnect):
+        with raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
@@ -1050,7 +1053,7 @@ class AddUpstreamCertsToClientChainMixin:
     def test_add_upstream_certs_to_client_chain(self):
         with open(self.servercert, "rb") as f:
             d = f.read()
-        upstreamCert = SSLCert.from_pem(d)
+        upstreamCert = certs.SSLCert.from_pem(d)
         p = self.pathoc()
         with p.connect():
             upstream_cert_found_in_client_chain = False
