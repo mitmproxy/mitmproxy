@@ -1,6 +1,8 @@
 import ipaddress
 from io import BytesIO
-from netlib import socks, tcp, tutils
+from netlib import socks
+from netlib import tcp
+from mitmproxy.test import tutils
 
 
 def test_client_greeting():

@@ -89,9 +89,7 @@ class RaisesContext:
         return True
 
 
-test_data = data.Data(__name__)
-# FIXME: Temporary workaround during repo merge.
-test_data.dirname = os.path.join(test_data.dirname, "..", "test", "netlib")
+test_data = data.Data(__name__).push("../../test/netlib")
 
 
 def treq(**kwargs):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from netlib.http import Headers
-from netlib.tutils import treq, raises
+from mitmproxy.test.tutils import treq, raises
 from .test_message import _test_decoded_attr, _test_passthrough_attr
 
 

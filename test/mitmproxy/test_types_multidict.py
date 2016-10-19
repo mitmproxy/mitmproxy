@@ -1,4 +1,4 @@
-from netlib import tutils
+from mitmproxy.test import tutils
 from mitmproxy.types import multidict
 
 

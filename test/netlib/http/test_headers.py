@@ -1,7 +1,7 @@
 import collections
 
 from netlib.http.headers import Headers, parse_content_type, assemble_content_type
-from netlib.tutils import raises
+from mitmproxy.test.tutils import raises
 
 
 class TestHeaders:

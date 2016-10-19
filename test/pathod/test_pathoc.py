@@ -4,7 +4,7 @@ from mock import Mock
 from netlib import http
 from netlib import tcp
 from netlib.http import http1
-from netlib.tutils import raises
+from mitmproxy.test.tutils import raises
 from mitmproxy import exceptions
 
 from pathod import pathoc, language

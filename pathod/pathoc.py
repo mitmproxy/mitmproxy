@@ -11,7 +11,7 @@ import time
 import OpenSSL.crypto
 import logging
 
-from netlib.tutils import treq
+from mitmproxy.test.tutils import treq
 from mitmproxy.utils import strutils
 from netlib import tcp
 from mitmproxy import certs

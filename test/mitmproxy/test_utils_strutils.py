@@ -1,5 +1,5 @@
 from mitmproxy.utils import strutils
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 def test_always_bytes():

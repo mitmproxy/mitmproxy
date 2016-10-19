@@ -11,7 +11,7 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from netlib import tcp
-from netlib import tutils
+from mitmproxy.test import tutils
 from mitmproxy import exceptions
 
 from . import tservers

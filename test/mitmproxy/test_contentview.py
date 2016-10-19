@@ -6,7 +6,7 @@ from mitmproxy.types import multidict
 
 import mitmproxy.contentviews as cv
 from . import tutils
-import netlib.tutils
+import mitmproxy.test.tutils
 
 try:
     import pyamf
@@ -232,7 +232,7 @@ def test_get_content_view():
 
 
 def test_get_message_content_view():
-    r = netlib.tutils.treq()
+    r = mitmproxy.test.tutils.treq()
     desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
     assert desc == "Raw"
 

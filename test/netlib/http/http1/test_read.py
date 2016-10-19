@@ -10,7 +10,7 @@ from netlib.http.http1.read import (
     _read_request_line, _parse_authority_form, _read_response_line, _check_http_version,
     _read_headers, _read_chunked, get_header_tokens
 )
-from netlib.tutils import treq, tresp, raises
+from mitmproxy.test.tutils import treq, tresp, raises
 
 
 def test_get_header_tokens():

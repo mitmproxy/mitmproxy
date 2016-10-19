@@ -5,7 +5,7 @@ import time
 from netlib.http import Headers
 from netlib.http import Response
 from netlib.http.cookies import CookieAttrs
-from netlib.tutils import raises, tresp
+from mitmproxy.test.tutils import raises, tresp
 from .test_message import _test_passthrough_attr, _test_decoded_attr
 
 

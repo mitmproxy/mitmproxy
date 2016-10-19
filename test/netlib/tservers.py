@@ -4,7 +4,7 @@ import io
 import OpenSSL
 
 from netlib import tcp
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 class _ServerThread(threading.Thread):

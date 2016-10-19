@@ -3,7 +3,7 @@ import codecs
 import pytest
 
 from netlib import websockets
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 class TestFrameHeader:

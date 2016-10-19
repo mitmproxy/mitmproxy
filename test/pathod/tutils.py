@@ -8,7 +8,7 @@ import urllib
 from mitmproxy.utils import data
 
 from netlib import tcp
-from netlib import tutils
+from mitmproxy.test import tutils
 
 from pathod import language
 from pathod import pathoc

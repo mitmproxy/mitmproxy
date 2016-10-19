@@ -2,7 +2,7 @@ import mock
 import pytest
 
 from netlib.http import encoding
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 @pytest.mark.parametrize("encoder", [

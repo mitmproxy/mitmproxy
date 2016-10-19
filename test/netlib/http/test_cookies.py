@@ -1,7 +1,7 @@
 import time
 
 from netlib.http import cookies
-from netlib.tutils import raises
+from mitmproxy.test.tutils import raises
 
 import mock
 

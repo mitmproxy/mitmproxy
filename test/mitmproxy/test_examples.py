@@ -9,7 +9,7 @@ from mitmproxy.addons import script
 from mitmproxy.utils import data
 from mitmproxy import master
 
-from netlib import tutils as netutils
+from mitmproxy.test import tutils as netutils
 from netlib.http import Headers
 from netlib.http import cookies
 

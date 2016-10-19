@@ -1,5 +1,5 @@
 from mitmproxy.types import bidi
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 def test_bidi():

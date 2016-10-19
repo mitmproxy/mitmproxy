@@ -2,7 +2,7 @@ import os
 import socket
 import time
 
-import netlib.tutils
+import mitmproxy.test.tutils
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.addons import script
@@ -16,7 +16,7 @@ from mitmproxy import exceptions
 from netlib.http import authentication
 from netlib.http import http1
 from netlib.tcp import Address
-from netlib.tutils import raises
+from mitmproxy.test.tutils import raises
 from pathod import pathoc
 from pathod import pathod
 
@@ -794,7 +794,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
     def request(self, f):
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -873,7 +873,7 @@ class MasterIncomplete(tservers.TestMaster):
 
     @controller.handler
     def request(self, f):
-        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         resp.content = None
         f.response = resp
 

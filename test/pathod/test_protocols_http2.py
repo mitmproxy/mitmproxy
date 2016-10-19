@@ -3,7 +3,7 @@ import codecs
 
 import hyperframe
 from netlib import tcp, http
-from netlib.tutils import raises
+from mitmproxy.test.tutils import raises
 from netlib.http import http2
 from mitmproxy import exceptions
 

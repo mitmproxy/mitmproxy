@@ -1,6 +1,6 @@
 import os
 from mitmproxy import certs
-from netlib import tutils
+from mitmproxy.test import tutils
 
 # class TestDNTree:
 #     def test_simple(self):

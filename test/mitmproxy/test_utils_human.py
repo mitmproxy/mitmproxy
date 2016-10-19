@@ -1,6 +1,6 @@
 import time
 from mitmproxy.utils import human
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 def test_format_timestamp():

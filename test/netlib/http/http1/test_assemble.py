@@ -5,7 +5,7 @@ from netlib.http.http1.assemble import (
     assemble_response_head, _assemble_request_line, _assemble_request_headers,
     _assemble_response_headers,
     assemble_body)
-from netlib.tutils import treq, raises, tresp
+from mitmproxy.test.tutils import treq, raises, tresp
 
 
 def test_assemble_request():
