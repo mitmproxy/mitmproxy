@@ -5,8 +5,8 @@ import traceback
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
-from mitmproxy.protocol import base
-from mitmproxy.protocol import websockets as pwebsockets
+from mitmproxy.proxy.protocol import base
+from mitmproxy.proxy.protocol import websockets as pwebsockets
 import netlib.http
 from netlib import tcp
 from netlib import websockets

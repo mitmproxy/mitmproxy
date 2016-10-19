@@ -11,8 +11,8 @@ import queue
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy.protocol import base
-from mitmproxy.protocol import http as httpbase
+from mitmproxy.proxy.protocol import base
+from mitmproxy.proxy.protocol import http as httpbase
 import netlib.http
 from netlib import tcp
 from netlib import basethread

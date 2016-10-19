@@ -22,7 +22,7 @@ class _LayerCodeCompletion:
         self.channel = None
         """@type: mitmproxy.controller.Channel"""
         self.ctx = None
-        """@type: mitmproxy.protocol.Layer"""
+        """@type: mitmproxy.proxy.protocol.Layer"""
 
 
 class Layer(_LayerCodeCompletion):

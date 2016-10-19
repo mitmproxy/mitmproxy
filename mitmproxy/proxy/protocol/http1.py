@@ -1,5 +1,5 @@
 from mitmproxy import http
-from mitmproxy.protocol import http as httpbase
+from mitmproxy.proxy.protocol import http as httpbase
 from netlib.http import http1
 
 

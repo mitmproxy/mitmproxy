@@ -1,7 +1,7 @@
 import netlib.exceptions
 from mitmproxy import log
 from mitmproxy import exceptions
-from mitmproxy import protocol
+from mitmproxy.proxy import protocol
 from mitmproxy.proxy import modes
 
 

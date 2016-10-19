@@ -6,7 +6,7 @@ import netlib.exceptions
 import netlib.tcp
 from mitmproxy import tcp
 from mitmproxy import flow
-from mitmproxy.protocol import base
+from mitmproxy.proxy.protocol import base
 
 
 class RawTCPLayer(base.Layer):

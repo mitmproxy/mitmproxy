@@ -1,6 +1,6 @@
 from mitmproxy import exceptions
 from mitmproxy import platform
-from mitmproxy import protocol
+from mitmproxy.proxy import protocol
 
 
 class TransparentProxy(protocol.Layer, protocol.ServerConnectionMixin):
