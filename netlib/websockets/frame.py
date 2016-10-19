@@ -6,6 +6,7 @@ from netlib import tcp
 from mitmproxy.utils import strutils
 from netlib import utils
 from mitmproxy.utils import human
+from mitmproxy.types import bidi
 from .masker import Masker
 
 
@@ -15,7 +16,7 @@ MAX_64_BIT_INT = (1 << 64)
 DEFAULT = object()
 
 # RFC 6455, Section 5.2 - Base Framing Protocol
-OPCODE = utils.BiDi(
+OPCODE = bidi.BiDi(
     CONTINUE=0x00,
     TEXT=0x01,
     BINARY=0x02,
@@ -25,7 +26,7 @@ OPCODE = utils.BiDi(
 )
 
 # RFC 6455, Section 7.4.1 - Defined Status Codes
-CLOSE_REASON = utils.BiDi(
+CLOSE_REASON = bidi.BiDi(
     NORMAL_CLOSURE=1000,
     GOING_AWAY=1001,
     PROTOCOL_ERROR=1002,

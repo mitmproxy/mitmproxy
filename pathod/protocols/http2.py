@@ -4,11 +4,11 @@ import time
 import hyperframe.frame
 from hpack.hpack import Encoder, Decoder
 
-from netlib import utils
 from netlib.http import http2
 import netlib.http.headers
 import netlib.http.response
 import netlib.http.request
+from mitmproxy.types import bidi
 
 from .. import language
 
@@ -22,7 +22,7 @@ class TCPHandler:
 
 class HTTP2StateProtocol:
 
-    ERROR_CODES = utils.BiDi(
+    ERROR_CODES = bidi.BiDi(
         NO_ERROR=0x0,
         PROTOCOL_ERROR=0x1,
         INTERNAL_ERROR=0x2,

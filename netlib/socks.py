@@ -3,6 +3,7 @@ import array
 import ipaddress
 
 from netlib import tcp, utils
+from mitmproxy.types import bidi
 
 
 class SocksError(Exception):
@@ -10,24 +11,24 @@ class SocksError(Exception):
         super().__init__(message)
         self.code = code
 
-VERSION = utils.BiDi(
+VERSION = bidi.BiDi(
     SOCKS4=0x04,
     SOCKS5=0x05
 )
 
-CMD = utils.BiDi(
+CMD = bidi.BiDi(
     CONNECT=0x01,
     BIND=0x02,
     UDP_ASSOCIATE=0x03
 )
 
-ATYP = utils.BiDi(
+ATYP = bidi.BiDi(
     IPV4_ADDRESS=0x01,
     DOMAINNAME=0x03,
     IPV6_ADDRESS=0x04
 )
 
-REP = utils.BiDi(
+REP = bidi.BiDi(
     SUCCEEDED=0x00,
     GENERAL_SOCKS_SERVER_FAILURE=0x01,
     CONNECTION_NOT_ALLOWED_BY_RULESET=0x02,
@@ -39,14 +40,14 @@ REP = utils.BiDi(
     ADDRESS_TYPE_NOT_SUPPORTED=0x08,
 )
 
-METHOD = utils.BiDi(
+METHOD = bidi.BiDi(
     NO_AUTHENTICATION_REQUIRED=0x00,
     GSSAPI=0x01,
     USERNAME_PASSWORD=0x02,
     NO_ACCEPTABLE_METHODS=0xFF
 )
 
-USERNAME_PASSWORD_VERSION = utils.BiDi(
+USERNAME_PASSWORD_VERSION = bidi.BiDi(
     DEFAULT=0x01
 )
 
