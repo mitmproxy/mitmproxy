@@ -6,18 +6,19 @@ import sys
 
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
+from mitmproxy import master
 from mitmproxy.flow import state
 import pathod.test
 import pathod.pathoc
-from mitmproxy import flow, controller, options
+from mitmproxy import controller, options
 import netlib.exceptions
 
 
-class TestMaster(flow.FlowMaster):
+class TestMaster(master.Master):
 
     def __init__(self, opts, config):
         s = ProxyServer(config)
-        flow.FlowMaster.__init__(self, opts, s)
+        master.Master.__init__(self, opts, s)
 
     def clear_addons(self, addons):
         self.addons.clear()

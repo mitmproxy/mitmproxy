@@ -8,6 +8,7 @@ import queue
 
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import proxy
+from mitmproxy import master
 from netlib.tutils import raises
 
 
@@ -17,7 +18,7 @@ class TMsg:
 
 class TestMaster:
     def test_simple(self):
-        class DummyMaster(controller.Master):
+        class DummyMaster(master.Master):
             @controller.handler
             def log(self, _):
                 m.should_exit.set()
@@ -35,7 +36,7 @@ class TestMaster:
         assert m.should_exit.is_set()
 
     def test_server_simple(self):
-        m = controller.Master(None, proxy.DummyServer(None))
+        m = master.Master(None, proxy.DummyServer(None))
         m.start()
         m.shutdown()
         m.start()
@@ -45,7 +46,7 @@ class TestMaster:
 class TestServerThread:
     def test_simple(self):
         m = Mock()
-        t = controller.ServerThread(m)
+        t = master.ServerThread(m)
         t.run()
         assert m.serve_forever.called
 

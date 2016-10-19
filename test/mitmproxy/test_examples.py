@@ -6,7 +6,7 @@ from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy import proxy
 from mitmproxy.builtins import script
-from mitmproxy.flow import master
+from mitmproxy import master
 
 import netlib.utils
 
@@ -23,7 +23,7 @@ class ScriptError(Exception):
     pass
 
 
-class RaiseMaster(master.FlowMaster):
+class RaiseMaster(master.Master):
     def add_log(self, e, level):
         if level in ("warn", "error"):
             raise ScriptError(e)

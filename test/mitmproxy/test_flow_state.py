@@ -1,12 +1,13 @@
 from mitmproxy import flow
 from mitmproxy import proxy
+from mitmproxy import master
 from . import tutils
 
 
 class TestState:
     def test_duplicate_flow(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, proxy.DummyServer())
+        fm = master.Master(None, proxy.DummyServer())
         fm.addons.add(s)
         f = tutils.tflow(resp=True)
         fm.load_flow(f)

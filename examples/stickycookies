@@ -10,14 +10,14 @@ from mitmproxy import controller, proxy
 from mitmproxy.proxy.server import ProxyServer
 
 
-class StickyMaster(controller.Master):
+class StickyMaster(master.Master):
     def __init__(self, server):
-        controller.Master.__init__(self, server)
+        master.Master.__init__(self, server)
         self.stickyhosts = {}
 
     def run(self):
         try:
-            return controller.Master.run(self)
+            return master.Master.run(self)
         except KeyboardInterrupt:
             self.shutdown()
 

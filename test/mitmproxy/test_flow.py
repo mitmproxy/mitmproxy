@@ -14,6 +14,7 @@ from mitmproxy.models import HTTPResponse
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy.models.connections import ClientConnection
+from mitmproxy import master
 from . import tutils
 
 
@@ -110,7 +111,7 @@ class TestHTTPFlow:
     def test_killall(self):
         srv = DummyServer(None)
         s = flow.State()
-        fm = flow.FlowMaster(None, srv)
+        fm = master.Master(None, srv)
         fm.addons.add(s)
 
         f = tutils.tflow()
@@ -363,7 +364,7 @@ class TestSerialize:
     def test_load_flows(self):
         r = self._treader()
         s = flow.State()
-        fm = flow.FlowMaster(None, DummyServer())
+        fm = master.Master(None, DummyServer())
         fm.addons.add(s)
         fm.load_flows(r)
         assert len(s.flows) == 6
@@ -376,7 +377,7 @@ class TestSerialize:
             upstream_server="https://use-this-domain"
         )
         conf = ProxyConfig(opts)
-        fm = flow.FlowMaster(opts, DummyServer(conf))
+        fm = master.Master(opts, DummyServer(conf))
         fm.addons.add(s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"
@@ -423,7 +424,7 @@ class TestSerialize:
 class TestFlowMaster:
 
     def test_replay(self):
-        fm = flow.FlowMaster(None, DummyServer())
+        fm = master.Master(None, DummyServer())
         f = tutils.tflow(resp=True)
         f.request.content = None
         tutils.raises("missing", fm.replay_request, f)
@@ -435,12 +436,12 @@ class TestFlowMaster:
         tutils.raises("live", fm.replay_request, f)
 
     def test_create_flow(self):
-        fm = flow.FlowMaster(None, DummyServer())
+        fm = master.Master(None, DummyServer())
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, DummyServer())
+        fm = master.Master(None, DummyServer())
         fm.addons.add(s)
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)

@@ -1,6 +1,6 @@
 from .. import tutils, mastertest
 from mitmproxy.builtins import stickyauth
-from mitmproxy.flow import master
+from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
 
@@ -8,7 +8,7 @@ from mitmproxy import proxy
 class TestStickyAuth(mastertest.MasterTest):
     def test_simple(self):
         o = options.Options(stickyauth = ".*")
-        m = master.FlowMaster(o, proxy.DummyServer())
+        m = master.Master(o, proxy.DummyServer())
         sa = stickyauth.StickyAuth()
         m.addons.add(sa)
 

@@ -6,6 +6,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import builtins
 from mitmproxy import options
+from mitmproxy import master
 from mitmproxy.builtins import dumper, termlog
 from netlib import tcp
 
@@ -30,10 +31,10 @@ class Options(options.Options):
         super().__init__(**kwargs)
 
 
-class DumpMaster(flow.FlowMaster):
+class DumpMaster(master.Master):
 
     def __init__(self, options, server):
-        flow.FlowMaster.__init__(self, options, server)
+        master.Master.__init__(self, options, server)
         self.has_errored = False
         self.addons.add(termlog.TermLog())
         self.addons.add(*builtins.default_addons())

@@ -3,7 +3,7 @@ from mitmproxy import controller
 from mitmproxy.builtins import script
 from mitmproxy import options
 from mitmproxy import proxy
-from mitmproxy.flow import master
+from mitmproxy import master
 import time
 
 
@@ -16,7 +16,7 @@ class Thing:
 class TestConcurrent(mastertest.MasterTest):
     @tutils.skip_appveyor
     def test_concurrent(self):
-        m = master.FlowMaster(options.Options(), proxy.DummyServer())
+        m = master.Master(options.Options(), proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/concurrent_decorator.py"

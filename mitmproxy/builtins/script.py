@@ -6,9 +6,8 @@ import threading
 import traceback
 
 from mitmproxy import exceptions
-from mitmproxy import controller
 from mitmproxy import ctx
-from mitmproxy.flow import master as flowmaster
+from mitmproxy import events
 
 
 import watchdog.events
@@ -154,7 +153,7 @@ class Script:
         self.last_options = None
         self.should_reload = threading.Event()
 
-        for i in controller.Events:
+        for i in events.Events:
             if not hasattr(self, i):
                 def mkprox():
                     evt = i
@@ -221,7 +220,7 @@ class ScriptLoader:
         sc = Script(command)
         sc.load_script()
         for f in flows:
-            for evt, o in flowmaster.event_sequence(f):
+            for evt, o in events.event_sequence(f):
                 sc.run(evt, o)
         sc.done()
         return sc

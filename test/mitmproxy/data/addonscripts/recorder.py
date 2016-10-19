@@ -1,4 +1,5 @@
 from mitmproxy import controller
+from mitmproxy import events
 from mitmproxy import ctx
 import sys
 
@@ -10,7 +11,7 @@ class CallLogger:
         self.name = name
 
     def __getattr__(self, attr):
-        if attr in controller.Events:
+        if attr in events.Events:
             def prox(*args, **kwargs):
                 lg = (self.name, attr, args, kwargs)
                 if attr != "log":
