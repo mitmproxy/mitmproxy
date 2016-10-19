@@ -121,7 +121,10 @@ class WebsocketFrameReader(basethread.BaseThread):
             while True:
                 if self.ws_read_limit == 0:
                     return
-                r, _, _ = select.select([self.rfile], [], [], 0.05)
+                try:
+                    r, _, _ = select.select([self.rfile], [], [], 0.05)
+                except OSError:
+                    return
                 delta = time.time() - starttime
                 if not r and self.timeout and delta > self.timeout:
                     return
