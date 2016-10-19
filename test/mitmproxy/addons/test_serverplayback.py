@@ -1,7 +1,7 @@
 from .. import tutils, mastertest
 
 import netlib.tutils
-from mitmproxy.builtins import serverplayback
+from mitmproxy.addons import serverplayback
 from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import exceptions

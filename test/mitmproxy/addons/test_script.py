@@ -7,7 +7,7 @@ import re
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import proxy
-from mitmproxy.builtins import script
+from mitmproxy.addons import script
 from mitmproxy import master
 
 from .. import tutils, mastertest

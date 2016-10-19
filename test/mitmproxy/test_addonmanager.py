@@ -1,4 +1,4 @@
-from mitmproxy import addons
+from mitmproxy import addonmanager
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy import proxy
@@ -15,7 +15,7 @@ class TAddon:
 def test_simple():
     o = options.Options()
     m = master.Master(o, proxy.DummyServer(o))
-    a = addons.Addons(m)
+    a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
     assert a.get("one")
     assert not a.get("two")

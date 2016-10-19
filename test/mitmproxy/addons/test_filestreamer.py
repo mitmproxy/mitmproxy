@@ -2,7 +2,7 @@ from .. import tutils, mastertest
 
 import os.path
 
-from mitmproxy.builtins import filestreamer
+from mitmproxy.addons import filestreamer
 from mitmproxy import master
 from mitmproxy.flow import io
 from mitmproxy import options

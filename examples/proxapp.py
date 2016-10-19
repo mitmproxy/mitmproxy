@@ -4,7 +4,7 @@ instance, we're using the Flask framework (http://flask.pocoo.org/) to expose
 a single simplest-possible page.
 """
 from flask import Flask
-from mitmproxy.builtins import wsgiapp
+from mitmproxy.addons import wsgiapp
 
 app = Flask("proxapp")
 

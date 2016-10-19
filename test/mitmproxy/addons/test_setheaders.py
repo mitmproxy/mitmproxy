@@ -1,6 +1,6 @@
 from .. import tutils, mastertest
 
-from mitmproxy.builtins import setheaders
+from mitmproxy.addons import setheaders
 from mitmproxy import options
 from mitmproxy import proxy
 

@@ -1,7 +1,7 @@
 from .. import mastertest
 import io
 
-from mitmproxy.builtins import termlog
+from mitmproxy.addons import termlog
 from mitmproxy import log
 from mitmproxy import dump
 

@@ -1,6 +1,6 @@
 from test.mitmproxy import tutils, mastertest
 from mitmproxy import controller
-from mitmproxy.builtins import script
+from mitmproxy.addons import script
 from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import master

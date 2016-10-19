@@ -1,17 +1,17 @@
 import flask
 
 from .. import tservers
-from mitmproxy.builtins import wsgiapp
+from mitmproxy.addons import wsgiapp
 
-testapp = flask.Flask(__name__)
+tapp = flask.Flask(__name__)
 
 
-@testapp.route("/")
+@tapp.route("/")
 def hello():
     return "testapp"
 
 
-@testapp.route("/error")
+@tapp.route("/error")
 def error():
     raise ValueError("An exception...")
 
@@ -23,7 +23,7 @@ def errapp(environ, start_response):
 class TestApp(tservers.HTTPProxyTest):
     def addons(self):
         return [
-            wsgiapp.WSGIApp(testapp, "testapp", 80),
+            wsgiapp.WSGIApp(tapp, "testapp", 80),
             wsgiapp.WSGIApp(errapp, "errapp", 80)
         ]
 

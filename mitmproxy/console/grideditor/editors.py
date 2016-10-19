@@ -2,7 +2,7 @@ import re
 import urwid
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
-from mitmproxy.builtins import script
+from mitmproxy.addons import script
 from mitmproxy.console import common
 from mitmproxy.console.grideditor import base
 from mitmproxy.console.grideditor import col_bytes

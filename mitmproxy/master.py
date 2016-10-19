@@ -4,7 +4,7 @@ import contextlib
 import queue
 import sys
 
-from mitmproxy import addons
+from mitmproxy import addonmanager
 from mitmproxy import options
 from mitmproxy import controller
 from mitmproxy import events
@@ -37,7 +37,7 @@ class Master:
     """
     def __init__(self, opts, server):
         self.options = opts or options.Options()
-        self.addons = addons.Addons(self)
+        self.addons = addonmanager.AddonManager(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.server = server

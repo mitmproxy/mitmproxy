@@ -6,8 +6,9 @@ import tornado.wsgi
 
 from mitmproxy import utils
 from mitmproxy.proxy import config
+from mitmproxy.addons import wsgiapp
 
-loader = tornado.template.Loader(utils.pkg_data.path("builtins/onboardingapp/templates"))
+loader = tornado.template.Loader(utils.pkg_data.path("addons/onboardingapp/templates"))
 
 
 class Adapter(tornado.wsgi.WSGIAdapter):
@@ -85,9 +86,24 @@ application = tornado.web.Application(
             r"/static/(.*)",
             tornado.web.StaticFileHandler,
             {
-                "path": utils.pkg_data.path("onboarding/static")
+                "path": utils.pkg_data.path("addons/onboardingapp/static")
             }
         ),
     ],
     # debug=True
 )
+
+
+class Onboarding(wsgiapp.WSGIApp):
+    def __init__(self):
+        super().__init__(Adapter(application), None, None)
+        self.enabled = False
+
+    def configure(self, options, updated):
+        self.host = options.app_host
+        self.port = options.app_port
+        self.enabled = options.app
+
+    def request(self, f):
+        if self.enabled:
+            super().request(f)

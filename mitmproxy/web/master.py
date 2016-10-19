@@ -6,7 +6,7 @@ import tornado.ioloop
 
 from typing import Optional
 
-from mitmproxy import builtins
+from mitmproxy import addons
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -136,7 +136,7 @@ class WebMaster(master.Master):
     def __init__(self, options, server):
         super().__init__(options, server)
         self.state = WebState()
-        self.addons.add(*builtins.default_addons())
+        self.addons.add(*addons.default_addons())
         self.addons.add(self.state)
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator
