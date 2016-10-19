@@ -1,4 +1,4 @@
-from mitmproxy.web import master
+from mitmproxy.tools.web import master
 from mitmproxy import proxy
 from . import mastertest
 

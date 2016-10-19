@@ -10,9 +10,9 @@ import queue
 
 import netlib.exceptions
 from mitmproxy import exceptions
-from mitmproxy import models
+from mitmproxy import http
 from mitmproxy.protocol import base
-from mitmproxy.protocol import http
+from mitmproxy.protocol import http as httpbase
 import netlib.http
 from netlib import tcp
 from netlib import basethread
@@ -358,7 +358,7 @@ def detect_zombie_stream(func):
     return wrapper
 
 
-class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread):
+class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThread):
 
     def __init__(self, ctx, h2_connection, stream_id, request_headers):
         super().__init__(
@@ -451,7 +451,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         self.request_arrived.wait()
         self.raise_zombie()
         first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_headers)
-        return models.HTTPRequest(
+        return http.HTTPRequest(
             first_line_format,
             method,
             scheme,
@@ -547,7 +547,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         headers = self.response_headers.copy()
         headers.pop(":status", None)
 
-        return models.HTTPResponse(
+        return http.HTTPResponse(
             http_version=b"HTTP/2.0",
             status_code=status_code,
             reason=b'',
@@ -597,7 +597,7 @@ class Http2SingleStreamLayer(http._HttpTransmissionLayer, basethread.BaseThread)
         raise EnvironmentError('Http2SingleStreamLayer must be run as thread')
 
     def run(self):
-        layer = http.HttpLayer(self, self.mode)
+        layer = httpbase.HttpLayer(self, self.mode)
 
         try:
             layer()

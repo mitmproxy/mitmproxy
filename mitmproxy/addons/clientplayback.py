@@ -3,7 +3,6 @@ from mitmproxy import ctx
 from mitmproxy import io
 
 
-
 class ClientPlayback:
     def __init__(self):
         self.flows = None

@@ -12,11 +12,10 @@ import io
 import netlib.utils
 import netlib.tutils
 from mitmproxy import controller
-from mitmproxy.models import (
-    ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow, TCPFlow
-)
-from mitmproxy.models.tcp import TCPMessage
-from mitmproxy.models.flow import Flow
+from mitmproxy import connections
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import tcp
 
 
 def _skip_windows(*args):
@@ -48,7 +47,7 @@ def skip_appveyor(fn):
         return fn
 
 
-class DummyFlow(Flow):
+class DummyFlow(flow.Flow):
     """A flow that is neither HTTP nor TCP."""
 
     def __init__(self, client_conn, server_conn, live=None):
@@ -76,13 +75,13 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
         server_conn = tserver_conn()
     if messages is True:
         messages = [
-            TCPMessage(True, b"hello"),
-            TCPMessage(False, b"it's me"),
+            tcp.TCPMessage(True, b"hello"),
+            tcp.TCPMessage(False, b"it's me"),
         ]
     if err is True:
         err = terr()
 
-    f = TCPFlow(client_conn, server_conn)
+    f = tcp.TCPFlow(client_conn, server_conn)
     f.messages = messages
     f.error = err
     f.reply = controller.DummyReply()
@@ -110,11 +109,11 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
         err = terr()
 
     if req:
-        req = HTTPRequest.wrap(req)
+        req = http.HTTPRequest.wrap(req)
     if resp:
-        resp = HTTPResponse.wrap(resp)
+        resp = http.HTTPResponse.wrap(resp)
 
-    f = HTTPFlow(client_conn, server_conn)
+    f = http.HTTPFlow(client_conn, server_conn)
     f.request = req
     f.response = resp
     f.error = err
@@ -126,7 +125,7 @@ def tclient_conn():
     """
     @return: mitmproxy.proxy.connection.ClientConnection
     """
-    c = ClientConnection.from_state(dict(
+    c = connections.ClientConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         clientcert=None,
         ssl_established=False,
@@ -142,7 +141,7 @@ def tserver_conn():
     """
     @return: mitmproxy.proxy.connection.ServerConnection
     """
-    c = ServerConnection.from_state(dict(
+    c = connections.ServerConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=dict(address=("address", 22), use_ipv6=True),
         ip_address=None,
@@ -163,7 +162,7 @@ def terr(content="error"):
     """
     @return: mitmproxy.protocol.primitives.Error
     """
-    err = Error(content)
+    err = flow.Error(content)
     return err
 
 

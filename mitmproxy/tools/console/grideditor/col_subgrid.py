@@ -1,6 +1,6 @@
 import urwid
-from mitmproxy.console.grideditor import base
-from mitmproxy.console import signals
+from mitmproxy.tools.console.grideditor import base
+from mitmproxy.tools.console import signals
 from netlib.http import cookies
 
 

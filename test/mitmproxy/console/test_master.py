@@ -1,9 +1,9 @@
 import gc
 
 import netlib.tutils
-from mitmproxy import console
+from mitmproxy.tools import console
 from mitmproxy import proxy
-from mitmproxy.console import common
+from mitmproxy.tools.console import common
 
 from .. import tutils, mastertest
 

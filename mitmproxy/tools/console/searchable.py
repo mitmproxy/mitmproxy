@@ -1,6 +1,6 @@
 import urwid
 
-from mitmproxy.console import signals
+from mitmproxy.tools.console import signals
 
 
 class Highlight(urwid.AttrMap):

@@ -2,8 +2,8 @@ import os
 from typing import Callable, Optional
 
 import urwid
-from mitmproxy.console import signals
-from mitmproxy.console.grideditor import base
+from mitmproxy.tools.console import signals
+from mitmproxy.tools.console.grideditor import base
 from netlib import strutils
 
 

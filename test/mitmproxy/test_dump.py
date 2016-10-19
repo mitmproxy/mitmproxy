@@ -2,7 +2,9 @@ import os
 import io
 
 import mitmproxy.io
-from mitmproxy import dump, exceptions, proxy
+from mitmproxy.tools import dump
+from mitmproxy import exceptions
+from mitmproxy import proxy
 from . import tutils, mastertest
 
 

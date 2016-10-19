@@ -9,8 +9,8 @@ from typing import Sequence
 from typing import Tuple
 
 import urwid
-from mitmproxy.console import common
-from mitmproxy.console import signals
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import signals
 
 FOOTER = [
     ('heading_key', "enter"), ":edit ",

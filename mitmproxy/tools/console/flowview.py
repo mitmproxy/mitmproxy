@@ -7,14 +7,14 @@ from mitmproxy import exceptions
 from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
-from mitmproxy import models
+from mitmproxy import http
 from mitmproxy import utils
-from mitmproxy.console import common
-from mitmproxy.console import flowdetailview
-from mitmproxy.console import grideditor
-from mitmproxy.console import searchable
-from mitmproxy.console import signals
-from mitmproxy.console import tabs
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import flowdetailview
+from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import searchable
+from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import tabs
 from mitmproxy import export
 from netlib.http import Headers
 from netlib.http import status_codes
@@ -100,7 +100,7 @@ footer = [
 
 class FlowViewHeader(urwid.WidgetWrap):
 
-    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", f: models.HTTPFlow):
+    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", f: http.HTTPFlow):
         self.master = master
         self.flow = f
         self._w = common.format_flow(
@@ -208,7 +208,7 @@ class FlowView(tabs.Tabs):
         if error:
             signals.add_log(error, "error")
         # Give hint that you have to tab for the response.
-        if description == "No content" and isinstance(message, models.HTTPRequest):
+        if description == "No content" and isinstance(message, http.HTTPRequest):
             description = "No request content (press tab to view response)"
 
         # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
@@ -373,7 +373,7 @@ class FlowView(tabs.Tabs):
             message = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = models.HTTPResponse.make(200, b"")
+                self.flow.response = http.HTTPResponse.make(200, b"")
             message = self.flow.response
 
         self.flow.backup()
@@ -500,7 +500,7 @@ class FlowView(tabs.Tabs):
         signals.flow_change.send(self, flow = self.flow)
 
     def keypress(self, size, key):
-        conn = None  # type: Optional[Union[models.HTTPRequest, models.HTTPResponse]]
+        conn = None  # type: Optional[Union[http.HTTPRequest, http.HTTPResponse]]
         if self.tab_offset == TAB_REQ:
             conn = self.flow.request
         elif self.tab_offset == TAB_RESP:

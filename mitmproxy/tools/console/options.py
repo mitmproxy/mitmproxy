@@ -1,11 +1,11 @@
 import urwid
 
 from mitmproxy import contentviews
-from mitmproxy.console import common
-from mitmproxy.console import grideditor
-from mitmproxy.console import palettes
-from mitmproxy.console import select
-from mitmproxy.console import signals
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import palettes
+from mitmproxy.tools.console import select
+from mitmproxy.tools.console import signals
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",

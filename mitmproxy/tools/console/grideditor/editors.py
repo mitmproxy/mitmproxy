@@ -3,12 +3,12 @@ import urwid
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy.addons import script
-from mitmproxy.console import common
-from mitmproxy.console.grideditor import base
-from mitmproxy.console.grideditor import col_bytes
-from mitmproxy.console.grideditor import col_text
-from mitmproxy.console.grideditor import col_subgrid
-from mitmproxy.console import signals
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console.grideditor import base
+from mitmproxy.tools.console.grideditor import col_bytes
+from mitmproxy.tools.console.grideditor import col_text
+from mitmproxy.tools.console.grideditor import col_subgrid
+from mitmproxy.tools.console import signals
 from netlib.http import user_agents
 
 

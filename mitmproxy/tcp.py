@@ -3,7 +3,7 @@ import time
 from typing import List
 
 import netlib.basetypes
-from mitmproxy.models.flow import Flow
+from mitmproxy import flow
 
 
 class TCPMessage(netlib.basetypes.Serializable):
@@ -34,7 +34,7 @@ class TCPMessage(netlib.basetypes.Serializable):
         )
 
 
-class TCPFlow(Flow):
+class TCPFlow(flow.Flow):
 
     """
     A TCPFlow is a simplified representation of a TCP session.
@@ -44,7 +44,7 @@ class TCPFlow(Flow):
         super().__init__("tcp", client_conn, server_conn, live)
         self.messages = []  # type: List[TCPMessage]
 
-    _stateobject_attributes = Flow._stateobject_attributes.copy()
+    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(
         messages=List[TCPMessage]
     )

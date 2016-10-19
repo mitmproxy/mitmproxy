@@ -3,12 +3,12 @@ from abc import abstractmethod, ABCMeta
 from typing import List  # noqa
 
 from mitmproxy import flowfilter
-from mitmproxy import models  # noqa
+from mitmproxy import flow  # noqa
 
 
 class FlowList(metaclass=ABCMeta):
     def __init__(self):
-        self._list = []  # type: List[models.Flow]
+        self._list = []  # type: List[flow.Flow]
 
     def __iter__(self):
         return iter(self._list)

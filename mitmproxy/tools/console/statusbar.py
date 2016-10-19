@@ -3,9 +3,9 @@ import os.path
 import urwid
 
 import netlib.http.url
-from mitmproxy.console import common
-from mitmproxy.console import pathedit
-from mitmproxy.console import signals
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import pathedit
+from mitmproxy.tools.console import signals
 from netlib import human
 
 

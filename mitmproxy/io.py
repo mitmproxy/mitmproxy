@@ -2,9 +2,16 @@ import os
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
-from mitmproxy import models
+from mitmproxy import http
+from mitmproxy import tcp
 from mitmproxy.contrib import tnetstring
 from mitmproxy import io_compat
+
+
+FLOW_TYPES = dict(
+    http=http.HTTPFlow,
+    tcp=tcp.TCPFlow,
+)
 
 
 class FlowWriter:
@@ -31,9 +38,9 @@ class FlowReader:
                     data = io_compat.migrate_flow(data)
                 except ValueError as e:
                     raise exceptions.FlowReadException(str(e))
-                if data["type"] not in models.FLOW_TYPES:
+                if data["type"] not in FLOW_TYPES:
                     raise exceptions.FlowReadException("Unknown flow type: {}".format(data["type"]))
-                yield models.FLOW_TYPES[data["type"]].from_state(data)
+                yield FLOW_TYPES[data["type"]].from_state(data)
         except ValueError as e:
             if str(e) == "not a tnetstring: empty file":
                 return  # Error is due to EOF

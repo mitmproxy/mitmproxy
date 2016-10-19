@@ -3,8 +3,7 @@ import copy
 import uuid
 
 from mitmproxy import stateobject
-from mitmproxy.models.connections import ClientConnection
-from mitmproxy.models.connections import ServerConnection
+from mitmproxy import connections
 
 from netlib import version
 from typing import Optional  # noqa
@@ -68,8 +67,8 @@ class Flow(stateobject.StateObject):
     def __init__(
             self,
             type: str,
-            client_conn: ClientConnection,
-            server_conn: ServerConnection,
+            client_conn: connections.ClientConnection,
+            server_conn: connections.ServerConnection,
             live=None
     ):
         self.type = type
@@ -87,8 +86,8 @@ class Flow(stateobject.StateObject):
     _stateobject_attributes = dict(
         id=str,
         error=Error,
-        client_conn=ClientConnection,
-        server_conn=ServerConnection,
+        client_conn=connections.ClientConnection,
+        server_conn=connections.ServerConnection,
         type=str,
         intercepted=bool,
         marked=bool,

@@ -11,13 +11,14 @@ import tornado.web
 from io import BytesIO
 
 from mitmproxy import flowfilter
-from mitmproxy import models
+from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy import contentviews
 from mitmproxy import io
 from netlib import version
 
 
-def convert_flow_to_json_dict(flow: models.Flow) -> dict:
+def convert_flow_to_json_dict(flow: flow.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
 
@@ -34,7 +35,7 @@ def convert_flow_to_json_dict(flow: models.Flow) -> dict:
     if flow.error:
         f["error"] = flow.error.get_state()
 
-    if isinstance(flow, models.HTTPFlow):
+    if isinstance(flow, http.HTTPFlow):
         if flow.request:
             f["request"] = {
                 "method": flow.request.method,
@@ -119,7 +120,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         return self.application.master.state
 
     @property
-    def master(self) -> "mitmproxy.web.master.WebMaster":
+    def master(self) -> "mitmproxy.tools.web.master.WebMaster":
         return self.application.master
 
     @property

@@ -3,8 +3,8 @@ import platform
 import urwid
 
 from mitmproxy import flowfilter
-from mitmproxy.console import common
-from mitmproxy.console import signals
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import signals
 
 from netlib import version
 

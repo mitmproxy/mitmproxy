@@ -1,6 +1,6 @@
 import urwid
 
-from mitmproxy.console import common
+from mitmproxy.tools.console import common
 
 
 class _OptionWidget(urwid.WidgetWrap):

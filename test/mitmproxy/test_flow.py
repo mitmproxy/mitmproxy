@@ -8,14 +8,11 @@ from mitmproxy import flowfilter, options
 from mitmproxy.addons import state
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, Kill
-from mitmproxy.models import Error
-from mitmproxy.models import Flow
-from mitmproxy.models import HTTPFlow
-from mitmproxy.models import HTTPRequest
-from mitmproxy.models import HTTPResponse
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import connections
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
-from mitmproxy.models.connections import ClientConnection
 from mitmproxy import master
 from . import tutils
 
@@ -62,7 +59,7 @@ class TestHTTPFlow:
 
     def test_backup(self):
         f = tutils.tflow()
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         f.request.content = b"foo"
         assert not f.modified()
         f.backup()
@@ -81,20 +78,20 @@ class TestHTTPFlow:
     def test_getset_state(self):
         f = tutils.tflow(resp=True)
         state = f.get_state()
-        assert f.get_state() == HTTPFlow.from_state(
+        assert f.get_state() == http.HTTPFlow.from_state(
             state).get_state()
 
         f.response = None
-        f.error = Error("error")
+        f.error = flow.Error("error")
         state = f.get_state()
-        assert f.get_state() == HTTPFlow.from_state(
+        assert f.get_state() == http.HTTPFlow.from_state(
             state).get_state()
 
         f2 = f.copy()
         f2.id = f.id  # copy creates a different uuid
         assert f.get_state() == f2.get_state()
         assert not f == f2
-        f2.error = Error("e2")
+        f2.error = flow.Error("e2")
         assert not f == f2
         f.set_state(f2.get_state())
         assert f.get_state() == f2.get_state()
@@ -215,7 +212,7 @@ class TestState:
         assert c.add_flow(newf)
         assert c.active_flow_count() == 2
 
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         assert c.update_flow(f)
         assert c.flow_count() == 2
         assert c.active_flow_count() == 1
@@ -223,7 +220,7 @@ class TestState:
         assert not c.update_flow(None)
         assert c.active_flow_count() == 1
 
-        newf.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        newf.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         assert c.update_flow(newf)
         assert c.active_flow_count() == 0
 
@@ -231,7 +228,7 @@ class TestState:
         c = state.State()
         f = tutils.tflow()
         c.add_flow(f)
-        f.error = Error("message")
+        f.error = flow.Error("message")
         assert c.update_flow(f)
 
         c = state.State()
@@ -255,7 +252,7 @@ class TestState:
         c.set_view_filter("~s")
         assert c.filter_txt == "~s"
         assert len(c.view) == 0
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         c.update_flow(f)
         assert len(c.view) == 1
         c.set_view_filter(None)
@@ -287,7 +284,7 @@ class TestState:
     def _add_response(self, state):
         f = tutils.tflow()
         state.add_flow(f)
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         state.update_flow(f)
 
     def _add_error(self, state):
@@ -316,7 +313,7 @@ class TestState:
         c.clear()
 
         c.load_flows(flows)
-        assert isinstance(c.flows[0], Flow)
+        assert isinstance(c.flows[0], flow.Flow)
 
     def test_accept_all(self):
         c = state.State()
@@ -447,17 +444,17 @@ class TestFlowMaster:
         fm.addons.add(s)
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)
-        f.request = HTTPRequest.wrap(netlib.tutils.treq())
+        f.request = http.HTTPRequest.wrap(netlib.tutils.treq())
         fm.request(f)
         assert s.flow_count() == 1
 
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         fm.response(f)
         assert s.flow_count() == 1
 
         fm.clientdisconnect(f.client_conn)
 
-        f.error = Error("msg")
+        f.error = flow.Error("msg")
         fm.error(f)
 
         fm.shutdown()
@@ -476,7 +473,7 @@ class TestRequest:
         assert r.get_state() == r2.get_state()
 
     def test_get_url(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
+        r = http.HTTPRequest.wrap(netlib.tutils.treq())
 
         assert r.url == "http://address:22/path"
 
@@ -497,7 +494,7 @@ class TestRequest:
         assert r.pretty_url == "https://foo.com:22/path"
 
     def test_replace(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
+        r = http.HTTPRequest.wrap(netlib.tutils.treq())
         r.path = "path/foo"
         r.headers["Foo"] = "fOo"
         r.content = b"afoob"
@@ -507,7 +504,7 @@ class TestRequest:
         assert r.headers["boo"] == "boo"
 
     def test_constrain_encoding(self):
-        r = HTTPRequest.wrap(netlib.tutils.treq())
+        r = http.HTTPRequest.wrap(netlib.tutils.treq())
         r.headers["accept-encoding"] = "gzip, oink"
         r.constrain_encoding()
         assert "oink" not in r.headers["accept-encoding"]
@@ -517,7 +514,7 @@ class TestRequest:
         assert "oink" not in r.headers["accept-encoding"]
 
     def test_get_content_type(self):
-        resp = HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
         resp.headers = Headers(content_type="text/plain")
         assert resp.headers["content-type"] == "text/plain"
 
@@ -531,7 +528,7 @@ class TestResponse:
         assert resp2.get_state() == resp.get_state()
 
     def test_replace(self):
-        r = HTTPResponse.wrap(netlib.tutils.tresp())
+        r = http.HTTPResponse.wrap(netlib.tutils.tresp())
         r.headers["Foo"] = "fOo"
         r.content = b"afoob"
         assert r.replace("foo(?i)", "boo") == 3
@@ -539,7 +536,7 @@ class TestResponse:
         assert r.headers["boo"] == "boo"
 
     def test_get_content_type(self):
-        resp = HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
         resp.headers = Headers(content_type="text/plain")
         assert resp.headers["content-type"] == "text/plain"
 
@@ -547,13 +544,13 @@ class TestResponse:
 class TestError:
 
     def test_getset_state(self):
-        e = Error("Error")
+        e = flow.Error("Error")
         state = e.get_state()
-        assert Error.from_state(state).get_state() == e.get_state()
+        assert flow.Error.from_state(state).get_state() == e.get_state()
 
         assert e.copy()
 
-        e2 = Error("bar")
+        e2 = flow.Error("bar")
         assert not e == e2
         e.set_state(e2.get_state())
         assert e.get_state() == e2.get_state()
@@ -562,14 +559,14 @@ class TestError:
         assert e3.get_state() == e.get_state()
 
     def test_repr(self):
-        e = Error("yay")
+        e = flow.Error("yay")
         assert repr(e)
 
 
 class TestClientConnection:
     def test_state(self):
         c = tutils.tclient_conn()
-        assert ClientConnection.from_state(c.get_state()).get_state() == \
+        assert connections.ClientConnection.from_state(c.get_state()).get_state() == \
             c.get_state()
 
         c2 = tutils.tclient_conn()

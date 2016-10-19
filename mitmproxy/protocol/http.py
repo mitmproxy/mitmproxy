@@ -3,10 +3,11 @@ import netlib.exceptions
 import time
 import traceback
 from mitmproxy import exceptions
-from mitmproxy import models
+from mitmproxy import http
+from mitmproxy import flow
 from mitmproxy.protocol import base
 from mitmproxy.protocol import websockets as pwebsockets
-from netlib import http
+import netlib.http
 from netlib import tcp
 from netlib import websockets
 
@@ -55,7 +56,7 @@ class _HttpTransmissionLayer(base.Layer):
     def send_response_body(self, response, chunks):
         raise NotImplementedError()
 
-    def check_close_connection(self, flow):
+    def check_close_connection(self, f):
         raise NotImplementedError()
 
 
@@ -140,9 +141,9 @@ class HttpLayer(base.Layer):
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
-            flow = models.HTTPFlow(self.client_conn, self.server_conn, live=self)
+            f = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
             try:
-                request = self.get_request_from_client(flow)
+                request = self.get_request_from_client(f)
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
             except netlib.exceptions.HttpReadDisconnect:
@@ -165,7 +166,7 @@ class HttpLayer(base.Layer):
             if not (self.http_authenticated or self.authenticate(request)):
                 return
 
-            flow.request = request
+            f.request = request
 
             try:
                 # Regular Proxy Mode: Handle CONNECT
@@ -176,74 +177,74 @@ class HttpLayer(base.Layer):
                 # HTTPS tasting means that ordinary errors like resolution and
                 # connection errors can happen here.
                 self.send_error_response(502, repr(e))
-                flow.error = models.Error(str(e))
-                self.channel.ask("error", flow)
+                f.error = flow.Error(str(e))
+                self.channel.ask("error", f)
                 return
 
             # update host header in reverse proxy mode
             if self.config.options.mode == "reverse":
-                flow.request.headers["Host"] = self.config.upstream_server.address.host
+                f.request.headers["Host"] = self.config.upstream_server.address.host
 
             # set upstream auth
             if self.mode == "upstream" and self.config.upstream_auth is not None:
-                flow.request.headers["Proxy-Authorization"] = self.config.upstream_auth
-            self.process_request_hook(flow)
+                f.request.headers["Proxy-Authorization"] = self.config.upstream_auth
+            self.process_request_hook(f)
 
             try:
                 if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
                     # We only support RFC6455 with WebSockets version 13
                     # allow inline scripts to manipulate the client handshake
-                    self.channel.ask("websocket_handshake", flow)
+                    self.channel.ask("websocket_handshake", f)
 
-                if not flow.response:
+                if not f.response:
                     self.establish_server_connection(
-                        flow.request.host,
-                        flow.request.port,
-                        flow.request.scheme
+                        f.request.host,
+                        f.request.port,
+                        f.request.scheme
                     )
-                    self.get_response_from_server(flow)
+                    self.get_response_from_server(f)
                 else:
                     # response was set by an inline script.
                     # we now need to emulate the responseheaders hook.
-                    self.channel.ask("responseheaders", flow)
+                    self.channel.ask("responseheaders", f)
 
-                self.log("response", "debug", [repr(flow.response)])
-                self.channel.ask("response", flow)
-                self.send_response_to_client(flow)
+                self.log("response", "debug", [repr(f.response)])
+                self.channel.ask("response", f)
+                self.send_response_to_client(f)
 
-                if self.check_close_connection(flow):
+                if self.check_close_connection(f):
                     return
 
                 # Handle 101 Switching Protocols
-                if flow.response.status_code == 101:
-                    return self.handle_101_switching_protocols(flow)
+                if f.response.status_code == 101:
+                    return self.handle_101_switching_protocols(f)
 
                 # Upstream Proxy Mode: Handle CONNECT
-                if flow.request.first_line_format == "authority" and flow.response.status_code == 200:
-                    self.handle_upstream_mode_connect(flow.request.copy())
+                if f.request.first_line_format == "authority" and f.response.status_code == 200:
+                    self.handle_upstream_mode_connect(f.request.copy())
                     return
 
             except (exceptions.ProtocolException, netlib.exceptions.NetlibException) as e:
                 self.send_error_response(502, repr(e))
-                if not flow.response:
-                    flow.error = models.Error(str(e))
-                    self.channel.ask("error", flow)
+                if not f.response:
+                    f.error = flow.Error(str(e))
+                    self.channel.ask("error", f)
                     return
                 else:
                     raise exceptions.ProtocolException(
                         "Error in HTTP connection: %s" % repr(e)
                     )
             finally:
-                if flow:
-                    flow.live = False
+                if f:
+                    f.live = False
 
-    def get_request_from_client(self, flow):
+    def get_request_from_client(self, f):
         request = self.read_request()
-        flow.request = request
-        self.channel.ask("requestheaders", flow)
+        f.request = request
+        self.channel.ask("requestheaders", f)
         if request.headers.get("expect", "").lower() == "100-continue":
             # TODO: We may have to use send_response_headers for HTTP2 here.
-            self.send_response(models.expect_continue_response)
+            self.send_response(http.expect_continue_response)
             request.headers.pop("expect")
             request.body = b"".join(self.read_request_body(request))
             request.timestamp_end = time.time()
@@ -251,7 +252,7 @@ class HttpLayer(base.Layer):
 
     def send_error_response(self, code, message, headers=None):
         try:
-            response = models.make_error_response(code, message, headers)
+            response = http.make_error_response(code, message, headers)
             self.send_response(response)
         except (netlib.exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
             self.log(traceback.format_exc(), "debug")
@@ -265,7 +266,7 @@ class HttpLayer(base.Layer):
     def handle_regular_mode_connect(self, request):
         self.http_authenticated = True
         self.set_server((request.host, request.port))
-        self.send_response(models.make_connect_response(request.data.http_version))
+        self.send_response(http.make_connect_response(request.data.http_version))
         layer = self.ctx.next_layer(self)
         layer()
 
@@ -273,29 +274,29 @@ class HttpLayer(base.Layer):
         layer = UpstreamConnectLayer(self, connect_request)
         layer()
 
-    def send_response_to_client(self, flow):
-        if not flow.response.stream:
+    def send_response_to_client(self, f):
+        if not f.response.stream:
             # no streaming:
             # we already received the full response from the server and can
             # send it to the client straight away.
-            self.send_response(flow.response)
+            self.send_response(f.response)
         else:
             # streaming:
             # First send the headers and then transfer the response incrementally
-            self.send_response_headers(flow.response)
+            self.send_response_headers(f.response)
             chunks = self.read_response_body(
-                flow.request,
-                flow.response
+                f.request,
+                f.response
             )
-            if callable(flow.response.stream):
-                chunks = flow.response.stream(chunks)
-            self.send_response_body(flow.response, chunks)
-            flow.response.timestamp_end = time.time()
+            if callable(f.response.stream):
+                chunks = f.response.stream(chunks)
+            self.send_response_body(f.response, chunks)
+            f.response.timestamp_end = time.time()
 
-    def get_response_from_server(self, flow):
+    def get_response_from_server(self, f):
         def get_response():
-            self.send_request(flow.request)
-            flow.response = self.read_response_headers()
+            self.send_request(f.request)
+            f.response = self.read_response_headers()
 
         try:
             get_response()
@@ -325,23 +326,23 @@ class HttpLayer(base.Layer):
             get_response()
 
         # call the appropriate script hook - this is an opportunity for an
-        # inline script to set flow.stream = True
-        self.channel.ask("responseheaders", flow)
+        # inline script to set f.stream = True
+        self.channel.ask("responseheaders", f)
 
-        if flow.response.stream:
-            flow.response.data.content = None
+        if f.response.stream:
+            f.response.data.content = None
         else:
-            flow.response.data.content = b"".join(self.read_response_body(
-                flow.request,
-                flow.response
+            f.response.data.content = b"".join(self.read_response_body(
+                f.request,
+                f.response
             ))
-        flow.response.timestamp_end = time.time()
+        f.response.timestamp_end = time.time()
 
         # no further manipulation of self.server_conn beyond this point
         # we can safely set it as the final attribute value here.
-        flow.server_conn = self.server_conn
+        f.server_conn = self.server_conn
 
-    def process_request_hook(self, flow):
+    def process_request_hook(self, f):
         # Determine .scheme, .host and .port attributes for inline scripts.
         # For absolute-form requests, they are directly given in the request.
         # For authority-form requests, we only need to determine the request scheme.
@@ -353,13 +354,13 @@ class HttpLayer(base.Layer):
             pass
         else:
             # Setting request.host also updates the host header, which we want to preserve
-            host_header = flow.request.headers.get("host", None)
-            flow.request.host = self.__initial_server_conn.address.host
-            flow.request.port = self.__initial_server_conn.address.port
+            host_header = f.request.headers.get("host", None)
+            f.request.host = self.__initial_server_conn.address.host
+            f.request.port = self.__initial_server_conn.address.port
             if host_header:
-                flow.request.headers["host"] = host_header
-            flow.request.scheme = "https" if self.__initial_server_tls else "http"
-        self.channel.ask("request", flow)
+                f.request.headers["host"] = host_header
+            f.request.scheme = "https" if self.__initial_server_tls else "http"
+        self.channel.ask("request", f)
 
     def establish_server_connection(self, host, port, scheme):
         address = tcp.Address((host, port))
@@ -419,29 +420,29 @@ class HttpLayer(base.Layer):
                 self.config.authenticator.clean(request.headers)
             else:
                 if self.mode == "transparent":
-                    self.send_response(models.make_error_response(
+                    self.send_response(http.make_error_response(
                         401,
                         "Authentication Required",
-                        http.Headers(**self.config.authenticator.auth_challenge_headers())
+                        netlib.http.Headers(**self.config.authenticator.auth_challenge_headers())
                     ))
                 else:
-                    self.send_response(models.make_error_response(
+                    self.send_response(http.make_error_response(
                         407,
                         "Proxy Authentication Required",
-                        http.Headers(**self.config.authenticator.auth_challenge_headers())
+                        netlib.http.Headers(**self.config.authenticator.auth_challenge_headers())
                     ))
                 return False
         return True
 
-    def handle_101_switching_protocols(self, flow):
+    def handle_101_switching_protocols(self, f):
         """
         Handle a successful HTTP 101 Switching Protocols Response, received after e.g. a WebSocket upgrade request.
         """
         # Check for WebSockets handshake
         is_websockets = (
-            flow and
-            websockets.check_handshake(flow.request.headers) and
-            websockets.check_handshake(flow.response.headers)
+            f and
+            websockets.check_handshake(f.request.headers) and
+            websockets.check_handshake(f.response.headers)
         )
         if is_websockets and not self.config.options.websockets:
             self.log(
@@ -450,7 +451,7 @@ class HttpLayer(base.Layer):
             )
 
         if is_websockets and self.config.options.websockets:
-            layer = pwebsockets.WebSocketsLayer(self, flow)
+            layer = pwebsockets.WebSocketsLayer(self, f)
         else:
             layer = self.ctx.next_layer(self)
 

@@ -4,8 +4,8 @@ from OpenSSL import SSL
 
 import netlib.exceptions
 import netlib.tcp
-from mitmproxy import models
-from mitmproxy.models import tcp
+from mitmproxy import tcp
+from mitmproxy import flow
 from mitmproxy.protocol import base
 
 
@@ -20,8 +20,8 @@ class RawTCPLayer(base.Layer):
         self.connect()
 
         if not self.ignore:
-            flow = models.TCPFlow(self.client_conn, self.server_conn, self)
-            self.channel.ask("tcp_start", flow)
+            f = tcp.TCPFlow(self.client_conn, self.server_conn, self)
+            self.channel.ask("tcp_start", f)
 
         buf = memoryview(bytearray(self.chunk_size))
 
@@ -52,14 +52,14 @@ class RawTCPLayer(base.Layer):
 
                     tcp_message = tcp.TCPMessage(dst == server, buf[:size].tobytes())
                     if not self.ignore:
-                        flow.messages.append(tcp_message)
-                        self.channel.ask("tcp_message", flow)
+                        f.messages.append(tcp_message)
+                        self.channel.ask("tcp_message", f)
                     dst.sendall(tcp_message.content)
 
         except (socket.error, netlib.exceptions.TcpException, SSL.Error) as e:
             if not self.ignore:
-                flow.error = models.Error("TCP connection closed unexpectedly: {}".format(repr(e)))
-                self.channel.tell("tcp_error", flow)
+                f.error = flow.Error("TCP connection closed unexpectedly: {}".format(repr(e)))
+                self.channel.tell("tcp_error", f)
         finally:
             if not self.ignore:
-                self.channel.tell("tcp_end", flow)
+                self.channel.tell("tcp_end", f)

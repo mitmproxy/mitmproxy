@@ -24,16 +24,16 @@ from mitmproxy import flowfilter
 from mitmproxy import utils
 from mitmproxy.addons import state
 import mitmproxy.options
-from mitmproxy.console import flowlist
-from mitmproxy.console import flowview
-from mitmproxy.console import grideditor
-from mitmproxy.console import help
-from mitmproxy.console import options
-from mitmproxy.console import palettepicker
-from mitmproxy.console import palettes
-from mitmproxy.console import signals
-from mitmproxy.console import statusbar
-from mitmproxy.console import window
+from mitmproxy.tools.console import flowlist
+from mitmproxy.tools.console import flowview
+from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import help
+from mitmproxy.tools.console import options
+from mitmproxy.tools.console import palettepicker
+from mitmproxy.tools.console import palettes
+from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import statusbar
+from mitmproxy.tools.console import window
 from mitmproxy.flowfilter import FMarked
 from netlib import tcp, strutils
 

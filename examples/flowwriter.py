@@ -1,6 +1,6 @@
 import random
 import sys
-from mimtproxy import io
+from mitmproxy import io
 
 
 class Writer:

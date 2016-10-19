@@ -750,7 +750,7 @@ def common_options(parser):
 
 
 def mitmproxy():
-    # Don't import mitmproxy.console for mitmdump, urwid is not available on all
+    # Don't import mitmproxy.tools.console for mitmdump, urwid is not available on all
     # platforms.
     from .console import palettes
 

@@ -1,6 +1,6 @@
 import urwid
 
-from mitmproxy.console import common, searchable
+from mitmproxy.tools.console import common, searchable
 from netlib import human
 
 

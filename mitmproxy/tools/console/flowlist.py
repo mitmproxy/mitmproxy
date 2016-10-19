@@ -2,8 +2,8 @@ import urwid
 
 import netlib.http.url
 from mitmproxy import exceptions
-from mitmproxy.console import common
-from mitmproxy.console import signals
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import signals
 from mitmproxy import export
 
 

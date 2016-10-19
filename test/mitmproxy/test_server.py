@@ -6,9 +6,10 @@ import netlib.tutils
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.addons import script
-from mitmproxy.models import HTTPResponse, HTTPFlow
+from mitmproxy import http
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
-from netlib import tcp, http, socks
+import netlib.http
+from netlib import tcp, socks
 from netlib.certutils import SSLCert
 from netlib.exceptions import HttpReadDisconnect, HttpException
 from netlib.http import authentication, http1
@@ -183,9 +184,9 @@ class TcpMixin:
         assert n.status_code == 304
         assert i.status_code == 305
         assert i2.status_code == 306
-        assert any(f.response.status_code == 304 for f in self.master.state.flows if isinstance(f, HTTPFlow))
-        assert not any(f.response.status_code == 305 for f in self.master.state.flows if isinstance(f, HTTPFlow))
-        assert not any(f.response.status_code == 306 for f in self.master.state.flows if isinstance(f, HTTPFlow))
+        assert any(f.response.status_code == 304 for f in self.master.state.flows if isinstance(f, http.HTTPFlow))
+        assert not any(f.response.status_code == 305 for f in self.master.state.flows if isinstance(f, http.HTTPFlow))
+        assert not any(f.response.status_code == 306 for f in self.master.state.flows if isinstance(f, http.HTTPFlow))
 
         # Test that we get the original SSL cert
         if self.ssl:
@@ -293,7 +294,7 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
                 h'%s'='%s'
             """ % (
                 self.server.port,
-                http.authentication.BasicProxyAuth.AUTH_HEADER,
+                netlib.http.authentication.BasicProxyAuth.AUTH_HEADER,
                 authentication.assemble_http_basic_auth("basic", "test", "test")
             ))
         assert ret.status_code == 202
@@ -310,7 +311,7 @@ class TestHTTPReverseAuth(tservers.ReverseProxyTest):
                 '/p/202'
                 h'%s'='%s'
             """ % (
-                http.authentication.BasicWebsiteAuth.AUTH_HEADER,
+                netlib.http.authentication.BasicWebsiteAuth.AUTH_HEADER,
                 authentication.assemble_http_basic_auth("basic", "test", "test")
             ))
         assert ret.status_code == 202
@@ -790,7 +791,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
     def request(self, f):
-        f.response = HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -869,7 +870,7 @@ class MasterIncomplete(tservers.TestMaster):
 
     @controller.handler
     def request(self, f):
-        resp = HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = None
         f.response = resp
 

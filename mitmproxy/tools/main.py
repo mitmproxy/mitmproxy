@@ -2,7 +2,7 @@ import os
 import signal
 import sys
 
-from mitmproxy import cmdline
+from mitmproxy.tools import cmdline
 from mitmproxy import exceptions
 from mitmproxy.proxy import config
 from mitmproxy.proxy import server
@@ -47,7 +47,7 @@ def mitmproxy(args=None):  # pragma: no cover
         print("Error: mitmproxy's console interface is not supported on Windows. "
               "You can run mitmdump or mitmweb instead.", file=sys.stderr)
         sys.exit(1)
-    from . import console
+    from mitmproxy.tools import console
 
     version_check.check_pyopenssl_version()
     assert_utf8_env()
@@ -79,7 +79,7 @@ def mitmproxy(args=None):  # pragma: no cover
 
 
 def mitmdump(args=None):  # pragma: no cover
-    from . import dump
+    from mitmproxy.tools import dump
 
     version_check.check_pyopenssl_version()
 
@@ -113,7 +113,7 @@ def mitmdump(args=None):  # pragma: no cover
 
 
 def mitmweb(args=None):  # pragma: no cover
-    from . import web
+    from mitmproxy.tools import web
 
     version_check.check_pyopenssl_version()
 

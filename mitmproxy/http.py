@@ -1,6 +1,6 @@
 import cgi
 
-from mitmproxy.models import flow
+from mitmproxy import flow
 from netlib import http
 from netlib import version
 from netlib import tcp
