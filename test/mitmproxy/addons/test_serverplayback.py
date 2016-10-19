@@ -1,6 +1,6 @@
 from .. import tutils, mastertest
 
-import netlib.tutils
+import mitmproxy.test.tutils
 from mitmproxy.addons import serverplayback
 from mitmproxy import options
 from mitmproxy import proxy
@@ -244,7 +244,7 @@ class TestServerPlayback:
         m.addons.add(s)
 
         f = tutils.tflow()
-        f.response = netlib.tutils.tresp(content=f.request.content)
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
         s.load([f, f])
 
         tf = tutils.tflow()
@@ -273,7 +273,7 @@ class TestServerPlayback:
         m.addons.add(s)
 
         f = tutils.tflow()
-        f.response = netlib.tutils.tresp(content=f.request.content)
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
         s.load([f])
 
         f = tutils.tflow()

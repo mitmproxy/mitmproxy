@@ -1,6 +1,6 @@
 import urwid
 
-import netlib.http.url
+import mitmproxy.net.http.url
 from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
@@ -325,7 +325,7 @@ class FlowListBox(urwid.ListBox):
         )
 
     def new_request(self, url, method):
-        parts = netlib.http.url.parse(str(url))
+        parts = mitmproxy.net.http.url.parse(str(url))
         if not parts:
             signals.status_message.send(message="Invalid Url")
             return

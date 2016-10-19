@@ -1,7 +1,7 @@
 import urwid
 
 from mitmproxy.tools.console import common, searchable
-from netlib import human
+from mitmproxy.utils import human
 
 
 def maybe_timestamp(base, attr):

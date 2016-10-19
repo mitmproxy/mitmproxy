@@ -3,7 +3,7 @@ from mitmproxy.addons import stickycookie
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
-from netlib import tutils as ntutils
+from mitmproxy.test import tutils as ntutils
 
 
 def test_domain_match():

@@ -4,8 +4,8 @@ import uuid
 
 from mitmproxy import stateobject
 from mitmproxy import connections
+from mitmproxy import version
 
-from netlib import version
 from typing import Optional  # noqa
 
 

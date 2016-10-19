@@ -13,7 +13,7 @@ from mitmproxy.addons import state
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.tools.web import app
-from netlib.http import authentication
+from mitmproxy.net.http import authentication
 
 
 class Stop(Exception):

@@ -1,6 +1,6 @@
 from mitmproxy import http
 from mitmproxy.proxy.protocol import http as httpbase
-from netlib.http import http1
+from mitmproxy.net.http import http1
 
 
 class Http1Layer(httpbase._HttpTransmissionLayer):

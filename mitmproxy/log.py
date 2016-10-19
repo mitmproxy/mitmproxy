@@ -38,3 +38,7 @@ class Log:
 
     def __call__(self, text, level="info"):
         self.master.add_log(text, level)
+
+
+def log_tier(level):
+    return dict(error=0, warn=1, info=2, debug=3).get(level)

@@ -1,7 +1,7 @@
 import pyparsing as pp
 
-from netlib import http
-from netlib.http import user_agents, Headers
+from mitmproxy.net import http
+from mitmproxy.net.http import user_agents, Headers
 from . import base, message
 
 """

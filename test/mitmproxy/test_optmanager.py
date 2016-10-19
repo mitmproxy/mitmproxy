@@ -2,7 +2,7 @@ import copy
 
 from mitmproxy import optmanager
 from mitmproxy import exceptions
-from netlib import tutils
+from mitmproxy.test import tutils
 
 
 class TO(optmanager.OptManager):

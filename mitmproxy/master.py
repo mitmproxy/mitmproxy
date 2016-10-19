@@ -14,8 +14,8 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import io
 from mitmproxy.proxy.protocol import http_replay
-from netlib import basethread
-import netlib.http
+from mitmproxy.types import basethread
+import mitmproxy.net.http
 
 from . import ctx as mitmproxy_ctx
 
@@ -122,7 +122,7 @@ class Master:
         s = connections.ServerConnection.make_dummy((host, port))
 
         f = http.HTTPFlow(c, s)
-        headers = netlib.http.Headers()
+        headers = mitmproxy.net.http.Headers()
 
         req = http.HTTPRequest(
             "absolute",

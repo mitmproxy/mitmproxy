@@ -1,4 +1,3 @@
-import netlib.exceptions
 from mitmproxy import log
 from mitmproxy import exceptions
 from mitmproxy.proxy import protocol
@@ -43,7 +42,7 @@ class RootContext:
     def _next_layer(self, top_layer):
         try:
             d = top_layer.client_conn.rfile.peek(3)
-        except netlib.exceptions.TcpException as e:
+        except exceptions.TcpException as e:
             raise exceptions.ProtocolException(str(e))
         client_tls = protocol.is_tls_record_magic(d)
 

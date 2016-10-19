@@ -40,7 +40,7 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import flow
 
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 import pyparsing as pp
 from typing import Callable

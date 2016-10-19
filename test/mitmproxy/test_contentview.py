@@ -1,12 +1,12 @@
 import mock
 from mitmproxy.exceptions import ContentViewException
-from netlib.http import Headers
-from netlib.http import url
-from netlib import multidict
+from mitmproxy.net.http import Headers
+from mitmproxy.net.http import url
+from mitmproxy.types import multidict
 
 import mitmproxy.contentviews as cv
 from . import tutils
-import netlib.tutils
+import mitmproxy.test.tutils
 
 try:
     import pyamf
@@ -232,7 +232,7 @@ def test_get_content_view():
 
 
 def test_get_message_content_view():
-    r = netlib.tutils.treq()
+    r = mitmproxy.test.tutils.treq()
     desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
     assert desc == "Raw"
 

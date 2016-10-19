@@ -7,7 +7,7 @@ from mitmproxy import exceptions
 from mitmproxy.tools import dump
 from mitmproxy import http
 from mitmproxy import proxy
-import netlib.tutils
+import mitmproxy.test.tutils
 import mock
 
 
@@ -38,11 +38,11 @@ class TestDumper(mastertest.MasterTest):
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
         flow = tutils.tflow()
-        flow.request = netlib.tutils.treq()
+        flow.request = mitmproxy.test.tutils.treq()
         flow.request.stickycookie = True
         flow.client_conn = mock.MagicMock()
         flow.client_conn.address.host = "foo"
-        flow.response = netlib.tutils.tresp(content=None)
+        flow.response = mitmproxy.test.tutils.tresp(content=None)
         flow.response.is_replay = True
         flow.response.status_code = 300
         d.response(flow)
@@ -50,7 +50,7 @@ class TestDumper(mastertest.MasterTest):
 
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
-        flow = tutils.tflow(resp=netlib.tutils.tresp(content=b"{"))
+        flow = tutils.tflow(resp=mitmproxy.test.tutils.tresp(content=b"{"))
         flow.response.headers["content-type"] = "application/json"
         flow.response.status_code = 400
         d.response(flow)
@@ -60,7 +60,7 @@ class TestDumper(mastertest.MasterTest):
         d.configure(dump.Options(tfile = sio), updated)
         flow = tutils.tflow()
         flow.request.content = None
-        flow.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        flow.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         flow.response.content = None
         d.response(flow)
         assert "content missing" in sio.getvalue()

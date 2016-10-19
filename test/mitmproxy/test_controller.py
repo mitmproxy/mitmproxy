@@ -9,7 +9,7 @@ import queue
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import proxy
 from mitmproxy import master
-from netlib.tutils import raises
+from mitmproxy.test.tutils import raises
 
 
 class TMsg:

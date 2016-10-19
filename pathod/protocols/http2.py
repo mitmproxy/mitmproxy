@@ -4,11 +4,11 @@ import time
 import hyperframe.frame
 from hpack.hpack import Encoder, Decoder
 
-from netlib import utils
-from netlib.http import http2
-import netlib.http.headers
-import netlib.http.response
-import netlib.http.request
+from mitmproxy.net.http import http2
+import mitmproxy.net.http.headers
+import mitmproxy.net.http.response
+import mitmproxy.net.http.request
+from mitmproxy.types import bidi
 
 from .. import language
 
@@ -22,7 +22,7 @@ class TCPHandler:
 
 class HTTP2StateProtocol:
 
-    ERROR_CODES = utils.BiDi(
+    ERROR_CODES = bidi.BiDi(
         NO_ERROR=0x0,
         PROTOCOL_ERROR=0x1,
         INTERNAL_ERROR=0x2,
@@ -100,7 +100,7 @@ class HTTP2StateProtocol:
 
         first_line_format, method, scheme, host, port, path = http2.parse_headers(headers)
 
-        request = netlib.http.request.Request(
+        request = mitmproxy.net.http.request.Request(
             first_line_format,
             method,
             scheme,
@@ -148,7 +148,7 @@ class HTTP2StateProtocol:
         else:
             timestamp_end = None
 
-        response = netlib.http.response.Response(
+        response = mitmproxy.net.http.response.Response(
             b"HTTP/2.0",
             int(headers.get(':status', 502)),
             b'',
@@ -162,15 +162,15 @@ class HTTP2StateProtocol:
         return response
 
     def assemble(self, message):
-        if isinstance(message, netlib.http.request.Request):
+        if isinstance(message, mitmproxy.net.http.request.Request):
             return self.assemble_request(message)
-        elif isinstance(message, netlib.http.response.Response):
+        elif isinstance(message, mitmproxy.net.http.response.Response):
             return self.assemble_response(message)
         else:
             raise ValueError("HTTP message not supported.")
 
     def assemble_request(self, request):
-        assert isinstance(request, netlib.http.request.Request)
+        assert isinstance(request, mitmproxy.net.http.request.Request)
 
         authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
         if self.tcp_handler.address.port != 443:
@@ -194,7 +194,7 @@ class HTTP2StateProtocol:
             self._create_body(request.body, stream_id)))
 
     def assemble_response(self, response):
-        assert isinstance(response, netlib.http.response.Response)
+        assert isinstance(response, mitmproxy.net.http.response.Response)
 
         headers = response.headers.copy()
 
@@ -394,7 +394,7 @@ class HTTP2StateProtocol:
             else:
                 self._handle_unexpected_frame(frm)
 
-        headers = netlib.http.headers.Headers(
+        headers = mitmproxy.net.http.headers.Headers(
             [[k, v] for k, v in self.decoder.decode(header_blocks, raw=True)]
         )
 

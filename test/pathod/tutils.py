@@ -5,9 +5,10 @@ import requests
 import io
 import urllib
 
-from netlib import tcp
-from netlib import utils
-from netlib import tutils
+from mitmproxy.utils import data
+
+from mitmproxy.net import tcp
+from mitmproxy.test import tutils
 
 from pathod import language
 from pathod import pathoc
@@ -142,7 +143,7 @@ tmpdir = tutils.tmpdir
 
 raises = tutils.raises
 
-test_data = utils.Data(__name__)
+test_data = data.Data(__name__)
 
 
 def render(r, settings=language.Settings()):

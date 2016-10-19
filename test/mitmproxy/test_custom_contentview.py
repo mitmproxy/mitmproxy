@@ -1,5 +1,5 @@
 import mitmproxy.contentviews as cv
-from netlib.http import Headers
+from mitmproxy.net.http import Headers
 
 
 def test_custom_views():

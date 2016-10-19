@@ -1,8 +1,8 @@
 import io
 
 from pathod import pathod
-from netlib import tcp
-from netlib.exceptions import HttpException, TlsException
+from mitmproxy.net import tcp
+from mitmproxy import exceptions
 
 from . import tutils
 
@@ -157,7 +157,7 @@ class CommonTests(tutils.DaemonTests):
 
     def test_invalid_content_length(self):
         tutils.raises(
-            HttpException,
+            exceptions.HttpException,
             self.pathoc,
             ["get:/:h'content-length'='foo'"]
         )
@@ -166,7 +166,7 @@ class CommonTests(tutils.DaemonTests):
         assert "Unparseable Content Length" in l["msg"]
 
     def test_invalid_headers(self):
-        tutils.raises(HttpException, self.pathoc, ["get:/:h'\t'='foo'"])
+        tutils.raises(exceptions.HttpException, self.pathoc, ["get:/:h'\t'='foo'"])
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "Invalid headers" in l["msg"]
@@ -225,7 +225,7 @@ class TestDaemon(CommonTests):
 
     def test_connect_err(self):
         tutils.raises(
-            HttpException,
+            exceptions.HttpException,
             self.pathoc,
             [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port)
@@ -241,7 +241,7 @@ class TestDaemonSSL(CommonTests):
         c.wbufsize = 0
         with c.connect():
             c.wfile.write(b"\0\0\0\0")
-            tutils.raises(TlsException, c.convert_to_ssl)
+            tutils.raises(exceptions.TlsException, c.convert_to_ssl)
             l = self.d.last_log()
             assert l["type"] == "error"
             assert "SSL" in l["msg"]

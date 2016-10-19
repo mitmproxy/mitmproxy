@@ -9,13 +9,13 @@ from unittest.case import SkipTest
 
 import io
 
-import netlib.utils
-import netlib.tutils
+import mitmproxy.test.tutils
 from mitmproxy import controller
 from mitmproxy import connections
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy.utils import data
 
 
 def _skip_windows(*args):
@@ -102,9 +102,9 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     if server_conn is True:
         server_conn = tserver_conn()
     if req is True:
-        req = netlib.tutils.treq()
+        req = mitmproxy.test.tutils.treq()
     if resp is True:
-        resp = netlib.tutils.tresp()
+        resp = mitmproxy.test.tutils.tresp()
     if err is True:
         err = terr()
 
@@ -197,7 +197,7 @@ class MockParser(argparse.ArgumentParser):
         raise Exception(message)
 
 
-raises = netlib.tutils.raises
+raises = mitmproxy.test.tutils.raises
 
 
 @contextmanager
@@ -208,4 +208,4 @@ def capture_stderr(command, *args, **kwargs):
     sys.stderr = out
 
 
-test_data = netlib.utils.Data(__name__)
+test_data = data.Data(__name__)

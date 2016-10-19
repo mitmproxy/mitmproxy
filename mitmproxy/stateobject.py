@@ -1,7 +1,7 @@
 from typing import Any
 from typing import List
 
-import netlib.basetypes
+from mitmproxy.types import serializable
 
 
 def _is_list(cls):
@@ -10,7 +10,7 @@ def _is_list(cls):
     return issubclass(cls, List) or is_list_bugfix
 
 
-class StateObject(netlib.basetypes.Serializable):
+class StateObject(serializable.Serializable):
 
     """
     An object with serializable state.
