@@ -9,7 +9,7 @@ import urwid.util
 import netlib
 from mitmproxy import utils
 from mitmproxy.console import signals
-from mitmproxy.flow import export
+from mitmproxy import export
 from netlib import human
 
 try:

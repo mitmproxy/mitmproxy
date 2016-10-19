@@ -9,11 +9,11 @@ import hashlib
 import tornado.websocket
 import tornado.web
 from io import BytesIO
-from mitmproxy.flow import FlowWriter, FlowReader
 
 from mitmproxy import flowfilter
 from mitmproxy import models
 from mitmproxy import contentviews
+from mitmproxy import io
 from netlib import version
 
 
@@ -193,7 +193,7 @@ class DumpFlows(RequestHandler):
         self.set_header("Content-Type", "application/octet-stream")
 
         bio = BytesIO()
-        fw = FlowWriter(bio)
+        fw = io.FlowWriter(bio)
         for f in self.state.flows:
             fw.add(f)
 
@@ -205,7 +205,7 @@ class DumpFlows(RequestHandler):
 
         content = self.request.files.values()[0][0].body
         bio = BytesIO(content)
-        self.state.load_flows(FlowReader(bio).stream())
+        self.state.load_flows(io.FlowReader(bio).stream())
         bio.close()
 
 

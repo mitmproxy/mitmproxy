@@ -11,7 +11,7 @@ from mitmproxy import events
 from mitmproxy import exceptions
 from mitmproxy import models
 from mitmproxy import log
-from mitmproxy.flow import io
+from mitmproxy import io
 from mitmproxy.protocol import http_replay
 from netlib import basethread
 from netlib import http

@@ -1,4 +1,7 @@
-from mitmproxy import exceptions, flow, ctx
+from mitmproxy import exceptions
+from mitmproxy import ctx
+from mitmproxy import io
+
 
 
 class ClientPlayback:
@@ -21,7 +24,7 @@ class ClientPlayback:
             if options.client_replay:
                 ctx.log.info(options.client_replay)
                 try:
-                    flows = flow.read_flows_from_paths(options.client_replay)
+                    flows = io.read_flows_from_paths(options.client_replay)
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
                 self.load(flows)

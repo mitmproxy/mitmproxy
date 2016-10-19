@@ -4,7 +4,7 @@ import netlib.http.url
 from mitmproxy import exceptions
 from mitmproxy.console import common
 from mitmproxy.console import signals
-from mitmproxy.flow import export
+from mitmproxy import export
 
 
 def _mkhelp():

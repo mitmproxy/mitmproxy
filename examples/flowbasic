@@ -8,7 +8,7 @@
     Note that request and response messages are not automatically replied to,
     so we need to implement handlers to do this.
 """
-from mitmproxy import flow, controller, options
+from mitmproxy import controller, options, master
 from mitmproxy.proxy import ProxyServer, ProxyConfig
 
 
@@ -37,7 +37,6 @@ class MyMaster(master.Master):
 
 opts = options.Options(cadir="~/.mitmproxy/")
 config = ProxyConfig(opts)
-state = state.State()
 server = ProxyServer(config)
-m = MyMaster(opts, server, state)
+m = MyMaster(opts, server)
 m.run()

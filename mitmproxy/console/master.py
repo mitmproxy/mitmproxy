@@ -19,7 +19,7 @@ from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import master
-from mitmproxy import flow
+from mitmproxy import io
 from mitmproxy import flowfilter
 from mitmproxy import utils
 from mitmproxy.addons import state
@@ -346,7 +346,7 @@ class ConsoleMaster(master.Master):
             - a list of flows, otherwise.
         """
         try:
-            return flow.read_flows_from_paths(path)
+            return io.read_flows_from_paths(path)
         except exceptions.FlowReadException as e:
             signals.status_message.send(message=str(e))
 
@@ -580,7 +580,7 @@ class ConsoleMaster(master.Master):
         path = os.path.expanduser(path)
         try:
             f = open(path, "wb")
-            fw = flow.FlowWriter(f)
+            fw = io.FlowWriter(f)
             for i in flows:
                 fw.add(i)
             f.close()

@@ -4,7 +4,7 @@ import os.path
 
 from mitmproxy.addons import filestreamer
 from mitmproxy import master
-from mitmproxy.flow import io
+from mitmproxy import io
 from mitmproxy import options
 from mitmproxy import proxy
 

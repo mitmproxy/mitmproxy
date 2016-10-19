@@ -4,7 +4,7 @@ from . import tutils
 import netlib.tutils
 
 from mitmproxy import master
-from mitmproxy import flow, proxy, models, options
+from mitmproxy import io, proxy, models, options
 
 
 class TestMaster:
@@ -33,7 +33,7 @@ class MasterTest:
 
     def flowfile(self, path):
         f = open(path, "wb")
-        fw = flow.FlowWriter(f)
+        fw = io.FlowWriter(f)
         t = tutils.tflow(resp=True)
         fw.add(t)
         f.close()

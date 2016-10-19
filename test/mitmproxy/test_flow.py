@@ -3,7 +3,8 @@ import io
 
 import netlib.utils
 from netlib.http import Headers
-from mitmproxy import flowfilter, flow, options
+import mitmproxy.io
+from mitmproxy import flowfilter, options
 from mitmproxy.addons import state
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, Kill
@@ -329,7 +330,7 @@ class TestSerialize:
 
     def _treader(self):
         sio = io.BytesIO()
-        w = flow.FlowWriter(sio)
+        w = mitmproxy.io.FlowWriter(sio)
         for i in range(3):
             f = tutils.tflow(resp=True)
             w.add(f)
@@ -342,18 +343,18 @@ class TestSerialize:
         w.add(f)
 
         sio.seek(0)
-        return flow.FlowReader(sio)
+        return mitmproxy.io.FlowReader(sio)
 
     def test_roundtrip(self):
         sio = io.BytesIO()
         f = tutils.tflow()
         f.marked = True
         f.request.content = bytes(bytearray(range(256)))
-        w = flow.FlowWriter(sio)
+        w = mitmproxy.io.FlowWriter(sio)
         w.add(f)
 
         sio.seek(0)
-        r = flow.FlowReader(sio)
+        r = mitmproxy.io.FlowReader(sio)
         l = list(r.stream())
         assert len(l) == 1
 
@@ -386,7 +387,7 @@ class TestSerialize:
     def test_filter(self):
         sio = io.BytesIO()
         flt = flowfilter.parse("~c 200")
-        w = flow.FilteredFlowWriter(sio, flt)
+        w = mitmproxy.io.FilteredFlowWriter(sio, flt)
 
         f = tutils.tflow(resp=True)
         f.response.status_code = 200
@@ -397,14 +398,14 @@ class TestSerialize:
         w.add(f)
 
         sio.seek(0)
-        r = flow.FlowReader(sio)
+        r = mitmproxy.io.FlowReader(sio)
         assert len(list(r.stream()))
 
     def test_error(self):
         sio = io.BytesIO()
         sio.write(b"bogus")
         sio.seek(0)
-        r = flow.FlowReader(sio)
+        r = mitmproxy.io.FlowReader(sio)
         tutils.raises(FlowReadException, list, r.stream())
 
         f = FlowReadException("foo")
@@ -418,7 +419,7 @@ class TestSerialize:
         tnetstring.dump(d, sio)
         sio.seek(0)
 
-        r = flow.FlowReader(sio)
+        r = mitmproxy.io.FlowReader(sio)
         tutils.raises("version", list, r.stream())
 
 

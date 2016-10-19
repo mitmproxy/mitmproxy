@@ -3,8 +3,8 @@ from typing import Optional
 
 from mitmproxy import controller
 from mitmproxy import exceptions
-from mitmproxy import flow
 from mitmproxy import addons
+from mitmproxy import io
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
@@ -68,7 +68,7 @@ class DumpMaster(master.Master):
         or raises a DumpError if that fails.
         """
         try:
-            return flow.read_flows_from_paths(paths)
+            return io.read_flows_from_paths(paths)
         except exceptions.FlowReadException as e:
             raise DumpError(str(e))
 

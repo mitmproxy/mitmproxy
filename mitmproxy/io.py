@@ -4,7 +4,7 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import models
 from mitmproxy.contrib import tnetstring
-from mitmproxy.flow import io_compat
+from mitmproxy import io_compat
 
 
 class FlowWriter:

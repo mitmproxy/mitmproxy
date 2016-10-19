@@ -15,7 +15,7 @@ from mitmproxy.console import grideditor
 from mitmproxy.console import searchable
 from mitmproxy.console import signals
 from mitmproxy.console import tabs
-from mitmproxy.flow import export
+from mitmproxy import export
 from netlib.http import Headers
 from netlib.http import status_codes
 

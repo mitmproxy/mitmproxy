@@ -2,7 +2,7 @@ import os.path
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
-from mitmproxy.flow import io
+from mitmproxy import io
 
 
 class FileStreamer:
