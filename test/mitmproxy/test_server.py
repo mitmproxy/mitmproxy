@@ -2,20 +2,23 @@ import os
 import socket
 import time
 
-import netlib.tutils
+import mitmproxy.test.tutils
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.addons import script
 from mitmproxy import http
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
-import netlib.http
-from netlib import tcp, socks
-from netlib.certutils import SSLCert
-from netlib.exceptions import HttpReadDisconnect, HttpException
-from netlib.http import authentication, http1
-from netlib.tcp import Address
-from netlib.tutils import raises
-from pathod import pathoc, pathod
+import mitmproxy.net.http
+from mitmproxy.net import tcp
+from mitmproxy.net import socks
+from mitmproxy import certs
+from mitmproxy import exceptions
+from mitmproxy.net.http import authentication
+from mitmproxy.net.http import http1
+from mitmproxy.net.tcp import Address
+from mitmproxy.test.tutils import raises
+from pathod import pathoc
+from pathod import pathod
 
 from . import tutils, tservers
 
@@ -144,9 +147,9 @@ class TcpMixin:
 
         # Test that we get the original SSL cert
         if self.ssl:
-            i_cert = SSLCert(i.sslinfo.certchain[0])
-            i2_cert = SSLCert(i2.sslinfo.certchain[0])
-            n_cert = SSLCert(n.sslinfo.certchain[0])
+            i_cert = certs.SSLCert(i.sslinfo.certchain[0])
+            i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
+            n_cert = certs.SSLCert(n.sslinfo.certchain[0])
 
             assert i_cert == i2_cert
             assert i_cert != n_cert
@@ -156,7 +159,7 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        with raises(HttpException):
+        with raises(exceptions.HttpException):
             self.pathod(spec)  # pathoc tries to parse answer as HTTP
 
         self._ignore_off()
@@ -190,9 +193,9 @@ class TcpMixin:
 
         # Test that we get the original SSL cert
         if self.ssl:
-            i_cert = SSLCert(i.sslinfo.certchain[0])
-            i2_cert = SSLCert(i2.sslinfo.certchain[0])
-            n_cert = SSLCert(n.sslinfo.certchain[0])
+            i_cert = certs.SSLCert(i.sslinfo.certchain[0])
+            i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
+            n_cert = certs.SSLCert(n.sslinfo.certchain[0])
 
             assert i_cert == i2_cert == n_cert
 
@@ -294,7 +297,7 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
                 h'%s'='%s'
             """ % (
                 self.server.port,
-                netlib.http.authentication.BasicProxyAuth.AUTH_HEADER,
+                mitmproxy.net.http.authentication.BasicProxyAuth.AUTH_HEADER,
                 authentication.assemble_http_basic_auth("basic", "test", "test")
             ))
         assert ret.status_code == 202
@@ -311,7 +314,7 @@ class TestHTTPReverseAuth(tservers.ReverseProxyTest):
                 '/p/202'
                 h'%s'='%s'
             """ % (
-                netlib.http.authentication.BasicWebsiteAuth.AUTH_HEADER,
+                mitmproxy.net.http.authentication.BasicWebsiteAuth.AUTH_HEADER,
                 authentication.assemble_http_basic_auth("basic", "test", "test")
             ))
         assert ret.status_code == 202
@@ -435,7 +438,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     def test_verification_w_bad_cert(self):
         # We only test for a single invalid cert here.
         # Actual testing of different root-causes (invalid hostname, expired, ...)
-        # is done in netlib.
+        # is done in mitmproxy.net.
         self.config.options.ssl_insecure = False
         r = self._request()
         assert r.status_code == 502
@@ -791,7 +794,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 class MasterFakeResponse(tservers.TestMaster):
     @controller.handler
     def request(self, f):
-        f.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -830,7 +833,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        with raises(HttpReadDisconnect):
+        with raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
@@ -847,7 +850,7 @@ class TestKillResponse(tservers.HTTPProxyTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        with raises(HttpReadDisconnect):
+        with raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
@@ -870,7 +873,7 @@ class MasterIncomplete(tservers.TestMaster):
 
     @controller.handler
     def request(self, f):
-        resp = http.HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         resp.content = None
         f.response = resp
 
@@ -1050,7 +1053,7 @@ class AddUpstreamCertsToClientChainMixin:
     def test_add_upstream_certs_to_client_chain(self):
         with open(self.servercert, "rb") as f:
             d = f.read()
-        upstreamCert = SSLCert.from_pem(d)
+        upstreamCert = certs.SSLCert.from_pem(d)
         p = self.pathoc()
         with p.connect():
             upstream_cert_found_in_client_chain = False

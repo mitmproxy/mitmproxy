@@ -6,11 +6,11 @@ import os
 import urwid
 import urwid.util
 
-import netlib
-from mitmproxy import utils
+import mitmproxy.net
+from mitmproxy.utils import lrucache
 from mitmproxy.tools.console import signals
 from mitmproxy import export
-from netlib import human
+from mitmproxy.utils import human
 
 try:
     import pyperclip
@@ -226,7 +226,7 @@ def format_flow_data(key, scope, flow):
         if request.content is None:
             return None, "Request content is missing"
         if key == "h":
-            data += netlib.http.http1.assemble_request(request)
+            data += mitmproxy.net.http.http1.assemble_request(request)
         elif key == "c":
             data += request.get_content(strict=False)
         else:
@@ -240,7 +240,7 @@ def format_flow_data(key, scope, flow):
         if response.content is None:
             return None, "Response content is missing"
         if key == "h":
-            data += netlib.http.http1.assemble_response(response)
+            data += mitmproxy.net.http.http1.assemble_response(response)
         elif key == "c":
             data += response.get_content(strict=False)
         else:
@@ -325,7 +325,7 @@ def export_to_clip_or_file(key, scope, flow, writer):
             else:  # other keys
                 writer(exporter(flow))
 
-flowcache = utils.LRUCache(800)
+flowcache = lrucache.LRUCache(800)
 
 
 def raw_format_flow(f):

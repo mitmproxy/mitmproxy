@@ -1,6 +1,6 @@
 import os
 import sys
-import netlib.utils
+from mitmproxy.utils import data as mdata
 
 
 class MemBool:
@@ -17,7 +17,8 @@ class MemBool:
         return bool(v)
 
 
-data = netlib.utils.Data(__name__)
+# FIXME: change this name
+data = mdata.Data(__name__)
 
 
 def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):  # pragma: no cover

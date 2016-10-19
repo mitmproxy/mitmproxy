@@ -2,11 +2,11 @@ import time
 
 from typing import List
 
-import netlib.basetypes
 from mitmproxy import flow
+from mitmproxy.types import serializable
 
 
-class TCPMessage(netlib.basetypes.Serializable):
+class TCPMessage(serializable.Serializable):
 
     def __init__(self, from_client, content, timestamp=None):
         self.content = content

@@ -1,6 +1,6 @@
 import click
 
-from mitmproxy import utils
+from mitmproxy import log
 
 
 class TermLog:
@@ -11,7 +11,7 @@ class TermLog:
         self.options = options
 
     def log(self, e):
-        if self.options.verbosity >= utils.log_tier(e.level):
+        if self.options.verbosity >= log.log_tier(e.level):
             click.secho(
                 e.msg,
                 file=self.options.tfile,

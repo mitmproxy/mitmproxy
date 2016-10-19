@@ -3,7 +3,7 @@ import re
 import textwrap
 import urllib
 
-import netlib.http
+import mitmproxy.net.http
 
 
 def _native(s):
@@ -89,9 +89,9 @@ def python_code(flow):
     return code
 
 
-def is_json(headers: netlib.http.Headers, content: bytes) -> bool:
+def is_json(headers: mitmproxy.net.http.Headers, content: bytes) -> bool:
     if headers:
-        ct = netlib.http.parse_content_type(headers.get("content-type", ""))
+        ct = mitmproxy.net.http.parse_content_type(headers.get("content-type", ""))
         if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
             try:
                 return json.loads(content.decode("utf8", "surrogateescape"))

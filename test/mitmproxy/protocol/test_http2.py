@@ -11,10 +11,10 @@ import h2
 from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
-import netlib
-from ...netlib import tservers as netlib_tservers
-from netlib.exceptions import HttpException
-from netlib.http import http1, http2
+import mitmproxy.net
+from ...mitmproxy.net import tservers as net_tservers
+from mitmproxy import exceptions
+from mitmproxy.net.http import http1, http2
 
 from .. import tservers
 
@@ -28,7 +28,7 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
 
 requires_alpn = pytest.mark.skipif(
-    not netlib.tcp.HAS_ALPN,
+    not mitmproxy.net.tcp.HAS_ALPN,
     reason='requires OpenSSL with ALPN support')
 
 
@@ -37,10 +37,10 @@ requires_alpn = pytest.mark.skipif(
 #       print(msg)
 
 
-class _Http2ServerBase(netlib_tservers.ServerTestBase):
+class _Http2ServerBase(net_tservers.ServerTestBase):
     ssl = dict(alpn_select=b'h2')
 
-    class handler(netlib.tcp.BaseHandler):
+    class handler(mitmproxy.net.tcp.BaseHandler):
 
         def handle(self):
             h2_conn = h2.connection.H2Connection(client_side=False, header_encoding=False)
@@ -61,10 +61,10 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                 try:
                     raw = b''.join(http2.read_raw_frame(self.rfile))
                     events = h2_conn.receive_data(raw)
-                except HttpException:
+                except exceptions.HttpException:
                     print(traceback.format_exc())
                     assert False
-                except netlib.exceptions.TcpDisconnect:
+                except exceptions.TcpDisconnect:
                     break
                 except:
                     print(traceback.format_exc())
@@ -77,7 +77,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                         if not self.server.handle_server_event(event, h2_conn, self.rfile, self.wfile):
                             done = True
                             break
-                    except netlib.exceptions.TcpDisconnect:
+                    except exceptions.TcpDisconnect:
                         done = True
                     except:
                         done = True
@@ -122,11 +122,11 @@ class _Http2TestBase:
         self.server.server.handle_server_event = self.handle_server_event
 
     def _setup_connection(self):
-        client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
+        client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
         # send CONNECT request
-        client.wfile.write(http1.assemble_request(netlib.http.Request(
+        client.wfile.write(http1.assemble_request(mitmproxy.net.http.Request(
             'authority',
             b'CONNECT',
             b'',
@@ -252,7 +252,7 @@ class TestSimple(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -329,7 +329,7 @@ class TestRequestWithPriority(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -368,7 +368,7 @@ class TestRequestWithPriority(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -440,7 +440,7 @@ class TestPriority(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -517,7 +517,7 @@ class TestPriorityWithExistingStream(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -568,7 +568,7 @@ class TestStreamResetFromServer(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -618,7 +618,7 @@ class TestBodySizeLimit(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -703,7 +703,7 @@ class TestPushPromise(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
             except:
@@ -756,7 +756,7 @@ class TestPushPromise(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -816,7 +816,7 @@ class TestConnectionLost(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
             except:

@@ -1,6 +1,6 @@
 import gc
 
-import netlib.tutils
+import mitmproxy.test.tutils
 from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy.tools.console import common
@@ -59,13 +59,13 @@ class TestConsoleState:
 
     def _add_response(self, state):
         f = self._add_request(state)
-        f.response = netlib.tutils.tresp()
+        f.response = mitmproxy.test.tutils.tresp()
         state.update_flow(f)
 
     def test_add_response(self):
         c = console.master.ConsoleState()
         f = self._add_request(c)
-        f.response = netlib.tutils.tresp()
+        f.response = mitmproxy.test.tutils.tresp()
         c.focus = None
         c.update_flow(f)
 
@@ -127,12 +127,12 @@ class TestMaster(mastertest.MasterTest):
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
         m = self.mkmaster(intercept="~b bar")
-        f = tutils.tflow(req=netlib.tutils.treq(content=b"foo"))
+        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=b"foo"))
         m.request(f)
         assert not m.state.flows[0].intercepted
-        f = tutils.tflow(req=netlib.tutils.treq(content=b"bar"))
+        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=b"bar"))
         m.request(f)
         assert m.state.flows[1].intercepted
-        f = tutils.tflow(resp=netlib.tutils.tresp(content=b"bar"))
+        f = tutils.tflow(resp=mitmproxy.test.tutils.tresp(content=b"bar"))
         m.request(f)
         assert m.state.flows[2].intercepted

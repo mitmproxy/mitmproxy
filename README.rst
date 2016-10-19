@@ -3,8 +3,7 @@ mitmproxy
 
 |travis| |appveyor| |coverage| |latest_release| |python_versions|
 
-This repository contains the **mitmproxy** and **pathod** projects, as well as
-their shared networking library, **netlib**.
+This repository contains the **mitmproxy** and **pathod** projects.
 
 ``mitmproxy`` is an interactive, SSL-capable intercepting proxy with a console
 interface.
@@ -64,7 +63,7 @@ virtualenv_ installed (you can find installation instructions for virtualenv
 
 The *dev* script will create a virtualenv environment in a directory called
 "venv", and install all mandatory and optional dependencies into it. The
-primary mitmproxy components - mitmproxy, netlib and pathod - are installed as
+primary mitmproxy components - mitmproxy and pathod - are installed as
 "editable", so any changes to the source in the repository will be reflected
 live in the virtualenv.
 
@@ -144,7 +143,7 @@ PR checks will fail and block merging. We are using this command to check for st
 
 .. code-block:: text
 
-    flake8 --jobs 8 --count mitmproxy netlib pathod examples test
+    flake8 --jobs 8 --count mitmproxy pathod examples test
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg

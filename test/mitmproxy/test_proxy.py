@@ -8,9 +8,9 @@ from mitmproxy.proxy import ProxyConfig
 from mitmproxy import connections
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
-from netlib.exceptions import TcpDisconnect
+from mitmproxy import exceptions
 from pathod import test
-from netlib.http import http1
+from mitmproxy.net.http import http1
 from . import tutils
 
 
@@ -40,7 +40,7 @@ class TestServerConnection:
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)
-        sc.connection.flush = mock.Mock(side_effect=TcpDisconnect)
+        sc.connection.flush = mock.Mock(side_effect=exceptions.TcpDisconnect)
         sc.finish()
         self.d.shutdown()
 

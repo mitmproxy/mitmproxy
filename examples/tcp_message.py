@@ -8,7 +8,7 @@ tcp_message Inline Script Hook API Demonstration
 example cmdline invocation:
 mitmdump -T --host --tcp ".*" -q -s examples/tcp_message.py
 """
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 
 def tcp_message(tcp_msg):

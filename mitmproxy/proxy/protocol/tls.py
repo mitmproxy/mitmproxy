@@ -3,11 +3,10 @@ from typing import Optional  # noqa
 from typing import Union
 
 import construct
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy.contrib.tls import _constructs
 from mitmproxy.proxy.protocol import base
-from netlib import utils
+from mitmproxy.net import check
 
 
 # taken from https://testssl.sh/openssl-rfc.mappping.html
@@ -265,7 +264,7 @@ class TlsClientHello:
                 extension.type == 0x00 and
                 len(extension.server_names) == 1 and
                 extension.server_names[0].type == 0 and
-                utils.is_valid_host(extension.server_names[0].name)
+                check.is_valid_host(extension.server_names[0].name)
             )
             if is_valid_sni_extension:
                 return extension.server_names[0].name.decode("idna")
@@ -484,7 +483,7 @@ class TlsLayer(base.Layer):
             # The reason for this might be difficult to find, so we try to peek here to see if it
             # raises ann error.
             self.client_conn.rfile.peek(1)
-        except netlib.exceptions.TlsException as e:
+        except exceptions.TlsException as e:
             raise exceptions.ClientHandshakeException(
                 "Cannot establish TLS with client (sni: {sni}): {e}".format(
                     sni=self._client_hello.sni, e=repr(e)
@@ -528,9 +527,9 @@ class TlsLayer(base.Layer):
             if tls_cert_err is not None:
                 self.log(str(tls_cert_err), "warn")
                 self.log("Ignoring server verification error, continuing with connection", "warn")
-        except netlib.exceptions.InvalidCertificateException as e:
+        except exceptions.InvalidCertificateException as e:
             raise exceptions.InvalidServerCertificate(str(e))
-        except netlib.exceptions.TlsException as e:
+        except exceptions.TlsException as e:
             raise exceptions.TlsProtocolException(
                 "Cannot establish TLS with {address} (sni: {sni}): {e}".format(
                     address=repr(self.server_conn.address),

@@ -8,7 +8,7 @@ from mitmproxy import io
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
-from netlib import tcp
+from mitmproxy.net import tcp
 
 
 class DumpError(Exception):

@@ -4,7 +4,7 @@ from typing import Callable, Optional
 import urwid
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import base
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 
 def read_file(filename: str, callback: Callable[..., None], escaped: bool) -> Optional[str]:

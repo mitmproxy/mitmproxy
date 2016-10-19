@@ -4,19 +4,20 @@ import tempfile
 import traceback
 
 from mitmproxy import options
+from mitmproxy import exceptions
 from mitmproxy.proxy.config import ProxyConfig
 
-import netlib
-from netlib import http
-from ...netlib import tservers as netlib_tservers
+import mitmproxy.net
+from mitmproxy.net import http
+from ...mitmproxy.net import tservers as net_tservers
 from .. import tservers
 
-from netlib import websockets
+from mitmproxy.net import websockets
 
 
-class _WebSocketsServerBase(netlib_tservers.ServerTestBase):
+class _WebSocketsServerBase(net_tservers.ServerTestBase):
 
-    class handler(netlib.tcp.BaseHandler):
+    class handler(mitmproxy.net.tcp.BaseHandler):
 
         def handle(self):
             try:
@@ -77,7 +78,7 @@ class _WebSocketsTestBase:
         self.server.server.handle_websockets = self.handle_websockets
 
     def _setup_connection(self):
-        client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
+        client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
         request = http.Request(
@@ -249,7 +250,7 @@ class TestClose(_WebSocketsTest):
         wfile.write(bytes(frame))
         wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(rfile)
 
     def test_close(self):
@@ -258,7 +259,7 @@ class TestClose(_WebSocketsTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
         client.wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
     def test_close_payload_1(self):
@@ -267,7 +268,7 @@ class TestClose(_WebSocketsTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42')))
         client.wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
     def test_close_payload_2(self):
@@ -276,7 +277,7 @@ class TestClose(_WebSocketsTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42foobar')))
         client.wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
 
@@ -290,7 +291,7 @@ class TestInvalidFrame(_WebSocketsTest):
     def test_invalid_frame(self):
         client = self._setup_connection()
 
-        # with pytest.raises(netlib.exceptions.TcpDisconnect):
+        # with pytest.raises(exceptions.TcpDisconnect):
         frame = websockets.Frame.from_file(client.rfile)
         assert frame.header.opcode == 15
         assert frame.payload == b'foobar'

@@ -4,8 +4,8 @@ import abc
 import functools
 import pyparsing as pp
 
-from netlib import strutils
-from netlib import human
+from mitmproxy.utils import strutils
+from mitmproxy.utils import human
 
 from . import generators, exceptions
 

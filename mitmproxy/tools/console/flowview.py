@@ -8,7 +8,7 @@ from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
 from mitmproxy import http
-from mitmproxy import utils
+from mitmproxy.utils import lrucache
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import grideditor
@@ -16,8 +16,8 @@ from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
 from mitmproxy import export
-from netlib.http import Headers
-from netlib.http import status_codes
+from mitmproxy.net.http import Headers
+from mitmproxy.net.http import status_codes
 
 
 class SearchError(Exception):
@@ -121,7 +121,7 @@ class FlowViewHeader(urwid.WidgetWrap):
             )
 
 
-cache = utils.LRUCache(200)
+cache = lrucache.LRUCache(200)
 
 TAB_REQ = 0
 TAB_RESP = 1

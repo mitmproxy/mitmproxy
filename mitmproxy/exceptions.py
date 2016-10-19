@@ -1,13 +1,16 @@
 """
 We try to be very hygienic regarding the exceptions we throw:
-Every Exception mitmproxy raises shall be a subclass of ProxyException.
 
+- Every exception that might be externally visible to users shall be a subclass
+  of MitmproxyException.p
+- Every exception in the base net module shall be a subclass
+  of NetlibException, and will not be propagated directly to users.
 
 See also: http://lucumr.pocoo.org/2014/10/16/on-error-handling/
 """
 
 
-class ProxyException(Exception):
+class MitmproxyException(Exception):
 
     """
     Base class for all exceptions thrown by mitmproxy.
@@ -17,7 +20,7 @@ class ProxyException(Exception):
         super().__init__(message)
 
 
-class Kill(ProxyException):
+class Kill(MitmproxyException):
 
     """
     Signal that both client and server connection(s) should be killed immediately.
@@ -25,7 +28,7 @@ class Kill(ProxyException):
     pass
 
 
-class ProtocolException(ProxyException):
+class ProtocolException(MitmproxyException):
     """
     ProtocolExceptions are caused by invalid user input, unavailable network resources,
     or other events that are outside of our influence.
@@ -66,37 +69,94 @@ class Http2ZombieException(ProtocolException):
     pass
 
 
-class ServerException(ProxyException):
+class ServerException(MitmproxyException):
     pass
 
 
-class ContentViewException(ProxyException):
+class ContentViewException(MitmproxyException):
     pass
 
 
-class ReplayException(ProxyException):
+class ReplayException(MitmproxyException):
     pass
 
 
-class FlowReadException(ProxyException):
+class FlowReadException(MitmproxyException):
     pass
 
 
-class ControlException(ProxyException):
+class ControlException(MitmproxyException):
     pass
 
 
-class SetServerNotAllowedException(ProxyException):
+class SetServerNotAllowedException(MitmproxyException):
     pass
 
 
-class OptionsError(Exception):
+class OptionsError(MitmproxyException):
     pass
 
 
-class AddonError(Exception):
+class AddonError(MitmproxyException):
     pass
 
 
-class AddonHalt(Exception):
+class AddonHalt(MitmproxyException):
+    pass
+
+
+"""
+    Net-layer exceptions
+"""
+
+
+class NetlibException(MitmproxyException):
+    """
+    Base class for all exceptions thrown by mitmproxy.net.
+    """
+    def __init__(self, message=None):
+        super().__init__(message)
+
+
+class Disconnect:
+    """Immediate EOF"""
+
+
+class HttpException(NetlibException):
+    pass
+
+
+class HttpReadDisconnect(HttpException, Disconnect):
+    pass
+
+
+class HttpSyntaxException(HttpException):
+    pass
+
+
+class TcpException(NetlibException):
+    pass
+
+
+class TcpDisconnect(TcpException, Disconnect):
+    pass
+
+
+class TcpReadIncomplete(TcpException):
+    pass
+
+
+class TcpTimeout(TcpException):
+    pass
+
+
+class TlsException(NetlibException):
+    pass
+
+
+class InvalidCertificateException(TlsException):
+    pass
+
+
+class Timeout(TcpException):
     pass

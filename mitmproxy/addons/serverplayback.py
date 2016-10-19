@@ -1,7 +1,7 @@
 import urllib
 import hashlib
 
-from netlib import strutils
+from mitmproxy.utils import strutils
 from mitmproxy import exceptions
 from mitmproxy import ctx
 from mitmproxy import io

@@ -1,7 +1,7 @@
 import io
 
-from netlib import tcp
-from netlib.http import user_agents
+from mitmproxy.net import tcp
+from mitmproxy.net.http import user_agents
 
 from pathod import language
 from pathod.language import http2

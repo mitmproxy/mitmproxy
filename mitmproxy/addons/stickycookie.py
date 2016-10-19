@@ -1,7 +1,7 @@
 import collections
 from http import cookiejar
 
-from netlib.http import cookies
+from mitmproxy.net.http import cookies
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter

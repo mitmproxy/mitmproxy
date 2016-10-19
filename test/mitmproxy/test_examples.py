@@ -6,17 +6,16 @@ from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy import proxy
 from mitmproxy.addons import script
+from mitmproxy.utils import data
 from mitmproxy import master
 
-import netlib.utils
-
-from netlib import tutils as netutils
-from netlib.http import Headers
-from netlib.http import cookies
+from mitmproxy.test import tutils as netutils
+from mitmproxy.net.http import Headers
+from mitmproxy.net.http import cookies
 
 from . import tutils, mastertest
 
-example_dir = netlib.utils.Data(__name__).push("../../examples")
+example_dir = data.Data(__name__).push("../../examples")
 
 
 class ScriptError(Exception):
