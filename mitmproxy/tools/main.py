@@ -7,7 +7,7 @@ from mitmproxy import exceptions
 from mitmproxy.proxy import config
 from mitmproxy.proxy import server
 from netlib import version_check
-from netlib import debug
+from mitmproxy.utils import debug
 
 
 def assert_utf8_env():

@@ -1,6 +1,6 @@
 import io
 
-from netlib import debug
+from mitmproxy.utils import debug
 
 
 def test_dump_info():
