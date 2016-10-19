@@ -2,7 +2,7 @@ import mock
 import io
 
 import mitmproxy.test.tutils
-from netlib.http import Headers
+from mitmproxy.net.http import Headers
 import mitmproxy.io
 from mitmproxy import flowfilter, options
 from mitmproxy.addons import state

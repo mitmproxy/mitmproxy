@@ -1,7 +1,7 @@
 import io
 
 from pathod import pathod
-from netlib import tcp
+from mitmproxy.net import tcp
 from mitmproxy import exceptions
 
 from . import tutils

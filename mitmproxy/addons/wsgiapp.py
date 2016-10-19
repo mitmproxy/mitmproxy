@@ -1,7 +1,7 @@
 from mitmproxy import ctx
 from mitmproxy import exceptions
 
-from netlib import wsgi
+from mitmproxy.net import wsgi
 from mitmproxy import version
 
 

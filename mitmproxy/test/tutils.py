@@ -7,8 +7,8 @@ from contextlib import contextmanager
 import sys
 
 from mitmproxy.utils import data
-from netlib import tcp
-from netlib import http
+from mitmproxy.net import tcp
+from mitmproxy.net import http
 
 
 def treader(bytes):
@@ -89,13 +89,13 @@ class RaisesContext:
         return True
 
 
-test_data = data.Data(__name__).push("../../test/netlib")
+test_data = data.Data(__name__).push("../../test/mitmproxy/net")
 
 
 def treq(**kwargs):
     """
     Returns:
-        netlib.http.Request
+        mitmproxy.net.http.Request
     """
     default = dict(
         first_line_format="relative",
@@ -115,7 +115,7 @@ def treq(**kwargs):
 def tresp(**kwargs):
     """
     Returns:
-        netlib.http.Response
+        mitmproxy.net.http.Response
     """
     default = dict(
         http_version=b"HTTP/1.1",

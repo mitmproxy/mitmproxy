@@ -1,9 +1,9 @@
 import io
 from mock import Mock
 
-from netlib import http
-from netlib import tcp
-from netlib.http import http1
+from mitmproxy.net import http
+from mitmproxy.net import tcp
+from mitmproxy.net.http import http1
 from mitmproxy.test.tutils import raises
 from mitmproxy import exceptions
 

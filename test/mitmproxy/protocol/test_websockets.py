@@ -7,17 +7,17 @@ from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy.proxy.config import ProxyConfig
 
-import netlib
-from netlib import http
-from ...netlib import tservers as netlib_tservers
+import mitmproxy.net
+from mitmproxy.net import http
+from ...mitmproxy.net import tservers as net_tservers
 from .. import tservers
 
-from netlib import websockets
+from mitmproxy.net import websockets
 
 
-class _WebSocketsServerBase(netlib_tservers.ServerTestBase):
+class _WebSocketsServerBase(net_tservers.ServerTestBase):
 
-    class handler(netlib.tcp.BaseHandler):
+    class handler(mitmproxy.net.tcp.BaseHandler):
 
         def handle(self):
             try:
@@ -78,7 +78,7 @@ class _WebSocketsTestBase:
         self.server.server.handle_websockets = self.handle_websockets
 
     def _setup_connection(self):
-        client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
+        client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
         request = http.Request(

@@ -4,9 +4,9 @@ import os
 import sys
 import threading
 
-from netlib import tcp
+from mitmproxy.net import tcp
 from mitmproxy import certs as mcerts
-from netlib import websockets
+from mitmproxy.net import websockets
 from mitmproxy import version
 
 import urllib

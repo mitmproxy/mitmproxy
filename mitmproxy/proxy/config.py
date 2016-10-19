@@ -11,9 +11,9 @@ from OpenSSL import SSL, crypto
 from mitmproxy import exceptions
 from mitmproxy import options as moptions
 from mitmproxy import certs
-from netlib import tcp
-from netlib.http import authentication
-from netlib.http import url
+from mitmproxy.net import tcp
+from mitmproxy.net.http import authentication
+from mitmproxy.net.http import url
 
 CONF_BASENAME = "mitmproxy"
 

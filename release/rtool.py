@@ -48,7 +48,7 @@ VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
 VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 
 # Project Configuration
-VERSION_FILE = join(ROOT_DIR, "netlib", "version.py")
+VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
 PROJECT_NAME = "mitmproxy"
 PYTHON_VERSION = "py2.py3"
 BDISTS = {

@@ -2,7 +2,7 @@ import socket
 
 from OpenSSL import SSL
 
-import netlib.tcp
+import mitmproxy.net.tcp
 from mitmproxy import tcp
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -31,7 +31,7 @@ class RawTCPLayer(base.Layer):
 
         try:
             while not self.channel.should_exit.is_set():
-                r = netlib.tcp.ssl_read_select(conns, 10)
+                r = mitmproxy.net.tcp.ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client
 

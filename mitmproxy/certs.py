@@ -193,7 +193,7 @@ class CertStore:
     @staticmethod
     def load_dhparam(path):
 
-        # netlib<=0.10 doesn't generate a dhparam file.
+        # mitmproxy<=0.10 doesn't generate a dhparam file.
         # Create it now if neccessary.
         if not os.path.exists(path):
             with open(path, "wb") as f:

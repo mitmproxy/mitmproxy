@@ -10,7 +10,7 @@ from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
 from mitmproxy import exceptions
 from pathod import test
-from netlib.http import http1
+from mitmproxy.net.http import http1
 from . import tutils
 
 

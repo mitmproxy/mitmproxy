@@ -231,10 +231,7 @@ def linkcode_resolve(domain, info):
         _, line = inspect.getsourcelines(obj)
     except (TypeError, IOError):
         return None
-    if spath.rfind("netlib") > -1:
-        off = spath.rfind("netlib")
-        mpath = spath[off:]
-    elif spath.rfind("mitmproxy") > -1:
+    if spath.rfind("mitmproxy") > -1:
         off = spath.rfind("mitmproxy")
         mpath = spath[off:]
     else:

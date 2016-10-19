@@ -13,12 +13,12 @@ import logging
 
 from mitmproxy.test.tutils import treq
 from mitmproxy.utils import strutils
-from netlib import tcp
+from mitmproxy.net import tcp
 from mitmproxy import certs
-from netlib import websockets
-from netlib import socks
+from mitmproxy.net import websockets
+from mitmproxy.net import socks
 from mitmproxy import exceptions
-from netlib.http import http1
+from mitmproxy.net.http import http1
 from mitmproxy.types import basethread
 
 from pathod import log

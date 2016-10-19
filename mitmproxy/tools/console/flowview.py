@@ -16,8 +16,8 @@ from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
 from mitmproxy import export
-from netlib.http import Headers
-from netlib.http import status_codes
+from mitmproxy.net.http import Headers
+from mitmproxy.net.http import status_codes
 
 
 class SearchError(Exception):

@@ -11,10 +11,10 @@ import h2
 from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
-import netlib
-from ...netlib import tservers as netlib_tservers
+import mitmproxy.net
+from ...mitmproxy.net import tservers as net_tservers
 from mitmproxy import exceptions
-from netlib.http import http1, http2
+from mitmproxy.net.http import http1, http2
 
 from .. import tservers
 
@@ -28,7 +28,7 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
 
 requires_alpn = pytest.mark.skipif(
-    not netlib.tcp.HAS_ALPN,
+    not mitmproxy.net.tcp.HAS_ALPN,
     reason='requires OpenSSL with ALPN support')
 
 
@@ -37,10 +37,10 @@ requires_alpn = pytest.mark.skipif(
 #       print(msg)
 
 
-class _Http2ServerBase(netlib_tservers.ServerTestBase):
+class _Http2ServerBase(net_tservers.ServerTestBase):
     ssl = dict(alpn_select=b'h2')
 
-    class handler(netlib.tcp.BaseHandler):
+    class handler(mitmproxy.net.tcp.BaseHandler):
 
         def handle(self):
             h2_conn = h2.connection.H2Connection(client_side=False, header_encoding=False)
@@ -122,11 +122,11 @@ class _Http2TestBase:
         self.server.server.handle_server_event = self.handle_server_event
 
     def _setup_connection(self):
-        client = netlib.tcp.TCPClient(("127.0.0.1", self.proxy.port))
+        client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
         # send CONNECT request
-        client.wfile.write(http1.assemble_request(netlib.http.Request(
+        client.wfile.write(http1.assemble_request(mitmproxy.net.http.Request(
             'authority',
             b'CONNECT',
             b'',

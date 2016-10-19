@@ -112,7 +112,7 @@ class AddonHalt(MitmproxyException):
 
 class NetlibException(MitmproxyException):
     """
-    Base class for all exceptions thrown by netlib.
+    Base class for all exceptions thrown by mitmproxy.net.
     """
     def __init__(self, message=None):
         super().__init__(message)

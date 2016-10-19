@@ -5,7 +5,7 @@ import os
 
 from mitmproxy import stateobject
 from mitmproxy import certs
-from netlib import tcp
+from mitmproxy.net import tcp
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):

@@ -1,7 +1,7 @@
 import urwid
 from mitmproxy.tools.console.grideditor import base
 from mitmproxy.tools.console import signals
-from netlib.http import cookies
+from mitmproxy.net.http import cookies
 
 
 class Column(base.Column):

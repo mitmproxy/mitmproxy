@@ -10,8 +10,8 @@ from mitmproxy.utils import data
 from mitmproxy import master
 
 from mitmproxy.test import tutils as netutils
-from netlib.http import Headers
-from netlib.http import cookies
+from mitmproxy.net.http import Headers
+from mitmproxy.net.http import cookies
 
 from . import tutils, mastertest
 

@@ -33,10 +33,10 @@ from PIL import ExifTags
 from PIL import Image
 from mitmproxy import exceptions
 from mitmproxy.contrib.wbxml import ASCommandResponse
-from netlib import http
+from mitmproxy.net import http
 from mitmproxy.types import multidict
 from mitmproxy.utils import strutils
-from netlib.http import url
+from mitmproxy.net.http import url
 
 try:
     import pyamf

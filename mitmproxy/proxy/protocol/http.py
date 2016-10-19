@@ -6,9 +6,9 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol import websockets as pwebsockets
-import netlib.http
-from netlib import tcp
-from netlib import websockets
+import mitmproxy.net.http
+from mitmproxy.net import tcp
+from mitmproxy.net import websockets
 
 
 class _HttpTransmissionLayer(base.Layer):
@@ -422,13 +422,13 @@ class HttpLayer(base.Layer):
                     self.send_response(http.make_error_response(
                         401,
                         "Authentication Required",
-                        netlib.http.Headers(**self.config.authenticator.auth_challenge_headers())
+                        mitmproxy.net.http.Headers(**self.config.authenticator.auth_challenge_headers())
                     ))
                 else:
                     self.send_response(http.make_error_response(
                         407,
                         "Proxy Authentication Required",
-                        netlib.http.Headers(**self.config.authenticator.auth_challenge_headers())
+                        mitmproxy.net.http.Headers(**self.config.authenticator.auth_challenge_headers())
                     ))
                 return False
         return True

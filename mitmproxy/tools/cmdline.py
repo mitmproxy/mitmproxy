@@ -6,7 +6,7 @@ from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy import platform
 from mitmproxy.utils import human
-from netlib import tcp
+from mitmproxy.net import tcp
 from mitmproxy import version
 
 

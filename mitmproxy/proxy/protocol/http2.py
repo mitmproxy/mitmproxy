@@ -12,10 +12,10 @@ from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol import http as httpbase
-import netlib.http
-from netlib import tcp
+import mitmproxy.net.http
+from mitmproxy.net import tcp
 from mitmproxy.types import basethread
-from netlib.http import http2
+from mitmproxy.net.http import http2
 
 
 class SafeH2Connection(connection.H2Connection):
@@ -148,7 +148,7 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_request_received(self, eid, event, h2_connection):
-        headers = netlib.http.Headers([[k, v] for k, v in event.headers])
+        headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
         self.streams[eid] = Http2SingleStreamLayer(self, h2_connection, eid, headers)
         self.streams[eid].timestamp_start = time.time()
         self.streams[eid].no_body = (event.stream_ended is not None)
@@ -162,7 +162,7 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_response_received(self, eid, event):
-        headers = netlib.http.Headers([[k, v] for k, v in event.headers])
+        headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
         self.streams[eid].queued_data_length = 0
         self.streams[eid].timestamp_start = time.time()
         self.streams[eid].response_headers = headers
@@ -239,7 +239,7 @@ class Http2Layer(base.Layer):
             self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
             self.client_conn.send(self.client_conn.h2.data_to_send())
 
-        headers = netlib.http.Headers([[k, v] for k, v in event.headers])
+        headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
         self.streams[event.pushed_stream_id] = Http2SingleStreamLayer(self, h2_connection, event.pushed_stream_id, headers)
         self.streams[event.pushed_stream_id].timestamp_start = time.time()
         self.streams[event.pushed_stream_id].pushed = True

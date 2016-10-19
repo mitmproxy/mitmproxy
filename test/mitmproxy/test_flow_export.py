@@ -1,7 +1,7 @@
 import re
 
 import mitmproxy.test.tutils
-from netlib.http import Headers
+from mitmproxy.net.http import Headers
 from mitmproxy import export  # heh
 from . import tutils
 

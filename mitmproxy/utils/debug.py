@@ -84,7 +84,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
     d = {}
     for i in gc.get_objects():
         t = str(type(i))
-        if "mitmproxy" in t or "netlib" in t:
+        if "mitmproxy" in t:
             d[t] = d.setdefault(t, 0) + 1
     itms = list(d.items())
     itms.sort(key=lambda x: x[1])

@@ -9,7 +9,7 @@ from mitmproxy.tools.console.grideditor import col_bytes
 from mitmproxy.tools.console.grideditor import col_text
 from mitmproxy.tools.console.grideditor import col_subgrid
 from mitmproxy.tools.console import signals
-from netlib.http import user_agents
+from mitmproxy.net.http import user_agents
 
 
 class QueryEditor(base.GridEditor):

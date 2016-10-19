@@ -23,7 +23,7 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: "tox -- --cov netlib --cov mitmproxy --cov pathod -v"
+  - ps: "tox -- --cov mitmproxy --cov pathod -v"
 
 deploy_script:
   ps: |

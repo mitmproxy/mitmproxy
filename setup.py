@@ -44,7 +44,6 @@ setup(
     packages=find_packages(include=[
         "mitmproxy", "mitmproxy.*",
         "pathod", "pathod.*",
-        "netlib", "netlib.*"
     ]),
     include_package_data=True,
     entry_points={

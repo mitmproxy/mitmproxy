@@ -1,6 +1,6 @@
 import time
 
-from netlib import websockets
+from mitmproxy.net import websockets
 from pathod import language
 from mitmproxy import exceptions
 

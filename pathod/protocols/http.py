@@ -1,6 +1,6 @@
 from mitmproxy import version
 from mitmproxy import exceptions
-from netlib.http import http1
+from mitmproxy.net.http import http1
 from .. import language
 
 

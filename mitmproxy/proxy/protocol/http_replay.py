@@ -6,7 +6,7 @@ from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy import connections
-from netlib.http import http1
+from mitmproxy.net.http import http1
 from mitmproxy.types import basethread
 
 

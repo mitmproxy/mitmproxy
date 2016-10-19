@@ -8,14 +8,14 @@ from mitmproxy import options
 from mitmproxy.addons import script
 from mitmproxy import http
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
-import netlib.http
-from netlib import tcp
-from netlib import socks
+import mitmproxy.net.http
+from mitmproxy.net import tcp
+from mitmproxy.net import socks
 from mitmproxy import certs
 from mitmproxy import exceptions
-from netlib.http import authentication
-from netlib.http import http1
-from netlib.tcp import Address
+from mitmproxy.net.http import authentication
+from mitmproxy.net.http import http1
+from mitmproxy.net.tcp import Address
 from mitmproxy.test.tutils import raises
 from pathod import pathoc
 from pathod import pathod
@@ -297,7 +297,7 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
                 h'%s'='%s'
             """ % (
                 self.server.port,
-                netlib.http.authentication.BasicProxyAuth.AUTH_HEADER,
+                mitmproxy.net.http.authentication.BasicProxyAuth.AUTH_HEADER,
                 authentication.assemble_http_basic_auth("basic", "test", "test")
             ))
         assert ret.status_code == 202
@@ -314,7 +314,7 @@ class TestHTTPReverseAuth(tservers.ReverseProxyTest):
                 '/p/202'
                 h'%s'='%s'
             """ % (
-                netlib.http.authentication.BasicWebsiteAuth.AUTH_HEADER,
+                mitmproxy.net.http.authentication.BasicWebsiteAuth.AUTH_HEADER,
                 authentication.assemble_http_basic_auth("basic", "test", "test")
             ))
         assert ret.status_code == 202
@@ -438,7 +438,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     def test_verification_w_bad_cert(self):
         # We only test for a single invalid cert here.
         # Actual testing of different root-causes (invalid hostname, expired, ...)
-        # is done in netlib.
+        # is done in mitmproxy.net.
         self.config.options.ssl_insecure = False
         r = self._request()
         assert r.status_code == 502

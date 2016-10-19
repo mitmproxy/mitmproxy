@@ -1,5 +1,5 @@
-from netlib.http import http1
-from netlib.tcp import TCPClient
+from mitmproxy.net.http import http1
+from mitmproxy.net.tcp import TCPClient
 from mitmproxy.test.tutils import treq
 from .. import tutils, tservers
 

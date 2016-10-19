@@ -6,7 +6,7 @@ import os
 import urwid
 import urwid.util
 
-import netlib
+import mitmproxy.net
 from mitmproxy.utils import lrucache
 from mitmproxy.tools.console import signals
 from mitmproxy import export
@@ -226,7 +226,7 @@ def format_flow_data(key, scope, flow):
         if request.content is None:
             return None, "Request content is missing"
         if key == "h":
-            data += netlib.http.http1.assemble_request(request)
+            data += mitmproxy.net.http.http1.assemble_request(request)
         elif key == "c":
             data += request.get_content(strict=False)
         else:
@@ -240,7 +240,7 @@ def format_flow_data(key, scope, flow):
         if response.content is None:
             return None, "Response content is missing"
         if key == "h":
-            data += netlib.http.http1.assemble_response(response)
+            data += mitmproxy.net.http.http1.assemble_response(response)
         elif key == "c":
             data += response.get_content(strict=False)
         else:

@@ -6,7 +6,7 @@ import construct
 from mitmproxy import exceptions
 from mitmproxy.contrib.tls import _constructs
 from mitmproxy.proxy.protocol import base
-from netlib import check
+from mitmproxy.net import check
 
 
 # taken from https://testssl.sh/openssl-rfc.mappping.html

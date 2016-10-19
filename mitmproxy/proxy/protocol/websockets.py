@@ -4,8 +4,8 @@ from OpenSSL import SSL
 from mitmproxy import exceptions
 from mitmproxy.proxy.protocol import base
 from mitmproxy.utils import strutils
-from netlib import tcp
-from netlib import websockets
+from mitmproxy.net import tcp
+from mitmproxy.net import websockets
 
 
 class WebSocketsLayer(base.Layer):

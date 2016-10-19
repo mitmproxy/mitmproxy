@@ -8,8 +8,8 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
-from netlib import tcp
-from netlib.http import http1
+from mitmproxy.net import tcp
+from mitmproxy.net.http import http1
 
 
 class DummyServer:
