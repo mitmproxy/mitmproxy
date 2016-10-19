@@ -22,6 +22,7 @@ from mitmproxy import master
 from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import utils
+from mitmproxy.addons import state
 import mitmproxy.options
 from mitmproxy.console import flowlist
 from mitmproxy.console import flowview
@@ -39,10 +40,10 @@ from netlib import tcp, strutils
 EVENTLOG_SIZE = 500
 
 
-class ConsoleState(flow.State):
+class ConsoleState(state.State):
 
     def __init__(self):
-        flow.State.__init__(self)
+        state.State.__init__(self)
         self.focus = None
         self.follow_focus = None
         self.default_body_view = contentviews.get("Auto")

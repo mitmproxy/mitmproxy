@@ -4,6 +4,7 @@ import io
 import netlib.utils
 from netlib.http import Headers
 from mitmproxy import flowfilter, flow, options
+from mitmproxy.addons import state
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, Kill
 from mitmproxy.models import Error
@@ -110,7 +111,7 @@ class TestHTTPFlow:
 
     def test_killall(self):
         srv = DummyServer(None)
-        s = flow.State()
+        s = state.State()
         fm = master.Master(None, srv)
         fm.addons.add(s)
 
@@ -190,7 +191,7 @@ class TestTCPFlow:
 class TestState:
 
     def test_backup(self):
-        c = flow.State()
+        c = state.State()
         f = tutils.tflow()
         c.add_flow(f)
         f.backup()
@@ -202,7 +203,7 @@ class TestState:
 
                 connect -> request -> response
         """
-        c = flow.State()
+        c = state.State()
         f = tutils.tflow()
         c.add_flow(f)
         assert f
@@ -226,13 +227,13 @@ class TestState:
         assert c.active_flow_count() == 0
 
     def test_err(self):
-        c = flow.State()
+        c = state.State()
         f = tutils.tflow()
         c.add_flow(f)
         f.error = Error("message")
         assert c.update_flow(f)
 
-        c = flow.State()
+        c = state.State()
         f = tutils.tflow()
         c.add_flow(f)
         c.set_view_filter("~e")
@@ -242,7 +243,7 @@ class TestState:
         assert c.view
 
     def test_set_view_filter(self):
-        c = flow.State()
+        c = state.State()
 
         f = tutils.tflow()
         assert len(c.view) == 0
@@ -270,7 +271,7 @@ class TestState:
         assert "Invalid" in c.set_view_filter("~")
 
     def test_set_intercept(self):
-        c = flow.State()
+        c = state.State()
         assert not c.set_intercept("~q")
         assert c.intercept_txt == "~q"
         assert "Invalid" in c.set_intercept("~")
@@ -293,7 +294,7 @@ class TestState:
         state.add_flow(f)
 
     def test_clear(self):
-        c = flow.State()
+        c = state.State()
         f = self._add_request(c)
         f.intercepted = True
 
@@ -301,7 +302,7 @@ class TestState:
         assert c.flow_count() == 0
 
     def test_dump_flows(self):
-        c = flow.State()
+        c = state.State()
         self._add_request(c)
         self._add_response(c)
         self._add_request(c)
@@ -317,7 +318,7 @@ class TestState:
         assert isinstance(c.flows[0], Flow)
 
     def test_accept_all(self):
-        c = flow.State()
+        c = state.State()
         self._add_request(c)
         self._add_response(c)
         self._add_request(c)
@@ -363,7 +364,7 @@ class TestSerialize:
 
     def test_load_flows(self):
         r = self._treader()
-        s = flow.State()
+        s = state.State()
         fm = master.Master(None, DummyServer())
         fm.addons.add(s)
         fm.load_flows(r)
@@ -371,7 +372,7 @@ class TestSerialize:
 
     def test_load_flows_reverse(self):
         r = self._treader()
-        s = flow.State()
+        s = state.State()
         opts = options.Options(
             mode="reverse",
             upstream_server="https://use-this-domain"
@@ -440,7 +441,7 @@ class TestFlowMaster:
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
-        s = flow.State()
+        s = state.State()
         fm = master.Master(None, DummyServer())
         fm.addons.add(s)
         f = tutils.tflow(req=None)

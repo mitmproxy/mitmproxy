@@ -9,7 +9,7 @@ from typing import Optional
 from mitmproxy import addons
 from mitmproxy import controller
 from mitmproxy import exceptions
-from mitmproxy import flow
+from mitmproxy.addons import state
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.web import app
@@ -20,7 +20,7 @@ class Stop(Exception):
     pass
 
 
-class WebFlowView(flow.FlowView):
+class WebFlowView(state.FlowView):
 
     def __init__(self, store):
         super().__init__(store, None)
@@ -57,7 +57,7 @@ class WebFlowView(flow.FlowView):
         )
 
 
-class WebState(flow.State):
+class WebState(state.State):
 
     def __init__(self):
         super().__init__()

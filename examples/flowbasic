@@ -37,7 +37,7 @@ class MyMaster(master.Master):
 
 opts = options.Options(cadir="~/.mitmproxy/")
 config = ProxyConfig(opts)
-state = flow.State()
+state = state.State()
 server = ProxyServer(config)
 m = MyMaster(opts, server, state)
 m.run()
