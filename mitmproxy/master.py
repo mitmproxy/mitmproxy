@@ -10,6 +10,7 @@ from mitmproxy import controller
 from mitmproxy import events
 from mitmproxy import exceptions
 from mitmproxy import models
+from mitmproxy import log
 from mitmproxy.flow import io
 from mitmproxy.protocol import http_replay
 from netlib import basethread
@@ -50,7 +51,7 @@ class Master:
             yield
             return
         mitmproxy_ctx.master = self
-        mitmproxy_ctx.log = controller.Log(self)
+        mitmproxy_ctx.log = log.Log(self)
         try:
             yield
         finally:
@@ -66,7 +67,7 @@ class Master:
             level: debug, info, warn, error
         """
         with self.handlecontext():
-            self.addons("log", controller.LogEntry(e, level))
+            self.addons("log", log.LogEntry(e, level))
 
     def start(self):
         self.should_exit.clear()
