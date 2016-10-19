@@ -1,4 +1,4 @@
-import mitmproxy.console.palettes as palettes
+import mitmproxy.tools.console.palettes as palettes
 from .. import tutils
 
 

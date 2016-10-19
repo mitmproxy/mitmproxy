@@ -1,7 +1,6 @@
 import random
 import sys
-
-from mitmproxy.flow import FlowWriter
+from mitmproxy import io
 
 
 class Writer:
@@ -10,7 +9,7 @@ class Writer:
             f = sys.stdout
         else:
             f = open(path, "wb")
-        self.w = FlowWriter(f)
+        self.w = io.FlowWriter(f)
 
     def response(self, flow):
         if random.choice([True, False]):

@@ -13,7 +13,7 @@ class RootContext:
 
     Attributes:
         client_conn:
-            The :py:class:`client connection <mitmproxy.models.ClientConnection>`.
+            The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.
         channel:
             A :py:class:`~mitmproxy.controller.Channel` to communicate with the FlowMaster.
             Provides :py:meth:`.ask() <mitmproxy.controller.Channel.ask>` and

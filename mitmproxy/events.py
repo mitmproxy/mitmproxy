@@ -1,5 +1,6 @@
 from mitmproxy import controller
-from mitmproxy import models
+from mitmproxy import http
+from mitmproxy import tcp
 
 Events = frozenset([
     "clientconnect",
@@ -34,7 +35,7 @@ Events = frozenset([
 
 
 def event_sequence(f):
-    if isinstance(f, models.HTTPFlow):
+    if isinstance(f, http.HTTPFlow):
         if f.request:
             yield "requestheaders", f
             yield "request", f
@@ -43,7 +44,7 @@ def event_sequence(f):
             yield "response", f
         if f.error:
             yield "error", f
-    elif isinstance(f, models.TCPFlow):
+    elif isinstance(f, tcp.TCPFlow):
         messages = f.messages
         f.messages = []
         f.reply = controller.DummyReply()

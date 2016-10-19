@@ -4,8 +4,8 @@ from .. import tutils, mastertest
 
 from mitmproxy.addons import dumper
 from mitmproxy import exceptions
-from mitmproxy import dump
-from mitmproxy import models
+from mitmproxy.tools import dump
+from mitmproxy import http
 from mitmproxy import proxy
 import netlib.tutils
 import mock
@@ -60,7 +60,7 @@ class TestDumper(mastertest.MasterTest):
         d.configure(dump.Options(tfile = sio), updated)
         flow = tutils.tflow()
         flow.request.content = None
-        flow.response = models.HTTPResponse.wrap(netlib.tutils.tresp())
+        flow.response = http.HTTPResponse.wrap(netlib.tutils.tresp())
         flow.response.content = None
         d.response(flow)
         assert "content missing" in sio.getvalue()

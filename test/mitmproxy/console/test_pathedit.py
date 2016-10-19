@@ -1,6 +1,6 @@
 import os
 from os.path import normpath
-from mitmproxy.console import pathedit
+from mitmproxy.tools.console import pathedit
 
 from mock import patch
 

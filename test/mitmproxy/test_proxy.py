@@ -2,10 +2,10 @@ import os
 import mock
 from OpenSSL import SSL
 
-from mitmproxy import cmdline
+from mitmproxy.tools import cmdline
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
-from mitmproxy.models.connections import ServerConnection
+from mitmproxy import connections
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
 from netlib.exceptions import TcpDisconnect
@@ -18,7 +18,7 @@ class TestServerConnection:
 
     def test_simple(self):
         self.d = test.Daemon()
-        sc = ServerConnection((self.d.IFACE, self.d.port))
+        sc = connections.ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         f = tutils.tflow()
         f.server_conn = sc
@@ -36,7 +36,7 @@ class TestServerConnection:
 
     def test_terminate_error(self):
         self.d = test.Daemon()
-        sc = ServerConnection((self.d.IFACE, self.d.port))
+        sc = connections.ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)

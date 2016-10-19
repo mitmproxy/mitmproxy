@@ -1,4 +1,4 @@
-import mitmproxy.console.common as common
+from mitmproxy.tools.console import common
 from .. import tutils
 
 

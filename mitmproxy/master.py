@@ -9,12 +9,13 @@ from mitmproxy import options
 from mitmproxy import controller
 from mitmproxy import events
 from mitmproxy import exceptions
-from mitmproxy import models
+from mitmproxy import connections
+from mitmproxy import http
 from mitmproxy import log
-from mitmproxy.flow import io
+from mitmproxy import io
 from mitmproxy.protocol import http_replay
 from netlib import basethread
-from netlib import http
+import netlib.http
 
 from . import ctx as mitmproxy_ctx
 
@@ -117,13 +118,13 @@ class Master:
         """
             this method creates a new artificial and minimalist request also adds it to flowlist
         """
-        c = models.ClientConnection.make_dummy(("", 0))
-        s = models.ServerConnection.make_dummy((host, port))
+        c = connections.ClientConnection.make_dummy(("", 0))
+        s = connections.ServerConnection.make_dummy((host, port))
 
-        f = models.HTTPFlow(c, s)
-        headers = http.Headers()
+        f = http.HTTPFlow(c, s)
+        headers = netlib.http.Headers()
 
-        req = models.HTTPRequest(
+        req = http.HTTPRequest(
             "absolute",
             method,
             scheme,
@@ -142,7 +143,7 @@ class Master:
         """
         Loads a flow
         """
-        if isinstance(f, models.HTTPFlow):
+        if isinstance(f, http.HTTPFlow):
             if self.server and self.options.mode == "reverse":
                 f.request.host = self.server.config.upstream_server.address.host
                 f.request.port = self.server.config.upstream_server.address.port

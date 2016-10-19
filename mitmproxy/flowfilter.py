@@ -36,9 +36,9 @@ import re
 import sys
 import functools
 
-from mitmproxy.models.http import HTTPFlow
-from mitmproxy.models.tcp import TCPFlow
-from mitmproxy.models.flow import Flow
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import flow
 
 from netlib import strutils
 
@@ -94,7 +94,7 @@ class FHTTP(_Action):
     code = "http"
     help = "Match HTTP flows"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         return True
 
@@ -103,7 +103,7 @@ class FTCP(_Action):
     code = "tcp"
     help = "Match TCP flows"
 
-    @only(TCPFlow)
+    @only(tcp.TCPFlow)
     def __call__(self, f):
         return True
 
@@ -112,7 +112,7 @@ class FReq(_Action):
     code = "q"
     help = "Match request with no response"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if not f.response:
             return True
@@ -122,7 +122,7 @@ class FResp(_Action):
     code = "s"
     help = "Match response"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         return bool(f.response)
 
@@ -162,7 +162,7 @@ class FAsset(_Action):
     ]
     ASSET_TYPES = [re.compile(x) for x in ASSET_TYPES]
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if f.response:
             for i in self.ASSET_TYPES:
@@ -175,7 +175,7 @@ class FContentType(_Rex):
     code = "t"
     help = "Content-type header"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if _check_content_type(self.re, f.request):
             return True
@@ -188,7 +188,7 @@ class FContentTypeRequest(_Rex):
     code = "tq"
     help = "Request Content-Type header"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         return _check_content_type(self.re, f.request)
 
@@ -197,7 +197,7 @@ class FContentTypeResponse(_Rex):
     code = "ts"
     help = "Response Content-Type header"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if f.response:
             return _check_content_type(self.re, f.response)
@@ -209,7 +209,7 @@ class FHead(_Rex):
     help = "Header"
     flags = re.MULTILINE
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
@@ -223,7 +223,7 @@ class FHeadRequest(_Rex):
     help = "Request header"
     flags = re.MULTILINE
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
@@ -234,7 +234,7 @@ class FHeadResponse(_Rex):
     help = "Response header"
     flags = re.MULTILINE
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if f.response and self.re.search(bytes(f.response.headers)):
             return True
@@ -245,16 +245,16 @@ class FBod(_Rex):
     help = "Body"
     flags = re.DOTALL
 
-    @only(HTTPFlow, TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow)
     def __call__(self, f):
-        if isinstance(f, HTTPFlow):
+        if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
                 if self.re.search(f.request.get_content(strict=False)):
                     return True
             if f.response and f.response.raw_content:
                 if self.re.search(f.response.get_content(strict=False)):
                     return True
-        elif isinstance(f, TCPFlow):
+        elif isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if self.re.search(msg.content):
                     return True
@@ -266,13 +266,13 @@ class FBodRequest(_Rex):
     help = "Request body"
     flags = re.DOTALL
 
-    @only(HTTPFlow, TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow)
     def __call__(self, f):
-        if isinstance(f, HTTPFlow):
+        if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
                 if self.re.search(f.request.get_content(strict=False)):
                     return True
-        elif isinstance(f, TCPFlow):
+        elif isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if msg.from_client and self.re.search(msg.content):
                     return True
@@ -283,13 +283,13 @@ class FBodResponse(_Rex):
     help = "Response body"
     flags = re.DOTALL
 
-    @only(HTTPFlow, TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow)
     def __call__(self, f):
-        if isinstance(f, HTTPFlow):
+        if isinstance(f, http.HTTPFlow):
             if f.response and f.response.raw_content:
                 if self.re.search(f.response.get_content(strict=False)):
                     return True
-        elif isinstance(f, TCPFlow):
+        elif isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if not msg.from_client and self.re.search(msg.content):
                     return True
@@ -300,7 +300,7 @@ class FMethod(_Rex):
     help = "Method"
     flags = re.IGNORECASE
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         return bool(self.re.search(f.request.data.method))
 
@@ -310,7 +310,7 @@ class FDomain(_Rex):
     help = "Domain"
     flags = re.IGNORECASE
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         return bool(self.re.search(f.request.data.host))
 
@@ -327,7 +327,7 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         return self.re.search(f.request.url)
 
@@ -360,7 +360,7 @@ class FCode(_Int):
     code = "c"
     help = "HTTP response code"
 
-    @only(HTTPFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
         if f.response and f.response.status_code == self.num:
             return True
@@ -485,7 +485,7 @@ def _make():
 bnf = _make()
 
 
-TFilter = Callable[[Flow], bool]
+TFilter = Callable[[flow.Flow], bool]
 
 
 def parse(s: str) -> TFilter:

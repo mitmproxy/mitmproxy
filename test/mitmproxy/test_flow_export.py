@@ -2,7 +2,7 @@ import re
 
 import netlib.tutils
 from netlib.http import Headers
-from mitmproxy.flow import export  # heh
+from mitmproxy import export  # heh
 from . import tutils
 
 

@@ -1,4 +1,4 @@
-import mitmproxy.console.help as help
+import mitmproxy.tools.console.help as help
 from .. import tutils
 
 

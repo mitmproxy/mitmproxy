@@ -1,8 +1,8 @@
 import tornado.testing
 
 from mitmproxy import proxy
-from mitmproxy.web import app
-from mitmproxy.web import master as webmaster
+from mitmproxy.tools.web import app
+from mitmproxy.tools.web import master as webmaster
 
 
 class TestApp(tornado.testing.AsyncHTTPTestCase):

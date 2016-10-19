@@ -1,7 +1,7 @@
 """
 This example shows two ways to redirect flows to other destinations.
 """
-from mitmproxy.models import HTTPResponse
+from mitmproxy import http
 
 
 def request(flow):
@@ -11,7 +11,7 @@ def request(flow):
 
     # Method 1: Answer with a locally generated response
     if flow.request.pretty_host.endswith("example.com"):
-        flow.response = HTTPResponse.make(200, b"Hello World", {"Content-Type": "text/html"})
+        flow.response = http.HTTPResponse.make(200, b"Hello World", {"Content-Type": "text/html"})
 
     # Method 2: Redirect the request to a different server
     if flow.request.pretty_host.endswith("example.org"):

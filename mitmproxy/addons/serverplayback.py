@@ -2,7 +2,9 @@ import urllib
 import hashlib
 
 from netlib import strutils
-from mitmproxy import exceptions, flow, ctx
+from mitmproxy import exceptions
+from mitmproxy import ctx
+from mitmproxy import io
 
 
 class ServerPlayback:
@@ -91,7 +93,7 @@ class ServerPlayback:
             self.clear()
             if options.server_replay:
                 try:
-                    flows = flow.read_flows_from_paths(options.server_replay)
+                    flows = io.read_flows_from_paths(options.server_replay)
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
                 self.load(flows)

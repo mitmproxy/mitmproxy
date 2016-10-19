@@ -1,6 +1,6 @@
 import netlib.exceptions
 from mitmproxy import exceptions
-from mitmproxy import models
+from mitmproxy import connections
 
 
 class _LayerCodeCompletion:
@@ -16,9 +16,9 @@ class _LayerCodeCompletion:
         self.config = None
         """@type: mitmproxy.proxy.ProxyConfig"""
         self.client_conn = None
-        """@type: mitmproxy.models.ClientConnection"""
+        """@type: mitmproxy.connections.ClientConnection"""
         self.server_conn = None
-        """@type: mitmproxy.models.ServerConnection"""
+        """@type: mitmproxy.connections.ServerConnection"""
         self.channel = None
         """@type: mitmproxy.controller.Channel"""
         self.ctx = None
@@ -111,10 +111,10 @@ class ServerConnectionMixin:
 
         self.server_conn = None
         if self.config.options.spoof_source_address:
-            self.server_conn = models.ServerConnection(
+            self.server_conn = connections.ServerConnection(
                 server_address, (self.ctx.client_conn.address.host, 0), True)
         else:
-            self.server_conn = models.ServerConnection(
+            self.server_conn = connections.ServerConnection(
                 server_address, (self.config.options.listen_host, 0))
 
         self.__check_self_connect()
@@ -157,7 +157,7 @@ class ServerConnectionMixin:
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
 
-        self.server_conn = models.ServerConnection(
+        self.server_conn = connections.ServerConnection(
             address,
             (self.server_conn.source_address.host, 0),
             self.config.options.spoof_source_address

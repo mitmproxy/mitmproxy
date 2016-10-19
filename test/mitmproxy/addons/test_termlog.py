@@ -3,7 +3,7 @@ import io
 
 from mitmproxy.addons import termlog
 from mitmproxy import log
-from mitmproxy import dump
+from mitmproxy.tools import dump
 
 
 class TestTermLog(mastertest.MasterTest):

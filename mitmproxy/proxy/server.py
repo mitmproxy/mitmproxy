@@ -4,7 +4,8 @@ import traceback
 
 import netlib.exceptions
 from mitmproxy import exceptions
-from mitmproxy import models
+from mitmproxy import connections
+from mitmproxy import http
 from mitmproxy import log
 from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
@@ -66,7 +67,7 @@ class ConnectionHandler:
     def __init__(self, client_conn, client_address, config, channel):
         self.config = config
         """@type: mitmproxy.proxy.config.ProxyConfig"""
-        self.client_conn = models.ClientConnection(
+        self.client_conn = connections.ClientConnection(
             client_conn,
             client_address,
             None)
@@ -135,7 +136,7 @@ class ConnectionHandler:
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.
             try:
-                error_response = models.make_error_response(502, repr(e))
+                error_response = http.make_error_response(502, repr(e))
                 self.client_conn.send(http1.assemble_response(error_response))
             except netlib.exceptions.TcpException:
                 pass

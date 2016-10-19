@@ -4,7 +4,10 @@ from . import tutils
 import netlib.tutils
 
 from mitmproxy import master
-from mitmproxy import flow, proxy, models, options
+from mitmproxy import io
+from mitmproxy import proxy
+from mitmproxy import http
+from mitmproxy import options
 
 
 class TestMaster:
@@ -19,7 +22,7 @@ class MasterTest:
         master.serverconnect(f.server_conn)
         master.request(f)
         if not f.error:
-            f.response = models.HTTPResponse.wrap(
+            f.response = http.HTTPResponse.wrap(
                 netlib.tutils.tresp(content=content)
             )
             master.response(f)
@@ -33,7 +36,7 @@ class MasterTest:
 
     def flowfile(self, path):
         f = open(path, "wb")
-        fw = flow.FlowWriter(f)
+        fw = io.FlowWriter(f)
         t = tutils.tflow(resp=True)
         fw.add(t)
         f.close()

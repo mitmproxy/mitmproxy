@@ -2,13 +2,13 @@ import os.path
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
-from mitmproxy.flow import io
+from mitmproxy import io
 
 
 class FileStreamer:
     def __init__(self):
         self.stream = None
-        self.active_flows = set()  # type: Set[models.Flow]
+        self.active_flows = set()  # type: Set[flow.Flow]
 
     def start_stream_to_path(self, path, mode, flt):
         path = os.path.expanduser(path)
