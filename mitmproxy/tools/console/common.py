@@ -10,7 +10,7 @@ import netlib
 from mitmproxy.utils import lrucache
 from mitmproxy.tools.console import signals
 from mitmproxy import export
-from netlib import human
+from mitmproxy.utils import human
 
 try:
     import pyperclip

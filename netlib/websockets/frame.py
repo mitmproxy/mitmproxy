@@ -5,7 +5,7 @@ import io
 from netlib import tcp
 from netlib import strutils
 from netlib import utils
-from netlib import human
+from mitmproxy.utils import human
 from .masker import Masker
 
 

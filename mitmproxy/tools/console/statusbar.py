@@ -6,7 +6,7 @@ import netlib.http.url
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
-from netlib import human
+from mitmproxy.utils import human
 
 
 class ActionBar(urwid.WidgetWrap):

@@ -5,7 +5,7 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy import platform
-from netlib import human
+from mitmproxy.utils import human
 from netlib import tcp
 from mitmproxy import version
 

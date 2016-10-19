@@ -5,7 +5,7 @@ import os.path
 import re
 
 from netlib import tcp
-from netlib import human
+from mitmproxy.utils import human
 from mitmproxy import version
 from . import pathod
 

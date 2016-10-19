@@ -1,8 +1,8 @@
-from mitmproxy import utils
+from mitmproxy.utils import lrucache
 
 
 def test_LRUCache():
-    cache = utils.LRUCache(2)
+    cache = lrucache.LRUCache(2)
 
     class Foo:
         ran = False

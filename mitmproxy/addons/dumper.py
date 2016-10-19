@@ -8,7 +8,7 @@ from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
-from netlib import human
+from mitmproxy.utils import human
 from netlib import strutils
 
 

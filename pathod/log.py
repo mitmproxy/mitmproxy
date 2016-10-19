@@ -1,6 +1,7 @@
 import time
 
-from netlib import strutils, human
+from netlib import strutils
+from mitmproxy.utils import human
 
 
 def write_raw(fp, lines, timestamp=True):
