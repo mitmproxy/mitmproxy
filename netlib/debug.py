@@ -77,7 +77,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
     for i in bthreads:
         print(i._threadinfo(), file=file)
 
-    print()
+    print(file=file)
     print("Memory", file=file)
     print("=======", file=file)
     gc.collect()
