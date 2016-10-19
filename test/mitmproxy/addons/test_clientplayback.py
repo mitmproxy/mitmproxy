@@ -14,7 +14,7 @@ class TestClientPlayback:
         f = tutils.tflow(resp=True)
         cp.load([f])
         assert cp.count() == 1
-        RP = "mitmproxy.protocol.http_replay.RequestReplayThread"
+        RP = "mitmproxy.proxy.protocol.http_replay.RequestReplayThread"
         with mock.patch(RP) as rp:
             assert not cp.current
             with mastertest.mockctx():

@@ -56,7 +56,7 @@ Connection
           connection can correspond to multiple HTTP requests.
 
           *root_layer*
-            The root layer (see `mitmproxy.protocol` for an explanation what
+            The root layer (see `mitmproxy.proxy.protocol` for an explanation what
             the root layer is), provides transparent access to all attributes
             of the :py:class:`~mitmproxy.proxy.RootContext`. For example,
             ``root_layer.client_conn.address`` gives the remote address of the

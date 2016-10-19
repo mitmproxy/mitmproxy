@@ -1,4 +1,4 @@
-from mitmproxy import protocol
+from mitmproxy.proxy import protocol
 
 
 class HttpProxy(protocol.Layer, protocol.ServerConnectionMixin):

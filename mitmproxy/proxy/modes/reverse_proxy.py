@@ -1,4 +1,4 @@
-from mitmproxy import protocol
+from mitmproxy.proxy import protocol
 
 
 class ReverseProxy(protocol.Layer, protocol.ServerConnectionMixin):

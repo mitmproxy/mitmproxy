@@ -6,7 +6,7 @@ import construct
 import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy.contrib.tls import _constructs
-from mitmproxy.protocol import base
+from mitmproxy.proxy.protocol import base
 from netlib import utils
 
 
@@ -283,7 +283,7 @@ class TlsClientHello:
         client_conn:
             The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.
         Returns:
-            :py:class:`client hello <mitmproxy.protocol.tls.TlsClientHello>`.
+            :py:class:`client hello <mitmproxy.proxy.protocol.tls.TlsClientHello>`.
         """
         try:
             raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.

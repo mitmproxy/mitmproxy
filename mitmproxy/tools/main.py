@@ -68,7 +68,7 @@ def mitmproxy(args=None):  # pragma: no cover
         console_options.no_mouse = args.no_mouse
 
         server = process_options(parser, console_options, args)
-        m = console.master.ConsoleMaster(server, console_options)
+        m = console.master.ConsoleMaster(console_options, server)
     except exceptions.OptionsError as e:
         print("mitmproxy: %s" % e, file=sys.stderr)
         sys.exit(1)

@@ -28,7 +28,7 @@ from enum import Enum
 
 import mitmproxy
 from mitmproxy.exceptions import TlsProtocolException
-from mitmproxy.protocol import TlsLayer, RawTCPLayer
+from mitmproxy.proxy.protocol import TlsLayer, RawTCPLayer
 
 
 class InterceptionResult(Enum):

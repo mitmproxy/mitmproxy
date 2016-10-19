@@ -92,10 +92,10 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     """
     @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
     @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
-    @type req:         bool | None | mitmproxy.protocol.http.HTTPRequest
-    @type resp:        bool | None | mitmproxy.protocol.http.HTTPResponse
-    @type err:         bool | None | mitmproxy.protocol.primitives.Error
-    @return:           mitmproxy.protocol.http.HTTPFlow
+    @type req:         bool | None | mitmproxy.proxy.protocol.http.HTTPRequest
+    @type resp:        bool | None | mitmproxy.proxy.protocol.http.HTTPResponse
+    @type err:         bool | None | mitmproxy.proxy.protocol.primitives.Error
+    @return:           mitmproxy.proxy.protocol.http.HTTPFlow
     """
     if client_conn is True:
         client_conn = tclient_conn()
@@ -160,7 +160,7 @@ def tserver_conn():
 
 def terr(content="error"):
     """
-    @return: mitmproxy.protocol.primitives.Error
+    @return: mitmproxy.proxy.protocol.primitives.Error
     """
     err = flow.Error(content)
     return err

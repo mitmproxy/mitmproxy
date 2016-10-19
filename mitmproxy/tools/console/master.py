@@ -224,7 +224,7 @@ class ConsoleMaster(master.Master):
     palette = []
 
     def __init__(self, options, server):
-        master.Master.__init__(self, options, server)
+        super().__init__(options, server)
         self.state = ConsoleState()
         self.stream_path = None
         # This line is just for type hinting

@@ -13,7 +13,7 @@ from mitmproxy import connections
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import io
-from mitmproxy.protocol import http_replay
+from mitmproxy.proxy.protocol import http_replay
 from netlib import basethread
 import netlib.http
 

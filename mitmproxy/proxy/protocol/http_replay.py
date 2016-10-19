@@ -11,7 +11,7 @@ from netlib.http import http1
 from netlib import basethread
 
 
-# TODO: Doesn't really belong into mitmproxy.protocol...
+# TODO: Doesn't really belong into mitmproxy.proxy.protocol...
 
 
 class RequestReplayThread(basethread.BaseThread):
