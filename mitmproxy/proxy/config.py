@@ -4,7 +4,7 @@ import os
 import re
 from typing import Any
 
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 from OpenSSL import SSL, crypto
 

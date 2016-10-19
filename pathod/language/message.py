@@ -1,6 +1,6 @@
 import abc
 from . import actions, exceptions
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 LOG_TRUNCATE = 1024
 

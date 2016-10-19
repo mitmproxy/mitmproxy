@@ -35,7 +35,7 @@ from mitmproxy import exceptions
 from mitmproxy.contrib.wbxml import ASCommandResponse
 from netlib import http
 from netlib import multidict
-from netlib import strutils
+from mitmproxy.utils import strutils
 from netlib.http import url
 
 try:

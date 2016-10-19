@@ -3,7 +3,7 @@ import struct
 import io
 
 from netlib import tcp
-from netlib import strutils
+from mitmproxy.utils import strutils
 from netlib import utils
 from mitmproxy.utils import human
 from .masker import Masker

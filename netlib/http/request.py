@@ -2,7 +2,7 @@ import re
 import urllib
 
 from netlib import multidict
-from netlib import strutils
+from mitmproxy.utils import strutils
 from netlib.http import multipart
 from netlib.http import cookies
 from netlib.http import headers as nheaders

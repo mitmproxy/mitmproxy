@@ -1,7 +1,7 @@
 import random
 import string
 import netlib.websockets
-from netlib import strutils
+from mitmproxy.utils import strutils
 import pyparsing as pp
 from . import base, generators, actions, message
 

@@ -2,7 +2,9 @@ import re
 import warnings
 from typing import Optional
 
-from netlib import encoding, strutils, basetypes
+from mitmproxy.utils import strutils
+from netlib import encoding
+from netlib import basetypes
 from netlib.http import headers
 
 

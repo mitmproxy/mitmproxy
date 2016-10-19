@@ -4,7 +4,7 @@ import struct
 from OpenSSL import SSL
 from mitmproxy import exceptions
 from mitmproxy.proxy.protocol import base
-from netlib import strutils
+from mitmproxy.utils import strutils
 from netlib import tcp
 from netlib import websockets
 

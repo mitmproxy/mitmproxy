@@ -10,7 +10,7 @@ import binascii
 
 from typing import Optional  # noqa
 
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 import certifi
 from backports import ssl_match_hostname

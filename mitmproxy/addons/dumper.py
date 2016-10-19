@@ -9,7 +9,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy.utils import human
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 
 def indent(n, text):

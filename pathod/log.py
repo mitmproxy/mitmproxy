@@ -1,6 +1,6 @@
 import time
 
-from netlib import strutils
+from mitmproxy.utils import strutils
 from mitmproxy.utils import human
 
 

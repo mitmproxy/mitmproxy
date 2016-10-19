@@ -3,7 +3,9 @@ import traceback
 import urllib
 import io
 
-from netlib import http, tcp, strutils
+from netlib import http
+from netlib import tcp
+from mitmproxy.utils import strutils
 
 
 class ClientConn:

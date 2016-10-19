@@ -15,7 +15,7 @@ import pytz
 import mitmproxy
 
 from mitmproxy import version
-from netlib import strutils
+from mitmproxy.utils import strutils
 from netlib.http import cookies
 
 HAR = {}

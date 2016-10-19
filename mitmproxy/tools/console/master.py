@@ -35,7 +35,9 @@ from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import window
 from mitmproxy.flowfilter import FMarked
-from netlib import tcp, strutils
+from mitmproxy.utils import strutils
+
+from netlib import tcp
 
 EVENTLOG_SIZE = 500
 

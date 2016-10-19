@@ -12,7 +12,7 @@ import OpenSSL.crypto
 import logging
 
 from netlib.tutils import treq
-from netlib import strutils
+from mitmproxy.utils import strutils
 from netlib import tcp, certutils, websockets, socks
 from netlib import exceptions
 from netlib.http import http1

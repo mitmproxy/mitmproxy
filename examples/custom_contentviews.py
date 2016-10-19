@@ -2,7 +2,7 @@ import string
 import lxml.html
 import lxml.etree
 from mitmproxy import contentviews
-from netlib import strutils
+from mitmproxy.utils import strutils
 
 
 class ViewPigLatin(contentviews.View):

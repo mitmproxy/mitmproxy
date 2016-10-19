@@ -8,7 +8,8 @@ import base64
 import hashlib
 import os
 
-from netlib import http, strutils
+from netlib import http
+from mitmproxy.utils import strutils
 
 MAGIC = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 VERSION = "13"
