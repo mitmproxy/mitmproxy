@@ -363,7 +363,7 @@ class TestSerialize:
     def test_load_flows(self):
         r = self._treader()
         s = flow.State()
-        fm = flow.FlowMaster(None, None)
+        fm = flow.FlowMaster(None, DummyServer())
         fm.addons.add(s)
         fm.load_flows(r)
         assert len(s.flows) == 6
@@ -423,7 +423,7 @@ class TestSerialize:
 class TestFlowMaster:
 
     def test_replay(self):
-        fm = flow.FlowMaster(None, None)
+        fm = flow.FlowMaster(None, DummyServer())
         f = tutils.tflow(resp=True)
         f.request.content = None
         tutils.raises("missing", fm.replay_request, f)
@@ -435,12 +435,12 @@ class TestFlowMaster:
         tutils.raises("live", fm.replay_request, f)
 
     def test_create_flow(self):
-        fm = flow.FlowMaster(None, None)
+        fm = flow.FlowMaster(None, DummyServer())
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = flow.State()
-        fm = flow.FlowMaster(None, None)
+        fm = flow.FlowMaster(None, DummyServer())
         fm.addons.add(s)
         f = tutils.tflow(req=None)
         fm.clientconnect(f.client_conn)

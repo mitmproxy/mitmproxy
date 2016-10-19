@@ -2,12 +2,13 @@ from .. import tutils, mastertest
 from mitmproxy.builtins import anticache
 from mitmproxy.flow import master
 from mitmproxy import options
+from mitmproxy import proxy
 
 
 class TestAntiCache(mastertest.MasterTest):
     def test_simple(self):
         o = options.Options(anticache = True)
-        m = master.FlowMaster(o, None)
+        m = master.FlowMaster(o, proxy.DummyServer())
         sa = anticache.AntiCache()
         m.addons.add(sa)
 

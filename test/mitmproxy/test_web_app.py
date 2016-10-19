@@ -1,12 +1,13 @@
 import tornado.testing
 
+from mitmproxy import proxy
 from mitmproxy.web import app, master
 
 
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
         o = master.Options()
-        m = master.WebMaster(None, o)
+        m = master.WebMaster(o, proxy.DummyServer())
         return app.Application(m, None, None)
 
     def test_index(self):

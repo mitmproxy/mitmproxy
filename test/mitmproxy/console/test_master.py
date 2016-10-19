@@ -2,6 +2,7 @@ import gc
 
 import netlib.tutils
 from mitmproxy import console
+from mitmproxy import proxy
 from mitmproxy.console import common
 
 from .. import tutils, mastertest
@@ -115,7 +116,7 @@ class TestMaster(mastertest.MasterTest):
         if "verbosity" not in options:
             options["verbosity"] = 0
         o = console.master.Options(**options)
-        return console.master.ConsoleMaster(None, o)
+        return console.master.ConsoleMaster(o, proxy.DummyServer())
 
     def test_basic(self):
         m = self.mkmaster()

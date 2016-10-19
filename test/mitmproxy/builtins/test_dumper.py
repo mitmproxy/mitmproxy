@@ -6,6 +6,7 @@ from mitmproxy.builtins import dumper
 from mitmproxy import exceptions
 from mitmproxy import dump
 from mitmproxy import models
+from mitmproxy import proxy
 import netlib.tutils
 import mock
 
@@ -76,7 +77,7 @@ class TestContentView(mastertest.MasterTest):
             verbosity=3,
             tfile=sio,
         )
-        m = mastertest.RecordingMaster(o, None)
+        m = mastertest.RecordingMaster(o, proxy.DummyServer())
         d = dumper.Dumper()
         m.addons.add(d)
         m.response(tutils.tflow())

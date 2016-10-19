@@ -35,19 +35,6 @@ def event_sequence(f):
 
 
 class FlowMaster(controller.Master):
-
-    @property
-    def server(self):
-        # At some point, we may want to have support for multiple servers.
-        # For now, this suffices.
-        if len(self.servers) > 0:
-            return self.servers[0]
-
-    def __init__(self, options, server):
-        super().__init__(options)
-        if server:
-            self.add_server(server)
-
     def create_request(self, method, scheme, host, port, path):
         """
             this method creates a new artificial and minimalist request also adds it to flowlist

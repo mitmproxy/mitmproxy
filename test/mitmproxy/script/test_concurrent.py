@@ -2,6 +2,7 @@ from test.mitmproxy import tutils, mastertest
 from mitmproxy import controller
 from mitmproxy.builtins import script
 from mitmproxy import options
+from mitmproxy import proxy
 from mitmproxy.flow import master
 import time
 
@@ -15,7 +16,7 @@ class Thing:
 class TestConcurrent(mastertest.MasterTest):
     @tutils.skip_appveyor
     def test_concurrent(self):
-        m = master.FlowMaster(options.Options(), None)
+        m = master.FlowMaster(options.Options(), proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/concurrent_decorator.py"
@@ -32,7 +33,7 @@ class TestConcurrent(mastertest.MasterTest):
         raise ValueError("Script never acked")
 
     def test_concurrent_err(self):
-        m = mastertest.RecordingMaster(options.Options(), None)
+        m = mastertest.RecordingMaster(options.Options(), proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
                 "data/addonscripts/concurrent_decorator_err.py"
