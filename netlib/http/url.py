@@ -2,7 +2,7 @@ import urllib
 from typing import Sequence
 from typing import Tuple
 
-from netlib import utils
+from netlib import check
 
 
 # PY2 workaround
@@ -62,9 +62,9 @@ def parse(url):
     if not full_path.startswith(b"/"):
         full_path = b"/" + full_path
 
-    if not utils.is_valid_host(host):
+    if not check.is_valid_host(host):
         raise ValueError("Invalid Host")
-    if not utils.is_valid_port(port):
+    if not check.is_valid_port(port):
         raise ValueError("Invalid Port")
 
     return parsed.scheme, host, port, full_path

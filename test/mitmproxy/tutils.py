@@ -9,7 +9,6 @@ from unittest.case import SkipTest
 
 import io
 
-import netlib.utils
 import netlib.tutils
 from mitmproxy import controller
 from mitmproxy import connections

@@ -6,7 +6,7 @@ from netlib.http import request
 from netlib.http import response
 from netlib.http import headers
 from netlib.http import url
-from netlib import utils
+from netlib import check
 from netlib import exceptions
 
 
@@ -274,7 +274,7 @@ def _parse_authority_form(hostport):
     try:
         host, port = hostport.split(b":")
         port = int(port)
-        if not utils.is_valid_host(host) or not utils.is_valid_port(port):
+        if not check.is_valid_host(host) or not check.is_valid_port(port):
             raise ValueError()
     except ValueError:
         raise exceptions.HttpSyntaxException("Invalid host specification: {}".format(hostport))

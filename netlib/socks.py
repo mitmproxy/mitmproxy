@@ -2,7 +2,8 @@ import struct
 import array
 import ipaddress
 
-from netlib import tcp, utils
+from netlib import tcp
+from netlib import check
 from mitmproxy.types import bidi
 
 
@@ -204,7 +205,7 @@ class Message:
         elif atyp == ATYP.DOMAINNAME:
             length, = struct.unpack("!B", f.safe_read(1))
             host = f.safe_read(length)
-            if not utils.is_valid_host(host):
+            if not check.is_valid_host(host):
                 raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, "Invalid hostname: %s" % host)
             host = host.decode("idna")
             use_ipv6 = False

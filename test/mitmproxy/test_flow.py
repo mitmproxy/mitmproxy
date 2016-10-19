@@ -1,7 +1,7 @@
 import mock
 import io
 
-import netlib.utils
+import netlib.tutils
 from netlib.http import Headers
 import mitmproxy.io
 from mitmproxy import flowfilter, options
