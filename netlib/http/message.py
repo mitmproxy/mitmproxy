@@ -3,7 +3,7 @@ import warnings
 from typing import Optional
 
 from mitmproxy.utils import strutils
-from netlib import encoding
+from netlib.http import encoding
 from mitmproxy.types import serializable
 from netlib.http import headers
 

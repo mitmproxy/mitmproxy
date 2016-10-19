@@ -1,7 +1,8 @@
 import mock
 import pytest
 
-from netlib import encoding, tutils
+from netlib.http import encoding
+from netlib import tutils
 
 
 @pytest.mark.parametrize("encoder", [
