@@ -1,5 +1,4 @@
 import h2.exceptions
-import netlib.exceptions
 import time
 import traceback
 from mitmproxy import exceptions
@@ -46,7 +45,7 @@ class _HttpTransmissionLayer(base.Layer):
 
     def send_response(self, response):
         if response.data.content is None:
-            raise netlib.exceptions.HttpException("Cannot assemble flow with missing content")
+            raise exceptions.HttpException("Cannot assemble flow with missing content")
         self.send_response_headers(response)
         self.send_response_body(response, [response.data.content])
 
@@ -146,10 +145,10 @@ class HttpLayer(base.Layer):
                 request = self.get_request_from_client(f)
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
-            except netlib.exceptions.HttpReadDisconnect:
+            except exceptions.HttpReadDisconnect:
                 # don't throw an error for disconnects that happen before/between requests.
                 return
-            except netlib.exceptions.HttpException as e:
+            except exceptions.HttpException as e:
                 # We optimistically guess there might be an HTTP client on the
                 # other end
                 self.send_error_response(400, repr(e))
@@ -173,7 +172,7 @@ class HttpLayer(base.Layer):
                 if self.mode == "regular" and request.first_line_format == "authority":
                     self.handle_regular_mode_connect(request)
                     return
-            except (exceptions.ProtocolException, netlib.exceptions.NetlibException) as e:
+            except (exceptions.ProtocolException, exceptions.NetlibException) as e:
                 # HTTPS tasting means that ordinary errors like resolution and
                 # connection errors can happen here.
                 self.send_error_response(502, repr(e))
@@ -224,7 +223,7 @@ class HttpLayer(base.Layer):
                     self.handle_upstream_mode_connect(f.request.copy())
                     return
 
-            except (exceptions.ProtocolException, netlib.exceptions.NetlibException) as e:
+            except (exceptions.ProtocolException, exceptions.NetlibException) as e:
                 self.send_error_response(502, repr(e))
                 if not f.response:
                     f.error = flow.Error(str(e))
@@ -254,7 +253,7 @@ class HttpLayer(base.Layer):
         try:
             response = http.make_error_response(code, message, headers)
             self.send_response(response)
-        except (netlib.exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
+        except (exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
             self.log(traceback.format_exc(), "debug")
 
     def change_upstream_proxy_server(self, address):
@@ -300,7 +299,7 @@ class HttpLayer(base.Layer):
 
         try:
             get_response()
-        except netlib.exceptions.NetlibException as e:
+        except exceptions.NetlibException as e:
             self.log(
                 "server communication error: %s" % repr(e),
                 level="debug"
@@ -396,7 +395,7 @@ class HttpLayer(base.Layer):
 
     def validate_request(self, request):
         if request.first_line_format == "absolute" and request.scheme != "http":
-            raise netlib.exceptions.HttpException("Invalid request scheme: %s" % request.scheme)
+            raise exceptions.HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {
             "regular": ("authority", "absolute",),
@@ -409,7 +408,7 @@ class HttpLayer(base.Layer):
             err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
                 " or ".join(allowed_request_forms), request.first_line_format
             )
-            raise netlib.exceptions.HttpException(err_message)
+            raise exceptions.HttpException(err_message)
 
         if self.mode == "regular" and request.first_line_format == "absolute":
             request.first_line_format = "relative"

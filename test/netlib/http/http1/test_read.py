@@ -2,7 +2,7 @@ from io import BytesIO
 from mock import Mock
 import pytest
 
-from netlib.exceptions import HttpException, HttpSyntaxException, HttpReadDisconnect, TcpDisconnect
+from mitmproxy import exceptions
 from netlib.http import Headers
 from netlib.http.http1.read import (
     read_request, read_response, read_request_head,
@@ -11,7 +11,6 @@ from netlib.http.http1.read import (
     _read_headers, _read_chunked, get_header_tokens
 )
 from netlib.tutils import treq, tresp, raises
-from netlib import exceptions
 
 
 def test_get_header_tokens():
@@ -117,12 +116,12 @@ class TestReadBody:
 
     def test_known_size_limit(self):
         rfile = BytesIO(b"foobar")
-        with raises(HttpException):
+        with raises(exceptions.HttpException):
             b"".join(read_body(rfile, 3, 2))
 
     def test_known_size_too_short(self):
         rfile = BytesIO(b"foo")
-        with raises(HttpException):
+        with raises(exceptions.HttpException):
             b"".join(read_body(rfile, 6))
 
     def test_unknown_size(self):
@@ -132,7 +131,7 @@ class TestReadBody:
 
     def test_unknown_size_limit(self):
         rfile = BytesIO(b"foobar")
-        with raises(HttpException):
+        with raises(exceptions.HttpException):
             b"".join(read_body(rfile, -1, 3))
 
     def test_max_chunk_size(self):
@@ -186,7 +185,7 @@ def test_expected_http_body_size():
 
     # explicit length
     for val in (b"foo", b"-7"):
-        with raises(HttpSyntaxException):
+        with raises(exceptions.HttpSyntaxException):
             expected_http_body_size(
                 treq(headers=Headers(content_length=val))
             )
@@ -210,13 +209,13 @@ def test_get_first_line():
     rfile = BytesIO(b"\r\nfoo\r\nbar")
     assert _get_first_line(rfile) == b"foo"
 
-    with raises(HttpReadDisconnect):
+    with raises(exceptions.HttpReadDisconnect):
         rfile = BytesIO(b"")
         _get_first_line(rfile)
 
-    with raises(HttpReadDisconnect):
+    with raises(exceptions.HttpReadDisconnect):
         rfile = Mock()
-        rfile.readline.side_effect = TcpDisconnect
+        rfile.readline.side_effect = exceptions.TcpDisconnect
         _get_first_line(rfile)
 
 
@@ -233,23 +232,23 @@ def test_read_request_line():
     assert (t(b"GET http://foo:42/bar HTTP/1.1") ==
             ("absolute", b"GET", b"http", b"foo", 42, b"/bar", b"HTTP/1.1"))
 
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         t(b"GET / WTF/1.1")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         t(b"this is not http")
-    with raises(HttpReadDisconnect):
+    with raises(exceptions.HttpReadDisconnect):
         t(b"")
 
 
 def test_parse_authority_form():
     assert _parse_authority_form(b"foo:42") == (b"foo", 42)
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"foo")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"foo:bar")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"foo:99999999")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"f\x00oo:80")
 
 
@@ -263,14 +262,14 @@ def test_read_response_line():
     # https://github.com/mitmproxy/mitmproxy/issues/784
     assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (b"HTTP/1.1", 200, b"Non-Autoris\xc3\xa9")
 
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         assert t(b"HTTP/1.1")
 
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         t(b"HTTP/1.1 OK OK")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         t(b"WTF/1.1 200 OK")
-    with raises(HttpReadDisconnect):
+    with raises(exceptions.HttpReadDisconnect):
         t(b"")
 
 
@@ -279,11 +278,11 @@ def test_check_http_version():
     _check_http_version(b"HTTP/1.0")
     _check_http_version(b"HTTP/1.1")
     _check_http_version(b"HTTP/2.0")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _check_http_version(b"WTF/1.0")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _check_http_version(b"HTTP/1.10")
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         _check_http_version(b"HTTP/1.b")
 
 
@@ -322,17 +321,17 @@ class TestReadHeaders:
 
     def test_read_continued_err(self):
         data = b"\tfoo: bar\r\n"
-        with raises(HttpSyntaxException):
+        with raises(exceptions.HttpSyntaxException):
             self._read(data)
 
     def test_read_err(self):
         data = b"foo"
-        with raises(HttpSyntaxException):
+        with raises(exceptions.HttpSyntaxException):
             self._read(data)
 
     def test_read_empty_name(self):
         data = b":foo"
-        with raises(HttpSyntaxException):
+        with raises(exceptions.HttpSyntaxException):
             self._read(data)
 
     def test_read_empty_value(self):
@@ -346,7 +345,7 @@ def test_read_chunked():
     req.headers["Transfer-Encoding"] = "chunked"
 
     data = b"1\r\na\r\n0\r\n"
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"1\r\na\r\n0\r\n\r\n"
@@ -364,7 +363,7 @@ def test_read_chunked():
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"foo\r\nfoo"
-    with raises(HttpSyntaxException):
+    with raises(exceptions.HttpSyntaxException):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"5\r\naaaaa\r\n0\r\n\r\n"

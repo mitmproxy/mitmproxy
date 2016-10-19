@@ -12,7 +12,7 @@ from OpenSSL import SSL
 from mitmproxy import certs
 from netlib import tcp
 from netlib import tutils
-from netlib import exceptions
+from mitmproxy import exceptions
 
 from . import tservers
 

@@ -1,5 +1,5 @@
 from mitmproxy import version
-from netlib.exceptions import TlsException
+from mitmproxy import exceptions
 from netlib.http import http1
 from .. import language
 
@@ -37,7 +37,7 @@ class HTTPProtocol:
                     options=self.pathod_handler.server.ssloptions.ssl_options,
                     alpn_select=self.pathod_handler.server.ssloptions.alpn_select,
                 )
-            except TlsException as v:
+            except exceptions.TlsException as v:
                 s = str(v)
                 lg(s)
                 return None, dict(type="error", msg=s)

@@ -1,4 +1,3 @@
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy.proxy import protocol
 from netlib import socks
@@ -48,7 +47,7 @@ class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
             connect_reply.to_file(self.client_conn.wfile)
             self.client_conn.wfile.flush()
 
-        except (socks.SocksError, netlib.exceptions.TcpException) as e:
+        except (socks.SocksError, exceptions.TcpException) as e:
             raise exceptions.Socks5ProtocolException("SOCKS5 mode failure: %s" % repr(e))
 
         self.server_conn.address = connect_request.addr

@@ -1,8 +1,8 @@
 import time
 
 from netlib import websockets
-from .. import language
-from netlib.exceptions import NetlibException
+from pathod import language
+from mitmproxy import exceptions
 
 
 class WebsocketsProtocol:
@@ -16,7 +16,7 @@ class WebsocketsProtocol:
                 started = time.time()
                 try:
                     frm = websockets.Frame.from_file(self.pathod_handler.rfile)
-                except NetlibException as e:
+                except exceptions.NetlibException as e:
                     lg("Error reading websocket frame: %s" % e)
                     return None, None
                 ended = time.time()

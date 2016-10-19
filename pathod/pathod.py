@@ -10,7 +10,7 @@ from netlib import websockets
 from mitmproxy import version
 
 import urllib
-from netlib import exceptions
+from mitmproxy import exceptions
 
 from pathod import language
 from pathod import utils

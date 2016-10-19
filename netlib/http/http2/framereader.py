@@ -1,7 +1,7 @@
 import codecs
 
 import hyperframe
-from ...exceptions import HttpException
+from mitmproxy import exceptions
 
 
 def read_raw_frame(rfile):
@@ -9,7 +9,7 @@ def read_raw_frame(rfile):
     length = int(codecs.encode(header[:3], 'hex_codec'), 16)
 
     if length == 4740180:
-        raise HttpException("Length field looks more like HTTP/1.1:\n{}".format(rfile.read(-1)))
+        raise exceptions.HttpException("Length field looks more like HTTP/1.1:\n{}".format(rfile.read(-1)))
 
     body = rfile.safe_read(length)
     return [header, body]

@@ -3,9 +3,9 @@ from mock import Mock
 
 from netlib import http
 from netlib import tcp
-from netlib.exceptions import NetlibException
 from netlib.http import http1
 from netlib.tutils import raises
+from mitmproxy import exceptions
 
 from pathod import pathoc, language
 from pathod.protocols.http2 import HTTP2StateProtocol
@@ -36,7 +36,7 @@ class PathocTestDaemon(tutils.DaemonTests):
                     r = r.freeze(language.Settings())
                 try:
                     c.request(r)
-                except NetlibException:
+                except exceptions.NetlibException:
                     pass
         self.d.wait_for_silence()
         return s.getvalue()

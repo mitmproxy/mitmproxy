@@ -4,6 +4,7 @@ import tempfile
 import traceback
 
 from mitmproxy import options
+from mitmproxy import exceptions
 from mitmproxy.proxy.config import ProxyConfig
 
 import netlib
@@ -249,7 +250,7 @@ class TestClose(_WebSocketsTest):
         wfile.write(bytes(frame))
         wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(rfile)
 
     def test_close(self):
@@ -258,7 +259,7 @@ class TestClose(_WebSocketsTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
         client.wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
     def test_close_payload_1(self):
@@ -267,7 +268,7 @@ class TestClose(_WebSocketsTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42')))
         client.wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
     def test_close_payload_2(self):
@@ -276,7 +277,7 @@ class TestClose(_WebSocketsTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42foobar')))
         client.wfile.flush()
 
-        with pytest.raises(netlib.exceptions.TcpDisconnect):
+        with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
 
@@ -290,7 +291,7 @@ class TestInvalidFrame(_WebSocketsTest):
     def test_invalid_frame(self):
         client = self._setup_connection()
 
-        # with pytest.raises(netlib.exceptions.TcpDisconnect):
+        # with pytest.raises(exceptions.TcpDisconnect):
         frame = websockets.Frame.from_file(client.rfile)
         assert frame.header.opcode == 15
         assert frame.payload == b'foobar'

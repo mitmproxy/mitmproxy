@@ -1,4 +1,3 @@
-import netlib.exceptions
 import socket
 import struct
 from OpenSSL import SSL
@@ -105,7 +104,7 @@ class WebSocketsLayer(base.Layer):
 
                     if not self._handle_frame(frame, source_conn, other_conn, is_server):
                         return
-        except (socket.error, netlib.exceptions.TcpException, SSL.Error) as e:
+        except (socket.error, exceptions.TcpException, SSL.Error) as e:
             self.log("WebSockets connection closed unexpectedly by {}: {}".format(
                 "server" if is_server else "client", repr(e)), "info")
         except Exception as e:  # pragma: no cover

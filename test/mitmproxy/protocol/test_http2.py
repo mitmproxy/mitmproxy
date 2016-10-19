@@ -13,7 +13,7 @@ from mitmproxy.proxy.config import ProxyConfig
 
 import netlib
 from ...netlib import tservers as netlib_tservers
-from netlib.exceptions import HttpException
+from mitmproxy import exceptions
 from netlib.http import http1, http2
 
 from .. import tservers
@@ -61,10 +61,10 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                 try:
                     raw = b''.join(http2.read_raw_frame(self.rfile))
                     events = h2_conn.receive_data(raw)
-                except HttpException:
+                except exceptions.HttpException:
                     print(traceback.format_exc())
                     assert False
-                except netlib.exceptions.TcpDisconnect:
+                except exceptions.TcpDisconnect:
                     break
                 except:
                     print(traceback.format_exc())
@@ -77,7 +77,7 @@ class _Http2ServerBase(netlib_tservers.ServerTestBase):
                         if not self.server.handle_server_event(event, h2_conn, self.rfile, self.wfile):
                             done = True
                             break
-                    except netlib.exceptions.TcpDisconnect:
+                    except exceptions.TcpDisconnect:
                         done = True
                     except:
                         done = True
@@ -252,7 +252,7 @@ class TestSimple(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -329,7 +329,7 @@ class TestRequestWithPriority(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -368,7 +368,7 @@ class TestRequestWithPriority(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -440,7 +440,7 @@ class TestPriority(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -517,7 +517,7 @@ class TestPriorityWithExistingStream(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -568,7 +568,7 @@ class TestStreamResetFromServer(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -618,7 +618,7 @@ class TestBodySizeLimit(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -703,7 +703,7 @@ class TestPushPromise(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
             except:
@@ -756,7 +756,7 @@ class TestPushPromise(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 events = h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
 
@@ -816,7 +816,7 @@ class TestConnectionLost(_Http2Test):
             try:
                 raw = b''.join(http2.read_raw_frame(client.rfile))
                 h2_conn.receive_data(raw)
-            except HttpException:
+            except exceptions.HttpException:
                 print(traceback.format_exc())
                 assert False
             except:

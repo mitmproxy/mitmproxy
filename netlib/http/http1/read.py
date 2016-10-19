@@ -7,7 +7,7 @@ from netlib.http import response
 from netlib.http import headers
 from netlib.http import url
 from netlib import check
-from netlib import exceptions
+from mitmproxy import exceptions
 
 
 def get_header_tokens(headers, key):

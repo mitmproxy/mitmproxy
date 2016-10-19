@@ -17,7 +17,7 @@ from netlib import tcp
 from mitmproxy import certs
 from netlib import websockets
 from netlib import socks
-from netlib import exceptions
+from mitmproxy import exceptions
 from netlib.http import http1
 from mitmproxy.types import basethread
 

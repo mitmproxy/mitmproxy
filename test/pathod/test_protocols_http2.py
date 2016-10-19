@@ -4,8 +4,8 @@ import codecs
 import hyperframe
 from netlib import tcp, http
 from netlib.tutils import raises
-from netlib.exceptions import TcpDisconnect
 from netlib.http import http2
+from mitmproxy import exceptions
 
 from ..netlib import tservers as netlib_tservers
 
@@ -132,7 +132,7 @@ class TestPerformServerConnectionPreface(netlib_tservers.ServerTestBase):
             protocol.perform_server_connection_preface()
             assert protocol.connection_preface_performed
 
-            with raises(TcpDisconnect):
+            with raises(exceptions.TcpDisconnect):
                 protocol.perform_server_connection_preface(force=True)
 
 

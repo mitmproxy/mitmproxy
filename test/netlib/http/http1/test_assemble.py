@@ -1,4 +1,4 @@
-from netlib.exceptions import HttpException
+from mitmproxy import exceptions
 from netlib.http import Headers
 from netlib.http.http1.assemble import (
     assemble_request, assemble_request_head, assemble_response,
@@ -18,7 +18,7 @@ def test_assemble_request():
         b"content"
     )
 
-    with raises(HttpException):
+    with raises(exceptions.HttpException):
         assemble_request(treq(content=None))
 
 
@@ -39,7 +39,7 @@ def test_assemble_response():
         b"message"
     )
 
-    with raises(HttpException):
+    with raises(exceptions.HttpException):
         assemble_response(tresp(content=None))
 
 

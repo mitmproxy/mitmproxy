@@ -8,7 +8,6 @@ from h2 import connection
 from h2 import events
 import queue
 
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.proxy.protocol import base

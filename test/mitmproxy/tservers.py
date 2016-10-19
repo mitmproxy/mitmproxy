@@ -10,8 +10,9 @@ from mitmproxy import master
 from mitmproxy.addons import state
 import pathod.test
 import pathod.pathoc
-from mitmproxy import controller, options
-import netlib.exceptions
+from mitmproxy import controller
+from mitmproxy import options
+from mitmproxy import exceptions
 
 
 class TestMaster(master.Master):
@@ -98,7 +99,7 @@ class ProxyTestBase:
     def teardown(self):
         try:
             self.server.wait_for_silence()
-        except netlib.exceptions.Timeout:
+        except exceptions.Timeout:
             # FIXME: Track down the Windows sync issues
             if sys.platform != "win32":
                 raise

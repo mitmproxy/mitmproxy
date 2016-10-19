@@ -20,7 +20,7 @@ from OpenSSL import SSL
 from mitmproxy import certs
 from mitmproxy.utils import version_check
 from mitmproxy.types import serializable
-from netlib import exceptions
+from mitmproxy import exceptions
 from mitmproxy.types import basethread
 
 # This is a rather hackish way to make sure that

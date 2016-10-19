@@ -1,5 +1,5 @@
 from netlib.http import http1
-from netlib import exceptions
+from mitmproxy import exceptions
 from mitmproxy import ctx
 
 

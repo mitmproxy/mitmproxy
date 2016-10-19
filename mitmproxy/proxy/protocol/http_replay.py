@@ -1,6 +1,5 @@
 import traceback
 
-import netlib.exceptions
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -97,7 +96,7 @@ class RequestReplayThread(basethread.BaseThread):
                 response_reply = self.channel.ask("response", self.f)
                 if response_reply == exceptions.Kill:
                     raise exceptions.Kill()
-        except (exceptions.ReplayException, netlib.exceptions.NetlibException) as e:
+        except (exceptions.ReplayException, exceptions.NetlibException) as e:
             self.f.error = flow.Error(str(e))
             if self.channel:
                 self.channel.ask("error", self.f)

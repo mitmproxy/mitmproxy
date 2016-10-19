@@ -1,5 +1,5 @@
 import netlib.http.url
-from netlib import exceptions
+from mitmproxy import exceptions
 
 
 def assemble_request(request):

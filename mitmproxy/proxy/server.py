@@ -2,7 +2,6 @@ import socket
 import sys
 import traceback
 
-import netlib.exceptions
 from mitmproxy import exceptions
 from mitmproxy import connections
 from mitmproxy import http
@@ -138,7 +137,7 @@ class ConnectionHandler:
             try:
                 error_response = http.make_error_response(502, repr(e))
                 self.client_conn.send(http1.assemble_response(error_response))
-            except netlib.exceptions.TcpException:
+            except exceptions.TcpException:
                 pass
         except Exception:
             self.log(traceback.format_exc(), "error")

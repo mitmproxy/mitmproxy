@@ -2,7 +2,6 @@ import socket
 
 from OpenSSL import SSL
 
-import netlib.exceptions
 import netlib.tcp
 from mitmproxy import tcp
 from mitmproxy import flow
@@ -56,7 +55,7 @@ class RawTCPLayer(base.Layer):
                         self.channel.ask("tcp_message", f)
                     dst.sendall(tcp_message.content)
 
-        except (socket.error, netlib.exceptions.TcpException, SSL.Error) as e:
+        except (socket.error, exceptions.TcpException, SSL.Error) as e:
             if not self.ignore:
                 f.error = flow.Error("TCP connection closed unexpectedly: {}".format(repr(e)))
                 self.channel.tell("tcp_error", f)
