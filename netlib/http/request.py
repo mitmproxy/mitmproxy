@@ -1,7 +1,7 @@
 import re
 import urllib
 
-from netlib import multidict
+from mitmproxy.types import multidict
 from mitmproxy.utils import strutils
 from netlib.http import multipart
 from netlib.http import cookies

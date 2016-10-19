@@ -1,7 +1,7 @@
 import time
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from mitmproxy.utils import human
-from netlib import multidict
+from mitmproxy.types import multidict
 from netlib.http import cookies
 from netlib.http import headers as nheaders
 from netlib.http import message

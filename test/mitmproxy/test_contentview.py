@@ -2,7 +2,7 @@ import mock
 from mitmproxy.exceptions import ContentViewException
 from netlib.http import Headers
 from netlib.http import url
-from netlib import multidict
+from mitmproxy.types import multidict
 
 import mitmproxy.contentviews as cv
 from . import tutils

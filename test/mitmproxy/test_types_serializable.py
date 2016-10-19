@@ -1,7 +1,7 @@
-from netlib import basetypes
+from mitmproxy.types import serializable
 
 
-class SerializableDummy(basetypes.Serializable):
+class SerializableDummy(serializable.Serializable):
     def __init__(self, i):
         self.i = i
 

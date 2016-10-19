@@ -19,9 +19,9 @@ from OpenSSL import SSL
 
 from netlib import certutils
 from netlib import version_check
-from netlib import basetypes
+from mitmproxy.types import serializable
 from netlib import exceptions
-from netlib import basethread
+from mitmproxy.types import basethread
 
 # This is a rather hackish way to make sure that
 # the latest version of pyOpenSSL is actually installed.
@@ -292,7 +292,7 @@ class Reader(_FileLike):
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
 
-class Address(basetypes.Serializable):
+class Address(serializable.Serializable):
 
     """
         This class wraps an IPv4/IPv6 tuple to provide named attributes and

@@ -3,7 +3,7 @@ import time
 import queue
 
 from . import pathod
-from netlib import basethread
+from mitmproxy.types import basethread
 
 
 class Daemon:

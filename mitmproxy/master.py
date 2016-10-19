@@ -14,7 +14,7 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import io
 from mitmproxy.proxy.protocol import http_replay
-from netlib import basethread
+from mitmproxy.types import basethread
 import netlib.http
 
 from . import ctx as mitmproxy_ctx

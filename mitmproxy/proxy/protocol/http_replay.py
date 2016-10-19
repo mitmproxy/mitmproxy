@@ -8,7 +8,7 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy import connections
 from netlib.http import http1
-from netlib import basethread
+from mitmproxy.types import basethread
 
 
 # TODO: Doesn't really belong into mitmproxy.proxy.protocol...

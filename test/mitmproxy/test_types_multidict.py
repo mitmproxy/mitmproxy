@@ -1,5 +1,5 @@
 from netlib import tutils
-from netlib.multidict import MultiDict, ImmutableMultiDict, MultiDictView
+from mitmproxy.types import multidict
 
 
 class _TMulti:
@@ -8,11 +8,11 @@ class _TMulti:
         return key.lower()
 
 
-class TMultiDict(_TMulti, MultiDict):
+class TMultiDict(_TMulti, multidict.MultiDict):
     pass
 
 
-class TImmutableMultiDict(_TMulti, ImmutableMultiDict):
+class TImmutableMultiDict(_TMulti, multidict.ImmutableMultiDict):
     pass
 
 
@@ -238,7 +238,7 @@ class TParent:
 class TestMultiDictView:
     def test_modify(self):
         p = TParent()
-        tv = MultiDictView(p.getter, p.setter)
+        tv = multidict.MultiDictView(p.getter, p.setter)
         assert len(tv) == 0
         tv["a"] = "b"
         assert p.vals == (("a", "b"),)

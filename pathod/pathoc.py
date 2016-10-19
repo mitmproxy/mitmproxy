@@ -16,7 +16,7 @@ from mitmproxy.utils import strutils
 from netlib import tcp, certutils, websockets, socks
 from netlib import exceptions
 from netlib.http import http1
-from netlib import basethread
+from mitmproxy.types import basethread
 
 from . import log, language
 from .protocols import http2

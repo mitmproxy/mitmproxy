@@ -6,10 +6,10 @@ try:
 except ImportError:  # pragma: no cover
     from collections import MutableMapping  # Workaround for Python < 3.3
 
-from netlib import basetypes
+from mitmproxy.types import serializable
 
 
-class _MultiDict(MutableMapping, basetypes.Serializable, metaclass=ABCMeta):
+class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
     def __repr__(self):
         fields = (
             repr(field)

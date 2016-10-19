@@ -4,7 +4,7 @@ from typing import Optional
 
 from mitmproxy.utils import strutils
 from netlib import encoding
-from netlib import basetypes
+from mitmproxy.types import serializable
 from netlib.http import headers
 
 
@@ -17,7 +17,7 @@ def _always_bytes(x):
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class MessageData(basetypes.Serializable):
+class MessageData(serializable.Serializable):
     def __eq__(self, other):
         if isinstance(other, MessageData):
             return self.__dict__ == other.__dict__
@@ -43,7 +43,7 @@ class MessageData(basetypes.Serializable):
         return cls(**state)
 
 
-class Message(basetypes.Serializable):
+class Message(serializable.Serializable):
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data

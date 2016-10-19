@@ -3,7 +3,7 @@ import email.utils
 import re
 import time
 
-from netlib import multidict
+from mitmproxy.types import multidict
 
 """
 A flexible module for cookie parsing and manipulation.
