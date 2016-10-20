@@ -285,9 +285,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.logbuffer.pop(0)
         self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
-    def add_log(self, e, level):
-        signals.add_log(e, level)
-
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
             return callback(*args)
@@ -703,9 +700,13 @@ class ConsoleMaster(flow.FlowMaster):
         super(ConsoleMaster, self).tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        self.add_log("{client} {direction} tcp {direction} {server}".format(
+        signals.add_log("{client} {direction} tcp {direction} {server}".format(
             client=repr(f.client_conn.address),
             server=repr(f.server_conn.address),
             direction=direction,
         ), "info")
-        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+
+    @controller.handler
+    def log(self, evt):
+        signals.add_log(evt.msg, evt.level)
