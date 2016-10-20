@@ -283,9 +283,6 @@ class ConsoleMaster(master.Master):
             self.logbuffer.pop(0)
         self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
-    def add_log(self, e, level):
-        signals.add_log(e, level)
-
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
             return callback(*args)
@@ -702,3 +699,7 @@ class ConsoleMaster(master.Master):
             direction=direction,
         ), "info")
         self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+
+    @controller.handler
+    def log(self, evt):
+        signals.add_log(evt.msg, evt.level)
