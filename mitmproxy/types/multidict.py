@@ -174,27 +174,6 @@ class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
                 coll.append([key, values])
         return coll
 
-    def to_dict(self):
-        """
-        Get the MultiDict as a plain Python dict.
-        Keys with multiple values are returned as lists.
-
-        Example:
-
-        .. code-block:: python
-
-            # Simple dict with duplicate values.
-            >>> d = MultiDict([("name", "value"), ("a", False), ("a", 42)])
-            >>> d.to_dict()
-            {
-                "name": "value",
-                "a": [False, 42]
-            }
-        """
-        return {
-            k: v for k, v in self.collect()
-        }
-
     def get_state(self):
         return self.fields
 

@@ -172,13 +172,6 @@ class TestMultiDict:
         assert list(md.items()) == [("foo", "bar"), ("bar", "baz")]
         assert list(md.items(multi=True)) == [("foo", "bar"), ("bar", "baz"), ("Bar", "bam")]
 
-    def test_to_dict(self):
-        md = self._multi()
-        assert md.to_dict() == {
-            "foo": "bar",
-            "bar": ["baz", "bam"]
-        }
-
     def test_state(self):
         md = self._multi()
         assert len(md.get_state()) == 3
