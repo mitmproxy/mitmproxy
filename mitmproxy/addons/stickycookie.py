@@ -59,7 +59,8 @@ class StickyCookie:
                         if not self.jar[dom_port_path]:
                             self.jar.pop(dom_port_path, None)
                     else:
-                        b = attrs.with_insert(0, name, value)
+                        b = attrs.copy()
+                        b.insert(0, name, value)
                         self.jar[dom_port_path][name] = b
 
     def request(self, flow):

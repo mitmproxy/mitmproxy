@@ -12,10 +12,6 @@ class TMultiDict(_TMulti, multidict.MultiDict):
     pass
 
 
-class TImmutableMultiDict(_TMulti, multidict.ImmutableMultiDict):
-    pass
-
-
 class TestMultiDict:
     @staticmethod
     def _multi():
@@ -176,13 +172,6 @@ class TestMultiDict:
         assert list(md.items()) == [("foo", "bar"), ("bar", "baz")]
         assert list(md.items(multi=True)) == [("foo", "bar"), ("bar", "baz"), ("Bar", "bam")]
 
-    def test_to_dict(self):
-        md = self._multi()
-        assert md.to_dict() == {
-            "foo": "bar",
-            "bar": ["baz", "bam"]
-        }
-
     def test_state(self):
         md = self._multi()
         assert len(md.get_state()) == 3
@@ -192,36 +181,6 @@ class TestMultiDict:
         assert md != md2
         md2.set_state(md.get_state())
         assert md == md2
-
-
-class TestImmutableMultiDict:
-    def test_modify(self):
-        md = TImmutableMultiDict()
-        with tutils.raises(TypeError):
-            md["foo"] = "bar"
-
-        with tutils.raises(TypeError):
-            del md["foo"]
-
-        with tutils.raises(TypeError):
-            md.add("foo", "bar")
-
-    def test_hash(self):
-        assert hash(TImmutableMultiDict())
-
-    def test_with_delitem(self):
-        md = TImmutableMultiDict([("foo", "bar")])
-        assert md.with_delitem("foo").fields == ()
-        assert md.fields == (("foo", "bar"),)
-
-    def test_with_set_all(self):
-        md = TImmutableMultiDict()
-        assert md.with_set_all("foo", ["bar"]).fields == (("foo", "bar"),)
-        assert md.fields == ()
-
-    def test_with_insert(self):
-        md = TImmutableMultiDict()
-        assert md.with_insert(0, "foo", "bar").fields == (("foo", "bar"),)
 
 
 class TParent:

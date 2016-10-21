@@ -1,11 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-
-try:
-    from collections.abc import MutableMapping
-except ImportError:  # pragma: no cover
-    from collections import MutableMapping  # Workaround for Python < 3.3
-
+from collections.abc import MutableMapping
 from mitmproxy.types import serializable
 
 
@@ -179,27 +174,6 @@ class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
                 coll.append([key, values])
         return coll
 
-    def to_dict(self):
-        """
-        Get the MultiDict as a plain Python dict.
-        Keys with multiple values are returned as lists.
-
-        Example:
-
-        .. code-block:: python
-
-            # Simple dict with duplicate values.
-            >>> d = MultiDict([("name", "value"), ("a", False), ("a", 42)])
-            >>> d.to_dict()
-            {
-                "name": "value",
-                "a": [False, 42]
-            }
-        """
-        return {
-            k: v for k, v in self.collect()
-        }
-
     def get_state(self):
         return self.fields
 
@@ -225,46 +199,6 @@ class MultiDict(_MultiDict):
     @staticmethod
     def _kconv(key):
         return key
-
-
-class ImmutableMultiDict(MultiDict, metaclass=ABCMeta):
-    def _immutable(self, *_):
-        raise TypeError('{} objects are immutable'.format(self.__class__.__name__))
-
-    __delitem__ = set_all = insert = _immutable
-
-    def __hash__(self):
-        return hash(self.fields)
-
-    def with_delitem(self, key):
-        """
-        Returns:
-            An updated ImmutableMultiDict. The original object will not be modified.
-        """
-        ret = self.copy()
-        # FIXME: This is filthy...
-        super(ImmutableMultiDict, ret).__delitem__(key)
-        return ret
-
-    def with_set_all(self, key, values):
-        """
-        Returns:
-            An updated ImmutableMultiDict. The original object will not be modified.
-        """
-        ret = self.copy()
-        # FIXME: This is filthy...
-        super(ImmutableMultiDict, ret).set_all(key, values)
-        return ret
-
-    def with_insert(self, index, key, value):
-        """
-        Returns:
-            An updated ImmutableMultiDict. The original object will not be modified.
-        """
-        ret = self.copy()
-        # FIXME: This is filthy...
-        super(ImmutableMultiDict, ret).insert(index, key, value)
-        return ret
 
 
 class MultiDictView(_MultiDict):

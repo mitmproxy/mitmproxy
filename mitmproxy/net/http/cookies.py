@@ -31,7 +31,7 @@ _cookie_params = set((
 ESCAPE = re.compile(r"([\"\\])")
 
 
-class CookieAttrs(multidict.ImmutableMultiDict):
+class CookieAttrs(multidict.MultiDict):
     @staticmethod
     def _kconv(key):
         return key.lower()
@@ -300,7 +300,7 @@ def refresh_set_cookie_header(c, delta):
         e = email.utils.parsedate_tz(attrs["expires"])
         if e:
             f = email.utils.mktime_tz(e) + delta
-            attrs = attrs.with_set_all("expires", [email.utils.formatdate(f)])
+            attrs.set_all("expires", [email.utils.formatdate(f)])
         else:
             # This can happen when the expires tag is invalid.
             # reddit.com sends a an expires tag like this: "Thu, 31 Dec
@@ -308,7 +308,7 @@ def refresh_set_cookie_header(c, delta):
             # strictly correct according to the cookie spec. Browsers
             # appear to parse this tolerantly - maybe we should too.
             # For now, we just ignore this.
-            attrs = attrs.with_delitem("expires")
+            del attrs["expires"]
 
     rv = format_set_cookie_header([(name, value, attrs)])
     if not rv:
