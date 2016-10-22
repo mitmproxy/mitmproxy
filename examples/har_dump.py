@@ -139,7 +139,7 @@ def response(flow):
     if flow.request.method in ["POST", "PUT", "PATCH"]:
         entry["request"]["postData"] = {
             "mimeType": flow.request.headers.get("Content-Type", "").split(";")[0],
-            "text": flow.request.content,
+            "text": _always_string(flow.request.content),
             "params": name_value(flow.request.urlencoded_form)
         }
 
@@ -213,4 +213,12 @@ def name_value(obj):
     """
         Convert (key, value) pairs to HAR format.
     """
-    return [{"name": k, "value": v} for k, v in obj.items()]
+    return [{"name": _always_string(k), "value": _always_string(v)} for k, v in obj.items()]
+
+def _always_string(byte_or_str):
+    """
+        Makes sure we get text back instead of `bytes` since json.dumps dies on `bytes`
+    """
+    if isinstance(byte_or_str, bytes):
+        return byte_or_str.decode('utf8')
+    return byte_or_str
