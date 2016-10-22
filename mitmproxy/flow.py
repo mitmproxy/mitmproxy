@@ -165,7 +165,6 @@ class Flow(stateobject.StateObject):
             self.reply.take()
         self.reply.kill(force=True)
         self.reply.commit()
-        master.error(self)
 
     def intercept(self, master):
         """
