@@ -28,6 +28,3 @@ def test_LRUCache():
     f.ran = False
     assert f.gen(1) == 1
     assert f.ran
-    #print(f.gen.cache_info())
-    #assert len(cache.cacheList) == 2
-    #assert len(cache.cache) == 2
