@@ -3,7 +3,7 @@ from mitmproxy.test import tutils
 
 
 def test_always_bytes():
-    assert strutils.always_bytes(bytes(bytearray(range(256)))) == bytes(bytearray(range(256)))
+    assert strutils.always_bytes(bytes(range(256))) == bytes(range(256))
     assert strutils.always_bytes("foo") == b"foo"
     with tutils.raises(ValueError):
         strutils.always_bytes(u"\u2605", "ascii")
