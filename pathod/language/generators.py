@@ -14,7 +14,7 @@ DATATYPES = dict(
     punctuation=string.punctuation.encode(),
     whitespace=string.whitespace.encode(),
     ascii=string.printable.encode(),
-    bytes=bytes(bytearray(range(256)))
+    bytes=bytes(range(256))
 )
 
 

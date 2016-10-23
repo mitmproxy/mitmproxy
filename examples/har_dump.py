@@ -3,7 +3,6 @@ This inline script can be used to dump flows as HAR files.
 """
 
 
-import pprint
 import json
 import sys
 import base64
@@ -128,19 +127,22 @@ def response(flow):
         "timings": timings,
     }
 
-    # Store binay data as base64
+    # Store binary data as base64
     if strutils.is_mostly_bin(flow.response.content):
-        b64 = base64.b64encode(flow.response.content)
-        entry["response"]["content"]["text"] = b64.decode('ascii')
+        entry["response"]["content"]["text"] = base64.b64encode(flow.response.content).decode()
         entry["response"]["content"]["encoding"] = "base64"
     else:
-        entry["response"]["content"]["text"] = flow.response.text
+        entry["response"]["content"]["text"] = flow.response.get_text(strict=False)
 
     if flow.request.method in ["POST", "PUT", "PATCH"]:
+        params = [
+            {"name": a.decode("utf8", "surrogateescape"), "value": b.decode("utf8", "surrogateescape")}
+            for a, b in flow.request.urlencoded_form.items(multi=True)
+        ]
         entry["request"]["postData"] = {
             "mimeType": flow.request.headers.get("Content-Type", "").split(";")[0],
-            "text": _always_string(flow.request.content),
-            "params": name_value(flow.request.urlencoded_form)
+            "text": flow.request.get_text(strict=False),
+            "params": params
         }
 
     if flow.server_conn:
@@ -155,16 +157,17 @@ def done():
     """
     dump_file = sys.argv[1]
 
+    json_dump = json.dumps(HAR, indent=2)  # type: str
+
     if dump_file == '-':
-        mitmproxy.ctx.log(pprint.pformat(HAR))
+        mitmproxy.ctx.log(json_dump)
     else:
-        json_dump = json.dumps(HAR, indent=2)
-
+        raw = json_dump.encode()  # type: bytes
         if dump_file.endswith('.zhar'):
-            json_dump = zlib.compress(json_dump, 9)
+            raw = zlib.compress(raw, 9)
 
-        with open(dump_file, "w") as f:
-            f.write(json_dump)
+        with open(dump_file, "wb") as f:
+            f.write(raw)
 
         mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
@@ -213,12 +216,4 @@ def name_value(obj):
     """
         Convert (key, value) pairs to HAR format.
     """
-    return [{"name": _always_string(k), "value": _always_string(v)} for k, v in obj.items()]
-
-def _always_string(byte_or_str):
-    """
-        Makes sure we get text back instead of `bytes` since json.dumps dies on `bytes`
-    """
-    if isinstance(byte_or_str, bytes):
-        return byte_or_str.decode('utf8')
-    return byte_or_str
+    return [{"name": k, "value": v} for k, v in obj.items()]

@@ -346,7 +346,7 @@ class TestSerialize:
         sio = io.BytesIO()
         f = tutils.tflow()
         f.marked = True
-        f.request.content = bytes(bytearray(range(256)))
+        f.request.content = bytes(range(256))
         w = mitmproxy.io.FlowWriter(sio)
         w.add(f)
 

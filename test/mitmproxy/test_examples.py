@@ -160,3 +160,24 @@ class TestHARDump:
 
         f = format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
         assert f['expires']
+
+    def test_binary(self):
+
+        f = self.flow()
+        f.request.method = "POST"
+        f.request.headers["content-type"] = "application/x-www-form-urlencoded"
+        f.request.content = b"foo=bar&baz=s%c3%bc%c3%9f"
+        f.response.headers["random-junk"] = bytes(range(256))
+        f.response.content = bytes(range(256))
+
+        with tutils.tmpdir() as tdir:
+            path = os.path.join(tdir, "somefile")
+
+            m, sc = tscript("har_dump.py", shlex.quote(path))
+            m.addons.invoke(m, "response", f)
+            m.addons.remove(sc)
+
+            with open(path, "r") as inp:
+                har = json.load(inp)
+
+        assert len(har["log"]["entries"]) == 1
