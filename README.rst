@@ -43,7 +43,7 @@ Join our developer chat on Slack if you would like to hack on mitmproxy itself.
 Installation
 ------------
 
-The installation instructions are `here <http://docs.mitmproxy.org/en/stable/install.html>`_.
+The installation instructions are `here <http://docs.mitmproxy.org/en/stable/install.html>`__.
 If you want to contribute changes, keep on reading.
 
 
@@ -52,7 +52,7 @@ Hacking
 
 To get started hacking on mitmproxy, make sure you have Python_ 3.5.x or above with
 virtualenv_ installed (you can find installation instructions for virtualenv
-`here <http://virtualenv.readthedocs.org/en/latest/>`_). Then do the following:
+`here <http://virtualenv.readthedocs.org/en/latest/>`__). Then do the following:
 
 .. code-block:: text
 
@@ -188,6 +188,5 @@ PR checks will fail and block merging. We are using this command to check for st
 .. _.env: https://github.com/mitmproxy/mitmproxy/blob/master/.env
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
-.. _issue_tracker: https://github.com/mitmproxy/mitmproxy/issues
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _Google Style Guide: https://google.github.io/styleguide/pyguide.html
