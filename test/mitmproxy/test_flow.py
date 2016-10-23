@@ -104,7 +104,6 @@ class TestHTTPFlow:
         assert f.killable
         f.kill(fm)
         assert not f.killable
-        assert fm.error.called
         assert f.reply.value == Kill
 
     def test_killall(self):

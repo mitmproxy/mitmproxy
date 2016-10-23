@@ -480,7 +480,7 @@ class FlowView(tabs.Tabs):
         else:
             new_flow, new_idx = self.state.get_prev(idx)
         if new_flow is None:
-            signals.status_message.send(message="No more flows!")
+            signals.status_message.send(message="No more flows")
         else:
             signals.pop_view_state.send(self)
             self.master.view_flow(new_flow, self.tab_offset)
