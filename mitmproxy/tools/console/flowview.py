@@ -8,7 +8,6 @@ from typing import Optional, Union  # noqa
 
 from mitmproxy import contentviews
 from mitmproxy import http
-from mitmproxy.utils import lrucache
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import grideditor
@@ -18,7 +17,7 @@ from mitmproxy.tools.console import tabs
 from mitmproxy import export
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import status_codes
-
+from functools import lru_cache
 
 class SearchError(Exception):
     pass
@@ -120,9 +119,6 @@ class FlowViewHeader(urwid.WidgetWrap):
                 hostheader=self.master.options.showhost
             )
 
-
-cache = lrucache.LRUCache(200)
-
 TAB_REQ = 0
 TAB_RESP = 1
 
@@ -193,14 +189,9 @@ class FlowView(tabs.Tabs):
                 message.headers.fields,
                 getattr(message, "path", None),
             ))
-            return cache.get(
-                # We move message into this partial function as it is not hashable.
-                lambda *args: self._get_content_view(message, *args),
-                viewmode,
-                limit,
-                flow_modify_cache_invalidation
-            )
+            return  lambda *args: self._get_content_view(message, viewmode,limit,flow_modify_cache_invalidation)
 
+    @lru_cache(maxsize=200)
     def _get_content_view(self, message, viewmode, max_lines, _):
         description, lines, error = contentviews.get_message_content_view(
             viewmode, message
