@@ -325,7 +325,7 @@ def export_to_clip_or_file(key, scope, flow, writer):
             else:  # other keys
                 writer(exporter(flow))
 
-@lru_cache(max_size=800)
+@lru_cache(maxsize=800)
 def raw_format_flow(f):
     f = dict(f)
     pile = []
