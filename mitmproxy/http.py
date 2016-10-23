@@ -1,9 +1,11 @@
 import cgi
 
 from mitmproxy import flow
+
 from mitmproxy.net import http
 from mitmproxy import version
 from mitmproxy.net import tcp
+from mitmproxy import connections  # noqa
 
 
 class HTTPRequest(http.Request):
@@ -155,22 +157,22 @@ class HTTPFlow(flow.Flow):
     def __init__(self, client_conn, server_conn, live=None):
         super().__init__("http", client_conn, server_conn, live)
 
-        self.request = None
+        self.request = None  # type: HTTPRequest
         """ :py:class:`HTTPRequest` object """
-        self.response = None
+        self.response = None  # type: HTTPResponse
         """ :py:class:`HTTPResponse` object """
-        self.error = None
+        self.error = None  # type: flow.Error
         """ :py:class:`Error` object
 
         Note that it's possible for a Flow to have both a response and an error
         object. This might happen, for instance, when a response was received
         from the server, but there was an error sending it back to the client.
         """
-        self.server_conn = server_conn
+        self.server_conn = server_conn  # type: connections.ServerConnection
         """ :py:class:`ServerConnection` object """
-        self.client_conn = client_conn
+        self.client_conn = client_conn  # type: connections.ClientConnection
         """:py:class:`ClientConnection` object """
-        self.intercepted = False
+        self.intercepted = False  # type: bool
         """ Is this flow currently being intercepted? """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()

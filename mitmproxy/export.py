@@ -1,9 +1,11 @@
+import io
 import json
+import pprint
 import re
 import textwrap
-import urllib
+from typing import Any
 
-import mitmproxy.net.http
+from mitmproxy import http
 
 
 def _native(s):
@@ -12,14 +14,14 @@ def _native(s):
     return s
 
 
-def dictstr(items, indent):
+def dictstr(items, indent: str) -> str:
     lines = []
     for k, v in items:
         lines.append(indent + "%s: %s,\n" % (repr(_native(k)), repr(_native(v))))
     return "{\n%s}\n" % "".join(lines)
 
 
-def curl_command(flow):
+def curl_command(flow: http.HTTPFlow) -> str:
     data = "curl "
 
     request = flow.request.copy()
@@ -31,8 +33,7 @@ def curl_command(flow):
     if request.method != "GET":
         data += "-X %s " % request.method
 
-    full_url = request.scheme + "://" + request.host + request.path
-    data += "'%s'" % full_url
+    data += "'%s'" % request.url
 
     if request.content:
         data += " --data-binary '%s'" % _native(request.content)
@@ -40,64 +41,54 @@ def curl_command(flow):
     return data
 
 
-def python_code(flow):
-    code = textwrap.dedent("""
-        import requests
-
-        url = '{url}'
-        {headers}{params}{data}
-        response = requests.request(
-            method='{method}',
-            url=url,{args}
-        )
-
-        print(response.text)
-    """).strip()
-
-    components = [urllib.parse.quote(c, safe="") for c in flow.request.path_components]
-    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
-
-    args = ""
-    headers = ""
-    if flow.request.headers:
-        headers += "\nheaders = %s\n" % dictstr(flow.request.headers.fields, "    ")
-        args += "\n    headers=headers,"
-
-    params = ""
-    if flow.request.query:
-        params = "\nparams = %s\n" % dictstr(flow.request.query.collect(), "    ")
-        args += "\n    params=params,"
-
-    data = ""
-    if flow.request.body:
-        json_obj = is_json(flow.request.headers, flow.request.content)
-        if json_obj:
-            data = "\njson = %s\n" % dictstr(sorted(json_obj.items()), "    ")
-            args += "\n    json=json,"
-        else:
-            data = "\ndata = '''%s'''\n" % _native(flow.request.content)
-            args += "\n    data=data,"
-
-    code = code.format(
-        url=url,
-        headers=headers,
-        params=params,
-        data=data,
-        method=flow.request.method,
-        args=args,
+def python_arg(arg: str, val: Any) -> str:
+    if not val:
+        return ""
+    if arg:
+        arg += "="
+    arg_str = "{}{},\n".format(
+        arg,
+        pprint.pformat(val, 79 - len(arg))
     )
-    return code
+    return textwrap.indent(arg_str, " " * 4)
 
 
-def is_json(headers: mitmproxy.net.http.Headers, content: bytes) -> bool:
-    if headers:
-        ct = mitmproxy.net.http.parse_content_type(headers.get("content-type", ""))
-        if ct and "%s/%s" % (ct[0], ct[1]) == "application/json":
-            try:
-                return json.loads(content.decode("utf8", "surrogateescape"))
-            except ValueError:
-                return False
-    return False
+def python_code(flow: http.HTTPFlow):
+    code = io.StringIO()
+
+    def writearg(arg, val):
+        code.write(python_arg(arg, val))
+
+    code.write("import requests\n")
+    code.write("\n")
+    if flow.request.method.lower() in ("get", "post", "put", "head", "delete", "patch"):
+        code.write("response = requests.{}(\n".format(flow.request.method.lower()))
+    else:
+        code.write("response = requests.request(\n")
+        writearg("", flow.request.method)
+    url_without_query = flow.request.url.split("?", 1)[0]
+    writearg("", url_without_query)
+
+    writearg("params", list(flow.request.query.fields))
+
+    headers = flow.request.headers.copy()
+    # requests adds those by default.
+    for x in ("host", "content-length"):
+        headers.pop(x, None)
+    writearg("headers", dict(headers))
+    try:
+        if "json" not in flow.request.headers.get("content-type", ""):
+            raise ValueError()
+        writearg("json", json.loads(flow.request.text))
+    except ValueError:
+        writearg("data", flow.request.content)
+
+    code.seek(code.tell() - 2)  # remove last comma
+    code.write("\n)\n")
+    code.write("\n")
+    code.write("print(response.text)")
+
+    return code.getvalue()
 
 
 def locust_code(flow):
@@ -111,7 +102,7 @@ def locust_code(flow):
 
             @task()
             def {name}(self):
-                url = '{url}'
+                url = self.locust.host + '{path}'
                 {headers}{params}{data}
                 self.response = self.client.request(
                     method='{method}',
@@ -127,13 +118,12 @@ def locust_code(flow):
             max_wait = 3000
 """).strip()
 
-    components = [urllib.parse.quote(c, safe="") for c in flow.request.path_components]
-    name = re.sub('\W|^(?=\d)', '_', "_".join(components))
-    if name == "" or name is None:
+    name = re.sub('\W|^(?=\d)', '_', flow.request.path.strip("/").split("?", 1)[0])
+    if not name:
         new_name = "_".join([str(flow.request.host), str(flow.request.timestamp_start)])
         name = re.sub('\W|^(?=\d)', '_', new_name)
 
-    url = flow.request.scheme + "://" + flow.request.host + "/" + "/".join(components)
+    path_without_query = flow.request.path.split("?")[0]
 
     args = ""
     headers = ""
@@ -148,7 +138,11 @@ def locust_code(flow):
 
     params = ""
     if flow.request.query:
-        lines = ["            %s: %s,\n" % (repr(k), repr(v)) for k, v in flow.request.query.collect()]
+        lines = [
+            "            %s: %s,\n" % (repr(k), repr(v))
+            for k, v in
+            flow.request.query.collect()
+        ]
         params = "\n        params = {\n%s        }\n" % "".join(lines)
         args += "\n            params=params,"
 
@@ -159,19 +153,13 @@ def locust_code(flow):
 
     code = code.format(
         name=name,
-        url=url,
+        path=path_without_query,
         headers=headers,
         params=params,
         data=data,
         method=flow.request.method,
         args=args,
     )
-
-    host = flow.request.scheme + "://" + flow.request.host
-    code = code.replace(host, "' + self.locust.host + '")
-    code = code.replace(urllib.parse.quote_plus(host), "' + quote_plus(self.locust.host) + '")
-    code = code.replace(urllib.parse.quote(host), "' + quote(self.locust.host) + '")
-    code = code.replace("'' + ", "")
 
     return code
 
