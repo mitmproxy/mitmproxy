@@ -7,7 +7,7 @@ import urwid
 import urwid.util
 
 import mitmproxy.net
-from mitmproxy.utils import lrucache
+from functools import lru_cache
 from mitmproxy.tools.console import signals
 from mitmproxy import export
 from mitmproxy.utils import human
@@ -325,9 +325,8 @@ def export_to_clip_or_file(key, scope, flow, writer):
             else:  # other keys
                 writer(exporter(flow))
 
-flowcache = lrucache.LRUCache(800)
 
-
+@lru_cache(maxsize=800)
 def raw_format_flow(f):
     f = dict(f)
     pile = []
@@ -458,4 +457,4 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
         else:
             d["resp_ctype"] = ""
 
-    return flowcache.get(raw_format_flow, tuple(sorted(d.items())))
+    return raw_format_flow(tuple(sorted(d.items())))
