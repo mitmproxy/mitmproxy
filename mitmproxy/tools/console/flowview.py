@@ -19,6 +19,7 @@ from mitmproxy.net.http import Headers
 from mitmproxy.net.http import status_codes
 from functools import lru_cache
 
+
 class SearchError(Exception):
     pass
 
@@ -189,7 +190,7 @@ class FlowView(tabs.Tabs):
                 message.headers.fields,
                 getattr(message, "path", None),
             ))
-            return  lambda *args: self._get_content_view(message, viewmode,limit,flow_modify_cache_invalidation)
+            return lambda *args: self._get_content_view(message, viewmode, limit, flow_modify_cache_invalidation)
 
     @lru_cache(maxsize=200)
     def _get_content_view(self, message, viewmode, max_lines, _):
