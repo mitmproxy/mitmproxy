@@ -190,10 +190,14 @@ class FlowView(tabs.Tabs):
                 message.headers.fields,
                 getattr(message, "path", None),
             ))
-            return lambda *args: self._get_content_view(message, viewmode, limit, flow_modify_cache_invalidation)
+            # we need to pass the message off-band because it's not hashable
+            self._get_content_view_message = message
+            return self._get_content_view(viewmode, limit, flow_modify_cache_invalidation)
 
     @lru_cache(maxsize=200)
-    def _get_content_view(self, message, viewmode, max_lines, _):
+    def _get_content_view(self, viewmode, max_lines, _):
+        message = self._get_content_view_message
+        self._get_content_view_message = None
         description, lines, error = contentviews.get_message_content_view(
             viewmode, message
         )
