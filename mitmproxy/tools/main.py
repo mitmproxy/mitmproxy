@@ -1,6 +1,12 @@
+from __future__ import print_function  # this is here for the version check to work on Python 2.
 import os
 import signal
 import sys
+
+if sys.version_info < (3, 5):
+    print("#" * 49, file=sys.stderr)
+    print("# mitmproxy only supports Python 3.5 and above! #", file=sys.stderr)
+    print("#" * 49, file=sys.stderr)
 
 from mitmproxy.tools import cmdline
 from mitmproxy import exceptions
