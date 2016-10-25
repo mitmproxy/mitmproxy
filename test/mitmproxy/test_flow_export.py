@@ -34,17 +34,17 @@ def req_patch():
 class TestExportCurlCommand:
     def test_get(self):
         flow = tutils.tflow(req=req_get())
-        result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address/path?a=foo&a=bar&b=baz'"""
+        result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(flow) == result
 
     def test_post(self):
         flow = tutils.tflow(req=req_post())
-        result = """curl -X POST 'http://address/path' --data-binary 'content'"""
+        result = """curl -X POST 'http://address:22/path' --data-binary 'content'"""
         assert export.curl_command(flow) == result
 
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
-        result = """curl -H 'header:qvalue' -H 'content-length:7' -X PATCH 'http://address/path?query=param' --data-binary 'content'"""
+        result = """curl -H 'header:qvalue' -H 'content-length:7' -X PATCH 'http://address:22/path?query=param' --data-binary 'content'"""
         assert export.curl_command(flow) == result
 
 
@@ -98,25 +98,6 @@ class TestExportLocustTask:
     def test_patch(self):
         flow = tutils.tflow(req=req_patch())
         python_equals("data/test_flow_export/locust_task_patch.py", export.locust_task(flow))
-
-
-class TestIsJson:
-    def test_empty(self):
-        assert export.is_json(None, None) is False
-
-    def test_json_type(self):
-        headers = Headers(content_type="application/json")
-        assert export.is_json(headers, b"foobar") is False
-
-    def test_valid(self):
-        headers = Headers(content_type="application/foobar")
-        j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
-        assert j is False
-
-    def test_valid2(self):
-        headers = Headers(content_type="application/json")
-        j = export.is_json(headers, b'{"name": "example", "email": "example@example.com"}')
-        assert isinstance(j, dict)
 
 
 class TestURL:

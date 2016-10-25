@@ -1,13 +1,8 @@
 import requests
 
-url = 'http://address/path'
-
-data = '''content'''
-
-response = requests.request(
-    method='POST',
-    url=url,
-    data=data,
+response = requests.post(
+    'http://address:22/path',
+    data=b'content'
 )
 
 print(response.text)

@@ -1,22 +1,9 @@
 import requests
 
-url = 'http://address/path'
-
-headers = {
-    'header': 'qvalue',
-    'content-length': '7',
-}
-
-params = {
-    'a': ['foo', 'bar'],
-    'b': 'baz',
-}
-
-response = requests.request(
-    method='GET',
-    url=url,
-    headers=headers,
-    params=params,
+response = requests.get(
+    'http://address:22/path',
+    params=[('a', 'foo'), ('a', 'bar'), ('b', 'baz')],
+    headers={'header': 'qvalue'}
 )
 
 print(response.text)
