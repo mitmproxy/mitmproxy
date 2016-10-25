@@ -140,7 +140,7 @@ def response(flow):
             for a, b in flow.request.urlencoded_form.items(multi=True)
         ]
         entry["request"]["postData"] = {
-            "mimeType": flow.request.headers.get("Content-Type", "").split(";")[0],
+            "mimeType": flow.request.headers.get("Content-Type", ""),
             "text": flow.request.get_text(strict=False),
             "params": params
         }
