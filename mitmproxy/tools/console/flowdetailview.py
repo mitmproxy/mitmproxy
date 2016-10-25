@@ -82,6 +82,8 @@ def flowdetails(state, flow):
         parts = [
             ["Address", repr(cc.address)],
         ]
+        if cc.sni:
+            parts.append(["Server Name Indication", cc.sni])
 
         text.extend(
             common.format_keyvals(parts, key="key", val="text", indent=4)

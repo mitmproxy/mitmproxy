@@ -132,6 +132,7 @@ def tclient_conn():
         timestamp_start=1,
         timestamp_ssl_setup=2,
         timestamp_end=3,
+        sni="address",
     ))
     c.reply = controller.DummyReply()
     return c
