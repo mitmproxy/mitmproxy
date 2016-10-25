@@ -20,6 +20,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_start: Connection start timestamp
         timestamp_ssl_setup: TLS established timestamp
         timestamp_end: Connection end timestamp
+        sni: Server Name Indication sent by client during the TLS handshake
     """
 
     def __init__(self, client_connection, address, server):
@@ -40,6 +41,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
         self.protocol = None
+        self.sni = None
 
     def __bool__(self):
         return bool(self.connection) and not self.finished
@@ -61,6 +63,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_start=float,
         timestamp_ssl_setup=float,
         timestamp_end=float,
+        sni=str,
     )
 
     def copy(self):
@@ -86,12 +89,14 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             ssl_established=False,
             timestamp_start=None,
             timestamp_end=None,
-            timestamp_ssl_setup=None
+            timestamp_ssl_setup=None,
+            sni=None
         ))
 
     def convert_to_ssl(self, *args, **kwargs):
         super().convert_to_ssl(*args, **kwargs)
         self.timestamp_ssl_setup = time.time()
+        self.sni = self.connection.get_servername()
 
     def finish(self):
         super().finish()
