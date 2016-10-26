@@ -9,6 +9,7 @@ from typing import Optional
 from mitmproxy import addons
 from mitmproxy import controller
 from mitmproxy import exceptions
+from mitmproxy import flowfilter
 from mitmproxy.addons import state
 from mitmproxy import options
 from mitmproxy import master
@@ -179,8 +180,12 @@ class WebMaster(master.Master):
             self.shutdown()
 
     def _process_flow(self, f):
-        if self.state.intercept and self.state.intercept(
-                f) and not f.request.is_replay:
+        should_intercept = (
+            self.state.intercept and flowfilter.match(self.state.intercept, f)
+            and not f.request.is_replay
+            and f.reply.state == "handled"
+        )
+        if should_intercept:
             f.intercept(self)
         return f
 

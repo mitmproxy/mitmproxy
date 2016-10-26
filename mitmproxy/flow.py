@@ -2,6 +2,7 @@ import time
 import copy
 import uuid
 
+from mitmproxy import controller  # noqa
 from mitmproxy import stateobject
 from mitmproxy import connections
 from mitmproxy import version
@@ -80,7 +81,7 @@ class Flow(stateobject.StateObject):
         self.error = None  # type: Optional[Error]
         self.intercepted = False  # type: bool
         self._backup = None  # type: Optional[Flow]
-        self.reply = None
+        self.reply = None  # type: Optional[controller.Reply]
         self.marked = False  # type: bool
 
     _stateobject_attributes = dict(
