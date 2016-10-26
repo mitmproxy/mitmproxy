@@ -23,6 +23,7 @@ DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA
 class Options(optmanager.OptManager):
     def __init__(
             self,
+            *,  # all args are keyword-only.
             # TODO: rename to onboarding_app_*
             app: bool = True,
             app_host: str = APP_HOST,

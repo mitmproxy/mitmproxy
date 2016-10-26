@@ -94,6 +94,7 @@ class WebState(state.State):
 class Options(options.Options):
     def __init__(
             self,
+            *,  # all args are keyword-only.
             intercept: Optional[str] = None,
             wdebug: bool = bool,
             wport: int = 8081,

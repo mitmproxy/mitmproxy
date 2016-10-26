@@ -203,6 +203,7 @@ class ConsoleState(state.State):
 class Options(mitmproxy.options.Options):
     def __init__(
             self,
+            *,  # all args are keyword-only.
             eventlog: bool = False,
             follow: bool = False,
             intercept: bool = False,
