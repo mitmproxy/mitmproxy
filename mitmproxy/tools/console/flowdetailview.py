@@ -82,6 +82,8 @@ def flowdetails(state, flow):
         parts = [
             ["Address", repr(cc.address)],
         ]
+        if cc.tls_version:
+            parts.append(["TLS Version", cc.tls_version])
         if cc.sni:
             parts.append(["Server Name Indication", cc.sni])
         if cc.cipher_name:

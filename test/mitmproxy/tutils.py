@@ -134,6 +134,7 @@ def tclient_conn():
         timestamp_end=3,
         sni="address",
         cipher_name="cipher",
+        tls_version="TLSv1.2",
     ))
     c.reply = controller.DummyReply()
     return c
