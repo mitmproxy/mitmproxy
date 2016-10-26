@@ -12,6 +12,7 @@ from mitmproxy import builtins
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.web import app
 from netlib.http import authentication
@@ -180,8 +181,12 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def _process_flow(self, f):
-        if self.state.intercept and self.state.intercept(
-                f) and not f.request.is_replay:
+        should_intercept = (
+            self.state.intercept and flowfilter.match(self.state.intercept, f)
+            and not f.request.is_replay
+            and f.reply.state == "handled"
+        )
+        if should_intercept:
             f.intercept(self)
         return f
 
