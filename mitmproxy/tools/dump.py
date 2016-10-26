@@ -18,7 +18,7 @@ class DumpError(Exception):
 class Options(options.Options):
     def __init__(
             self,
-            *, # all args are keyword-only.
+            *,  # all args are keyword-only.
             keepserving: bool = False,
             filtstr: Optional[str] = None,
             flow_detail: int = 1,

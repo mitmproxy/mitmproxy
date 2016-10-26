@@ -591,7 +591,7 @@ def client_replay(parser):
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
         "-c", "--client-replay",
-        action="append", dest="client_replay", default=None, metavar="PATH",
+        action="append", dest="client_replay", default=[], metavar="PATH",
         help="Replay client requests from a saved file."
     )
 
@@ -600,7 +600,7 @@ def server_replay(parser):
     group = parser.add_argument_group("Server Replay")
     group.add_argument(
         "-S", "--server-replay",
-        action="append", dest="server_replay", default=None, metavar="PATH",
+        action="append", dest="server_replay", default=[], metavar="PATH",
         help="Replay server responses from a saved file."
     )
     group.add_argument(
@@ -610,7 +610,7 @@ def server_replay(parser):
     )
     group.add_argument(
         "--server-replay-use-header",
-        action="append", dest="server_replay_use_headers", type=str,
+        action="append", dest="server_replay_use_headers", type=str, default=[],
         help="Request headers to be considered during replay. "
              "Can be passed multiple times."
     )
@@ -638,7 +638,7 @@ def server_replay(parser):
     )
     payload.add_argument(
         "--replay-ignore-payload-param",
-        action="append", dest="server_replay_ignore_payload_params", type=str,
+        action="append", dest="server_replay_ignore_payload_params", type=str, default=[],
         help="""
             Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
             be ignored while searching for a saved flow to replay.
@@ -648,7 +648,7 @@ def server_replay(parser):
 
     group.add_argument(
         "--replay-ignore-param",
-        action="append", dest="server_replay_ignore_params", type=str,
+        action="append", dest="server_replay_ignore_params", type=str, default=[],
         help="""
             Request's parameters to be ignored while searching for a saved flow
             to replay. Can be passed multiple times.

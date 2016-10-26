@@ -206,7 +206,7 @@ class Options(mitmproxy.options.Options):
             *,  # all args are keyword-only.
             eventlog: bool = False,
             follow: bool = False,
-            intercept: bool = False,
+            intercept: Optional[str] = None,
             filter: Optional[str] = None,
             palette: Optional[str] = None,
             palette_transparent: bool = False,

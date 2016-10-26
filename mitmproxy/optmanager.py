@@ -3,6 +3,7 @@ import blinker
 import pprint
 
 from mitmproxy import exceptions
+from mitmproxy.utils import typecheck
 
 """
     The base implementation for Options.
@@ -58,9 +59,18 @@ class OptManager:
 
     def __setattr__(self, attr, value):
         if not self._initialized:
+            self._typecheck(attr, value)
             self._opts[attr] = value
             return
         self.update(**{attr: value})
+
+    def _typecheck(self, attr, value):
+        expected_type = typecheck.get_arg_type_from_constructor_annotation(
+            type(self), attr
+        )
+        if expected_type is None:
+            return  # no type info :(
+        typecheck.check_type(attr, value, expected_type)
 
     def keys(self):
         return set(self._opts.keys())
@@ -70,9 +80,10 @@ class OptManager:
 
     def update(self, **kwargs):
         updated = set(kwargs.keys())
-        for k in kwargs:
+        for k, v in kwargs.items():
             if k not in self._opts:
                 raise KeyError("No such option: %s" % k)
+            self._typecheck(k, v)
         with self.rollback(updated):
             self._opts.update(kwargs)
             self.changed.send(self, updated=updated)
