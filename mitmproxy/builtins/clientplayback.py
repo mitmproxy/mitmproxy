@@ -19,7 +19,7 @@ class ClientPlayback:
     def configure(self, options, updated):
         if "client_replay" in updated:
             if options.client_replay:
-                ctx.log.info(options.client_replay)
+                ctx.log.info("Client Replay: {}".format(options.client_replay))
                 try:
                     flows = flow.read_flows_from_paths(options.client_replay)
                 except exceptions.FlowReadException as e:
