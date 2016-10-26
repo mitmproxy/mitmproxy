@@ -1,7 +1,7 @@
-from mitmproxy import master
+from mitmproxy import ctx
 
 
 def request(flow):
-    f = master.duplicate_flow(flow)
+    f = ctx.master.state.duplicate_flow(flow)
     f.request.path = "/changed"
-    master.replay_request(f, block=True, run_scripthooks=False)
+    ctx.master.replay_request(f, block=True, run_scripthooks=False)
