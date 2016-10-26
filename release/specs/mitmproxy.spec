@@ -4,7 +4,7 @@ from PyInstaller.utils.hooks import collect_data_files
 
 a = Analysis(['mitmproxy'],
              binaries=None,
-             datas=collect_data_files("mitmproxy.onboarding"),
+             datas=collect_data_files("mitmproxy.addons.onboardingapp"),
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
