@@ -659,11 +659,10 @@ class ConsoleMaster(master.Master):
             )
 
     def process_flow(self, f):
-        should_intercept = any(
-            [
-                self.state.intercept and flowfilter.match(self.state.intercept, f) and not f.request.is_replay,
-                f.intercepted,
-            ]
+        should_intercept = (
+            self.state.intercept and flowfilter.match(self.state.intercept, f)
+            and not f.request.is_replay
+            and f.reply.state == "handled"
         )
         if should_intercept:
             f.intercept(self)
