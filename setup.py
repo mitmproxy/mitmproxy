@@ -91,6 +91,9 @@ setup(
         ':sys_platform != "win32"': [
         ],
         'dev': [
+            "flake8>=2.6.2, <3.1",
+            "mypy-lang>=0.4.5, <4.6",
+            "rstcheck>=2.2, <3.0",
             "tox>=2.3, <3",
             "mock>=2.0, <2.1",
             "pytest>=3, <3.1",
