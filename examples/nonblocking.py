@@ -1,10 +1,11 @@
 import time
-import mitmproxy
+
 from mitmproxy.script import concurrent
 
 
 @concurrent  # Remove this and see what happens
 def request(flow):
-    mitmproxy.ctx.log("handle request: %s%s" % (flow.request.host, flow.request.path))
+    # You don't want to use mitmproxy.ctx from a different thread
+    print("handle request: %s%s" % (flow.request.host, flow.request.path))
     time.sleep(5)
-    mitmproxy.ctx.log("start  request: %s%s" % (flow.request.host, flow.request.path))
+    print("start  request: %s%s" % (flow.request.host, flow.request.path))
