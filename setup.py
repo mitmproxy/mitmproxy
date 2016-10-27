@@ -83,6 +83,7 @@ setup(
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
         "brotlipy>=0.5.1, <0.7",
+        "sortedcontainers>=1.5.4, <1.6",
     ],
     extras_require={
         ':sys_platform == "win32"': [
