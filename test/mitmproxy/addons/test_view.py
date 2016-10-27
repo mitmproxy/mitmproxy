@@ -1,5 +1,6 @@
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
+
 from .. import tutils
 
 
@@ -90,3 +91,73 @@ def test_update():
 
     v.update(f)
     assert f in v
+
+
+class Record:
+    def __init__(self):
+        self.calls = []
+
+    def __bool__(self):
+        return bool(self.calls)
+
+    def __repr__(self):
+        return repr(self.calls)
+
+    def __call__(self, *args, **kwargs):
+        self.calls.append((args, kwargs))
+
+
+def test_signals():
+    v = view.View()
+    rec_add = Record()
+    rec_update = Record()
+    rec_remove = Record()
+    rec_refresh = Record()
+
+    def clearrec():
+        rec_add.calls = []
+        rec_update.calls = []
+        rec_remove.calls = []
+        rec_refresh.calls = []
+
+    v.sig_add.connect(rec_add)
+    v.sig_update.connect(rec_update)
+    v.sig_remove.connect(rec_remove)
+    v.sig_refresh.connect(rec_refresh)
+
+    assert not any([rec_add, rec_update, rec_remove, rec_refresh])
+
+    # Simple add
+    v.add(tft())
+    assert rec_add
+    assert not any([rec_update, rec_remove, rec_refresh])
+
+    # Filter change triggers refresh
+    clearrec()
+    v.set_filter(flowfilter.parse("~m put"))
+    assert rec_refresh
+    assert not any([rec_update, rec_add, rec_remove])
+
+    v.set_filter(flowfilter.parse("~m get"))
+
+    # An update that results in a flow being added to the view
+    clearrec()
+    v[0].request.method = "PUT"
+    v.update(v[0])
+    assert rec_remove
+    assert not any([rec_update, rec_refresh, rec_add])
+
+    # An update that does not affect the view just sends update
+    v.set_filter(flowfilter.parse("~m put"))
+    clearrec()
+    v.update(v[0])
+    assert rec_update
+    assert not any([rec_remove, rec_refresh, rec_add])
+
+    # An update for a flow in state but not view does not do anything
+    f = v[0]
+    v.set_filter(flowfilter.parse("~m get"))
+    assert not len(v)
+    clearrec()
+    v.update(f)
+    assert not any([rec_add, rec_update, rec_remove, rec_refresh])

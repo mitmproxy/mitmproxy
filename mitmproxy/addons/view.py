@@ -36,13 +36,11 @@ class View(collections.Sequence):
         self.filter = matchall
         self.order_key = key_request_start
         self.order_reverse = False
-        self._view = sortedcontainers.SortedListWithKey(
-            key = self.order_key
-        )
+        self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
 
         # These signals broadcast events that affect the view. That is, an
         # update to a flow in the store but not in the view does not trigger a
-        # signal.
+        # signal. All signals are called after the view has been updated.
         self.sig_update = blinker.Signal()
         self.sig_add = blinker.Signal()
         self.sig_remove = blinker.Signal()
@@ -75,6 +73,7 @@ class View(collections.Sequence):
         for i in self._store.values():
             if self.filter(i):
                 self._view.add(i)
+        self.sig_refresh.send(self)
 
     def clear(self):
         """
@@ -82,6 +81,7 @@ class View(collections.Sequence):
         """
         self._state.clear()
         self._view.clear()
+        self.sig_refresh.send(self)
 
     def add(self, f: flow.Flow):
         """
@@ -92,6 +92,7 @@ class View(collections.Sequence):
             self._store[f.id] = f
             if self.filter(f):
                 self._view.add(f)
+                self.sig_add.send(self, flow=f)
 
     def update(self, f: flow.Flow):
         """
@@ -101,10 +102,15 @@ class View(collections.Sequence):
             if self.filter(f):
                 if f not in self._view:
                     self._view.add(f)
+                    self.sig_add.send(self, flow=f)
+                else:
+                    self.sig_update.send(self, flow=f)
             else:
                 try:
                     self._view.remove(f)
+                    self.sig_remove.send(self, flow=f)
                 except ValueError:
+                    # The value was not in the view
                     pass
 
     # Event handlers
