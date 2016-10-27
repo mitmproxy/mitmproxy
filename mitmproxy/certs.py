@@ -102,7 +102,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
     cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(DEFAULT_EXP)
     cert.set_issuer(cacert.get_subject())
-    if commonname is not None:
+    if commonname is not None and len(commonname) < 64:
         cert.get_subject().CN = commonname
     cert.set_serial_number(int(time.time() * 10000))
     if ss:
