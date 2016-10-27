@@ -298,9 +298,9 @@ class TestRequestWithPriority(_Http2Test):
 
                 headers = [(':status', '200')]
                 if event.priority_updated:
-                    headers.append(('priority_exclusive', event.priority_updated.exclusive))
-                    headers.append(('priority_depends_on', event.priority_updated.depends_on))
-                    headers.append(('priority_weight', event.priority_updated.weight))
+                    headers.append(('priority_exclusive', str(event.priority_updated.exclusive).encode()))
+                    headers.append(('priority_depends_on', str(event.priority_updated.depends_on).encode()))
+                    headers.append(('priority_weight', str(event.priority_updated.weight).encode()))
                 h2_conn.send_headers(event.stream_id, headers)
             h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
