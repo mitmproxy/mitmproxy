@@ -15,7 +15,7 @@ class LRUCache:
         """
             gen: A (presumably expensive) generator function. The identity of
             gen is NOT taken into account by the cache.
-            *args: A list of immutable arguments, used to establish identiy by
+            *args: A list of immutable arguments, used to establish identity by
             *the cache, and passed to gen to generate values.
         """
         if args in self.cache:
