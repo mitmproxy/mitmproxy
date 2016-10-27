@@ -30,6 +30,8 @@ matrix:
       env: TOXENV=py35 NO_ALPN=1
     - python: 3.5
       env: TOXENV=docs
+      git:
+        depth: 10000
   allow_failures:
     - python: pypy
 
