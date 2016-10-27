@@ -25,17 +25,13 @@ class SafeH2Connection(connection.H2Connection):
         self.conn = conn
         self.lock = threading.RLock()
 
-    def safe_increment_flow_control(self, stream_id, length):
-        if length == 0:
+    def safe_acknowledge_received_data(self, acknowledged_size, stream_id):
+        if acknowledged_size == 0:
             return
 
         with self.lock:
-            self.increment_flow_control_window(length)
+            self.acknowledge_received_data(acknowledged_size, stream_id)
             self.conn.send(self.data_to_send())
-        with self.lock:
-            if stream_id in self.streams and not self.streams[stream_id].closed:
-                self.increment_flow_control_window(length, stream_id=stream_id)
-                self.conn.send(self.data_to_send())
 
     def safe_reset_stream(self, stream_id, error_code):
         with self.lock:
@@ -90,13 +86,25 @@ class Http2Layer(base.Layer):
         self.mode = mode
         self.streams = dict()
         self.server_to_client_stream_ids = dict([(0, 0)])
-        self.client_conn.h2 = SafeH2Connection(self.client_conn, client_side=False, header_encoding=False)
+        config = h2.config.H2Configuration(
+            client_side=False,
+            header_encoding=False,
+            validate_outbound_headers=False,
+            normalize_outbound_headers=False,
+            validate_inbound_headers=False)
+        self.client_conn.h2 = SafeH2Connection(self.client_conn, config=config)
 
     def _initiate_server_conn(self):
         if self.server_conn:
-            self.server_conn.h2 = SafeH2Connection(self.server_conn, client_side=True, header_encoding=False)
-            self.server_conn.h2.initiate_connection()
-            self.server_conn.send(self.server_conn.h2.data_to_send())
+            config = h2.config.H2Configuration(
+                client_side=True,
+                header_encoding=False,
+                validate_outbound_headers=False,
+                normalize_outbound_headers=False,
+                validate_inbound_headers=False)
+            self.server_conn.h2 = SafeH2Connection(self.server_conn, config=config)
+        self.server_conn.h2.initiate_connection()
+        self.server_conn.send(self.server_conn.h2.data_to_send())
 
     def _complete_handshake(self):
         preamble = self.client_conn.rfile.read(24)
@@ -181,9 +189,9 @@ class Http2Layer(base.Layer):
         else:
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
-            source_conn.h2.safe_increment_flow_control(
-                event.stream_id,
-                event.flow_controlled_length
+            source_conn.h2.safe_acknowledge_received_data(
+                event.flow_controlled_length,
+                event.stream_id
             )
         return True
 
