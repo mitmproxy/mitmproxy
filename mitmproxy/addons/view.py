@@ -199,18 +199,20 @@ class Focus:
         if self.focusflow:
             return self.view.index(self.focusflow)
 
+    def _nearest(self, f, v):
+        return min(v.bisect(f), len(v)-1)
+
     def _sig_remove(self, view, flow):
         if len(view) == 0:
             self.focusflow = None
         elif flow is self.focusflow:
-            idx = min(view.bisect(self.focusflow), len(view)-1)
-            self.focusflow = view[idx]
+            self.focusflow = view[self._nearest(self.focusflow, view)]
 
     def _sig_refresh(self, view):
         if len(view) == 0:
             self.focusflow = None
         elif self.focusflow not in view:
-            self.focusflow = view[0]
+            self.focusflow = view[self._nearest(self.focusflow, view)]
 
     def _sig_add(self, view, flow):
         # We only have to act if we don't have a focus element

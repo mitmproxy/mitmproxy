@@ -228,7 +228,7 @@ def test_focus():
 
     filt = flowfilter.parse("~m get")
     v.set_filter(filt)
-    assert f.index == 0
+    assert f.index == 2
 
     filt = flowfilter.parse("~m oink")
     v.set_filter(filt)
