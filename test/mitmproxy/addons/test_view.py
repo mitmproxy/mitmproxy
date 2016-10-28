@@ -233,3 +233,18 @@ def test_focus():
     filt = flowfilter.parse("~m oink")
     v.set_filter(filt)
     assert f.index is None
+
+
+def test_settings():
+    v = view.View()
+    f = tft()
+
+    tutils.raises(KeyError, v.settings.__getitem__, f)
+    v.add(f)
+    assert v.settings[f] == {}
+    v.settings[f]["foo"] = "bar"
+    assert v.settings[f]["foo"] == "bar"
+    assert len(list(v.settings)) == 1
+    v.remove(f)
+    tutils.raises(KeyError, v.settings.__getitem__, f)
+    assert not v.settings.keys()

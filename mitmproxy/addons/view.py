@@ -4,7 +4,9 @@ The View:
 - Keeps track of a store of flows
 - Maintains a filtered, ordered view onto that list of flows
 - Exposes a number of signals so the view can be monitored
-- Has an associated class that tracks focus within the view
+- Tracks focus within the view
+- Exposes a settings store for flows that automatically expires if the flow is
+  removed from the store.
 """
 import collections
 import typing
@@ -45,6 +47,9 @@ class View(collections.Sequence):
         self.sig_remove = blinker.Signal()
         # Signals that the view should be refreshed completely
         self.sig_refresh = blinker.Signal()
+
+        self.focus = Focus(self)
+        self.settings = Settings(self)
 
     def _rev(self, idx: int) -> int:
         """
@@ -211,6 +216,8 @@ class Focus:
     def _sig_refresh(self, view):
         if len(view) == 0:
             self.focusflow = None
+        elif self.focusflow is None:
+            self.focusflow = view[0]
         elif self.focusflow not in view:
             self.focusflow = view[self._nearest(self.focusflow, view)]
 
@@ -218,3 +225,31 @@ class Focus:
         # We only have to act if we don't have a focus element
         if not self.focusflow:
             self.focusflow = flow
+
+
+class Settings(collections.Mapping):
+    def __init__(self, view: View) -> None:
+        self.view = view
+        self.values = {}
+        view.sig_remove.connect(self._sig_remove)
+        view.sig_refresh.connect(self._sig_refresh)
+
+    def __iter__(self) -> typing.Iterable:
+        return iter(self.values)
+
+    def __len__(self) -> int:
+        return len(self.values)
+
+    def __getitem__(self, f: flow.Flow) -> dict:
+        if f.id not in self.view._store:
+            raise KeyError
+        return self.values.setdefault(f.id, {})
+
+    def _sig_remove(self, view, flow):
+        if flow.id in self.values:
+            del self.values[flow.id]
+
+    def _sig_refresh(self, view):
+        for fid in self.values.keys():
+            if fid not in view._store:
+                del self.values[fid]
