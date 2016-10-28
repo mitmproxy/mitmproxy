@@ -161,3 +161,58 @@ def test_signals():
     clearrec()
     v.update(f)
     assert not any([rec_add, rec_update, rec_remove, rec_refresh])
+
+
+def test_focus():
+    # Special case - initialising with a view that already contains data
+    v = view.View()
+    v.add(tft())
+    f = view.Focus(v)
+    assert f.index is 0
+    assert f.focusflow is v[0]
+
+    # Start empty
+    v = view.View()
+    f = view.Focus(v)
+    assert f.index is None
+    assert f.focusflow is None
+
+    v.add(tft(start=1))
+    assert f.index == 0
+    assert f.focusflow is v[0]
+
+    v.add(tft(start=0))
+    assert f.index == 1
+    assert f.focusflow is v[1]
+
+    v.add(tft(start=2))
+    assert f.index == 1
+    assert f.focusflow is v[1]
+
+    v.remove(v[1])
+    assert f.index == 1
+    assert f.focusflow is v[1]
+
+    v.remove(v[1])
+    assert f.index == 0
+    assert f.focusflow is v[0]
+
+    v.remove(v[0])
+    assert f.index is None
+    assert f.focusflow is None
+
+    v.add(tft(method="get", start=0))
+    v.add(tft(method="get", start=1))
+    v.add(tft(method="put", start=2))
+    v.add(tft(method="get", start=3))
+
+    f.focusflow = v[2]
+    assert f.focusflow.request.method == "PUT"
+
+    filt = flowfilter.parse("~m get")
+    v.set_filter(filt)
+    assert f.index == 0
+
+    filt = flowfilter.parse("~m oink")
+    v.set_filter(filt)
+    assert f.index is None
