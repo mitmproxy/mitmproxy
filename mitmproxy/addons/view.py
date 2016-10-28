@@ -34,7 +34,7 @@ class View(collections.Sequence):
         self._store = {}
         self.filter = matchall
         self.order_key = key_request_start
-        self.order_reverse = False
+        self.order_reversed = False
         self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
 
         # These signals broadcast events that affect the view. That is, an
@@ -46,13 +46,42 @@ class View(collections.Sequence):
         # Signals that the view should be refreshed completely
         self.sig_refresh = blinker.Signal()
 
+    def _rev(self, idx: int) -> int:
+        """
+            Reverses an index, if needed
+        """
+        if self.order_reversed:
+            if idx < 0:
+                idx = -idx - 1
+            else:
+                idx = len(self._view) - idx - 1
+                if idx < 0:
+                    raise IndexError
+        return idx
+
     def __len__(self):
         return len(self._view)
 
     def __getitem__(self, offset) -> flow.Flow:
-        if self.order_reverse:
-            offset = -offset - 1
-        return self._view[offset]
+        return self._view[self._rev(offset)]
+
+    # Reflect some methods to the efficient underlying implementation
+
+    def bisect(self, f: flow.Flow) -> int:
+        v = self._view.bisect(f)
+        # Bisect returns an item to the RIGHT of the existing entries.
+        if v == 0:
+            return v
+        return self._rev(v - 1) + 1
+
+    def index(self, f: flow.Flow) -> int:
+        return self._rev(self._view.index(f))
+
+    # API
+
+    def toggle_reversed(self):
+        self.order_reversed = not self.order_reversed
+        self.sig_refresh.send(self)
 
     def set_order(self, order_key: typing.Callable):
         """
@@ -122,14 +151,8 @@ class View(collections.Sequence):
                     # The value was not in the view
                     pass
 
-    # Reflect some methods to the efficient underlying implementation
-    def bisect(self, f: flow.Flow) -> int:
-        return self._view.bisect(f)
-
-    def index(self, f: flow.Flow) -> int:
-        return self._view.index(f)
-
     # Event handlers
+
     def request(self, f):
         self.add(f)
 
@@ -186,9 +209,8 @@ class Focus:
     def _sig_refresh(self, view):
         if len(view) == 0:
             self.focusflow = None
-        else:
-            if self.focusflow not in view:
-                self.focusflow = view[0]
+        elif self.focusflow not in view:
+            self.focusflow = view[0]
 
     def _sig_add(self, view, flow):
         # We only have to act if we don't have a focus element

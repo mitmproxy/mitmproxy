@@ -62,14 +62,31 @@ def test_order():
 
     v.set_order(view.key_request_method)
     assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
-    v.order_reverse = True
+    v.toggle_reversed()
     assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
 
     v.set_order(view.key_request_start)
     assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
 
-    v.order_reverse = False
+    v.toggle_reversed()
     assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+
+
+def test_reversed():
+    v = view.View()
+    v.request(tft(start=1))
+    v.request(tft(start=2))
+    v.request(tft(start=3))
+    v.toggle_reversed()
+
+    assert v[0].request.timestamp_start == 3
+    assert v[-1].request.timestamp_start == 1
+    assert v[2].request.timestamp_start == 1
+    tutils.raises(IndexError, v.__getitem__, 5)
+    tutils.raises(IndexError, v.__getitem__, -5)
+
+    assert v.bisect(v[0]) == 1
+    assert v.bisect(v[2]) == 3
 
 
 def test_update():
