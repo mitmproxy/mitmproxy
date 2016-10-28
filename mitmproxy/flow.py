@@ -7,7 +7,7 @@ from mitmproxy import stateobject
 from mitmproxy import connections
 from mitmproxy import version
 
-from typing import Optional  # noqa
+from typing import Optional, Dict  # noqa
 
 
 class Error(stateobject.StateObject):
@@ -83,6 +83,7 @@ class Flow(stateobject.StateObject):
         self._backup = None  # type: Optional[Flow]
         self.reply = None  # type: Optional[controller.Reply]
         self.marked = False  # type: bool
+        self.metadata = dict()  # type: Dict[str, str]
 
     _stateobject_attributes = dict(
         id=str,
@@ -92,6 +93,7 @@ class Flow(stateobject.StateObject):
         type=str,
         intercepted=bool,
         marked=bool,
+        metadata=dict,
     )
 
     def get_state(self):
@@ -120,6 +122,7 @@ class Flow(stateobject.StateObject):
         f.live = False
         f.client_conn = self.client_conn.copy()
         f.server_conn = self.server_conn.copy()
+        f.metadata = self.metadata.copy()
 
         if self.error:
             f.error = self.error.copy()

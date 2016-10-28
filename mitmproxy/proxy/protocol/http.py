@@ -12,14 +12,14 @@ from mitmproxy.net import websockets
 
 
 class _HttpTransmissionLayer(base.Layer):
-    def read_request_headers(self):
+    def read_request_headers(self, flow):
         raise NotImplementedError()
 
     def read_request_body(self, request):
         raise NotImplementedError()
 
-    def read_request(self):
-        request = self.read_request_headers()
+    def read_request(self, f):
+        request = self.read_request_headers(f)
         request.data.content = b"".join(
             self.read_request_body(request)
         )
@@ -125,7 +125,7 @@ class HttpLayer(base.Layer):
     def __init__(self, ctx, mode):
         super().__init__(ctx)
         self.mode = mode
-
+        self.flow = None  # type: http.HTTPFlow
         self.__initial_server_conn = None
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
@@ -140,105 +140,112 @@ class HttpLayer(base.Layer):
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
-            f = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
-            try:
-                request = self.get_request_from_client(f)
-                # Make sure that the incoming request matches our expectations
-                self.validate_request(request)
-            except exceptions.HttpReadDisconnect:
-                # don't throw an error for disconnects that happen before/between requests.
+            self.flow = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
+            if not self._process_flow(self.flow):
                 return
-            except exceptions.HttpException as e:
-                # We optimistically guess there might be an HTTP client on the
-                # other end
-                self.send_error_response(400, repr(e))
-                raise exceptions.ProtocolException(
-                    "HTTP protocol error in client request: {}".format(e)
+
+    def _process_flow(self, f):
+        try:
+            request = self.get_request_from_client(f)
+            # Make sure that the incoming request matches our expectations
+            self.validate_request(request)
+        except exceptions.HttpReadDisconnect:
+            # don't throw an error for disconnects that happen before/between requests.
+            return False
+        except exceptions.HttpException as e:
+            # We optimistically guess there might be an HTTP client on the
+            # other end
+            self.send_error_response(400, repr(e))
+            raise exceptions.ProtocolException(
+                "HTTP protocol error in client request: {}".format(e)
+            )
+
+        self.log("request", "debug", [repr(request)])
+
+        # Handle Proxy Authentication
+        # Proxy Authentication conceptually does not work in transparent mode.
+        # We catch this misconfiguration on startup. Here, we sort out requests
+        # after a successful CONNECT request (which do not need to be validated anymore)
+        if not (self.http_authenticated or self.authenticate(request)):
+            return False
+
+        f.request = request
+
+        try:
+            # Regular Proxy Mode: Handle CONNECT
+            if self.mode == "regular" and request.first_line_format == "authority":
+                self.handle_regular_mode_connect(request)
+                return False
+        except (exceptions.ProtocolException, exceptions.NetlibException) as e:
+            # HTTPS tasting means that ordinary errors like resolution and
+            # connection errors can happen here.
+            self.send_error_response(502, repr(e))
+            f.error = flow.Error(str(e))
+            self.channel.ask("error", f)
+            return False
+
+        # update host header in reverse proxy mode
+        if self.config.options.mode == "reverse":
+            f.request.headers["Host"] = self.config.upstream_server.address.host
+
+        # set upstream auth
+        if self.mode == "upstream" and self.config.upstream_auth is not None:
+            f.request.headers["Proxy-Authorization"] = self.config.upstream_auth
+        self.process_request_hook(f)
+
+        try:
+            if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
+                # We only support RFC6455 with WebSockets version 13
+                # allow inline scripts to manipulate the client handshake
+                self.channel.ask("websocket_handshake", f)
+
+            if not f.response:
+                self.establish_server_connection(
+                    f.request.host,
+                    f.request.port,
+                    f.request.scheme
                 )
+                self.get_response_from_server(f)
+            else:
+                # response was set by an inline script.
+                # we now need to emulate the responseheaders hook.
+                self.channel.ask("responseheaders", f)
 
-            self.log("request", "debug", [repr(request)])
+            self.log("response", "debug", [repr(f.response)])
+            self.channel.ask("response", f)
+            self.send_response_to_client(f)
 
-            # Handle Proxy Authentication
-            # Proxy Authentication conceptually does not work in transparent mode.
-            # We catch this misconfiguration on startup. Here, we sort out requests
-            # after a successful CONNECT request (which do not need to be validated anymore)
-            if not (self.http_authenticated or self.authenticate(request)):
-                return
+            if self.check_close_connection(f):
+                return False
 
-            f.request = request
+            # Handle 101 Switching Protocols
+            if f.response.status_code == 101:
+                self.handle_101_switching_protocols(f)
+                return False  # should never be reached
 
-            try:
-                # Regular Proxy Mode: Handle CONNECT
-                if self.mode == "regular" and request.first_line_format == "authority":
-                    self.handle_regular_mode_connect(request)
-                    return
-            except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-                # HTTPS tasting means that ordinary errors like resolution and
-                # connection errors can happen here.
-                self.send_error_response(502, repr(e))
+            # Upstream Proxy Mode: Handle CONNECT
+            if f.request.first_line_format == "authority" and f.response.status_code == 200:
+                self.handle_upstream_mode_connect(f.request.copy())
+                return False
+
+        except (exceptions.ProtocolException, exceptions.NetlibException) as e:
+            self.send_error_response(502, repr(e))
+            if not f.response:
                 f.error = flow.Error(str(e))
                 self.channel.ask("error", f)
-                return
+                return False
+            else:
+                raise exceptions.ProtocolException(
+                    "Error in HTTP connection: %s" % repr(e)
+                )
+        finally:
+            if f:
+                f.live = False
 
-            # update host header in reverse proxy mode
-            if self.config.options.mode == "reverse":
-                f.request.headers["Host"] = self.config.upstream_server.address.host
-
-            # set upstream auth
-            if self.mode == "upstream" and self.config.upstream_auth is not None:
-                f.request.headers["Proxy-Authorization"] = self.config.upstream_auth
-            self.process_request_hook(f)
-
-            try:
-                if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
-                    # We only support RFC6455 with WebSockets version 13
-                    # allow inline scripts to manipulate the client handshake
-                    self.channel.ask("websocket_handshake", f)
-
-                if not f.response:
-                    self.establish_server_connection(
-                        f.request.host,
-                        f.request.port,
-                        f.request.scheme
-                    )
-                    self.get_response_from_server(f)
-                else:
-                    # response was set by an inline script.
-                    # we now need to emulate the responseheaders hook.
-                    self.channel.ask("responseheaders", f)
-
-                self.log("response", "debug", [repr(f.response)])
-                self.channel.ask("response", f)
-                self.send_response_to_client(f)
-
-                if self.check_close_connection(f):
-                    return
-
-                # Handle 101 Switching Protocols
-                if f.response.status_code == 101:
-                    return self.handle_101_switching_protocols(f)
-
-                # Upstream Proxy Mode: Handle CONNECT
-                if f.request.first_line_format == "authority" and f.response.status_code == 200:
-                    self.handle_upstream_mode_connect(f.request.copy())
-                    return
-
-            except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-                self.send_error_response(502, repr(e))
-                if not f.response:
-                    f.error = flow.Error(str(e))
-                    self.channel.ask("error", f)
-                    return
-                else:
-                    raise exceptions.ProtocolException(
-                        "Error in HTTP connection: %s" % repr(e)
-                    )
-            finally:
-                if f:
-                    f.live = False
+        return True
 
     def get_request_from_client(self, f):
-        request = self.read_request()
+        request = self.read_request(f)
         f.request = request
         self.channel.ask("requestheaders", f)
         if request.headers.get("expect", "").lower() == "100-continue":
