@@ -2,6 +2,7 @@ import threading
 import time
 import traceback
 import functools
+from typing import Dict, Callable, Any, List  # noqa
 
 import h2.exceptions
 from h2 import connection
@@ -15,7 +16,7 @@ from mitmproxy.proxy.protocol import http as httpbase
 import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.types import basethread
-from mitmproxy.net.http import http2
+from mitmproxy.net.http import http2, headers
 
 
 class SafeH2Connection(connection.H2Connection):
@@ -25,7 +26,7 @@ class SafeH2Connection(connection.H2Connection):
         self.conn = conn
         self.lock = threading.RLock()
 
-    def safe_acknowledge_received_data(self, acknowledged_size, stream_id):
+    def safe_acknowledge_received_data(self, acknowledged_size: int, stream_id: int):
         if acknowledged_size == 0:
             return
 
@@ -33,7 +34,7 @@ class SafeH2Connection(connection.H2Connection):
             self.acknowledge_received_data(acknowledged_size, stream_id)
             self.conn.send(self.data_to_send())
 
-    def safe_reset_stream(self, stream_id, error_code):
+    def safe_reset_stream(self, stream_id: int, error_code: int):
         with self.lock:
             try:
                 self.reset_stream(stream_id, error_code)
@@ -42,18 +43,18 @@ class SafeH2Connection(connection.H2Connection):
                 pass
             self.conn.send(self.data_to_send())
 
-    def safe_update_settings(self, new_settings):
+    def safe_update_settings(self, new_settings: Dict[int, Any]):
         with self.lock:
             self.update_settings(new_settings)
             self.conn.send(self.data_to_send())
 
-    def safe_send_headers(self, raise_zombie, stream_id, headers, **kwargs):
+    def safe_send_headers(self, raise_zombie: Callable, stream_id: int, headers: headers.Headers, **kwargs):
         with self.lock:
             raise_zombie()
             self.send_headers(stream_id, headers.fields, **kwargs)
             self.conn.send(self.data_to_send())
 
-    def safe_send_body(self, raise_zombie, stream_id, chunks):
+    def safe_send_body(self, raise_zombie: Callable, stream_id: int, chunks: List[bytes]):
         for chunk in chunks:
             position = 0
             while position < len(chunk):
@@ -81,11 +82,11 @@ class SafeH2Connection(connection.H2Connection):
 
 class Http2Layer(base.Layer):
 
-    def __init__(self, ctx, mode):
+    def __init__(self, ctx, mode: str) -> None:
         super().__init__(ctx)
         self.mode = mode
-        self.streams = dict()
-        self.server_to_client_stream_ids = dict([(0, 0)])
+        self.streams = dict()  # type: Dict[int, Http2SingleStreamLayer]
+        self.server_to_client_stream_ids = dict([(0, 0)])  # type: Dict[int, int]
         config = h2.config.H2Configuration(
             client_side=False,
             header_encoding=False,
@@ -368,37 +369,37 @@ def detect_zombie_stream(func):
 
 class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThread):
 
-    def __init__(self, ctx, h2_connection, stream_id, request_headers):
+    def __init__(self, ctx, h2_connection, stream_id: int, request_headers: mitmproxy.net.http.Headers) -> None:
         super().__init__(
             ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
         )
         self.h2_connection = h2_connection
-        self.zombie = None
-        self.client_stream_id = stream_id
-        self.server_stream_id = None
+        self.zombie = None  # type: float
+        self.client_stream_id = stream_id  # type: int
+        self.server_stream_id = None  # type: int
         self.request_headers = request_headers
-        self.response_headers = None
+        self.response_headers = None  # type: mitmproxy.net.http.Headers
         self.pushed = False
 
-        self.timestamp_start = None
-        self.timestamp_end = None
+        self.timestamp_start = None  # type: float
+        self.timestamp_end = None  # type: float
 
         self.request_arrived = threading.Event()
-        self.request_data_queue = queue.Queue()
+        self.request_data_queue = queue.Queue()  # type: queue.Queue[bytes]
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
 
         self.response_arrived = threading.Event()
-        self.response_data_queue = queue.Queue()
+        self.response_data_queue = queue.Queue()  # type: queue.Queue[bytes]
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
 
         self.no_body = False
 
-        self.priority_exclusive = None
-        self.priority_depends_on = None
-        self.priority_weight = None
-        self.handled_priority_event = None
+        self.priority_exclusive = None  # type: bool
+        self.priority_depends_on = None  # type: int
+        self.priority_weight = None  # type: int
+        self.handled_priority_event = None  # type: Any
 
     def kill(self):
         if not self.zombie:
@@ -436,16 +437,16 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         else:
             return self.request_queued_data_length
 
+    @queued_data_length.setter
+    def queued_data_length(self, v):
+        self.request_queued_data_length = v
+
     @property
     def data_finished(self):
         if self.response_arrived.is_set():
             return self.response_data_finished
         else:
             return self.request_data_finished
-
-    @queued_data_length.setter
-    def queued_data_length(self, v):
-        self.request_queued_data_length = v
 
     def raise_zombie(self, pre_command=None):
         connection_closed = self.h2_connection.state_machine.state == h2.connection.ConnectionState.CLOSED

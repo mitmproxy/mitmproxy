@@ -67,7 +67,7 @@ def parse_upstream_auth(auth):
 
 class ProxyConfig:
 
-    def __init__(self, options: moptions.Options):
+    def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
         self.authenticator = None
