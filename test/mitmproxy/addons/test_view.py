@@ -186,45 +186,45 @@ def test_focus():
     v.add(tft())
     f = view.Focus(v)
     assert f.index is 0
-    assert f.focusflow is v[0]
+    assert f.flow is v[0]
 
     # Start empty
     v = view.View()
     f = view.Focus(v)
     assert f.index is None
-    assert f.focusflow is None
+    assert f.flow is None
 
     v.add(tft(start=1))
     assert f.index == 0
-    assert f.focusflow is v[0]
+    assert f.flow is v[0]
 
     v.add(tft(start=0))
     assert f.index == 1
-    assert f.focusflow is v[1]
+    assert f.flow is v[1]
 
     v.add(tft(start=2))
     assert f.index == 1
-    assert f.focusflow is v[1]
+    assert f.flow is v[1]
 
     v.remove(v[1])
     assert f.index == 1
-    assert f.focusflow is v[1]
+    assert f.flow is v[1]
 
     v.remove(v[1])
     assert f.index == 0
-    assert f.focusflow is v[0]
+    assert f.flow is v[0]
 
     v.remove(v[0])
     assert f.index is None
-    assert f.focusflow is None
+    assert f.flow is None
 
     v.add(tft(method="get", start=0))
     v.add(tft(method="get", start=1))
     v.add(tft(method="put", start=2))
     v.add(tft(method="get", start=3))
 
-    f.focusflow = v[2]
-    assert f.focusflow.request.method == "PUT"
+    f.flow = v[2]
+    assert f.flow.request.method == "PUT"
 
     filt = flowfilter.parse("~m get")
     v.set_filter(filt)
@@ -243,21 +243,21 @@ def test_focus_nextprev():
 
     # Nops on a single-flow view
     v.add(tft(start=0))
-    assert v.focus.focusflow == v[0]
+    assert v.focus.flow == v[0]
     v.focus.next()
-    assert v.focus.focusflow == v[0]
+    assert v.focus.flow == v[0]
     v.focus.prev()
-    assert v.focus.focusflow == v[0]
+    assert v.focus.flow == v[0]
 
     v.add(tft(start=1))
     v.focus.next()
-    assert v.focus.focusflow == v[1]
+    assert v.focus.flow == v[1]
     v.focus.next()
-    assert v.focus.focusflow == v[1]
+    assert v.focus.flow == v[1]
     v.focus.prev()
-    assert v.focus.focusflow == v[0]
+    assert v.focus.flow == v[0]
     v.focus.prev()
-    assert v.focus.focusflow == v[0]
+    assert v.focus.flow == v[0]
 
 
 def test_settings():
