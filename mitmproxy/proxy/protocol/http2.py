@@ -242,6 +242,7 @@ class Http2Layer(base.Layer):
     def _handle_pushed_stream_received(self, event, h2_connection):
         # pushed stream ids should be unique and not dependent on race conditions
         # only the parent stream id must be looked up first
+
         parent_eid = self.server_to_client_stream_ids[event.parent_stream_id]
         with self.client_conn.h2.lock:
             self.client_conn.h2.push_stream(parent_eid, event.pushed_stream_id, event.headers)
@@ -454,9 +455,13 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             raise exceptions.Http2ZombieException("Connection already dead")
 
     @detect_zombie_stream
-    def read_request_headers(self):
+    def read_request_headers(self, flow):
         self.request_arrived.wait()
         self.raise_zombie()
+
+        if self.pushed:
+            flow.metadata['h2-pushed-stream'] = True
+
         first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_headers)
         return http.HTTPRequest(
             first_line_format,

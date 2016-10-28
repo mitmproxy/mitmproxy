@@ -116,7 +116,8 @@ class Dumper:
         else:
             client = ""
 
-        method = flow.request.method
+        pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''
+        method = flow.request.method + pushed
         method_color = dict(
             GET="green",
             DELETE="red"

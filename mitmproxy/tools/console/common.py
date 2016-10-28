@@ -327,7 +327,7 @@ def export_to_clip_or_file(key, scope, flow, writer):
 
 
 @lru_cache(maxsize=800)
-def raw_format_flow(f):
+def raw_format_flow(f, flow):
     f = dict(f)
     pile = []
     req = []
@@ -346,7 +346,9 @@ def raw_format_flow(f):
 
     if f["req_is_replay"]:
         req.append(fcol(SYMBOL_REPLAY, "replay"))
-    req.append(fcol(f["req_method"], "method"))
+
+    pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''
+    req.append(fcol(f["req_method"] + pushed, "method"))
 
     preamble = sum(i[1] for i in req) + len(req) - 1
 
@@ -451,10 +453,11 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
             resp_clen = contentdesc,
             roundtrip = roundtrip,
         ))
+
         t = f.response.headers.get("content-type")
         if t:
             d["resp_ctype"] = t.split(";")[0]
         else:
             d["resp_ctype"] = ""
 
-    return raw_format_flow(tuple(sorted(d.items())))
+    return raw_format_flow(tuple(sorted(d.items())), f)

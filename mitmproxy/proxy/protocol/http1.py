@@ -9,7 +9,7 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         super().__init__(ctx)
         self.mode = mode
 
-    def read_request_headers(self):
+    def read_request_headers(self, flow):
         return http.HTTPRequest.wrap(
             http1.read_request_head(self.client_conn.rfile)
         )
