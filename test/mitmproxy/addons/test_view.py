@@ -235,6 +235,31 @@ def test_focus():
     assert f.index is None
 
 
+def test_focus_nextprev():
+    v = view.View()
+    # Nops on an empty view
+    v.focus.next()
+    v.focus.prev()
+
+    # Nops on a single-flow view
+    v.add(tft(start=0))
+    assert v.focus.focusflow == v[0]
+    v.focus.next()
+    assert v.focus.focusflow == v[0]
+    v.focus.prev()
+    assert v.focus.focusflow == v[0]
+
+    v.add(tft(start=1))
+    v.focus.next()
+    assert v.focus.focusflow == v[1]
+    v.focus.next()
+    assert v.focus.focusflow == v[1]
+    v.focus.prev()
+    assert v.focus.focusflow == v[0]
+    v.focus.prev()
+    assert v.focus.focusflow == v[0]
+
+
 def test_settings():
     v = view.View()
     f = tft()

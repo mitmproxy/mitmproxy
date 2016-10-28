@@ -181,8 +181,6 @@ class Focus:
     def __init__(self, v: View) -> None:
         self.view = v
         self._focusflow = None
-
-        self.focusflow = None
         if len(self.view):
             self.focusflow = self.view[0]
         v.sig_add.connect(self._sig_add)
@@ -204,8 +202,24 @@ class Focus:
         if self.focusflow:
             return self.view.index(self.focusflow)
 
+    def next(self):
+        """
+            Sets the focus to the next flow.
+        """
+        if self.focusflow:
+            idx = min(self.index + 1, len(self.view) - 1)
+            self.focusflow = self.view[idx]
+
+    def prev(self):
+        """
+            Sets the focus to the previous flow.
+        """
+        if self.focusflow:
+            idx = max(self.index - 1, 0)
+            self.focusflow = self.view[idx]
+
     def _nearest(self, f, v):
-        return min(v.bisect(f), len(v)-1)
+        return min(v.bisect(f), len(v) - 1)
 
     def _sig_remove(self, view, flow):
         if len(view) == 0:
