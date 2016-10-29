@@ -160,10 +160,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "T"))
             r.append("CP:%d]" % len(self.master.options.tcp_hosts))
-        if self.master.state.intercept_txt:
+        if self.master.options.intercept:
             r.append("[")
             r.append(("heading_key", "i"))
-            r.append(":%s]" % self.master.state.intercept_txt)
+            r.append(":%s]" % self.master.options.intercept)
         if self.master.state.filter_txt:
             r.append("[")
             r.append(("heading_key", "f"))

@@ -1,4 +1,6 @@
-from .. import tutils, mastertest
+from mitmproxy.test import tflow
+
+from .. import mastertest
 from mitmproxy.addons import stickyauth
 from mitmproxy import master
 from mitmproxy import options
@@ -12,12 +14,12 @@ class TestStickyAuth(mastertest.MasterTest):
         sa = stickyauth.StickyAuth()
         m.addons.add(sa)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.request.headers["authorization"] = "foo"
         m.request(f)
 
         assert "address" in sa.hosts
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         m.request(f)
         assert f.request.headers["authorization"] == "foo"

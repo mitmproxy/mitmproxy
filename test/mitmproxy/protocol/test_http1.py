@@ -1,13 +1,14 @@
+from mitmproxy.test import tflow
 from mitmproxy.net.http import http1
 from mitmproxy.net.tcp import TCPClient
 from mitmproxy.test.tutils import treq
-from .. import tutils, tservers
+from .. import tservers
 
 
 class TestHTTPFlow:
 
     def test_repr(self):
-        f = tutils.tflow(resp=True, err=True)
+        f = tflow.tflow(resp=True, err=True)
         assert repr(f)
 
 

@@ -1,9 +1,10 @@
+from mitmproxy.test import tflow
 import mock
 
 from mitmproxy.addons import clientplayback
 from mitmproxy import options
 
-from .. import tutils, mastertest
+from .. import mastertest
 
 
 class TestClientPlayback:
@@ -11,7 +12,7 @@ class TestClientPlayback:
         cp = clientplayback.ClientPlayback()
         cp.configure(options.Options(), [])
         assert cp.count() == 0
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         cp.load([f])
         assert cp.count() == 1
         RP = "mitmproxy.proxy.protocol.http_replay.RequestReplayThread"

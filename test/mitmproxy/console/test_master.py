@@ -1,11 +1,12 @@
 import gc
 
+from mitmproxy.test import tflow
 import mitmproxy.test.tutils
 from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy.tools.console import common
 
-from .. import tutils, mastertest
+from .. import mastertest
 
 
 class TestConsoleState:
@@ -54,7 +55,7 @@ class TestConsoleState:
         assert c.get_focus() == (None, None)
 
     def _add_request(self, state):
-        f = tutils.tflow()
+        f = tflow.tflow()
         return state.add_flow(f)
 
     def _add_response(self, state):
@@ -127,12 +128,12 @@ class TestMaster(mastertest.MasterTest):
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
         m = self.mkmaster(intercept="~b bar")
-        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=b"foo"))
+        f = tflow.tflow(req=mitmproxy.test.tutils.treq(content=b"foo"))
         m.request(f)
         assert not m.state.flows[0].intercepted
-        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=b"bar"))
+        f = tflow.tflow(req=mitmproxy.test.tutils.treq(content=b"bar"))
         m.request(f)
         assert m.state.flows[1].intercepted
-        f = tutils.tflow(resp=mitmproxy.test.tutils.tresp(content=b"bar"))
+        f = tflow.tflow(resp=mitmproxy.test.tutils.tresp(content=b"bar"))
         m.request(f)
         assert m.state.flows[2].intercepted

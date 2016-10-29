@@ -1,3 +1,4 @@
+from mitmproxy.test import tflow
 from test.mitmproxy import tutils, mastertest
 from mitmproxy import controller
 from mitmproxy.addons import script
@@ -23,7 +24,7 @@ class TestConcurrent(mastertest.MasterTest):
             )
         )
         m.addons.add(sc)
-        f1, f2 = tutils.tflow(), tutils.tflow()
+        f1, f2 = tflow.tflow(), tflow.tflow()
         m.request(f1)
         m.request(f2)
         start = time.time()

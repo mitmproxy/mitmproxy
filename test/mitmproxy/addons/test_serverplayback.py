@@ -1,4 +1,6 @@
-from .. import tutils, mastertest
+from mitmproxy.test import tflow
+
+from .. import mastertest
 
 import mitmproxy.test.tutils
 from mitmproxy.addons import serverplayback
@@ -11,7 +13,7 @@ class TestServerPlayback:
     def test_server_playback(self):
         sp = serverplayback.ServerPlayback()
         sp.configure(options.Options(), [])
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
 
         assert not sp.flowmap
 
@@ -24,8 +26,8 @@ class TestServerPlayback:
         sp = serverplayback.ServerPlayback()
         sp.configure(options.Options(server_replay_ignore_host=True), [])
 
-        r = tutils.tflow(resp=True)
-        r2 = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
 
         r.request.host = "address"
         r2.request.host = "address"
@@ -37,8 +39,8 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(options.Options(server_replay_ignore_content=False), [])
 
-        r = tutils.tflow(resp=True)
-        r2 = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
 
         r.request.content = b"foo"
         r2.request.content = b"foo"
@@ -47,8 +49,8 @@ class TestServerPlayback:
         assert not s._hash(r) == s._hash(r2)
 
         s.configure(options.Options(server_replay_ignore_content=True), [])
-        r = tutils.tflow(resp=True)
-        r2 = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r.request.content = b"foo"
         r2.request.content = b"foo"
         assert s._hash(r) == s._hash(r2)
@@ -72,11 +74,11 @@ class TestServerPlayback:
         )
         # NOTE: parameters are mutually exclusive in options
 
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         r.request.content = b"paramx=y"
 
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         r2.request.content = b"paramx=x"
 
@@ -95,10 +97,10 @@ class TestServerPlayback:
             []
 
         )
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/json"
         r.request.content = b'{"param1":"1"}'
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/json"
         r2.request.content = b'{"param1":"1"}'
         # same content
@@ -111,8 +113,8 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(options.Options(), [])
 
-        r = tutils.tflow()
-        r2 = tutils.tflow()
+        r = tflow.tflow()
+        r2 = tflow.tflow()
 
         assert s._hash(r)
         assert s._hash(r) == s._hash(r2)
@@ -129,27 +131,27 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(options.Options(server_replay_use_headers=["foo"]), [])
 
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.headers["foo"] = "bar"
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         assert not s._hash(r) == s._hash(r2)
         r2.request.headers["foo"] = "bar"
         assert s._hash(r) == s._hash(r2)
         r2.request.headers["oink"] = "bar"
         assert s._hash(r) == s._hash(r2)
 
-        r = tutils.tflow(resp=True)
-        r2 = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         assert s._hash(r) == s._hash(r2)
 
     def test_load(self):
         s = serverplayback.ServerPlayback()
         s.configure(options.Options(), [])
 
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.headers["key"] = "one"
 
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r2.request.headers["key"] = "two"
 
         s.load([r, r2])
@@ -171,10 +173,10 @@ class TestServerPlayback:
         s = serverplayback.ServerPlayback()
         s.configure(options.Options(server_replay_nopop=True), [])
 
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.headers["key"] = "one"
 
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r2.request.headers["key"] = "two"
 
         s.load([r, r2])
@@ -192,9 +194,9 @@ class TestServerPlayback:
             []
         )
 
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.path = "/test?param1=1"
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r2.request.path = "/test"
         assert s._hash(r) == s._hash(r2)
         r2.request.path = "/test?param1=2"
@@ -213,10 +215,10 @@ class TestServerPlayback:
             []
         )
 
-        r = tutils.tflow(resp=True)
+        r = tflow.tflow(resp=True)
         r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         r.request.content = b"paramx=x&param1=1"
-        r2 = tutils.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
         r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         r2.request.content = b"paramx=x&param1=1"
         # same parameters
@@ -243,16 +245,16 @@ class TestServerPlayback:
         m = mastertest.RecordingMaster(o, proxy.DummyServer())
         m.addons.add(s)
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
         s.load([f, f])
 
-        tf = tutils.tflow()
+        tf = tflow.tflow()
         assert not tf.response
         m.request(tf)
         assert tf.response == f.response
 
-        tf = tutils.tflow()
+        tf = tflow.tflow()
         tf.request.content = b"gibble"
         assert not tf.response
         m.request(tf)
@@ -262,8 +264,8 @@ class TestServerPlayback:
         s.tick()
         assert not s.stop
 
-        tf = tutils.tflow()
-        m.request(tutils.tflow())
+        tf = tflow.tflow()
+        m.request(tflow.tflow())
         assert s.stop
 
     def test_server_playback_kill(self):
@@ -272,11 +274,11 @@ class TestServerPlayback:
         m = mastertest.RecordingMaster(o, proxy.DummyServer())
         m.addons.add(s)
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
         s.load([f])
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.request.host = "nonexistent"
         m.request(f)
         assert f.reply.value == exceptions.Kill

@@ -1,3 +1,4 @@
+from mitmproxy.test import tflow
 import mock
 import io
 
@@ -20,7 +21,7 @@ from . import tutils
 class TestHTTPFlow:
 
     def test_copy(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.get_state()
         f2 = f.copy()
         a = f.get_state()
@@ -37,7 +38,7 @@ class TestHTTPFlow:
         assert f.response.get_state() == f2.response.get_state()
         assert f.response is not f2.response
 
-        f = tutils.tflow(err=True)
+        f = tflow.tflow(err=True)
         f2 = f.copy()
         assert f is not f2
         assert f.request is not f2.request
@@ -47,18 +48,18 @@ class TestHTTPFlow:
         assert f.error is not f2.error
 
     def test_match(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         assert not flowfilter.match("~b test", f)
         assert flowfilter.match(None, f)
         assert not flowfilter.match("~b test", f)
 
-        f = tutils.tflow(err=True)
+        f = tflow.tflow(err=True)
         assert flowfilter.match("~e", f)
 
         tutils.raises(ValueError, flowfilter.match, "~", f)
 
     def test_backup(self):
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         f.request.content = b"foo"
         assert not f.modified()
@@ -69,14 +70,14 @@ class TestHTTPFlow:
         assert f.request.content == b"foo"
 
     def test_backup_idempotence(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.backup()
         f.revert()
         f.backup()
         f.revert()
 
     def test_getset_state(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         state = f.get_state()
         assert f.get_state() == http.HTTPFlow.from_state(
             state).get_state()
@@ -98,7 +99,7 @@ class TestHTTPFlow:
 
     def test_kill(self):
         fm = mock.Mock()
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.reply.handle()
         f.intercept(fm)
         assert f.killable
@@ -112,7 +113,7 @@ class TestHTTPFlow:
         fm = master.Master(None, srv)
         fm.addons.add(s)
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.reply.handle()
         f.intercept(fm)
 
@@ -121,7 +122,7 @@ class TestHTTPFlow:
             assert "killed" in str(i.error)
 
     def test_resume(self):
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.reply.handle()
         f.intercept(mock.Mock())
         assert f.reply.state == "taken"
@@ -129,17 +130,17 @@ class TestHTTPFlow:
         assert f.reply.state == "committed"
 
     def test_replace_unicode(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.content = b"\xc2foo"
         f.replace(b"foo", u"bar")
 
     def test_replace_no_content(self):
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.request.content = None
         assert f.replace("foo", "bar") == 0
 
     def test_replace(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.request.headers["foo"] = "foo"
         f.request.content = b"afoob"
 
@@ -154,7 +155,7 @@ class TestHTTPFlow:
         assert f.response.content == b"abarb"
 
     def test_replace_encoded(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.request.content = b"afoob"
         f.request.encode("gzip")
         f.response.content = b"afoob"
@@ -174,12 +175,12 @@ class TestHTTPFlow:
 class TestTCPFlow:
 
     def test_match(self):
-        f = tutils.ttcpflow()
+        f = tflow.ttcpflow()
         assert not flowfilter.match("~b nonexistent", f)
         assert flowfilter.match(None, f)
         assert not flowfilter.match("~b nonexistent", f)
 
-        f = tutils.ttcpflow(err=True)
+        f = tflow.ttcpflow(err=True)
         assert flowfilter.match("~e", f)
 
         tutils.raises(ValueError, flowfilter.match, "~", f)
@@ -189,7 +190,7 @@ class TestState:
 
     def test_backup(self):
         c = state.State()
-        f = tutils.tflow()
+        f = tflow.tflow()
         c.add_flow(f)
         f.backup()
         c.revert(f)
@@ -201,13 +202,13 @@ class TestState:
                 connect -> request -> response
         """
         c = state.State()
-        f = tutils.tflow()
+        f = tflow.tflow()
         c.add_flow(f)
         assert f
         assert c.flow_count() == 1
         assert c.active_flow_count() == 1
 
-        newf = tutils.tflow()
+        newf = tflow.tflow()
         assert c.add_flow(newf)
         assert c.active_flow_count() == 2
 
@@ -225,24 +226,24 @@ class TestState:
 
     def test_err(self):
         c = state.State()
-        f = tutils.tflow()
+        f = tflow.tflow()
         c.add_flow(f)
         f.error = flow.Error("message")
         assert c.update_flow(f)
 
         c = state.State()
-        f = tutils.tflow()
+        f = tflow.tflow()
         c.add_flow(f)
         c.set_view_filter("~e")
         assert not c.view
-        f.error = tutils.terr()
+        f.error = tflow.terr()
         assert c.update_flow(f)
         assert c.view
 
     def test_set_view_filter(self):
         c = state.State()
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         assert len(c.view) == 0
 
         c.add_flow(f)
@@ -257,7 +258,7 @@ class TestState:
         c.set_view_filter(None)
         assert len(c.view) == 1
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         c.add_flow(f)
         assert len(c.view) == 2
         c.set_view_filter("~q")
@@ -267,27 +268,19 @@ class TestState:
 
         assert "Invalid" in c.set_view_filter("~")
 
-    def test_set_intercept(self):
-        c = state.State()
-        assert not c.set_intercept("~q")
-        assert c.intercept_txt == "~q"
-        assert "Invalid" in c.set_intercept("~")
-        assert not c.set_intercept(None)
-        assert c.intercept_txt is None
-
     def _add_request(self, state):
-        f = tutils.tflow()
+        f = tflow.tflow()
         state.add_flow(f)
         return f
 
     def _add_response(self, state):
-        f = tutils.tflow()
+        f = tflow.tflow()
         state.add_flow(f)
         f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         state.update_flow(f)
 
     def _add_error(self, state):
-        f = tutils.tflow(err=True)
+        f = tflow.tflow(err=True)
         state.add_flow(f)
 
     def test_clear(self):
@@ -328,14 +321,14 @@ class TestSerialize:
         sio = io.BytesIO()
         w = mitmproxy.io.FlowWriter(sio)
         for i in range(3):
-            f = tutils.tflow(resp=True)
+            f = tflow.tflow(resp=True)
             w.add(f)
         for i in range(3):
-            f = tutils.tflow(err=True)
+            f = tflow.tflow(err=True)
             w.add(f)
-        f = tutils.ttcpflow()
+        f = tflow.ttcpflow()
         w.add(f)
-        f = tutils.ttcpflow(err=True)
+        f = tflow.ttcpflow(err=True)
         w.add(f)
 
         sio.seek(0)
@@ -343,7 +336,7 @@ class TestSerialize:
 
     def test_roundtrip(self):
         sio = io.BytesIO()
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.marked = True
         f.request.content = bytes(range(256))
         w = mitmproxy.io.FlowWriter(sio)
@@ -385,11 +378,11 @@ class TestSerialize:
         flt = flowfilter.parse("~c 200")
         w = mitmproxy.io.FilteredFlowWriter(sio, flt)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.status_code = 200
         w.add(f)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.status_code = 201
         w.add(f)
 
@@ -408,7 +401,7 @@ class TestSerialize:
         assert str(f) == "foo"
 
     def test_versioncheck(self):
-        f = tutils.tflow()
+        f = tflow.tflow()
         d = f.get_state()
         d["version"] = (0, 0)
         sio = io.BytesIO()
@@ -423,7 +416,7 @@ class TestFlowMaster:
 
     def test_replay(self):
         fm = master.Master(None, DummyServer())
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.request.content = None
         tutils.raises("missing", fm.replay_request, f)
 
@@ -441,7 +434,7 @@ class TestFlowMaster:
         s = state.State()
         fm = master.Master(None, DummyServer())
         fm.addons.add(s)
-        f = tutils.tflow(req=None)
+        f = tflow.tflow(req=None)
         fm.clientconnect(f.client_conn)
         f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
         fm.request(f)
@@ -462,7 +455,7 @@ class TestFlowMaster:
 class TestRequest:
 
     def test_simple(self):
-        f = tutils.tflow()
+        f = tflow.tflow()
         r = f.request
         u = r.url
         r.url = u
@@ -521,7 +514,7 @@ class TestRequest:
 class TestResponse:
 
     def test_simple(self):
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         resp = f.response
         resp2 = resp.copy()
         assert resp2.get_state() == resp.get_state()
@@ -564,11 +557,11 @@ class TestError:
 
 class TestClientConnection:
     def test_state(self):
-        c = tutils.tclient_conn()
+        c = tflow.tclient_conn()
         assert connections.ClientConnection.from_state(c.get_state()).get_state() == \
             c.get_state()
 
-        c2 = tutils.tclient_conn()
+        c2 = tflow.tclient_conn()
         c2.address.address = (c2.address.host, 4242)
         assert not c == c2
 

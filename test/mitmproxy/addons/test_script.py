@@ -3,6 +3,7 @@ import traceback
 import sys
 import time
 
+from mitmproxy.test import tflow
 import re
 from mitmproxy import exceptions
 from mitmproxy import options
@@ -71,7 +72,7 @@ class TestScript(mastertest.MasterTest):
         ]
 
         sc.ns.call_log = []
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         m.request(f)
 
         recf = sc.ns.call_log[0]
@@ -102,7 +103,7 @@ class TestScript(mastertest.MasterTest):
             tutils.test_data.path("data/addonscripts/error.py")
         )
         m.addons.add(sc)
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         m.request(f)
         assert m.event_log[0][0] == "error"
         assert len(m.event_log[0][1].splitlines()) == 6
@@ -149,7 +150,7 @@ class TestScriptLoader(mastertest.MasterTest):
         sl = script.ScriptLoader()
         m.addons.add(sl)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         with m.handlecontext():
             sc = sl.run_once(
                 tutils.test_data.path(

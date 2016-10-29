@@ -1,3 +1,5 @@
+from mitmproxy.test import tflow
+
 from .. import tutils, mastertest, tservers
 from mitmproxy.addons import replace
 from mitmproxy import master
@@ -40,12 +42,12 @@ class TestReplace(mastertest.MasterTest):
         sa = replace.Replace()
         m.addons.add(sa)
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.request.content = b"foo"
         m.request(f)
         assert f.request.content == b"bar"
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.content = b"foo"
         m.response(f)
         assert f.response.content == b"bar"

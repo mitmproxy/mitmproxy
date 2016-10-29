@@ -180,9 +180,6 @@ class State:
         self.flows = FlowStore()
         self.view = FlowView(self.flows, None)
 
-        # These are compiled filter expressions:
-        self.intercept = None
-
     @property
     def filter_txt(self):
         return getattr(self.view.filter, "pattern", None)
@@ -230,19 +227,6 @@ class State:
         else:
             self.view._close()
             self.view = FlowView(self.flows, None)
-
-    def set_intercept(self, txt):
-        if txt:
-            flt = flowfilter.parse(txt)
-            if not flt:
-                return "Invalid filter expression."
-            self.intercept = flt
-        else:
-            self.intercept = None
-
-    @property
-    def intercept_txt(self):
-        return getattr(self.intercept, "pattern", None)
 
     def clear(self):
         self.flows._clear()

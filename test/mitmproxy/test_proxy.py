@@ -1,3 +1,4 @@
+from mitmproxy.test import tflow
 import os
 import mock
 from OpenSSL import SSL
@@ -20,7 +21,7 @@ class TestServerConnection:
         self.d = test.Daemon()
         sc = connections.ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.server_conn = sc
         f.request.path = "/p/200:da"
 
@@ -45,7 +46,7 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_repr(self):
-        sc = tutils.tserver_conn()
+        sc = tflow.tserver_conn()
         assert "address:22" in repr(sc)
         assert "ssl" not in repr(sc)
         sc.ssl_established = True

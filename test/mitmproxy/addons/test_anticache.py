@@ -1,4 +1,6 @@
-from .. import tutils, mastertest
+from mitmproxy.test import tflow
+
+from .. import mastertest
 from mitmproxy.addons import anticache
 from mitmproxy import master
 from mitmproxy import options
@@ -12,10 +14,10 @@ class TestAntiCache(mastertest.MasterTest):
         sa = anticache.AntiCache()
         m.addons.add(sa)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         m.request(f)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.request.headers["if-modified-since"] = "test"
         f.request.headers["if-none-match"] = "test"
         m.request(f)

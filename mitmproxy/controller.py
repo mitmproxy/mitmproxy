@@ -174,10 +174,10 @@ class Reply:
 
 class DummyReply(Reply):
     """
-    A reply object that is not connected to anything. In contrast to regular Reply objects,
-    DummyReply objects are reset to "unhandled" at the end of an handler so that they can be used
-    multiple times. Useful when we need an object to seem like it has a channel,
-    and during testing.
+    A reply object that is not connected to anything. In contrast to regular
+    Reply objects, DummyReply objects are reset to "unhandled" at the end of an
+    handler so that they can be used multiple times. Useful when we need an
+    object to seem like it has a channel, and during testing.
     """
     def __init__(self):
         super().__init__(None)

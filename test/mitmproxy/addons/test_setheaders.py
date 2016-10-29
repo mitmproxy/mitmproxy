@@ -1,3 +1,5 @@
+from mitmproxy.test import tflow
+
 from .. import tutils, mastertest
 
 from mitmproxy.addons import setheaders
@@ -30,12 +32,12 @@ class TestSetHeaders(mastertest.MasterTest):
                 ("~s", "one", "three")
             ]
         )
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.request.headers["one"] = "xxx"
         m.request(f)
         assert f.request.headers["one"] == "two"
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.headers["one"] = "xxx"
         m.response(f)
         assert f.response.headers["one"] == "three"
@@ -46,7 +48,7 @@ class TestSetHeaders(mastertest.MasterTest):
                 ("~s", "one", "three")
             ]
         )
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.request.headers["one"] = "xxx"
         f.response.headers["one"] = "xxx"
         m.response(f)
@@ -58,7 +60,7 @@ class TestSetHeaders(mastertest.MasterTest):
                 ("~q", "one", "three")
             ]
         )
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.request.headers["one"] = "xxx"
         m.request(f)
         assert f.request.headers.get_all("one") == ["two", "three"]

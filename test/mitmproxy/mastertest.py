@@ -1,6 +1,7 @@
 import contextlib
 
-from . import tutils
+from mitmproxy.test import tflow
+
 import mitmproxy.test.tutils
 
 from mitmproxy import master
@@ -10,14 +11,10 @@ from mitmproxy import http
 from mitmproxy import options
 
 
-class TestMaster:
-    pass
-
-
 class MasterTest:
 
     def cycle(self, master, content):
-        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=content))
+        f = tflow.tflow(req=mitmproxy.test.tutils.treq(content=content))
         master.clientconnect(f.client_conn)
         master.serverconnect(f.server_conn)
         master.request(f)
@@ -37,7 +34,7 @@ class MasterTest:
     def flowfile(self, path):
         f = open(path, "wb")
         fw = io.FlowWriter(f)
-        t = tutils.tflow(resp=True)
+        t = tflow.tflow(resp=True)
         fw.add(t)
         f.close()
 
