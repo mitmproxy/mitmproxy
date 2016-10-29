@@ -268,14 +268,6 @@ class TestState:
 
         assert "Invalid" in c.set_view_filter("~")
 
-    def test_set_intercept(self):
-        c = state.State()
-        assert not c.set_intercept("~q")
-        assert c.intercept_txt == "~q"
-        assert "Invalid" in c.set_intercept("~")
-        assert not c.set_intercept(None)
-        assert c.intercept_txt is None
-
     def _add_request(self, state):
         f = tflow.tflow()
         state.add_flow(f)

@@ -4,7 +4,7 @@ import mock
 from mitmproxy.addons import clientplayback
 from mitmproxy import options
 
-from .. import tutils, mastertest
+from .. import mastertest
 
 
 class TestClientPlayback:

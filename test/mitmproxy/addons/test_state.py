@@ -3,8 +3,6 @@ from mitmproxy import proxy
 from mitmproxy import master
 from mitmproxy.addons import state
 
-from .. import tutils
-
 
 class TestState:
     def test_duplicate_flow(self):

@@ -1,6 +1,6 @@
 from mitmproxy.test import tflow
 
-from .. import tutils, mastertest
+from .. import mastertest
 
 import mitmproxy.test.tutils
 from mitmproxy.addons import serverplayback

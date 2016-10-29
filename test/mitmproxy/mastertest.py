@@ -2,7 +2,6 @@ import contextlib
 
 from mitmproxy.test import tflow
 
-from . import tutils
 import mitmproxy.test.tutils
 
 from mitmproxy import master

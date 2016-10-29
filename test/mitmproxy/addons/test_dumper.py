@@ -1,7 +1,7 @@
 import io
 from mitmproxy.test import tflow
 
-from .. import tutils, mastertest
+from .. import mastertest
 
 from mitmproxy.addons import dumper
 from mitmproxy import exceptions

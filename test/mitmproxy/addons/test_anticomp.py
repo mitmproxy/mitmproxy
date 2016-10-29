@@ -1,6 +1,6 @@
 from mitmproxy.test import tflow
 
-from .. import tutils, mastertest
+from .. import mastertest
 from mitmproxy.addons import anticomp
 from mitmproxy import master
 from mitmproxy import options

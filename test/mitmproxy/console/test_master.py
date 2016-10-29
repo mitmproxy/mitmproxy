@@ -6,7 +6,7 @@ from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy.tools.console import common
 
-from .. import tutils, mastertest
+from .. import mastertest
 
 
 class TestConsoleState:
