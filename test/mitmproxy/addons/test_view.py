@@ -1,3 +1,4 @@
+from mitmproxy.test import tflow
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
 
@@ -6,7 +7,7 @@ from .. import tutils
 
 def test_simple():
     v = view.View()
-    f = tutils.tflow()
+    f = tflow.tflow()
     f.request.timestamp_start = 1
     v.request(f)
     assert list(v) == [f]
@@ -14,7 +15,7 @@ def test_simple():
     assert list(v) == [f]
     assert len(v._store) == 1
 
-    f2 = tutils.tflow()
+    f2 = tflow.tflow()
     f2.request.timestamp_start = 3
     v.request(f2)
     assert list(v) == [f, f2]
@@ -22,7 +23,7 @@ def test_simple():
     assert list(v) == [f, f2]
     assert len(v._store) == 2
 
-    f3 = tutils.tflow()
+    f3 = tflow.tflow()
     f3.request.timestamp_start = 2
     v.request(f3)
     assert list(v) == [f, f3, f2]
@@ -32,7 +33,7 @@ def test_simple():
 
 
 def tft(*, method="get", start=0):
-    f = tutils.tflow()
+    f = tflow.tflow()
     f.request.method = method
     f.request.timestamp_start = start
     return f

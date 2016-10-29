@@ -1,5 +1,7 @@
 import contextlib
 
+from mitmproxy.test import tflow
+
 from . import tutils
 import mitmproxy.test.tutils
 
@@ -13,7 +15,7 @@ from mitmproxy import options
 class MasterTest:
 
     def cycle(self, master, content):
-        f = tutils.tflow(req=mitmproxy.test.tutils.treq(content=content))
+        f = tflow.tflow(req=mitmproxy.test.tutils.treq(content=content))
         master.clientconnect(f.client_conn)
         master.serverconnect(f.server_conn)
         master.request(f)
@@ -33,7 +35,7 @@ class MasterTest:
     def flowfile(self, path):
         f = open(path, "wb")
         fw = io.FlowWriter(f)
-        t = tutils.tflow(resp=True)
+        t = tflow.tflow(resp=True)
         fw.add(t)
         f.close()
 

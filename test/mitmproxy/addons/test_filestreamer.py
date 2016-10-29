@@ -1,3 +1,5 @@
+from mitmproxy.test import tflow
+
 from .. import tutils, mastertest
 
 import os.path
@@ -25,7 +27,7 @@ class TestStream(mastertest.MasterTest):
             sa = filestreamer.FileStreamer()
 
             m.addons.add(sa)
-            f = tutils.tflow(resp=True)
+            f = tflow.tflow(resp=True)
             m.request(f)
             m.response(f)
             m.addons.remove(sa)
@@ -35,7 +37,7 @@ class TestStream(mastertest.MasterTest):
             m.options.outfile = (p, "ab")
 
             m.addons.add(sa)
-            f = tutils.tflow()
+            f = tflow.tflow()
             m.request(f)
             m.addons.remove(sa)
             assert not r()[1].response

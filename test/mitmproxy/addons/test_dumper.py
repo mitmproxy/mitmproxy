@@ -1,4 +1,5 @@
 import io
+from mitmproxy.test import tflow
 
 from .. import tutils, mastertest
 
@@ -18,26 +19,26 @@ class TestDumper(mastertest.MasterTest):
 
         updated = {"tfile", "flow_detail"}
         d.configure(dump.Options(tfile = sio, flow_detail = 0), updated)
-        d.response(tutils.tflow())
+        d.response(tflow.tflow())
         assert not sio.getvalue()
 
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
-        d.response(tutils.tflow())
+        d.response(tflow.tflow())
         assert sio.getvalue()
 
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
-        d.response(tutils.tflow(resp=True))
+        d.response(tflow.tflow(resp=True))
         assert "<<" in sio.getvalue()
 
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
-        d.response(tutils.tflow(err=True))
+        d.response(tflow.tflow(err=True))
         assert "<<" in sio.getvalue()
 
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
-        flow = tutils.tflow()
+        flow = tflow.tflow()
         flow.request = mitmproxy.test.tutils.treq()
         flow.request.stickycookie = True
         flow.client_conn = mock.MagicMock()
@@ -50,7 +51,7 @@ class TestDumper(mastertest.MasterTest):
 
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio, flow_detail = 4), updated)
-        flow = tutils.tflow(resp=mitmproxy.test.tutils.tresp(content=b"{"))
+        flow = tflow.tflow(resp=mitmproxy.test.tutils.tresp(content=b"{"))
         flow.response.headers["content-type"] = "application/json"
         flow.response.status_code = 400
         d.response(flow)
@@ -58,7 +59,7 @@ class TestDumper(mastertest.MasterTest):
 
         sio = io.StringIO()
         d.configure(dump.Options(tfile = sio), updated)
-        flow = tutils.tflow()
+        flow = tflow.tflow()
         flow.request.content = None
         flow.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         flow.response.content = None
@@ -80,5 +81,5 @@ class TestContentView(mastertest.MasterTest):
         m = mastertest.RecordingMaster(o, proxy.DummyServer())
         d = dumper.Dumper()
         m.addons.add(d)
-        m.response(tutils.tflow())
+        m.response(tflow.tflow())
         assert "Content viewer failed" in m.event_log[0][1]

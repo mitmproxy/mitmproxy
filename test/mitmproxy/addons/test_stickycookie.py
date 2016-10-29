@@ -1,3 +1,5 @@
+from mitmproxy.test import tflow
+
 from .. import tutils, mastertest
 from mitmproxy.addons import stickycookie
 from mitmproxy import master
@@ -31,7 +33,7 @@ class TestStickyCookie(mastertest.MasterTest):
         m, sc = self.mk()
         m.addons.add(sc)
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.headers["set-cookie"] = "foo=bar"
         m.request(f)
 
@@ -47,7 +49,7 @@ class TestStickyCookie(mastertest.MasterTest):
         assert f.request.headers["cookie"] == "foo=bar"
 
     def _response(self, m, sc, cookie, host):
-        f = tutils.tflow(req=ntutils.treq(host=host, port=80), resp=True)
+        f = tflow.tflow(req=ntutils.treq(host=host, port=80), resp=True)
         f.response.headers["Set-Cookie"] = cookie
         m.response(f)
         return f
@@ -86,7 +88,7 @@ class TestStickyCookie(mastertest.MasterTest):
         m, sc = self.mk()
 
         # Test setting of weird cookie keys
-        f = tutils.tflow(req=ntutils.treq(host="www.google.com", port=80), resp=True)
+        f = tflow.tflow(req=ntutils.treq(host="www.google.com", port=80), resp=True)
         cs = [
             "foo/bar=hello",
             "foo:bar=world",

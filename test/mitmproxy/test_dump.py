@@ -1,3 +1,4 @@
+from mitmproxy.test import tflow
 import os
 import io
 
@@ -45,7 +46,7 @@ class TestDumpMaster(mastertest.MasterTest):
             flow_detail=1
         )
         m = dump.DumpMaster(o, proxy.DummyServer())
-        f = tutils.tflow(err=True)
+        f = tflow.tflow(err=True)
         m.error(f)
         assert "error" in o.tfile.getvalue()
 

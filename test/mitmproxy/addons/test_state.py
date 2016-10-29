@@ -1,3 +1,4 @@
+from mitmproxy.test import tflow
 from mitmproxy import proxy
 from mitmproxy import master
 from mitmproxy.addons import state
@@ -10,7 +11,7 @@ class TestState:
         s = state.State()
         fm = master.Master(None, proxy.DummyServer())
         fm.addons.add(s)
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         fm.load_flow(f)
         assert s.flow_count() == 1
 

@@ -1,3 +1,5 @@
+from mitmproxy.test import tflow
+
 from .. import tutils, mastertest
 from mitmproxy import master
 from mitmproxy import options
@@ -13,14 +15,14 @@ class TestStreamBodies(mastertest.MasterTest):
         sa = streambodies.StreamBodies()
         m.addons.add(sa)
 
-        f = tutils.tflow()
+        f = tflow.tflow()
         f.request.content = b""
         f.request.headers["Content-Length"] = "1024"
         assert not f.request.stream
         m.requestheaders(f)
         assert f.request.stream
 
-        f = tutils.tflow(resp=True)
+        f = tflow.tflow(resp=True)
         f.response.content = b""
         f.response.headers["Content-Length"] = "1024"
         assert not f.response.stream
