@@ -1,4 +1,4 @@
-import ctx
+from mitmproxy import ctx
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 
@@ -11,8 +11,8 @@ class Intercept:
         if "intercept" in updated:
             if not opts.intercept:
                 self.filt = None
-            filt = flowfilter.parse(opts.intercept)
-            if not filt:
+            self.filt = flowfilter.parse(opts.intercept)
+            if not self.filt:
                 raise exceptions.OptionsError(
                     "Invalid interception filter: %s" % opts.intercept
                 )

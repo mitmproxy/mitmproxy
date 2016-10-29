@@ -10,10 +10,6 @@ from mitmproxy import http
 from mitmproxy import options
 
 
-class TestMaster:
-    pass
-
-
 class MasterTest:
 
     def cycle(self, master, content):
