@@ -15,7 +15,6 @@ import urwid
 from typing import Optional
 
 from mitmproxy import addons
-from mitmproxy import contentviews
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import master
@@ -49,7 +48,6 @@ class ConsoleState(state.State):
         state.State.__init__(self)
         self.focus = None
         self.follow_focus = None
-        self.default_body_view = contentviews.get("Auto")
         self.flowsettings = weakref.WeakKeyDictionary()
         self.last_search = None
         self.last_filter = ""
@@ -611,11 +609,6 @@ class ConsoleMaster(master.Master):
         v = self.state.set_view_filter(txt)
         signals.flowlist_change.send(self)
         return v
-
-    def change_default_display_mode(self, t):
-        v = contentviews.get_by_shortcut(t)
-        self.state.default_body_view = v
-        self.refresh_focus()
 
     def edit_scripts(self, scripts):
         self.options.scripts = [x[0] for x in scripts]

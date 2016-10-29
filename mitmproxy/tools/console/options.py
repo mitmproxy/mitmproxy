@@ -60,7 +60,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Default Display Mode",
                     "M",
-                    self.has_default_displaymode,
+                    lambda: self.master.options.default_contentview != "auto",
                     self.default_displaymode
                 ),
                 select.Option(
@@ -231,11 +231,13 @@ class Options(urwid.WidgetWrap):
         signals.status_prompt_onekey.send(
             prompt = "Global default display mode",
             keys = contentviews.view_prompts,
-            callback = self.master.change_default_display_mode
+            callback = self.change_default_display_mode
         )
 
-    def has_default_displaymode(self):
-        return self.master.state.default_body_view.name != "Auto"
+    def change_default_display_mode(self, t):
+        v = contentviews.get_by_shortcut(t)
+        self.master.options.default_contentview = v.name
+        self.master.refresh_focus()
 
     def sticky_auth(self):
         signals.status_prompt.send(

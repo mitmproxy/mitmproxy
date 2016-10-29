@@ -241,7 +241,7 @@ class FlowView(tabs.Tabs):
             self.flow,
             (self.tab_offset, "prettyview")
         )
-        return self.state.default_body_view if override is None else override
+        return self.master.options.default_contentview if override is None else override
 
     def conn_text(self, conn):
         if conn:
@@ -264,7 +264,7 @@ class FlowView(tabs.Tabs):
                         " ",
                         ('heading', "["),
                         ('heading_key', "m"),
-                        ('heading', (":%s]" % viewmode.name)),
+                        ('heading', (":%s]" % viewmode)),
                     ],
                     align="right"
                 )
@@ -491,7 +491,7 @@ class FlowView(tabs.Tabs):
         self.state.add_flow_setting(
             self.flow,
             (self.tab_offset, "prettyview"),
-            contentviews.get_by_shortcut(t)
+            contentviews.get_by_shortcut(t).name
         )
         signals.flow_change.send(self, flow = self.flow)
 
