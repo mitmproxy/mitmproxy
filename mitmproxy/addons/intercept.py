@@ -19,11 +19,10 @@ class Intercept:
 
     def process_flow(self, f):
         if self.filt:
-            should_intercept = all(
+            should_intercept = all([
                 self.filt(f),
                 not f.request.is_replay,
-                f.reply.state == "handled"
-            )
+            ])
             if should_intercept:
                 f.intercept(ctx.master)
 

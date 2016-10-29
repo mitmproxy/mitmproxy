@@ -1,6 +1,7 @@
 import mitmproxy.master
 import mitmproxy.options
 from mitmproxy import proxy
+from mitmproxy import events
 
 
 class context:
@@ -25,6 +26,19 @@ class context:
         self.wrapped.__exit__(exc_type, exc_value, traceback)
         self.wrapped = None
         return False
+
+    def cycle(self, addon, f):
+        """
+            Cycles the flow through the events for the flow. Stops if a reply
+            is taken (as in flow interception).
+        """
+        f.reply._state = "handled"
+        for evt, arg in events.event_sequence(f):
+            h = getattr(addon, evt, None)
+            if h:
+                h(arg)
+                if f.reply.state == "taken":
+                    return
 
     def configure(self, addon, **kwargs):
         """

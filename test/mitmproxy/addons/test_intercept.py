@@ -3,6 +3,7 @@ from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy.test import taddons
 from mitmproxy.test import tutils
+from mitmproxy.test import tflow
 
 
 class Options(options.Options):
@@ -23,3 +24,13 @@ def test_simple():
             r,
             intercept="~~"
         )
+
+        tctx.configure(r, intercept="~s")
+
+        f = tflow.tflow(resp=True)
+        tctx.cycle(r, f)
+        assert f.intercepted
+
+        f = tflow.tflow(resp=False)
+        tctx.cycle(r, f)
+        assert not f.intercepted
