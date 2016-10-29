@@ -7,10 +7,9 @@ import tornado.ioloop
 from typing import Optional
 
 from mitmproxy import addons
-from mitmproxy import controller
 from mitmproxy import exceptions
-from mitmproxy import flowfilter
 from mitmproxy.addons import state
+from mitmproxy.addons import intercept
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.tools.web import app
@@ -139,7 +138,7 @@ class WebMaster(master.Master):
         super().__init__(options, server)
         self.state = WebState()
         self.addons.add(*addons.default_addons())
-        self.addons.add(self.state)
+        self.addons.add(self.state, intercept.Intercept())
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator
         )
@@ -178,31 +177,6 @@ class WebMaster(master.Master):
             iol.start()
         except (Stop, KeyboardInterrupt):
             self.shutdown()
-
-    def _process_flow(self, f):
-        should_intercept = (
-            self.state.intercept and flowfilter.match(self.state.intercept, f)
-            and not f.request.is_replay
-            and f.reply.state == "handled"
-        )
-        if should_intercept:
-            f.intercept(self)
-        return f
-
-    @controller.handler
-    def request(self, f):
-        super().request(f)
-        return self._process_flow(f)
-
-    @controller.handler
-    def response(self, f):
-        super().response(f)
-        return self._process_flow(f)
-
-    @controller.handler
-    def error(self, f):
-        super().error(f)
-        return self._process_flow(f)
 
     def add_log(self, e, level="info"):
         super().add_log(e, level)

@@ -11,6 +11,7 @@ class Intercept:
         if "intercept" in updated:
             if not opts.intercept:
                 self.filt = None
+                return
             self.filt = flowfilter.parse(opts.intercept)
             if not self.filt:
                 raise exceptions.OptionsError(

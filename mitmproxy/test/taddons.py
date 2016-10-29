@@ -6,9 +6,9 @@ from mitmproxy import events
 
 class context:
     """
-        A helper context for testing addons. Its most important function is to
-        set up the ctx module so handlers can be called just like they would be
-        when running from within mitmproxy.
+        A context for testing addons, which sets up the mitmproxy.ctx module so
+        handlers can run as they would within mitmproxy. The context also
+        provides a number of helper methods for common testing scenarios.
     """
     def __init__(self, master = None, options = None):
         self.options = options or mitmproxy.options.Options()

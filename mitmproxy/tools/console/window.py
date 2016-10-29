@@ -88,8 +88,8 @@ class Window(urwid.Frame):
             signals.status_prompt.send(
                 self,
                 prompt = "Intercept filter",
-                text = self.master.state.intercept_txt,
-                callback = self.master.set_intercept
+                text = self.master.options.intercept,
+                callback = self.master.options.setter("intercept")
             )
         elif k == "o":
             self.master.view_options()

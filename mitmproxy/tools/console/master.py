@@ -23,6 +23,7 @@ from mitmproxy import io
 from mitmproxy import flowfilter
 from mitmproxy import log
 from mitmproxy.addons import state
+from mitmproxy.addons import intercept
 import mitmproxy.options
 from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import flowview
@@ -234,11 +235,6 @@ class ConsoleMaster(master.Master):
         self.options = self.options  # type: Options
         self.options.errored.connect(self.options_error)
 
-        r = self.set_intercept(options.intercept)
-        if r:
-            print("Intercept error: {}".format(r), file=sys.stderr)
-            sys.exit(1)
-
         if options.filter:
             self.set_view_filter(options.filter)
 
@@ -256,7 +252,7 @@ class ConsoleMaster(master.Master):
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(*addons.default_addons())
-        self.addons.add(self.state)
+        self.addons.add(self.state, intercept.Intercept())
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -616,9 +612,6 @@ class ConsoleMaster(master.Master):
         signals.flowlist_change.send(self)
         return v
 
-    def set_intercept(self, txt):
-        return self.state.set_intercept(txt)
-
     def change_default_display_mode(self, t):
         v = contentviews.get_by_shortcut(t)
         self.state.default_body_view = v
@@ -659,13 +652,6 @@ class ConsoleMaster(master.Master):
             )
 
     def process_flow(self, f):
-        should_intercept = (
-            self.state.intercept and flowfilter.match(self.state.intercept, f)
-            and not f.request.is_replay
-            and f.reply.state == "handled"
-        )
-        if should_intercept:
-            f.intercept(self)
         signals.flowlist_change.send(self)
         signals.flow_change.send(self, flow=f)
 

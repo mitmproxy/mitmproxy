@@ -24,6 +24,8 @@ def test_simple():
             r,
             intercept="~~"
         )
+        tctx.configure(r, intercept=None)
+        assert not r.filt
 
         tctx.configure(r, intercept="~s")
 
