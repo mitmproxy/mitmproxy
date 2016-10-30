@@ -211,6 +211,7 @@ class Focus:
     def __init__(self, v: View) -> None:
         self.view = v
         self._flow = None
+        self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
         v.sig_add.connect(self._sig_add)
@@ -226,6 +227,7 @@ class Focus:
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
+        self.sig_change.send(self)
 
     @property
     def index(self) -> typing.Optional[int]:

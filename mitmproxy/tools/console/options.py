@@ -217,11 +217,13 @@ class Options(urwid.WidgetWrap):
         )
 
     def scripts(self):
+        def edit_scripts(scripts):
+            self.master.options.scripts = [x[0] for x in scripts]
         self.master.view_grideditor(
             grideditor.ScriptEditor(
                 self.master,
                 [[i] for i in self.master.options.scripts],
-                self.master.edit_scripts
+                edit_scripts
             )
         )
 
@@ -235,7 +237,8 @@ class Options(urwid.WidgetWrap):
     def change_default_display_mode(self, t):
         v = contentviews.get_by_shortcut(t)
         self.master.options.default_contentview = v.name
-        self.master.refresh_focus()
+        if self.master.view.focus.flow:
+            signals.flow_change.send(self, flow = self.master.view.focus.flow)
 
     def sticky_auth(self):
         signals.status_prompt.send(
