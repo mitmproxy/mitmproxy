@@ -174,11 +174,7 @@ class ConnectionItem(urwid.WidgetWrap):
             self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
         elif key == "M":
-            if self.state.mark_filter:
-                self.state.disable_marked_filter()
-            else:
-                self.state.enable_marked_filter()
-            signals.flowlist_change.send(self)
+            self.master.view.toggle_marked()
         elif key == "r":
             try:
                 self.master.replay_request(self.flow)

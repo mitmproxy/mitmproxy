@@ -36,6 +36,8 @@ class View(collections.Sequence):
         super().__init__()
         self._store = {}
         self.filter = matchall
+        # Should we show only marked flows?
+        self.show_marked = False
         self.order_key = key_request_start
         self.order_reversed = False
         self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
@@ -92,7 +94,19 @@ class View(collections.Sequence):
     def index(self, f: mitmproxy.flow.Flow) -> int:
         return self._rev(self._view.index(f))
 
+    def _refilter(self):
+        self._view.clear()
+        for i in self._store.values():
+            if self.show_marked and not i.marked:
+                continue
+            if self.filter(i):
+                self._view.add(i)
+        self.sig_refresh.send(self)
+
     # API
+    def toggle_marked(self):
+        self.show_marked = not self.show_marked
+        self._refilter()
 
     def toggle_reversed(self):
         self.order_reversed = not self.order_reversed
@@ -112,11 +126,7 @@ class View(collections.Sequence):
             Sets the current view filter.
         """
         self.filter = flt or matchall
-        self._view.clear()
-        for i in self._store.values():
-            if self.filter(i):
-                self._view.add(i)
-        self.sig_refresh.send(self)
+        self._refilter()
 
     def clear(self):
         """

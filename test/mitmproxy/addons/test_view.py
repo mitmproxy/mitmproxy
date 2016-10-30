@@ -58,6 +58,14 @@ def test_filter():
     assert len(v._store) == 4
     v.set_filter(None)
 
+    assert len(v) == 4
+    v[1].marked = True
+    v.toggle_marked()
+    assert len(v) == 1
+    assert v[0].marked
+    v.toggle_marked()
+    assert len(v) == 4
+
 
 def test_order():
     v = view.View()
