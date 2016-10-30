@@ -1,6 +1,8 @@
 from mitmproxy.test import tflow
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
+from mitmproxy import options
+from mitmproxy.test import taddons
 
 from .. import tutils
 
@@ -31,6 +33,10 @@ def test_simple():
     assert list(v) == [f, f3, f2]
     assert len(v._store) == 3
 
+    v.clear()
+    assert len(v) == 0
+    assert len(v._store) == 0
+
 
 def tft(*, method="get", start=0):
     f = tflow.tflow()
@@ -51,6 +57,14 @@ def test_filter():
     assert [i.request.method for i in v] == ["GET", "GET"]
     assert len(v._store) == 4
     v.set_filter(None)
+
+    assert len(v) == 4
+    v[1].marked = True
+    v.toggle_marked()
+    assert len(v) == 1
+    assert v[0].marked
+    v.toggle_marked()
+    assert len(v) == 4
 
 
 def test_order():
@@ -236,31 +250,6 @@ def test_focus():
     assert f.index is None
 
 
-def test_focus_nextprev():
-    v = view.View()
-    # Nops on an empty view
-    v.focus.next()
-    v.focus.prev()
-
-    # Nops on a single-flow view
-    v.add(tft(start=0))
-    assert v.focus.flow == v[0]
-    v.focus.next()
-    assert v.focus.flow == v[0]
-    v.focus.prev()
-    assert v.focus.flow == v[0]
-
-    v.add(tft(start=1))
-    v.focus.next()
-    assert v.focus.flow == v[1]
-    v.focus.next()
-    assert v.focus.flow == v[1]
-    v.focus.prev()
-    assert v.focus.flow == v[0]
-    v.focus.prev()
-    assert v.focus.flow == v[0]
-
-
 def test_settings():
     v = view.View()
     f = tft()
@@ -274,3 +263,16 @@ def test_settings():
     v.remove(f)
     tutils.raises(KeyError, v.settings.__getitem__, f)
     assert not v.settings.keys()
+
+
+class Options(options.Options):
+    def __init__(self, *, filter=None, **kwargs):
+        self.filter = filter
+        super().__init__(**kwargs)
+
+
+def test_configure():
+    v = view.View()
+    with taddons.context(options=Options()) as tctx:
+        tctx.configure(v, filter="~q")
+        tutils.raises("invalid interception filter", tctx.configure, v, filter="~~")

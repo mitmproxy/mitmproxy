@@ -127,8 +127,8 @@ TAB_RESP = 1
 class FlowView(tabs.Tabs):
     highlight_color = "focusfield"
 
-    def __init__(self, master, state, flow, tab_offset):
-        self.master, self.state, self.flow = master, state, flow
+    def __init__(self, master, view, flow, tab_offset):
+        self.master, self.view, self.flow = master, view, flow
         super().__init__(
             [
                 (self.tab_request, self.view_request),
@@ -164,7 +164,7 @@ class FlowView(tabs.Tabs):
         return self.conn_text(self.flow.response)
 
     def view_details(self):
-        return flowdetailview.flowdetails(self.state, self.flow)
+        return flowdetailview.flowdetails(self.view, self.flow)
 
     def sig_flow_change(self, sender, flow):
         if flow == self.flow:
@@ -175,11 +175,8 @@ class FlowView(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.state.get_flow_setting(
-                self.flow,
-                (self.tab_offset, "fullcontents"),
-                False
-            )
+            s = self.view.settings[self.flow]
+            full = s.get((self.tab_offset, "fullcontents"), False)
             if full:
                 limit = sys.maxsize
             else:
@@ -237,9 +234,9 @@ class FlowView(tabs.Tabs):
         return description, text_objects
 
     def viewmode_get(self):
-        override = self.state.get_flow_setting(
-            self.flow,
-            (self.tab_offset, "prettyview")
+        override = self.view.settings[self.flow].get(
+            (self.tab_offset, "prettyview"),
+            None
         )
         return self.master.options.default_contentview if override is None else override
 
@@ -284,7 +281,7 @@ class FlowView(tabs.Tabs):
                     ]
                 )
             ]
-        return searchable.Searchable(self.state, txt)
+        return searchable.Searchable(self.view, txt)
 
     def set_method_raw(self, m):
         if m:
@@ -466,33 +463,25 @@ class FlowView(tabs.Tabs):
             )
         signals.flow_change.send(self, flow = self.flow)
 
-    def _view_nextprev_flow(self, np, flow):
-        try:
-            idx = self.state.view.index(flow)
-        except IndexError:
-            return
-        if np == "next":
-            new_flow, new_idx = self.state.get_next(idx)
-        else:
-            new_flow, new_idx = self.state.get_prev(idx)
-        if new_flow is None:
+    def view_flow(self, flow):
+        signals.pop_view_state.send(self)
+        self.master.view_flow(flow, self.tab_offset)
+
+    def _view_nextprev_flow(self, idx, flow):
+        if not self.view.inbounds(idx):
             signals.status_message.send(message="No more flows")
-        else:
-            signals.pop_view_state.send(self)
-            self.master.view_flow(new_flow, self.tab_offset)
+            return
+        self.view_flow(self.view[idx])
 
     def view_next_flow(self, flow):
-        return self._view_nextprev_flow("next", flow)
+        return self._view_nextprev_flow(self.view.index(flow) + 1, flow)
 
     def view_prev_flow(self, flow):
-        return self._view_nextprev_flow("prev", flow)
+        return self._view_nextprev_flow(self.view.index(flow) - 1, flow)
 
     def change_this_display_mode(self, t):
-        self.state.add_flow_setting(
-            self.flow,
-            (self.tab_offset, "prettyview"),
-            contentviews.get_by_shortcut(t).name
-        )
+        name = contentviews.get_by_shortcut(t).name
+        self.view.settings[self.flow][(self.tab_offset, "prettyview")] = name
         signals.flow_change.send(self, flow = self.flow)
 
     def keypress(self, size, key):
@@ -521,20 +510,18 @@ class FlowView(tabs.Tabs):
             self.master.accept_all()
             signals.flow_change.send(self, flow = self.flow)
         elif key == "d":
-            if self.state.flow_count() == 1:
+            if self.flow.killable:
+                self.flow.kill(self.master)
+            self.view.remove(self.flow)
+            if not self.view.focus.flow:
                 self.master.view_flowlist()
-            elif self.state.view.index(self.flow) == len(self.state.view) - 1:
-                self.view_prev_flow(self.flow)
             else:
-                self.view_next_flow(self.flow)
-            f = self.flow
-            if f.killable:
-                f.kill(self.master)
-            self.state.delete_flow(f)
+                self.view_flow(self.view.focus.flow)
         elif key == "D":
-            f = self.master.state.duplicate_flow(self.flow)
-            signals.pop_view_state.send(self)
-            self.master.view_flow(f)
+            cp = self.flow.copy()
+            self.master.view.add(cp)
+            self.master.view.focus.flow = cp
+            self.view_flow(cp)
             signals.status_message.send(message="Duplicated.")
         elif key == "p":
             self.view_prev_flow(self.flow)
@@ -546,7 +533,7 @@ class FlowView(tabs.Tabs):
             signals.flow_change.send(self, flow = self.flow)
         elif key == "V":
             if self.flow.modified():
-                self.state.revert(self.flow)
+                self.flow.revert()
                 signals.flow_change.send(self, flow = self.flow)
                 signals.status_message.send(message="Reverted.")
             else:
@@ -608,14 +595,9 @@ class FlowView(tabs.Tabs):
             else:
                 common.ask_save_body("s", self.flow)
         elif key == "f":
-            signals.status_message.send(message="Loading all body data...")
-            self.state.add_flow_setting(
-                self.flow,
-                (self.tab_offset, "fullcontents"),
-                True
-            )
+            self.view.settings[self.flow][(self.tab_offset, "fullcontents")] = True
             signals.flow_change.send(self, flow = self.flow)
-            signals.status_message.send(message="")
+            signals.status_message.send(message="Loading all body data...")
         elif key == "m":
             p = list(contentviews.view_prompts)
             p.insert(0, ("Clear", "C"))
