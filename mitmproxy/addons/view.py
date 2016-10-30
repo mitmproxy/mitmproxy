@@ -19,37 +19,81 @@ import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 
-
-def key_request_start(f: mitmproxy.flow.Flow) -> datetime.datetime:
-    return f.request.timestamp_start or 0
-
-
-def key_request_method(f: mitmproxy.flow.Flow) -> str:
-    return f.request.method
-
-
-def key_request_url(f: mitmproxy.flow.Flow) -> str:
-    return f.request.url
+# The underlying sorted list implementation expects the sort key to be stable
+# for the lifetime of the object. However, if we sort by size, for instance,
+# the sort order changes as the flow progresses through its lifecycle. We
+# address this through two means:
+#
+# - Let order keys cache the sort value by flow ID.
+#
+# - Add a facility to refresh items in the list by removing and re-adding them
+# when they are updated.
 
 
-def key_size(f: mitmproxy.flow.Flow) -> int:
-    s = 0
-    if f.request.raw_content:
-        s += len(f.request.raw_content)
-    if f.response and f.response.raw_content:
-        s += len(f.response.raw_content)
-    return s
+class _OrderKey:
+    def __init__(self, view):
+        self.view = view
+
+    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:
+        pass
+
+    def refresh(self, f):
+        k = self._key()
+        old = self.view.settings[f][k]
+        new = self.generate(f)
+        if old != new:
+            self.view._view.remove(f)
+            self.view.settings[f][k] = new
+            self.view._view.add(f)
+            self.view.sig_refresh.send(self.view)
+
+    def _key(self):
+        return "_order_%s" % id(self)
+
+    def __call__(self, f):
+        k = self._key()
+        s = self.view.settings[f]
+        if k in s:
+            return s[k]
+        val = self.generate(f)
+        s[k] = val
+        return val
 
 
-orders = [
-    ("t", "time", key_request_start),
-    ("m", "method", key_request_method),
-    ("u", "url", key_request_url),
-    ("z", "size", key_size),
-]
+class OrderRequestStart(_OrderKey):
+    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+        return f.request.timestamp_start or 0
+
+
+class OrderRequestMethod(_OrderKey):
+    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+        return f.request.method
+
+
+class OrderRequestURL(_OrderKey):
+    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+        return f.request.url
+
+
+class OrderKeySize(_OrderKey):
+    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+        s = 0
+        if f.request.raw_content:
+            s += len(f.request.raw_content)
+        if f.response and f.response.raw_content:
+            s += len(f.response.raw_content)
+        return s
 
 
 matchall = flowfilter.parse(".")
+
+
+orders = [
+    ("t", "time"),
+    ("m", "method"),
+    ("u", "url"),
+    ("z", "size"),
+]
 
 
 class View(collections.Sequence):
@@ -59,8 +103,18 @@ class View(collections.Sequence):
         self.filter = matchall
         # Should we show only marked flows?
         self.show_marked = False
-        self.order_key = key_request_start
+
+        self.default_order = OrderRequestStart(self)
+        self.orders = dict(
+            time = self.default_order,
+            method = OrderRequestMethod(self),
+            url = OrderRequestURL(self),
+            size = OrderKeySize(self),
+        )
+        self.order_key = self.default_order
         self.order_reversed = False
+        self.focus_follow = False
+
         self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
 
         # These signals broadcast events that affect the view. That is, an
@@ -115,13 +169,23 @@ class View(collections.Sequence):
     def index(self, f: mitmproxy.flow.Flow) -> int:
         return self._rev(self._view.index(f))
 
+    def __contains__(self, f: mitmproxy.flow.Flow) -> bool:
+        return self._view.__contains__(f)
+
+    def _order_key_name(self):
+        return "_order_%s" % id(self.order_key)
+
+    def _base_add(self, f):
+        self.settings[f][self._order_key_name()] = self.order_key(f)
+        self._view.add(f)
+
     def _refilter(self):
         self._view.clear()
         for i in self._store.values():
             if self.show_marked and not i.marked:
                 continue
             if self.filter(i):
-                self._view.add(i)
+                self._base_add(i)
         self.sig_refresh.send(self)
 
     # API
@@ -155,9 +219,10 @@ class View(collections.Sequence):
         """
         self._store.clear()
         self._view.clear()
+        self.settings.clear()
         self.sig_refresh.send(self)
 
-    def add(self, f: mitmproxy.flow.Flow):
+    def add(self, f: mitmproxy.flow.Flow) -> bool:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
@@ -165,7 +230,9 @@ class View(collections.Sequence):
         if f.id not in self._store:
             self._store[f.id] = f
             if self.filter(f):
-                self._view.add(f)
+                self._base_add(f)
+                if self.focus_follow:
+                    self.focus.flow = f
                 self.sig_add.send(self, flow=f)
 
     def remove(self, f: mitmproxy.flow.Flow):
@@ -173,10 +240,10 @@ class View(collections.Sequence):
             Removes the flow from the underlying store and the view.
         """
         if f.id in self._store:
-            del self._store[f.id]
             if f in self._view:
                 self._view.remove(f)
                 self.sig_remove.send(self, flow=f)
+            del self._store[f.id]
 
     def update(self, f: mitmproxy.flow.Flow):
         """
@@ -185,9 +252,16 @@ class View(collections.Sequence):
         if f.id in self._store:
             if self.filter(f):
                 if f not in self._view:
-                    self._view.add(f)
+                    self._base_add(f)
+                    if self.focus_follow:
+                        self.focus.flow = f
                     self.sig_add.send(self, flow=f)
                 else:
+                    # This is a tad complicated. The sortedcontainers
+                    # implementation assumes that the order key is stable. If
+                    # it changes mid-way Very Bad Things happen. We detect when
+                    # this happens, and re-fresh the item.
+                    self.order_key.refresh(f)
                     self.sig_update.send(self, flow=f)
             else:
                 try:
@@ -210,32 +284,31 @@ class View(collections.Sequence):
             self.set_filter(filt)
         if "order" in updated:
             if opts.order is None:
-                self.set_order(key_request_start)
+                self.set_order(self.default_order)
             else:
-                for _, name, func in orders:
-                    if name == opts.order:
-                        self.set_order(func)
-                        break
-                else:
+                if opts.order not in self.orders:
                     raise exceptions.OptionsError(
                         "Unknown flow order: %s" % opts.order
                     )
+                self.set_order(self.orders[opts.order])
         if "order_reversed" in updated:
             self.set_reversed(opts.order_reversed)
+        if "focus_follow" in updated:
+            self.focus_follow = opts.focus_follow
 
     def request(self, f):
         self.add(f)
-
-    def intercept(self, f):
-        self.update(f)
-
-    def resume(self, f):
-        self.update(f)
 
     def error(self, f):
         self.update(f)
 
     def response(self, f):
+        self.update(f)
+
+    def intercept(self, f):
+        self.update(f)
+
+    def resume(self, f):
         self.update(f)
 
 
@@ -258,7 +331,7 @@ class Focus:
         return self._flow
 
     @flow.setter
-    def flow(self, f: mitmproxy.flow.Flow):
+    def flow(self, f: typing.Optional[mitmproxy.flow.Flow]):
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
@@ -305,6 +378,9 @@ class Settings(collections.Mapping):
         view.sig_remove.connect(self._sig_remove)
         view.sig_refresh.connect(self._sig_refresh)
 
+    def clear(self):
+        self.values.clear()
+
     def __iter__(self) -> typing.Iterable:
         return iter(self.values)
 
@@ -321,6 +397,6 @@ class Settings(collections.Mapping):
             del self.values[flow.id]
 
     def _sig_refresh(self, view):
-        for fid in self.values.keys():
+        for fid in list(self.values.keys()):
             if fid not in view._store:
                 del self.values[fid]

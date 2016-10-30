@@ -175,18 +175,6 @@ class FlowItem(urwid.WidgetWrap):
             signals.flowlist_change.send(self)
         elif key == "M":
             self.master.view.toggle_marked()
-        elif key == "o":
-            orders = [(i[1], i[0]) for i in view.orders]
-            lookup = dict([(i[0], i[1]) for i in view.orders])
-
-            def change_order(k):
-                self.master.options.order = lookup[k]
-
-            signals.status_prompt_onekey.send(
-                prompt = "Order",
-                keys = orders,
-                callback = change_order
-            )
         elif key == "r":
             try:
                 self.master.replay_request(self.flow)
@@ -220,9 +208,6 @@ class FlowItem(urwid.WidgetWrap):
             for f in self.master.view:
                 f.marked = False
             signals.flowlist_change.send(self)
-        elif key == "v":
-            val = not self.master.options.order_reversed
-            self.master.options.order_reversed = val
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
@@ -389,8 +374,24 @@ class FlowListBox(urwid.ListBox):
                 keys = common.METHOD_OPTIONS,
                 callback = self.get_method
             )
+        elif key == "o":
+            orders = [(i[1], i[0]) for i in view.orders]
+            lookup = dict([(i[0], i[1]) for i in view.orders])
+
+            def change_order(k):
+                self.master.options.order = lookup[k]
+
+            signals.status_prompt_onekey.send(
+                prompt = "Order",
+                keys = orders,
+                callback = change_order
+            )
         elif key == "F":
-            self.master.toggle_follow_flows()
+            o = self.master.options
+            o.focus_follow = not o.focus_follow
+        elif key == "v":
+            val = not self.master.options.order_reversed
+            self.master.options.order_reversed = val
         elif key == "W":
             if self.master.options.outfile:
                 self.master.options.outfile = None

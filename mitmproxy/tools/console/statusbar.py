@@ -199,7 +199,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("killextra")
         if self.master.options.no_upstream_cert:
             opts.append("no-upstream-cert")
-        if self.master.options.follow_focus:
+        if self.master.options.focus_follow:
             opts.append("following")
         if self.master.options.stream_large_bodies:
             opts.append(

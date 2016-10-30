@@ -44,25 +44,23 @@ class Options(mitmproxy.options.Options):
             self,
             *,  # all args are keyword-only.
             eventlog: bool = False,
-            follow: bool = False,
+            focus_follow: bool = False,
             intercept: Optional[str] = None,
             filter: Optional[str] = None,
             palette: Optional[str] = None,
             palette_transparent: bool = False,
             no_mouse: bool = False,
-            follow_focus: bool = False,
             order: Optional[str] = None,
             order_reversed: bool = False,
             **kwargs
     ):
         self.eventlog = eventlog
-        self.follow = follow
+        self.focus_follow = focus_follow
         self.intercept = intercept
         self.filter = filter
         self.palette = palette
         self.palette_transparent = palette_transparent
         self.no_mouse = no_mouse
-        self.follow_focus = follow_focus
         self.order = order
         self.order_reversed = order_reversed
         super().__init__(**kwargs)
@@ -83,7 +81,6 @@ class ConsoleMaster(master.Master):
         self.palette_transparent = options.palette_transparent
 
         self.logbuffer = urwid.SimpleListWalker([])
-        self.follow = options.follow
 
         self.view_stack = []
 
