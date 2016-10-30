@@ -109,8 +109,8 @@ class BodyPile(urwid.Pile):
 
 class ConnectionItem(urwid.WidgetWrap):
 
-    def __init__(self, master, state, flow, focus):
-        self.master, self.state, self.flow = master, state, flow
+    def __init__(self, master, view, flow, focus):
+        self.master, self.view, self.flow = master, view, flow
         self.f = focus
         w = self.get_text()
         urwid.WidgetWrap.__init__(self, w)
@@ -143,7 +143,7 @@ class ConnectionItem(urwid.WidgetWrap):
     def server_replay_prompt(self, k):
         a = self.master.addons.get("serverplayback")
         if k == "a":
-            a.load([i.copy() for i in self.master.state.view])
+            a.load([i.copy() for i in self.master.view])
         elif k == "t":
             a.load([self.flow.copy()])
         signals.update_settings.send(self)
@@ -163,11 +163,12 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "d":
             if self.flow.killable:
                 self.flow.kill(self.master)
-            self.state.delete_flow(self.flow)
+            self.view.remove(self.view.focus.flow)
             signals.flowlist_change.send(self)
         elif key == "D":
-            f = self.master.state.duplicate_flow(self.flow)
-            self.master.state.set_focus_flow(f)
+            cp = self.flow.copy()
+            self.master.view.add(cp)
+            self.master.view.focus.flow = cp
             signals.flowlist_change.send(self)
         elif key == "m":
             self.flow.marked = not self.flow.marked
@@ -208,14 +209,14 @@ class ConnectionItem(urwid.WidgetWrap):
                     callback = self.server_replay_prompt,
                 )
         elif key == "U":
-            for f in self.state.flows:
+            for f in self.view:
                 f.marked = False
             signals.flowlist_change.send(self)
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
                 return
-            self.state.revert(self.flow)
+            self.flow.revert()
             signals.flowlist_change.send(self)
             signals.status_message.send(message="Reverted.")
         elif key == "w":
@@ -264,38 +265,49 @@ class ConnectionItem(urwid.WidgetWrap):
 
 class FlowListWalker(urwid.ListWalker):
 
-    def __init__(self, master, state):
-        self.master, self.state = master, state
-        signals.flowlist_change.connect(self.sig_flowlist_change)
+    def __init__(self, master, view):
+        self.master, self.view = master, view
+        self.view.sig_refresh.connect(self.sig_mod)
+        self.view.sig_add.connect(self.sig_mod)
+        self.view.sig_remove.connect(self.sig_mod)
+        self.view.sig_update.connect(self.sig_mod)
+        signals.flowlist_change.connect(self.sig_mod)
 
-    def sig_flowlist_change(self, sender):
+    def sig_mod(self, *args, **kwargs):
         self._modified()
 
     def get_focus(self):
-        f, i = self.state.get_focus()
-        f = ConnectionItem(self.master, self.state, f, True) if f else None
-        return f, i
+        if not self.view.focus.flow:
+            return None, 0
+        return ConnectionItem(
+            self.master, self.view, self.view.focus.flow, True
+        ), self.view.focus.index
 
-    def set_focus(self, focus):
-        ret = self.state.set_focus(focus)
-        return ret
+    def set_focus(self, index):
+        if self.view.inbounds(index):
+            self.view.focus.index = index
+            signals.flowlist_change.send(self)
 
     def get_next(self, pos):
-        f, i = self.state.get_next(pos)
-        f = ConnectionItem(self.master, self.state, f, False) if f else None
-        return f, i
+        pos = pos + 1
+        if not self.view.inbounds(pos):
+            return None, None
+        f = ConnectionItem(self.master, self.view, self.view[pos], False)
+        return f, pos
 
     def get_prev(self, pos):
-        f, i = self.state.get_prev(pos)
-        f = ConnectionItem(self.master, self.state, f, False) if f else None
-        return f, i
+        pos = pos - 1
+        if not self.view.inbounds(pos):
+            return None, None
+        f = ConnectionItem(self.master, self.view, self.view[pos], False)
+        return f, pos
 
 
 class FlowListBox(urwid.ListBox):
 
     def __init__(self, master: "mitmproxy.console.master.ConsoleMaster"):
         self.master = master
-        super().__init__(FlowListWalker(master, master.state))
+        super().__init__(FlowListWalker(master, master.view))
 
     def get_method_raw(self, k):
         if k:
@@ -331,29 +343,32 @@ class FlowListBox(urwid.ListBox):
             return
         scheme, host, port, path = parts
         f = self.master.create_request(method, scheme, host, port, path)
-        self.master.state.set_focus_flow(f)
+        self.master.view.focus.flow = f
         signals.flowlist_change.send(self)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "A":
-            self.master.accept_all()
+            for f in self.master.view:
+                if f.intercepted:
+                    f.resume()
             signals.flowlist_change.send(self)
         elif key == "z":
-            self.master.clear_flows()
+            self.master.view.clear()
+            signals.flowlist_change.send(self)
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "g":
-            self.master.state.set_focus(0)
+            self.master.view.focus.index = 0
             signals.flowlist_change.send(self)
         elif key == "G":
-            self.master.state.set_focus(self.master.state.flow_count())
+            self.master.view.focus.index = len(self.master.view) - 1
             signals.flowlist_change.send(self)
         elif key == "f":
             signals.status_prompt.send(
                 prompt = "Filter View",
-                text = self.master.state.filter_txt,
-                callback = self.master.set_view_filter
+                text = self.master.options.filter,
+                callback = self.master.options.setter("filter")
             )
         elif key == "L":
             signals.status_prompt_path.send(

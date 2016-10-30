@@ -17,6 +17,7 @@ import sortedcontainers
 
 import mitmproxy.flow
 from mitmproxy import flowfilter
+from mitmproxy import exceptions
 
 
 def key_request_start(f: mitmproxy.flow.Flow) -> datetime.datetime:
@@ -50,6 +51,15 @@ class View(collections.Sequence):
 
         self.focus = Focus(self)
         self.settings = Settings(self)
+
+    def store_count(self):
+        return len(self._store)
+
+    def inbounds(self, index: int) -> bool:
+        """
+            Is this index >= 0 and < len(self)
+        """
+        return index >= 0 and index < len(self)
 
     def _rev(self, idx: int) -> int:
         """
@@ -112,7 +122,7 @@ class View(collections.Sequence):
         """
             Clears both the state and view.
         """
-        self._state.clear()
+        self._store.clear()
         self._view.clear()
         self.sig_refresh.send(self)
 
@@ -157,6 +167,16 @@ class View(collections.Sequence):
                     pass
 
     # Event handlers
+    def configure(self, opts, updated):
+        filt = None
+        if "filter" in updated:
+            if opts.filter:
+                filt = flowfilter.parse(opts.filter)
+                if not filt:
+                    raise exceptions.OptionsError(
+                        "Invalid interception filter: %s" % opts.filter
+                    )
+        self.set_filter(filt)
 
     def request(self, f):
         self.add(f)
@@ -202,21 +222,11 @@ class Focus:
         if self.flow:
             return self.view.index(self.flow)
 
-    def next(self):
-        """
-            Sets the focus to the next flow.
-        """
-        if self.flow:
-            idx = min(self.index + 1, len(self.view) - 1)
-            self.flow = self.view[idx]
-
-    def prev(self):
-        """
-            Sets the focus to the previous flow.
-        """
-        if self.flow:
-            idx = max(self.index - 1, 0)
-            self.flow = self.view[idx]
+    @index.setter
+    def index(self, idx) -> typing.Optional[int]:
+        if idx < 0 or idx > len(self.view) - 1:
+            raise ValueError("Index out of view bounds")
+        self.flow = self.view[idx]
 
     def _nearest(self, f, v):
         return min(v.bisect(f), len(v) - 1)

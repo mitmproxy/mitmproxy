@@ -164,10 +164,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "i"))
             r.append(":%s]" % self.master.options.intercept)
-        if self.master.state.filter_txt:
+        if self.master.options.filter:
             r.append("[")
             r.append(("heading_key", "f"))
-            r.append(":%s]" % self.master.state.filter_txt)
+            r.append(":%s]" % self.master.options.filter)
         if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
@@ -194,7 +194,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("killextra")
         if self.master.options.no_upstream_cert:
             opts.append("no-upstream-cert")
-        if self.master.state.follow_focus:
+        if self.master.options.follow_focus:
             opts.append("following")
         if self.master.options.stream_large_bodies:
             opts.append(
@@ -224,11 +224,11 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = self.master.state.flow_count()
-        if self.master.state.focus is None:
+        fc = len(self.master.view)
+        if self.master.view.focus.flow is None:
             offset = 0
         else:
-            offset = min(self.master.state.focus + 1, fc)
+            offset = self.master.view.focus.index + 1
         t = [
             ('heading', ("[%s/%s]" % (offset, fc)).ljust(9))
         ]

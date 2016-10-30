@@ -127,8 +127,8 @@ TAB_RESP = 1
 class FlowView(tabs.Tabs):
     highlight_color = "focusfield"
 
-    def __init__(self, master, state, flow, tab_offset):
-        self.master, self.state, self.flow = master, state, flow
+    def __init__(self, master, view, flow, tab_offset):
+        self.master, self.view, self.flow = master, view, flow
         super().__init__(
             [
                 (self.tab_request, self.view_request),
@@ -164,7 +164,7 @@ class FlowView(tabs.Tabs):
         return self.conn_text(self.flow.response)
 
     def view_details(self):
-        return flowdetailview.flowdetails(self.state, self.flow)
+        return flowdetailview.flowdetails(self.view, self.flow)
 
     def sig_flow_change(self, sender, flow):
         if flow == self.flow:
@@ -175,11 +175,8 @@ class FlowView(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.state.get_flow_setting(
-                self.flow,
-                (self.tab_offset, "fullcontents"),
-                False
-            )
+            s = self.view.settings[self.flow]
+            full = s.get((self.tab_offset, "fullcontents"), False)
             if full:
                 limit = sys.maxsize
             else:
@@ -237,9 +234,9 @@ class FlowView(tabs.Tabs):
         return description, text_objects
 
     def viewmode_get(self):
-        override = self.state.get_flow_setting(
-            self.flow,
-            (self.tab_offset, "prettyview")
+        override = self.view.settings[self.flow].get(
+            (self.tab_offset, "prettyview"),
+            None
         )
         return self.master.options.default_contentview if override is None else override
 
@@ -284,7 +281,7 @@ class FlowView(tabs.Tabs):
                     ]
                 )
             ]
-        return searchable.Searchable(self.state, txt)
+        return searchable.Searchable(self.view, txt)
 
     def set_method_raw(self, m):
         if m:
@@ -468,18 +465,20 @@ class FlowView(tabs.Tabs):
 
     def _view_nextprev_flow(self, np, flow):
         try:
-            idx = self.state.view.index(flow)
+            idx = self.view.index(flow)
         except IndexError:
             return
+
+        new_idx = idx
         if np == "next":
-            new_flow, new_idx = self.state.get_next(idx)
+            new_idx += 1
         else:
-            new_flow, new_idx = self.state.get_prev(idx)
-        if new_flow is None:
+            new_idx -= 1
+        if not self.view.inbounds(new_idx):
             signals.status_message.send(message="No more flows")
-        else:
-            signals.pop_view_state.send(self)
-            self.master.view_flow(new_flow, self.tab_offset)
+            return
+        signals.pop_view_state.send(self)
+        self.master.view_flow(self.view[new_idx], self.tab_offset)
 
     def view_next_flow(self, flow):
         return self._view_nextprev_flow("next", flow)

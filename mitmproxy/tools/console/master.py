@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 import traceback
-import weakref
 
 import urwid
 from typing import Optional
@@ -19,9 +18,8 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io
-from mitmproxy import flowfilter
 from mitmproxy import log
-from mitmproxy.addons import state
+from mitmproxy.addons import view
 from mitmproxy.addons import intercept
 import mitmproxy.options
 from mitmproxy.tools.console import flowlist
@@ -34,169 +32,11 @@ from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import window
-from mitmproxy.flowfilter import FMarked
 from mitmproxy.utils import strutils
 
 from mitmproxy.net import tcp
 
 EVENTLOG_SIZE = 500
-
-
-class ConsoleState(state.State):
-
-    def __init__(self):
-        state.State.__init__(self)
-        self.focus = None
-        self.follow_focus = None
-        self.flowsettings = weakref.WeakKeyDictionary()
-        self.last_search = None
-        self.last_filter = ""
-        self.mark_filter = False
-
-    def __setattr__(self, name, value):
-        self.__dict__[name] = value
-        signals.update_settings.send(self)
-
-    def add_flow_setting(self, flow, key, value):
-        d = self.flowsettings.setdefault(flow, {})
-        d[key] = value
-
-    def get_flow_setting(self, flow, key, default=None):
-        d = self.flowsettings.get(flow, {})
-        return d.get(key, default)
-
-    def add_flow(self, f):
-        super().add_flow(f)
-        signals.flowlist_change.send(self)
-        self.update_focus()
-        return f
-
-    def update_flow(self, f):
-        super().update_flow(f)
-        signals.flowlist_change.send(self)
-        self.update_focus()
-        return f
-
-    def set_view_filter(self, txt):
-        ret = super().set_view_filter(txt)
-        self.set_focus(self.focus)
-        return ret
-
-    def get_focus(self):
-        if not self.view or self.focus is None:
-            return None, None
-        return self.view[self.focus], self.focus
-
-    def set_focus(self, idx):
-        if self.view:
-            if idx is None or idx < 0:
-                idx = 0
-            elif idx >= len(self.view):
-                idx = len(self.view) - 1
-            self.focus = idx
-        else:
-            self.focus = None
-
-    def update_focus(self):
-        if self.focus is None:
-            self.set_focus(0)
-        elif self.follow_focus:
-            self.set_focus(len(self.view) - 1)
-
-    def set_focus_flow(self, f):
-        self.set_focus(self.view.index(f))
-
-    def get_from_pos(self, pos):
-        if len(self.view) <= pos or pos < 0:
-            return None, None
-        return self.view[pos], pos
-
-    def get_next(self, pos):
-        return self.get_from_pos(pos + 1)
-
-    def get_prev(self, pos):
-        return self.get_from_pos(pos - 1)
-
-    def delete_flow(self, f):
-        if f in self.view and self.view.index(f) <= self.focus:
-            self.focus -= 1
-        if self.focus < 0:
-            self.focus = None
-        ret = super().delete_flow(f)
-        self.set_focus(self.focus)
-        return ret
-
-    def get_nearest_matching_flow(self, flow, flt):
-        fidx = self.view.index(flow)
-        dist = 1
-
-        fprev = fnext = True
-        while fprev or fnext:
-            fprev, _ = self.get_from_pos(fidx - dist)
-            fnext, _ = self.get_from_pos(fidx + dist)
-
-            if fprev and flowfilter.match(flt, fprev):
-                return fprev
-            elif fnext and flowfilter.match(flt, fnext):
-                return fnext
-
-            dist += 1
-
-        return None
-
-    def enable_marked_filter(self):
-        marked_flows = [f for f in self.flows if f.marked]
-        if not marked_flows:
-            return
-
-        marked_filter = "~%s" % FMarked.code
-
-        # Save Focus
-        last_focus, _ = self.get_focus()
-        nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
-
-        self.last_filter = self.filter_txt
-        self.set_view_filter(marked_filter)
-
-        # Restore Focus
-        if last_focus.marked:
-            self.set_focus_flow(last_focus)
-        else:
-            self.set_focus_flow(nearest_marked)
-
-        self.mark_filter = True
-
-    def disable_marked_filter(self):
-        marked_filter = "~%s" % FMarked.code
-
-        # Save Focus
-        last_focus, _ = self.get_focus()
-        nearest_marked = self.get_nearest_matching_flow(last_focus, marked_filter)
-
-        self.set_view_filter(self.last_filter)
-        self.last_filter = ""
-
-        # Restore Focus
-        if last_focus.marked:
-            self.set_focus_flow(last_focus)
-        else:
-            self.set_focus_flow(nearest_marked)
-
-        self.mark_filter = False
-
-    def clear(self):
-        marked_flows = [f for f in self.view if f.marked]
-        super().clear()
-
-        for f in marked_flows:
-            self.add_flow(f)
-            f.marked = True
-
-        if len(self.flows.views) == 0:
-            self.focus = None
-        else:
-            self.focus = 0
-        self.set_focus(self.focus)
 
 
 class Options(mitmproxy.options.Options):
@@ -210,6 +50,7 @@ class Options(mitmproxy.options.Options):
             palette: Optional[str] = None,
             palette_transparent: bool = False,
             no_mouse: bool = False,
+            follow_focus: bool = False,
             **kwargs
     ):
         self.eventlog = eventlog
@@ -219,6 +60,7 @@ class Options(mitmproxy.options.Options):
         self.palette = palette
         self.palette_transparent = palette_transparent
         self.no_mouse = no_mouse
+        self.follow_focus = follow_focus
         super().__init__(**kwargs)
 
 
@@ -227,14 +69,11 @@ class ConsoleMaster(master.Master):
 
     def __init__(self, options, server):
         super().__init__(options, server)
-        self.state = ConsoleState()
+        self.view = view.View()
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
         self.options.errored.connect(self.options_error)
-
-        if options.filter:
-            self.set_view_filter(options.filter)
 
         self.palette = options.palette
         self.palette_transparent = options.palette_transparent
@@ -250,7 +89,7 @@ class ConsoleMaster(master.Master):
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(*addons.default_addons())
-        self.addons.add(self.state, intercept.Intercept())
+        self.addons.add(intercept.Intercept(), self.view)
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -432,13 +271,13 @@ class ConsoleMaster(master.Master):
 
         if self.options.rfile:
             ret = self.load_flows_path(self.options.rfile)
-            if ret and self.state.flow_count():
+            if ret and self.view.store_count():
                 signals.add_log(
                     "File truncated or corrupted. "
                     "Loaded as many flows as possible.",
                     "error"
                 )
-            elif ret and not self.state.flow_count():
+            elif ret and not self.view.store_count():
                 self.shutdown()
                 print("Could not load file: {}".format(ret), file=sys.stderr)
                 sys.exit(1)
@@ -533,16 +372,11 @@ class ConsoleMaster(master.Master):
     def view_flowlist(self):
         if self.ui.started:
             self.ui.clear()
-        if self.state.follow_focus:
-            self.state.set_focus(self.state.flow_count())
 
         if self.options.eventlog:
             body = flowlist.BodyPile(self)
         else:
             body = flowlist.FlowListBox(self)
-
-        if self.follow:
-            self.toggle_follow_flows()
 
         signals.push_view_state.send(
             self,
@@ -556,12 +390,12 @@ class ConsoleMaster(master.Master):
         )
 
     def view_flow(self, flow, tab_offset=0):
-        self.state.set_focus_flow(flow)
+        self.view.focus.flow = flow
         signals.push_view_state.send(
             self,
             window = window.Window(
                 self,
-                flowview.FlowView(self, self.state, flow, tab_offset),
+                flowview.FlowView(self, self.view, flow, tab_offset),
                 flowview.FlowViewHeader(self, flow),
                 statusbar.StatusBar(self, flowview.footer),
                 flowview.help_context
@@ -585,7 +419,7 @@ class ConsoleMaster(master.Master):
         return self._write_flows(path, [flow])
 
     def save_flows(self, path):
-        return self._write_flows(path, self.state.view)
+        return self._write_flows(path, self.view)
 
     def load_flows_callback(self, path):
         if not path:
@@ -602,14 +436,6 @@ class ConsoleMaster(master.Master):
         signals.flowlist_change.send(self)
         return reterr
 
-    def accept_all(self):
-        self.state.accept_all(self)
-
-    def set_view_filter(self, txt):
-        v = self.state.set_view_filter(txt)
-        signals.flowlist_change.send(self)
-        return v
-
     def edit_scripts(self, scripts):
         self.options.scripts = [x[0] for x in scripts]
 
@@ -617,56 +443,14 @@ class ConsoleMaster(master.Master):
         if a != "n":
             raise urwid.ExitMainLoop
 
-    def shutdown(self):
-        self.state.killall(self)
-        master.Master.shutdown(self)
-
-    def clear_flows(self):
-        self.state.clear()
-        signals.flowlist_change.send(self)
-
-    def toggle_follow_flows(self):
-        # toggle flow follow
-        self.state.follow_focus = not self.state.follow_focus
-        # jump to most recent flow if follow is now on
-        if self.state.follow_focus:
-            self.state.set_focus(self.state.flow_count())
-            signals.flowlist_change.send(self)
-
-    def delete_flow(self, f):
-        self.state.delete_flow(f)
-        signals.flowlist_change.send(self)
-
     def refresh_focus(self):
-        if self.state.view:
-            signals.flow_change.send(
-                self,
-                flow = self.state.view[self.state.focus]
-            )
-
-    def process_flow(self, f):
-        signals.flowlist_change.send(self)
-        signals.flow_change.send(self, flow=f)
+        if self.view.focus.flow:
+            signals.flow_change.send(self, flow = self.view.focus.flow)
 
     def clear_events(self):
         self.logbuffer[:] = []
 
     # Handlers
-    @controller.handler
-    def error(self, f):
-        super().error(f)
-        self.process_flow(f)
-
-    @controller.handler
-    def request(self, f):
-        super().request(f)
-        self.process_flow(f)
-
-    @controller.handler
-    def response(self, f):
-        super().response(f)
-        self.process_flow(f)
-
     @controller.handler
     def tcp_message(self, f):
         super().tcp_message(f)
