@@ -129,8 +129,8 @@ class View(collections.Sequence):
         self.show_marked = not self.show_marked
         self._refilter()
 
-    def toggle_reversed(self):
-        self.order_reversed = not self.order_reversed
+    def set_reversed(self, value: bool):
+        self.order_reversed = value
         self.sig_refresh.send(self)
 
     def set_order(self, order_key: typing.Callable):
@@ -220,6 +220,8 @@ class View(collections.Sequence):
                     raise exceptions.OptionsError(
                         "Unknown flow order: %s" % opts.order
                     )
+        if "order_reversed" in updated:
+            self.set_reversed(opts.order_reversed)
 
     def request(self, f):
         self.add(f)

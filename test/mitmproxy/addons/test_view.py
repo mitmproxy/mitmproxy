@@ -77,13 +77,13 @@ def test_order():
 
     v.set_order(view.key_request_method)
     assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
-    v.toggle_reversed()
+    v.set_reversed(True)
     assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
 
     v.set_order(view.key_request_start)
     assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
 
-    v.toggle_reversed()
+    v.set_reversed(False)
     assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
 
@@ -92,7 +92,7 @@ def test_reversed():
     v.request(tft(start=1))
     v.request(tft(start=2))
     v.request(tft(start=3))
-    v.toggle_reversed()
+    v.set_reversed(True)
 
     assert v[0].request.timestamp_start == 3
     assert v[-1].request.timestamp_start == 1
@@ -266,9 +266,16 @@ def test_settings():
 
 
 class Options(options.Options):
-    def __init__(self, *, filter=None, order=None, **kwargs):
+    def __init__(
+        self, *,
+        filter=None,
+        order=None,
+        order_reversed=False,
+        **kwargs
+    ):
         self.filter = filter
         self.order = order
+        self.order_reversed = order_reversed
         super().__init__(**kwargs)
 
 
@@ -280,3 +287,5 @@ def test_configure():
 
         tctx.configure(v, order="method")
         tutils.raises("unknown flow order", tctx.configure, v, order="no")
+
+        tctx.configure(v, order_reversed=True)

@@ -29,6 +29,7 @@ def _mkhelp():
         ("r", "replay request"),
         ("S", "server replay request/s"),
         ("U", "unmark all marked flows"),
+        ("v", "reverse flow order"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
         ("W", "stream flows to file"),
@@ -219,6 +220,9 @@ class FlowItem(urwid.WidgetWrap):
             for f in self.master.view:
                 f.marked = False
             signals.flowlist_change.send(self)
+        elif key == "v":
+            val = not self.master.options.order_reversed
+            self.master.options.order_reversed = val
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
