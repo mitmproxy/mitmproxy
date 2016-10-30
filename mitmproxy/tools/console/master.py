@@ -3,7 +3,6 @@ import mimetypes
 import os
 import os.path
 import shlex
-import signal
 import stat
 import subprocess
 import sys
@@ -256,7 +255,6 @@ class ConsoleMaster(master.Master):
         changed = self.tick(timeout=0)
         if changed:
             self.loop.draw_screen()
-            signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
 
     def run(self):
@@ -293,13 +291,6 @@ class ConsoleMaster(master.Master):
                 )
             self.loop.set_alarm_in(0.01, http2err)
 
-        # It's not clear why we need to handle this explicitly - without this,
-        # mitmproxy hangs on keyboard interrupt. Remove if we ever figure it
-        # out.
-        def exit(s, f):
-            raise urwid.ExitMainLoop
-        signal.signal(signal.SIGINT, exit)
-
         self.loop.set_alarm_in(
             0.0001,
             lambda *args: self.view_flowlist()
@@ -316,8 +307,9 @@ class ConsoleMaster(master.Master):
             print("Please lodge a bug report at:", file=sys.stderr)
             print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
             print("Shutting down...", file=sys.stderr)
-        sys.stderr.flush()
-        self.shutdown()
+        finally:
+            sys.stderr.flush()
+            self.shutdown()
 
     def view_help(self, helpctx):
         signals.push_view_state.send(
