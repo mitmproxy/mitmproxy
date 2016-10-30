@@ -7,9 +7,18 @@ from mitmproxy.test import taddons
 from .. import tutils
 
 
-def test_keys():
-    t = tflow.tflow(resp=True)
-    view.key_size(t)
+class Options(options.Options):
+    def __init__(
+        self, *,
+        filter=None,
+        order=None,
+        order_reversed=False,
+        **kwargs
+    ):
+        self.filter = filter
+        self.order = order
+        self.order_reversed = order_reversed
+        super().__init__(**kwargs)
 
 
 def test_simple():
@@ -74,22 +83,23 @@ def test_filter():
 
 def test_order():
     v = view.View()
-    v.request(tft(method="get", start=1))
-    v.request(tft(method="put", start=2))
-    v.request(tft(method="get", start=3))
-    v.request(tft(method="put", start=4))
-    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    with taddons.context(options=Options()) as tctx:
+        v.request(tft(method="get", start=1))
+        v.request(tft(method="put", start=2))
+        v.request(tft(method="get", start=3))
+        v.request(tft(method="put", start=4))
+        assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
-    v.set_order(view.key_request_method)
-    assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
-    v.set_reversed(True)
-    assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
+        tctx.configure(v, order="method")
+        assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
+        v.set_reversed(True)
+        assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
 
-    v.set_order(view.key_request_start)
-    assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
+        tctx.configure(v, order="time")
+        assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
 
-    v.set_reversed(False)
-    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+        v.set_reversed(False)
+        assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
 
 def test_reversed():
@@ -261,27 +271,12 @@ def test_settings():
 
     tutils.raises(KeyError, v.settings.__getitem__, f)
     v.add(f)
-    assert v.settings[f] == {}
     v.settings[f]["foo"] = "bar"
     assert v.settings[f]["foo"] == "bar"
     assert len(list(v.settings)) == 1
     v.remove(f)
     tutils.raises(KeyError, v.settings.__getitem__, f)
     assert not v.settings.keys()
-
-
-class Options(options.Options):
-    def __init__(
-        self, *,
-        filter=None,
-        order=None,
-        order_reversed=False,
-        **kwargs
-    ):
-        self.filter = filter
-        self.order = order
-        self.order_reversed = order_reversed
-        super().__init__(**kwargs)
 
 
 def test_configure():

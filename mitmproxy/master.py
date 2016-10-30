@@ -92,10 +92,14 @@ class Master:
         try:
             mtype, obj = self.event_queue.get(timeout=timeout)
             if mtype not in events.Events:
-                raise exceptions.ControlException("Unknown event %s" % repr(mtype))
+                raise exceptions.ControlException(
+                    "Unknown event %s" % repr(mtype)
+                )
             handle_func = getattr(self, mtype)
             if not callable(handle_func):
-                raise exceptions.ControlException("Handler %s not callable" % mtype)
+                raise exceptions.ControlException(
+                    "Handler %s not callable" % mtype
+                )
             if not handle_func.__dict__.get("__handler"):
                 raise exceptions.ControlException(
                     "Handler function %s is not decorated with controller.handler" % (
