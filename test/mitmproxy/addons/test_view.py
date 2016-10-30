@@ -266,8 +266,9 @@ def test_settings():
 
 
 class Options(options.Options):
-    def __init__(self, *, filter=None, **kwargs):
+    def __init__(self, *, filter=None, order=None, **kwargs):
         self.filter = filter
+        self.order = order
         super().__init__(**kwargs)
 
 
@@ -276,3 +277,6 @@ def test_configure():
     with taddons.context(options=Options()) as tctx:
         tctx.configure(v, filter="~q")
         tutils.raises("invalid interception filter", tctx.configure, v, filter="~~")
+
+        tctx.configure(v, order="method")
+        tutils.raises("unknown flow order", tctx.configure, v, order="no")

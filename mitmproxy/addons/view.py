@@ -28,6 +28,27 @@ def key_request_method(f: mitmproxy.flow.Flow) -> str:
     return f.request.method
 
 
+def key_request_url(f: mitmproxy.flow.Flow) -> str:
+    return f.request.url
+
+
+def key_size(f: mitmproxy.flow.Flow) -> int:
+    s = 0
+    if f.request.raw_content:
+        s += len(f.request.raw_content)
+    if f.response and f.response.raw_content:
+        s += len(f.response.raw_content)
+    return s
+
+
+orders = [
+    ("t", "time", key_request_start),
+    ("m", "method", key_request_method),
+    ("u", "url", key_request_url),
+    ("z", "size", key_size),
+]
+
+
 matchall = flowfilter.parse(".")
 
 
@@ -178,15 +199,27 @@ class View(collections.Sequence):
 
     # Event handlers
     def configure(self, opts, updated):
-        filt = None
         if "filter" in updated:
+            filt = None
             if opts.filter:
                 filt = flowfilter.parse(opts.filter)
                 if not filt:
                     raise exceptions.OptionsError(
                         "Invalid interception filter: %s" % opts.filter
                     )
-        self.set_filter(filt)
+            self.set_filter(filt)
+        if "order" in updated:
+            if opts.order is None:
+                self.set_order(key_request_start)
+            else:
+                for _, name, func in orders:
+                    if name == opts.order:
+                        self.set_order(func)
+                        break
+                else:
+                    raise exceptions.OptionsError(
+                        "Unknown flow order: %s" % opts.order
+                    )
 
     def request(self, f):
         self.add(f)
