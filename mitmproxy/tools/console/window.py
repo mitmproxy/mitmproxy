@@ -91,7 +91,7 @@ class Window(urwid.Frame):
                 text = self.master.options.intercept,
                 callback = self.master.options.setter("intercept")
             )
-        elif k == "o":
+        elif k == "O":
             self.master.view_options()
         elif k == "Q":
             raise urwid.ExitMainLoop

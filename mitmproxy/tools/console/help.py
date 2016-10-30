@@ -48,7 +48,7 @@ class HelpView(urwid.ListBox):
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
             ("i", "set interception pattern"),
-            ("o", "options"),
+            ("O", "options"),
             ("q", "quit / return to previous page"),
             ("Q", "quit without confirm prompt"),
             ("R", "replay of requests/responses from file"),

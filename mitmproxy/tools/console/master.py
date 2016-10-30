@@ -51,6 +51,8 @@ class Options(mitmproxy.options.Options):
             palette_transparent: bool = False,
             no_mouse: bool = False,
             follow_focus: bool = False,
+            order: Optional[str] = None,
+            order_reversed: bool = False,
             **kwargs
     ):
         self.eventlog = eventlog
@@ -61,6 +63,8 @@ class Options(mitmproxy.options.Options):
         self.palette_transparent = palette_transparent
         self.no_mouse = no_mouse
         self.follow_focus = follow_focus
+        self.order = order
+        self.order_reversed = order_reversed
         super().__init__(**kwargs)
 
 

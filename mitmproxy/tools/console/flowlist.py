@@ -4,6 +4,7 @@ import mitmproxy.net.http.url
 from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
+from mitmproxy.addons import view
 from mitmproxy import export
 
 
@@ -24,9 +25,11 @@ def _mkhelp():
         ("m", "toggle flow mark"),
         ("M", "toggle marked flow view"),
         ("n", "create a new request"),
+        ("o", "set flow order"),
         ("r", "replay request"),
         ("S", "server replay request/s"),
         ("U", "unmark all marked flows"),
+        ("v", "reverse flow order"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
         ("W", "stream flows to file"),
@@ -172,6 +175,18 @@ class FlowItem(urwid.WidgetWrap):
             signals.flowlist_change.send(self)
         elif key == "M":
             self.master.view.toggle_marked()
+        elif key == "o":
+            orders = [(i[1], i[0]) for i in view.orders]
+            lookup = dict([(i[0], i[1]) for i in view.orders])
+
+            def change_order(k):
+                self.master.options.order = lookup[k]
+
+            signals.status_prompt_onekey.send(
+                prompt = "Order",
+                keys = orders,
+                callback = change_order
+            )
         elif key == "r":
             try:
                 self.master.replay_request(self.flow)
@@ -205,6 +220,9 @@ class FlowItem(urwid.WidgetWrap):
             for f in self.master.view:
                 f.marked = False
             signals.flowlist_change.send(self)
+        elif key == "v":
+            val = not self.master.options.order_reversed
+            self.master.options.order_reversed = val
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")

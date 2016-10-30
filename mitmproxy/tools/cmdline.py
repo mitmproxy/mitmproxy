@@ -8,6 +8,7 @@ from mitmproxy import platform
 from mitmproxy.utils import human
 from mitmproxy.net import tcp
 from mitmproxy import version
+from mitmproxy.addons import view
 
 
 class ParseException(Exception):
@@ -785,6 +786,12 @@ def mitmproxy():
         "--follow",
         action="store_true", dest="follow",
         help="Follow flow list."
+    )
+    parser.add_argument(
+        "--order",
+        type=str, dest="order", default=None,
+        choices=[o[1] for o in view.orders],
+        help="Flow sort order."
     )
     parser.add_argument(
         "--no-mouse",
