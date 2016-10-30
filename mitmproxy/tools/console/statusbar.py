@@ -119,12 +119,13 @@ class StatusBar(urwid.WidgetWrap):
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         super().__init__(urwid.Pile([self.ib, self.master.ab]))
-        signals.update_settings.connect(self.sig_update_settings)
-        signals.flowlist_change.connect(self.sig_update_settings)
-        master.options.changed.connect(self.sig_update_settings)
+        signals.update_settings.connect(self.sig_update)
+        signals.flowlist_change.connect(self.sig_update)
+        master.options.changed.connect(self.sig_update)
+        master.view.focus.sig_change.connect(self.sig_update)
         self.redraw()
 
-    def sig_update_settings(self, sender, updated=None):
+    def sig_update(self, sender, updated=None):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
@@ -229,8 +230,14 @@ class StatusBar(urwid.WidgetWrap):
             offset = 0
         else:
             offset = self.master.view.focus.index + 1
+
+        if self.master.options.order_reversed:
+            arrow = common.SYMBOL_UP
+        else:
+            arrow = common.SYMBOL_DOWN
+
         t = [
-            ('heading', ("[%s/%s]" % (offset, fc)).ljust(9))
+            ('heading', ("%s [%s/%s]" % (arrow, offset, fc)).ljust(11)),
         ]
 
         if self.master.server.bound:

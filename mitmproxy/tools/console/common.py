@@ -123,10 +123,14 @@ if urwid.util.detected_encoding:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
     SYMBOL_MARK = u"\u25cf"
+    SYMBOL_UP = u"\u21E7"
+    SYMBOL_DOWN = u"\u21E9"
 else:
     SYMBOL_REPLAY = u"[r]"
     SYMBOL_RETURN = u"<-"
     SYMBOL_MARK = "[m]"
+    SYMBOL_UP = "^"
+    SYMBOL_DOWN = " "
 
 
 # Save file to disk
