@@ -80,13 +80,13 @@ Logging and the context
 Scripts should not output straight to stderr or stdout. Instead, the `log
 <api.html#mitmproxy.controller.Log>`_ object on the ``ctx`` contexzt module
 should be used, so that the mitmproxy host program can handle output
-appropriately. So, mitmdump can print colorised sript output to the terminal,
+appropriately. So, mitmdump can print colorised script output to the terminal,
 and mitmproxy console can place script output in the event buffer.
 
 Here's how this looks:
 
-.. literalinclude:: ../../examples/logging.py
-   :caption: :src:`examples/logging.py`
+.. literalinclude:: ../../examples/context_logging.py
+   :caption: :src:`examples/context_logging.py`
    :language: python
 
 The ``ctx`` module also exposes the mitmproxy master object at ``ctx.master``
