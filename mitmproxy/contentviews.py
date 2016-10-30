@@ -2,15 +2,16 @@
 Mitmproxy Content Views
 =======================
 
-mitmproxy includes a set of content views which can be used to format/decode/highlight data.
-While they are currently used for HTTP message bodies only, the may be used in other contexts
-in the future, e.g. to decode protobuf messages sent as WebSocket frames.
+mitmproxy includes a set of content views which can be used to
+format/decode/highlight data. While they are currently used for HTTP message
+bodies only, the may be used in other contexts in the future, e.g. to decode
+protobuf messages sent as WebSocket frames.
 
-Thus, the View API is very minimalistic. The only arguments are `data` and `**metadata`,
-where `data` is the actual content (as bytes). The contents on metadata depend on the protocol in
-use. For HTTP, the message headers are passed as the ``headers`` keyword argument. For HTTP
-requests, the query parameters are passed as the ``query`` keyword argument.
-
+Thus, the View API is very minimalistic. The only arguments are `data` and
+`**metadata`, where `data` is the actual content (as bytes). The contents on
+metadata depend on the protocol in use. For HTTP, the message headers are
+passed as the ``headers`` keyword argument. For HTTP requests, the query
+parameters are passed as the ``query`` keyword argument.
 """
 
 import datetime
@@ -97,11 +98,7 @@ class View:
     prompt = ()
     content_types = []
 
-    def __call__(
-            self,
-            data: bytes,
-            **metadata
-    ):
+    def __call__(self, data: bytes, **metadata):
         """
         Transform raw data into human-readable output.
 
@@ -528,7 +525,7 @@ view_prompts = []
 
 def get(name):
     for i in views:
-        if i.name == name:
+        if i.name.lower() == name.lower():
             return i
 
 
@@ -606,10 +603,13 @@ def safe_to_print(lines, encoding="utf8"):
         yield clean_line
 
 
-def get_message_content_view(viewmode, message):
+def get_message_content_view(viewname, message):
     """
     Like get_content_view, but also handles message encoding.
     """
+    viewmode = get(viewname)
+    if not viewmode:
+        get("auto")
     try:
         content = message.content
     except ValueError:

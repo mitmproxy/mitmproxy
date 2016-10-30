@@ -24,6 +24,7 @@ class Dumper:
         self.flow_detail = None  # type: int
         self.outfp = None  # type: typing.io.TextIO
         self.showhost = None  # type: bool
+        self.default_contentview = "auto"  # type: str
 
     def configure(self, options, updated):
         if options.filtstr:
@@ -37,6 +38,7 @@ class Dumper:
         self.flow_detail = options.flow_detail
         self.outfp = options.tfile
         self.showhost = options.showhost
+        self.default_contentview = options.default_contentview
 
     def echo(self, text, ident=None, **style):
         if ident:
@@ -61,7 +63,7 @@ class Dumper:
             self.echo(headers, ident=4)
         if self.flow_detail >= 3:
                 _, lines, error = contentviews.get_message_content_view(
-                    contentviews.get("Auto"),
+                    self.default_contentview,
                     message
                 )
                 if error:

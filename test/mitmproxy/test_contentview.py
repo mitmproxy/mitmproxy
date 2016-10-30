@@ -233,19 +233,19 @@ def test_get_content_view():
 
 def test_get_message_content_view():
     r = mitmproxy.test.tutils.treq()
-    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    desc, lines, err = cv.get_message_content_view("raw", r)
     assert desc == "Raw"
 
     r.encode("gzip")
-    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    desc, lines, err = cv.get_message_content_view("raw", r)
     assert desc == "[decoded gzip] Raw"
 
     r.headers["content-encoding"] = "deflate"
-    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    desc, lines, err = cv.get_message_content_view("raw", r)
     assert desc == "[cannot decode] Raw"
 
     r.content = None
-    desc, lines, err = cv.get_message_content_view(cv.get("Raw"), r)
+    desc, lines, err = cv.get_message_content_view("raw", r)
     assert list(lines) == [[("error", "content missing")]]
 
 

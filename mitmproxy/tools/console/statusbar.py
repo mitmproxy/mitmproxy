@@ -176,10 +176,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]" % self.master.options.stickyauth)
-        if self.master.state.default_body_view.name != "Auto":
+        if self.master.options.default_contentview != "auto":
             r.append("[")
             r.append(("heading_key", "M"))
-            r.append(":%s]" % self.master.state.default_body_view.name)
+            r.append(":%s]" % self.master.options.default_contentview)
 
         opts = []
         if self.master.options.anticache:

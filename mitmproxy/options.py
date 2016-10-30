@@ -47,6 +47,7 @@ class Options(optmanager.OptManager):
             stickyauth: Optional[str] = None,
             stream_large_bodies: Optional[int] = None,
             verbosity: int = 2,
+            default_contentview: str = "auto",
             outfile: Optional[Tuple[str, str]] = None,
             server_replay_ignore_content: bool = False,
             server_replay_ignore_params: Sequence[str] = (),
@@ -106,6 +107,7 @@ class Options(optmanager.OptManager):
         self.stickyauth = stickyauth
         self.stream_large_bodies = stream_large_bodies
         self.verbosity = verbosity
+        self.default_contentview = default_contentview
         self.outfile = outfile
         self.server_replay_ignore_content = server_replay_ignore_content
         self.server_replay_ignore_params = server_replay_ignore_params
