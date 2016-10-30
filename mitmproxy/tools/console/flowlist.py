@@ -107,11 +107,10 @@ class BodyPile(urwid.Pile):
         return self.focus_item.keypress(tsize, key)
 
 
-class ConnectionItem(urwid.WidgetWrap):
+class FlowItem(urwid.WidgetWrap):
 
-    def __init__(self, master, view, flow, focus):
-        self.master, self.view, self.flow = master, view, flow
-        self.f = focus
+    def __init__(self, master, flow):
+        self.master, self.flow = master, flow
         w = self.get_text()
         urwid.WidgetWrap.__init__(self, w)
 
@@ -119,7 +118,7 @@ class ConnectionItem(urwid.WidgetWrap):
         cols, _ = self.master.ui.get_cols_rows()
         return common.format_flow(
             self.flow,
-            self.f,
+            self.flow is self.master.view.focus.flow,
             hostheader=self.master.options.showhost,
             max_url_len=cols,
         )
@@ -163,13 +162,11 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "d":
             if self.flow.killable:
                 self.flow.kill(self.master)
-            self.view.remove(self.view.focus.flow)
-            signals.flowlist_change.send(self)
+            self.master.view.remove(self.master.view.focus.flow)
         elif key == "D":
             cp = self.flow.copy()
             self.master.view.add(cp)
             self.master.view.focus.flow = cp
-            signals.flowlist_change.send(self)
         elif key == "m":
             self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
@@ -205,7 +202,7 @@ class ConnectionItem(urwid.WidgetWrap):
                     callback = self.server_replay_prompt,
                 )
         elif key == "U":
-            for f in self.view:
+            for f in self.master.view:
                 f.marked = False
             signals.flowlist_change.send(self)
         elif key == "V":
@@ -261,49 +258,49 @@ class ConnectionItem(urwid.WidgetWrap):
 
 class FlowListWalker(urwid.ListWalker):
 
-    def __init__(self, master, view):
-        self.master, self.view = master, view
-        self.view.sig_refresh.connect(self.sig_mod)
-        self.view.sig_add.connect(self.sig_mod)
-        self.view.sig_remove.connect(self.sig_mod)
-        self.view.sig_update.connect(self.sig_mod)
+    def __init__(self, master):
+        self.master = master
+        self.master.view.sig_refresh.connect(self.sig_mod)
+        self.master.view.sig_add.connect(self.sig_mod)
+        self.master.view.sig_remove.connect(self.sig_mod)
+        self.master.view.sig_update.connect(self.sig_mod)
+        self.master.view.focus.sig_change.connect(self.sig_mod)
         signals.flowlist_change.connect(self.sig_mod)
 
     def sig_mod(self, *args, **kwargs):
         self._modified()
 
     def get_focus(self):
-        if not self.view.focus.flow:
+        if not self.master.view.focus.flow:
             return None, 0
-        return ConnectionItem(
-            self.master, self.view, self.view.focus.flow, True
-        ), self.view.focus.index
+        f = FlowItem(self.master, self.master.view.focus.flow)
+        return f, self.master.view.focus.index
 
     def set_focus(self, index):
-        if self.view.inbounds(index):
-            self.view.focus.index = index
+        if self.master.view.inbounds(index):
+            self.master.view.focus.index = index
             signals.flowlist_change.send(self)
 
     def get_next(self, pos):
         pos = pos + 1
-        if not self.view.inbounds(pos):
+        if not self.master.view.inbounds(pos):
             return None, None
-        f = ConnectionItem(self.master, self.view, self.view[pos], False)
+        f = FlowItem(self.master, self.master.view[pos])
         return f, pos
 
     def get_prev(self, pos):
         pos = pos - 1
-        if not self.view.inbounds(pos):
+        if not self.master.view.inbounds(pos):
             return None, None
-        f = ConnectionItem(self.master, self.view, self.view[pos], False)
+        f = FlowItem(self.master, self.master.view[pos])
         return f, pos
 
 
 class FlowListBox(urwid.ListBox):
 
-    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster"):
+    def __init__(self, master):
         self.master = master
-        super().__init__(FlowListWalker(master, master.view))
+        super().__init__(FlowListWalker(master))
 
     def get_method_raw(self, k):
         if k:
@@ -340,7 +337,6 @@ class FlowListBox(urwid.ListBox):
         scheme, host, port, path = parts
         f = self.master.create_request(method, scheme, host, port, path)
         self.master.view.focus.flow = f
-        signals.flowlist_change.send(self)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
@@ -351,15 +347,12 @@ class FlowListBox(urwid.ListBox):
             signals.flowlist_change.send(self)
         elif key == "z":
             self.master.view.clear()
-            signals.flowlist_change.send(self)
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "g":
             self.master.view.focus.index = 0
-            signals.flowlist_change.send(self)
         elif key == "G":
             self.master.view.focus.index = len(self.master.view) - 1
-            signals.flowlist_change.send(self)
         elif key == "f":
             signals.status_prompt.send(
                 prompt = "Filter View",

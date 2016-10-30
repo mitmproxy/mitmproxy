@@ -436,16 +436,9 @@ class ConsoleMaster(master.Master):
         signals.flowlist_change.send(self)
         return reterr
 
-    def edit_scripts(self, scripts):
-        self.options.scripts = [x[0] for x in scripts]
-
     def quit(self, a):
         if a != "n":
             raise urwid.ExitMainLoop
-
-    def refresh_focus(self):
-        if self.view.focus.flow:
-            signals.flow_change.send(self, flow = self.view.focus.flow)
 
     def clear_events(self):
         self.logbuffer[:] = []

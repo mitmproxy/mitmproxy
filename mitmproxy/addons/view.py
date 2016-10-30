@@ -217,6 +217,8 @@ class Focus:
         v.sig_remove.connect(self._sig_remove)
         v.sig_refresh.connect(self._sig_refresh)
 
+        self.sig_change = blinker.Signal()
+
     @property
     def flow(self) -> typing.Optional[mitmproxy.flow.Flow]:
         return self._flow
@@ -226,6 +228,7 @@ class Focus:
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
+        self.sig_change.send(self)
 
     @property
     def index(self) -> typing.Optional[int]:
