@@ -463,35 +463,25 @@ class FlowView(tabs.Tabs):
             )
         signals.flow_change.send(self, flow = self.flow)
 
-    def _view_nextprev_flow(self, np, flow):
-        try:
-            idx = self.view.index(flow)
-        except IndexError:
-            return
+    def view_flow(self, flow):
+        signals.pop_view_state.send(self)
+        self.master.view_flow(flow, self.tab_offset)
 
-        new_idx = idx
-        if np == "next":
-            new_idx += 1
-        else:
-            new_idx -= 1
-        if not self.view.inbounds(new_idx):
+    def _view_nextprev_flow(self, idx, flow):
+        if not self.view.inbounds(idx):
             signals.status_message.send(message="No more flows")
             return
-        signals.pop_view_state.send(self)
-        self.master.view_flow(self.view[new_idx], self.tab_offset)
+        self.view_flow(self.view[idx])
 
     def view_next_flow(self, flow):
-        return self._view_nextprev_flow("next", flow)
+        return self._view_nextprev_flow(self.view.index(flow) + 1, flow)
 
     def view_prev_flow(self, flow):
-        return self._view_nextprev_flow("prev", flow)
+        return self._view_nextprev_flow(self.view.index(flow) - 1, flow)
 
     def change_this_display_mode(self, t):
-        self.state.add_flow_setting(
-            self.flow,
-            (self.tab_offset, "prettyview"),
-            contentviews.get_by_shortcut(t).name
-        )
+        name = contentviews.get_by_shortcut(t).name
+        self.view.settings[self.flow][(self.tab_offset, "prettyview")] = name
         signals.flow_change.send(self, flow = self.flow)
 
     def keypress(self, size, key):
@@ -520,20 +510,18 @@ class FlowView(tabs.Tabs):
             self.master.accept_all()
             signals.flow_change.send(self, flow = self.flow)
         elif key == "d":
-            if self.state.flow_count() == 1:
+            if self.flow.killable:
+                self.flow.kill(self.master)
+            self.view.remove(self.flow)
+            if not self.view.focus.flow:
                 self.master.view_flowlist()
-            elif self.state.view.index(self.flow) == len(self.state.view) - 1:
-                self.view_prev_flow(self.flow)
             else:
-                self.view_next_flow(self.flow)
-            f = self.flow
-            if f.killable:
-                f.kill(self.master)
-            self.state.delete_flow(f)
+                self.view_flow(self.view.focus.flow)
         elif key == "D":
-            f = self.master.state.duplicate_flow(self.flow)
-            signals.pop_view_state.send(self)
-            self.master.view_flow(f)
+            cp = self.flow.copy()
+            self.master.view.add(cp)
+            self.master.view.focus.flow = cp
+            self.view_flow(cp)
             signals.status_message.send(message="Duplicated.")
         elif key == "p":
             self.view_prev_flow(self.flow)
@@ -545,7 +533,7 @@ class FlowView(tabs.Tabs):
             signals.flow_change.send(self, flow = self.flow)
         elif key == "V":
             if self.flow.modified():
-                self.state.revert(self.flow)
+                self.flow.revert()
                 signals.flow_change.send(self, flow = self.flow)
                 signals.status_message.send(message="Reverted.")
             else:
@@ -607,14 +595,9 @@ class FlowView(tabs.Tabs):
             else:
                 common.ask_save_body("s", self.flow)
         elif key == "f":
-            signals.status_message.send(message="Loading all body data...")
-            self.state.add_flow_setting(
-                self.flow,
-                (self.tab_offset, "fullcontents"),
-                True
-            )
+            self.view.settings[self.flow][(self.tab_offset, "fullcontents")] = True
             signals.flow_change.send(self, flow = self.flow)
-            signals.status_message.send(message="")
+            signals.status_message.send(message="Loading all body data...")
         elif key == "m":
             p = list(contentviews.view_prompts)
             p.insert(0, ("Clear", "C"))

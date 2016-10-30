@@ -172,10 +172,8 @@ class Options(urwid.WidgetWrap):
             showhost = False,
             stickyauth = None,
             stickycookie = None,
+            default_contentview = "auto",
         )
-
-        self.master.state.default_body_view = contentviews.get("Auto")
-
         signals.update_settings.send(self)
         signals.status_message.send(
             message = "All select.Options cleared",
