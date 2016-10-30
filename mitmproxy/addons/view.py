@@ -211,13 +211,12 @@ class Focus:
     def __init__(self, v: View) -> None:
         self.view = v
         self._flow = None
+        self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
         v.sig_add.connect(self._sig_add)
         v.sig_remove.connect(self._sig_remove)
         v.sig_refresh.connect(self._sig_refresh)
-
-        self.sig_change = blinker.Signal()
 
     @property
     def flow(self) -> typing.Optional[mitmproxy.flow.Flow]:
