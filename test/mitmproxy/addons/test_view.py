@@ -7,6 +7,11 @@ from mitmproxy.test import taddons
 from .. import tutils
 
 
+def test_keys():
+    t = tflow.tflow(resp=True)
+    view.key_size(t)
+
+
 def test_simple():
     v = view.View()
     f = tflow.tflow()

@@ -61,6 +61,8 @@ class View(collections.Sequence):
         self.show_marked = False
         self.order_key = key_request_start
         self.order_reversed = False
+        self.focus_follow = False
+
         self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
 
         # These signals broadcast events that affect the view. That is, an
@@ -115,6 +117,9 @@ class View(collections.Sequence):
     def index(self, f: mitmproxy.flow.Flow) -> int:
         return self._rev(self._view.index(f))
 
+    def __contains__(self, f: mitmproxy.flow.Flow) -> bool:
+        return self._view.__contains__(f)
+
     def _refilter(self):
         self._view.clear()
         for i in self._store.values():
@@ -166,6 +171,8 @@ class View(collections.Sequence):
             self._store[f.id] = f
             if self.filter(f):
                 self._view.add(f)
+                if self.focus_follow:
+                    self.focus.flow = f
                 self.sig_add.send(self, flow=f)
 
     def remove(self, f: mitmproxy.flow.Flow):
@@ -186,6 +193,8 @@ class View(collections.Sequence):
             if self.filter(f):
                 if f not in self._view:
                     self._view.add(f)
+                    if self.focus_follow:
+                        self.focus.flow = f
                     self.sig_add.send(self, flow=f)
                 else:
                     self.sig_update.send(self, flow=f)
@@ -222,6 +231,8 @@ class View(collections.Sequence):
                     )
         if "order_reversed" in updated:
             self.set_reversed(opts.order_reversed)
+        if "focus_follow" in updated:
+            self.focus_follow = opts.focus_follow
 
     def request(self, f):
         self.add(f)
@@ -258,7 +269,7 @@ class Focus:
         return self._flow
 
     @flow.setter
-    def flow(self, f: mitmproxy.flow.Flow):
+    def flow(self, f: typing.Optional[mitmproxy.flow.Flow]):
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f

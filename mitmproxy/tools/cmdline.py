@@ -784,8 +784,8 @@ def mitmproxy():
     )
     parser.add_argument(
         "--follow",
-        action="store_true", dest="follow",
-        help="Follow flow list."
+        action="store_true", dest="focus_follow",
+        help="Focus follows new flows."
     )
     parser.add_argument(
         "--order",
