@@ -181,6 +181,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.options.default_contentview)
+        if self.master.options.order:
+            r.append("[")
+            r.append(("heading_key", "o"))
+            r.append(":%s]" % self.master.options.order)
 
         opts = []
         if self.master.options.anticache:
