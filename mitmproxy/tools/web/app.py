@@ -116,8 +116,8 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         return json.loads(self.request.body.decode())
 
     @property
-    def state(self):
-        return self.application.master.state
+    def view(self):
+        return self.application.master.view
 
     @property
     def master(self) -> "mitmproxy.tools.web.master.WebMaster":
@@ -126,7 +126,8 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
     @property
     def flow(self):
         flow_id = str(self.path_kwargs["flow_id"])
-        flow = self.state.flows.get(flow_id)
+        # FIXME: Add a facility to addon.view to safely access the store
+        flow = self.view._store.get(flow_id)
         if flow:
             return flow
         else:
@@ -184,7 +185,7 @@ class Flows(RequestHandler):
 
     def get(self):
         self.write(dict(
-            data=[convert_flow_to_json_dict(f) for f in self.state.flows]
+            data=[convert_flow_to_json_dict(f) for f in self.view]
         ))
 
 
@@ -195,31 +196,31 @@ class DumpFlows(RequestHandler):
 
         bio = BytesIO()
         fw = io.FlowWriter(bio)
-        for f in self.state.flows:
+        for f in self.view:
             fw.add(f)
 
         self.write(bio.getvalue())
         bio.close()
 
     def post(self):
-        self.state.clear()
+        self.view.clear()
 
         content = self.request.files.values()[0][0].body
         bio = BytesIO(content)
-        self.state.load_flows(io.FlowReader(bio).stream())
+        self.view.load_flows(io.FlowReader(bio).stream())
         bio.close()
 
 
 class ClearAll(RequestHandler):
 
     def post(self):
-        self.state.clear()
+        self.view.clear()
 
 
 class AcceptFlows(RequestHandler):
 
     def post(self):
-        self.state.flows.accept_all(self.master)
+        self.view.flows.accept_all(self.master)
 
 
 class AcceptFlow(RequestHandler):
@@ -233,7 +234,7 @@ class FlowHandler(RequestHandler):
     def delete(self, flow_id):
         if self.flow.killable:
             self.flow.kill(self.master)
-        self.state.delete_flow(self.flow)
+        self.view.delete_flow(self.flow)
 
     def put(self, flow_id):
         flow = self.flow
@@ -270,19 +271,19 @@ class FlowHandler(RequestHandler):
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
             else:
                 print("Warning: Unknown update {}: {}".format(a, b))
-        self.state.update_flow(flow)
+        self.view.update_flow(flow)
 
 
 class DuplicateFlow(RequestHandler):
 
     def post(self, flow_id):
-        self.master.state.duplicate_flow(self.flow)
+        self.master.view.duplicate_flow(self.flow)
 
 
 class RevertFlow(RequestHandler):
 
     def post(self, flow_id):
-        self.state.revert(self.flow)
+        self.flow.revert()
 
 
 class ReplayFlow(RequestHandler):
@@ -290,7 +291,7 @@ class ReplayFlow(RequestHandler):
     def post(self, flow_id):
         self.flow.backup()
         self.flow.response = None
-        self.state.update_flow(self.flow)
+        self.view.update_flow(self.flow)
 
         r = self.master.replay_request(self.flow)
         if r:
@@ -303,7 +304,7 @@ class FlowContent(RequestHandler):
         self.flow.backup()
         message = getattr(self.flow, message)
         message.content = self.request.files.values()[0][0].body
-        self.state.update_flow(self.flow)
+        self.view.update_flow(self.flow)
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
@@ -340,7 +341,7 @@ class FlowContentView(RequestHandler):
         message = getattr(self.flow, message)
 
         description, lines, error = contentviews.get_message_content_view(
-            contentviews.get(content_view.replace('_', ' ')), message
+            contentviews.get(content_view.replace('_', ' ')).name, message
         )
 #        if error:
 #           add event log
@@ -355,7 +356,7 @@ class Events(RequestHandler):
 
     def get(self):
         self.write(dict(
-            data=list(self.state.events)
+            data=list([])
         ))
 
 

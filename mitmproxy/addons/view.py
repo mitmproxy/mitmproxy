@@ -66,17 +66,17 @@ class OrderRequestStart(_OrderKey):
 
 
 class OrderRequestMethod(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+    def generate(self, f: mitmproxy.flow.Flow) -> str:
         return f.request.method
 
 
 class OrderRequestURL(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+    def generate(self, f: mitmproxy.flow.Flow) -> str:
         return f.request.url
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+    def generate(self, f: mitmproxy.flow.Flow) -> int:
         s = 0
         if f.request.raw_content:
             s += len(f.request.raw_content)
@@ -166,8 +166,8 @@ class View(collections.Sequence):
             return v
         return self._rev(v - 1) + 1
 
-    def index(self, f: mitmproxy.flow.Flow) -> int:
-        return self._rev(self._view.index(f))
+    def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None) -> int:
+        return self._rev(self._view.index(f, start, stop))
 
     def __contains__(self, f: mitmproxy.flow.Flow) -> bool:
         return self._view.__contains__(f)
@@ -318,7 +318,7 @@ class Focus:
     """
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow = None
+        self._flow = None  # type: mitmproxy.flow.Flow
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
@@ -374,29 +374,29 @@ class Focus:
 class Settings(collections.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
-        self.values = {}
+        self._values = {}  # type: typing.MutableMapping[str, mitmproxy.flow.Flow]
         view.sig_remove.connect(self._sig_remove)
         view.sig_refresh.connect(self._sig_refresh)
 
     def clear(self):
-        self.values.clear()
+        self._values.clear()
 
-    def __iter__(self) -> typing.Iterable:
-        return iter(self.values)
+    def __iter__(self) -> typing.Iterator:
+        return iter(self._values)
 
     def __len__(self) -> int:
-        return len(self.values)
+        return len(self._values)
 
     def __getitem__(self, f: mitmproxy.flow.Flow) -> dict:
         if f.id not in self.view._store:
             raise KeyError
-        return self.values.setdefault(f.id, {})
+        return self._values.setdefault(f.id, {})
 
     def _sig_remove(self, view, flow):
-        if flow.id in self.values:
-            del self.values[flow.id]
+        if flow.id in self._values:
+            del self._values[flow.id]
 
     def _sig_refresh(self, view):
-        for fid in list(self.values.keys()):
+        for fid in list(self._values.keys()):
             if fid not in view._store:
-                del self.values[fid]
+                del self._values[fid]
