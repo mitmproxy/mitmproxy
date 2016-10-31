@@ -30,8 +30,8 @@ class WSGIApp:
         )
         if err:
             ctx.log.error("Error in wsgi app. %s" % err)
+            raise exceptions.AddonHalt()
         flow.reply.kill()
-        raise exceptions.AddonHalt()
 
     def request(self, f):
         if (f.request.pretty_host, f.request.port) == (self.host, self.port):
