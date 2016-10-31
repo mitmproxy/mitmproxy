@@ -1,5 +1,4 @@
 import sys
-import collections
 
 import tornado.httpserver
 import tornado.ioloop
