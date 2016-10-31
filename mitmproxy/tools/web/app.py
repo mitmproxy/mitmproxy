@@ -341,7 +341,7 @@ class FlowContentView(RequestHandler):
         message = getattr(self.flow, message)
 
         description, lines, error = contentviews.get_message_content_view(
-            contentviews.get(content_view.replace('_', ' ')).name, message
+            content_view.replace('_', ' '), message
         )
 #        if error:
 #           add event log
