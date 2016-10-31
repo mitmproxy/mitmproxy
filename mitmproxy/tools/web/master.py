@@ -8,7 +8,7 @@ from typing import Optional
 
 from mitmproxy import addons
 from mitmproxy import exceptions
-from mitmproxy.addons import state
+from mitmproxy.addons import view
 from mitmproxy.addons import intercept
 from mitmproxy import options
 from mitmproxy import master
@@ -20,53 +20,7 @@ class Stop(Exception):
     pass
 
 
-class WebFlowView(state.FlowView):
-
-    def __init__(self, store):
-        super().__init__(store, None)
-
-    def _add(self, f):
-        super()._add(f)
-        app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
-            cmd="add",
-            data=app.convert_flow_to_json_dict(f)
-        )
-
-    def _update(self, f):
-        super()._update(f)
-        app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
-            cmd="update",
-            data=app.convert_flow_to_json_dict(f)
-        )
-
-    def _remove(self, f):
-        super()._remove(f)
-        app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
-            cmd="remove",
-            data=dict(id=f.id)
-        )
-
-    def _recalculate(self, flows):
-        super()._recalculate(flows)
-        app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
-            cmd="reset"
-        )
-
-
-class WebState(state.State):
-
-    def __init__(self):
-        super().__init__()
-        self.view._close()
-        self.view = WebFlowView(self.flows)
-
-        self._last_event_id = 0
-        self.events = collections.deque(maxlen=1000)
-
+class _WebState():
     def add_log(self, e, level):
         self._last_event_id += 1
         entry = {
@@ -136,9 +90,14 @@ class WebMaster(master.Master):
 
     def __init__(self, options, server):
         super().__init__(options, server)
-        self.state = WebState()
+        self.view = view.View()
+        self.view.sig_add.connect(self._sig_add)
+        self.view.sig_remove.connect(self._sig_remove)
+        self.view.sig_update.connect(self._sig_update)
+        self.view.sig_refresh.connect(self._sig_refresh)
+
         self.addons.add(*addons.default_addons())
-        self.addons.add(self.state, intercept.Intercept())
+        self.addons.add(self.view, intercept.Intercept())
         self.app = app.Application(
             self, self.options.wdebug, self.options.wauthenticator
         )
@@ -162,6 +121,33 @@ class WebMaster(master.Master):
                 print("Stream file error: {}".format(err), file=sys.stderr)
                 sys.exit(1)
 
+    def _sig_add(self, view, flow):
+        app.ClientConnection.broadcast(
+            type="UPDATE_FLOWS",
+            cmd="add",
+            data=app.convert_flow_to_json_dict(flow)
+        )
+
+    def _sig_update(self, view, flow):
+        app.ClientConnection.broadcast(
+            type="UPDATE_FLOWS",
+            cmd="update",
+            data=app.convert_flow_to_json_dict(flow)
+        )
+
+    def _sig_remove(self, view, flow):
+        app.ClientConnection.broadcast(
+            type="UPDATE_FLOWS",
+            cmd="remove",
+            data=dict(id=flow.id)
+        )
+
+    def _sig_refresh(self, view):
+        app.ClientConnection.broadcast(
+            type="UPDATE_FLOWS",
+            cmd="reset"
+        )
+
     def run(self):  # pragma: no cover
 
         iol = tornado.ioloop.IOLoop.instance()
@@ -178,6 +164,6 @@ class WebMaster(master.Master):
         except (Stop, KeyboardInterrupt):
             self.shutdown()
 
-    def add_log(self, e, level="info"):
-        super().add_log(e, level)
-        return self.state.add_log(e, level)
+    # def add_log(self, e, level="info"):
+    #     super().add_log(e, level)
+    #     return self.state.add_log(e, level)

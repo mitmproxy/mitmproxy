@@ -12,4 +12,4 @@ class TestWebMaster(mastertest.MasterTest):
         m = self.mkmaster()
         for i in (1, 2, 3):
             self.dummy_cycle(m, 1, b"")
-            assert len(m.state.flows) == i
+            assert len(m.view) == i
