@@ -76,30 +76,18 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-/**
- * @public
- */
 export function add(item) {
     return { type: ADD, item }
 }
 
-/**
- * @public
- */
 export function update(item) {
     return { type: UPDATE, item }
 }
 
-/**
- * @public
- */
 export function remove(id) {
     return { type: REMOVE, id }
 }
 
-/**
- * @public
- */
 export function receive(list) {
     return { type: RECEIVE, list }
 }

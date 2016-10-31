@@ -1,17 +1,12 @@
 import reduceList, * as listActions from './utils/list'
 import reduceView, * as viewActions from './utils/view'
-import * as websocketActions from './websocket'
-import * as msgQueueActions from './msgQueue'
 
-export const MSG_TYPE = 'UPDATE_EVENTLOG'
-export const DATA_URL = '/events'
-
-export const ADD               = 'EVENTLOG_ADD'
-export const RECEIVE           = 'EVENTLOG_RECEIVE'
-export const TOGGLE_VISIBILITY = 'EVENTLOG_TOGGLE_VISIBILITY'
-export const TOGGLE_FILTER     = 'EVENTLOG_TOGGLE_FILTER'
-export const UNKNOWN_CMD       = 'EVENTLOG_UNKNOWN_CMD'
-export const FETCH_ERROR       = 'EVENTLOG_FETCH_ERROR'
+export const ADD               = 'EVENTS_ADD'
+export const RECEIVE           = 'EVENTS_RECEIVE'
+export const TOGGLE_VISIBILITY = 'EVENTS_TOGGLE_VISIBILITY'
+export const TOGGLE_FILTER     = 'EVENTS_TOGGLE_FILTER'
+export const UNKNOWN_CMD       = 'EVENTS_UNKNOWN_CMD'
+export const FETCH_ERROR       = 'EVENTS_FETCH_ERROR'
 
 const defaultState = {
     logId: 0,
@@ -54,8 +49,8 @@ export default function reduce(state = defaultState, action) {
         case RECEIVE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.receive(action.list)),
-                view: reduceView(state.view, viewActions.receive(action.list, log => state.filters[log.level])),
+                list: reduceList(state.list, listActions.receive(action.events)),
+                view: reduceView(state.view, viewActions.receive(action.events, log => state.filters[log.level])),
             }
 
         default:
@@ -63,58 +58,14 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-/**
- * @public
- */
 export function toggleFilter(filter) {
     return { type: TOGGLE_FILTER, filter }
 }
 
-/**
- * @public
- *
- * @todo move to ui?
- */
 export function toggleVisibility() {
     return { type: TOGGLE_VISIBILITY }
 }
 
-/**
- * @public
- */
 export function add(message, level = 'web') {
     return { type: ADD, message, level }
-}
-
-/**
- * This action creater takes all WebSocket events
- *
- * @public websocket
- */
-export function handleWsMsg(msg) {
-    switch (msg.cmd) {
-
-        case websocketActions.CMD_ADD:
-            return add(msg.data.message, msg.data.level)
-
-        case websocketActions.CMD_RESET:
-            return fetchData()
-
-        default:
-            return { type: UNKNOWN_CMD, msg }
-    }
-}
-
-/**
- * @public websocket
- */
-export function fetchData() {
-    return msgQueueActions.fetchData(MSG_TYPE)
-}
-
-/**
- * @public msgQueue
- */
-export function receiveData(list) {
-    return { type: RECEIVE, list }
 }

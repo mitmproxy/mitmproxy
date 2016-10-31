@@ -96,6 +96,12 @@ class BasicAuth:
 
 class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
+    def write(self, chunk):
+        if isinstance(chunk, list):
+            chunk = tornado.escape.json_encode(chunk)
+            self.set_header("Content-Type", "application/json; charset=UTF-8")
+        super(RequestHandler, self).write(chunk)
+
     def set_default_headers(self):
         super().set_default_headers()
         self.set_header("Server", version.MITMPROXY)
@@ -184,10 +190,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 class Flows(RequestHandler):
 
     def get(self):
-        self.write(dict(
-            data=[convert_flow_to_json_dict(f) for f in self.view]
-        ))
-
+        self.write([convert_flow_to_json_dict(f) for f in self.view])
 
 class DumpFlows(RequestHandler):
     def get(self):
@@ -355,9 +358,7 @@ class FlowContentView(RequestHandler):
 class Events(RequestHandler):
 
     def get(self):
-        self.write(dict(
-            data=list([])
-        ))
+        self.write([]) # FIXME
 
 
 class Settings(RequestHandler):
@@ -365,7 +366,6 @@ class Settings(RequestHandler):
     def get(self):
 
         self.write(dict(
-            data=dict(
                 version=version.VERSION,
                 mode=str(self.master.options.mode),
                 intercept=self.master.options.intercept,
@@ -377,10 +377,10 @@ class Settings(RequestHandler):
                 anticomp=self.master.options.anticomp,
                 stickyauth=self.master.options.stickyauth,
                 stickycookie=self.master.options.stickycookie,
-                stream= self.master.options.stream_large_bodies,
-                contentViews= [v.name.replace(' ', '_') for v in contentviews.views]
+                stream=self.master.options.stream_large_bodies,
+                contentViews=[v.name.replace(' ', '_') for v in contentviews.views]
             )
-        ))
+        )
 
     def put(self):
         update = {}
@@ -419,7 +419,7 @@ class Settings(RequestHandler):
                 print("Warning: Unknown setting {}: {}".format(k, v))
 
         ClientConnection.broadcast(
-            type="UPDATE_SETTINGS",
+            resource="settings",
             cmd="update",
             data=update
         )

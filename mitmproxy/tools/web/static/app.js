@@ -1,5 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // shim for using process in browser
+
 var process = module.exports = {};
 
 // cached from whatever global is present so that test runners that stub it
@@ -11,35 +12,21 @@ var cachedSetTimeout;
 var cachedClearTimeout;
 
 (function () {
-    try {
-        cachedSetTimeout = setTimeout;
-    } catch (e) {
-        cachedSetTimeout = function () {
-            throw new Error('setTimeout is not defined');
-        }
+  try {
+    cachedSetTimeout = setTimeout;
+  } catch (e) {
+    cachedSetTimeout = function () {
+      throw new Error('setTimeout is not defined');
     }
-    try {
-        cachedClearTimeout = clearTimeout;
-    } catch (e) {
-        cachedClearTimeout = function () {
-            throw new Error('clearTimeout is not defined');
-        }
+  }
+  try {
+    cachedClearTimeout = clearTimeout;
+  } catch (e) {
+    cachedClearTimeout = function () {
+      throw new Error('clearTimeout is not defined');
     }
+  }
 } ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        return setTimeout(fun, 0);
-    } else {
-        return cachedSetTimeout.call(null, fun, 0);
-    }
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        clearTimeout(marker);
-    } else {
-        cachedClearTimeout.call(null, marker);
-    }
-}
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -64,7 +51,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = runTimeout(cleanUpNextTick);
+    var timeout = cachedSetTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -81,7 +68,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    runClearTimeout(timeout);
+    cachedClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -93,7 +80,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
+        cachedSetTimeout(drainQueue, 0);
     }
 };
 
@@ -133,59 +120,6 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],2:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.Query = exports.ConnectionActions = exports.StoreCmds = exports.ActionTypes = undefined;
-
-var _dispatcher = require("./dispatcher.js");
-
-var ActionTypes = exports.ActionTypes = {
-    // Connection
-    CONNECTION_OPEN: "connection_open",
-    CONNECTION_CLOSE: "connection_close",
-    CONNECTION_ERROR: "connection_error",
-
-    // Stores
-    SETTINGS_STORE: "settings",
-    EVENT_STORE: "events",
-    FLOW_STORE: "flows"
-};
-
-var StoreCmds = exports.StoreCmds = {
-    ADD: "add",
-    UPDATE: "update",
-    REMOVE: "remove",
-    RESET: "reset"
-};
-
-var ConnectionActions = exports.ConnectionActions = {
-    open: function open() {
-        _dispatcher.AppDispatcher.dispatchViewAction({
-            type: ActionTypes.CONNECTION_OPEN
-        });
-    },
-    close: function close() {
-        _dispatcher.AppDispatcher.dispatchViewAction({
-            type: ActionTypes.CONNECTION_CLOSE
-        });
-    },
-    error: function error() {
-        _dispatcher.AppDispatcher.dispatchViewAction({
-            type: ActionTypes.CONNECTION_ERROR
-        });
-    }
-};
-
-var Query = exports.Query = {
-    SEARCH: "s",
-    HIGHLIGHT: "h",
-    SHOW_EVENTLOG: "e"
-};
-
-},{"./dispatcher.js":48}],3:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -213,6 +147,14 @@ var _index2 = _interopRequireDefault(_index);
 
 var _eventLog = require('./ducks/eventLog');
 
+var _urlState = require('./urlState');
+
+var _urlState2 = _interopRequireDefault(_urlState);
+
+var _websocket = require('./backends/websocket');
+
+var _websocket2 = _interopRequireDefault(_websocket);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var middlewares = [_reduxThunk2.default];
@@ -225,12 +167,13 @@ if (process.env.NODE_ENV !== 'production') {
 // logger must be last
 var store = (0, _redux.createStore)(_index2.default, _redux.applyMiddleware.apply(undefined, middlewares));
 
-// @todo move to ProxyApp
+(0, _urlState2.default)(store);
+window.backend = new _websocket2.default(store);
+
 window.addEventListener('error', function (msg) {
     store.dispatch((0, _eventLog.add)(msg));
 });
 
-// @todo remove this
 document.addEventListener('DOMContentLoaded', function () {
     (0, _reactDom.render)(_react2.default.createElement(
         _reactRedux.Provider,
@@ -241,7 +184,122 @@ document.addEventListener('DOMContentLoaded', function () {
 
 }).call(this,require('_process'))
 
-},{"./components/ProxyApp":37,"./ducks/eventLog":50,"./ducks/index":53,"_process":1,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],4:[function(require,module,exports){
+},{"./backends/websocket":3,"./components/ProxyApp":37,"./ducks/eventLog":48,"./ducks/index":51,"./urlState":63,"_process":1,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.CMD_RESET = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _utils = require('../utils');
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CMD_RESET = exports.CMD_RESET = 'reset';
+
+var WebsocketBackend = function () {
+    function WebsocketBackend(store) {
+        _classCallCheck(this, WebsocketBackend);
+
+        this.activeFetches = {};
+        this.store = store;
+        this.connect();
+    }
+
+    _createClass(WebsocketBackend, [{
+        key: 'connect',
+        value: function connect() {
+            var _this = this;
+
+            this.socket = new WebSocket(location.origin.replace('http', 'ws') + '/updates');
+            this.socket.addEventListener('open', function () {
+                return _this.onOpen();
+            });
+            this.socket.addEventListener('close', function () {
+                return _this.onClose();
+            });
+            this.socket.addEventListener('message', function (msg) {
+                return _this.onMessage(JSON.parse(msg.data));
+            });
+            this.socket.addEventListener('error', function (error) {
+                return _this.onError(error);
+            });
+        }
+    }, {
+        key: 'onOpen',
+        value: function onOpen() {
+            this.fetchData("settings");
+            this.fetchData("flows");
+            this.fetchData("events");
+        }
+    }, {
+        key: 'fetchData',
+        value: function fetchData(resource) {
+            var _this2 = this;
+
+            var queue = [];
+            this.activeFetches[resource] = queue;
+            (0, _utils.fetchApi)('/' + resource).then(function (res) {
+                return res.json();
+            }).then(function (json) {
+                // Make sure that we are not superseded yet by the server sending a RESET.
+                if (_this2.activeFetches[resource] === queue) _this2.receive(resource, json);
+            });
+        }
+    }, {
+        key: 'onMessage',
+        value: function onMessage(msg) {
+
+            if (msg.cmd === CMD_RESET) {
+                return this.fetchData(msg.resource);
+            }
+            if (msg.resource in this.activeFetches) {
+                this.activeFetches[msg.resource].push(msg);
+            } else {
+                var type = (msg.resource + '_' + msg.cmd).toUpperCase();
+                this.store.dispatch(_extends({ type: type }, msg));
+            }
+        }
+    }, {
+        key: 'receive',
+        value: function receive(resource, msg) {
+            var _this3 = this;
+
+            var type = (resource + '_RECEIVE').toUpperCase();
+            this.store.dispatch(_defineProperty({ type: type }, resource, msg));
+            var queue = this.activeFetches[resource];
+            delete this.activeFetches[resource];
+            queue.forEach(function (msg) {
+                return _this3.onMessage(msg);
+            });
+        }
+    }, {
+        key: 'onClose',
+        value: function onClose() {
+            // FIXME
+            console.error("onClose", arguments);
+        }
+    }, {
+        key: 'onError',
+        value: function onError() {
+            // FIXME
+            console.error("onError", arguments);
+        }
+    }]);
+
+    return WebsocketBackend;
+}();
+
+exports.default = WebsocketBackend;
+
+},{"../utils":64}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -327,7 +385,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateEdit: _flow.updateEdit
 })(ContentView);
 
-},{"../ducks/ui/flow":56,"./ContentView/ContentViews":8,"./ContentView/MetaViews":10,"./ContentView/ShowFullContentButton":11,"react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
+},{"../ducks/ui/flow":54,"./ContentView/ContentViews":8,"./ContentView/MetaViews":10,"./ContentView/ShowFullContentButton":11,"react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -496,7 +554,7 @@ exports.default = function (View) {
     }), _temp;
 };
 
-},{"../../flow/utils.js":64,"react":"react"}],7:[function(require,module,exports){
+},{"../../flow/utils.js":62,"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -565,6 +623,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.ViewImage = exports.ViewServer = exports.Edit = undefined;
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -679,12 +739,15 @@ var ViewServer = function (_Component) {
                             'div',
                             { key: 'line' + i },
                             line.map(function (element, j) {
-                                var style = void 0,
-                                    text = element;
+                                var _element = _slicedToArray(element, 2);
+
+                                var style = _element[0];
+                                var text = _element[1];
+
                                 return _react2.default.createElement(
                                     'span',
                                     { key: 'tuple' + j, className: style },
-                                    element
+                                    text
                                 );
                             })
                         );
@@ -720,7 +783,7 @@ exports.Edit = Edit;
 exports.ViewServer = ViewServer;
 exports.ViewImage = ViewImage;
 
-},{"../../ducks/ui/flow":56,"../../flow/utils":64,"./CodeEditor":5,"./ContentLoader":6,"react":"react","react-redux":"react-redux"}],9:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"../../flow/utils":62,"./CodeEditor":5,"./ContentLoader":6,"react":"react","react-redux":"react-redux"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -751,7 +814,7 @@ function DownloadContentButton(_ref) {
     );
 }
 
-},{"../../flow/utils":64,"react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils":62,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -832,7 +895,7 @@ function ContentTooLarge(_ref3) {
     );
 }
 
-},{"../../utils.js":65,"./DownloadContentButton":9,"./UploadContentButton":12,"react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":64,"./DownloadContentButton":9,"./UploadContentButton":12,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -871,7 +934,7 @@ function ShowFullContentButton(_ref) {
         'div',
         null,
         _react2.default.createElement(_Button2.default, { className: 'view-all-content-btn btn-xs', onClick: function onClick() {
-                return setShowFullContent(true);
+                return setShowFullContent();
             }, text: 'Show full content' }),
         _react2.default.createElement(
             'span',
@@ -896,7 +959,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setShowFullContent: _flow.setShowFullContent
 })(ShowFullContentButton);
 
-},{"../../ducks/ui/flow":56,"../common/Button":40,"react":"react","react-dom":"react-dom","react-redux":"react-redux"}],12:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"../common/Button":40,"react":"react","react-dom":"react-dom","react-redux":"react-redux"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -919,8 +982,6 @@ UploadContentButton.propTypes = {
 function UploadContentButton(_ref) {
     var uploadContent = _ref.uploadContent;
 
-
-    var fileInput = void 0;
 
     return React.createElement(_FileChooser2.default, {
         icon: 'fa-upload',
@@ -1017,7 +1078,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setContentView: _flow.setContentView
 })(ViewSelector);
 
-},{"../../ducks/ui/flow":56,"../common/Dropdown":41,"./ContentViews":8,"react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"../common/Dropdown":41,"./ContentViews":8,"react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1144,7 +1205,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     toggleFilter: _eventLog.toggleFilter
 })(EventLog);
 
-},{"../ducks/eventLog":50,"./EventLog/EventList":15,"./common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
+},{"../ducks/eventLog":48,"./EventLog/EventList":15,"./common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1482,7 +1543,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../filt/filt":63,"./FlowTable/FlowRow":18,"./FlowTable/FlowTableHead":19,"./helpers/AutoScroll":46,"./helpers/VirtualScroll":47,"react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],17:[function(require,module,exports){
+},{"../filt/filt":61,"./FlowTable/FlowRow":18,"./FlowTable/FlowTableHead":19,"./helpers/AutoScroll":46,"./helpers/VirtualScroll":47,"react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1639,7 +1700,7 @@ TimeColumn.headerName = 'Time';
 
 exports.default = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, SizeColumn, TimeColumn];
 
-},{"../../flow/utils.js":64,"../../utils.js":65,"classnames":"classnames","react":"react"}],18:[function(require,module,exports){
+},{"../../flow/utils.js":62,"../../utils.js":64,"classnames":"classnames","react":"react"}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1696,7 +1757,7 @@ function FlowRow(_ref) {
 
 exports.default = (0, _utils.pure)(FlowRow);
 
-},{"../../utils":65,"./FlowColumns":17,"classnames":"classnames","react":"react"}],19:[function(require,module,exports){
+},{"../../utils":64,"./FlowColumns":17,"classnames":"classnames","react":"react"}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1760,7 +1821,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateSort: _flowView.updateSort
 })(FlowTableHead);
 
-},{"../../ducks/flowView":51,"./FlowColumns":17,"classnames":"classnames","react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
+},{"../../ducks/flowView":49,"./FlowColumns":17,"classnames":"classnames","react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1900,7 +1961,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     selectTab: _flow.selectTab
 })(FlowView);
 
-},{"../ducks/ui/flow":56,"./FlowView/Details":21,"./FlowView/Messages":23,"./FlowView/Nav":24,"./Prompt":36,"lodash":"lodash","react":"react","react-redux":"react-redux"}],21:[function(require,module,exports){
+},{"../ducks/ui/flow":54,"./FlowView/Details":21,"./FlowView/Messages":23,"./FlowView/Nav":24,"./Prompt":36,"lodash":"lodash","react":"react","react-redux":"react-redux"}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2123,7 +2184,7 @@ function Details(_ref5) {
     );
 }
 
-},{"../../utils.js":65,"lodash":"lodash","react":"react"}],22:[function(require,module,exports){
+},{"../../utils.js":64,"lodash":"lodash","react":"react"}],22:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2364,7 +2425,7 @@ Headers.propTypes = {
 };
 exports.default = Headers;
 
-},{"../../utils":65,"../ValueEditor/ValueEditor":39,"react":"react","react-dom":"react-dom"}],23:[function(require,module,exports){
+},{"../../utils":64,"../ValueEditor/ValueEditor":39,"react":"react","react-dom":"react-dom"}],23:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2726,7 +2787,7 @@ function ErrorView(_ref3) {
     );
 }
 
-},{"../../ducks/flows":52,"../../ducks/ui/flow":56,"../../flow/utils.js":64,"../../utils.js":65,"../ContentView":4,"../ContentView/ContentViewOptions":7,"../ValueEditor/ValidateEditor":38,"../ValueEditor/ValueEditor":39,"./Headers":22,"./ToggleEdit":25,"react":"react","react-redux":"react-redux"}],24:[function(require,module,exports){
+},{"../../ducks/flows":50,"../../ducks/ui/flow":54,"../../flow/utils.js":62,"../../utils.js":64,"../ContentView":4,"../ContentView/ContentViewOptions":7,"../ValueEditor/ValidateEditor":38,"../ValueEditor/ValueEditor":39,"./Headers":22,"./ToggleEdit":25,"react":"react","react-redux":"react-redux"}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2861,7 +2922,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     stopEdit: _flow.stopEdit
 })(ToggleEdit);
 
-},{"../../ducks/ui/flow":56,"react":"react","react-redux":"react-redux"}],26:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"react":"react","react-redux":"react-redux"}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2968,7 +3029,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     };
 })(Footer);
 
-},{"../utils.js":65,"react":"react","react-redux":"react-redux"}],27:[function(require,module,exports){
+},{"../utils.js":64,"react":"react","react-redux":"react-redux"}],27:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3093,7 +3154,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setActiveMenu: _header.setActiveMenu
 })(Header);
 
-},{"../ducks/ui/header":57,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":33,"./Header/ViewMenu":34,"classnames":"classnames","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
+},{"../ducks/ui/header":55,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":33,"./Header/ViewMenu":34,"classnames":"classnames","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3180,7 +3241,7 @@ exports.default = (0, _reactRedux.connect)(null, {
     saveFlows: flowsActions.download
 })(FileMenu);
 
-},{"../../ducks/flows":52,"../common/Dropdown":41,"../common/FileChooser":42,"react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
+},{"../../ducks/flows":50,"../common/Dropdown":41,"../common/FileChooser":42,"react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3291,7 +3352,7 @@ FilterDocs.xhr = null;
 FilterDocs.doc = null;
 exports.default = FilterDocs;
 
-},{"../../utils":65,"react":"react"}],30:[function(require,module,exports){
+},{"../../utils":64,"react":"react"}],30:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3339,6 +3400,7 @@ var FilterInput = function (_Component) {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
         // finalized, hiding the tooltip just as the user clicks on it.
+
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FilterInput).call(this, props, context));
 
         _this.state = { value: _this.props.value, focus: false, mousefocus: false };
@@ -3485,7 +3547,7 @@ var FilterInput = function (_Component) {
 
 exports.default = FilterInput;
 
-},{"../../filt/filt":63,"../../utils.js":65,"./FilterDocs":29,"classnames":"classnames","react":"react","react-dom":"react-dom"}],31:[function(require,module,exports){
+},{"../../filt/filt":61,"../../utils.js":64,"./FilterDocs":29,"classnames":"classnames","react":"react","react-dom":"react-dom"}],31:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3572,7 +3634,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     revertFlow: flowsActions.revert
 })(FlowMenu);
 
-},{"../../ducks/flows":52,"../../flow/utils.js":64,"../common/Button":40,"react":"react","react-redux":"react-redux"}],32:[function(require,module,exports){
+},{"../../ducks/flows":50,"../../flow/utils.js":62,"../common/Button":40,"react":"react","react-redux":"react-redux"}],32:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3642,7 +3704,7 @@ var HighlightInput = (0, _reactRedux.connect)(function (state) {
     };
 }, { onChange: _flowView.updateHighlight })(_FilterInput2.default);
 
-},{"../../ducks/flowView":51,"../../ducks/settings":55,"./FilterInput":30,"react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
+},{"../../ducks/flowView":49,"../../ducks/settings":53,"./FilterInput":30,"react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3755,7 +3817,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateSettings: _settings.update
 })(OptionMenu);
 
-},{"../../ducks/settings":55,"../common/ToggleButton":44,"../common/ToggleInputButton":45,"react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
+},{"../../ducks/settings":53,"../common/ToggleButton":44,"../common/ToggleInputButton":45,"react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3808,7 +3870,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     toggleEventLog: _eventLog.toggleVisibility
 })(ViewMenu);
 
-},{"../../ducks/eventLog":50,"../common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
+},{"../../ducks/eventLog":48,"../common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3915,7 +3977,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateFlow: flowsActions.update
 })(MainView);
 
-},{"../ducks/flowView":51,"../ducks/flows":52,"./FlowTable":16,"./FlowView":20,"./common/Splitter":43,"react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
+},{"../ducks/flowView":49,"../ducks/flows":50,"./FlowTable":16,"./FlowView":20,"./common/Splitter":43,"react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4016,14 +4078,12 @@ function Prompt(_ref) {
     );
 }
 
-},{"../utils.js":65,"lodash":"lodash","react":"react","react-dom":"react-dom"}],37:[function(require,module,exports){
+},{"../utils.js":64,"lodash":"lodash","react":"react","react-dom":"react-dom"}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -4033,19 +4093,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
-var _history = require('history');
-
-var _app = require('../ducks/app');
-
 var _keyboard = require('../ducks/ui/keyboard');
-
-var _flowView = require('../ducks/flowView');
-
-var _flow = require('../ducks/ui/flow');
-
-var _flows = require('../ducks/flows');
-
-var _actions = require('../actions');
 
 var _MainView = require('./MainView');
 
@@ -4081,66 +4129,14 @@ var ProxyAppMain = function (_Component) {
     }
 
     _createClass(ProxyAppMain, [{
-        key: 'flushToStore',
-        value: function flushToStore(location) {
-            var components = location.pathname.split('/').filter(function (v) {
-                return v;
-            });
-            var query = location.query || {};
-
-            if (components.length > 2) {
-                this.props.selectFlow(components[1]);
-                this.props.selectTab(components[2]);
-            } else {
-                this.props.selectFlow(null);
-                this.props.selectTab(null);
-            }
-
-            this.props.updateFilter(query[_actions.Query.SEARCH]);
-            this.props.updateHighlight(query[_actions.Query.HIGHLIGHT]);
-        }
-    }, {
-        key: 'flushToHistory',
-        value: function flushToHistory(props) {
-            var query = _extends({}, query);
-
-            if (props.filter) {
-                query[_actions.Query.SEARCH] = props.filter;
-            }
-
-            if (props.highlight) {
-                query[_actions.Query.HIGHLIGHT] = props.highlight;
-            }
-
-            if (props.selectedFlowId) {
-                this.history.push({ pathname: '/flows/' + props.selectedFlowId + '/' + props.tab, query: query });
-            } else {
-                this.history.push({ pathname: '/flows', query: query });
-            }
-        }
-    }, {
         key: 'componentWillMount',
         value: function componentWillMount() {
-            var _this2 = this;
-
-            this.props.appInit();
-            this.history = (0, _history.useQueries)(_history.createHashHistory)();
-            this.unlisten = this.history.listen(function (location) {
-                return _this2.flushToStore(location);
-            });
             window.addEventListener('keydown', this.props.onKeyDown);
         }
     }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
-            this.props.appDestruct();
-            this.unlisten();
             window.removeEventListener('keydown', this.props.onKeyDown);
-        }
-    }, {
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(nextProps) {
-            this.flushToHistory(nextProps);
         }
     }, {
         key: 'render',
@@ -4167,23 +4163,13 @@ var ProxyAppMain = function (_Component) {
 
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
-        showEventLog: state.eventLog.visible,
-        filter: state.flowView.filter,
-        highlight: state.flowView.highlight,
-        tab: state.ui.flow.tab,
-        selectedFlowId: state.flows.selected[0]
+        showEventLog: state.eventLog.visible
     };
 }, {
-    appInit: _app.init,
-    appDestruct: _app.destruct,
-    onKeyDown: _keyboard.onKeyDown,
-    updateFilter: _flowView.updateFilter,
-    updateHighlight: _flowView.updateHighlight,
-    selectTab: _flow.selectTab,
-    selectFlow: _flows.select
+    onKeyDown: _keyboard.onKeyDown
 })(ProxyAppMain);
 
-},{"../actions":2,"../ducks/app":49,"../ducks/flowView":51,"../ducks/flows":52,"../ducks/ui/flow":56,"../ducks/ui/keyboard":59,"./EventLog":14,"./Footer":26,"./Header":27,"./MainView":35,"history":"history","react":"react","react-redux":"react-redux"}],38:[function(require,module,exports){
+},{"../ducks/ui/keyboard":57,"./EventLog":14,"./Footer":26,"./Header":27,"./MainView":35,"react":"react","react-redux":"react-redux"}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4492,7 +4478,7 @@ ValueEditor.defaultProps = {
 };
 exports.default = ValueEditor;
 
-},{"../../utils":65,"classnames":"classnames","lodash":"lodash","react":"react"}],40:[function(require,module,exports){
+},{"../../utils":64,"classnames":"classnames","lodash":"lodash","react":"react"}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4539,10 +4525,9 @@ function Button(_ref) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.Divider = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-exports.Divider = Divider;
 
 var _react = require('react');
 
@@ -4560,9 +4545,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function Divider() {
+var Divider = exports.Divider = function Divider() {
     return _react2.default.createElement('hr', { className: 'divider' });
-}
+};
 
 var Dropdown = function (_Component) {
     _inherits(Dropdown, _Component);
@@ -4980,7 +4965,7 @@ ToggleInputButton.propTypes = {
 };
 exports.default = ToggleInputButton;
 
-},{"../../utils":65,"classnames":"classnames","react":"react"}],46:[function(require,module,exports){
+},{"../../utils":64,"classnames":"classnames","react":"react"}],46:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5126,83 +5111,12 @@ function calcVScroll(opts) {
 }
 
 },{}],48:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.AppDispatcher = undefined;
-
-var _flux = require("flux");
-
-var _flux2 = _interopRequireDefault(_flux);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var PayloadSources = {
-    VIEW: "view",
-    SERVER: "server"
-};
-
-var AppDispatcher = exports.AppDispatcher = new _flux2.default.Dispatcher();
-AppDispatcher.dispatchViewAction = function (action) {
-    action.source = PayloadSources.VIEW;
-    this.dispatch(action);
-};
-AppDispatcher.dispatchServerAction = function (action) {
-    action.source = PayloadSources.SERVER;
-    this.dispatch(action);
-};
-
-},{"flux":"flux"}],49:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.INIT = undefined;
-exports.reduce = reduce;
-exports.init = init;
-exports.destruct = destruct;
-
-var _websocket = require('./websocket');
-
-var INIT = exports.INIT = 'APP_INIT';
-
-var defaultState = {};
-
-function reduce() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
-    var action = arguments[1];
-
-    switch (action.type) {
-
-        default:
-            return state;
-    }
-}
-
-function init() {
-    return function (dispatch) {
-        dispatch((0, _websocket.connect)());
-        dispatch({ type: INIT });
-    };
-}
-
-function destruct() {
-    return function (dispatch) {
-        dispatch((0, _websocket.disconnect)());
-        dispatch({ type: DESTRUCT });
-    };
-}
-
-},{"./websocket":62}],50:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.FETCH_ERROR = exports.UNKNOWN_CMD = exports.TOGGLE_FILTER = exports.TOGGLE_VISIBILITY = exports.RECEIVE = exports.ADD = exports.DATA_URL = exports.MSG_TYPE = undefined;
+exports.FETCH_ERROR = exports.UNKNOWN_CMD = exports.TOGGLE_FILTER = exports.TOGGLE_VISIBILITY = exports.RECEIVE = exports.ADD = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -5212,9 +5126,6 @@ exports.default = reduce;
 exports.toggleFilter = toggleFilter;
 exports.toggleVisibility = toggleVisibility;
 exports.add = add;
-exports.handleWsMsg = handleWsMsg;
-exports.fetchData = fetchData;
-exports.receiveData = receiveData;
 
 var _list = require('./utils/list');
 
@@ -5224,27 +5135,16 @@ var _view = require('./utils/view');
 
 var viewActions = _interopRequireWildcard(_view);
 
-var _websocket = require('./websocket');
-
-var websocketActions = _interopRequireWildcard(_websocket);
-
-var _msgQueue = require('./msgQueue');
-
-var msgQueueActions = _interopRequireWildcard(_msgQueue);
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var MSG_TYPE = exports.MSG_TYPE = 'UPDATE_EVENTLOG';
-var DATA_URL = exports.DATA_URL = '/events';
-
-var ADD = exports.ADD = 'EVENTLOG_ADD';
-var RECEIVE = exports.RECEIVE = 'EVENTLOG_RECEIVE';
-var TOGGLE_VISIBILITY = exports.TOGGLE_VISIBILITY = 'EVENTLOG_TOGGLE_VISIBILITY';
-var TOGGLE_FILTER = exports.TOGGLE_FILTER = 'EVENTLOG_TOGGLE_FILTER';
-var UNKNOWN_CMD = exports.UNKNOWN_CMD = 'EVENTLOG_UNKNOWN_CMD';
-var FETCH_ERROR = exports.FETCH_ERROR = 'EVENTLOG_FETCH_ERROR';
+var ADD = exports.ADD = 'EVENTS_ADD';
+var RECEIVE = exports.RECEIVE = 'EVENTS_RECEIVE';
+var TOGGLE_VISIBILITY = exports.TOGGLE_VISIBILITY = 'EVENTS_TOGGLE_VISIBILITY';
+var TOGGLE_FILTER = exports.TOGGLE_FILTER = 'EVENTS_TOGGLE_FILTER';
+var UNKNOWN_CMD = exports.UNKNOWN_CMD = 'EVENTS_UNKNOWN_CMD';
+var FETCH_ERROR = exports.FETCH_ERROR = 'EVENTS_FETCH_ERROR';
 
 var defaultState = {
     logId: 0,
@@ -5298,8 +5198,8 @@ function reduce() {
             case RECEIVE:
                 return {
                     v: _extends({}, state, {
-                        list: (0, listActions.default)(state.list, listActions.receive(action.list)),
-                        view: (0, viewActions.default)(state.view, viewActions.receive(action.list, function (log) {
+                        list: (0, listActions.default)(state.list, listActions.receive(action.events)),
+                        view: (0, viewActions.default)(state.view, viewActions.receive(action.events, function (log) {
                             return state.filters[log.level];
                         }))
                     })
@@ -5315,65 +5215,21 @@ function reduce() {
     if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
 }
 
-/**
- * @public
- */
 function toggleFilter(filter) {
     return { type: TOGGLE_FILTER, filter: filter };
 }
 
-/**
- * @public
- *
- * @todo move to ui?
- */
 function toggleVisibility() {
     return { type: TOGGLE_VISIBILITY };
 }
 
-/**
- * @public
- */
 function add(message) {
     var level = arguments.length <= 1 || arguments[1] === undefined ? 'web' : arguments[1];
 
     return { type: ADD, message: message, level: level };
 }
 
-/**
- * This action creater takes all WebSocket events
- *
- * @public websocket
- */
-function handleWsMsg(msg) {
-    switch (msg.cmd) {
-
-        case websocketActions.CMD_ADD:
-            return add(msg.data.message, msg.data.level);
-
-        case websocketActions.CMD_RESET:
-            return fetchData();
-
-        default:
-            return { type: UNKNOWN_CMD, msg: msg };
-    }
-}
-
-/**
- * @public websocket
- */
-function fetchData() {
-    return msgQueueActions.fetchData(MSG_TYPE);
-}
-
-/**
- * @public msgQueue
- */
-function receiveData(list) {
-    return { type: RECEIVE, list: list };
-}
-
-},{"./msgQueue":54,"./utils/list":60,"./utils/view":61,"./websocket":62}],51:[function(require,module,exports){
+},{"./utils/list":58,"./utils/view":59}],49:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5507,42 +5363,40 @@ function reduce() {
             return _extends({}, (0, viewActions.default)(state, viewActions.update(action.item, makeFilter(state.filter), makeSort(state.sort))));
 
         case flowActions.REMOVE:
+            /* FIXME: Implement select switch on remove
+                return (dispatch, getState) => {
+                    let currentIndex = getState().flowView.indexOf[getState().flows.selected[0]]
+                    let maxIndex = getState().flowView.data.length - 1
+                    let deleteLastEntry = maxIndex == 0
+                    if (deleteLastEntry)
+                        dispatch(select())
+                    else
+                        dispatch(selectRelative(currentIndex == maxIndex ? -1 : 1) )
+             */
             return _extends({}, (0, viewActions.default)(state, viewActions.remove(action.id)));
 
         case flowActions.RECEIVE:
-            return _extends({}, (0, viewActions.default)(state, viewActions.receive(action.list, makeFilter(state.filter), makeSort(state.sort))));
+            return _extends({}, (0, viewActions.default)(state, viewActions.receive(action.flows, makeFilter(state.filter), makeSort(state.sort))));
 
         default:
             return _extends({}, (0, viewActions.default)(state, action));
     }
 }
 
-/**
- * @public
- */
 function updateFilter(filter) {
     return function (dispatch, getState) {
         dispatch({ type: UPDATE_FILTER, filter: filter, flows: getState().flows.data });
     };
 }
 
-/**
- * @public
- */
 function updateHighlight(highlight) {
     return { type: UPDATE_HIGHLIGHT, highlight: highlight };
 }
 
-/**
- * @public
- */
 function updateSort(column, desc) {
     return { type: UPDATE_SORT, column: column, desc: desc };
 }
 
-/**
- * @public
- */
 function selectRelative(shift) {
     return function (dispatch, getState) {
         var currentSelectionIndex = getState().flowView.indexOf[getState().flows.selected[0]];
@@ -5561,13 +5415,13 @@ function selectRelative(shift) {
     };
 }
 
-},{"../filt/filt":63,"../flow/utils":64,"./flows":52,"./utils/view":61}],52:[function(require,module,exports){
+},{"../filt/filt":61,"../flow/utils":62,"./flows":50,"./utils/view":59}],50:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.SELECT = exports.FETCH_ERROR = exports.UNKNOWN_CMD = exports.REQUEST_ACTION = exports.RECEIVE = exports.REMOVE = exports.UPDATE = exports.ADD = exports.DATA_URL = exports.MSG_TYPE = undefined;
+exports.SELECT = exports.FETCH_ERROR = exports.UNKNOWN_CMD = exports.REQUEST_ACTION = exports.RECEIVE = exports.REMOVE = exports.UPDATE = exports.ADD = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -5584,12 +5438,6 @@ exports.clear = clear;
 exports.download = download;
 exports.upload = upload;
 exports.select = select;
-exports.handleWsMsg = handleWsMsg;
-exports.fetchFlows = fetchFlows;
-exports.receiveData = receiveData;
-exports.addFlow = addFlow;
-exports.updateFlow = updateFlow;
-exports.removeFlow = removeFlow;
 
 var _utils = require('../utils');
 
@@ -5597,18 +5445,9 @@ var _list = require('./utils/list');
 
 var listActions = _interopRequireWildcard(_list);
 
-var _msgQueue = require('./msgQueue');
-
-var msgQueueActions = _interopRequireWildcard(_msgQueue);
-
-var _websocket = require('./websocket');
-
-var websocketActions = _interopRequireWildcard(_websocket);
+var _flowView = require('./flowView');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-var MSG_TYPE = exports.MSG_TYPE = 'UPDATE_FLOWS';
-var DATA_URL = exports.DATA_URL = '/flows';
 
 var ADD = exports.ADD = 'FLOWS_ADD';
 var UPDATE = exports.UPDATE = 'FLOWS_UPDATE';
@@ -5639,7 +5478,7 @@ function reduce() {
             return _extends({}, state, (0, listActions.default)(state, listActions.remove(action.id)));
 
         case RECEIVE:
-            return _extends({}, state, (0, listActions.default)(state, listActions.receive(action.list)));
+            return _extends({}, state, (0, listActions.default)(state, listActions.receive(action.flows)));
 
         case SELECT:
             return _extends({}, state, {
@@ -5651,63 +5490,42 @@ function reduce() {
     }
 }
 
-/**
- * @public
- */
 function accept(flow) {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/flows/' + flow.id + '/accept', { method: 'POST' });
     };
 }
 
-/**
- * @public
- */
 function acceptAll() {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/flows/accept', { method: 'POST' });
     };
 }
 
-/**
- * @public
- */
 function remove(flow) {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/flows/' + flow.id, { method: 'DELETE' });
     };
 }
 
-/**
- * @public
- */
 function duplicate(flow) {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/flows/' + flow.id + '/duplicate', { method: 'POST' });
     };
 }
 
-/**
- * @public
- */
 function replay(flow) {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/flows/' + flow.id + '/replay', { method: 'POST' });
     };
 }
 
-/**
- * @public
- */
 function revert(flow) {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/flows/' + flow.id + '/revert', { method: 'POST' });
     };
 }
 
-/**
- * @public
- */
 function update(flow, data) {
     return function (dispatch) {
         return _utils.fetchApi.put('/flows/' + flow.id, data);
@@ -5723,26 +5541,17 @@ function uploadContent(flow, file, type) {
     };
 }
 
-/**
- * @public
- */
 function clear() {
     return function (dispatch) {
         return (0, _utils.fetchApi)('/clear', { method: 'POST' });
     };
 }
 
-/**
- * @public
- */
 function download() {
     window.location = '/flows/dump';
     return { type: REQUEST_ACTION };
 }
 
-/**
- * @public
- */
 function upload(file) {
     var body = new FormData();
     body.append('file', file);
@@ -5758,70 +5567,7 @@ function select(id) {
     };
 }
 
-/**
- * This action creater takes all WebSocket events
- *
- * @public websocket
- */
-function handleWsMsg(msg) {
-    switch (msg.cmd) {
-
-        case websocketActions.CMD_ADD:
-            return addFlow(msg.data);
-
-        case websocketActions.CMD_UPDATE:
-            return updateFlow(msg.data);
-
-        case websocketActions.CMD_REMOVE:
-            return removeFlow(msg.data.id);
-
-        case websocketActions.CMD_RESET:
-            return fetchFlows();
-
-        default:
-            return { type: UNKNOWN_CMD, msg: msg };
-    }
-}
-
-/**
- * @public websocket
- */
-function fetchFlows() {
-    return msgQueueActions.fetchData(MSG_TYPE);
-}
-
-/**
- * @public msgQueue
- */
-function receiveData(list) {
-    return { type: RECEIVE, list: list };
-}
-
-/**
- * @private
- */
-function addFlow(item) {
-    return { type: ADD, item: item };
-}
-
-/**
- * @private
- */
-function updateFlow(item) {
-    return { type: UPDATE, item: item };
-}
-
-/**
- * @private
- */
-function removeFlow(id) {
-    return function (dispatch) {
-        dispatch(select());
-        dispatch({ type: REMOVE, id: id });
-    };
-}
-
-},{"../utils":65,"./msgQueue":54,"./utils/list":60,"./websocket":62}],53:[function(require,module,exports){
+},{"../utils":64,"./flowView":49,"./utils/list":58}],51:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5870,7 +5616,7 @@ exports.default = (0, _redux.combineReducers)({
     msgQueue: _msgQueue2.default
 });
 
-},{"./eventLog":50,"./flowView":51,"./flows":52,"./msgQueue":54,"./settings":55,"./ui/index":58,"./websocket":62,"redux":"redux"}],54:[function(require,module,exports){
+},{"./eventLog":48,"./flowView":49,"./flows":50,"./msgQueue":52,"./settings":53,"./ui/index":56,"./websocket":60,"redux":"redux"}],52:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6038,40 +5784,23 @@ function fetchError(type, error) {
     return _ref = { type: FETCH_ERROR }, _defineProperty(_ref, 'type', type), _defineProperty(_ref, 'error', error), _ref;
 }
 
-},{"../utils":65,"./eventLog":50,"./flows":52,"./settings":55,"./websocket":62}],55:[function(require,module,exports){
+},{"../utils":64,"./eventLog":48,"./flows":50,"./settings":53,"./websocket":60}],53:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.UNKNOWN_CMD = exports.REQUEST_UPDATE = exports.UPDATE = exports.RECEIVE = exports.DATA_URL = exports.MSG_TYPE = undefined;
+exports.UNKNOWN_CMD = exports.REQUEST_UPDATE = exports.UPDATE = exports.RECEIVE = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = reducer;
-exports.handleWsMsg = handleWsMsg;
 exports.update = update;
-exports.fetchData = fetchData;
-exports.receiveData = receiveData;
-exports.updateSettings = updateSettings;
 
 var _utils = require('../utils');
 
-var _websocket = require('./websocket');
-
-var websocketActions = _interopRequireWildcard(_websocket);
-
-var _msgQueue = require('./msgQueue');
-
-var msgQueueActions = _interopRequireWildcard(_msgQueue);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-var MSG_TYPE = exports.MSG_TYPE = 'UPDATE_SETTINGS';
-var DATA_URL = exports.DATA_URL = '/settings';
-
-var RECEIVE = exports.RECEIVE = 'RECEIVE';
-var UPDATE = exports.UPDATE = 'UPDATE';
+var RECEIVE = exports.RECEIVE = 'SETTINGS_RECEIVE';
+var UPDATE = exports.UPDATE = 'SETTINGS_UPDATE';
 var REQUEST_UPDATE = exports.REQUEST_UPDATE = 'REQUEST_UPDATE';
 var UNKNOWN_CMD = exports.UNKNOWN_CMD = 'SETTINGS_UNKNOWN_CMD';
 
@@ -6087,58 +5816,19 @@ function reducer() {
             return action.settings;
 
         case UPDATE:
-            return _extends({}, state, action.settings);
+            return _extends({}, state, action.data);
 
         default:
             return state;
     }
 }
 
-/**
- * @public msgQueue
- */
-function handleWsMsg(msg) {
-    switch (msg.cmd) {
-
-        case websocketActions.CMD_UPDATE:
-            return updateSettings(msg.data);
-
-        default:
-            console.error('unknown settings update', msg);
-            return { type: UNKNOWN_CMD, msg: msg };
-    }
-}
-
-/**
- * @public
- */
 function update(settings) {
     _utils.fetchApi.put('/settings', settings);
     return { type: REQUEST_UPDATE };
 }
 
-/**
- * @public websocket
- */
-function fetchData() {
-    return msgQueueActions.fetchData(MSG_TYPE);
-}
-
-/**
- * @public msgQueue
- */
-function receiveData(settings) {
-    return { type: RECEIVE, settings: settings };
-}
-
-/**
- * @private
- */
-function updateSettings(settings) {
-    return { type: UPDATE, settings: settings };
-}
-
-},{"../utils":65,"./msgQueue":54,"./websocket":62}],56:[function(require,module,exports){
+},{"../utils":64}],54:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6156,7 +5846,6 @@ exports.startEdit = startEdit;
 exports.updateEdit = updateEdit;
 exports.setContentViewDescription = setContentViewDescription;
 exports.setShowFullContent = setShowFullContent;
-exports.updateEdit = updateEdit;
 exports.setContent = setContent;
 exports.stopEdit = stopEdit;
 
@@ -6186,7 +5875,7 @@ var SET_CONTENT_VIEW = exports.SET_CONTENT_VIEW = 'UI_FLOWVIEW_SET_CONTENT_VIEW'
 
 var defaultState = {
     displayLarge: false,
-    contentViewDescription: '',
+    viewDescription: '',
     showFullContent: false,
     modifiedFlow: false,
     contentView: 'Auto',
@@ -6200,6 +5889,10 @@ function reducer() {
     var action = arguments[1];
 
     var wasInEditMode = !!state.modifiedFlow;
+
+    var content = action.content || state.content;
+    var isFullContentShown = content && content.length <= state.maxContentLines;
+
     switch (action.type) {
 
         case START_EDIT:
@@ -6219,8 +5912,7 @@ function reducer() {
                 modifiedFlow: false,
                 displayLarge: false,
                 contentView: wasInEditMode ? 'Auto' : state.contentView,
-                viewDescription: '',
-                showFullContent: false
+                showFullContent: isFullContentShown
             });
 
         case flowsActions.UPDATE:
@@ -6232,7 +5924,6 @@ function reducer() {
                     modifiedFlow: false,
                     displayLarge: false,
                     contentView: wasInEditMode ? 'Auto' : state.contentView,
-                    viewDescription: '',
                     showFullContent: false
                 });
             } else {
@@ -6246,7 +5937,7 @@ function reducer() {
 
         case SET_SHOW_FULL_CONTENT:
             return _extends({}, state, {
-                showFullContent: action.show
+                showFullContent: true
             });
 
         case SET_TAB:
@@ -6263,7 +5954,6 @@ function reducer() {
             });
 
         case SET_CONTENT:
-            var isFullContentShown = action.content.length < state.maxContentLines;
             return _extends({}, state, {
                 content: action.content,
                 showFullContent: isFullContentShown
@@ -6302,12 +5992,8 @@ function setContentViewDescription(description) {
     return { type: SET_CONTENT_VIEW_DESCRIPTION, description: description };
 }
 
-function setShowFullContent(show) {
-    return { type: SET_SHOW_FULL_CONTENT, show: show };
-}
-
-function updateEdit(update) {
-    return { type: UPDATE_EDIT, update: update };
+function setShowFullContent() {
+    return { type: SET_SHOW_FULL_CONTENT };
 }
 
 function setContent(content) {
@@ -6315,11 +6001,10 @@ function setContent(content) {
 }
 
 function stopEdit(flow, modifiedFlow) {
-    var diff = (0, _utils.getDiff)(flow, modifiedFlow);
-    return flowsActions.update(flow, diff);
+    return flowsActions.update(flow, (0, _utils.getDiff)(flow, modifiedFlow));
 }
 
-},{"../../utils":65,"../flows":52,"lodash":"lodash"}],57:[function(require,module,exports){
+},{"../../utils":64,"../flows":50,"lodash":"lodash"}],55:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6386,7 +6071,7 @@ function setActiveMenu(activeMenu) {
     return { type: SET_ACTIVE_MENU, activeMenu: activeMenu };
 }
 
-},{"../flows":52}],58:[function(require,module,exports){
+},{"../flows":50}],56:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6405,12 +6090,13 @@ var _header2 = _interopRequireDefault(_header);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// TODO: Just move ducks/ui/* into ducks/?
 exports.default = (0, _redux.combineReducers)({
     flow: _flow2.default,
     header: _header2.default
 });
 
-},{"./flow":56,"./header":57,"redux":"redux"}],59:[function(require,module,exports){
+},{"./flow":54,"./header":55,"redux":"redux"}],57:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6550,7 +6236,7 @@ function onKeyDown(e) {
     };
 }
 
-},{"../../utils":65,"../flowView":51,"../flows":52,"./flow":56}],60:[function(require,module,exports){
+},{"../../utils":64,"../flowView":49,"../flows":50,"./flow":54}],58:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6657,35 +6343,23 @@ function reduce() {
     }
 }
 
-/**
- * @public
- */
 function add(item) {
     return { type: ADD, item: item };
 }
 
-/**
- * @public
- */
 function update(item) {
     return { type: UPDATE, item: item };
 }
 
-/**
- * @public
- */
 function remove(id) {
     return { type: REMOVE, id: id };
 }
 
-/**
- * @public
- */
 function receive(list) {
     return { type: RECEIVE, list: list };
 }
 
-},{"lodash":"lodash"}],61:[function(require,module,exports){
+},{"lodash":"lodash"}],59:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6906,7 +6580,7 @@ function defaultSort(a, b) {
     return 0;
 }
 
-},{"lodash":"lodash"}],62:[function(require,module,exports){
+},{"lodash":"lodash"}],60:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6923,10 +6597,6 @@ exports.onConnect = onConnect;
 exports.onMessage = onMessage;
 exports.onDisconnect = onDisconnect;
 exports.onError = onError;
-
-var _actions = require('../actions.js');
-
-var _dispatcher = require('../dispatcher.js');
 
 var _msgQueue = require('./msgQueue');
 
@@ -7047,7 +6717,7 @@ function onError(error) {
     };
 }
 
-},{"../actions.js":2,"../dispatcher.js":48,"./eventLog":50,"./flows":52,"./msgQueue":54,"./settings":55}],63:[function(require,module,exports){
+},{"./eventLog":48,"./flows":50,"./msgQueue":52,"./settings":53}],61:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -8951,7 +8621,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":64}],64:[function(require,module,exports){
+},{"../flow/utils.js":62}],62:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9070,7 +8740,118 @@ var isValidHttpVersion = exports.isValidHttpVersion = function isValidHttpVersio
     return isValidHttpVersion_regex.test(httpVersion);
 };
 
-},{"lodash":"lodash"}],65:[function(require,module,exports){
+},{"lodash":"lodash"}],63:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+exports.default = initialize;
+
+var _flows = require("./ducks/flows");
+
+var _flow = require("./ducks/ui/flow");
+
+var _flowView = require("./ducks/flowView");
+
+var _eventLog = require("./ducks/eventLog");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Query = {
+    SEARCH: "s",
+    HIGHLIGHT: "h",
+    SHOW_EVENTLOG: "e"
+};
+
+function updateStoreFromUrl(store) {
+    var _window$location$hash = window.location.hash.substr(1).split("?", 2);
+
+    var _window$location$hash2 = _slicedToArray(_window$location$hash, 2);
+
+    var path = _window$location$hash2[0];
+    var query = _window$location$hash2[1];
+
+    var path_components = path.substr(1).split("/");
+
+    if (path_components[0] === "flows") {
+        if (path_components.length == 3) {
+            var _path_components$slic = path_components.slice(1);
+
+            var _path_components$slic2 = _slicedToArray(_path_components$slic, 2);
+
+            var flowId = _path_components$slic2[0];
+            var tab = _path_components$slic2[1];
+
+            store.dispatch((0, _flows.select)(flowId));
+            store.dispatch((0, _flow.selectTab)(tab));
+        }
+    }
+
+    if (query) {
+        query.split("&").forEach(function (x) {
+            var _x$split = x.split("=", 2);
+
+            var _x$split2 = _slicedToArray(_x$split, 2);
+
+            var key = _x$split2[0];
+            var value = _x$split2[1];
+
+            switch (key) {
+                case Query.SEARCH:
+                    store.dispatch((0, _flowView.updateFilter)(value));
+                    break;
+                case Query.HIGHLIGHT:
+                    store.dispatch((0, _flowView.updateHighlight)(value));
+                    break;
+                case Query.SHOW_EVENTLOG:
+                    if (!store.getState().eventLog.visible) store.dispatch((0, _eventLog.toggleVisibility)(value));
+                    break;
+                default:
+                    console.error("unimplemented query arg: " + x);
+            }
+        });
+    }
+}
+
+function updateUrlFromStore(store) {
+    var _query;
+
+    var state = store.getState();
+    var query = (_query = {}, _defineProperty(_query, Query.SEARCH, state.flowView.filter), _defineProperty(_query, Query.HIGHLIGHT, state.flowView.highlight), _defineProperty(_query, Query.SHOW_EVENTLOG, state.eventLog.visible), _query);
+    var queryStr = Object.keys(query).filter(function (k) {
+        return query[k];
+    }).map(function (k) {
+        return k + "=" + query[k];
+    }).join("&");
+
+    var url = void 0;
+    if (state.flows.selected.length > 0) {
+        url = "/flows/" + state.flows.selected[0] + "/" + state.ui.flow.tab;
+    } else {
+        url = "/flows";
+    }
+
+    if (queryStr) {
+        url += "?" + queryStr;
+    }
+    if (window.location.hash !== url) {
+        // FIXME: replace state
+        window.location.hash = url;
+    }
+}
+
+function initialize(store) {
+    updateStoreFromUrl(store);
+    store.subscribe(function () {
+        return updateUrlFromStore(store);
+    });
+}
+
+},{"./ducks/eventLog":48,"./ducks/flowView":49,"./ducks/flows":50,"./ducks/ui/flow":54}],64:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -9079,8 +8860,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.pure = exports.formatTimeStamp = exports.formatTimeDelta = exports.formatSize = exports.Key = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -9203,11 +8982,12 @@ fetchApi.put = function (url, json, options) {
         body: JSON.stringify(json)
     }, options));
 };
-
+// deep comparison of two json objects (dicts). arrays are handeled as a single value.
+// return: json object including only the changed keys value pairs.
 function getDiff(obj1, obj2) {
     var result = _extends({}, obj2);
     for (var key in obj1) {
-        if (_lodash2.default.isEqual(obj2[key], obj1[key])) result[key] = undefined;else if (!(Array.isArray(obj2[key]) && Array.isArray(obj1[key])) && _typeof(obj2[key]) == 'object' && _typeof(obj1[key]) == 'object') result[key] = getDiff(obj1[key], obj2[key]);
+        if (_lodash2.default.isEqual(obj2[key], obj1[key])) result[key] = undefined;else if (Object.prototype.toString.call(obj2[key]) === '[object Object]' && Object.prototype.toString.call(obj1[key]) === '[object Object]') result[key] = getDiff(obj1[key], obj2[key]);
     }
     return result;
 }
@@ -9240,7 +9020,7 @@ var pure = exports.pure = function pure(renderFn) {
     }(_react2.default.Component), _class.displayName = renderFn.name, _temp;
 };
 
-},{"lodash":"lodash","react":"react","shallowequal":"shallowequal"}]},{},[3])
+},{"lodash":"lodash","react":"react","shallowequal":"shallowequal"}]},{},[2])
 
 
 //# sourceMappingURL=app.js.map

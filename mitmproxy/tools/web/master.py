@@ -29,7 +29,7 @@ class _WebState():
         }
         self.events.append(entry)
         app.ClientConnection.broadcast(
-            type="UPDATE_EVENTLOG",
+            resource="events",
             cmd="add",
             data=entry
         )
@@ -38,9 +38,8 @@ class _WebState():
         super().clear()
         self.events.clear()
         app.ClientConnection.broadcast(
-            type="UPDATE_EVENTLOG",
-            cmd="reset",
-            data=[]
+            resource="events",
+            cmd="reset"
         )
 
 
@@ -113,28 +112,28 @@ class WebMaster(master.Master):
 
     def _sig_add(self, view, flow):
         app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
+            resource="flows",
             cmd="add",
             data=app.convert_flow_to_json_dict(flow)
         )
 
     def _sig_update(self, view, flow):
         app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
+            resource="flows",
             cmd="update",
             data=app.convert_flow_to_json_dict(flow)
         )
 
     def _sig_remove(self, view, flow):
         app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
+            resource="flows",
             cmd="remove",
             data=dict(id=flow.id)
         )
 
     def _sig_refresh(self, view):
         app.ClientConnection.broadcast(
-            type="UPDATE_FLOWS",
+            resource="flows",
             cmd="reset"
         )
 

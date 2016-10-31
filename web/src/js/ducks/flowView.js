@@ -121,6 +121,16 @@ export default function reduce(state = defaultState, action) {
             }
 
         case flowActions.REMOVE:
+            /* FIXME: Implement select switch on remove
+                return (dispatch, getState) => {
+                    let currentIndex = getState().flowView.indexOf[getState().flows.selected[0]]
+                    let maxIndex = getState().flowView.data.length - 1
+                    let deleteLastEntry = maxIndex == 0
+                    if (deleteLastEntry)
+                        dispatch(select())
+                    else
+                        dispatch(selectRelative(currentIndex == maxIndex ? -1 : 1) )
+             */
             return {
                 ...reduceView(
                     state,
@@ -135,7 +145,7 @@ export default function reduce(state = defaultState, action) {
                 ...reduceView(
                     state,
                     viewActions.receive(
-                        action.list,
+                        action.flows,
                         makeFilter(state.filter),
                         makeSort(state.sort)
                     )
@@ -149,33 +159,20 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-/**
- * @public
- */
 export function updateFilter(filter) {
     return (dispatch, getState) => {
         dispatch({ type: UPDATE_FILTER, filter, flows: getState().flows.data })
     }
 }
 
-/**
- * @public
- */
 export function updateHighlight(highlight) {
     return { type: UPDATE_HIGHLIGHT, highlight }
 }
 
-/**
- * @public
- */
 export function updateSort(column, desc) {
     return { type: UPDATE_SORT, column, desc }
 }
 
-
-/**
- * @public
- */
 export function selectRelative(shift) {
     return (dispatch, getState) => {
         let currentSelectionIndex = getState().flowView.indexOf[getState().flows.selected[0]]
