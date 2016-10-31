@@ -38,8 +38,14 @@ DHCP and TFTP) services to a small-scale network.
     **Ubuntu >12.04** runs an internal dnsmasq instance (listening on loopback only) by default
     `[1] <https://www.stgraber.org/2012/02/24/dns-in-ubuntu-12-04/>`_. For our use case, this needs
     to be disabled by changing ``dns=dnsmasq`` to ``#dns=dnsmasq`` in
-    **/etc/NetworkManager/NetworkManager.conf** and running
-
+    **/etc/NetworkManager/NetworkManager.conf** and
+    
+    if on Ubuntu 16.04 or newer running:
+    
+    >>> sudo systemctl restart NetworkManager
+    
+    if on Ubuntu 12.04 or 14.04 running:
+    
     >>> sudo restart network-manager
 
     afterwards.
@@ -61,6 +67,12 @@ DHCP and TFTP) services to a small-scale network.
 
     Apply changes:
 
+    if on Ubuntu 16.04 or newer:
+    
+    >>> sudo systemctl restart dnsmasq
+    
+    if on Ubuntu 12.04 or 14.04:
+    
     >>> sudo service dnsmasq restart
 
     Your **proxied machine** in the internal virtual network should now receive an IP address via DHCP:
@@ -74,8 +86,8 @@ To redirect traffic to mitmproxy, we need to add two iptables rules:
 
 .. code-block:: none
 
-    iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j REDIRECT --to-port 8080
-    iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 443 -j REDIRECT --to-port 8080
+    sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j REDIRECT --to-port 8080
+    sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 443 -j REDIRECT --to-port 8080
 
 4. Run mitmproxy
 ----------------
