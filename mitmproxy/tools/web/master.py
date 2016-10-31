@@ -21,7 +21,8 @@ class Stop(Exception):
 
 class _WebState():
     def add_log(self, e, level):
-        self._last_event_id += 1
+        # server-side log ids are odd
+        self._last_event_id += 2
         entry = {
             "id": self._last_event_id,
             "message": e,

@@ -3,15 +3,15 @@ import { connect } from 'react-redux'
 import classnames from 'classnames'
 import columns from './FlowColumns'
 
-import { updateSort } from '../../ducks/flowView'
+import { setSort } from '../../ducks/flows'
 
 FlowTableHead.propTypes = {
-    updateSort: PropTypes.func.isRequired,
+    setSort: PropTypes.func.isRequired,
     sortDesc: React.PropTypes.bool.isRequired,
     sortColumn: React.PropTypes.string,
 }
 
-function FlowTableHead({ sortColumn, sortDesc, updateSort }) {
+function FlowTableHead({ sortColumn, sortDesc, setSort }) {
     const sortType = sortDesc ? 'sort-desc' : 'sort-asc'
 
     return (
@@ -19,7 +19,7 @@ function FlowTableHead({ sortColumn, sortDesc, updateSort }) {
             {columns.map(Column => (
                 <th className={classnames(Column.headerClass, sortColumn === Column.name && sortType)}
                     key={Column.name}
-                    onClick={() => updateSort(Column.name, Column.name !== sortColumn ? false : !sortDesc)}>
+                    onClick={() => setSort(Column.name, Column.name !== sortColumn ? false : !sortDesc)}>
                     {Column.headerName}
                 </th>
             ))}
@@ -29,10 +29,10 @@ function FlowTableHead({ sortColumn, sortDesc, updateSort }) {
 
 export default connect(
     state => ({
-        sortDesc: state.flowView.sort.desc,
-        sortColumn: state.flowView.sort.column,
+        sortDesc: state.flows.sort.desc,
+        sortColumn: state.flows.sort.column,
     }),
     {
-        updateSort
+        setSort
     }
 )(FlowTableHead)

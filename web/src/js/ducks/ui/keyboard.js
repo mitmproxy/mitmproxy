@@ -1,5 +1,4 @@
 import { Key } from '../../utils'
-import { selectRelative as selectFlowRelative } from '../flowView'
 import { selectTab } from './flow'
 import * as flowsActions from '../flows'
 
@@ -20,29 +19,29 @@ export function onKeyDown(e) {
         switch (key) {
             case Key.K:
             case Key.UP:
-                dispatch(selectFlowRelative(-1))
+                dispatch(flowsActions.selectRelative(-1))
                 break
 
             case Key.J:
             case Key.DOWN:
-                dispatch(selectFlowRelative(+1))
+                dispatch(flowsActions.selectRelative(+1))
                 break
 
             case Key.SPACE:
             case Key.PAGE_DOWN:
-                dispatch(selectFlowRelative(+10))
+                dispatch(flowsActions.selectRelative(+10))
                 break
 
             case Key.PAGE_UP:
-                dispatch(selectFlowRelative(-10))
+                dispatch(flowsActions.selectRelative(-10))
                 break
 
             case Key.END:
-                dispatch(selectFlowRelative(+1e10))
+                dispatch(flowsActions.selectRelative(+1e10))
                 break
 
             case Key.HOME:
-                dispatch(selectFlowRelative(-1e10))
+                dispatch(flowsActions.selectRelative(-1e10))
                 break
 
             case Key.ESC:

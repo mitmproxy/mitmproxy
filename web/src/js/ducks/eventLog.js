@@ -1,19 +1,15 @@
-import reduceList, * as listActions from './utils/list'
-import reduceView, * as viewActions from './utils/view'
+import reduceStore from "./utils/store"
+import * as storeActions from "./utils/store"
 
 export const ADD               = 'EVENTS_ADD'
 export const RECEIVE           = 'EVENTS_RECEIVE'
 export const TOGGLE_VISIBILITY = 'EVENTS_TOGGLE_VISIBILITY'
 export const TOGGLE_FILTER     = 'EVENTS_TOGGLE_FILTER'
-export const UNKNOWN_CMD       = 'EVENTS_UNKNOWN_CMD'
-export const FETCH_ERROR       = 'EVENTS_FETCH_ERROR'
 
 const defaultState = {
-    logId: 0,
     visible: false,
     filters: { debug: false, info: true, web: true },
-    list: reduceList(undefined, {}),
-    view: reduceView(undefined, {}),
+    ...reduceStore(undefined, {}),
 }
 
 export default function reduce(state = defaultState, action) {
@@ -30,27 +26,14 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 filters,
-                view: reduceView(state.view, viewActions.updateFilter(state.list.data, log => filters[log.level])),
+                ...reduceStore(state, storeActions.setFilter(log => filters[log.level]))
             }
 
         case ADD:
-            const item = {
-                id: state.logId,
-                message: action.message,
-                level: action.level,
-            }
-            return {
-                ...state,
-                logId: state.logId + 1,
-                list: reduceList(state.list, listActions.add(item)),
-                view: reduceView(state.view, viewActions.add(item, log => state.filters[log.level])),
-            }
-
         case RECEIVE:
             return {
                 ...state,
-                list: reduceList(state.list, listActions.receive(action.events)),
-                view: reduceView(state.view, viewActions.receive(action.events, log => state.filters[log.level])),
+                ...reduceStore(state, storeActions[action.cmd](action.data, log => state.filters[log.level]))
             }
 
         default:
@@ -66,6 +49,17 @@ export function toggleVisibility() {
     return { type: TOGGLE_VISIBILITY }
 }
 
+let logId = 1  // client-side log ids are odd
 export function add(message, level = 'web') {
-    return { type: ADD, message, level }
+    let data = {
+        id: logId,
+        message,
+        level,
+    }
+    logId += 2
+    return {
+        type: ADD,
+        cmd: "add",
+        data
+    }
 }

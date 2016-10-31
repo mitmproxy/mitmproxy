@@ -4,7 +4,6 @@ import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
 import * as flowsActions from '../ducks/flows'
-import { updateFilter, updateHighlight } from '../ducks/flowView'
 
 class MainView extends Component {
 
@@ -41,16 +40,14 @@ class MainView extends Component {
 
 export default connect(
     state => ({
-        flows: state.flowView.data,
-        filter: state.flowView.filter,
-        highlight: state.flowView.highlight,
+        flows: state.flows.view,
+        filter: state.flows.filter,
+        highlight: state.flows.highlight,
         selectedFlow: state.flows.byId[state.flows.selected[0]],
         tab: state.ui.flow.tab,
     }),
     {
         selectFlow: flowsActions.select,
-        updateFilter,
-        updateHighlight,
         updateFlow: flowsActions.update,
     }
 )(MainView)

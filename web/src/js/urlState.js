@@ -1,6 +1,5 @@
-import { select } from "./ducks/flows"
+import { select, setFilter, setHighlight } from "./ducks/flows"
 import { selectTab } from "./ducks/ui/flow"
-import { updateFilter, updateHighlight } from "./ducks/flowView"
 import { toggleVisibility } from "./ducks/eventLog"
 
 const Query = {
@@ -10,7 +9,7 @@ const Query = {
 };
 
 function updateStoreFromUrl(store) {
-    const [path, query] = window.location.hash.substr(1).split("?", 2)
+    const [path, query]   = window.location.hash.substr(1).split("?", 2)
     const path_components = path.substr(1).split("/")
 
     if (path_components[0] === "flows") {
@@ -28,14 +27,14 @@ function updateStoreFromUrl(store) {
                 const [key, value] = x.split("=", 2)
                 switch (key) {
                     case Query.SEARCH:
-                        store.dispatch(updateFilter(value))
+                        store.dispatch(setFilter(value))
                         break
                     case Query.HIGHLIGHT:
-                        store.dispatch(updateHighlight(value))
+                        store.dispatch(setHighlight(value))
                         break
                     case Query.SHOW_EVENTLOG:
-                        if(!store.getState().eventLog.visible)
-                            store.dispatch(toggleVisibility(value))
+                        if (!store.getState().eventLog.visible)
+                            store.dispatch(toggleVisibility())
                         break
                     default:
                         console.error(`unimplemented query arg: ${x}`)
@@ -45,10 +44,10 @@ function updateStoreFromUrl(store) {
 }
 
 function updateUrlFromStore(store) {
-    const state = store.getState()
-    let query = {
-        [Query.SEARCH]: state.flowView.filter,
-        [Query.HIGHLIGHT]: state.flowView.highlight,
+    const state    = store.getState()
+    let query      = {
+        [Query.SEARCH]: state.flows.filter,
+        [Query.HIGHLIGHT]: state.flows.highlight,
         [Query.SHOW_EVENTLOG]: state.eventLog.visible,
     }
     const queryStr = Object.keys(query)

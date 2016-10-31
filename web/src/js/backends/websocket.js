@@ -48,9 +48,9 @@ export default class WebsocketBackend {
         }
     }
 
-    receive(resource, msg) {
+    receive(resource, data) {
         let type = `${resource}_RECEIVE`.toUpperCase()
-        this.store.dispatch({ type, [resource]: msg })
+        this.store.dispatch({ type, cmd: "receive", resource, data })
         let queue = this.activeFetches[resource]
         delete this.activeFetches[resource]
         queue.forEach(msg => this.onMessage(msg))

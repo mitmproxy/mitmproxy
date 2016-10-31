@@ -251,7 +251,7 @@ class FlowHandler(RequestHandler):
                     elif k == "port":
                         request.port = int(v)
                     elif k == "headers":
-                        request.headers.set_state(v)
+                        request.headers.set_state((a.encode(), b.encode()) for a, b in v)
                     elif k == "content":
                         request.text = v
                     else:

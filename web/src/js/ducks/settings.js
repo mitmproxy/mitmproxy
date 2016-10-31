@@ -13,7 +13,7 @@ export default function reducer(state = defaultState, action) {
     switch (action.type) {
 
         case RECEIVE:
-            return action.settings
+            return action.data
 
         case UPDATE:
             return {
