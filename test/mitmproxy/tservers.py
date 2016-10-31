@@ -7,12 +7,28 @@ import sys
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy import master
-from mitmproxy.addons import state
 import pathod.test
 import pathod.pathoc
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy import exceptions
+
+
+class TestState:
+    def __init__(self):
+        self.flows = []
+
+    def request(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
+
+    def response(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
+
+    # FIXME: compat with old state - remove in favor of len(state.flows)
+    def flow_count(self):
+        return len(self.flows)
 
 
 class TestMaster(master.Master):
@@ -23,7 +39,7 @@ class TestMaster(master.Master):
 
     def clear_addons(self, addons):
         self.addons.clear()
-        self.state = state.State()
+        self.state = TestState()
         self.addons.add(self.state)
         self.addons.add(*addons)
 

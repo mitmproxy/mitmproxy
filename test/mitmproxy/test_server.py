@@ -50,10 +50,10 @@ class CommonMixin:
     def test_replay(self):
         assert self.pathod("304").status_code == 304
         if isinstance(self, tservers.HTTPUpstreamProxyTest) and self.ssl:
-            assert len(self.master.state.view) == 2
+            assert len(self.master.state.flows) == 2
         else:
-            assert len(self.master.state.view) == 1
-        l = self.master.state.view[-1]
+            assert len(self.master.state.flows) == 1
+        l = self.master.state.flows[-1]
         assert l.response.status_code == 304
         l.request.path = "/p/305"
         self.wait_until_not_live(l)
@@ -87,7 +87,7 @@ class CommonMixin:
 
         # In Upstream mode with SSL, we may already have a previous CONNECT
         # request.
-        l = self.master.state.view[-1]
+        l = self.master.state.flows[-1]
         assert l.client_conn.address
         assert "host" in l.request.headers
         assert l.response.status_code == 304
@@ -589,7 +589,7 @@ class TestProxy(tservers.HTTPProxyTest):
         f = self.pathod("304")
         assert f.status_code == 304
 
-        f = self.master.state.view[0]
+        f = self.master.state.flows[0]
         assert f.client_conn.address
         assert "host" in f.request.headers
         assert f.response.status_code == 304
@@ -601,7 +601,7 @@ class TestProxy(tservers.HTTPProxyTest):
         f = self.pathod("304:b@1k:p50,1")
         assert f.status_code == 304
 
-        response = self.master.state.view[0].response
+        response = self.master.state.flows[0].response
         # timestamp_start might fire a bit late, so we play safe and only require 300ms.
         assert 0.3 <= response.timestamp_end - response.timestamp_start
 
@@ -620,8 +620,8 @@ class TestProxy(tservers.HTTPProxyTest):
         connection.recv(50000)
         connection.close()
 
-        request, response = self.master.state.view[
-            0].request, self.master.state.view[0].response
+        request, response = self.master.state.flows[
+            0].request, self.master.state.flows[0].response
         assert response.status_code == 304  # sanity test for our low level request
         # timestamp_start might fire a bit late, so we play safe and only require 300ms.
         assert 0.3 <= request.timestamp_end - request.timestamp_start
@@ -647,8 +647,8 @@ class TestProxy(tservers.HTTPProxyTest):
             recvd += len(connection.recv(5000))
         connection.close()
 
-        first_flow = self.master.state.view[0]
-        second_flow = self.master.state.view[1]
+        first_flow = self.master.state.flows[0]
+        second_flow = self.master.state.flows[1]
         assert first_flow.server_conn.timestamp_tcp_setup
         assert first_flow.server_conn.timestamp_ssl_setup is None
         assert second_flow.server_conn.timestamp_tcp_setup
@@ -657,7 +657,7 @@ class TestProxy(tservers.HTTPProxyTest):
     def test_request_ip(self):
         f = self.pathod("200:b@100")
         assert f.status_code == 200
-        f = self.master.state.view[0]
+        f = self.master.state.flows[0]
         assert f.server_conn.address == ("127.0.0.1", self.server.port)
 
 
@@ -668,7 +668,7 @@ class TestProxySSL(tservers.HTTPProxyTest):
         # tests that the ssl timestamp is present when ssl is used
         f = self.pathod("304:b@10k")
         assert f.status_code == 304
-        first_flow = self.master.state.view[0]
+        first_flow = self.master.state.flows[0]
         assert first_flow.server_conn.timestamp_ssl_setup
 
 
