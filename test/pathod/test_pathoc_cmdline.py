@@ -3,7 +3,7 @@ import mock
 
 from pathod import pathoc_cmdline as cmdline
 
-from . import tutils
+from mitmproxy.test import tutils
 
 
 @mock.patch("argparse.ArgumentParser.error")
@@ -52,7 +52,7 @@ def test_pathoc(perror):
         [
             "pathoc",
             "foo.com:8888",
-            tutils.test_data.path("data/request")
+            tutils.test_data.path("pathod/data/request")
         ]
     )
     assert len(list(a.requests)) == 1

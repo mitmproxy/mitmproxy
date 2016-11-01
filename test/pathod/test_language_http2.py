@@ -7,7 +7,7 @@ from pathod import language
 from pathod.language import http2
 from pathod.protocols.http2 import HTTP2StateProtocol
 
-from . import tutils
+from mitmproxy.test import tutils
 
 
 def parse_request(s):

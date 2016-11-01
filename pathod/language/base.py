@@ -216,7 +216,7 @@ class TokValueFile(Token):
             os.path.abspath(os.path.join(settings.staticdir, s))
         )
         uf = settings.unconstrained_file_access
-        if not uf and not s.startswith(settings.staticdir):
+        if not uf and not s.startswith(os.path.normpath(settings.staticdir)):
             raise exceptions.FileAccessDenied(
                 "File access outside of configured directory"
             )
