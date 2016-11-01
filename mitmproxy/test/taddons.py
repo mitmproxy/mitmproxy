@@ -4,6 +4,15 @@ from mitmproxy import proxy
 from mitmproxy import events
 
 
+class RecordingMaster(mitmproxy.master.Master):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.event_log = []
+
+    def add_log(self, e, level):
+        self.event_log.append((level, e))
+
+
 class context:
     """
         A context for testing addons, which sets up the mitmproxy.ctx module so
@@ -12,7 +21,7 @@ class context:
     """
     def __init__(self, master = None, options = None):
         self.options = options or mitmproxy.options.Options()
-        self.master = master or mitmproxy.master.Master(
+        self.master = master or RecordingMaster(
             options, proxy.DummyServer(options)
         )
         self.wrapped = None
