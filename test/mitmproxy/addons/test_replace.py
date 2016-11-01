@@ -1,6 +1,7 @@
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
-from .. import tutils, mastertest, tservers
+from .. import mastertest, tservers
 from mitmproxy.addons import replace
 from mitmproxy import master
 from mitmproxy import options

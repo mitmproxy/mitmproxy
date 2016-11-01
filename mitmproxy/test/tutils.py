@@ -20,6 +20,14 @@ def treader(bytes):
 
 
 @contextmanager
+def chdir(dir):
+    orig_dir = os.getcwd()
+    os.chdir(dir)
+    yield
+    os.chdir(orig_dir)
+
+
+@contextmanager
 def tmpdir(*args, **kwargs):
     orig_workdir = os.getcwd()
     temp_workdir = tempfile.mkdtemp(*args, **kwargs)
@@ -89,7 +97,7 @@ class RaisesContext:
         return True
 
 
-test_data = data.Data(__name__).push("../../test/mitmproxy/net")
+test_data = data.Data(__name__).push("../../test/")
 
 
 def treq(**kwargs):

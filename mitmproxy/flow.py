@@ -7,7 +7,7 @@ from mitmproxy import stateobject
 from mitmproxy import connections
 from mitmproxy import version
 
-from typing import Optional, Dict  # noqa
+import typing # noqa
 
 
 class Error(stateobject.StateObject):
@@ -26,7 +26,7 @@ class Error(stateobject.StateObject):
             timestamp: Seconds since the epoch
     """
 
-    def __init__(self, msg, timestamp=None):
+    def __init__(self, msg: str, timestamp=None) -> None:
         """
         @type msg: str
         @type timestamp: float
@@ -70,20 +70,20 @@ class Flow(stateobject.StateObject):
             type: str,
             client_conn: connections.ClientConnection,
             server_conn: connections.ServerConnection,
-            live=None
-    ):
+            live: bool=None
+    ) -> None:
         self.type = type
         self.id = str(uuid.uuid4())
         self.client_conn = client_conn
         self.server_conn = server_conn
         self.live = live
 
-        self.error = None  # type: Optional[Error]
+        self.error = None  # type: typing.Optional[Error]
         self.intercepted = False  # type: bool
-        self._backup = None  # type: Optional[Flow]
-        self.reply = None  # type: Optional[controller.Reply]
+        self._backup = None  # type: typing.Optional[Flow]
+        self.reply = None  # type: typing.Optional[controller.Reply]
         self.marked = False  # type: bool
-        self.metadata = dict()  # type: Dict[str, str]
+        self.metadata = dict()  # type: typing.Dict[str, str]
 
     _stateobject_attributes = dict(
         id=str,

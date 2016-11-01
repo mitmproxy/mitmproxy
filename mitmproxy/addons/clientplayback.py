@@ -1,21 +1,24 @@
 from mitmproxy import exceptions
 from mitmproxy import ctx
 from mitmproxy import io
+from mitmproxy import flow
+
+import typing
 
 
 class ClientPlayback:
     def __init__(self):
         self.flows = None
-        self.current = None
-        self.keepserving = None
+        self.current_thread = None
+        self.keepserving = False
         self.has_replayed = False
 
-    def count(self):
+    def count(self) -> int:
         if self.flows:
             return len(self.flows)
         return 0
 
-    def load(self, flows):
+    def load(self, flows: typing.Sequence[flow.Flow]):
         self.flows = flows
 
     def configure(self, options, updated):
@@ -32,11 +35,11 @@ class ClientPlayback:
         self.keepserving = options.keepserving
 
     def tick(self):
-        if self.current and not self.current.is_alive():
-            self.current = None
-        if self.flows and not self.current:
-            self.current = ctx.master.replay_request(self.flows.pop(0))
+        if self.current_thread and not self.current_thread.is_alive():
+            self.current_thread = None
+        if self.flows and not self.current_thread:
+            self.current_thread = ctx.master.replay_request(self.flows.pop(0))
             self.has_replayed = True
         if self.has_replayed:
-            if not self.flows and not self.current and not self.keepserving:
+            if not self.flows and not self.current_thread and not self.keepserving:
                 ctx.master.shutdown()

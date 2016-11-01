@@ -2,7 +2,7 @@ import os
 from pathod import language
 from pathod.language import base, exceptions
 
-from . import tutils
+from mitmproxy.test import tutils
 
 
 def parse_request(s):

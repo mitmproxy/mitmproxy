@@ -1,7 +1,7 @@
 import os
 
 from pathod.language import generators
-from . import tutils
+from mitmproxy.test import tutils
 
 
 def test_randomgenerator():

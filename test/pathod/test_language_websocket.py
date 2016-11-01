@@ -2,7 +2,8 @@ from pathod import language
 from pathod.language import websockets
 import mitmproxy.net.websockets
 
-from . import tutils
+from mitmproxy.test import tutils
+from . import tservers
 
 
 def parse_request(s):
@@ -62,7 +63,7 @@ class TestWebsocketFrame:
 
     def test_flags(self):
         wf = parse_request("wf:fin:mask:rsv1:rsv2:rsv3")
-        frm = mitmproxy.net.websockets.Frame.from_bytes(tutils.render(wf))
+        frm = mitmproxy.net.websockets.Frame.from_bytes(tservers.render(wf))
         assert frm.header.fin
         assert frm.header.mask
         assert frm.header.rsv1
@@ -70,7 +71,7 @@ class TestWebsocketFrame:
         assert frm.header.rsv3
 
         wf = parse_request("wf:-fin:-mask:-rsv1:-rsv2:-rsv3")
-        frm = mitmproxy.net.websockets.Frame.from_bytes(tutils.render(wf))
+        frm = mitmproxy.net.websockets.Frame.from_bytes(tservers.render(wf))
         assert not frm.header.fin
         assert not frm.header.mask
         assert not frm.header.rsv1
@@ -80,7 +81,7 @@ class TestWebsocketFrame:
     def fr(self, spec, **kwargs):
         settings = language.base.Settings(**kwargs)
         wf = parse_request(spec)
-        return mitmproxy.net.websockets.Frame.from_bytes(tutils.render(wf, settings))
+        return mitmproxy.net.websockets.Frame.from_bytes(tservers.render(wf, settings))
 
     def test_construction(self):
         assert self.fr("wf:c1").header.opcode == 1

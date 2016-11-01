@@ -6,7 +6,8 @@ import mitmproxy.io
 from mitmproxy.tools import dump
 from mitmproxy import exceptions
 from mitmproxy import proxy
-from . import tutils, mastertest
+from mitmproxy.test import tutils
+from . import mastertest
 
 
 class TestDumpMaster(mastertest.MasterTest):
@@ -156,7 +157,7 @@ class TestDumpMaster(mastertest.MasterTest):
         ret = self.dummy_cycle(
             self.mkmaster(
                 None,
-                scripts=[tutils.test_data.path("data/scripts/all.py")],
+                scripts=[tutils.test_data.path("mitmproxy/data/scripts/all.py")],
                 verbosity=2
             ),
             1, b"",

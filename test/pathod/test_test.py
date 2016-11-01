@@ -2,7 +2,7 @@ import logging
 import requests
 from pathod import test
 
-from . import tutils
+from mitmproxy.test import tutils
 
 import requests.packages.urllib3
 
@@ -34,8 +34,8 @@ class TestDaemonManual:
 
     def test_startstop_ssl_explicit(self):
         ssloptions = dict(
-            certfile=tutils.test_data.path("data/testkey.pem"),
-            cacert=tutils.test_data.path("data/testkey.pem"),
+            certfile=tutils.test_data.path("pathod/data/testkey.pem"),
+            cacert=tutils.test_data.path("pathod/data/testkey.pem"),
             ssl_after_connect=False
         )
         d = test.Daemon(ssl=ssloptions)

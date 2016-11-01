@@ -4,6 +4,7 @@ import sys
 import time
 
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 import re
 from mitmproxy import exceptions
 from mitmproxy import options
@@ -11,7 +12,8 @@ from mitmproxy import proxy
 from mitmproxy.addons import script
 from mitmproxy import master
 
-from .. import tutils, mastertest
+from .. import mastertest
+from .. import tutils as ttutils
 
 
 class TestParseCommand:
@@ -32,25 +34,31 @@ class TestParseCommand:
 
     def test_parse_args(self):
         with tutils.chdir(tutils.test_data.dirname):
-            assert script.parse_command("data/addonscripts/recorder.py") == ("data/addonscripts/recorder.py", [])
-            assert script.parse_command("data/addonscripts/recorder.py foo bar") == ("data/addonscripts/recorder.py", ["foo", "bar"])
-            assert script.parse_command("data/addonscripts/recorder.py 'foo bar'") == ("data/addonscripts/recorder.py", ["foo bar"])
+            assert script.parse_command(
+                "mitmproxy/data/addonscripts/recorder.py"
+            ) == ("mitmproxy/data/addonscripts/recorder.py", [])
+            assert script.parse_command(
+                "mitmproxy/data/addonscripts/recorder.py foo bar"
+            ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo", "bar"])
+            assert script.parse_command(
+                "mitmproxy/data/addonscripts/recorder.py 'foo bar'"
+            ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo bar"])
 
-    @tutils.skip_not_windows
+    @ttutils.skip_not_windows
     def test_parse_windows(self):
         with tutils.chdir(tutils.test_data.dirname):
             assert script.parse_command(
-                "data\\addonscripts\\recorder.py"
-            ) == ("data\\addonscripts\\recorder.py", [])
+                "mitmproxy/data\\addonscripts\\recorder.py"
+            ) == ("mitmproxy/data\\addonscripts\\recorder.py", [])
             assert script.parse_command(
-                "data\\addonscripts\\recorder.py 'foo \\ bar'"
-            ) == ("data\\addonscripts\\recorder.py", ['foo \\ bar'])
+                "mitmproxy/data\\addonscripts\\recorder.py 'foo \\ bar'"
+            ) == ("mitmproxy/data\\addonscripts\\recorder.py", ['foo \\ bar'])
 
 
 def test_load_script():
     ns = script.load_script(
         tutils.test_data.path(
-            "data/addonscripts/recorder.py"
+            "mitmproxy/data/addonscripts/recorder.py"
         ), []
     )
     assert ns.start
@@ -62,7 +70,7 @@ class TestScript(mastertest.MasterTest):
         m = master.Master(o, proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
-                "data/addonscripts/recorder.py"
+                "mitmproxy/data/addonscripts/recorder.py"
             )
         )
         m.addons.add(sc)
@@ -100,7 +108,7 @@ class TestScript(mastertest.MasterTest):
         o = options.Options()
         m = mastertest.RecordingMaster(o, proxy.DummyServer())
         sc = script.Script(
-            tutils.test_data.path("data/addonscripts/error.py")
+            tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
         )
         m.addons.add(sc)
         f = tflow.tflow(resp=True)
@@ -116,7 +124,7 @@ class TestScript(mastertest.MasterTest):
         m = master.Master(o, proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
-                "data/addonscripts/addon.py"
+                "mitmproxy/data/addonscripts/addon.py"
             )
         )
         m.addons.add(sc)
@@ -154,7 +162,7 @@ class TestScriptLoader(mastertest.MasterTest):
         with m.handlecontext():
             sc = sl.run_once(
                 tutils.test_data.path(
-                    "data/addonscripts/recorder.py"
+                    "mitmproxy/data/addonscripts/recorder.py"
                 ), [f]
             )
         evts = [i[1] for i in sc.ns.call_log]
@@ -176,7 +184,7 @@ class TestScriptLoader(mastertest.MasterTest):
         assert len(m.addons) == 1
         o.update(
             scripts = [
-                tutils.test_data.path("data/addonscripts/recorder.py")
+                tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
             ]
         )
         assert len(m.addons) == 2
@@ -190,7 +198,7 @@ class TestScriptLoader(mastertest.MasterTest):
         tutils.raises(exceptions.OptionsError, m.addons.add, o, sc)
 
     def test_order(self):
-        rec = tutils.test_data.path("data/addonscripts/recorder.py")
+        rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
 
         o = options.Options(
             scripts = [

@@ -29,10 +29,10 @@ class TestPassManHtpasswd:
         tutils.raises(
             "malformed htpasswd file",
             authentication.PassManHtpasswd,
-            tutils.test_data.path("data/server.crt"))
+            tutils.test_data.path("mitmproxy/net/data/server.crt"))
 
     def test_simple(self):
-        pm = authentication.PassManHtpasswd(tutils.test_data.path("data/htpasswd"))
+        pm = authentication.PassManHtpasswd(tutils.test_data.path("mitmproxy/net/data/htpasswd"))
 
         vals = ("basic", "test", "test")
         authentication.assemble_http_basic_auth(*vals)
@@ -118,5 +118,5 @@ class TestAuthAction:
     def test_httppasswd(self):
         m = Bunch()
         aa = authentication.HtpasswdAuthAction(None, "authenticator")
-        aa(None, m, tutils.test_data.path("data/htpasswd"), None)
+        aa(None, m, tutils.test_data.path("mitmproxy/net/data/htpasswd"), None)
         assert m.authenticator

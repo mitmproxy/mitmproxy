@@ -4,13 +4,13 @@ from mock import Mock
 from mitmproxy.net import http
 from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
-from mitmproxy.test.tutils import raises
 from mitmproxy import exceptions
 
 from pathod import pathoc, language
 from pathod.protocols.http2 import HTTP2StateProtocol
 
-from . import tutils
+from mitmproxy.test import tutils
+from . import tservers
 
 
 def test_response():
@@ -18,7 +18,7 @@ def test_response():
     assert repr(r)
 
 
-class PathocTestDaemon(tutils.DaemonTests):
+class PathocTestDaemon(tservers.DaemonTests):
     def tval(self, requests, timeout=None, showssl=False, **kwargs):
         s = io.StringIO()
         c = pathoc.Pathoc(
@@ -64,7 +64,7 @@ class TestDaemonSSL(PathocTestDaemon):
     def test_clientcert(self):
         self.tval(
             ["get:/p/200"],
-            clientcert=tutils.test_data.path("data/clientcert/client.pem"),
+            clientcert=tutils.test_data.path("pathod/data/clientcert/client.pem"),
         )
         log = self.d.log()
         assert log[0]["request"]["clientcert"]["keyinfo"]
@@ -171,12 +171,12 @@ class TestDaemon(PathocTestDaemon):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
         c.rfile, c.wfile = io.BytesIO(), io.BytesIO()
-        with raises("connect failed"):
+        with tutils.raises("connect failed"):
             c.http_connect(to)
         c.rfile = io.BytesIO(
             b"HTTP/1.1 500 OK\r\n"
         )
-        with raises("connect failed"):
+        with tutils.raises("connect failed"):
             c.http_connect(to)
         c.rfile = io.BytesIO(
             b"HTTP/1.1 200 OK\r\n"

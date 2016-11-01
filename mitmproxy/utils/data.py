@@ -6,6 +6,7 @@ import inspect
 class Data:
 
     def __init__(self, name):
+        self.name = name
         m = importlib.import_module(name)
         dirname = os.path.dirname(inspect.getsourcefile(m))
         self.dirname = os.path.abspath(dirname)
@@ -14,8 +15,10 @@ class Data:
         """
             Change the data object to a path relative to the module.
         """
-        self.dirname = os.path.join(self.dirname, subpath)
-        return self
+        dirname = os.path.join(self.dirname, subpath)
+        ret = Data(self.name)
+        ret.dirname = dirname
+        return ret
 
     def path(self, path):
         """

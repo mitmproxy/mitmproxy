@@ -5,7 +5,6 @@ import requests
 import io
 import urllib
 
-from mitmproxy.utils import data
 
 from mitmproxy.net import tcp
 from mitmproxy.test import tutils
@@ -40,7 +39,7 @@ class DaemonTests:
         opts["confdir"] = cls.confdir
         so = pathod.SSLOptions(**opts)
         cls.d = test.Daemon(
-            staticdir=test_data.path("data"),
+            staticdir=tutils.test_data.path("pathod/data"),
             anchors=[
                 (re.compile("/anchor/.*"), "202:da")
             ],
@@ -137,13 +136,6 @@ class DaemonTests:
                 ret.append(frm)
             c.stop()
             return ret, logfp.getvalue()
-
-
-tmpdir = tutils.tmpdir
-
-raises = tutils.raises
-
-test_data = data.Data(__name__)
 
 
 def render(r, settings=language.Settings()):

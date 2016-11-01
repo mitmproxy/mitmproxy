@@ -2,7 +2,8 @@ import io
 from pathod import language
 from pathod.language import http, base
 
-from . import tutils
+from mitmproxy.test import tutils
+from . import tservers
 
 
 def parse_request(s):
@@ -302,8 +303,8 @@ def test_shortcuts():
     assert next(language.parse_pathod(
         "400:l'foo'")).headers[0].key.val == b"Location"
 
-    assert b"Android" in tutils.render(parse_request("get:/:ua"))
-    assert b"User-Agent" in tutils.render(parse_request("get:/:ua"))
+    assert b"Android" in tservers.render(parse_request("get:/:ua"))
+    assert b"User-Agent" in tservers.render(parse_request("get:/:ua"))
 
 
 def test_user_agent():

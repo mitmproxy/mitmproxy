@@ -164,7 +164,7 @@ class TestServerSSL(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         cipher_list="AES256-SHA",
-        chain_file=tutils.test_data.path("data/server.crt")
+        chain_file=tutils.test_data.path("mitmproxy/net/data/server.crt")
     )
 
     def test_echo(self):
@@ -203,8 +203,8 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/verificationcerts/self-signed.crt"),
-        key=tutils.test_data.path("data/verificationcerts/self-signed.key")
+        cert=tutils.test_data.path("mitmproxy/net/data/verificationcerts/self-signed.crt"),
+        key=tutils.test_data.path("mitmproxy/net/data/verificationcerts/self-signed.key")
     )
 
     def test_mode_default_should_pass(self):
@@ -241,7 +241,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
                 c.convert_to_ssl(
                     sni="example.mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
-                    ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
                 )
 
             assert c.ssl_verification_error
@@ -255,8 +255,8 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/verificationcerts/trusted-leaf.crt"),
-        key=tutils.test_data.path("data/verificationcerts/trusted-leaf.key")
+        cert=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt"),
+        key=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-leaf.key")
     )
 
     def test_should_fail_without_sni(self):
@@ -265,7 +265,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
             with tutils.raises(exceptions.TlsException):
                 c.convert_to_ssl(
                     verify_options=SSL.VERIFY_PEER,
-                    ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
                 )
 
     def test_should_fail(self):
@@ -275,7 +275,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
                 c.convert_to_ssl(
                     sni="mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
-                    ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
                 )
             assert c.ssl_verification_error
 
@@ -284,8 +284,8 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/verificationcerts/trusted-leaf.crt"),
-        key=tutils.test_data.path("data/verificationcerts/trusted-leaf.key")
+        cert=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt"),
+        key=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-leaf.key")
     )
 
     def test_mode_strict_w_pemfile_should_pass(self):
@@ -294,7 +294,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.convert_to_ssl(
                 sni="example.mitmproxy.org",
                 verify_options=SSL.VERIFY_PEER,
-                ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted-root.crt")
+                ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
             )
 
             assert c.ssl_verification_error is None
@@ -310,7 +310,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.convert_to_ssl(
                 sni="example.mitmproxy.org",
                 verify_options=SSL.VERIFY_PEER,
-                ca_path=tutils.test_data.path("data/verificationcerts/")
+                ca_path=tutils.test_data.path("mitmproxy/net/data/verificationcerts/")
             )
 
             assert c.ssl_verification_error is None
@@ -342,7 +342,7 @@ class TestSSLClientCert(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(
-                cert=tutils.test_data.path("data/clientcert/client.pem"))
+                cert=tutils.test_data.path("mitmproxy/net/data/clientcert/client.pem"))
             assert c.rfile.readline().strip() == b"1"
 
     def test_clientcert_err(self):
@@ -351,7 +351,7 @@ class TestSSLClientCert(tservers.ServerTestBase):
             tutils.raises(
                 exceptions.TlsException,
                 c.convert_to_ssl,
-                cert=tutils.test_data.path("data/clientcert/make")
+                cert=tutils.test_data.path("mitmproxy/net/data/clientcert/make")
             )
 
 
@@ -570,7 +570,7 @@ class TestDHParams(tservers.ServerTestBase):
     handler = HangHandler
     ssl = dict(
         dhparams=certs.CertStore.load_dhparam(
-            tutils.test_data.path("data/dhparam.pem"),
+            tutils.test_data.path("mitmproxy/net/data/dhparam.pem"),
         ),
         cipher_list="DHE-RSA-AES256-SHA"
     )

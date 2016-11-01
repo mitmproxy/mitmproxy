@@ -2,7 +2,7 @@ import mock
 
 from pathod import pathod_cmdline as cmdline
 
-from . import tutils
+from mitmproxy.test import tutils
 
 
 def test_parse_anchor_spec():
@@ -18,7 +18,7 @@ def test_pathod(perror):
         [
             "pathod",
             "--cert",
-            tutils.test_data.path("data/testkey.pem")
+            tutils.test_data.path("pathod/data/testkey.pem")
         ]
     )
     assert a.ssl_certs
@@ -46,7 +46,7 @@ def test_pathod(perror):
         [
             "pathod",
             "-a",
-            "foo=" + tutils.test_data.path("data/response")
+            "foo=" + tutils.test_data.path("pathod/data/response")
         ]
     )
     assert a.anchors

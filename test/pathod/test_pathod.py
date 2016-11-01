@@ -3,8 +3,9 @@ import io
 from pathod import pathod
 from mitmproxy.net import tcp
 from mitmproxy import exceptions
+from mitmproxy.test import tutils
 
-from . import tutils
+from . import tservers
 
 
 class TestPathod:
@@ -24,7 +25,7 @@ class TestPathod:
         assert len(p.get_log()) <= p.LOGBUF
 
 
-class TestTimeout(tutils.DaemonTests):
+class TestTimeout(tservers.DaemonTests):
     timeout = 0.01
 
     def test_timeout(self):
@@ -36,7 +37,7 @@ class TestTimeout(tutils.DaemonTests):
         assert self.d.last_log()["type"] == "timeout"
 
 
-class TestNotAfterConnect(tutils.DaemonTests):
+class TestNotAfterConnect(tservers.DaemonTests):
     ssl = False
     ssloptions = dict(
         not_after_connect=True
@@ -50,10 +51,10 @@ class TestNotAfterConnect(tutils.DaemonTests):
         assert r[0].status_code == 202
 
 
-class TestCustomCert(tutils.DaemonTests):
+class TestCustomCert(tservers.DaemonTests):
     ssl = True
     ssloptions = dict(
-        certs=[(b"*", tutils.test_data.path("data/testkey.pem"))],
+        certs=[(b"*", tutils.test_data.path("pathod/data/testkey.pem"))],
     )
 
     def test_connect(self):
@@ -64,7 +65,7 @@ class TestCustomCert(tutils.DaemonTests):
         assert "test.com" in str(r.sslinfo.certchain[0].get_subject())
 
 
-class TestSSLCN(tutils.DaemonTests):
+class TestSSLCN(tservers.DaemonTests):
     ssl = True
     ssloptions = dict(
         cn=b"foo.com"
@@ -78,7 +79,7 @@ class TestSSLCN(tutils.DaemonTests):
         assert r.sslinfo.certchain[0].get_subject().CN == "foo.com"
 
 
-class TestNohang(tutils.DaemonTests):
+class TestNohang(tservers.DaemonTests):
     nohang = True
 
     def test_nohang(self):
@@ -88,14 +89,14 @@ class TestNohang(tutils.DaemonTests):
         assert "Pauses have been disabled" in l["response"]["msg"]
 
 
-class TestHexdump(tutils.DaemonTests):
+class TestHexdump(tservers.DaemonTests):
     hexdump = True
 
     def test_hexdump(self):
         assert self.get(r"200:b'\xf0'")
 
 
-class TestNocraft(tutils.DaemonTests):
+class TestNocraft(tservers.DaemonTests):
     nocraft = True
 
     def test_nocraft(self):
@@ -104,7 +105,7 @@ class TestNocraft(tutils.DaemonTests):
         assert b"Crafting disabled" in r.content
 
 
-class CommonTests(tutils.DaemonTests):
+class CommonTests(tservers.DaemonTests):
 
     def test_binarydata(self):
         assert self.get(r"200:b'\xf0'")
@@ -252,7 +253,7 @@ class TestDaemonSSL(CommonTests):
         assert self.d.last_log()["cipher"][1] > 0
 
 
-class TestHTTP2(tutils.DaemonTests):
+class TestHTTP2(tservers.DaemonTests):
     ssl = True
     nohang = True
 

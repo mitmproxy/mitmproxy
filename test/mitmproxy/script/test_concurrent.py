@@ -1,11 +1,15 @@
 from mitmproxy.test import tflow
-from test.mitmproxy import tutils, mastertest
+from mitmproxy.test import tutils
 from mitmproxy import controller
 from mitmproxy.addons import script
 from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import master
+
 import time
+
+from test.mitmproxy import mastertest
+from test.mitmproxy import tutils as ttutils
 
 
 class Thing:
@@ -15,12 +19,12 @@ class Thing:
 
 
 class TestConcurrent(mastertest.MasterTest):
-    @tutils.skip_appveyor
+    @ttutils.skip_appveyor
     def test_concurrent(self):
         m = master.Master(options.Options(), proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
-                "data/addonscripts/concurrent_decorator.py"
+                "mitmproxy/data/addonscripts/concurrent_decorator.py"
             )
         )
         m.addons.add(sc)
@@ -37,7 +41,7 @@ class TestConcurrent(mastertest.MasterTest):
         m = mastertest.RecordingMaster(options.Options(), proxy.DummyServer())
         sc = script.Script(
             tutils.test_data.path(
-                "data/addonscripts/concurrent_decorator_err.py"
+                "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
             )
         )
         with m.handlecontext():

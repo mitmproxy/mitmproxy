@@ -143,13 +143,13 @@ class TestDummyCert:
 class TestSSLCert:
 
     def test_simple(self):
-        with open(tutils.test_data.path("data/text_cert"), "rb") as f:
+        with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
         c1 = certs.SSLCert.from_pem(d)
         assert c1.cn == b"google.com"
         assert len(c1.altnames) == 436
 
-        with open(tutils.test_data.path("data/text_cert_2"), "rb") as f:
+        with open(tutils.test_data.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
             d = f.read()
         c2 = certs.SSLCert.from_pem(d)
         assert c2.cn == b"www.inode.co.nz"
@@ -168,14 +168,14 @@ class TestSSLCert:
         assert c1 != c2
 
     def test_err_broken_sans(self):
-        with open(tutils.test_data.path("data/text_cert_weird1"), "rb") as f:
+        with open(tutils.test_data.path("mitmproxy/net/data/text_cert_weird1"), "rb") as f:
             d = f.read()
         c = certs.SSLCert.from_pem(d)
         # This breaks unless we ignore a decoding error.
         assert c.altnames is not None
 
     def test_der(self):
-        with open(tutils.test_data.path("data/dercert"), "rb") as f:
+        with open(tutils.test_data.path("mitmproxy/net/data/dercert"), "rb") as f:
             d = f.read()
         s = certs.SSLCert.from_der(d)
         assert s.cn

@@ -1,6 +1,7 @@
 from mitmproxy.test import tflow
 import os
 import mock
+import argparse
 from OpenSSL import SSL
 
 from mitmproxy.tools import cmdline
@@ -12,7 +13,9 @@ from mitmproxy.proxy import config
 from mitmproxy import exceptions
 from pathod import test
 from mitmproxy.net.http import http1
-from . import tutils
+from mitmproxy.test import tutils
+
+from . import tutils as ttutils
 
 
 class TestServerConnection:
@@ -55,10 +58,21 @@ class TestServerConnection:
         assert "foo" in repr(sc)
 
 
+class MockParser(argparse.ArgumentParser):
+
+    """
+    argparse.ArgumentParser sys.exits() by default.
+    Make it more testable by throwing an exception instead.
+    """
+
+    def error(self, message):
+        raise Exception(message)
+
+
 class TestProcessProxyOptions:
 
     def p(self, *args):
-        parser = tutils.MockParser()
+        parser = MockParser()
         cmdline.common_options(parser)
         args = parser.parse_args(args=args)
         opts = cmdline.get_common_options(args)
@@ -115,7 +129,7 @@ class TestProcessProxyOptions:
             self.assert_noerr("--client-certs", cadir)
             self.assert_noerr(
                 "--client-certs",
-                os.path.join(tutils.test_data.path("data/clientcert"), "client.pem"))
+                os.path.join(tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem"))
             self.assert_err(
                 "path does not exist",
                 "--client-certs",
@@ -124,7 +138,7 @@ class TestProcessProxyOptions:
     def test_certs(self):
         self.assert_noerr(
             "--cert",
-            tutils.test_data.path("data/testkey.pem"))
+            tutils.test_data.path("mitmproxy/data/testkey.pem"))
         self.assert_err("does not exist", "--cert", "nonexistent")
 
     def test_auth(self):
@@ -133,12 +147,12 @@ class TestProcessProxyOptions:
 
         p = self.assert_noerr(
             "--htpasswd",
-            tutils.test_data.path("data/htpasswd"))
+            tutils.test_data.path("mitmproxy/data/htpasswd"))
         assert p.authenticator
         self.assert_err(
             "malformed htpasswd file",
             "--htpasswd",
-            tutils.test_data.path("data/htpasswd.invalid"))
+            tutils.test_data.path("mitmproxy/data/htpasswd.invalid"))
 
         p = self.assert_noerr("--singleuser", "test:test")
         assert p.authenticator
@@ -165,7 +179,7 @@ class TestProcessProxyOptions:
 class TestProxyServer:
     # binding to 0.0.0.0:1 works without special permissions on Windows
 
-    @tutils.skip_windows
+    @ttutils.skip_windows
     def test_err(self):
         conf = ProxyConfig(
             options.Options(listen_port=1),
@@ -205,5 +219,5 @@ class TestConnectionHandler:
             config,
             channel
         )
-        with tutils.capture_stderr(c.handle) as output:
+        with ttutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output
