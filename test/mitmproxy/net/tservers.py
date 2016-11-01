@@ -50,10 +50,10 @@ class _TServer(tcp.TCPServer):
         if self.ssl is not None:
             cert = self.ssl.get(
                 "cert",
-                tutils.test_data.path("data/server.crt"))
+                tutils.test_data.path("mitmproxy/net/data/server.crt"))
             raw_key = self.ssl.get(
                 "key",
-                tutils.test_data.path("data/server.key"))
+                tutils.test_data.path("mitmproxy/net/data/server.key"))
             key = OpenSSL.crypto.load_privatekey(
                 OpenSSL.crypto.FILETYPE_PEM,
                 open(raw_key, "rb").read())

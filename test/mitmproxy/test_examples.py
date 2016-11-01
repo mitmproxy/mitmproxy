@@ -8,16 +8,15 @@ from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy import proxy
 from mitmproxy.addons import script
-from mitmproxy.utils import data
 from mitmproxy import master
 
-from mitmproxy.test import tutils as netutils
+from mitmproxy.test import tutils
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import cookies
 
-from . import tutils, mastertest
+from . import mastertest
 
-example_dir = data.Data(__name__).push("../../examples")
+example_dir = tutils.test_data.push("../examples")
 
 
 class ScriptError(Exception):
@@ -42,7 +41,7 @@ def tscript(cmd, args=""):
 class TestScripts(mastertest.MasterTest):
     def test_add_header(self):
         m, _ = tscript("add_header.py")
-        f = tflow.tflow(resp=netutils.tresp())
+        f = tflow.tflow(resp=tutils.tresp())
         m.response(f)
         assert f.response.headers["newheader"] == "foo"
 
@@ -58,7 +57,7 @@ class TestScripts(mastertest.MasterTest):
             tscript("iframe_injector.py")
 
         m, sc = tscript("iframe_injector.py", "http://example.org/evil_iframe")
-        f = tflow.tflow(resp=netutils.tresp(content=b"<html>mitmproxy</html>"))
+        f = tflow.tflow(resp=tutils.tresp(content=b"<html>mitmproxy</html>"))
         m.response(f)
         content = f.response.content
         assert b'iframe' in content and b'evil_iframe' in content
@@ -67,7 +66,7 @@ class TestScripts(mastertest.MasterTest):
         m, sc = tscript("modify_form.py")
 
         form_header = Headers(content_type="application/x-www-form-urlencoded")
-        f = tflow.tflow(req=netutils.treq(headers=form_header))
+        f = tflow.tflow(req=tutils.treq(headers=form_header))
         m.request(f)
 
         assert f.request.urlencoded_form[b"mitmproxy"] == b"rocks"
@@ -78,7 +77,7 @@ class TestScripts(mastertest.MasterTest):
 
     def test_modify_querystring(self):
         m, sc = tscript("modify_querystring.py")
-        f = tflow.tflow(req=netutils.treq(path="/search?q=term"))
+        f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
         m.request(f)
         assert f.request.query["mitmproxy"] == "rocks"
@@ -89,13 +88,13 @@ class TestScripts(mastertest.MasterTest):
 
     def test_arguments(self):
         m, sc = tscript("arguments.py", "mitmproxy rocks")
-        f = tflow.tflow(resp=netutils.tresp(content=b"I <3 mitmproxy"))
+        f = tflow.tflow(resp=tutils.tresp(content=b"I <3 mitmproxy"))
         m.response(f)
         assert f.response.content == b"I <3 rocks"
 
     def test_redirect_requests(self):
         m, sc = tscript("redirect_requests.py")
-        f = tflow.tflow(req=netutils.treq(host="example.org"))
+        f = tflow.tflow(req=tutils.treq(host="example.org"))
         m.request(f)
         assert f.request.host == "mitmproxy.org"
 
@@ -110,8 +109,8 @@ class TestHARDump:
 
         # Create a dummy flow for testing
         return tflow.tflow(
-            req=netutils.treq(method=b'GET', **times),
-            resp=netutils.tresp(content=resp_content, **times)
+            req=tutils.treq(method=b'GET', **times),
+            resp=tutils.tresp(content=resp_content, **times)
         )
 
     def test_no_file_arg(self):

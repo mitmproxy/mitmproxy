@@ -2,7 +2,7 @@ from mitmproxy.test import tflow
 import mock
 import io
 
-import mitmproxy.test.tutils
+from mitmproxy.test import tutils
 from mitmproxy.net.http import Headers
 import mitmproxy.io
 from mitmproxy import flowfilter, options
@@ -14,7 +14,7 @@ from mitmproxy import connections
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy import master
-from . import tutils, tservers
+from . import tservers
 
 
 class TestHTTPFlow:

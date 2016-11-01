@@ -1,4 +1,3 @@
-from test.mitmproxy import tutils
 from threading import Thread, Event
 
 from mock import Mock
@@ -9,7 +8,7 @@ import queue
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import proxy
 from mitmproxy import master
-from mitmproxy.test.tutils import raises
+from mitmproxy.test import tutils
 
 
 class TMsg:
@@ -81,7 +80,7 @@ class TestChannel:
         done = Event()
         done.set()
         channel = controller.Channel(q, done)
-        with raises(Kill):
+        with tutils.raises(Kill):
             channel.ask("test", Mock(name="test_ask_shutdown"))
 
 

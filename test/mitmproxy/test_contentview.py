@@ -5,8 +5,7 @@ from mitmproxy.net.http import url
 from mitmproxy.types import multidict
 
 import mitmproxy.contentviews as cv
-from . import tutils
-import mitmproxy.test.tutils
+from mitmproxy.test import tutils
 
 try:
     import pyamf
@@ -117,7 +116,7 @@ class TestContentView:
     def test_view_css(self):
         v = cv.ViewCSS()
 
-        with open(tutils.test_data.path('data/1.css'), 'r') as fp:
+        with open(tutils.test_data.path('mitmproxy/data/1.css'), 'r') as fp:
             fixture_1 = fp.read()
 
         result = v('a')
@@ -140,16 +139,16 @@ class TestContentView:
 
     def test_view_image(self):
         v = cv.ViewImage()
-        p = tutils.test_data.path("data/image.png")
+        p = tutils.test_data.path("mitmproxy/data/image.png")
         assert v(open(p, "rb").read())
 
-        p = tutils.test_data.path("data/image.gif")
+        p = tutils.test_data.path("mitmproxy/data/image.gif")
         assert v(open(p, "rb").read())
 
-        p = tutils.test_data.path("data/image-err1.jpg")
+        p = tutils.test_data.path("mitmproxy/data/image-err1.jpg")
         assert v(open(p, "rb").read())
 
-        p = tutils.test_data.path("data/image.ico")
+        p = tutils.test_data.path("mitmproxy/data/image.ico")
         assert v(open(p, "rb").read())
 
         assert not v(b"flibble")
@@ -232,7 +231,7 @@ def test_get_content_view():
 
 
 def test_get_message_content_view():
-    r = mitmproxy.test.tutils.treq()
+    r = tutils.treq()
     desc, lines, err = cv.get_message_content_view("raw", r)
     assert desc == "Raw"
 
@@ -253,22 +252,22 @@ if pyamf:
     def test_view_amf_request():
         v = cv.ViewAMF()
 
-        p = tutils.test_data.path("data/amf01")
+        p = tutils.test_data.path("mitmproxy/data/amf01")
         assert v(open(p, "rb").read())
 
-        p = tutils.test_data.path("data/amf02")
+        p = tutils.test_data.path("mitmproxy/data/amf02")
         assert v(open(p, "rb").read())
 
     def test_view_amf_response():
         v = cv.ViewAMF()
-        p = tutils.test_data.path("data/amf03")
+        p = tutils.test_data.path("mitmproxy/data/amf03")
         assert v(open(p, "rb").read())
 
 if cv.ViewProtobuf.is_available():
     def test_view_protobuf_request():
         v = cv.ViewProtobuf()
 
-        p = tutils.test_data.path("data/protobuf01")
+        p = tutils.test_data.path("mitmproxy/data/protobuf01")
         content_type, output = v(open(p, "rb").read())
         assert content_type == "Protobuf"
         assert output.next()[0][1] == '1: "3bbc333c-e61c-433b-819a-0b9a8cc103b8"'

@@ -1,6 +1,6 @@
 import argparse
 from mitmproxy.tools import cmdline
-from . import tutils
+from mitmproxy.test import tutils
 
 
 def test_parse_replace_hook():
@@ -91,7 +91,7 @@ def test_common():
         opts
     )
 
-    p = tutils.test_data.path("data/replace")
+    p = tutils.test_data.path("mitmproxy/data/replace")
     opts.replace_file = [("/foo/bar/%s" % p)]
     v = cmdline.get_common_options(opts)["replacements"]
     assert len(v) == 1

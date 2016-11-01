@@ -1,10 +1,9 @@
 from mitmproxy.test import tflow
 import re
 
-import mitmproxy.test.tutils
 from mitmproxy.net.http import Headers
 from mitmproxy import export  # heh
-from . import tutils
+from mitmproxy.test import tutils
 
 
 def clean_blanks(s):
@@ -21,15 +20,15 @@ def python_equals(testdata, text):
 
 
 def req_get():
-    return mitmproxy.test.tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz")
+    return tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz")
 
 
 def req_post():
-    return mitmproxy.test.tutils.treq(method=b'POST', headers=())
+    return tutils.treq(method=b'POST', headers=())
 
 
 def req_patch():
-    return mitmproxy.test.tutils.treq(method=b'PATCH', path=b"/path?query=param")
+    return tutils.treq(method=b'PATCH', path=b"/path?query=param")
 
 
 class TestExportCurlCommand:
@@ -52,53 +51,53 @@ class TestExportCurlCommand:
 class TestExportPythonCode:
     def test_get(self):
         flow = tflow.tflow(req=req_get())
-        python_equals("data/test_flow_export/python_get.py", export.python_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/python_get.py", export.python_code(flow))
 
     def test_post(self):
         flow = tflow.tflow(req=req_post())
-        python_equals("data/test_flow_export/python_post.py", export.python_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/python_post.py", export.python_code(flow))
 
     def test_post_json(self):
         p = req_post()
         p.content = b'{"name": "example", "email": "example@example.com"}'
         p.headers = Headers(content_type="application/json")
         flow = tflow.tflow(req=p)
-        python_equals("data/test_flow_export/python_post_json.py", export.python_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/python_post_json.py", export.python_code(flow))
 
     def test_patch(self):
         flow = tflow.tflow(req=req_patch())
-        python_equals("data/test_flow_export/python_patch.py", export.python_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/python_patch.py", export.python_code(flow))
 
 
 class TestExportLocustCode:
     def test_get(self):
         flow = tflow.tflow(req=req_get())
-        python_equals("data/test_flow_export/locust_get.py", export.locust_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/locust_get.py", export.locust_code(flow))
 
     def test_post(self):
         p = req_post()
         p.content = b'content'
         p.headers = ''
         flow = tflow.tflow(req=p)
-        python_equals("data/test_flow_export/locust_post.py", export.locust_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/locust_post.py", export.locust_code(flow))
 
     def test_patch(self):
         flow = tflow.tflow(req=req_patch())
-        python_equals("data/test_flow_export/locust_patch.py", export.locust_code(flow))
+        python_equals("mitmproxy/data/test_flow_export/locust_patch.py", export.locust_code(flow))
 
 
 class TestExportLocustTask:
     def test_get(self):
         flow = tflow.tflow(req=req_get())
-        python_equals("data/test_flow_export/locust_task_get.py", export.locust_task(flow))
+        python_equals("mitmproxy/data/test_flow_export/locust_task_get.py", export.locust_task(flow))
 
     def test_post(self):
         flow = tflow.tflow(req=req_post())
-        python_equals("data/test_flow_export/locust_task_post.py", export.locust_task(flow))
+        python_equals("mitmproxy/data/test_flow_export/locust_task_post.py", export.locust_task(flow))
 
     def test_patch(self):
         flow = tflow.tflow(req=req_patch())
-        python_equals("data/test_flow_export/locust_task_patch.py", export.locust_task(flow))
+        python_equals("mitmproxy/data/test_flow_export/locust_task_patch.py", export.locust_task(flow))
 
 
 class TestURL:

@@ -1,10 +1,10 @@
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
+
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.test import taddons
-
-from .. import tutils
 
 
 class Options(options.Options):

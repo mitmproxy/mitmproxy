@@ -2,7 +2,7 @@ import os
 import socket
 import time
 
-import mitmproxy.test.tutils
+from mitmproxy.test import tutils
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.addons import script
@@ -16,11 +16,12 @@ from mitmproxy import exceptions
 from mitmproxy.net.http import authentication
 from mitmproxy.net.http import http1
 from mitmproxy.net.tcp import Address
-from mitmproxy.test.tutils import raises
 from pathod import pathoc
 from pathod import pathod
 
-from . import tutils, tservers
+from . import tutils as ttutils
+
+from . import tservers
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -159,7 +160,7 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        with raises(exceptions.HttpException):
+        with tutils.raises(exceptions.HttpException):
             self.pathod(spec)  # pathoc tries to parse answer as HTTP
 
         self._ignore_off()
@@ -238,7 +239,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             # There's a race here, which means we can get any of a number of errors.
             # Rather than introduce yet another sleep into the test suite, we just
             # relax the Exception specification.
-            with raises(Exception):
+            with tutils.raises(Exception):
                 p.request("get:'%s'" % response)
 
     def test_reconnect(self):
@@ -277,7 +278,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
 
     def test_stream_modify(self):
         s = script.Script(
-            tutils.test_data.path("data/addonscripts/stream_modify.py")
+            tutils.test_data.path("mitmproxy/data/addonscripts/stream_modify.py")
         )
         self.master.addons.add(s)
         d = self.pathod('200:b"foo"')
@@ -327,7 +328,7 @@ class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
     def test_clientcert_file(self):
         try:
             self.config.clientcerts = os.path.join(
-                tutils.test_data.path("data/clientcert"), "client.pem")
+                tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
@@ -336,7 +337,7 @@ class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
 
     def test_clientcert_dir(self):
         try:
-            self.config.clientcerts = tutils.test_data.path("data/clientcert")
+            self.config.clientcerts = tutils.test_data.path("mitmproxy/data/clientcert")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
@@ -375,7 +376,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            ("example.mitmproxy.org", tutils.test_data.path("data/servercert/trusted-leaf.pem"))
+            ("example.mitmproxy.org", tutils.test_data.path("mitmproxy/data/servercert/trusted-leaf.pem"))
         ]
     )
 
@@ -388,7 +389,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
         self.config.options.update(
             ssl_insecure=False,
             ssl_verify_upstream_trusted_cadir=tutils.test_data.path(
-                "data/servercert/"
+                "mitmproxy/data/servercert/"
             ),
             ssl_verify_upstream_trusted_ca=None,
         )
@@ -399,7 +400,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
             ssl_insecure=False,
             ssl_verify_upstream_trusted_cadir=None,
             ssl_verify_upstream_trusted_ca=tutils.test_data.path(
-                "data/servercert/trusted-root.pem"
+                "mitmproxy/data/servercert/trusted-root.pem"
             ),
         )
         assert self._request().status_code == 242
@@ -414,7 +415,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            ("example.mitmproxy.org", tutils.test_data.path("data/servercert/self-signed.pem"))
+            ("example.mitmproxy.org", tutils.test_data.path("mitmproxy/data/servercert/self-signed.pem"))
         ])
 
     def _request(self):
@@ -426,7 +427,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     def get_options(cls):
         opts = super().get_options()
         opts.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-            "data/servercert/trusted-root.pem"
+            "mitmproxy/data/servercert/trusted-root.pem"
         )
         return opts
 
@@ -453,7 +454,7 @@ class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
     ssl = True
     ssloptions = pathod.SSLOptions(
         certs=[
-            (b"*", tutils.test_data.path("data/no_common_name.pem"))
+            (b"*", tutils.test_data.path("mitmproxy/data/no_common_name.pem"))
         ]
     )
 
@@ -563,7 +564,7 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
 
     def test_tcp_stream_modify(self):
         s = script.Script(
-            tutils.test_data.path("data/addonscripts/tcp_stream_modify.py")
+            tutils.test_data.path("mitmproxy/data/addonscripts/tcp_stream_modify.py")
         )
         self.master.addons.add(s)
         self._tcpproxy_on()
@@ -594,7 +595,7 @@ class TestProxy(tservers.HTTPProxyTest):
         assert "host" in f.request.headers
         assert f.response.status_code == 304
 
-    @tutils.skip_appveyor
+    @ttutils.skip_appveyor
     def test_response_timestamps(self):
         # test that we notice at least 1 sec delay between timestamps
         # in response object
@@ -605,7 +606,7 @@ class TestProxy(tservers.HTTPProxyTest):
         # timestamp_start might fire a bit late, so we play safe and only require 300ms.
         assert 0.3 <= response.timestamp_end - response.timestamp_start
 
-    @tutils.skip_appveyor
+    @ttutils.skip_appveyor
     def test_request_timestamps(self):
         # test that we notice a delay between timestamps in request object
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -833,7 +834,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        with raises(exceptions.HttpReadDisconnect):
+        with tutils.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
@@ -850,7 +851,7 @@ class TestKillResponse(tservers.HTTPProxyTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        with raises(exceptions.HttpReadDisconnect):
+        with tutils.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
@@ -1042,7 +1043,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 class AddUpstreamCertsToClientChainMixin:
 
     ssl = True
-    servercert = tutils.test_data.path("data/servercert/trusted-root.pem")
+    servercert = tutils.test_data.path("mitmproxy/data/servercert/trusted-root.pem")
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[

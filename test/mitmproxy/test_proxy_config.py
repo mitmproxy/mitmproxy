@@ -1,4 +1,4 @@
-from . import tutils
+from mitmproxy.test import tutils
 import base64
 from mitmproxy.proxy import config
 

@@ -5,12 +5,9 @@ from unittest.case import SkipTest
 import io
 import mitmproxy.test.tutils
 import os
-import shutil
-import tempfile
 from mitmproxy import controller
 from mitmproxy import flow
 import mitmproxy.test.tflow
-from mitmproxy.utils import data
 
 
 def _skip_windows(*args):
@@ -64,30 +61,8 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
 
 
 @contextmanager
-def chdir(dir):
-    orig_dir = os.getcwd()
-    os.chdir(dir)
-    yield
-    os.chdir(orig_dir)
-
-
-@contextmanager
-def tmpdir(*args, **kwargs):
-    temp_workdir = tempfile.mkdtemp(*args, **kwargs)
-    with chdir(temp_workdir):
-        yield temp_workdir
-    shutil.rmtree(temp_workdir)
-
-
-raises = mitmproxy.test.tutils.raises
-
-
-@contextmanager
 def capture_stderr(command, *args, **kwargs):
     out, sys.stderr = sys.stderr, io.StringIO()
     command(*args, **kwargs)
     yield sys.stderr.getvalue()
     sys.stderr = out
-
-
-test_data = data.Data(__name__)
