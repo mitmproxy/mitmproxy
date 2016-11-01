@@ -3,7 +3,6 @@ from mitmproxy.test import tflow
 from mock import patch
 
 from mitmproxy import flowfilter
-from mitmproxy.test import tutils
 from . import tutils as ttutils
 
 

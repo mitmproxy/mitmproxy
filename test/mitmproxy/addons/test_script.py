@@ -34,9 +34,15 @@ class TestParseCommand:
 
     def test_parse_args(self):
         with tutils.chdir(tutils.test_data.dirname):
-            assert script.parse_command("mitmproxy/data/addonscripts/recorder.py") == ("mitmproxy/data/addonscripts/recorder.py", [])
-            assert script.parse_command("mitmproxy/data/addonscripts/recorder.py foo bar") == ("mitmproxy/data/addonscripts/recorder.py", ["foo", "bar"])
-            assert script.parse_command("mitmproxy/data/addonscripts/recorder.py 'foo bar'") == ("mitmproxy/data/addonscripts/recorder.py", ["foo bar"])
+            assert script.parse_command(
+                "mitmproxy/data/addonscripts/recorder.py"
+            ) == ("mitmproxy/data/addonscripts/recorder.py", [])
+            assert script.parse_command(
+                "mitmproxy/data/addonscripts/recorder.py foo bar"
+            ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo", "bar"])
+            assert script.parse_command(
+                "mitmproxy/data/addonscripts/recorder.py 'foo bar'"
+            ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo bar"])
 
     @ttutils.skip_not_windows
     def test_parse_windows(self):
