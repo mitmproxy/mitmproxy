@@ -2,24 +2,22 @@ from mitmproxy.test import tflow
 
 from .. import mastertest
 from mitmproxy.addons import anticache
-from mitmproxy import master
-from mitmproxy import options
-from mitmproxy import proxy
+from mitmproxy.test import taddons
 
 
 class TestAntiCache(mastertest.MasterTest):
     def test_simple(self):
-        o = options.Options(anticache = True)
-        m = master.Master(o, proxy.DummyServer())
         sa = anticache.AntiCache()
-        m.addons.add(sa)
+        with taddons.context() as tctx:
+            f = tflow.tflow(resp=True)
+            f.request.headers["if-modified-since"] = "test"
+            f.request.headers["if-none-match"] = "test"
 
-        f = tflow.tflow(resp=True)
-        m.request(f)
+            sa.request(f)
+            assert "if-modified-since" in f.request.headers
+            assert "if-none-match" in f.request.headers
 
-        f = tflow.tflow(resp=True)
-        f.request.headers["if-modified-since"] = "test"
-        f.request.headers["if-none-match"] = "test"
-        m.request(f)
-        assert "if-modified-since" not in f.request.headers
-        assert "if-none-match" not in f.request.headers
+            tctx.configure(sa, anticache = True)
+            sa.request(f)
+            assert "if-modified-since" not in f.request.headers
+            assert "if-none-match" not in f.request.headers
