@@ -11,7 +11,7 @@ class TestPathCompleter:
     def test_lookup_construction(self):
         c = pathedit._PathCompleter()
 
-        cd = tutils.test_data.path("mitmproxy/completion")
+        cd = os.path.normpath(tutils.test_data.path("mitmproxy/completion"))
         ca = os.path.join(cd, "a")
         assert c.complete(ca).endswith(normpath("/completion/aaa"))
         assert c.complete(ca).endswith(normpath("/completion/aab"))
@@ -59,7 +59,7 @@ class TestPathEdit:
         with patch('urwid.widget.Edit.get_edit_text') as get_text, \
                 patch('urwid.widget.Edit.set_edit_text') as set_text:
 
-            cd = tutils.test_data.path("mitmproxy/completion")
+            cd = os.path.normpath(tutils.test_data.path("mitmproxy/completion"))
             get_text.return_value = os.path.join(cd, "a")
 
             # Pressing tab should set completed path
