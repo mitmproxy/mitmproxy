@@ -1,6 +1,7 @@
 from mitmproxy.test import tflow
 import os
 import mock
+import argparse
 from OpenSSL import SSL
 
 from mitmproxy.tools import cmdline
@@ -55,10 +56,21 @@ class TestServerConnection:
         assert "foo" in repr(sc)
 
 
+class MockParser(argparse.ArgumentParser):
+
+    """
+    argparse.ArgumentParser sys.exits() by default.
+    Make it more testable by throwing an exception instead.
+    """
+
+    def error(self, message):
+        raise Exception(message)
+
+
 class TestProcessProxyOptions:
 
     def p(self, *args):
-        parser = tutils.MockParser()
+        parser = MockParser()
         cmdline.common_options(parser)
         args = parser.parse_args(args=args)
         opts = cmdline.get_common_options(args)

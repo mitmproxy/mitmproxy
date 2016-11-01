@@ -1,4 +1,3 @@
-import argparse
 import sys
 from contextlib import contextmanager
 from unittest.case import SkipTest
@@ -64,10 +63,6 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
     return f
 
 
-def get_body_line(last_displayed_body, line_nb):
-    return last_displayed_body.contents()[line_nb + 2]
-
-
 @contextmanager
 def chdir(dir):
     orig_dir = os.getcwd()
@@ -82,17 +77,6 @@ def tmpdir(*args, **kwargs):
     with chdir(temp_workdir):
         yield temp_workdir
     shutil.rmtree(temp_workdir)
-
-
-class MockParser(argparse.ArgumentParser):
-
-    """
-    argparse.ArgumentParser sys.exits() by default.
-    Make it more testable by throwing an exception instead.
-    """
-
-    def error(self, message):
-        raise Exception(message)
 
 
 raises = mitmproxy.test.tutils.raises
