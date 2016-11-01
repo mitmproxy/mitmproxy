@@ -12,10 +12,16 @@ from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 
 
-def indent(n, text):
+def indent(n: int, text: str) -> str:
     l = str(text).strip().splitlines()
     pad = " " * n
     return "\n".join(pad + i for i in l)
+
+
+def colorful(line, styles):
+    yield u"    "  # we can already indent here
+    for (style, text) in line:
+        yield click.style(text, **styles.get(style, {}))
 
 
 class Dumper:
@@ -27,14 +33,15 @@ class Dumper:
         self.default_contentview = "auto"  # type: str
 
     def configure(self, options, updated):
-        if options.filtstr:
-            self.filter = flowfilter.parse(options.filtstr)
-            if not self.filter:
-                raise exceptions.OptionsError(
-                    "Invalid filter expression: %s" % options.filtstr
-                )
-        else:
-            self.filter = None
+        if "filtstr" in updated:
+            if options.filtstr:
+                self.filter = flowfilter.parse(options.filtstr)
+                if not self.filter:
+                    raise exceptions.OptionsError(
+                        "Invalid filter expression: %s" % options.filtstr
+                    )
+            else:
+                self.filter = None
         self.flow_detail = options.flow_detail
         self.outfp = options.tfile
         self.showhost = options.showhost
@@ -47,67 +54,51 @@ class Dumper:
         if self.outfp:
             self.outfp.flush()
 
-    def _echo_message(self, message):
-        if self.flow_detail >= 2 and hasattr(message, "headers"):
-            headers = "\r\n".join(
-                "{}: {}".format(
-                    click.style(
-                        strutils.bytes_to_escaped_str(k), fg="blue", bold=True
-                    ),
-                    click.style(
-                        strutils.bytes_to_escaped_str(v), fg="blue"
-                    )
-                )
-                for k, v in message.headers.fields
+    def _echo_headers(self, headers):
+        for k, v in headers.fields:
+            k = strutils.bytes_to_escaped_str(k)
+            v = strutils.bytes_to_escaped_str(v)
+            out = "{}: {}".format(
+                click.style(k, fg="blue"),
+                click.style(v)
             )
-            self.echo(headers, ident=4)
-        if self.flow_detail >= 3:
-                _, lines, error = contentviews.get_message_content_view(
-                    self.default_contentview,
-                    message
-                )
-                if error:
-                    ctx.log.debug(error)
+            self.echo(out, ident=4)
 
-                styles = dict(
-                    highlight=dict(bold=True),
-                    offset=dict(fg="blue"),
-                    header=dict(fg="green", bold=True),
-                    text=dict(fg="green")
-                )
+    def _echo_message(self, message):
+        _, lines, error = contentviews.get_message_content_view(
+            self.default_contentview,
+            message
+        )
+        if error:
+            ctx.log.debug(error)
 
-                def colorful(line):
-                    yield u"    "  # we can already indent here
-                    for (style, text) in line:
-                        yield click.style(text, **styles.get(style, {}))
+        if self.flow_detail == 3:
+            lines_to_echo = itertools.islice(lines, 70)
+        else:
+            lines_to_echo = lines
 
-                if self.flow_detail == 3:
-                    lines_to_echo = itertools.islice(lines, 70)
-                else:
-                    lines_to_echo = lines
+        styles = dict(
+            highlight=dict(bold=True),
+            offset=dict(fg="blue"),
+            header=dict(fg="green", bold=True),
+            text=dict(fg="green")
+        )
 
-                content = u"\r\n".join(
-                    u"".join(colorful(line)) for line in lines_to_echo
-                )
-                if content:
-                    self.echo("")
-                    self.echo(content)
+        content = u"\r\n".join(
+            u"".join(colorful(line, styles)) for line in lines_to_echo
+        )
+        if content:
+            self.echo("")
+            self.echo(content)
 
-                if next(lines, None):
-                    self.echo("(cut off)", ident=4, dim=True)
+        if next(lines, None):
+            self.echo("(cut off)", ident=4, dim=True)
 
         if self.flow_detail >= 2:
             self.echo("")
 
     def _echo_request_line(self, flow):
-        if flow.request.stickycookie:
-            stickycookie = click.style(
-                "[stickycookie] ", fg="yellow", bold=True
-            )
-        else:
-            stickycookie = ""
-
-        if flow.client_conn:
+        if flow.client_conn is not None:
             client = click.style(
                 strutils.escape_control_characters(
                     repr(flow.client_conn.address)
@@ -133,8 +124,6 @@ class Dumper:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        if len(url) > 200:
-            url = url[:199] + "…"
         url = click.style(strutils.escape_control_characters(url), bold=True)
 
         http_version = ""
@@ -142,15 +131,8 @@ class Dumper:
             # We hide "normal" HTTP 1.
             http_version = " " + flow.request.http_version
 
-        if self.flow_detail >= 2:
-            linebreak = "\n    "
-        else:
-            linebreak = ""
-
-        line = "{client}: {linebreak}{stickycookie}{method} {url}{http_version}".format(
+        line = "{client}: {method} {url}{http_version}".format(
             client=client,
-            stickycookie=stickycookie,
-            linebreak=linebreak,
             method=method,
             url=url,
             http_version=http_version
@@ -208,11 +190,17 @@ class Dumper:
     def echo_flow(self, f):
         if f.request:
             self._echo_request_line(f)
-            self._echo_message(f.request)
+            if self.flow_detail >= 2:
+                self._echo_headers(f.request.headers)
+            if self.flow_detail >= 3:
+                self._echo_message(f.request)
 
         if f.response:
             self._echo_response_line(f)
-            self._echo_message(f.response)
+            if self.flow_detail >= 2:
+                self._echo_headers(f.response.headers)
+            if self.flow_detail >= 3:
+                self._echo_message(f.response)
 
         if f.error:
             msg = strutils.escape_control_characters(f.error.msg)
@@ -244,13 +232,12 @@ class Dumper:
         )
 
     def tcp_message(self, f):
-        if not self.match(f):
-            return
-        message = f.messages[-1]
-        direction = "->" if message.from_client else "<-"
-        self.echo("{client} {direction} tcp {direction} {server}".format(
-            client=repr(f.client_conn.address),
-            server=repr(f.server_conn.address),
-            direction=direction,
-        ))
-        self._echo_message(message)
+        if self.match(f):
+            message = f.messages[-1]
+            direction = "->" if message.from_client else "<-"
+            self.echo("{client} {direction} tcp {direction} {server}".format(
+                client=repr(f.client_conn.address),
+                server=repr(f.server_conn.address),
+                direction=direction,
+            ))
+            self._echo_message(message)
