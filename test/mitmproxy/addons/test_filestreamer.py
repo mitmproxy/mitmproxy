@@ -1,44 +1,32 @@
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-
-from .. import mastertest
+from mitmproxy.test import taddons
 
 import os.path
-
 from mitmproxy.addons import filestreamer
-from mitmproxy import master
 from mitmproxy import io
-from mitmproxy import options
-from mitmproxy import proxy
 
 
-class TestStream(mastertest.MasterTest):
-    def test_stream(self):
+def test_stream():
+    sa = filestreamer.FileStreamer()
+    with taddons.context() as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
 
             def r():
-                r = io.FlowReader(open(p, "rb"))
-                return list(r.stream())
+                x = io.FlowReader(open(p, "rb"))
+                return list(x.stream())
 
-            o = options.Options(
-                outfile = (p, "wb")
-            )
-            m = master.Master(o, proxy.DummyServer())
-            sa = filestreamer.FileStreamer()
+            tctx.configure(sa, outfile=(p, "wb"))
 
-            m.addons.add(sa)
             f = tflow.tflow(resp=True)
-            m.request(f)
-            m.response(f)
-            m.addons.remove(sa)
-
+            sa.request(f)
+            sa.response(f)
+            tctx.configure(sa, outfile=None)
             assert r()[0].response
 
-            m.options.outfile = (p, "ab")
-
-            m.addons.add(sa)
+            tctx.configure(sa, outfile=(p, "ab"))
             f = tflow.tflow()
-            m.request(f)
-            m.addons.remove(sa)
+            sa.request(f)
+            tctx.configure(sa, outfile=None)
             assert not r()[1].response

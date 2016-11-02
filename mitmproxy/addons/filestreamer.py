@@ -21,23 +21,23 @@ class FileStreamer:
 
     def configure(self, options, updated):
         # We're already streaming - stop the previous stream and restart
-        if self.stream:
-            self.done()
-
-        if options.outfile:
-            flt = None
-            if options.get("filtstr"):
-                flt = flowfilter.parse(options.filtstr)
-                if not flt:
-                    raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % options.filtstr
-                    )
-            path, mode = options.outfile
-            if mode not in ("wb", "ab"):
-                raise exceptions.OptionsError("Invalid mode.")
-            err = self.start_stream_to_path(path, mode, flt)
-            if err:
-                raise exceptions.OptionsError(err)
+        if "outfile" in updated:
+            if self.stream:
+                self.done()
+            if options.outfile:
+                flt = None
+                if options.get("filtstr"):
+                    flt = flowfilter.parse(options.filtstr)
+                    if not flt:
+                        raise exceptions.OptionsError(
+                            "Invalid filter specification: %s" % options.filtstr
+                        )
+                path, mode = options.outfile
+                if mode not in ("wb", "ab"):
+                    raise exceptions.OptionsError("Invalid mode.")
+                err = self.start_stream_to_path(path, mode, flt)
+                if err:
+                    raise exceptions.OptionsError(err)
 
     def tcp_start(self, flow):
         if self.stream:
