@@ -380,14 +380,14 @@ class TestSNI(tservers.ServerTestBase):
 class TestServerCipherList(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cipher_list='RC4-SHA'
+        cipher_list='AES256-GCM-SHA384'
     )
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(sni="foo.com")
-            assert c.rfile.readline() == b"['RC4-SHA']"
+            assert c.rfile.readline() == b"['AES256-GCM-SHA384']"
 
 
 class TestServerCurrentCipher(tservers.ServerTestBase):
@@ -400,14 +400,14 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
             self.wfile.flush()
 
     ssl = dict(
-        cipher_list='RC4-SHA'
+        cipher_list='AES256-GCM-SHA384'
     )
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(sni="foo.com")
-            assert b"RC4-SHA" in c.rfile.readline()
+            assert b'AES256-GCM-SHA384' in c.rfile.readline()
 
 
 class TestServerCipherListError(tservers.ServerTestBase):
