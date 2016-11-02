@@ -1,4 +1,4 @@
-import mitmproxy.test
+from mitmproxy.test import tutils
 from mitmproxy import tcp
 from mitmproxy import controller
 from mitmproxy import http
@@ -40,9 +40,9 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     if server_conn is True:
         server_conn = tserver_conn()
     if req is True:
-        req = mitmproxy.test.tutils.treq()
+        req = tutils.treq()
     if resp is True:
-        resp = mitmproxy.test.tutils.tresp()
+        resp = tutils.tresp()
     if err is True:
         err = terr()
 
