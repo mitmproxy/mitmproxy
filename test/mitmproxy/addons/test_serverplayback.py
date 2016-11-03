@@ -1,11 +1,9 @@
 from mitmproxy.test import tflow
-
-from .. import mastertest
+from mitmproxy.test import taddons
 
 import mitmproxy.test.tutils
 from mitmproxy.addons import serverplayback
 from mitmproxy import options
-from mitmproxy import proxy
 from mitmproxy import exceptions
 
 
@@ -87,27 +85,26 @@ class TestServerPlayback:
 
     def test_ignore_payload_params_other_content_type(self):
         s = serverplayback.ServerPlayback()
-        s.configure(
-            options.Options(
+        with taddons.context() as tctx:
+            tctx.configure(
+                s,
                 server_replay_ignore_content=False,
                 server_replay_ignore_payload_params=[
                     "param1", "param2"
                 ]
-            ),
-            []
+            )
 
-        )
-        r = tflow.tflow(resp=True)
-        r.request.headers["Content-Type"] = "application/json"
-        r.request.content = b'{"param1":"1"}'
-        r2 = tflow.tflow(resp=True)
-        r2.request.headers["Content-Type"] = "application/json"
-        r2.request.content = b'{"param1":"1"}'
-        # same content
-        assert s._hash(r) == s._hash(r2)
-        # distint content (note only x-www-form-urlencoded payload is analysed)
-        r2.request.content = b'{"param1":"2"}'
-        assert not s._hash(r) == s._hash(r2)
+            r = tflow.tflow(resp=True)
+            r.request.headers["Content-Type"] = "application/json"
+            r.request.content = b'{"param1":"1"}'
+            r2 = tflow.tflow(resp=True)
+            r2.request.headers["Content-Type"] = "application/json"
+            r2.request.content = b'{"param1":"1"}'
+            # same content
+            assert s._hash(r) == s._hash(r2)
+            # distint content (note only x-www-form-urlencoded payload is analysed)
+            r2.request.content = b'{"param1":"2"}'
+            assert not s._hash(r) == s._hash(r2)
 
     def test_hash(self):
         s = serverplayback.ServerPlayback()
@@ -241,44 +238,50 @@ class TestServerPlayback:
 
     def test_server_playback_full(self):
         s = serverplayback.ServerPlayback()
-        o = options.Options(refresh_server_playback = True, keepserving=False)
-        m = mastertest.RecordingMaster(o, proxy.DummyServer())
-        m.addons.add(s)
+        with taddons.context() as tctx:
+            tctx.configure(
+                s,
+                refresh_server_playback = True,
+                keepserving=False
+            )
 
-        f = tflow.tflow()
-        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
-        s.load([f, f])
+            f = tflow.tflow()
+            f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+            s.load([f, f])
 
-        tf = tflow.tflow()
-        assert not tf.response
-        m.request(tf)
-        assert tf.response == f.response
+            tf = tflow.tflow()
+            assert not tf.response
+            s.request(tf)
+            assert tf.response == f.response
 
-        tf = tflow.tflow()
-        tf.request.content = b"gibble"
-        assert not tf.response
-        m.request(tf)
-        assert not tf.response
+            tf = tflow.tflow()
+            tf.request.content = b"gibble"
+            assert not tf.response
+            s.request(tf)
+            assert not tf.response
 
-        assert not s.stop
-        s.tick()
-        assert not s.stop
+            assert not s.stop
+            s.tick()
+            assert not s.stop
 
-        tf = tflow.tflow()
-        m.request(tflow.tflow())
-        assert s.stop
+            tf = tflow.tflow()
+            s.request(tflow.tflow())
+            assert s.stop
 
     def test_server_playback_kill(self):
         s = serverplayback.ServerPlayback()
-        o = options.Options(refresh_server_playback = True, replay_kill_extra=True)
-        m = mastertest.RecordingMaster(o, proxy.DummyServer())
-        m.addons.add(s)
+        with taddons.context() as tctx:
+            tctx.configure(
+                s,
+                refresh_server_playback = True,
+                replay_kill_extra=True
+            )
 
-        f = tflow.tflow()
-        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
-        s.load([f])
+            f = tflow.tflow()
+            f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+            s.load([f])
 
-        f = tflow.tflow()
-        f.request.host = "nonexistent"
-        m.request(f)
-        assert f.reply.value == exceptions.Kill
+            f = tflow.tflow()
+            f.request.host = "nonexistent"
+            tctx.cycle(s, f)
+            assert f.reply.value == exceptions.Kill
