@@ -1,5 +1,4 @@
 import re
-import warnings
 from typing import Optional
 
 from mitmproxy.utils import strutils
@@ -269,32 +268,3 @@ class Message(serializable.Serializable):
             )
         replacements += self.headers.replace(pattern, repl, flags=flags, count=count)
         return replacements
-
-    # Legacy
-
-    @property
-    def body(self):  # pragma: no cover
-        warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
-        return self.content
-
-    @body.setter
-    def body(self, body):  # pragma: no cover
-        warnings.warn(".body is deprecated, use .content instead.", DeprecationWarning)
-        self.content = body
-
-
-class decoded:
-    """
-    Deprecated: You can now directly use :py:attr:`content`.
-    :py:attr:`raw_content` has the encoded content.
-    """
-
-    def __init__(self, message):  # pragma no cover
-        warnings.warn("decoded() is deprecated, you can now directly use .content instead. "
-                      ".raw_content has the encoded content.", DeprecationWarning)
-
-    def __enter__(self):  # pragma no cover
-        pass
-
-    def __exit__(self, type, value, tb):  # pragma no cover
-        pass

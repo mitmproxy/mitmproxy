@@ -252,7 +252,7 @@ class HttpLayer(base.Layer):
             # TODO: We may have to use send_response_headers for HTTP2 here.
             self.send_response(http.expect_continue_response)
             request.headers.pop("expect")
-            request.body = b"".join(self.read_request_body(request))
+            request.content = b"".join(self.read_request_body(request))
             request.timestamp_end = time.time()
         return request
 

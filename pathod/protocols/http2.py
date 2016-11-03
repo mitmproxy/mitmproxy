@@ -190,8 +190,8 @@ class HTTP2StateProtocol:
             stream_id = self._next_stream_id()
 
         return list(itertools.chain(
-            self._create_headers(headers, stream_id, end_stream=(request.body is None or len(request.body) == 0)),
-            self._create_body(request.body, stream_id)))
+            self._create_headers(headers, stream_id, end_stream=(request.content is None or len(request.content) == 0)),
+            self._create_body(request.content, stream_id)))
 
     def assemble_response(self, response):
         assert isinstance(response, mitmproxy.net.http.response.Response)
@@ -207,8 +207,8 @@ class HTTP2StateProtocol:
             stream_id = self._next_stream_id()
 
         return list(itertools.chain(
-            self._create_headers(headers, stream_id, end_stream=(response.body is None or len(response.body) == 0)),
-            self._create_body(response.body, stream_id),
+            self._create_headers(headers, stream_id, end_stream=(response.content is None or len(response.content) == 0)),
+            self._create_body(response.content, stream_id),
         ))
 
     def perform_connection_preface(self, force=False):
