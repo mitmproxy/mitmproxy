@@ -34,7 +34,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:
+    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
