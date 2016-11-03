@@ -9,27 +9,68 @@ from mitmproxy.test import taddons
 
 class Options(options.Options):
     def __init__(
-        self, *,
+        self,
+        *,
         filter=None,
         order=None,
         order_reversed=False,
+        focus_follow=False,
         **kwargs
     ):
         self.filter = filter
         self.order = order
         self.order_reversed = order_reversed
+        self.focus_follow = focus_follow
         super().__init__(**kwargs)
+
+
+def test_order_refresh():
+    v = view.View()
+    sargs = []
+
+    def save(*args, **kwargs):
+        sargs.extend([args, kwargs])
+
+    v.sig_refresh.connect(save)
+
+    tf = tflow.tflow(resp=True)
+    with taddons.context(options=Options()) as tctx:
+        tctx.configure(v, order="time")
+        v.add(tf)
+        tf.request.timestamp_start = 1
+        assert not sargs
+        v.update(tf)
+        assert sargs
+
+
+def test_order_generators():
+    v = view.View()
+    tf = tflow.tflow(resp=True)
+
+    rs = view.OrderRequestStart(v)
+    assert rs.generate(tf) == 0
+
+    rm = view.OrderRequestMethod(v)
+    assert rm.generate(tf) == tf.request.method
+
+    ru = view.OrderRequestURL(v)
+    assert ru.generate(tf) == tf.request.url
+
+    sz = view.OrderKeySize(v)
+    assert sz.generate(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
 
 
 def test_simple():
     v = view.View()
     f = tflow.tflow()
+    assert v.store_count() == 0
     f.request.timestamp_start = 1
     v.request(f)
     assert list(v) == [f]
     v.request(f)
     assert list(v) == [f]
     assert len(v._store) == 1
+    assert v.store_count() == 1
 
     f2 = tflow.tflow()
     f2.request.timestamp_start = 3
@@ -38,6 +79,10 @@ def test_simple():
     v.request(f2)
     assert list(v) == [f, f2]
     assert len(v._store) == 2
+
+    assert v.inbounds(0)
+    assert not v.inbounds(-1)
+    assert not v.inbounds(100)
 
     f3 = tflow.tflow()
     f3.request.timestamp_start = 2
@@ -289,3 +334,8 @@ def test_configure():
         tutils.raises("unknown flow order", tctx.configure, v, order="no")
 
         tctx.configure(v, order_reversed=True)
+
+        tctx.configure(v, order=None)
+
+        tctx.configure(v, focus_follow=True)
+        assert v.focus_follow
