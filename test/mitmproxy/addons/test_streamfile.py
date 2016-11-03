@@ -6,25 +6,25 @@ import os.path
 from mitmproxy import io
 from mitmproxy import exceptions
 from mitmproxy.tools import dump
-from mitmproxy.addons import filestreamer
+from mitmproxy.addons import streamfile
 
 
 def test_configure():
-    sa = filestreamer.FileStreamer()
+    sa = streamfile.StreamFile()
     with taddons.context(options=dump.Options()) as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
             tutils.raises(
                 exceptions.OptionsError,
-                tctx.configure, sa, outfile=(tdir, "ab")
+                tctx.configure, sa, streamfile=(tdir, "ab")
             )
             tutils.raises(
                 "invalid filter",
-                tctx.configure, sa, outfile=(p, "ab"), filtstr="~~"
+                tctx.configure, sa, streamfile=(p, "ab"), filtstr="~~"
             )
             tutils.raises(
                 "invalid mode",
-                tctx.configure, sa, outfile=(p, "xx")
+                tctx.configure, sa, streamfile=(p, "xx")
             )
 
 
@@ -34,36 +34,35 @@ def rd(p):
 
 
 def test_tcp():
-    sa = filestreamer.FileStreamer()
+    sa = streamfile.StreamFile()
     with taddons.context() as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
-            tctx.configure(sa, outfile=(p, "wb"))
+            tctx.configure(sa, streamfile=(p, "wb"))
 
             tt = tflow.ttcpflow()
             sa.tcp_start(tt)
             sa.tcp_end(tt)
-            tctx.configure(sa, outfile=None)
+            tctx.configure(sa, streamfile=None)
             assert rd(p)
 
 
 def test_simple():
-    sa = filestreamer.FileStreamer()
+    sa = streamfile.StreamFile()
     with taddons.context() as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
 
-            tctx.configure(sa, outfile=(p, "wb"))
+            tctx.configure(sa, streamfile=(p, "wb"))
 
             f = tflow.tflow(resp=True)
             sa.request(f)
             sa.response(f)
-            tctx.configure(sa, outfile=None)
+            tctx.configure(sa, streamfile=None)
             assert rd(p)[0].response
 
-            tctx.configure(sa, outfile=(p, "ab"))
+            tctx.configure(sa, streamfile=(p, "ab"))
             f = tflow.tflow()
             sa.request(f)
-            tctx.configure(sa, outfile=None)
+            tctx.configure(sa, streamfile=None)
             assert not rd(p)[1].response
-

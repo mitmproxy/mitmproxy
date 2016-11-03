@@ -111,10 +111,10 @@ class WebMaster(master.Master):
                     "error"
                 )
 
-        if options.outfile:
+        if options.streamfile:
             err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1]
+                options.streamfile[0],
+                options.streamfile[1]
             )
             if err:
                 print("Stream file error: {}".format(err), file=sys.stderr)

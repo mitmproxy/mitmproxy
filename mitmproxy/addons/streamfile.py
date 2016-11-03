@@ -5,7 +5,7 @@ from mitmproxy import flowfilter
 from mitmproxy import io
 
 
-class FileStreamer:
+class StreamFile:
     def __init__(self):
         self.stream = None
         self.filt = None
@@ -29,11 +29,11 @@ class FileStreamer:
                     raise exceptions.OptionsError(
                         "Invalid filter specification: %s" % options.filtstr
                     )
-        if "outfile" in updated:
+        if "streamfile" in updated:
             if self.stream:
                 self.done()
-            if options.outfile:
-                path, mode = options.outfile
+            if options.streamfile:
+                path, mode = options.streamfile
                 if mode not in ("wb", "ab"):
                     raise exceptions.OptionsError("Invalid mode.")
                 self.start_stream_to_path(path, mode, self.filt)

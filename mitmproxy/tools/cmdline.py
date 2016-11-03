@@ -140,8 +140,8 @@ def get_common_options(args):
             raise exceptions.OptionsError(e)
         setheaders.append(p)
 
-    if args.outfile and args.outfile[0] == args.rfile:
-        if args.outfile[1] == "wb":
+    if args.streamfile and args.streamfile[0] == args.rfile:
+        if args.streamfile[1] == "wb":
             raise exceptions.OptionsError(
                 "Cannot use '{}' for both reading and writing flows. "
                 "Are you looking for --afile?".format(args.rfile)
@@ -228,7 +228,7 @@ def get_common_options(args):
         stickyauth=stickyauth,
         stream_large_bodies=stream_large_bodies,
         showhost=args.showhost,
-        outfile=args.outfile,
+        streamfile=args.streamfile,
         verbosity=args.verbose,
         server_replay_nopop=args.server_replay_nopop,
         server_replay_ignore_content=args.server_replay_ignore_content,
@@ -339,15 +339,15 @@ def basic_options(parser):
         action="store_const", dest="verbose", default=2, const=3,
         help="Increase log verbosity."
     )
-    outfile = parser.add_mutually_exclusive_group()
-    outfile.add_argument(
+    streamfile = parser.add_mutually_exclusive_group()
+    streamfile.add_argument(
         "-w", "--wfile",
-        action="store", dest="outfile", type=lambda f: (f, "wb"),
+        action="store", dest="streamfile", type=lambda f: (f, "wb"),
         help="Write flows to file."
     )
-    outfile.add_argument(
+    streamfile.add_argument(
         "-a", "--afile",
-        action="store", dest="outfile", type=lambda f: (f, "ab"),
+        action="store", dest="streamfile", type=lambda f: (f, "ab"),
         help="Append flows to file."
     )
     parser.add_argument(
