@@ -115,5 +115,5 @@ class RequestReplayThread(basethread.BaseThread):
         finally:
             r.first_line_format = first_line_format_backup
             self.f.live = False
-            if server:
+            if server.connected():
                 server.finish()

@@ -96,7 +96,7 @@ class Http2Layer(base.Layer):
         self.client_conn.h2 = SafeH2Connection(self.client_conn, config=config)
 
     def _initiate_server_conn(self):
-        if self.server_conn:
+        if self.server_conn.connected():
             config = h2.config.H2Configuration(
                 client_side=True,
                 header_encoding=False,
