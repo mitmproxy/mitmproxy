@@ -57,7 +57,9 @@ def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
         while actions:
             a = actions.pop()
             if a[1] == "pause":
-                time.sleep(a[2])
+                time.sleep(
+                    FOREVER if a[2] == "f" else a[2]
+                )
             elif a[1] == "disconnect":
                 return True
             elif a[1] == "inject":
