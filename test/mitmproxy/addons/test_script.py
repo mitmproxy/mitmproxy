@@ -9,10 +9,57 @@ from mitmproxy.test import taddons
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import proxy
-from mitmproxy.addons import script
 from mitmproxy import master
 
+from mitmproxy.addons import script
+
+import watchdog.events
+
 from .. import tutils as ttutils
+
+
+def test_ns():
+    n = script.NS({})
+    n.one = "one"
+    assert n.one == "one"
+    assert n.__dict__["ns"]["one"] == "one"
+
+
+def test_scriptenv():
+    with taddons.context() as tctx:
+        with script.scriptenv("path", []):
+            raise SystemExit
+        assert tctx.master.event_log[0][0] == "error"
+        assert "exited" in tctx.master.event_log[0][1]
+
+        tctx.master.clear()
+        with script.scriptenv("path", []):
+            raise ValueError("fooo")
+        assert tctx.master.event_log[0][0] == "error"
+        assert "foo" in tctx.master.event_log[0][1]
+
+
+class Called:
+    def __init__(self):
+        self.called = False
+
+    def __call__(self, *args, **kwargs):
+        self.called = True
+
+
+def test_reloadhandler():
+    rh = script.ReloadHandler(Called())
+    assert not rh.filter(watchdog.events.DirCreatedEvent("path"))
+    assert not rh.filter(watchdog.events.FileModifiedEvent("/foo/.bar"))
+    assert rh.filter(watchdog.events.FileModifiedEvent("/foo/bar"))
+
+    assert not rh.callback.called
+    rh.on_modified(watchdog.events.FileModifiedEvent("/foo/bar"))
+    assert rh.callback.called
+    rh.callback.called = False
+
+    rh.on_created(watchdog.events.FileCreatedEvent("foo"))
+    assert rh.callback.called
 
 
 class TestParseCommand:
@@ -65,7 +112,7 @@ def test_load_script():
 
 class TestScript:
     def test_simple(self):
-        with taddons.context() as tctx:
+        with taddons.context():
             sc = script.Script(
                 tutils.test_data.path(
                     "mitmproxy/data/addonscripts/recorder.py"

@@ -15,6 +15,9 @@ class RecordingMaster(mitmproxy.master.Master):
     def add_log(self, e, level):
         self.event_log.append((level, e))
 
+    def clear(self):
+        self.event_log = []
+
 
 class context:
     """
