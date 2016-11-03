@@ -1,11 +1,10 @@
 from mitmproxy.test import tflow
 
-from .. import mastertest
 from mitmproxy.addons import anticache
 from mitmproxy.test import taddons
 
 
-class TestAntiCache(mastertest.MasterTest):
+class TestAntiCache:
     def test_simple(self):
         sa = anticache.AntiCache()
         with taddons.context() as tctx:

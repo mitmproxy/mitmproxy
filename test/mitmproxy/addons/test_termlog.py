@@ -1,4 +1,3 @@
-from .. import mastertest
 import io
 
 from mitmproxy.addons import termlog
@@ -6,7 +5,7 @@ from mitmproxy import log
 from mitmproxy.tools import dump
 
 
-class TestTermLog(mastertest.MasterTest):
+class TestTermLog:
     def test_simple(self):
         t = termlog.TermLog()
         sio = io.StringIO()

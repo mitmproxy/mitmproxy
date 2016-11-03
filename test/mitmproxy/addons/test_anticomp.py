@@ -1,11 +1,10 @@
 from mitmproxy.test import tflow
 
-from .. import mastertest
 from mitmproxy.addons import anticomp
 from mitmproxy.test import taddons
 
 
-class TestAntiComp(mastertest.MasterTest):
+class TestAntiComp:
     def test_simple(self):
         sa = anticomp.AntiComp()
         with taddons.context() as tctx:
