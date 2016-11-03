@@ -7,6 +7,13 @@ from mitmproxy import options
 from mitmproxy.test import taddons
 
 
+def tft(*, method="get", start=0):
+    f = tflow.tflow()
+    f.request.method = method
+    f.request.timestamp_start = start
+    return f
+
+
 class Options(options.Options):
     def __init__(
         self,
@@ -62,18 +69,24 @@ def test_order_generators():
 
 def test_simple():
     v = view.View()
-    f = tflow.tflow()
+    f = tft(start=1)
     assert v.store_count() == 0
-    f.request.timestamp_start = 1
     v.request(f)
     assert list(v) == [f]
+
+    # These all just call udpate
+    v.error(f)
+    v.response(f)
+    v.intercept(f)
+    v.resume(f)
+    assert list(v) == [f]
+
     v.request(f)
     assert list(v) == [f]
     assert len(v._store) == 1
     assert v.store_count() == 1
 
-    f2 = tflow.tflow()
-    f2.request.timestamp_start = 3
+    f2 = tft(start=3)
     v.request(f2)
     assert list(v) == [f, f2]
     v.request(f2)
@@ -84,8 +97,7 @@ def test_simple():
     assert not v.inbounds(-1)
     assert not v.inbounds(100)
 
-    f3 = tflow.tflow()
-    f3.request.timestamp_start = 2
+    f3 = tft(start=2)
     v.request(f3)
     assert list(v) == [f, f3, f2]
     v.request(f3)
@@ -95,13 +107,6 @@ def test_simple():
     v.clear()
     assert len(v) == 0
     assert len(v._store) == 0
-
-
-def tft(*, method="get", start=0):
-    f = tflow.tflow()
-    f.request.method = method
-    f.request.timestamp_start = start
-    return f
 
 
 def test_filter():
@@ -160,8 +165,8 @@ def test_reversed():
     tutils.raises(IndexError, v.__getitem__, 5)
     tutils.raises(IndexError, v.__getitem__, -5)
 
-    assert v.bisect(v[0]) == 1
-    assert v.bisect(v[2]) == 3
+    assert v._bisect(v[0]) == 1
+    assert v._bisect(v[2]) == 3
 
 
 def test_update():
@@ -255,6 +260,33 @@ def test_signals():
     assert not any([rec_add, rec_update, rec_remove, rec_refresh])
 
 
+def test_focus_follow():
+    v = view.View()
+    with taddons.context(options=Options()) as tctx:
+        tctx.configure(v, focus_follow=True, filter="~m get")
+
+        v.add(tft(start=5))
+        assert v.focus.index == 0
+
+        v.add(tft(start=4))
+        assert v.focus.index == 0
+        assert v.focus.flow.request.timestamp_start == 4
+
+        v.add(tft(start=7))
+        assert v.focus.index == 2
+        assert v.focus.flow.request.timestamp_start == 7
+
+        mod = tft(method="put", start=6)
+        v.add(mod)
+        assert v.focus.index == 2
+        assert v.focus.flow.request.timestamp_start == 7
+
+        mod.request.method = "GET"
+        v.update(mod)
+        assert v.focus.index == 2
+        assert v.focus.flow.request.timestamp_start == 6
+
+
 def test_focus():
     # Special case - initialising with a view that already contains data
     v = view.View()
@@ -273,6 +305,10 @@ def test_focus():
     assert f.index == 0
     assert f.flow is v[0]
 
+    # Try to set to something not in view
+    tutils.raises(ValueError, f.__setattr__, "flow", tft())
+    tutils.raises(ValueError, f.__setattr__, "index", 99)
+
     v.add(tft(start=0))
     assert f.index == 1
     assert f.flow is v[1]
@@ -280,6 +316,10 @@ def test_focus():
     v.add(tft(start=2))
     assert f.index == 1
     assert f.flow is v[1]
+
+    f.index = 0
+    assert f.index == 0
+    f.index = 1
 
     v.remove(v[1])
     assert f.index == 1
