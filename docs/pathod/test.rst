@@ -14,7 +14,7 @@ The canonical docs can be accessed using pydoc:
 >>> pydoc pathod.test
 
 The remainder of this page demonstrates some common interaction patterns using
-<a href="http://nose.readthedocs.org/en/latest/">nose</a>. These examples are
+`Nose`_. These examples are
 also applicable with only minor modification to most commonly used Python testing
 engines.
 
@@ -33,3 +33,6 @@ One instance per test
 .. literalinclude:: ../../examples/pathod/test_setup.py
    :caption: examples/pathod/test_setup.py
    :language: python
+
+
+.. _Nose: https://nose.readthedocs.org/en/latest/
