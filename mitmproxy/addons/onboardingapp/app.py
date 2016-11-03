@@ -6,7 +6,6 @@ import tornado.wsgi
 
 from mitmproxy.utils import data
 from mitmproxy.proxy import config
-from mitmproxy.addons import wsgiapp
 
 loader = tornado.template.Loader(data.pkg_data.path("addons/onboardingapp/templates"))
 
@@ -92,18 +91,3 @@ application = tornado.web.Application(
     ],
     # debug=True
 )
-
-
-class Onboarding(wsgiapp.WSGIApp):
-    def __init__(self):
-        super().__init__(Adapter(application), None, None)
-        self.enabled = False
-
-    def configure(self, options, updated):
-        self.host = options.app_host
-        self.port = options.app_port
-        self.enabled = options.app
-
-    def request(self, f):
-        if self.enabled:
-            super().request(f)
