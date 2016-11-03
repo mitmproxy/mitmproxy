@@ -1,7 +1,7 @@
 from mitmproxy.addons import anticache
 from mitmproxy.addons import anticomp
 from mitmproxy.addons import clientplayback
-from mitmproxy.addons import filestreamer
+from mitmproxy.addons import streamfile
 from mitmproxy.addons import onboarding
 from mitmproxy.addons import replace
 from mitmproxy.addons import script
@@ -20,7 +20,7 @@ def default_addons():
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
         script.ScriptLoader(),
-        filestreamer.FileStreamer(),
+        streamfile.StreamFile(),
         streambodies.StreamBodies(),
         replace.Replace(),
         setheaders.SetHeaders(),

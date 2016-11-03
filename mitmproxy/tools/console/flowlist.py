@@ -393,13 +393,13 @@ class FlowListBox(urwid.ListBox):
             val = not self.master.options.order_reversed
             self.master.options.order_reversed = val
         elif key == "W":
-            if self.master.options.outfile:
-                self.master.options.outfile = None
+            if self.master.options.streamfile:
+                self.master.options.streamfile = None
             else:
                 signals.status_prompt_path.send(
                     self,
                     prompt="Stream flows to",
-                    callback= lambda path: self.master.options.update(outfile=(path, "ab"))
+                    callback= lambda path: self.master.options.update(streamfile=path)
                 )
         else:
             return urwid.ListBox.keypress(self, size, key)

@@ -5,9 +5,10 @@ from mitmproxy import flowfilter
 from mitmproxy import io
 
 
-class FileStreamer:
+class StreamFile:
     def __init__(self):
         self.stream = None
+        self.filt = None
         self.active_flows = set()  # type: Set[flow.Flow]
 
     def start_stream_to_path(self, path, mode, flt):
@@ -15,29 +16,28 @@ class FileStreamer:
         try:
             f = open(path, mode)
         except IOError as v:
-            return str(v)
+            raise exceptions.OptionsError(str(v))
         self.stream = io.FilteredFlowWriter(f, flt)
         self.active_flows = set()
 
     def configure(self, options, updated):
         # We're already streaming - stop the previous stream and restart
-        if self.stream:
-            self.done()
-
-        if options.outfile:
-            flt = None
+        if "filtstr" in updated:
             if options.get("filtstr"):
-                flt = flowfilter.parse(options.filtstr)
-                if not flt:
+                self.filt = flowfilter.parse(options.filtstr)
+                if not self.filt:
                     raise exceptions.OptionsError(
                         "Invalid filter specification: %s" % options.filtstr
                     )
-            path, mode = options.outfile
-            if mode not in ("wb", "ab"):
-                raise exceptions.OptionsError("Invalid mode.")
-            err = self.start_stream_to_path(path, mode, flt)
-            if err:
-                raise exceptions.OptionsError(err)
+        if "streamfile" in updated:
+            if self.stream:
+                self.done()
+            if options.streamfile:
+                if options.streamfile_append:
+                    mode = "ab"
+                else:
+                    mode = "wb"
+                self.start_stream_to_path(options.streamfile, mode, self.filt)
 
     def tcp_start(self, flow):
         if self.stream:

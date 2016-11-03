@@ -111,15 +111,6 @@ class WebMaster(master.Master):
                     "error"
                 )
 
-        if options.outfile:
-            err = self.start_stream_to_path(
-                options.outfile[0],
-                options.outfile[1]
-            )
-            if err:
-                print("Stream file error: {}".format(err), file=sys.stderr)
-                sys.exit(1)
-
     def _sig_add(self, view, flow):
         app.ClientConnection.broadcast(
             type="UPDATE_FLOWS",

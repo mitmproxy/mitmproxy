@@ -36,3 +36,8 @@ def test_simple():
         f = tflow.tflow(resp=False)
         tctx.cycle(r, f)
         assert not f.intercepted
+
+        f = tflow.tflow(resp=True)
+        f.reply._state = "handled"
+        r.response(f)
+        assert f.intercepted
