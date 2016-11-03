@@ -51,13 +51,16 @@ class _OrderKey:
         return "_order_%s" % id(self)
 
     def __call__(self, f):
-        k = self._key()
-        s = self.view.settings[f]
-        if k in s:
-            return s[k]
-        val = self.generate(f)
-        s[k] = val
-        return val
+        if f.id in self.view._store:
+            k = self._key()
+            s = self.view.settings[f]
+            if k in s:
+                return s[k]
+            val = self.generate(f)
+            s[k] = val
+            return val
+        else:
+            return self.generate(f)
 
 
 class OrderRequestStart(_OrderKey):
@@ -159,11 +162,8 @@ class View(collections.Sequence):
 
     # Reflect some methods to the efficient underlying implementation
 
-    def bisect(self, f: mitmproxy.flow.Flow) -> int:
-        v = self._view.bisect(f)
-        # Bisect returns an item to the RIGHT of the existing entries.
-        if v == 0:
-            return v
+    def _bisect(self, f: mitmproxy.flow.Flow) -> int:
+        v = self._view.bisect_right(f)
         return self._rev(v - 1) + 1
 
     def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None) -> int:
@@ -349,7 +349,7 @@ class Focus:
         self.flow = self.view[idx]
 
     def _nearest(self, f, v):
-        return min(v.bisect(f), len(v) - 1)
+        return min(v._bisect(f), len(v) - 1)
 
     def _sig_remove(self, view, flow):
         if len(view) == 0:
