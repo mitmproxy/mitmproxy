@@ -139,11 +139,12 @@ contribute and collaborate. Please stick to the guidelines in
 good reason not to.
 
 This is automatically enforced on every PR. If we detect a linting error, the
-PR checks will fail and block merging. We are using this command to check for style compliance:
+PR checks will fail and block merging. You can run our lint checks yourself
+with the following command:
 
 .. code-block:: text
 
-    flake8 --jobs 8 --count mitmproxy pathod examples test
+    tox -e lint
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
