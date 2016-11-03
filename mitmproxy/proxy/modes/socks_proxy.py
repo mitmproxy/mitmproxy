@@ -56,5 +56,5 @@ class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
         try:
             layer()
         finally:
-            if self.server_conn:
+            if self.server_conn.connected():
                 self.disconnect()

@@ -8,7 +8,7 @@ class HttpProxy(protocol.Layer, protocol.ServerConnectionMixin):
         try:
             layer()
         finally:
-            if self.server_conn:
+            if self.server_conn.connected():
                 self.disconnect()
 
 
@@ -22,5 +22,5 @@ class HttpUpstreamProxy(protocol.Layer, protocol.ServerConnectionMixin):
         try:
             layer()
         finally:
-            if self.server_conn:
+            if self.server_conn.connected():
                 self.disconnect()

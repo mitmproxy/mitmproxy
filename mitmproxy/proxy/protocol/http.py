@@ -76,8 +76,8 @@ class ConnectServerConnection:
     def __getattr__(self, item):
         return getattr(self.via, item)
 
-    def __bool__(self):
-        return bool(self.via)
+    def connected(self):
+        return self.via.connected()
 
 
 class UpstreamConnectLayer(base.Layer):
@@ -101,7 +101,7 @@ class UpstreamConnectLayer(base.Layer):
             raise exceptions.ProtocolException("Reconnect: Upstream server refuses CONNECT request")
 
     def connect(self):
-        if not self.server_conn:
+        if not self.server_conn.connected():
             self.ctx.connect()
             self._send_connect_request()
         else:
@@ -112,7 +112,7 @@ class UpstreamConnectLayer(base.Layer):
             self.ctx.set_server(address)
 
     def set_server(self, address):
-        if self.ctx.server_conn:
+        if self.ctx.server_conn.connected():
             self.ctx.disconnect()
         address = tcp.Address.wrap(address)
         self.connect_request.host = address.host
@@ -378,10 +378,10 @@ class HttpLayer(base.Layer):
                 self.set_server(address)
                 self.set_server_tls(tls, address.host)
             # Establish connection is neccessary.
-            if not self.server_conn:
+            if not self.server_conn.connected():
                 self.connect()
         else:
-            if not self.server_conn:
+            if not self.server_conn.connected():
                 self.connect()
             if tls:
                 raise exceptions.HttpProtocolException("Cannot change scheme in upstream proxy mode.")

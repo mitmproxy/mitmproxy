@@ -101,7 +101,7 @@ class ServerConnectionMixin:
                 try:
                     # Do something.
                 finally:
-                    if self.server_conn:
+                    if self.server_conn.connected():
                         self.disconnect()
     """
 
@@ -139,7 +139,7 @@ class ServerConnectionMixin:
         """
         Sets a new server address. If there is an existing connection, it will be closed.
         """
-        if self.server_conn:
+        if self.server_conn.connected():
             self.disconnect()
         self.log("Set new server address: " + repr(address), "debug")
         self.server_conn.address = address
