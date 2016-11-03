@@ -364,7 +364,7 @@ class TlsLayer(base.Layer):
             )
         )
         establish_server_tls_now = (
-            (self.server_conn and self._server_tls) or
+            (self.server_conn.connected() and self._server_tls) or
             client_tls_requires_server_connection
         )
 
@@ -389,7 +389,7 @@ class TlsLayer(base.Layer):
             return "TlsLayer(inactive)"
 
     def connect(self):
-        if not self.server_conn:
+        if not self.server_conn.connected():
             self.ctx.connect()
         if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()

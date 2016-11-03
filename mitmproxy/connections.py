@@ -47,7 +47,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.cipher_name = None
         self.tls_version = None
 
-    def __bool__(self):
+    def connected(self):
         return bool(self.connection) and not self.finished
 
     def __repr__(self):
@@ -146,7 +146,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.protocol = None
 
-    def __bool__(self):
+    def connected(self):
         return bool(self.connection) and not self.finished
 
     def __repr__(self):

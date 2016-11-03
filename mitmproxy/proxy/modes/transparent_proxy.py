@@ -19,5 +19,5 @@ class TransparentProxy(protocol.Layer, protocol.ServerConnectionMixin):
         try:
             layer()
         finally:
-            if self.server_conn:
+            if self.server_conn.connected():
                 self.disconnect()

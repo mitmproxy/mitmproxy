@@ -98,7 +98,7 @@ class Dumper:
             self.echo("")
 
     def _echo_request_line(self, flow):
-        if flow.client_conn is not None:
+        if flow.client_conn:
             client = click.style(
                 strutils.escape_control_characters(
                     repr(flow.client_conn.address)
