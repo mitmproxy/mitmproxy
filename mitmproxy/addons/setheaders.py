@@ -14,13 +14,15 @@ class SetHeaders:
             header: Header name.
             value: Header value string
         """
-        for fpatt, header, value in options.setheaders:
-            flt = flowfilter.parse(fpatt)
-            if not flt:
-                raise exceptions.OptionsError(
-                    "Invalid setheader filter pattern %s" % fpatt
-                )
-            self.lst.append((fpatt, header, value, flt))
+        if "setheaders" in updated:
+            self.lst = []
+            for fpatt, header, value in options.setheaders:
+                flt = flowfilter.parse(fpatt)
+                if not flt:
+                    raise exceptions.OptionsError(
+                        "Invalid setheader filter pattern %s" % fpatt
+                    )
+                self.lst.append((fpatt, header, value, flt))
 
     def run(self, f, hdrs):
         for _, header, value, flt in self.lst:
