@@ -224,7 +224,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append("cripts:%s]" % len(self.master.options.scripts))
 
         if self.master.options.streamfile:
-            r.append("[W:%s]" % self.master.options.streamfile[0])
+            r.append("[W:%s]" % self.master.options.streamfile)
 
         return r
 

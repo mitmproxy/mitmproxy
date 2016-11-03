@@ -16,15 +16,11 @@ def test_configure():
             p = os.path.join(tdir, "foo")
             tutils.raises(
                 exceptions.OptionsError,
-                tctx.configure, sa, streamfile=(tdir, "ab")
+                tctx.configure, sa, streamfile=tdir
             )
             tutils.raises(
                 "invalid filter",
-                tctx.configure, sa, streamfile=(p, "ab"), filtstr="~~"
-            )
-            tutils.raises(
-                "invalid mode",
-                tctx.configure, sa, streamfile=(p, "xx")
+                tctx.configure, sa, streamfile=p, filtstr="~~"
             )
 
 
@@ -38,7 +34,7 @@ def test_tcp():
     with taddons.context() as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
-            tctx.configure(sa, streamfile=(p, "wb"))
+            tctx.configure(sa, streamfile=p)
 
             tt = tflow.ttcpflow()
             sa.tcp_start(tt)
@@ -53,7 +49,7 @@ def test_simple():
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
 
-            tctx.configure(sa, streamfile=(p, "wb"))
+            tctx.configure(sa, streamfile=p)
 
             f = tflow.tflow(resp=True)
             sa.request(f)
@@ -61,7 +57,7 @@ def test_simple():
             tctx.configure(sa, streamfile=None)
             assert rd(p)[0].response
 
-            tctx.configure(sa, streamfile=(p, "ab"))
+            tctx.configure(sa, streamfile=p, streamfile_append=True)
             f = tflow.tflow()
             sa.request(f)
             tctx.configure(sa, streamfile=None)

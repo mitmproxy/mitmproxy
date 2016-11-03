@@ -2,7 +2,6 @@ from mitmproxy.test import tflow
 import os
 import io
 
-import mitmproxy.io
 from mitmproxy.tools import dump
 from mitmproxy import exceptions
 from mitmproxy import proxy
@@ -125,33 +124,6 @@ class TestDumpMaster(mastertest.MasterTest):
         m = dump.DumpMaster(o, proxy.DummyServer())
         f = self.cycle(m, b"content")
         assert f.request.headers["one"] == "two"
-
-    def test_write(self):
-        with tutils.tmpdir() as d:
-            p = os.path.join(d, "a")
-            self.dummy_cycle(
-                self.mkmaster(None, outfile=(p, "wb"), verbosity=0), 1, b""
-            )
-            assert len(list(mitmproxy.io.FlowReader(open(p, "rb")).stream())) == 1
-
-    def test_write_append(self):
-        with tutils.tmpdir() as d:
-            p = os.path.join(d, "a.append")
-            self.dummy_cycle(
-                self.mkmaster(None, outfile=(p, "wb"), verbosity=0),
-                1, b""
-            )
-            self.dummy_cycle(
-                self.mkmaster(None, outfile=(p, "ab"), verbosity=0),
-                1, b""
-            )
-            assert len(list(mitmproxy.io.FlowReader(open(p, "rb")).stream())) == 2
-
-    def test_write_err(self):
-        tutils.raises(
-            exceptions.OptionsError,
-            self.mkmaster, None, outfile = ("nonexistentdir/foo", "wb")
-        )
 
     def test_script(self):
         ret = self.dummy_cycle(

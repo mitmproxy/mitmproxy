@@ -48,7 +48,8 @@ class Options(optmanager.OptManager):
             stream_large_bodies: Optional[int] = None,
             verbosity: int = 2,
             default_contentview: str = "auto",
-            streamfile: Optional[Tuple[str, str]] = None,
+            streamfile: Optional[str] = None,
+            streamfile_append: bool = False,
             server_replay_ignore_content: bool = False,
             server_replay_ignore_params: Sequence[str] = (),
             server_replay_ignore_payload_params: Sequence[str] = (),
@@ -109,6 +110,7 @@ class Options(optmanager.OptManager):
         self.verbosity = verbosity
         self.default_contentview = default_contentview
         self.streamfile = streamfile
+        self.streamfile_append = streamfile_append
         self.server_replay_ignore_content = server_replay_ignore_content
         self.server_replay_ignore_params = server_replay_ignore_params
         self.server_replay_ignore_payload_params = server_replay_ignore_payload_params

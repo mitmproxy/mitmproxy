@@ -228,7 +228,8 @@ def get_common_options(args):
         stickyauth=stickyauth,
         stream_large_bodies=stream_large_bodies,
         showhost=args.showhost,
-        streamfile=args.streamfile,
+        streamfile=args.streamfile[0] if args.streamfile else None,
+        streamfile_append=True if args.streamfile and args.streamfile[1] == "a" else False,
         verbosity=args.verbose,
         server_replay_nopop=args.server_replay_nopop,
         server_replay_ignore_content=args.server_replay_ignore_content,
@@ -342,12 +343,12 @@ def basic_options(parser):
     streamfile = parser.add_mutually_exclusive_group()
     streamfile.add_argument(
         "-w", "--wfile",
-        action="store", dest="streamfile", type=lambda f: (f, "wb"),
+        action="store", dest="streamfile", type=lambda f: (f, "w"),
         help="Write flows to file."
     )
     streamfile.add_argument(
         "-a", "--afile",
-        action="store", dest="streamfile", type=lambda f: (f, "ab"),
+        action="store", dest="streamfile", type=lambda f: (f, "a"),
         help="Append flows to file."
     )
     parser.add_argument(

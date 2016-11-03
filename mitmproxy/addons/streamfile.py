@@ -33,10 +33,11 @@ class StreamFile:
             if self.stream:
                 self.done()
             if options.streamfile:
-                path, mode = options.streamfile
-                if mode not in ("wb", "ab"):
-                    raise exceptions.OptionsError("Invalid mode.")
-                self.start_stream_to_path(path, mode, self.filt)
+                if options.streamfile_append:
+                    mode = "ab"
+                else:
+                    mode = "wb"
+                self.start_stream_to_path(options.streamfile, mode, self.filt)
 
     def tcp_start(self, flow):
         if self.stream:

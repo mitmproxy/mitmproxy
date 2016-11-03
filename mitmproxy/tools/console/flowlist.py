@@ -399,7 +399,7 @@ class FlowListBox(urwid.ListBox):
                 signals.status_prompt_path.send(
                     self,
                     prompt="Stream flows to",
-                    callback= lambda path: self.master.options.update(streamfile=(path, "ab"))
+                    callback= lambda path: self.master.options.update(streamfile=path)
                 )
         else:
             return urwid.ListBox.keypress(self, size, key)
