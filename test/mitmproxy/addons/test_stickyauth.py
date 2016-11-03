@@ -1,25 +1,27 @@
 from mitmproxy.test import tflow
+from mitmproxy.test import taddons
+from mitmproxy.test import tutils
 
-from .. import mastertest
 from mitmproxy.addons import stickyauth
-from mitmproxy import master
-from mitmproxy import options
-from mitmproxy import proxy
+from mitmproxy import exceptions
 
 
-class TestStickyAuth(mastertest.MasterTest):
-    def test_simple(self):
-        o = options.Options(stickyauth = ".*")
-        m = master.Master(o, proxy.DummyServer())
-        sa = stickyauth.StickyAuth()
-        m.addons.add(sa)
+def test_configure():
+    r = stickyauth.StickyAuth()
+    with taddons.context() as tctx:
+        tctx.configure(r, stickyauth="~s")
+        tutils.raises(exceptions.OptionsError, tctx.configure, r, stickyauth="~~")
 
+
+def test_simple():
+    r = stickyauth.StickyAuth()
+    with taddons.context():
         f = tflow.tflow(resp=True)
         f.request.headers["authorization"] = "foo"
-        m.request(f)
+        r.request(f)
 
-        assert "address" in sa.hosts
+        assert "address" in r.hosts
 
         f = tflow.tflow(resp=True)
-        m.request(f)
+        r.request(f)
         assert f.request.headers["authorization"] == "foo"
