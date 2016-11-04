@@ -547,7 +547,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.server_conn.h2.safe_send_body(
                 self.raise_zombie,
                 self.server_stream_id,
-                [message.body]
+                [message.content]
             )
 
     @detect_zombie_stream

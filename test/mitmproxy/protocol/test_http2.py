@@ -273,7 +273,7 @@ class TestSimple(_Http2Test):
         assert self.master.state.flows[0].response.status_code == 200
         assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
         assert self.master.state.flows[0].response.headers['föo'] == 'bär'
-        assert self.master.state.flows[0].response.body == b'response body'
+        assert self.master.state.flows[0].response.content == b'response body'
         assert self.request_body_buffer == b'request body'
         assert response_body_buffer == b'response body'
 
@@ -731,7 +731,7 @@ class TestPushPromise(_Http2Test):
         assert ended_streams == 3
         assert pushed_streams == 2
 
-        bodies = [flow.response.body for flow in self.master.state.flows]
+        bodies = [flow.response.content for flow in self.master.state.flows]
         assert len(bodies) == 3
         assert b'regular_stream' in bodies
         assert b'pushed_stream_foo' in bodies
@@ -783,7 +783,7 @@ class TestPushPromise(_Http2Test):
         client.wfile.write(h2_conn.data_to_send())
         client.wfile.flush()
 
-        bodies = [flow.response.body for flow in self.master.state.flows if flow.response]
+        bodies = [flow.response.content for flow in self.master.state.flows if flow.response]
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
@@ -889,7 +889,7 @@ class TestMaxConcurrentStreams(_Http2Test):
         assert len(self.master.state.flows) == len(new_streams)
         for flow in self.master.state.flows:
             assert flow.response.status_code == 200
-            assert b"Stream-ID " in flow.response.body
+            assert b"Stream-ID " in flow.response.content
 
 
 @requires_alpn
