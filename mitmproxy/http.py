@@ -31,8 +31,6 @@ class HTTPRequest(http.Request):
             timestamp_start=None,
             timestamp_end=None,
             is_replay=False,
-            stickycookie=False,
-            stickyauth=False,
     ):
         http.Request.__init__(
             self,
@@ -48,11 +46,6 @@ class HTTPRequest(http.Request):
             timestamp_start,
             timestamp_end,
         )
-
-        # Have this request's cookies been modified by sticky cookies or auth?
-        self.stickycookie = stickycookie
-        self.stickyauth = stickyauth
-
         # Is this request replayed?
         self.is_replay = is_replay
         self.stream = None
@@ -60,15 +53,11 @@ class HTTPRequest(http.Request):
     def get_state(self):
         state = super().get_state()
         state.update(
-            stickycookie=self.stickycookie,
-            stickyauth=self.stickyauth,
             is_replay=self.is_replay,
         )
         return state
 
     def set_state(self, state):
-        self.stickycookie = state.pop("stickycookie")
-        self.stickyauth = state.pop("stickyauth")
         self.is_replay = state.pop("is_replay")
         super().set_state(state)
 
