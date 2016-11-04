@@ -160,27 +160,24 @@ class HttpLayer(base.Layer):
 
     def _process_flow(self, f):
         try:
-            request = self.read_request_headers(f)
+            try:
+                request = self.read_request_headers(f)
+            except exceptions.HttpReadDisconnect:
+                # don't throw an error for disconnects that happen before/between requests.
+                return False
+
             f.request = request
             self.channel.ask("requestheaders", f)
 
-            request.data.content = b"".join(self.read_request_body(request))
-            request.timestamp_end = time.time()
             if request.headers.get("expect", "").lower() == "100-continue":
                 # TODO: We may have to use send_response_headers for HTTP2 here.
                 self.send_response(http.expect_continue_response)
                 request.headers.pop("expect")
-                request.content = b"".join(self.read_request_body(request))
-                request.timestamp_end = time.time()
+
+            request.data.content = b"".join(self.read_request_body(request))
+            request.timestamp_end = time.time()
 
             validate_request_form(self.mode, request)
-
-            if self.mode == "regular" and request.first_line_format == "absolute":
-                request.first_line_format = "relative"
-
-        except exceptions.HttpReadDisconnect:
-            # don't throw an error for disconnects that happen before/between requests.
-            return False
         except exceptions.HttpException as e:
             # We optimistically guess there might be an HTTP client on the
             # other end
