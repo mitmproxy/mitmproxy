@@ -42,7 +42,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_start = time.time()
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
-        self.protocol = None
         self.sni = None
         self.cipher_name = None
         self.tls_version = None
@@ -144,7 +143,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
         self.timestamp_ssl_setup = None
-        self.protocol = None
 
     def connected(self):
         return bool(self.connection) and not self.finished
