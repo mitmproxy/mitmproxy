@@ -112,12 +112,34 @@ class UpstreamConnectLayer(base.Layer):
         self.server_conn.address = address
 
 
+FIRSTLINES = set(["absolute", "relative", "authority"])
+# At this point, we see only a subset of the proxy modes
+MODES = set(["regular", "transparent", "upstream"])
+MODE_REQUEST_FORMS = {
+    "regular": ("authority", "absolute"),
+    "transparent": ("relative"),
+    "upstream": ("authority", "absolute"),
+}
+
+
+def validate_request_form(mode, request):
+    if request.first_line_format == "absolute" and request.scheme != "http":
+        raise exceptions.HttpException("Invalid request scheme: %s" % request.scheme)
+    allowed_request_forms = MODE_REQUEST_FORMS[mode]
+    if request.first_line_format not in allowed_request_forms:
+        err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
+            " or ".join(allowed_request_forms), request.first_line_format
+        )
+        raise exceptions.HttpException(err_message)
+
+
 class HttpLayer(base.Layer):
 
     def __init__(self, ctx, mode):
         super().__init__(ctx)
+        if mode not in MODES:
+            raise exceptions.ServerException("Invalid mode: %s"%mode)
         self.mode = mode
-        self.flow = None  # type: http.HTTPFlow
         self.__initial_server_conn = None
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
@@ -125,23 +147,21 @@ class HttpLayer(base.Layer):
         # see https://github.com/mitmproxy/mitmproxy/issues/925
         self.__initial_server_tls = None
         # Requests happening after CONNECT do not need Proxy-Authorization headers.
-        self.http_authenticated = False
+        self.connect_request = False
 
     def __call__(self):
         if self.mode == "transparent":
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
-            self.flow = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
-            if not self._process_flow(self.flow):
+            flow = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
+            if not self._process_flow(flow):
                 return
 
     def _process_flow(self, f):
         try:
             request = self.read_request_headers(f)
-            request.data.content = b"".join(
-                self.read_request_body(request)
-            )
+            request.data.content = b"".join(self.read_request_body(request))
             request.timestamp_end = time.time()
             f.request = request
             self.channel.ask("requestheaders", f)
@@ -152,25 +172,11 @@ class HttpLayer(base.Layer):
                 request.content = b"".join(self.read_request_body(request))
                 request.timestamp_end = time.time()
 
-            # Make sure that the incoming request matches our expectations
-            if request.first_line_format == "absolute" and request.scheme != "http":
-                raise exceptions.HttpException("Invalid request scheme: %s" % request.scheme)
-
-            expected_request_forms = {
-                "regular": ("authority", "absolute",),
-                "upstream": ("authority", "absolute"),
-                "transparent": ("relative",)
-            }
-
-            allowed_request_forms = expected_request_forms[self.mode]
-            if request.first_line_format not in allowed_request_forms:
-                err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
-                    " or ".join(allowed_request_forms), request.first_line_format
-                )
-                raise exceptions.HttpException(err_message)
+            validate_request_form(self.mode, request)
 
             if self.mode == "regular" and request.first_line_format == "absolute":
                 request.first_line_format = "relative"
+
         except exceptions.HttpReadDisconnect:
             # don't throw an error for disconnects that happen before/between requests.
             return False
@@ -188,7 +194,7 @@ class HttpLayer(base.Layer):
         # Proxy Authentication conceptually does not work in transparent mode.
         # We catch this misconfiguration on startup. Here, we sort out requests
         # after a successful CONNECT request (which do not need to be validated anymore)
-        if not (self.http_authenticated or self.authenticate(request)):
+        if not self.connect_request and not self.authenticate(request):
             return False
 
         f.request = request
@@ -196,7 +202,7 @@ class HttpLayer(base.Layer):
         try:
             # Regular Proxy Mode: Handle CONNECT
             if self.mode == "regular" and request.first_line_format == "authority":
-                self.http_authenticated = True
+                self.connect_request = True
                 self.set_server((request.host, request.port))
                 self.send_response(http.make_connect_response(request.data.http_version))
                 layer = self.ctx.next_layer(self)
@@ -275,7 +281,9 @@ class HttpLayer(base.Layer):
 
                     if isinstance(e, exceptions.Http2ProtocolException):
                         # do not try to reconnect for HTTP2
-                        raise exceptions.ProtocolException("First and only attempt to get response via HTTP2 failed.")
+                        raise exceptions.ProtocolException(
+                            "First and only attempt to get response via HTTP2 failed."
+                        )
 
                     self.disconnect()
                     self.connect()
@@ -334,13 +342,12 @@ class HttpLayer(base.Layer):
                 """
                 # Check for WebSockets handshake
                 is_websockets = (
-                    f and
                     websockets.check_handshake(f.request.headers) and
                     websockets.check_handshake(f.response.headers)
                 )
                 if is_websockets and not self.config.options.websockets:
                     self.log(
-                        "Client requested WebSocket connection, but the protocol is currently disabled in mitmproxy.",
+                        "Client requested WebSocket connection, but the protocol is disabled.",
                         "info"
                     )
 
