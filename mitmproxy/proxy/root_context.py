@@ -90,16 +90,7 @@ class RootContext:
             if alpn == b'http/1.1':
                 return protocol.Http1Layer(top_layer, 'transparent')
 
-        # 6. Check for raw tcp mode
-        is_ascii = (
-            len(d) == 3 and
-            # expect A-Za-z
-            all(65 <= x <= 90 or 97 <= x <= 122 for x in d)
-        )
-        if self.config.options.rawtcp and not is_ascii:
-            return protocol.RawTCPLayer(top_layer)
-
-        # 7. Assume HTTP1 by default
+        # 6. Assume HTTP1 by default
         return protocol.Http1Layer(top_layer, 'transparent')
 
     def log(self, msg, level, subs=()):

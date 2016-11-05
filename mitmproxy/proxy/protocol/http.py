@@ -138,7 +138,7 @@ class HttpLayer(base.Layer):
     def __init__(self, ctx, mode):
         super().__init__(ctx)
         if mode not in MODES:
-            raise exceptions.ServerException("Invalid mode: %s"%mode)
+            raise exceptions.ServerException("Invalid mode: %s" % mode)
         self.mode = mode
         self.__initial_server_conn = None
         "Contains the original destination in transparent mode, which needs to be restored"
