@@ -737,6 +737,9 @@ class TestPushPromise(_Http2Test):
         assert b'pushed_stream_foo' in bodies
         assert b'pushed_stream_bar' in bodies
 
+        pushed_flows = [flow for flow in self.master.state.flows if 'h2-pushed-stream' in flow.metadata]
+        assert len(pushed_flows) == 2
+
     def test_push_promise_reset(self):
         client, h2_conn = self._setup_connection()
 
@@ -787,6 +790,9 @@ class TestPushPromise(_Http2Test):
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
+
+        pushed_flows = [flow for flow in self.master.state.flows if 'h2-pushed-stream' in flow.metadata]
+        assert len(pushed_flows) == 2
 
 
 @requires_alpn
