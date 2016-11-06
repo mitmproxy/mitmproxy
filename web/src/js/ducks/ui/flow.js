@@ -10,9 +10,8 @@ export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              UPDATE_EDIT                    = 'UI_FLOWVIEW_UPDATE_EDIT',
              UPLOAD_CONTENT                 = 'UI_FLOWVIEW_UPLOAD_CONTENT',
              SET_SHOW_FULL_CONTENT          = 'UI_SET_SHOW_FULL_CONTENT',
-             SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION",
-             SET_CONTENT                    = "UI_SET_CONTENT"
-
+             SET_CONTENT_VIEW_DESCRIPTION   = 'UI_SET_CONTENT_VIEW_DESCRIPTION',
+             SET_CONTENT                    = 'UI_SET_CONTENT'
 
 const defaultState = {
     displayLarge: false,
@@ -26,10 +25,8 @@ const defaultState = {
 }
 
 export default function reducer(state = defaultState, action) {
-    let wasInEditMode = !!(state.modifiedFlow)
-
-    let content = action.content || state.content
-    let isFullContentShown = content && content.length <= state.maxContentLines
+    const content = action.content || state.content
+    const isFullContentShown = content && content.length <= state.maxContentLines
 
     switch (action.type) {
 
@@ -52,7 +49,7 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 modifiedFlow: false,
                 displayLarge: false,
-                contentView: (wasInEditMode ? 'Auto' : state.contentView),
+                contentView: (state.modifiedFlow ? 'Auto' : state.contentView),
                 showFullContent: isFullContentShown,
             }
 
@@ -65,7 +62,7 @@ export default function reducer(state = defaultState, action) {
                     ...state,
                     modifiedFlow: false,
                     displayLarge: false,
-                    contentView: (wasInEditMode ? 'Auto' : state.contentView),
+                    contentView: (state.modifiedFlow ? 'Auto' : state.contentView),
                     showFullContent: false
                 }
             } else {
@@ -111,6 +108,7 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 displayLarge: true,
             }
+
         default:
             return state
     }

@@ -89,7 +89,7 @@ class FlowTable extends React.Component {
 
     render() {
         const { vScroll, viewportTop } = this.state
-        const { flows, selected, highlight } = this.props
+        const { flows, selectedFlowIds, highlight } = this.props
         const isHighlighted = highlight ? Filt.parse(highlight) : () => false
 
         return (
@@ -104,7 +104,7 @@ class FlowTable extends React.Component {
                             <FlowRow
                                 key={flow.id}
                                 flow={flow}
-                                selected={flow === selected}
+                                selected={selectedFlowIds.some(id => flow.id === id)}
                                 highlighted={isHighlighted(flow)}
                                 onSelect={this.props.onSelect}
                             />

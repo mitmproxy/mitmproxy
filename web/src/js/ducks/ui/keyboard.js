@@ -3,21 +3,20 @@ import { selectRelative as selectFlowRelative } from '../flowView'
 import { selectTab } from './flow'
 import * as flowsActions from '../flows'
 
-
 export function onKeyDown(e) {
-    console.debug("onKeyDown", e)
-    if (e.ctrlKey) {
-        return () => {
-        }
-    }
-    var key = e.keyCode
-    var shiftKey = e.shiftKey
     e.preventDefault()
+
+    if (e.ctrlKey) {
+        return () => {}
+    }
+
+    const shiftKey = e.shiftKey
+
     return (dispatch, getState) => {
 
         const flow = getState().flows.byId[getState().flows.selected[0]]
 
-        switch (key) {
+        switch (e.keyCode) {
             case Key.K:
             case Key.UP:
                 dispatch(selectFlowRelative(-1))
