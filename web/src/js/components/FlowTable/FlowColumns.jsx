@@ -14,9 +14,7 @@ TLSColumn.headerName = ''
 
 export function IconColumn({ flow }) {
     return (
-        <td className="col-icon">
-            <div className={classnames('resource-icon', IconColumn.getIcon(flow))}></div>
-        </td>
+        <td className={classnames('col-icon resource-icon', IconColumn.getIcon(flow))}></td>
     )
 }
 
@@ -72,7 +70,9 @@ PathColumn.headerName = 'Path'
 
 export function MethodColumn({ flow }) {
     return (
-        <td className="col-method">{flow.request.method}</td>
+        <td className="col-method">
+            {flow.request.method}
+        </td>
     )
 }
 
@@ -81,7 +81,9 @@ MethodColumn.headerName = 'Method'
 
 export function StatusColumn({ flow }) {
     return (
-        <td className="col-status">{flow.response && flow.response.status_code}</td>
+        <td className="col-status">
+            {flow.response && flow.response.status_code}
+        </td>
     )
 }
 
@@ -90,7 +92,9 @@ StatusColumn.headerName = 'Status'
 
 export function SizeColumn({ flow }) {
     return (
-        <td className="col-size">{formatSize(SizeColumn.getTotalSize(flow))}</td>
+        <td className="col-size">
+            {formatSize(SizeColumn.getTotalSize(flow))}
+        </td>
     )
 }
 

@@ -1,11 +1,12 @@
 import React, { PropTypes } from 'react'
 import ReactDOM from 'react-dom'
 import shallowEqual from 'shallowequal'
+import { ContextMenuLayer } from 'react-contextmenu'
 import AutoScroll from './helpers/AutoScroll'
 import { calcVScroll } from './helpers/VirtualScroll'
 import FlowTableHead from './FlowTable/FlowTableHead'
 import FlowRow from './FlowTable/FlowRow'
-import Filt from "../filt/filt"
+import Filt from '../filt/filt'
 
 class FlowTable extends React.Component {
 
@@ -93,7 +94,7 @@ class FlowTable extends React.Component {
         const isHighlighted = highlight ? Filt.parse(highlight) : () => false
 
         return (
-            <div className="flow-table" onScroll={this.onViewportUpdate}>
+            <div className="flow-table-content" onScroll={this.onViewportUpdate}>
                 <table>
                     <thead ref="head" style={{ transform: `translateY(${viewportTop}px)` }}>
                         <FlowTableHead />
@@ -106,7 +107,8 @@ class FlowTable extends React.Component {
                                 flow={flow}
                                 selected={flow === selected}
                                 highlighted={isHighlighted(flow)}
-                                onSelect={this.props.onSelect}
+                                onSelect={() => this.props.onSelect(flow.id)}
+                                onContextMenu={() => this.props.onSelect(flow.id)}
                             />
                         ))}
                         <tr style={{ height: vScroll.paddingBottom }}></tr>
@@ -117,4 +119,4 @@ class FlowTable extends React.Component {
     }
 }
 
-export default AutoScroll(FlowTable)
+export default ContextMenuLayer('flow-table-context-menu')(AutoScroll(FlowTable))

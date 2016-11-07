@@ -1,0 +1,26 @@
+.react-context-menu {
+    outline: none;
+    background: white;
+    border: 1px solid #a0a0a0;
+    min-width: 120px;
+
+    .react-context-menu-link {
+        padding: 5px 8px;
+        border-bottom: 1px solid lightgray;
+        display: inline-block;
+        width: 100%;
+
+        &.disabled {
+            color: #bbb;
+            cursor: default;
+        }
+
+        &:hover {
+            text-decoration: none;
+
+            &:not(.disabled) {
+                background: #efefef;
+            }
+        }
+    }
+}
