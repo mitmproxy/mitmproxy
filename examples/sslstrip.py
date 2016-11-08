@@ -16,6 +16,7 @@ def request(flow):
     if flow.request.pretty_host in secure_hosts:
         flow.request.scheme = 'https'
         flow.request.port = 443
+        flow.request.host = flow.request.pretty_host
 
 
 def response(flow):
