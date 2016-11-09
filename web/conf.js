@@ -1,8 +1,8 @@
 
 var conf = {
     src: "src/",
-    dist: "../mitmproxy/web",
-    static: "../mitmproxy/web/static",
+    dist: "../mitmproxy/tools/web",
+    static: "../mitmproxy/tools/web/static",
     js: {
         // Don't package these in the vendor distribution
         vendor_excludes: [

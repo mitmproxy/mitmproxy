@@ -1,19 +1,18 @@
 import base64
+import hashlib
 import json
 import logging
 import os.path
 import re
-import hashlib
-
-
-import tornado.websocket
-import tornado.web
 from io import BytesIO
 
-from mitmproxy import flowfilter
-from mitmproxy import flow
-from mitmproxy import http
+import tornado.web
+import tornado.websocket
+import tornado.escape
 from mitmproxy import contentviews
+from mitmproxy import flow
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import version
 
@@ -95,6 +94,14 @@ class BasicAuth:
 
 
 class RequestHandler(BasicAuth, tornado.web.RequestHandler):
+
+    def write(self, chunk):
+        # Writing arrays on the top level is ok nowadays.
+        # http://flask.pocoo.org/docs/0.11/security/#json-security
+        if isinstance(chunk, list):
+            chunk = tornado.escape.json_encode(chunk)
+            self.set_header("Content-Type", "application/json; charset=UTF-8")
+        super(RequestHandler, self).write(chunk)
 
     def set_default_headers(self):
         super().set_default_headers()
@@ -184,9 +191,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 class Flows(RequestHandler):
 
     def get(self):
-        self.write(dict(
-            data=[convert_flow_to_json_dict(f) for f in self.view]
-        ))
+        self.write([convert_flow_to_json_dict(f) for f in self.view])
 
 
 class DumpFlows(RequestHandler):
@@ -248,7 +253,9 @@ class FlowHandler(RequestHandler):
                     elif k == "port":
                         request.port = int(v)
                     elif k == "headers":
-                        request.headers.set_state(v)
+                        request.headers.clear()
+                        for header in v:
+                            request.headers.add(*header)
                     elif k == "content":
                         request.text = v
                     else:
@@ -264,7 +271,9 @@ class FlowHandler(RequestHandler):
                     elif k == "http_version":
                         response.http_version = str(v)
                     elif k == "headers":
-                        response.headers.set_state(v)
+                        response.headers.clear()
+                        for header in v:
+                            response.headers.add(*header)
                     elif k == "content":
                         response.text = v
                     else:
@@ -341,7 +350,7 @@ class FlowContentView(RequestHandler):
         message = getattr(self.flow, message)
 
         description, lines, error = contentviews.get_message_content_view(
-            contentviews.get(content_view.replace('_', ' ')).name, message
+            content_view.replace('_', ' '), message
         )
 #        if error:
 #           add event log
@@ -355,31 +364,26 @@ class FlowContentView(RequestHandler):
 class Events(RequestHandler):
 
     def get(self):
-        self.write(dict(
-            data=list([])
-        ))
+        self.write([])  # FIXME
 
 
 class Settings(RequestHandler):
 
     def get(self):
-
         self.write(dict(
-            data=dict(
-                version=version.VERSION,
-                mode=str(self.master.options.mode),
-                intercept=self.master.options.intercept,
-                showhost=self.master.options.showhost,
-                no_upstream_cert=self.master.options.no_upstream_cert,
-                rawtcp=self.master.options.rawtcp,
-                http2=self.master.options.http2,
-                anticache=self.master.options.anticache,
-                anticomp=self.master.options.anticomp,
-                stickyauth=self.master.options.stickyauth,
-                stickycookie=self.master.options.stickycookie,
-                stream= self.master.options.stream_large_bodies,
-                contentViews= [v.name.replace(' ', '_') for v in contentviews.views]
-            )
+            version=version.VERSION,
+            mode=str(self.master.options.mode),
+            intercept=self.master.options.intercept,
+            showhost=self.master.options.showhost,
+            no_upstream_cert=self.master.options.no_upstream_cert,
+            rawtcp=self.master.options.rawtcp,
+            http2=self.master.options.http2,
+            anticache=self.master.options.anticache,
+            anticomp=self.master.options.anticomp,
+            stickyauth=self.master.options.stickyauth,
+            stickycookie=self.master.options.stickycookie,
+            stream=self.master.options.stream_large_bodies,
+            contentViews=[v.name.replace(' ', '_') for v in contentviews.views]
         ))
 
     def put(self):
@@ -419,7 +423,7 @@ class Settings(RequestHandler):
                 print("Warning: Unknown setting {}: {}".format(k, v))
 
         ClientConnection.broadcast(
-            type="UPDATE_SETTINGS",
+            resource="settings",
             cmd="update",
             data=update
         )

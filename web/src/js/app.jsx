@@ -7,6 +7,9 @@ import thunk from 'redux-thunk'
 import ProxyApp from './components/ProxyApp'
 import rootReducer from './ducks/index'
 import { add as addLog } from './ducks/eventLog'
+import useUrlState from './urlState'
+import WebSocketBackend from './backends/websocket'
+
 
 const middlewares = [thunk];
 
@@ -21,12 +24,13 @@ const store = createStore(
     applyMiddleware(...middlewares)
 )
 
-// @todo move to ProxyApp
+useUrlState(store)
+window.backend = new WebSocketBackend(store)
+
 window.addEventListener('error', msg => {
     store.dispatch(addLog(msg))
 })
 
-// @todo remove this
 document.addEventListener('DOMContentLoaded', () => {
     render(
         <Provider store={store}>

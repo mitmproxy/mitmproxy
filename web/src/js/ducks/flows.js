@@ -1,53 +1,58 @@
-import { fetchApi } from '../utils'
-import reduceList, * as listActions from './utils/list'
-import { selectRelative } from './flowView'
+import { fetchApi } from "../utils"
+import reduceStore, * as storeActions from "./utils/store"
+import Filt from "../filt/filt"
+import { RequestUtils } from "../flow/utils"
 
-import * as msgQueueActions from './msgQueue'
-import * as websocketActions from './websocket'
-
-export const MSG_TYPE = 'UPDATE_FLOWS'
-export const DATA_URL = '/flows'
-
-export const ADD = 'FLOWS_ADD'
-export const UPDATE = 'FLOWS_UPDATE'
-export const REMOVE = 'FLOWS_REMOVE'
-export const RECEIVE = 'FLOWS_RECEIVE'
+export const ADD            = 'FLOWS_ADD'
+export const UPDATE         = 'FLOWS_UPDATE'
+export const REMOVE         = 'FLOWS_REMOVE'
+export const RECEIVE        = 'FLOWS_RECEIVE'
+export const SELECT         = 'FLOWS_SELECT'
+export const SET_FILTER     = 'FLOWS_SET_FILTER'
+export const SET_SORT       = 'FLOWS_SET_SORT'
+export const SET_HIGHLIGHT  = 'FLOWS_SET_HIGHLIGHT'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
-export const UNKNOWN_CMD = 'FLOWS_UNKNOWN_CMD'
-export const FETCH_ERROR = 'FLOWS_FETCH_ERROR'
-export const SELECT = 'FLOWS_SELECT'
 
 
 const defaultState = {
+    highlight: null,
+    filter: null,
+    sort: { column: null, desc: false },
     selected: [],
-    ...reduceList(undefined, {}),
+    ...reduceStore(undefined, {})
 }
 
 export default function reduce(state = defaultState, action) {
     switch (action.type) {
 
         case ADD:
-            return {
-                ...state,
-                ...reduceList(state, listActions.add(action.item)),
-            }
-
         case UPDATE:
-            return {
-                ...state,
-                ...reduceList(state, listActions.update(action.item)),
-            }
-
         case REMOVE:
+        case RECEIVE:
+            // FIXME: Update state.selected on REMOVE:
+            // The selected flow may have been removed, we need to select the next one in the view.
+            let storeAction = storeActions[action.cmd](
+                action.data,
+                makeFilter(state.filter),
+                makeSort(state.sort)
+            )
             return {
                 ...state,
-                ...reduceList(state, listActions.remove(action.id)),
+                ...reduceStore(state, storeAction)
             }
 
-        case RECEIVE:
+        case SET_FILTER:
             return {
                 ...state,
-                ...reduceList(state, listActions.receive(action.list)),
+                filter: action.filter,
+                ...reduceStore(state, storeActions.setFilter(makeFilter(action.filter), makeSort(state.sort)))
+            }
+
+        case SET_SORT:
+            return {
+                ...state,
+                sort: action.sort,
+                ...reduceStore(state, storeActions.setSort(makeSort(action.sort)))
             }
 
         case SELECT:
@@ -57,88 +62,133 @@ export default function reduce(state = defaultState, action) {
             }
 
         default:
-            return {
-                ...state,
-                ...reduceList(state, action),
-            }
+            return state
     }
 }
 
-/**
- * @public
- */
+
+const sortKeyFuns = {
+
+    TLSColumn: flow => flow.request.scheme,
+
+    PathColumn: flow => RequestUtils.pretty_url(flow.request),
+
+    MethodColumn: flow => flow.request.method,
+
+    StatusColumn: flow => flow.response && flow.response.status_code,
+
+    TimeColumn: flow => flow.response && flow.response.timestamp_end - flow.request.timestamp_start,
+
+    SizeColumn: flow => {
+        let total = flow.request.contentLength
+        if (flow.response) {
+            total += flow.response.contentLength || 0
+        }
+        return total
+    },
+}
+
+export function makeFilter(filter) {
+    if (!filter) {
+        return
+    }
+    return Filt.parse(filter)
+}
+
+export function makeSort({ column, desc }) {
+    const sortKeyFun = sortKeyFuns[column]
+    if (!sortKeyFun) {
+        return
+    }
+    return (a, b) => {
+        const ka = sortKeyFun(a)
+        const kb = sortKeyFun(b)
+        if (ka > kb) {
+            return desc ? -1 : 1
+        }
+        if (ka < kb) {
+            return desc ? 1 : -1
+        }
+        return 0
+    }
+}
+
+export function setFilter(filter) {
+    return { type: SET_FILTER, filter }
+}
+
+export function setHighlight(highlight) {
+    return { type: SET_HIGHLIGHT, highlight }
+}
+
+export function setSort(column, desc) {
+    return { type: SET_SORT, sort: { column, desc } }
+}
+
+export function selectRelative(shift) {
+    return (dispatch, getState) => {
+        let currentSelectionIndex = getState().flows.viewIndex[getState().flows.selected[0]]
+        let minIndex              = 0
+        let maxIndex              = getState().flows.view.length - 1
+        let newIndex
+        if (currentSelectionIndex === undefined) {
+            newIndex = (shift < 0) ? minIndex : maxIndex
+        } else {
+            newIndex = currentSelectionIndex + shift
+            newIndex = window.Math.max(newIndex, minIndex)
+            newIndex = window.Math.min(newIndex, maxIndex)
+        }
+        let flow = getState().flows.view[newIndex]
+        dispatch(select(flow ? flow.id : undefined))
+    }
+}
+
+
 export function accept(flow) {
     return dispatch => fetchApi(`/flows/${flow.id}/accept`, { method: 'POST' })
 }
 
-/**
- * @public
- */
 export function acceptAll() {
     return dispatch => fetchApi('/flows/accept', { method: 'POST' })
 }
 
-/**
- * @public
- */
 export function remove(flow) {
     return dispatch => fetchApi(`/flows/${flow.id}`, { method: 'DELETE' })
 }
 
-/**
- * @public
- */
 export function duplicate(flow) {
     return dispatch => fetchApi(`/flows/${flow.id}/duplicate`, { method: 'POST' })
 }
 
-/**
- * @public
- */
 export function replay(flow) {
     return dispatch => fetchApi(`/flows/${flow.id}/replay`, { method: 'POST' })
 }
 
-/**
- * @public
- */
 export function revert(flow) {
     return dispatch => fetchApi(`/flows/${flow.id}/revert`, { method: 'POST' })
 }
 
-/**
- * @public
- */
 export function update(flow, data) {
     return dispatch => fetchApi.put(`/flows/${flow.id}`, data)
 }
 
 export function uploadContent(flow, file, type) {
     const body = new FormData()
-    file = new Blob([file], {type: 'plain/text'})
+    file       = new window.Blob([file], { type: 'plain/text' })
     body.append('file', file)
-    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, {method: 'post',  body} )
+    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, { method: 'post', body })
 }
 
 
-/**
- * @public
- */
 export function clear() {
     return dispatch => fetchApi('/clear', { method: 'POST' })
 }
 
-/**
- * @public
- */
 export function download() {
     window.location = '/flows/dump'
     return { type: REQUEST_ACTION }
 }
 
-/**
- * @public
- */
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
@@ -150,75 +200,5 @@ export function select(id) {
     return {
         type: SELECT,
         flowIds: id ? [id] : []
-    }
-}
-
-
-/**
- * This action creater takes all WebSocket events
- *
- * @public websocket
- */
-export function handleWsMsg(msg) {
-    switch (msg.cmd) {
-
-        case websocketActions.CMD_ADD:
-            return addFlow(msg.data)
-
-        case websocketActions.CMD_UPDATE:
-            return updateFlow(msg.data)
-
-        case websocketActions.CMD_REMOVE:
-            return removeFlow(msg.data.id)
-
-        case websocketActions.CMD_RESET:
-            return fetchFlows()
-
-        default:
-            return { type: UNKNOWN_CMD, msg }
-    }
-}
-
-/**
- * @public websocket
- */
-export function fetchFlows() {
-    return msgQueueActions.fetchData(MSG_TYPE)
-}
-
-/**
- * @public msgQueue
- */
-export function receiveData(list) {
-    return { type: RECEIVE, list }
-}
-
-/**
- * @private
- */
-export function addFlow(item) {
-    return { type: ADD, item }
-}
-
-/**
- * @private
- */
-export function updateFlow(item) {
-    return { type: UPDATE, item }
-}
-
-/**
- * @private
- */
-export function removeFlow(id) {
-    return (dispatch, getState) => {
-        let currentIndex = getState().flowView.indexOf[getState().flows.selected[0]]
-        let maxIndex = getState().flowView.data.length - 1
-        let deleteLastEntry = maxIndex == 0
-        if (deleteLastEntry)
-            dispatch(select())
-        else
-            dispatch(selectRelative(currentIndex == maxIndex ? -1 : 1) )
-        dispatch({ type: REMOVE, id })
     }
 }
