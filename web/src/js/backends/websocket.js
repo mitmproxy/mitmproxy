@@ -1,6 +1,11 @@
+/**
+ *  The WebSocket backend is responsible for updating our knowledge of flows and events
+ *  from the REST API and live updates delivered via a WebSocket connection.
+ *  An alternative backend may use the REST API only to host static instances.
+ */
 import { fetchApi } from "../utils"
 
-export const CMD_RESET = 'reset'
+const CMD_RESET = 'reset'
 
 export default class WebsocketBackend {
     constructor(store) {

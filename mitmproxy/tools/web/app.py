@@ -8,6 +8,7 @@ from io import BytesIO
 
 import tornado.web
 import tornado.websocket
+import tornado.escape
 from mitmproxy import contentviews
 from mitmproxy import flow
 from mitmproxy import flowfilter
@@ -95,6 +96,8 @@ class BasicAuth:
 class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
     def write(self, chunk):
+        # Writing arrays on the top level is ok nowadays.
+        # http://flask.pocoo.org/docs/0.11/security/#json-security
         if isinstance(chunk, list):
             chunk = tornado.escape.json_encode(chunk)
             self.set_header("Content-Type", "application/json; charset=UTF-8")

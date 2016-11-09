@@ -13,6 +13,22 @@ const defaultState = {
     viewIndex: {},
 }
 
+/**
+ * The store reducer can be used as a mixin to another reducer that always returns a
+ * new { byId, list, listIndex, view, viewIndex } object. The reducer using the store
+ * usually has to map its action to the matching store action and then call the mixin with that.
+ *
+ * Example Usage:
+ *
+ *      import reduceStore, * as storeActions from "./utils/store"
+ *
+ *      case EVENTLOG_ADD:
+ *          return {
+ *              ...state,
+ *              ...reduceStore(state, storeActions.add(action.data))
+ *          }
+ *
+ */
 export default function reduce(state = defaultState, action) {
 
     let { byId, list, listIndex, view, viewIndex } = state

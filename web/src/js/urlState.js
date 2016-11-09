@@ -1,3 +1,10 @@
+/**
+ * Instead of dealing with react-router's ever-changing APIs,
+ * we use a simple url state manager where we only
+ *
+ * - read the initial URL state on page load
+ * - push updates to the URL later on.
+ */
 import { select, setFilter, setHighlight } from "./ducks/flows"
 import { selectTab } from "./ducks/ui/flow"
 import { toggleVisibility } from "./ducks/eventLog"
@@ -65,9 +72,8 @@ function updateUrlFromStore(store) {
     if (queryStr) {
         url += "?" + queryStr
     }
-    if (window.location.hash !== url) {
-        // FIXME: replace state
-        window.location.hash = url
+    if (window.location.hash.substr(1) !== url) {
+        history.replaceState(undefined, "", `/#${url}`)
     }
 }
 

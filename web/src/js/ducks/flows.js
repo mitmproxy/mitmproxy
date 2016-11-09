@@ -1,6 +1,5 @@
 import { fetchApi } from "../utils"
-import reduceStore from "./utils/store"
-import * as storeActions from "./utils/store"
+import reduceStore, * as storeActions from "./utils/store"
 import Filt from "../filt/filt"
 import { RequestUtils } from "../flow/utils"
 
@@ -30,7 +29,8 @@ export default function reduce(state = defaultState, action) {
         case UPDATE:
         case REMOVE:
         case RECEIVE:
-            // FIXME: Implement select switch for remove
+            // FIXME: Update state.selected on REMOVE:
+            // The selected flow may have been removed, we need to select the next one in the view.
             let storeAction = storeActions[action.cmd](
                 action.data,
                 makeFilter(state.filter),
