@@ -16,6 +16,10 @@ def request(flow):
     if flow.request.pretty_host in secure_hosts:
         flow.request.scheme = 'https'
         flow.request.port = 443
+
+        # We need to update the request destination to whatever is specified in the host header:
+        # Having no TLS Server Name Indication from the client and just an IP address as request.host
+        # in transparent mode, TLS server name certificate validation would fail.
         flow.request.host = flow.request.pretty_host
 
 
