@@ -1,3 +1,4 @@
+
 import base64
 import hashlib
 import json
@@ -10,14 +11,15 @@ import tornado.web
 import tornado.websocket
 import tornado.escape
 from mitmproxy import contentviews
-from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import version
+import mitmproxy.addons.view
+import mitmproxy.flow
 
 
-def convert_flow_to_json_dict(flow: flow.Flow) -> dict:
+def convert_flow_to_json_dict(flow: mitmproxy.flow.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
 
@@ -86,9 +88,9 @@ class BasicAuth:
             if auth_header is None or not auth_header.startswith('Basic '):
                 self.set_auth_headers()
             else:
-                self.auth_decoded = base64.decodestring(auth_header[6:])
-                self.username, self.password = self.auth_decoded.split(':', 2)
-                if not wauthenticator.test(self.username, self.password):
+                auth_decoded = base64.decodebytes(auth_header[6:])
+                username, password = auth_decoded.split(':', 2)
+                if not wauthenticator.test(username, password):
                     self.set_auth_headers()
                     raise APIError(401, "Invalid username or password.")
 
@@ -123,7 +125,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         return json.loads(self.request.body.decode())
 
     @property
-    def view(self):
+    def view(self) -> mitmproxy.addons.view.View:
         return self.application.master.view
 
     @property
@@ -131,7 +133,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         return self.application.master
 
     @property
-    def flow(self):
+    def flow(self) -> mitmproxy.flow.Flow:
         flow_id = str(self.path_kwargs["flow_id"])
         # FIXME: Add a facility to addon.view to safely access the store
         flow = self.view._store.get(flow_id)
@@ -140,7 +142,7 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
         else:
             raise APIError(400, "Flow not found.")
 
-    def write_error(self, status_code, **kwargs):
+    def write_error(self, status_code: int, **kwargs):
         if "exc_info" in kwargs and isinstance(kwargs["exc_info"][1], APIError):
             self.finish(kwargs["exc_info"][1].log_message)
         else:
@@ -165,7 +167,7 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(BasicAuth, tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections = None
+    connections = None  # type: set
 
     def open(self):
         self.connections.add(self)
@@ -180,12 +182,12 @@ class WebSocketEventBroadcaster(BasicAuth, tornado.websocket.WebSocketHandler):
         for conn in cls.connections:
             try:
                 conn.write_message(message)
-            except:
+            except Exception:
                 logging.error("Error sending message", exc_info=True)
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections = set()
+    connections = set()  # type: set
 
 
 class Flows(RequestHandler):
@@ -212,7 +214,7 @@ class DumpFlows(RequestHandler):
 
         content = self.request.files.values()[0][0].body
         bio = BytesIO(content)
-        self.view.load_flows(io.FlowReader(bio).stream())
+        self.master.load_flows(io.FlowReader(bio).stream())
         bio.close()
 
 
@@ -225,7 +227,7 @@ class ClearAll(RequestHandler):
 class AcceptFlows(RequestHandler):
 
     def post(self):
-        self.view.flows.accept_all(self.master)
+        self.master.accept_all(self.master)
 
 
 class AcceptFlow(RequestHandler):
@@ -239,13 +241,13 @@ class FlowHandler(RequestHandler):
     def delete(self, flow_id):
         if self.flow.killable:
             self.flow.kill(self.master)
-        self.view.delete_flow(self.flow)
+        self.view.remove(self.flow)
 
     def put(self, flow_id):
         flow = self.flow
         flow.backup()
         for a, b in self.json.items():
-            if a == "request":
+            if a == "request" and hasattr(flow, "request"):
                 request = flow.request
                 for k, v in b.items():
                     if k in ["method", "scheme", "host", "path", "http_version"]:
@@ -261,7 +263,7 @@ class FlowHandler(RequestHandler):
                     else:
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
 
-            elif a == "response":
+            elif a == "response" and hasattr(flow, "response"):
                 response = flow.response
                 for k, v in b.items():
                     if k == "msg":
@@ -280,7 +282,7 @@ class FlowHandler(RequestHandler):
                         print("Warning: Unknown update {}.{}: {}".format(a, k, v))
             else:
                 print("Warning: Unknown update {}: {}".format(a, b))
-        self.view.update_flow(flow)
+        self.view.update(flow)
 
 
 class DuplicateFlow(RequestHandler):
@@ -300,7 +302,7 @@ class ReplayFlow(RequestHandler):
     def post(self, flow_id):
         self.flow.backup()
         self.flow.response = None
-        self.view.update_flow(self.flow)
+        self.view.update(self.flow)
 
         r = self.master.replay_request(self.flow)
         if r:
@@ -313,7 +315,7 @@ class FlowContent(RequestHandler):
         self.flow.backup()
         message = getattr(self.flow, message)
         message.content = self.request.files.values()[0][0].body
-        self.view.update_flow(self.flow)
+        self.view.update(self.flow)
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
@@ -329,13 +331,13 @@ class FlowContent(RequestHandler):
         original_cd = message.headers.get("Content-Disposition", None)
         filename = None
         if original_cd:
-            filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)
+            filename = re.search('filename=([-\w" .()]+)', original_cd)
             if filename:
                 filename = filename.group(1)
         if not filename:
             filename = self.flow.request.path.split("?")[0].split("/")[-1]
 
-        filename = re.sub(r"[^\w\" \.\-\(\)]", "", filename)
+        filename = re.sub(r'[^-\w" .()]', "", filename)
         cd = "attachment; filename={}".format(filename)
         self.set_header("Content-Disposition", cd)
         self.set_header("Content-Type", "application/text")

@@ -55,7 +55,7 @@ class Options(options.Options):
             wsingleuser: Optional[str] = None,
             whtpasswd: Optional[str] = None,
             **kwargs
-    ):
+    ) -> None:
         self.wdebug = wdebug
         self.wport = wport
         self.wiface = wiface
