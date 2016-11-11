@@ -228,10 +228,6 @@ class HttpLayer(base.Layer):
         if self.config.options.mode == "reverse":
             f.request.headers["Host"] = self.config.upstream_server.address.host
 
-        # set upstream auth
-        if self.mode is HTTPMode.upstream and self.config.upstream_auth is not None:
-            f.request.headers["Proxy-Authorization"] = self.config.upstream_auth
-
         # Determine .scheme, .host and .port attributes for inline scripts.
         # For absolute-form requests, they are directly given in the request.
         # For authority-form requests, we only need to determine the request scheme.

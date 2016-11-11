@@ -1,10 +1,7 @@
-import base64
 import collections
 import os
 import re
 from typing import Any
-
-from mitmproxy.utils import strutils
 
 from OpenSSL import SSL, crypto
 
@@ -54,15 +51,6 @@ def parse_server_spec(spec):
     address = tcp.Address((host.decode("ascii"), port))
     scheme = p[0].decode("ascii").lower()
     return ServerSpec(scheme, address)
-
-
-def parse_upstream_auth(auth):
-    pattern = re.compile(".+:")
-    if pattern.search(auth) is None:
-        raise exceptions.OptionsError(
-            "Invalid upstream auth specification: %s" % auth
-        )
-    return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
 
 
 class ProxyConfig:
@@ -134,11 +122,8 @@ class ProxyConfig:
                 )
 
         self.upstream_server = None
-        self.upstream_auth = None
         if options.upstream_server:
             self.upstream_server = parse_server_spec(options.upstream_server)
-        if options.upstream_auth:
-            self.upstream_auth = parse_upstream_auth(options.upstream_auth)
 
         self.authenticator = authentication.NullProxyAuth(None)
         needsauth = any(

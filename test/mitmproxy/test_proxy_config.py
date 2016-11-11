@@ -1,5 +1,4 @@
 from mitmproxy.test import tutils
-import base64
 from mitmproxy.proxy import config
 
 
@@ -26,23 +25,3 @@ def test_parse_server_spec():
         config.parse_server_spec,
         "http://"
     )
-
-
-def test_parse_upstream_auth():
-    tutils.raises(
-        "Invalid upstream auth specification",
-        config.parse_upstream_auth,
-        ""
-    )
-    tutils.raises(
-        "Invalid upstream auth specification",
-        config.parse_upstream_auth,
-        ":"
-    )
-    tutils.raises(
-        "Invalid upstream auth specification",
-        config.parse_upstream_auth,
-        ":test"
-    )
-    assert config.parse_upstream_auth("test:test") == b"Basic" + b" " + base64.b64encode(b"test:test")
-    assert config.parse_upstream_auth("test:") == b"Basic" + b" " + base64.b64encode(b"test:")
