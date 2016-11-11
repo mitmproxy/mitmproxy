@@ -1,6 +1,8 @@
 import h2.exceptions
 import time
 import traceback
+import enum
+
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
@@ -112,13 +114,18 @@ class UpstreamConnectLayer(base.Layer):
         self.server_conn.address = address
 
 
+class HTTPMode(enum.Enum):
+    regular = 1
+    transparent = 2
+    upstream = 3
+
+
 FIRSTLINES = set(["absolute", "relative", "authority"])
 # At this point, we see only a subset of the proxy modes
-MODES = set(["regular", "transparent", "upstream"])
 MODE_REQUEST_FORMS = {
-    "regular": ("authority", "absolute"),
-    "transparent": ("relative"),
-    "upstream": ("authority", "absolute"),
+    HTTPMode.regular: ("authority", "absolute"),
+    HTTPMode.transparent: ("relative"),
+    HTTPMode.upstream: ("authority", "absolute"),
 }
 
 
@@ -137,8 +144,6 @@ class HttpLayer(base.Layer):
 
     def __init__(self, ctx, mode):
         super().__init__(ctx)
-        if mode not in MODES:
-            raise exceptions.ServerException("Invalid mode: %s" % mode)
         self.mode = mode
         self.__initial_server_conn = None
         "Contains the original destination in transparent mode, which needs to be restored"
@@ -150,7 +155,7 @@ class HttpLayer(base.Layer):
         self.connect_request = False
 
     def __call__(self):
-        if self.mode == "transparent":
+        if self.mode == HTTPMode.transparent:
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
@@ -199,7 +204,7 @@ class HttpLayer(base.Layer):
 
         try:
             # Regular Proxy Mode: Handle CONNECT
-            if self.mode == "regular" and request.first_line_format == "authority":
+            if self.mode is HTTPMode.regular and request.first_line_format == "authority":
                 self.connect_request = True
                 self.set_server((request.host, request.port))
                 self.send_response(http.make_connect_response(request.data.http_version))
@@ -219,7 +224,7 @@ class HttpLayer(base.Layer):
             f.request.headers["Host"] = self.config.upstream_server.address.host
 
         # set upstream auth
-        if self.mode == "upstream" and self.config.upstream_auth is not None:
+        if self.mode is HTTPMode.upstream and self.config.upstream_auth is not None:
             f.request.headers["Proxy-Authorization"] = self.config.upstream_auth
 
         # Determine .scheme, .host and .port attributes for inline scripts.
@@ -227,11 +232,7 @@ class HttpLayer(base.Layer):
         # For authority-form requests, we only need to determine the request scheme.
         # For relative-form requests, we need to determine host and port as
         # well.
-        if self.mode == "regular":
-            pass  # only absolute-form at this point, nothing to do here.
-        elif self.mode == "upstream":
-            pass
-        else:
+        if self.mode is HTTPMode.transparent:
             # Setting request.host also updates the host header, which we want to preserve
             host_header = f.request.headers.get("host", None)
             f.request.host = self.__initial_server_conn.address.host
@@ -395,7 +396,7 @@ class HttpLayer(base.Layer):
         address = tcp.Address((host, port))
         tls = (scheme == "https")
 
-        if self.mode == "regular" or self.mode == "transparent":
+        if self.mode is HTTPMode.regular or self.mode is HTTPMode.transparent:
             # If there's an existing connection that doesn't match our expectations, kill it.
             if address != self.server_conn.address or tls != self.server_tls:
                 self.set_server(address)
@@ -414,7 +415,7 @@ class HttpLayer(base.Layer):
             if self.config.authenticator.authenticate(request.headers):
                 self.config.authenticator.clean(request.headers)
             else:
-                if self.mode == "transparent":
+                if self.mode == HTTPMode.transparent:
                     self.send_response(http.make_error_response(
                         401,
                         "Authentication Required",

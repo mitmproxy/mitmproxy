@@ -2,6 +2,7 @@ from mitmproxy import log
 from mitmproxy import exceptions
 from mitmproxy.proxy import protocol
 from mitmproxy.proxy import modes
+from mitmproxy.proxy.protocol import http
 
 
 class RootContext:
@@ -70,9 +71,9 @@ class RootContext:
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if isinstance(top_layer, protocol.TlsLayer):
             if isinstance(top_layer.ctx, modes.HttpProxy):
-                return protocol.Http1Layer(top_layer, "regular")
+                return protocol.Http1Layer(top_layer, http.HTTPMode.regular)
             if isinstance(top_layer.ctx, modes.HttpUpstreamProxy):
-                return protocol.Http1Layer(top_layer, "upstream")
+                return protocol.Http1Layer(top_layer, http.HTTPMode.upstream)
 
         # 4. Check for other TLS cases (e.g. after CONNECT).
         if client_tls:
@@ -86,12 +87,12 @@ class RootContext:
         if isinstance(top_layer, protocol.TlsLayer):
             alpn = top_layer.client_conn.get_alpn_proto_negotiated()
             if alpn == b'h2':
-                return protocol.Http2Layer(top_layer, 'transparent')
+                return protocol.Http2Layer(top_layer, http.HTTPMode.transparent)
             if alpn == b'http/1.1':
-                return protocol.Http1Layer(top_layer, 'transparent')
+                return protocol.Http1Layer(top_layer, http.HTTPMode.transparent)
 
         # 6. Assume HTTP1 by default
-        return protocol.Http1Layer(top_layer, 'transparent')
+        return protocol.Http1Layer(top_layer, http.HTTPMode.transparent)
 
     def log(self, msg, level, subs=()):
         """
