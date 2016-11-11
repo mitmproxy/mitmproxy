@@ -159,7 +159,12 @@ class HttpLayer(base.Layer):
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
-            flow = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
+            flow = http.HTTPFlow(
+                self.client_conn,
+                self.server_conn,
+                live=self,
+                mode=self.mode.name
+            )
             if not self._process_flow(flow):
                 return
 
