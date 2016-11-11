@@ -13,6 +13,7 @@ Events = frozenset([
     "tcp_error",
     "tcp_end",
 
+    "http_connect",
     "request",
     "requestheaders",
     "response",

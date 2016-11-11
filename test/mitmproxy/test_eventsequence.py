@@ -37,6 +37,8 @@ class SequenceTester:
 
 
 class TestBasic(tservers.HTTPProxyTest, SequenceTester):
+    ssl = True
+
     def test_requestheaders(self):
 
         def hdrs(f):
@@ -50,7 +52,7 @@ class TestBasic(tservers.HTTPProxyTest, SequenceTester):
         with self.addon(Eventer(requestheaders=hdrs, request=req)):
             p = self.pathoc()
             with p.connect():
-                assert p.request("get:'%s/p/200':b@10" % self.server.urlbase).status_code == 200
+                assert p.request("get:'/p/200':b@10").status_code == 200
 
     def test_100_continue_fail(self):
         e = Eventer()
@@ -59,10 +61,20 @@ class TestBasic(tservers.HTTPProxyTest, SequenceTester):
             with p.connect():
                 p.request(
                     """
-                        get:'%s/p/200'
+                        get:'/p/200'
                         h'expect'='100-continue'
                         h'content-length'='1000'
                         da
-                    """ % self.server.urlbase
+                    """
                 )
             assert e.called[-1] == "requestheaders"
+
+    def test_connect(self):
+        e = Eventer()
+        with self.addon(e):
+            p = self.pathoc()
+            with p.connect():
+                p.request("get:'/p/200:b@1'")
+            assert "http_connect" in e.called
+            assert e.called.count("requestheaders") == 1
+            assert e.called.count("request") == 1

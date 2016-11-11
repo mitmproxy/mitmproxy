@@ -176,6 +176,30 @@ class HttpLayer(base.Layer):
                 # don't throw an error for disconnects that happen before/between requests.
                 return False
 
+            # Regular Proxy Mode: Handle CONNECT
+            if self.mode is HTTPMode.regular and request.first_line_format == "authority":
+                self.connect_request = True
+                # The standards are silent on what we should do with a CONNECT
+                # request body, so although it's not common, it's allowed.
+                request.data.content = b"".join(self.read_request_body(request))
+                request.timestamp_end = time.time()
+
+                self.channel.ask("http_connect", f)
+
+                try:
+                    self.set_server((request.host, request.port))
+                except (exceptions.ProtocolException, exceptions.NetlibException) as e:
+                    # HTTPS tasting means that ordinary errors like resolution and
+                    # connection errors can happen here.
+                    self.send_error_response(502, repr(e))
+                    f.error = flow.Error(str(e))
+                    self.channel.ask("error", f)
+                    return False
+                self.send_response(http.make_connect_response(request.data.http_version))
+                layer = self.ctx.next_layer(self)
+                layer()
+                return False
+
             f.request = request
             self.channel.ask("requestheaders", f)
 
@@ -206,23 +230,6 @@ class HttpLayer(base.Layer):
             return False
 
         f.request = request
-
-        try:
-            # Regular Proxy Mode: Handle CONNECT
-            if self.mode is HTTPMode.regular and request.first_line_format == "authority":
-                self.connect_request = True
-                self.set_server((request.host, request.port))
-                self.send_response(http.make_connect_response(request.data.http_version))
-                layer = self.ctx.next_layer(self)
-                layer()
-                return False
-        except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-            # HTTPS tasting means that ordinary errors like resolution and
-            # connection errors can happen here.
-            self.send_error_response(502, repr(e))
-            f.error = flow.Error(str(e))
-            self.channel.ask("error", f)
-            return False
 
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse":
