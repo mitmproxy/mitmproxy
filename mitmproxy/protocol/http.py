@@ -13,6 +13,7 @@ from mitmproxy.protocol import websockets as pwebsockets
 from netlib import http
 from netlib import tcp
 from netlib import websockets
+from netlib.http import authentication
 
 
 class _HttpTransmissionLayer(base.Layer):
@@ -175,6 +176,19 @@ class HttpLayer(base.Layer):
             # after a successful CONNECT request (which do not need to be validated anymore)
             if not (self.http_authenticated or self.authenticate(request)):
                 return
+
+
+            # Its helpful to store the proxy-username if supplied with the request, then clear the authentication headers
+            flow.proxy_username = None
+            auth_value = request.headers.get(authentication.BasicProxyAuth.AUTH_HEADER)
+            if auth_value:
+                parts = authentication.parse_http_basic_auth(auth_value)
+                del request.headers[authentication.BasicProxyAuth.AUTH_HEADER]
+                if parts:
+                    scheme, username, password = parts
+                    if scheme.lower() == 'basic':
+                        flow.proxy_username = username
+
 
             flow.request = request
 
@@ -428,9 +442,7 @@ class HttpLayer(base.Layer):
 
     def authenticate(self, request):
         if self.config.authenticator:
-            if self.config.authenticator.authenticate(request.headers):
-                self.config.authenticator.clean(request.headers)
-            else:
+            if not self.config.authenticator.authenticate(request.headers):
                 if self.mode == "transparent":
                     self.send_response(models.make_error_response(
                         401,
