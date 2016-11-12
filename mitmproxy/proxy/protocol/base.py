@@ -114,7 +114,7 @@ class ServerConnectionMixin:
                 server_address, (self.ctx.client_conn.address.host, 0), True)
         else:
             self.server_conn = connections.ServerConnection(
-                server_address, (self.config.options.listen_host, 0))
+                server_address, (self.config.options.upstream_bind_address, 0))
 
         self.__check_self_connect()
 
