@@ -20,7 +20,7 @@ class TestInvalidRequests(tservers.HTTPProxyTest):
         with p.connect():
             r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
         assert r.status_code == 400
-        assert b"Invalid HTTP request form" in r.content
+        assert b"Unexpected CONNECT" in r.content
 
     def test_relative_request(self):
         p = self.pathoc_raw()

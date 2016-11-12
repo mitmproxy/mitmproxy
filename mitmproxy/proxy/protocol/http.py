@@ -114,6 +114,10 @@ class UpstreamConnectLayer(base.Layer):
         self.server_conn.address = address
 
 
+def is_ok(status):
+    return 200 <= status < 300
+
+
 class HTTPMode(enum.Enum):
     regular = 1
     transparent = 2
@@ -168,43 +172,85 @@ class HttpLayer(base.Layer):
             if not self._process_flow(flow):
                 return
 
+    def handle_regular_connect(self, f):
+        self.connect_request = True
+
+        try:
+            self.set_server((f.request.host, f.request.port))
+        except (
+            exceptions.ProtocolException, exceptions.NetlibException
+        ) as e:
+            # HTTPS tasting means that ordinary errors like resolution
+            # and connection errors can happen here.
+            self.send_error_response(502, repr(e))
+            f.error = flow.Error(str(e))
+            self.channel.ask("error", f)
+            return False
+
+        if f.response:
+            resp = f.response
+        else:
+            resp = http.make_connect_response(f.request.data.http_version)
+
+        self.send_response(resp)
+
+        if is_ok(resp.status_code):
+            layer = self.ctx.next_layer(self)
+            layer()
+
+        return False
+
+    def handle_upstream_connect(self, f):
+        self.establish_server_connection(
+            f.request.host,
+            f.request.port,
+            f.request.scheme
+        )
+        self.send_request(f.request)
+        f.response = self.read_response_headers()
+        f.response.data.content = b"".join(
+            self.read_response_body(f.request, f.response)
+        )
+        self.send_response(f.response)
+        if is_ok(f.response.status_code):
+            layer = UpstreamConnectLayer(self, f.request)
+            return layer()
+        return False
+
     def _process_flow(self, f):
         try:
             try:
                 request = self.read_request_headers(f)
             except exceptions.HttpReadDisconnect:
-                # don't throw an error for disconnects that happen before/between requests.
-                return False
-
-            # Regular Proxy Mode: Handle CONNECT
-            if self.mode is HTTPMode.regular and request.first_line_format == "authority":
-                self.connect_request = True
-                # The standards are silent on what we should do with a CONNECT
-                # request body, so although it's not common, it's allowed.
-                request.data.content = b"".join(self.read_request_body(request))
-                request.timestamp_end = time.time()
-
-                self.channel.ask("http_connect", f)
-
-                try:
-                    self.set_server((request.host, request.port))
-                except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-                    # HTTPS tasting means that ordinary errors like resolution and
-                    # connection errors can happen here.
-                    self.send_error_response(502, repr(e))
-                    f.error = flow.Error(str(e))
-                    self.channel.ask("error", f)
-                    return False
-                self.send_response(http.make_connect_response(request.data.http_version))
-                layer = self.ctx.next_layer(self)
-                layer()
+                # don't throw an error for disconnects that happen
+                # before/between requests.
                 return False
 
             f.request = request
+
+            if request.first_line_format == "authority":
+                # The standards are silent on what we should do with a CONNECT
+                # request body, so although it's not common, it's allowed.
+                f.request.data.content = b"".join(
+                    self.read_request_body(f.request)
+                )
+                f.request.timestamp_end = time.time()
+                self.channel.ask("http_connect", f)
+
+                if self.mode is HTTPMode.regular:
+                    return self.handle_regular_connect(f)
+                elif self.mode is HTTPMode.upstream:
+                    return self.handle_upstream_connect(f)
+                else:
+                    msg = "Unexpected CONNECT request."
+                    self.send_error_response(400, msg)
+                    raise exceptions.ProtocolException(msg)
+
             self.channel.ask("requestheaders", f)
 
             if request.headers.get("expect", "").lower() == "100-continue":
-                # TODO: We may have to use send_response_headers for HTTP2 here.
+                # TODO: We may have to use send_response_headers for HTTP2
+                # here.
                 self.send_response(http.expect_continue_response)
                 request.headers.pop("expect")
 
@@ -222,10 +268,10 @@ class HttpLayer(base.Layer):
 
         self.log("request", "debug", [repr(request)])
 
-        # Handle Proxy Authentication
-        # Proxy Authentication conceptually does not work in transparent mode.
-        # We catch this misconfiguration on startup. Here, we sort out requests
-        # after a successful CONNECT request (which do not need to be validated anymore)
+        # Handle Proxy Authentication Proxy Authentication conceptually does
+        # not work in transparent mode. We catch this misconfiguration on
+        # startup. Here, we sort out requests after a successful CONNECT
+        # request (which do not need to be validated anymore)
         if not self.connect_request and not self.authenticate(request):
             return False
 
@@ -235,13 +281,14 @@ class HttpLayer(base.Layer):
         if self.config.options.mode == "reverse":
             f.request.headers["Host"] = self.config.upstream_server.address.host
 
-        # Determine .scheme, .host and .port attributes for inline scripts.
-        # For absolute-form requests, they are directly given in the request.
-        # For authority-form requests, we only need to determine the request scheme.
-        # For relative-form requests, we need to determine host and port as
-        # well.
+        # Determine .scheme, .host and .port attributes for inline scripts. For
+        # absolute-form requests, they are directly given in the request. For
+        # authority-form requests, we only need to determine the request
+        # scheme. For relative-form requests, we need to determine host and
+        # port as well.
         if self.mode is HTTPMode.transparent:
-            # Setting request.host also updates the host header, which we want to preserve
+            # Setting request.host also updates the host header, which we want
+            # to preserve
             host_header = f.request.headers.get("host", None)
             f.request.host = self.__initial_server_conn.address.host
             f.request.port = self.__initial_server_conn.address.port
@@ -296,17 +343,16 @@ class HttpLayer(base.Layer):
                     self.connect()
                     get_response()
 
-                # call the appropriate script hook - this is an opportunity for an
-                # inline script to set f.stream = True
+                # call the appropriate script hook - this is an opportunity for
+                # an inline script to set f.stream = True
                 self.channel.ask("responseheaders", f)
 
                 if f.response.stream:
                     f.response.data.content = None
                 else:
-                    f.response.data.content = b"".join(self.read_response_body(
-                        f.request,
-                        f.response
-                    ))
+                    f.response.data.content = b"".join(
+                        self.read_response_body(f.request, f.response)
+                    )
                 f.response.timestamp_end = time.time()
 
                 # no further manipulation of self.server_conn beyond this point
@@ -364,12 +410,6 @@ class HttpLayer(base.Layer):
                     layer = self.ctx.next_layer(self)
                 layer()
                 return False  # should never be reached
-
-            # Upstream Proxy Mode: Handle CONNECT
-            if f.request.first_line_format == "authority" and f.response.status_code == 200:
-                layer = UpstreamConnectLayer(self, f.request)
-                layer()
-                return False
 
         except (exceptions.ProtocolException, exceptions.NetlibException) as e:
             self.send_error_response(502, repr(e))

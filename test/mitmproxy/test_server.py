@@ -50,10 +50,7 @@ class CommonMixin:
 
     def test_replay(self):
         assert self.pathod("304").status_code == 304
-        if isinstance(self, tservers.HTTPUpstreamProxyTest) and self.ssl:
-            assert len(self.master.state.flows) == 2
-        else:
-            assert len(self.master.state.flows) == 1
+        assert len(self.master.state.flows) == 1
         l = self.master.state.flows[-1]
         assert l.response.status_code == 304
         l.request.path = "/p/305"
@@ -952,10 +949,10 @@ class TestUpstreamProxySSL(
         assert req.status_code == 418
 
         # CONNECT from pathoc to chain[0],
-        assert self.proxy.tmaster.state.flow_count() == 2
+        assert self.proxy.tmaster.state.flow_count() == 1
         # request from pathoc to chain[0]
         # CONNECT from proxy to chain[1],
-        assert self.chain[0].tmaster.state.flow_count() == 2
+        assert self.chain[0].tmaster.state.flow_count() == 1
         # request from proxy to chain[1]
         # request from chain[0] (regular proxy doesn't store CONNECTs)
         assert self.chain[1].tmaster.state.flow_count() == 1
@@ -978,21 +975,12 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
     def test_reconnect(self):
         """
         Tests proper functionality of ConnectionHandler.server_reconnect mock.
-        If we have a disconnect on a secure connection that's transparently proxified to
-        an upstream http proxy, we need to send the CONNECT request again.
+        If we have a disconnect on a secure connection that's transparently
+        proxified to an upstream http proxy, we need to send the CONNECT
+        request again.
         """
-        self.chain[1].tmaster.addons.add(
-            RequestKiller([2])
-        )
-        self.chain[0].tmaster.addons.add(
-            RequestKiller(
-                [
-                    1,  # CONNECT
-                    3,  # reCONNECT
-                    4   # request
-                ]
-            )
-        )
+        self.chain[0].tmaster.addons.add(RequestKiller([1, 2]))
+        self.chain[1].tmaster.addons.add(RequestKiller([1]))
 
         p = self.pathoc()
         with p.connect():
@@ -1000,44 +988,27 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             assert req.content == b"content"
             assert req.status_code == 418
 
-            assert self.proxy.tmaster.state.flow_count() == 2  # CONNECT and request
-            # CONNECT, failing request,
-            assert self.chain[0].tmaster.state.flow_count() == 4
-            # reCONNECT, request
-            # failing request, request
-            assert self.chain[1].tmaster.state.flow_count() == 2
-            # (doesn't store (repeated) CONNECTs from chain[0]
-            #  as it is a regular proxy)
-
-            assert not self.chain[1].tmaster.state.flows[0].response  # killed
-            assert self.chain[1].tmaster.state.flows[1].response
-
-            assert self.proxy.tmaster.state.flows[0].request.first_line_format == "authority"
-            assert self.proxy.tmaster.state.flows[1].request.first_line_format == "relative"
-
-            assert self.chain[0].tmaster.state.flows[
-                0].request.first_line_format == "authority"
-            assert self.chain[0].tmaster.state.flows[
-                1].request.first_line_format == "relative"
-            assert self.chain[0].tmaster.state.flows[
-                2].request.first_line_format == "authority"
-            assert self.chain[0].tmaster.state.flows[
-                3].request.first_line_format == "relative"
-
-            assert self.chain[1].tmaster.state.flows[
-                0].request.first_line_format == "relative"
-            assert self.chain[1].tmaster.state.flows[
-                1].request.first_line_format == "relative"
+            # First request goes through all three proxies exactly once
+            assert self.proxy.tmaster.state.flow_count() == 1
+            assert self.chain[0].tmaster.state.flow_count() == 1
+            assert self.chain[1].tmaster.state.flow_count() == 1
 
             req = p.request("get:'/p/418:b\"content2\"'")
-
             assert req.status_code == 502
-            assert self.proxy.tmaster.state.flow_count() == 3  # + new request
-            # + new request, repeated CONNECT from chain[1]
-            assert self.chain[0].tmaster.state.flow_count() == 6
-            # (both terminated)
-            # nothing happened here
-            assert self.chain[1].tmaster.state.flow_count() == 2
+
+            assert self.proxy.tmaster.state.flow_count() == 2
+            assert self.chain[0].tmaster.state.flow_count() == 2
+            # Upstream sees two requests due to reconnection attempt
+            assert self.chain[1].tmaster.state.flow_count() == 3
+            assert not self.chain[1].tmaster.state.flows[-1].response
+            assert not self.chain[1].tmaster.state.flows[-2].response
+
+            # Reconnection failed, so we're now disconnected
+            tutils.raises(
+                exceptions.HttpException,
+                p.request,
+                "get:'/p/418:b\"content3\"'"
+            )
 
 
 class AddUpstreamCertsToClientChainMixin:
