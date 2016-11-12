@@ -20,7 +20,7 @@ from . import tservers
 class TestHTTPFlow:
 
     def test_copy(self):
-        f = tflow.tflow(resp=True)
+        f = tflow.tflow(resp=True, proxy_username=True)
         f.get_state()
         f2 = f.copy()
         a = f.get_state()
@@ -36,6 +36,8 @@ class TestHTTPFlow:
         assert f.request.headers is not f2.request.headers
         assert f.response.get_state() == f2.response.get_state()
         assert f.response is not f2.response
+        assert f.proxy_username == f2.proxy_username
+        assert f.proxy_username is not f2.proxy_username
 
         f = tflow.tflow(err=True)
         f2 = f.copy()

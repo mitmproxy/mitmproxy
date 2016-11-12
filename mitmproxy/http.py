@@ -163,6 +163,8 @@ class HTTPFlow(flow.Flow):
         """:py:class:`ClientConnection` object """
         self.intercepted = False  # type: bool
         """ Is this flow currently being intercepted? """
+        self.proxy_username = None # type: string
+        """ :py:class:`String` object """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(
@@ -172,7 +174,7 @@ class HTTPFlow(flow.Flow):
 
     def __repr__(self):
         s = "<HTTPFlow"
-        for a in ("request", "response", "error", "client_conn", "server_conn"):
+        for a in ("request", "response", "error", "client_conn", "server_conn", "proxy_username"):
             if getattr(self, a, False):
                 s += "\r\n  %s = {flow.%s}" % (a, a)
         s += ">"
@@ -184,6 +186,8 @@ class HTTPFlow(flow.Flow):
             f.request = self.request.copy()
         if self.response:
             f.response = self.response.copy()
+        if self.proxy_username:
+            f.proxy_username = ''.join(self.proxy_username)
         return f
 
     def replace(self, pattern, repl, *args, **kwargs):
