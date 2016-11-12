@@ -67,6 +67,7 @@ class Options(optmanager.OptManager):
             ignore_hosts = (),  # type: Sequence[str]
             listen_host = "",  # type: str
             listen_port = LISTEN_PORT,  # type: int
+            upstream_bind_address = "",  # type: str
             mode = "regular",  # type: str
             no_upstream_cert = False,  # type: bool
             rawtcp = False,  # type: bool
@@ -127,6 +128,7 @@ class Options(optmanager.OptManager):
         self.ignore_hosts = ignore_hosts
         self.listen_host = listen_host
         self.listen_port = listen_port
+        self.upstream_bind_address = upstream_bind_address
         self.mode = mode
         self.no_upstream_cert = no_upstream_cert
         self.rawtcp = rawtcp
