@@ -208,6 +208,11 @@ def get_common_options(args):
     if args.quiet:
         args.verbose = 0
 
+    if args.addr in ("localhost", "127.0.0.1", "::1"):
+        upstream_bind_address = ""
+    else:
+        upstream_bind_address = args.addr
+
     return dict(
         app=args.app,
         app_host=args.app_host,
@@ -251,6 +256,7 @@ def get_common_options(args):
         ignore_hosts = args.ignore_hosts,
         listen_host = args.addr,
         listen_port = args.port,
+        upstream_bind_address = upstream_bind_address,
         mode = mode,
         no_upstream_cert = args.no_upstream_cert,
         spoof_source_address = args.spoof_source_address,
