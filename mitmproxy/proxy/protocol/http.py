@@ -135,7 +135,9 @@ MODE_REQUEST_FORMS = {
 
 def validate_request_form(mode, request):
     if request.first_line_format == "absolute" and request.scheme != "http":
-        raise exceptions.HttpException("Invalid request scheme: %s" % request.scheme)
+        raise exceptions.HttpException(
+            "Invalid request scheme: %s" % request.scheme
+        )
     allowed_request_forms = MODE_REQUEST_FORMS[mode]
     if request.first_line_format not in allowed_request_forms:
         err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
@@ -275,8 +277,6 @@ class HttpLayer(base.Layer):
         if not self.connect_request and not self.authenticate(request):
             return False
 
-        f.request = request
-
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse":
             f.request.headers["Host"] = self.config.upstream_server.address.host
@@ -389,10 +389,8 @@ class HttpLayer(base.Layer):
 
             # Handle 101 Switching Protocols
             if f.response.status_code == 101:
-                """
-                    Handle a successful HTTP 101 Switching Protocols Response, received after
-                    e.g. a WebSocket upgrade request.
-                """
+                # Handle a successful HTTP 101 Switching Protocols Response,
+                # received after e.g. a WebSocket upgrade request.
                 # Check for WebSockets handshake
                 is_websockets = (
                     websockets.check_handshake(f.request.headers) and
@@ -467,13 +465,17 @@ class HttpLayer(base.Layer):
                     self.send_response(http.make_error_response(
                         401,
                         "Authentication Required",
-                        mitmproxy.net.http.Headers(**self.config.authenticator.auth_challenge_headers())
+                        mitmproxy.net.http.Headers(
+                            **self.config.authenticator.auth_challenge_headers()
+                        )
                     ))
                 else:
                     self.send_response(http.make_error_response(
                         407,
                         "Proxy Authentication Required",
-                        mitmproxy.net.http.Headers(**self.config.authenticator.auth_challenge_headers())
+                        mitmproxy.net.http.Headers(
+                            **self.config.authenticator.auth_challenge_headers()
+                        )
                     ))
                 return False
         return True

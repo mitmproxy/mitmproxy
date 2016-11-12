@@ -669,6 +669,13 @@ class TestProxySSL(tservers.HTTPProxyTest):
         first_flow = self.master.state.flows[0]
         assert first_flow.server_conn.timestamp_ssl_setup
 
+    def test_via(self):
+        # tests that the ssl timestamp is present when ssl is used
+        f = self.pathod("200:b@10")
+        assert f.status_code == 200
+        first_flow = self.master.state.flows[0]
+        assert not first_flow.server_conn.via
+
 
 class MasterRedirectRequest(tservers.TestMaster):
     redirect_port = None  # Set by TestRedirectRequest
@@ -950,11 +957,14 @@ class TestUpstreamProxySSL(
 
         # CONNECT from pathoc to chain[0],
         assert self.proxy.tmaster.state.flow_count() == 1
+        assert self.proxy.tmaster.state.flows[0].server_conn.via
         # request from pathoc to chain[0]
         # CONNECT from proxy to chain[1],
         assert self.chain[0].tmaster.state.flow_count() == 1
+        assert self.chain[0].tmaster.state.flows[0].server_conn.via
         # request from proxy to chain[1]
         # request from chain[0] (regular proxy doesn't store CONNECTs)
+        assert not self.chain[1].tmaster.state.flows[0].server_conn.via
         assert self.chain[1].tmaster.state.flow_count() == 1
 
 

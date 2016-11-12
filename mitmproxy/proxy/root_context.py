@@ -64,7 +64,12 @@ class RootContext:
         # An inline script may upgrade from http to https,
         # in which case we need some form of TLS layer.
         if isinstance(top_layer, modes.ReverseProxy):
-            return protocol.TlsLayer(top_layer, client_tls, top_layer.server_tls, top_layer.server_conn.address.host)
+            return protocol.TlsLayer(
+                top_layer,
+                client_tls,
+                top_layer.server_tls,
+                top_layer.server_conn.address.host
+            )
         if isinstance(top_layer, protocol.ServerConnectionMixin) or isinstance(top_layer, protocol.UpstreamConnectLayer):
             return protocol.TlsLayer(top_layer, client_tls, client_tls)
 
