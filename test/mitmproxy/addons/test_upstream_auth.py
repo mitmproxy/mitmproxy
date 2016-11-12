@@ -4,11 +4,11 @@ from mitmproxy import exceptions
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.addons import upstream_proxy_auth
+from mitmproxy.addons import upstream_auth
 
 
 def test_configure():
-    up = upstream_proxy_auth.UpstreamProxyAuth()
+    up = upstream_auth.UpstreamAuth()
     with taddons.context() as tctx:
         tctx.configure(up, upstream_auth="test:test")
         assert up.auth == b"Basic" + b" " + base64.b64encode(b"test:test")
@@ -40,7 +40,7 @@ def test_configure():
 
 
 def test_simple():
-    up = upstream_proxy_auth.UpstreamProxyAuth()
+    up = upstream_auth.UpstreamAuth()
     with taddons.context() as tctx:
         tctx.configure(up, upstream_auth="foo:bar")
 

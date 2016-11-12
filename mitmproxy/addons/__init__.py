@@ -10,7 +10,7 @@ from mitmproxy.addons import serverplayback
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import streambodies
-from mitmproxy.addons import upstream_proxy_auth
+from mitmproxy.addons import upstream_auth
 
 
 def default_addons():
@@ -27,5 +27,5 @@ def default_addons():
         setheaders.SetHeaders(),
         serverplayback.ServerPlayback(),
         clientplayback.ClientPlayback(),
-        upstream_proxy_auth.UpstreamProxyAuth(),
+        upstream_auth.UpstreamAuth(),
     ]

@@ -14,7 +14,7 @@ def parse_upstream_auth(auth):
     return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
 
 
-class UpstreamProxyAuth():
+class UpstreamAuth():
     """
         This addon handles authentication to systems upstream from us for the
         upstream proxy and reverse proxy mode. There are 3 cases:
