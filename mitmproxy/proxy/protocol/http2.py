@@ -121,7 +121,7 @@ class Http2Layer(base.Layer):
         self.client_conn.send(self.connections[self.client_conn].data_to_send())
 
     def next_layer(self):  # pragma: no cover
-        # WebSockets over HTTP/2?
+        # WebSocket over HTTP/2?
         # CONNECT for proxying?
         raise NotImplementedError()
 

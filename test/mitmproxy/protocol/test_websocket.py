@@ -15,7 +15,7 @@ from .. import tservers
 from mitmproxy.net import websockets
 
 
-class _WebSocketsServerBase(net_tservers.ServerTestBase):
+class _WebSocketServerBase(net_tservers.ServerTestBase):
 
     class handler(mitmproxy.net.tcp.BaseHandler):
 
@@ -43,7 +43,7 @@ class _WebSocketsServerBase(net_tservers.ServerTestBase):
                 traceback.print_exc()
 
 
-class _WebSocketsTestBase:
+class _WebSocketTestBase:
 
     @classmethod
     def setup_class(cls):
@@ -123,20 +123,20 @@ class _WebSocketsTestBase:
         return client
 
 
-class _WebSocketsTest(_WebSocketsTestBase, _WebSocketsServerBase):
+class _WebSocketTest(_WebSocketTestBase, _WebSocketServerBase):
 
     @classmethod
     def setup_class(cls):
-        _WebSocketsTestBase.setup_class()
-        _WebSocketsServerBase.setup_class(ssl=cls.ssl)
+        _WebSocketTestBase.setup_class()
+        _WebSocketServerBase.setup_class(ssl=cls.ssl)
 
     @classmethod
     def teardown_class(cls):
-        _WebSocketsTestBase.teardown_class()
-        _WebSocketsServerBase.teardown_class()
+        _WebSocketTestBase.teardown_class()
+        _WebSocketServerBase.teardown_class()
 
 
-class TestSimple(_WebSocketsTest):
+class TestSimple(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
@@ -163,7 +163,7 @@ class TestSimple(_WebSocketsTest):
         client.wfile.flush()
 
 
-class TestSimpleTLS(_WebSocketsTest):
+class TestSimpleTLS(_WebSocketTest):
     ssl = True
 
     @classmethod
@@ -191,7 +191,7 @@ class TestSimpleTLS(_WebSocketsTest):
         client.wfile.flush()
 
 
-class TestPing(_WebSocketsTest):
+class TestPing(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
@@ -220,7 +220,7 @@ class TestPing(_WebSocketsTest):
         assert frame.payload == b'pong-received'
 
 
-class TestPong(_WebSocketsTest):
+class TestPong(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
@@ -242,7 +242,7 @@ class TestPong(_WebSocketsTest):
         assert frame.payload == b'foobar'
 
 
-class TestClose(_WebSocketsTest):
+class TestClose(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
@@ -281,7 +281,7 @@ class TestClose(_WebSocketsTest):
             websockets.Frame.from_file(client.rfile)
 
 
-class TestInvalidFrame(_WebSocketsTest):
+class TestInvalidFrame(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):

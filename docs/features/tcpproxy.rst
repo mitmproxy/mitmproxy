@@ -3,7 +3,7 @@
 TCP Proxy
 =========
 
-WebSockets or other non-HTTP protocols are not supported by mitmproxy yet. However, you can exempt
+Non-HTTP protocols are not supported by mitmproxy yet. However, you can exempt
 hostnames from processing, so that mitmproxy acts as a generic TCP forwarder.
 This feature is closely related to the :ref:`passthrough` functionality,
 but differs in two important aspects:

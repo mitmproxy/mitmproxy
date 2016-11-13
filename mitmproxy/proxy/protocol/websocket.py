@@ -8,9 +8,9 @@ from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 
 
-class WebSocketsLayer(base.Layer):
+class WebSocketLayer(base.Layer):
     """
-        WebSockets layer to intercept, modify, and forward WebSockets connections
+        WebSocket layer to intercept, modify, and forward WebSocket connections
 
         Only version 13 is supported (as specified in RFC6455)
         Only HTTP/1.1-initiated connections are supported.
@@ -20,11 +20,11 @@ class WebSocketsLayer(base.Layer):
         and extensions, the Upgrade-request is forwarded to the server.
         The response from the server is then parsed and negotiated settings are extracted.
         Finally the handshake is completed by forwarding the server-response to the client.
-        After that, only WebSockets frames are exchanged.
+        After that, only WebSocket frames are exchanged.
 
         PING/PONG frames pass through and must be answered by the other endpoint.
 
-        CLOSE frames are forwarded before this WebSocketsLayer terminates.
+        CLOSE frames are forwarded before this WebSocketLayer terminates.
 
         This layer is transparent to any negotiated extensions.
         This layer is transparent to any negotiated subprotocols.
@@ -46,7 +46,7 @@ class WebSocketsLayer(base.Layer):
     def _handle_frame(self, frame, source_conn, other_conn, is_server):
         sender = "server" if is_server else "client"
         self.log(
-            "WebSockets Frame received from {}".format(sender),
+            "WebSocket frame received from {}".format(sender),
             "debug",
             [repr(frame)]
         )
@@ -74,13 +74,13 @@ class WebSocketsLayer(base.Layer):
                 msg = websockets.CLOSE_REASON.get_name(code, default='unknown status code')
             if len(frame.payload) > 2:
                 reason = frame.payload[2:]
-            self.log("WebSockets connection closed by {}: {} {}, {}".format(sender, code, msg, reason), "info")
+            self.log("WebSocket connection closed by {}: {} {}, {}".format(sender, code, msg, reason), "info")
 
             other_conn.send(bytes(frame))
             # close the connection
             return False
         else:
-            self.log("Unknown WebSockets frame received from {}".format(sender), "info", [repr(frame)])
+            self.log("Unknown WebSocket frame received from {}".format(sender), "info", [repr(frame)])
             # unknown frame - just forward it
             other_conn.send(bytes(frame))
 
@@ -105,7 +105,7 @@ class WebSocketsLayer(base.Layer):
                     if not self._handle_frame(frame, source_conn, other_conn, is_server):
                         return
         except (socket.error, exceptions.TcpException, SSL.Error) as e:
-            self.log("WebSockets connection closed unexpectedly by {}: {}".format(
+            self.log("WebSocket connection closed unexpectedly by {}: {}".format(
                 "server" if is_server else "client", repr(e)), "info")
         except Exception as e:  # pragma: no cover
-            raise exceptions.ProtocolException("Error in WebSockets connection: {}".format(repr(e)))
+            raise exceptions.ProtocolException("Error in WebSocket connection: {}".format(repr(e)))

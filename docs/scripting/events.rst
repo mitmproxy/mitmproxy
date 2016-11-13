@@ -162,15 +162,15 @@ WebSocket Events
     :widths: 40 60
     :header-rows: 0
 
-    *   - .. py:function:: websockets_handshake(flow)
+    *   - .. py:function:: websocket_handshake(flow)
 
-        - Called when a client wants to establish a WebSockets connection. The
-          WebSockets-specific headers can be manipulated to manipulate the
+        - Called when a client wants to establish a WebSocket connection. The
+          WebSocket-specific headers can be manipulated to manipulate the
           handshake. The ``flow`` object is guaranteed to have a non-None
           ``request`` attribute.
 
           *flow*
-            The flow containing the HTTP websocket handshake request. The
+            The flow containing the HTTP WebSocket handshake request. The
             object is guaranteed to have a non-None ``request`` attribute.
 
 

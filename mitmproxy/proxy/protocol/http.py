@@ -8,7 +8,8 @@ from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
-from mitmproxy.proxy.protocol import websockets as pwebsockets
+from mitmproxy.proxy.protocol.websocket import WebSocketLayer
+import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 
@@ -300,7 +301,7 @@ class HttpLayer(base.Layer):
 
         try:
             if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
-                # We only support RFC6455 with WebSockets version 13
+                # We only support RFC6455 with WebSocket version 13
                 # allow inline scripts to manipulate the client handshake
                 self.channel.ask("websocket_handshake", f)
 
@@ -392,19 +393,19 @@ class HttpLayer(base.Layer):
             if f.response.status_code == 101:
                 # Handle a successful HTTP 101 Switching Protocols Response,
                 # received after e.g. a WebSocket upgrade request.
-                # Check for WebSockets handshake
-                is_websockets = (
+                # Check for WebSocket handshake
+                is_websocket = (
                     websockets.check_handshake(f.request.headers) and
                     websockets.check_handshake(f.response.headers)
                 )
-                if is_websockets and not self.config.options.websockets:
+                if is_websocket and not self.config.options.websockets:
                     self.log(
                         "Client requested WebSocket connection, but the protocol is disabled.",
                         "info"
                     )
 
-                if is_websockets and self.config.options.websockets:
-                    layer = pwebsockets.WebSocketsLayer(self, f)
+                if is_websocket and self.config.options.websockets:
+                    layer = WebSocketLayer(self, f)
                 else:
                     layer = self.ctx.next_layer(self)
                 layer()

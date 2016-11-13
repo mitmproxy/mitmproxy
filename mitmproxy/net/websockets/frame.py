@@ -90,7 +90,7 @@ class FrameHeader:
     @classmethod
     def _make_length_code(self, length):
         """
-         A websockets frame contains an initial length_code, and an optional
+         A WebSocket frame contains an initial length_code, and an optional
          extended length code to represent the actual length if length code is
          larger than 125
         """
@@ -149,7 +149,7 @@ class FrameHeader:
     @classmethod
     def from_file(cls, fp):
         """
-          read a websockets frame header
+          read a WebSocket frame header
         """
         first_byte, second_byte = fp.safe_read(2)
         fin = bits.getbit(first_byte, 7)
@@ -195,11 +195,11 @@ class FrameHeader:
 
 class Frame:
     """
-    Represents a single WebSockets frame.
+    Represents a single WebSocket frame.
     Constructor takes human readable forms of the frame components.
     from_bytes() reads from a file-like object to create a new Frame.
 
-    WebSockets Frame as defined in RFC6455
+    WebSocket frame as defined in RFC6455
 
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
       +-+-+-+-+-------+-+-------------+-------------------------------+
@@ -253,7 +253,7 @@ class Frame:
     @classmethod
     def from_file(cls, fp):
         """
-          read a websockets frame sent by a server or client
+          read a WebSocket frame sent by a server or client
 
           fp is a "file like" object that could be backed by a network
           stream or a disk or an in memory stream reader
