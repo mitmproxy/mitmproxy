@@ -64,7 +64,7 @@ class _WebSocketTestBase:
             listen_port=0,
             no_upstream_cert=False,
             ssl_insecure=True,
-            websockets=True,
+            websocket=True,
         )
         opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return opts

@@ -256,7 +256,7 @@ def get_common_options(args):
         no_upstream_cert = args.no_upstream_cert,
         spoof_source_address = args.spoof_source_address,
         rawtcp = args.rawtcp,
-        websockets = args.websockets,
+        websocket = args.websocket,
         upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
         ssl_version_client = args.ssl_version_client,
@@ -459,6 +459,12 @@ def proxy_options(parser):
             If your OpenSSL version supports ALPN, HTTP/2 is enabled by default.
         """
     )
+    group.add_argument(
+        "--no-websocket",
+        action="store_false", dest="websocket",
+        help="Explicitly disable WebSocket support."
+    )
+
     parser.add_argument(
         "--upstream-auth",
         action="store", dest="upstream_auth", default=None,
@@ -468,6 +474,7 @@ def proxy_options(parser):
             requests. Format: username:password
         """
     )
+
     rawtcp = group.add_mutually_exclusive_group()
     rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
     rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
@@ -475,13 +482,7 @@ def proxy_options(parser):
                         "Disabled by default. "
                         "Default value will change in a future version."
                         )
-    websockets = group.add_mutually_exclusive_group()
-    websockets.add_argument("--websockets", action="store_true", dest="websockets")
-    websockets.add_argument("--no-websockets", action="store_false", dest="websockets",
-                            help="Explicitly enable/disable experimental WebSocket support. "
-                                 "Disabled by default as messages are only printed to the event log and not retained. "
-                                 "Default value will change in a future version."
-                            )
+
     group.add_argument(
         "--spoof-source-address",
         action="store_true", dest="spoof_source_address",

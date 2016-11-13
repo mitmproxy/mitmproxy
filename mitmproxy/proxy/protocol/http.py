@@ -398,13 +398,13 @@ class HttpLayer(base.Layer):
                     websockets.check_handshake(f.request.headers) and
                     websockets.check_handshake(f.response.headers)
                 )
-                if is_websocket and not self.config.options.websockets:
+                if is_websocket and not self.config.options.websocket:
                     self.log(
                         "Client requested WebSocket connection, but the protocol is disabled.",
                         "info"
                     )
 
-                if is_websocket and self.config.options.websockets:
+                if is_websocket and self.config.options.websocket:
                     layer = WebSocketLayer(self, f)
                 else:
                     layer = self.ctx.next_layer(self)
