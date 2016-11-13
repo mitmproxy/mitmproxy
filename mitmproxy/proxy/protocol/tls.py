@@ -432,7 +432,6 @@ class TlsLayer(base.Layer):
     def __alpn_select_callback(self, conn_, options):
         # This gets triggered if we haven't established an upstream connection yet.
         default_alpn = b'http/1.1'
-        # alpn_preference = b'h2'
 
         if self.alpn_for_client_connection in options:
             choice = bytes(self.alpn_for_client_connection)
@@ -503,6 +502,17 @@ class TlsLayer(base.Layer):
                     alpn = [x for x in self._client_hello.alpn_protocols if not (x.startswith(b"h2-") or x.startswith(b"spdy"))]
                 if alpn and b"h2" in alpn and not self.config.options.http2:
                     alpn.remove(b"h2")
+
+            if self.client_conn.ssl_established:
+                # If the client has already negotiated an ALP, then force the
+                # server to use the same. This can only happen if the host gets
+                # changed after the initial connection was established. E.g.:
+                #   * the client offers http/1.1 and h2,
+                #   * the initial host is only capable of http/1.1,
+                #   * then the first server connection negotiates http/1.1,
+                #   * but after the server_conn change, the new host offers h2
+                #   * which results in garbage because the layers don' match.
+                alpn = [self.client_conn.connection.get_alpn_proto_negotiated()]
 
             ciphers_server = self.config.options.ciphers_server
             if not ciphers_server and self._client_tls:
