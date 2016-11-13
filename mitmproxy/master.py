@@ -284,6 +284,22 @@ class Master:
         pass
 
     @controller.handler
+    def websocket_start(self, flow):
+        pass
+
+    @controller.handler
+    def websocket_message(self, flow):
+        pass
+
+    @controller.handler
+    def websocket_error(self, flow):
+        pass
+
+    @controller.handler
+    def websocket_end(self, flow):
+        pass
+
+    @controller.handler
     def tcp_start(self, flow):
         pass
 
