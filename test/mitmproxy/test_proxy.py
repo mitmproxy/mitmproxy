@@ -113,13 +113,6 @@ class TestProcessProxyOptions:
         self.assert_err("expected one argument", "--upstream-auth")
         self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
 
-    def test_socks_auth(self):
-        self.assert_err(
-            "Proxy Authentication not supported in SOCKS mode.",
-            "--socks",
-            "--nonanonymous"
-        )
-
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--client-certs", cadir)
@@ -136,26 +129,6 @@ class TestProcessProxyOptions:
             "--cert",
             tutils.test_data.path("mitmproxy/data/testkey.pem"))
         self.assert_err("does not exist", "--cert", "nonexistent")
-
-    def test_auth(self):
-        p = self.assert_noerr("--nonanonymous")
-        assert p.authenticator
-
-        p = self.assert_noerr(
-            "--htpasswd",
-            tutils.test_data.path("mitmproxy/data/htpasswd"))
-        assert p.authenticator
-        self.assert_err(
-            "malformed htpasswd file",
-            "--htpasswd",
-            tutils.test_data.path("mitmproxy/data/htpasswd.invalid"))
-
-        p = self.assert_noerr("--singleuser", "test:test")
-        assert p.authenticator
-        self.assert_err(
-            "invalid single-user specification",
-            "--singleuser",
-            "test")
 
     def test_insecure(self):
         p = self.assert_noerr("--insecure")

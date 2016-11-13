@@ -99,12 +99,11 @@ HTTP Events
     :header-rows: 0
 
     *   - .. py:function:: http_connect(flow)
-
         - Called when we receive an HTTP CONNECT request. Setting a non 2xx
-        response on the flow will return the response to the client abort the
-        connection. CONNECT requests and responses do not generate the usual
-        HTTP handler events. CONNECT requests are only valid in regular and
-        upstream proxy modes.
+          response on the flow will return the response to the client abort the
+          connection. CONNECT requests and responses do not generate the usual
+          HTTP handler events. CONNECT requests are only valid in regular and
+          upstream proxy modes.
 
           *flow*
             A ``models.HTTPFlow`` object. The flow is guaranteed to have

@@ -10,6 +10,13 @@ import mitmproxy.net.http
 REALM = "mitmproxy"
 
 
+def mkauth(username, password, scheme="basic"):
+    v = binascii.b2a_base64(
+        (username + ":" + password).encode("utf8")
+    ).decode("ascii")
+    return scheme + " " + v
+
+
 def parse_http_basic_auth(s):
     words = s.split()
     if len(words) != 2:

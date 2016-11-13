@@ -12,7 +12,6 @@ from mitmproxy.addons import intercept
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.tools.web import app
-from mitmproxy.net.http import authentication
 
 
 class Stop(Exception):
@@ -52,7 +51,7 @@ class Options(options.Options):
             wdebug: bool = False,
             wport: int = 8081,
             wiface: str = "127.0.0.1",
-            wauthenticator: Optional[authentication.PassMan] = None,
+            # wauthenticator: Optional[authentication.PassMan] = None,
             wsingleuser: Optional[str] = None,
             whtpasswd: Optional[str] = None,
             **kwargs
@@ -60,29 +59,30 @@ class Options(options.Options):
         self.wdebug = wdebug
         self.wport = wport
         self.wiface = wiface
-        self.wauthenticator = wauthenticator
-        self.wsingleuser = wsingleuser
-        self.whtpasswd = whtpasswd
+        # self.wauthenticator = wauthenticator
+        # self.wsingleuser = wsingleuser
+        # self.whtpasswd = whtpasswd
         self.intercept = intercept
         super().__init__(**kwargs)
 
     # TODO: This doesn't belong here.
     def process_web_options(self, parser):
-        if self.wsingleuser or self.whtpasswd:
-            if self.wsingleuser:
-                if len(self.wsingleuser.split(':')) != 2:
-                    return parser.error(
-                        "Invalid single-user specification. Please use the format username:password"
-                    )
-                username, password = self.wsingleuser.split(':')
-                self.wauthenticator = authentication.PassManSingleUser(username, password)
-            elif self.whtpasswd:
-                try:
-                    self.wauthenticator = authentication.PassManHtpasswd(self.whtpasswd)
-                except ValueError as v:
-                    return parser.error(v.message)
-        else:
-            self.wauthenticator = None
+        # if self.wsingleuser or self.whtpasswd:
+        #     if self.wsingleuser:
+        #         if len(self.wsingleuser.split(':')) != 2:
+        #             return parser.error(
+        #                 "Invalid single-user specification. Please use the format username:password"
+        #             )
+        #         username, password = self.wsingleuser.split(':')
+        #         # self.wauthenticator = authentication.PassManSingleUser(username, password)
+        #     elif self.whtpasswd:
+        #         try:
+        #             self.wauthenticator = authentication.PassManHtpasswd(self.whtpasswd)
+        #         except ValueError as v:
+        #             return parser.error(v.message)
+        # else:
+        #     self.wauthenticator = None
+        pass
 
 
 class WebMaster(master.Master):
@@ -98,7 +98,7 @@ class WebMaster(master.Master):
         self.addons.add(*addons.default_addons())
         self.addons.add(self.view, intercept.Intercept())
         self.app = app.Application(
-            self, self.options.wdebug, self.options.wauthenticator
+            self, self.options.wdebug, False
         )
         # This line is just for type hinting
         self.options = self.options  # type: Options

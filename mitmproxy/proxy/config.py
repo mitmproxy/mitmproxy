@@ -9,7 +9,6 @@ from mitmproxy import exceptions
 from mitmproxy import options as moptions
 from mitmproxy import certs
 from mitmproxy.net import tcp
-from mitmproxy.net.http import authentication
 from mitmproxy.net.http import url
 
 CONF_BASENAME = "mitmproxy"
@@ -58,7 +57,6 @@ class ProxyConfig:
     def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
-        self.authenticator = None
         self.check_ignore = None
         self.check_tcp = None
         self.certstore = None
@@ -124,49 +122,3 @@ class ProxyConfig:
         self.upstream_server = None
         if options.upstream_server:
             self.upstream_server = parse_server_spec(options.upstream_server)
-
-        self.authenticator = authentication.NullProxyAuth(None)
-        needsauth = any(
-            [
-                options.auth_nonanonymous,
-                options.auth_singleuser,
-                options.auth_htpasswd
-            ]
-        )
-        if needsauth:
-            if options.mode == "transparent":
-                raise exceptions.OptionsError(
-                    "Proxy Authentication not supported in transparent mode."
-                )
-            elif options.mode == "socks5":
-                raise exceptions.OptionsError(
-                    "Proxy Authentication not supported in SOCKS mode. "
-                    "https://github.com/mitmproxy/mitmproxy/issues/738"
-                )
-            elif options.auth_singleuser:
-                parts = options.auth_singleuser.split(':')
-                if len(parts) != 2:
-                    raise exceptions.OptionsError(
-                        "Invalid single-user specification. "
-                        "Please use the format username:password"
-                    )
-                password_manager = authentication.PassManSingleUser(*parts)
-            elif options.auth_nonanonymous:
-                password_manager = authentication.PassManNonAnon()
-            elif options.auth_htpasswd:
-                try:
-                    password_manager = authentication.PassManHtpasswd(
-                        options.auth_htpasswd
-                    )
-                except ValueError as v:
-                    raise exceptions.OptionsError(str(v))
-            if options.mode == "reverse":
-                self.authenticator = authentication.BasicWebsiteAuth(
-                    password_manager,
-                    self.upstream_server.address
-                )
-            else:
-                self.authenticator = authentication.BasicProxyAuth(
-                    password_manager,
-                    "mitmproxy"
-                )

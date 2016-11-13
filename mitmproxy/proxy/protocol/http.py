@@ -8,7 +8,6 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol import websockets as pwebsockets
-import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 
@@ -124,7 +123,6 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-FIRSTLINES = set(["absolute", "relative", "authority"])
 # At this point, we see only a subset of the proxy modes
 MODE_REQUEST_FORMS = {
     HTTPMode.regular: ("authority", "absolute"),
@@ -269,13 +267,6 @@ class HttpLayer(base.Layer):
             )
 
         self.log("request", "debug", [repr(request)])
-
-        # Handle Proxy Authentication Proxy Authentication conceptually does
-        # not work in transparent mode. We catch this misconfiguration on
-        # startup. Here, we sort out requests after a successful CONNECT
-        # request (which do not need to be validated anymore)
-        if not self.connect_request and not self.authenticate(request):
-            return False
 
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse":
@@ -455,27 +446,3 @@ class HttpLayer(base.Layer):
                 self.connect()
             if tls:
                 raise exceptions.HttpProtocolException("Cannot change scheme in upstream proxy mode.")
-
-    def authenticate(self, request) -> bool:
-        if self.config.authenticator:
-            if self.config.authenticator.authenticate(request.headers):
-                self.config.authenticator.clean(request.headers)
-            else:
-                if self.mode == HTTPMode.transparent:
-                    self.send_response(http.make_error_response(
-                        401,
-                        "Authentication Required",
-                        mitmproxy.net.http.Headers(
-                            **self.config.authenticator.auth_challenge_headers()
-                        )
-                    ))
-                else:
-                    self.send_response(http.make_error_response(
-                        407,
-                        "Proxy Authentication Required",
-                        mitmproxy.net.http.Headers(
-                            **self.config.authenticator.auth_challenge_headers()
-                        )
-                    ))
-                return False
-        return True

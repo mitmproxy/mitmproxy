@@ -67,7 +67,8 @@ class TestBasic(tservers.HTTPProxyTest, SequenceTester):
                         da
                     """
                 )
-            assert e.called[-1] == "requestheaders"
+        assert "requestheaders" in e.called
+        assert "responseheaders" not in e.called
 
     def test_connect(self):
         e = Eventer()

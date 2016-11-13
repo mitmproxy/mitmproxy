@@ -6,6 +6,7 @@ from mitmproxy.test import tutils
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.addons import script
+from mitmproxy.addons import proxyauth
 from mitmproxy import http
 from mitmproxy.proxy.config import HostMatcher, parse_server_spec
 import mitmproxy.net.http
@@ -13,7 +14,6 @@ from mitmproxy.net import tcp
 from mitmproxy.net import socks
 from mitmproxy import certs
 from mitmproxy import exceptions
-from mitmproxy.net.http import authentication
 from mitmproxy.net.http import http1
 from mitmproxy.net.tcp import Address
 from pathod import pathoc
@@ -285,6 +285,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
 
 class TestHTTPAuth(tservers.HTTPProxyTest):
     def test_auth(self):
+        self.master.addons.add(proxyauth.ProxyAuth())
         self.master.options.auth_singleuser = "test:test"
         assert self.pathod("202").status_code == 407
         p = self.pathoc()
@@ -295,14 +296,15 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
                 h'%s'='%s'
             """ % (
                 self.server.port,
-                mitmproxy.net.http.authentication.BasicProxyAuth.AUTH_HEADER,
-                authentication.assemble_http_basic_auth("basic", "test", "test")
+                "Proxy-Authorization",
+                proxyauth.mkauth("test", "test")
             ))
         assert ret.status_code == 202
 
 
 class TestHTTPReverseAuth(tservers.ReverseProxyTest):
     def test_auth(self):
+        self.master.addons.add(proxyauth.ProxyAuth())
         self.master.options.auth_singleuser = "test:test"
         assert self.pathod("202").status_code == 401
         p = self.pathoc()
@@ -312,8 +314,8 @@ class TestHTTPReverseAuth(tservers.ReverseProxyTest):
                 '/p/202'
                 h'%s'='%s'
             """ % (
-                mitmproxy.net.http.authentication.BasicWebsiteAuth.AUTH_HEADER,
-                authentication.assemble_http_basic_auth("basic", "test", "test")
+                "Authorization",
+                proxyauth.mkauth("test", "test")
             ))
         assert ret.status_code == 202
 
