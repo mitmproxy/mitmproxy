@@ -69,6 +69,7 @@ def convert_018_019(data):
     data["client_conn"]["sni"] = None
     data["client_conn"]["cipher_name"] = None
     data["client_conn"]["tls_version"] = None
+    data["mode"] = "regular"
     data["metadata"] = dict()
     return data
 

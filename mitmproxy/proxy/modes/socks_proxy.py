@@ -5,9 +5,6 @@ from mitmproxy.net import socks
 
 class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
 
-    def __init__(self, ctx):
-        super().__init__(ctx)
-
     def __call__(self):
         try:
             # Parse Client Greeting

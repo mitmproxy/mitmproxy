@@ -53,7 +53,7 @@ class HTTPRequest(http.Request):
     def get_state(self):
         state = super().get_state()
         state.update(
-            is_replay=self.is_replay,
+            is_replay=self.is_replay
         )
         return state
 
@@ -143,7 +143,7 @@ class HTTPFlow(flow.Flow):
     transaction.
     """
 
-    def __init__(self, client_conn, server_conn, live=None):
+    def __init__(self, client_conn, server_conn, live=None, mode="regular"):
         super().__init__("http", client_conn, server_conn, live)
 
         self.request = None  # type: HTTPRequest
@@ -163,11 +163,14 @@ class HTTPFlow(flow.Flow):
         """:py:class:`ClientConnection` object """
         self.intercepted = False  # type: bool
         """ Is this flow currently being intercepted? """
+        self.mode = mode
+        """ What mode was the proxy layer in when receiving this request? """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(
         request=HTTPRequest,
-        response=HTTPResponse
+        response=HTTPResponse,
+        mode=str
     )
 
     def __repr__(self):

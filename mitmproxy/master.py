@@ -256,6 +256,10 @@ class Master:
         pass
 
     @controller.handler
+    def http_connect(self, f):
+        pass
+
+    @controller.handler
     def error(self, f):
         pass
 

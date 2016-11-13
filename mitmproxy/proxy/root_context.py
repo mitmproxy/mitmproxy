@@ -2,6 +2,7 @@ from mitmproxy import log
 from mitmproxy import exceptions
 from mitmproxy.proxy import protocol
 from mitmproxy.proxy import modes
+from mitmproxy.proxy.protocol import http
 
 
 class RootContext:
@@ -63,16 +64,21 @@ class RootContext:
         # An inline script may upgrade from http to https,
         # in which case we need some form of TLS layer.
         if isinstance(top_layer, modes.ReverseProxy):
-            return protocol.TlsLayer(top_layer, client_tls, top_layer.server_tls, top_layer.server_conn.address.host)
+            return protocol.TlsLayer(
+                top_layer,
+                client_tls,
+                top_layer.server_tls,
+                top_layer.server_conn.address.host
+            )
         if isinstance(top_layer, protocol.ServerConnectionMixin) or isinstance(top_layer, protocol.UpstreamConnectLayer):
             return protocol.TlsLayer(top_layer, client_tls, client_tls)
 
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if isinstance(top_layer, protocol.TlsLayer):
             if isinstance(top_layer.ctx, modes.HttpProxy):
-                return protocol.Http1Layer(top_layer, "regular")
+                return protocol.Http1Layer(top_layer, http.HTTPMode.regular)
             if isinstance(top_layer.ctx, modes.HttpUpstreamProxy):
-                return protocol.Http1Layer(top_layer, "upstream")
+                return protocol.Http1Layer(top_layer, http.HTTPMode.upstream)
 
         # 4. Check for other TLS cases (e.g. after CONNECT).
         if client_tls:
@@ -86,21 +92,12 @@ class RootContext:
         if isinstance(top_layer, protocol.TlsLayer):
             alpn = top_layer.client_conn.get_alpn_proto_negotiated()
             if alpn == b'h2':
-                return protocol.Http2Layer(top_layer, 'transparent')
+                return protocol.Http2Layer(top_layer, http.HTTPMode.transparent)
             if alpn == b'http/1.1':
-                return protocol.Http1Layer(top_layer, 'transparent')
+                return protocol.Http1Layer(top_layer, http.HTTPMode.transparent)
 
-        # 6. Check for raw tcp mode
-        is_ascii = (
-            len(d) == 3 and
-            # expect A-Za-z
-            all(65 <= x <= 90 or 97 <= x <= 122 for x in d)
-        )
-        if self.config.options.rawtcp and not is_ascii:
-            return protocol.RawTCPLayer(top_layer)
-
-        # 7. Assume HTTP1 by default
-        return protocol.Http1Layer(top_layer, 'transparent')
+        # 6. Assume HTTP1 by default
+        return protocol.Http1Layer(top_layer, http.HTTPMode.transparent)
 
     def log(self, msg, level, subs=()):
         """

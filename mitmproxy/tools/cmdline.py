@@ -463,8 +463,8 @@ def proxy_options(parser):
         action="store", dest="upstream_auth", default=None,
         type=str,
         help="""
-            Proxy Authentication:
-            username:password
+            Add HTTP Basic authentcation to upstream proxy and reverse proxy
+            requests. Format: username:password
         """
     )
     rawtcp = group.add_mutually_exclusive_group()

@@ -1,12 +1,13 @@
 import h2.exceptions
 import time
 import traceback
+import enum
+
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol import websockets as pwebsockets
-import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 
@@ -17,14 +18,6 @@ class _HttpTransmissionLayer(base.Layer):
 
     def read_request_body(self, request):
         raise NotImplementedError()
-
-    def read_request(self, f):
-        request = self.read_request_headers(f)
-        request.data.content = b"".join(
-            self.read_request_body(request)
-        )
-        request.timestamp_end = time.time()
-        return request
 
     def send_request(self, request):
         raise NotImplementedError()
@@ -120,12 +113,42 @@ class UpstreamConnectLayer(base.Layer):
         self.server_conn.address = address
 
 
+def is_ok(status):
+    return 200 <= status < 300
+
+
+class HTTPMode(enum.Enum):
+    regular = 1
+    transparent = 2
+    upstream = 3
+
+
+# At this point, we see only a subset of the proxy modes
+MODE_REQUEST_FORMS = {
+    HTTPMode.regular: ("authority", "absolute"),
+    HTTPMode.transparent: ("relative"),
+    HTTPMode.upstream: ("authority", "absolute"),
+}
+
+
+def validate_request_form(mode, request):
+    if request.first_line_format == "absolute" and request.scheme != "http":
+        raise exceptions.HttpException(
+            "Invalid request scheme: %s" % request.scheme
+        )
+    allowed_request_forms = MODE_REQUEST_FORMS[mode]
+    if request.first_line_format not in allowed_request_forms:
+        err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
+            " or ".join(allowed_request_forms), request.first_line_format
+        )
+        raise exceptions.HttpException(err_message)
+
+
 class HttpLayer(base.Layer):
 
     def __init__(self, ctx, mode):
         super().__init__(ctx)
         self.mode = mode
-        self.flow = None  # type: http.HTTPFlow
         self.__initial_server_conn = None
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
@@ -133,25 +156,108 @@ class HttpLayer(base.Layer):
         # see https://github.com/mitmproxy/mitmproxy/issues/925
         self.__initial_server_tls = None
         # Requests happening after CONNECT do not need Proxy-Authorization headers.
-        self.http_authenticated = False
+        self.connect_request = False
 
     def __call__(self):
-        if self.mode == "transparent":
+        if self.mode == HTTPMode.transparent:
             self.__initial_server_tls = self.server_tls
             self.__initial_server_conn = self.server_conn
         while True:
-            self.flow = http.HTTPFlow(self.client_conn, self.server_conn, live=self)
-            if not self._process_flow(self.flow):
+            flow = http.HTTPFlow(
+                self.client_conn,
+                self.server_conn,
+                live=self,
+                mode=self.mode.name
+            )
+            if not self._process_flow(flow):
                 return
+
+    def handle_regular_connect(self, f):
+        self.connect_request = True
+
+        try:
+            self.set_server((f.request.host, f.request.port))
+        except (
+            exceptions.ProtocolException, exceptions.NetlibException
+        ) as e:
+            # HTTPS tasting means that ordinary errors like resolution
+            # and connection errors can happen here.
+            self.send_error_response(502, repr(e))
+            f.error = flow.Error(str(e))
+            self.channel.ask("error", f)
+            return False
+
+        if f.response:
+            resp = f.response
+        else:
+            resp = http.make_connect_response(f.request.data.http_version)
+
+        self.send_response(resp)
+
+        if is_ok(resp.status_code):
+            layer = self.ctx.next_layer(self)
+            layer()
+
+        return False
+
+    def handle_upstream_connect(self, f):
+        self.establish_server_connection(
+            f.request.host,
+            f.request.port,
+            f.request.scheme
+        )
+        self.send_request(f.request)
+        f.response = self.read_response_headers()
+        f.response.data.content = b"".join(
+            self.read_response_body(f.request, f.response)
+        )
+        self.send_response(f.response)
+        if is_ok(f.response.status_code):
+            layer = UpstreamConnectLayer(self, f.request)
+            return layer()
+        return False
 
     def _process_flow(self, f):
         try:
-            request = self.get_request_from_client(f)
-            # Make sure that the incoming request matches our expectations
-            self.validate_request(request)
-        except exceptions.HttpReadDisconnect:
-            # don't throw an error for disconnects that happen before/between requests.
-            return False
+            try:
+                request = self.read_request_headers(f)
+            except exceptions.HttpReadDisconnect:
+                # don't throw an error for disconnects that happen
+                # before/between requests.
+                return False
+
+            f.request = request
+
+            if request.first_line_format == "authority":
+                # The standards are silent on what we should do with a CONNECT
+                # request body, so although it's not common, it's allowed.
+                f.request.data.content = b"".join(
+                    self.read_request_body(f.request)
+                )
+                f.request.timestamp_end = time.time()
+                self.channel.ask("http_connect", f)
+
+                if self.mode is HTTPMode.regular:
+                    return self.handle_regular_connect(f)
+                elif self.mode is HTTPMode.upstream:
+                    return self.handle_upstream_connect(f)
+                else:
+                    msg = "Unexpected CONNECT request."
+                    self.send_error_response(400, msg)
+                    raise exceptions.ProtocolException(msg)
+
+            self.channel.ask("requestheaders", f)
+
+            if request.headers.get("expect", "").lower() == "100-continue":
+                # TODO: We may have to use send_response_headers for HTTP2
+                # here.
+                self.send_response(http.expect_continue_response)
+                request.headers.pop("expect")
+
+            request.data.content = b"".join(self.read_request_body(request))
+            request.timestamp_end = time.time()
+
+            validate_request_form(self.mode, request)
         except exceptions.HttpException as e:
             # We optimistically guess there might be an HTTP client on the
             # other end
@@ -162,36 +268,25 @@ class HttpLayer(base.Layer):
 
         self.log("request", "debug", [repr(request)])
 
-        # Handle Proxy Authentication
-        # Proxy Authentication conceptually does not work in transparent mode.
-        # We catch this misconfiguration on startup. Here, we sort out requests
-        # after a successful CONNECT request (which do not need to be validated anymore)
-        if not (self.http_authenticated or self.authenticate(request)):
-            return False
-
-        f.request = request
-
-        try:
-            # Regular Proxy Mode: Handle CONNECT
-            if self.mode == "regular" and request.first_line_format == "authority":
-                self.handle_regular_mode_connect(request)
-                return False
-        except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-            # HTTPS tasting means that ordinary errors like resolution and
-            # connection errors can happen here.
-            self.send_error_response(502, repr(e))
-            f.error = flow.Error(str(e))
-            self.channel.ask("error", f)
-            return False
-
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse":
             f.request.headers["Host"] = self.config.upstream_server.address.host
 
-        # set upstream auth
-        if self.mode == "upstream" and self.config.upstream_auth is not None:
-            f.request.headers["Proxy-Authorization"] = self.config.upstream_auth
-        self.process_request_hook(f)
+        # Determine .scheme, .host and .port attributes for inline scripts. For
+        # absolute-form requests, they are directly given in the request. For
+        # authority-form requests, we only need to determine the request
+        # scheme. For relative-form requests, we need to determine host and
+        # port as well.
+        if self.mode is HTTPMode.transparent:
+            # Setting request.host also updates the host header, which we want
+            # to preserve
+            host_header = f.request.headers.get("host", None)
+            f.request.host = self.__initial_server_conn.address.host
+            f.request.port = self.__initial_server_conn.address.port
+            if host_header:
+                f.request.headers["host"] = host_header
+            f.request.scheme = "https" if self.__initial_server_tls else "http"
+        self.channel.ask("request", f)
 
         try:
             if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
@@ -205,7 +300,55 @@ class HttpLayer(base.Layer):
                     f.request.port,
                     f.request.scheme
                 )
-                self.get_response_from_server(f)
+
+                def get_response():
+                    self.send_request(f.request)
+                    f.response = self.read_response_headers()
+
+                try:
+                    get_response()
+                except exceptions.NetlibException as e:
+                    self.log(
+                        "server communication error: %s" % repr(e),
+                        level="debug"
+                    )
+                    # In any case, we try to reconnect at least once. This is
+                    # necessary because it might be possible that we already
+                    # initiated an upstream connection after clientconnect that
+                    # has already been expired, e.g consider the following event
+                    # log:
+                    # > clientconnect (transparent mode destination known)
+                    # > serverconnect (required for client tls handshake)
+                    # > read n% of large request
+                    # > server detects timeout, disconnects
+                    # > read (100-n)% of large request
+                    # > send large request upstream
+
+                    if isinstance(e, exceptions.Http2ProtocolException):
+                        # do not try to reconnect for HTTP2
+                        raise exceptions.ProtocolException(
+                            "First and only attempt to get response via HTTP2 failed."
+                        )
+
+                    self.disconnect()
+                    self.connect()
+                    get_response()
+
+                # call the appropriate script hook - this is an opportunity for
+                # an inline script to set f.stream = True
+                self.channel.ask("responseheaders", f)
+
+                if f.response.stream:
+                    f.response.data.content = None
+                else:
+                    f.response.data.content = b"".join(
+                        self.read_response_body(f.request, f.response)
+                    )
+                f.response.timestamp_end = time.time()
+
+                # no further manipulation of self.server_conn beyond this point
+                # we can safely set it as the final attribute value here.
+                f.server_conn = self.server_conn
             else:
                 # response was set by an inline script.
                 # we now need to emulate the responseheaders hook.
@@ -213,20 +356,49 @@ class HttpLayer(base.Layer):
 
             self.log("response", "debug", [repr(f.response)])
             self.channel.ask("response", f)
-            self.send_response_to_client(f)
+
+            if not f.response.stream:
+                # no streaming:
+                # we already received the full response from the server and can
+                # send it to the client straight away.
+                self.send_response(f.response)
+            else:
+                # streaming:
+                # First send the headers and then transfer the response incrementally
+                self.send_response_headers(f.response)
+                chunks = self.read_response_body(
+                    f.request,
+                    f.response
+                )
+                if callable(f.response.stream):
+                    chunks = f.response.stream(chunks)
+                self.send_response_body(f.response, chunks)
+                f.response.timestamp_end = time.time()
 
             if self.check_close_connection(f):
                 return False
 
             # Handle 101 Switching Protocols
             if f.response.status_code == 101:
-                self.handle_101_switching_protocols(f)
-                return False  # should never be reached
+                # Handle a successful HTTP 101 Switching Protocols Response,
+                # received after e.g. a WebSocket upgrade request.
+                # Check for WebSockets handshake
+                is_websockets = (
+                    websockets.check_handshake(f.request.headers) and
+                    websockets.check_handshake(f.response.headers)
+                )
+                if is_websockets and not self.config.options.websockets:
+                    self.log(
+                        "Client requested WebSocket connection, but the protocol is disabled.",
+                        "info"
+                    )
 
-            # Upstream Proxy Mode: Handle CONNECT
-            if f.request.first_line_format == "authority" and f.response.status_code == 200:
-                self.handle_upstream_mode_connect(f.request.copy())
-                return False
+                if is_websockets and self.config.options.websockets:
+                    layer = pwebsockets.WebSocketsLayer(self, f)
+                else:
+                    layer = self.ctx.next_layer(self)
+                layer()
+                return False  # should never be reached
 
         except (exceptions.ProtocolException, exceptions.NetlibException) as e:
             self.send_error_response(502, repr(e))
@@ -244,135 +416,24 @@ class HttpLayer(base.Layer):
 
         return True
 
-    def get_request_from_client(self, f):
-        request = self.read_request(f)
-        f.request = request
-        self.channel.ask("requestheaders", f)
-        if request.headers.get("expect", "").lower() == "100-continue":
-            # TODO: We may have to use send_response_headers for HTTP2 here.
-            self.send_response(http.expect_continue_response)
-            request.headers.pop("expect")
-            request.content = b"".join(self.read_request_body(request))
-            request.timestamp_end = time.time()
-        return request
-
-    def send_error_response(self, code, message, headers=None):
+    def send_error_response(self, code, message, headers=None) -> None:
         try:
             response = http.make_error_response(code, message, headers)
             self.send_response(response)
         except (exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
             self.log(traceback.format_exc(), "debug")
 
-    def change_upstream_proxy_server(self, address):
+    def change_upstream_proxy_server(self, address) -> None:
         # Make set_upstream_proxy_server always available,
         # even if there's no UpstreamConnectLayer
         if address != self.server_conn.address:
-            return self.set_server(address)
+            self.set_server(address)
 
-    def handle_regular_mode_connect(self, request):
-        self.http_authenticated = True
-        self.set_server((request.host, request.port))
-        self.send_response(http.make_connect_response(request.data.http_version))
-        layer = self.ctx.next_layer(self)
-        layer()
-
-    def handle_upstream_mode_connect(self, connect_request):
-        layer = UpstreamConnectLayer(self, connect_request)
-        layer()
-
-    def send_response_to_client(self, f):
-        if not f.response.stream:
-            # no streaming:
-            # we already received the full response from the server and can
-            # send it to the client straight away.
-            self.send_response(f.response)
-        else:
-            # streaming:
-            # First send the headers and then transfer the response incrementally
-            self.send_response_headers(f.response)
-            chunks = self.read_response_body(
-                f.request,
-                f.response
-            )
-            if callable(f.response.stream):
-                chunks = f.response.stream(chunks)
-            self.send_response_body(f.response, chunks)
-            f.response.timestamp_end = time.time()
-
-    def get_response_from_server(self, f):
-        def get_response():
-            self.send_request(f.request)
-            f.response = self.read_response_headers()
-
-        try:
-            get_response()
-        except exceptions.NetlibException as e:
-            self.log(
-                "server communication error: %s" % repr(e),
-                level="debug"
-            )
-            # In any case, we try to reconnect at least once. This is
-            # necessary because it might be possible that we already
-            # initiated an upstream connection after clientconnect that
-            # has already been expired, e.g consider the following event
-            # log:
-            # > clientconnect (transparent mode destination known)
-            # > serverconnect (required for client tls handshake)
-            # > read n% of large request
-            # > server detects timeout, disconnects
-            # > read (100-n)% of large request
-            # > send large request upstream
-
-            if isinstance(e, exceptions.Http2ProtocolException):
-                # do not try to reconnect for HTTP2
-                raise exceptions.ProtocolException("First and only attempt to get response via HTTP2 failed.")
-
-            self.disconnect()
-            self.connect()
-            get_response()
-
-        # call the appropriate script hook - this is an opportunity for an
-        # inline script to set f.stream = True
-        self.channel.ask("responseheaders", f)
-
-        if f.response.stream:
-            f.response.data.content = None
-        else:
-            f.response.data.content = b"".join(self.read_response_body(
-                f.request,
-                f.response
-            ))
-        f.response.timestamp_end = time.time()
-
-        # no further manipulation of self.server_conn beyond this point
-        # we can safely set it as the final attribute value here.
-        f.server_conn = self.server_conn
-
-    def process_request_hook(self, f):
-        # Determine .scheme, .host and .port attributes for inline scripts.
-        # For absolute-form requests, they are directly given in the request.
-        # For authority-form requests, we only need to determine the request scheme.
-        # For relative-form requests, we need to determine host and port as
-        # well.
-        if self.mode == "regular":
-            pass  # only absolute-form at this point, nothing to do here.
-        elif self.mode == "upstream":
-            pass
-        else:
-            # Setting request.host also updates the host header, which we want to preserve
-            host_header = f.request.headers.get("host", None)
-            f.request.host = self.__initial_server_conn.address.host
-            f.request.port = self.__initial_server_conn.address.port
-            if host_header:
-                f.request.headers["host"] = host_header
-            f.request.scheme = "https" if self.__initial_server_tls else "http"
-        self.channel.ask("request", f)
-
-    def establish_server_connection(self, host, port, scheme):
+    def establish_server_connection(self, host: str, port: int, scheme: str):
         address = tcp.Address((host, port))
         tls = (scheme == "https")
 
-        if self.mode == "regular" or self.mode == "transparent":
+        if self.mode is HTTPMode.regular or self.mode is HTTPMode.transparent:
             # If there's an existing connection that doesn't match our expectations, kill it.
             if address != self.server_conn.address or tls != self.server_tls:
                 self.set_server(address)
@@ -385,80 +446,3 @@ class HttpLayer(base.Layer):
                 self.connect()
             if tls:
                 raise exceptions.HttpProtocolException("Cannot change scheme in upstream proxy mode.")
-            """
-            # This is a very ugly (untested) workaround to solve a very ugly problem.
-            if self.server_conn and self.server_conn.tls_established and not ssl:
-                self.disconnect()
-                self.connect()
-            elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
-                if self.server_conn.tls_established:
-                    self.disconnect()
-                    self.connect()
-
-                self.send_request(make_connect_request(address))
-                tls_layer = TlsLayer(self, False, True)
-                tls_layer._establish_tls_with_server()
-            """
-
-    def validate_request(self, request):
-        if request.first_line_format == "absolute" and request.scheme != "http":
-            raise exceptions.HttpException("Invalid request scheme: %s" % request.scheme)
-
-        expected_request_forms = {
-            "regular": ("authority", "absolute",),
-            "upstream": ("authority", "absolute"),
-            "transparent": ("relative",)
-        }
-
-        allowed_request_forms = expected_request_forms[self.mode]
-        if request.first_line_format not in allowed_request_forms:
-            err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
-                " or ".join(allowed_request_forms), request.first_line_format
-            )
-            raise exceptions.HttpException(err_message)
-
-        if self.mode == "regular" and request.first_line_format == "absolute":
-            request.first_line_format = "relative"
-
-    def authenticate(self, request):
-        if self.config.authenticator:
-            if self.config.authenticator.authenticate(request.headers):
-                self.config.authenticator.clean(request.headers)
-            else:
-                if self.mode == "transparent":
-                    self.send_response(http.make_error_response(
-                        401,
-                        "Authentication Required",
-                        mitmproxy.net.http.Headers(**self.config.authenticator.auth_challenge_headers())
-                    ))
-                else:
-                    self.send_response(http.make_error_response(
-                        407,
-                        "Proxy Authentication Required",
-                        mitmproxy.net.http.Headers(**self.config.authenticator.auth_challenge_headers())
-                    ))
-                return False
-        return True
-
-    def handle_101_switching_protocols(self, f):
-        """
-        Handle a successful HTTP 101 Switching Protocols Response, received after e.g. a WebSocket upgrade request.
-        """
-        # Check for WebSockets handshake
-        is_websockets = (
-            f and
-            websockets.check_handshake(f.request.headers) and
-            websockets.check_handshake(f.response.headers)
-        )
-        if is_websockets and not self.config.options.websockets:
-            self.log(
-                "Client requested WebSocket connection, but the protocol is currently disabled in mitmproxy.",
-                "info"
-            )
-
-        if is_websockets and self.config.options.websockets:
-            layer = pwebsockets.WebSocketsLayer(self, f)
-        else:
-            layer = self.ctx.next_layer(self)
-
-        layer()
