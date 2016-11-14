@@ -38,7 +38,7 @@ def test_order_refresh():
     def save(*args, **kwargs):
         sargs.extend([args, kwargs])
 
-    v.sig_refresh.connect(save)
+    v.sig_view_refresh.connect(save)
 
     tf = tflow.tflow(resp=True)
     with taddons.context(options=Options()) as tctx:
@@ -217,10 +217,10 @@ def test_signals():
         rec_remove.calls = []
         rec_refresh.calls = []
 
-    v.sig_add.connect(rec_add)
-    v.sig_update.connect(rec_update)
-    v.sig_remove.connect(rec_remove)
-    v.sig_refresh.connect(rec_refresh)
+    v.sig_view_add.connect(rec_add)
+    v.sig_view_update.connect(rec_update)
+    v.sig_view_remove.connect(rec_remove)
+    v.sig_view_refresh.connect(rec_refresh)
 
     assert not any([rec_add, rec_update, rec_remove, rec_refresh])
 
@@ -361,6 +361,12 @@ def test_settings():
     assert len(list(v.settings)) == 1
     v.remove(f)
     tutils.raises(KeyError, v.settings.__getitem__, f)
+    assert not v.settings.keys()
+
+    v.add(f)
+    v.settings[f]["foo"] = "bar"
+    assert v.settings.keys()
+    v.clear()
     assert not v.settings.keys()
 
 

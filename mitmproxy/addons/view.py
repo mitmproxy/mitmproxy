@@ -45,7 +45,7 @@ class _OrderKey:
             self.view._view.remove(f)
             self.view.settings[f][k] = new
             self.view._view.add(f)
-            self.view.sig_refresh.send(self.view)
+            self.view.sig_view_refresh.send(self.view)
 
     def _key(self):
         return "_order_%s" % id(self)
@@ -120,14 +120,22 @@ class View(collections.Sequence):
 
         self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
 
-        # These signals broadcast events that affect the view. That is, an
-        # update to a flow in the store but not in the view does not trigger a
-        # signal. All signals are called after the view has been updated.
-        self.sig_update = blinker.Signal()
-        self.sig_add = blinker.Signal()
-        self.sig_remove = blinker.Signal()
+        # The sig_view* signals broadcast events that affect the view. That is,
+        # an update to a flow in the store but not in the view does not trigger
+        # a signal. All signals are called after the view has been updated.
+        self.sig_view_update = blinker.Signal()
+        self.sig_view_add = blinker.Signal()
+        self.sig_view_remove = blinker.Signal()
         # Signals that the view should be refreshed completely
-        self.sig_refresh = blinker.Signal()
+        self.sig_view_refresh = blinker.Signal()
+
+        # The sig_store* signals broadcast events that affect the underlying
+        # store. If a flow is removed from just the view, sig_view_remove is
+        # triggered. If it is removed from the store while it is also in the
+        # view, both sig_store_remove and sig_view_remove are triggered.
+        self.sig_store_remove = blinker.Signal()
+        # Signals that the store should be refreshed completely
+        self.sig_store_refresh = blinker.Signal()
 
         self.focus = Focus(self)
         self.settings = Settings(self)
@@ -186,7 +194,7 @@ class View(collections.Sequence):
                 continue
             if self.filter(i):
                 self._base_add(i)
-        self.sig_refresh.send(self)
+        self.sig_view_refresh.send(self)
 
     # API
     def toggle_marked(self):
@@ -195,7 +203,7 @@ class View(collections.Sequence):
 
     def set_reversed(self, value: bool):
         self.order_reversed = value
-        self.sig_refresh.send(self)
+        self.sig_view_refresh.send(self)
 
     def set_order(self, order_key: typing.Callable):
         """
@@ -215,12 +223,12 @@ class View(collections.Sequence):
 
     def clear(self):
         """
-            Clears both the state and view.
+            Clears both the store and view.
         """
         self._store.clear()
         self._view.clear()
-        self.settings.clear()
-        self.sig_refresh.send(self)
+        self.sig_view_refresh.send(self)
+        self.sig_store_refresh.send(self)
 
     def add(self, f: mitmproxy.flow.Flow) -> bool:
         """
@@ -233,7 +241,7 @@ class View(collections.Sequence):
                 self._base_add(f)
                 if self.focus_follow:
                     self.focus.flow = f
-                self.sig_add.send(self, flow=f)
+                self.sig_view_add.send(self, flow=f)
 
     def remove(self, f: mitmproxy.flow.Flow):
         """
@@ -242,8 +250,9 @@ class View(collections.Sequence):
         if f.id in self._store:
             if f in self._view:
                 self._view.remove(f)
-                self.sig_remove.send(self, flow=f)
+                self.sig_view_remove.send(self, flow=f)
             del self._store[f.id]
+            self.sig_store_remove.send(self, flow=f)
 
     def update(self, f: mitmproxy.flow.Flow):
         """
@@ -255,18 +264,18 @@ class View(collections.Sequence):
                     self._base_add(f)
                     if self.focus_follow:
                         self.focus.flow = f
-                    self.sig_add.send(self, flow=f)
+                    self.sig_view_add.send(self, flow=f)
                 else:
                     # This is a tad complicated. The sortedcontainers
                     # implementation assumes that the order key is stable. If
                     # it changes mid-way Very Bad Things happen. We detect when
                     # this happens, and re-fresh the item.
                     self.order_key.refresh(f)
-                    self.sig_update.send(self, flow=f)
+                    self.sig_view_update.send(self, flow=f)
             else:
                 try:
                     self._view.remove(f)
-                    self.sig_remove.send(self, flow=f)
+                    self.sig_view_remove.send(self, flow=f)
                 except ValueError:
                     # The value was not in the view
                     pass
@@ -322,9 +331,9 @@ class Focus:
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
-        v.sig_add.connect(self._sig_add)
-        v.sig_remove.connect(self._sig_remove)
-        v.sig_refresh.connect(self._sig_refresh)
+        v.sig_view_add.connect(self._sig_view_add)
+        v.sig_view_remove.connect(self._sig_view_remove)
+        v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
     def flow(self) -> typing.Optional[mitmproxy.flow.Flow]:
@@ -351,13 +360,13 @@ class Focus:
     def _nearest(self, f, v):
         return min(v._bisect(f), len(v) - 1)
 
-    def _sig_remove(self, view, flow):
+    def _sig_view_remove(self, view, flow):
         if len(view) == 0:
             self.flow = None
         elif flow is self.flow:
             self.flow = view[self._nearest(self.flow, view)]
 
-    def _sig_refresh(self, view):
+    def _sig_view_refresh(self, view):
         if len(view) == 0:
             self.flow = None
         elif self.flow is None:
@@ -365,7 +374,7 @@ class Focus:
         elif self.flow not in view:
             self.flow = view[self._nearest(self.flow, view)]
 
-    def _sig_add(self, view, flow):
+    def _sig_view_add(self, view, flow):
         # We only have to act if we don't have a focus element
         if not self.flow:
             self.flow = flow
@@ -375,11 +384,8 @@ class Settings(collections.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
         self._values = {}  # type: typing.MutableMapping[str, mitmproxy.flow.Flow]
-        view.sig_remove.connect(self._sig_remove)
-        view.sig_refresh.connect(self._sig_refresh)
-
-    def clear(self):
-        self._values.clear()
+        view.sig_store_remove.connect(self._sig_store_remove)
+        view.sig_store_refresh.connect(self._sig_store_refresh)
 
     def __iter__(self) -> typing.Iterator:
         return iter(self._values)
@@ -392,11 +398,11 @@ class Settings(collections.Mapping):
             raise KeyError
         return self._values.setdefault(f.id, {})
 
-    def _sig_remove(self, view, flow):
+    def _sig_store_remove(self, view, flow):
         if flow.id in self._values:
             del self._values[flow.id]
 
-    def _sig_refresh(self, view):
+    def _sig_store_refresh(self, view):
         for fid in list(self._values.keys()):
             if fid not in view._store:
                 del self._values[fid]
