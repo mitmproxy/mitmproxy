@@ -78,7 +78,7 @@ Logging and the context
 -----------------------
 
 Scripts should not output straight to stderr or stdout. Instead, the `log
-<api.html#mitmproxy.controller.Log>`_ object on the ``ctx`` contexzt module
+<api.html#mitmproxy.controller.Log>`_ object on the ``ctx`` context module
 should be used, so that the mitmproxy host program can handle output
 appropriately. So, mitmdump can print colorised script output to the terminal,
 and mitmproxy console can place script output in the event buffer.
@@ -134,7 +134,7 @@ purposes. You can use it as follows:
 Developing scripts
 ------------------
 
-Mitmprxoy monitors scripts for modifications, and reloads them on change. When
+Mitmproxy monitors scripts for modifications, and reloads them on change. When
 this happens, the script is shut down (the `done <events.html#done>`_  event is
 called), and the new instance is started up as if the script had just been
 loaded (the `start <events.html#start>`_ and `configure
