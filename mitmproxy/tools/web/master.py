@@ -90,10 +90,10 @@ class WebMaster(master.Master):
     def __init__(self, options, server):
         super().__init__(options, server)
         self.view = view.View()
-        self.view.sig_add.connect(self._sig_add)
-        self.view.sig_remove.connect(self._sig_remove)
-        self.view.sig_update.connect(self._sig_update)
-        self.view.sig_refresh.connect(self._sig_refresh)
+        self.view.sig_view_add.connect(self._sig_add)
+        self.view.sig_view_remove.connect(self._sig_remove)
+        self.view.sig_view_update.connect(self._sig_update)
+        self.view.sig_view_refresh.connect(self._sig_refresh)
 
         self.addons.add(*addons.default_addons())
         self.addons.add(self.view, intercept.Intercept())

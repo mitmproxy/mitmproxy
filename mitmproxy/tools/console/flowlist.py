@@ -263,10 +263,10 @@ class FlowListWalker(urwid.ListWalker):
 
     def __init__(self, master):
         self.master = master
-        self.master.view.sig_refresh.connect(self.sig_mod)
-        self.master.view.sig_add.connect(self.sig_mod)
-        self.master.view.sig_remove.connect(self.sig_mod)
-        self.master.view.sig_update.connect(self.sig_mod)
+        self.master.view.sig_view_refresh.connect(self.sig_mod)
+        self.master.view.sig_view_add.connect(self.sig_mod)
+        self.master.view.sig_view_remove.connect(self.sig_mod)
+        self.master.view.sig_view_update.connect(self.sig_mod)
         self.master.view.focus.sig_change.connect(self.sig_mod)
         signals.flowlist_change.connect(self.sig_mod)
 
