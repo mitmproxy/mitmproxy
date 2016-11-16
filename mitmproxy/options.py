@@ -83,7 +83,7 @@ class Options(optmanager.OptManager):
             ssl_verify_upstream_trusted_cadir: Optional[str] = None,
             ssl_verify_upstream_trusted_ca: Optional[str] = None,
             tcp_hosts: Sequence[str] = ()
-    ):
+    ) -> None:
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
 

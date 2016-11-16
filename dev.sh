@@ -7,7 +7,7 @@ VENV="venv$PYVERSION"
 
 echo "Creating dev environment in $VENV using Python $PYVERSION"
 
-python$PYVERSION -m virtualenv "$VENV" --always-copy
+python$PYVERSION -m venv "$VENV"
 . "$VENV/bin/activate"
 pip$PYVERSION install -U pip setuptools
 pip$PYVERSION install -r requirements.txt
