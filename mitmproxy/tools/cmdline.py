@@ -251,6 +251,7 @@ def get_common_options(args):
         ignore_hosts = args.ignore_hosts,
         listen_host = args.addr,
         listen_port = args.port,
+        upstream_bind_address = args.upstream_bind_address,
         mode = mode,
         no_upstream_cert = args.no_upstream_cert,
         spoof_source_address = args.spoof_source_address,
@@ -485,6 +486,11 @@ def proxy_options(parser):
         "--spoof-source-address",
         action="store_true", dest="spoof_source_address",
         help="Use the client's IP for server-side connections"
+    )
+    group.add_argument(
+        "--upstream-bind-address",
+        action="store", type=str, dest="upstream_bind_address", default='',
+        help="Address to bind upstream requests to (defaults to none)"
     )
 
 
