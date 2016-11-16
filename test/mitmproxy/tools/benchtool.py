@@ -51,5 +51,6 @@ def main(profiler, clock_type, concurrency):
         stats.save(outfile, type='callgrind')
     print("Done.")
 
+
 if __name__ == '__main__':
     main()

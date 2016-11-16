@@ -90,6 +90,8 @@ def _mkhelp():
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
+
+
 help_context = _mkhelp()
 
 footer = [
@@ -119,6 +121,7 @@ class FlowViewHeader(urwid.WidgetWrap):
                 extended=True,
                 hostheader=self.master.options.showhost
             )
+
 
 TAB_REQ = 0
 TAB_RESP = 1

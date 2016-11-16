@@ -12,6 +12,7 @@ class SocksError(Exception):
         super().__init__(message)
         self.code = code
 
+
 VERSION = bidi.BiDi(
     SOCKS4=0x04,
     SOCKS5=0x05

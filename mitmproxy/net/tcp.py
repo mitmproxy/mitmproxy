@@ -106,6 +106,7 @@ class SSLKeyLogger:
             return SSLKeyLogger(filename)
         return False
 
+
 log_ssl_key = SSLKeyLogger.create_logfun(
     os.getenv("MITMPROXY_SSLKEYLOGFILE") or os.getenv("SSLKEYLOGFILE"))
 
