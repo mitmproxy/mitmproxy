@@ -1,4 +1,5 @@
 import sys
+import webbrowser
 
 import tornado.httpserver
 import tornado.ioloop
@@ -143,13 +144,16 @@ class WebMaster(master.Master):
         iol = tornado.ioloop.IOLoop.instance()
 
         http_server = tornado.httpserver.HTTPServer(self.app)
-        http_server.listen(self.options.wport)
+        http_server.listen(self.options.wport, self.options.wiface)
 
         iol.add_callback(self.start)
         tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
         try:
-            print("Server listening at http://{}:{}".format(
-                self.options.wiface, self.options.wport), file=sys.stderr)
+            url = "http://{}:{}/".format(self.options.wiface, self.options.wport)
+            print("Server listening at {}".format(url), file=sys.stderr)
+            if not open_browser(url):
+                print("No webbrowser found. Please open a browser and point it to {}".format(url))
+
             iol.start()
         except (Stop, KeyboardInterrupt):
             self.shutdown()
@@ -157,3 +161,30 @@ class WebMaster(master.Master):
     # def add_log(self, e, level="info"):
     #     super().add_log(e, level)
     #     return self.state.add_log(e, level)
+
+
+def open_browser(url: str) -> bool:
+    """
+    Open a URL in a browser window.
+    In contrast to webbrowser.open, we limit the list of suitable browsers.
+    This gracefully degrades to a no-op on headless servers, where webbrowser.open
+    would otherwise open lynx.
+
+    Returns:
+        True, if a browser has been opened
+        False, if no suitable browser has been found.
+    """
+    browsers = (
+        "windows-default", "macosx",
+        "google-chrome", "chrome", "chromium", "chromium-browser",
+        "firefox", "opera", "safari",
+    )
+    for browser in browsers:
+        try:
+            b = webbrowser.get(browser)
+        except webbrowser.Error:
+            pass
+        else:
+            b.open(url)
+            return True
+    return False
