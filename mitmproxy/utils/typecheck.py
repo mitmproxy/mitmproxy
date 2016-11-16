@@ -10,7 +10,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
 
     - Union
     - Tuple
-    - TextIO
+    - IO
     """
     # If we realize that we need to extend this list substantially, it may make sense
     # to use typeguard for this, but right now it's not worth the hassle for 16 lines of code.
@@ -37,7 +37,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         for i, (x, T) in enumerate(zip(value, typeinfo.__tuple_params__)):
             check_type("{}[{}]".format(attr_name, i), x, T)
         return
-    if typeinfo == typing.TextIO:
+    if issubclass(typeinfo, typing.IO):
         if hasattr(value, "read"):
             return
 
