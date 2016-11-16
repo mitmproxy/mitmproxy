@@ -78,7 +78,7 @@ setup(
         "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1.3, <2.2",
         "pyperclip>=1.5.22, <1.6",
-        "requests>=2.9.1, <2.12",
+        "requests>=2.9.1, <3",
         "tornado>=4.3, <4.5",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
@@ -92,7 +92,7 @@ setup(
         ':sys_platform != "win32"': [
         ],
         'dev': [
-            "flake8>=2.6.2, <3.1",
+            "flake8>=2.6.2, <3.3",
             "mypy-lang>=0.4.5, <0.5",
             "rstcheck>=2.2, <3.0",
             "tox>=2.3, <3",
