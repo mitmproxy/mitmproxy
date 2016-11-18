@@ -1,3 +1,8 @@
+"""
+The only way for layers to do IO is to emit events indicating what should be done.
+For example, a layer may first emit a OpenConnection event and then a SendData event.
+Likewise, layers only receive IO via events.
+"""
 from typing import Generator, Any
 
 from mitmproxy.proxy.protocol2.context import Connection
@@ -12,6 +17,10 @@ TEventGenerator = Generator[Event, Any, None]
 
 
 class Start(Event):
+    """
+    Every layer initially receives a start event.
+    This is useful to emit events on startup, which otherwise would not be possible.
+    """
     pass
 
 
