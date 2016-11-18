@@ -42,6 +42,7 @@ class CookieAttrs(multidict.MultiDict):
         # if we take the last part.
         return values[-1]
 
+
 SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
 
 

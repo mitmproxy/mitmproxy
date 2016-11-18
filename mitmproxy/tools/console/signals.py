@@ -11,6 +11,7 @@ def add_log(e, level):
         level=level
     )
 
+
 # Show a status message in the action bar
 status_message = blinker.Signal()
 

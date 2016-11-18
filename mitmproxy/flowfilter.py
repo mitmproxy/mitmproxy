@@ -482,9 +482,9 @@ def _make():
                                   ])
     expr = pp.OneOrMore(expr)
     return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
+
+
 bnf = _make()
-
-
 TFilter = Callable[[flow.Flow], bool]
 
 

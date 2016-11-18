@@ -21,6 +21,8 @@ def _mkhelp():
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
+
+
 help_context = _mkhelp()
 
 

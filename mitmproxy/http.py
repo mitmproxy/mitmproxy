@@ -251,6 +251,7 @@ def make_connect_response(http_version):
         b"",
     )
 
+
 expect_continue_response = HTTPResponse(
     b"HTTP/1.1", 100, b"Continue", http.Headers(), b""
 )

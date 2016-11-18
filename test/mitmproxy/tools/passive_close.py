@@ -19,5 +19,6 @@ class service(socketserver.BaseRequestHandler):
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
+
 server = ThreadedTCPServer(('', 1520), service)
 server.serve_forever()
