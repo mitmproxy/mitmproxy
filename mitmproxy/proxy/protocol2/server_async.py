@@ -18,7 +18,7 @@ class ConnectionHandler:
         self.client = Client(addr)
         self.context = Context(self.client)
 
-        self.layer = ReverseProxy(self.context, ("towel.blinkenlights.nl", 23))
+        self.layer = ReverseProxy(self.context, ("example.com", 80))
 
         self.transports = {}  # type: MutableMapping[Connection, StreamIO]
         self.transports[self.client] = StreamIO(reader, writer)
@@ -26,8 +26,6 @@ class ConnectionHandler:
         self.lock = asyncio.Lock()
 
     async def handle_client(self):
-        await self.server_event(events.Start())
-
         await self.handle_connection(self.client)
 
         for connection in self.transports:
@@ -48,15 +46,27 @@ class ConnectionHandler:
 
     async def handle_connection(self, connection):
         connection.connected = True
+        await self.server_event(events.OpenConnection(connection))
         reader, writer = self.transports[connection]
         while True:
-            data = await reader.read(4096)
+            try:
+                data = await reader.read(4096)
+            except socket.error:
+                data = b""
             if data:
                 await self.server_event(events.ReceiveData(connection, data))
             else:
                 connection.connected = False
                 await self.close(connection)
+                await self.server_event(events.CloseConnection(connection))
                 break
+
+    async def open_connection(self, event: events.OpenConnection):
+        reader, writer = await asyncio.open_connection(
+            *event.connection.address
+        )
+        self.transports[event.connection] = StreamIO(reader, writer)
+        await self.handle_connection(event.connection)
 
     async def server_event(self, event: events.Event):
         print("*", event)
@@ -66,13 +76,7 @@ class ConnectionHandler:
             for event in layer_events:
                 print("<<", event)
                 if isinstance(event, events.OpenConnection):
-                    reader, writer = await asyncio.open_connection(
-                        *event.connection.address
-                    )
-                    self.transports[event.connection] = StreamIO(reader, writer)
-                    asyncio.ensure_future(self.handle_connection(event.connection))
-                    layer_events.send(42)
-
+                    asyncio.ensure_future(self.open_connection(event))
                 elif isinstance(event, events.SendData):
                     self.transports[event.connection].w.write(event.data)
                 else:
