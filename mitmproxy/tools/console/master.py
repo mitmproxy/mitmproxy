@@ -3,6 +3,7 @@ import mimetypes
 import os
 import os.path
 import shlex
+import signal
 import stat
 import subprocess
 import sys
@@ -91,6 +92,11 @@ class ConsoleMaster(master.Master):
         self.addons.add(*addons.default_addons())
         self.addons.add(intercept.Intercept(), self.view)
 
+        def sigint_handler(*args, **kwargs):
+            self.prompt_for_exit()
+
+        signal.signal(signal.SIGINT, sigint_handler)
+
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         signals.update_settings.send(self)
@@ -99,6 +105,17 @@ class ConsoleMaster(master.Master):
         signals.status_message.send(
             message=str(exc),
             expire=1
+        )
+
+    def prompt_for_exit(self):
+        signals.status_prompt_onekey.send(
+                self,
+                prompt = "Quit",
+                keys = (
+                    ("yes", "y"),
+                    ("no", "n"),
+                ),
+                callback = self.quit,
         )
 
     def sig_add_log(self, sender, e, level):
@@ -139,15 +156,7 @@ class ConsoleMaster(master.Master):
             self.view_stack.pop()
             self.loop.widget = self.view_stack[-1]
         else:
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Quit",
-                keys = (
-                    ("yes", "y"),
-                    ("no", "n"),
-                ),
-                callback = self.quit,
-            )
+            self.prompt_for_exit()
 
     def sig_push_view_state(self, sender, window):
         """
