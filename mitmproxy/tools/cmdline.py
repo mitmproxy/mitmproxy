@@ -485,7 +485,8 @@ def proxy_options(parser):
     group.add_argument(
         "--spoof-source-address",
         action="store_true", dest="spoof_source_address",
-        help="Use the client's IP for server-side connections"
+        help="Use the client's IP for server-side connections. "
+             "Combine with --upstream-bind-address to spoof a fixed source address."
     )
     group.add_argument(
         "--upstream-bind-address",
