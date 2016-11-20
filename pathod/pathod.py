@@ -144,6 +144,7 @@ class PathodHandler(tcp.BaseHandler):
             path = req.path
             http_version = req.http_version
             headers = req.headers
+            first_line_format = req.first_line_format
 
             clientcert = None
             if self.clientcert:
@@ -167,6 +168,7 @@ class PathodHandler(tcp.BaseHandler):
                     sni=self.sni,
                     remote_address=self.address(),
                     clientcert=clientcert,
+                    first_line_format=first_line_format
                 ),
                 cipher=None,
             )
