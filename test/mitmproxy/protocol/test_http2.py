@@ -649,6 +649,9 @@ class TestPushPromise(_Http2Test):
                 return True
 
             h2_conn.send_headers(1, [(':status', '200')])
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+
             h2_conn.push_stream(1, 2, [
                 (':authority', "127.0.0.1:{}".format(cls.port)),
                 (':method', 'GET'),
@@ -656,6 +659,9 @@ class TestPushPromise(_Http2Test):
                 (':path', '/pushed_stream_foo'),
                 ('foo', 'bar')
             ])
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+
             h2_conn.push_stream(1, 4, [
                 (':authority', "127.0.0.1:{}".format(cls.port)),
                 (':method', 'GET'),
@@ -672,12 +678,19 @@ class TestPushPromise(_Http2Test):
             wfile.flush()
 
             h2_conn.send_data(1, b'regular_stream')
-            h2_conn.send_data(2, b'pushed_stream_foo')
-            h2_conn.send_data(4, b'pushed_stream_bar')
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
+
             h2_conn.end_stream(1)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+
+            h2_conn.send_data(2, b'pushed_stream_foo')
             h2_conn.end_stream(2)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+
+            h2_conn.send_data(4, b'pushed_stream_bar')
             h2_conn.end_stream(4)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
@@ -790,9 +803,6 @@ class TestPushPromise(_Http2Test):
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
-
-        pushed_flows = [flow for flow in self.master.state.flows if 'h2-pushed-stream' in flow.metadata]
-        assert len(pushed_flows) == 2
 
 
 @requires_alpn
