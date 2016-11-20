@@ -47,6 +47,7 @@ class WebSocketBinaryMessage(WebSocketMessage):
     def __repr__(self):
         return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
 
+
 class WebSocketTextMessage(WebSocketMessage):
 
     type = 'text'
@@ -71,7 +72,6 @@ class WebSocketFlow(flow.Flow):
         self.server_accept = websockets.get_server_accept(self.handshake_flow.response.headers)
         self.server_protocol = websockets.get_protocol(self.handshake_flow.response.headers)
         self.server_extensions = websockets.get_extensions(self.handshake_flow.response.headers)
-
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(

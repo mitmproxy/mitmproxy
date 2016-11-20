@@ -26,6 +26,14 @@ class TestState:
         if f not in self.flows:
             self.flows.append(f)
 
+    def websocket_start(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
+
+    def tcp_start(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
+
     # FIXME: compat with old state - remove in favor of len(state.flows)
     def flow_count(self):
         return len(self.flows)

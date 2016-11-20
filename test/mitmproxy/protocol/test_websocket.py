@@ -5,6 +5,8 @@ import traceback
 
 from mitmproxy import options
 from mitmproxy import exceptions
+from mitmproxy.http import HTTPFlow
+from mitmproxy.websocket import WebSocketFlow
 from mitmproxy.proxy.config import ProxyConfig
 
 import mitmproxy.net
@@ -147,6 +149,10 @@ class TestSimple(_WebSocketTest):
         wfile.write(bytes(frame))
         wfile.flush()
 
+        frame = websockets.Frame.from_file(rfile)
+        wfile.write(bytes(frame))
+        wfile.flush()
+
     def test_simple(self):
         client = self._setup_connection()
 
@@ -159,8 +165,30 @@ class TestSimple(_WebSocketTest):
         frame = websockets.Frame.from_file(client.rfile)
         assert frame.payload == b'client-foobar'
 
+        client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.BINARY, payload=b'\xde\xad\xbe\xef')))
+        client.wfile.flush()
+
+        frame = websockets.Frame.from_file(client.rfile)
+        assert frame.payload == b'\xde\xad\xbe\xef'
+
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
         client.wfile.flush()
+
+        assert len(self.master.state.flows) == 2
+        assert isinstance(self.master.state.flows[0], HTTPFlow)
+        assert isinstance(self.master.state.flows[1], WebSocketFlow)
+        assert len(self.master.state.flows[1].messages) == 5
+        assert self.master.state.flows[1].messages[0].content == b'server-foobar'
+        assert self.master.state.flows[1].messages[0].type == 'text'
+        assert self.master.state.flows[1].messages[1].content == b'client-foobar'
+        assert self.master.state.flows[1].messages[1].type == 'text'
+        assert self.master.state.flows[1].messages[2].content == b'client-foobar'
+        assert self.master.state.flows[1].messages[2].type == 'text'
+        assert self.master.state.flows[1].messages[3].content == b'\xde\xad\xbe\xef'
+        assert self.master.state.flows[1].messages[3].type == 'binary'
+        assert self.master.state.flows[1].messages[4].content == b'\xde\xad\xbe\xef'
+        assert self.master.state.flows[1].messages[4].type == 'binary'
+        assert [m.info for m in self.master.state.flows[1].messages]
 
 
 class TestSimpleTLS(_WebSocketTest):

@@ -3,11 +3,9 @@ import socket
 import struct
 from OpenSSL import SSL
 
-
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
-from mitmproxy.utils import strutils
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 from mitmproxy.websocket import WebSocketFlow, WebSocketBinaryMessage, WebSocketTextMessage

@@ -9,7 +9,6 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.websocket import WebSocketLayer
-import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 
