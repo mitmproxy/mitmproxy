@@ -282,6 +282,21 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
         assert d.content == b"bar"
         self.master.addons.remove(s)
 
+    def test_first_line_rewrite(self):
+        """
+        If mitmproxy is a regular HTTP proxy, it must rewrite an absolute-form request like
+            GET http://example.com/foo HTTP/1.0
+        to
+            GET /foo HTTP/1.0
+        when sending the request upstream. While any server should technically accept
+        the absolute form, this is not the case in practice.
+        """
+        req = "get:'%s/p/200'" % self.server.urlbase
+        p = self.pathoc()
+        with p.connect():
+            assert p.request(req).status_code == 200
+            assert self.server.last_log()["request"]["first_line_format"] == "relative"
+
 
 class TestHTTPAuth(tservers.HTTPProxyTest):
     def test_auth(self):

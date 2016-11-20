@@ -268,6 +268,11 @@ class HttpLayer(base.Layer):
 
         self.log("request", "debug", [repr(request)])
 
+        # set first line format to relative in regular mode,
+        # see https://github.com/mitmproxy/mitmproxy/issues/1759
+        if self.mode is HTTPMode.regular and request.first_line_format == "absolute":
+            request.first_line_format = "relative"
+
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse":
             f.request.headers["Host"] = self.config.upstream_server.address.host
