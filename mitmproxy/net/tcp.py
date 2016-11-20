@@ -70,6 +70,15 @@ sslversion_choices = {
     "TLSv1_2": (SSL.TLSv1_2_METHOD, SSL_BASIC_OPTIONS),
 }
 
+ssl_method_names = {
+    SSL.SSLv2_METHOD: "SSLv2",
+    SSL.SSLv3_METHOD: "SSLv3",
+    SSL.SSLv23_METHOD: "SSLv23",
+    SSL.TLSv1_METHOD: "TLSv1",
+    SSL.TLSv1_1_METHOD: "TLSv1.1",
+    SSL.TLSv1_2_METHOD: "TLSv1.2",
+}
+
 
 class SSLKeyLogger:
 
@@ -510,7 +519,17 @@ class _Connection:
         :param cipher_list: A textual OpenSSL cipher list, see https://www.openssl.org/docs/apps/ciphers.html
         :rtype : SSL.Context
         """
-        context = SSL.Context(method)
+        try:
+            context = SSL.Context(method)
+        except ValueError as e:
+            method_name = ssl_method_names[method] if method in ssl_method_names.keys() else "unknown"
+            raise exceptions.TlsException(
+                "SSL method \"%s\" is most likely not supported "
+                "or disabled (for security reasons) in your libssl. "
+                "Please refer to https://github.com/mitmproxy/mitmproxy/issues/1101 "
+                "for more details." % method_name
+            )
+
         # Options (NO_SSLv2/3)
         if options is not None:
             context.set_options(options)
