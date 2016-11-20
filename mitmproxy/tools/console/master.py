@@ -109,13 +109,13 @@ class ConsoleMaster(master.Master):
 
     def prompt_for_exit(self):
         signals.status_prompt_onekey.send(
-                self,
-                prompt = "Quit",
-                keys = (
-                    ("yes", "y"),
-                    ("no", "n"),
-                ),
-                callback = self.quit,
+            self,
+            prompt = "Quit",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = self.quit,
         )
 
     def sig_add_log(self, sender, e, level):
