@@ -109,12 +109,14 @@ class ServerConnectionMixin:
         super().__init__()
 
         self.server_conn = None
-        if self.config.options.spoof_source_address:
+        if self.config.options.spoof_source_address and self.config.options.upstream_bind_address == '':
             self.server_conn = connections.ServerConnection(
                 server_address, (self.ctx.client_conn.address.host, 0), True)
         else:
             self.server_conn = connections.ServerConnection(
-                server_address, (self.config.options.upstream_bind_address, 0))
+                server_address, (self.config.options.upstream_bind_address, 0),
+                self.config.options.spoof_source_address
+            )
 
         self.__check_self_connect()
 
