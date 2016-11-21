@@ -800,3 +800,18 @@ class TestSSLKeyLogger(tservers.ServerTestBase):
             tcp.SSLKeyLogger.create_logfun("test"),
             tcp.SSLKeyLogger)
         assert not tcp.SSLKeyLogger.create_logfun(False)
+
+
+class TestSSLInvalidMethod(tservers.ServerTestBase):
+    handler = EchoHandler
+    ssl = True
+
+    def test_invalid_ssl_method_should_fail(self):
+        fake_ssl_method = 100500
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            tutils.raises(
+                exceptions.TlsException,
+                c.convert_to_ssl,
+                method=fake_ssl_method
+            )
