@@ -522,7 +522,7 @@ class _Connection:
         try:
             context = SSL.Context(method)
         except ValueError as e:
-            method_name = ssl_method_names[method] if method in ssl_method_names.keys() else "unknown"
+            method_name = ssl_method_names.get(method, "unknown")
             raise exceptions.TlsException(
                 "SSL method \"%s\" is most likely not supported "
                 "or disabled (for security reasons) in your libssl. "
