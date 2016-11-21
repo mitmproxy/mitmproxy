@@ -40,30 +40,29 @@ def tscript(cmd, args=""):
 
 class TestScripts(mastertest.MasterTest):
     def test_add_header(self):
-        m, _ = tscript("add_header.py")
+        m, _ = tscript("simple/add_header.py")
         f = tflow.tflow(resp=tutils.tresp())
         m.response(f)
         assert f.response.headers["newheader"] == "foo"
 
     def test_custom_contentviews(self):
-        m, sc = tscript("custom_contentviews.py")
-        pig = contentviews.get("pig_latin_HTML")
-        _, fmt = pig(b"<html>test!</html>")
-        assert any(b'esttay!' in val[0][1] for val in fmt)
-        assert not pig(b"gobbledygook")
+        m, sc = tscript("simple/custom_contentview.py")
+        swapcase = contentviews.get("swapcase")
+        _, fmt = swapcase(b"<html>Test!</html>")
+        assert any(b'tEST!' in val[0][1] for val in fmt)
 
     def test_iframe_injector(self):
         with tutils.raises(ScriptError):
-            tscript("iframe_injector.py")
+            tscript("simple/modify_body_inject_iframe.py")
 
-        m, sc = tscript("iframe_injector.py", "http://example.org/evil_iframe")
+        m, sc = tscript("simple/modify_body_inject_iframe.py", "http://example.org/evil_iframe")
         f = tflow.tflow(resp=tutils.tresp(content=b"<html>mitmproxy</html>"))
         m.response(f)
         content = f.response.content
         assert b'iframe' in content and b'evil_iframe' in content
 
     def test_modify_form(self):
-        m, sc = tscript("modify_form.py")
+        m, sc = tscript("simple/modify_form.py")
 
         form_header = Headers(content_type="application/x-www-form-urlencoded")
         f = tflow.tflow(req=tutils.treq(headers=form_header))
@@ -76,7 +75,7 @@ class TestScripts(mastertest.MasterTest):
         assert list(f.request.urlencoded_form.items()) == [(b"foo", b"bar")]
 
     def test_modify_querystring(self):
-        m, sc = tscript("modify_querystring.py")
+        m, sc = tscript("simple/modify_querystring.py")
         f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
         m.request(f)
@@ -87,16 +86,22 @@ class TestScripts(mastertest.MasterTest):
         assert f.request.query["mitmproxy"] == "rocks"
 
     def test_arguments(self):
-        m, sc = tscript("arguments.py", "mitmproxy rocks")
+        m, sc = tscript("simple/script_arguments.py", "mitmproxy rocks")
         f = tflow.tflow(resp=tutils.tresp(content=b"I <3 mitmproxy"))
         m.response(f)
         assert f.response.content == b"I <3 rocks"
 
     def test_redirect_requests(self):
-        m, sc = tscript("redirect_requests.py")
+        m, sc = tscript("simple/redirect_requests.py")
         f = tflow.tflow(req=tutils.treq(host="example.org"))
         m.request(f)
         assert f.request.host == "mitmproxy.org"
+
+    def test_send_reply_from_proxy(self):
+        m, sc = tscript("simple/send_reply_from_proxy.py")
+        f = tflow.tflow(req=tutils.treq(host="example.com", port=80))
+        m.request(f)
+        assert f.response.content == b"Hello World"
 
 
 class TestHARDump:
@@ -115,13 +120,13 @@ class TestHARDump:
 
     def test_no_file_arg(self):
         with tutils.raises(ScriptError):
-            tscript("har_dump.py")
+            tscript("complex/har_dump.py")
 
     def test_simple(self):
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", shlex.quote(path))
+            m, sc = tscript("complex/har_dump.py", shlex.quote(path))
             m.addons.invoke(m, "response", self.flow())
             m.addons.remove(sc)
 
@@ -134,7 +139,7 @@ class TestHARDump:
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", shlex.quote(path))
+            m, sc = tscript("complex/har_dump.py", shlex.quote(path))
             m.addons.invoke(m, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10))
             m.addons.remove(sc)
 
@@ -144,7 +149,7 @@ class TestHARDump:
         assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
     def test_format_cookies(self):
-        m, sc = tscript("har_dump.py", "-")
+        m, sc = tscript("complex/har_dump.py", "-")
         format_cookies = sc.ns.ns["format_cookies"]
 
         CA = cookies.CookieAttrs
@@ -174,7 +179,7 @@ class TestHARDump:
         with tutils.tmpdir() as tdir:
             path = os.path.join(tdir, "somefile")
 
-            m, sc = tscript("har_dump.py", shlex.quote(path))
+            m, sc = tscript("complex/har_dump.py", shlex.quote(path))
             m.addons.invoke(m, "response", f)
             m.addons.remove(sc)
 

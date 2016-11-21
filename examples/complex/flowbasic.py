@@ -35,6 +35,7 @@ class MyMaster(master.Master):
     def log(self, l):
         print("log", l.msg)
 
+
 opts = options.Options(cadir="~/.mitmproxy/")
 config = ProxyConfig(opts)
 server = ProxyServer(config)

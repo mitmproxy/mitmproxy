@@ -17,8 +17,8 @@ appropriate points of mitmproxy's operation. Here's a complete mitmproxy script
 that adds a new header to every HTTP response before it is returned to the
 client:
 
-.. literalinclude:: ../../examples/add_header.py
-   :caption: :src:`examples/add_header.py`
+.. literalinclude:: ../../examples/simple/add_header.py
+   :caption: :src:`examples/simple/add_header.py`
    :language: python
 
 All events that deal with an HTTP request get an instance of `HTTPFlow
@@ -42,8 +42,8 @@ called before anything else happens. You can replace the current script object
 by returning it from this handler. Here's how this looks when applied to the
 example above:
 
-.. literalinclude:: ../../examples/classes.py
-   :caption: :src:`examples/classes.py`
+.. literalinclude:: ../../examples/simple/add_header_class.py
+   :caption: :src:`examples/simple/add_header_class.py`
    :language: python
 
 So here, we're using a module-level script to "boot up" into a class instance.
@@ -62,13 +62,13 @@ sophisticated - replace one value with another in all responses. Mitmproxy's
 <api.html#mitmproxy.models.http.HTTPResponse.replace>`_ method that takes care
 of all the details for us.
 
-.. literalinclude:: ../../examples/arguments.py
-   :caption: :src:`examples/arguments.py`
+.. literalinclude:: ../../examples/simple/script_arguments.py
+   :caption: :src:`examples/simple/script_arguments.py`
    :language: python
 
 We can now call this script on the command-line like this:
 
->>> mitmdump -dd -s "./arguments.py html faketml"
+>>> mitmdump -dd -s "./script_arguments.py html faketml"
 
 Whenever a handler is called, mitpmroxy rewrites the script environment so that
 it sees its own arguments as if it was invoked from the command-line.
@@ -85,8 +85,8 @@ and mitmproxy console can place script output in the event buffer.
 
 Here's how this looks:
 
-.. literalinclude:: ../../examples/context_logging.py
-   :caption: :src:`examples/context_logging.py`
+.. literalinclude:: ../../examples/simple/logging.py
+   :caption: :src:`examples/simple/logging.py`
    :language: python
 
 The ``ctx`` module also exposes the mitmproxy master object at ``ctx.master``
@@ -126,8 +126,8 @@ It's possible to implement a concurrent mechanism on top of the blocking
 framework, and mitmproxy includes a handy example of this that is fit for most
 purposes. You can use it as follows:
 
-.. literalinclude:: ../../examples/nonblocking.py
-   :caption: :src:`examples/nonblocking.py`
+.. literalinclude:: ../../examples/complex/nonblocking.py
+   :caption: :src:`examples/complex/nonblocking.py`
    :language: python
 
 
