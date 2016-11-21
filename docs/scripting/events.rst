@@ -168,7 +168,7 @@ are issued, only new WebSocket messages are called.
 
     *   - .. py:function:: websocket_handshake(flow)
         - Called when a client wants to establish a WebSocket connection. The
-          WebSocket-specific headers can be manipulated to manipulate the
+          WebSocket-specific headers can be manipulated to alter the
           handshake. The ``flow`` object is guaranteed to have a non-None
           ``request`` attribute.
 
