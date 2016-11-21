@@ -6,7 +6,7 @@ implement functionality similar to the "sticky cookies" option.
 Heads Up: In the majority of cases, you want to use inline scripts.
 """
 import os
-from mitmproxy import controller, proxy
+from mitmproxy import controller, proxy, master
 from mitmproxy.proxy.server import ProxyServer
 
 

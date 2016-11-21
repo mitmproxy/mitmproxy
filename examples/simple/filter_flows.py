@@ -1,6 +1,8 @@
-# This scripts demonstrates how to use mitmproxy's filter pattern in scripts.
-# Usage: mitmdump -s "flowfilter.py FILTER"
-
+"""
+This scripts demonstrates how to use mitmproxy's filter pattern in scripts.
+Usage:
+    mitmdump -s "flowfilter.py FILTER"
+"""
 import sys
 from mitmproxy import flowfilter
 

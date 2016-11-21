@@ -40,8 +40,8 @@ You can also use a script to customize exactly which responses are streamed.
 Responses that should be tagged for streaming by setting their ``.stream``
 attribute to ``True``:
 
-.. literalinclude:: ../../examples/stream.py
-   :caption: examples/stream.py
+.. literalinclude:: ../../examples/complex/stream.py
+   :caption: examples/complex/stream.py
    :language: python
 
 Implementation Details
@@ -59,8 +59,8 @@ Modifying streamed data
 If the ``.stream`` attribute is callable, ``.stream`` will wrap the generator that yields all
 chunks.
 
-.. literalinclude:: ../../examples/stream_modify.py
-   :caption: examples/stream_modify.py
+.. literalinclude:: ../../examples/complex/stream_modify.py
+   :caption: examples/complex/stream_modify.py
    :language: python
 
 .. seealso::
