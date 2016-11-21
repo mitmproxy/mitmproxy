@@ -8,8 +8,8 @@ import threading
 import time
 
 import configargparse
-from pydivert import enum
-from pydivert import windivert
+import pydivert
+import pydivert.consts
 import pickle
 import socketserver
 
@@ -149,7 +149,7 @@ class TransparentProxy:
     Limitations:
 
     - No IPv6 support. (Pull Requests welcome)
-    - TCP ports do not get re-used simulateously on the client, i.e. the proxy will fail if application X
+    - TCP ports do not get re-used simultaneously on the client, i.e. the proxy will fail if application X
       connects to example.com and example.org from 192.168.0.42:4242 simultaneously. This could be mitigated by
       introducing unique "meta-addresses" which mitmproxy sees, but this would remove the correct client info from
       mitmproxy.
@@ -197,13 +197,10 @@ class TransparentProxy:
         self.api_thread = threading.Thread(target=self.api.serve_forever)
         self.api_thread.daemon = True
 
-        self.driver = windivert.WinDivert()
-        self.driver.register()
-
         self.request_filter = custom_filter or " or ".join(
             ("tcp.DstPort == %d" %
              p) for p in redirect_ports)
-        self.request_forward_handle = None
+        self.request_forward_handle = None  # type: pydivert.WinDivert
         self.request_forward_thread = threading.Thread(
             target=self.request_forward)
         self.request_forward_thread.daemon = True
@@ -212,18 +209,18 @@ class TransparentProxy:
         self.trusted_pids = set()
         self.tcptable2 = MIB_TCPTABLE2(0)
         self.tcptable2_size = ctypes.wintypes.DWORD(0)
-        self.request_local_handle = None
+        self.request_local_handle = None  # type: pydivert.WinDivert
         self.request_local_thread = threading.Thread(target=self.request_local)
         self.request_local_thread.daemon = True
 
         # The proxy server responds to the client. To the client,
         # this response should look like it has been sent by the real target
         self.response_filter = "outbound and tcp.SrcPort == %d" % proxy_port
-        self.response_handle = None
+        self.response_handle = None  # type: pydivert.WinDivert
         self.response_thread = threading.Thread(target=self.response)
         self.response_thread.daemon = True
 
-        self.icmp_handle = None
+        self.icmp_handle = None  # type: pydivert.WinDivert
 
     @classmethod
     def setup(cls):
@@ -241,25 +238,33 @@ class TransparentProxy:
         # Block all ICMP requests (which are sent on Windows by default).
         # In layman's terms: If we don't do this, our proxy machine tells the client that it can directly connect to the
         # real gateway if they are on the same network.
-        self.icmp_handle = self.driver.open_handle(
+        self.icmp_handle = pydivert.WinDivert(
             filter="icmp",
-            layer=enum.Layer.NETWORK,
-            flags=enum.Flag.DROP)
+            layer=pydivert.Layer.NETWORK,
+            flags=pydivert.Flag.DROP
+        )
+        self.icmp_handle.open()
 
-        self.response_handle = self.driver.open_handle(
+        self.response_handle = pydivert.WinDivert(
             filter=self.response_filter,
-            layer=enum.Layer.NETWORK)
+            layer=pydivert.Layer.NETWORK
+        )
+        self.response_handle.open()
         self.response_thread.start()
 
         if self.mode == "forward" or self.mode == "both":
-            self.request_forward_handle = self.driver.open_handle(
+            self.request_forward_handle = pydivert.WinDivert(
                 filter=self.request_filter,
-                layer=enum.Layer.NETWORK_FORWARD)
+                layer=pydivert.Layer.NETWORK_FORWARD
+            )
+            self.request_forward_handle.open()
             self.request_forward_thread.start()
         if self.mode == "local" or self.mode == "both":
-            self.request_local_handle = self.driver.open_handle(
+            self.request_local_handle = pydivert.WinDivert(
                 filter=self.request_filter,
-                layer=enum.Layer.NETWORK)
+                layer=pydivert.Layer.NETWORK
+            )
+            self.request_local_handle.open()
             self.request_local_thread.start()
 
     def shutdown(self):
@@ -272,17 +277,16 @@ class TransparentProxy:
         self.icmp_handle.close()
         self.api.shutdown()
 
-    def recv(self, handle):
+    def recv(self, handle: pydivert.WinDivert) -> pydivert.Packet:
         """
         Convenience function that receives a packet from the passed handler and handles error codes.
         If the process has been shut down, (None, None) is returned.
         """
         try:
-            raw_packet, metadata = handle.recv()
-            return self.driver.parse_packet(raw_packet), metadata
+            return handle.recv()
         except WindowsError as e:
             if e.winerror == 995:
-                return None, None
+                return None
             else:
                 raise
 
@@ -306,7 +310,7 @@ class TransparentProxy:
 
     def request_local(self):
         while True:
-            packet, metadata = self.recv(self.request_local_handle)
+            packet = self.recv(self.request_local_handle)
             if not packet:
                 return
 
@@ -321,49 +325,47 @@ class TransparentProxy:
             pid = self.addr_pid_map.get(client, None)
 
             if pid not in self.trusted_pids:
-                self._request(packet, metadata)
+                self._request(packet)
             else:
-                self.request_local_handle.send((packet.raw, metadata))
+                self.request_local_handle.send(packet, recalculate_checksum=False)
 
     def request_forward(self):
         """
         Redirect packages to the proxy
         """
         while True:
-            packet, metadata = self.recv(self.request_forward_handle)
+            packet = self.recv(self.request_forward_handle)
             if not packet:
                 return
 
-            self._request(packet, metadata)
+            self._request(packet)
 
-    def _request(self, packet, metadata):
+    def _request(self, packet: pydivert.Packet):
         # print(" * Redirect client -> server to proxy")
         # print("%s:%s -> %s:%s" % (packet.src_addr, packet.src_port, packet.dst_addr, packet.dst_port))
         client = (packet.src_addr, packet.src_port)
         server = (packet.dst_addr, packet.dst_port)
 
         if client in self.client_server_map:
-            # Force re-add to mark as "newest" entry in the dict.
-            del self.client_server_map[client]
-        while len(self.client_server_map) > self.connection_cache_size:
-            self.client_server_map.popitem(False)
-
-        self.client_server_map[client] = server
+            self.client_server_map.move_to_end(client)
+        else:
+            while len(self.client_server_map) > self.connection_cache_size:
+                self.client_server_map.popitem(False)
+            self.client_server_map[client] = server
 
         packet.dst_addr, packet.dst_port = self.proxy_addr, self.proxy_port
-        metadata.direction = enum.Direction.INBOUND
+        packet.direction = pydivert.consts.Direction.INBOUND
 
-        packet = self.driver.update_packet_checksums(packet)
         # Use any handle thats on the NETWORK layer - request_local may be
         # unavailable.
-        self.response_handle.send((packet.raw, metadata))
+        self.response_handle.send(packet)
 
     def response(self):
         """
         Spoof source address of packets send from the proxy to the client
         """
         while True:
-            packet, metadata = self.recv(self.response_handle)
+            packet = self.recv(self.response_handle)
             if not packet:
                 return
 
@@ -373,11 +375,11 @@ class TransparentProxy:
             server = self.client_server_map.get(client, None)
             if server:
                 packet.src_addr, packet.src_port = server
+                packet.recalculate_checksums()
             else:
                 print("Warning: Previously unseen connection from proxy to %s:%s." % client)
 
-            packet = self.driver.update_packet_checksums(packet)
-            self.response_handle.send((packet.raw, metadata))
+            self.response_handle.send(packet, recalculate_checksum=False)
 
 
 if __name__ == "__main__":

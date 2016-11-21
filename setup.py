@@ -87,7 +87,7 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "pydivert>=0.0.7, <2.0",
+            "pydivert>=2.0.3, <2.1",
         ],
         ':sys_platform != "win32"': [
         ],
