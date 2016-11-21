@@ -76,6 +76,7 @@ class WebSocketLayer(base.Layer):
 
             websocket_message = t(self.flow, not is_server, payload)
             self.flow.messages.append(websocket_message)
+            self.log("WebSocket message: {}".format(websocket_message.info), "info")
             self.channel.ask("websocket_message", self.flow)
 
             # chunk payload into multiple 10kB frames, and send them
