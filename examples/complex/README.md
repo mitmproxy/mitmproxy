@@ -12,7 +12,6 @@
 | nonblocking.py           | Demonstrate parallel processing with a blocking script                                        |
 | remote_debug.py          | This script enables remote debugging of the mitmproxy _UI_ with PyCharm.                      |
 | sslstrip.py              | sslstrip-like funtionality implemented with mitmproxy                                         |
-| stickycookies            | An advanced example of using mitmproxy's FlowMaster directly.                                 |
 | stream                   | Enable streaming for all responses.                                                           |
 | stream_modify.py         | Modify a streamed response body.                                                              |
 | tcp_message.py           | Modify a raw TCP connection                                                                   |
