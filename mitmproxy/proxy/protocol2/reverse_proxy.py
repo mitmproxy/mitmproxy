@@ -1,7 +1,7 @@
 from mitmproxy.proxy.protocol2.context import ClientServerContext, Context, Server
 from mitmproxy.proxy.protocol2.events import Event, TEventGenerator
 from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.tcp import TCPLayer
+from mitmproxy.proxy.protocol2.tls import TLSLayer
 
 
 class ReverseProxy(Layer):
@@ -9,7 +9,7 @@ class ReverseProxy(Layer):
         super().__init__(context)
         server = Server(server_addr)
         self.child_context = ClientServerContext(context.client, server)
-        self.child_layer = TCPLayer(self.child_context)
+        self.child_layer = TLSLayer(self.child_context, True, True)
 
     def handle_event(self, event: Event) -> TEventGenerator:
         yield from self.child_layer.handle_event(event)

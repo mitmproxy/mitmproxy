@@ -18,7 +18,7 @@ class ConnectionHandler:
         self.client = Client(addr)
         self.context = Context(self.client)
 
-        self.layer = ReverseProxy(self.context, ("example.com", 80))
+        self.layer = ReverseProxy(self.context, ("example.com", 443))
 
         self.transports = {}  # type: MutableMapping[Connection, StreamIO]
         self.transports[self.client] = StreamIO(reader, writer)
@@ -26,9 +26,11 @@ class ConnectionHandler:
         self.lock = asyncio.Lock()
 
     async def handle_client(self):
+        await self.server_event(events.Start())
         await self.handle_connection(self.client)
 
         for connection in self.transports:
+            # FIXME: dictionary is changing size during iteration
             await self.close(connection)
 
         # TODO: teardown all other conns.
@@ -46,7 +48,8 @@ class ConnectionHandler:
 
     async def handle_connection(self, connection):
         connection.connected = True
-        await self.server_event(events.OpenConnection(connection))
+        if connection != self.client:
+            await self.server_event(events.OpenConnection(connection))
         reader, writer = self.transports[connection]
         while True:
             try:
@@ -54,7 +57,10 @@ class ConnectionHandler:
             except socket.error:
                 data = b""
             if data:
-                await self.server_event(events.ReceiveData(connection, data))
+                if connection == self.client:
+                    await self.server_event(events.ReceiveClientData(connection, data))
+                else:
+                    await self.server_event(events.ReceiveServerData(connection, data))
             else:
                 connection.connected = False
                 await self.close(connection)
