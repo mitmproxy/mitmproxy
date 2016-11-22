@@ -65,6 +65,10 @@ class WebSocketFlow(flow.Flow):
     def __init__(self, client_conn, server_conn, handshake_flow, live=None):
         super().__init__("websocket", client_conn, server_conn, live)
         self.messages = []  # type: List[WebSocketMessage]
+        self.close_sender = 'client'
+        self.close_code = '(status code missing)'
+        self.close_message = '(message missing)'
+        self.close_reason = 'unknown status code'
         self.handshake_flow = handshake_flow
         self.client_key = websockets.get_client_key(self.handshake_flow.request.headers)
         self.client_protocol = websockets.get_protocol(self.handshake_flow.request.headers)
@@ -80,4 +84,4 @@ class WebSocketFlow(flow.Flow):
     )
 
     def __repr__(self):
-        return "<WebSocketFlow ({} messages)>".format(len(self.messages))
+        return "WebSocketFlow ({} messages)".format(len(self.messages))

@@ -238,6 +238,14 @@ class Dumper:
             if self.flow_detail >= 3:
                 self._echo_message(message)
 
+    def websocket_end(self, f):
+        if self.match(f):
+            self.echo("WebSocket connection closed by {}: {} {}, {}".format(
+                f.close_sender,
+                f.close_code,
+                f.close_message,
+                f.close_reason))
+
     def tcp_error(self, f):
         self.echo(
             "Error in TCP connection to {}: {}".format(

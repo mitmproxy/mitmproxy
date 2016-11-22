@@ -450,20 +450,29 @@ class ConsoleMaster(master.Master):
     def websocket_message(self, f):
         super().websocket_message(f)
         message = f.messages[-1]
-        self.add_log(message.info, "info")
-        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        signals.add_log(message.info, "info")
+        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+
+    @controller.handler
+    def websocket_end(self, f):
+        super().websocket_end(f)
+        signals.add_log("WebSocket connection closed by {}: {} {}, {}".format(
+            f.close_sender,
+            f.close_code,
+            f.close_message,
+            f.close_reason), "info")
 
     @controller.handler
     def tcp_message(self, f):
         super().tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        self.add_log("{client} {direction} tcp {direction} {server}".format(
+        signals.add_log("{client} {direction} tcp {direction} {server}".format(
             client=repr(f.client_conn.address),
             server=repr(f.server_conn.address),
             direction=direction,
         ), "info")
-        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
     def log(self, evt):

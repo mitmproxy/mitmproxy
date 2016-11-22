@@ -45,13 +45,6 @@ class WebSocketLayer(base.Layer):
         self.server_frame_buffer = []
 
     def _handle_frame(self, frame, source_conn, other_conn, is_server):
-        # sender = "server" if is_server else "client"
-        # self.log(
-        #     "WebSocket frame received from {}".format(sender),
-        #     "debug",
-        #     [repr(frame)]
-        # )
-
         if frame.header.opcode & 0x8 == 0:
             return self._handle_data_frame(frame, source_conn, other_conn, is_server)
         elif frame.header.opcode in (websockets.OPCODE.PING, websockets.OPCODE.PONG):
@@ -102,19 +95,15 @@ class WebSocketLayer(base.Layer):
         return True
 
     def _handle_close(self, frame, source_conn, other_conn, is_server):
-        code = '(status code missing)'
-        msg = None
-        reason = '(message missing)'
+        self.flow.close_sender = "server" if is_server else "client"
         if len(frame.payload) >= 2:
             code, = struct.unpack('!H', frame.payload[:2])
-            msg = websockets.CLOSE_REASON.get_name(code, default='unknown status code')
+            self.flow.close_code = code
+            self.flow.close_message = websockets.CLOSE_REASON.get_name(code, default='unknown status code')
         if len(frame.payload) > 2:
-            reason = frame.payload[2:]
+            self.flow.close_reason = frame.payload[2:]
 
         other_conn.send(bytes(frame))
-
-        sender = "server" if is_server else "client"
-        self.log("WebSocket connection closed by {}: {} {}, {}".format(sender, code, msg, reason), "info")
 
         # close the connection
         return False
@@ -130,6 +119,8 @@ class WebSocketLayer(base.Layer):
 
     def __call__(self):
         self.flow = WebSocketFlow(self.client_conn, self.server_conn, self.handshake_flow, self)
+        self.flow.metadata['websocket_handshake'] = self.handshake_flow
+        self.handshake_flow.metadata['websocket_flow'] = self.flow
         self.channel.ask("websocket_start", self.flow)
 
         client = self.client_conn.connection
