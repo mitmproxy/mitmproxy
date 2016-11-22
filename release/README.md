@@ -6,3 +6,4 @@
 - Download assets from snapshots.mitmproxy.org
 - Create release notice on Github
 - Upload wheel to pypi
+- Update docker-releases repo
