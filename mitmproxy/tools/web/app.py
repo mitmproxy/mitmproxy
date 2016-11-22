@@ -1,5 +1,3 @@
-
-import base64
 import hashlib
 import json
 import logging
@@ -7,19 +5,20 @@ import os.path
 import re
 from io import BytesIO
 
+import mitmproxy.addons.view
+import mitmproxy.flow
+import tornado.escape
 import tornado.web
 import tornado.websocket
-import tornado.escape
 from mitmproxy import contentviews
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy import log
 from mitmproxy import version
-import mitmproxy.addons.view
-import mitmproxy.flow
 
 
-def convert_flow_to_json_dict(flow: mitmproxy.flow.Flow) -> dict:
+def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
 
@@ -46,8 +45,10 @@ def convert_flow_to_json_dict(flow: mitmproxy.flow.Flow) -> dict:
                 "path": flow.request.path,
                 "http_version": flow.request.http_version,
                 "headers": tuple(flow.request.headers.items(True)),
-                "contentLength": len(flow.request.raw_content) if flow.request.raw_content is not None else None,
-                "contentHash": hashlib.sha256(flow.request.raw_content).hexdigest() if flow.request.raw_content is not None else None,
+                "contentLength": len(
+                    flow.request.raw_content) if flow.request.raw_content is not None else None,
+                "contentHash": hashlib.sha256(
+                    flow.request.raw_content).hexdigest() if flow.request.raw_content is not None else None,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
@@ -58,8 +59,10 @@ def convert_flow_to_json_dict(flow: mitmproxy.flow.Flow) -> dict:
                 "status_code": flow.response.status_code,
                 "reason": flow.response.reason,
                 "headers": tuple(flow.response.headers.items(True)),
-                "contentLength": len(flow.response.raw_content) if flow.response.raw_content is not None else None,
-                "contentHash": hashlib.sha256(flow.response.raw_content).hexdigest() if flow.response.raw_content is not None else None,
+                "contentLength": len(
+                    flow.response.raw_content) if flow.response.raw_content is not None else None,
+                "contentHash": hashlib.sha256(
+                    flow.response.raw_content).hexdigest() if flow.response.raw_content is not None else None,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
@@ -69,34 +72,18 @@ def convert_flow_to_json_dict(flow: mitmproxy.flow.Flow) -> dict:
     return f
 
 
+def logentry_to_json(e: log.LogEntry):
+    return {
+        "message": e.msg,
+        "level": e.level
+    }
+
+
 class APIError(tornado.web.HTTPError):
     pass
 
 
-class BasicAuth:
-
-    def set_auth_headers(self):
-        self.set_status(401)
-        self.set_header('WWW-Authenticate', 'Basic realm=MITMWeb')
-        self._transforms = []
-        self.finish()
-
-    def prepare(self):
-        wauthenticator = self.application.settings['wauthenticator']
-        if wauthenticator:
-            auth_header = self.request.headers.get('Authorization')
-            if auth_header is None or not auth_header.startswith('Basic '):
-                self.set_auth_headers()
-            else:
-                auth_decoded = base64.decodebytes(auth_header[6:])
-                username, password = auth_decoded.split(':', 2)
-                if not wauthenticator.test(username, password):
-                    self.set_auth_headers()
-                    raise APIError(401, "Invalid username or password.")
-
-
-class RequestHandler(BasicAuth, tornado.web.RequestHandler):
-
+class RequestHandler(tornado.web.RequestHandler):
     def write(self, chunk):
         # Writing arrays on the top level is ok nowadays.
         # http://flask.pocoo.org/docs/0.11/security/#json-security
@@ -150,7 +137,6 @@ class RequestHandler(BasicAuth, tornado.web.RequestHandler):
 
 
 class IndexHandler(RequestHandler):
-
     def get(self):
         token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         assert token
@@ -158,14 +144,13 @@ class IndexHandler(RequestHandler):
 
 
 class FilterHelp(RequestHandler):
-
     def get(self):
         self.write(dict(
             commands=flowfilter.help
         ))
 
 
-class WebSocketEventBroadcaster(BasicAuth, tornado.websocket.WebSocketHandler):
+class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections = None  # type: set
 
@@ -191,9 +176,8 @@ class ClientConnection(WebSocketEventBroadcaster):
 
 
 class Flows(RequestHandler):
-
     def get(self):
-        self.write([convert_flow_to_json_dict(f) for f in self.view])
+        self.write([flow_to_json(f) for f in self.view])
 
 
 class DumpFlows(RequestHandler):
@@ -219,25 +203,22 @@ class DumpFlows(RequestHandler):
 
 
 class ClearAll(RequestHandler):
-
     def post(self):
         self.view.clear()
+        self.master.events.clear()
 
 
 class AcceptFlows(RequestHandler):
-
     def post(self):
         self.master.accept_all(self.master)
 
 
 class AcceptFlow(RequestHandler):
-
     def post(self, flow_id):
         self.flow.resume(self.master)
 
 
 class FlowHandler(RequestHandler):
-
     def delete(self, flow_id):
         if self.flow.killable:
             self.flow.kill(self.master)
@@ -286,19 +267,16 @@ class FlowHandler(RequestHandler):
 
 
 class DuplicateFlow(RequestHandler):
-
     def post(self, flow_id):
         self.master.view.duplicate_flow(self.flow)
 
 
 class RevertFlow(RequestHandler):
-
     def post(self, flow_id):
         self.flow.revert()
 
 
 class ReplayFlow(RequestHandler):
-
     def post(self, flow_id):
         self.flow.backup()
         self.flow.response = None
@@ -310,7 +288,6 @@ class ReplayFlow(RequestHandler):
 
 
 class FlowContent(RequestHandler):
-
     def post(self, flow_id, message):
         self.flow.backup()
         message = getattr(self.flow, message)
@@ -347,15 +324,14 @@ class FlowContent(RequestHandler):
 
 
 class FlowContentView(RequestHandler):
-
     def get(self, flow_id, message, content_view):
         message = getattr(self.flow, message)
 
         description, lines, error = contentviews.get_message_content_view(
             content_view.replace('_', ' '), message
         )
-#        if error:
-#           add event log
+        #        if error:
+        #           add event log
 
         self.write(dict(
             lines=list(lines),
@@ -364,13 +340,11 @@ class FlowContentView(RequestHandler):
 
 
 class Events(RequestHandler):
-
     def get(self):
-        self.write([])  # FIXME
+        self.write([logentry_to_json(e) for e in self.master.events.data])
 
 
 class Settings(RequestHandler):
-
     def get(self):
         self.write(dict(
             version=version.VERSION,
@@ -432,8 +406,7 @@ class Settings(RequestHandler):
 
 
 class Application(tornado.web.Application):
-
-    def __init__(self, master, debug, wauthenticator):
+    def __init__(self, master, debug):
         self.master = master
         handlers = [
             (r"/", IndexHandler),
@@ -449,7 +422,9 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)", FlowContentView),
+            (
+                r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)",
+                FlowContentView),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
         ]
@@ -460,6 +435,5 @@ class Application(tornado.web.Application):
             cookie_secret=os.urandom(256),
             debug=debug,
             autoreload=False,
-            wauthenticator=wauthenticator,
         )
         super().__init__(handlers, **settings)
