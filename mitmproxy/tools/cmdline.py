@@ -883,21 +883,6 @@ def mitmweb():
         action="store_true", dest="wdebug",
         help="Turn on mitmweb debugging"
     )
-    group.add_argument(
-        "--wsingleuser",
-        action="store", dest="wsingleuser", type=str,
-        metavar="USER",
-        help="""
-            Allows access to a a single user, specified in the form
-            username:password.
-        """
-    )
-    group.add_argument(
-        "--whtpasswd",
-        action="store", dest="whtpasswd", type=str,
-        metavar="PATH",
-        help="Allow access to users specified in an Apache htpasswd file."
-    )
 
     common_options(parser)
     group = parser.add_argument_group(

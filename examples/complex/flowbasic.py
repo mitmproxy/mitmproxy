@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
     This example shows how to build a proxy based on mitmproxy's Flow
     primitives.

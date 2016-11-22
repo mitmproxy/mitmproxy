@@ -135,8 +135,6 @@ def mitmweb(args=None):  # pragma: no cover
         web_options.wdebug = args.wdebug
         web_options.wiface = args.wiface
         web_options.wport = args.wport
-        web_options.wsingleuser = args.wsingleuser
-        web_options.whtpasswd = args.whtpasswd
         web_options.process_web_options(parser)
 
         server = process_options(parser, web_options, args)
