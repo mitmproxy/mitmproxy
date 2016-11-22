@@ -128,7 +128,9 @@ class ViewAuto(View):
 
     def __call__(self, data, **metadata):
         headers = metadata.get("headers", {})
-        ctype = headers.get("content-type")
+        ctype = None
+        if headers:
+            ctype = headers.get("content-type", None)
         if data and ctype:
             ct = http.parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
