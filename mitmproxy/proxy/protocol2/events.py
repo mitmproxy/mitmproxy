@@ -3,7 +3,7 @@ The only way for layers to do IO is to emit events indicating what should be don
 For example, a layer may first emit a OpenConnection event and then a SendData event.
 Likewise, layers only receive IO via events.
 """
-from typing import Generator, Any
+from typing import Iterable
 
 from mitmproxy.proxy.protocol2.context import Connection
 
@@ -13,7 +13,7 @@ class Event:
         return "{}({})".format(type(self).__name__, repr(self.__dict__))
 
 
-TEventGenerator = Generator[Event, Any, None]
+TEventGenerator = Iterable[Event]
 
 
 class Start(Event):
@@ -54,3 +54,11 @@ class ReceiveData(ConnectionEvent):
     def __init__(self, connection: Connection, data: bytes) -> None:
         super().__init__(connection)
         self.data = data
+
+
+class ReceiveClientData(ReceiveData):
+    pass
+
+
+class ReceiveServerData(ReceiveData):
+    pass
