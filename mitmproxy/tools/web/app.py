@@ -72,8 +72,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     return f
 
 
-def logentry_to_json(e: log.LogEntry):
+def logentry_to_json(e: log.LogEntry) -> dict:
     return {
+        "id": id(e),  # we just need some kind of id.
         "message": e.msg,
         "level": e.level
     }

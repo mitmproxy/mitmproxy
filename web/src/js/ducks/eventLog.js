@@ -49,14 +49,12 @@ export function toggleVisibility() {
     return { type: TOGGLE_VISIBILITY }
 }
 
-let logId = 1  // client-side log ids are odd
 export function add(message, level = 'web') {
     let data = {
-        id: logId,
+        id: Math.random().toString(),
         message,
         level,
     }
-    logId += 2
     return {
         type: ADD,
         cmd: "add",
