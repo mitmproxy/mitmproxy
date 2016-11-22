@@ -14,10 +14,16 @@ def maybe_timestamp(base, attr):
 def flowdetails(state, flow):
     text = []
 
-    cc = flow.client_conn
     sc = flow.server_conn
+    cc = flow.client_conn
     req = flow.request
     resp = flow.response
+    metadata = flow.metadata
+
+    if metadata is not None and len(metadata.items()) > 0:
+        parts = [[str(k), repr(v)] for k, v in metadata.items()]
+        text.append(urwid.Text([("head", "Metadata:")]))
+        text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
     if sc is not None:
         text.append(urwid.Text([("head", "Server Connection:")]))
@@ -109,6 +115,7 @@ def flowdetails(state, flow):
                     maybe_timestamp(cc, "timestamp_ssl_setup")
                 ]
             )
+
     if sc is not None and sc.timestamp_start:
         parts.append(
             [
@@ -129,6 +136,7 @@ def flowdetails(state, flow):
                     maybe_timestamp(sc, "timestamp_ssl_setup")
                 ]
             )
+
     if req is not None and req.timestamp_start:
         parts.append(
             [
@@ -142,6 +150,7 @@ def flowdetails(state, flow):
                 maybe_timestamp(req, "timestamp_end")
             ]
         )
+
     if resp is not None and resp.timestamp_start:
         parts.append(
             [
@@ -162,4 +171,5 @@ def flowdetails(state, flow):
 
         text.append(urwid.Text([("head", "Timing:")]))
         text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
+
     return searchable.Searchable(state, text)
