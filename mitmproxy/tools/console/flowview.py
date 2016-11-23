@@ -202,7 +202,7 @@ class FlowView(tabs.Tabs):
             viewmode, message
         )
         if error:
-            signals.add_log(error, "error")
+            self.master.add_log(error, "error")
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.HTTPRequest):
             description = "No request content (press tab to view response)"
@@ -534,7 +534,7 @@ class FlowView(tabs.Tabs):
             try:
                 self.master.replay_request(self.flow)
             except exceptions.ReplayException as e:
-                signals.add_log("Replay error: %s" % e, "warn")
+                self.master.add_log("Replay error: %s" % e, "warn")
             signals.flow_change.send(self, flow = self.flow)
         elif key == "V":
             if self.flow.modified():

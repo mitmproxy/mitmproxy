@@ -181,7 +181,7 @@ class FlowItem(urwid.WidgetWrap):
             try:
                 self.master.replay_request(self.flow)
             except exceptions.ReplayException as e:
-                signals.add_log("Replay error: %s" % e, "warn")
+                self.master.add_log("Replay error: %s" % e, "warn")
             signals.flowlist_change.send(self)
         elif key == "S":
             def stop_server_playback(response):
