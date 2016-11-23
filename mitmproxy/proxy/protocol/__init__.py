@@ -2,7 +2,7 @@
 In mitmproxy, protocols are implemented as a set of layers, which are composed
 on top each other. The first layer is usually the proxy mode, e.g. transparent
 proxy or normal HTTP proxy. Next, various protocol layers are stacked on top of
-each other - imagine WebSockets on top of an HTTP Upgrade request. An actual
+each other - imagine WebSocket on top of an HTTP Upgrade request. An actual
 mitmproxy connection may look as follows (outermost layer first):
 
     Transparent HTTP proxy, no TLS:
@@ -10,7 +10,7 @@ mitmproxy connection may look as follows (outermost layer first):
       - Http1Layer
       - HttpLayer
 
-    Regular proxy, CONNECT request with WebSockets over SSL:
+    Regular proxy, CONNECT request with WebSocket over SSL:
       - ReverseProxy
       - Http1Layer
       - HttpLayer
@@ -34,7 +34,7 @@ from .http import UpstreamConnectLayer
 from .http import HttpLayer
 from .http1 import Http1Layer
 from .http2 import Http2Layer
-from .websockets import WebSocketsLayer
+from .websocket import WebSocketLayer
 from .rawtcp import RawTCPLayer
 from .tls import TlsClientHello
 from .tls import TlsLayer
@@ -47,6 +47,6 @@ __all__ = [
     "HttpLayer",
     "Http1Layer",
     "Http2Layer",
-    "WebSocketsLayer",
+    "WebSocketLayer",
     "RawTCPLayer",
 ]

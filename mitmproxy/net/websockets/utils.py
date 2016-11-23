@@ -1,5 +1,5 @@
 """
-Collection of WebSockets Protocol utility functions (RFC6455)
+Collection of WebSocket protocol utility functions (RFC6455)
 Spec: https://tools.ietf.org/html/rfc6455
 """
 

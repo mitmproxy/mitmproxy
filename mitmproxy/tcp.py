@@ -11,9 +11,7 @@ class TCPMessage(serializable.Serializable):
     def __init__(self, from_client, content, timestamp=None):
         self.content = content
         self.from_client = from_client
-        if timestamp is None:
-            timestamp = time.time()
-        self.timestamp = timestamp
+        self.timestamp = timestamp or time.time()
 
     @classmethod
     def from_state(cls, state):

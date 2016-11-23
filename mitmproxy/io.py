@@ -4,12 +4,14 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy import websocket
 from mitmproxy.contrib import tnetstring
 from mitmproxy import io_compat
 
 
 FLOW_TYPES = dict(
     http=http.HTTPFlow,
+    websocket=websocket.WebSocketFlow,
     tcp=tcp.TCPFlow,
 )
 
