@@ -9,6 +9,7 @@ from h2 import connection
 from h2 import events
 import queue
 
+from mitmproxy import connections  # noqa
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.proxy.protocol import base
@@ -81,6 +82,10 @@ class SafeH2Connection(connection.H2Connection):
 
 
 class Http2Layer(base.Layer):
+
+    if False:
+        # mypy type hints
+        client_conn = None  # type: connections.ClientConnection
 
     def __init__(self, ctx, mode: str) -> None:
         super().__init__(ctx)
