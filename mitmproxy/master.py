@@ -156,7 +156,7 @@ class Master:
         for e, o in events.event_sequence(f):
             getattr(self, e)(o)
 
-    def load_flows(self, fr):
+    def load_flows(self, fr: io.FlowReader) -> int:
         """
             Load flows from a FlowReader object.
         """
@@ -166,7 +166,7 @@ class Master:
             self.load_flow(i)
         return cnt
 
-    def load_flows_file(self, path):
+    def load_flows_file(self, path: str) -> int:
         path = os.path.expanduser(path)
         try:
             if path == "-":
@@ -180,7 +180,11 @@ class Master:
         except IOError as v:
             raise exceptions.FlowReadException(v.strerror)
 
-    def replay_request(self, f, block=False):
+    def replay_request(
+            self,
+            f: http.HTTPFlow,
+            block: bool=False
+    ) -> http_replay.RequestReplayThread:
         """
         Replay a HTTP request to receive a new response from the server.
 

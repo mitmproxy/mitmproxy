@@ -11,6 +11,7 @@ import tornado.escape
 import tornado.web
 import tornado.websocket
 from mitmproxy import contentviews
+from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
@@ -108,9 +109,23 @@ class RequestHandler(tornado.web.RequestHandler):
 
     @property
     def json(self):
-        if not self.request.headers.get("Content-Type").startswith("application/json"):
-            return None
-        return json.loads(self.request.body.decode())
+        if not self.request.headers.get("Content-Type", "").startswith("application/json"):
+            raise APIError(400, "Invalid Content-Type, expected application/json.")
+        try:
+            return json.loads(self.request.body.decode())
+        except Exception as e:
+            raise APIError(400, "Malformed JSON: {}".format(str(e)))
+
+    @property
+    def filecontents(self):
+        """
+        Accept either a multipart/form file upload or just take the plain request body.
+
+        """
+        if self.request.files:
+            return next(iter(self.request.files.values()))[0].body
+        else:
+            return self.request.body
 
     @property
     def view(self) -> mitmproxy.addons.view.View:
@@ -124,11 +139,11 @@ class RequestHandler(tornado.web.RequestHandler):
     def flow(self) -> mitmproxy.flow.Flow:
         flow_id = str(self.path_kwargs["flow_id"])
         # FIXME: Add a facility to addon.view to safely access the store
-        flow = self.view._store.get(flow_id)
+        flow = self.view.get_by_id(flow_id)
         if flow:
             return flow
         else:
-            raise APIError(400, "Flow not found.")
+            raise APIError(404, "Flow not found.")
 
     def write_error(self, status_code: int, **kwargs):
         if "exc_info" in kwargs and isinstance(kwargs["exc_info"][1], APIError):
@@ -168,7 +183,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         for conn in cls.connections:
             try:
                 conn.write_message(message)
-            except Exception:
+            except Exception:  # pragma: no cover
                 logging.error("Error sending message", exc_info=True)
 
 
@@ -196,10 +211,8 @@ class DumpFlows(RequestHandler):
 
     def post(self):
         self.view.clear()
-
-        content = self.request.files.values()[0][0].body
-        bio = BytesIO(content)
-        self.master.load_flows(io.FlowReader(bio).stream())
+        bio = BytesIO(self.filecontents)
+        self.master.load_flows(io.FlowReader(bio))
         bio.close()
 
 
@@ -211,7 +224,8 @@ class ClearAll(RequestHandler):
 
 class AcceptFlows(RequestHandler):
     def post(self):
-        self.master.accept_all(self.master)
+        for f in self.view:
+            f.resume(self.master)
 
 
 class AcceptFlow(RequestHandler):
@@ -228,53 +242,59 @@ class FlowHandler(RequestHandler):
     def put(self, flow_id):
         flow = self.flow
         flow.backup()
-        for a, b in self.json.items():
-            if a == "request" and hasattr(flow, "request"):
-                request = flow.request
-                for k, v in b.items():
-                    if k in ["method", "scheme", "host", "path", "http_version"]:
-                        setattr(request, k, str(v))
-                    elif k == "port":
-                        request.port = int(v)
-                    elif k == "headers":
-                        request.headers.clear()
-                        for header in v:
-                            request.headers.add(*header)
-                    elif k == "content":
-                        request.text = v
-                    else:
-                        print("Warning: Unknown update {}.{}: {}".format(a, k, v))
+        try:
+            for a, b in self.json.items():
+                if a == "request" and hasattr(flow, "request"):
+                    request = flow.request
+                    for k, v in b.items():
+                        if k in ["method", "scheme", "host", "path", "http_version"]:
+                            setattr(request, k, str(v))
+                        elif k == "port":
+                            request.port = int(v)
+                        elif k == "headers":
+                            request.headers.clear()
+                            for header in v:
+                                request.headers.add(*header)
+                        elif k == "content":
+                            request.text = v
+                        else:
+                            raise APIError(400, "Unknown update request.{}: {}".format(k, v))
 
-            elif a == "response" and hasattr(flow, "response"):
-                response = flow.response
-                for k, v in b.items():
-                    if k == "msg":
-                        response.msg = str(v)
-                    elif k == "code":
-                        response.status_code = int(v)
-                    elif k == "http_version":
-                        response.http_version = str(v)
-                    elif k == "headers":
-                        response.headers.clear()
-                        for header in v:
-                            response.headers.add(*header)
-                    elif k == "content":
-                        response.text = v
-                    else:
-                        print("Warning: Unknown update {}.{}: {}".format(a, k, v))
-            else:
-                print("Warning: Unknown update {}: {}".format(a, b))
+                elif a == "response" and hasattr(flow, "response"):
+                    response = flow.response
+                    for k, v in b.items():
+                        if k in ["msg", "http_version"]:
+                            setattr(response, k, str(v))
+                        elif k == "code":
+                            response.status_code = int(v)
+                        elif k == "headers":
+                            response.headers.clear()
+                            for header in v:
+                                response.headers.add(*header)
+                        elif k == "content":
+                            response.text = v
+                        else:
+                            raise APIError(400, "Unknown update response.{}: {}".format(k, v))
+                else:
+                    raise APIError(400, "Unknown update {}: {}".format(a, b))
+        except APIError:
+            flow.revert()
+            raise
         self.view.update(flow)
 
 
 class DuplicateFlow(RequestHandler):
     def post(self, flow_id):
-        self.master.view.duplicate_flow(self.flow)
+        f = self.flow.copy()
+        self.view.add(f)
+        self.write(f.id)
 
 
 class RevertFlow(RequestHandler):
     def post(self, flow_id):
-        self.flow.revert()
+        if self.flow.modified():
+            self.flow.revert()
+            self.view.update(self.flow)
 
 
 class ReplayFlow(RequestHandler):
@@ -283,16 +303,17 @@ class ReplayFlow(RequestHandler):
         self.flow.response = None
         self.view.update(self.flow)
 
-        r = self.master.replay_request(self.flow)
-        if r:
-            raise APIError(400, r)
+        try:
+            self.master.replay_request(self.flow)
+        except exceptions.ReplayException as e:
+            raise APIError(400, str(e))
 
 
 class FlowContent(RequestHandler):
     def post(self, flow_id, message):
         self.flow.backup()
         message = getattr(self.flow, message)
-        message.content = self.request.files.values()[0][0].body
+        message.content = self.filecontents
         self.view.update(self.flow)
 
     def get(self, flow_id, message):
@@ -364,46 +385,16 @@ class Settings(RequestHandler):
         ))
 
     def put(self):
-        update = {}
-        for k, v in self.json.items():
-            if k == "intercept":
-                self.master.options.intercept = v
-                update[k] = v
-            elif k == "showhost":
-                self.master.options.showhost = v
-                update[k] = v
-            elif k == "no_upstream_cert":
-                self.master.options.no_upstream_cert = v
-                update[k] = v
-            elif k == "rawtcp":
-                self.master.options.rawtcp = v
-                update[k] = v
-            elif k == "http2":
-                self.master.options.http2 = v
-                update[k] = v
-            elif k == "anticache":
-                self.master.options.anticache = v
-                update[k] = v
-            elif k == "anticomp":
-                self.master.options.anticomp = v
-                update[k] = v
-            elif k == "stickycookie":
-                self.master.options.stickycookie = v
-                update[k] = v
-            elif k == "stickyauth":
-                self.master.options.stickyauth = v
-                update[k] = v
-            elif k == "stream":
-                self.master.options.stream_large_bodies = v
-                update[k] = v
-            else:
-                print("Warning: Unknown setting {}: {}".format(k, v))
-
-        ClientConnection.broadcast(
-            resource="settings",
-            cmd="update",
-            data=update
-        )
+        update = self.json
+        option_whitelist = {
+            "intercept", "showhost", "no_upstream_cert",
+            "rawtcp", "http2", "anticache", "anticomp",
+            "stickycookie", "stickyauth", "stream_large_bodies"
+        }
+        for k in update:
+            if k not in option_whitelist:
+                raise APIError(400, "Unknown setting {}".format(k))
+        self.master.options.update(**update)
 
 
 class Application(tornado.web.Application):

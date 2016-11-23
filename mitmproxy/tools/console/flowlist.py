@@ -303,8 +303,8 @@ class FlowListWalker(urwid.ListWalker):
 
 class FlowListBox(urwid.ListBox):
 
-    def __init__(self, master):
-        self.master = master
+    def __init__(self, master: "mitmproxy.tools.console.master.ConsoleMaster"):
+        self.master = master  # type: "mitmproxy.tools.console.master.ConsoleMaster"
         super().__init__(FlowListWalker(master))
 
     def get_method_raw(self, k):
@@ -348,7 +348,7 @@ class FlowListBox(urwid.ListBox):
         if key == "A":
             for f in self.master.view:
                 if f.intercepted:
-                    f.resume()
+                    f.resume(self.master)
             signals.flowlist_change.send(self)
         elif key == "z":
             self.master.view.clear()
