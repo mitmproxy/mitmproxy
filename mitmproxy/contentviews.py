@@ -626,11 +626,14 @@ def get_message_content_view(viewname, message):
     if content is None:
         return "", iter([[("error", "content missing")]]), None
 
-    query = message.query if isinstance(message, http.Request) else None
-    headers = message.headers if isinstance(message, http.Message) else None
+    metadata = {}
+    if isinstance(message, http.Request):
+        metadata["query"] = message.query
+    if isinstance(message, http.Message):
+        metadata["headers"] = message.headers
 
     description, lines, error = get_content_view(
-        viewmode, content, headers=headers, query=query
+        viewmode, content, **metadata
     )
 
     if enc:
