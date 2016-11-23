@@ -63,6 +63,7 @@ class ViewServer extends Component {
         let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, maxLines)
         return (
             <div>
+                {ViewImage.matches(message) && <ViewImage {...this.props} />}
                 <pre>
                     {lines.map((line, i) =>
                         <div key={`line${i}`}>
@@ -77,9 +78,6 @@ class ViewServer extends Component {
                         </div>
                     )}
                 </pre>
-                {ViewImage.matches(message) &&
-                <ViewImage {...this.props} />
-                }
             </div>
         )
     }

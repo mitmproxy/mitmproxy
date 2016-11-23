@@ -14,7 +14,7 @@ ViewSelector.propTypes = {
 
 function ViewSelector ({contentViews, activeView, isEdit, setContentView}){
     let edit = ContentViews.Edit.displayName
-    let inner = <span> <b>View:</b> {activeView}<span className="caret"></span> </span>
+    let inner = <span> <b>View:</b> {activeView} <span className="caret"></span> </span>
 
     return (
         <Dropdown dropup className="pull-left" btnClass="btn btn-default btn-xs" text={inner}>
