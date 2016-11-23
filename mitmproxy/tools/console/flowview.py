@@ -510,8 +510,10 @@ class FlowView(tabs.Tabs):
             self.flow.resume(self.master)
             signals.flow_change.send(self, flow = self.flow)
         elif key == "A":
-            self.master.accept_all()
-            signals.flow_change.send(self, flow = self.flow)
+            for f in self.view:
+                if f.intercepted:
+                    f.resume(self.master)
+                    signals.flow_change.send(self, flow=f)
         elif key == "d":
             if self.flow.killable:
                 self.flow.kill(self.master)

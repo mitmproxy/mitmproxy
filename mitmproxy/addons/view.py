@@ -280,6 +280,13 @@ class View(collections.Sequence):
                     # The value was not in the view
                     pass
 
+    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
+        """
+        Get flow with the given id from the store.
+        Returns None if the flow is not found.
+        """
+        return self._store.get(flow_id)
+
     # Event handlers
     def configure(self, opts, updated):
         if "filter" in updated:

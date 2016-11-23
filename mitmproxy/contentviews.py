@@ -609,7 +609,7 @@ def get_message_content_view(viewname, message):
     """
     viewmode = get(viewname)
     if not viewmode:
-        get("auto")
+        viewmode = get("auto")
     try:
         content = message.content
     except ValueError:

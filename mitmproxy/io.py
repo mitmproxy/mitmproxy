@@ -1,6 +1,8 @@
 import os
+from typing import Iterable
 
 from mitmproxy import exceptions
+from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import tcp
@@ -29,7 +31,7 @@ class FlowReader:
     def __init__(self, fo):
         self.fo = fo
 
-    def stream(self):
+    def stream(self) -> Iterable[flow.Flow]:
         """
             Yields Flow objects from the dump.
         """
@@ -54,10 +56,10 @@ class FilteredFlowWriter:
         self.fo = fo
         self.flt = flt
 
-    def add(self, flow):
-        if self.flt and not flowfilter.match(self.flt, flow):
+    def add(self, f: flow.Flow):
+        if self.flt and not flowfilter.match(self.flt, f):
             return
-        d = flow.get_state()
+        d = f.get_state()
         tnetstring.dump(d, self.fo)
 
 

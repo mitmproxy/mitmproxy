@@ -9,15 +9,14 @@ ContentViewOptions.propTypes = {
     message: React.PropTypes.object.isRequired,
 }
 
-function ContentViewOptions(props) {
-    const { flow, message, uploadContent, readonly, contentViewDescription } = props
+function ContentViewOptions({ flow, message, uploadContent, readonly, contentViewDescription }) {
     return (
         <div className="view-options">
             <ViewSelector message={message}/>
             &nbsp;
             <DownloadContentButton flow={flow} message={message}/>
             &nbsp;
-            <UploadContentButton uploadContent={uploadContent}/>
+            {!readonly && <UploadContentButton uploadContent={uploadContent}/> }
             &nbsp;
             <span>{contentViewDescription}</span>
         </div>
@@ -26,6 +25,7 @@ function ContentViewOptions(props) {
 
 export default connect(
     state => ({
-        contentViewDescription: state.ui.flow.viewDescription
+        contentViewDescription: state.ui.flow.viewDescription,
+        readonly: !state.ui.flow.modifiedFlow,
     })
 )(ContentViewOptions)

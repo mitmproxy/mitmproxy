@@ -7,7 +7,7 @@ Footer.propTypes = {
 }
 
 function Footer({ settings }) {
-    let {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp, stickyauth, stickycookie, stream} = settings;
+    let {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, anticache, anticomp, stickyauth, stickycookie, stream_large_bodies} = settings;
     return (
         <footer>
             {mode && mode != "regular" && (
@@ -40,8 +40,8 @@ function Footer({ settings }) {
             {stickycookie && (
                 <span className="label label-success">stickycookie: {stickycookie}</span>
             )}
-            {stream && (
-                <span className="label label-success">stream: {formatSize(stream)}</span>
+            {stream_large_bodies && (
+                <span className="label label-success">stream: {formatSize(stream_large_bodies)}</span>
             )}
         </footer>
     )

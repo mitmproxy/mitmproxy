@@ -49,11 +49,11 @@ function OptionMenu({ settings, updateSettings }) {
                     txt={settings.stickycookie}
                     onToggleChanged={txt => updateSettings({ stickycookie: !settings.stickycookie ? txt : null })}
                 />
-                <ToggleInputButton name="stream" placeholder="stream..."
-                    checked={!!settings.stream}
-                    txt={settings.stream}
+                <ToggleInputButton name="stream_large_bodies" placeholder="stream..."
+                    checked={!!settings.stream_large_bodies}
+                    txt={settings.stream_large_bodies}
                     inputType="number"
-                    onToggleChanged={txt => updateSettings({ stream: !settings.stream ? txt : null })}
+                    onToggleChanged={txt => updateSettings({ stream_large_bodies: !settings.stream_large_bodies ? txt : null })}
                 />
             </div>
             <div className="clearfix"/>
