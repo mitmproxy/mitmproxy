@@ -20,12 +20,14 @@ class Options(options.Options):
             self,
             *,  # all args are keyword-only.
             intercept: Optional[str] = None,
+            open_browser: bool = True,
             wdebug: bool = False,
             wport: int = 8081,
             wiface: str = "127.0.0.1",
             **kwargs
     ) -> None:
         self.intercept = intercept
+        self.open_browser = open_browser
         self.wdebug = wdebug
         self.wport = wport
         self.wiface = wiface
@@ -122,11 +124,13 @@ class WebMaster(master.Master):
         try:
             url = "http://{}:{}/".format(self.options.wiface, self.options.wport)
             print("Server listening at {}".format(url), file=sys.stderr)
-            if not open_browser(url):
-                print("No webbrowser found. Please open a browser and point it to {}".format(url))
+            if self.options.open_browser:
+                success = open_browser(url)
+                if not success:
+                    print("No webbrowser found. Please open a browser and point it to {}".format(url))
 
             iol.start()
-        except (KeyboardInterrupt):
+        except KeyboardInterrupt:
             self.shutdown()
 
 

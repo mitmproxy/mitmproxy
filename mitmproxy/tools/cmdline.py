@@ -868,6 +868,11 @@ def mitmweb():
 
     group = parser.add_argument_group("Mitmweb")
     group.add_argument(
+        "--no-browser",
+        action="store_false", dest="open_browser",
+        help="Don't start a browser"
+    )
+    group.add_argument(
         "--wport",
         action="store", type=int, dest="wport", default=8081,
         metavar="PORT",

@@ -132,6 +132,7 @@ def mitmweb(args=None):  # pragma: no cover
     try:
         web_options = web.master.Options(**cmdline.get_common_options(args))
         web_options.intercept = args.intercept
+        web_options.open_browser = args.open_browser
         web_options.wdebug = args.wdebug
         web_options.wiface = args.wiface
         web_options.wport = args.wport
