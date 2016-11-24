@@ -1,5 +1,16 @@
 import blinker
 
+# Show a status message in the action bar
+sig_add_log = blinker.Signal()
+
+
+def add_log(e, level):
+    sig_add_log.send(
+        None,
+        e=e,
+        level=level
+    )
+
 
 # Show a status message in the action bar
 status_message = blinker.Signal()

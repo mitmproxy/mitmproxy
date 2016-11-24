@@ -88,6 +88,7 @@ class ConsoleMaster(master.Master):
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.replace_view_state.connect(self.sig_replace_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
+        signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(*addons.default_addons())
         self.addons.add(intercept.Intercept(), self.view)
 
@@ -116,6 +117,9 @@ class ConsoleMaster(master.Master):
             ),
             callback = self.quit,
         )
+
+    def sig_add_log(self, sender, e, level):
+        self.add_log(e, level)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
