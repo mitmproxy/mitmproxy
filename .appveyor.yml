@@ -33,7 +33,7 @@ deploy_script:
       ) {
       pip install -U virtualenv
       .\dev.ps1
-      copy .\venv\Scripts\python.exe .\venv\Scripts\python3.exe"
+      copy .\venv\Scripts\python.exe .\venv\Scripts\python3.exe
       cmd /c "python3 -u .\release\rtool.py bdist 2>&1"
       python -u .\release\rtool.py upload-snapshot --bdist --wheel
     }
