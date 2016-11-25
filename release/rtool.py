@@ -40,6 +40,8 @@ BUILD_DIR = join(RELEASE_DIR, "build")
 DIST_DIR = join(RELEASE_DIR, "dist")
 
 PYINSTALLER_SPEC = join(RELEASE_DIR, "specs")
+# PyInstaller 3.2 does not bundle pydivert's Windivert binaries
+PYINSTALLER_HOOKS = join(RELEASE_DIR, "hooks")
 PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
 PYINSTALLER_DIST = join(BUILD_DIR, "binaries")
 
@@ -166,7 +168,7 @@ def make_wheel():
         print("Creating wheel...")
         subprocess.check_call(
             [
-                "python", "./setup.py", "-q",
+                "python3", "./setup.py", "-q",
                 "bdist_wheel", "--dist-dir", DIST_DIR, "--universal"
             ],
             cwd=ROOT_DIR
@@ -175,7 +177,7 @@ def make_wheel():
         print("Creating virtualenv for test install...")
         if exists(VENV_DIR):
             shutil.rmtree(VENV_DIR)
-        subprocess.check_call(["virtualenv", "-q", VENV_DIR])
+        subprocess.check_call(["python3", "-m", "virtualenv", "-q", VENV_DIR])
 
         with chdir(DIST_DIR):
             print("Install wheel into virtualenv...")
@@ -198,7 +200,11 @@ def make_wheel():
 
 @cli.command("bdist")
 @click.option("--use-existing-wheel/--no-use-existing-wheel", default=False)
-@click.argument("pyinstaller_version", envvar="PYINSTALLER_VERSION", default="PyInstaller~=3.1.1")
+@click.argument(
+    "pyinstaller_version",
+    envvar="PYINSTALLER_VERSION",
+    default="git+https://github.com/pyinstaller/pyinstaller.git@483c819d6a256b58db6740696a901bd41c313f0c"
+)
 @click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION", default="setuptools>=25.1.0,!=25.1.1")
 @click.pass_context
 def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version):
@@ -230,12 +236,20 @@ def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version)
                             "--clean",
                             "--workpath", PYINSTALLER_TEMP,
                             "--distpath", PYINSTALLER_DIST,
+                            "--additional-hooks-dir", PYINSTALLER_HOOKS,
+                            # PyInstaller 3.2 does not handle Python 3.5's ucrt correctly.
+                            "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
+                            "--onefile",
+                            "--console",
+                            "--icon", "icon.ico",
                             # This is PyInstaller, so setting a
                             # different log level obviously breaks it :-)
                             # "--log-level", "WARN",
-                            "%s.spec" % tool
+                            tool
                         ]
                     )
+                    # Delete the spec file - we're good without.
+                    os.remove("{}.spec".format(tool))
 
                 # Test if it works at all O:-)
                 executable = join(PYINSTALLER_DIST, tool)
