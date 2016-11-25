@@ -19,6 +19,7 @@ environment:
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "copy %PYTHON%\\python.exe %PYTHON%\\python3.exe"
   - "python -m pip install --disable-pip-version-check -U pip"
   - "pip install -U tox"
 
@@ -29,7 +30,7 @@ deploy_script:
   ps: |
     if(
       ($Env:TOXENV -match "py35") -and
-      (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
+      (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
       pip install -U virtualenv
       .\dev.ps1
