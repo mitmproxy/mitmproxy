@@ -119,20 +119,7 @@ class ConsoleMaster(master.Master):
         )
 
     def sig_add_log(self, sender, e, level):
-        if self.options.verbosity < log.log_tier(level):
-            return
-
-        if level in ("error", "warn"):
-            signals.status_message.send(
-                message = "{}: {}".format(level.title(), e)
-            )
-            e = urwid.Text((level, str(e)))
-        else:
-            e = urwid.Text(str(e))
-        self.logbuffer.append(e)
-        if len(self.logbuffer) > EVENTLOG_SIZE:
-            self.logbuffer.pop(0)
-        self.logbuffer.set_focus(len(self.logbuffer) - 1)
+        self.add_log(e, level)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -172,7 +159,7 @@ class ConsoleMaster(master.Master):
             with self.handlecontext():
                 sc.run_once(command, [f])
         except mitmproxy.exceptions.AddonError as e:
-            signals.add_log("Script error: %s" % e, "warn")
+            self.add_log("Script error: %s" % e, "warn")
 
     def toggle_eventlog(self):
         self.options.eventlog = not self.options.eventlog
@@ -280,7 +267,7 @@ class ConsoleMaster(master.Master):
         if self.options.rfile:
             ret = self.load_flows_path(self.options.rfile)
             if ret and self.view.store_count():
-                signals.add_log(
+                self.add_log(
                     "File truncated or corrupted. "
                     "Loaded as many flows as possible.",
                     "error"
@@ -450,13 +437,13 @@ class ConsoleMaster(master.Master):
     def websocket_message(self, f):
         super().websocket_message(f)
         message = f.messages[-1]
-        signals.add_log(message.info, "info")
-        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        self.add_log(message.info, "info")
+        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
     def websocket_end(self, f):
         super().websocket_end(f)
-        signals.add_log("WebSocket connection closed by {}: {} {}, {}".format(
+        self.add_log("WebSocket connection closed by {}: {} {}, {}".format(
             f.close_sender,
             f.close_code,
             f.close_message,
@@ -467,13 +454,26 @@ class ConsoleMaster(master.Master):
         super().tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        signals.add_log("{client} {direction} tcp {direction} {server}".format(
+        self.add_log("{client} {direction} tcp {direction} {server}".format(
             client=repr(f.client_conn.address),
             server=repr(f.server_conn.address),
             direction=direction,
         ), "info")
-        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        self.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
-    def log(self, evt):
-        signals.add_log(evt.msg, evt.level)
+    def log(self, entry: log.LogEntry):
+        if self.options.verbosity < log.log_tier(entry.level):
+            return
+
+        if entry.level in ("error", "warn"):
+            signals.status_message.send(
+                message = "{}: {}".format(entry.level.title(), entry.msg)
+            )
+            e = urwid.Text((entry.level, str(entry.msg)))
+        else:
+            e = urwid.Text(str(entry.msg))
+        self.logbuffer.append(e)
+        if len(self.logbuffer) > EVENTLOG_SIZE:
+            self.logbuffer.pop(0)
+        self.logbuffer.set_focus(len(self.logbuffer) - 1)

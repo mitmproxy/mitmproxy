@@ -47,8 +47,8 @@ class WebMaster(master.Master):
 
         self.options.changed.connect(self._sig_options_update)
 
+        self.addons.add(self.events, self.view, intercept.Intercept())
         self.addons.add(*addons.default_addons())
-        self.addons.add(self.view, self.events, intercept.Intercept())
         self.app = app.Application(
             self, self.options.wdebug
         )

@@ -67,8 +67,9 @@ class Master:
         """
             level: debug, info, warn, error
         """
-        with self.handlecontext():
-            self.addons("log", log.LogEntry(e, level))
+        entry = log.LogEntry(e, level)
+        entry.reply = controller.DummyReply()
+        self.log(entry)
 
     def start(self):
         self.should_exit.clear()
