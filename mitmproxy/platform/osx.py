@@ -14,24 +14,23 @@ from . import pf
     the output processing of pfctl (see pf.py).
 """
 
+STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
 
-class Resolver:
-    STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
 
-    def original_addr(self, csock):
-        peer = csock.getpeername()
-        try:
-            stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            if "sudo: a password is required" in e.output.decode(errors="replace"):
-                insufficient_priv = True
-            else:
-                raise RuntimeError("Error getting pfctl state: " + repr(e))
+def original_addr(csock):
+    peer = csock.getpeername()
+    try:
+        stxt = subprocess.check_output(STATECMD, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        if "sudo: a password is required" in e.output.decode(errors="replace"):
+            insufficient_priv = True
         else:
-            insufficient_priv = "sudo: a password is required" in stxt.decode(errors="replace")
+            raise RuntimeError("Error getting pfctl state: " + repr(e))
+    else:
+        insufficient_priv = "sudo: a password is required" in stxt.decode(errors="replace")
 
-        if insufficient_priv:
-            raise RuntimeError(
-                "Insufficient privileges to access pfctl. "
-                "See http://docs.mitmproxy.org/en/latest/transparent/osx.html for details.")
-        return pf.lookup(peer[0], peer[1], stxt)
+    if insufficient_priv:
+        raise RuntimeError(
+            "Insufficient privileges to access pfctl. "
+            "See http://docs.mitmproxy.org/en/latest/transparent/osx.html for details.")
+    return pf.lookup(peer[0], peer[1], stxt)

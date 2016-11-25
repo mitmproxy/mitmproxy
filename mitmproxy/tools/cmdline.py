@@ -174,7 +174,7 @@ def get_common_options(args):
     mode, upstream_server = "regular", None
     if args.transparent_proxy:
         c += 1
-        if not platform.resolver:
+        if not platform.original_addr:
             raise exceptions.OptionsError(
                 "Transparent mode not supported on this platform."
             )

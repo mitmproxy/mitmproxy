@@ -94,11 +94,11 @@ class TestProcessProxyOptions:
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--cadir", cadir)
 
-    @mock.patch("mitmproxy.platform.resolver", None)
+    @mock.patch("mitmproxy.platform.original_addr", None)
     def test_no_transparent(self):
         self.assert_err("transparent mode not supported", "-T")
 
-    @mock.patch("mitmproxy.platform.resolver")
+    @mock.patch("mitmproxy.platform.original_addr")
     def test_modes(self, _):
         self.assert_noerr("-R", "http://localhost")
         self.assert_err("expected one argument", "-R")

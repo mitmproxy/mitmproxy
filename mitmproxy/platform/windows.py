@@ -19,10 +19,13 @@ PROXY_API_PORT = 8085
 class Resolver:
 
     def __init__(self):
-        TransparentProxy.setup()
         self.socket = None
         self.lock = threading.RLock()
-        self._connect()
+
+    def setup(self):
+        with self.lock:
+            TransparentProxy.setup()
+            self._connect()
 
     def _connect(self):
         if self.socket:

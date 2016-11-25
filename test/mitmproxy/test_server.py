@@ -2,6 +2,8 @@ import os
 import socket
 import time
 
+import mock
+
 from mitmproxy.test import tutils
 from mitmproxy import controller
 from mitmproxy import options
@@ -878,16 +880,10 @@ class TestKillResponse(tservers.HTTPProxyTest):
         assert self.server.last_log()
 
 
-class EResolver(tservers.TResolver):
-
-    def original_addr(self, sock):
-        raise RuntimeError("Could not resolve original destination.")
-
-
 class TestTransparentResolveError(tservers.TransparentProxyTest):
-    resolver = EResolver
-
-    def test_resolve_error(self):
+    @mock.patch("mitmproxy.platform.original_addr")
+    def test_resolve_error(self, original_addr):
+        original_addr.side_effect = RuntimeError
         assert self.pathod("304").status_code == 502
 
 
