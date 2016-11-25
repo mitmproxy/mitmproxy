@@ -1,7 +1,6 @@
 import os.path
 import threading
 import tempfile
-import mock
 import sys
 
 import mitmproxy.platform
@@ -219,12 +218,11 @@ class TransparentProxyTest(ProxyTestBase):
         mitmproxy.platform.original_addr = lambda sock: ("127.0.0.1", cls.server.port)
         super().setup_class()
 
-
     @classmethod
     def teardown_class(cls):
         super().teardown_class()
         mitmproxy.platform.init_transparent_mode = cls._init_transparent_mode
-        mitmproxy.platform.original_addr= cls._original_addr
+        mitmproxy.platform.original_addr = cls._original_addr
 
     @classmethod
     def get_options(cls):
