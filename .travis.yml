@@ -55,9 +55,9 @@ script: tox -- --cov mitmproxy --cov pathod -v
 
 after_success:
   - |
-    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
+    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        git fetch --unshallow
+        git fetch --unshallow --tags
         ./dev.sh 3.5
         source venv3.5/bin/activate
         pip install -e ./release
