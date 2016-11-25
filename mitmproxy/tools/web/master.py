@@ -1,6 +1,5 @@
-import sys
 import webbrowser
-from typing import Optional
+from typing import Optional, IO
 
 import tornado.httpserver
 import tornado.ioloop
@@ -11,6 +10,7 @@ from mitmproxy import master
 from mitmproxy import options
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
+from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.tools.web import app
 
@@ -20,6 +20,7 @@ class Options(options.Options):
             self,
             *,  # all args are keyword-only.
             intercept: Optional[str] = None,
+            tfile: Optional[IO[str]] = None,
             open_browser: bool = True,
             wdebug: bool = False,
             wport: int = 8081,
@@ -27,6 +28,7 @@ class Options(options.Options):
             **kwargs
     ) -> None:
         self.intercept = intercept
+        self.tfile = tfile
         self.open_browser = open_browser
         self.wdebug = wdebug
         self.wport = wport
@@ -50,7 +52,12 @@ class WebMaster(master.Master):
         self.options.changed.connect(self._sig_options_update)
 
         self.addons.add(*addons.default_addons())
-        self.addons.add(self.view, self.events, intercept.Intercept())
+        self.addons.add(
+            self.view,
+            self.events,
+            intercept.Intercept(),
+            termlog.TermLog(),
+        )
         self.app = app.Application(
             self, self.options.wdebug
         )
@@ -121,14 +128,27 @@ class WebMaster(master.Master):
 
         iol.add_callback(self.start)
         tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
-        try:
-            url = "http://{}:{}/".format(self.options.wiface, self.options.wport)
-            print("Server listening at {}".format(url), file=sys.stderr)
-            if self.options.open_browser:
-                success = open_browser(url)
-                if not success:
-                    print("No webbrowser found. Please open a browser and point it to {}".format(url))
 
+        self.add_log(
+            "Proxy server listening at http://{}/".format(self.server.address),
+            "info"
+        )
+
+        web_url = "http://{}:{}/".format(self.options.wiface, self.options.wport)
+        self.add_log(
+            "Web   server listening at {}".format(web_url),
+            "info"
+        )
+
+        if self.options.open_browser:
+            success = open_browser(web_url)
+            if not success:
+                self.add_log(
+                    "No web browser found. Please open a browser and point it to {}".format(web_url),
+                    "info"
+                )
+
+        try:
             iol.start()
         except KeyboardInterrupt:
             self.shutdown()
