@@ -1,9 +1,9 @@
 import os.path
 import threading
 import tempfile
-import mock
 import sys
 
+import mitmproxy.platform
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy import master
@@ -207,33 +207,22 @@ class HTTPProxyTest(ProxyTestBase):
                 return p.request("get:'http://%s%s'" % (options.APP_HOST, page))
 
 
-class TResolver:
-
-    def __init__(self, port):
-        self.port = port
-
-    def original_addr(self, sock):
-        return ("127.0.0.1", self.port)
-
-
 class TransparentProxyTest(ProxyTestBase):
     ssl = None
-    resolver = TResolver
 
     @classmethod
     def setup_class(cls):
+        cls._init_transparent_mode = mitmproxy.platform.init_transparent_mode
+        cls._original_addr = mitmproxy.platform.original_addr
+        mitmproxy.platform.init_transparent_mode = lambda: True
+        mitmproxy.platform.original_addr = lambda sock: ("127.0.0.1", cls.server.port)
         super().setup_class()
-
-        cls._resolver = mock.patch(
-            "mitmproxy.platform.resolver",
-            new=lambda: cls.resolver(cls.server.port)
-        )
-        cls._resolver.start()
 
     @classmethod
     def teardown_class(cls):
-        cls._resolver.stop()
         super().teardown_class()
+        mitmproxy.platform.init_transparent_mode = cls._init_transparent_mode
+        mitmproxy.platform.original_addr = cls._original_addr
 
     @classmethod
     def get_options(cls):

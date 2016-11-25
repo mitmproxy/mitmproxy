@@ -6,6 +6,8 @@ from mitmproxy import exceptions
 from mitmproxy import connections
 from mitmproxy import http
 from mitmproxy import log
+from mitmproxy import platform
+from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
 from mitmproxy.net import tcp
@@ -33,7 +35,7 @@ class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
 
-    def __init__(self, config):
+    def __init__(self, config: ProxyConfig):
         """
             Raises ServerException if there's a startup problem.
         """
@@ -42,6 +44,8 @@ class ProxyServer(tcp.TCPServer):
             super().__init__(
                 (config.options.listen_host, config.options.listen_port)
             )
+            if config.options.mode == "transparent":
+                platform.init_transparent_mode()
         except socket.error as e:
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
