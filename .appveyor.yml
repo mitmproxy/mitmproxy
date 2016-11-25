@@ -19,7 +19,6 @@ environment:
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "copy %PYTHON%\\python.exe %PYTHON%\\python3.exe"
   - "python -m pip install --disable-pip-version-check -U pip"
   - "pip install -U tox"
 
@@ -34,7 +33,8 @@ deploy_script:
       ) {
       pip install -U virtualenv
       .\dev.ps1
-      cmd /c "python -u .\release\rtool.py bdist 2>&1"
+      copy .\venv\Scripts\python.exe .\venv\Scripts\python3.exe"
+      cmd /c "python3 -u .\release\rtool.py bdist 2>&1"
       python -u .\release\rtool.py upload-snapshot --bdist --wheel
     }
 
