@@ -134,10 +134,15 @@ class TestRequestUtils:
         request.host = None
         assert request.pretty_host is None
         assert request.host is None
-
         # Invalid IDNA
         request.headers["host"] = ".disqus.com:22"
         assert request.pretty_host == ".disqus.com"
+        # HTTP/2 with :authority header
+        request.scheme = 'https'
+        request.port = 443
+        del request.headers["host"]
+        request.headers[":authority"] = "other"
+        assert request.pretty_host == "other"
 
     def test_pretty_url(self):
         request = treq()
