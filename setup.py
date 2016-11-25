@@ -73,7 +73,7 @@ setup(
         "jsbeautifier>=1.6.3, <1.7",
         "lxml>=3.5.0, <=3.6.0",  # no wheels for 3.6.1 yet.
         "Pillow>=3.2, <3.5",
-        "passlib>=1.6.5, <1.7",
+        "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1.3, <2.2",
