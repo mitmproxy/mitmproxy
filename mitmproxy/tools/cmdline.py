@@ -850,7 +850,14 @@ def mitmdump():
         action="count", dest="flow_detail", default=1,
         help="Increase flow detail display level. Can be passed multiple times."
     )
-    parser.add_argument('args', nargs="...")
+    parser.add_argument(
+        'filter',
+        nargs="...",
+        help="""
+            Filter view expression, used to only show flows that match a certain filter.
+            See help in mitmproxy for filter expression syntax.
+        """
+    )
     return parser
 
 
