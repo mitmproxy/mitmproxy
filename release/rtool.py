@@ -220,7 +220,7 @@ def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version)
         ctx.invoke(make_wheel)
 
     print("Installing PyInstaller and setuptools...")
-    subprocess.check_call([VENV_PIP, "install", "-q", pyinstaller_version, setuptools_version])
+    subprocess.check_call([VENV_PIP, "install", pyinstaller_version, setuptools_version])
     print(subprocess.check_output([VENV_PIP, "freeze"]).decode())
 
     for bdist, tools in BDISTS.items():
