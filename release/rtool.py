@@ -203,7 +203,7 @@ def make_wheel():
 @click.argument(
     "pyinstaller_version",
     envvar="PYINSTALLER_VERSION",
-    default="git+https://github.com/pyinstaller/pyinstaller.git@483c819d6a256b58db6740696a901bd41c313f0c"
+    default="pyinstaller~=3.1.0"
 )
 @click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION", default="setuptools>=25.1.0,!=25.1.1")
 @click.pass_context
