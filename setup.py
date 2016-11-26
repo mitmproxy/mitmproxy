@@ -84,6 +84,9 @@ setup(
         "watchdog>=0.8.3, <0.9",
         "brotlipy>=0.5.1, <0.7",
         "sortedcontainers>=1.5.4, <1.6",
+        # transitive from cryptography, we just blacklist here.
+        # https://github.com/pypa/setuptools/issues/861
+        "setuptools>=11.3, !=29.0.0",
     ],
     extras_require={
         ':sys_platform == "win32"': [
