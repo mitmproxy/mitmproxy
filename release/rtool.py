@@ -281,9 +281,7 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
                         ]
                         + [x for e in excludes for x in ["--exclude-module", e]]
                         + PYINSTALLER_ARGS
-                        + [
-                            tool
-                        ]
+                        + [tool]
                     )
                     # Delete the spec file - we're good without.
                     os.remove("{}.spec".format(tool))
