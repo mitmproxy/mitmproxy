@@ -151,8 +151,8 @@ def make_bdist():
         shutil.rmtree(PYINSTALLER_TEMP)
     if exists(PYINSTALLER_DIST):
         shutil.rmtree(PYINSTALLER_DIST)
-    if not exists(DIST_DIR):
-        os.makedirs(DIST_DIR)
+
+    os.makedirs(DIST_DIR, exist_ok=True)
 
     for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
