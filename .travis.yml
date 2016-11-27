@@ -57,23 +57,14 @@ script:
     if [[ $BDIST == "1" ]]
     then
         git fetch --unshallow --tags
-        ./dev.sh 3.5
-        source venv3.5/bin/activate
-        ls ./venv3.5
-        which rtool
-        pip freeze
-        ls ./venv3.5/bin
-        ls ./venv3.5/lib
-        ls ./venv3.5/lib/python3.5
-        ls ./venv3.5/lib/python3.5/site-packages
-        ./venv3.5/bin/rtool bdist
+        tox -e rtool -- bdist
     fi
 
 after_success:
   - |
     if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        ./venv3.5/bin/rtool upload-snapshot --bdist
+        tox -e rtool upload-snapshot --bdist
     fi
 
 notifications:

@@ -10,8 +10,7 @@ import shutil
 import subprocess
 import tarfile
 import zipfile
-from os.path import join, abspath, normpath, dirname, exists, basename
-from typing import Union
+from os.path import join, abspath, dirname, exists, basename
 
 import click
 import pysftp
@@ -54,8 +53,6 @@ VENV_DIR = join(BUILD_DIR, "venv")
 
 # Project Configuration
 VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
-PROJECT_NAME = "mitmproxy"
-PYTHON_VERSION = "py3"
 BDISTS = {
     "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
     "pathod": ["pathoc", "pathod"]
@@ -70,29 +67,13 @@ TOOLS = [
 ]
 
 
-def get_version() -> str:
-    return runpy.run_path(VERSION_FILE)["VERSION"]
-
-
 def git(args: str) -> str:
     with chdir(ROOT_DIR):
         return subprocess.check_output(["git"] + shlex.split(args)).decode()
 
 
-def build_venv(args: Union[str, list]):
-    if not isinstance(args, list):
-        args = shlex.split(args)
-    args[0] = join(VENV_DIR, VENV_BIN, args[0])
-
-    click.secho("(build-venv) > {}".format(" ".join(args)), color="cyan")
-    subprocess.check_call(
-        args,
-        env={
-            **os.environ,
-            "VIRTUAL_ENV": VENV_DIR,
-            "PYTHON_HOME": "",
-        }
-    )
+def get_version() -> str:
+    return runpy.run_path(VERSION_FILE)["VERSION"]
 
 
 def get_snapshot_version() -> str:
@@ -128,23 +109,9 @@ def archive_name(bdist: str) -> str:
 
 
 def wheel_name() -> str:
-    return "{project}-{version}-{py_version}-none-any.whl".format(
-        project=PROJECT_NAME,
+    return "mitmproxy-{version}-py3-none-any.whl".format(
         version=get_version(),
-        py_version=PYTHON_VERSION
     )
-
-
-@contextlib.contextmanager
-def empty_pythonpath():
-    """
-    Make sure that the regular python installation is not on the python path,
-    which would give us access to modules installed outside of our virtualenv.
-    """
-    pythonpath = os.environ.get("PYTHONPATH", "")
-    os.environ["PYTHONPATH"] = ""
-    yield
-    os.environ["PYTHONPATH"] = pythonpath
 
 
 @contextlib.contextmanager
@@ -175,65 +142,8 @@ def contributors():
             f.write(contributors_data.encode())
 
 
-@cli.command("wheel")
-def make_wheel():
-    """
-    Build wheel
-    """
-    with empty_pythonpath():
-        if exists(DIST_DIR):
-            shutil.rmtree(DIST_DIR)
-
-        click.secho("Creating wheel...", color="cyan")
-        subprocess.check_call(
-            [
-                "python3", "./setup.py", "-q",
-                "bdist_wheel", "--dist-dir", DIST_DIR,
-            ],
-            cwd=ROOT_DIR
-        )
-
-        if exists(VENV_DIR):
-            click.secho("Removing old virtualenv for test install...", color="cyan")
-            shutil.rmtree(VENV_DIR)
-
-        click.secho("Creating new virtualenv for test install...", color="cyan")
-        subprocess.check_call(["python3", "-m", "virtualenv", "-q", "--always-copy", VENV_DIR])
-
-        with chdir(DIST_DIR):
-            click.secho("Install wheel into virtualenv...", color="cyan")
-            # lxml...
-            if platform.system() == "Windows":
-                build_venv(
-                    "pip install -q https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl")
-            build_venv("pip install -q {}".format(wheel_name()))
-
-            click.secho("Running tools...", color="cyan")
-            for tool in TOOLS:
-                build_venv("{} --version".format(tool))
-
-            print("Virtualenv available for further testing:")
-            print("source %s" % normpath(join(VENV_DIR, VENV_BIN, "activate")))
-
-
 @cli.command("bdist")
-@click.option("--use-existing-wheel/--no-use-existing-wheel", default=False)
-@click.option("--use-existing-pyinstaller/--no-use-existing-pyinstaller", default=False)
-@click.argument(
-    "pyinstaller_version",
-    envvar="PYINSTALLER_VERSION",
-    # the next commit after this updates the bootloaders, which then segfault! 🎉
-    # https://github.com/pyinstaller/pyinstaller/issues/2232
-    default="git+https://github.com/pyinstaller/pyinstaller.git@e78b7013382afebc7410901e066e4d4eb8432cd7"
-    # 3.2.0 is broken. 🎉
-    # This one may also still work:
-    # default="PyInstaller~=3.1.1"
-)
-@click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION",
-                default="setuptools>=25.1.0,!=25.1.1,!=29.0.0")
-@click.pass_context
-def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_version,
-               setuptools_version):
+def make_bdist():
     """
     Build a binary distribution
     """
@@ -241,15 +151,6 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
         shutil.rmtree(PYINSTALLER_TEMP)
     if exists(PYINSTALLER_DIST):
         shutil.rmtree(PYINSTALLER_DIST)
-
-    if not use_existing_wheel:
-        ctx.invoke(make_wheel)
-
-    if not use_existing_pyinstaller:
-        print("Installing PyInstaller and setuptools...")
-        build_venv("pip install {} {}".format(pyinstaller_version, setuptools_version))
-
-    build_venv("pip freeze")
 
     for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
@@ -266,7 +167,7 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
                         excludes.append("mitmproxy.tools.web")
                     if tool != "mitmproxy_main":
                         excludes.append("mitmproxy.tools.console")
-                    build_venv(
+                    subprocess.check_call(
                         [
                             "pyinstaller",
                             "--clean",
