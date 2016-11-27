@@ -156,8 +156,8 @@ class TestScript:
             sc.request(f)
             assert tctx.master.event_log[0][0] == "error"
             assert len(tctx.master.event_log[0][1].splitlines()) == 6
-            assert re.search('addonscripts/error.py", line \d+, in request', tctx.master.event_log[0][1])
-            assert re.search('addonscripts/error.py", line \d+, in mkerr', tctx.master.event_log[0][1])
+            assert re.search('addonscripts[\\/]error.py", line \d+, in request', tctx.master.event_log[0][1])
+            assert re.search('addonscripts[\\/]error.py", line \d+, in mkerr', tctx.master.event_log[0][1])
             assert tctx.master.event_log[0][1].endswith("ValueError: Error!\n")
 
     def test_addon(self):
