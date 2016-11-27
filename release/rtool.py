@@ -84,7 +84,7 @@ def build_venv(args: Union[str, list]):
         args = shlex.split(args)
     args[0] = join(VENV_DIR, VENV_BIN, args[0])
 
-    click.secho("(build-venv) > {}".format("".join(args)), color="cyan")
+    click.secho("(build-venv) > {}".format(" ".join(args)), color="cyan")
     subprocess.check_call(
         args,
         env={
