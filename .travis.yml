@@ -64,7 +64,7 @@ after_success:
   - |
     if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        tox -e rtool upload-snapshot -- --bdist
+        tox -e rtool -- upload-snapshot --bdist
     fi
 
 notifications:
