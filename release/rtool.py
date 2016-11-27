@@ -171,6 +171,7 @@ def make_wheel():
             shutil.rmtree(DIST_DIR)
 
         print("Creating wheel...")
+        print(subprocess.check_output(["which", "python3"]))
         subprocess.check_call(
             [
                 "python3", "./setup.py", "-q",
