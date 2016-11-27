@@ -59,14 +59,14 @@ script:
         git fetch --unshallow --tags
         ./dev.sh 3.5
         source venv3.5/bin/activate
-        venv3.5/bin/mitmproxy-rtool bdist
+        ./venv3.5/bin/mitmproxy-rtool bdist
     fi
 
 after_success:
   - |
     if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        venv3.5/bin/mitmproxy-rtool upload-snapshot --bdist
+        ./venv3.5/bin/mitmproxy-rtool upload-snapshot --bdist
     fi
 
 notifications:

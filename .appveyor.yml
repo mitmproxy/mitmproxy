@@ -34,8 +34,8 @@ deploy_script:
       pip install -U virtualenv
       .\dev.ps1
       copy .\venv\Scripts\python.exe .\venv\Scripts\python3.exe
-      cmd /c ".\venv\Scripts\mitmproxy-rtool.exe bdist 2>&1"
-      python -u .\venv\Scripts\mitmproxy-rtool.exe upload-snapshot --bdist --wheel
+      cmd /c ".\venv\Scripts\rtool.exe bdist 2>&1"
+      python -u .\venv\Scripts\rtool.exe upload-snapshot --bdist --wheel
     }
 
 cache:
