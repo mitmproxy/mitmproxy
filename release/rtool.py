@@ -250,6 +250,11 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
                 # We need to make sure that we are in the spec folder.
                 with chdir(PYINSTALLER_SPEC):
                     print("Building %s binary..." % tool)
+                    excludes = []
+                    if tool != "mitmweb":
+                        excludes.append("mitmproxy.tools.web")
+                    if tool != "mitmproxy_main":
+                        excludes.append("mitmproxy.tools.console")
                     subprocess.check_call(
                         [
                             VENV_PYINSTALLER,
@@ -264,6 +269,7 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
                             # different log level obviously breaks it :-)
                             # "--log-level", "WARN",
                         ]
+                        + [x for e in excludes for x in ["--exclude-module", e]]
                         + PYINSTALLER_ARGS
                         + [
                             tool
