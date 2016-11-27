@@ -15,7 +15,7 @@ class Data:
         """
             Change the data object to a path relative to the module.
         """
-        dirname = os.path.join(self.dirname, subpath)
+        dirname = os.path.normpath(os.path.join(self.dirname, subpath))
         ret = Data(self.name)
         ret.dirname = dirname
         return ret
@@ -27,7 +27,7 @@ class Data:
 
             This function will raise ValueError if the path does not exist.
         """
-        fullpath = os.path.join(self.dirname, path)
+        fullpath = os.path.normpath(os.path.join(self.dirname, path))
         if not os.path.exists(fullpath):
             raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath

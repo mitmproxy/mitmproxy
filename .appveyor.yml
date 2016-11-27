@@ -24,17 +24,20 @@ install:
 
 test_script:
   - ps: "tox -- --cov mitmproxy --cov pathod -v"
+  - ps: |
+      $Env:VERSION = $(python mitmproxy/version.py)
+      $Env:SKIP_MITMPROXY = "python -c `"print('skip mitmproxy')`""
+      tox -e wheel -- https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl
+      tox -e rtool -- bdist
 
 deploy_script:
+  # we build binaries on every run, but we only upload them for master snapshots or tags.
   ps: |
     if(
       ($Env:TOXENV -match "py35") -and
-      (($Env:APPVEYOR_REPO_BRANCH -match "master") -or ($Env:APPVEYOR_REPO_TAG -match "true"))
-      ) {
-      pip install -U virtualenv
-      .\dev.ps1
-      cmd /c "python -u .\release\rtool.py bdist 2>&1"
-      python -u .\release\rtool.py upload-snapshot --bdist --wheel
+      (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
+    ) {
+      tox -e rtool -- upload-snapshot --bdist --wheel
     }
 
 cache:

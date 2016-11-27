@@ -51,18 +51,21 @@ install:
     fi
   - pip install tox
 
-script: tox -- --cov mitmproxy --cov pathod -v
+script:
+  - |
+    tox -- --cov mitmproxy --cov pathod -v
+    if [[ $BDIST == "1" ]]
+    then
+        git fetch --unshallow --tags
+        tox -e rtool -- bdist
+    fi
 
 after_success:
+  # we build binaries on every run, but we only upload them for master snapshots or tags.
   - |
-    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
+    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then
-        git fetch --unshallow
-        ./dev.sh 3.5
-        source venv3.5/bin/activate
-        pip install -e ./release
-        python -u ./release/rtool.py bdist
-        python -u ./release/rtool.py upload-snapshot --bdist
+        tox -e rtool -- upload-snapshot --bdist
     fi
 
 notifications:

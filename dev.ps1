@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 $VENV = ".\venv"
 
-virtualenv $VENV --always-copy
+python3 -m venv $VENV --copies
 & $VENV\Scripts\activate.ps1
 
 python -m pip install --disable-pip-version-check -U pip
