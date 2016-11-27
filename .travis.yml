@@ -61,6 +61,7 @@ script:
     fi
 
 after_success:
+  # we build binaries on every run, but we only upload them for master snapshots or tags.
   - |
     if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
     then

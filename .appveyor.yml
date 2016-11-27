@@ -31,6 +31,7 @@ test_script:
       tox -e rtool -- bdist
 
 deploy_script:
+  # we build binaries on every run, but we only upload them for master snapshots or tags.
   ps: |
     if(
       ($Env:TOXENV -match "py35") -and
