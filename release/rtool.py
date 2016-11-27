@@ -8,10 +8,10 @@ import runpy
 import shlex
 import shutil
 import subprocess
-import sys
 import tarfile
 import zipfile
 from os.path import join, abspath, normpath, dirname, exists, basename
+from typing import Union
 
 import click
 import pysftp
@@ -51,8 +51,6 @@ PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
 PYINSTALLER_DIST = join(BUILD_DIR, "binaries")
 
 VENV_DIR = join(BUILD_DIR, "venv")
-VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
-VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 
 # Project Configuration
 VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
@@ -79,6 +77,21 @@ def get_version() -> str:
 def git(args: str) -> str:
     with chdir(ROOT_DIR):
         return subprocess.check_output(["git"] + shlex.split(args)).decode()
+
+
+def build_venv(args: Union[str, list]):
+    if not isinstance(args, list):
+        args = shlex.split(args)
+    args[0] = join(VENV_DIR, VENV_BIN, args[0])
+
+    click.secho("(build-venv) > {}".format("".join(args)), color="cyan")
+    subprocess.check_call(
+        args,
+        env={
+            **os.environ,
+            "VIRTUAL_ENV": VENV_DIR
+        }
+    )
 
 
 def get_snapshot_version() -> str:
@@ -170,8 +183,7 @@ def make_wheel():
         if exists(DIST_DIR):
             shutil.rmtree(DIST_DIR)
 
-        print("Creating wheel...")
-        print(subprocess.check_output(["which", "python3"]))
+        click.secho("Creating wheel...", color="cyan")
         subprocess.check_call(
             [
                 "python3", "./setup.py", "-q",
@@ -181,27 +193,23 @@ def make_wheel():
         )
 
         if exists(VENV_DIR):
-            print("Removing old virtualenv for test install...")
+            click.secho("Removing old virtualenv for test install...", color="cyan")
             shutil.rmtree(VENV_DIR)
 
-        print("Creating new virtualenv for test install...")
-        subprocess.check_call(["python3", "-m", "virtualenv", "-q", VENV_DIR, "--always-copy"])
+        click.secho("Creating new virtualenv for test install...", color="cyan")
+        subprocess.check_call(["python3", "-m", "virtualenv", "-q", "--always-copy", VENV_DIR])
 
         with chdir(DIST_DIR):
-            print("Install wheel into virtualenv...")
+            click.secho("Install wheel into virtualenv...", color="cyan")
             # lxml...
-            if platform.system() == "Windows" and sys.version_info[0] == 3:
-                subprocess.check_call(
-                    [VENV_PIP, "install", "-q",
-                        "https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl"]
-                )
-            subprocess.check_call([VENV_PIP, "install", "-q", wheel_name()])
+            if platform.system() == "Windows":
+                build_venv(
+                    "pip install -q https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl")
+            build_venv("pip install -q {}".format(wheel_name()))
 
-            print("Running tools...")
+            click.secho("Running tools...", color="cyan")
             for tool in TOOLS:
-                tool = join(VENV_DIR, VENV_BIN, tool)
-                print("> %s --version" % tool)
-                print(subprocess.check_output([tool, "--version"]).decode())
+                build_venv("{} --version".format(tool))
 
             print("Virtualenv available for further testing:")
             print("source %s" % normpath(join(VENV_DIR, VENV_BIN, "activate")))
@@ -223,7 +231,8 @@ def make_wheel():
 @click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION",
                 default="setuptools>=25.1.0,!=25.1.1,!=29.0.0")
 @click.pass_context
-def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_version, setuptools_version):
+def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_version,
+               setuptools_version):
     """
     Build a binary distribution
     """
@@ -237,11 +246,9 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
 
     if not use_existing_pyinstaller:
         print("Installing PyInstaller and setuptools...")
-        subprocess.check_call([VENV_PIP, "install", "-v", "-v", "-v", pyinstaller_version, setuptools_version])
+        build_venv("pip install {} {}".format(pyinstaller_version, setuptools_version))
 
-    print(subprocess.check_output([VENV_PIP, "freeze"]).decode())
-    print(subprocess.check_output(["which", "python3"]).decode())
-    print(subprocess.check_output(["which", "pyinstaller"]).decode())
+    build_venv("pip freeze")
 
     for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
@@ -258,9 +265,9 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
                         excludes.append("mitmproxy.tools.web")
                     if tool != "mitmproxy_main":
                         excludes.append("mitmproxy.tools.console")
-                    subprocess.check_call(
+                    build_venv(
                         [
-                            VENV_PYINSTALLER,
+                            "pyinstaller",
                             "--clean",
                             "--workpath", PYINSTALLER_TEMP,
                             "--distpath", PYINSTALLER_DIST,
