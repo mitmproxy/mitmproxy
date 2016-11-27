@@ -237,7 +237,7 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
 
     if not use_existing_pyinstaller:
         print("Installing PyInstaller and setuptools...")
-        subprocess.check_call([VENV_PIP, "install", pyinstaller_version, setuptools_version])
+        subprocess.check_call([VENV_PIP, "install", "-v", "-v", "-v", pyinstaller_version, setuptools_version])
 
     print(subprocess.check_output([VENV_PIP, "freeze"]).decode())
 
