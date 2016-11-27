@@ -90,7 +90,7 @@ def build_venv(args: Union[str, list]):
         env={
             **os.environ,
             "VIRTUAL_ENV": VENV_DIR,
-            "PYTHON_HOME": None,
+            "PYTHON_HOME": "",
         }
     )
 
