@@ -59,7 +59,10 @@ script:
         git fetch --unshallow --tags
         ./dev.sh 3.5
         source venv3.5/bin/activate
-        ls ./venv3.5/bin/
+        ls ./venv3.5/
+        ls ./venv3.5/bin
+        ls ./venv3.5/lib
+        ls ./venv3.5/lib/python3.5
         ./venv3.5/bin/rtool bdist
     fi
 
