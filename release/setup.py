@@ -8,7 +8,6 @@ setup(
         "click>=6.2, <7.0",
         "twine>=1.6.5, <1.9",
         "pysftp==0.2.8",
-        "colorama>=0.3.7, < 0.4",
     ],
     entry_points={
         "console_scripts": [

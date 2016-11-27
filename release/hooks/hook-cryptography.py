@@ -1,4 +1,4 @@
-# Taken from the latest pyinstaller master.
+# Taken from the latest pyinstaller master on 2016-11-27 (0729a2b).
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2005-2016, PyInstaller Development Team.
