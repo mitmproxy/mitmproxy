@@ -214,10 +214,10 @@ def make_wheel():
     envvar="PYINSTALLER_VERSION",
     # the next commit after this updates the bootloaders, which then segfault! 🎉
     # https://github.com/pyinstaller/pyinstaller/issues/2232
-    default="git+https://github.com/pyinstaller/pyinstaller.git@e78b7013382afebc7410901e066e4d4eb8432cd7"
+    #default="git+https://github.com/pyinstaller/pyinstaller.git@e78b7013382afebc7410901e066e4d4eb8432cd7"
     # 3.2.0 is broken. 🎉
     # This one may also still work:
-    # default="PyInstaller~=3.1.1"
+     default="PyInstaller~=3.1.1"
 )
 @click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION",
                 default="setuptools>=25.1.0,!=25.1.1,!=29.0.0")
