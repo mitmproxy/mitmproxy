@@ -57,7 +57,7 @@ VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 # Project Configuration
 VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
 PROJECT_NAME = "mitmproxy"
-PYTHON_VERSION = "py2.py3"
+PYTHON_VERSION = "py3"
 BDISTS = {
     "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
     "pathod": ["pathoc", "pathod"]
@@ -175,7 +175,7 @@ def make_wheel():
         subprocess.check_call(
             [
                 "python3", "./setup.py", "-q",
-                "bdist_wheel", "--dist-dir", DIST_DIR, "--universal"
+                "bdist_wheel", "--dist-dir", DIST_DIR,
             ],
             cwd=ROOT_DIR
         )
@@ -215,10 +215,10 @@ def make_wheel():
     envvar="PYINSTALLER_VERSION",
     # the next commit after this updates the bootloaders, which then segfault! 🎉
     # https://github.com/pyinstaller/pyinstaller/issues/2232
-    #default="git+https://github.com/pyinstaller/pyinstaller.git@e78b7013382afebc7410901e066e4d4eb8432cd7"
+    default="git+https://github.com/pyinstaller/pyinstaller.git@e78b7013382afebc7410901e066e4d4eb8432cd7"
     # 3.2.0 is broken. 🎉
     # This one may also still work:
-     default="PyInstaller~=3.1.1"
+    # default="PyInstaller~=3.1.1"
 )
 @click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION",
                 default="setuptools>=25.1.0,!=25.1.1,!=29.0.0")
@@ -240,6 +240,8 @@ def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_ve
         subprocess.check_call([VENV_PIP, "install", "-v", "-v", "-v", pyinstaller_version, setuptools_version])
 
     print(subprocess.check_output([VENV_PIP, "freeze"]).decode())
+    print(subprocess.check_output(["which", "python3"]).decode())
+    print(subprocess.check_output(["which", "pyinstaller"]).decode())
 
     for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
