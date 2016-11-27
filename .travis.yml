@@ -60,7 +60,6 @@ after_success:
         git fetch --unshallow --tags
         ./dev.sh 3.5
         source venv3.5/bin/activate
-        pip install -e ./release
         python -u ./release/rtool.py bdist
         python -u ./release/rtool.py upload-snapshot --bdist
     fi

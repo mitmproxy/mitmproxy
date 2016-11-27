@@ -20,8 +20,13 @@ import pysftp
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
 if platform.system() == "Windows":
     VENV_BIN = "Scripts"
+    PYINSTALLER_ARGS = [
+        # PyInstaller < 3.2 does not handle Python 3.5's ucrt correctly.
+        "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
+    ]
 else:
     VENV_BIN = "bin"
+    PYINSTALLER_ARGS = []
 
 # ZipFile and tarfile have slightly different APIs. Fix that.
 if platform.system() == "Windows":
@@ -62,7 +67,7 @@ if platform.system() == "Windows":
 
 TOOLS = [
     tool
-    for tools in BDISTS.values()
+    for tools in sorted(BDISTS.values())
     for tool in tools
 ]
 
@@ -174,17 +179,20 @@ def make_wheel():
             cwd=ROOT_DIR
         )
 
-        print("Creating virtualenv for test install...")
         if exists(VENV_DIR):
+            print("Removing old virtualenv for test install...")
             shutil.rmtree(VENV_DIR)
-        subprocess.check_call(["python3", "-m", "virtualenv", "-q", VENV_DIR])
+
+        print("Creating new virtualenv for test install...")
+        subprocess.check_call(["python3", "-m", "virtualenv", "-q", VENV_DIR, "--always-copy"])
 
         with chdir(DIST_DIR):
             print("Install wheel into virtualenv...")
             # lxml...
             if platform.system() == "Windows" and sys.version_info[0] == 3:
                 subprocess.check_call(
-                    [VENV_PIP, "install", "-q", "https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl"]
+                    [VENV_PIP, "install", "-q",
+                        "https://snapshots.mitmproxy.org/misc/lxml-3.6.0-cp35-cp35m-win32.whl"]
                 )
             subprocess.check_call([VENV_PIP, "install", "-q", wheel_name()])
 
@@ -200,14 +208,21 @@ def make_wheel():
 
 @cli.command("bdist")
 @click.option("--use-existing-wheel/--no-use-existing-wheel", default=False)
+@click.option("--use-existing-pyinstaller/--no-use-existing-pyinstaller", default=False)
 @click.argument(
     "pyinstaller_version",
     envvar="PYINSTALLER_VERSION",
-    default="git+https://github.com/pyinstaller/pyinstaller.git@483c819d6a256b58db6740696a901bd41c313f0c"
+    # the next commit after this updates the bootloaders, which then segfault! 🎉
+    # https://github.com/pyinstaller/pyinstaller/issues/2232
+    default="git+https://github.com/pyinstaller/pyinstaller.git@e78b7013382afebc7410901e066e4d4eb8432cd7"
+    # 3.2.0 is broken. 🎉
+    # This one may also still work:
+    # default="PyInstaller~=3.1.1"
 )
-@click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION", default="setuptools>=25.1.0,!=25.1.1,!=29.0.0")
+@click.argument("setuptools_version", envvar="SETUPTOOLS_VERSION",
+                default="setuptools>=25.1.0,!=25.1.1,!=29.0.0")
 @click.pass_context
-def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version):
+def make_bdist(ctx, use_existing_wheel, use_existing_pyinstaller, pyinstaller_version, setuptools_version):
     """
     Build a binary distribution
     """
@@ -219,13 +234,18 @@ def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version)
     if not use_existing_wheel:
         ctx.invoke(make_wheel)
 
-    print("Installing PyInstaller and setuptools...")
-    subprocess.check_call([VENV_PIP, "install", pyinstaller_version, setuptools_version])
+    if not use_existing_pyinstaller:
+        print("Installing PyInstaller and setuptools...")
+        subprocess.check_call([VENV_PIP, "install", pyinstaller_version, setuptools_version])
+
     print(subprocess.check_output([VENV_PIP, "freeze"]).decode())
 
-    for bdist, tools in BDISTS.items():
+    for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
             for tool in tools:
+                # We can't have a folder and a file with the same name.
+                if tool == "mitmproxy":
+                    tool = "mitmproxy_main"
                 # This is PyInstaller, so it messes up paths.
                 # We need to make sure that we are in the spec folder.
                 with chdir(PYINSTALLER_SPEC):
@@ -237,14 +257,15 @@ def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version)
                             "--workpath", PYINSTALLER_TEMP,
                             "--distpath", PYINSTALLER_DIST,
                             "--additional-hooks-dir", PYINSTALLER_HOOKS,
-                            # PyInstaller 3.2 does not handle Python 3.5's ucrt correctly.
-                            "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
                             "--onefile",
                             "--console",
                             "--icon", "icon.ico",
                             # This is PyInstaller, so setting a
                             # different log level obviously breaks it :-)
                             # "--log-level", "WARN",
+                        ]
+                        + PYINSTALLER_ARGS
+                        + [
                             tool
                         ]
                     )
@@ -255,6 +276,15 @@ def make_bdist(ctx, use_existing_wheel, pyinstaller_version, setuptools_version)
                 executable = join(PYINSTALLER_DIST, tool)
                 if platform.system() == "Windows":
                     executable += ".exe"
+
+                # Remove _main suffix from mitmproxy executable
+                if executable.startswith("mitmproxy_main"):
+                    shutil.move(
+                        executable,
+                        executable.replace("_main", "")
+                    )
+                    executable = executable.replace("_main", "")
+
                 print("> %s --version" % executable)
                 print(subprocess.check_output([executable, "--version"]).decode())
 
@@ -306,7 +336,7 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
             if wheel:
                 files.append(wheel_name())
             if bdist:
-                for bdist in BDISTS.keys():
+                for bdist in sorted(BDISTS.keys()):
                     files.append(archive_name(bdist))
 
             for f in files:
