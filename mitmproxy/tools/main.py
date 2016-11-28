@@ -101,7 +101,7 @@ def mitmdump(args=None):  # pragma: no cover
         dump_options = dump.Options(**cmdline.get_common_options(args))
         dump_options.flow_detail = args.flow_detail
         dump_options.keepserving = args.keepserving
-        dump_options.filtstr = " ".join(args.args) if args.args else None
+        dump_options.filtstr = " ".join(args.filter) if args.filter else None
         server = process_options(parser, dump_options, args)
         master = dump.DumpMaster(dump_options, server)
 
