@@ -551,7 +551,14 @@ class _Connection:
             context.set_verify(verify_options, verify_cert)
             if ca_path is None and ca_pemfile is None:
                 ca_pemfile = certifi.where()
-            context.load_verify_locations(ca_pemfile, ca_path)
+            try:
+                context.load_verify_locations(ca_pemfile, ca_path)
+            except SSL.Error:
+                raise exceptions.TlsException(
+                    "Cannot load trusted certificates ({}, {}).".format(
+                        ca_pemfile, ca_path
+                    )
+                )
 
         # Workaround for
         # https://github.com/pyca/pyopenssl/issues/190
