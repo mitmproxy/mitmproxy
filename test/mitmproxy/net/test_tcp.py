@@ -199,6 +199,18 @@ class TestSSLv3Only(tservers.ServerTestBase):
             tutils.raises(exceptions.TlsException, c.convert_to_ssl, sni="foo.com")
 
 
+class TestInvalidTrustFile(tservers.ServerTestBase):
+    def test_invalid_trust_file_should_fail(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            with tutils.raises(exceptions.TlsException):
+                c.convert_to_ssl(
+                    sni="example.mitmproxy.org",
+                    verify_options=SSL.VERIFY_PEER,
+                    ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/generate.py")
+                )
+
+
 class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
     handler = EchoHandler
 
