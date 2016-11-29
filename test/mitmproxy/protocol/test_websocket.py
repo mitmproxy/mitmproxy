@@ -276,6 +276,7 @@ class TestClose(_WebSocketTest):
     def handle_websockets(cls, rfile, wfile):
         frame = websockets.Frame.from_file(rfile)
         wfile.write(bytes(frame))
+        wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
         wfile.flush()
 
         with pytest.raises(exceptions.TcpDisconnect):
@@ -287,6 +288,7 @@ class TestClose(_WebSocketTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
         client.wfile.flush()
 
+        websockets.Frame.from_file(client.rfile)
         with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
@@ -296,6 +298,7 @@ class TestClose(_WebSocketTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42')))
         client.wfile.flush()
 
+        websockets.Frame.from_file(client.rfile)
         with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
@@ -305,6 +308,7 @@ class TestClose(_WebSocketTest):
         client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42foobar')))
         client.wfile.flush()
 
+        websockets.Frame.from_file(client.rfile)
         with pytest.raises(exceptions.TcpDisconnect):
             websockets.Frame.from_file(client.rfile)
 
