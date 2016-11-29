@@ -154,7 +154,7 @@ class WebSocketLayer(base.Layer):
 
         try:
             while not self.channel.should_exit.is_set():
-                r = tcp.ssl_read_select(conns, 0.5)
+                r = tcp.ssl_read_select(conns, 0.1)
                 for conn in r:
                     source_conn = self.client_conn if conn == client else self.server_conn
                     other_conn = self.server_conn if conn == client else self.client_conn
