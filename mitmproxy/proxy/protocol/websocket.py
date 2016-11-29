@@ -59,28 +59,41 @@ class WebSocketLayer(base.Layer):
         fb.append(frame)
 
         if frame.header.fin:
+            payload = b''.join(f.payload for f in fb)
+            original_chunk_sizes = [len(f.payload) for f in fb]
+            fb.clear()
+
             if frame.header.opcode == websockets.OPCODE.TEXT:
                 t = WebSocketTextMessage
             else:
                 t = WebSocketBinaryMessage
 
-            payload = b''.join(f.payload for f in fb)
-            fb.clear()
-
             websocket_message = t(self.flow, not is_server, payload)
+            length = len(websocket_message.content)
             self.flow.messages.append(websocket_message)
             self.channel.ask("websocket_message", self.flow)
 
-            # chunk payload into multiple 10kB frames, and send them
-            payload = websocket_message.content
-            chunk_size = 10240  # 10kB
-            chunks = range(0, len(payload), chunk_size)
+            def get_chunk(payload):
+                if len(payload) == length:
+                    # message has the same length, we can reuse the same sizes
+                    pos = 0
+                    for s in original_chunk_sizes:
+                        yield payload[pos:pos + s]
+                        pos += s
+                else:
+                    # just re-chunk everything into 10kB frames
+                    chunk_size = 10240
+                    chunks = range(0, len(payload), chunk_size)
+                    for i in chunks:
+                        yield payload[i:i + chunk_size]
+
             frms = [
                 websockets.Frame(
-                    payload=payload[i:i + chunk_size],
+                    payload=chunk,
                     opcode=frame.header.opcode,
                     mask=(False if is_server else 1),
-                    masking_key=(b'' if is_server else os.urandom(4))) for i in chunks
+                    masking_key=(b'' if is_server else os.urandom(4)))
+                for chunk in get_chunk(websocket_message.content)
             ]
 
             if len(frms) > 0:
@@ -113,7 +126,7 @@ class WebSocketLayer(base.Layer):
 
         other_conn.send(bytes(frame))
 
-        # close the connection
+        # initiate close handshake
         return False
 
     def _handle_unknown_frame(self, frame, source_conn, other_conn, is_server):
@@ -134,10 +147,11 @@ class WebSocketLayer(base.Layer):
         client = self.client_conn.connection
         server = self.server_conn.connection
         conns = [client, server]
+        close_received = False
 
         try:
             while not self.channel.should_exit.is_set():
-                r = tcp.ssl_read_select(conns, 1)
+                r = tcp.ssl_read_select(conns, 0.5)
                 for conn in r:
                     source_conn = self.client_conn if conn == client else self.server_conn
                     other_conn = self.server_conn if conn == client else self.client_conn
@@ -145,10 +159,15 @@ class WebSocketLayer(base.Layer):
 
                     frame = websockets.Frame.from_file(source_conn.rfile)
 
-                    if not self._handle_frame(frame, source_conn, other_conn, is_server):
-                        return
+                    cont = self._handle_frame(frame, source_conn, other_conn, is_server)
+                    if not cont:
+                        if close_received:
+                            return
+                        else:
+                            close_received = True
         except (socket.error, exceptions.TcpException, SSL.Error) as e:
-            self.flow.error = flow.Error("WebSocket connection closed unexpectedly: {}".format(repr(e)))
+            s = 'server' if is_server else 'client'
+            self.flow.error = flow.Error("WebSocket connection closed unexpectedly by {}: {}".format(s, repr(e)))
             self.channel.tell("websocket_error", self.flow)
         finally:
             self.channel.tell("websocket_end", self.flow)
