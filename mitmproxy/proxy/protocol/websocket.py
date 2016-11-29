@@ -82,7 +82,15 @@ class WebSocketLayer(base.Layer):
                     mask=(False if is_server else 1),
                     masking_key=(b'' if is_server else os.urandom(4))) for i in chunks
             ]
-            frms[-1].header.fin = 1
+
+            if len(frms) > 0:
+                frms[-1].header.fin = True
+            else:
+                frms.append(websockets.Frame(
+                    fin=True,
+                    opcode=frame.header.opcode,
+                    mask=(False if is_server else 1),
+                    masking_key=(b'' if is_server else os.urandom(4))))
 
             for frm in frms:
                 other_conn.send(bytes(frm))
