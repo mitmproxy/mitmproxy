@@ -62,6 +62,7 @@ class WebSocketLayer(base.Layer):
             payload = b''.join(f.payload for f in fb)
             original_chunk_sizes = [len(f.payload) for f in fb]
             message_type = fb[0].header.opcode
+            compressed_message = fb[0].header.rsv1
             fb.clear()
 
             if message_type == websockets.OPCODE.TEXT:
@@ -107,6 +108,7 @@ class WebSocketLayer(base.Layer):
                     masking_key=(b'' if is_server else os.urandom(4))))
 
             frms[0].header.opcode = message_type
+            frms[0].header.rsv1 = compressed_message
 
             for frm in frms:
                 other_conn.send(bytes(frm))
