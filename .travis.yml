@@ -44,7 +44,7 @@ install:
     if [[ $TRAVIS_OS_NAME == "osx" ]]
     then
       brew update || brew update # try again if it fails
-      for package in openssl pyenv; do
+      for package in pyenv; do
         if ! brew outdated $package; then # exit status is inverted from what you'd expect
           brew upgrade $package
         else
