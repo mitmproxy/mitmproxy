@@ -37,6 +37,7 @@ import sys
 import functools
 
 from mitmproxy import http
+from mitmproxy import websocket
 from mitmproxy import tcp
 from mitmproxy import flow
 
@@ -98,6 +99,14 @@ class FHTTP(_Action):
     def __call__(self, f):
         return True
 
+
+class FWebSocket(_Action):
+    code = "websocket"
+    help = "Match WebSocket flows"
+
+    @only(websocket.WebSocketFlow)
+    def __call__(self, f):
+        return True
 
 class FTCP(_Action):
     code = "tcp"
@@ -245,7 +254,7 @@ class FBod(_Rex):
     help = "Body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, websocket.WebSocketFlow, tcp.TCPFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -254,7 +263,7 @@ class FBod(_Rex):
             if f.response and f.response.raw_content:
                 if self.re.search(f.response.get_content(strict=False)):
                     return True
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, websocket.WebSocketFlow) or isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if self.re.search(msg.content):
                     return True
@@ -266,13 +275,13 @@ class FBodRequest(_Rex):
     help = "Request body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, websocket.WebSocketFlow, tcp.TCPFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
                 if self.re.search(f.request.get_content(strict=False)):
                     return True
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, websocket.WebSocketFlow) or isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if msg.from_client and self.re.search(msg.content):
                     return True
@@ -283,13 +292,13 @@ class FBodResponse(_Rex):
     help = "Response body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, websocket.WebSocketFlow, tcp.TCPFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.response and f.response.raw_content:
                 if self.re.search(f.response.get_content(strict=False)):
                     return True
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, websocket.WebSocketFlow) or isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if not msg.from_client and self.re.search(msg.content):
                     return True
