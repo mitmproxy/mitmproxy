@@ -3,10 +3,6 @@ language: python
 
 addons:
   apt:
-    sources:
-      # Debian sid currently holds OpenSSL 1.0.2
-      # change this with future releases!
-      - debian-sid
     packages:
       - libssl-dev
 
@@ -26,6 +22,12 @@ matrix:
       env: TOXENV=py35 BDIST=1
     - python: 3.5
       env: TOXENV=py35 BDIST=1
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.1.0
+            # change this with future releases!
+            - debian-sid
     - python: 3.5
       env: TOXENV=py35 NO_ALPN=1
     - python: 3.5
