@@ -28,6 +28,8 @@ matrix:
             # Debian sid currently holds OpenSSL 1.1.0
             # change this with future releases!
             - debian-sid
+          packages:
+            - libssl-dev
     - python: 3.5
       env: TOXENV=py35 NO_ALPN=1
     - python: 3.5
@@ -54,8 +56,8 @@ install:
   - pip install tox
 
 script:
+  - tox -- --cov mitmproxy --cov pathod -v
   - |
-    tox -- --cov mitmproxy --cov pathod -v
     if [[ $BDIST == "1" ]]
     then
         git fetch --unshallow --tags
