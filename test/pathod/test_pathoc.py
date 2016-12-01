@@ -1,8 +1,8 @@
 import io
 from mock import Mock
+import pytest
 
 from mitmproxy.net import http
-from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
 from mitmproxy import exceptions
 
@@ -11,6 +11,7 @@ from pathod.protocols.http2 import HTTP2StateProtocol
 
 from mitmproxy.test import tutils
 from . import tservers
+from ..conftest import requires_alpn
 
 
 def test_response():
@@ -211,45 +212,57 @@ class TestDaemonHTTP2(PathocTestDaemon):
     ssl = True
     explain = False
 
-    if tcp.HAS_ALPN:
+    @requires_alpn
+    def test_http2(self):
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+            fp=None,
+            ssl=True,
+            use_http2=True,
+        )
+        assert isinstance(c.protocol, HTTP2StateProtocol)
 
-        def test_http2(self):
-            c = pathoc.Pathoc(
-                ("127.0.0.1", self.d.port),
-                fp=None,
-                ssl=True,
-                use_http2=True,
-            )
-            assert isinstance(c.protocol, HTTP2StateProtocol)
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+        )
+        assert c.protocol == http1
 
-            c = pathoc.Pathoc(
-                ("127.0.0.1", self.d.port),
-            )
-            assert c.protocol == http1
+    @requires_alpn
+    def test_http2_alpn(self):
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+            fp=None,
+            ssl=True,
+            use_http2=True,
+            http2_skip_connection_preface=True,
+        )
 
-        def test_http2_alpn(self):
-            c = pathoc.Pathoc(
-                ("127.0.0.1", self.d.port),
-                fp=None,
-                ssl=True,
-                use_http2=True,
-                http2_skip_connection_preface=True,
-            )
+        tmp_convert_to_ssl = c.convert_to_ssl
+        c.convert_to_ssl = Mock()
+        c.convert_to_ssl.side_effect = tmp_convert_to_ssl
+        with c.connect():
+            _, kwargs = c.convert_to_ssl.call_args
+            assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
 
-            tmp_convert_to_ssl = c.convert_to_ssl
-            c.convert_to_ssl = Mock()
-            c.convert_to_ssl.side_effect = tmp_convert_to_ssl
+    @requires_alpn
+    def test_request(self):
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+            fp=None,
+            ssl=True,
+            use_http2=True,
+        )
+        with c.connect():
+            resp = c.request("get:/p/200")
+        assert resp.status_code == 200
+
+    def test_failing_request(self, disable_alpn):
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+            fp=None,
+            ssl=True,
+            use_http2=True,
+        )
+        with pytest.raises(NotImplementedError):
             with c.connect():
-                _, kwargs = c.convert_to_ssl.call_args
-                assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
-
-        def test_request(self):
-            c = pathoc.Pathoc(
-                ("127.0.0.1", self.d.port),
-                fp=None,
-                ssl=True,
-                use_http2=True,
-            )
-            with c.connect():
-                resp = c.request("get:/p/200")
-            assert resp.status_code == 200
+                c.request("get:/p/200")

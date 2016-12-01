@@ -11,6 +11,8 @@ from ..mitmproxy.net import tservers as net_tservers
 
 from pathod.protocols.http2 import HTTP2StateProtocol, TCPHandler
 
+from ..conftest import requires_alpn
+
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
@@ -66,37 +68,35 @@ class TestProtocol:
         assert mock_server_method.called
 
 
+@requires_alpn
 class TestCheckALPNMatch(net_tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         alpn_select=b'h2',
     )
 
-    if tcp.HAS_ALPN:
-
-        def test_check_alpn(self):
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl(alpn_protos=[b'h2'])
-                protocol = HTTP2StateProtocol(c)
-                assert protocol.check_alpn()
+    def test_check_alpn(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl(alpn_protos=[b'h2'])
+            protocol = HTTP2StateProtocol(c)
+            assert protocol.check_alpn()
 
 
+@requires_alpn
 class TestCheckALPNMismatch(net_tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         alpn_select=None,
     )
 
-    if tcp.HAS_ALPN:
-
-        def test_check_alpn(self):
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl(alpn_protos=[b'h2'])
-                protocol = HTTP2StateProtocol(c)
-                with raises(NotImplementedError):
-                    protocol.check_alpn()
+    def test_check_alpn(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl(alpn_protos=[b'h2'])
+            protocol = HTTP2StateProtocol(c)
+            with raises(NotImplementedError):
+                protocol.check_alpn()
 
 
 class TestPerformServerConnectionPreface(net_tservers.ServerTestBase):

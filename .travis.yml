@@ -1,15 +1,6 @@
 sudo: false
 language: python
 
-addons:
-  apt:
-    sources:
-      # Debian sid currently holds OpenSSL 1.0.2
-      # change this with future releases!
-      - debian-sid
-    packages:
-      - libssl-dev
-
 env:
   global:
     - CI_DEPS=codecov>=2.0.5
@@ -25,9 +16,21 @@ matrix:
       language: generic
       env: TOXENV=py35 BDIST=1
     - python: 3.5
-      env: TOXENV=py35 BDIST=1
+      env: TOXENV=py35 OPENSSL_OLD
+      addons:
+        apt:
+          packages:
+            - libssl-dev
     - python: 3.5
-      env: TOXENV=py35 NO_ALPN=1
+      env: TOXENV=py35 BDIST=1 OPENSSL_ALPN
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.1.0
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
     - python: 3.5
       env: TOXENV=docs
       git:
@@ -39,10 +42,8 @@ install:
   - |
     if [[ $TRAVIS_OS_NAME == "osx" ]]
     then
-      brew update || brew update # try again if it fails
-      brew upgrade
-      brew reinstall openssl
-      brew reinstall pyenv
+      brew update || brew update
+      brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
       env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.2
       pyenv global 3.5.2
@@ -52,8 +53,8 @@ install:
   - pip install tox
 
 script:
+  - tox -- --cov mitmproxy --cov pathod -v
   - |
-    tox -- --cov mitmproxy --cov pathod -v
     if [[ $BDIST == "1" ]]
     then
         git fetch --unshallow --tags
@@ -80,3 +81,4 @@ cache:
   directories:
     - $HOME/.pyenv
     - $HOME/.cache/pip
+    # - $HOME/build/mitmproxy/mitmproxy/.tox

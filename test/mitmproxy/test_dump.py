@@ -51,14 +51,14 @@ class TestDumpMaster(mastertest.MasterTest):
         assert "error" in o.tfile.getvalue()
 
     def test_replay(self):
-        o = dump.Options(server_replay=["nonexistent"], replay_kill_extra=True)
+        o = dump.Options(http2=False, server_replay=["nonexistent"], replay_kill_extra=True)
         tutils.raises(exceptions.OptionsError, dump.DumpMaster, o, proxy.DummyServer())
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
             self.flowfile(p)
 
-            o = dump.Options(server_replay=[p], replay_kill_extra=True)
+            o = dump.Options(http2=False, server_replay=[p], replay_kill_extra=True)
             o.verbosity = 0
             o.flow_detail = 0
             m = dump.DumpMaster(o, proxy.DummyServer())
@@ -66,13 +66,13 @@ class TestDumpMaster(mastertest.MasterTest):
             self.cycle(m, b"content")
             self.cycle(m, b"content")
 
-            o = dump.Options(server_replay=[p], replay_kill_extra=False)
+            o = dump.Options(http2=False, server_replay=[p], replay_kill_extra=False)
             o.verbosity = 0
             o.flow_detail = 0
             m = dump.DumpMaster(o, proxy.DummyServer())
             self.cycle(m, b"nonexistent")
 
-            o = dump.Options(client_replay=[p], replay_kill_extra=False)
+            o = dump.Options(http2=False, client_replay=[p], replay_kill_extra=False)
             o.verbosity = 0
             o.flow_detail = 0
             m = dump.DumpMaster(o, proxy.DummyServer())

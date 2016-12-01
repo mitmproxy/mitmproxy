@@ -1,11 +1,14 @@
 import io
 
+import pytest
+
 from pathod import pathod
 from mitmproxy.net import tcp
 from mitmproxy import exceptions
 from mitmproxy.test import tutils
 
 from . import tservers
+from ..conftest import requires_alpn
 
 
 class TestPathod:
@@ -257,8 +260,11 @@ class TestHTTP2(tservers.DaemonTests):
     ssl = True
     nohang = True
 
-    if tcp.HAS_ALPN:
+    @requires_alpn
+    def test_http2(self):
+        r, _ = self.pathoc(["GET:/"], ssl=True, use_http2=True)
+        assert r[0].status_code == 800
 
-        def test_http2(self):
+    def test_no_http2(self, disable_alpn):
+        with pytest.raises(NotImplementedError):
             r, _ = self.pathoc(["GET:/"], ssl=True, use_http2=True)
-            assert r[0].status_code == 800
