@@ -160,22 +160,7 @@ class Options(urwid.WidgetWrap):
         return super().keypress(size, key)
 
     def clearall(self):
-        self.master.options.update(
-            anticache = False,
-            anticomp = False,
-            ignore_hosts = (),
-            tcp_hosts = (),
-            replay_kill_extra = False,
-            no_upstream_cert = False,
-            refresh_server_playback = True,
-            replacements = [],
-            scripts = [],
-            setheaders = [],
-            showhost = False,
-            stickyauth = None,
-            stickycookie = None,
-            default_contentview = "auto",
-        )
+        self.master.options.reset()
         signals.update_settings.send(self)
         signals.status_message.send(
             message = "All select.Options cleared",

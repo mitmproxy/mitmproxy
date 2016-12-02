@@ -12,6 +12,43 @@ class TO(optmanager.OptManager):
         super().__init__()
 
 
+class TD(optmanager.OptManager):
+    def __init__(self, one="done", two="dtwo", three="error"):
+        self.one = one
+        self.two = two
+        self.three = three
+        super().__init__()
+
+
+class TD2(TD):
+    def __init__(self, *, three="dthree", four="dfour", **kwargs):
+        self.three = three
+        self.four = four
+        super().__init__(**kwargs)
+
+
+def test_defaults():
+    o = TD2()
+    assert o._defaults == {
+        "one": "done",
+        "two": "dtwo",
+        "three": "dthree",
+        "four": "dfour",
+    }
+    newvals = dict(
+        one="xone",
+        two="xtwo",
+        three="xthree",
+        four="xfour",
+    )
+    o.update(**newvals)
+    for k, v in newvals.items():
+        assert v == o.get(k)
+    o.reset()
+    for k, v in o._defaults.items():
+        assert v == o.get(k)
+
+
 def test_options():
     o = TO(two="three")
     assert o.keys() == set(["one", "two"])

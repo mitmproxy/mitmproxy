@@ -1,6 +1,7 @@
 import contextlib
 import blinker
 import pprint
+import inspect
 
 from mitmproxy import exceptions
 from mitmproxy.utils import typecheck
@@ -12,6 +13,10 @@ from mitmproxy.utils import typecheck
 
 class OptManager:
     """
+        OptManager is the base class from which Options objects are derived.
+        Note that the __init__ method of all child classes must force all
+        arguments to be positional only, by including a "*" argument.
+
         .changed is a blinker Signal that triggers whenever options are
         updated. If any handler in the chain raises an exceptions.OptionsError
         exception, all changes are rolled back, the exception is suppressed,
@@ -26,6 +31,15 @@ class OptManager:
         # ._initialized = True as the final operation.
         instance = super().__new__(cls)
         instance.__dict__["_opts"] = {}
+
+        defaults = {}
+        for klass in reversed(inspect.getmro(cls)):
+            for p in inspect.signature(klass.__init__).parameters.values():
+                if p.kind in (p.KEYWORD_ONLY, p.POSITIONAL_OR_KEYWORD):
+                    if not p.default == p.empty:
+                        defaults[p.name] = p.default
+        instance.__dict__["_defaults"] = defaults
+
         return instance
 
     def __init__(self):
@@ -77,6 +91,12 @@ class OptManager:
 
     def get(self, k, d=None):
         return self._opts.get(k, d)
+
+    def reset(self):
+        """
+            Restore defaults for all options.
+        """
+        self.update(**self._defaults)
 
     def update(self, **kwargs):
         updated = set(kwargs.keys())
