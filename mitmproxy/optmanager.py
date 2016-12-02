@@ -3,6 +3,8 @@ import blinker
 import pprint
 import inspect
 import copy
+import functools
+import weakref
 
 from mitmproxy import exceptions
 from mitmproxy.utils import typecheck
@@ -62,6 +64,27 @@ class OptManager:
             # Rollback
             self.__dict__["_opts"] = old
             self.changed.send(self, updated=updated)
+
+    def subscribe(self, func, opts):
+        """
+            Subscribe a callable to the .changed signal, but only for a
+            specified list of options. The callable should accept arguments
+            (options, updated), and may raise an OptionsError.
+        """
+        func = weakref.proxy(func)
+
+        @functools.wraps(func)
+        def _call(options, updated):
+            if updated.intersection(set(opts)):
+                try:
+                    func(options, updated)
+                except ReferenceError:
+                    self.changed.disconnect(_call)
+
+        # Our wrapper function goes out of scope immediately, so we have to set
+        # weakrefs to false. This means we need to keep our own weakref, and
+        # clean up the hook when it's gone.
+        self.changed.connect(_call, weak=False)
 
     def __eq__(self, other):
         return self._opts == other._opts

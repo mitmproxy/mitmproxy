@@ -77,9 +77,6 @@ class ConsoleMaster(master.Master):
         self.options = self.options  # type: Options
         self.options.errored.connect(self.options_error)
 
-        self.palette = options.palette
-        self.palette_transparent = options.palette_transparent
-
         self.logbuffer = urwid.SimpleListWalker([])
 
         self.view_stack = []
@@ -253,10 +250,11 @@ class ConsoleMaster(master.Master):
         self.ui.start()
         os.unlink(name)
 
-    def set_palette(self, name):
-        self.palette = name
+    def set_palette(self, options, updated):
         self.ui.register_palette(
-            palettes.palettes[name].palette(self.palette_transparent)
+            palettes.palettes[options.palette].palette(
+                options.palette_transparent
+            )
         )
         self.ui.clear()
 
@@ -269,7 +267,11 @@ class ConsoleMaster(master.Master):
     def run(self):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
-        self.set_palette(self.palette)
+        self.set_palette(self.options, None)
+        self.options.subscribe(
+            self.set_palette,
+            ["palette", "palette_transparent"]
+        )
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             screen = self.ui,

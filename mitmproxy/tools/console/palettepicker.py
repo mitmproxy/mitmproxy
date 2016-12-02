@@ -3,7 +3,6 @@ import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import select
-from mitmproxy.tools.console import signals
 
 footer = [
     ('heading_key', "enter/space"), ":select",
@@ -43,8 +42,8 @@ class PalettePicker(urwid.WidgetWrap):
             return select.Option(
                 i,
                 None,
-                lambda: self.master.palette == name,
-                lambda: self.select(name)
+                lambda: self.master.options.palette == name,
+                lambda: setattr(self.master.options, "palette", name)
             )
 
         for i in high:
@@ -59,8 +58,8 @@ class PalettePicker(urwid.WidgetWrap):
                 select.Option(
                     "Transparent",
                     "T",
-                    lambda: master.palette_transparent,
-                    self.toggle_palette_transparent
+                    lambda: master.options.palette_transparent,
+                    master.options.toggler("palette_transparent")
                 )
             ]
         )
@@ -73,15 +72,7 @@ class PalettePicker(urwid.WidgetWrap):
             self.lb,
             header = title
         )
-        signals.update_settings.connect(self.sig_update_settings)
+        master.options.changed.connect(self.sig_options_changed)
 
-    def sig_update_settings(self, sender):
+    def sig_options_changed(self, options, updated):
         self.lb.walker._modified()
-
-    def select(self, name):
-        self.master.set_palette(name)
-
-    def toggle_palette_transparent(self):
-        self.master.palette_transparent = not self.master.palette_transparent
-        self.master.set_palette(self.master.palette)
-        signals.update_settings.send(self)

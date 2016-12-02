@@ -104,6 +104,29 @@ def test_toggler():
         o.toggler("nonexistent")
 
 
+class Rec():
+    def __init__(self):
+        self.called = None
+
+    def __call__(self, *args, **kwargs):
+        self.called = (args, kwargs)
+
+
+def test_subscribe():
+    o = TO()
+    r = Rec()
+    o.subscribe(r, ["two"])
+    o.one = "foo"
+    assert not r.called
+    o.two = "foo"
+    assert r.called
+
+    assert len(o.changed.receivers) == 1
+    del r
+    o.two = "bar"
+    assert len(o.changed.receivers) == 0
+
+
 def test_rollback():
     o = TO(one="two")
 
