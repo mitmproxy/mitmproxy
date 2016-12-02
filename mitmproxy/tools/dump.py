@@ -3,7 +3,6 @@ from typing import Optional, IO
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import addons
-from mitmproxy import io
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
@@ -61,16 +60,6 @@ class DumpMaster(master.Master):
             except exceptions.FlowReadException as v:
                 self.add_log("Flow file corrupted.", "error")
                 raise DumpError(v)
-
-    def _readflow(self, paths):
-        """
-        Utitility function that reads a list of flows
-        or raises a DumpError if that fails.
-        """
-        try:
-            return io.read_flows_from_paths(paths)
-        except exceptions.FlowReadException as e:
-            raise DumpError(str(e))
 
     @controller.handler
     def log(self, e):
