@@ -1,4 +1,5 @@
 import itertools
+import sys
 
 import click
 
@@ -25,10 +26,10 @@ def colorful(line, styles):
 
 
 class Dumper:
-    def __init__(self):
+    def __init__(self, outfile=sys.stdout):
         self.filter = None  # type: flowfilter.TFilter
         self.flow_detail = None  # type: int
-        self.outfp = None  # type: typing.io.TextIO
+        self.outfp = outfile  # type: typing.io.TextIO
         self.showhost = None  # type: bool
         self.default_contentview = "auto"  # type: str
 
@@ -43,7 +44,6 @@ class Dumper:
             else:
                 self.filter = None
         self.flow_detail = options.flow_detail
-        self.outfp = options.tfile
         self.showhost = options.showhost
         self.default_contentview = options.default_contentview
 

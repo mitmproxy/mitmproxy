@@ -1,4 +1,4 @@
-from typing import Optional, IO
+from typing import Optional
 
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -20,13 +20,11 @@ class Options(options.Options):
             keepserving: bool = False,
             filtstr: Optional[str] = None,
             flow_detail: int = 1,
-            tfile: Optional[IO[str]] = None,
             **kwargs
     ) -> None:
         self.filtstr = filtstr
         self.flow_detail = flow_detail
         self.keepserving = keepserving
-        self.tfile = tfile
         super().__init__(**kwargs)
 
 

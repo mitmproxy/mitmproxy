@@ -1,5 +1,5 @@
 import webbrowser
-from typing import Optional, IO
+from typing import Optional
 
 import tornado.httpserver
 import tornado.ioloop
@@ -20,7 +20,6 @@ class Options(options.Options):
             self,
             *,  # all args are keyword-only.
             intercept: Optional[str] = None,
-            tfile: Optional[IO[str]] = None,
             open_browser: bool = True,
             wdebug: bool = False,
             wport: int = 8081,
@@ -28,7 +27,6 @@ class Options(options.Options):
             **kwargs
     ) -> None:
         self.intercept = intercept
-        self.tfile = tfile
         self.open_browser = open_browser
         self.wdebug = wdebug
         self.wport = wport
