@@ -23,7 +23,7 @@ class StreamFile:
     def configure(self, options, updated):
         # We're already streaming - stop the previous stream and restart
         if "filtstr" in updated:
-            if options.get("filtstr"):
+            if options.filtstr:
                 self.filt = flowfilter.parse(options.filtstr)
                 if not self.filt:
                     raise exceptions.OptionsError(

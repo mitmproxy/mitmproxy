@@ -47,7 +47,7 @@ class Options(mitmproxy.options.Options):
             focus_follow: bool = False,
             intercept: Optional[str] = None,
             filter: Optional[str] = None,
-            palette: Optional[str] = None,
+            palette: Optional[str] = palettes.DEFAULT,
             palette_transparent: bool = False,
             no_mouse: bool = False,
             order: Optional[str] = None,

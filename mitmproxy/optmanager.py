@@ -2,6 +2,7 @@ import contextlib
 import blinker
 import pprint
 import inspect
+import copy
 
 from mitmproxy import exceptions
 from mitmproxy.utils import typecheck
@@ -21,6 +22,9 @@ class OptManager:
         updated. If any handler in the chain raises an exceptions.OptionsError
         exception, all changes are rolled back, the exception is suppressed,
         and the .errored signal is notified.
+
+        Optmanager always returns a deep copy of options to ensure that
+        mutation doesn't change the option state inadvertently.
     """
     _initialized = False
     attributes = []
@@ -67,7 +71,7 @@ class OptManager:
 
     def __getattr__(self, attr):
         if attr in self._opts:
-            return self._opts[attr]
+            return copy.deepcopy(self._opts[attr])
         else:
             raise AttributeError("No such option: %s" % attr)
 
@@ -88,9 +92,6 @@ class OptManager:
 
     def keys(self):
         return set(self._opts.keys())
-
-    def get(self, k, d=None):
-        return self._opts.get(k, d)
 
     def reset(self):
         """
@@ -131,6 +132,13 @@ class OptManager:
         def toggle():
             setattr(self, attr, not getattr(self, attr))
         return toggle
+
+    def has_changed(self, option):
+        """
+            Has the option changed from the default?
+        """
+        if getattr(self, option) != self._defaults[option]:
+            return True
 
     def __repr__(self):
         options = pprint.pformat(self._opts, indent=4).strip(" {}")

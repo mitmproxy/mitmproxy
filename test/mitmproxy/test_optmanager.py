@@ -35,6 +35,7 @@ def test_defaults():
         "three": "dthree",
         "four": "dfour",
     }
+    assert not o.has_changed("one")
     newvals = dict(
         one="xone",
         two="xtwo",
@@ -42,11 +43,13 @@ def test_defaults():
         four="xfour",
     )
     o.update(**newvals)
+    assert o.has_changed("one")
     for k, v in newvals.items():
-        assert v == o.get(k)
+        assert v == getattr(o, k)
     o.reset()
+    assert not o.has_changed("one")
     for k, v in o._defaults.items():
-        assert v == o.get(k)
+        assert v == getattr(o, k)
 
 
 def test_options():
