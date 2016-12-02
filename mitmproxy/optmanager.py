@@ -14,7 +14,20 @@ from mitmproxy.utils import typecheck
 """
 
 
-class OptManager:
+class _DefaultsMeta(type):
+    def __new__(cls, name, bases, namespace, **kwds):
+        ret = type.__new__(cls, name, bases, dict(namespace))
+        defaults = {}
+        for klass in reversed(inspect.getmro(ret)):
+            for p in inspect.signature(klass.__init__).parameters.values():
+                if p.kind in (p.KEYWORD_ONLY, p.POSITIONAL_OR_KEYWORD):
+                    if not p.default == p.empty:
+                        defaults[p.name] = p.default
+        ret._defaults = defaults
+        return ret
+
+
+class OptManager(metaclass=_DefaultsMeta):
     """
         OptManager is the base class from which Options objects are derived.
         Note that the __init__ method of all child classes must force all
@@ -37,15 +50,6 @@ class OptManager:
         # ._initialized = True as the final operation.
         instance = super().__new__(cls)
         instance.__dict__["_opts"] = {}
-
-        defaults = {}
-        for klass in reversed(inspect.getmro(cls)):
-            for p in inspect.signature(klass.__init__).parameters.values():
-                if p.kind in (p.KEYWORD_ONLY, p.POSITIONAL_OR_KEYWORD):
-                    if not p.default == p.empty:
-                        defaults[p.name] = p.default
-        instance.__dict__["_defaults"] = defaults
-
         return instance
 
     def __init__(self):
@@ -121,6 +125,10 @@ class OptManager:
             Restore defaults for all options.
         """
         self.update(**self._defaults)
+
+    @classmethod
+    def default(klass, opt):
+        return copy.deepcopy(klass._defaults[opt])
 
     def update(self, **kwargs):
         updated = set(kwargs.keys())

@@ -28,6 +28,11 @@ class TD2(TD):
 
 
 def test_defaults():
+    assert TD2.default("one") == "done"
+    assert TD2.default("two") == "dtwo"
+    assert TD2.default("three") == "dthree"
+    assert TD2.default("four") == "dfour"
+
     o = TD2()
     assert o._defaults == {
         "one": "done",
