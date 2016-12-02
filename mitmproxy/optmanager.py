@@ -12,6 +12,7 @@ import ruamel.yaml
 from mitmproxy import exceptions
 from mitmproxy.utils import typecheck
 
+
 """
     The base implementation for Options.
 """
