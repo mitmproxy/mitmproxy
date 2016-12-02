@@ -35,7 +35,7 @@ class Options(optmanager.OptManager):
             keepserving: bool = True,
             no_server: bool = False,
             server_replay_nopop: bool = False,
-            refresh_server_playback: bool = False,
+            refresh_server_playback: bool = True,
             rfile: Optional[str] = None,
             scripts: Sequence[str] = [],
             showhost: bool = False,
