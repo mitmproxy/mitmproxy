@@ -233,8 +233,8 @@ class ScriptLoader:
 
             for a in ctx.master.addons.chain[:]:
                 if isinstance(a, Script) and a.name not in options.scripts:
-                        ctx.log.info("Un-loading script: %s" % a.name)
-                        ctx.master.addons.remove(a)
+                    ctx.log.info("Un-loading script: %s" % a.name)
+                    ctx.master.addons.remove(a)
 
             # The machinations below are to ensure that:
             #   - Scripts remain in the same order
