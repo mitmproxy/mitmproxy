@@ -108,6 +108,7 @@ class FWebSocket(_Action):
     def __call__(self, f):
         return True
 
+
 class FTCP(_Action):
     code = "tcp"
     help = "Match TCP flows"
