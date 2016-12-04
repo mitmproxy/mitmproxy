@@ -108,7 +108,8 @@ class ConsoleMaster(master.Master):
         self.logbuffer.append(e)
         if len(self.logbuffer) > EVENTLOG_SIZE:
             self.logbuffer.pop(0)
-        self.logbuffer.set_focus(len(self.logbuffer) - 1)
+        if self.options.focus_follow:
+            self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
