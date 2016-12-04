@@ -124,10 +124,6 @@ class OptManager(metaclass=_DefaultsMeta):
     def keys(self):
         return set(self._opts.keys())
 
-    @classmethod
-    def default(klass, opt):
-        return copy.deepcopy(klass._defaults[opt])
-
     def reset(self):
         """
             Restore defaults for all options.
