@@ -196,7 +196,7 @@ def make_bdist():
                     executable += ".exe"
 
                 # Remove _main suffix from mitmproxy executable
-                if executable.startswith("mitmproxy_main"):
+                if "_main" in executable:
                     shutil.move(
                         executable,
                         executable.replace("_main", "")
