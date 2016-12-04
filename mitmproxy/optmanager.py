@@ -5,6 +5,9 @@ import inspect
 import copy
 import functools
 import weakref
+import os
+
+import ruamel.yaml
 
 from mitmproxy import exceptions
 from mitmproxy.utils import typecheck
@@ -170,6 +173,73 @@ class OptManager(metaclass=_DefaultsMeta):
         """
         if getattr(self, option) != self._defaults[option]:
             return True
+
+    def save(self, path, defaults=False):
+        """
+            Save to path. If the destination file exists, modify it in-place.
+        """
+        if os.path.exists(path) and os.path.isfile(path):
+            data = open(path, "r").read()
+        else:
+            data = ""
+        data = self.serialize(data, defaults)
+        fp = open(path, "w")
+        fp.write(data)
+
+    def serialize(self, text, defaults=False):
+        """
+            Performs a round-trip serialization. If text is not None, it is
+            treated as a previous serialization that should be modified
+            in-place.
+
+            - If "defaults" is False, only options with non-default values are
+              serialized. Default values in text are preserved.
+            - Unknown options in text are removed.
+            - Raises OptionsError if text is invalid.
+        """
+        data = self._load(text)
+        for k in self.keys():
+            if defaults or self.has_changed(k):
+                data[k] = getattr(self, k)
+        for k in list(data.keys()):
+            if k not in self._opts:
+                del data[k]
+        return ruamel.yaml.round_trip_dump(data)
+
+    def _load(self, text):
+        if not text:
+            return {}
+        try:
+            data = ruamel.yaml.load(text, ruamel.yaml.Loader)
+        except ruamel.yaml.error.YAMLError as v:
+            snip = v.problem_mark.get_snippet()
+            raise exceptions.OptionsError(
+                "Config error at line %s:\n%s\n%s" %
+                (v.problem_mark.line+1, snip, v.problem)
+            )
+        if isinstance(data, str):
+            raise exceptions.OptionsError("Config error - no keys found.")
+        return data
+
+    def load(self, text):
+        """
+            Load configuration from text, over-writing options already set in
+            this object. May raise OptionsError if the config file is invalid.
+        """
+        data = self._load(text)
+        for k, v in data.items():
+            setattr(self, k, v)
+
+    def load_paths(self, *paths):
+        """
+            Load paths in order. Each path takes precedence over the previous
+            path. Paths that don't exist are ignored, errors raise an
+            OptionsError.
+        """
+        for p in paths:
+            if os.path.exists(p) and os.path.isfile(p):
+                txt = open(p, "r").read()
+                self.load(txt)
 
     def __repr__(self):
         options = pprint.pformat(self._opts, indent=4).strip(" {}")

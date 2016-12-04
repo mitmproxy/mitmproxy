@@ -1,5 +1,7 @@
 import copy
+import os
 
+from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy import exceptions
 from mitmproxy.test import tutils
@@ -24,7 +26,7 @@ class TD2(TD):
     def __init__(self, *, three="dthree", four="dfour", **kwargs):
         self.three = three
         self.four = four
-        super().__init__(**kwargs)
+        super().__init__(three=three, **kwargs)
 
 
 def test_defaults():
@@ -167,3 +169,54 @@ def test_repr():
     'one': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
     'two': None
 })"""
+
+
+def test_serialize():
+    o = TD2()
+    o.three = "set"
+    assert "dfour" in o.serialize(None, defaults=True)
+
+    data = o.serialize(None)
+    assert "dfour" not in data
+
+    o2 = TD2()
+    o2.load(data)
+    assert o2 == o
+
+    t = """
+        unknown: foo
+    """
+    data = o.serialize(t)
+    o2 = TD2()
+    o2.load(data)
+    assert o2 == o
+
+    t = "invalid: foo\ninvalid"
+    tutils.raises("config error", o2.load, t)
+
+    t = "invalid"
+    tutils.raises("config error", o2.load, t)
+
+    t = ""
+    o2.load(t)
+
+
+def test_serialize_defaults():
+    o = options.Options()
+    assert o.serialize(None, defaults=True)
+
+
+def test_saving():
+    o = TD2()
+    o.three = "set"
+    with tutils.tmpdir() as tdir:
+        dst = os.path.join(tdir, "conf")
+        o.save(dst, defaults=True)
+
+        o2 = TD2()
+        o2.load_paths(dst)
+        o2.three = "foo"
+        o2.save(dst, defaults=True)
+
+        o.load_paths(dst)
+        assert o.three == "foo"
