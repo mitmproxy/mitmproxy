@@ -3,10 +3,6 @@ language: python
 
 addons:
   apt:
-    sources:
-      # Debian sid currently holds OpenSSL 1.0.2
-      # change this with future releases!
-      - debian-sid
     packages:
       - libssl-dev
 
@@ -26,10 +22,22 @@ matrix:
       env: TOXENV=py35 BDIST=1
     - python: 3.5
       env: TOXENV=py35 BDIST=1
+      addons:
+        apt:
+          sources:
+            - debian-sid
+          packages:
+            - libssl-dev
     - python: 3.5
       env: TOXENV=py35 NO_ALPN=1
     - python: 2.7
       env: TOXENV=py27
+      addons:
+        apt:
+          sources:
+            - debian-sid
+          packages:
+            - libssl-dev
     - python: 2.7
       env: TOXENV=py27 NO_ALPN=1
     - python: 3.5
@@ -42,9 +50,13 @@ install:
     if [[ $TRAVIS_OS_NAME == "osx" ]]
     then
       brew update || brew update # try again if it fails
-      brew upgrade
-      brew reinstall openssl
-      brew reinstall pyenv
+      for package in pyenv; do
+        if ! brew outdated $package; then
+          brew upgrade $package
+        else
+          brew reinstall $package
+        fi
+      done
       eval "$(pyenv init -)"
       env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.2
       pyenv global 3.5.2
