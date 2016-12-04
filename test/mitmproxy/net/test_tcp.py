@@ -6,7 +6,7 @@ import random
 import os
 import threading
 import mock
-
+import pytest
 from OpenSSL import SSL
 
 from mitmproxy import certs
@@ -15,6 +15,7 @@ from mitmproxy.test import tutils
 from mitmproxy import exceptions
 
 from . import tservers
+from ...conftest import requires_alpn
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -526,40 +527,47 @@ class TestTimeOut(tservers.ServerTestBase):
             tutils.raises(exceptions.TcpTimeout, c.rfile.read, 10)
 
 
+class TestCryptographyALPN:
+
+    def test_has_alpn(self):
+        if 'OPENSSL_ALPN' in os.environ:
+            assert tcp.HAS_ALPN
+            assert SSL._lib.Cryptography_HAS_ALPN
+        elif 'OPENSSL_OLD' in os.environ:
+            assert not tcp.HAS_ALPN
+            assert not SSL._lib.Cryptography_HAS_ALPN
+
+
 class TestALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
     ssl = dict(
         alpn_select=b"bar"
     )
 
-    if tcp.HAS_ALPN:
-        def test_alpn(self):
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
-                assert c.get_alpn_proto_negotiated() == b"bar"
-                assert c.rfile.readline().strip() == b"bar"
+    @requires_alpn
+    @pytest.mark.parametrize('has_alpn,alpn_protos, expected_negotiated, expected_response', [
+        (True, [b"foo", b"bar", b"fasel"], b'bar', b'bar'),
+        (True, [], b'', b'NONE'),
+        (True, None, b'', b'NONE'),
+        (False, [b"foo", b"bar", b"fasel"], b'', b'NONE'),
+        (False, [], b'', b'NONE'),
+        (False, None, b'', b'NONE'),
+    ])
+    def test_alpn(self, monkeypatch, has_alpn, alpn_protos, expected_negotiated, expected_response):
+        monkeypatch.setattr(tcp, 'HAS_ALPN', has_alpn)
+        monkeypatch.setattr(SSL._lib, 'Cryptography_HAS_ALPN', has_alpn)
 
-        def test_no_alpn(self):
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl()
-                assert c.get_alpn_proto_negotiated() == b""
-                assert c.rfile.readline().strip() == b"NONE"
-
-    else:
-        def test_none_alpn(self):
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl(alpn_protos=[b"foo", b"bar", b"fasel"])
-                assert c.get_alpn_proto_negotiated() == b""
-                assert c.rfile.readline() == b"NONE"
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl(alpn_protos=alpn_protos)
+            assert c.get_alpn_proto_negotiated() == expected_negotiated
+            assert c.rfile.readline().strip() == expected_response
 
 
 class TestNoSSLNoALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
 
-    def test_no_ssl_no_alpn(self):
+    def test_no_ssl_no_alpn(self, disable_alpn):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             assert c.get_alpn_proto_negotiated() == b""

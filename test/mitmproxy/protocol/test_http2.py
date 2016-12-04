@@ -1,7 +1,6 @@
 # coding=utf-8
 
 
-import pytest
 import os
 import tempfile
 import traceback
@@ -17,6 +16,7 @@ from mitmproxy import exceptions
 from mitmproxy.net.http import http1, http2
 
 from .. import tservers
+from ...conftest import requires_alpn
 
 import logging
 logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)
@@ -25,11 +25,6 @@ logging.getLogger("passlib.utils.compat").setLevel(logging.WARNING)
 logging.getLogger("passlib.registry").setLevel(logging.WARNING)
 logging.getLogger("PIL.Image").setLevel(logging.WARNING)
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
-
-
-requires_alpn = pytest.mark.skipif(
-    not mitmproxy.net.tcp.HAS_ALPN,
-    reason='requires OpenSSL with ALPN support')
 
 
 # inspect the log:
