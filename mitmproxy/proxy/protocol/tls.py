@@ -259,19 +259,19 @@ class TlsClientHello:
 
     @property
     def sni(self):
-        for extension in self._client_hello.extensions:
+        for extension in self._client_hello.extensions.extensions:
             is_valid_sni_extension = (
                 extension.type == 0x00 and
                 len(extension.server_names) == 1 and
-                extension.server_names[0].type == 0 and
-                check.is_valid_host(extension.server_names[0].name)
+                extension.server_names[0].name_type == 0 and
+                check.is_valid_host(extension.server_names[0].host_name)
             )
             if is_valid_sni_extension:
-                return extension.server_names[0].name.decode("idna")
+                return extension.server_names[0].host_name.decode("idna")
 
     @property
     def alpn_protocols(self):
-        for extension in self._client_hello.extensions:
+        for extension in self._client_hello.extensions.extensions:
             if extension.type == 0x10:
                 return list(extension.alpn_protocols)
 
