@@ -4,6 +4,7 @@ import mock
 import tornado.testing
 from mitmproxy import exceptions
 from mitmproxy import proxy
+from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
@@ -17,7 +18,7 @@ def json(resp: httpclient.HTTPResponse):
 
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
-        o = webmaster.Options()
+        o = options.Options()
         m = webmaster.WebMaster(o, proxy.DummyServer())
         f = tflow.tflow(resp=True)
         f.id = "42"

@@ -2,6 +2,7 @@ from mitmproxy.test import tflow
 import mitmproxy.test.tutils
 from mitmproxy.tools import console
 from mitmproxy import proxy
+from mitmproxy import options
 from mitmproxy.tools.console import common
 
 from .. import mastertest
@@ -20,14 +21,14 @@ def test_format_keyvals():
 
 
 def test_options():
-    assert console.master.Options(replay_kill_extra=True)
+    assert options.Options(replay_kill_extra=True)
 
 
 class TestMaster(mastertest.MasterTest):
-    def mkmaster(self, **options):
-        if "verbosity" not in options:
-            options["verbosity"] = 0
-        o = console.master.Options(**options)
+    def mkmaster(self, **opts):
+        if "verbosity" not in opts:
+            opts["verbosity"] = 0
+        o = options.Options(**opts)
         return console.master.ConsoleMaster(o, proxy.DummyServer())
 
     def test_basic(self):

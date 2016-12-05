@@ -11,7 +11,6 @@ import tempfile
 import traceback
 
 import urwid
-from typing import Optional
 
 from mitmproxy import addons
 from mitmproxy import controller
@@ -37,33 +36,6 @@ from mitmproxy.utils import strutils
 from mitmproxy.net import tcp
 
 EVENTLOG_SIZE = 500
-
-
-class Options(mitmproxy.options.Options):
-    def __init__(
-            self,
-            *,  # all args are keyword-only.
-            eventlog: bool = False,
-            focus_follow: bool = False,
-            intercept: Optional[str] = None,
-            filter: Optional[str] = None,
-            palette: Optional[str] = palettes.DEFAULT,
-            palette_transparent: bool = False,
-            no_mouse: bool = False,
-            order: Optional[str] = None,
-            order_reversed: bool = False,
-            **kwargs
-    ):
-        self.eventlog = eventlog
-        self.focus_follow = focus_follow
-        self.intercept = intercept
-        self.filter = filter
-        self.palette = palette
-        self.palette_transparent = palette_transparent
-        self.no_mouse = no_mouse
-        self.order = order
-        self.order_reversed = order_reversed
-        super().__init__(**kwargs)
 
 
 class ConsoleMaster(master.Master):

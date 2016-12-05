@@ -11,6 +11,7 @@ import signal  # noqa
 
 from mitmproxy.tools import cmdline  # noqa
 from mitmproxy import exceptions  # noqa
+from mitmproxy import options  # noqa
 from mitmproxy.proxy import config  # noqa
 from mitmproxy.proxy import server  # noqa
 from mitmproxy.utils import version_check  # noqa
@@ -71,7 +72,7 @@ def mitmproxy(args=None):  # pragma: no cover
     args = parser.parse_args(args)
 
     try:
-        console_options = console.master.Options()
+        console_options = options.Options()
         console_options.load_paths(args.conf)
         console_options.update(**notnone(cmdline.get_common_options(args)))
         console_options.update(
@@ -110,7 +111,7 @@ def mitmdump(args=None):  # pragma: no cover
 
     master = None
     try:
-        dump_options = dump.Options()
+        dump_options = options.Options()
         dump_options.load_paths(args.conf)
         dump_options.update(**notnone(cmdline.get_common_options(args)))
         dump_options.update(
@@ -149,7 +150,7 @@ def mitmweb(args=None):  # pragma: no cover
     args = parser.parse_args(args)
 
     try:
-        web_options = web.master.Options()
+        web_options = options.Options()
         web_options.load_paths(args.conf)
         web_options.update(**notnone(cmdline.get_common_options(args)))
         web_options.update(
