@@ -238,6 +238,7 @@ class OptManager(metaclass=_DefaultsMeta):
             OptionsError.
         """
         for p in paths:
+            p = os.path.expanduser(p)
             if os.path.exists(p) and os.path.isfile(p):
                 txt = open(p, "r").read()
                 self.load(txt)

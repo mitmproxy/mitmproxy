@@ -62,7 +62,6 @@ setup(
         "blinker>=1.4, <1.5",
         "click>=6.2, <7.0",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
-        "configargparse>=0.10, <0.12",
         "construct>=2.8, <2.9",
         "cryptography>=1.3, <1.7",
         "cssutils>=1.0.1, <1.1",

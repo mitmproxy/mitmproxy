@@ -1,6 +1,7 @@
-import configargparse
-import os
+import argparse
 import re
+import os
+
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import options
@@ -9,6 +10,9 @@ from mitmproxy.utils import human
 from mitmproxy.net import tcp
 from mitmproxy import version
 from mitmproxy.addons import view
+
+
+CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
 
 
 class ParseException(Exception):
@@ -113,13 +117,13 @@ def get_common_options(args):
         stream_large_bodies = human.parse_size(stream_large_bodies)
 
     reps = []
-    for i in args.replace:
+    for i in args.replace or []:
         try:
             p = parse_replace_hook(i)
         except ParseException as e:
             raise exceptions.OptionsError(e)
         reps.append(p)
-    for i in args.replace_file:
+    for i in args.replace_file or []:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException as e:
@@ -133,7 +137,7 @@ def get_common_options(args):
         reps.append((patt, rex, v))
 
     setheaders = []
-    for i in args.setheader:
+    for i in args.setheader or []:
         try:
             p = parse_setheader(i)
         except ParseException as e:
@@ -154,7 +158,7 @@ def get_common_options(args):
 
     # Proxy config
     certs = []
-    for i in args.certs:
+    for i in args.certs or []:
         parts = i.split("=", 1)
         if len(parts) == 1:
             parts = ["*", parts[0]]
@@ -287,8 +291,7 @@ def basic_options(parser):
     )
     parser.add_argument(
         "--anticache",
-        action="store_true", dest="anticache", default=False,
-
+        action="store_true", dest="anticache",
         help="""
             Strip out request headers that might cause the server to return
             304-not-modified.
@@ -296,12 +299,12 @@ def basic_options(parser):
     )
     parser.add_argument(
         "--cadir",
-        action="store", type=str, dest="cadir", default=options.CA_DIR,
+        action="store", type=str, dest="cadir",
         help="Location of the default mitmproxy CA files. (%s)" % options.CA_DIR
     )
     parser.add_argument(
         "--host",
-        action="store_true", dest="showhost", default=False,
+        action="store_true", dest="showhost",
         help="Use the Host header to construct URLs for display."
     )
     parser.add_argument(
@@ -311,12 +314,12 @@ def basic_options(parser):
     )
     parser.add_argument(
         "-r", "--read-flows",
-        action="store", dest="rfile", default=None,
+        action="store", dest="rfile",
         help="Read flows from file."
     )
     parser.add_argument(
         "-s", "--script",
-        action="append", type=str, dest="scripts", default=[],
+        action="append", type=str, dest="scripts",
         metavar='"script.py --bar"',
         help="""
             Run a script. Surround with quotes to pass script arguments. Can be
@@ -327,18 +330,17 @@ def basic_options(parser):
         "-t", "--stickycookie",
         action="store",
         dest="stickycookie_filt",
-        default=None,
         metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
     )
     parser.add_argument(
         "-u", "--stickyauth",
-        action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
+        action="store", dest="stickyauth_filt", metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
     parser.add_argument(
         "-v", "--verbose",
-        action="store_const", dest="verbose", default=2, const=3,
+        action="store_const", dest="verbose", const=3,
         help="Increase log verbosity."
     )
     streamfile = parser.add_mutually_exclusive_group()
@@ -354,19 +356,19 @@ def basic_options(parser):
     )
     parser.add_argument(
         "-z", "--anticomp",
-        action="store_true", dest="anticomp", default=False,
+        action="store_true", dest="anticomp",
         help="Try to convince servers to send us un-compressed data."
     )
     parser.add_argument(
         "-Z", "--body-size-limit",
-        action="store", dest="body_size_limit", default=None,
+        action="store", dest="body_size_limit",
         metavar="SIZE",
         help="Byte size limit of HTTP request and response bodies."
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
     parser.add_argument(
         "--stream",
-        action="store", dest="stream_large_bodies", default=None,
+        action="store", dest="stream_large_bodies",
         metavar="SIZE",
         help="""
             Stream data to the client if response body exceeds the given
@@ -383,7 +385,6 @@ def proxy_modes(parser):
         action="store",
         type=str,
         dest="reverse_proxy",
-        default=None,
         help="""
             Forward all requests to upstream HTTP server:
             http[s]://host[:port]. Clients can always connect both
@@ -393,12 +394,12 @@ def proxy_modes(parser):
     )
     group.add_argument(
         "--socks",
-        action="store_true", dest="socks_proxy", default=False,
+        action="store_true", dest="socks_proxy",
         help="Set SOCKS5 proxy mode."
     )
     group.add_argument(
         "-T", "--transparent",
-        action="store_true", dest="transparent_proxy", default=False,
+        action="store_true", dest="transparent_proxy",
         help="Set transparent proxy mode."
     )
     group.add_argument(
@@ -406,7 +407,6 @@ def proxy_modes(parser):
         action="store",
         type=str,
         dest="upstream_proxy",
-        default=None,
         help="Forward all requests to upstream proxy server: http://host[:port]"
     )
 
@@ -415,12 +415,12 @@ def proxy_options(parser):
     group = parser.add_argument_group("Proxy Options")
     group.add_argument(
         "-b", "--bind-address",
-        action="store", type=str, dest="addr", default='',
+        action="store", type=str, dest="addr",
         help="Address to bind proxy to (defaults to all interfaces)"
     )
     group.add_argument(
         "-I", "--ignore",
-        action="append", type=str, dest="ignore_hosts", default=[],
+        action="append", type=str, dest="ignore_hosts",
         metavar="HOST",
         help="""
             Ignore host and forward all traffic without processing it. In
@@ -433,7 +433,7 @@ def proxy_options(parser):
     )
     group.add_argument(
         "--tcp",
-        action="append", type=str, dest="tcp_hosts", default=[],
+        action="append", type=str, dest="tcp_hosts",
         metavar="HOST",
         help="""
             Generic TCP SSL proxy mode for all hosts that match the pattern.
@@ -448,7 +448,7 @@ def proxy_options(parser):
     )
     group.add_argument(
         "-p", "--port",
-        action="store", type=int, dest="port", default=options.LISTEN_PORT,
+        action="store", type=int, dest="port",
         help="Proxy service port."
     )
     group.add_argument(
@@ -467,7 +467,7 @@ def proxy_options(parser):
 
     parser.add_argument(
         "--upstream-auth",
-        action="store", dest="upstream_auth", default=None,
+        action="store", dest="upstream_auth",
         type=str,
         help="""
             Add HTTP Basic authentcation to upstream proxy and reverse proxy
@@ -491,7 +491,7 @@ def proxy_options(parser):
     )
     group.add_argument(
         "--upstream-bind-address",
-        action="store", type=str, dest="upstream_bind_address", default='',
+        action="store", type=str, dest="upstream_bind_address",
         help="Address to bind upstream requests to (defaults to none)"
     )
 
@@ -502,7 +502,6 @@ def proxy_ssl_options(parser):
     group.add_argument(
         "--cert",
         dest='certs',
-        default=[],
         type=str,
         metavar="SPEC",
         action="append",
@@ -514,56 +513,55 @@ def proxy_ssl_options(parser):
              'as the first entry. Can be passed multiple times.')
     group.add_argument(
         "--ciphers-client", action="store",
-        type=str, dest="ciphers_client", default=options.DEFAULT_CLIENT_CIPHERS,
         help="Set supported ciphers for client connections. (OpenSSL Syntax)"
     )
     group.add_argument(
         "--ciphers-server", action="store",
-        type=str, dest="ciphers_server", default=None,
+        type=str, dest="ciphers_server",
         help="Set supported ciphers for server connections. (OpenSSL Syntax)"
     )
     group.add_argument(
         "--client-certs", action="store",
-        type=str, dest="clientcerts", default=None,
+        type=str, dest="clientcerts",
         help="Client certificate file or directory."
     )
     group.add_argument(
-        "--no-upstream-cert", default=False,
+        "--no-upstream-cert",
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
     )
     group.add_argument(
-        "--add-upstream-certs-to-client-chain", default=False,
+        "--add-upstream-certs-to-client-chain",
         action="store_true", dest="add_upstream_certs_to_client_chain",
         help="Add all certificates of the upstream server to the certificate chain "
              "that will be served to the proxy client, as extras."
     )
     group.add_argument(
-        "--insecure", default=False,
+        "--insecure",
         action="store_true", dest="ssl_insecure",
         help="Do not verify upstream server SSL/TLS certificates."
     )
     group.add_argument(
-        "--upstream-trusted-cadir", default=None, action="store",
+        "--upstream-trusted-cadir", action="store",
         dest="ssl_verify_upstream_trusted_cadir",
         help="Path to a directory of trusted CA certificates for upstream "
              "server verification prepared using the c_rehash tool."
     )
     group.add_argument(
-        "--upstream-trusted-ca", default=None, action="store",
+        "--upstream-trusted-ca", action="store",
         dest="ssl_verify_upstream_trusted_ca",
         help="Path to a PEM formatted trusted CA certificate."
     )
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client",
-        default="secure", action="store",
+        action="store",
         choices=tcp.sslversion_choices.keys(),
         help="Set supported SSL/TLS versions for client connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )
     group.add_argument(
         "--ssl-version-server", dest="ssl_version_server",
-        default="secure", action="store",
+        action="store",
         choices=tcp.sslversion_choices.keys(),
         help="Set supported SSL/TLS versions for server connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
@@ -574,12 +572,12 @@ def onboarding_app(parser):
     group = parser.add_argument_group("Onboarding App")
     group.add_argument(
         "--noapp",
-        action="store_false", dest="app", default=True,
+        action="store_false", dest="app",
         help="Disable the mitmproxy onboarding app."
     )
     group.add_argument(
         "--app-host",
-        action="store", dest="app_host", default=options.APP_HOST, metavar="host",
+        action="store", dest="app_host",
         help="""
             Domain to serve the onboarding app from. For transparent mode, use
             an IP when a DNS entry for the app domain is not present. Default:
@@ -590,7 +588,6 @@ def onboarding_app(parser):
         "--app-port",
         action="store",
         dest="app_port",
-        default=options.APP_PORT,
         type=int,
         metavar="80",
         help="Port to serve the onboarding app from."
@@ -601,7 +598,7 @@ def client_replay(parser):
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
         "-c", "--client-replay",
-        action="append", dest="client_replay", default=[], metavar="PATH",
+        action="append", dest="client_replay", metavar="PATH",
         help="Replay client requests from a saved file."
     )
 
@@ -610,23 +607,23 @@ def server_replay(parser):
     group = parser.add_argument_group("Server Replay")
     group.add_argument(
         "-S", "--server-replay",
-        action="append", dest="server_replay", default=[], metavar="PATH",
+        action="append", dest="server_replay", metavar="PATH",
         help="Replay server responses from a saved file."
     )
     group.add_argument(
         "-k", "--replay-kill-extra",
-        action="store_true", dest="replay_kill_extra", default=False,
+        action="store_true", dest="replay_kill_extra",
         help="Kill extra requests during replay."
     )
     group.add_argument(
         "--server-replay-use-header",
-        action="append", dest="server_replay_use_headers", type=str, default=[],
+        action="append", dest="server_replay_use_headers", type=str,
         help="Request headers to be considered during replay. "
              "Can be passed multiple times."
     )
     group.add_argument(
         "--norefresh",
-        action="store_true", dest="norefresh", default=False,
+        action="store_true", dest="norefresh",
         help="""
             Disable response refresh, which updates times in cookies and headers
             for replayed responses.
@@ -634,21 +631,21 @@ def server_replay(parser):
     )
     group.add_argument(
         "--no-pop",
-        action="store_true", dest="server_replay_nopop", default=False,
+        action="store_true", dest="server_replay_nopop",
         help="Disable response pop from response flow. "
              "This makes it possible to replay same response multiple times."
     )
     payload = group.add_mutually_exclusive_group()
     payload.add_argument(
         "--replay-ignore-content",
-        action="store_true", dest="server_replay_ignore_content", default=False,
+        action="store_true", dest="server_replay_ignore_content",
         help="""
             Ignore request's content while searching for a saved flow to replay
         """
     )
     payload.add_argument(
         "--replay-ignore-payload-param",
-        action="append", dest="server_replay_ignore_payload_params", type=str, default=[],
+        action="append", dest="server_replay_ignore_payload_params", type=str,
         help="""
             Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
             be ignored while searching for a saved flow to replay.
@@ -658,7 +655,7 @@ def server_replay(parser):
 
     group.add_argument(
         "--replay-ignore-param",
-        action="append", dest="server_replay_ignore_params", type=str, default=[],
+        action="append", dest="server_replay_ignore_params", type=str,
         help="""
             Request's parameters to be ignored while searching for a saved flow
             to replay. Can be passed multiple times.
@@ -668,7 +665,6 @@ def server_replay(parser):
         "--replay-ignore-host",
         action="store_true",
         dest="server_replay_ignore_host",
-        default=False,
         help="Ignore request's destination host while searching for a saved flow to replay")
 
 
@@ -683,13 +679,13 @@ def replacements(parser):
     )
     group.add_argument(
         "--replace",
-        action="append", type=str, dest="replace", default=[],
+        action="append", type=str, dest="replace",
         metavar="PATTERN",
         help="Replacement pattern."
     )
     group.add_argument(
         "--replace-from-file",
-        action="append", type=str, dest="replace_file", default=[],
+        action="append", type=str, dest="replace_file",
         metavar="PATH",
         help="""
             Replacement pattern, where the replacement clause is a path to a
@@ -709,7 +705,7 @@ def set_headers(parser):
     )
     group.add_argument(
         "--setheader",
-        action="append", type=str, dest="setheader", default=[],
+        action="append", type=str, dest="setheader",
         metavar="PATTERN",
         help="Header set pattern."
     )
@@ -747,6 +743,15 @@ def proxy_authentication(parser):
 
 
 def common_options(parser):
+    parser.add_argument(
+        "--conf",
+        type=str, dest="conf", default=CONFIG_PATH,
+        metavar="PATH",
+        help="""
+            Configuration file
+        """
+    )
+
     basic_options(parser)
     proxy_modes(parser)
     proxy_options(parser)
@@ -764,26 +769,17 @@ def mitmproxy():
     # platforms.
     from .console import palettes
 
-    parser = configargparse.ArgumentParser(
-        usage="%(prog)s [options]",
-        args_for_setting_config_path=["--conf"],
-        default_config_files=[
-            os.path.join(options.CA_DIR, "common.conf"),
-            os.path.join(options.CA_DIR, "mitmproxy.conf")
-        ],
-        add_config_file_help=True,
-        add_env_var_help=True
-    )
+    parser = argparse.ArgumentParser(usage="%(prog)s [options]")
     common_options(parser)
     parser.add_argument(
-        "--palette", type=str, default=palettes.DEFAULT,
+        "--palette", type=str,
         action="store", dest="palette",
         choices=sorted(palettes.palettes.keys()),
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
     parser.add_argument(
         "--palette-transparent",
-        action="store_true", dest="palette_transparent", default=False,
+        action="store_true", dest="palette_transparent",
         help="Set transparent background for palette."
     )
     parser.add_argument(
@@ -798,7 +794,7 @@ def mitmproxy():
     )
     parser.add_argument(
         "--order",
-        type=str, dest="order", default=None,
+        type=str, dest="order",
         choices=[o[1] for o in view.orders],
         help="Flow sort order."
     )
@@ -813,33 +809,24 @@ def mitmproxy():
     )
     group.add_argument(
         "-i", "--intercept", action="store",
-        type=str, dest="intercept", default=None,
+        type=str, dest="intercept",
         help="Intercept filter expression."
     )
     group.add_argument(
         "-f", "--filter", action="store",
-        type=str, dest="filter", default=None,
+        type=str, dest="filter",
         help="Filter view expression."
     )
     return parser
 
 
 def mitmdump():
-    parser = configargparse.ArgumentParser(
-        usage="%(prog)s [options] [filter]",
-        args_for_setting_config_path=["--conf"],
-        default_config_files=[
-            os.path.join(options.CA_DIR, "common.conf"),
-            os.path.join(options.CA_DIR, "mitmdump.conf")
-        ],
-        add_config_file_help=True,
-        add_env_var_help=True
-    )
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] [filter]")
 
     common_options(parser)
     parser.add_argument(
         "--keepserving",
-        action="store_true", dest="keepserving", default=False,
+        action="store_true", dest="keepserving",
         help="""
             Continue serving after client playback or file read. We exit by
             default.
@@ -847,7 +834,7 @@ def mitmdump():
     )
     parser.add_argument(
         "-d", "--detail",
-        action="count", dest="flow_detail", default=1,
+        action="count", dest="flow_detail",
         help="Increase flow detail display level. Can be passed multiple times."
     )
     parser.add_argument(
@@ -862,16 +849,7 @@ def mitmdump():
 
 
 def mitmweb():
-    parser = configargparse.ArgumentParser(
-        usage="%(prog)s [options]",
-        args_for_setting_config_path=["--conf"],
-        default_config_files=[
-            os.path.join(options.CA_DIR, "common.conf"),
-            os.path.join(options.CA_DIR, "mitmweb.conf")
-        ],
-        add_config_file_help=True,
-        add_env_var_help=True
-    )
+    parser = argparse.ArgumentParser(usage="%(prog)s [options]")
 
     group = parser.add_argument_group("Mitmweb")
     group.add_argument(
@@ -881,13 +859,13 @@ def mitmweb():
     )
     group.add_argument(
         "--wport",
-        action="store", type=int, dest="wport", default=8081,
+        action="store", type=int, dest="wport",
         metavar="PORT",
         help="Mitmweb port."
     )
     group.add_argument(
         "--wiface",
-        action="store", dest="wiface", default="127.0.0.1",
+        action="store", dest="wiface",
         metavar="IFACE",
         help="Mitmweb interface."
     )
@@ -904,7 +882,7 @@ def mitmweb():
     )
     group.add_argument(
         "-i", "--intercept", action="store",
-        type=str, dest="intercept", default=None,
+        type=str, dest="intercept",
         help="Intercept filter expression."
     )
     return parser

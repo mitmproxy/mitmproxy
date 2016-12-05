@@ -17,6 +17,14 @@ from mitmproxy.utils import version_check  # noqa
 from mitmproxy.utils import debug  # noqa
 
 
+def notnone(d):
+    ret = {}
+    for k, v in d.items():
+        if v is not None:
+            ret[k] = v
+    return ret
+
+
 def assert_utf8_env():
     spec = ""
     for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
@@ -63,17 +71,21 @@ def mitmproxy(args=None):  # pragma: no cover
     args = parser.parse_args(args)
 
     try:
-        console_options = console.master.Options(
-            **cmdline.get_common_options(args)
+        console_options = console.master.Options()
+        console_options.load_paths(args.conf)
+        console_options.update(**notnone(cmdline.get_common_options(args)))
+        console_options.update(
+            **notnone(dict(
+                palette = args.palette,
+                palette_transparent = args.palette_transparent,
+                eventlog = args.eventlog,
+                focus_follow = args.focus_follow,
+                intercept = args.intercept,
+                filter = args.filter,
+                no_mouse = args.no_mouse,
+                order = args.order,
+            ))
         )
-        console_options.palette = args.palette
-        console_options.palette_transparent = args.palette_transparent
-        console_options.eventlog = args.eventlog
-        console_options.focus_follow = args.focus_follow
-        console_options.intercept = args.intercept
-        console_options.filter = args.filter
-        console_options.no_mouse = args.no_mouse
-        console_options.order = args.order
 
         server = process_options(parser, console_options, args)
         m = console.master.ConsoleMaster(console_options, server)
@@ -98,10 +110,17 @@ def mitmdump(args=None):  # pragma: no cover
 
     master = None
     try:
-        dump_options = dump.Options(**cmdline.get_common_options(args))
-        dump_options.flow_detail = args.flow_detail
-        dump_options.keepserving = args.keepserving
-        dump_options.filtstr = " ".join(args.filter) if args.filter else None
+        dump_options = dump.Options()
+        dump_options.load_paths(args.conf)
+        dump_options.update(**notnone(cmdline.get_common_options(args)))
+        dump_options.update(
+            **notnone(dict(
+                flow_detail = args.flow_detail,
+                keepserving = args.keepserving,
+                filtstr = " ".join(args.filter) if args.filter else None,
+            ))
+        )
+
         server = process_options(parser, dump_options, args)
         master = dump.DumpMaster(dump_options, server)
 
@@ -130,13 +149,18 @@ def mitmweb(args=None):  # pragma: no cover
     args = parser.parse_args(args)
 
     try:
-        web_options = web.master.Options(**cmdline.get_common_options(args))
-        web_options.intercept = args.intercept
-        web_options.open_browser = args.open_browser
-        web_options.wdebug = args.wdebug
-        web_options.wiface = args.wiface
-        web_options.wport = args.wport
-
+        web_options = web.master.Options()
+        web_options.load_paths(args.conf)
+        web_options.update(**notnone(cmdline.get_common_options(args)))
+        web_options.update(
+            **notnone(dict(
+                intercept = args.intercept,
+                open_browser = args.open_browser,
+                wdebug = args.wdebug,
+                wiface = args.wiface,
+                wport = args.wport,
+            ))
+        )
         server = process_options(parser, web_options, args)
         m = web.master.WebMaster(web_options, server)
     except exceptions.OptionsError as e:
