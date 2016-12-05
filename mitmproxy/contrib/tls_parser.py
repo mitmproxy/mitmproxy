@@ -1,3 +1,6 @@
+# This file originally comes from https://github.com/pyca/tls/blob/master/tls/_constructs.py.
+# Modified by the mitmproxy team.
+
 # This file is dual licensed under the terms of the Apache License, Version
 # 2.0, and the BSD License. See the LICENSE file in the root of this repository
 # for complete details.
@@ -113,9 +116,11 @@ Extension = "Extension" / Struct(
     )
 )
 
-extensions = "extensions" / Struct(
-    Int16ub,
-    "extensions" / GreedyRange(Extension)
+extensions = "extensions" / Optional(
+    Struct(
+        Int16ub,
+        "extensions" / GreedyRange(Extension)
+    )
 )
 
 ClientHello = "ClientHello" / Struct(
