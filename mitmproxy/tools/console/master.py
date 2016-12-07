@@ -38,6 +38,11 @@ from mitmproxy.net import tcp
 EVENTLOG_SIZE = 500
 
 
+class Logger:
+    def log(self, evt):
+        signals.add_log(evt.msg, evt.level)
+
+
 class ConsoleMaster(master.Master):
     palette = []
 
@@ -58,6 +63,7 @@ class ConsoleMaster(master.Master):
         signals.replace_view_state.connect(self.sig_replace_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
+        self.addons.add(Logger())
         self.addons.add(*addons.default_addons())
         self.addons.add(intercept.Intercept(), self.view)
 
@@ -447,7 +453,3 @@ class ConsoleMaster(master.Master):
             direction=direction,
         ), "info")
         signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
-
-    @controller.handler
-    def log(self, evt):
-        signals.add_log(evt.msg, evt.level)
