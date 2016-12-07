@@ -3,7 +3,6 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import grideditor
-from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import select
 from mitmproxy.tools.console import signals
 
@@ -26,6 +25,12 @@ def _mkhelp():
 help_context = _mkhelp()
 
 
+def checker(opt, options):
+    def _check():
+        return options.has_changed(opt)
+    return _check
+
+
 class Options(urwid.WidgetWrap):
 
     def __init__(self, master):
@@ -36,25 +41,25 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Header Set Patterns",
                     "H",
-                    lambda: len(master.options.setheaders),
+                    checker("setheaders", master.options),
                     self.setheaders
                 ),
                 select.Option(
                     "Ignore Patterns",
                     "I",
-                    lambda: master.options.ignore_hosts,
+                    checker("ignore_hosts", master.options),
                     self.ignore_hosts
                 ),
                 select.Option(
                     "Replacement Patterns",
                     "R",
-                    lambda: len(master.options.replacements),
+                    checker("replacements", master.options),
                     self.replacepatterns
                 ),
                 select.Option(
                     "Scripts",
                     "S",
-                    lambda: master.options.scripts,
+                    checker("scripts", master.options),
                     self.scripts
                 ),
 
@@ -62,19 +67,19 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Default Display Mode",
                     "M",
-                    lambda: self.master.options.default_contentview != "auto",
+                    checker("default_contentview", master.options),
                     self.default_displaymode
                 ),
                 select.Option(
                     "Palette",
                     "P",
-                    lambda: self.master.palette != palettes.DEFAULT,
+                    checker("palette", master.options),
                     self.palette
                 ),
                 select.Option(
                     "Show Host",
                     "w",
-                    lambda: master.options.showhost,
+                    checker("showhost", master.options),
                     master.options.toggler("showhost")
                 ),
 
@@ -82,19 +87,19 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "No Upstream Certs",
                     "U",
-                    lambda: master.options.no_upstream_cert,
+                    checker("no_upstream_cert", master.options),
                     master.options.toggler("no_upstream_cert")
                 ),
                 select.Option(
                     "TCP Proxying",
                     "T",
-                    lambda: master.options.tcp_hosts,
+                    checker("tcp_hosts", master.options),
                     self.tcp_hosts
                 ),
                 select.Option(
                     "Don't Verify SSL/TLS Certificates",
                     "V",
-                    lambda: master.options.ssl_insecure,
+                    checker("ssl_insecure", master.options),
                     master.options.toggler("ssl_insecure")
                 ),
 
@@ -102,37 +107,37 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Anti-Cache",
                     "a",
-                    lambda: master.options.anticache,
+                    checker("anticache", master.options),
                     master.options.toggler("anticache")
                 ),
                 select.Option(
                     "Anti-Compression",
                     "o",
-                    lambda: master.options.anticomp,
+                    checker("anticomp", master.options),
                     master.options.toggler("anticomp")
                 ),
                 select.Option(
                     "Kill Extra",
                     "x",
-                    lambda: master.options.replay_kill_extra,
+                    checker("replay_kill_extra", master.options),
                     master.options.toggler("replay_kill_extra")
                 ),
                 select.Option(
                     "No Refresh",
                     "f",
-                    lambda: not master.options.refresh_server_playback,
+                    checker("refresh_server_playback", master.options),
                     master.options.toggler("refresh_server_playback")
                 ),
                 select.Option(
                     "Sticky Auth",
                     "A",
-                    lambda: master.options.stickyauth,
+                    checker("stickyauth", master.options),
                     self.sticky_auth
                 ),
                 select.Option(
                     "Sticky Cookies",
                     "t",
-                    lambda: master.options.stickycookie,
+                    checker("stickycookie", master.options),
                     self.sticky_cookie
                 ),
             ]
@@ -160,25 +165,10 @@ class Options(urwid.WidgetWrap):
         return super().keypress(size, key)
 
     def clearall(self):
-        self.master.options.update(
-            anticache = False,
-            anticomp = False,
-            ignore_hosts = (),
-            tcp_hosts = (),
-            replay_kill_extra = False,
-            no_upstream_cert = False,
-            refresh_server_playback = True,
-            replacements = [],
-            scripts = [],
-            setheaders = [],
-            showhost = False,
-            stickyauth = None,
-            stickycookie = None,
-            default_contentview = "auto",
-        )
+        self.master.options.reset()
         signals.update_settings.send(self)
         signals.status_message.send(
-            message = "All select.Options cleared",
+            message = "Options cleared",
             expire = 1
         )
 

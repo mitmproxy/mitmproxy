@@ -1,11 +1,12 @@
 from mitmproxy.tools.web import master
 from mitmproxy import proxy
+from mitmproxy import options
 from . import mastertest
 
 
 class TestWebMaster(mastertest.MasterTest):
-    def mkmaster(self, **options):
-        o = master.Options(**options)
+    def mkmaster(self, **opts):
+        o = options.Options(**opts)
         return master.WebMaster(o, proxy.DummyServer(o))
 
     def test_basic(self):

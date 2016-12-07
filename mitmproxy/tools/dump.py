@@ -1,9 +1,8 @@
-from typing import Optional, IO
+from typing import Optional
 
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import addons
-from mitmproxy import io
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
@@ -21,13 +20,11 @@ class Options(options.Options):
             keepserving: bool = False,
             filtstr: Optional[str] = None,
             flow_detail: int = 1,
-            tfile: Optional[IO[str]] = None,
             **kwargs
     ) -> None:
         self.filtstr = filtstr
         self.flow_detail = flow_detail
         self.keepserving = keepserving
-        self.tfile = tfile
         super().__init__(**kwargs)
 
 
@@ -61,16 +58,6 @@ class DumpMaster(master.Master):
             except exceptions.FlowReadException as v:
                 self.add_log("Flow file corrupted.", "error")
                 raise DumpError(v)
-
-    def _readflow(self, paths):
-        """
-        Utitility function that reads a list of flows
-        or raises a DumpError if that fails.
-        """
-        try:
-            return io.read_flows_from_paths(paths)
-        except exceptions.FlowReadException as e:
-            raise DumpError(str(e))
 
     @controller.handler
     def log(self, e):

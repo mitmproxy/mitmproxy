@@ -28,43 +28,40 @@ def test_configure():
 
 
 def test_simple():
-    d = dumper.Dumper()
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        sio = io.StringIO()
-        ctx.configure(d, tfile = sio, flow_detail = 0)
+        ctx.configure(d, flow_detail=0)
         d.response(tflow.tflow(resp=True))
         assert not sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, tfile = sio, flow_detail = 1)
+        ctx.configure(d, flow_detail=1)
         d.response(tflow.tflow(resp=True))
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, tfile = sio, flow_detail = 1)
+        ctx.configure(d, flow_detail=1)
         d.error(tflow.tflow(err=True))
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, tfile = sio, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(resp=True))
         assert sio.getvalue()
         sio.truncate(0)
 
-        sio = io.StringIO()
-        ctx.configure(d, tfile = sio, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(resp=True))
         assert "<<" in sio.getvalue()
         sio.truncate(0)
 
-        sio = io.StringIO()
-        ctx.configure(d, tfile = sio, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(err=True))
         assert "<<" in sio.getvalue()
         sio.truncate(0)
 
-        sio = io.StringIO()
-        ctx.configure(d, tfile = sio, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request = tutils.treq()
         flow.request.stickycookie = True
@@ -77,8 +74,7 @@ def test_simple():
         assert sio.getvalue()
         sio.truncate(0)
 
-        sio = io.StringIO()
-        ctx.configure(d, tfile = sio, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         flow = tflow.tflow(resp=tutils.tresp(content=b"{"))
         flow.response.headers["content-type"] = "application/json"
         flow.response.status_code = 400
@@ -86,8 +82,7 @@ def test_simple():
         assert sio.getvalue()
         sio.truncate(0)
 
-        sio = io.StringIO()
-        ctx.configure(d, tfile = sio, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request.content = None
         flow.response = http.HTTPResponse.wrap(tutils.tresp())
@@ -102,20 +97,20 @@ def test_echo_body():
     f.response.headers["content-type"] = "text/html"
     f.response.content = b"foo bar voing\n" * 100
 
-    d = dumper.Dumper()
     sio = io.StringIO()
+    d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, tfile=sio, flow_detail = 3)
+        ctx.configure(d, flow_detail=3)
         d._echo_message(f.response)
         t = sio.getvalue()
         assert "cut off" in t
 
 
 def test_echo_request_line():
-    d = dumper.Dumper()
     sio = io.StringIO()
+    d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, tfile=sio, flow_detail = 3, showhost = True)
+        ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
         f.request.is_replay = True
         d._echo_request_line(f)
@@ -139,19 +134,19 @@ class TestContentView:
     @mock.patch("mitmproxy.contentviews.ViewAuto.__call__")
     def test_contentview(self, view_auto):
         view_auto.side_effect = exceptions.ContentViewException("")
-        d = dumper.Dumper()
+        sio = io.StringIO()
+        d = dumper.Dumper(sio)
         with taddons.context(options=dump.Options()) as ctx:
-            sio = io.StringIO()
-            ctx.configure(d, flow_detail=4, verbosity=3, tfile=sio)
+            ctx.configure(d, flow_detail=4, verbosity=3)
             d.response(tflow.tflow())
             assert "Content viewer failed" in ctx.master.event_log[0][1]
 
 
 def test_tcp():
-    d = dumper.Dumper()
     sio = io.StringIO()
+    d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, tfile=sio, flow_detail = 3, showhost = True)
+        ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.ttcpflow(client_conn=True, server_conn=True)
         d.tcp_message(f)
         assert "it's me" in sio.getvalue()

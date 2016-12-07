@@ -30,19 +30,19 @@ class Options(optmanager.OptManager):
             app_port: int = APP_PORT,
             anticache: bool = False,
             anticomp: bool = False,
-            client_replay: Sequence[str] = (),
+            client_replay: Sequence[str] = [],
             replay_kill_extra: bool = False,
             keepserving: bool = True,
             no_server: bool = False,
             server_replay_nopop: bool = False,
-            refresh_server_playback: bool = False,
+            refresh_server_playback: bool = True,
             rfile: Optional[str] = None,
-            scripts: Sequence[str] = (),
+            scripts: Sequence[str] = [],
             showhost: bool = False,
-            replacements: Sequence[Tuple[str, str, str]] = (),
-            server_replay_use_headers: Sequence[str] = (),
-            setheaders: Sequence[Tuple[str, str, str]] = (),
-            server_replay: Sequence[str] = (),
+            replacements: Sequence[Tuple[str, str, str]] = [],
+            server_replay_use_headers: Sequence[str] = [],
+            setheaders: Sequence[Tuple[str, str, str]] = [],
+            server_replay: Sequence[str] = [],
             stickycookie: Optional[str] = None,
             stickyauth: Optional[str] = None,
             stream_large_bodies: Optional[int] = None,
@@ -51,8 +51,8 @@ class Options(optmanager.OptManager):
             streamfile: Optional[str] = None,
             streamfile_append: bool = False,
             server_replay_ignore_content: bool = False,
-            server_replay_ignore_params: Sequence[str] = (),
-            server_replay_ignore_payload_params: Sequence[str] = (),
+            server_replay_ignore_params: Sequence[str] = [],
+            server_replay_ignore_payload_params: Sequence[str] = [],
             server_replay_ignore_host: bool = False,
             # Proxy options
             auth_nonanonymous: bool = False,
@@ -61,12 +61,12 @@ class Options(optmanager.OptManager):
             add_upstream_certs_to_client_chain: bool = False,
             body_size_limit: Optional[int] = None,
             cadir: str = CA_DIR,
-            certs: Sequence[Tuple[str, str]] = (),
+            certs: Sequence[Tuple[str, str]] = [],
             ciphers_client: str=DEFAULT_CLIENT_CIPHERS,
             ciphers_server: Optional[str]=None,
             clientcerts: Optional[str] = None,
             http2: bool = True,
-            ignore_hosts: Sequence[str] = (),
+            ignore_hosts: Sequence[str] = [],
             listen_host: str = "",
             listen_port: int = LISTEN_PORT,
             upstream_bind_address: str = "",
@@ -82,7 +82,29 @@ class Options(optmanager.OptManager):
             ssl_insecure: bool = False,
             ssl_verify_upstream_trusted_cadir: Optional[str] = None,
             ssl_verify_upstream_trusted_ca: Optional[str] = None,
-            tcp_hosts: Sequence[str] = ()
+            tcp_hosts: Sequence[str] = [],
+
+            intercept: Optional[str] = None,
+
+            # Console options
+            eventlog: bool = False,
+            focus_follow: bool = False,
+            filter: Optional[str] = None,
+            palette: Optional[str] = "dark",
+            palette_transparent: bool = False,
+            no_mouse: bool = False,
+            order: Optional[str] = None,
+            order_reversed: bool = False,
+
+            # Web options
+            open_browser: bool = True,
+            wdebug: bool = False,
+            wport: int = 8081,
+            wiface: str = "127.0.0.1",
+
+            # Dump options
+            filtstr: Optional[str] = None,
+            flow_detail: int = 1
     ) -> None:
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
@@ -146,4 +168,27 @@ class Options(optmanager.OptManager):
         self.ssl_verify_upstream_trusted_cadir = ssl_verify_upstream_trusted_cadir
         self.ssl_verify_upstream_trusted_ca = ssl_verify_upstream_trusted_ca
         self.tcp_hosts = tcp_hosts
+
+        self.intercept = intercept
+
+        # Console options
+        self.eventlog = eventlog
+        self.focus_follow = focus_follow
+        self.filter = filter
+        self.palette = palette
+        self.palette_transparent = palette_transparent
+        self.no_mouse = no_mouse
+        self.order = order
+        self.order_reversed = order_reversed
+
+        # Web options
+        self.open_browser = open_browser
+        self.wdebug = wdebug
+        self.wport = wport
+        self.wiface = wiface
+
+        # Dump options
+        self.filtstr = filtstr
+        self.flow_detail = flow_detail
+
         super().__init__()

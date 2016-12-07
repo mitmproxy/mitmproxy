@@ -7,9 +7,9 @@ from mitmproxy.tools import dump
 
 class TestTermLog:
     def test_simple(self):
-        t = termlog.TermLog()
         sio = io.StringIO()
-        t.configure(dump.Options(tfile = sio, verbosity = 2), set([]))
+        t = termlog.TermLog(outfile=sio)
+        t.configure(dump.Options(verbosity = 2), set([]))
         t.log(log.LogEntry("one", "info"))
         assert "one" in sio.getvalue()
         t.log(log.LogEntry("two", "debug"))

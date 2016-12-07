@@ -1,5 +1,4 @@
 import webbrowser
-from typing import Optional, IO
 
 import tornado.httpserver
 import tornado.ioloop
@@ -7,33 +6,11 @@ from mitmproxy import addons
 from mitmproxy import exceptions
 from mitmproxy import log
 from mitmproxy import master
-from mitmproxy import options
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.tools.web import app
-
-
-class Options(options.Options):
-    def __init__(
-            self,
-            *,  # all args are keyword-only.
-            intercept: Optional[str] = None,
-            tfile: Optional[IO[str]] = None,
-            open_browser: bool = True,
-            wdebug: bool = False,
-            wport: int = 8081,
-            wiface: str = "127.0.0.1",
-            **kwargs
-    ) -> None:
-        self.intercept = intercept
-        self.tfile = tfile
-        self.open_browser = open_browser
-        self.wdebug = wdebug
-        self.wport = wport
-        self.wiface = wiface
-        super().__init__(**kwargs)
 
 
 class WebMaster(master.Master):

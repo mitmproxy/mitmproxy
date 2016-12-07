@@ -1,6 +1,6 @@
 .DS_Store
 MANIFEST
-*/tmp
+**/tmp
 /venv*
 *.py[cdo]
 *.swp

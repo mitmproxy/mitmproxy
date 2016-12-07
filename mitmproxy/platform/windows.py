@@ -7,7 +7,7 @@ import struct
 import threading
 import time
 
-import configargparse
+import argparse
 import pydivert
 import pydivert.consts
 import pickle
@@ -386,8 +386,9 @@ class TransparentProxy:
 
 
 if __name__ == "__main__":
-    parser = configargparse.ArgumentParser(
-        description="Windows Transparent Proxy")
+    parser = argparse.ArgumentParser(
+        description="Windows Transparent Proxy"
+    )
     parser.add_argument(
         '--mode',
         choices=[
