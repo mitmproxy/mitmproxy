@@ -15,7 +15,7 @@ class TO(optmanager.OptManager):
 
 
 class TD(optmanager.OptManager):
-    def __init__(self, one="done", two="dtwo", three="error"):
+    def __init__(self, *, one="done", two="dtwo", three="error"):
         self.one = one
         self.two = two
         self.three = three

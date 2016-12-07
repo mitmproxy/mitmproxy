@@ -180,12 +180,13 @@ class OptManager(metaclass=_DefaultsMeta):
             Save to path. If the destination file exists, modify it in-place.
         """
         if os.path.exists(path) and os.path.isfile(path):
-            data = open(path, "r").read()
+            with open(path, "r") as f:
+                data = f.read()
         else:
             data = ""
         data = self.serialize(data, defaults)
-        fp = open(path, "w")
-        fp.write(data)
+        with open(path, "w") as f:
+            f.write(data)
 
     def serialize(self, text, defaults=False):
         """
@@ -228,8 +229,7 @@ class OptManager(metaclass=_DefaultsMeta):
             this object. May raise OptionsError if the config file is invalid.
         """
         data = self._load(text)
-        for k, v in data.items():
-            setattr(self, k, v)
+        self.update(**data)
 
     def load_paths(self, *paths):
         """
@@ -240,7 +240,8 @@ class OptManager(metaclass=_DefaultsMeta):
         for p in paths:
             p = os.path.expanduser(p)
             if os.path.exists(p) and os.path.isfile(p):
-                txt = open(p, "r").read()
+                with open(p, "r") as f:
+                    txt = f.read()
                 self.load(txt)
 
     def __repr__(self):

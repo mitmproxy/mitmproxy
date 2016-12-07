@@ -513,6 +513,7 @@ def proxy_ssl_options(parser):
              'as the first entry. Can be passed multiple times.')
     group.add_argument(
         "--ciphers-client", action="store",
+        type=str, dest="ciphers_client",
         help="Set supported ciphers for client connections. (OpenSSL Syntax)"
     )
     group.add_argument(

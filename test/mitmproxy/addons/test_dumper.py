@@ -31,37 +31,37 @@ def test_simple():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, flow_detail = 0)
+        ctx.configure(d, flow_detail=0)
         d.response(tflow.tflow(resp=True))
         assert not sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 1)
+        ctx.configure(d, flow_detail=1)
         d.response(tflow.tflow(resp=True))
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 1)
+        ctx.configure(d, flow_detail=1)
         d.error(tflow.tflow(err=True))
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(resp=True))
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(resp=True))
         assert "<<" in sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(err=True))
         assert "<<" in sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request = tutils.treq()
         flow.request.stickycookie = True
@@ -74,7 +74,7 @@ def test_simple():
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         flow = tflow.tflow(resp=tutils.tresp(content=b"{"))
         flow.response.headers["content-type"] = "application/json"
         flow.response.status_code = 400
@@ -82,7 +82,7 @@ def test_simple():
         assert sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail = 4)
+        ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request.content = None
         flow.response = http.HTTPResponse.wrap(tutils.tresp())
@@ -100,7 +100,7 @@ def test_echo_body():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, flow_detail = 3)
+        ctx.configure(d, flow_detail=3)
         d._echo_message(f.response)
         t = sio.getvalue()
         assert "cut off" in t
@@ -110,7 +110,7 @@ def test_echo_request_line():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, flow_detail = 3, showhost = True)
+        ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
         f.request.is_replay = True
         d._echo_request_line(f)
@@ -146,7 +146,7 @@ def test_tcp():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
-        ctx.configure(d, flow_detail = 3, showhost = True)
+        ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.ttcpflow(client_conn=True, server_conn=True)
         d.tcp_message(f)
         assert "it's me" in sio.getvalue()
