@@ -16,6 +16,8 @@ environment:
     secure: 6yBwmO5gv4vAwoFYII8qjQ==
   SNAPSHOT_PASS:
     secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
+  RTOOL_KEY:
+    secure: 0a+UUNbA+JjquyAbda4fd0JmiwL06AdG6torRPdCvbPDbKHnaW/BHHp1nRPytOKM
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -29,6 +31,19 @@ test_script:
       $Env:SKIP_MITMPROXY = "python -c `"print('skip mitmproxy')`""
       tox -e wheel
       tox -e rtool -- bdist
+
+      tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
+      (New-Object System.Net.WebClient).DownloadFile(
+        "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe","installbuilder_setup.exe",
+        "installbuilder-installer.exe"
+      )
+      .\installbuilder-installer.exe --mode unattended --unattendedmodeui none
+      & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.0\bin\builder-cli.exe' `
+        build `
+        .\release\installbuilder\mitmproxy.xml `
+        windows `
+        --license .\release\installbuilder\license.xml`
+        --setvars project.version=$Env:VERSION
 
 deploy_script:
   # we build binaries on every run, but we only upload them for master snapshots or tags.

@@ -2,8 +2,8 @@
     <shortName>mitmproxy</shortName>
     <fullName>mitmproxy</fullName>
     <version>1.0</version>
-    <leftImage>../../mitmproxy.org/logo/logo-installer.png</leftImage>
-    <logoImage>../../mitmproxy.org/logo/logo-installer-icon.png</logoImage>
+    <leftImage>logo-installer.png</leftImage>
+    <logoImage>logo-installer-icon.png</logoImage>
     <componentList>
         <component>
             <name>default</name>
@@ -19,7 +19,7 @@
                     <platforms>all</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>specs/icon.ico</origin>
+                            <origin>logo.ico</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -30,7 +30,7 @@
                     <platforms>linux</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>dist/linux/*</origin>
+                            <origin>../build/binaries/linux/*</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -42,7 +42,7 @@
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <origin>dist/windows/*</origin>
+                            <origin>../build/binaries/win32/*</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -54,7 +54,7 @@
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <origin>dist/osx/*</origin>
+                            <origin>../build/binaries/osx/*</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -80,7 +80,7 @@
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}/mitmweb</windowsExec>
                     <windowsExecArgs></windowsExecArgs>
-                    <windowsIcon>${installdir}/icon.ico</windowsIcon>
+                    <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${installdir}</windowsPath>
                 </startMenuShortcut>
                 <startMenuShortcut>
@@ -90,7 +90,7 @@
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}/mitmdump</windowsExec>
                     <windowsExecArgs></windowsExecArgs>
-                    <windowsIcon>${installdir}/icon.ico</windowsIcon>
+                    <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${installdir}</windowsPath>
                 </startMenuShortcut>
             </startMenuShortcutList>
@@ -99,10 +99,11 @@
     <disableSplashScreen>1</disableSplashScreen>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
-    <productDisplayIcon>C:/Users/user/git/mitmproxy/release/specs/icon.ico</productDisplayIcon>
+    <outputDirectory>../dist</outputDirectory>
+    <productDisplayIcon>logo.ico</productDisplayIcon>
     <saveRelativePaths>1</saveRelativePaths>
     <vendor>mitmproxy.org</vendor>
-    <windowsExecutableIcon>specs/icon.ico</windowsExecutableIcon>
+    <windowsExecutableIcon>logo.ico</windowsExecutableIcon>
     <finalPageActionList>
         <runProgram>
             <program>cmd</program>
