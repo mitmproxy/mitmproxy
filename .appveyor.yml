@@ -34,11 +34,11 @@ test_script:
 
       tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
       (New-Object System.Net.WebClient).DownloadFile(
-        "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe","installbuilder_setup.exe",
-        "installbuilder-installer.exe"
+        "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe",
+        "C:\projects\mitmproxy\release\installbuilder-installer.exe"
       )
-      .\installbuilder-installer.exe --mode unattended --unattendedmodeui none
-      & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.0\bin\builder-cli.exe' `
+      & 'C:\projects\mitmproxy\release\installbuilder-installer.exe' --mode unattended --unattendedmodeui none
+      & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\bin\builder-cli.exe' `
         build `
         .\release\installbuilder\mitmproxy.xml `
         windows `
@@ -56,6 +56,7 @@ deploy_script:
     }
 
 cache:
+  - C:\projects\mitmproxy\release\installbuilder-installer.exe -> .appveyor.yml
   - C:\Users\appveyor\AppData\Local\pip\cache
 
 notifications:
