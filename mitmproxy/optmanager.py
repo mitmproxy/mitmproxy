@@ -244,6 +244,21 @@ class OptManager(metaclass=_DefaultsMeta):
                     txt = f.read()
                 self.load(txt)
 
+    def merge(self, opts):
+        """
+            Merge a dict of options into this object. Options that have None
+            value are ignored. Lists and tuples are appended to the current
+            option value.
+        """
+        toset = {}
+        for k, v in opts.items():
+            if v is not None:
+                if isinstance(v, (list, tuple)):
+                    toset[k] = getattr(self, k) + v
+                else:
+                    toset[k] = v
+        self.update(**toset)
+
     def __repr__(self):
         options = pprint.pformat(self._opts, indent=4).strip(" {}")
         if "\n" in options:

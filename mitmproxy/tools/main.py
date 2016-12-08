@@ -18,14 +18,6 @@ from mitmproxy.utils import version_check  # noqa
 from mitmproxy.utils import debug  # noqa
 
 
-def notnone(d):
-    ret = {}
-    for k, v in d.items():
-        if v is not None:
-            ret[k] = v
-    return ret
-
-
 def assert_utf8_env():
     spec = ""
     for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
@@ -74,9 +66,9 @@ def mitmproxy(args=None):  # pragma: no cover
     try:
         console_options = options.Options()
         console_options.load_paths(args.conf)
-        console_options.update(**notnone(cmdline.get_common_options(args)))
-        console_options.update(
-            **notnone(dict(
+        console_options.merge(cmdline.get_common_options(args))
+        console_options.merge(
+            dict(
                 palette = args.palette,
                 palette_transparent = args.palette_transparent,
                 eventlog = args.eventlog,
@@ -85,7 +77,7 @@ def mitmproxy(args=None):  # pragma: no cover
                 filter = args.filter,
                 no_mouse = args.no_mouse,
                 order = args.order,
-            ))
+            )
         )
 
         server = process_options(parser, console_options, args)
@@ -113,13 +105,13 @@ def mitmdump(args=None):  # pragma: no cover
     try:
         dump_options = options.Options()
         dump_options.load_paths(args.conf)
-        dump_options.update(**notnone(cmdline.get_common_options(args)))
-        dump_options.update(
-            **notnone(dict(
+        dump_options.merge(cmdline.get_common_options(args))
+        dump_options.merge(
+            dict(
                 flow_detail = args.flow_detail,
                 keepserving = args.keepserving,
                 filtstr = " ".join(args.filter) if args.filter else None,
-            ))
+            )
         )
 
         server = process_options(parser, dump_options, args)
@@ -152,15 +144,15 @@ def mitmweb(args=None):  # pragma: no cover
     try:
         web_options = options.Options()
         web_options.load_paths(args.conf)
-        web_options.update(**notnone(cmdline.get_common_options(args)))
-        web_options.update(
-            **notnone(dict(
+        web_options.merge(cmdline.get_common_options(args))
+        web_options.merge(
+            dict(
                 intercept = args.intercept,
                 open_browser = args.open_browser,
                 wdebug = args.wdebug,
                 wiface = args.wiface,
                 wport = args.wport,
-            ))
+            )
         )
         server = process_options(parser, web_options, args)
         m = web.master.WebMaster(web_options, server)
