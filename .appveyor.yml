@@ -39,7 +39,7 @@ test_script:
       )
 
 
-      & 'C:\projects\mitmproxy\release\installbuilder-installer.exe' --mode unattended --unattendedmodeui none --debuglevel 4 --debugtrace "C:\projects\mitmproxy\release\install.log"
+      C:\projects\mitmproxy\release\installbuilder-installer.exe --mode unattended --unattendedmodeui none --debuglevel 4 --debugtrace "C:\projects\mitmproxy\release\install.log"
       cat "C:\projects\mitmproxy\release\install.log"
       ls 'C:\Program Files\'
       ls 'C:\Program Files (x86)\'
