@@ -220,3 +220,21 @@ def test_saving():
 
         o.load_paths(dst)
         assert o.three == "foo"
+
+
+class TM(optmanager.OptManager):
+    def __init__(self, one="one", two=["foo"], three=None):
+        self.one = one
+        self.two = two
+        self.three = three
+        super().__init__()
+
+
+def test_merge():
+    m = TM()
+    m.merge(dict(one="two"))
+    assert m.one == "two"
+    m.merge(dict(one=None))
+    assert m.one == "two"
+    m.merge(dict(two=["bar"]))
+    assert m.two == ["foo", "bar"]

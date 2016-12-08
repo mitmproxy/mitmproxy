@@ -64,10 +64,10 @@ def test_reloadhandler():
 
 class TestParseCommand:
     def test_empty_command(self):
-        with tutils.raises(exceptions.AddonError):
+        with tutils.raises(exceptions.OptionsError):
             script.parse_command("")
 
-        with tutils.raises(exceptions.AddonError):
+        with tutils.raises(exceptions.OptionsError):
             script.parse_command("  ")
 
     def test_no_script_file(self):

@@ -5,7 +5,6 @@ import argparse
 from OpenSSL import SSL
 
 from mitmproxy.tools import cmdline
-from mitmproxy.tools import main
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy import connections
@@ -76,8 +75,9 @@ class TestProcessProxyOptions:
         parser = MockParser()
         cmdline.common_options(parser)
         args = parser.parse_args(args=args)
-        opts = cmdline.get_common_options(args)
-        pconf = config.ProxyConfig(options.Options(**main.notnone(opts)))
+        opts = options.Options()
+        opts.merge(cmdline.get_common_options(args))
+        pconf = config.ProxyConfig(opts)
         return parser, pconf
 
     def assert_err(self, err, *args):

@@ -164,7 +164,7 @@ class ScriptEditor(base.GridEditor):
     def is_error(self, col, val):
         try:
             script.parse_command(val)
-        except exceptions.AddonError as e:
+        except exceptions.OptionsError as e:
             return str(e)
 
 
