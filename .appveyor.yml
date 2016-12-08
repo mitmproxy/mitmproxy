@@ -38,6 +38,9 @@ test_script:
         "C:\projects\mitmproxy\release\installbuilder-installer.exe"
       )
       & 'C:\projects\mitmproxy\release\installbuilder-installer.exe' --mode unattended --unattendedmodeui none
+      ls 'C:\Program Files\'
+      ls 'C:\Program Files (x86)\'
+      ls 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\'
       & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\bin\builder-cli.exe' `
         build `
         .\release\installbuilder\mitmproxy.xml `
