@@ -37,7 +37,10 @@ test_script:
         "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe",
         "C:\projects\mitmproxy\release\installbuilder-installer.exe"
       )
-      & 'C:\projects\mitmproxy\release\installbuilder-installer.exe' --mode unattended --unattendedmodeui none
+
+
+      & 'C:\projects\mitmproxy\release\installbuilder-installer.exe' --mode unattended --unattendedmodeui none --debuglevel 4 --debugtrace "C:\projects\mitmproxy\release\install.log"
+      cat "C:\projects\mitmproxy\release\install.log"
       ls 'C:\Program Files\'
       ls 'C:\Program Files (x86)\'
       ls 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\'
