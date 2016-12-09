@@ -40,8 +40,8 @@ else:
 
 PLATFORM_TAG = {
     "Darwin": "osx",
-    "Windows": "win32",
-    "Linux": "linux"
+    "Windows": "windows",
+    "Linux": "linux",
 }.get(platform.system(), platform.system())
 
 ROOT_DIR = abspath(join(dirname(__file__), ".."))
@@ -115,6 +115,17 @@ def wheel_name() -> str:
         version=get_version(),
     )
 
+def installer_name() -> str:
+	ext = {
+		"Windows": "exe",
+		"Darwin": "dmg",
+		"Linux": "run"
+	}[platform.system()]
+	return "mitmproxy-{version}-{platform}-installer.{ext}".format(
+        version=get_version(),
+        platform=PLATFORM_TAG,
+        ext=ext,
+    )
 
 @contextlib.contextmanager
 def chdir(path: str):
@@ -259,7 +270,8 @@ def upload_release(username, password, repository):
 @click.option("--private-key-password", envvar="SNAPSHOT_PASS", prompt=True, hide_input=True)
 @click.option("--wheel/--no-wheel", default=False)
 @click.option("--bdist/--no-bdist", default=False)
-def upload_snapshot(host, port, user, private_key, private_key_password, wheel, bdist):
+@click.option("--installer/--no-installer", default=False)
+def upload_snapshot(host, port, user, private_key, private_key_password, wheel, bdist, installer):
     """
     Upload snapshot to snapshot server
     """
@@ -277,6 +289,9 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
             if bdist:
                 for bdist in sorted(BDISTS.keys()):
                     files.append(archive_name(bdist))
+            if installer:
+                files.append(installer_name())
+
 
             for f in files:
                 local_path = join(DIST_DIR, f)

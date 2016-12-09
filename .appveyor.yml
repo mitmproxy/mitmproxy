@@ -8,6 +8,8 @@ environment:
     - PYTHON: "C:\\Python35"
       TOXENV: "py35"
 
+
+
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
   SNAPSHOT_PORT:
@@ -20,7 +22,7 @@ environment:
     secure: 0a+UUNbA+JjquyAbda4fd0JmiwL06AdG6torRPdCvbPDbKHnaW/BHHp1nRPytOKM
 
 artifacts:
-  - path: release\dist
+  - path: 'release\dist\*'
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -38,10 +40,13 @@ test_script:
       tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
 
   - ps: |
-      (New-Object System.Net.WebClient).DownloadFile(
-        "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe", 
-        "C:\projects\mitmproxy\release\installbuilder-installer.exe"
-      )
+      if (!(Test-Path "C:\projects\mitmproxy\release\installbuilder-installer.exe")) {
+        "Download InstallBuilder..."
+        (New-Object System.Net.WebClient).DownloadFile(
+          "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe", 
+          "C:\projects\mitmproxy\release\installbuilder-installer.exe"
+        )
+      }
       Start-Process "C:\projects\mitmproxy\release\installbuilder-installer.exe" "--mode unattended --unattendedmodeui none" -Wait
       & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\bin\builder-cli.exe' `
         build `
@@ -57,7 +62,7 @@ deploy_script:
       ($Env:TOXENV -match "py35") -and
       (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
     ) {
-      tox -e rtool -- upload-snapshot --bdist --wheel
+      tox -e rtool -- upload-snapshot --bdist --wheel --installer
     }
 
 cache:
