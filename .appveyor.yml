@@ -35,14 +35,14 @@ test_script:
       tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
 
   - ps: |
-      echo "start download"
-      echo (New-Object System.Net.WebClient)
-      (New-Object System.Net.WebClient).DownloadFile("https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe", "C:\projects\mitmproxy\release\installbuilder-installer.exe")
-      echo "download done"
-      ls C:\projects\mitmproxy\release\
-      echo "install"
-      C:\projects\mitmproxy\release\installbuilder-installer.exe --mode unattended --unattendedmodeui none --debuglevel 4
-      ls %appdata%
+      echo Get-Date -Format o
+      (New-Object System.Net.WebClient).DownloadFile(
+        "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe", 
+        "C:\projects\mitmproxy\release\installbuilder-installer.exe"
+      )
+      echo Get-Date -Format o
+      Start-Process "C:\projects\mitmproxy\release\installbuilder-installer.exe" "--mode unattended --unattendedmodeui none" -Wait
+      echo Get-Date -Format o
       ls 'C:\Program Files\'
       ls 'C:\Program Files (x86)\'
       ls 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\'
