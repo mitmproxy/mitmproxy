@@ -9,6 +9,7 @@ from mitmproxy.tools.console import signals
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
     ('heading_key', "C"), ":clear all ",
+    ('heading_key', "W"), ":save ",
 ]
 
 
@@ -17,6 +18,7 @@ def _mkhelp():
     keys = [
         ("enter/space", "activate option"),
         ("C", "clear all options"),
+        ("w", "save options"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
@@ -162,7 +164,19 @@ class Options(urwid.WidgetWrap):
         if key == "C":
             self.clearall()
             return None
+        if key == "W":
+            self.save()
+            return None
         return super().keypress(size, key)
+
+    def do_save(self, path):
+        self.master.options.save(path)
+
+    def save(self):
+        signals.status_prompt_path.send(
+            prompt = "Save options to file",
+            callback = self.do_save
+        )
 
     def clearall(self):
         self.master.options.reset()
