@@ -131,7 +131,7 @@ def test_echo_request_line():
 
 
 class TestContentView:
-    @mock.patch("mitmproxy.contentviews.ViewAuto.__call__")
+    @mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__")
     def test_contentview(self, view_auto):
         view_auto.side_effect = exceptions.ContentViewException("")
         sio = io.StringIO()

@@ -1,9 +1,8 @@
 # Default view cutoff *in lines*
 
-from typing import Iterable
+from typing import Iterable, AnyStr, List
 from typing import Mapping
 from typing import Tuple
-from typing import Union
 
 VIEW_CUTOFF = 512
 
@@ -11,9 +10,9 @@ KEY_MAX = 30
 
 
 class View:
-    name = None
-    prompt = ()
-    content_types = []
+    name = None  # type: str
+    prompt = None  # type: Tuple[str,str]
+    content_types = []  # type: List[str]
 
     def __call__(self, data: bytes, **metadata):
         """
@@ -35,12 +34,12 @@ class View:
             The content generator must not yield tuples of tuples,
             because urwid cannot process that. You have to yield a *list* of tuples per line.
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 def format_dict(
-        d: Mapping[Union[str, bytes], Union[str, bytes]]
-) -> Iterable[Tuple[Union[str, bytes], Union[str, bytes]]]:
+        d: Mapping[AnyStr, AnyStr]
+) -> Iterable[List[Tuple[str, AnyStr]]]:
     """
     Helper function that transforms the given dictionary into a list of
         ("key",   key  )
@@ -58,7 +57,7 @@ def format_dict(
         ]
 
 
-def format_text(text):
+def format_text(text: AnyStr) -> Iterable[List[Tuple[str, AnyStr]]]:
     """
     Helper function that transforms bytes into the view output format.
     """

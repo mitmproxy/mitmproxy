@@ -2,6 +2,7 @@ from mitmproxy.net import http
 from mitmproxy.types import multidict
 from . import base
 
+
 class ViewMultipart(base.View):
     name = "Multipart Form"
     prompt = ("multipart", "m")

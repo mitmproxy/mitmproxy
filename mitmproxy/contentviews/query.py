@@ -1,10 +1,11 @@
+from typing import List  # noqa
+
 from . import base
 
 
 class ViewQuery(base.View):
     name = "Query"
     prompt = ("query", "q")
-    content_types = []
 
     def __call__(self, data, **metadata):
         query = metadata.get("query")

@@ -14,31 +14,37 @@ passed as the ``headers`` keyword argument. For HTTP requests, the query
 parameters are passed as the ``query`` keyword argument.
 """
 import traceback
+from typing import Dict, Optional  # noqa
+from typing import List  # noqa
+from typing import Tuple  # noqa
 
 from mitmproxy import exceptions
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
+from . import (
+    auto, raw, hex, json, xml, wbxml, html, javascript, css,
+    urlencoded, multipart, image, query, protobuf
+)
+from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict
 
-from .base import VIEW_CUTOFF, KEY_MAX
-
-views = []
-content_types_map = {}
-view_prompts = []
+views = []  # type: List[View]
+content_types_map = {}  # type: Dict[str, List[View]]
+view_prompts = []  # type: List[Tuple[str, str]]
 
 
-def get(name):
+def get(name: str) -> Optional[View]:
     for i in views:
         if i.name.lower() == name.lower():
             return i
 
 
-def get_by_shortcut(c):
+def get_by_shortcut(c: str) -> Optional[View]:
     for i in views:
         if i.prompt[1] == c:
             return i
 
 
-def add(view):
+def add(view: View) -> None:
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
@@ -58,7 +64,7 @@ def add(view):
     view_prompts.append(view.prompt)
 
 
-def remove(view):
+def remove(view: View) -> None:
     for ct in view.content_types:
         l = content_types_map.setdefault(ct, [])
         l.remove(view)
@@ -123,7 +129,7 @@ def get_message_content_view(viewname, message):
     return description, lines, error
 
 
-def get_content_view(viewmode, data, **metadata):
+def get_content_view(viewmode: View, data: bytes, **metadata):
     """
         Args:
             viewmode: the view to use.
@@ -153,11 +159,6 @@ def get_content_view(viewmode, data, **metadata):
     return desc, safe_to_print(content), error
 
 
-from . import (
-    auto, raw, hex, json, xml, wbxml, html, javascript, css,
-    urlencoded, multipart, image, query, protobuf
-)
-
 add(auto.ViewAuto())
 add(raw.ViewRaw())
 add(hex.ViewHex())
@@ -175,3 +176,9 @@ add(query.ViewQuery())
 
 if protobuf.ViewProtobuf.is_available():
     add(protobuf.ViewProtobuf())
+
+__all__ = [
+    "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict",
+    "get", "get_by_shortcut", "add", "remove",
+    "get_content_view", "get_message_content_view",
+]
