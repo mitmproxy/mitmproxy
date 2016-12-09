@@ -20,7 +20,7 @@ environment:
     secure: 0a+UUNbA+JjquyAbda4fd0JmiwL06AdG6torRPdCvbPDbKHnaW/BHHp1nRPytOKM
 
 artifacts:
-  - path: C:\projects\mitmproxy\release\dist
+  - path: release\dist
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
