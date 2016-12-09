@@ -49,6 +49,7 @@ class ConsoleMaster(master.Master):
     def __init__(self, options, server):
         super().__init__(options, server)
         self.view = view.View()  # type: view.View
+        self.view.sig_view_update.connect(signals.flow_change.send)
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
