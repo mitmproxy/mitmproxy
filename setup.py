@@ -58,7 +58,6 @@ setup(
     # https://packaging.python.org/en/latest/requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
-        "backports.ssl_match_hostname>=3.5.0.1, <3.6",
         "blinker>=1.4, <1.5",
         "click>=6.2, <7.0",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
