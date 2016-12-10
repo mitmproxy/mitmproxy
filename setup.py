@@ -59,7 +59,7 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "blinker>=1.4, <1.5",
-        "click>=6.2, <7.0",
+        "click>=6.2, <7",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "construct>=2.8, <2.9",
         "cryptography>=1.3, <1.7",
@@ -93,8 +93,8 @@ setup(
         ':sys_platform != "win32"': [
         ],
         'dev': [
-            "flake8>=2.6.2, <3.3",
-            "mypy-lang>=0.4.5, <0.5",
+            "flake8>=3.2.1, <3.3",
+            "mypy-lang>=0.4.6, <0.5",
             "rstcheck>=2.2, <3.0",
             "tox>=2.3, <3",
             "mock>=2.0, <2.1",
@@ -103,7 +103,7 @@ setup(
             "pytest-timeout>=1.0.0, <2",
             "pytest-xdist>=1.14, <2",
             "pytest-faulthandler>=1.3.0, <2",
-            "sphinx>=1.3.5, <1.5",
+            "sphinx>=1.3.5, <1.6",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.4.0, <0.5",
             "sphinx_rtd_theme>=0.1.9, <0.2",
@@ -115,7 +115,7 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.6",
-            "pytz>=2015.07.0, <=2016.7",
+            "pytz>=2015.07.0, <=2016.10",
         ]
     }
 )
