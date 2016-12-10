@@ -31,7 +31,7 @@
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <excludeFiles>patho*</excludeFiles>
+                            <excludeFiles>*/patho*</excludeFiles>
                             <origin>../build/binaries/${platform_name}/*</origin>
                         </distributionFile>
                     </distributionFileList>
