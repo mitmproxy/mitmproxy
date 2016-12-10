@@ -50,8 +50,9 @@ test_script:
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
-          --license .\release\installbuilder\license.xml`
-          --setvars project.version=$Env:VERSION
+          --license .\release\installbuilder\license.xml `
+          --setvars project.version=$Env:VERSION `
+          --verbose
       }
 
 deploy_script:
