@@ -24,37 +24,15 @@
                     </distributionFileList>
                 </folder>
                 <folder>
-                    <description>Program Files</description>
-                    <destination>${installdir}</destination>
-                    <name>programfileslinux</name>
-                    <platforms>linux</platforms>
-                    <distributionFileList>
-                        <distributionFile>
-                            <origin>../build/binaries/linux/*</origin>
-                        </distributionFile>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Program Files</description>
-                    <destination>${installdir}</destination>
-                    <name>programfileswindows</name>
-                    <platforms>windows</platforms>
+                    <description>Program Files/bin</description>
+                    <destination>${installdir}/bin</destination>
+                    <name>binaries</name>
+                    <platforms>all</platforms>
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <origin>../build/binaries/win32/*</origin>
-                        </distributionFile>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Program Files</description>
-                    <destination>${installdir}</destination>
-                    <name>programfilesosx</name>
-                    <platforms>osx</platforms>
-                    <distributionFileList>
-                        <distributionFile>
-                            <allowWildcards>1</allowWildcards>
-                            <origin>../build/binaries/osx/*</origin>
+                            <excludeFiles>patho*</excludeFiles>
+                            <origin>../build/binaries/${platform_name}/*</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -78,7 +56,7 @@
                     <name>mitmproxy ui</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
-                    <windowsExec>${installdir}/mitmweb</windowsExec>
+                    <windowsExec>${installdir}\bin\mitmweb.exe</windowsExec>
                     <windowsExecArgs></windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${installdir}</windowsPath>
@@ -88,7 +66,7 @@
                     <name>mitmdump</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
-                    <windowsExec>${installdir}/mitmdump</windowsExec>
+                    <windowsExec>${installdir}\bin\mitmdump.exe</windowsExec>
                     <windowsExecArgs></windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${installdir}</windowsPath>
@@ -96,6 +74,7 @@
             </startMenuShortcutList>
         </component>
     </componentList>
+    <createOsxBundleDmg>1</createOsxBundleDmg>
     <disableSplashScreen>1</disableSplashScreen>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
@@ -107,7 +86,7 @@
     <finalPageActionList>
         <runProgram>
             <program>cmd</program>
-            <programArguments>/c start "mitmproxy ui" "${installdir}\mitmweb.exe" &amp;</programArguments>
+            <programArguments>/c start "mitmproxy ui" "${installdir}\bin\mitmweb.exe" &amp;</programArguments>
             <progressText>Launch mitmproxy ui now</progressText>
             <ruleList>
                 <platformTest>
