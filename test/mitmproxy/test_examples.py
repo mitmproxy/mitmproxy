@@ -56,7 +56,7 @@ class TestScripts(mastertest.MasterTest):
             tscript("simple/modify_body_inject_iframe.py")
 
         m, sc = tscript("simple/modify_body_inject_iframe.py", "http://example.org/evil_iframe")
-        f = tflow.tflow(resp=tutils.tresp(content=b"<html>mitmproxy</html>"))
+        f = tflow.tflow(resp=tutils.tresp(content=b"<html><body>mitmproxy</body></html>"))
         m.response(f)
         content = f.response.content
         assert b'iframe' in content and b'evil_iframe' in content
