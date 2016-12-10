@@ -292,7 +292,6 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
             if installer:
                 files.append(installer_name())
 
-
             for f in files:
                 local_path = join(DIST_DIR, f)
                 remote_filename = f.replace(get_version(), get_snapshot_version())

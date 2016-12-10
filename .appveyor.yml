@@ -8,8 +8,6 @@ environment:
     - PYTHON: "C:\\Python35"
       TOXENV: "py35"
 
-
-
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
   SNAPSHOT_PORT:
@@ -20,9 +18,6 @@ environment:
     secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
   RTOOL_KEY:
     secure: 0a+UUNbA+JjquyAbda4fd0JmiwL06AdG6torRPdCvbPDbKHnaW/BHHp1nRPytOKM
-
-artifacts:
-  - path: 'release\dist\*'
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -37,13 +32,12 @@ test_script:
       tox -e wheel
       tox -e rtool -- bdist
 
-      tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
-
   - ps: |
       if(
         ($Env:TOXENV -match "py35") -and
         (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
+        tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
         if (!(Test-Path "C:\projects\mitmproxy\release\installbuilder-installer.exe")) {
           "Download InstallBuilder..."
           (New-Object System.Net.WebClient).DownloadFile(
