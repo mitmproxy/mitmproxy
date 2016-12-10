@@ -5,15 +5,15 @@ import sys
 import threading
 import time
 import traceback
-
 import binascii
+from ssl import match_hostname
+from ssl import CertificateError
 
 from typing import Optional  # noqa
 
 from mitmproxy.utils import strutils
 
 import certifi
-from backports import ssl_match_hostname
 import OpenSSL
 from OpenSSL import SSL
 
@@ -726,8 +726,8 @@ class TCPClient(_Connection):
                 hostname = sni
             else:
                 hostname = "no-hostname"
-            ssl_match_hostname.match_hostname(crt, hostname)
-        except (ValueError, ssl_match_hostname.CertificateError) as e:
+            match_hostname(crt, hostname)
+        except (ValueError, CertificateError) as e:
             self.ssl_verification_error = exceptions.InvalidCertificateException(
                 "Certificate Verification Error for {}: {}".format(
                     sni or repr(self.address),
