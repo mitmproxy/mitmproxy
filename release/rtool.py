@@ -13,8 +13,8 @@ import zipfile
 from os.path import join, abspath, dirname, exists, basename
 
 import click
-import pysftp
 import cryptography.fernet
+import pysftp
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
@@ -115,17 +115,19 @@ def wheel_name() -> str:
         version=get_version(),
     )
 
+
 def installer_name() -> str:
-	ext = {
-		"Windows": "exe",
-		"Darwin": "dmg",
-		"Linux": "run"
-	}[platform.system()]
-	return "mitmproxy-{version}-{platform}-installer.{ext}".format(
+    ext = {
+        "Windows": "exe",
+        "Darwin": "dmg",
+        "Linux": "run"
+    }[platform.system()]
+    return "mitmproxy-{version}-{platform}-installer.{ext}".format(
         version=get_version(),
         platform=PLATFORM_TAG,
         ext=ext,
     )
+
 
 @contextlib.contextmanager
 def chdir(path: str):
@@ -148,8 +150,8 @@ def cli():
 @click.argument('outfile', type=click.File('wb'))
 @click.argument('key', envvar='RTOOL_KEY')
 def encrypt(infile, outfile, key):
-	f = cryptography.fernet.Fernet(key.encode())
-	outfile.write(f.encrypt(infile.read()))
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.encrypt(infile.read()))
 
 
 @cli.command("decrypt")
@@ -157,9 +159,8 @@ def encrypt(infile, outfile, key):
 @click.argument('outfile', type=click.File('wb'))
 @click.argument('key', envvar='RTOOL_KEY')
 def decrypt(infile, outfile, key):
-	f = cryptography.fernet.Fernet(key.encode())
-	outfile.write(f.decrypt(infile.read()))
-
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.decrypt(infile.read()))
 
 
 @cli.command("contributors")
