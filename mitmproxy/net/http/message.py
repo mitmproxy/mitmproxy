@@ -180,9 +180,10 @@ class Message(serializable.Serializable):
             return "utf8"
         else:
             # We may also want to check for HTML meta tags here at some point.
+            # REGEX_ENCODING = re.compile(rb"""<meta[^>]+charset=['"]?([^'"]+)""")
             return "latin-1"
 
-    def get_text(self, strict: bool=True) -> str:
+    def get_text(self, strict: bool=True) -> Optional[str]:
         """
         The HTTP message body decoded with both content-encoding header (e.g. gzip)
         and content-type header charset.
