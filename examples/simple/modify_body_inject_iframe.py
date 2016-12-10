@@ -11,7 +11,7 @@ class Injector:
     def response(self, flow):
         if flow.request.host in self.iframe_url:
             return
-        html = BeautifulSoup(flow.response.content)
+        html = BeautifulSoup(flow.response.content, "html.parser")
         if html.body:
             iframe = html.new_tag(
                 "iframe",

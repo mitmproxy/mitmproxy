@@ -82,4 +82,4 @@ def test_get_message_content_view():
 
 
 def test_get_by_shortcut():
-    assert contentviews.get_by_shortcut("h")
+    assert contentviews.get_by_shortcut("s")
