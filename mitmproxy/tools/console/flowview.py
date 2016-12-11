@@ -1,23 +1,23 @@
 import math
 import os
 import sys
-
-import urwid
-from mitmproxy import exceptions
+from functools import lru_cache
 from typing import Optional, Union  # noqa
 
+import urwid
+
 from mitmproxy import contentviews
+from mitmproxy import exceptions
+from mitmproxy import export
 from mitmproxy import http
+from mitmproxy.net.http import Headers
+from mitmproxy.net.http import status_codes
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
-from mitmproxy import export
-from mitmproxy.net.http import Headers
-from mitmproxy.net.http import status_codes
-from functools import lru_cache
 
 
 class SearchError(Exception):
@@ -483,9 +483,12 @@ class FlowView(tabs.Tabs):
         return self._view_nextprev_flow(self.view.index(flow) - 1, flow)
 
     def change_this_display_mode(self, t):
-        name = contentviews.get_by_shortcut(t).name
-        self.view.settings[self.flow][(self.tab_offset, "prettyview")] = name
-        signals.flow_change.send(self, flow = self.flow)
+        view = contentviews.get_by_shortcut(t)
+        if view:
+            self.view.settings[self.flow][(self.tab_offset, "prettyview")] = view.name
+        else:
+            self.view.settings[self.flow][(self.tab_offset, "prettyview")] = None
+        signals.flow_change.send(self, flow=self.flow)
 
     def keypress(self, size, key):
         conn = None  # type: Optional[Union[http.HTTPRequest, http.HTTPResponse]]
