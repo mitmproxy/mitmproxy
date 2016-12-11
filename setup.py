@@ -1,8 +1,8 @@
-from setuptools import setup, find_packages
-from codecs import open
 import os
+import runpy
+from codecs import open
 
-from mitmproxy import version
+from setuptools import setup, find_packages
 
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
@@ -12,9 +12,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+VERSION = runpy.run_path(os.path.join(here, "mitmproxy", "version.py"))["VERSION"]
+
 setup(
     name="mitmproxy",
-    version=version.VERSION,
+    version=VERSION,
     description="An interactive, SSL-capable, man-in-the-middle HTTP proxy for penetration testers and software developers.",
     long_description=long_description,
     url="http://mitmproxy.org",
