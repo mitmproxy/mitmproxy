@@ -61,6 +61,7 @@ Installation On macOS
 
 You can use Homebrew to install everything:
 .. code:: bash
+
     brew install mitmproxy
 
 Or you can download the pre-built binary packages from `mitmproxy.org`_.
@@ -86,17 +87,20 @@ If you already have an older version of Python 3.5 installed, make sure to insta
 (pip is included in Python by default). If pip aborts with an error, make sure you are using the current version of pip.
 
 .. code:: powershell
+
     python -m pip install --upgrade pip
 
 Next, add Python and the Python Scripts directory to your **PATH** variable.
 You can do this easily by running the following in powershell:
 
 .. code:: powershell
+
     [Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\Python27;C:\Python27\Scripts", "User")
 
 Now, you can install mitmproxy by running
 
 .. code:: powershell
+
     pip install mitmproxy
 
 Once the installation is complete, you can run :ref:`mitmdump` from a command prompt.
