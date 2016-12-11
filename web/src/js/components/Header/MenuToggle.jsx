@@ -11,7 +11,7 @@ MenuToggle.propTypes = {
 
 export function MenuToggle({ value, onChange, children }) {
     return (
-        <div className="entry">
+        <div className="menu-entry">
             <label>
                 <input type="checkbox"
                        value={value}
