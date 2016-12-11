@@ -2,14 +2,13 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import classnames from 'classnames'
 import MainMenu from './Header/MainMenu'
-import ViewMenu from './Header/ViewMenu'
 import OptionMenu from './Header/OptionMenu'
 import FileMenu from './Header/FileMenu'
 import FlowMenu from './Header/FlowMenu'
 import {setActiveMenu} from '../ducks/ui/header'
 
 class Header extends Component {
-    static entries = [MainMenu, ViewMenu, OptionMenu]
+    static entries = [MainMenu, OptionMenu]
 
     handleClick(active, e) {
         e.preventDefault()
@@ -38,9 +37,9 @@ class Header extends Component {
                         </a>
                     ))}
                 </nav>
-                <div className="menu">
+                <menu>
                     <Active/>
-                </div>
+                </menu>
             </header>
         )
     }

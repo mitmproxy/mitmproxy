@@ -18,15 +18,12 @@ FlowMenu.propTypes = {
 function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
     return (
         <div>
-            <div className="menu-row">
-                <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow" text="Accept" icon="fa-play" onClick={() => acceptFlow(flow)} />
-                <Button title="[r]eplay flow" text="Replay" icon="fa-repeat" onClick={() => replayFlow(flow)} />
-                <Button title="[D]uplicate flow" text="Duplicate" icon="fa-copy" onClick={() => duplicateFlow(flow)} />
-                <Button title="[d]elete flow" text="Delete" icon="fa-trash" onClick={() => removeFlow(flow)}/>
-                <Button disabled={!flow || !flow.modified} title="revert changes to flow [V]" text="Revert" icon="fa-history" onClick={() => revertFlow(flow)} />
-                <Button title="download" text="Download" icon="fa-download" onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}/>
-            </div>
-            <div className="clearfix"/>
+            <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow" text="Accept" icon="fa-play" onClick={() => acceptFlow(flow)} />
+            <Button title="[r]eplay flow" text="Replay" icon="fa-repeat" onClick={() => replayFlow(flow)} />
+            <Button title="[D]uplicate flow" text="Duplicate" icon="fa-copy" onClick={() => duplicateFlow(flow)} />
+            <Button title="[d]elete flow" text="Delete" icon="fa-trash" onClick={() => removeFlow(flow)}/>
+            <Button disabled={!flow || !flow.modified} title="revert changes to flow [V]" text="Revert" icon="fa-history" onClick={() => revertFlow(flow)} />
+            <Button title="download" text="Download" icon="fa-download" onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}/>
         </div>
     )
 }

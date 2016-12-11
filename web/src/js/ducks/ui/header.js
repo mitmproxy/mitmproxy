@@ -4,7 +4,7 @@ export const SET_ACTIVE_MENU = 'UI_SET_ACTIVE_MENU'
 
 
 const defaultState = {
-    activeMenu: 'Start',
+    activeMenu: 'Options',
     isFlowSelected: false,
 }
 
@@ -22,7 +22,7 @@ export default function reducer(state = defaultState, action) {
             if (action.flowIds.length && !state.isFlowSelected) {
                 return {
                     ...state,
-                    activeMenu: 'Flow',
+                    activeMenu: 'Options',
                     isFlowSelected: true,
                 }
             }

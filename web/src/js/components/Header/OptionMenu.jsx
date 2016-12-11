@@ -1,75 +1,59 @@
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
-import ToggleButton from '../common/ToggleButton'
-import ToggleInputButton from '../common/ToggleInputButton'
-import { update as updateSettings } from '../../ducks/settings'
+import {SettingsToggle, EventlogToggle} from './MenuToggle'
+import DocsLink from '../common/DocsLink'
 
 OptionMenu.title = 'Options'
 
-OptionMenu.propTypes = {
-    settings: PropTypes.object.isRequired,
-    updateSettings: PropTypes.func.isRequired,
-}
-
-function OptionMenu({ settings, updateSettings }) {
+export default function OptionMenu() {
     return (
         <div>
-            <div className="menu-row">
-                <ToggleButton text="showhost"
-                    checked={settings.showhost}
-                    onToggle={() => updateSettings({ showhost: !settings.showhost })}
-                />
-                <ToggleButton text="no_upstream_cert"
-                    checked={settings.no_upstream_cert}
-                    onToggle={() => updateSettings({ no_upstream_cert: !settings.no_upstream_cert })}
-                />
-                <ToggleButton text="rawtcp"
-                    checked={settings.rawtcp}
-                    onToggle={() => updateSettings({ rawtcp: !settings.rawtcp })}
-                />
-                <ToggleButton text="http2"
-                    checked={settings.http2}
-                    onToggle={() => updateSettings({ http2: !settings.http2 })}
-                />
-                <ToggleButton text="websocket"
-                    checked={settings.websocket}
-                    onToggle={() => updateSettings({ websocket: !settings.websocket })}
-                />
-                <ToggleButton text="anticache"
-                    checked={settings.anticache}
-                    onToggle={() => updateSettings({ anticache: !settings.anticache })}
-                />
-                <ToggleButton text="anticomp"
-                    checked={settings.anticomp}
-                    onToggle={() => updateSettings({ anticomp: !settings.anticomp })}
-                />
-                <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
-                    checked={!!settings.stickyauth}
-                    txt={settings.stickyauth}
-                    onToggleChanged={txt => updateSettings({ stickyauth: !settings.stickyauth ? txt : null })}
-                />
-                <ToggleInputButton name="stickycookie" placeholder="Sticky cookie filter"
-                    checked={!!settings.stickycookie}
-                    txt={settings.stickycookie}
-                    onToggleChanged={txt => updateSettings({ stickycookie: !settings.stickycookie ? txt : null })}
-                />
-                <ToggleInputButton name="stream_large_bodies" placeholder="stream..."
-                    checked={!!settings.stream_large_bodies}
-                    txt={settings.stream_large_bodies}
-                    inputType="number"
-                    onToggleChanged={txt => updateSettings({ stream_large_bodies: !settings.stream_large_bodies ? txt : null })}
-                />
+            <div className="menu-group">
+                <SettingsToggle setting="http2">HTTP/2.0</SettingsToggle>
+                <SettingsToggle setting="websocket">WebSockets</SettingsToggle>
+                <SettingsToggle setting="rawtcp">Raw TCP</SettingsToggle>
+                <div className="description">Protocol Support</div>
             </div>
-            <div className="clearfix"/>
+            <div className="menu-group">
+                <SettingsToggle setting="anticache">
+                    Disable Caching <DocsLink resource="features/anticache.html"/>
+                </SettingsToggle>
+                <SettingsToggle setting="anticomp">
+                    Disable Compression <i className="fa fa-question-circle" title="Do not forward Accept-Encoding headers to the server to force an uncompressed response."></i>
+                </SettingsToggle>
+                <div className="entry"/>
+                <div className="description">HTTP Options</div>
+            </div>
+            <div className="menu-group">
+                <SettingsToggle setting="showhost">
+                    Use Host Header <i className="fa fa-question-circle" title="Use the Host header to construct URLs for display."></i>
+                </SettingsToggle>
+                <EventlogToggle/>
+                <div className="entry"/>
+                <div className="description">View Options</div>
+            </div>
+            { /*
+            <ToggleButton text="no_upstream_cert"
+                checked={settings.no_upstream_cert}
+                onToggle={() => updateSettings({ no_upstream_cert: !settings.no_upstream_cert })}
+            />
+            <ToggleInputButton name="stickyauth" placeholder="Sticky auth filter"
+                checked={!!settings.stickyauth}
+                txt={settings.stickyauth}
+                onToggleChanged={txt => updateSettings({ stickyauth: !settings.stickyauth ? txt : null })}
+            />
+            <ToggleInputButton name="stickycookie" placeholder="Sticky cookie filter"
+                checked={!!settings.stickycookie}
+                txt={settings.stickycookie}
+                onToggleChanged={txt => updateSettings({ stickycookie: !settings.stickycookie ? txt : null })}
+            />
+            <ToggleInputButton name="stream_large_bodies" placeholder="stream..."
+                checked={!!settings.stream_large_bodies}
+                txt={settings.stream_large_bodies}
+                inputType="number"
+                onToggleChanged={txt => updateSettings({ stream_large_bodies: !settings.stream_large_bodies ? txt : null })}
+            />
+            */}
         </div>
     )
 }
-
-export default connect(
-    state => ({
-        settings: state.settings,
-    }),
-    {
-        updateSettings,
-    }
-)(OptionMenu)
