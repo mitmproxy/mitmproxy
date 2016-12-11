@@ -21,23 +21,23 @@ function FileMenu ({clearFlows, loadFlows, saveFlows}) {
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
                 <i className="fa fa-fw fa-file"></i>
-                New
+                &nbsp;New
             </a>
             <FileChooser
                 icon="fa-folder-open"
-                text="Open..."
+                text="&nbsp;Open..."
                 onOpenFile={file => loadFlows(file)}
             />
             <a href="#" onClick={e =>{ e.preventDefault(); saveFlows();}}>
                 <i className="fa fa-fw fa-floppy-o"></i>
-                Save...
+                &nbsp;Save...
             </a>
 
             <Divider/>
 
             <a href="http://mitm.it/" target="_blank">
                 <i className="fa fa-fw fa-external-link"></i>
-                Install Certificates...
+                &nbsp;Install Certificates...
             </a>
         </Dropdown>
     )

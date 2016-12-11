@@ -169,6 +169,8 @@ class Flow(stateobject.StateObject):
             self.reply.take()
         self.reply.kill(force=True)
         self.reply.commit()
+        self.live = False
+        master.addons("kill", self)
 
     def intercept(self, master):
         """
@@ -190,4 +192,4 @@ class Flow(stateobject.StateObject):
         self.intercepted = False
         self.reply.ack()
         self.reply.commit()
-        master.addons("intercept", self)
+        master.addons("resume", self)

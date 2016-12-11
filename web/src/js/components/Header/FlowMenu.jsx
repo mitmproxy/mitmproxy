@@ -8,21 +8,23 @@ FlowMenu.title = 'Flow'
 
 FlowMenu.propTypes = {
     flow: PropTypes.object,
-    acceptFlow: PropTypes.func.isRequired,
+    resumeFlow: PropTypes.func.isRequired,
+    killFlow: PropTypes.func.isRequired,
     replayFlow: PropTypes.func.isRequired,
     duplicateFlow: PropTypes.func.isRequired,
     removeFlow: PropTypes.func.isRequired,
     revertFlow: PropTypes.func.isRequired
 }
 
-function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
+function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
     if (!flow)
         return <div/>
     return (
         <div>
             <div className="menu-group">
                 <div className="menu-content">
-                    <Button title="[r]eplay flow" icon="fa-repeat text-primary" onClick={() => replayFlow(flow)}>
+                    <Button title="[r]eplay flow" icon="fa-repeat text-primary"
+                            onClick={() => replayFlow(flow)}>
                         Replay
                     </Button>
                     <Button title="[D]uplicate flow" icon="fa-copy text-info"
@@ -33,7 +35,8 @@ function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, rev
                             icon="fa-history text-warning" onClick={() => revertFlow(flow)}>
                         Revert
                     </Button>
-                    <Button title="[d]elete flow" icon="fa-trash text-danger" onClick={() => removeFlow(flow)}>
+                    <Button title="[d]elete flow" icon="fa-trash text-danger"
+                            onClick={() => removeFlow(flow)}>
                         Delete
                     </Button>
                 </div>
@@ -51,15 +54,16 @@ function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, rev
             <div className="menu-group">
                 <div className="menu-content">
                     <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow"
-                    icon="fa-play text-success" onClick={() => acceptFlow(flow)}
-                    >
-                Resume
-            </Button>
-
+                            icon="fa-play text-success" onClick={() => resumeFlow(flow)}>
+                        Resume
+                    </Button>
+                    <Button disabled={!flow || !flow.intercepted} title="kill intercepted flow [x]"
+                            icon="fa-times text-danger" onClick={() => killFlow(flow)}>
+                        Abort
+                    </Button>
                 </div>
                 <div className="menu-legend">Interception</div>
             </div>
-
 
 
         </div>
@@ -71,7 +75,8 @@ export default connect(
         flow: state.flows.byId[state.flows.selected[0]],
     }),
     {
-        acceptFlow: flowsActions.accept,
+        resumeFlow: flowsActions.resume,
+        killFlow: flowsActions.kill,
         replayFlow: flowsActions.replay,
         duplicateFlow: flowsActions.duplicate,
         removeFlow: flowsActions.remove,

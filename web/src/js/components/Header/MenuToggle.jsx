@@ -14,7 +14,7 @@ export function MenuToggle({ value, onChange, children }) {
         <div className="menu-entry">
             <label>
                 <input type="checkbox"
-                       value={value}
+                       checked={value}
                        onChange={onChange}/>
                 {children}
             </label>

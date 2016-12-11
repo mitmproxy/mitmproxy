@@ -68,7 +68,7 @@ class WebMaster(master.Master):
         app.ClientConnection.broadcast(
             resource="flows",
             cmd="remove",
-            data=dict(id=flow.id)
+            data=flow.id
         )
 
     def _sig_view_refresh(self, view):

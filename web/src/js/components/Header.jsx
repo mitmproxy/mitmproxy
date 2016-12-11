@@ -22,7 +22,9 @@ class Header extends Component {
         if(selectedFlowId)
             entries.push(FlowMenu)
 
-        const Active = _.find(entries, (e) => e.title == activeMenu)
+        // Make sure to have a fallback in case FlowMenu is selected but we don't have any flows
+        // (e.g. because they are all deleted or not yet received)
+        const Active = _.find(entries, (e) => e.title == activeMenu) || MainMenu
 
         return (
             <header>

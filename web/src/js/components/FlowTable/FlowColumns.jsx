@@ -54,6 +54,15 @@ IconColumn.getIcon = flow => {
 }
 
 export function PathColumn({ flow }) {
+
+    let err;
+    if(flow.error){
+        if (flow.error.msg === "Connection killed"){
+            err = <i className="fa fa-fw fa-times pull-right"></i>
+        } else {
+            err = <i className="fa fa-fw fa-exclamation pull-right"></i>
+        }
+    }
     return (
         <td className="col-path">
             {flow.request.is_replay && (
@@ -62,6 +71,7 @@ export function PathColumn({ flow }) {
             {flow.intercepted && (
                 <i className="fa fa-fw fa-pause pull-right"></i>
             )}
+            {err}
             {RequestUtils.pretty_url(flow.request)}
         </td>
     )
@@ -109,7 +119,7 @@ export function TimeColumn({ flow }) {
     return (
         <td className="col-time">
             {flow.response ? (
-                formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))
+                formatTimeDelta(1000 * (flow.response.timestamp_end - flow.server_conn.timestamp_start))
             ) : (
                 '...'
             )}

@@ -327,6 +327,9 @@ class View(collections.Sequence):
     def resume(self, f):
         self.update(f)
 
+    def kill(self, f):
+        self.update(f)
+
 
 class Focus:
     """

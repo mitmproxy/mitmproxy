@@ -936,9 +936,13 @@ function ShowFullContentButton(_ref) {
     return !showFullContent && _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(_Button2.default, { className: 'view-all-content-btn btn-xs', onClick: function onClick() {
-                return setShowFullContent();
-            }, text: 'Show full content' }),
+        _react2.default.createElement(
+            _Button2.default,
+            { className: 'view-all-content-btn btn-xs', onClick: function onClick() {
+                    return setShowFullContent();
+                } },
+            'Show full content'
+        ),
         _react2.default.createElement(
             'span',
             { className: 'pull-right' },
@@ -993,7 +997,7 @@ function UploadContentButton(_ref) {
         className: 'btn btn-default btn-xs' });
 }
 
-},{"../common/FileChooser":42,"react":"react"}],13:[function(require,module,exports){
+},{"../common/FileChooser":43,"react":"react"}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1082,7 +1086,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setContentView: _flow.setContentView
 })(ViewSelector);
 
-},{"../../ducks/ui/flow":52,"../common/Dropdown":41,"./ContentViews":8,"react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
+},{"../../ducks/ui/flow":52,"../common/Dropdown":42,"./ContentViews":8,"react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1209,7 +1213,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     toggleFilter: _eventLog.toggleFilter
 })(EventLog);
 
-},{"../ducks/eventLog":48,"./EventLog/EventList":15,"./common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
+},{"../ducks/eventLog":48,"./EventLog/EventList":15,"./common/ToggleButton":45,"react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1630,11 +1634,21 @@ IconColumn.getIcon = function (flow) {
 function PathColumn(_ref3) {
     var flow = _ref3.flow;
 
+
+    var err = void 0;
+    if (flow.error) {
+        if (flow.error.msg === "Connection killed") {
+            err = _react2.default.createElement('i', { className: 'fa fa-fw fa-times pull-right' });
+        } else {
+            err = _react2.default.createElement('i', { className: 'fa fa-fw fa-exclamation pull-right' });
+        }
+    }
     return _react2.default.createElement(
         'td',
         { className: 'col-path' },
         flow.request.is_replay && _react2.default.createElement('i', { className: 'fa fa-fw fa-repeat pull-right' }),
         flow.intercepted && _react2.default.createElement('i', { className: 'fa fa-fw fa-pause pull-right' }),
+        err,
         _utils.RequestUtils.pretty_url(flow.request)
     );
 }
@@ -1695,7 +1709,7 @@ function TimeColumn(_ref7) {
     return _react2.default.createElement(
         'td',
         { className: 'col-time' },
-        flow.response ? (0, _utils2.formatTimeDelta)(1000 * (flow.response.timestamp_end - flow.request.timestamp_start)) : '...'
+        flow.response ? (0, _utils2.formatTimeDelta)(1000 * (flow.response.timestamp_end - flow.server_conn.timestamp_start)) : '...'
     );
 }
 
@@ -2901,13 +2915,13 @@ function ToggleEdit(_ref) {
         { className: 'edit-flow-container' },
         isEdit ? _react2.default.createElement(
             'a',
-            { className: 'edit-flow', onClick: function onClick() {
+            { className: 'edit-flow', title: 'Finish Edit', onClick: function onClick() {
                     return stopEdit(flow, modifiedFlow);
                 } },
             _react2.default.createElement('i', { className: 'fa fa-check' })
         ) : _react2.default.createElement(
             'a',
-            { className: 'edit-flow', onClick: function onClick() {
+            { className: 'edit-flow', title: 'Edit Flow', onClick: function onClick() {
                     return startEdit(flow);
                 } },
             _react2.default.createElement('i', { className: 'fa fa-pencil' })
@@ -3077,10 +3091,6 @@ var _MainMenu = require('./Header/MainMenu');
 
 var _MainMenu2 = _interopRequireDefault(_MainMenu);
 
-var _ViewMenu = require('./Header/ViewMenu');
-
-var _ViewMenu2 = _interopRequireDefault(_ViewMenu);
-
 var _OptionMenu = require('./Header/OptionMenu');
 
 var _OptionMenu2 = _interopRequireDefault(_OptionMenu);
@@ -3133,9 +3143,11 @@ var Header = function (_Component) {
             var entries = [].concat(_toConsumableArray(Header.entries));
             if (selectedFlowId) entries.push(_FlowMenu2.default);
 
+            // Make sure to have a fallback in case FlowMenu is selected but we don't have any flows
+            // (e.g. because they are all deleted or not yet received)
             var Active = _.find(entries, function (e) {
                 return e.title == activeMenu;
-            });
+            }) || _MainMenu2.default;
 
             return _react2.default.createElement(
                 'header',
@@ -3158,8 +3170,8 @@ var Header = function (_Component) {
                     })
                 ),
                 _react2.default.createElement(
-                    'div',
-                    { className: 'menu' },
+                    'menu',
+                    null,
                     _react2.default.createElement(Active, null)
                 )
             );
@@ -3169,7 +3181,7 @@ var Header = function (_Component) {
     return Header;
 }(_react.Component);
 
-Header.entries = [_MainMenu2.default, _ViewMenu2.default, _OptionMenu2.default];
+Header.entries = [_MainMenu2.default, _OptionMenu2.default];
 exports.default = (0, _reactRedux.connect)(function (state) {
     return {
         selectedFlowId: state.flows.selected[0],
@@ -3179,7 +3191,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setActiveMenu: _header.setActiveMenu
 })(Header);
 
-},{"../ducks/ui/header":53,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":33,"./Header/ViewMenu":34,"classnames":"classnames","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
+},{"../ducks/ui/header":53,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":34,"classnames":"classnames","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3233,11 +3245,11 @@ function FileMenu(_ref) {
                     return FileMenu.onNewClick(e, clearFlows);
                 } },
             _react2.default.createElement('i', { className: 'fa fa-fw fa-file' }),
-            'New'
+            ' New'
         ),
         _react2.default.createElement(_FileChooser2.default, {
             icon: 'fa-folder-open',
-            text: 'Open...',
+            text: ' Open...',
             onOpenFile: function onOpenFile(file) {
                 return loadFlows(file);
             }
@@ -3248,14 +3260,14 @@ function FileMenu(_ref) {
                     e.preventDefault();saveFlows();
                 } },
             _react2.default.createElement('i', { className: 'fa fa-fw fa-floppy-o' }),
-            'Save...'
+            ' Save...'
         ),
         _react2.default.createElement(_Dropdown.Divider, null),
         _react2.default.createElement(
             'a',
             { href: 'http://mitm.it/', target: '_blank' },
             _react2.default.createElement('i', { className: 'fa fa-fw fa-external-link' }),
-            'Install Certificates...'
+            ' Install Certificates...'
         )
     );
 }
@@ -3266,7 +3278,7 @@ exports.default = (0, _reactRedux.connect)(null, {
     saveFlows: flowsActions.download
 })(FileMenu);
 
-},{"../../ducks/flows":49,"../common/Dropdown":41,"../common/FileChooser":42,"react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
+},{"../../ducks/flows":49,"../common/Dropdown":42,"../common/FileChooser":43,"react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3361,7 +3373,7 @@ var FilterDocs = function (_Component) {
                                 { href: 'http://docs.mitmproxy.org/en/stable/features/filters.html',
                                     target: '_blank' },
                                 _react2.default.createElement('i', { className: 'fa fa-external-link' }),
-                                '&nbsp mitmproxy docs'
+                                '  mitmproxy docs'
                             )
                         )
                     )
@@ -3573,25 +3585,25 @@ var FilterInput = function (_Component) {
 exports.default = FilterInput;
 
 },{"../../filt/filt":57,"../../utils.js":60,"./FilterDocs":29,"classnames":"classnames","react":"react","react-dom":"react-dom"}],31:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _react = require('react');
+var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = require('react-redux');
+var _reactRedux = require("react-redux");
 
-var _Button = require('../common/Button');
+var _Button = require("../common/Button");
 
 var _Button2 = _interopRequireDefault(_Button);
 
-var _utils = require('../../flow/utils.js');
+var _utils = require("../../flow/utils.js");
 
-var _flows = require('../../ducks/flows');
+var _flows = require("../../ducks/flows");
 
 var flowsActions = _interopRequireWildcard(_flows);
 
@@ -3602,8 +3614,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 FlowMenu.title = 'Flow';
 
 FlowMenu.propTypes = {
-    flow: _react.PropTypes.object.isRequired,
-    acceptFlow: _react.PropTypes.func.isRequired,
+    flow: _react.PropTypes.object,
+    resumeFlow: _react.PropTypes.func.isRequired,
+    killFlow: _react.PropTypes.func.isRequired,
     replayFlow: _react.PropTypes.func.isRequired,
     duplicateFlow: _react.PropTypes.func.isRequired,
     removeFlow: _react.PropTypes.func.isRequired,
@@ -3612,38 +3625,112 @@ FlowMenu.propTypes = {
 
 function FlowMenu(_ref) {
     var flow = _ref.flow;
-    var acceptFlow = _ref.acceptFlow;
+    var resumeFlow = _ref.resumeFlow;
+    var killFlow = _ref.killFlow;
     var replayFlow = _ref.replayFlow;
     var duplicateFlow = _ref.duplicateFlow;
     var removeFlow = _ref.removeFlow;
     var revertFlow = _ref.revertFlow;
 
+    if (!flow) return _react2.default.createElement("div", null);
     return _react2.default.createElement(
-        'div',
+        "div",
         null,
         _react2.default.createElement(
-            'div',
-            { className: 'menu-row' },
-            _react2.default.createElement(_Button2.default, { disabled: !flow || !flow.intercepted, title: '[a]ccept intercepted flow', text: 'Accept', icon: 'fa-play', onClick: function onClick() {
-                    return acceptFlow(flow);
-                } }),
-            _react2.default.createElement(_Button2.default, { title: '[r]eplay flow', text: 'Replay', icon: 'fa-repeat', onClick: function onClick() {
-                    return replayFlow(flow);
-                } }),
-            _react2.default.createElement(_Button2.default, { title: '[D]uplicate flow', text: 'Duplicate', icon: 'fa-copy', onClick: function onClick() {
-                    return duplicateFlow(flow);
-                } }),
-            _react2.default.createElement(_Button2.default, { title: '[d]elete flow', text: 'Delete', icon: 'fa-trash', onClick: function onClick() {
-                    return removeFlow(flow);
-                } }),
-            _react2.default.createElement(_Button2.default, { disabled: !flow || !flow.modified, title: 'revert changes to flow [V]', text: 'Revert', icon: 'fa-history', onClick: function onClick() {
-                    return revertFlow(flow);
-                } }),
-            _react2.default.createElement(_Button2.default, { title: 'download', text: 'Download', icon: 'fa-download', onClick: function onClick() {
-                    return window.location = _utils.MessageUtils.getContentURL(flow, flow.response);
-                } })
+            "div",
+            { className: "menu-group" },
+            _react2.default.createElement(
+                "div",
+                { className: "menu-content" },
+                _react2.default.createElement(
+                    _Button2.default,
+                    { title: "[r]eplay flow", icon: "fa-repeat text-primary",
+                        onClick: function onClick() {
+                            return replayFlow(flow);
+                        } },
+                    "Replay"
+                ),
+                _react2.default.createElement(
+                    _Button2.default,
+                    { title: "[D]uplicate flow", icon: "fa-copy text-info",
+                        onClick: function onClick() {
+                            return duplicateFlow(flow);
+                        } },
+                    "Duplicate"
+                ),
+                _react2.default.createElement(
+                    _Button2.default,
+                    { disabled: !flow || !flow.modified, title: "revert changes to flow [V]",
+                        icon: "fa-history text-warning", onClick: function onClick() {
+                            return revertFlow(flow);
+                        } },
+                    "Revert"
+                ),
+                _react2.default.createElement(
+                    _Button2.default,
+                    { title: "[d]elete flow", icon: "fa-trash text-danger",
+                        onClick: function onClick() {
+                            return removeFlow(flow);
+                        } },
+                    "Delete"
+                )
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "menu-legend" },
+                "Flow Modification"
+            )
         ),
-        _react2.default.createElement('div', { className: 'clearfix' })
+        _react2.default.createElement(
+            "div",
+            { className: "menu-group" },
+            _react2.default.createElement(
+                "div",
+                { className: "menu-content" },
+                _react2.default.createElement(
+                    _Button2.default,
+                    { title: "download", icon: "fa-download",
+                        onClick: function onClick() {
+                            return window.location = _utils.MessageUtils.getContentURL(flow, flow.response);
+                        } },
+                    "Download"
+                )
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "menu-legend" },
+                "Export"
+            )
+        ),
+        _react2.default.createElement(
+            "div",
+            { className: "menu-group" },
+            _react2.default.createElement(
+                "div",
+                { className: "menu-content" },
+                _react2.default.createElement(
+                    _Button2.default,
+                    { disabled: !flow || !flow.intercepted, title: "[a]ccept intercepted flow",
+                        icon: "fa-play text-success", onClick: function onClick() {
+                            return resumeFlow(flow);
+                        } },
+                    "Resume"
+                ),
+                _react2.default.createElement(
+                    _Button2.default,
+                    { disabled: !flow || !flow.intercepted, title: "kill intercepted flow [x]",
+                        icon: "fa-times text-danger", onClick: function onClick() {
+                            return killFlow(flow);
+                        } },
+                    "Abort"
+                )
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "menu-legend" },
+                "Interception"
+            )
+        )
     );
 }
 
@@ -3652,7 +3739,8 @@ exports.default = (0, _reactRedux.connect)(function (state) {
         flow: state.flows.byId[state.flows.selected[0]]
     };
 }, {
-    acceptFlow: flowsActions.accept,
+    resumeFlow: flowsActions.resume,
+    killFlow: flowsActions.kill,
     replayFlow: flowsActions.replay,
     duplicateFlow: flowsActions.duplicate,
     removeFlow: flowsActions.remove,
@@ -3660,26 +3748,26 @@ exports.default = (0, _reactRedux.connect)(function (state) {
 })(FlowMenu);
 
 },{"../../ducks/flows":49,"../../flow/utils.js":58,"../common/Button":40,"react":"react","react-redux":"react-redux"}],32:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.default = MainMenu;
 
-var _react = require('react');
+var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = require('react-redux');
+var _reactRedux = require("react-redux");
 
-var _FilterInput = require('./FilterInput');
+var _FilterInput = require("./FilterInput");
 
 var _FilterInput2 = _interopRequireDefault(_FilterInput);
 
-var _settings = require('../../ducks/settings');
+var _settings = require("../../ducks/settings");
 
-var _flows = require('../../ducks/flows');
+var _flows = require("../../ducks/flows");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3687,16 +3775,11 @@ MainMenu.title = "Start";
 
 function MainMenu() {
     return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-            'div',
-            { className: 'menu-row' },
-            _react2.default.createElement(FlowFilterInput, null),
-            _react2.default.createElement(HighlightInput, null),
-            _react2.default.createElement(InterceptInput, null)
-        ),
-        _react2.default.createElement('div', { className: 'clearfix' })
+        "div",
+        { className: "menu-main" },
+        _react2.default.createElement(FlowFilterInput, null),
+        _react2.default.createElement(HighlightInput, null),
+        _react2.default.createElement(InterceptInput, null)
     );
 }
 
@@ -3730,178 +3813,208 @@ var HighlightInput = (0, _reactRedux.connect)(function (state) {
 }, { onChange: _flows.setHighlight })(_FilterInput2.default);
 
 },{"../../ducks/flows":49,"../../ducks/settings":51,"./FilterInput":30,"react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.MenuToggle = MenuToggle;
+exports.SettingsToggle = SettingsToggle;
+exports.EventlogToggle = EventlogToggle;
 
-var _react = require('react');
+var _react = require("react");
 
-var _react2 = _interopRequireDefault(_react);
+var _reactRedux = require("react-redux");
 
-var _reactRedux = require('react-redux');
+var _settings = require("../../ducks/settings");
 
-var _ToggleButton = require('../common/ToggleButton');
+var _eventLog = require("../../ducks/eventLog");
 
-var _ToggleButton2 = _interopRequireDefault(_ToggleButton);
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var _ToggleInputButton = require('../common/ToggleInputButton');
-
-var _ToggleInputButton2 = _interopRequireDefault(_ToggleInputButton);
-
-var _settings = require('../../ducks/settings');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-OptionMenu.title = 'Options';
-
-OptionMenu.propTypes = {
-    settings: _react.PropTypes.object.isRequired,
-    updateSettings: _react.PropTypes.func.isRequired
+MenuToggle.propTypes = {
+    value: _react.PropTypes.bool.isRequired,
+    onChange: _react.PropTypes.func.isRequired,
+    children: _react.PropTypes.node.isRequired
 };
 
-function OptionMenu(_ref) {
-    var settings = _ref.settings;
-    var updateSettings = _ref.updateSettings;
+function MenuToggle(_ref) {
+    var value = _ref.value;
+    var onChange = _ref.onChange;
+    var children = _ref.children;
 
-    return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-            'div',
-            { className: 'menu-row' },
-            _react2.default.createElement(_ToggleButton2.default, { text: 'showhost',
-                checked: settings.showhost,
-                onToggle: function onToggle() {
-                    return updateSettings({ showhost: !settings.showhost });
-                }
-            }),
-            _react2.default.createElement(_ToggleButton2.default, { text: 'no_upstream_cert',
-                checked: settings.no_upstream_cert,
-                onToggle: function onToggle() {
-                    return updateSettings({ no_upstream_cert: !settings.no_upstream_cert });
-                }
-            }),
-            _react2.default.createElement(_ToggleButton2.default, { text: 'rawtcp',
-                checked: settings.rawtcp,
-                onToggle: function onToggle() {
-                    return updateSettings({ rawtcp: !settings.rawtcp });
-                }
-            }),
-            _react2.default.createElement(_ToggleButton2.default, { text: 'http2',
-                checked: settings.http2,
-                onToggle: function onToggle() {
-                    return updateSettings({ http2: !settings.http2 });
-                }
-            }),
-            _react2.default.createElement(_ToggleButton2.default, { text: 'websocket',
-                checked: settings.websocket,
-                onToggle: function onToggle() {
-                    return updateSettings({ websocket: !settings.websocket });
-                }
-            }),
-            _react2.default.createElement(_ToggleButton2.default, { text: 'anticache',
-                checked: settings.anticache,
-                onToggle: function onToggle() {
-                    return updateSettings({ anticache: !settings.anticache });
-                }
-            }),
-            _react2.default.createElement(_ToggleButton2.default, { text: 'anticomp',
-                checked: settings.anticomp,
-                onToggle: function onToggle() {
-                    return updateSettings({ anticomp: !settings.anticomp });
-                }
-            }),
-            _react2.default.createElement(_ToggleInputButton2.default, { name: 'stickyauth', placeholder: 'Sticky auth filter',
-                checked: !!settings.stickyauth,
-                txt: settings.stickyauth,
-                onToggleChanged: function onToggleChanged(txt) {
-                    return updateSettings({ stickyauth: !settings.stickyauth ? txt : null });
-                }
-            }),
-            _react2.default.createElement(_ToggleInputButton2.default, { name: 'stickycookie', placeholder: 'Sticky cookie filter',
-                checked: !!settings.stickycookie,
-                txt: settings.stickycookie,
-                onToggleChanged: function onToggleChanged(txt) {
-                    return updateSettings({ stickycookie: !settings.stickycookie ? txt : null });
-                }
-            }),
-            _react2.default.createElement(_ToggleInputButton2.default, { name: 'stream_large_bodies', placeholder: 'stream...',
-                checked: !!settings.stream_large_bodies,
-                txt: settings.stream_large_bodies,
-                inputType: 'number',
-                onToggleChanged: function onToggleChanged(txt) {
-                    return updateSettings({ stream_large_bodies: !settings.stream_large_bodies ? txt : null });
-                }
-            })
-        ),
-        _react2.default.createElement('div', { className: 'clearfix' })
+    return React.createElement(
+        "div",
+        { className: "menu-entry" },
+        React.createElement(
+            "label",
+            null,
+            React.createElement("input", { type: "checkbox",
+                checked: value,
+                onChange: onChange }),
+            children
+        )
     );
 }
 
-exports.default = (0, _reactRedux.connect)(function (state) {
+SettingsToggle.propTypes = {
+    setting: _react.PropTypes.string.isRequired,
+    children: _react.PropTypes.node.isRequired
+};
+
+function SettingsToggle(_ref2) {
+    var setting = _ref2.setting;
+    var children = _ref2.children;
+    var settings = _ref2.settings;
+    var updateSettings = _ref2.updateSettings;
+
+    return React.createElement(
+        MenuToggle,
+        {
+            value: settings[setting] || false // we don't have settings initially, so just pass false.
+            , onChange: function onChange() {
+                return updateSettings(_defineProperty({}, setting, !settings[setting]));
+            }
+        },
+        children
+    );
+}
+exports.SettingsToggle = SettingsToggle = (0, _reactRedux.connect)(function (state) {
     return {
         settings: state.settings
     };
 }, {
     updateSettings: _settings.update
-})(OptionMenu);
+})(SettingsToggle);
 
-},{"../../ducks/settings":51,"../common/ToggleButton":44,"../common/ToggleInputButton":45,"react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
-'use strict';
+function EventlogToggle(_ref3) {
+    var toggleVisibility = _ref3.toggleVisibility;
+    var eventLogVisible = _ref3.eventLogVisible;
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require('react-redux');
-
-var _ToggleButton = require('../common/ToggleButton');
-
-var _ToggleButton2 = _interopRequireDefault(_ToggleButton);
-
-var _eventLog = require('../../ducks/eventLog');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-ViewMenu.title = 'View';
-ViewMenu.route = 'flows';
-
-ViewMenu.propTypes = {
-    eventLogVisible: _react.PropTypes.bool.isRequired,
-    toggleEventLog: _react.PropTypes.func.isRequired
-};
-
-function ViewMenu(_ref) {
-    var eventLogVisible = _ref.eventLogVisible;
-    var toggleEventLog = _ref.toggleEventLog;
-
-    return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-            'div',
-            { className: 'menu-row' },
-            _react2.default.createElement(_ToggleButton2.default, { text: 'Show Event Log', checked: eventLogVisible, onToggle: toggleEventLog })
-        ),
-        _react2.default.createElement('div', { className: 'clearfix' })
+    return React.createElement(
+        MenuToggle,
+        {
+            value: eventLogVisible,
+            onChange: toggleVisibility
+        },
+        "Display Event Log"
     );
 }
-
-exports.default = (0, _reactRedux.connect)(function (state) {
+exports.EventlogToggle = EventlogToggle = (0, _reactRedux.connect)(function (state) {
     return {
         eventLogVisible: state.eventLog.visible
     };
 }, {
-    toggleEventLog: _eventLog.toggleVisibility
-})(ViewMenu);
+    toggleVisibility: _eventLog.toggleVisibility
+})(EventlogToggle);
 
-},{"../../ducks/eventLog":48,"../common/ToggleButton":44,"react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
+},{"../../ducks/eventLog":48,"../../ducks/settings":51,"react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = OptionMenu;
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = require("react-redux");
+
+var _MenuToggle = require("./MenuToggle");
+
+var _DocsLink = require("../common/DocsLink");
+
+var _DocsLink2 = _interopRequireDefault(_DocsLink);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+OptionMenu.title = 'Options';
+
+function OptionMenu() {
+    return _react2.default.createElement(
+        "div",
+        null,
+        _react2.default.createElement(
+            "div",
+            { className: "menu-group" },
+            _react2.default.createElement(
+                "div",
+                { className: "menu-content" },
+                _react2.default.createElement(
+                    _MenuToggle.SettingsToggle,
+                    { setting: "http2" },
+                    "HTTP/2.0"
+                ),
+                _react2.default.createElement(
+                    _MenuToggle.SettingsToggle,
+                    { setting: "websocket" },
+                    "WebSockets"
+                ),
+                _react2.default.createElement(
+                    _MenuToggle.SettingsToggle,
+                    { setting: "rawtcp" },
+                    "Raw TCP"
+                )
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "menu-legend" },
+                "Protocol Support"
+            )
+        ),
+        _react2.default.createElement(
+            "div",
+            { className: "menu-group" },
+            _react2.default.createElement(
+                "div",
+                { className: "menu-content" },
+                _react2.default.createElement(
+                    _MenuToggle.SettingsToggle,
+                    { setting: "anticache" },
+                    "Disable Caching ",
+                    _react2.default.createElement(_DocsLink2.default, { resource: "features/anticache.html" })
+                ),
+                _react2.default.createElement(
+                    _MenuToggle.SettingsToggle,
+                    { setting: "anticomp" },
+                    "Disable Compression ",
+                    _react2.default.createElement("i", { className: "fa fa-question-circle",
+                        title: "Do not forward Accept-Encoding headers to the server to force an uncompressed response." })
+                )
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "menu-legend" },
+                "HTTP Options"
+            )
+        ),
+        _react2.default.createElement(
+            "div",
+            { className: "menu-group" },
+            _react2.default.createElement(
+                "div",
+                { className: "menu-content" },
+                _react2.default.createElement(
+                    _MenuToggle.SettingsToggle,
+                    { setting: "showhost" },
+                    "Use Host Header ",
+                    _react2.default.createElement("i", { className: "fa fa-question-circle",
+                        title: "Use the Host header to construct URLs for display." })
+                ),
+                _react2.default.createElement(_MenuToggle.EventlogToggle, null)
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "menu-legend" },
+                "View Options"
+            )
+        )
+    );
+}
+
+},{"../common/DocsLink":41,"./MenuToggle":33,"react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4004,7 +4117,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateFlow: flowsActions.update
 })(MainView);
 
-},{"../ducks/flows":49,"./FlowTable":16,"./FlowView":20,"./common/Splitter":43,"react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
+},{"../ducks/flows":49,"./FlowTable":16,"./FlowView":20,"./common/Splitter":44,"react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4506,18 +4619,18 @@ ValueEditor.defaultProps = {
 exports.default = ValueEditor;
 
 },{"../../utils":60,"classnames":"classnames","lodash":"lodash","react":"react"}],40:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.default = Button;
 
-var _react = require('react');
+var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
-var _classnames = require('classnames');
+var _classnames = require("classnames");
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
@@ -4525,28 +4638,57 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 Button.propTypes = {
     onClick: _react.PropTypes.func.isRequired,
-    text: _react.PropTypes.string,
-    icon: _react.PropTypes.string
+    children: _react.PropTypes.node.isRequired,
+    icon: _react.PropTypes.string,
+    title: _react.PropTypes.string
 };
 
 function Button(_ref) {
     var onClick = _ref.onClick;
-    var text = _ref.text;
+    var children = _ref.children;
     var icon = _ref.icon;
     var disabled = _ref.disabled;
     var className = _ref.className;
+    var title = _ref.title;
 
     return _react2.default.createElement(
-        'div',
+        "div",
         { className: (0, _classnames2.default)(className, 'btn btn-default'),
-            onClick: onClick,
-            disabled: disabled },
-        icon && _react2.default.createElement('i', { className: "fa fa-fw " + icon }),
-        text && text
+            onClick: !disabled && onClick,
+            disabled: disabled,
+            title: title },
+        icon && _react2.default.createElement("i", { className: "fa fa-fw " + icon }),
+        children
     );
 }
 
 },{"classnames":"classnames","react":"react"}],41:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = DocsLink;
+
+var _react = require("react");
+
+DocsLink.propTypes = {
+    resource: _react.PropTypes.string.isRequired
+};
+
+function DocsLink(_ref) {
+    var children = _ref.children;
+    var resource = _ref.resource;
+
+    var url = "http://docs.mitmproxy.org/en/stable/" + resource;
+    return React.createElement(
+        "a",
+        { target: "_blank", href: url },
+        children || React.createElement("i", { className: "fa fa-question-circle" })
+    );
+}
+
+},{"react":"react"}],42:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4655,7 +4797,7 @@ Dropdown.defaultProps = {
 };
 exports.default = Dropdown;
 
-},{"classnames":"classnames","react":"react"}],42:[function(require,module,exports){
+},{"classnames":"classnames","react":"react"}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4707,7 +4849,7 @@ function FileChooser(_ref) {
     );
 }
 
-},{"react":"react"}],43:[function(require,module,exports){
+},{"react":"react"}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4852,7 +4994,7 @@ var Splitter = function (_Component) {
 Splitter.defaultProps = { axis: 'x' };
 exports.default = Splitter;
 
-},{"classnames":"classnames","react":"react","react-dom":"react-dom"}],44:[function(require,module,exports){
+},{"classnames":"classnames","react":"react","react-dom":"react-dom"}],45:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4886,113 +5028,7 @@ function ToggleButton(_ref) {
     );
 }
 
-},{"react":"react"}],45:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _classnames = require('classnames');
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-var _utils = require('../../utils');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var ToggleInputButton = function (_Component) {
-    _inherits(ToggleInputButton, _Component);
-
-    function ToggleInputButton(props) {
-        _classCallCheck(this, ToggleInputButton);
-
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ToggleInputButton).call(this, props));
-
-        _this.state = { txt: props.txt || '' };
-        return _this;
-    }
-
-    _createClass(ToggleInputButton, [{
-        key: 'onKeyDown',
-        value: function onKeyDown(e) {
-            e.stopPropagation();
-            if (e.keyCode === _utils.Key.ENTER) {
-                this.props.onToggleChanged(this.state.txt);
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this2 = this;
-
-            var _props = this.props;
-            var checked = _props.checked;
-            var onToggleChanged = _props.onToggleChanged;
-            var name = _props.name;
-            var inputType = _props.inputType;
-            var placeholder = _props.placeholder;
-
-            return _react2.default.createElement(
-                'div',
-                { className: 'input-group toggle-input-btn' },
-                _react2.default.createElement(
-                    'span',
-                    { className: 'input-group-btn',
-                        onClick: function onClick() {
-                            return onToggleChanged(_this2.state.txt);
-                        } },
-                    _react2.default.createElement(
-                        'div',
-                        { className: (0, _classnames2.default)('btn', checked ? 'btn-primary' : 'btn-default') },
-                        _react2.default.createElement('span', { className: (0, _classnames2.default)('fa', checked ? 'fa-check-square-o' : 'fa-square-o') }),
-                        ' ',
-                        name
-                    )
-                ),
-                _react2.default.createElement('input', {
-                    className: 'form-control',
-                    placeholder: placeholder,
-                    disabled: checked,
-                    value: this.state.txt,
-                    type: inputType || 'text',
-                    onChange: function onChange(e) {
-                        return _this2.setState({ txt: e.target.value });
-                    },
-                    onKeyDown: function onKeyDown(e) {
-                        return _this2.onKeyDown(e);
-                    }
-                })
-            );
-        }
-    }]);
-
-    return ToggleInputButton;
-}(_react.Component);
-
-ToggleInputButton.propTypes = {
-    name: _react.PropTypes.string.isRequired,
-    txt: _react.PropTypes.string,
-    onToggleChanged: _react.PropTypes.func.isRequired,
-    checked: _react.PropTypes.bool.isRequired,
-    placeholder: _react.PropTypes.string.isRequired,
-    inputType: _react.PropTypes.string
-};
-exports.default = ToggleInputButton;
-
-},{"../../utils":60,"classnames":"classnames","react":"react"}],46:[function(require,module,exports){
+},{"react":"react"}],46:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5254,8 +5290,10 @@ exports.setFilter = setFilter;
 exports.setHighlight = setHighlight;
 exports.setSort = setSort;
 exports.selectRelative = selectRelative;
-exports.accept = accept;
-exports.acceptAll = acceptAll;
+exports.resume = resume;
+exports.resumeAll = resumeAll;
+exports.kill = kill;
+exports.killAll = killAll;
 exports.remove = remove;
 exports.duplicate = duplicate;
 exports.replay = replay;
@@ -5313,12 +5351,42 @@ function reduce() {
             // FIXME: Update state.selected on REMOVE:
             // The selected flow may have been removed, we need to select the next one in the view.
             var storeAction = storeActions[action.cmd](action.data, makeFilter(state.filter), makeSort(state.sort));
-            return _extends({}, state, (0, storeActions.default)(state, storeAction));
+
+            var selected = state.selected;
+            if (action.type === REMOVE && state.selected.includes(action.data)) {
+                if (state.selected.length > 1) {
+                    selected = selected.filter(function (x) {
+                        return x !== action.data;
+                    });
+                } else {
+                    selected = [];
+                    if (action.data in state.viewIndex && state.view.length > 1) {
+                        var currentIndex = state.viewIndex[action.data],
+                            nextSelection = void 0;
+                        if (currentIndex === state.view.length - 1) {
+                            // last row
+                            nextSelection = state.view[currentIndex - 1];
+                        } else {
+                            nextSelection = state.view[currentIndex + 1];
+                        }
+                        selected.push(nextSelection.id);
+                    }
+                }
+            }
+
+            return _extends({}, state, {
+                selected: selected
+            }, (0, storeActions.default)(state, storeAction));
 
         case SET_FILTER:
             return _extends({}, state, {
                 filter: action.filter
             }, (0, storeActions.default)(state, storeActions.setFilter(makeFilter(action.filter), makeSort(state.sort))));
+
+        case SET_HIGHLIGHT:
+            return _extends({}, state, {
+                highlight: action.highlight
+            });
 
         case SET_SORT:
             return _extends({}, state, {
@@ -5424,15 +5492,27 @@ function selectRelative(shift) {
     };
 }
 
-function accept(flow) {
+function resume(flow) {
     return function (dispatch) {
-        return (0, _utils.fetchApi)("/flows/" + flow.id + "/accept", { method: 'POST' });
+        return (0, _utils.fetchApi)("/flows/" + flow.id + "/resume", { method: 'POST' });
     };
 }
 
-function acceptAll() {
+function resumeAll() {
     return function (dispatch) {
-        return (0, _utils.fetchApi)('/flows/accept', { method: 'POST' });
+        return (0, _utils.fetchApi)('/flows/resume', { method: 'POST' });
+    };
+}
+
+function kill(flow) {
+    return function (dispatch) {
+        return (0, _utils.fetchApi)("/flows/" + flow.id + "/kill", { method: 'POST' });
+    };
+}
+
+function killAll() {
+    return function (dispatch) {
+        return (0, _utils.fetchApi)('/flows/kill', { method: 'POST' });
     };
 }
 
@@ -5794,7 +5874,7 @@ function reducer() {
 
         case flowsActions.SELECT:
             // First Select
-            if (action.flowIds.length && !state.isFlowSelected) {
+            if (action.flowIds.length > 0 && !state.isFlowSelected) {
                 return _extends({}, state, {
                     activeMenu: 'Flow',
                     isFlowSelected: true
@@ -5802,7 +5882,7 @@ function reducer() {
             }
 
             // Deselect
-            if (!action.flowIds.length && state.isFlowSelected) {
+            if (action.flowIds.length === 0 && state.isFlowSelected) {
                 var activeMenu = state.activeMenu;
                 if (activeMenu == 'Flow') {
                     activeMenu = 'Start';
@@ -5848,18 +5928,18 @@ exports.default = (0, _redux.combineReducers)({
 });
 
 },{"./flow":52,"./header":53,"redux":"redux"}],55:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.onKeyDown = onKeyDown;
 
-var _utils = require('../../utils');
+var _utils = require("../../utils");
 
-var _flow = require('./flow');
+var _flow = require("./flow");
 
-var _flows = require('../flows');
+var _flows = require("../flows");
 
 var flowsActions = _interopRequireWildcard(_flows);
 
@@ -5934,12 +6014,6 @@ function onKeyDown(e) {
                     break;
                 }
 
-            case _utils.Key.C:
-                if (shiftKey) {
-                    dispatch(flowsActions.clear());
-                }
-                break;
-
             case _utils.Key.D:
                 {
                     if (!flow) {
@@ -5956,9 +6030,9 @@ function onKeyDown(e) {
             case _utils.Key.A:
                 {
                     if (shiftKey) {
-                        dispatch(flowsActions.acceptAll());
+                        dispatch(flowsActions.resumeAll());
                     } else if (flow && flow.intercepted) {
-                        dispatch(flowsActions.accept(flow));
+                        dispatch(flowsActions.resume(flow));
                     }
                     break;
                 }
@@ -5975,6 +6049,24 @@ function onKeyDown(e) {
                 {
                     if (!shiftKey && flow && flow.modified) {
                         dispatch(flowsActions.revert(flow));
+                    }
+                    break;
+                }
+
+            case _utils.Key.X:
+                {
+                    if (shiftKey) {
+                        dispatch(flowsActions.killAll());
+                    } else if (flow && flow.intercepted) {
+                        dispatch(flowsActions.kill(flow));
+                    }
+                    break;
+                }
+
+            case _utils.Key.Z:
+                {
+                    if (!shiftKey) {
+                        dispatch(flowsActions.clear());
                     }
                     break;
                 }
@@ -6109,6 +6201,7 @@ function reduce() {
             if (!(action.id in byId)) {
                 break;
             }
+            byId = _extends({}, byId);
             delete byId[action.id];
 
             var _removeData2 = removeData(list, listIndex, action.id);

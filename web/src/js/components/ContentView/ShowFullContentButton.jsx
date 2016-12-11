@@ -16,7 +16,9 @@ function ShowFullContentButton ( {setShowFullContent, showFullContent, visibleLi
     return (
         !showFullContent &&
             <div>
-                <Button className="view-all-content-btn btn-xs" onClick={() => setShowFullContent()} text="Show full content"/>
+                <Button className="view-all-content-btn btn-xs" onClick={() => setShowFullContent()}>
+                    Show full content
+                </Button>
                 <span className="pull-right"> {visibleLines}/{contentLines} are visible &nbsp; </span>
             </div>
     )

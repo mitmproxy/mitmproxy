@@ -80,16 +80,29 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             self.view.add(f)
         self.events.data = events
 
-    def test_accept(self):
+    def test_resume(self):
         for f in self.view:
             f.reply.handle()
             f.intercept(self.master)
 
         assert self.fetch(
-            "/flows/42/accept", method="POST").code == 200
+            "/flows/42/resume", method="POST").code == 200
         assert sum(f.intercepted for f in self.view) == 1
-        assert self.fetch("/flows/accept", method="POST").code == 200
+        assert self.fetch("/flows/resume", method="POST").code == 200
         assert all(not f.intercepted for f in self.view)
+
+    def test_kill(self):
+        for f in self.view:
+            f.backup()
+            f.reply.handle()
+            f.intercept(self.master)
+
+        assert self.fetch("/flows/42/kill", method="POST").code == 200
+        assert sum(f.killable for f in self.view) == 1
+        assert self.fetch("/flows/kill", method="POST").code == 200
+        assert all(not f.killable for f in self.view)
+        for f in self.view:
+            f.revert()
 
     def test_flow_delete(self):
         f = self.view.get_by_id("42")

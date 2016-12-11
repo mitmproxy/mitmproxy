@@ -1,4 +1,4 @@
-import * as flowsActions from '../flows'
+import * as flowsActions from "../flows"
 
 export const SET_ACTIVE_MENU = 'UI_SET_ACTIVE_MENU'
 
@@ -19,7 +19,7 @@ export default function reducer(state = defaultState, action) {
 
         case flowsActions.SELECT:
             // First Select
-            if (action.flowIds.length && !state.isFlowSelected) {
+            if (action.flowIds.length > 0 && !state.isFlowSelected) {
                 return {
                     ...state,
                     activeMenu: 'Flow',
@@ -28,7 +28,7 @@ export default function reducer(state = defaultState, action) {
             }
 
             // Deselect
-            if (!action.flowIds.length && state.isFlowSelected) {
+            if (action.flowIds.length === 0 && state.isFlowSelected) {
                 let activeMenu = state.activeMenu
                 if (activeMenu == 'Flow') {
                     activeMenu = 'Start'

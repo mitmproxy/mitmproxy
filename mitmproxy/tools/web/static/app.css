@@ -130,28 +130,98 @@ body,
   margin: 1px 0 0px;
 }
 header {
-  padding-top: 0.5em;
+  padding-top: 6px;
   background-color: white;
 }
-header .menu {
-  padding: 10px;
+header menu {
+  display: block;
+  margin: 0;
+  padding: 0;
   border-bottom: solid #a6a6a6 1px;
+  height: 85px;
+  overflow: visible;
 }
-.menu-row {
+.menu-group {
+  margin: 0 3px;
+  display: inline-block;
+  height: 85px;
+  vertical-align: top;
+}
+.menu-content {
+  height: 69px;
+  text-align: center;
+}
+.menu-content > .btn {
+  height: 69px;
+  text-align: center;
+  margin: 0 1px;
+  padding: 12px 5px;
+  border: none;
+  border-radius: 0;
+}
+.menu-content > .btn i {
+  font-size: 20px;
+  display: block;
+  margin: 0 auto 5px;
+}
+.menu-entry {
+  text-align: left;
+  height: 23px;
+  line-height: 1;
+  padding: 0.5rem 1rem;
+}
+.menu-entry label {
+  font-size: 1.2rem;
+  font-weight: normal;
+  margin: 0;
+}
+.menu-entry input[type=checkbox] {
+  margin: 0 2px;
+  vertical-align: middle;
+}
+.menu-legend {
+  height: 16px;
+  text-align: center;
+  font-size: 12px;
+  padding: 0 5px;
+}
+.menu-group + .menu-group:before {
+  margin-left: -3px;
+  content: " ";
+  border-left: solid 1px #e6e6e6;
+  margin-top: 10px;
+  height: 65px;
+  position: absolute;
+}
+.menu-main {
   margin-left: -2px;
   margin-right: -3px;
+  padding: 2px 5px;
 }
 .filter-input {
   position: relative;
   min-height: 1px;
   padding-left: 2.5px;
   padding-right: 2.5px;
-  margin-bottom: 5px;
+  padding: 2.5px;
 }
 @media (min-width: 768px) {
   .filter-input {
     float: left;
-    width: 25%;
+    width: 41.66666667%;
+  }
+}
+@media (max-width: 767px) {
+  .filter-input {
+    padding: 2px 2.5px;
+  }
+  .filter-input > .form-control,
+  .filter-input > .input-group-addon,
+  .filter-input > .input-group-btn > .btn {
+    height: 23.5px;
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
   }
 }
 .filter-input .popover {
@@ -257,6 +327,10 @@ header .menu {
 }
 .flow-table .col-path .fa-pause {
   color: #ff8000;
+}
+.flow-table .col-path .fa-exclamation,
+.flow-table .col-path .fa-times {
+  color: darkred;
 }
 .flow-table .col-method {
   width: 60px;

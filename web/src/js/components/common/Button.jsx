@@ -11,7 +11,7 @@ Button.propTypes = {
 export default function Button({ onClick, children, icon, disabled, className, title }) {
     return (
         <div className={classnames(className, 'btn btn-default')}
-             onClick={onClick}
+             onClick={!disabled && onClick}
              disabled={disabled}
              title={title}>
             {icon && (<i className={"fa fa-fw " + icon}/> )}
