@@ -386,17 +386,11 @@ class ConsoleMaster(master.Master):
         )
 
     def _write_flows(self, path, flows):
-        if not path:
-            return
-        path = os.path.expanduser(path)
-        try:
-            f = open(path, "wb")
-            fw = io.FlowWriter(f)
-            for i in flows:
-                fw.add(i)
-            f.close()
-        except IOError as v:
-            signals.status_message.send(message=v.strerror)
+        f = open(path, "wb")
+        fw = io.FlowWriter(f)
+        for i in flows:
+            fw.add(i)
+        f.close()
 
     def save_one_flow(self, path, flow):
         return self._write_flows(path, [flow])
@@ -405,8 +399,6 @@ class ConsoleMaster(master.Master):
         return self._write_flows(path, self.view)
 
     def load_flows_callback(self, path):
-        if not path:
-            return
         ret = self.load_flows_path(path)
         return ret or "Flows loaded from %s" % path
 

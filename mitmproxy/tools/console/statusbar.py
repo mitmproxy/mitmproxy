@@ -9,6 +9,28 @@ from mitmproxy.tools.console import signals
 from mitmproxy.utils import human
 
 
+class PromptPath:
+    def __init__(self, callback, args):
+        self.callback, self.args = callback, args
+
+    def __call__(self, pth):
+        if not pth:
+            return
+        pth = os.path.expanduser(pth)
+        try:
+            return self.callback(pth, *self.args)
+        except IOError as v:
+            signals.status_message.send(message=v.strerror)
+
+
+class PromptStub:
+    def __init__(self, callback, args):
+        self.callback, self.args = callback, args
+
+    def __call__(self, txt):
+        return self.callback(txt, *self.args)
+
+
 class ActionBar(urwid.WidgetWrap):
 
     def __init__(self):
@@ -21,7 +43,8 @@ class ActionBar(urwid.WidgetWrap):
 
         self.last_path = ""
 
-        self.prompting = False
+        self.prompting = None
+
         self.onekey = False
         self.pathprompt = False
 
@@ -42,7 +65,7 @@ class ActionBar(urwid.WidgetWrap):
     def sig_prompt(self, sender, prompt, text, callback, args=()):
         signals.focus.send(self, section="footer")
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
-        self.prompting = (callback, args)
+        self.prompting = PromptStub(callback, args)
 
     def sig_path_prompt(self, sender, prompt, callback, args=()):
         signals.focus.send(self, section="footer")
@@ -51,7 +74,7 @@ class ActionBar(urwid.WidgetWrap):
             os.path.dirname(self.last_path)
         )
         self.pathprompt = True
-        self.prompting = (callback, args)
+        self.prompting = PromptPath(callback, args)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
         """
@@ -69,7 +92,7 @@ class ActionBar(urwid.WidgetWrap):
         prompt.append(")? ")
         self.onekey = set(i[1] for i in keys)
         self._w = urwid.Edit(prompt, "")
-        self.prompting = (callback, args)
+        self.prompting = PromptStub(callback, args)
 
     def selectable(self):
         return True
@@ -93,10 +116,10 @@ class ActionBar(urwid.WidgetWrap):
 
     def clear(self):
         self._w = urwid.Text("")
-        self.prompting = False
+        self.prompting = None
 
     def prompt_done(self):
-        self.prompting = False
+        self.prompting = None
         self.onekey = False
         self.pathprompt = False
         signals.status_message.send(message="")
@@ -105,9 +128,9 @@ class ActionBar(urwid.WidgetWrap):
     def prompt_execute(self, txt):
         if self.pathprompt:
             self.last_path = txt
-        p, args = self.prompting
+        p = self.prompting
         self.prompt_done()
-        msg = p(txt, *args)
+        msg = p(txt)
         if msg:
             signals.status_message.send(message=msg, expire=1)
 

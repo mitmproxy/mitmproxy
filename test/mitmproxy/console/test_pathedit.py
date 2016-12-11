@@ -54,7 +54,7 @@ class TestPathEdit:
 
     def test_keypress(self):
 
-        pe = pathedit.PathEdit()
+        pe = pathedit.PathEdit("", "")
 
         with patch('urwid.widget.Edit.get_edit_text') as get_text, \
                 patch('urwid.widget.Edit.set_edit_text') as set_text:

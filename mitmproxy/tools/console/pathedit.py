@@ -57,8 +57,8 @@ class _PathCompleter:
 
 class PathEdit(urwid.Edit, _PathCompleter):
 
-    def __init__(self, *args, **kwargs):
-        urwid.Edit.__init__(self, *args, **kwargs)
+    def __init__(self, prompt, last_path):
+        urwid.Edit.__init__(self, prompt, last_path)
         _PathCompleter.__init__(self)
 
     def keypress(self, size, key):

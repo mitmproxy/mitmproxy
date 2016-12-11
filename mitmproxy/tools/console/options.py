@@ -171,6 +171,7 @@ class Options(urwid.WidgetWrap):
 
     def do_save(self, path):
         self.master.options.save(path)
+        return "Saved"
 
     def save(self):
         signals.status_prompt_path.send(
