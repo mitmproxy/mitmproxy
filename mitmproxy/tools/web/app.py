@@ -376,19 +376,22 @@ class Settings(RequestHandler):
             no_upstream_cert=self.master.options.no_upstream_cert,
             rawtcp=self.master.options.rawtcp,
             http2=self.master.options.http2,
+            websocket=self.master.options.websocket,
             anticache=self.master.options.anticache,
             anticomp=self.master.options.anticomp,
             stickyauth=self.master.options.stickyauth,
             stickycookie=self.master.options.stickycookie,
             stream=self.master.options.stream_large_bodies,
-            contentViews=[v.name.replace(' ', '_') for v in contentviews.views]
+            contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
+            listen_host=self.master.options.listen_host,
+            listen_port=self.master.options.listen_port,
         ))
 
     def put(self):
         update = self.json
         option_whitelist = {
             "intercept", "showhost", "no_upstream_cert",
-            "rawtcp", "http2", "anticache", "anticomp",
+            "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }
         for k in update:

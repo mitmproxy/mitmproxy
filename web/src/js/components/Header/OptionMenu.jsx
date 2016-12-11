@@ -31,6 +31,10 @@ function OptionMenu({ settings, updateSettings }) {
                     checked={settings.http2}
                     onToggle={() => updateSettings({ http2: !settings.http2 })}
                 />
+                <ToggleButton text="websocket"
+                    checked={settings.websocket}
+                    onToggle={() => updateSettings({ websocket: !settings.websocket })}
+                />
                 <ToggleButton text="anticache"
                     checked={settings.anticache}
                     onToggle={() => updateSettings({ anticache: !settings.anticache })}

@@ -10,6 +10,7 @@ from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
+from mitmproxy.options import Options  # noqa
 from mitmproxy.tools.web import app
 
 
