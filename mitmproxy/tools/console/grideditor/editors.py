@@ -5,8 +5,8 @@ from mitmproxy import flowfilter
 from mitmproxy.addons import script
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console.grideditor import base
-from mitmproxy.tools.console.grideditor import col_bytes
 from mitmproxy.tools.console.grideditor import col_text
+from mitmproxy.tools.console.grideditor import col_bytes
 from mitmproxy.tools.console.grideditor import col_subgrid
 from mitmproxy.tools.console import signals
 from mitmproxy.net.http import user_agents
@@ -74,8 +74,8 @@ class ReplaceEditor(base.GridEditor):
     title = "Editing replacement patterns"
     columns = [
         col_text.Column("Filter"),
-        col_bytes.Column("Regex"),
-        col_bytes.Column("Replacement"),
+        col_text.Column("Regex"),
+        col_text.Column("Replacement"),
     ]
 
     def is_error(self, col, val):
@@ -94,8 +94,8 @@ class SetHeadersEditor(base.GridEditor):
     title = "Editing header set patterns"
     columns = [
         col_text.Column("Filter"),
-        col_bytes.Column("Header"),
-        col_bytes.Column("Value"),
+        col_text.Column("Header"),
+        col_text.Column("Value"),
     ]
 
     def is_error(self, col, val):

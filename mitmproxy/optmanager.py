@@ -212,7 +212,7 @@ class OptManager(metaclass=_DefaultsMeta):
         if not text:
             return {}
         try:
-            data = ruamel.yaml.load(text, ruamel.yaml.Loader)
+            data = ruamel.yaml.load(text, ruamel.yaml.RoundTripLoader)
         except ruamel.yaml.error.YAMLError as v:
             snip = v.problem_mark.get_snippet()
             raise exceptions.OptionsError(

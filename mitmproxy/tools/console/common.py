@@ -150,9 +150,6 @@ def save_data(path, data):
 
 
 def ask_save_overwrite(path, data):
-    if not path:
-        return
-    path = os.path.expanduser(path)
     if os.path.exists(path):
         def save_overwrite(k):
             if k == "y":
