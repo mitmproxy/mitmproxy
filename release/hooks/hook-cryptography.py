@@ -1,4 +1,5 @@
 # Taken from the latest pyinstaller master on 2016-11-27 (0729a2b).
+# flake8: noqa
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2005-2016, PyInstaller Development Team.
