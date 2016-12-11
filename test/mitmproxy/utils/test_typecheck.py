@@ -26,6 +26,8 @@ def test_check_type():
         typecheck.check_type("foo", 42, str)
     with pytest.raises(TypeError):
         typecheck.check_type("foo", None, str)
+    with pytest.raises(TypeError):
+        typecheck.check_type("foo", b"foo", str)
 
 
 def test_check_union():
@@ -44,5 +46,14 @@ def test_check_tuple():
         typecheck.check_type("foo", (42, 42), typing.Tuple[int, str])
     with pytest.raises(TypeError):
         typecheck.check_type("foo", ("42", 42), typing.Tuple[int, str])
-
     typecheck.check_type("foo", (42, "42"), typing.Tuple[int, str])
+
+
+def test_check_sequence():
+    typecheck.check_type("foo", [10], typing.Sequence[int])
+    with pytest.raises(TypeError):
+        typecheck.check_type("foo", ["foo"], typing.Sequence[int])
+    with pytest.raises(TypeError):
+        typecheck.check_type("foo", [10, "foo"], typing.Sequence[int])
+    with pytest.raises(TypeError):
+        typecheck.check_type("foo", [b"foo"], typing.Sequence[str])

@@ -21,7 +21,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         type(value)
     ))
 
-    if isinstance(typeinfo, typing.UnionMeta):
+    if typeinfo.__qualname__ == "Union":
         for T in typeinfo.__union_params__:
             try:
                 check_type(attr_name, value, T)
@@ -30,18 +30,24 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
             else:
                 return
         raise e
-    if isinstance(typeinfo, typing.TupleMeta):
-        check_type(attr_name, value, tuple)
+    elif typeinfo.__qualname__ == "Tuple":
+        if not isinstance(value, (tuple, list)):
+            raise e
         if len(typeinfo.__tuple_params__) != len(value):
             raise e
         for i, (x, T) in enumerate(zip(value, typeinfo.__tuple_params__)):
             check_type("{}[{}]".format(attr_name, i), x, T)
         return
-    if issubclass(typeinfo, typing.IO):
+    elif typeinfo.__qualname__ == "Sequence":
+        T = typeinfo.__args__[0]
+        if not isinstance(value, (tuple, list)):
+            raise e
+        for v in value:
+            check_type(attr_name, v, T)
+    elif typeinfo.__qualname__ == "IO":
         if hasattr(value, "read"):
             return
-
-    if not isinstance(value, typeinfo):
+    elif not isinstance(value, typeinfo):
         raise e
 
 
