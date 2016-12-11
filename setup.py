@@ -106,6 +106,7 @@ setup(
             "sphinx>=1.3.5, <1.6",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.4.0, <0.5",
+            "docutils==0.12",  # temporary pin, https://github.com/chintal/sphinxcontrib-documentedlist/pull/3
             "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
