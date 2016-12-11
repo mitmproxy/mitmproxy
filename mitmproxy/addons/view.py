@@ -145,9 +145,9 @@ class View(collections.Sequence):
 
     def inbounds(self, index: int) -> bool:
         """
-            Is this index >= 0 and < len(self)
+            Is this 0 <= index < len(self)
         """
-        return index >= 0 and index < len(self)
+        return 0 <= index < len(self)
 
     def _rev(self, idx: int) -> int:
         """
@@ -359,7 +359,7 @@ class Focus:
             return self.view.index(self.flow)
 
     @index.setter
-    def index(self, idx) -> typing.Optional[int]:
+    def index(self, idx):
         if idx < 0 or idx > len(self.view) - 1:
             raise ValueError("Index out of view bounds")
         self.flow = self.view[idx]
