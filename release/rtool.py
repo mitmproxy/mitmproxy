@@ -13,6 +13,7 @@ import zipfile
 from os.path import join, abspath, dirname, exists, basename
 
 import click
+import cryptography.fernet
 import pysftp
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -37,6 +38,12 @@ else:
     def Archive(name):
         return tarfile.open(name, "w:gz")
 
+PLATFORM_TAG = {
+    "Darwin": "osx",
+    "Windows": "windows",
+    "Linux": "linux",
+}.get(platform.system(), platform.system())
+
 ROOT_DIR = abspath(join(dirname(__file__), ".."))
 RELEASE_DIR = join(ROOT_DIR, "release")
 
@@ -47,7 +54,7 @@ PYINSTALLER_SPEC = join(RELEASE_DIR, "specs")
 # PyInstaller 3.2 does not bundle pydivert's Windivert binaries
 PYINSTALLER_HOOKS = join(RELEASE_DIR, "hooks")
 PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
-PYINSTALLER_DIST = join(BUILD_DIR, "binaries")
+PYINSTALLER_DIST = join(BUILD_DIR, "binaries", PLATFORM_TAG)
 
 VENV_DIR = join(BUILD_DIR, "venv")
 
@@ -91,11 +98,6 @@ def get_snapshot_version() -> str:
 
 
 def archive_name(bdist: str) -> str:
-    platform_tag = {
-        "Darwin": "osx",
-        "Windows": "win32",
-        "Linux": "linux"
-    }.get(platform.system(), platform.system())
     if platform.system() == "Windows":
         ext = "zip"
     else:
@@ -103,7 +105,7 @@ def archive_name(bdist: str) -> str:
     return "{project}-{version}-{platform}.{ext}".format(
         project=bdist,
         version=get_version(),
-        platform=platform_tag,
+        platform=PLATFORM_TAG,
         ext=ext
     )
 
@@ -111,6 +113,19 @@ def archive_name(bdist: str) -> str:
 def wheel_name() -> str:
     return "mitmproxy-{version}-py3-none-any.whl".format(
         version=get_version(),
+    )
+
+
+def installer_name() -> str:
+    ext = {
+        "Windows": "exe",
+        "Darwin": "dmg",
+        "Linux": "run"
+    }[platform.system()]
+    return "mitmproxy-{version}-{platform}-installer.{ext}".format(
+        version=get_version(),
+        platform=PLATFORM_TAG,
+        ext=ext,
     )
 
 
@@ -128,6 +143,24 @@ def cli():
     mitmproxy build tool
     """
     pass
+
+
+@cli.command("encrypt")
+@click.argument('infile', type=click.File('rb'))
+@click.argument('outfile', type=click.File('wb'))
+@click.argument('key', envvar='RTOOL_KEY')
+def encrypt(infile, outfile, key):
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.encrypt(infile.read()))
+
+
+@cli.command("decrypt")
+@click.argument('infile', type=click.File('rb'))
+@click.argument('outfile', type=click.File('wb'))
+@click.argument('key', envvar='RTOOL_KEY')
+def decrypt(infile, outfile, key):
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.decrypt(infile.read()))
 
 
 @cli.command("contributors")
@@ -238,7 +271,8 @@ def upload_release(username, password, repository):
 @click.option("--private-key-password", envvar="SNAPSHOT_PASS", prompt=True, hide_input=True)
 @click.option("--wheel/--no-wheel", default=False)
 @click.option("--bdist/--no-bdist", default=False)
-def upload_snapshot(host, port, user, private_key, private_key_password, wheel, bdist):
+@click.option("--installer/--no-installer", default=False)
+def upload_snapshot(host, port, user, private_key, private_key_password, wheel, bdist, installer):
     """
     Upload snapshot to snapshot server
     """
@@ -256,6 +290,8 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
             if bdist:
                 for bdist in sorted(BDISTS.keys()):
                     files.append(archive_name(bdist))
+            if installer:
+                files.append(installer_name())
 
             for f in files:
                 local_path = join(DIST_DIR, f)
