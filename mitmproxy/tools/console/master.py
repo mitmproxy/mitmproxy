@@ -386,11 +386,10 @@ class ConsoleMaster(master.Master):
         )
 
     def _write_flows(self, path, flows):
-        f = open(path, "wb")
-        fw = io.FlowWriter(f)
-        for i in flows:
-            fw.add(i)
-        f.close()
+        with open(path, "wb") as f:
+            fw = io.FlowWriter(f)
+            for i in flows:
+                fw.add(i)
 
     def save_one_flow(self, path, flow):
         return self._write_flows(path, [flow])
