@@ -355,9 +355,11 @@ class FlowListBox(urwid.ListBox):
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "g":
-            self.master.view.focus.index = 0
+            if len(self.master.view):
+                self.master.view.focus.index = 0
         elif key == "G":
-            self.master.view.focus.index = len(self.master.view) - 1
+            if len(self.master.view):
+                self.master.view.focus.index = len(self.master.view) - 1
         elif key == "f":
             signals.status_prompt.send(
                 prompt = "Filter View",
