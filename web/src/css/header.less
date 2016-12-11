@@ -57,10 +57,24 @@ header {
 @menu-main-gutter-width: 5px;
 .menu-main {
     .make-row(@menu-main-gutter-width);
+    padding: 2px 5px;
 }
 
 .filter-input {
-    .make-sm-column(4, @menu-main-gutter-width);
+    .make-sm-column(5, @menu-main-gutter-width);
+    padding: 2.5px;
+
+    @media (max-width: @screen-xs-max) {
+
+        padding: 2px 2.5px;
+
+        >.form-control,> .input-group-addon, > .input-group-btn>.btn {
+          height: 23.5px;
+          padding: 1px 5px;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+    }
 }
 
 .filter-input .popover {

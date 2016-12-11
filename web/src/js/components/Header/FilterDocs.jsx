@@ -47,7 +47,7 @@ export default class FilterDocs extends Component {
                             <a href="http://docs.mitmproxy.org/en/stable/features/filters.html"
                                 target="_blank">
                                 <i className="fa fa-external-link"></i>
-                            &nbsp mitmproxy docs</a>
+                            &nbsp; mitmproxy docs</a>
                         </td>
                     </tr>
                 </tbody>
