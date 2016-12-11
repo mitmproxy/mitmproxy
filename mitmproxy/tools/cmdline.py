@@ -451,19 +451,21 @@ def proxy_options(parser):
         action="store", type=int, dest="port",
         help="Proxy service port."
     )
-    group.add_argument(
-        "--no-http2",
-        action="store_false", dest="http2",
-        help="""
-            Explicitly disable HTTP/2 support.
-            If your OpenSSL version supports ALPN, HTTP/2 is enabled by default.
-        """
-    )
-    group.add_argument(
-        "--no-websocket",
-        action="store_false", dest="websocket",
-        help="Explicitly disable WebSocket support."
-    )
+
+    http2 = group.add_mutually_exclusive_group()
+    http2.add_argument("--http2", action="store_true", dest="http2")
+    http2.add_argument("--no-http2", action="store_false", dest="http2",
+                       help="Explicitly enable/disable HTTP/2 support. "
+                            "Disabled by default until major websites implement the spec correctly. "
+                            "Default value will change in a future version."
+                       )
+
+    websocket = group.add_mutually_exclusive_group()
+    websocket.add_argument("--no-websocket", action="store_false", dest="websocket",
+                           help="Explicitly enable/disable WebSocket support. "
+                                "Enabled by default."
+                           )
+    websocket.add_argument("--websocket", action="store_true", dest="websocket")
 
     parser.add_argument(
         "--upstream-auth",
