@@ -35,7 +35,7 @@ from mitmproxy.utils import strutils
 
 from mitmproxy.net import tcp
 
-EVENTLOG_SIZE = 500
+EVENTLOG_SIZE = 10000
 
 
 class Logger:
