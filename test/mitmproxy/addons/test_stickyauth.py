@@ -15,7 +15,8 @@ def test_configure():
 
 def test_simple():
     r = stickyauth.StickyAuth()
-    with taddons.context():
+    with taddons.context() as tctx:
+        tctx.configure(r, stickyauth=".*")
         f = tflow.tflow(resp=True)
         f.request.headers["authorization"] = "foo"
         r.request(f)

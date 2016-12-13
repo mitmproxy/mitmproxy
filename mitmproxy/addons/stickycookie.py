@@ -34,13 +34,16 @@ class StickyCookie:
         self.flt = None
 
     def configure(self, options, updated):
-        if options.stickycookie:
-            flt = flowfilter.parse(options.stickycookie)
-            if not flt:
-                raise exceptions.OptionsError(
-                    "stickycookie: invalid filter expression: %s" % options.stickycookie
-                )
-            self.flt = flt
+        if "stickycookie" in updated:
+            if options.stickycookie:
+                flt = flowfilter.parse(options.stickycookie)
+                if not flt:
+                    raise exceptions.OptionsError(
+                        "stickycookie: invalid filter expression: %s" % options.stickycookie
+                    )
+                self.flt = flt
+            else:
+                self.flt = None
 
     def response(self, flow):
         if self.flt:

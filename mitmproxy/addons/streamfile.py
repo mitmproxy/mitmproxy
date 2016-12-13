@@ -29,6 +29,8 @@ class StreamFile:
                     raise exceptions.OptionsError(
                         "Invalid filter specification: %s" % options.filtstr
                     )
+            else:
+                self.filt = None
         if "streamfile" in updated:
             if self.stream:
                 self.done()
