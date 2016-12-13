@@ -4,6 +4,7 @@ import shlex
 import sys
 import threading
 import traceback
+import types
 
 from mitmproxy import exceptions
 from mitmproxy import ctx
@@ -12,19 +13,6 @@ from mitmproxy import events
 
 import watchdog.events
 from watchdog.observers import polling
-
-
-class NS:
-    def __init__(self, ns):
-        self.__dict__["ns"] = ns
-
-    def __getattr__(self, key):
-        if key not in self.ns:
-            raise AttributeError("No such element: %s", key)
-        return self.ns[key]
-
-    def __setattr__(self, key, value):
-        self.__dict__["ns"][key] = value
 
 
 def parse_command(command):
@@ -113,8 +101,8 @@ def load_script(path, args):
             return
     ns = {'__file__': os.path.abspath(path)}
     with scriptenv(path, args):
-        exec(code, ns, ns)
-    return NS(ns)
+        exec(code, ns)
+    return types.SimpleNamespace(**ns)
 
 
 class ReloadHandler(watchdog.events.FileSystemEventHandler):

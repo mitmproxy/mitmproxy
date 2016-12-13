@@ -150,7 +150,7 @@ class TestHARDump:
 
     def test_format_cookies(self):
         m, sc = tscript("complex/har_dump.py", "-")
-        format_cookies = sc.ns.ns["format_cookies"]
+        format_cookies = sc.ns.format_cookies
 
         CA = cookies.CookieAttrs
 

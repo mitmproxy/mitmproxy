@@ -18,13 +18,6 @@ import watchdog.events
 from .. import tutils as ttutils
 
 
-def test_ns():
-    n = script.NS({})
-    n.one = "one"
-    assert n.one == "one"
-    assert n.__dict__["ns"]["one"] == "one"
-
-
 def test_scriptenv():
     with taddons.context() as tctx:
         with script.scriptenv("path", []):
