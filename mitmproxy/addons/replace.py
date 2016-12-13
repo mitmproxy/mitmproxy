@@ -16,21 +16,22 @@ class Replace:
             rex: a regular expression, as bytes.
             s: the replacement string, as bytes
         """
-        lst = []
-        for fpatt, rex, s in options.replacements:
-            flt = flowfilter.parse(fpatt)
-            if not flt:
-                raise exceptions.OptionsError(
-                    "Invalid filter pattern: %s" % fpatt
-                )
-            try:
-                re.compile(rex)
-            except re.error as e:
-                raise exceptions.OptionsError(
-                    "Invalid regular expression: %s - %s" % (rex, str(e))
-                )
-            lst.append((rex, s, flt))
-        self.lst = lst
+        if "replacements" in updated:
+            lst = []
+            for fpatt, rex, s in options.replacements:
+                flt = flowfilter.parse(fpatt)
+                if not flt:
+                    raise exceptions.OptionsError(
+                        "Invalid filter pattern: %s" % fpatt
+                    )
+                try:
+                    re.compile(rex)
+                except re.error as e:
+                    raise exceptions.OptionsError(
+                        "Invalid regular expression: %s - %s" % (rex, str(e))
+                    )
+                lst.append((rex, s, flt))
+            self.lst = lst
 
     def execute(self, f):
         for rex, s, flt in self.lst:
