@@ -64,7 +64,7 @@ setup(
         "click>=6.2, <7",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "construct>=2.8, <2.9",
-        "cryptography>=1.3, <1.7",
+        "cryptography>=1.3, <1.8",
         "cssutils>=1.0.1, <1.1",
         "Flask>=0.10.1, <0.12",
         "h2>=2.5.0, <3",
