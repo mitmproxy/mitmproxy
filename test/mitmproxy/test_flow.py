@@ -1,5 +1,4 @@
 from mitmproxy.test import tflow
-import mock
 import io
 
 from mitmproxy.test import tutils
@@ -97,21 +96,20 @@ class TestHTTPFlow:
         assert f.get_state() == f2.get_state()
 
     def test_kill(self):
-        fm = mock.Mock()
         f = tflow.tflow()
         f.reply.handle()
-        f.intercept(fm)
+        f.intercept()
         assert f.killable
-        f.kill(fm)
+        f.kill()
         assert not f.killable
         assert f.reply.value == Kill
 
     def test_resume(self):
         f = tflow.tflow()
         f.reply.handle()
-        f.intercept(mock.Mock())
+        f.intercept()
         assert f.reply.state == "taken"
-        f.resume(mock.Mock())
+        f.resume()
         assert f.reply.state == "committed"
 
     def test_replace_unicode(self):

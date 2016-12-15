@@ -510,16 +510,16 @@ class FlowView(tabs.Tabs):
             # Pass scroll events to the wrapped widget
             self._w.keypress(size, key)
         elif key == "a":
-            self.flow.resume(self.master)
-            signals.flow_change.send(self, flow = self.flow)
+            self.flow.resume()
+            self.master.view.update(self.flow)
         elif key == "A":
             for f in self.view:
                 if f.intercepted:
-                    f.resume(self.master)
-                    signals.flow_change.send(self, flow=f)
+                    f.resume()
+                    self.master.view.update(self.flow)
         elif key == "d":
             if self.flow.killable:
-                self.flow.kill(self.master)
+                self.flow.kill()
             self.view.remove(self.flow)
             if not self.view.focus.flow:
                 self.master.view_flowlist()
