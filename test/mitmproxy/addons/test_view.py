@@ -123,6 +123,11 @@ def test_filter():
     v.set_filter(None)
 
     assert len(v) == 4
+    v.toggle_marked()
+    assert len(v) == 0
+    v.toggle_marked()
+    assert len(v) == 4
+
     v[1].marked = True
     v.toggle_marked()
     assert len(v) == 1

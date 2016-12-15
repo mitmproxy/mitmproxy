@@ -263,8 +263,12 @@ class StatusBar(urwid.WidgetWrap):
         else:
             arrow = common.SYMBOL_DOWN
 
+        marked = ""
+        if self.master.view.show_marked:
+            marked = "M"
+
         t = [
-            ('heading', ("%s [%s/%s]" % (arrow, offset, fc)).ljust(11)),
+            ('heading', ("%s %s [%s/%s]" % (arrow, marked, offset, fc)).ljust(11)),
         ]
 
         if self.master.server.bound:

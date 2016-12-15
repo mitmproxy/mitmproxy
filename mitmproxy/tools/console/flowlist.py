@@ -178,8 +178,6 @@ class FlowItem(urwid.WidgetWrap):
         elif key == "m":
             self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
-        elif key == "M":
-            self.master.view.toggle_marked()
         elif key == "r":
             try:
                 self.master.replay_request(self.flow)
@@ -375,6 +373,8 @@ class FlowListBox(urwid.ListBox):
                 prompt = "Load flows",
                 callback = self.master.load_flows_callback
             )
+        elif key == "M":
+            self.master.view.toggle_marked()
         elif key == "n":
             signals.status_prompt_onekey.send(
                 prompt = "Method",
