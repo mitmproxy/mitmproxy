@@ -1,20 +1,17 @@
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import FilterInput from './FilterInput'
-import { update as updateSettings } from '../../ducks/settings'
-import { setFilter, setHighlight } from '../../ducks/flows'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import FilterInput from "./FilterInput"
+import { update as updateSettings } from "../../ducks/settings"
+import { setFilter, setHighlight } from "../../ducks/flows"
 
 MainMenu.title = "Start"
 
 export default function MainMenu() {
     return (
-        <div>
-            <div className="menu-row">
-                <FlowFilterInput/>
-                <HighlightInput/>
-                <InterceptInput/>
-            </div>
-            <div className="clearfix"></div>
+        <div className="menu-main">
+            <FlowFilterInput/>
+            <HighlightInput/>
+            <InterceptInput/>
         </div>
     )
 }

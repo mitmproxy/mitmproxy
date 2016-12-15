@@ -1,32 +1,71 @@
-import React, { PropTypes } from 'react'
-import { connect } from 'react-redux'
-import Button from '../common/Button'
-import { MessageUtils } from '../../flow/utils.js'
-import * as flowsActions from '../../ducks/flows'
+import React, { PropTypes } from "react"
+import { connect } from "react-redux"
+import Button from "../common/Button"
+import { MessageUtils } from "../../flow/utils.js"
+import * as flowsActions from "../../ducks/flows"
 
 FlowMenu.title = 'Flow'
 
 FlowMenu.propTypes = {
-    flow: PropTypes.object.isRequired,
-    acceptFlow: PropTypes.func.isRequired,
+    flow: PropTypes.object,
+    resumeFlow: PropTypes.func.isRequired,
+    killFlow: PropTypes.func.isRequired,
     replayFlow: PropTypes.func.isRequired,
     duplicateFlow: PropTypes.func.isRequired,
     removeFlow: PropTypes.func.isRequired,
     revertFlow: PropTypes.func.isRequired
 }
 
-function FlowMenu({ flow, acceptFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
+function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
+    if (!flow)
+        return <div/>
     return (
         <div>
-            <div className="menu-row">
-                <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow" text="Accept" icon="fa-play" onClick={() => acceptFlow(flow)} />
-                <Button title="[r]eplay flow" text="Replay" icon="fa-repeat" onClick={() => replayFlow(flow)} />
-                <Button title="[D]uplicate flow" text="Duplicate" icon="fa-copy" onClick={() => duplicateFlow(flow)} />
-                <Button title="[d]elete flow" text="Delete" icon="fa-trash" onClick={() => removeFlow(flow)}/>
-                <Button disabled={!flow || !flow.modified} title="revert changes to flow [V]" text="Revert" icon="fa-history" onClick={() => revertFlow(flow)} />
-                <Button title="download" text="Download" icon="fa-download" onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}/>
+            <div className="menu-group">
+                <div className="menu-content">
+                    <Button title="[r]eplay flow" icon="fa-repeat text-primary"
+                            onClick={() => replayFlow(flow)}>
+                        Replay
+                    </Button>
+                    <Button title="[D]uplicate flow" icon="fa-copy text-info"
+                            onClick={() => duplicateFlow(flow)}>
+                        Duplicate
+                    </Button>
+                    <Button disabled={!flow || !flow.modified} title="revert changes to flow [V]"
+                            icon="fa-history text-warning" onClick={() => revertFlow(flow)}>
+                        Revert
+                    </Button>
+                    <Button title="[d]elete flow" icon="fa-trash text-danger"
+                            onClick={() => removeFlow(flow)}>
+                        Delete
+                    </Button>
+                </div>
+                <div className="menu-legend">Flow Modification</div>
             </div>
-            <div className="clearfix"/>
+            <div className="menu-group">
+                <div className="menu-content">
+                    <Button title="download" icon="fa-download"
+                            onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}>
+                        Download
+                    </Button>
+                </div>
+                <div className="menu-legend">Export</div>
+            </div>
+            <div className="menu-group">
+                <div className="menu-content">
+                    <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow"
+                            icon="fa-play text-success" onClick={() => resumeFlow(flow)}>
+                        Resume
+                    </Button>
+                    <Button disabled={!flow || !flow.intercepted} title="kill intercepted flow [x]"
+                            icon="fa-times text-danger" onClick={() => killFlow(flow)}>
+                        Abort
+                    </Button>
+                </div>
+                <div className="menu-legend">Interception</div>
+            </div>
+
+
         </div>
     )
 }
@@ -36,7 +75,8 @@ export default connect(
         flow: state.flows.byId[state.flows.selected[0]],
     }),
     {
-        acceptFlow: flowsActions.accept,
+        resumeFlow: flowsActions.resume,
+        killFlow: flowsActions.kill,
         replayFlow: flowsActions.replay,
         duplicateFlow: flowsActions.duplicate,
         removeFlow: flowsActions.remove,

@@ -36,8 +36,29 @@ export default function reduce(state = defaultState, action) {
                 makeFilter(state.filter),
                 makeSort(state.sort)
             )
+
+            let selected = state.selected
+            if(action.type === REMOVE && state.selected.includes(action.data)) {
+                if(state.selected.length > 1){
+                    selected = selected.filter(x => x !== action.data)
+                } else {
+                    selected = []
+                    if (action.data in state.viewIndex && state.view.length > 1) {
+                        let currentIndex = state.viewIndex[action.data],
+                            nextSelection
+                        if(currentIndex === state.view.length -1){ // last row
+                            nextSelection = state.view[currentIndex - 1]
+                        } else {
+                            nextSelection = state.view[currentIndex + 1]
+                        }
+                        selected.push(nextSelection.id)
+                    }
+                }
+            }
+
             return {
                 ...state,
+                selected,
                 ...reduceStore(state, storeAction)
             }
 
@@ -46,6 +67,12 @@ export default function reduce(state = defaultState, action) {
                 ...state,
                 filter: action.filter,
                 ...reduceStore(state, storeActions.setFilter(makeFilter(action.filter), makeSort(state.sort)))
+            }
+
+        case SET_HIGHLIGHT:
+            return {
+                ...state,
+                highlight: action.highlight
             }
 
         case SET_SORT:
@@ -144,13 +171,22 @@ export function selectRelative(shift) {
 }
 
 
-export function accept(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/accept`, { method: 'POST' })
+export function resume(flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/resume`, { method: 'POST' })
 }
 
-export function acceptAll() {
-    return dispatch => fetchApi('/flows/accept', { method: 'POST' })
+export function resumeAll() {
+    return dispatch => fetchApi('/flows/resume', { method: 'POST' })
 }
+
+export function kill(flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/kill`, { method: 'POST' })
+}
+
+export function killAll() {
+    return dispatch => fetchApi('/flows/kill', { method: 'POST' })
+}
+
 
 export function remove(flow) {
     return dispatch => fetchApi(`/flows/${flow.id}`, { method: 'DELETE' })

@@ -14,11 +14,11 @@ function ToggleEdit({ isEdit, startEdit, stopEdit, flow, modifiedFlow }) {
     return (
         <div className="edit-flow-container">
             {isEdit ?
-                <a className="edit-flow" onClick={() => stopEdit(flow, modifiedFlow)}>
+                <a className="edit-flow" title="Finish Edit" onClick={() => stopEdit(flow, modifiedFlow)}>
                     <i className="fa fa-check"/>
                 </a>
                 :
-                <a className="edit-flow" onClick={() => startEdit(flow)}>
+                <a className="edit-flow" title="Edit Flow" onClick={() => startEdit(flow)}>
                     <i className="fa fa-pencil"/>
                 </a>
             }

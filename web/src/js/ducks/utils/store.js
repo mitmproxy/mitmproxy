@@ -85,6 +85,7 @@ export default function reduce(state = defaultState, action) {
             if (!(action.id in byId)) {
                 break
             }
+            byId = {...byId}
             delete byId[action.id];
             ({data: list, dataIndex: listIndex} = removeData(list, listIndex, action.id))
 

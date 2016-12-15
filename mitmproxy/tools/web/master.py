@@ -10,6 +10,7 @@ from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
+from mitmproxy.options import Options  # noqa
 from mitmproxy.tools.web import app
 
 
@@ -67,7 +68,7 @@ class WebMaster(master.Master):
         app.ClientConnection.broadcast(
             resource="flows",
             cmd="remove",
-            data=dict(id=flow.id)
+            data=flow.id
         )
 
     def _sig_view_refresh(self, view):

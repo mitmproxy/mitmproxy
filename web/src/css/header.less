@@ -1,24 +1,107 @@
 @import (reference) '../../node_modules/bootstrap/less/variables.less';
 @import (reference) '../../node_modules/bootstrap/less/mixins/grid.less';
 
+@menu-height: 85px;
+
 header {
-    padding-top: 0.5em;
+    padding-top: 6px;
     background-color: white;
     @separator-color: lighten(grey, 15%);
-    .menu {
-        padding: 10px;
+    menu {
+        display: block;
+        margin: 0;
+        padding: 0;
         border-bottom: solid @separator-color 1px;
+        height: @menu-height;
+        overflow: visible; // search help context laps over.
     }
 }
 
-@menu-row-gutter-width: 5px;
-.menu-row {
-    .make-row(@menu-row-gutter-width);
+@menu-legend-height: 16px;
+@menu-group-hmargin: 3px;
+.menu-group {
+    margin: 0 @menu-group-hmargin;
+    display: inline-block;
+    height: @menu-height;
+    vertical-align: top;
+}
+
+.menu-content {
+    height: @menu-height - @menu-legend-height;
+    text-align: center;
+
+    > .btn {
+        height: @menu-height - @menu-legend-height;
+        text-align: center;
+        margin: 0 1px;
+        padding: 12px 5px;
+        border: none;
+        border-radius: 0;
+        i {
+            font-size: 20px;
+            display: block;
+            margin: 0 auto 5px;
+        }
+    }
+}
+
+
+.menu-entry {
+    text-align: left;
+    height: (@menu-height - @menu-legend-height)/3;
+    line-height: 1;
+    padding: 0.5rem 1rem;
+
+    label {
+        font-size: 1.2rem;
+        font-weight: normal;
+        margin: 0;
+    }
+    input[type=checkbox] {
+        margin: 0 2px;
+        vertical-align: middle;
+    }
+}
+
+
+.menu-legend {
+    height: @menu-legend-height;
+    text-align: center;
+    font-size: 12px;
+    padding: 0 5px;
+}
+
+.menu-group + .menu-group:before {
+    @space: 10px;
+    margin-left: -@menu-group-hmargin;
+    content: " ";
+    border-left: solid 1px lighten(grey, 40%);
+    margin-top: @space;
+    height: @menu-height - @space*2;
+    position: absolute;
+}
+
+@menu-main-gutter-width: 5px;
+.menu-main {
+    .make-row(@menu-main-gutter-width);
+    padding: 2px 5px;
 }
 
 .filter-input {
-    .make-sm-column(3, @menu-row-gutter-width);
-    margin-bottom:5px;
+    .make-sm-column(5, @menu-main-gutter-width);
+    padding: 2.5px;
+
+    @media (max-width: @screen-xs-max) {
+
+        padding: 2px 2.5px;
+
+        > .form-control, > .input-group-addon, > .input-group-btn > .btn {
+            height: 23.5px;
+            padding: 1px 5px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    }
 }
 
 .filter-input .popover {

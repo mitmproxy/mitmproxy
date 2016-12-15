@@ -31,7 +31,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "intercepted": flow.intercepted,
         "client_conn": flow.client_conn.get_state(),
         "server_conn": flow.server_conn.get_state(),
-        "type": flow.type
+        "type": flow.type,
+        "modified": flow.modified(),
     }
     if flow.error:
         f["error"] = flow.error.get_state()
@@ -222,15 +223,28 @@ class ClearAll(RequestHandler):
         self.master.events.clear()
 
 
-class AcceptFlows(RequestHandler):
+class ResumeFlows(RequestHandler):
     def post(self):
         for f in self.view:
             f.resume(self.master)
 
 
-class AcceptFlow(RequestHandler):
+class KillFlows(RequestHandler):
+    def post(self):
+        for f in self.view:
+            if f.killable:
+                f.kill(self.master)
+
+
+class ResumeFlow(RequestHandler):
     def post(self, flow_id):
         self.flow.resume(self.master)
+
+
+class KillFlow(RequestHandler):
+    def post(self, flow_id):
+        if self.flow.killable:
+            self.flow.kill(self.master)
 
 
 class FlowHandler(RequestHandler):
@@ -376,19 +390,22 @@ class Settings(RequestHandler):
             no_upstream_cert=self.master.options.no_upstream_cert,
             rawtcp=self.master.options.rawtcp,
             http2=self.master.options.http2,
+            websocket=self.master.options.websocket,
             anticache=self.master.options.anticache,
             anticomp=self.master.options.anticomp,
             stickyauth=self.master.options.stickyauth,
             stickycookie=self.master.options.stickycookie,
             stream=self.master.options.stream_large_bodies,
-            contentViews=[v.name.replace(' ', '_') for v in contentviews.views]
+            contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
+            listen_host=self.master.options.listen_host,
+            listen_port=self.master.options.listen_port,
         ))
 
     def put(self):
         update = self.json
         option_whitelist = {
             "intercept", "showhost", "no_upstream_cert",
-            "rawtcp", "http2", "anticache", "anticomp",
+            "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }
         for k in update:
@@ -407,9 +424,11 @@ class Application(tornado.web.Application):
             (r"/events", Events),
             (r"/flows", Flows),
             (r"/flows/dump", DumpFlows),
-            (r"/flows/accept", AcceptFlows),
+            (r"/flows/resume", ResumeFlows),
+            (r"/flows/kill", KillFlows),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/accept", AcceptFlow),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),

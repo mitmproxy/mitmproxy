@@ -1,6 +1,6 @@
-import { Key } from '../../utils'
-import { selectTab } from './flow'
-import * as flowsActions from '../flows'
+import { Key } from "../../utils"
+import { selectTab } from "./flow"
+import * as flowsActions from "../flows"
 
 
 export function onKeyDown(e) {
@@ -9,7 +9,7 @@ export function onKeyDown(e) {
         return () => {
         }
     }
-    var key = e.keyCode
+    var key      = e.keyCode
     var shiftKey = e.shiftKey
     e.preventDefault()
     return (dispatch, getState) => {
@@ -48,9 +48,8 @@ export function onKeyDown(e) {
                 dispatch(flowsActions.select(null))
                 break
 
-            case Key.LEFT:
-            {
-                if(!flow) break
+            case Key.LEFT: {
+                if (!flow) break
                 let tabs       = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details']),
                     currentTab = getState().ui.flow.tab,
                     nextTab    = tabs[(tabs.indexOf(currentTab) - 1 + tabs.length) % tabs.length]
@@ -59,9 +58,8 @@ export function onKeyDown(e) {
             }
 
             case Key.TAB:
-            case Key.RIGHT:
-            {
-                if(!flow) break
+            case Key.RIGHT: {
+                if (!flow) break
                 let tabs       = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details']),
                     currentTab = getState().ui.flow.tab,
                     nextTab    = tabs[(tabs.indexOf(currentTab) + 1) % tabs.length]
@@ -69,14 +67,7 @@ export function onKeyDown(e) {
                 break
             }
 
-            case Key.C:
-                if (shiftKey) {
-                    dispatch(flowsActions.clear())
-                }
-                break
-
-            case Key.D:
-            {
+            case Key.D: {
                 if (!flow) {
                     return
                 }
@@ -88,31 +79,45 @@ export function onKeyDown(e) {
                 break
             }
 
-            case Key.A:
-            {
+            case Key.A: {
                 if (shiftKey) {
-                    dispatch(flowsActions.acceptAll())
+                    dispatch(flowsActions.resumeAll())
                 } else if (flow && flow.intercepted) {
-                    dispatch(flowsActions.accept(flow))
+                    dispatch(flowsActions.resume(flow))
                 }
                 break
             }
 
-            case Key.R:
-            {
+            case Key.R: {
                 if (!shiftKey && flow) {
                     dispatch(flowsActions.replay(flow))
                 }
                 break
             }
 
-            case Key.V:
-            {
+            case Key.V: {
                 if (!shiftKey && flow && flow.modified) {
                     dispatch(flowsActions.revert(flow))
                 }
                 break
             }
+
+            case Key.X: {
+                if (shiftKey) {
+                    dispatch(flowsActions.killAll())
+                } else if (flow && flow.intercepted) {
+                    dispatch(flowsActions.kill(flow))
+                }
+                break
+            }
+
+            case Key.Z: {
+                if (!shiftKey) {
+                    dispatch(flowsActions.clear())
+                }
+                break
+            }
+
 
             default:
                 return
