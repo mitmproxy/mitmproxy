@@ -74,6 +74,11 @@ def convert_018_019(data):
     return data
 
 
+def convert_019_100(data):
+    data["version"] = (1, 0, 0)
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.native(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -121,6 +126,7 @@ converters = {
     (0, 16): convert_016_017,
     (0, 17): convert_017_018,
     (0, 18): convert_018_019,
+    (0, 19): convert_019_100,
 }
 
 
