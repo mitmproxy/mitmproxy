@@ -157,7 +157,7 @@ class Flow(stateobject.StateObject):
     def killable(self):
         return self.reply and self.reply.state in {"handled", "taken"}
 
-    def kill(self, master):
+    def kill(self):
         """
             Kill this request.
         """
@@ -170,9 +170,8 @@ class Flow(stateobject.StateObject):
         self.reply.kill(force=True)
         self.reply.commit()
         self.live = False
-        master.addons("kill", self)
 
-    def intercept(self, master):
+    def intercept(self):
         """
             Intercept this Flow. Processing will stop until resume is
             called.
@@ -181,9 +180,8 @@ class Flow(stateobject.StateObject):
             return
         self.intercepted = True
         self.reply.take()
-        master.addons("intercept", self)
 
-    def resume(self, master):
+    def resume(self):
         """
             Continue with the flow - called after an intercept().
         """
@@ -192,4 +190,3 @@ class Flow(stateobject.StateObject):
         self.intercepted = False
         self.reply.ack()
         self.reply.commit()
-        master.addons("resume", self)

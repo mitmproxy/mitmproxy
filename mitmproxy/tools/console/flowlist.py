@@ -165,12 +165,12 @@ class FlowItem(urwid.WidgetWrap):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
         if key == "a":
-            self.flow.resume(self.master)
-            signals.flowlist_change.send(self)
+            self.flow.resume()
+            self.master.view.update(self.flow)
         elif key == "d":
             if self.flow.killable:
-                self.flow.kill(self.master)
-            self.master.view.remove(self.master.view.focus.flow)
+                self.flow.kill()
+            self.master.view.remove(self.flow)
         elif key == "D":
             cp = self.flow.copy()
             self.master.view.add(cp)
@@ -230,7 +230,8 @@ class FlowItem(urwid.WidgetWrap):
             )
         elif key == "X":
             if self.flow.killable:
-                self.flow.kill(self.master)
+                self.flow.kill()
+                self.master.view.update(self.flow)
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
@@ -349,8 +350,8 @@ class FlowListBox(urwid.ListBox):
         if key == "A":
             for f in self.master.view:
                 if f.intercepted:
-                    f.resume(self.master)
-            signals.flowlist_change.send(self)
+                    f.resume()
+                    self.master.view.update(f)
         elif key == "z":
             self.master.view.clear()
         elif key == "e":

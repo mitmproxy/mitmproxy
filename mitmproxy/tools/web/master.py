@@ -31,9 +31,9 @@ class WebMaster(master.Master):
 
         self.addons.add(*addons.default_addons())
         self.addons.add(
+            intercept.Intercept(),
             self.view,
             self.events,
-            intercept.Intercept(),
             termlog.TermLog(),
         )
         self.app = app.Application(

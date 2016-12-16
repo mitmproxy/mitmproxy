@@ -1,4 +1,3 @@
-from mitmproxy import ctx
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 
@@ -25,7 +24,7 @@ class Intercept:
                 not f.request.is_replay,
             ])
             if should_intercept:
-                f.intercept(ctx.master)
+                f.intercept()
 
     # Handlers
 

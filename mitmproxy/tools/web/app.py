@@ -226,31 +226,35 @@ class ClearAll(RequestHandler):
 class ResumeFlows(RequestHandler):
     def post(self):
         for f in self.view:
-            f.resume(self.master)
+            f.resume()
+            self.view.update(f)
 
 
 class KillFlows(RequestHandler):
     def post(self):
         for f in self.view:
             if f.killable:
-                f.kill(self.master)
+                f.kill()
+                self.view.update(f)
 
 
 class ResumeFlow(RequestHandler):
     def post(self, flow_id):
-        self.flow.resume(self.master)
+        self.flow.resume()
+        self.view.update(self.flow)
 
 
 class KillFlow(RequestHandler):
     def post(self, flow_id):
         if self.flow.killable:
-            self.flow.kill(self.master)
+            self.flow.kill()
+            self.view.update(self.flow)
 
 
 class FlowHandler(RequestHandler):
     def delete(self, flow_id):
         if self.flow.killable:
-            self.flow.kill(self.master)
+            self.flow.kill()
         self.view.remove(self.flow)
 
     def put(self, flow_id):

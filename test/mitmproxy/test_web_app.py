@@ -83,7 +83,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_resume(self):
         for f in self.view:
             f.reply.handle()
-            f.intercept(self.master)
+            f.intercept()
 
         assert self.fetch(
             "/flows/42/resume", method="POST").code == 200
@@ -95,7 +95,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         for f in self.view:
             f.backup()
             f.reply.handle()
-            f.intercept(self.master)
+            f.intercept()
 
         assert self.fetch("/flows/42/kill", method="POST").code == 200
         assert sum(f.killable for f in self.view) == 1
