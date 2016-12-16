@@ -12,6 +12,7 @@ from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import streambodies
 from mitmproxy.addons import upstream_auth
+from mitmproxy.addons import disable_h2c_upgrade
 
 
 def default_addons():
@@ -30,4 +31,5 @@ def default_addons():
         serverplayback.ServerPlayback(),
         clientplayback.ClientPlayback(),
         upstream_auth.UpstreamAuth(),
+        disable_h2c_upgrade.DisableH2CleartextUpgrade(),
     ]
