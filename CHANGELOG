@@ -1,3 +1,21 @@
+18 December 2017: mitmproxy 1.0
+
+    * Mitmproxy is now Python 3 only
+
+    * The config file format is now a single YAML file. In most cases,
+      converting to the new format should be trivial - please see the docs for
+      more information.
+
+    * console: significant UI improvements - including sorting of flows by
+      size, type and url, status bar improvements, much faster indentation for
+      HTTP views, and more.
+
+    * http2: significant improvements, but is temporarily disabled by default
+      due to wide-spread protocol implementation errors on some large website
+
+    * A myriad of other small improvements throughout the project.
+
+
 16 October 2016: mitmproxy 0.18
 
     * Python 3 Compatibility for mitmproxy and pathod (Shadab Zafar, GSoC 2016)
