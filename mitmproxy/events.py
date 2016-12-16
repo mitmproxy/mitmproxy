@@ -21,9 +21,6 @@ Events = frozenset([
     "responseheaders",
     "error",
 
-    "intercept",
-    "resume",
-
     "websocket_handshake",
     "websocket_start",
     "websocket_message",

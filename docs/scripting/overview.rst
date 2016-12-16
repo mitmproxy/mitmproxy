@@ -131,6 +131,23 @@ purposes. You can use it as follows:
    :language: python
 
 
+Testing
+-------
+
+Mitmproxy includes a number of helpers for testing addons. The
+``mitmproxy.test.taddons`` module contains a context helper that takes care of
+setting up and tearing down the addon event context. The
+``mitmproxy.test.tflow`` module contains helpers for quickly creating test
+flows. Pydoc is the canonical reference for these modules, and mitmproxy's own
+test suite is an excellent source of examples of usage. Here, for instance, is
+the mitmproxy unit tests for the `anticache` option, demonstrating a good
+cross-section of the test helpers:
+
+.. literalinclude:: ../../test/mitmproxy/addons/test_anticache.py
+   :caption: :src:`test/mitmproxy/addons/test_anticache.py`
+   :language: python
+
+
 Developing scripts
 ------------------
 
