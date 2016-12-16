@@ -1,4 +1,4 @@
-18 December 2017: mitmproxy 1.0
+18 December 2016: mitmproxy 1.0
 
     * Mitmproxy is now Python 3 only
 
@@ -12,6 +12,9 @@
 
     * http2: significant improvements, but is temporarily disabled by default
       due to wide-spread protocol implementation errors on some large website
+
+    * websockets: the protocol implementation is now mature, and is enabled by
+      default. Complete UI support is coming in the next release.
 
     * A myriad of other small improvements throughout the project.
 
