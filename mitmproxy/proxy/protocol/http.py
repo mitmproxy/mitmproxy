@@ -1,6 +1,5 @@
 import h2.exceptions
 import time
-import traceback
 import enum
 
 from mitmproxy import connections  # noqa
@@ -431,7 +430,7 @@ class HttpLayer(base.Layer):
             response = http.make_error_response(code, message, headers)
             self.send_response(response)
         except (exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
-            self.log(traceback.format_exc(), "debug")
+            self.log("Failed to send error response to client: {}".format(message), "debug")
 
     def change_upstream_proxy_server(self, address) -> None:
         # Make set_upstream_proxy_server always available,
