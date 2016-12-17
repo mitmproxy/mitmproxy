@@ -328,7 +328,7 @@ class Http2Layer(base.Layer):
 
         try:
             while True:
-                r = tcp.ssl_read_select(conns, 1)
+                r = tcp.ssl_read_select(conns, 0.1)
                 for conn in r:
                     source_conn = self.client_conn if conn == self.client_conn.connection else self.server_conn
                     other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
@@ -580,7 +580,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
     def read_response_body(self, request, response):
         while True:
             try:
-                yield self.response_data_queue.get(timeout=1)
+                yield self.response_data_queue.get(timeout=0.1)
             except queue.Empty:  # pragma: no cover
                 pass
             if self.response_data_finished.is_set():
