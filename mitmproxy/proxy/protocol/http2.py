@@ -1,6 +1,5 @@
 import threading
 import time
-import traceback
 import functools
 from typing import Dict, Callable, Any, List  # noqa
 
@@ -358,7 +357,6 @@ class Http2Layer(base.Layer):
                     self._cleanup_streams()
         except Exception as e:  # pragma: no cover
             self.log(repr(e), "info")
-            self.log(traceback.format_exc(), "debug")
             self._kill_all_streams()
 
 
@@ -624,7 +622,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             pass
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
-            self.log(traceback.format_exc(), "debug")
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
             self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
         except exceptions.Kill:
