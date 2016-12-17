@@ -1,6 +1,5 @@
 import h2.exceptions
 import time
-import traceback
 import enum
 
 from mitmproxy import connections  # noqa
