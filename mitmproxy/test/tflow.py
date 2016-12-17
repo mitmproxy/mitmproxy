@@ -72,6 +72,7 @@ def tclient_conn():
         timestamp_end=3,
         sni="address",
         cipher_name="cipher",
+        alpn_proto_negotiated=None,
         tls_version="TLSv1.2",
     ))
     c.reply = controller.DummyReply()
@@ -93,7 +94,8 @@ def tserver_conn():
         timestamp_end=4,
         ssl_established=False,
         sni="address",
-        via=None
+        alpn_proto_negotiated=None,
+        via=None,
     ))
     c.reply = controller.DummyReply()
     return c

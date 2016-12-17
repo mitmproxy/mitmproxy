@@ -31,6 +31,8 @@ def flowdetails(state, flow):
             ["Address", repr(sc.address)],
             ["Resolved Address", repr(sc.ip_address)],
         ]
+        if sc.alpn_proto_negotiated:
+            parts.append(["ALPN", sc.alpn_proto_negotiated])
 
         text.extend(
             common.format_keyvals(parts, key="key", val="text", indent=4)
@@ -94,6 +96,8 @@ def flowdetails(state, flow):
             parts.append(["Server Name Indication", cc.sni])
         if cc.cipher_name:
             parts.append(["Cipher Name", cc.cipher_name])
+        if cc.alpn_proto_negotiated:
+            parts.append(["ALPN", cc.alpn_proto_negotiated])
 
         text.extend(
             common.format_keyvals(parts, key="key", val="text", indent=4)
