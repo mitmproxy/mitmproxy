@@ -120,7 +120,6 @@ class ConnectionHandler:
         except exceptions.Kill:
             self.log("Connection killed", "info")
         except exceptions.ProtocolException as e:
-
             if isinstance(e, exceptions.ClientHandshakeException):
                 self.log(
                     "Client Handshake failed. "
@@ -134,7 +133,7 @@ class ConnectionHandler:
             else:
                 self.log(str(e), "warn")
 
-                self.log(traceback.format_exc(), "debug")
+                self.log(repr(e), "debug")
             # If an error propagates to the topmost level,
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.

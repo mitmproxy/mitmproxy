@@ -1,5 +1,3 @@
-import traceback
-
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -107,10 +105,10 @@ class RequestReplayThread(basethread.BaseThread):
                 "log",
                 log.LogEntry("Connection killed", "info")
             )
-        except Exception:
+        except Exception as e:
             self.channel.tell(
                 "log",
-                log.LogEntry(traceback.format_exc(), "error")
+                log.LogEntry(repr(e), "error")
             )
         finally:
             r.first_line_format = first_line_format_backup
