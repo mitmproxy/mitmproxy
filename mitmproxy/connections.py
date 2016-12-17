@@ -22,6 +22,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_end: Connection end timestamp
         sni: Server Name Indication sent by client during the TLS handshake
         cipher_name: The current used cipher
+        alpn_proto_negotiated: The negotiated application protocol
         tls_version: TLS version
     """
 
@@ -44,14 +45,16 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.sni = None
         self.cipher_name = None
+        self.alpn_proto_negotiated = None
         self.tls_version = None
 
     def connected(self):
         return bool(self.connection) and not self.finished
 
     def __repr__(self):
-        return "<ClientConnection: {ssl}{address}>".format(
+        return "<ClientConnection: {ssl}{alpn}{address}>".format(
             ssl="[ssl] " if self.ssl_established else "",
+            alpn="[ALPN: {}] ".format(self.alpn_proto_negotiated) if self.alpn_proto_negotiated else "",
             address=repr(self.address)
         )
 
@@ -68,6 +71,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_end=float,
         sni=str,
         cipher_name=str,
+        alpn_proto_negotiated=str,
         tls_version=str,
     )
 
@@ -97,6 +101,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             timestamp_ssl_setup=None,
             sni=None,
             cipher_name=None,
+            alpn_proto_negotiated=None,
             tls_version=None,
         ))
 
@@ -109,6 +114,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         else:
             self.sni = None
         self.cipher_name = self.connection.get_cipher_name()
+        self.alpn_proto_negotiated = self.get_alpn_proto_negotiated()
         self.tls_version = self.connection.get_protocol_version_name()
 
     def finish(self):
@@ -128,6 +134,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ssl_established: True if TLS is established, False otherwise
         cert: The certificate presented by the remote during the TLS handshake
         sni: Server Name Indication sent by the proxy during the TLS handshake
+        alpn_proto_negotiated: The negotiated application protocol
         via: The underlying server connection (e.g. the connection to the upstream proxy in upstream proxy mode)
         timestamp_start: Connection start timestamp
         timestamp_tcp_setup: TCP ACK received timestamp
@@ -138,6 +145,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def __init__(self, address, source_address=None, spoof_source_address=None):
         tcp.TCPClient.__init__(self, address, source_address, spoof_source_address)
 
+        self.alpn_proto_negotiated = None
         self.via = None
         self.timestamp_start = None
         self.timestamp_end = None
@@ -154,8 +162,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             ssl = "[ssl] "
         else:
             ssl = ""
-        return "<ServerConnection: {ssl}{address}>".format(
+        return "<ServerConnection: {ssl}{alpn}{address}>".format(
             ssl=ssl,
+            alpn="[ALPN: {}] ".format(self.alpn_proto_negotiated) if self.alpn_proto_negotiated else "",
             address=repr(self.address)
         )
 
@@ -170,6 +179,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ssl_established=bool,
         cert=certs.SSLCert,
         sni=str,
+        alpn_proto_negotiated=str,
         timestamp_start=float,
         timestamp_tcp_setup=float,
         timestamp_ssl_setup=float,
@@ -189,6 +199,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             ip_address=dict(address=address, use_ipv6=False),
             cert=None,
             sni=None,
+            alpn_proto_negotiated=None,
             source_address=dict(address=('', 0), use_ipv6=False),
             ssl_established=False,
             timestamp_start=None,
@@ -228,6 +239,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
         self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni
+        self.alpn_proto_negotiated = self.get_alpn_proto_negotiated()
         self.timestamp_ssl_setup = time.time()
 
     def finish(self):
