@@ -141,6 +141,15 @@ class TestMessageContentEncoding:
         assert r.headers["content-encoding"]
         assert r.get_content(strict=False) == b"foo"
 
+    def test_utf8_as_ce(self):
+        r = tutils.tresp()
+        r.headers["content-encoding"] = "utf8"
+        r.raw_content = b"foo"
+        with tutils.raises(ValueError):
+            assert r.content
+        assert r.headers["content-encoding"]
+        assert r.get_content(strict=False) == b"foo"
+
     def test_cannot_decode(self):
         r = tutils.tresp()
         r.encode("gzip")
