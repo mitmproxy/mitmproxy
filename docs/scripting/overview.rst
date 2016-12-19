@@ -85,8 +85,8 @@ and mitmproxy console can place script output in the event buffer.
 
 Here's how this looks:
 
-.. literalinclude:: ../../examples/simple/logging.py
-   :caption: :src:`examples/simple/logging.py`
+.. literalinclude:: ../../examples/simple/log_events.py
+   :caption: :src:`examples/simple/log_events.py`
    :language: python
 
 The ``ctx`` module also exposes the mitmproxy master object at ``ctx.master``
