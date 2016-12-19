@@ -255,11 +255,11 @@ class TestRequestUtils:
         assert not request.urlencoded_form
 
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        assert list(request.urlencoded_form.items()) == [(b"foobar", b"baz")]
+        assert list(request.urlencoded_form.items()) == [("foobar", "baz")]
 
     def test_set_urlencoded_form(self):
         request = treq()
-        request.urlencoded_form = [(b'foo', b'bar'), (b'rab', b'oof')]
+        request.urlencoded_form = [('foo', 'bar'), ('rab', 'oof')]
         assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
         assert request.content
 

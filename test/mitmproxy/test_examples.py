@@ -68,11 +68,11 @@ class TestScripts(mastertest.MasterTest):
         f = tflow.tflow(req=tutils.treq(headers=form_header))
         m.request(f)
 
-        assert f.request.urlencoded_form[b"mitmproxy"] == b"rocks"
+        assert f.request.urlencoded_form["mitmproxy"] == "rocks"
 
         f.request.headers["content-type"] = ""
         m.request(f)
-        assert list(f.request.urlencoded_form.items()) == [(b"foo", b"bar")]
+        assert list(f.request.urlencoded_form.items()) == [("foo", "bar")]
 
     def test_modify_querystring(self):
         m, sc = tscript("simple/modify_querystring.py")

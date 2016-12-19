@@ -1,9 +1,10 @@
-import urllib
 import hashlib
+import urllib
+from typing import Any  # noqa
+from typing import List  # noqa
 
-from mitmproxy.utils import strutils
-from mitmproxy import exceptions
 from mitmproxy import ctx
+from mitmproxy import exceptions
 from mitmproxy import io
 
 
@@ -36,17 +37,20 @@ class ServerPlayback:
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
-        key = [str(r.port), str(r.scheme), str(r.method), str(path)]
+        key = [str(r.port), str(r.scheme), str(r.method), str(path)]  # type: List[Any]
         if not self.options.server_replay_ignore_content:
-            form_contents = r.urlencoded_form or r.multipart_form
-            if self.options.server_replay_ignore_payload_params and form_contents:
-                params = [
-                    strutils.always_bytes(i)
-                    for i in self.options.server_replay_ignore_payload_params
-                ]
-                for p in form_contents.items(multi=True):
-                    if p[0] not in params:
-                        key.append(p)
+            if self.options.server_replay_ignore_payload_params and r.multipart_form:
+                key.extend(
+                    (k, v)
+                    for k, v in r.multipart_form.items(multi=True)
+                    if k.decode(errors="replace") not in self.options.server_replay_ignore_payload_params
+                )
+            elif self.options.server_replay_ignore_payload_params and r.urlencoded_form:
+                key.extend(
+                    (k, v)
+                    for k, v in r.urlencoded_form.items(multi=True)
+                    if k not in self.options.server_replay_ignore_payload_params
+                )
             else:
                 key.append(str(r.raw_content))
 
