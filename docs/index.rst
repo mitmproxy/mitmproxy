@@ -17,6 +17,7 @@
 
     mitmproxy
     mitmdump
+    mitmweb
     config
 
 .. toctree::
