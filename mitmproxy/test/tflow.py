@@ -72,7 +72,7 @@ def tclient_conn():
         timestamp_end=3,
         sni="address",
         cipher_name="cipher",
-        alpn_proto_negotiated=None,
+        alpn_proto_negotiated=b"http/1.1",
         tls_version="TLSv1.2",
     ))
     c.reply = controller.DummyReply()

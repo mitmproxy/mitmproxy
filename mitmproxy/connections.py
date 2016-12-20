@@ -6,6 +6,7 @@ import os
 from mitmproxy import stateobject
 from mitmproxy import certs
 from mitmproxy.net import tcp
+from mitmproxy.utils import strutils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
@@ -52,9 +53,15 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return bool(self.connection) and not self.finished
 
     def __repr__(self):
+        if self.alpn_proto_negotiated:
+            alpn = "[ALPN: {}] ".format(
+                strutils.bytes_to_escaped_str(self.alpn_proto_negotiated)
+            )
+        else:
+            alpn = ""
         return "<ClientConnection: {ssl}{alpn}{address}>".format(
             ssl="[ssl] " if self.ssl_established else "",
-            alpn="[ALPN: {}] ".format(self.alpn_proto_negotiated) if self.alpn_proto_negotiated else "",
+            alpn=alpn,
             address=repr(self.address)
         )
 
@@ -71,7 +78,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_end=float,
         sni=str,
         cipher_name=str,
-        alpn_proto_negotiated=str,
+        alpn_proto_negotiated=bytes,
         tls_version=str,
     )
 
@@ -162,9 +169,15 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             ssl = "[ssl] "
         else:
             ssl = ""
+        if self.alpn_proto_negotiated:
+            alpn = "[ALPN: {}] ".format(
+                strutils.bytes_to_escaped_str(self.alpn_proto_negotiated)
+            )
+        else:
+            alpn = ""
         return "<ServerConnection: {ssl}{alpn}{address}>".format(
             ssl=ssl,
-            alpn="[ALPN: {}] ".format(self.alpn_proto_negotiated) if self.alpn_proto_negotiated else "",
+            alpn=alpn,
             address=repr(self.address)
         )
 
@@ -179,7 +192,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ssl_established=bool,
         cert=certs.SSLCert,
         sni=str,
-        alpn_proto_negotiated=str,
+        alpn_proto_negotiated=bytes,
         timestamp_start=float,
         timestamp_tcp_setup=float,
         timestamp_ssl_setup=float,
