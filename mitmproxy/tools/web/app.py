@@ -34,6 +34,12 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "type": flow.type,
         "modified": flow.modified(),
     }
+    # .alpn_proto_negotiated is bytes, we need to decode that.
+    for conn in "client_conn", "server_conn":
+        if f[conn]["alpn_proto_negotiated"] is None:
+            continue
+        f[conn]["alpn_proto_negotiated"] = \
+            f[conn]["alpn_proto_negotiated"].decode(errors="backslashreplace")
     if flow.error:
         f["error"] = flow.error.get_state()
 

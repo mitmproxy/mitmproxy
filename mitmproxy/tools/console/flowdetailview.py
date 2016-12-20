@@ -2,6 +2,7 @@ import urwid
 
 from mitmproxy.tools.console import common, searchable
 from mitmproxy.utils import human
+from mitmproxy.utils import strutils
 
 
 def maybe_timestamp(base, attr):
@@ -77,7 +78,7 @@ def flowdetails(state, flow):
                 parts.append(
                     [
                         "Alt names",
-                        ", ".join(str(x) for x in c.altnames)
+                        ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)
                     ]
                 )
             text.extend(
