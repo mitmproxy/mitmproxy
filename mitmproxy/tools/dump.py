@@ -30,12 +30,14 @@ class Options(options.Options):
 
 class DumpMaster(master.Master):
 
-    def __init__(self, options, server):
+    def __init__(self, options, server, with_termlog=True, with_dumper=True):
         master.Master.__init__(self, options, server)
         self.has_errored = False
-        self.addons.add(termlog.TermLog())
+        if with_termlog:
+            self.addons.add(termlog.TermLog())
         self.addons.add(*addons.default_addons())
-        self.addons.add(dumper.Dumper())
+        if with_dumper:
+            self.addons.add(dumper.Dumper())
         # This line is just for type hinting
         self.options = self.options  # type: Options
 

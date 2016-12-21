@@ -19,8 +19,7 @@ def json(resp: httpclient.HTTPResponse):
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
         o = options.Options()
-        m = webmaster.WebMaster(o, proxy.DummyServer())
-        m.addons.remove(m.addons.get('termlog'))
+        m = webmaster.WebMaster(o, proxy.DummyServer(), with_termlog=False)
         f = tflow.tflow(resp=True)
         f.id = "42"
         m.view.add(f)

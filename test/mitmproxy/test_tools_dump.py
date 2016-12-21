@@ -11,7 +11,8 @@ from . import mastertest
 class TestDumpMaster(mastertest.MasterTest):
     def mkmaster(self, flt, **options):
         o = dump.Options(filtstr=flt, verbosity=-1, flow_detail=0, **options)
-        return dump.DumpMaster(o, proxy.DummyServer())
+        m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)
+        return m
 
     def test_read(self):
         with tutils.tmpdir() as t:

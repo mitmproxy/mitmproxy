@@ -15,7 +15,7 @@ from mitmproxy.tools.web import app
 
 
 class WebMaster(master.Master):
-    def __init__(self, options, server):
+    def __init__(self, options, server, with_termlog=True):
         super().__init__(options, server)
         self.view = view.View()
         self.view.sig_view_add.connect(self._sig_view_add)
@@ -34,8 +34,9 @@ class WebMaster(master.Master):
             intercept.Intercept(),
             self.view,
             self.events,
-            termlog.TermLog(),
         )
+        if with_termlog:
+            self.addons.add(termlog.TermLog())
         self.app = app.Application(
             self, self.options.wdebug
         )
