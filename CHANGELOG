@@ -10,7 +10,7 @@
       size, type and url, status bar improvements, much faster indentation for
       HTTP views, and more.
 
-    * http2: significant improvements, but is temporarily disabled by default
+    * HTTP/2: significant improvements, but is temporarily disabled by default
       due to wide-spread protocol implementation errors on some large website
 
     * websockets: the protocol implementation is now mature, and is enabled by
