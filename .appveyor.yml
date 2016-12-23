@@ -7,6 +7,9 @@ environment:
   matrix:
     - PYTHON: "C:\\Python35"
       TOXENV: "py35"
+    # TODO: ENABLE WHEN AVAILABLE
+    # - PYTHON: "C:\\Python36"
+    #   TOXENV: "py36"
 
   SNAPSHOT_HOST:
     secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=

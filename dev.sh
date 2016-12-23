@@ -2,7 +2,7 @@
 set -e
 set -x
 
-PYVERSION=3.5
+PYVERSION=${1:-3.5}
 VENV="venv$PYVERSION"
 
 echo "Creating dev environment in $VENV using Python $PYVERSION"
