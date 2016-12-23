@@ -136,7 +136,7 @@ def response(flow):
 
     if flow.request.method in ["POST", "PUT", "PATCH"]:
         params = [
-            {"name": a.decode("utf8", "surrogateescape"), "value": b.decode("utf8", "surrogateescape")}
+            {"name": a, "value": b}
             for a, b in flow.request.urlencoded_form.items(multi=True)
         ]
         entry["request"]["postData"] = {

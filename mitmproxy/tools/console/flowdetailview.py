@@ -2,6 +2,7 @@ import urwid
 
 from mitmproxy.tools.console import common, searchable
 from mitmproxy.utils import human
+from mitmproxy.utils import strutils
 
 
 def maybe_timestamp(base, attr):
@@ -31,6 +32,8 @@ def flowdetails(state, flow):
             ["Address", repr(sc.address)],
             ["Resolved Address", repr(sc.ip_address)],
         ]
+        if sc.alpn_proto_negotiated:
+            parts.append(["ALPN", sc.alpn_proto_negotiated])
 
         text.extend(
             common.format_keyvals(parts, key="key", val="text", indent=4)
@@ -75,7 +78,7 @@ def flowdetails(state, flow):
                 parts.append(
                     [
                         "Alt names",
-                        ", ".join(str(x) for x in c.altnames)
+                        ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)
                     ]
                 )
             text.extend(
@@ -94,6 +97,8 @@ def flowdetails(state, flow):
             parts.append(["Server Name Indication", cc.sni])
         if cc.cipher_name:
             parts.append(["Cipher Name", cc.cipher_name])
+        if cc.alpn_proto_negotiated:
+            parts.append(["ALPN", cc.alpn_proto_negotiated])
 
         text.extend(
             common.format_keyvals(parts, key="key", val="text", indent=4)

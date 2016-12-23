@@ -11,6 +11,14 @@ def test_load():
         assert flows[0].request.url == "https://example.com/"
 
 
+def test_load_018():
+    with open(tutils.test_data.path("mitmproxy/data/dumpfile-018"), "rb") as f:
+        flow_reader = io.FlowReader(f)
+        flows = list(flow_reader.stream())
+        assert len(flows) == 1
+        assert flows[0].request.url == "https://www.example.com/"
+
+
 def test_cannot_convert():
     with open(tutils.test_data.path("mitmproxy/data/dumpfile-010"), "rb") as f:
         flow_reader = io.FlowReader(f)

@@ -34,7 +34,7 @@ test_script:
 
   - ps: |
       if(
-        ($Env:TOXENV -match "py35") -and
+        ($Env:TOXENV -match "py35") -and !$Env:APPVEYOR_PULL_REQUEST_NUMBER -and
         (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
         tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml

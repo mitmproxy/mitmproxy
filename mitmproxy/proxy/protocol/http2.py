@@ -1,6 +1,5 @@
 import threading
 import time
-import traceback
 import functools
 from typing import Dict, Callable, Any, List  # noqa
 
@@ -328,7 +327,7 @@ class Http2Layer(base.Layer):
 
         try:
             while True:
-                r = tcp.ssl_read_select(conns, 1)
+                r = tcp.ssl_read_select(conns, 0.1)
                 for conn in r:
                     source_conn = self.client_conn if conn == self.client_conn.connection else self.server_conn
                     other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
@@ -358,7 +357,6 @@ class Http2Layer(base.Layer):
                     self._cleanup_streams()
         except Exception as e:  # pragma: no cover
             self.log(repr(e), "info")
-            self.log(traceback.format_exc(), "debug")
             self._kill_all_streams()
 
 
@@ -580,7 +578,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
     def read_response_body(self, request, response):
         while True:
             try:
-                yield self.response_data_queue.get(timeout=1)
+                yield self.response_data_queue.get(timeout=0.1)
             except queue.Empty:  # pragma: no cover
                 pass
             if self.response_data_finished.is_set():
@@ -624,7 +622,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             pass
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
-            self.log(traceback.format_exc(), "debug")
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
             self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
         except exceptions.Kill:

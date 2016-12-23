@@ -350,6 +350,8 @@ class Request(message.Message):
         The URL-encoded form data as an :py:class:`~mitmproxy.net.multidict.MultiDictView` object.
         An empty multidict.MultiDictView if the content-type indicates non-form data
         or the content could not be parsed.
+
+        Starting with mitmproxy 1.0, key and value are strings.
         """
         return multidict.MultiDictView(
             self._get_urlencoded_form,
@@ -360,7 +362,7 @@ class Request(message.Message):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             try:
-                return tuple(mitmproxy.net.http.url.decode(self.content))
+                return tuple(mitmproxy.net.http.url.decode(self.content.decode()))
             except ValueError:
                 pass
         return ()
@@ -381,7 +383,10 @@ class Request(message.Message):
     def multipart_form(self):
         """
         The multipart form data as an :py:class:`~mitmproxy.net.multidict.MultiDictView` object.
-        None if the content-type indicates non-form data.
+        An empty multidict.MultiDictView if the content-type indicates non-form data
+        or the content could not be parsed.
+
+        Key and value are bytes.
         """
         return multidict.MultiDictView(
             self._get_multipart_form,

@@ -65,12 +65,19 @@ def convert_017_018(data):
 
 
 def convert_018_019(data):
-    data["version"] = (0, 19)
+    # convert_unicode needs to be called for every dual release and the first py3-only release
+    data = convert_unicode(data)
+
+    data["request"].pop("stickyauth", None)
+    data["request"].pop("stickycookie", None)
     data["client_conn"]["sni"] = None
+    data["client_conn"]["alpn_proto_negotiated"] = None
     data["client_conn"]["cipher_name"] = None
     data["client_conn"]["tls_version"] = None
+    data["server_conn"]["alpn_proto_negotiated"] = None
     data["mode"] = "regular"
     data["metadata"] = dict()
+    data["version"] = (0, 19)
     return data
 
 
@@ -142,7 +149,4 @@ def migrate_flow(flow_data):
             raise ValueError(
                 "{} cannot read files serialized with version {}.".format(version.MITMPROXY, v)
             )
-    # TODO: This should finally be moved in the converter for the first py3-only release.
-    # It's here so that a py2 0.18 dump can be read by py3 0.18 and vice versa.
-    flow_data = convert_unicode(flow_data)
     return flow_data
