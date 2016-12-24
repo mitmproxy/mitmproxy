@@ -1,3 +1,33 @@
+18 December 2016: mitmproxy 1.0
+
+    * All mitmproxy tools are now Python 3 only! We plan to support Python 3.5 and higher.
+
+    * Web-Based User Interface: Mitmproxy now offically has a web-based user interface
+      called mitmweb. We consider it stable for all features currently exposed 
+      in the UI, but it still misses a lot of mitmproxy’s options.
+      
+    * Windows Compatibility: With mitmweb, mitmproxy is now useable on Windows. 
+      We are also introducing an installer (kindly sponsored by BitRock) that 
+      simplifies setup.
+      
+    * Configuration: The config file format is now a single YAML file. In most cases,
+      converting to the new format should be trivial - please see the docs for
+      more information.
+
+    * Console: Significant UI improvements - including sorting of flows by
+      size, type and url, status bar improvements, much faster indentation for
+      HTTP views, and more.
+
+    * HTTP/2: Significant improvements, but is temporarily disabled by default
+      due to wide-spread protocol implementation errors on some large website
+
+    * WebSocket: The protocol implementation is now mature, and is enabled by
+      default. Complete UI support is coming in the next release. Hooks for 
+      message interception and manipulation are available.
+
+    * A myriad of other small improvements throughout the project.
+
+
 16 October 2016: mitmproxy 0.18
 
     * Python 3 Compatibility for mitmproxy and pathod (Shadab Zafar, GSoC 2016)
