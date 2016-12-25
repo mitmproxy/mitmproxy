@@ -1,4 +1,4 @@
-18 December 2016: mitmproxy 1.0
+26 December 2016: mitmproxy 1.0
 
     * All mitmproxy tools are now Python 3 only! We plan to support Python 3.5 and higher.
 
