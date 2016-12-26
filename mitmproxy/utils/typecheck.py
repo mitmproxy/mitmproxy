@@ -1,4 +1,5 @@
 import typing
+import sys
 
 
 def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
@@ -21,8 +22,15 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         type(value)
     ))
 
-    if typeinfo.__qualname__ == "Union":
-        for T in typeinfo.__union_params__:
+    typename = str(typeinfo)
+
+    if typename.startswith("typing.Union"):
+        if sys.version_info < (3, 6):
+            types = typeinfo.__union_params__
+        else:
+            types = typeinfo.__args__
+
+        for T in types:
             try:
                 check_type(attr_name, value, T)
             except TypeError:
@@ -30,21 +38,26 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
             else:
                 return
         raise e
-    elif typeinfo.__qualname__ == "Tuple":
+    elif typename.startswith("typing.Tuple"):
+        if sys.version_info < (3, 6):
+            types = typeinfo.__tuple_params__
+        else:
+            types = typeinfo.__args__
+
         if not isinstance(value, (tuple, list)):
             raise e
-        if len(typeinfo.__tuple_params__) != len(value):
+        if len(types) != len(value):
             raise e
-        for i, (x, T) in enumerate(zip(value, typeinfo.__tuple_params__)):
+        for i, (x, T) in enumerate(zip(value, types)):
             check_type("{}[{}]".format(attr_name, i), x, T)
         return
-    elif typeinfo.__qualname__ == "Sequence":
+    elif typename.startswith("typing.Sequence"):
         T = typeinfo.__args__[0]
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:
             check_type(attr_name, v, T)
-    elif typeinfo.__qualname__ == "IO":
+    elif typename.startswith("typing.IO"):
         if hasattr(value, "read"):
             return
     elif not isinstance(value, typeinfo):
