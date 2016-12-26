@@ -6,6 +6,8 @@ with a console interface.
 
 **mitmdump** is the command-line version of mitmproxy. Think tcpdump for HTTP.
 
+**mitmweb** is a web-based interface for mitmproxy.
+
 Documentation, tutorials and distribution packages can be found on the
 mitmproxy website: `mitmproxy.org <https://mitmproxy.org/>`_
 
