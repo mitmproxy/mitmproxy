@@ -20,11 +20,15 @@ sudo make install
 sudo ldconfig
 
 sudo apt-get build-dep curl
-wget https://curl.haxx.se/download/curl-7.51.0.tar.bz2
-tar xvjf curl-7.51.0.tar.bz2
-cd curl-7.51.0
+wget https://curl.haxx.se/download/curl-7.52.1.tar.bz2
+tar xvjf curl-7.52.1.tar.bz2
+cd curl-7.52.1
 ./configure
 make
+
+
+
+export PATH=/home/ubuntu/chromedriver_linux64:$PATH
 """
 
 import tempfile
@@ -38,7 +42,10 @@ import glob
 import time
 
 import pytest
+import selenium
 from flaky import flaky
+from selenium import webdriver
+from pyvirtualdisplay import Display
 
 from mitmproxy import controller, flow, proxy, options
 from mitmproxy.proxy.server import ProxyServer
@@ -62,10 +69,10 @@ def generate_combinations():
             (False, domain, "https://{}".format(domain)),
             (False, domain, "http://www.{}".format(domain)),
             (False, domain, "https://www.{}".format(domain)),
-            (True, domain, "http://{}".format(domain)),
-            (True, domain, "http://www.{}".format(domain)),
-            (True, domain, "https://{}".format(domain)),
-            (True, domain, "https://www.{}".format(domain)),
+            # (True, domain, "http://{}".format(domain)),
+            # (True, domain, "http://www.{}".format(domain)),
+            # (True, domain, "https://{}".format(domain)),
+            # (True, domain, "https://www.{}".format(domain)),
         ] for domain in domains]
     return [item for sublist in l for item in sublist]
 
@@ -121,19 +128,32 @@ class TestSmokeCurl(object):
         config = ProxyConfig(opts)
 
         tmaster = tservers.TestMaster(opts, config)
+        tmaster.clear_log()
         cls.proxy = proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
+
+        cls.display = Display(visible=0, size=(800, 600))
+        cls.display.start()
+
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--proxy-server={}:{}'.format('127.0.0.1', cls.proxy.port))
+        cls.driver = webdriver.Chrome(chrome_options=chrome_options)
+
 
     @classmethod
     def teardown_class(cls):
         cls.proxy.shutdown()
+        cls.driver.close()
+        cls.display.stop()
 
     @flaky(max_runs=3)
     @pytest.mark.parametrize('offer_h2, domain, url', generate_combinations())
     def test_smoke_curl(self, offer_h2, domain, url):
+        self.proxy.tmaster.clear_log()
         self.proxy.tmaster.reset([DisableH2CleartextUpgrade()])
 
         cmd = [
+            # '/usr/local/opt/curl/bin/curl',
             '/home/ubuntu/curl-7.51.0/src/curl',
             '--location',
             '--insecure',
@@ -165,10 +185,13 @@ class TestSmokeCurl(object):
             url
         ]
         try:
-            c = subprocess.run(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60, check=True)
-            output += c.stderr
-            if b'ALPN, server accepted to use h2' in c.stderr:
-                negotiated_http2 = True
+            self.driver.get(url)
+            # assert self.driver.title
+
+            # c = subprocess.run(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60, check=True)
+            # output += c.stderr
+            # if b'ALPN, server accepted to use h2' in c.stderr:
+            #     negotiated_http2 = True
         except subprocess.CalledProcessError as e:
             write_protocol(offer_h2,
                            domain,
@@ -185,6 +208,13 @@ class TestSmokeCurl(object):
                            'timeout',
                            stdout=e.stdout,
                            stderr=e.stderr,
+                           tlog=self.proxy.tmaster.tlog)
+            pytest.fail("timeout: {}".format(url))
+        except selenium.common.exceptions.TimeoutException:
+            write_protocol(offer_h2,
+                           domain,
+                           url,
+                           'selenium timeout',
                            tlog=self.proxy.tmaster.tlog)
             pytest.fail("timeout: {}".format(url))
 
@@ -224,4 +254,14 @@ if __name__ == '__main__':
     os.environ['SMOKE_TEST_TIMESTAMP'] = time.strftime("%Y%m%d-%H%M")
     print(os.environ['SMOKE_TEST_TIMESTAMP'])
     os.makedirs('tmp/{}'.format(os.environ['SMOKE_TEST_TIMESTAMP']), exist_ok=True)
-    pytest.main(args=['-s', '-v', '-n', '16', '--show-progress', '--no-flaky-report', sys.argv[0]])
+    if os.path.islink('tmp/latest'):
+        os.remove('tmp/latest')
+    os.symlink(os.environ['SMOKE_TEST_TIMESTAMP'], 'tmp/latest')
+    pytest.main(args=['-s',
+                      '-v',
+                    #   '-x',
+                    #   '-n', '16',
+                      '--show-progress',
+                      '--no-flaky-report',
+                      *sys.argv
+                      ])
