@@ -1,3 +1,6 @@
+import sys
+import pytest
+
 from mitmproxy.test import tutils
 from mitmproxy.net.http import url
 
@@ -30,9 +33,6 @@ def test_parse():
     s, h, po, pa = url.parse(b"https://foo")
     assert po == 443
 
-    with tutils.raises(ValueError):
-        url.parse(b"https://foo:bar")
-
     # Invalid IDNA
     with tutils.raises(ValueError):
         url.parse("http://\xfafoo")
@@ -42,12 +42,19 @@ def test_parse():
     # Null byte in host
     with tutils.raises(ValueError):
         url.parse("http://foo\0")
-    # Port out of range
-    _, _, port, _ = url.parse("http://foo:999999")
-    assert port == 80
+    # Invalid port
+    with tutils.raises(ValueError):
+        url.parse(b"https://foo:bar")
     # Invalid IPv6 URL - see http://www.ietf.org/rfc/rfc2732.txt
     with tutils.raises(ValueError):
         url.parse('http://lo[calhost')
+
+
+@pytest.mark.skipif(sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
+def test_parse_port_range():
+    # Port out of range
+    with tutils.raises(ValueError):
+        url.parse("http://foo:999999")
 
 
 def test_unparse():

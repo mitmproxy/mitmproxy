@@ -51,21 +51,23 @@ def parse(url):
     else:
         host = parsed.hostname.encode("idna")
         parsed = encode_parse_result(parsed, "ascii")
+    if not check.is_valid_host(host):
+        raise ValueError("Invalid Host")
 
-    port = parsed.port
+    try:
+        port = parsed.port
+    except:
+        raise ValueError("Invalid Port")
     if not port:
         port = 443 if parsed.scheme == b"https" else 80
+    if not check.is_valid_port(port):
+        raise ValueError("Invalid Port")
 
     full_path = urllib.parse.urlunparse(
         (b"", b"", parsed.path, parsed.params, parsed.query, parsed.fragment)
     )
     if not full_path.startswith(b"/"):
         full_path = b"/" + full_path
-
-    if not check.is_valid_host(host):
-        raise ValueError("Invalid Host")
-    if not check.is_valid_port(port):
-        raise ValueError("Invalid Port")
 
     return parsed.scheme, host, port, full_path
 
