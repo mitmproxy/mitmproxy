@@ -1,7 +1,12 @@
 $ErrorActionPreference = "Stop"
 $VENV = ".\venv"
 
-python3 -m venv $VENV --copies
+$pyver = python --version
+if($pyver -notmatch "3\.[5-9]") {
+    Write-Warning "Unexpected Python version, expected Python 3.5 or above: $pyver"
+}
+
+python -m venv $VENV --copies
 & $VENV\Scripts\activate.ps1
 
 python -m pip install --disable-pip-version-check -U pip
