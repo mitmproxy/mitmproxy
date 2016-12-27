@@ -10,6 +10,8 @@ interface.
 
 ``mitmdump`` is the command-line version of mitmproxy. Think tcpdump for HTTP.
 
+``mitmweb`` is a web-based interface for mitmproxy.
+
 ``pathoc`` and ``pathod`` are perverse HTTP client and server applications
 designed to let you craft almost any conceivable HTTP request, including ones
 that creatively violate the standards.
