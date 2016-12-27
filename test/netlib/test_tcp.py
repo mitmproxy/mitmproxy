@@ -519,6 +519,12 @@ class TestALPNClient(tservers.ServerTestBase):
         alpn_select=b"bar"
     )
 
+    def test_alpn_functional(self):
+        if os.environ.get("NO_ALPN", False):
+            assert not tcp.HAS_ALPN
+        else:
+            assert tcp.HAS_ALPN
+
     if tcp.HAS_ALPN:
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
