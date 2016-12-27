@@ -89,13 +89,14 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
     return f
 
 
-def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
+def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None, proxy_username=None):
     """
     @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
     @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
     @type req:         bool | None | mitmproxy.protocol.http.HTTPRequest
     @type resp:        bool | None | mitmproxy.protocol.http.HTTPResponse
     @type err:         bool | None | mitmproxy.protocol.primitives.Error
+    @type proxy_username:  bool | None | string
     @return:           mitmproxy.protocol.http.HTTPFlow
     """
     if client_conn is True:
@@ -108,6 +109,8 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
         resp = netlib.tutils.tresp()
     if err is True:
         err = terr()
+    if proxy_username is True:
+        proxy_username = "myusername"
 
     if req:
         req = HTTPRequest.wrap(req)
@@ -116,6 +119,7 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
 
     f = HTTPFlow(client_conn, server_conn)
     f.request = req
+    f.proxy_username = proxy_username
     f.response = resp
     f.error = err
     f.reply = controller.DummyReply()

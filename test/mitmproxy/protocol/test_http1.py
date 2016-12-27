@@ -12,6 +12,10 @@ class TestHTTPFlow(object):
         f = tutils.tflow(resp=True, err=True)
         assert repr(f)
 
+    def test_proxy_username(self):
+        f = tutils.tflow(resp=True, proxy_username="some_proxy_username")
+        assert f.proxy_username == "some_proxy_username"
+
 
 class TestInvalidRequests(tservers.HTTPProxyTest):
     ssl = True

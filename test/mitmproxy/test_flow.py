@@ -40,7 +40,7 @@ def test_app_registry():
 class TestHTTPFlow(object):
 
     def test_copy(self):
-        f = tutils.tflow(resp=True)
+        f = tutils.tflow(resp=True, proxy_username=True)
         f.get_state()
         f2 = f.copy()
         a = f.get_state()
@@ -56,6 +56,8 @@ class TestHTTPFlow(object):
         assert f.request.headers is not f2.request.headers
         assert f.response.get_state() == f2.response.get_state()
         assert f.response is not f2.response
+        assert f.proxy_username == f2.proxy_username
+        assert f.proxy_username is not f2.proxy_username
 
         f = tutils.tflow(err=True)
         f2 = f.copy()
