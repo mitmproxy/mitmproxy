@@ -30,6 +30,7 @@ matrix:
             # change this with future releases!
             - debian-sid
           packages:
+            - libssl-dev
     - python: 3.6
       env: TOXENV=py36 OPENSSL_ALPN
       addons:
