@@ -30,6 +30,15 @@ matrix:
             # change this with future releases!
             - debian-sid
           packages:
+    - python: 3.6
+      env: TOXENV=py36 OPENSSL_ALPN
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.1.0
+            # change this with future releases!
+            - debian-sid
+          packages:
             - libssl-dev
     - python: 3.5
       env: TOXENV=docs
