@@ -8,3 +8,4 @@
 - Upload wheel to pypi
 - Update docker-releases repo
 - Update `latest` tag on https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/
+- Bump the version immediately afterwards
