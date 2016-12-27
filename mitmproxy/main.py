@@ -14,6 +14,31 @@ from netlib import version_check
 from netlib import debug
 
 
+def py3():
+    print("""
+Error: mitmproxy requires Python 3.5 or above
+
+Starting with version 1.0 released in 12/2016, mitmproxy no longer supports Python 2.
+
+To install the latest version of mitmproxy using pip on Python 3, run:
+
+    pip uninstall mitmproxy
+    pip3 install mitmproxy
+
+You can also use our standalone binaries that come with their own Python interpreter:
+
+    http://docs.mitmproxy.org/en/stable/install.html
+
+To get rid of this message and use the last version of mitmproxy that supports Python 2, run:
+
+    pip install "mitmproxy==0.18.2"
+
+
+Apologies for the inconvenience!
+""")
+    sys.exit(1)
+
+
 def assert_utf8_env():
     spec = ""
     for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
@@ -47,6 +72,7 @@ def process_options(parser, options, args):
 
 
 def mitmproxy(args=None):  # pragma: no cover
+    py3()
     if os.name == "nt":
         print("Error: mitmproxy's console interface is not supported on Windows. "
               "You can run mitmdump or mitmweb instead.", file=sys.stderr)
@@ -83,6 +109,7 @@ def mitmproxy(args=None):  # pragma: no cover
 
 
 def mitmdump(args=None):  # pragma: no cover
+    py3()
     from . import dump
 
     version_check.check_pyopenssl_version()
@@ -117,6 +144,7 @@ def mitmdump(args=None):  # pragma: no cover
 
 
 def mitmweb(args=None):  # pragma: no cover
+    py3()
     from . import web
 
     version_check.check_pyopenssl_version()
