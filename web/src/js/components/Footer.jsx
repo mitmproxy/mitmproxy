@@ -26,8 +26,8 @@ function Footer({ settings }) {
             {rawtcp && (
                 <span className="label label-success">raw-tcp</span>
             )}
-            {http2 && (
-                <span className="label label-success">http2</span>
+            {!http2 && (
+                <span className="label label-success">no-http2</span>
             )}
             {!websocket && (
                 <span className="label label-success">no-websocket</span>

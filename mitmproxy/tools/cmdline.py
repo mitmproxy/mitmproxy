@@ -453,12 +453,11 @@ def proxy_options(parser):
     )
 
     http2 = group.add_mutually_exclusive_group()
-    http2.add_argument("--http2", action="store_true", dest="http2")
     http2.add_argument("--no-http2", action="store_false", dest="http2",
                        help="Explicitly enable/disable HTTP/2 support. "
-                            "Disabled by default until major websites implement the spec correctly. "
-                            "Default value will change in a future version."
+                            "Enabled by default."
                        )
+    http2.add_argument("--http2", action="store_true", dest="http2")
 
     websocket = group.add_mutually_exclusive_group()
     websocket.add_argument("--no-websocket", action="store_false", dest="websocket",
