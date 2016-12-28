@@ -1,5 +1,6 @@
 import typing
 
+import mock
 import pytest
 from mitmproxy.utils import typecheck
 
@@ -57,3 +58,11 @@ def test_check_sequence():
         typecheck.check_type("foo", [10, "foo"], typing.Sequence[int])
     with pytest.raises(TypeError):
         typecheck.check_type("foo", [b"foo"], typing.Sequence[str])
+    with pytest.raises(TypeError):
+        typecheck.check_type("foo", "foo", typing.Sequence[str])
+
+    # Python 3.5.0 only defines __parameters__
+    m = mock.Mock()
+    m.__str__ = lambda self: "typing.Sequence"
+    m.__parameters__ = (int,)
+    typecheck.check_type("foo", [10], m)
