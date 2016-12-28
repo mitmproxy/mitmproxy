@@ -1,5 +1,4 @@
 import typing
-import sys
 
 
 def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
@@ -25,10 +24,11 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
     typename = str(typeinfo)
 
     if typename.startswith("typing.Union"):
-        if sys.version_info < (3, 6):
-            types = typeinfo.__union_params__
-        else:
+        try:
             types = typeinfo.__args__
+        except AttributeError:
+            # Python 3.5.x
+            types = typeinfo.__union_params__
 
         for T in types:
             try:
@@ -39,10 +39,11 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
                 return
         raise e
     elif typename.startswith("typing.Tuple"):
-        if sys.version_info < (3, 6):
-            types = typeinfo.__tuple_params__
-        else:
+        try:
             types = typeinfo.__args__
+        except AttributeError:
+            # Python 3.5.x
+            types = typeinfo.__tuple_params__
 
         if not isinstance(value, (tuple, list)):
             raise e
@@ -52,7 +53,11 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
             check_type("{}[{}]".format(attr_name, i), x, T)
         return
     elif typename.startswith("typing.Sequence"):
-        T = typeinfo.__args__[0]
+        try:
+            T = typeinfo.__args__[0]
+        except AttributeError:
+            # Python 3.5.0
+            T = typeinfo.__parameters__[0]
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:
@@ -60,6 +65,8 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
     elif typename.startswith("typing.IO"):
         if hasattr(value, "read"):
             return
+        else:
+            raise e
     elif not isinstance(value, typeinfo):
         raise e
 
