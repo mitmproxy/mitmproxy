@@ -1,7 +1,9 @@
+import io
 import typing
 
 import mock
 import pytest
+
 from mitmproxy.utils import typecheck
 
 
@@ -66,3 +68,9 @@ def test_check_sequence():
     m.__str__ = lambda self: "typing.Sequence"
     m.__parameters__ = (int,)
     typecheck.check_type("foo", [10], m)
+
+
+def test_check_io():
+    typecheck.check_type("foo", io.StringIO(), typing.IO[str])
+    with pytest.raises(TypeError):
+        typecheck.check_type("foo", "foo", typing.IO[str])

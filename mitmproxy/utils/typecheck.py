@@ -65,6 +65,8 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
     elif typename.startswith("typing.IO"):
         if hasattr(value, "read"):
             return
+        else:
+            raise e
     elif not isinstance(value, typeinfo):
         raise e
 
