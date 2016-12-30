@@ -124,8 +124,9 @@ class Dumper:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        if self.flow_detail < 1 and len(url) > click.get_terminal_size()[0] - 10:
-            url = url[:(click.get_terminal_size()[0] - 10)] + "…"
+        terminalWidthLimit = click.get_terminal_size()[0] - 25
+        if self.flow_detail < 1 and len(url) > terminalWidthLimit:
+            url = url[:terminalWidthLimit] + "…"
         url = click.style(strutils.escape_control_characters(url), bold=True)
 
         http_version = ""
