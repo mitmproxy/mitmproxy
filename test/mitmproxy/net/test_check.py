@@ -8,3 +8,5 @@ def test_is_valid_host():
     assert check.is_valid_host(b"one.two")
     assert not check.is_valid_host(b"one" * 255)
     assert check.is_valid_host(b"one.two.")
+    # Allow underscore
+    assert check.is_valid_host(b"one_two")
