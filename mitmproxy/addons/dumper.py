@@ -124,6 +124,8 @@ class Dumper:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
+        if self.flow_detail < 1 and len(url) > 200:
+            url = url[:199] + "…"
         url = click.style(strutils.escape_control_characters(url), bold=True)
 
         http_version = ""
