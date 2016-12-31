@@ -65,8 +65,8 @@ class HeaderEditor(base.GridEditor):
 class URLEncodedFormEditor(base.GridEditor):
     title = "Editing URL-encoded form"
     columns = [
-        col_bytes.Column("Key"),
-        col_bytes.Column("Value")
+        col_text.Column("Key"),
+        col_text.Column("Value")
     ]
 
 
