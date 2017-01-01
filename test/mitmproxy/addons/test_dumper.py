@@ -7,6 +7,7 @@ from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy.tools import dump
 from mitmproxy import http
+import shutil
 import mock
 
 
