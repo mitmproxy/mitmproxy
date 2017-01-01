@@ -2,6 +2,7 @@ import itertools
 import sys
 
 import click
+import shutil
 
 import typing  # noqa
 
@@ -124,7 +125,7 @@ class Dumper:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
-        terminalWidthLimit = click.get_terminal_size()[0] - 25
+        terminalWidthLimit = shutil.get_terminal_size()[0] - 25
         if self.flow_detail < 1 and len(url) > terminalWidthLimit:
             url = url[:terminalWidthLimit] + "…"
         url = click.style(strutils.escape_control_characters(url), bold=True)
