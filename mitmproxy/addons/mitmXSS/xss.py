@@ -21,6 +21,23 @@ fullPayload = frontWall + payload + backWall
 #   - 'Line' -> String
 
 
+def getCookies(flow):
+    """ Return a dict going from cookie names to cookie values
+          - Note that it includes both the cookies sent in the original request and
+            the cookies sent by the server
+        Flow -> Dict """
+    # responseCookies is a list of tuples going from the cookie name to a SetCookie object
+    responseCookies = flow.response.cookies.fields
+    # requestCookies is a list of tuples going from the cookie name to the value
+    requestCookies = flow.request.cookies.fields
+    cookieDict = {}
+    for name, SC in responseCookies:
+        cookieDict[name] = SC.value
+    for name, value in requestCookies:
+        cookieDict[name] = value
+    return cookieDict
+
+
 def findUnclaimedURLs(body, requestUrl):
     """ Look for unclaimed URLs in script tags and log them if found
         String URL -> None """
@@ -40,7 +57,7 @@ def findUnclaimedURLs(body, requestUrl):
         pass
 
 
-def testEndOfURLInjection(requestURL):
+def testEndOfURLInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection onto the end of the URL and
         log the XSS if found
         URL -> None """
@@ -50,30 +67,30 @@ def testEndOfURLInjection(requestURL):
         path += "/"
     path += fullPayload.decode('utf-8')  # the path must be a string while the payload is bytes
     url = parsedURL._replace(path=path).geturl()
-    body = requests.get(url).text.lower()
+    body = requests.get(url, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, url, "End of URL")
     ctxLog(xssInfo)
 
 
-def testRefererInjection(requestURL):
+def testRefererInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection into the referer and
         log the XSS if found
         URL -> None """
-    body = requests.get(requestURL, headers={'referer': fullPayload}).text.lower()
+    body = requests.get(requestURL, headers={'referer': fullPayload}, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, requestURL, "Referer")
     ctxLog(xssInfo)
 
 
-def testUserAgentInjection(requestURL):
+def testUserAgentInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection into the user agent and
         log the XSS if found
         URL -> None """
-    body = requests.get(requestURL, headers={'User-Agent': fullPayload}).text.lower()
+    body = requests.get(requestURL, headers={'User-Agent': fullPayload}, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, requestURL, "User Agent")
     ctxLog(xssInfo)
 
 
-def testQueryInjection(requestURL):
+def testQueryInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection into URL queries and
         log the XSS if found
         URL -> None """
@@ -83,7 +100,7 @@ def testQueryInjection(requestURL):
     queries = [query.split("=")[0] + "=" + fullPayload.decode('utf-8') for query in queryString.split("&")]
     newQueryString = "&".join(queries)
     newURL = parsedURL._replace(query=newQueryString).geturl()
-    body = requests.get(newURL).text.lower()
+    body = requests.get(newURL, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, newURL, "Query")
     ctxLog(xssInfo)
 
@@ -278,9 +295,10 @@ def getXSSInfo(body, requestURL, injectionPoint):
 
 # response is mitmproxy's entry point
 def response(flow):
+    cookiesDict = getCookies(flow)
     findUnclaimedURLs(flow.response.content, flow.request.url)  # Example: http://xss.guru/unclaimedScriptTag.html
-    testEndOfURLInjection(flow.request.url)
-    testRefererInjection(flow.request.url)  # Example: https://daviddworken.com/vulnerableReferer.php
-    testUserAgentInjection(flow.request.url)  # Example: https://daviddworken.com/vulnerableUA.php
+    testEndOfURLInjection(flow.request.url, cookiesDict)
+    testRefererInjection(flow.request.url, cookiesDict)  # Example: https://daviddworken.com/vulnerableReferer.php
+    testUserAgentInjection(flow.request.url, cookiesDict)  # Example: https://daviddworken.com/vulnerableUA.php
     if "?" in flow.request.url:
-        testQueryInjection(flow.request.url)  # Example: https://daviddworken.com/vulnerable.php?name=
+        testQueryInjection(flow.request.url, cookiesDict)  # Example: https://daviddworken.com/vulnerable.php?name=
