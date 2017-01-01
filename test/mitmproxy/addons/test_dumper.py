@@ -128,6 +128,14 @@ def test_echo_request_line():
         d._echo_request_line(f)
         assert "nonstandard" in sio.getvalue()
         sio.truncate(0)
+        
+        ctx.configure(d, flow_detail=0, showhost=True)
+        f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
+        terminalWidth = shutil.get_terminal_size()[0]
+        f.request.pretty_url = "http://address:22/"+"x"*terminalWidth+"textToBeTruncated"
+        d._echo_request_line(f)
+        assert "textToBeTruncated" not in sio.getvalue()
+        sio.truncate(0)
 
 
 class TestContentView:
