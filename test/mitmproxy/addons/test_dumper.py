@@ -82,7 +82,7 @@ def test_simple():
         d.response(flow)
         assert sio.getvalue()
         sio.truncate(0)
-
+        
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request.content = None
