@@ -133,7 +133,7 @@ def test_echo_request_line():
         ctx.configure(d, flow_detail=0, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
         terminalWidth = shutil.get_terminal_size()[0]
-        f.request.pretty_url = "http://address:22/"+"x"*terminalWidth+"textToBeTruncated"
+        f.request.url = "http://address:22/"+"x"*terminalWidth+"textToBeTruncated"
         d._echo_request_line(f)
         assert "textToBeTruncated" not in sio.getvalue()
         sio.truncate(0)
