@@ -82,7 +82,7 @@ def test_simple():
         d.response(flow)
         assert sio.getvalue()
         sio.truncate(0)
-        
+
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request.content = None
@@ -129,7 +129,7 @@ def test_echo_request_line():
         d._echo_request_line(f)
         assert "nonstandard" in sio.getvalue()
         sio.truncate(0)
-        
+
         ctx.configure(d, flow_detail=0, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
         terminalWidth = shutil.get_terminal_size()[0]
