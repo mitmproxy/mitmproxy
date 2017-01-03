@@ -132,7 +132,7 @@ def test_echo_request_line():
 
         ctx.configure(d, flow_detail=0, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
-        terminalWidth = max(shutil.get_terminal_size()[0] - 25, 50)
+        terminalWidth = max(shutil.get_terminal_size()[0] - 25 , 50)
         f.request.url = "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
         d._echo_request_line(f)
         assert "textToBeTruncated" not in sio.getvalue()
