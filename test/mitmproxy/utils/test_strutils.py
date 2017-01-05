@@ -19,11 +19,6 @@ def test_always_str():
     assert strutils.always_str(None) is None
 
 
-def test_replace_surrogates():
-    assert strutils.replace_surrogates("foo") == "foo"
-    assert strutils.replace_surrogates("bar \udc80 baz") == "bar � baz"
-
-
 def test_escape_control_characters():
     assert strutils.escape_control_characters(u"one") == u"one"
     assert strutils.escape_control_characters(u"\00ne") == u".ne"
