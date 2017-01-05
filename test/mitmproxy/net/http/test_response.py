@@ -55,7 +55,20 @@ class TestResponseCore:
         _test_passthrough_attr(tresp(), "status_code")
 
     def test_reason(self):
-        _test_decoded_attr(tresp(), "reason")
+        resp = tresp()
+        assert resp.reason == "OK"
+
+        resp.reason = "ABC"
+        assert resp.data.reason == b"ABC"
+
+        resp.reason = b"DEF"
+        assert resp.data.reason == b"DEF"
+
+        resp.reason = None
+        assert resp.data.reason is None
+
+        resp.data.reason = b'cr\xe9e'
+        assert resp.reason == "crée"
 
 
 class TestResponseUtils:
