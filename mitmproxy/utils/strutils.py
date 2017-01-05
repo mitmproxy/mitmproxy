@@ -25,6 +25,17 @@ def always_str(str_or_bytes: Optional[AnyStr], *decode_args) -> Optional[str]:
         raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
+def replace_surrogates(text: str, errors='replace') -> str:
+    """Convert surrogates to replacement characters (e.g., "\udc80" becomes "�")
+    by applying a different error handler.
+
+    Uses the "replace" error handler by default, but any input
+    error handler may be specified.
+
+    For an introduction to surrogateescape, see https://www.python.org/dev/peps/pep-0383/.
+    """
+    return text.encode('utf-8', 'surrogateescape').decode('utf-8', errors)
+
 # Translate control characters to "safe" characters. This implementation initially
 # replaced them with the matching control pictures (http://unicode.org/charts/PDF/U2400.pdf),
 # but that turned out to render badly with monospace fonts. We are back to "." therefore.
