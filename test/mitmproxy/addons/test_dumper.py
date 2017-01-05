@@ -7,6 +7,7 @@ from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy.tools import dump
 from mitmproxy import http
+import shutil
 import mock
 
 
@@ -127,6 +128,14 @@ def test_echo_request_line():
         f.request.http_version = "nonstandard"
         d._echo_request_line(f)
         assert "nonstandard" in sio.getvalue()
+        sio.truncate(0)
+
+        ctx.configure(d, flow_detail=0, showhost=True)
+        f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
+        terminalWidth = max(shutil.get_terminal_size()[0] - 25, 50)
+        f.request.url = "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
+        d._echo_request_line(f)
+        assert "textToBeTruncated" not in sio.getvalue()
         sio.truncate(0)
 
 
