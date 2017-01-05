@@ -93,7 +93,7 @@ def convert_100_200(data):
 
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
-        return {strutils.native(k): _convert_dict_keys(v) for k, v in o.items()}
+        return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
     else:
         return o
 
@@ -103,7 +103,7 @@ def _convert_dict_vals(o: dict, values_to_convert: dict) -> dict:
         if not o or k not in o:
             continue
         if v is True:
-            o[k] = strutils.native(o[k])
+            o[k] = strutils.always_str(o[k])
         else:
             _convert_dict_vals(o[k], v)
     return o
