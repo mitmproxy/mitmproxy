@@ -194,7 +194,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs, ensure_ascii=False)
+        message = json.dumps(kwargs, ensure_ascii=False).encode("utf8", "surrogateescape")
 
         for conn in cls.connections:
             try:
