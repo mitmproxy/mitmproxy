@@ -6,7 +6,7 @@ from mitmproxy.net.http import Headers
 from mitmproxy.net.http import Response
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tutils import raises, tresp
-from .test_message import _test_passthrough_attr, _test_decoded_attr
+from .test_message import _test_passthrough_attr
 
 
 class TestResponseData:
