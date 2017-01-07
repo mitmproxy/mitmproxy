@@ -17,7 +17,6 @@ from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
-from mitmproxy.utils import strutils
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:

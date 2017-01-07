@@ -129,7 +129,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "content": "req",
             },
             "response": {
-                "msg": "Not Found",
+                "msg": "Non-Authorisé",
                 "code": 404,
                 "headers": [("bar", "baz")],
                 "content": "resp",
@@ -140,7 +140,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.request.port == 123
         assert f.request.headers["foo"] == "bar"
         assert f.request.text == "req"
-        assert f.response.msg == "Not Found"
+        assert f.response.msg == "Non-Authorisé"
         assert f.response.status_code == 404
         assert f.response.headers["bar"] == "baz"
         assert f.response.text == "resp"
