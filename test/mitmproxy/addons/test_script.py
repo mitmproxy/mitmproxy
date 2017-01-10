@@ -44,10 +44,11 @@ def test_reloadhandler():
     rh = script.ReloadHandler(Called())
     assert not rh.filter(watchdog.events.DirCreatedEvent("path"))
     assert not rh.filter(watchdog.events.FileModifiedEvent("/foo/.bar"))
-    assert rh.filter(watchdog.events.FileModifiedEvent("/foo/bar"))
+    assert not rh.filter(watchdog.events.FileModifiedEvent("/foo/bar"))
+    assert rh.filter(watchdog.events.FileModifiedEvent('/foo/bar.py'))
 
     assert not rh.callback.called
-    rh.on_modified(watchdog.events.FileModifiedEvent("/foo/bar"))
+    rh.on_modified(watchdog.events.FileModifiedEvent("/foo/bar.py"))
     assert rh.callback.called
     rh.callback.called = False
 
