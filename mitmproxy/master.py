@@ -170,8 +170,11 @@ class Master:
         path = os.path.expanduser(path)
         try:
             if path == "-":
-                # This is incompatible with Python 3 - maybe we can use click?
-                freader = io.FlowReader(sys.stdin)
+                try:
+                    sys.stdin.buffer.read(0)
+                except Exception as e:
+                    raise IOError("Cannot read from stdin: {}".format(e))
+                freader = io.FlowReader(sys.stdin.buffer)
                 return self.load_flows(freader)
             else:
                 with open(path, "rb") as f:
