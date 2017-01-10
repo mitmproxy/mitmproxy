@@ -58,13 +58,14 @@ virtualenv_ installed (you can find installation instructions for virtualenv
 
 .. code-block:: text
 
+    sudo apt-get install python3-pip python3-dev libffi-dev libssl-dev libtiff5-dev libjpeg8-dev zlib1g-dev libwebp-dev
     git clone https://github.com/mitmproxy/mitmproxy.git
     cd mitmproxy
     ./dev.sh  # powershell .\dev.ps1 on Windows
 
 
 The *dev* script will create a virtualenv environment in a directory called
-"venv", and install all mandatory and optional dependencies into it. The
+"venv3.5", and install all mandatory and optional dependencies into it. The
 primary mitmproxy components - mitmproxy and pathod - are installed as
 "editable", so any changes to the source in the repository will be reflected
 live in the virtualenv.
@@ -74,7 +75,7 @@ mitmproxy test suite:
 
 .. code-block:: text
 
-    . venv/bin/activate  # venv\Scripts\activate on Windows
+    . venv3.5/bin/activate  # venv\Scripts\activate on Windows
     py.test
 
 Note that the main executables for the project - ``mitmdump``, ``mitmproxy``,
