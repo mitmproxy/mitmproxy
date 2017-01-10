@@ -35,7 +35,7 @@ Both executables are  added to your PATH and can be invoked from the command
 line.
 
 .. note::
-    mitmproxy's console interface is not supported on Windows, but you can use
+    Mitmproxy's console interface is not supported on Windows, but you can use
     mitmweb (the web-based interface) and mitmdump.
 
 .. _install-linux:
@@ -117,13 +117,13 @@ Make sure to have an up-to-date version of pip by running ``pip3 install -U pip`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
-    mitmproxy's console interface is not supported on Windows, but you can use
+    Mitmproxy's console interface is not supported on Windows, but you can use
     mitmweb (the web-based interface) and mitmdump.
 
 First, install the latest version of Python 3.5 or later from the `Python
 website`_. During installation, make sure to select `Add Python to PATH`.
 
-Now, you can install mitmproxy by running
+Mitmproxy has no other dependencies on Windows. You can now install mitmproxy by running
 
 .. code:: powershell
 

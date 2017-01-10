@@ -115,24 +115,24 @@ class Request(message.Message):
         """
         HTTP request method, e.g. "GET".
         """
-        return message._native(self.data.method).upper()
+        return self.data.method.decode("utf-8", "surrogateescape").upper()
 
     @method.setter
     def method(self, method):
-        self.data.method = message._always_bytes(method)
+        self.data.method = strutils.always_bytes(method, "utf-8", "surrogateescape")
 
     @property
     def scheme(self):
         """
         HTTP request scheme, which should be "http" or "https".
         """
-        if not self.data.scheme:
-            return self.data.scheme
-        return message._native(self.data.scheme)
+        if self.data.scheme is None:
+            return None
+        return self.data.scheme.decode("utf-8", "surrogateescape")
 
     @scheme.setter
     def scheme(self, scheme):
-        self.data.scheme = message._always_bytes(scheme)
+        self.data.scheme = strutils.always_bytes(scheme, "utf-8", "surrogateescape")
 
     @property
     def host(self):
@@ -190,11 +190,11 @@ class Request(message.Message):
         if self.data.path is None:
             return None
         else:
-            return message._native(self.data.path)
+            return self.data.path.decode("utf-8", "surrogateescape")
 
     @path.setter
     def path(self, path):
-        self.data.path = message._always_bytes(path)
+        self.data.path = strutils.always_bytes(path, "utf-8", "surrogateescape")
 
     @property
     def url(self):

@@ -33,6 +33,19 @@ updated in a similar way.
 You can turn off response refreshing using the ``--norefresh`` argument, or using
 the :kbd:`o` options shortcut within :program:`mitmproxy`.
 
+
+Replaying a session recorded in Reverse-proxy Mode
+--------------------------------------------------
+
+If you have captured the session in reverse proxy mode, in order to replay it you 
+still have to specify the server URL, otherwise you may get the error: 
+'HTTP protocol error in client request: Invalid HTTP request form (expected authority or absolute...)'.
+
+During replay, when the client's requests match previously recorded requests, then the
+respective recorded responses are simply replayed  by mitmproxy. 
+Otherwise, the unmatched requests is forwarded to the upstream server.
+If forwarding is not desired, you can use the --kill (-k) switch to prevent that.
+
 ================== ===========
 command-line       ``-S path``
 mitmproxy shortcut :kbd:`R` then :kbd:`s`

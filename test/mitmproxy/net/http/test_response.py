@@ -6,7 +6,7 @@ from mitmproxy.net.http import Headers
 from mitmproxy.net.http import Response
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tutils import raises, tresp
-from .test_message import _test_passthrough_attr, _test_decoded_attr
+from .test_message import _test_passthrough_attr
 
 
 class TestResponseData:
@@ -55,7 +55,20 @@ class TestResponseCore:
         _test_passthrough_attr(tresp(), "status_code")
 
     def test_reason(self):
-        _test_decoded_attr(tresp(), "reason")
+        resp = tresp()
+        assert resp.reason == "OK"
+
+        resp.reason = "ABC"
+        assert resp.data.reason == b"ABC"
+
+        resp.reason = b"DEF"
+        assert resp.data.reason == b"DEF"
+
+        resp.reason = None
+        assert resp.data.reason is None
+
+        resp.data.reason = b'cr\xe9e'
+        assert resp.reason == "crée"
 
 
 class TestResponseUtils:
