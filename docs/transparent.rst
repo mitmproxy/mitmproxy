@@ -27,7 +27,7 @@ Fully transparent mode
 By default mitmproxy will use its own local ip address for its server-side connections.
 In case this isn't desired, the --spoof-source-address argument can be used to
 use the client's ip address for server-side connections. The following config is
-required for this mode to work:
+required for this mode to work::
 
     CLIENT_NET=192.168.1.0/24
     TABLE_ID=100
@@ -42,7 +42,7 @@ required for this mode to work:
 
 This mode does require root privileges though. There's a wrapper in the examples directory
 called 'mitmproxy_shim.c', which will enable you to use this mode with dropped priviliges.
-It can be used as follows:
+It can be used as follows::
 
     gcc examples/mitmproxy_shim.c -o mitmproxy_shim -lcap
     sudo chown root:root mitmproxy_shim
