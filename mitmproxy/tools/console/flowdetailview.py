@@ -1,5 +1,6 @@
 import urwid
 
+from mitmproxy import http
 from mitmproxy.tools.console import common, searchable
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
@@ -12,7 +13,7 @@ def maybe_timestamp(base, attr):
         return "active"
 
 
-def flowdetails(state, flow):
+def flowdetails(state, flow: http.HTTPFlow):
     text = []
 
     sc = flow.server_conn
@@ -21,7 +22,7 @@ def flowdetails(state, flow):
     resp = flow.response
     metadata = flow.metadata
 
-    if metadata is not None and len(metadata.items()) > 0:
+    if metadata is not None and len(metadata) > 0:
         parts = [[str(k), repr(v)] for k, v in metadata.items()]
         text.append(urwid.Text([("head", "Metadata:")]))
         text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
@@ -32,6 +33,8 @@ def flowdetails(state, flow):
             ["Address", repr(sc.address)],
             ["Resolved Address", repr(sc.ip_address)],
         ]
+        if resp:
+            parts.append(["HTTP Version", resp.http_version])
         if sc.alpn_proto_negotiated:
             parts.append(["ALPN", sc.alpn_proto_negotiated])
 
@@ -91,6 +94,8 @@ def flowdetails(state, flow):
         parts = [
             ["Address", repr(cc.address)],
         ]
+        if req:
+            parts.append(["HTTP Version", req.http_version])
         if cc.tls_version:
             parts.append(["TLS Version", cc.tls_version])
         if cc.sni:
