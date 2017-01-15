@@ -205,7 +205,11 @@ class ScriptLoader:
         An addon that manages loading scripts from options.
     """
     def run_once(self, command, flows):
-        sc = Script(command)
+        try:
+            sc = Script(command)
+        except exceptions.OptionsError as e:
+            ctx.log.error("Script error: %s" % e)
+            return None
         sc.load_script()
         for f in flows:
             for evt, o in events.event_sequence(f):
