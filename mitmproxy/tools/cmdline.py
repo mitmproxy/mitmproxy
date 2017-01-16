@@ -227,6 +227,8 @@ def get_common_options(args):
         replacements=reps,
         setheaders=setheaders,
         server_replay=args.server_replay,
+        server_cache_replay=args.server_cache_replay,
+        server_cache_replay_load=args.server_cache_replay_load,
         scripts=args.scripts,
         stickycookie=stickycookie,
         stickyauth=stickyauth,
@@ -607,10 +609,21 @@ def client_replay(parser):
 
 def server_replay(parser):
     group = parser.add_argument_group("Server Replay")
-    group.add_argument(
+    replay_or_cache = group.add_mutually_exclusive_group()
+    replay_or_cache.add_argument(
         "-S", "--server-replay",
         action="append", dest="server_replay", metavar="PATH",
         help="Replay server responses from a saved file."
+    )
+    replay_or_cache.add_argument(
+        "-C", "--server-cache-replay",
+        action="store_true", dest="server_cache_replay",
+        help="Replay known server responses."
+    )
+    group.add_argument(
+        "--server-cache-replay-load",
+        action="append", dest="server_cache_replay_load", metavar="PATH",
+        help="Load server responses from a saved file for server cache replay functionality."
     )
     group.add_argument(
         "-k", "--replay-kill-extra",

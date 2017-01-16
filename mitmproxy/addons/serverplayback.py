@@ -1,11 +1,7 @@
-import hashlib
-import urllib
-from typing import Any  # noqa
-from typing import List  # noqa
-
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import io
+import mitmproxy.utils.flows
 
 
 class ServerPlayback:
@@ -26,55 +22,20 @@ class ServerPlayback:
         self.flowmap = {}
 
     def count(self):
-        return sum([len(i) for i in self.flowmap.values()])
+        return sum(len(i) for i in self.flowmap.values())
 
     def _hash(self, flow):
         """
             Calculates a loose hash of the flow request.
         """
-        r = flow.request
-
-        _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
-        queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
-
-        key = [str(r.port), str(r.scheme), str(r.method), str(path)]  # type: List[Any]
-        if not self.options.server_replay_ignore_content:
-            if self.options.server_replay_ignore_payload_params and r.multipart_form:
-                key.extend(
-                    (k, v)
-                    for k, v in r.multipart_form.items(multi=True)
-                    if k.decode(errors="replace") not in self.options.server_replay_ignore_payload_params
-                )
-            elif self.options.server_replay_ignore_payload_params and r.urlencoded_form:
-                key.extend(
-                    (k, v)
-                    for k, v in r.urlencoded_form.items(multi=True)
-                    if k not in self.options.server_replay_ignore_payload_params
-                )
-            else:
-                key.append(str(r.raw_content))
-
-        if not self.options.server_replay_ignore_host:
-            key.append(r.host)
-
-        filtered = []
-        ignore_params = self.options.server_replay_ignore_params or []
-        for p in queriesArray:
-            if p[0] not in ignore_params:
-                filtered.append(p)
-        for p in filtered:
-            key.append(p[0])
-            key.append(p[1])
-
-        if self.options.server_replay_use_headers:
-            headers = []
-            for i in self.options.server_replay_use_headers:
-                v = r.headers.get(i)
-                headers.append((i, v))
-            key.append(headers)
-        return hashlib.sha256(
-            repr(key).encode("utf8", "surrogateescape")
-        ).digest()
+        return mitmproxy.utils.flows.hash_flow(
+            flow=flow,
+            include_headers_list=self.options.server_replay_use_headers,
+            ignore_host=self.options.server_replay_ignore_host,
+            ignore_content=self.options.server_replay_ignore_content,
+            ignore_payload_params_list=self.options.server_replay_ignore_payload_params,
+            ignore_query_params_list=self.options.server_replay_ignore_params,
+        )
 
     def next_flow(self, request):
         """

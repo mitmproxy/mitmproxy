@@ -8,6 +8,7 @@ from mitmproxy.addons import replace
 from mitmproxy.addons import script
 from mitmproxy.addons import setheaders
 from mitmproxy.addons import serverplayback
+from mitmproxy.addons import servercacheplayback
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import streambodies
@@ -29,6 +30,7 @@ def default_addons():
         replace.Replace(),
         setheaders.SetHeaders(),
         serverplayback.ServerPlayback(),
+        servercacheplayback.ServerCachePlayBack(),
         clientplayback.ClientPlayback(),
         upstream_auth.UpstreamAuth(),
         disable_h2c_upgrade.DisableH2CleartextUpgrade(),
