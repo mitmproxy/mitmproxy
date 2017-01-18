@@ -205,9 +205,7 @@ class TestScriptLoader:
         f = tflow.tflow(resp=True)
         with m.handlecontext():
             sc = sl.run_once(
-                tutils.test_data.path(
-                    "nonexistent"
-                ), [f]
+                "nonexistent", [f]
             )
         assert "Script error" in tctx.master.event_log[0][1]
 
