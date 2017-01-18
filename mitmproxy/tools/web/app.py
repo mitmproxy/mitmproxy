@@ -33,6 +33,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "server_conn": flow.server_conn.get_state(),
         "type": flow.type,
         "modified": flow.modified(),
+        "marked": flow.marked,
     }
     # .alpn_proto_negotiated is bytes, we need to decode that.
     for conn in "client_conn", "server_conn":
