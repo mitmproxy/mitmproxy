@@ -202,12 +202,13 @@ class TestScriptLoader:
         evts = [i[1] for i in sc.ns.call_log]
         assert evts == ['start', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
 
-        f = tflow.tflow(resp=True)
-        with m.handlecontext():
-            sc = sl.run_once(
-                "nonexistent", [f]
-            )
-        assert "Script error" in tctx.master.event_log[0][1]
+        with taddons.context() as tctx:
+            f = tflow.tflow(resp=True)
+            with m.handlecontext():
+                sc = sl.run_once(
+                    "nonexistent", [f]
+                )
+            assert "Script error" in tctx.master.event_log[0][1]
 
     def test_simple(self):
         o = options.Options(scripts=[])
