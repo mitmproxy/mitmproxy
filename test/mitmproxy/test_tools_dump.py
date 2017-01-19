@@ -1,10 +1,13 @@
 import os
+import pytest
+from unittest import mock
 
-from mitmproxy.tools import dump
 from mitmproxy import proxy
-from mitmproxy.test import tutils
 from mitmproxy import log
 from mitmproxy import controller
+from mitmproxy.tools import dump
+
+from mitmproxy.test import tutils
 from . import mastertest
 
 
@@ -37,3 +40,17 @@ class TestDumpMaster(mastertest.MasterTest):
         ent.reply = controller.DummyReply()
         m.log(ent)
         assert m.has_errored
+
+    @pytest.mark.parametrize("termlog", [False, True])
+    def test_addons_termlog(self, termlog):
+        with mock.patch('sys.stdout'):
+            o = dump.Options()
+            m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=termlog)
+            assert (m.addons.get('termlog') is not None) == termlog
+
+    @pytest.mark.parametrize("dumper", [False, True])
+    def test_addons_dumper(self, dumper):
+        with mock.patch('sys.stdout'):
+            o = dump.Options()
+            m = dump.DumpMaster(o, proxy.DummyServer(), with_dumper=dumper)
+            assert (m.addons.get('dumper') is not None) == dumper
