@@ -20,14 +20,6 @@ def treader(bytes):
 
 
 @contextmanager
-def chdir(dir):
-    orig_dir = os.getcwd()
-    os.chdir(dir)
-    yield
-    os.chdir(orig_dir)
-
-
-@contextmanager
 def tmpdir(*args, **kwargs):
     orig_workdir = os.getcwd()
     temp_workdir = tempfile.mkdtemp(*args, **kwargs)

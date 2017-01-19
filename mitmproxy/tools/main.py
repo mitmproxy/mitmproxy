@@ -35,9 +35,10 @@ def assert_utf8_env():
 
 
 def process_options(parser, options, args):
-    if args.sysinfo:
-        print(debug.sysinfo())
+    if args.version:
+        print(debug.dump_system_info())
         sys.exit(0)
+
     debug.register_info_dumpers()
     pconf = config.ProxyConfig(options)
     if options.no_server:

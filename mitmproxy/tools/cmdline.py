@@ -275,13 +275,8 @@ def get_common_options(args):
 def basic_options(parser):
     parser.add_argument(
         '--version',
-        action='version',
-        version="%(prog)s" + " " + version.VERSION
-    )
-    parser.add_argument(
-        '--sysinfo',
         action='store_true',
-        dest='sysinfo',
+        dest='version',
     )
     parser.add_argument(
         '--shortversion',
