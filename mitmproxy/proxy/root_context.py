@@ -50,7 +50,7 @@ class RootContext:
         # 1. check for --ignore
         if self.config.check_ignore:
             ignore = self.config.check_ignore(top_layer.server_conn.address)
-            if not ignore and client_tls:
+            if client_tls:
                 try:
                     client_hello = protocol.TlsClientHello.from_client_conn(self.client_conn)
                 except exceptions.TlsProtocolException as e:
