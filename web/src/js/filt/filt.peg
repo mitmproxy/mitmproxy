@@ -109,6 +109,10 @@ function responseHeader(regex){
     responseHeaderFilter.desc = "resp. header matches " + regex;
     return responseHeaderFilter;
 }
+function httpFilter(flow){
+    return flow.type === "http";
+}
+httpFilter.desc = "is an HTTP Flow";
 function method(regex){
     regex = new RegExp(regex, "i");
     function methodFilter(flow){
@@ -142,6 +146,10 @@ function contentType(regex){
     contentTypeFilter.desc = "content type matches " + regex;
     return contentTypeFilter;
 }
+function tcpFilter(flow){
+    return flow.type === "tcp";
+}
+tcpFilter.desc = "is a TCP Flow";
 function requestContentType(regex){
     regex = new RegExp(regex, "i");
     function requestContentTypeFilter(flow){
@@ -205,9 +213,11 @@ NullaryExpr
   = BooleanLiteral
   / "~a" { return assetFilter; }
   / "~e" { return errorFilter; }
+  / "~http" { return httpFilter; }
+  / "~marked" { return markedFilter; }
   / "~q" { return noResponseFilter; }
   / "~s" { return responseFilter; }
-  / "~marked" { return markedFilter; }
+  / "~tcp" { return tcpFilter; }
 
 
 BooleanLiteral
