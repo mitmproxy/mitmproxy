@@ -27,7 +27,7 @@ import re
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891
 parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
-class DnsSpoofing:
+class Rerouter:
     def __init__(self):
         self.hostHeader = None
 
@@ -55,4 +55,4 @@ class DnsSpoofing:
         flow.request.port = port
 
 def start():
-    return DnsSpoofing()
+    return Rerouter()
