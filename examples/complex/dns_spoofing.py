@@ -27,23 +27,32 @@ import re
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891
 parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
+class DnsSpoofing:
+    def __init__(self):
+        self.hostHeader = None
 
-def request(flow):
-    if flow.client_conn.ssl_established:
-        flow.request.scheme = "https"
-        sni = flow.client_conn.connection.get_servername()
-        port = 443
-    else:
-        flow.request.scheme = "http"
-        sni = None
-        port = 80
+    def requestheaders(self, flow):
+        self.hostHeader = flow.request.headers.get('host')
 
-    host_header = flow.request.pretty_host
-    m = parse_host_header.match(host_header)
-    if m:
-        host_header = m.group("host").strip("[]")
-        if m.group("port"):
-            port = int(m.group("port"))
+    def request(self, flow):
+        if flow.client_conn.ssl_established:
+            flow.request.scheme = "https"
+            sni = flow.client_conn.connection.get_servername()
+            port = 443
+        else:
+            flow.request.scheme = "http"
+            sni = None
+            port = 80
 
-    flow.request.host = sni or host_header
-    flow.request.port = port
+        host_header = self.hostHeader
+        m = parse_host_header.match(host_header)
+        if m:
+            host_header = m.group("host").strip("[]")
+            if m.group("port"):
+                port = int(m.group("port"))
+
+        flow.request.host = sni or host_header
+        flow.request.port = port
+
+def start():
+    return DnsSpoofing()
