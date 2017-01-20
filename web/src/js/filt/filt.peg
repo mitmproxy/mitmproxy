@@ -117,6 +117,10 @@ function method(regex){
     methodFilter.desc = "method matches " + regex;
     return methodFilter;
 }
+function markedFilter(flow){
+    return flow.marked;
+}
+markedFilter.desc = "is marked";
 function noResponseFilter(flow){
     return flow.request && !flow.response;
 }
@@ -172,24 +176,24 @@ cc "control character" = [|&!()~"]
 __ "optional whitespace" = ws*
 
 OrExpr
-  = first:AndExpr __ "|" __ second:OrExpr 
+  = first:AndExpr __ "|" __ second:OrExpr
     { return or(first, second); }
   / AndExpr
 
 AndExpr
-  = first:NotExpr __ "&" __ second:AndExpr 
+  = first:NotExpr __ "&" __ second:AndExpr
     { return and(first, second); }
-  / first:NotExpr ws+ second:AndExpr 
+  / first:NotExpr ws+ second:AndExpr
     { return and(first, second); }
   / NotExpr
 
 NotExpr
-  = "!" __ expr:NotExpr 
+  = "!" __ expr:NotExpr
     { return not(expr); }
   / BindingExpr
 
 BindingExpr
-  = "(" __ expr:OrExpr __ ")" 
+  = "(" __ expr:OrExpr __ ")"
     { return binding(expr); }
   / Expr
 
@@ -203,6 +207,7 @@ NullaryExpr
   / "~e" { return errorFilter; }
   / "~q" { return noResponseFilter; }
   / "~s" { return responseFilter; }
+  / "~marked" { return markedFilter; }
 
 
 BooleanLiteral
