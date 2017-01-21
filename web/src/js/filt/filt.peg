@@ -77,6 +77,16 @@ function domain(regex){
     domainFilter.desc = "domain matches " + regex;
     return domainFilter;
 }
+function destination(regex){
+    regex = new RegExp(regex, "i");
+    function destinationFilter(flow){
+    return (!!flow.server_conn.address)
+           &&
+           regex.test(flow.server_conn.address.address[0] + ":" + flow.server_conn.address.address[1]);
+    }
+    destinationFilter.desc = "destination address matches " + regex;
+    return destinationFilter;
+}
 function errorFilter(flow){
     return !!flow.error;
 }
@@ -133,7 +143,16 @@ function responseFilter(flow){
     return !!flow.response;
 }
 responseFilter.desc = "has response";
-
+function source(regex){
+    regex = new RegExp(regex, "i");
+    function sourceFilter(flow){
+        return (!!flow.client_conn.address)
+               &&
+               regex.test(flow.client_conn.address.address[0] + ":" + flow.client_conn.address.address[1]);
+    }
+    sourceFilter.desc = "source address matches " + regex;
+    return sourceFilter;
+}
 function contentType(regex){
     regex = new RegExp(regex, "i");
     function contentTypeFilter(flow){
@@ -225,16 +244,18 @@ BooleanLiteral
   / "false" { return falseFilter; }
 
 UnaryExpr
-  = "~c"  ws+ s:IntegerLiteral { return responseCode(s); }
-  / "~d"  ws+ s:StringLiteral { return domain(s); }
-  / "~h"  ws+ s:StringLiteral { return header(s); }
-  / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
-  / "~hs" ws+ s:StringLiteral { return responseHeader(s); }
-  / "~m"  ws+ s:StringLiteral { return method(s); }
-  / "~t"  ws+ s:StringLiteral { return contentType(s); }
-  / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
-  / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
-  / "~u"  ws+ s:StringLiteral { return url(s); }
+  = "~c"   ws+ s:IntegerLiteral { return responseCode(s); }
+  / "~d"   ws+ s:StringLiteral { return domain(s); }
+  / "~dst" ws+ s:StringLiteral { return destination(s); }
+  / "~h"   ws+ s:StringLiteral { return header(s); }
+  / "~hq"  ws+ s:StringLiteral { return requestHeader(s); }
+  / "~hs"  ws+ s:StringLiteral { return responseHeader(s); }
+  / "~m"   ws+ s:StringLiteral { return method(s); }
+  / "~src" ws+ s:StringLiteral { return source(s); }
+  / "~t"   ws+ s:StringLiteral { return contentType(s); }
+  / "~tq"  ws+ s:StringLiteral { return requestContentType(s); }
+  / "~ts"  ws+ s:StringLiteral { return responseContentType(s); }
+  / "~u"   ws+ s:StringLiteral { return url(s); }
   / s:StringLiteral { return url(s); }
 
 IntegerLiteral "integer"
