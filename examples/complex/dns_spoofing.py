@@ -30,10 +30,14 @@ parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 class Rerouter:
     def __init__(self):
-        self.hostHeader = None
+        self.host_header = None
 
     def requestheaders(self, flow):
-        self.hostHeader = flow.request.headers.get('host')
+        """
+        The original host header is retrieved early
+        before flow.request is replaced by mitmproxy new outgoing request
+        """
+        self.host_header = flow.request.headers.get('host')
 
     def request(self, flow):
         if flow.client_conn.ssl_established:
@@ -45,14 +49,13 @@ class Rerouter:
             sni = None
             port = 80
 
-        host_header = self.hostHeader
-        m = parse_host_header.match(host_header)
+        m = parse_host_header.match(self.host_header)
         if m:
             host_header = m.group("host").strip("[]")
             if m.group("port"):
                 port = int(m.group("port"))
 
-        flow.request.host = sni or host_header
+        flow.request.host = sni or self.host_header
         flow.request.port = port
 
 
