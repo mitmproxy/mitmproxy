@@ -1,5 +1,5 @@
 import io
-import mock
+from unittest import mock
 from mitmproxy.utils import version_check
 
 

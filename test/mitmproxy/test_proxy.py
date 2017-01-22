@@ -1,6 +1,6 @@
 from mitmproxy.test import tflow
 import os
-import mock
+from unittest import mock
 import argparse
 from OpenSSL import SSL
 

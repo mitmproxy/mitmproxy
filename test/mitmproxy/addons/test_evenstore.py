@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 from mitmproxy import log
 from mitmproxy.addons import eventstore
 

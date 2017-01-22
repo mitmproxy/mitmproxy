@@ -100,7 +100,6 @@ setup(
             "mypy-lang>=0.4.6, <0.5",
             "rstcheck>=2.2, <4.0",
             "tox>=2.3, <3",
-            "mock>=2.0, <2.1",
             "pytest>=3, <3.1",
             "pytest-cov>=2.2.1, <3",
             "pytest-timeout>=1.0.0, <2",

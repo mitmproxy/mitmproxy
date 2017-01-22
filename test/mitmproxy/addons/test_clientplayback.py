@@ -1,5 +1,5 @@
 import os
-import mock
+from unittest import mock
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -33,7 +33,7 @@ class TestClientPlayback:
             with mock.patch(RP) as rp:
                 assert not cp.current_thread
                 cp.tick()
-                rp.assert_called()
+                assert rp.called
                 assert cp.current_thread
 
             cp.keepserving = False
@@ -41,7 +41,7 @@ class TestClientPlayback:
             cp.current_thread = None
             with mock.patch("mitmproxy.master.Master.shutdown") as sd:
                 cp.tick()
-                sd.assert_called()
+                assert sd.called
 
             cp.current_thread = MockThread()
             with mock.patch("mitmproxy.master.Master.shutdown") as sd:

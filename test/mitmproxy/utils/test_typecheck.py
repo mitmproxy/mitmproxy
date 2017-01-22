@@ -1,7 +1,6 @@
 import io
 import typing
-
-import mock
+from unittest import mock
 import pytest
 
 from mitmproxy.utils import typecheck

@@ -1,6 +1,7 @@
 import os
 import sys
-import mock
+from unittest import mock
+
 if os.name == "nt":
     m = mock.Mock()
     m.__version__ = "1.1.1"

@@ -5,8 +5,8 @@ import socket
 import random
 import os
 import threading
-import mock
 import pytest
+from unittest import mock
 from OpenSSL import SSL
 
 from mitmproxy import certs
