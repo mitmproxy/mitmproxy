@@ -51,7 +51,7 @@ class Rerouter:
 
         m = parse_host_header.match(self.host_header)
         if m:
-            host_header = m.group("host").strip("[]")
+            self.host_header = m.group("host").strip("[]")
             if m.group("port"):
                 port = int(m.group("port"))
 
