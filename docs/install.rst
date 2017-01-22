@@ -20,7 +20,7 @@ You can use Homebrew to install everything:
 
     brew install mitmproxy
 
-Or you can download the pre-built binary packages from `mitmproxy.org`_.
+Or you can download the pre-built binary packages from our `releases`_.
 
 
 .. _install-windows:
@@ -144,6 +144,7 @@ by running: ``mitmproxy --version``
 
 
 .. _Hacking: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst#hacking
+.. _releases: https://github.com/mitmproxy/mitmproxy/releases
 .. _mitmproxy.org: https://mitmproxy.org/
 .. _`Python website`: https://www.python.org/downloads/windows/
 .. _pip: https://pip.pypa.io/en/latest/installing.html
