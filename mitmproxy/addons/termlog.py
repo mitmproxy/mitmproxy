@@ -5,9 +5,9 @@ from mitmproxy import log
 
 
 class TermLog:
-    def __init__(self, outfile=sys.stdout):
+    def __init__(self, outfile=None):
         self.options = None
-        self.outfile = outfile
+        self.outfile = outfile or sys.stdout
 
     def configure(self, options, updated):
         self.options = options

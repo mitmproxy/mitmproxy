@@ -6,7 +6,6 @@ from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
-from mitmproxy.net import tcp
 
 
 class DumpError(Exception):
@@ -30,7 +29,13 @@ class Options(options.Options):
 
 class DumpMaster(master.Master):
 
-    def __init__(self, options, server, with_termlog=True, with_dumper=True):
+    def __init__(
+            self,
+            options: Options,
+            server,
+            with_termlog=True,
+            with_dumper=True,
+    ) -> None:
         master.Master.__init__(self, options, server)
         self.has_errored = False
         if with_termlog:
@@ -38,20 +43,11 @@ class DumpMaster(master.Master):
         self.addons.add(*addons.default_addons())
         if with_dumper:
             self.addons.add(dumper.Dumper())
-        # This line is just for type hinting
-        self.options = self.options  # type: Options
 
         if not self.options.no_server:
             self.add_log(
                 "Proxy server listening at http://{}".format(server.address),
                 "info"
-            )
-
-        if self.server and self.options.http2 and not tcp.HAS_ALPN:  # pragma: no cover
-            self.add_log(
-                "ALPN support missing (OpenSSL 1.0.2+ required)!\n"
-                "HTTP/2 is disabled. Use --no-http2 to silence this warning.",
-                "error"
             )
 
         if options.rfile:
