@@ -166,6 +166,7 @@ def test_tcp():
         d.tcp_error(f)
         assert "Error in TCP" in sio.getvalue()
 
+
 def test_websocket():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
