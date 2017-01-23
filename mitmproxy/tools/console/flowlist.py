@@ -27,7 +27,7 @@ def _mkhelp():
         ("n", "create a new request"),
         ("o", "set flow order"),
         ("r", "replay request"),
-        ("S", "server replay request/s"),
+        ("S", "server cache/replay request/s"),
         ("U", "unmark all marked flows"),
         ("v", "reverse flow order"),
         ("V", "revert changes to request"),
@@ -150,10 +150,42 @@ class FlowItem(urwid.WidgetWrap):
     def server_replay_prompt(self, k):
         a = self.master.addons.get("serverplayback")
         if k == "a":
-            a.load([i.copy() for i in self.master.view])
+            a.load(i.copy() for i in self.master.view)
         elif k == "t":
             a.load([self.flow.copy()])
         signals.update_settings.send(self)
+
+    def server_cache_replay_prompt(self, k):
+        a = self.master.addons.get("servercacheplayback")
+        if k == "a":
+            a.enable(flows={i.copy() for i in self.master.view})
+        elif k == "t":
+            a.enable(flows=[self.flow.copy()])
+        else:
+            a.enable()
+        signals.update_settings.send(self)
+
+    def server_replay_or_cache_prompt(self, k):
+        prompt = "Which flows to load?"
+        if k == "S":
+            signals.status_prompt_onekey.send(
+                prompt=prompt,
+                keys=(
+                    ("all flows", "a"),
+                    ("this flow", "t"),
+                ),
+                callback=self.server_cache_replay_prompt,
+            )
+        elif k == "C":
+            signals.status_prompt_onekey.send(
+                prompt=prompt,
+                keys=(
+                    ("all flows", "a"),
+                    ("this flow", "t"),
+                    ("future flows", "f"),
+                ),
+                callback=self.server_cache_replay_prompt,
+            )
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
@@ -188,7 +220,13 @@ class FlowItem(urwid.WidgetWrap):
             def stop_server_playback(response):
                 if response == "y":
                     self.master.options.server_replay = []
+
+            def stop_server_cache_playback(response):
+                if response == "y":
+                    self.master.options.server_cache_replay = False
             a = self.master.addons.get("serverplayback")
+            cache_addon = self.master.addons.get("servercacheplayback")
+
             if a.count():
                 signals.status_prompt_onekey.send(
                     prompt = "Stop current server replay?",
@@ -198,14 +236,23 @@ class FlowItem(urwid.WidgetWrap):
                     ),
                     callback = stop_server_playback,
                 )
+            elif cache_addon.enabled:
+                signals.status_prompt_onekey.send(
+                    prompt="Stop current server cache replay?",
+                    keys=(
+                        ("yes", "y"),
+                        ("no", "n"),
+                    ),
+                    callback=stop_server_cache_playback,
+                )
             else:
                 signals.status_prompt_onekey.send(
-                    prompt = "Server Replay",
-                    keys = (
-                        ("all flows", "a"),
-                        ("this flow", "t"),
+                    prompt="Server Replay or Cache",
+                    keys=(
+                        ("Server Replay", "S"),
+                        ("Cache", "C"),
                     ),
-                    callback = self.server_replay_prompt,
+                    callback=self.server_replay_or_cache_prompt,
                 )
         elif key == "U":
             for f in self.master.view:

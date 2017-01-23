@@ -43,6 +43,8 @@ class Options(optmanager.OptManager):
             server_replay_use_headers: Sequence[str] = [],
             setheaders: Sequence[Tuple[str, str, str]] = [],
             server_replay: Sequence[str] = [],
+            server_cache_replay: bool = False,
+            server_cache_replay_load: Sequence[str] = [],
             stickycookie: Optional[str] = None,
             stickyauth: Optional[str] = None,
             stream_large_bodies: Optional[int] = None,
@@ -127,6 +129,8 @@ class Options(optmanager.OptManager):
         self.server_replay_use_headers = server_replay_use_headers
         self.setheaders = setheaders
         self.server_replay = server_replay
+        self.server_cache_replay = server_cache_replay
+        self.server_cache_replay_load = server_cache_replay_load
         self.stickycookie = stickycookie
         self.stickyauth = stickyauth
         self.stream_large_bodies = stream_large_bodies
