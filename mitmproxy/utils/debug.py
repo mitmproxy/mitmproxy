@@ -19,7 +19,21 @@ def dump_system_info():
         try:
             c = ['git', 'describe', '--tags', '--long']
             git_describe = subprocess.check_output(c, stderr=subprocess.STDOUT)
-            git_describe = git_describe.decode().strip()
+            last_tag, tag_dist, commit = git_describe.decode().strip().rsplit("-", 2)
+
+            if last_tag.startswith('v'):
+                # remove the 'v' prefix
+                last_tag = last_tag[1:]
+            if commit.startswith('g'):
+                # remove the 'g' prefix added by recent git versions
+                commit = commit[1:]
+
+            # build the same version specifier as used for snapshots by rtool
+            git_describe = "{version}dev{tag:04}-0x{commit}".format(
+                version=last_tag,
+                tag=int(tag_dist),
+                commit=commit,
+            )
         except:
             pass
 
