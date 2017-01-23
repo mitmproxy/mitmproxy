@@ -224,38 +224,33 @@ BindingExpr
     { return binding(expr); }
   / Expr
 
+/* All the filters except "~s" and "~src" are arranged in the ascending order as
+   given in the docs(http://docs.mitmproxy.org/en/latest/features/filters.html).
+   "~s" and "~src" are so arranged as "~s" caused problems in the evaluation of
+   "~src". */
+
 Expr
-  = NullaryExpr
-  / UnaryExpr
-
-NullaryExpr
-  = BooleanLiteral
-  / "~a" { return assetFilter; }
-  / "~e" { return errorFilter; }
-  / "~http" { return httpFilter; }
-  / "~marked" { return markedFilter; }
-  / "~q" { return noResponseFilter; }
-  / "~s" { return responseFilter; }
-  / "~tcp" { return tcpFilter; }
-
-
-BooleanLiteral
   = "true" { return trueFilter; }
   / "false" { return falseFilter; }
-
-UnaryExpr
-  = "~c"   ws+ s:IntegerLiteral { return responseCode(s); }
-  / "~d"   ws+ s:StringLiteral { return domain(s); }
+  / "~a" { return assetFilter; }
+  / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
+  / "~d" ws+ s:StringLiteral { return domain(s); }
   / "~dst" ws+ s:StringLiteral { return destination(s); }
-  / "~h"   ws+ s:StringLiteral { return header(s); }
-  / "~hq"  ws+ s:StringLiteral { return requestHeader(s); }
-  / "~hs"  ws+ s:StringLiteral { return responseHeader(s); }
-  / "~m"   ws+ s:StringLiteral { return method(s); }
+  / "~e" { return errorFilter; }
+  / "~h" ws+ s:StringLiteral { return header(s); }
+  / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
+  / "~hs" ws+ s:StringLiteral { return responseHeader(s); }
+  / "~http" { return httpFilter; }
+  / "~m" ws+ s:StringLiteral { return method(s); }
+  / "~marked" { return markedFilter; }
+  / "~q" { return noResponseFilter; }
   / "~src" ws+ s:StringLiteral { return source(s); }
-  / "~t"   ws+ s:StringLiteral { return contentType(s); }
-  / "~tq"  ws+ s:StringLiteral { return requestContentType(s); }
-  / "~ts"  ws+ s:StringLiteral { return responseContentType(s); }
-  / "~u"   ws+ s:StringLiteral { return url(s); }
+  / "~s" { return responseFilter; }
+  / "~t" ws+ s:StringLiteral { return contentType(s); }
+  / "~tcp" { return tcpFilter; }
+  / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
+  / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
+  / "~u" ws+ s:StringLiteral { return url(s); }
   / s:StringLiteral { return url(s); }
 
 IntegerLiteral "integer"
