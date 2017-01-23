@@ -81,7 +81,7 @@ def python_code(flow: http.HTTPFlow):
             raise ValueError()
         writearg("json", json.loads(flow.request.text.decode('utf8')))
     except ValueError:
-        writearg("data", flow.request.content)
+        writearg("data", flow.request.content.decode('utf8'))
 
     code.seek(code.tell() - 2)  # remove last comma
     code.write("\n)\n")
