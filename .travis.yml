@@ -63,7 +63,7 @@ install:
   - pip install tox
 
 script:
-  - tox -- --cov mitmproxy --cov pathod -v
+  - tox -- --verbose --cov-report=term
   - |
     if [[ $BDIST == "1" ]]
     then

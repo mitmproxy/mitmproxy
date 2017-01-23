@@ -28,7 +28,7 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: "tox -- --cov mitmproxy --cov pathod -v"
+  - ps: "tox -- --verbose --cov-report=term"
   - ps: |
       $Env:VERSION = $(python mitmproxy/version.py)
       $Env:SKIP_MITMPROXY = "python -c `"print('skip mitmproxy')`""
