@@ -3,7 +3,7 @@ from os.path import normpath
 from mitmproxy.tools.console import pathedit
 from mitmproxy.test import tutils
 
-from mock import patch
+from unittest.mock import patch
 
 
 class TestPathCompleter:

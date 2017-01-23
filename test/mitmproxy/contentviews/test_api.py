@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from mitmproxy import contentviews
 from mitmproxy.exceptions import ContentViewException

@@ -1,15 +1,16 @@
 import json as _json
+from unittest import mock
 
-import mock
 import tornado.testing
+from tornado import httpclient
+from tornado import websocket
+
 from mitmproxy import exceptions
 from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
-from tornado import httpclient
-from tornado import websocket
 
 
 def json(resp: httpclient.HTTPResponse):

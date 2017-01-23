@@ -1,4 +1,7 @@
 import io
+import shutil
+from unittest import mock
+
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
 from mitmproxy.test import tutils
@@ -7,8 +10,6 @@ from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy.tools import dump
 from mitmproxy import http
-import shutil
-import mock
 
 
 def test_configure():
