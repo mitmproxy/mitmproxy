@@ -157,7 +157,7 @@ def test_tcp():
     d = dumper.Dumper(sio)
     with taddons.context(options=dump.Options()) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
-        f = tflow.ttcpflow(client_conn=True, server_conn=True)
+        f = tflow.ttcpflow()
         d.tcp_message(f)
         assert "it's me" in sio.getvalue()
         sio.truncate(0)
@@ -165,3 +165,20 @@ def test_tcp():
         f = tflow.ttcpflow(client_conn=True, err=True)
         d.tcp_error(f)
         assert "Error in TCP" in sio.getvalue()
+
+def test_websocket():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(options=dump.Options()) as ctx:
+        ctx.configure(d, flow_detail=3, showhost=True)
+        f = tflow.twebsocketflow()
+        d.websocket_message(f)
+        assert "hello text" in sio.getvalue()
+        sio.truncate(0)
+
+        d.websocket_end(f)
+        assert "WebSocket connection closed by" in sio.getvalue()
+
+        f = tflow.twebsocketflow(client_conn=True, err=True)
+        d.websocket_error(f)
+        assert "Error in WebSocket" in sio.getvalue()
