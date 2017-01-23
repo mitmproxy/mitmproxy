@@ -89,6 +89,10 @@ def get_snapshot_version() -> str:
     if tag_dist == 0:
         return get_version()
     else:
+        # remove the 'g' prefix added by recent git versions
+        if commit.startswith('g'):
+            commit = commit[1:]
+
         # The wheel build tag (we use the commit) must start with a digit, so we include "0x"
         return "{version}dev{tag_dist:04}-0x{commit}".format(
             version=get_version(),  # this should already be the next version
