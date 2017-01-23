@@ -20,7 +20,7 @@ You can use Homebrew to install everything:
 
     brew install mitmproxy
 
-Or you can download the pre-built binary packages from `mitmproxy.org`_.
+Or you can download the pre-built binary packages from our `releases`_.
 
 
 .. _install-windows:
@@ -44,7 +44,7 @@ Installation on Linux
 ---------------------
 
 The recommended way to run mitmproxy on Linux is to use the pre-built binaries
-provided at `mitmproxy.org`_.
+provided at `releases`_.
 
 Our pre-built binaries provide you with the latest version of mitmproxy, a
 self-contained Python 3.5 environment and a recent version of OpenSSL that
@@ -144,6 +144,7 @@ by running: ``mitmproxy --version``
 
 
 .. _Hacking: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst#hacking
+.. _releases: https://github.com/mitmproxy/mitmproxy/releases
 .. _mitmproxy.org: https://mitmproxy.org/
 .. _`Python website`: https://www.python.org/downloads/windows/
 .. _pip: https://pip.pypa.io/en/latest/installing.html
