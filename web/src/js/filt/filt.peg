@@ -69,6 +69,30 @@ function responseCode(code){
     responseCodeFilter.desc = "resp. code is " + code;
     return responseCodeFilter;
 }
+function body(regex){
+    regex = new RegExp(regex, "i");
+    function bodyFilter(flow){
+        return True;
+    }
+    bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return bodyFilter;
+}
+function requestBody(regex){
+    regex = new RegExp(regex, "i");
+    function requestBodyFilter(flow){
+        return True;
+    }
+    requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return requestBodyFilter;
+}
+function responseBody(regex){
+    regex = new RegExp(regex, "i");
+    function responseBodyFilter(flow){
+        return True;
+    }
+    responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return responseBodyFilter;
+}
 function domain(regex){
     regex = new RegExp(regex, "i");
     function domainFilter(flow){
@@ -233,6 +257,9 @@ Expr
   = "true" { return trueFilter; }
   / "false" { return falseFilter; }
   / "~a" { return assetFilter; }
+  / "~b" ws+ s:StringLiteral { return body(s); }
+  / "~bq" ws+ s:StringLiteral { return requestBody(s); }
+  / "~bs" ws+ s:StringLiteral { return responseBody(s); }
   / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
   / "~d" ws+ s:StringLiteral { return domain(s); }
   / "~dst" ws+ s:StringLiteral { return destination(s); }
