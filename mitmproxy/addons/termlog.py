@@ -13,6 +13,11 @@ class TermLog:
         self.options = options
 
     def log(self, e):
+        if self.outfile == None:
+            if log.log_tier(e.level) == log.log_tier("error"):
+                self.outfile = sys.stderr
+            else:
+                self.outfile = sys.stdout
         if self.options.verbosity >= log.log_tier(e.level):
             click.secho(
                 e.msg,
