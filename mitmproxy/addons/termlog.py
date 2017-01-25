@@ -18,7 +18,6 @@ class TermLog:
                 self.outfile = sys.stderr
             else:
                 self.outfile = sys.stdout
-
         determine_outfile()
 
         if self.options.verbosity >= log.log_tier(e.level):

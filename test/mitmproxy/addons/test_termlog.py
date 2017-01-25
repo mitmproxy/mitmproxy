@@ -2,7 +2,6 @@ from mitmproxy.addons import termlog
 from mitmproxy import log
 from mitmproxy.tools import dump
 
-
 class TestTermLog:
     def test_simple(self, capsys):
         t = termlog.TermLog()
