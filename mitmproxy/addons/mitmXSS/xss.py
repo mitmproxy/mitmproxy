@@ -1,18 +1,14 @@
 '''
 MIT License
-
 Copyright (c) 2016 David Dworken
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,10 +20,9 @@ SOFTWARE.
 from mitmproxy import ctx  # Used for logging information to mitmproxy
 from socket import gaierror, gethostbyname  # Used to check whether a domain name resolves
 from urllib.parse import urlparse  # Used to modify paths and queries for URLs
-from lxml.etree import ParserError, XMLSyntaxError  # Catch errors caused by parsing trees
-from lxml.html import fromstring  # Used when processing HTML as a tree
 import requests  # Used to send additional requests when looking for XSSs
 import re  # Used for pulling out the payload
+from html.parser import HTMLParser  # used for parsing HTML
 
 # The actual payload is put between a frontWall and a backWall to make it easy
 # to locate the payload with regular expressions
@@ -64,20 +59,24 @@ def getCookies(flow):
 def findUnclaimedURLs(body, requestUrl):
     """ Look for unclaimed URLs in script tags and log them if found
         String URL -> None """
-    try:
-        tree = fromstring(body)
-        scriptURLs = tree.xpath('//script/@src')
-        for url in scriptURLs:
-            parser = urlparse(url)
-            domain = parser.netloc
-            try:
-                gethostbyname(domain)
-            except gaierror:
-                ctx.log.error("XSS found in %s due to unclaimed URL \"%s\" in script tag." % (requestUrl, url))
-    except XMLSyntaxError:
-        pass
-    except ParserError:
-        pass
+    class scriptURLExtractor(HTMLParser):
+        scriptURLs = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "script" and "src" in [name for name,value in attrs]:
+                for name, value in attrs:
+                    if name == "src":
+                        self.scriptURLs.append(value)
+
+    parser = scriptURLExtractor()
+    parser.feed(body)
+    for url in parser.scriptURLs:
+        parser = urlparse(url)
+        domain = parser.netloc
+        try:
+            gethostbyname(domain)
+        except gaierror:
+            ctx.log.error("XSS found in %s due to unclaimed URL \"%s\" in script tag." % (requestUrl, url))
 
 
 def testEndOfURLInjection(requestURL, cookies):
@@ -175,37 +174,45 @@ def getXSSInfo(body, requestURL, injectionPoint):
         """ Whether or not you can inject ;
             Bytes -> Boolean """
         return b"se;sl" in match
-    # A Path is a String containing HTML nodes separated by forward slashes
-    # A HTMLTree is a lxml tree returned by fromstring()
-    # A TreePathTuple is a (HTMLTree, Path)
-
-    def pathsToText(listOfTreePathTuples, str, found=[]):
+    # An HTML is a String containing valid HTML
+    def pathsToText(html, str):
         """ Return list of Paths to a given str in the given HTML tree
               - Note that it does a BFS
-            TreePathTuple String -> [ListOf Path] """
-        newLOTPT = []
-        if not listOfTreePathTuples:
-            return found
-        for tuple in listOfTreePathTuples:
-            tree = tuple[0]
-            path = tuple[1]
-            if tree.text and str in tree.text:
-                found.append(path + "/" + tree.tag)
-            else:
-                newLOTPT.extend([(child, path + "/" + tree.tag) for child in tree.getchildren()])
-        return pathsToText(newLOTPT, str, found)
+            HTML String -> [ListOf Path] """
+        def removeLastOccurenceOfSubString(str, substr):
+            """ Delete the last occurence of substr from str
+            String String -> String
+            """
+            index = str.rfind(substr)
+            return str[:index] + str[index + len(substr):]
 
+        class pathHTMLParser(HTMLParser):
+            currentPath = ""
+            paths = []
+
+            def handle_starttag(self, tag, attrs):
+                self.currentPath += ("/" + tag)
+
+            def handle_endtag(self, tag):
+                self.currentPath = removeLastOccurenceOfSubString(self.currentPath, "/" + tag)
+
+            def handle_data(self, data):
+                if str in data:
+                    self.paths.append(self.currentPath)
+
+        parser = pathHTMLParser()
+        parser.feed(html)
+        return parser.paths
     def inScript(text, index, body):
         """ Whether the Numberth occurence of the first string in the second
             string is inside a script tag
             String Number String -> Boolean """
-        paths = pathsToText([(fromstring(body), "")], text.decode("utf-8"), found=[])
+        paths = pathsToText(body.decode('utf-8'), text.decode("utf-8"))
         try:
             path = paths[index]
             return "script" in path
         except IndexError:
             return False
-
     def inHTML(text, index, body):
         """ Whether the Numberth occurence of the first string in the second
             string is inside the HTML but not inside a script tag or part of
@@ -213,14 +220,13 @@ def getXSSInfo(body, requestURL, injectionPoint):
             String Number String -> Boolean """
         # if there is a < then lxml will interpret that as a tag, so only search for the stuff before it
         text = text.split(b"<")[0]
-        paths = pathsToText([(fromstring(body), "")], text.decode("utf-8"), found=[])
+        paths = pathsToText(body.decode('utf-8'), text.decode("utf-8"))
         try:
             path = paths[index]
             return "script" not in path
         except IndexError:
             return False
     # A QuoteChar is either ' or "
-
     def insideQuote(qc, text, textIndex, body):
         """ Whether the Numberth occurence of the first string in the second
             string is inside quotes as defined by the supplied QuoteChar
@@ -229,27 +235,28 @@ def getXSSInfo(body, requestURL, injectionPoint):
         body = body.decode('utf-8')
         inQuote = False
         count = 0
-        for index, char in enumerate(body):
-            if char == qc and body[index - 1] != "\\":
+        for index,char in enumerate(body):
+            if char == qc and body[index-1] != "\\":
                 inQuote = not inQuote
-            if body[index:index + len(text)] == text:
+            if body[index:index+len(text)] == text:
                 if count == textIndex:
                     return inQuote
                 count += 1
         raise Exception("Failed in inside quote")
-
-    def injectJavascriptHandler(lot):
+    def injectJavascriptHandler(html):
         """ Whether you can inject a Javascript:alert(0) as a link
             [ListOf HTMLTree] -> Boolean """
-        newLot = []
-        if not lot:
-            return False
-        for tree in lot:
-            if tree.attrib and 'href' in tree.attrib.keys() and tree.attrib['href'].startswith(frontWall.decode('utf-8')):
-                return True
-            else:
-                newLot.extend([child for child in tree])
-        return injectJavascriptHandler(newLot)
+        class injectJSHandlerHTMLParser(HTMLParser):
+            injectJSHandler = False
+
+            def handle_starttag(self, tag, attrs):
+                for name, value in attrs:
+                    if name == "href" and value.startswith(frontWall.decode('utf-8')):
+                        self.injectJSHandler = True
+
+        parser = injectJSHandlerHTMLParser()
+        parser.feed(html)
+        return parser.injectJSHandler
     # Only convert the body to bytes if needed
     if isinstance(body, str):
         body = bytes(body, 'utf-8')
@@ -308,7 +315,7 @@ def getXSSInfo(body, requestURL, injectionPoint):
         elif inHTML and not inScript and injectOA and injectCA and injectSlash:  # e.g. <html>PAYLOAD</html>
             respDict['Exploit'] = '<script>alert(0)</script>'
             return respDict
-        elif injectJavascriptHandler([fromstring(body)]):  # e.g. <html><a href=PAYLOAD>Test</a>
+        elif injectJavascriptHandler(body.decode('utf-8')):  # e.g. <html><a href=PAYLOAD>Test</a>
             respDict['Exploit'] = 'Javascript:alert(0)'
             return respDict
         # TODO: Injection of JS executing attributes (e.g. onmouseover)
