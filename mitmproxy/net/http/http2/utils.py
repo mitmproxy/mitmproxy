@@ -14,11 +14,12 @@ def parse_headers(headers):
     host = None
     port = None
 
+    if method == b'CONNECT':
+        raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
+
     if path == b'*' or path.startswith(b"/"):
         first_line_format = "relative"
-    elif method == b'CONNECT':  # pragma: no cover
-        raise NotImplementedError("CONNECT over HTTP/2 is not implemented.")
-    else:  # pragma: no cover
+    else:
         first_line_format = "absolute"
         # FIXME: verify if path or :host contains what we need
         scheme, host, port, _ = url.parse(path)

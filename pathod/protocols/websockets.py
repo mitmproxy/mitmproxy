@@ -53,4 +53,3 @@ class WebsocketsProtocol:
                         )
                         lg("crafting websocket spec: %s" % frame_log["spec"])
                         self.pathod_handler.addlog(frame_log)
-        return self.handle_websocket, None

@@ -1,10 +1,16 @@
 import io
+import subprocess
+from unittest import mock
 
 from mitmproxy.utils import debug
 
 
 def test_dump_system_info():
     assert debug.dump_system_info()
+
+    with mock.patch('subprocess.check_output') as m:
+        m.side_effect = subprocess.CalledProcessError(-1, 'git describe --tags --long')
+        assert 'release version' in debug.dump_system_info()
 
 
 def test_dump_info():

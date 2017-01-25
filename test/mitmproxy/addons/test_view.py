@@ -76,7 +76,7 @@ def test_simple():
     assert v.get_by_id(f.id)
     assert not v.get_by_id("nonexistent")
 
-    # These all just call udpate
+    # These all just call update
     v.error(f)
     v.response(f)
     v.intercept(f)

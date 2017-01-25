@@ -1,6 +1,6 @@
 import codecs
 
-import hyperframe
+import hyperframe.frame
 from mitmproxy import exceptions
 
 
@@ -20,6 +20,6 @@ def parse_frame(header, body=None):
         body = header[9:]
         header = header[:9]
 
-    frame, length = hyperframe.frame.Frame.parse_frame_header(header)
+    frame, _ = hyperframe.frame.Frame.parse_frame_header(header)
     frame.parse_body(memoryview(body))
     return frame
