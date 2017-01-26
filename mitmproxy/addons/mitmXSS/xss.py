@@ -63,7 +63,7 @@ def findUnclaimedURLs(body, requestUrl):
         scriptURLs = []
 
         def handle_starttag(self, tag, attrs):
-            if tag == "script" and "src" in [name for name,value in attrs]:
+            if tag == "script" and "src" in [name for name, value in attrs]:
                 for name, value in attrs:
                     if name == "src":
                         self.scriptURLs.append(value)
@@ -174,11 +174,13 @@ def getXSSInfo(body, requestURL, injectionPoint):
         """ Whether or not you can inject ;
             Bytes -> Boolean """
         return b"se;sl" in match
+
     # An HTML is a String containing valid HTML
     def pathsToText(html, str):
         """ Return list of Paths to a given str in the given HTML tree
               - Note that it does a BFS
             HTML String -> [ListOf Path] """
+
         def removeLastOccurenceOfSubString(str, substr):
             """ Delete the last occurence of substr from str
             String String -> String
@@ -203,6 +205,7 @@ def getXSSInfo(body, requestURL, injectionPoint):
         parser = pathHTMLParser()
         parser.feed(html)
         return parser.paths
+
     def inScript(text, index, body):
         """ Whether the Numberth occurence of the first string in the second
             string is inside a script tag
@@ -213,6 +216,7 @@ def getXSSInfo(body, requestURL, injectionPoint):
             return "script" in path
         except IndexError:
             return False
+
     def inHTML(text, index, body):
         """ Whether the Numberth occurence of the first string in the second
             string is inside the HTML but not inside a script tag or part of
@@ -226,6 +230,7 @@ def getXSSInfo(body, requestURL, injectionPoint):
             return "script" not in path
         except IndexError:
             return False
+
     # A QuoteChar is either ' or "
     def insideQuote(qc, text, textIndex, body):
         """ Whether the Numberth occurence of the first string in the second
@@ -235,14 +240,15 @@ def getXSSInfo(body, requestURL, injectionPoint):
         body = body.decode('utf-8')
         inQuote = False
         count = 0
-        for index,char in enumerate(body):
-            if char == qc and body[index-1] != "\\":
+        for index, char in enumerate(body):
+            if char == qc and body[index - 1] != "\\":
                 inQuote = not inQuote
-            if body[index:index+len(text)] == text:
+            if body[index:index + len(text)] == text:
                 if count == textIndex:
                     return inQuote
                 count += 1
         raise Exception("Failed in inside quote")
+
     def injectJavascriptHandler(html):
         """ Whether you can inject a Javascript:alert(0) as a link
             [ListOf HTMLTree] -> Boolean """
