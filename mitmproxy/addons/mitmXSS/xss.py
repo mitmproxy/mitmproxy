@@ -338,4 +338,3 @@ def response(flow):
     ctxLog(testUserAgentInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerableUA.php
     if "?" in flow.request.url:
         ctxLog(testQueryInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerable.php?name=
-
