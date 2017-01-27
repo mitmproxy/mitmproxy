@@ -247,7 +247,7 @@ def getXSSInfo(body, requestURL, injectionPoint):
                 if count == textIndex:
                     return inQuote
                 count += 1
-        raise Exception("Failed in inside quote")
+        raise EOFError("Failed in inside quote")
 
     def injectJavascriptHandler(html):
         """ Whether you can inject a Javascript:alert(0) as a link

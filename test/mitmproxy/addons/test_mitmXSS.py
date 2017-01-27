@@ -22,6 +22,29 @@ from unittest import mock
 from mitmproxy.addons.mitmXSS import xss
 
 
+class MockResponseOrRequest:
+    def __init__(self, cookies):
+        self.cookies = MockLoCT(cookies)
+        self.content = "<html></html>"
+        self.url = "https://example.com/index.html"
+
+
+class MockLoCT:
+    def __init__(self, cookies):
+        self.fields = cookies
+
+
+class MockCookieValue:
+    def __init__(self, value):
+        self.value = value
+
+
+class MockFlow:
+    def __init__(self):
+        self.response = MockResponseOrRequest([("cookieName1", MockCookieValue("cookieValue1"))])
+        self.request = MockResponseOrRequest([("cookieName2", "cookieValue2")])
+
+
 class xssFinderTests(unittest.TestCase):
     def test_getXSSInfo(self):
         # First type of exploit: <script>PAYLOAD</script>
@@ -161,6 +184,9 @@ class xssFinderTests(unittest.TestCase):
                                         "End of URL"),
                          None)
 
+        # Exception on malformed HTML
+        self.assertRaises(EOFError, xss.getXSSInfo(b"<html><src=", "https://example.com/", "End of URL"))
+
     def mocked_requests(*args, headers=None, cookies=None):
         class MockResponse:
             def __init__(self, html, headers=None, cookies=None):
@@ -198,6 +224,33 @@ class xssFinderTests(unittest.TestCase):
                           'Injection Point': 'Query',
                           'URL': 'https://example.com/vuln.php?cmd=1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\3847asd',
                           'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd'})
+
+    @mock.patch('mitmproxy.ctx.log')
+    def testFindUnclaimedURLs(self, mocked_log):
+        xss.findUnclaimedURLs("<html><script src=\"http://google.com\"></script></html>", "https://example.com")
+        self.assertFalse(mocked_log.error.called)
+        xss.findUnclaimedURLs("<html><script src=\"http://unclaimedDomainName.com\"></script></html>", "https://example.com")
+        self.assertTrue(mocked_log.error.called)
+
+    @mock.patch('mitmproxy.ctx.log')
+    def testCTXLog(self, mocked_log):
+        xss.ctxLog(None)
+        self.assertFalse(mocked_log.error.called)
+        xss.ctxLog({'Exploit': 'String',
+                    'Injection Point': 'Location',
+                    'URL': 'https://example.com',
+                    'Line': 'Line of HTML'})
+        self.assertTrue(mocked_log.error.called)
+
+    def testGetCookies(self):
+        mocked_flow = MockFlow()
+        self.assertEqual(xss.getCookies(mocked_flow), {'cookieName1': 'cookieValue1', 'cookieName2': 'cookieValue2'})
+
+    @mock.patch('mitmproxy.ctx.log')
+    def testResponse(self, mocked_log):
+        mocked_flow = MockFlow()
+        xss.response(mocked_flow)
+        self.assertFalse(mocked_log.error.called)
 
 
 if __name__ == '__main__':
