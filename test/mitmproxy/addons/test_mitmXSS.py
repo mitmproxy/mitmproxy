@@ -18,6 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 import unittest
+from unittest import mock
 from mitmproxy.addons.mitmXSS import xss
 
 
@@ -159,6 +160,44 @@ class xssFinderTests(unittest.TestCase):
                                         "https://example.com",
                                         "End of URL"),
                          None)
+
+    def mocked_requests(*args, headers=None, cookies=None):
+        class MockResponse:
+            def __init__(self, html, headers=None, cookies=None):
+                self.text = html
+        return MockResponse("<html>%s</html>" % xss.fullPayload)
+
+    @mock.patch('requests.get', side_effect=mocked_requests)
+    def testTestEndOfURLInjection(self, mocked_requests):
+        self.assertEqual(xss.testEndOfURLInjection("https://example.com/", {}),
+                         {'Exploit': '<script>alert(0)</script>',
+                          'Injection Point': 'End of URL',
+                          'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd',
+                          'URL': 'https://example.com/1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\3847asd'})
+
+    @mock.patch('requests.get', side_effect=mocked_requests)
+    def testTestRefererInjection(self, mocked_requests):
+        self.assertEqual(xss.testRefererInjection("https://example.com/", {}),
+                         {'Exploit': '<script>alert(0)</script>',
+                          'Injection Point': 'Referer',
+                          'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd',
+                          'URL': 'https://example.com/'})
+
+    @mock.patch('requests.get', side_effect=mocked_requests)
+    def testTestUserAgentInjection(self, mocked_requests):
+        self.assertEqual(xss.testUserAgentInjection("https://example.com/", {}),
+                         {'Exploit': '<script>alert(0)</script>',
+                          'Injection Point': 'User Agent',
+                          'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd',
+                          'URL': 'https://example.com/'})
+
+    @mock.patch('requests.get', side_effect=mocked_requests)
+    def testTestQueryInjection(self, mocked_requests):
+        self.assertEqual(xss.testQueryInjection("https://example.com/vuln.php?cmd=ls", {}),
+                         {'Exploit': '<script>alert(0)</script>',
+                          'Injection Point': 'Query',
+                          'URL': 'https://example.com/vuln.php?cmd=1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\3847asd',
+                          'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd'})
 
 
 if __name__ == '__main__':

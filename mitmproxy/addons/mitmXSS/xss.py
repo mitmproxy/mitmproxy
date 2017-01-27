@@ -82,7 +82,7 @@ def findUnclaimedURLs(body, requestUrl):
 def testEndOfURLInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection onto the end of the URL and
         log the XSS if found
-        URL -> None """
+        URL -> XSSDict """
     parsedURL = urlparse(requestURL)
     path = parsedURL.path
     if path[-1] != "/":  # ensure the path ends in a /
@@ -91,31 +91,31 @@ def testEndOfURLInjection(requestURL, cookies):
     url = parsedURL._replace(path=path).geturl()
     body = requests.get(url, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, url, "End of URL")
-    ctxLog(xssInfo)
+    return xssInfo
 
 
 def testRefererInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection into the referer and
         log the XSS if found
-        URL -> None """
+        URL -> XSSDict """
     body = requests.get(requestURL, headers={'referer': fullPayload}, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, requestURL, "Referer")
-    ctxLog(xssInfo)
+    return xssInfo
 
 
 def testUserAgentInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection into the user agent and
         log the XSS if found
-        URL -> None """
+        URL -> XSSDict """
     body = requests.get(requestURL, headers={'User-Agent': fullPayload}, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, requestURL, "User Agent")
-    ctxLog(xssInfo)
+    return xssInfo
 
 
 def testQueryInjection(requestURL, cookies):
     """ Test the given URL for XSS via injection into URL queries and
         log the XSS if found
-        URL -> None """
+        URL -> XSSDict """
     parsedURL = urlparse(requestURL)
     queryString = parsedURL.query
     # queries is a list of parameters where each parameter is set to the payload
@@ -124,7 +124,7 @@ def testQueryInjection(requestURL, cookies):
     newURL = parsedURL._replace(query=newQueryString).geturl()
     body = requests.get(newURL, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, newURL, "Query")
-    ctxLog(xssInfo)
+    return xssInfo
 
 
 def ctxLog(xssInfo):
@@ -332,9 +332,10 @@ def getXSSInfo(body, requestURL, injectionPoint):
 # response is mitmproxy's entry point
 def response(flow):
     cookiesDict = getCookies(flow)
-    findUnclaimedURLs(flow.response.content, flow.request.url)  # Example: http://xss.guru/unclaimedScriptTag.html
-    testEndOfURLInjection(flow.request.url, cookiesDict)
-    testRefererInjection(flow.request.url, cookiesDict)  # Example: https://daviddworken.com/vulnerableReferer.php
-    testUserAgentInjection(flow.request.url, cookiesDict)  # Example: https://daviddworken.com/vulnerableUA.php
+    ctxLog(findUnclaimedURLs(flow.response.content, flow.request.url))  # Example: http://xss.guru/unclaimedScriptTag.html
+    ctxLog(testEndOfURLInjection(flow.request.url, cookiesDict))
+    ctxLog(testRefererInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerableReferer.php
+    ctxLog(testUserAgentInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerableUA.php
     if "?" in flow.request.url:
-        testQueryInjection(flow.request.url, cookiesDict)  # Example: https://daviddworken.com/vulnerable.php?name=
+        ctxLog(testQueryInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerable.php?name=
+
