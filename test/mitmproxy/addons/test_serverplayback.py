@@ -1,4 +1,6 @@
 import os
+import urllib
+
 from mitmproxy.test import tutils
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
@@ -22,8 +24,13 @@ def test_config():
         with taddons.context() as tctx:
             fpath = os.path.join(p, "flows")
             tdump(fpath, [tflow.tflow(resp=True)])
-            tctx.configure(s, server_replay = [fpath])
-            tutils.raises(exceptions.OptionsError, tctx.configure, s, server_replay = [p])
+            tctx.configure(s, server_replay=[fpath])
+            tutils.raises(
+                exceptions.OptionsError,
+                tctx.configure,
+                s,
+                server_replay=[p]
+            )
 
 
 def test_tick():
@@ -246,7 +253,7 @@ def test_ignore_params():
     assert not s._hash(r) == s._hash(r2)
 
 
-def test_ignore_payload_params():
+def thash(r, r2, setter):
     s = serverplayback.ServerPlayback()
     s.configure(
         options.Options(
@@ -255,29 +262,57 @@ def test_ignore_payload_params():
         []
     )
 
-    r = tflow.tflow(resp=True)
-    r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-    r.request.content = b"paramx=x&param1=1"
-    r2 = tflow.tflow(resp=True)
-    r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-    r2.request.content = b"paramx=x&param1=1"
+    setter(r, paramx="x", param1="1")
+
+    setter(r2, paramx="x", param1="1")
     # same parameters
     assert s._hash(r) == s._hash(r2)
     # ignored parameters !=
-    r2.request.content = b"paramx=x&param1=2"
+    setter(r2, paramx="x", param1="2")
     assert s._hash(r) == s._hash(r2)
     # missing parameter
-    r2.request.content = b"paramx=x"
+    setter(r2, paramx="x")
     assert s._hash(r) == s._hash(r2)
     # ignorable parameter added
-    r2.request.content = b"paramx=x&param1=2"
+    setter(r2, paramx="x", param1="2")
     assert s._hash(r) == s._hash(r2)
     # not ignorable parameter changed
-    r2.request.content = b"paramx=y&param1=1"
+    setter(r2, paramx="y", param1="1")
     assert not s._hash(r) == s._hash(r2)
     # not ignorable parameter missing
+    setter(r2, param1="1")
     r2.request.content = b"param1=1"
     assert not s._hash(r) == s._hash(r2)
+
+
+def test_ignore_payload_params():
+    def urlencode_setter(r, **kwargs):
+        r.request.content = urllib.parse.urlencode(kwargs).encode()
+
+    r = tflow.tflow(resp=True)
+    r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+    r2 = tflow.tflow(resp=True)
+    r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+    thash(r, r2, urlencode_setter)
+
+    boundary = 'somefancyboundary'
+
+    def multipart_setter(r, **kwargs):
+        b = "--{0}\n".format(boundary)
+        parts = []
+        for k, v in kwargs.items():
+            parts.append(
+                "Content-Disposition: form-data; name=\"%s\"\n\n"
+                "%s\n" % (k, v)
+            )
+        c = b + b.join(parts) + b
+        r.request.content = c.encode()
+        r.request.headers["content-type"] = 'multipart/form-data; boundary=' +\
+            boundary
+
+    r = tflow.tflow(resp=True)
+    r2 = tflow.tflow(resp=True)
+    thash(r, r2, multipart_setter)
 
 
 def test_server_playback_full():
