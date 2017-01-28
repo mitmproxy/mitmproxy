@@ -10,7 +10,15 @@ def test_configure():
     r = stickyauth.StickyAuth()
     with taddons.context() as tctx:
         tctx.configure(r, stickyauth="~s")
-        tutils.raises(exceptions.OptionsError, tctx.configure, r, stickyauth="~~")
+        tutils.raises(
+            exceptions.OptionsError,
+            tctx.configure,
+            r,
+            stickyauth="~~"
+        )
+
+        tctx.configure(r, stickyauth=None)
+        assert not r.flt
 
 
 def test_simple():

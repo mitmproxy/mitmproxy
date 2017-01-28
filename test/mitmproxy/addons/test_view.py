@@ -73,12 +73,15 @@ def test_simple():
     assert v.store_count() == 0
     v.request(f)
     assert list(v) == [f]
+    assert v.get_by_id(f.id)
+    assert not v.get_by_id("nonexistent")
 
     # These all just call udpate
     v.error(f)
     v.response(f)
     v.intercept(f)
     v.resume(f)
+    v.kill(f)
     assert list(v) == [f]
 
     v.request(f)
