@@ -26,7 +26,7 @@ class MockResponseOrRequest:
     def __init__(self, cookies):
         self.cookies = MockLoCT(cookies)
         self.content = "<html></html>"
-        self.url = "https://example.com/index.html"
+        self.url = "https://example.com/index.html?q=1"
 
 
 class MockLoCT:
@@ -45,7 +45,7 @@ class MockFlow:
         self.request = MockResponseOrRequest([("cookieName2", "cookieValue2")])
 
 
-class xssFinderTests(unittest.TestCase):
+class test_mitmXSS(unittest.TestCase):
     def test_getXSSInfo(self):
         # First type of exploit: <script>PAYLOAD</script>
         # Exploitable:
@@ -195,7 +195,7 @@ class xssFinderTests(unittest.TestCase):
 
     @mock.patch('requests.get', side_effect=mocked_requests)
     def testTestEndOfURLInjection(self, mocked_requests):
-        self.assertEqual(xss.testEndOfURLInjection("https://example.com/", {}),
+        self.assertEqual(xss.testEndOfURLInjection("<html></html>", "https://example.com/", {})[0],
                          {'Exploit': '<script>alert(0)</script>',
                           'Injection Point': 'End of URL',
                           'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd',
@@ -203,7 +203,7 @@ class xssFinderTests(unittest.TestCase):
 
     @mock.patch('requests.get', side_effect=mocked_requests)
     def testTestRefererInjection(self, mocked_requests):
-        self.assertEqual(xss.testRefererInjection("https://example.com/", {}),
+        self.assertEqual(xss.testRefererInjection("<html></html>", "https://example.com/", {})[0],
                          {'Exploit': '<script>alert(0)</script>',
                           'Injection Point': 'Referer',
                           'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd',
@@ -211,7 +211,7 @@ class xssFinderTests(unittest.TestCase):
 
     @mock.patch('requests.get', side_effect=mocked_requests)
     def testTestUserAgentInjection(self, mocked_requests):
-        self.assertEqual(xss.testUserAgentInjection("https://example.com/", {}),
+        self.assertEqual(xss.testUserAgentInjection("<html></html>", "https://example.com/", {})[0],
                          {'Exploit': '<script>alert(0)</script>',
                           'Injection Point': 'User Agent',
                           'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\3847asd',
@@ -219,7 +219,7 @@ class xssFinderTests(unittest.TestCase):
 
     @mock.patch('requests.get', side_effect=mocked_requests)
     def testTestQueryInjection(self, mocked_requests):
-        self.assertEqual(xss.testQueryInjection("https://example.com/vuln.php?cmd=ls", {}),
+        self.assertEqual(xss.testQueryInjection("<html></html>", "https://example.com/vuln.php?cmd=ls", {})[0],
                          {'Exploit': '<script>alert(0)</script>',
                           'Injection Point': 'Query',
                           'URL': 'https://example.com/vuln.php?cmd=1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\3847asd',
@@ -233,14 +233,18 @@ class xssFinderTests(unittest.TestCase):
         self.assertTrue(mocked_log.error.called)
 
     @mock.patch('mitmproxy.ctx.log')
-    def testCTXLog(self, mocked_log):
-        xss.ctxLog(None)
+    def testlogXSS(self, mocked_log):
+        xss.logXSS(None)
         self.assertFalse(mocked_log.error.called)
-        xss.ctxLog({'Exploit': 'String',
+        xss.logXSS({'Exploit': 'String',
                     'Injection Point': 'Location',
                     'URL': 'https://example.com',
                     'Line': 'Line of HTML'})
-        self.assertTrue(mocked_log.error.called)
+        mocked_log.error.assert_has_calls([mock.call('===== XSS Found ===='),
+                                           mock.call('XSS URL: https://example.com'),
+                                           mock.call('Injection Point: Location'),
+                                           mock.call('Suggested Exploit: String'),
+                                           mock.call('Line: Line of HTML')])
 
     def testGetCookies(self):
         mocked_flow = MockFlow()
@@ -251,6 +255,34 @@ class xssFinderTests(unittest.TestCase):
         mocked_flow = MockFlow()
         xss.response(mocked_flow)
         self.assertFalse(mocked_log.error.called)
+
+    @mock.patch('mitmproxy.ctx.log')
+    def testlogSQLi(self, mocked_log):
+        xss.logSQLiDict(None)
+        self.assertFalse(mocked_log.error.called)
+        xss.logSQLiDict({'URL': "https://example.com",
+                         'Injection Point': "Location",
+                         'Regex': "Oracle.*Driver",
+                         'DBMS': "Oracle"})
+        mocked_log.error.assert_has_calls([mock.call('===== SQLi Found ====='),
+                                           mock.call('SQLi URL: https://example.com'),
+                                           mock.call('Injection Point: Location'),
+                                           mock.call('Regex used: Oracle.*Driver')])
+
+    def testGetSQLiInfo(self):
+        self.assertEqual(xss.getSQLiInfo("<html>SQL syntax MySQL</html>",
+                                         "<html></html>",
+                                         "https://example.com",
+                                         "End of URL"),
+                         {'URL': "https://example.com",
+                          'Injection Point': "End of URL",
+                          'Regex': "SQL syntax.*MySQL",
+                          'DBMS': "MySQL"})
+        self.assertEqual(xss.getSQLiInfo("<html>SQL syntax MySQL</html>",
+                                         "<html>SQL syntax MySQL</html>",
+                                         "https://example.com",
+                                         "End of URL"),
+                         None)
 
 
 if __name__ == '__main__':

@@ -37,6 +37,11 @@ fullPayload = frontWall + payload + backWall
 #   - 'Injection Point' -> String
 #   - 'Exploit' -> String
 #   - 'Line' -> String
+# A SQLiDict is a dictionary with the following keys value pairs:
+#   - 'URL' -> URL
+#   - 'Injection Point' -> String
+#   - 'Regex' -> String
+#   - 'DBMS' -> String
 
 
 def getCookies(flow):
@@ -79,7 +84,7 @@ def findUnclaimedURLs(body, requestUrl):
             ctx.log.error("XSS found in %s due to unclaimed URL \"%s\" in script tag." % (requestUrl, url))
 
 
-def testEndOfURLInjection(requestURL, cookies):
+def testEndOfURLInjection(originalBody, requestURL, cookies):
     """ Test the given URL for XSS via injection onto the end of the URL and
         log the XSS if found
         URL -> XSSDict """
@@ -91,28 +96,31 @@ def testEndOfURLInjection(requestURL, cookies):
     url = parsedURL._replace(path=path).geturl()
     body = requests.get(url, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, url, "End of URL")
-    return xssInfo
+    sqliInfo = getSQLiInfo(body, originalBody, url, "End of URL")
+    return xssInfo, sqliInfo
 
 
-def testRefererInjection(requestURL, cookies):
+def testRefererInjection(originalBody, requestURL, cookies):
     """ Test the given URL for XSS via injection into the referer and
         log the XSS if found
         URL -> XSSDict """
     body = requests.get(requestURL, headers={'referer': fullPayload}, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, requestURL, "Referer")
-    return xssInfo
+    sqliInfo = getSQLiInfo(body, originalBody, requestURL, "Referer")
+    return xssInfo, sqliInfo
 
 
-def testUserAgentInjection(requestURL, cookies):
+def testUserAgentInjection(originalBody, requestURL, cookies):
     """ Test the given URL for XSS via injection into the user agent and
         log the XSS if found
         URL -> XSSDict """
     body = requests.get(requestURL, headers={'User-Agent': fullPayload}, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, requestURL, "User Agent")
-    return xssInfo
+    sqliInfo = getSQLiInfo(body, originalBody, requestURL, "User Agent")
+    return xssInfo, sqliInfo
 
 
-def testQueryInjection(requestURL, cookies):
+def testQueryInjection(originalBody, requestURL, cookies):
     """ Test the given URL for XSS via injection into URL queries and
         log the XSS if found
         URL -> XSSDict """
@@ -124,10 +132,11 @@ def testQueryInjection(requestURL, cookies):
     newURL = parsedURL._replace(query=newQueryString).geturl()
     body = requests.get(newURL, cookies=cookies).text.lower()
     xssInfo = getXSSInfo(body, newURL, "Query")
-    return xssInfo
+    sqliInfo = getSQLiInfo(body, originalBody, newURL, "Query")
+    return xssInfo, sqliInfo
 
 
-def ctxLog(xssInfo):
+def logXSS(xssInfo):
     """ Log information about the given XSS to mitmproxy
         (XSSDict or None) -> None """
     # If it is None, then there is no info to log
@@ -138,6 +147,43 @@ def ctxLog(xssInfo):
     ctx.log.error("Injection Point: %s" % xssInfo['Injection Point'])
     ctx.log.error("Suggested Exploit: %s" % xssInfo['Exploit'])
     ctx.log.error("Line: %s" % xssInfo['Line'])
+
+
+def logSQLiDict(SQLiDict):
+    """ Log information about the given SQLi to mitmproxy
+        (SQLiDict or None) -> None """
+    if not SQLiDict:
+        return
+    ctx.log.error("===== SQLi Found =====")
+    ctx.log.error("SQLi URL: %s" % SQLiDict['URL'])
+    ctx.log.error("Injection Point: %s" % SQLiDict['Injection Point'])
+    ctx.log.error("Regex used: %s" % SQLiDict['Regex'])
+
+
+def getSQLiInfo(newBody, originalBody, requestURL, injectionPoint):
+    """ Return a SQLiDict if there is a SQLi otherwise return None
+        String String URL String -> (SQLiDict or None) """
+    # Regexes taken from Damn Small SQLi Scanner: https://github.com/stamparm/DSSS/blob/master/dsss.py#L17
+    DBMS_ERRORS = {
+        "MySQL": (r"SQL syntax.*MySQL", r"Warning.*mysql_.*", r"valid MySQL result", r"MySqlClient\."),
+        "PostgreSQL": (r"PostgreSQL.*ERROR", r"Warning.*\Wpg_.*", r"valid PostgreSQL result", r"Npgsql\."),
+        "Microsoft SQL Server": (r"Driver.* SQL[\-\_\ ]*Server", r"OLE DB.* SQL Server", r"(\W|\A)SQL Server.*Driver",
+                                 r"Warning.*mssql_.*", r"(\W|\A)SQL Server.*[0-9a-fA-F]{8}",
+                                 r"(?s)Exception.*\WSystem\.Data\.SqlClient\.", r"(?s)Exception.*\WRoadhouse\.Cms\."),
+        "Microsoft Access": (r"Microsoft Access Driver", r"JET Database Engine", r"Access Database Engine"),
+        "Oracle": (r"\bORA-[0-9][0-9][0-9][0-9]", r"Oracle error", r"Oracle.*Driver", r"Warning.*\Woci_.*", r"Warning.*\Wora_.*"),
+        "IBM DB2": (r"CLI Driver.*DB2", r"DB2 SQL error", r"\bdb2_\w+\("),
+        "SQLite": (r"SQLite/JDBCDriver", r"SQLite.Exception", r"System.Data.SQLite.SQLiteException", r"Warning.*sqlite_.*",
+                   r"Warning.*SQLite3::", r"\[SQLITE_ERROR\]"),
+        "Sybase": (r"(?i)Warning.*sybase.*", r"Sybase message", r"Sybase.*Server message.*"),
+    }
+    for dbms, regexes in DBMS_ERRORS.items():
+        for regex in regexes:
+            if re.search(regex, newBody) and not re.search(regex, originalBody):
+                return {'URL': requestURL,
+                        'Injection Point': injectionPoint,
+                        'Regex': regex,
+                        'DBMS': dbms}
 
 
 def getXSSInfo(body, requestURL, injectionPoint):
@@ -332,9 +378,21 @@ def getXSSInfo(body, requestURL, injectionPoint):
 # response is mitmproxy's entry point
 def response(flow):
     cookiesDict = getCookies(flow)
-    ctxLog(findUnclaimedURLs(flow.response.content, flow.request.url))  # Example: http://xss.guru/unclaimedScriptTag.html
-    ctxLog(testEndOfURLInjection(flow.request.url, cookiesDict))
-    ctxLog(testRefererInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerableReferer.php
-    ctxLog(testUserAgentInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerableUA.php
+    # Example: http://xss.guru/unclaimedScriptTag.html
+    logXSS(findUnclaimedURLs(flow.response.content, flow.request.url))
+    results = testEndOfURLInjection(flow.response.content, flow.request.url, cookiesDict)
+    logXSS(results[0])
+    logSQLiDict(results[1])
+    # Example: https://daviddworken.com/vulnerableReferer.php
+    results = testRefererInjection(flow.response.content, flow.request.url, cookiesDict)
+    logXSS(results[0])
+    logSQLiDict(results[1])
+    # Example: https://daviddworken.com/vulnerableUA.php
+    results = testUserAgentInjection(flow.response.content, flow.request.url, cookiesDict)
+    logXSS(results[0])
+    logSQLiDict(results[1])
     if "?" in flow.request.url:
-        ctxLog(testQueryInjection(flow.request.url, cookiesDict))  # Example: https://daviddworken.com/vulnerable.php?name=
+        # Example: https://daviddworken.com/vulnerable.php?name=
+        results = testQueryInjection(flow.response.content, flow.request.url, cookiesDict)
+        logXSS(results[0])
+        logSQLiDict(results[1])

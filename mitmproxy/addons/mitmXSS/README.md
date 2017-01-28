@@ -1,6 +1,6 @@
 # mitmXSS
 
-A XSS scanning script for mitmproxy. Automatically scans every visited page for XSS vulnerabilities. Run with mitmproxy with the ```-s``` flag pointing to this script and watch the log (by pressing ```e```). 
+An XSS and SQLi scanning script for mitmproxy. Automatically scans every visited page for XSS and SQLi vulnerabilities. Run with mitmproxy with the ```-s``` flag pointing to this script and watch the log (by pressing ```e```). 
 
 ![Example Query Based XSS](https://raw.githubusercontent.com/ddworken/mitmXSS/master/images/xssQuery.png)
 
