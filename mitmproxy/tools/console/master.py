@@ -106,7 +106,7 @@ class ConsoleMaster(master.Master):
         self.logbuffer.append(e)
         if len(self.logbuffer) > EVENTLOG_SIZE:
             self.logbuffer.pop(0)
-        if self.options.focus_follow:
+        if self.options.console_focus_follow:
             self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
@@ -150,7 +150,7 @@ class ConsoleMaster(master.Master):
             signals.add_log("Script error: %s" % e, "warn")
 
     def toggle_eventlog(self):
-        self.options.eventlog = not self.options.eventlog
+        self.options.console_eventlog = not self.options.console_eventlog
         self.view_flowlist()
         signals.replace_view_state.send(self)
 
@@ -230,8 +230,8 @@ class ConsoleMaster(master.Master):
 
     def set_palette(self, options, updated):
         self.ui.register_palette(
-            palettes.palettes[options.palette].palette(
-                options.palette_transparent
+            palettes.palettes[options.console_palette].palette(
+                options.console_palette_transparent
             )
         )
         self.ui.clear()
@@ -253,7 +253,7 @@ class ConsoleMaster(master.Master):
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             screen = self.ui,
-            handle_mouse = not self.options.no_mouse,
+            handle_mouse = not self.options.console_no_mouse,
         )
         self.ab = statusbar.ActionBar()
 
@@ -345,7 +345,7 @@ class ConsoleMaster(master.Master):
         if self.ui.started:
             self.ui.clear()
 
-        if self.options.eventlog:
+        if self.options.console_eventlog:
             body = flowlist.BodyPile(self)
         else:
             body = flowlist.FlowListBox(self)

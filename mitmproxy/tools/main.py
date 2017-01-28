@@ -70,14 +70,15 @@ def mitmproxy(args=None):  # pragma: no cover
         console_options.merge(cmdline.get_common_options(args))
         console_options.merge(
             dict(
-                palette = args.palette,
-                palette_transparent = args.palette_transparent,
-                eventlog = args.eventlog,
-                focus_follow = args.focus_follow,
-                intercept = args.intercept,
+                console_palette = args.console_palette,
+                console_palette_transparent = args.console_palette_transparent,
+                console_eventlog = args.console_eventlog,
+                console_focus_follow = args.console_focus_follow,
+                console_no_mouse = args.console_no_mouse,
+                console_order = args.console_order,
+
                 filter = args.filter,
-                no_mouse = args.no_mouse,
-                order = args.order,
+                intercept = args.intercept,
             )
         )
 
@@ -149,10 +150,10 @@ def mitmweb(args=None):  # pragma: no cover
         web_options.merge(
             dict(
                 intercept = args.intercept,
-                open_browser = args.open_browser,
-                wdebug = args.wdebug,
-                wiface = args.wiface,
-                wport = args.wport,
+                web_open_browser = args.web_open_browser,
+                web_debug = args.web_debug,
+                web_iface = args.web_iface,
+                web_port = args.web_port,
             )
         )
         server = process_options(parser, web_options, args)

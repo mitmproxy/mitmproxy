@@ -38,7 +38,7 @@ class WebMaster(master.Master):
         if with_termlog:
             self.addons.add(termlog.TermLog())
         self.app = app.Application(
-            self, self.options.wdebug
+            self, self.options.web_debug
         )
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -103,7 +103,7 @@ class WebMaster(master.Master):
         iol = tornado.ioloop.IOLoop.instance()
 
         http_server = tornado.httpserver.HTTPServer(self.app)
-        http_server.listen(self.options.wport, self.options.wiface)
+        http_server.listen(self.options.web_port, self.options.web_iface)
 
         iol.add_callback(self.start)
         tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
@@ -113,13 +113,13 @@ class WebMaster(master.Master):
             "info"
         )
 
-        web_url = "http://{}:{}/".format(self.options.wiface, self.options.wport)
+        web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
         self.add_log(
             "Web   server listening at {}".format(web_url),
             "info"
         )
 
-        if self.options.open_browser:
+        if self.options.web_open_browser:
             success = open_browser(web_url)
             if not success:
                 self.add_log(

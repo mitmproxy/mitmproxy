@@ -22,96 +22,96 @@ DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA
 
 class Options(optmanager.OptManager):
     def __init__(
-            self,
-            *,  # all args are keyword-only.
-            # TODO: rename to onboarding_app_*
-            app: bool = True,
-            app_host: str = APP_HOST,
-            app_port: int = APP_PORT,
-            anticache: bool = False,
-            anticomp: bool = False,
-            client_replay: Sequence[str] = [],
-            replay_kill_extra: bool = False,
-            keepserving: bool = True,
-            no_server: bool = False,
-            server_replay_nopop: bool = False,
-            refresh_server_playback: bool = True,
-            rfile: Optional[str] = None,
-            scripts: Sequence[str] = [],
-            showhost: bool = False,
-            replacements: Sequence[Tuple[str, str, str]] = [],
-            server_replay_use_headers: Sequence[str] = [],
-            setheaders: Sequence[Tuple[str, str, str]] = [],
-            server_replay: Sequence[str] = [],
-            stickycookie: Optional[str] = None,
-            stickyauth: Optional[str] = None,
-            stream_large_bodies: Optional[int] = None,
-            verbosity: int = 2,
-            default_contentview: str = "auto",
-            streamfile: Optional[str] = None,
-            streamfile_append: bool = False,
-            server_replay_ignore_content: bool = False,
-            server_replay_ignore_params: Sequence[str] = [],
-            server_replay_ignore_payload_params: Sequence[str] = [],
-            server_replay_ignore_host: bool = False,
-            # Proxy options
-            auth_nonanonymous: bool = False,
-            auth_singleuser: Optional[str] = None,
-            auth_htpasswd: Optional[str] = None,
-            add_upstream_certs_to_client_chain: bool = False,
-            body_size_limit: Optional[int] = None,
-            cadir: str = CA_DIR,
-            certs: Sequence[Tuple[str, str]] = [],
-            ciphers_client: str=DEFAULT_CLIENT_CIPHERS,
-            ciphers_server: Optional[str]=None,
-            clientcerts: Optional[str] = None,
-            http2: bool = True,
-            ignore_hosts: Sequence[str] = [],
-            listen_host: str = "",
-            listen_port: int = LISTEN_PORT,
-            upstream_bind_address: str = "",
-            mode: str = "regular",
-            no_upstream_cert: bool = False,
-            rawtcp: bool = False,
-            websocket: bool = True,
-            spoof_source_address: bool = False,
-            upstream_server: Optional[str] = None,
-            upstream_auth: Optional[str] = None,
-            ssl_version_client: str = "secure",
-            ssl_version_server: str = "secure",
-            ssl_insecure: bool = False,
-            ssl_verify_upstream_trusted_cadir: Optional[str] = None,
-            ssl_verify_upstream_trusted_ca: Optional[str] = None,
-            tcp_hosts: Sequence[str] = [],
+        self,
+        *,  # all args are keyword-only.
+        onboarding: bool = True,
+        onboarding_host: str = APP_HOST,
+        onboarding_port: int = APP_PORT,
+        anticache: bool = False,
+        anticomp: bool = False,
+        client_replay: Sequence[str] = [],
+        replay_kill_extra: bool = False,
+        keepserving: bool = True,
+        no_server: bool = False,
+        server_replay_nopop: bool = False,
+        refresh_server_playback: bool = True,
+        rfile: Optional[str] = None,
+        scripts: Sequence[str] = [],
+        showhost: bool = False,
+        replacements: Sequence[Tuple[str, str, str]] = [],
+        server_replay_use_headers: Sequence[str] = [],
+        setheaders: Sequence[Tuple[str, str, str]] = [],
+        server_replay: Sequence[str] = [],
+        stickycookie: Optional[str] = None,
+        stickyauth: Optional[str] = None,
+        stream_large_bodies: Optional[int] = None,
+        verbosity: int = 2,
+        default_contentview: str = "auto",
+        streamfile: Optional[str] = None,
+        streamfile_append: bool = False,
+        server_replay_ignore_content: bool = False,
+        server_replay_ignore_params: Sequence[str] = [],
+        server_replay_ignore_payload_params: Sequence[str] = [],
+        server_replay_ignore_host: bool = False,
+        # Proxy options
+        auth_nonanonymous: bool = False,
+        auth_singleuser: Optional[str] = None,
+        auth_htpasswd: Optional[str] = None,
+        add_upstream_certs_to_client_chain: bool = False,
+        body_size_limit: Optional[int] = None,
+        cadir: str = CA_DIR,
+        certs: Sequence[Tuple[str, str]] = [],
+        ciphers_client: str=DEFAULT_CLIENT_CIPHERS,
+        ciphers_server: Optional[str]=None,
+        clientcerts: Optional[str] = None,
+        http2: bool = True,
+        ignore_hosts: Sequence[str] = [],
+        listen_host: str = "",
+        listen_port: int = LISTEN_PORT,
+        upstream_bind_address: str = "",
+        mode: str = "regular",
+        no_upstream_cert: bool = False,
+        rawtcp: bool = False,
+        websocket: bool = True,
+        spoof_source_address: bool = False,
+        upstream_server: Optional[str] = None,
+        upstream_auth: Optional[str] = None,
+        ssl_version_client: str = "secure",
+        ssl_version_server: str = "secure",
+        ssl_insecure: bool = False,
+        ssl_verify_upstream_trusted_cadir: Optional[str] = None,
+        ssl_verify_upstream_trusted_ca: Optional[str] = None,
+        tcp_hosts: Sequence[str] = [],
 
-            intercept: Optional[str] = None,
+        intercept: Optional[str] = None,
 
-            # Console options
-            eventlog: bool = False,
-            focus_follow: bool = False,
-            filter: Optional[str] = None,
-            palette: Optional[str] = "dark",
-            palette_transparent: bool = False,
-            no_mouse: bool = False,
-            order: Optional[str] = None,
-            order_reversed: bool = False,
+        # Console options
+        console_eventlog: bool = False,
+        console_focus_follow: bool = False,
+        console_palette: Optional[str] = "dark",
+        console_palette_transparent: bool = False,
+        console_no_mouse: bool = False,
+        console_order: Optional[str] = None,
+        console_order_reversed: bool = False,
 
-            # Web options
-            open_browser: bool = True,
-            wdebug: bool = False,
-            wport: int = 8081,
-            wiface: str = "127.0.0.1",
+        filter: Optional[str] = None,
 
-            # Dump options
-            filtstr: Optional[str] = None,
-            flow_detail: int = 1
+        # Web options
+        web_open_browser: bool = True,
+        web_debug: bool = False,
+        web_port: int = 8081,
+        web_iface: str = "127.0.0.1",
+
+        # Dump options
+        filtstr: Optional[str] = None,
+        flow_detail: int = 1
     ) -> None:
         # We could replace all assignments with clever metaprogramming,
         # but type hints are a much more valueable asset.
 
-        self.app = app
-        self.app_host = app_host
-        self.app_port = app_port
+        self.onboarding = onboarding
+        self.onboarding_host = onboarding_host
+        self.onboarding_port = onboarding_port
         self.anticache = anticache
         self.anticomp = anticomp
         self.client_replay = client_replay
@@ -172,20 +172,21 @@ class Options(optmanager.OptManager):
         self.intercept = intercept
 
         # Console options
-        self.eventlog = eventlog
-        self.focus_follow = focus_follow
+        self.console_eventlog = console_eventlog
+        self.console_focus_follow = console_focus_follow
+        self.console_palette = console_palette
+        self.console_palette_transparent = console_palette_transparent
+        self.console_no_mouse = console_no_mouse
+        self.console_order = console_order
+        self.console_order_reversed = console_order_reversed
+
         self.filter = filter
-        self.palette = palette
-        self.palette_transparent = palette_transparent
-        self.no_mouse = no_mouse
-        self.order = order
-        self.order_reversed = order_reversed
 
         # Web options
-        self.open_browser = open_browser
-        self.wdebug = wdebug
-        self.wport = wport
-        self.wiface = wiface
+        self.web_open_browser = web_open_browser
+        self.web_debug = web_debug
+        self.web_port = web_port
+        self.web_iface = web_iface
 
         # Dump options
         self.filtstr = filtstr

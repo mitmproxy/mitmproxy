@@ -204,10 +204,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.options.default_contentview)
-        if self.master.options.order:
+        if self.master.options.console_order:
             r.append("[")
             r.append(("heading_key", "o"))
-            r.append(":%s]" % self.master.options.order)
+            r.append(":%s]" % self.master.options.console_order)
 
         opts = []
         if self.master.options.anticache:
@@ -222,7 +222,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("killextra")
         if self.master.options.no_upstream_cert:
             opts.append("no-upstream-cert")
-        if self.master.options.focus_follow:
+        if self.master.options.console_focus_follow:
             opts.append("following")
         if self.master.options.stream_large_bodies:
             opts.append(
@@ -258,7 +258,7 @@ class StatusBar(urwid.WidgetWrap):
         else:
             offset = self.master.view.focus.index + 1
 
-        if self.master.options.order_reversed:
+        if self.master.options.console_order_reversed:
             arrow = common.SYMBOL_UP
         else:
             arrow = common.SYMBOL_DOWN

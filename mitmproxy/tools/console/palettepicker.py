@@ -42,7 +42,7 @@ class PalettePicker(urwid.WidgetWrap):
             return select.Option(
                 i,
                 None,
-                lambda: self.master.options.palette == name,
+                lambda: self.master.options.console_palette == name,
                 lambda: setattr(self.master.options, "palette", name)
             )
 
@@ -58,7 +58,7 @@ class PalettePicker(urwid.WidgetWrap):
                 select.Option(
                     "Transparent",
                     "T",
-                    lambda: master.options.palette_transparent,
+                    lambda: master.options.console_palette_transparent,
                     master.options.toggler("palette_transparent")
                 )
             ]
