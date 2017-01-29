@@ -37,7 +37,7 @@ each other solve problems, and come up with new ideas for the project.
 |mitmproxy_discourse|
 
 
-Join our developer chat on Slack if you would like to hack on mitmproxy itself.
+Join our developer chat on Slack if you would like to contribute to mitmproxy itself.
 
 |slack|
 
@@ -49,42 +49,32 @@ The installation instructions are `here <http://docs.mitmproxy.org/en/stable/ins
 If you want to contribute changes, keep on reading.
 
 
-Hacking
--------
+Setting Up a Development Environment
+------------------------------------
 
-To get started hacking on mitmproxy, make sure you have Python_ 3.5.x or above with
-virtualenv_ installed (you can find installation instructions for virtualenv
-`here <http://virtualenv.readthedocs.org/en/latest/>`__). Then do the following:
+To get started hacking on mitmproxy, please follow the `advanced installation`_ steps to install mitmproxy from source, but stop right before running ``pip3 install mitmproxy``. Instead, do the following:
 
 .. code-block:: text
 
-    sudo apt-get install python3-pip python3-dev libffi-dev libssl-dev libtiff5-dev libjpeg8-dev zlib1g-dev libwebp-dev
     git clone https://github.com/mitmproxy/mitmproxy.git
     cd mitmproxy
-    ./dev.sh  # powershell .\dev.ps1 on Windows
+    ./dev.sh  # "powershell .\dev.ps1" on Windows
 
 
-The *dev* script will create a virtualenv environment in a directory called
+The *dev* script will create a `virtualenv`_ environment in a directory called
 "venv3.5", and install all mandatory and optional dependencies into it. The
 primary mitmproxy components - mitmproxy and pathod - are installed as
 "editable", so any changes to the source in the repository will be reflected
 live in the virtualenv.
 
-To confirm that you're up and running, activate the virtualenv, and run the
-mitmproxy test suite:
-
-.. code-block:: text
-
-    . venv3.5/bin/activate  # venv\Scripts\activate on Windows
-    py.test
-
-Note that the main executables for the project - ``mitmdump``, ``mitmproxy``,
+The main executables for the project - ``mitmdump``, ``mitmproxy``,
 ``mitmweb``, ``pathod``, and ``pathoc`` - are all created within the
 virtualenv. After activating the virtualenv, they will be on your $PATH, and
 you can run them like any other command:
 
 .. code-block:: text
 
+    . venv3.5/bin/activate  # "venv\Scripts\activate" on Windows
     mitmdump --version
 
 For convenience, the project includes an autoenv_ file (`.env`_) that
@@ -95,26 +85,23 @@ Testing
 -------
 
 If you've followed the procedure above, you already have all the development
-requirements installed, and you can simply run the test suite:
+requirements installed, and you can run the full test suite (including tests for code style and documentation) with tox_:
 
 .. code-block:: text
 
-    py.test
+    tox
+
+For speedier testing, we recommend you run `py.test`_ directly on individual test files or folders:
+
+.. code-block:: text
+
+    cd test/mitmproxy/addons
+    py.test --cov mitmproxy.addons.anticache --looponfail test_anticache.py
+
+As py.test does not check the code style, you probably want to run ``tox -e lint`` before committing your changes.
 
 Please ensure that all patches are accompanied by matching changes in the test
-suite. The project tries to maintain 100% test coverage.
-
-You can also use `tox` to run the full suite of tests, including a quick test
-to check documentation and code linting.
-
-The following tox environments are relevant for local testing:
-
-.. code-block:: text
-
-    tox -e py35  # runs all tests with Python 3.5
-    tox -e docs  # runs a does-it-compile check on the documentation
-    tox -e lint  # runs the linter for coding style checks
-
+suite. The project tries to maintain 100% test coverage and enforces this strictly for some parts of the codebase.
 
 Documentation
 -------------
@@ -133,8 +120,8 @@ installation, you can render the documentation like this:
 The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory and rebuilds
 the documentation when a change is detected.
 
-Style
------
+Code Style
+----------
 
 Keeping to a consistent code style throughout the project makes it easier to
 contribute and collaborate. Please stick to the guidelines in
@@ -186,11 +173,13 @@ with the following command:
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 
-.. _Python: https://www.python.org/
-.. _virtualenv: http://virtualenv.readthedocs.org/en/latest/
-.. _autoenv: https://github.com/kennethreitz/autoenv
+.. _`advanced installation`: http://docs.mitmproxy.org/en/latest/install.html#advanced-installation
+.. _virtualenv: https://virtualenv.pypa.io/
 .. _.env: https://github.com/mitmproxy/mitmproxy/blob/master/.env
+.. _autoenv: https://github.com/kennethreitz/autoenv
+.. _`py.test`: http://pytest.org/
+.. _tox: https://tox.readthedocs.io/
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
-.. _Google Style Guide: https://google.github.io/styleguide/pyguide.html
+.. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
