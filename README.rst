@@ -48,9 +48,17 @@ Installation
 The installation instructions are `here <http://docs.mitmproxy.org/en/stable/install.html>`__.
 If you want to contribute changes, keep on reading.
 
+Contributing
+------------
 
-Setting Up a Development Environment
-------------------------------------
+As an open source project, mitmproxy welcomes contributions of all forms. If you would like to bring the project forward,
+please consider contributing in the following areas:
+
+- **Maintenance:** We are *incredibly* thankful for individuals who are stepping up and helping with maintenance. This includes (but is not limited to) triaging issues, reviewing pull requests and picking up stale ones, helping out other users in our forums_, creating minimal, complete and verifiable examples or test cases for existing bug reports, updating documentation, or fixing minor bugs that have recently been reported.
+- **Code Contributions:** We actively mark issues that we consider are `good first contributions`_. If you intend to work on a larger contribution to the project, please come talk to us first.
+
+Development Setup
+-----------------
 
 To get started hacking on mitmproxy, please follow the `advanced installation`_ steps to install mitmproxy from source, but stop right before running ``pip3 install mitmproxy``. Instead, do the following:
 
@@ -76,10 +84,6 @@ you can run them like any other command:
 
     . venv3.5/bin/activate  # "venv\Scripts\activate" on Windows
     mitmdump --version
-
-For convenience, the project includes an autoenv_ file (`.env`_) that
-auto-activates the virtualenv when you cd into the mitmproxy directory.
-
 
 Testing
 -------
@@ -175,11 +179,11 @@ with the following command:
 
 .. _`advanced installation`: http://docs.mitmproxy.org/en/latest/install.html#advanced-installation
 .. _virtualenv: https://virtualenv.pypa.io/
-.. _.env: https://github.com/mitmproxy/mitmproxy/blob/master/.env
-.. _autoenv: https://github.com/kennethreitz/autoenv
 .. _`py.test`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
+.. _forums: https://discourse.mitmproxy.org/
+.. _`good first contributions`: https://github.com/mitmproxy/mitmproxy/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-contribution
