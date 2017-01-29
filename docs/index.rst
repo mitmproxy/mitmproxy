@@ -80,7 +80,6 @@
     :hidden:
     :caption: Hacking
 
-    dev/architecture
     dev/testing
     dev/sslkeylogfile
 
