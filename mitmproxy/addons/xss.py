@@ -167,6 +167,31 @@ def getSQLiInfo(newBody, originalBody, requestURL, injectionPoint):
                         'DBMS': dbms}
 
 
+# A QuoteChar is either ' or "
+def insideQuote(qc, substring, textIndex, body):
+    """ Whether the Numberth occurence of the first string in the second
+        string is inside quotes as defined by the supplied QuoteChar
+        QuoteChar String Number String -> Boolean """
+    def nextPartIsSubstring(index):
+        return body[index:index + len(substring)] == substring
+
+    def isNotEscaped(index):
+        return body[index - 1] != "\\"
+
+    substring = substring.decode('utf-8')
+    body = body.decode('utf-8')
+    numSubstringsFound = 0
+    inQuote = False
+    for index, char in enumerate(body):
+        if char == qc and isNotEscaped(index):
+            inQuote = not inQuote
+        if nextPartIsSubstring(index):
+            if numSubstringsFound == textIndex:
+                return inQuote
+            numSubstringsFound += 1
+    return False
+
+
 def getXSSInfo(body, requestURL, injectionPoint):
     """ Return a XSSDict if there is a XSS otherwise return None
         String URL String -> (XSSDict or None) """
@@ -257,24 +282,6 @@ def getXSSInfo(body, requestURL, injectionPoint):
             return "script" not in path
         except IndexError:
             return False
-
-    # A QuoteChar is either ' or "
-    def insideQuote(qc, text, textIndex, body):
-        """ Whether the Numberth occurence of the first string in the second
-            string is inside quotes as defined by the supplied QuoteChar
-            QuoteChar String Number String -> Boolean """
-        text = text.decode('utf-8')
-        body = body.decode('utf-8')
-        inQuote = False
-        count = 0
-        for index, char in enumerate(body):
-            if char == qc and body[index - 1] != "\\":
-                inQuote = not inQuote
-            if body[index:index + len(text)] == text:
-                if count == textIndex:
-                    return inQuote
-                count += 1
-        raise EOFError("Failed in inside quote")
 
     def injectJavascriptHandler(html):
         """ Whether you can inject a Javascript:alert(0) as a link

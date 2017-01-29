@@ -165,8 +165,11 @@ class test_mitmXSS(unittest.TestCase):
                                         "End of URL"),
                          None)
 
-        # Exception on malformed HTML
-        self.assertRaises(EOFError, xss.getXSSInfo(b"<html><src=", "https://example.com/", "End of URL"))
+    def testInsideQuote(self):
+        self.assertEqual(xss.insideQuote("'", b"no", 0, b"no"), False)
+        self.assertEqual(xss.insideQuote("'", b"yes", 0, b"'yes'"), True)
+        self.assertEqual(xss.insideQuote("'", b"yes", 1, b"'yes'otherJunk'yes'more"), True)
+        self.assertEqual(xss.insideQuote("'", b"longStringNotInIt", 1, b"short"), False)
 
     def mocked_requests(*args, headers=None, cookies=None):
         class MockResponse:
