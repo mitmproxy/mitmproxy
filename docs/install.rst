@@ -139,11 +139,11 @@ Latest Development Version
 If you would like to install mitmproxy directly from the master branch on GitHub
 or would like to get set up to contribute to the project, install the
 dependencies as you would for a regular installation from source. Then see the
-Hacking_ section of the README on GitHub. You can check your system information
+project's README_ on GitHub. You can check your system information
 by running: ``mitmproxy --version``
 
 
-.. _Hacking: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst#hacking
+.. _README: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst
 .. _releases: https://github.com/mitmproxy/mitmproxy/releases
 .. _mitmproxy.org: https://mitmproxy.org/
 .. _`Python website`: https://www.python.org/downloads/windows/
