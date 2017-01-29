@@ -80,7 +80,6 @@
     :hidden:
     :caption: Hacking
 
-    dev/testing
     dev/sslkeylogfile
 
 ..  Indices and tables
