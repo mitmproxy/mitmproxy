@@ -69,9 +69,9 @@ To get started hacking on mitmproxy, please follow the `advanced installation`_ 
     ./dev.sh  # "powershell .\dev.ps1" on Windows
 
 
-The *dev* script will create a `virtualenv`_ environment in a directory called
-"venv3.5", and install all mandatory and optional dependencies into it. The
-primary mitmproxy components - mitmproxy and pathod - are installed as
+The *dev* script will create a `virtualenv`_ environment in a directory called "venv"
+and install all mandatory and optional dependencies into it. The primary
+mitmproxy components - mitmproxy and pathod - are installed as
 "editable", so any changes to the source in the repository will be reflected
 live in the virtualenv.
 
@@ -82,7 +82,7 @@ you can run them like any other command:
 
 .. code-block:: text
 
-    . venv3.5/bin/activate  # "venv\Scripts\activate" on Windows
+    . venv/bin/activate  # "venv\Scripts\activate" on Windows
     mitmdump --version
 
 Testing
