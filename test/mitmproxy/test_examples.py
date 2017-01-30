@@ -103,6 +103,22 @@ class TestScripts(mastertest.MasterTest):
         m.request(f)
         assert f.response.content == b"Hello World"
 
+    def test_dns_spoofing(self):
+        m, sc = tscript("complex/dns_spoofing.py")
+        original_host = "example.com"
+
+        host_header = Headers(host=original_host)
+        f = tflow.tflow(req=tutils.treq(headers=host_header))
+
+        m.requestheaders(f)
+
+        # Rewrite by reverse proxy mode
+        f.request.host = "mitmproxy.org"
+
+        m.request(f)
+        assert f.request.host == original_host
+        assert f.request.headers["Host"] == original_host
+
 
 class TestHARDump:
 
