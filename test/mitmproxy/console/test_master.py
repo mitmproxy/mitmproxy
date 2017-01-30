@@ -7,12 +7,15 @@ from mitmproxy.tools.console import common
 from .. import mastertest
 from unittest import mock
 
+
 class ScriptError(Exception):
     pass
 
+
 def mock_add_log(e, level):
-    if level in ("warn", "error"):
+    if "Input error" in e:
         raise ScriptError(e)
+
 
 def test_format_keyvals():
     assert common.format_keyvals(
@@ -44,10 +47,10 @@ class TestMaster(mastertest.MasterTest):
             assert len(m.view) == i
 
     @mock.patch('mitmproxy.tools.console.signals.add_log', side_effect=mock_add_log)
-    def test_run_script_once(self,func):
+    def test_run_script_once(self, test_func):
         m = self.mkmaster()
         f = tflow.tflow(resp=True)
-        with mitmproxy.test.tutils.raises(ScriptError) as e:
+        with mitmproxy.test.tutils.raises(ScriptError):
             m.run_script_once("nonexistent", [f])
 
     def test_intercept(self):
