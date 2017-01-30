@@ -95,14 +95,14 @@ requirements installed, and you can run the full test suite (including tests for
 
     tox
 
-For speedier testing, we recommend you run `py.test`_ directly on individual test files or folders:
+For speedier testing, we recommend you run `pytest`_ directly on individual test files or folders:
 
 .. code-block:: text
 
     cd test/mitmproxy/addons
-    py.test --cov mitmproxy.addons.anticache --looponfail test_anticache.py
+    pytest --cov mitmproxy.addons.anticache --looponfail test_anticache.py
 
-As py.test does not check the code style, you probably want to run ``tox -e lint`` before committing your changes.
+As pytest does not check the code style, you probably want to run ``tox -e lint`` before committing your changes.
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage and enforces this strictly for some parts of the codebase.
@@ -179,7 +179,7 @@ with the following command:
 
 .. _`advanced installation`: http://docs.mitmproxy.org/en/latest/install.html#advanced-installation
 .. _virtualenv: https://virtualenv.pypa.io/
-.. _`py.test`: http://pytest.org/
+.. _`pytest`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
