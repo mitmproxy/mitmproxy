@@ -148,8 +148,8 @@ class ConsoleMaster(master.Master):
         try:
             with self.handlecontext():
                 sc.run_once(command, [f])
-        except mitmproxy.exceptions.AddonError as e:
-            signals.add_log("Script error: %s" % e, "warn")
+        except mitmproxy.exceptions.OptionsError as e:
+            signals.add_log("Input error: %s" % e, "warn")
 
     def toggle_eventlog(self):
         self.options.eventlog = not self.options.eventlog
