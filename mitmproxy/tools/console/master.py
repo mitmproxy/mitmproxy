@@ -270,6 +270,8 @@ class ConsoleMaster(master.Master):
                 print("Could not load file: {}".format(ret), file=sys.stderr)
                 sys.exit(1)
 
+        self.loop.set_alarm_in(0.01, self.ticker)
+
         self.loop.set_alarm_in(
             0.0001,
             lambda *args: self.view_flowlist()
