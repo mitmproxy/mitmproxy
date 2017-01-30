@@ -4,9 +4,15 @@ from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
-
 from .. import mastertest
+import mock
 
+class ScriptError(Exception):
+    pass
+
+def mock_add_log(e, level):
+    if level in ("warn", "error"):
+        raise ScriptError(e)
 
 def test_format_keyvals():
     assert common.format_keyvals(
@@ -36,6 +42,13 @@ class TestMaster(mastertest.MasterTest):
         for i in (1, 2, 3):
             self.dummy_cycle(m, 1, b"")
             assert len(m.view) == i
+
+    @mock.patch('mitmproxy.tools.console.signals.add_log', side_effect=mock_add_log)
+    def test_run_script_once(self,func):
+        m = self.mkmaster()
+        f = tflow.tflow(resp=True)
+        with mitmproxy.test.tutils.raises(ScriptError) as e:
+            m.run_script_once("nonexistent", [f])
 
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
