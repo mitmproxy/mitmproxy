@@ -44,7 +44,7 @@ This mode does require root privileges though. There's a wrapper in the examples
 called 'mitmproxy_shim.c', which will enable you to use this mode with dropped priviliges.
 It can be used as follows::
 
-    gcc examples/mitmproxy_shim.c -o mitmproxy_shim -lcap
+    gcc examples/complex/full_transparency_shim.c -o mitmproxy_shim -lcap
     sudo chown root:root mitmproxy_shim
     sudo chmod u+s mitmproxy_shim
     ./mitmproxy_shim $(which mitmproxy) -T --spoof-source-address
