@@ -5,7 +5,7 @@ from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
 from .. import mastertest
-import mock
+from unittest import mock
 
 class ScriptError(Exception):
     pass
