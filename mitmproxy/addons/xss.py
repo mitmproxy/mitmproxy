@@ -173,9 +173,13 @@ def insideQuote(qc, substring, textIndex, body):
         string is inside quotes as defined by the supplied QuoteChar
         QuoteChar String Number String -> Boolean """
     def nextPartIsSubstring(index):
+        if index + len(substring) > len(body):
+            return False
         return body[index:index + len(substring)] == substring
 
     def isNotEscaped(index):
+        if index - 1 < 0 or index - 1 > len(body):
+            return True
         return body[index - 1] != "\\"
 
     substring = substring.decode('utf-8')
@@ -190,6 +194,38 @@ def insideQuote(qc, substring, textIndex, body):
                 return inQuote
             numSubstringsFound += 1
     return False
+
+
+# An HTML is a String containing valid HTML
+def pathsToText(html, str):
+    """ Return list of Paths to a given str in the given HTML tree
+          - Note that it does a BFS
+        HTML String -> [ListOf Path] """
+
+    def removeLastOccurenceOfSubString(str, substr):
+        """ Delete the last occurence of substr from str
+        String String -> String
+        """
+        index = str.rfind(substr)
+        return str[:index] + str[index + len(substr):]
+
+    class pathHTMLParser(HTMLParser):
+        currentPath = ""
+        paths = []
+
+        def handle_starttag(self, tag, attrs):
+            self.currentPath += ("/" + tag)
+
+        def handle_endtag(self, tag):
+            self.currentPath = removeLastOccurenceOfSubString(self.currentPath, "/" + tag)
+
+        def handle_data(self, data):
+            if str in data:
+                self.paths.append(self.currentPath)
+
+    parser = pathHTMLParser()
+    parser.feed(html)
+    return parser.paths
 
 
 def getXSSInfo(body, requestURL, injectionPoint):
@@ -226,37 +262,6 @@ def getXSSInfo(body, requestURL, injectionPoint):
         """ Whether or not you can inject ;
             Bytes -> Boolean """
         return b"se;sl" in match
-
-    # An HTML is a String containing valid HTML
-    def pathsToText(html, str):
-        """ Return list of Paths to a given str in the given HTML tree
-              - Note that it does a BFS
-            HTML String -> [ListOf Path] """
-
-        def removeLastOccurenceOfSubString(str, substr):
-            """ Delete the last occurence of substr from str
-            String String -> String
-            """
-            index = str.rfind(substr)
-            return str[:index] + str[index + len(substr):]
-
-        class pathHTMLParser(HTMLParser):
-            currentPath = ""
-            paths = []
-
-            def handle_starttag(self, tag, attrs):
-                self.currentPath += ("/" + tag)
-
-            def handle_endtag(self, tag):
-                self.currentPath = removeLastOccurenceOfSubString(self.currentPath, "/" + tag)
-
-            def handle_data(self, data):
-                if str in data:
-                    self.paths.append(self.currentPath)
-
-        parser = pathHTMLParser()
-        parser.feed(html)
-        return parser.paths
 
     def inScript(text, index, body):
         """ Whether the Numberth occurence of the first string in the second

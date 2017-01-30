@@ -171,6 +171,13 @@ class test_mitmXSS(unittest.TestCase):
         self.assertEqual(xss.insideQuote("'", b"yes", 1, b"'yes'otherJunk'yes'more"), True)
         self.assertEqual(xss.insideQuote("'", b"longStringNotInIt", 1, b"short"), False)
 
+    def testPathsToText(self):
+        self.assertEqual(xss.pathsToText("""<html><head><h1>STRING</h1></head>
+                                            <script>STRING</script>
+                                            <a href=STRING></a></html>""", "STRING"),
+                         ["/html/head/h1", "/html/script"])
+        self.assertEqual(xss.pathsToText("""<html></html>""", "STRING"), [])
+
     def mocked_requests(*args, headers=None, cookies=None):
         class MockResponse:
             def __init__(self, html, headers=None, cookies=None):
