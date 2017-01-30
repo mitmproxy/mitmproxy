@@ -1,10 +1,10 @@
-from mitmproxy.contentviews import image
+from mitmproxy.contentviews.image import pillow
 from mitmproxy.test import tutils
 from . import full_eval
 
 
 def test_view_image():
-    v = full_eval(image.ViewImage())
+    v = full_eval(pillow.ViewImage())
     for img in [
         "mitmproxy/data/image.png",
         "mitmproxy/data/image.gif",
