@@ -53,6 +53,7 @@ class Rerouter:
             if m.group("port"):
                 port = int(m.group("port"))
 
+        flow.request.headers["Host"] = host_header
         flow.request.host = sni or host_header
         flow.request.port = port
 
