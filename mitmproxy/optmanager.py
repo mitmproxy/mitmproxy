@@ -229,7 +229,10 @@ class OptManager(metaclass=_DefaultsMeta):
             this object. May raise OptionsError if the config file is invalid.
         """
         data = self._load(text)
-        self.update(**data)
+        try:
+            self.update(**data)
+        except KeyError as v:
+            raise exceptions.OptionsError(v)
 
     def load_paths(self, *paths):
         """
@@ -242,7 +245,12 @@ class OptManager(metaclass=_DefaultsMeta):
             if os.path.exists(p) and os.path.isfile(p):
                 with open(p, "r") as f:
                     txt = f.read()
-                self.load(txt)
+                try:
+                    self.load(txt)
+                except exceptions.OptionsError as e:
+                    raise exceptions.OptionsError(
+                        "Error reading %s: %s" % (p, e)
+                    )
 
     def merge(self, opts):
         """

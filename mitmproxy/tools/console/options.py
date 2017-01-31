@@ -75,7 +75,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Palette",
                     "P",
-                    checker("palette", master.options),
+                    checker("console_palette", master.options),
                     self.palette
                 ),
                 select.Option(
