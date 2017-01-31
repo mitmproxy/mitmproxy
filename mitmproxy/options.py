@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Sequence
+from typing import Tuple, Optional, Sequence, Union
 
 from mitmproxy import optmanager
 
@@ -38,7 +38,8 @@ class Options(optmanager.OptManager):
         rfile: Optional[str] = None,
         scripts: Sequence[str] = [],
         showhost: bool = False,
-        replacements: Sequence[Tuple[str, str, str]] = [],
+        replacements: Sequence[Union[Tuple[str, str, str], str]] = [],
+        replacement_files: Sequence[Union[Tuple[str, str, str], str]] = [],
         server_replay_use_headers: Sequence[str] = [],
         setheaders: Sequence[Tuple[str, str, str]] = [],
         server_replay: Sequence[str] = [],
@@ -124,6 +125,7 @@ class Options(optmanager.OptManager):
         self.scripts = scripts
         self.showhost = showhost
         self.replacements = replacements
+        self.replacement_files = replacement_files
         self.server_replay_use_headers = server_replay_use_headers
         self.setheaders = setheaders
         self.server_replay = server_replay

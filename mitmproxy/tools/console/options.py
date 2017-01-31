@@ -6,6 +6,8 @@ from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import select
 from mitmproxy.tools.console import signals
 
+from mitmproxy.addons import replace
+
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
     ('heading_key', "C"), ":clear all ",
@@ -215,10 +217,16 @@ class Options(urwid.WidgetWrap):
         )
 
     def replacepatterns(self):
+        data = []
+        for d in self.master.options.replacements:
+            if isinstance(d, str):
+                data.append(replace.parse_hook(d))
+            else:
+                data.append(d)
         self.master.view_grideditor(
             grideditor.ReplaceEditor(
                 self.master,
-                self.master.options.replacements,
+                data,
                 self.master.options.setter("replacements")
             )
         )

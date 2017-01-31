@@ -1,5 +1,4 @@
 import argparse
-import re
 import os
 
 from mitmproxy import exceptions
@@ -39,40 +38,6 @@ def _parse_hook(s):
         raise ParseException("Malformed filter pattern: %s" % patt)
 
     return patt, a, b
-
-
-def parse_replace_hook(s):
-    """
-        Returns a (pattern, regex, replacement) tuple.
-
-        The general form for a replacement hook is as follows:
-
-            /patt/regex/replacement
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the pattern is set to match
-        universally (i.e. ".*"). Example:
-
-            /foo/bar/
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the replacement clause below is
-        "foo/bar/":
-
-            /one/two/foo/bar/
-
-        Checks that pattern and regex are both well-formed. Raises
-        ParseException on error.
-    """
-    patt, regex, replacement = _parse_hook(s)
-    try:
-        re.compile(regex)
-    except re.error as e:
-        raise ParseException("Malformed replacement regex: %s" % str(e))
-    return patt, regex, replacement
 
 
 def parse_setheader(s):
@@ -115,26 +80,6 @@ def get_common_options(args):
     stream_large_bodies = args.stream_large_bodies
     if stream_large_bodies:
         stream_large_bodies = human.parse_size(stream_large_bodies)
-
-    reps = []
-    for i in args.replace or []:
-        try:
-            p = parse_replace_hook(i)
-        except ParseException as e:
-            raise exceptions.OptionsError(e)
-        reps.append(p)
-    for i in args.replace_file or []:
-        try:
-            patt, rex, path = parse_replace_hook(i)
-        except ParseException as e:
-            raise exceptions.OptionsError(e)
-        try:
-            v = open(path, "rb").read()
-        except IOError as e:
-            raise exceptions.OptionsError(
-                "Could not read replace file: %s" % path
-            )
-        reps.append((patt, rex, v))
 
     setheaders = []
     for i in args.setheader or []:
@@ -224,7 +169,8 @@ def get_common_options(args):
         refresh_server_playback=not args.norefresh,
         server_replay_use_headers=args.server_replay_use_headers,
         rfile=args.rfile,
-        replacements=reps,
+        replacements=args.replacements,
+        replacement_files=args.replacement_files,
         setheaders=setheaders,
         server_replay=args.server_replay,
         scripts=args.scripts,
@@ -676,13 +622,13 @@ def replacements(parser):
     )
     group.add_argument(
         "--replace",
-        action="append", type=str, dest="replace",
+        action="append", type=str, dest="replacements",
         metavar="PATTERN",
         help="Replacement pattern."
     )
     group.add_argument(
         "--replace-from-file",
-        action="append", type=str, dest="replace_file",
+        action="append", type=str, dest="replacement_files",
         metavar="PATH",
         help="""
             Replacement pattern, where the replacement clause is a path to a
