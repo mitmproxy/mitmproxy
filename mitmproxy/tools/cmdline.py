@@ -2,7 +2,6 @@ import argparse
 import os
 
 from mitmproxy import exceptions
-from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy import platform
 from mitmproxy.utils import human
@@ -18,57 +17,6 @@ class ParseException(Exception):
     pass
 
 
-def _parse_hook(s):
-    sep, rem = s[0], s[1:]
-    parts = rem.split(sep, 2)
-    if len(parts) == 2:
-        patt = ".*"
-        a, b = parts
-    elif len(parts) == 3:
-        patt, a, b = parts
-    else:
-        raise ParseException(
-            "Malformed hook specifier - too few clauses: %s" % s
-        )
-
-    if not a:
-        raise ParseException("Empty clause: %s" % str(patt))
-
-    if not flowfilter.parse(patt):
-        raise ParseException("Malformed filter pattern: %s" % patt)
-
-    return patt, a, b
-
-
-def parse_setheader(s):
-    """
-        Returns a (pattern, header, value) tuple.
-
-        The general form for a replacement hook is as follows:
-
-            /patt/header/value
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the pattern is set to match
-        universally (i.e. ".*"). Example:
-
-            /foo/bar/
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the value clause below is
-        "foo/bar/":
-
-            /one/two/foo/bar/
-
-        Checks that pattern and regex are both well-formed. Raises
-        ParseException on error.
-    """
-    return _parse_hook(s)
-
-
 def get_common_options(args):
     stickycookie, stickyauth = None, None
     if args.stickycookie_filt:
@@ -80,14 +28,6 @@ def get_common_options(args):
     stream_large_bodies = args.stream_large_bodies
     if stream_large_bodies:
         stream_large_bodies = human.parse_size(stream_large_bodies)
-
-    setheaders = []
-    for i in args.setheader or []:
-        try:
-            p = parse_setheader(i)
-        except ParseException as e:
-            raise exceptions.OptionsError(e)
-        setheaders.append(p)
 
     if args.streamfile and args.streamfile[0] == args.rfile:
         if args.streamfile[1] == "wb":
@@ -171,7 +111,7 @@ def get_common_options(args):
         rfile=args.rfile,
         replacements=args.replacements,
         replacement_files=args.replacement_files,
-        setheaders=setheaders,
+        setheaders=args.setheaders,
         server_replay=args.server_replay,
         scripts=args.scripts,
         stickycookie=stickycookie,
@@ -648,7 +588,7 @@ def set_headers(parser):
     )
     group.add_argument(
         "--setheader",
-        action="append", type=str, dest="setheader",
+        action="append", type=str, dest="setheaders",
         metavar="PATTERN",
         help="Header set pattern."
     )
@@ -708,8 +648,8 @@ def common_options(parser):
 
 
 def mitmproxy():
-    # Don't import mitmproxy.tools.console for mitmdump, urwid is not available on all
-    # platforms.
+    # Don't import mitmproxy.tools.console for mitmdump, urwid is not available
+    # on all platforms.
     from .console import palettes
 
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
