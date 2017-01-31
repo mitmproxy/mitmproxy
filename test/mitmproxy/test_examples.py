@@ -108,15 +108,21 @@ class TestScripts(mastertest.MasterTest):
         original_host = "example.com"
 
         host_header = Headers(host=original_host)
-        f = tflow.tflow(req=tutils.treq(headers=host_header))
+        f = tflow.tflow(req=tutils.treq(headers=host_header, port=80))
 
         m.requestheaders(f)
 
         # Rewrite by reverse proxy mode
+        f.request.scheme = "https"
         f.request.host = "mitmproxy.org"
+        f.request.port = 443
 
         m.request(f)
+
+        assert f.request.scheme == "http"
         assert f.request.host == original_host
+        assert f.request.port == 80
+
         assert f.request.headers["Host"] == original_host
 
 
