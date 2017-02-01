@@ -4,7 +4,6 @@ from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
-
 from .. import mastertest
 
 
@@ -27,7 +26,7 @@ def test_options():
 class TestMaster(mastertest.MasterTest):
     def mkmaster(self, **opts):
         if "verbosity" not in opts:
-            opts["verbosity"] = 0
+            opts["verbosity"] = 1
         o = options.Options(**opts)
         return console.master.ConsoleMaster(o, proxy.DummyServer())
 
@@ -36,6 +35,12 @@ class TestMaster(mastertest.MasterTest):
         for i in (1, 2, 3):
             self.dummy_cycle(m, 1, b"")
             assert len(m.view) == i
+
+    def test_run_script_once(self):
+        m = self.mkmaster()
+        f = tflow.tflow(resp=True)
+        m.run_script_once("nonexistent", [f])
+        assert "Input error" in str(m.logbuffer[0])
 
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""

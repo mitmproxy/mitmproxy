@@ -58,10 +58,10 @@ def test_reloadhandler():
 
 class TestParseCommand:
     def test_empty_command(self):
-        with tutils.raises(exceptions.OptionsError):
+        with tutils.raises(ValueError):
             script.parse_command("")
 
-        with tutils.raises(exceptions.OptionsError):
+        with tutils.raises(ValueError):
             script.parse_command("  ")
 
     def test_no_script_file(self):
@@ -203,6 +203,7 @@ class TestScriptLoader:
         evts = [i[1] for i in sc.ns.call_log]
         assert evts == ['start', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
 
+        f = tflow.tflow(resp=True)
         with m.handlecontext():
             tutils.raises(
                 "file not found",
