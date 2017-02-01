@@ -5,16 +5,6 @@ from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
 from .. import mastertest
-from unittest import mock
-
-
-class ScriptError(Exception):
-    pass
-
-
-def mock_add_log(e, level):
-    if "Input error" in e:
-        raise ScriptError(e)
 
 
 def test_format_keyvals():
@@ -36,7 +26,7 @@ def test_options():
 class TestMaster(mastertest.MasterTest):
     def mkmaster(self, **opts):
         if "verbosity" not in opts:
-            opts["verbosity"] = 0
+            opts["verbosity"] = 1
         o = options.Options(**opts)
         return console.master.ConsoleMaster(o, proxy.DummyServer())
 
@@ -46,12 +36,11 @@ class TestMaster(mastertest.MasterTest):
             self.dummy_cycle(m, 1, b"")
             assert len(m.view) == i
 
-    @mock.patch('mitmproxy.tools.console.signals.add_log', side_effect=mock_add_log)
-    def test_run_script_once(self, test_func):
+    def test_run_script_once(self):
         m = self.mkmaster()
         f = tflow.tflow(resp=True)
-        with mitmproxy.test.tutils.raises(ScriptError):
-            m.run_script_once("nonexistent", [f])
+        m.run_script_once("nonexistent", [f])
+        assert "Input error" in str(m.logbuffer[0])
 
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
