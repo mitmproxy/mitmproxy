@@ -231,7 +231,15 @@ class TestScriptLoader:
         o = options.Options(scripts=["one", "one"])
         m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        tutils.raises(exceptions.OptionsError, m.addons.add, o, sc)
+        with tutils.raises(exceptions.OptionsError):
+            m.addons.add(o, sc)
+
+    def test_nonexistent(self):
+        o = options.Options(scripts=["nonexistent"])
+        m = master.Master(o, proxy.DummyServer())
+        sc = script.ScriptLoader()
+        with tutils.raises(exceptions.OptionsError):
+            m.addons.add(o, sc)
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
