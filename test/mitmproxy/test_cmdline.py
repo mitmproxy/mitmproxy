@@ -1,11 +1,5 @@
 import argparse
 from mitmproxy.tools import cmdline
-from mitmproxy.test import tutils
-
-
-def test_parse_setheaders():
-    x = cmdline.parse_setheader("/foo/bar/voing")
-    assert x == ("foo", "bar", "voing")
 
 
 def test_common():
@@ -20,18 +14,6 @@ def test_common():
     v = cmdline.get_common_options(opts)
     assert v["stickycookie"] == "foo"
     assert v["stickyauth"] == "foo"
-
-    opts.setheader = ["/foo/bar/voing"]
-    v = cmdline.get_common_options(opts)
-    assert v["setheaders"] == [("foo", "bar", "voing")]
-
-    opts.setheader = ["//"]
-    tutils.raises(
-        "empty clause",
-        cmdline.get_common_options,
-        opts
-    )
-    opts.setheader = []
 
 
 def test_mitmproxy():

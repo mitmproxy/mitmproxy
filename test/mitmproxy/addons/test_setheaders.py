@@ -3,19 +3,28 @@ from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 
 from mitmproxy.addons import setheaders
-from mitmproxy import options
 
 
 class TestSetHeaders:
+    def test_parse_setheaders(self):
+        x = setheaders.parse_setheader("/foo/bar/voing")
+        assert x == ("foo", "bar", "voing")
+        x = setheaders.parse_setheader("/foo/bar/vo/ing/")
+        assert x == ("foo", "bar", "vo/ing/")
+        x = setheaders.parse_setheader("/bar/voing")
+        assert x == (".*", "bar", "voing")
+        tutils.raises("invalid replacement", setheaders.parse_setheader, "/")
+
     def test_configure(self):
         sh = setheaders.SetHeaders()
-        o = options.Options(
-            setheaders = [("~b", "one", "two")]
-        )
-        tutils.raises(
-            "invalid setheader filter pattern",
-            sh.configure, o, o.keys()
-        )
+        with taddons.context() as tctx:
+            tutils.raises(
+                "invalid setheader filter pattern",
+                tctx.configure,
+                sh,
+                setheaders = [("~b", "one", "two")]
+            )
+            tctx.configure(sh, setheaders = ["/foo/bar/voing"])
 
     def test_setheaders(self):
         sh = setheaders.SetHeaders()

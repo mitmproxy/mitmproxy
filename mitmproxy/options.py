@@ -41,7 +41,7 @@ class Options(optmanager.OptManager):
         replacements: Sequence[Union[Tuple[str, str, str], str]] = [],
         replacement_files: Sequence[Union[Tuple[str, str, str], str]] = [],
         server_replay_use_headers: Sequence[str] = [],
-        setheaders: Sequence[Tuple[str, str, str]] = [],
+        setheaders: Sequence[Union[Tuple[str, str, str], str]] = [],
         server_replay: Sequence[str] = [],
         stickycookie: Optional[str] = None,
         stickyauth: Optional[str] = None,
