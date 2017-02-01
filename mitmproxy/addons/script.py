@@ -208,7 +208,7 @@ class ScriptLoader:
         try:
             sc = Script(command)
         except ValueError as e:
-            raise exceptions.OptionsError(str(e))
+            raise ValueError(str(e))
         sc.load_script()
         for f in flows:
             for evt, o in events.event_sequence(f):
@@ -252,7 +252,7 @@ class ScriptLoader:
                     try:
                         sc = Script(s)
                     except ValueError as e:
-                        raise exceptions.OptionsError(str(e))
+                        raise ValueError(str(e))
                     ordered.append(sc)
                     newscripts.append(sc)
 
