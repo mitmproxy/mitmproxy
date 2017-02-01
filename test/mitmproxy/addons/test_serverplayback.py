@@ -1,5 +1,6 @@
 import os
 import urllib
+import pytest
 
 from mitmproxy.test import tutils
 from mitmproxy.test import tflow
@@ -25,12 +26,8 @@ def test_config():
             fpath = os.path.join(p, "flows")
             tdump(fpath, [tflow.tflow(resp=True)])
             tctx.configure(s, server_replay=[fpath])
-            tutils.raises(
-                exceptions.OptionsError,
-                tctx.configure,
-                s,
-                server_replay=[p]
-            )
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(s, server_replay=[p])
 
 
 def test_tick():

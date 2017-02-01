@@ -1,4 +1,5 @@
 import os
+import pytest
 from unittest import mock
 
 from mitmproxy.test import tflow
@@ -57,9 +58,5 @@ class TestClientPlayback:
                 tctx.configure(cp, client_replay=[path])
                 tctx.configure(cp, client_replay=[])
                 tctx.configure(cp)
-                tutils.raises(
-                    exceptions.OptionsError,
-                    tctx.configure,
-                    cp,
-                    client_replay=["nonexistent"]
-                )
+                with pytest.raises(exceptions.OptionsError):
+                    tctx.configure(cp, client_replay=["nonexistent"])

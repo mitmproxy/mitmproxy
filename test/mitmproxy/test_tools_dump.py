@@ -25,14 +25,10 @@ class TestDumpMaster(mastertest.MasterTest):
                 self.mkmaster(None, rfile=p),
                 1, b"",
             )
-            tutils.raises(
-                dump.DumpError,
-                self.mkmaster, None, rfile="/nonexistent"
-            )
-            tutils.raises(
-                dump.DumpError,
-                self.mkmaster, None, rfile="test_dump.py"
-            )
+            with pytest.raises(dump.DumpError):
+                self.mkmaster(None, rfile="/nonexistent")
+            with pytest.raises(dump.DumpError):
+                self.mkmaster(None, rfile="test_dump.py")
 
     def test_has_error(self):
         m = self.mkmaster(None)

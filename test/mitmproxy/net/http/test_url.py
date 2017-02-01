@@ -1,12 +1,11 @@
 import pytest
 import sys
 
-from mitmproxy.test import tutils
 from mitmproxy.net.http import url
 
 
 def test_parse():
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse("")
 
     s, h, po, pa = url.parse(b"http://foo.com:8888/test")
@@ -33,27 +32,27 @@ def test_parse():
     s, h, po, pa = url.parse(b"https://foo")
     assert po == 443
 
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse(b"https://foo:bar")
 
     # Invalid IDNA
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse("http://\xfafoo")
     # Invalid PATH
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse("http:/\xc6/localhost:56121")
     # Null byte in host
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse("http://foo\0")
     # Invalid IPv6 URL - see http://www.ietf.org/rfc/rfc2732.txt
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse('http://lo[calhost')
 
 
 @pytest.mark.skipif(sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
 def test_parse_port_range():
     # Port out of range
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         url.parse("http://foo:999999")
 
 

@@ -1,5 +1,5 @@
+import pytest
 from mitmproxy.types import bidi
-from mitmproxy.test import tutils
 
 
 def test_bidi():
@@ -7,5 +7,7 @@ def test_bidi():
     assert b.a == 1
     assert b.get_name(1) == "a"
     assert b.get_name(5) is None
-    tutils.raises(AttributeError, getattr, b, "c")
-    tutils.raises(ValueError, bidi.BiDi, one=1, two=1)
+    with pytest.raises(AttributeError):
+        getattr(b, "c")
+    with pytest.raises(ValueError):
+        bidi.BiDi(one=1, two=1)

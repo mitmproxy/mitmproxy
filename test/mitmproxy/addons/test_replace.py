@@ -1,4 +1,5 @@
 import os.path
+import pytest
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
@@ -15,24 +16,17 @@ class TestReplace:
         assert x == ("foo", "bar", "vo/ing/")
         x = replace.parse_hook("/bar/voing")
         assert x == (".*", "bar", "voing")
-        tutils.raises("invalid replacement", replace.parse_hook, "/")
+        with pytest.raises("invalid replacement"):
+            replace.parse_hook("/")
 
     def test_configure(self):
         r = replace.Replace()
         with taddons.context() as tctx:
             tctx.configure(r, replacements=[("one", "two", "three")])
-            tutils.raises(
-                "invalid filter pattern",
-                tctx.configure,
-                r,
-                replacements=[("~b", "two", "three")]
-            )
-            tutils.raises(
-                "invalid regular expression",
-                tctx.configure,
-                r,
-                replacements=[("foo", "+", "three")]
-            )
+            with pytest.raises("invalid filter pattern"):
+                tctx.configure(r, replacements=[("~b", "two", "three")])
+            with pytest.raises("invalid regular expression"):
+                tctx.configure(r, replacements=[("foo", "+", "three")])
             tctx.configure(r, replacements=["/a/b/c/"])
 
     def test_simple(self):

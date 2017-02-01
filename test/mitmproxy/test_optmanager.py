@@ -1,5 +1,6 @@
 import copy
 import os
+import pytest
 
 from mitmproxy import options
 from mitmproxy import optmanager
@@ -68,11 +69,11 @@ def test_options():
     o.one = "one"
     assert o.one == "one"
 
-    with tutils.raises(TypeError):
+    with pytest.raises(TypeError):
         TO(nonexistent = "value")
-    with tutils.raises("no such option"):
+    with pytest.raises("no such option"):
         o.nonexistent = "value"
-    with tutils.raises("no such option"):
+    with pytest.raises("no such option"):
         o.update(nonexistent = "value")
 
     rec = []
@@ -96,7 +97,7 @@ def test_setter():
     f = o.setter("two")
     f("xxx")
     assert o.two == "xxx"
-    with tutils.raises("no such option"):
+    with pytest.raises("no such option"):
         o.setter("nonexistent")
 
 
@@ -107,7 +108,7 @@ def test_toggler():
     assert o.two is False
     f()
     assert o.two is True
-    with tutils.raises("no such option"):
+    with pytest.raises("no such option"):
         o.toggler("nonexistent")
 
 
@@ -192,10 +193,12 @@ def test_serialize():
     assert o2 == o
 
     t = "invalid: foo\ninvalid"
-    tutils.raises("config error", o2.load, t)
+    with pytest.raises("config error"):
+        o2.load(t)
 
     t = "invalid"
-    tutils.raises("config error", o2.load, t)
+    with pytest.raises("config error"):
+        o2.load(t)
 
     t = ""
     o2.load(t)

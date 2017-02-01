@@ -1,6 +1,7 @@
+import pytest
+
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
-from mitmproxy.test import tutils
 
 from mitmproxy.addons import stickyauth
 from mitmproxy import exceptions
@@ -10,12 +11,8 @@ def test_configure():
     r = stickyauth.StickyAuth()
     with taddons.context() as tctx:
         tctx.configure(r, stickyauth="~s")
-        tutils.raises(
-            exceptions.OptionsError,
-            tctx.configure,
-            r,
-            stickyauth="~~"
-        )
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(r, stickyauth="~~")
 
         tctx.configure(r, stickyauth=None)
         assert not r.flt

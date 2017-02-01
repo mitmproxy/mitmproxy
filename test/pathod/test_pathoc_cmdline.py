@@ -1,4 +1,5 @@
 import io
+import pytest
 from unittest import mock
 
 from pathod import pathoc_cmdline as cmdline
@@ -10,7 +11,7 @@ from mitmproxy.test import tutils
 def test_pathoc(perror):
     assert cmdline.args_pathoc(["pathoc", "foo.com", "get:/"])
     s = io.StringIO()
-    with tutils.raises(SystemExit):
+    with pytest.raises(SystemExit):
         cmdline.args_pathoc(["pathoc", "--show-uas"], s, s)
 
     a = cmdline.args_pathoc(["pathoc", "foo.com:8888", "get:/"])
@@ -57,5 +58,5 @@ def test_pathoc(perror):
     )
     assert len(list(a.requests)) == 1
 
-    with tutils.raises(SystemExit):
+    with pytest.raises(SystemExit):
         cmdline.args_pathoc(["pathoc", "foo.com", "invalid"], s, s)

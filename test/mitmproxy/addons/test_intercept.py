@@ -1,8 +1,9 @@
+import pytest
+
 from mitmproxy.addons import intercept
 from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy.test import taddons
-from mitmproxy.test import tutils
 from mitmproxy.test import tflow
 
 
@@ -18,12 +19,8 @@ def test_simple():
         assert not r.filt
         tctx.configure(r, intercept="~q")
         assert r.filt
-        tutils.raises(
-            exceptions.OptionsError,
-            tctx.configure,
-            r,
-            intercept="~~"
-        )
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(r, intercept="~~")
         tctx.configure(r, intercept=None)
         assert not r.filt
 

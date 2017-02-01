@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy import exceptions
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.assemble import (
@@ -5,7 +7,7 @@ from mitmproxy.net.http.http1.assemble import (
     assemble_response_head, _assemble_request_line, _assemble_request_headers,
     _assemble_response_headers,
     assemble_body)
-from mitmproxy.test.tutils import treq, raises, tresp
+from mitmproxy.test.tutils import treq, tresp
 
 
 def test_assemble_request():
@@ -18,7 +20,7 @@ def test_assemble_request():
         b"content"
     )
 
-    with raises(exceptions.HttpException):
+    with pytest.raises(exceptions.HttpException):
         assemble_request(treq(content=None))
 
 
@@ -39,7 +41,7 @@ def test_assemble_response():
         b"message"
     )
 
-    with raises(exceptions.HttpException):
+    with pytest.raises(exceptions.HttpException):
         assemble_response(tresp(content=None))
 
 
@@ -70,7 +72,7 @@ def test_assemble_request_line():
     absolute_request = treq(first_line_format="absolute").data
     assert _assemble_request_line(absolute_request) == b"GET http://address:22/path HTTP/1.1"
 
-    with raises(RuntimeError):
+    with pytest.raises(RuntimeError):
         _assemble_request_line(treq(first_line_format="invalid_form").data)
 
 

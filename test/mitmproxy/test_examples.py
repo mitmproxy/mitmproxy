@@ -1,15 +1,15 @@
 import json
-
-from mitmproxy.test import tflow
 import os
 import shlex
+import pytest
 
 from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy import proxy
-from mitmproxy.addons import script
 from mitmproxy import master
+from mitmproxy.addons import script
 
+from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import cookies
@@ -52,7 +52,7 @@ class TestScripts(mastertest.MasterTest):
         assert any(b'tEST!' in val[0][1] for val in fmt)
 
     def test_iframe_injector(self):
-        with tutils.raises(ScriptError):
+        with pytest.raises(ScriptError):
             tscript("simple/modify_body_inject_iframe.py")
 
         m, sc = tscript("simple/modify_body_inject_iframe.py", "http://example.org/evil_iframe")
@@ -141,7 +141,7 @@ class TestHARDump:
         )
 
     def test_no_file_arg(self):
-        with tutils.raises(ScriptError):
+        with pytest.raises(ScriptError):
             tscript("complex/har_dump.py")
 
     def test_simple(self):

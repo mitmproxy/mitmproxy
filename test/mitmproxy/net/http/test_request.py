@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import pytest
+
 from mitmproxy.net.http import Headers
-from mitmproxy.test.tutils import treq, raises
+from mitmproxy.test.tutils import treq
 from .test_message import _test_decoded_attr, _test_passthrough_attr
 
 
 class TestRequestData:
     def test_init(self):
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             treq(headers="foobar")
 
         assert isinstance(treq(headers=()).headers, Headers)
@@ -105,7 +107,7 @@ class TestRequestUtils:
         assert request.port == 42
         assert request.path == "/foo"
 
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             request.url = "not-a-url"
 
     def test_url_options(self):

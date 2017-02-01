@@ -1,14 +1,12 @@
 from threading import Thread, Event
-
 from unittest.mock import Mock
-
-from mitmproxy import controller
 import queue
+import pytest
 
 from mitmproxy.exceptions import Kill, ControlException
-from mitmproxy import proxy
+from mitmproxy import controller
 from mitmproxy import master
-from mitmproxy.test import tutils
+from mitmproxy import proxy
 
 
 class TMsg:
@@ -80,7 +78,7 @@ class TestChannel:
         done = Event()
         done.set()
         channel = controller.Channel(q, done)
-        with tutils.raises(Kill):
+        with pytest.raises(Kill):
             channel.ask("test", Mock(name="test_ask_shutdown"))
 
 
@@ -98,7 +96,7 @@ class TestReply:
         reply.take()
         assert reply.state == "taken"
 
-        with tutils.raises(queue.Empty):
+        with pytest.raises(queue.Empty):
             reply.q.get_nowait()
         reply.commit()
         assert reply.state == "committed"
@@ -132,7 +130,7 @@ class TestReply:
         reply = controller.Reply(46)
         reply.handle()
         reply.take()
-        with tutils.raises(ControlException):
+        with pytest.raises(ControlException):
             reply.commit()
         reply.ack()
         reply.commit()
@@ -141,7 +139,7 @@ class TestReply:
         reply = controller.Reply(47)
         reply.handle()
         reply.send(1)
-        with tutils.raises(ControlException):
+        with pytest.raises(ControlException):
             reply.send(2)
         reply.take()
         reply.commit()
@@ -163,13 +161,13 @@ class TestReply:
                 if state in ok:
                     getattr(r, fn)()
                 else:
-                    with tutils.raises(ControlException):
+                    with pytest.raises(ControlException):
                         getattr(r, fn)()
                 r._state = "committed"  # hide warnings on deletion
 
     def test_del(self):
         reply = controller.Reply(47)
-        with tutils.raises(ControlException):
+        with pytest.raises(ControlException):
             reply.__del__()
         reply.handle()
         reply.ack()

@@ -1,6 +1,7 @@
 import os
 import pytest
 import OpenSSL
+import functools
 
 import mitmproxy.net.tcp
 
@@ -23,6 +24,38 @@ skip_appveyor = pytest.mark.skipif(
     "APPVEYOR" in os.environ,
     reason='Skipping due to Appveyor'
 )
+
+
+original_pytest_raises = pytest.raises
+
+
+def raises(exc, *args, **kwargs):
+    functools.wraps(original_pytest_raises)
+    if isinstance(exc, str):
+        return RaisesContext(exc)
+    else:
+        return original_pytest_raises(exc, *args, **kwargs)
+
+
+pytest.raises = raises
+
+
+class RaisesContext:
+    def __init__(self, expected_exception):
+        self.expected_exception = expected_exception
+
+    def __enter__(self):
+        return
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not exc_type:
+            raise AssertionError("No exception raised.")
+        else:
+            if self.expected_exception.lower() not in str(exc_val).lower():
+                raise AssertionError(
+                    "Expected %s, but caught %s" % (repr(self.expected_exception), repr(exc_val))
+                )
+        return True
 
 
 @pytest.fixture()

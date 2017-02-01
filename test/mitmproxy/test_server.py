@@ -1,7 +1,7 @@
 import os
 import socket
 import time
-
+import pytest
 from unittest import mock
 
 from mitmproxy.test import tutils
@@ -159,7 +159,7 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        with tutils.raises(exceptions.HttpException):
+        with pytest.raises(exceptions.HttpException):
             self.pathod(spec)  # pathoc tries to parse answer as HTTP
 
         self._ignore_off()
@@ -238,7 +238,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             # There's a race here, which means we can get any of a number of errors.
             # Rather than introduce yet another sleep into the test suite, we just
             # relax the Exception specification.
-            with tutils.raises(Exception):
+            with pytest.raises(Exception):
                 p.request("get:'%s'" % response)
 
     def test_reconnect(self):
@@ -857,7 +857,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        with tutils.raises(exceptions.HttpReadDisconnect):
+        with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
@@ -874,7 +874,7 @@ class TestKillResponse(tservers.HTTPProxyTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        with tutils.raises(exceptions.HttpReadDisconnect):
+        with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
@@ -1027,11 +1027,8 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             assert not self.chain[1].tmaster.state.flows[-2].response
 
             # Reconnection failed, so we're now disconnected
-            tutils.raises(
-                exceptions.HttpException,
-                p.request,
-                "get:'/p/418:b\"content3\"'"
-            )
+            with pytest.raises(exceptions.HttpException):
+                p.request("get:'/p/418:b\"content3\"'")
 
 
 class AddUpstreamCertsToClientChainMixin:

@@ -1,17 +1,17 @@
 import email
-
 import time
+import pytest
 
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import Response
 from mitmproxy.net.http.cookies import CookieAttrs
-from mitmproxy.test.tutils import raises, tresp
+from mitmproxy.test.tutils import tresp
 from .test_message import _test_passthrough_attr
 
 
 class TestResponseData:
     def test_init(self):
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             tresp(headers="foobar")
 
         assert isinstance(tresp(headers=()).headers, Headers)
@@ -39,7 +39,7 @@ class TestResponseCore:
 
         Response.make(content=b"foo")
         Response.make(content="foo")
-        with raises(TypeError):
+        with pytest.raises(TypeError):
             Response.make(content=42)
 
         r = Response.make(headers=[(b"foo", b"bar")])
@@ -48,7 +48,7 @@ class TestResponseCore:
         r = Response.make(headers=({"foo": "baz"}))
         assert r.headers["foo"] == "baz"
 
-        with raises(TypeError):
+        with pytest.raises(TypeError):
             Response.make(headers=42)
 
     def test_status_code(self):

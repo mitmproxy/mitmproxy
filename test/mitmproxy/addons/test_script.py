@@ -3,6 +3,7 @@ import sys
 import time
 import re
 import watchdog.events
+import pytest
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -56,18 +57,18 @@ def test_reloadhandler():
 
 class TestParseCommand:
     def test_empty_command(self):
-        with tutils.raises(ValueError):
+        with pytest.raises(ValueError):
             script.parse_command("")
 
-        with tutils.raises(ValueError):
+        with pytest.raises(ValueError):
             script.parse_command("  ")
 
     def test_no_script_file(self):
-        with tutils.raises("not found"):
+        with pytest.raises("not found"):
             script.parse_command("notfound")
 
         with tutils.tmpdir() as dir:
-            with tutils.raises("not a file"):
+            with pytest.raises("not a file"):
                 script.parse_command(dir)
 
     def test_parse_args(self):
@@ -203,12 +204,8 @@ class TestScriptLoader:
 
         f = tflow.tflow(resp=True)
         with m.handlecontext():
-            tutils.raises(
-                "file not found",
-                sl.run_once,
-                "nonexistent",
-                [f]
-            )
+            with pytest.raises("file not found"):
+                sl.run_once("nonexistent", [f])
 
     def test_simple(self):
         o = options.Options(scripts=[])
@@ -229,14 +226,14 @@ class TestScriptLoader:
         o = options.Options(scripts=["one", "one"])
         m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        with tutils.raises(exceptions.OptionsError):
+        with pytest.raises(exceptions.OptionsError):
             m.addons.add(o, sc)
 
     def test_nonexistent(self):
         o = options.Options(scripts=["nonexistent"])
         m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        with tutils.raises(exceptions.OptionsError):
+        with pytest.raises(exceptions.OptionsError):
             m.addons.add(o, sc)
 
     def test_order(self):

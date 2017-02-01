@@ -108,8 +108,10 @@ class TestFrameHeader:
         assert not f2.mask
 
     def test_violations(self):
-        tutils.raises("opcode", websockets.FrameHeader, opcode=17)
-        tutils.raises("masking key", websockets.FrameHeader, masking_key=b"x")
+        with pytest.raises("opcode"):
+            websockets.FrameHeader(opcode=17)
+        with pytest.raises("masking key"):
+            websockets.FrameHeader(masking_key=b"x")
 
     def test_automask(self):
         f = websockets.FrameHeader(mask=True)

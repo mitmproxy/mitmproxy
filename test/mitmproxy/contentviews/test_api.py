@@ -1,4 +1,5 @@
 from unittest import mock
+import pytest
 
 from mitmproxy import contentviews
 from mitmproxy.exceptions import ContentViewException
@@ -17,11 +18,11 @@ def test_add_remove():
     contentviews.add(tcv)
 
     # repeated addition causes exception
-    with tutils.raises(ContentViewException):
+    with pytest.raises(ContentViewException):
         contentviews.add(tcv)
 
     # Same shortcut doesn't work either.
-    with tutils.raises(ContentViewException):
+    with pytest.raises(ContentViewException):
         contentviews.add(TestContentView())
 
     contentviews.remove(tcv)

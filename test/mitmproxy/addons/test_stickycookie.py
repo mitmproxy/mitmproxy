@@ -1,5 +1,6 @@
+import pytest
+
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 
 from mitmproxy.addons import stickycookie
@@ -15,9 +16,8 @@ class TestStickyCookie:
     def test_config(self):
         sc = stickycookie.StickyCookie()
         with taddons.context() as tctx:
-            tutils.raises(
-                "invalid filter", tctx.configure, sc, stickycookie="~b"
-            )
+            with pytest.raises("invalid filter"):
+                tctx.configure(sc, stickycookie="~b")
 
             tctx.configure(sc, stickycookie="foo")
             assert sc.flt

@@ -1,5 +1,6 @@
+import pytest
+
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 
 from mitmproxy.addons import setheaders
@@ -13,17 +14,14 @@ class TestSetHeaders:
         assert x == ("foo", "bar", "vo/ing/")
         x = setheaders.parse_setheader("/bar/voing")
         assert x == (".*", "bar", "voing")
-        tutils.raises("invalid replacement", setheaders.parse_setheader, "/")
+        with pytest.raises("invalid replacement"):
+            setheaders.parse_setheader("/")
 
     def test_configure(self):
         sh = setheaders.SetHeaders()
         with taddons.context() as tctx:
-            tutils.raises(
-                "invalid setheader filter pattern",
-                tctx.configure,
-                sh,
-                setheaders = [("~b", "one", "two")]
-            )
+            with pytest.raises("invalid setheader filter pattern"):
+                tctx.configure(sh, setheaders = [("~b", "one", "two")])
             tctx.configure(sh, setheaders = ["/foo/bar/voing"])
 
     def test_setheaders(self):

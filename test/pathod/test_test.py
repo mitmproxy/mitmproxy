@@ -1,5 +1,7 @@
 import logging
 import requests
+import pytest
+
 from pathod import test
 
 from mitmproxy.test import tutils
@@ -17,7 +19,7 @@ class TestDaemonManual:
             rsp = requests.get("http://localhost:%s/p/202:da" % d.port)
             assert rsp.ok
             assert rsp.status_code == 202
-        with tutils.raises(requests.ConnectionError):
+        with pytest.raises(requests.ConnectionError):
             requests.get("http://localhost:%s/p/202:da" % d.port)
 
     def test_startstop_ssl(self):
@@ -29,7 +31,7 @@ class TestDaemonManual:
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
-        with tutils.raises(requests.ConnectionError):
+        with pytest.raises(requests.ConnectionError):
             requests.get("http://localhost:%s/p/202:da" % d.port)
 
     def test_startstop_ssl_explicit(self):
@@ -46,5 +48,5 @@ class TestDaemonManual:
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
-        with tutils.raises(requests.ConnectionError):
+        with pytest.raises(requests.ConnectionError):
             requests.get("http://localhost:%s/p/202:da" % d.port)

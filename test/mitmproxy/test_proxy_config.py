@@ -1,11 +1,10 @@
-from mitmproxy.test import tutils
+import pytest
 from mitmproxy.proxy import config
 
 
 def test_parse_server_spec():
-    tutils.raises(
-        "Invalid server specification", config.parse_server_spec, ""
-    )
+    with pytest.raises("Invalid server specification"):
+        config.parse_server_spec("")
     assert config.parse_server_spec("http://foo.com:88") == (
         "http", ("foo.com", 88)
     )
@@ -15,13 +14,7 @@ def test_parse_server_spec():
     assert config.parse_server_spec("https://foo.com") == (
         "https", ("foo.com", 443)
     )
-    tutils.raises(
-        "Invalid server specification",
-        config.parse_server_spec,
-        "foo.com"
-    )
-    tutils.raises(
-        "Invalid server specification",
-        config.parse_server_spec,
-        "http://"
-    )
+    with pytest.raises("Invalid server specification"):
+        config.parse_server_spec("foo.com")
+    with pytest.raises("Invalid server specification"):
+        config.parse_server_spec("http://")

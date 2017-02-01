@@ -1,4 +1,6 @@
 import os
+import pytest
+
 from pathod import language
 from pathod.language import base, exceptions
 
@@ -145,23 +147,14 @@ class TestTokValueFile:
             assert v.get_generator(language.Settings(staticdir=t))
 
             v = base.TokValue.parseString("<path2")[0]
-            tutils.raises(
-                exceptions.FileAccessDenied,
-                v.get_generator,
-                language.Settings(staticdir=t)
-            )
-            tutils.raises(
-                "access disabled",
-                v.get_generator,
-                language.Settings()
-            )
+            with pytest.raises(exceptions.FileAccessDenied):
+                v.get_generator(language.Settings(staticdir=t))
+            with pytest.raises("access disabled"):
+                v.get_generator(language.Settings())
 
             v = base.TokValue.parseString("</outside")[0]
-            tutils.raises(
-                "outside",
-                v.get_generator,
-                language.Settings(staticdir=t)
-            )
+            with pytest.raises("outside"):
+                v.get_generator(language.Settings(staticdir=t))
 
     def test_spec(self):
         v = base.TokValue.parseString("<'one two'")[0]
@@ -208,8 +201,10 @@ class TestMisc:
 
         e = TT.expr()
         assert e.parseString("m@4")
-        tutils.raises("invalid value length", e.parseString, "m@100")
-        tutils.raises("invalid value length", e.parseString, "m@1")
+        with pytest.raises("invalid value length"):
+            e.parseString("m@100")
+        with pytest.raises("invalid value length"):
+            e.parseString("m@1")
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "path")
@@ -217,7 +212,8 @@ class TestMisc:
             with open(p, "wb") as f:
                 f.write(b"a" * 20)
             v = e.parseString("m<path")[0]
-            tutils.raises("invalid value length", v.values, s)
+            with pytest.raises("invalid value length"):
+                v.values(s)
 
             p = os.path.join(t, "path")
             with open(p, "wb") as f:
@@ -286,7 +282,8 @@ def test_intfield():
     assert v.value == 4
     assert v.spec() == "t4"
 
-    tutils.raises("can't exceed", e.parseString, "t5")
+    with pytest.raises("can't exceed"):
+        e.parseString("t5")
 
 
 def test_options_or_value():
@@ -327,8 +324,10 @@ def test_integer():
     class BInt(base.Integer):
         bounds = (1, 5)
 
-    tutils.raises("must be between", BInt, 0)
-    tutils.raises("must be between", BInt, 6)
+    with pytest.raises("must be between"):
+        BInt(0)
+    with pytest.raises("must be between"):
+        BInt(6)
     assert BInt(5)
     assert BInt(1)
     assert BInt(3)

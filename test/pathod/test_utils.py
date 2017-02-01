@@ -1,6 +1,6 @@
-from pathod import utils
+import pytest
 
-from mitmproxy.test import tutils
+from pathod import utils
 
 
 def test_membool():
@@ -13,4 +13,5 @@ def test_membool():
 
 
 def test_data_path():
-    tutils.raises(ValueError, utils.data.path, "nonexistent")
+    with pytest.raises(ValueError):
+        utils.data.path("nonexistent")
