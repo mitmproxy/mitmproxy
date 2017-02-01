@@ -4,7 +4,6 @@ from unittest.mock import patch
 from mitmproxy.test import tflow
 
 from mitmproxy import flowfilter
-from . import tutils as ttutils
 
 
 class TestParsing:
@@ -382,10 +381,10 @@ class TestMatchingTCPFlow:
 class TestMatchingDummyFlow:
 
     def flow(self):
-        return ttutils.tdummyflow()
+        return tflow.tdummyflow()
 
     def err(self):
-        return ttutils.tdummyflow(err=True)
+        return tflow.tdummyflow(err=True)
 
     def q(self, q, o):
         return flowfilter.parse(q)(o)

@@ -115,6 +115,26 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     return f
 
 
+def tdummyflow(client_conn=True, server_conn=True, err=None):
+    class DummyFlow(flow.Flow):
+        """A flow that is neither HTTP nor TCP."""
+
+        def __init__(self, client_conn, server_conn, live=None):
+            super().__init__("dummy", client_conn, server_conn, live)
+
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    if err is True:
+        err = terr()
+
+    f = DummyFlow(client_conn, server_conn)
+    f.error = err
+    f.reply = controller.DummyReply()
+    return f
+
+
 def tclient_conn():
     """
     @return: mitmproxy.proxy.connection.ClientConnection

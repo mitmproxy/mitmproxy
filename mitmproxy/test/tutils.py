@@ -11,12 +11,7 @@ from mitmproxy.net import tcp
 from mitmproxy.net import http
 
 
-def treader(bytes):
-    """
-        Construct a tcp.Read object from bytes.
-    """
-    fp = BytesIO(bytes)
-    return tcp.Reader(fp)
+test_data = data.Data(__name__).push("../../test/")
 
 
 @contextmanager
@@ -89,7 +84,12 @@ class RaisesContext:
         return True
 
 
-test_data = data.Data(__name__).push("../../test/")
+def treader(bytes):
+    """
+        Construct a tcp.Read object from bytes.
+    """
+    fp = BytesIO(bytes)
+    return tcp.Reader(fp)
 
 
 def treq(**kwargs):

@@ -2,6 +2,7 @@ import traceback
 import sys
 import time
 import re
+import watchdog.events
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -11,12 +12,9 @@ from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import master
 from mitmproxy import utils
-
 from mitmproxy.addons import script
 
-import watchdog.events
-
-from .. import tutils as ttutils
+from ...conftest import skip_not_windows
 
 
 def test_scriptenv():
@@ -84,7 +82,7 @@ class TestParseCommand:
                 "mitmproxy/data/addonscripts/recorder.py 'foo bar'"
             ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo bar"])
 
-    @ttutils.skip_not_windows
+    @skip_not_windows
     def test_parse_windows(self):
         with utils.chdir(tutils.test_data.dirname):
             assert script.parse_command(

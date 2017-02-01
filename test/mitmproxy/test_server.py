@@ -21,9 +21,9 @@ from mitmproxy.net.tcp import Address
 from pathod import pathoc
 from pathod import pathod
 
-from . import tutils as ttutils
-
 from . import tservers
+from ..conftest import skip_appveyor
+
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -611,7 +611,7 @@ class TestProxy(tservers.HTTPProxyTest):
         assert "host" in f.request.headers
         assert f.response.status_code == 304
 
-    @ttutils.skip_appveyor
+    @skip_appveyor
     def test_response_timestamps(self):
         # test that we notice at least 1 sec delay between timestamps
         # in response object
@@ -622,7 +622,7 @@ class TestProxy(tservers.HTTPProxyTest):
         # timestamp_start might fire a bit late, so we play safe and only require 300ms.
         assert 0.3 <= response.timestamp_end - response.timestamp_start
 
-    @ttutils.skip_appveyor
+    @skip_appveyor
     def test_request_timestamps(self):
         # test that we notice a delay between timestamps in request object
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

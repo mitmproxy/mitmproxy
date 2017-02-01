@@ -1,8 +1,9 @@
 import mitmproxy.tools.console.help as help
-from .. import tutils
+
+from ...conftest import skip_appveyor
 
 
-@tutils.skip_appveyor
+@skip_appveyor
 class TestHelp:
 
     def test_helptext(self):

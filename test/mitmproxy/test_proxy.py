@@ -15,8 +15,7 @@ from pathod import test
 from mitmproxy.net.http import http1
 from mitmproxy.test import tutils
 
-from . import tutils as ttutils
-
+from ..conftest import skip_windows
 
 class TestServerConnection:
 
@@ -149,7 +148,7 @@ class TestProcessProxyOptions:
 class TestProxyServer:
     # binding to 0.0.0.0:1 works without special permissions on Windows
 
-    @ttutils.skip_windows
+    @skip_windows
     def test_err(self):
         conf = ProxyConfig(
             options.Options(listen_port=1),
@@ -173,7 +172,7 @@ class TestDummyServer:
 
 class TestConnectionHandler:
 
-    def test_fatal_error(self):
+    def test_fatal_error(self, capsys):
         config = mock.Mock()
         root_layer = mock.Mock()
         root_layer.side_effect = RuntimeError
@@ -189,5 +188,7 @@ class TestConnectionHandler:
             config,
             channel
         )
-        with ttutils.capture_stderr(c.handle) as output:
-            assert "mitmproxy has crashed" in output
+        c.handle()
+
+        _, err = capsys.readouterr()
+        assert "mitmproxy has crashed" in err
