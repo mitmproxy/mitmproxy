@@ -337,7 +337,11 @@ class FlowListBox(urwid.ListBox):
         )
 
     def new_request(self, url, method):
-        parts = mitmproxy.net.http.url.parse(str(url))
+        try:
+            parts = mitmproxy.net.http.url.parse(str(url))
+        except ValueError as e:
+            signals.status_message.send(message=str(e))
+            return
         if not parts:
             signals.status_message.send(message="Invalid Url")
             return
