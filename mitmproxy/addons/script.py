@@ -252,7 +252,7 @@ class ScriptLoader:
                     try:
                         sc = Script(s)
                     except ValueError as e:
-                        exceptions.OptionsError(str(e))
+                        raise exceptions.OptionsError(str(e))
                     ordered.append(sc)
                     newscripts.append(sc)
 
