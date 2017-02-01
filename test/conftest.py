@@ -29,8 +29,8 @@ skip_appveyor = pytest.mark.skipif(
 original_pytest_raises = pytest.raises
 
 
+@functools.wraps(original_pytest_raises)
 def raises(exc, *args, **kwargs):
-    functools.wraps(original_pytest_raises)
     if isinstance(exc, str):
         return RaisesContext(exc)
     else:

@@ -172,9 +172,9 @@ def test_reversed():
     assert v[-1].request.timestamp_start == 1
     assert v[2].request.timestamp_start == 1
     with pytest.raises(IndexError):
-        v.__getitem__(5)
+        v[5]
     with pytest.raises(IndexError):
-        v.__getitem__(-5)
+        v[-5]
 
     assert v._bisect(v[0]) == 1
     assert v._bisect(v[2]) == 3
@@ -368,14 +368,14 @@ def test_settings():
     f = tft()
 
     with pytest.raises(KeyError):
-        v.settings.__getitem__(f)
+        v.settings[f]
     v.add(f)
     v.settings[f]["foo"] = "bar"
     assert v.settings[f]["foo"] == "bar"
     assert len(list(v.settings)) == 1
     v.remove(f)
     with pytest.raises(KeyError):
-        v.settings.__getitem__(f)
+        v.settings[f]
     assert not v.settings.keys()
 
     v.add(f)
