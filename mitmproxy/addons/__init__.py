@@ -28,6 +28,7 @@ def default_addons():
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
         replace.Replace(),
+        replace.ReplaceFile(),
         script.ScriptLoader(),
         serverplayback.ServerPlayback(),
         setheaders.SetHeaders(),
