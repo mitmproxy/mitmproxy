@@ -1,9 +1,9 @@
 from unittest import mock
 import codecs
-
+import pytest
 import hyperframe
+
 from mitmproxy.net import tcp, http
-from mitmproxy.test.tutils import raises
 from mitmproxy.net.http import http2
 from mitmproxy import exceptions
 
@@ -95,7 +95,7 @@ class TestCheckALPNMismatch(net_tservers.ServerTestBase):
         with c.connect():
             c.convert_to_ssl(alpn_protos=[b'h2'])
             protocol = HTTP2StateProtocol(c)
-            with raises(NotImplementedError):
+            with pytest.raises(NotImplementedError):
                 protocol.check_alpn()
 
 
@@ -132,7 +132,7 @@ class TestPerformServerConnectionPreface(net_tservers.ServerTestBase):
             protocol.perform_server_connection_preface()
             assert protocol.connection_preface_performed
 
-            with raises(exceptions.TcpDisconnect):
+            with pytest.raises(exceptions.TcpDisconnect):
                 protocol.perform_server_connection_preface(force=True)
 
 

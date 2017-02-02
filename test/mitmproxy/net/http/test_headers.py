@@ -1,7 +1,7 @@
 import collections
+import pytest
 
 from mitmproxy.net.http.headers import Headers, parse_content_type, assemble_content_type
-from mitmproxy.test.tutils import raises
 
 
 class TestHeaders:
@@ -40,7 +40,7 @@ class TestHeaders:
         assert headers["Host"] == "example.com"
         assert headers["Accept"] == "text/plain"
 
-        with raises(TypeError):
+        with pytest.raises(TypeError):
             Headers([[b"Host", u"not-bytes"]])
 
     def test_set(self):
@@ -48,7 +48,7 @@ class TestHeaders:
         headers[u"foo"] = u"1"
         headers[b"bar"] = b"2"
         headers["baz"] = b"3"
-        with raises(TypeError):
+        with pytest.raises(TypeError):
             headers["foobar"] = 42
         assert len(headers) == 3
 

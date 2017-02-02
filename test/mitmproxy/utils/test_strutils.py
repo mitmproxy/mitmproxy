@@ -1,18 +1,19 @@
+import pytest
+
 from mitmproxy.utils import strutils
-from mitmproxy.test import tutils
 
 
 def test_always_bytes():
     assert strutils.always_bytes(bytes(range(256))) == bytes(range(256))
     assert strutils.always_bytes("foo") == b"foo"
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         strutils.always_bytes(u"\u2605", "ascii")
-    with tutils.raises(TypeError):
+    with pytest.raises(TypeError):
         strutils.always_bytes(42, "ascii")
 
 
 def test_always_str():
-    with tutils.raises(TypeError):
+    with pytest.raises(TypeError):
         strutils.always_str(42)
     assert strutils.always_str("foo") == "foo"
     assert strutils.always_str(b"foo") == "foo"
@@ -36,7 +37,7 @@ def test_escape_control_characters():
         u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
     )
 
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         strutils.escape_control_characters(b"foo")
 
 
@@ -59,7 +60,7 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"\\\n", True) == "\\ \\ \n".replace(" ", "")
     assert strutils.bytes_to_escaped_str(b"\\\\n", True) == "\\ \\ \\ \\ n".replace(" ", "")
 
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         strutils.bytes_to_escaped_str(u"such unicode")
 
 
@@ -71,7 +72,7 @@ def test_escaped_str_to_bytes():
     assert strutils.escaped_str_to_bytes(u"&!?=\\\\)") == br"&!?=\)"
     assert strutils.escaped_str_to_bytes(u"\u00fc") == b'\xc3\xbc'
 
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         strutils.escaped_str_to_bytes(b"very byte")
 
 

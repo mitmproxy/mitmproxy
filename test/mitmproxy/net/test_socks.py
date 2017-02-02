@@ -1,5 +1,7 @@
 import ipaddress
 from io import BytesIO
+import pytest
+
 from mitmproxy.net import socks
 from mitmproxy.net import tcp
 from mitmproxy.test import tutils
@@ -22,7 +24,8 @@ def test_client_greeting():
 def test_client_greeting_assert_socks5():
     raw = tutils.treader(b"\x00\x00")
     msg = socks.ClientGreeting.from_file(raw)
-    tutils.raises(socks.SocksError, msg.assert_socks5)
+    with pytest.raises(socks.SocksError):
+        msg.assert_socks5()
 
     raw = tutils.treader(b"HTTP/1.1 200 OK" + b" " * 100)
     msg = socks.ClientGreeting.from_file(raw)
@@ -45,11 +48,8 @@ def test_client_greeting_assert_socks5():
         assert False
 
     raw = tutils.treader(b"XX")
-    tutils.raises(
-        socks.SocksError,
-        socks.ClientGreeting.from_file,
-        raw,
-        fail_early=True)
+    with pytest.raises(socks.SocksError):
+        socks.ClientGreeting.from_file(raw, fail_early=True)
 
 
 def test_server_greeting():
@@ -103,7 +103,8 @@ def test_username_password_auth():
 def test_username_password_auth_assert_ver1():
     raw = tutils.treader(b"\x02\x03usr\x03psd\xBE\xEF")
     auth = socks.UsernamePasswordAuth.from_file(raw)
-    tutils.raises(socks.SocksError, auth.assert_authver1)
+    with pytest.raises(socks.SocksError):
+        auth.assert_authver1()
 
 
 def test_username_password_auth_response():
@@ -122,7 +123,8 @@ def test_username_password_auth_response():
 def test_username_password_auth_response_auth_assert_ver1():
     raw = tutils.treader(b"\x02\x00\xBE\xEF")
     auth = socks.UsernamePasswordAuthResponse.from_file(raw)
-    tutils.raises(socks.SocksError, auth.assert_authver1)
+    with pytest.raises(socks.SocksError):
+        auth.assert_authver1()
 
 
 def test_message():
@@ -143,7 +145,8 @@ def test_message():
 def test_message_assert_socks5():
     raw = tutils.treader(b"\xEE\x01\x00\x03\x0bexample.com\xDE\xAD\xBE\xEF")
     msg = socks.Message.from_file(raw)
-    tutils.raises(socks.SocksError, msg.assert_socks5)
+    with pytest.raises(socks.SocksError):
+        msg.assert_socks5()
 
 
 def test_message_ipv4():
@@ -178,12 +181,15 @@ def test_message_ipv6():
 
 def test_message_invalid_rsv():
     raw = tutils.treader(b"\x05\x01\xFF\x01\x7f\x00\x00\x01\xDE\xAD\xBE\xEF")
-    tutils.raises(socks.SocksError, socks.Message.from_file, raw)
+    with pytest.raises(socks.SocksError):
+        socks.Message.from_file(raw)
 
 
 def test_message_unknown_atyp():
     raw = tutils.treader(b"\x05\x02\x00\x02\x7f\x00\x00\x01\xDE\xAD\xBE\xEF")
-    tutils.raises(socks.SocksError, socks.Message.from_file, raw)
+    with pytest.raises(socks.SocksError):
+        socks.Message.from_file(raw)
 
     m = socks.Message(5, 1, 0x02, tcp.Address(("example.com", 5050)))
-    tutils.raises(socks.SocksError, m.to_file, BytesIO())
+    with pytest.raises(socks.SocksError):
+        m.to_file(BytesIO())

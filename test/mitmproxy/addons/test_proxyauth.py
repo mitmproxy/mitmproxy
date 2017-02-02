@@ -1,4 +1,5 @@
 import binascii
+import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.test import taddons
@@ -20,10 +21,8 @@ def test_parse_http_basic_auth():
 def test_configure():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        tutils.raises(
-            exceptions.OptionsError,
-            ctx.configure, up, auth_singleuser="foo"
-        )
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, auth_singleuser="foo")
 
         ctx.configure(up, auth_singleuser="foo:bar")
         assert up.singleuser == ["foo", "bar"]
@@ -36,20 +35,10 @@ def test_configure():
         ctx.configure(up, auth_nonanonymous=False)
         assert not up.nonanonymous
 
-        tutils.raises(
-            exceptions.OptionsError,
-            ctx.configure,
-            up,
-            auth_htpasswd = tutils.test_data.path(
-                "mitmproxy/net/data/server.crt"
-            )
-        )
-        tutils.raises(
-            exceptions.OptionsError,
-            ctx.configure,
-            up,
-            auth_htpasswd = "nonexistent"
-        )
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, auth_htpasswd=tutils.test_data.path("mitmproxy/net/data/server.crt"))
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, auth_htpasswd="nonexistent")
 
         ctx.configure(
             up,
@@ -63,20 +52,10 @@ def test_configure():
         ctx.configure(up, auth_htpasswd = None)
         assert not up.htpasswd
 
-        tutils.raises(
-            exceptions.OptionsError,
-            ctx.configure,
-            up,
-            auth_nonanonymous = True,
-            mode = "transparent"
-        )
-        tutils.raises(
-            exceptions.OptionsError,
-            ctx.configure,
-            up,
-            auth_nonanonymous = True,
-            mode = "socks5"
-        )
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, auth_nonanonymous=True, mode="transparent")
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, auth_nonanonymous=True, mode="socks5")
 
 
 def test_check():

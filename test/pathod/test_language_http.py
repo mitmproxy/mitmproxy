@@ -1,8 +1,9 @@
 import io
+import pytest
+
 from pathod import language
 from pathod.language import http, base
 
-from mitmproxy.test import tutils
 from . import tservers
 
 
@@ -19,10 +20,12 @@ def test_make_error_response():
 class TestRequest:
 
     def test_nonascii(self):
-        tutils.raises("ascii", parse_request, "get:\xf0")
+        with pytest.raises("ascii"):
+            parse_request("get:\xf0")
 
     def test_err(self):
-        tutils.raises(language.ParseException, parse_request, 'GET')
+        with pytest.raises(language.ParseException):
+            parse_request('GET')
 
     def test_simple(self):
         r = parse_request('GET:"/foo"')
@@ -214,9 +217,8 @@ class TestResponse:
         testlen(r)
 
     def test_parse_err(self):
-        tutils.raises(
-            language.ParseException, language.parse_pathod, "400:msg,b:"
-        )
+        with pytest.raises(language.ParseException):
+            language.parse_pathod("400:msg,b:")
         try:
             language.parse_pathod("400'msg':b:")
         except language.ParseException as v:
@@ -224,7 +226,8 @@ class TestResponse:
             assert str(v)
 
     def test_nonascii(self):
-        tutils.raises("ascii", language.parse_pathod, "foo:b\xf0")
+        with pytest.raises("ascii"):
+            language.parse_pathod("foo:b\xf0")
 
     def test_parse_header(self):
         r = next(language.parse_pathod('400:h"foo"="bar"'))
@@ -260,7 +263,8 @@ class TestResponse:
 
     def test_websockets(self):
         r = next(language.parse_pathod("ws"))
-        tutils.raises("no websocket key", r.resolve, language.Settings())
+        with pytest.raises("no websocket key"):
+            r.resolve(language.Settings())
         res = r.resolve(language.Settings(websocket_key=b"foo"))
         assert res.status_code.string() == b"101"
 
@@ -327,11 +331,8 @@ def test_nested_response():
     e = http.NestedResponse.expr()
     v = e.parseString("s'200'")[0]
     assert v.value.val == b"200"
-    tutils.raises(
-        language.ParseException,
-        e.parseString,
-        "s'foo'"
-    )
+    with pytest.raises(language.ParseException):
+        e.parseString("s'foo'")
 
     v = e.parseString('s"200:b@1"')[0]
     assert "@1" in v.spec()
@@ -350,8 +351,5 @@ def test_nested_response_freeze():
 
 
 def test_unique_components():
-    tutils.raises(
-        "multiple body clauses",
-        language.parse_pathod,
-        "400:b@1:b@1"
-    )
+    with pytest.raises("multiple body clauses"):
+        language.parse_pathod("400:b@1:b@1")

@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy import io
 from mitmproxy import exceptions
 from mitmproxy.test import tutils
@@ -22,5 +24,5 @@ def test_load_018():
 def test_cannot_convert():
     with open(tutils.test_data.path("mitmproxy/data/dumpfile-010"), "rb") as f:
         flow_reader = io.FlowReader(f)
-        with tutils.raises(exceptions.FlowReadException):
+        with pytest.raises(exceptions.FlowReadException):
             list(flow_reader.stream())

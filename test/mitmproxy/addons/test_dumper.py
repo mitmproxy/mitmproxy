@@ -1,5 +1,6 @@
 import io
 import shutil
+import pytest
 from unittest import mock
 
 from mitmproxy.test import tflow
@@ -25,7 +26,8 @@ def test_configure():
 
         ctx.configure(d, filtstr=None)
         assert not d.filter
-        tutils.raises(exceptions.OptionsError, ctx.configure, d, filtstr="~~")
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(d, filtstr="~~")
         assert not d.filter
 
 

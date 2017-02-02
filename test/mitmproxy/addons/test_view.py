@@ -1,5 +1,6 @@
+import pytest
+
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
@@ -170,8 +171,10 @@ def test_reversed():
     assert v[0].request.timestamp_start == 3
     assert v[-1].request.timestamp_start == 1
     assert v[2].request.timestamp_start == 1
-    tutils.raises(IndexError, v.__getitem__, 5)
-    tutils.raises(IndexError, v.__getitem__, -5)
+    with pytest.raises(IndexError):
+        v.__getitem__(5)
+    with pytest.raises(IndexError):
+        v.__getitem__(-5)
 
     assert v._bisect(v[0]) == 1
     assert v._bisect(v[2]) == 3
@@ -314,8 +317,10 @@ def test_focus():
     assert f.flow is v[0]
 
     # Try to set to something not in view
-    tutils.raises(ValueError, f.__setattr__, "flow", tft())
-    tutils.raises(ValueError, f.__setattr__, "index", 99)
+    with pytest.raises(ValueError):
+        f.__setattr__("flow", tft())
+    with pytest.raises(ValueError):
+        f.__setattr__("index", 99)
 
     v.add(tft(start=0))
     assert f.index == 1
@@ -362,13 +367,15 @@ def test_settings():
     v = view.View()
     f = tft()
 
-    tutils.raises(KeyError, v.settings.__getitem__, f)
+    with pytest.raises(KeyError):
+        v.settings.__getitem__(f)
     v.add(f)
     v.settings[f]["foo"] = "bar"
     assert v.settings[f]["foo"] == "bar"
     assert len(list(v.settings)) == 1
     v.remove(f)
-    tutils.raises(KeyError, v.settings.__getitem__, f)
+    with pytest.raises(KeyError):
+        v.settings.__getitem__(f)
     assert not v.settings.keys()
 
     v.add(f)
@@ -382,10 +389,12 @@ def test_configure():
     v = view.View()
     with taddons.context(options=Options()) as tctx:
         tctx.configure(v, filter="~q")
-        tutils.raises("invalid interception filter", tctx.configure, v, filter="~~")
+        with pytest.raises("invalid interception filter"):
+            tctx.configure(v, filter="~~")
 
         tctx.configure(v, console_order="method")
-        tutils.raises("unknown flow order", tctx.configure, v, console_order="no")
+        with pytest.raises("unknown flow order"):
+            tctx.configure(v, console_order="no")
 
         tctx.configure(v, console_order_reversed=True)
 

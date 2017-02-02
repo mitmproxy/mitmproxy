@@ -1,7 +1,7 @@
 import os
 import socket
 import time
-
+import pytest
 from unittest import mock
 
 from mitmproxy.test import tutils
@@ -21,9 +21,9 @@ from mitmproxy.net.tcp import Address
 from pathod import pathoc
 from pathod import pathod
 
-from . import tutils as ttutils
-
 from . import tservers
+from ..conftest import skip_appveyor
+
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -159,7 +159,7 @@ class TcpMixin:
         # mitmproxy responds with bad gateway
         assert self.pathod(spec).status_code == 502
         self._ignore_on()
-        with tutils.raises(exceptions.HttpException):
+        with pytest.raises(exceptions.HttpException):
             self.pathod(spec)  # pathoc tries to parse answer as HTTP
 
         self._ignore_off()
@@ -238,7 +238,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             # There's a race here, which means we can get any of a number of errors.
             # Rather than introduce yet another sleep into the test suite, we just
             # relax the Exception specification.
-            with tutils.raises(Exception):
+            with pytest.raises(Exception):
                 p.request("get:'%s'" % response)
 
     def test_reconnect(self):
@@ -611,7 +611,7 @@ class TestProxy(tservers.HTTPProxyTest):
         assert "host" in f.request.headers
         assert f.response.status_code == 304
 
-    @ttutils.skip_appveyor
+    @skip_appveyor
     def test_response_timestamps(self):
         # test that we notice at least 1 sec delay between timestamps
         # in response object
@@ -622,7 +622,7 @@ class TestProxy(tservers.HTTPProxyTest):
         # timestamp_start might fire a bit late, so we play safe and only require 300ms.
         assert 0.3 <= response.timestamp_end - response.timestamp_start
 
-    @ttutils.skip_appveyor
+    @skip_appveyor
     def test_request_timestamps(self):
         # test that we notice a delay between timestamps in request object
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -857,7 +857,7 @@ class TestKillRequest(tservers.HTTPProxyTest):
     masterclass = MasterKillRequest
 
     def test_kill(self):
-        with tutils.raises(exceptions.HttpReadDisconnect):
+        with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
         assert not self.server.last_log()
@@ -874,7 +874,7 @@ class TestKillResponse(tservers.HTTPProxyTest):
     masterclass = MasterKillResponse
 
     def test_kill(self):
-        with tutils.raises(exceptions.HttpReadDisconnect):
+        with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
         assert self.server.last_log()
@@ -1027,11 +1027,8 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             assert not self.chain[1].tmaster.state.flows[-2].response
 
             # Reconnection failed, so we're now disconnected
-            tutils.raises(
-                exceptions.HttpException,
-                p.request,
-                "get:'/p/418:b\"content3\"'"
-            )
+            with pytest.raises(exceptions.HttpException):
+                p.request("get:'/p/418:b\"content3\"'")
 
 
 class AddUpstreamCertsToClientChainMixin:

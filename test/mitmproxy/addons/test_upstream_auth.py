@@ -1,9 +1,9 @@
 import base64
+import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 from mitmproxy.addons import upstream_auth
 
 
@@ -19,24 +19,12 @@ def test_configure():
         tctx.configure(up, upstream_auth=None)
         assert not up.auth
 
-        tutils.raises(
-            exceptions.OptionsError,
-            tctx.configure,
-            up,
-            upstream_auth=""
-        )
-        tutils.raises(
-            exceptions.OptionsError,
-            tctx.configure,
-            up,
-            upstream_auth=":"
-        )
-        tutils.raises(
-            exceptions.OptionsError,
-            tctx.configure,
-            up,
-            upstream_auth=":test"
-        )
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(up, upstream_auth="")
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(up, upstream_auth=":")
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(up, upstream_auth=":test")
 
 
 def test_simple():

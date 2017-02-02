@@ -1,8 +1,10 @@
-from mitmproxy.test import tflow
 import os
-from unittest import mock
 import argparse
+from unittest import mock
 from OpenSSL import SSL
+import pytest
+
+from mitmproxy.test import tflow
 
 from mitmproxy.tools import cmdline
 from mitmproxy import options
@@ -15,7 +17,7 @@ from pathod import test
 from mitmproxy.net.http import http1
 from mitmproxy.test import tutils
 
-from . import tutils as ttutils
+from ..conftest import skip_windows
 
 
 class TestServerConnection:
@@ -80,9 +82,6 @@ class TestProcessProxyOptions:
         pconf = config.ProxyConfig(opts)
         return parser, pconf
 
-    def assert_err(self, err, *args):
-        tutils.raises(err, self.p, *args)
-
     def assert_noerr(self, *args):
         m, p = self.p(*args)
         assert p
@@ -97,22 +96,28 @@ class TestProcessProxyOptions:
 
     @mock.patch("mitmproxy.platform.original_addr", None)
     def test_no_transparent(self):
-        self.assert_err("transparent mode not supported", "-T")
+        with pytest.raises("transparent mode not supported"):
+            self.p("-T")
 
     @mock.patch("mitmproxy.platform.original_addr")
     def test_modes(self, _):
         self.assert_noerr("-R", "http://localhost")
-        self.assert_err("expected one argument", "-R")
-        self.assert_err("Invalid server specification", "-R", "reverse")
+        with pytest.raises("expected one argument"):
+            self.p("-R")
+        with pytest.raises("Invalid server specification"):
+            self.p("-R", "reverse")
 
         self.assert_noerr("-T")
 
         self.assert_noerr("-U", "http://localhost")
-        self.assert_err("Invalid server specification", "-U", "upstream")
+        with pytest.raises("Invalid server specification"):
+            self.p("-U", "upstream")
 
         self.assert_noerr("--upstream-auth", "test:test")
-        self.assert_err("expected one argument", "--upstream-auth")
-        self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
+        with pytest.raises("expected one argument"):
+            self.p("--upstream-auth")
+        with pytest.raises("mutually exclusive"):
+            self.p("-R", "http://localhost", "-T")
 
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
@@ -120,16 +125,15 @@ class TestProcessProxyOptions:
             self.assert_noerr(
                 "--client-certs",
                 os.path.join(tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem"))
-            self.assert_err(
-                "path does not exist",
-                "--client-certs",
-                "nonexistent")
+            with pytest.raises("path does not exist"):
+                self.p("--client-certs", "nonexistent")
 
     def test_certs(self):
         self.assert_noerr(
             "--cert",
             tutils.test_data.path("mitmproxy/data/testkey.pem"))
-        self.assert_err("does not exist", "--cert", "nonexistent")
+        with pytest.raises("does not exist"):
+            self.p("--cert", "nonexistent")
 
     def test_insecure(self):
         p = self.assert_noerr("--insecure")
@@ -147,20 +151,18 @@ class TestProcessProxyOptions:
 
 
 class TestProxyServer:
-    # binding to 0.0.0.0:1 works without special permissions on Windows
 
-    @ttutils.skip_windows
+    @skip_windows
     def test_err(self):
-        conf = ProxyConfig(
-            options.Options(listen_port=1),
-        )
-        tutils.raises("error starting proxy server", ProxyServer, conf)
+        # binding to 0.0.0.0:1 works without special permissions on Windows
+        conf = ProxyConfig(options.Options(listen_port=1))
+        with pytest.raises("error starting proxy server"):
+            ProxyServer(conf)
 
     def test_err_2(self):
-        conf = ProxyConfig(
-            options.Options(listen_host="invalidhost"),
-        )
-        tutils.raises("error starting proxy server", ProxyServer, conf)
+        conf = ProxyConfig(options.Options(listen_host="invalidhost"))
+        with pytest.raises("error starting proxy server"):
+            ProxyServer(conf)
 
 
 class TestDummyServer:
@@ -173,7 +175,7 @@ class TestDummyServer:
 
 class TestConnectionHandler:
 
-    def test_fatal_error(self):
+    def test_fatal_error(self, capsys):
         config = mock.Mock()
         root_layer = mock.Mock()
         root_layer.side_effect = RuntimeError
@@ -189,5 +191,7 @@ class TestConnectionHandler:
             config,
             channel
         )
-        with ttutils.capture_stderr(c.handle) as output:
-            assert "mitmproxy has crashed" in output
+        c.handle()
+
+        _, err = capsys.readouterr()
+        assert "mitmproxy has crashed" in err

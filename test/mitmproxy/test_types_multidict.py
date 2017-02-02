@@ -1,4 +1,5 @@
-from mitmproxy.test import tutils
+import pytest
+
 from mitmproxy.types import multidict
 
 
@@ -40,7 +41,7 @@ class TestMultiDict:
         assert "Foo" in md
         assert md["foo"] == "bar"
 
-        with tutils.raises(KeyError):
+        with pytest.raises(KeyError):
             assert md["bar"]
 
         md_multi = TMultiDict(
@@ -65,7 +66,7 @@ class TestMultiDict:
         assert "foo" not in md
         assert "bar" in md
 
-        with tutils.raises(KeyError):
+        with pytest.raises(KeyError):
             del md["foo"]
 
         del md["bar"]
@@ -103,7 +104,7 @@ class TestMultiDict:
         it should not implement __hash__(), since the implementation of hashable
         collections requires that a key's hash value is immutable.
         """
-        with tutils.raises(TypeError):
+        with pytest.raises(TypeError):
             assert hash(TMultiDict())
 
     def test_get_all(self):

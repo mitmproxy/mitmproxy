@@ -1,8 +1,9 @@
+import pytest
+
 from pathod import language
 from pathod.language import websockets
 import mitmproxy.net.websockets
 
-from mitmproxy.test import tutils
 from . import tservers
 
 
@@ -45,11 +46,8 @@ class TestWebsocketFrame:
     def test_parse_websocket_frames(self):
         wf = language.parse_websocket_frame("wf:x10")
         assert len(list(wf)) == 10
-        tutils.raises(
-            language.ParseException,
-            language.parse_websocket_frame,
-            "wf:x"
-        )
+        with pytest.raises(language.ParseException):
+            language.parse_websocket_frame("wf:x")
 
     def test_client_values(self):
         specs = [
@@ -132,7 +130,7 @@ class TestWebsocketFrame:
         assert frm.payload == b"abc"
 
     def test_knone(self):
-        with tutils.raises("expected 4 bytes"):
+        with pytest.raises("expected 4 bytes"):
             self.fr("wf:b'foo':mask:knone")
 
     def test_length(self):
@@ -140,4 +138,5 @@ class TestWebsocketFrame:
         frm = self.fr("wf:l2:b'foo'")
         assert frm.header.payload_length == 2
         assert frm.payload == b"fo"
-        tutils.raises("expected 1024 bytes", self.fr, "wf:l1024:b'foo'")
+        with pytest.raises("expected 1024 bytes"):
+            self.fr("wf:l1024:b'foo'")

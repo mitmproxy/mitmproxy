@@ -2,7 +2,6 @@ from unittest import mock
 import pytest
 
 from mitmproxy.net.http import encoding
-from mitmproxy.test import tutils
 
 
 @pytest.mark.parametrize("encoder", [
@@ -12,7 +11,7 @@ from mitmproxy.test import tutils
 def test_identity(encoder):
     assert b"string" == encoding.decode(b"string", encoder)
     assert b"string" == encoding.encode(b"string", encoder)
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         encoding.encode(b"string", "nonexistent encoding")
 
 
@@ -40,7 +39,7 @@ def test_encoders(encoder):
         encoder
     )
 
-    with tutils.raises(ValueError):
+    with pytest.raises(ValueError):
         encoding.decode(b"foobar", encoder)
 
 

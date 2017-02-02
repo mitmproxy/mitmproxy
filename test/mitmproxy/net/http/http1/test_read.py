@@ -10,7 +10,7 @@ from mitmproxy.net.http.http1.read import (
     _read_request_line, _parse_authority_form, _read_response_line, _check_http_version,
     _read_headers, _read_chunked, get_header_tokens
 )
-from mitmproxy.test.tutils import treq, tresp, raises
+from mitmproxy.test.tutils import treq, tresp
 
 
 def test_get_header_tokens():
@@ -45,7 +45,8 @@ def test_read_request(input):
 ])
 def test_read_request_error(input):
     rfile = BytesIO(input)
-    raises(exceptions.HttpException, read_request, rfile)
+    with pytest.raises(exceptions.HttpException):
+        read_request(rfile)
 
 
 def test_read_request_head():
@@ -116,12 +117,12 @@ class TestReadBody:
 
     def test_known_size_limit(self):
         rfile = BytesIO(b"foobar")
-        with raises(exceptions.HttpException):
+        with pytest.raises(exceptions.HttpException):
             b"".join(read_body(rfile, 3, 2))
 
     def test_known_size_too_short(self):
         rfile = BytesIO(b"foo")
-        with raises(exceptions.HttpException):
+        with pytest.raises(exceptions.HttpException):
             b"".join(read_body(rfile, 6))
 
     def test_unknown_size(self):
@@ -131,7 +132,7 @@ class TestReadBody:
 
     def test_unknown_size_limit(self):
         rfile = BytesIO(b"foobar")
-        with raises(exceptions.HttpException):
+        with pytest.raises(exceptions.HttpException):
             b"".join(read_body(rfile, -1, 3))
 
     def test_max_chunk_size(self):
@@ -185,7 +186,7 @@ def test_expected_http_body_size():
 
     # explicit length
     for val in (b"foo", b"-7"):
-        with raises(exceptions.HttpSyntaxException):
+        with pytest.raises(exceptions.HttpSyntaxException):
             expected_http_body_size(
                 treq(headers=Headers(content_length=val))
             )
@@ -209,11 +210,11 @@ def test_get_first_line():
     rfile = BytesIO(b"\r\nfoo\r\nbar")
     assert _get_first_line(rfile) == b"foo"
 
-    with raises(exceptions.HttpReadDisconnect):
+    with pytest.raises(exceptions.HttpReadDisconnect):
         rfile = BytesIO(b"")
         _get_first_line(rfile)
 
-    with raises(exceptions.HttpReadDisconnect):
+    with pytest.raises(exceptions.HttpReadDisconnect):
         rfile = Mock()
         rfile.readline.side_effect = exceptions.TcpDisconnect
         _get_first_line(rfile)
@@ -232,23 +233,23 @@ def test_read_request_line():
     assert (t(b"GET http://foo:42/bar HTTP/1.1") ==
             ("absolute", b"GET", b"http", b"foo", 42, b"/bar", b"HTTP/1.1"))
 
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         t(b"GET / WTF/1.1")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         t(b"this is not http")
-    with raises(exceptions.HttpReadDisconnect):
+    with pytest.raises(exceptions.HttpReadDisconnect):
         t(b"")
 
 
 def test_parse_authority_form():
     assert _parse_authority_form(b"foo:42") == (b"foo", 42)
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"foo")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"foo:bar")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"foo:99999999")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _parse_authority_form(b"f\x00oo:80")
 
 
@@ -262,14 +263,14 @@ def test_read_response_line():
     # https://github.com/mitmproxy/mitmproxy/issues/784
     assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (b"HTTP/1.1", 200, b"Non-Autoris\xc3\xa9")
 
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         assert t(b"HTTP/1.1")
 
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         t(b"HTTP/1.1 OK OK")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         t(b"WTF/1.1 200 OK")
-    with raises(exceptions.HttpReadDisconnect):
+    with pytest.raises(exceptions.HttpReadDisconnect):
         t(b"")
 
 
@@ -278,11 +279,11 @@ def test_check_http_version():
     _check_http_version(b"HTTP/1.0")
     _check_http_version(b"HTTP/1.1")
     _check_http_version(b"HTTP/2.0")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _check_http_version(b"WTF/1.0")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _check_http_version(b"HTTP/1.10")
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         _check_http_version(b"HTTP/1.b")
 
 
@@ -321,17 +322,17 @@ class TestReadHeaders:
 
     def test_read_continued_err(self):
         data = b"\tfoo: bar\r\n"
-        with raises(exceptions.HttpSyntaxException):
+        with pytest.raises(exceptions.HttpSyntaxException):
             self._read(data)
 
     def test_read_err(self):
         data = b"foo"
-        with raises(exceptions.HttpSyntaxException):
+        with pytest.raises(exceptions.HttpSyntaxException):
             self._read(data)
 
     def test_read_empty_name(self):
         data = b":foo"
-        with raises(exceptions.HttpSyntaxException):
+        with pytest.raises(exceptions.HttpSyntaxException):
             self._read(data)
 
     def test_read_empty_value(self):
@@ -345,7 +346,7 @@ def test_read_chunked():
     req.headers["Transfer-Encoding"] = "chunked"
 
     data = b"1\r\na\r\n0\r\n"
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"1\r\na\r\n0\r\n\r\n"
@@ -355,17 +356,17 @@ def test_read_chunked():
     assert b"".join(_read_chunked(BytesIO(data))) == b"ab"
 
     data = b"\r\n"
-    with raises("closed prematurely"):
+    with pytest.raises("closed prematurely"):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"1\r\nfoo"
-    with raises("malformed chunked body"):
+    with pytest.raises("malformed chunked body"):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"foo\r\nfoo"
-    with raises(exceptions.HttpSyntaxException):
+    with pytest.raises(exceptions.HttpSyntaxException):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"5\r\naaaaa\r\n0\r\n\r\n"
-    with raises("too large"):
+    with pytest.raises("too large"):
         b"".join(_read_chunked(BytesIO(data), limit=2))

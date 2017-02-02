@@ -1,4 +1,5 @@
 import io
+import pytest
 
 from mitmproxy.net import tcp
 from mitmproxy.net.http import user_agents
@@ -6,8 +7,6 @@ from mitmproxy.net.http import user_agents
 from pathod import language
 from pathod.language import http2
 from pathod.protocols.http2 import HTTP2StateProtocol
-
-from mitmproxy.test import tutils
 
 
 def parse_request(s):
@@ -40,10 +39,12 @@ class TestRequest:
         assert req.values(default_settings()) == req.values(default_settings())
 
     def test_nonascii(self):
-        tutils.raises("ascii", parse_request, "get:\xf0")
+        with pytest.raises("ascii"):
+            parse_request("get:\xf0")
 
     def test_err(self):
-        tutils.raises(language.ParseException, parse_request, 'GET')
+        with pytest.raises(language.ParseException):
+            parse_request('GET')
 
     def test_simple(self):
         r = parse_request('GET:"/foo"')
@@ -167,10 +168,12 @@ class TestResponse:
         assert res.values(default_settings()) == res.values(default_settings())
 
     def test_nonascii(self):
-        tutils.raises("ascii", parse_response, "200:\xf0")
+        with pytest.raises("ascii"):
+            parse_response("200:\xf0")
 
     def test_err(self):
-        tutils.raises(language.ParseException, parse_response, 'GET:/')
+        with pytest.raises(language.ParseException):
+            parse_response('GET:/')
 
     def test_raw_content_length(self):
         r = parse_response('200:r')

@@ -1,6 +1,6 @@
 import time
+import pytest
 from mitmproxy.utils import human
-from mitmproxy.test import tutils
 
 
 def test_format_timestamp():
@@ -18,8 +18,10 @@ def test_parse_size():
     assert human.parse_size("1k") == 1024
     assert human.parse_size("1m") == 1024**2
     assert human.parse_size("1g") == 1024**3
-    tutils.raises(ValueError, human.parse_size, "1f")
-    tutils.raises(ValueError, human.parse_size, "ak")
+    with pytest.raises(ValueError):
+        human.parse_size("1f")
+    with pytest.raises(ValueError):
+        human.parse_size("ak")
 
 
 def test_pretty_size():

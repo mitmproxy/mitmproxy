@@ -1,8 +1,10 @@
+import os.path
+import pytest
+
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 
-import os.path
 from mitmproxy import io
 from mitmproxy import exceptions
 from mitmproxy.tools import dump
@@ -14,14 +16,10 @@ def test_configure():
     with taddons.context(options=dump.Options()) as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
-            tutils.raises(
-                exceptions.OptionsError,
-                tctx.configure, sa, streamfile=tdir
-            )
-            tutils.raises(
-                "invalid filter",
-                tctx.configure, sa, streamfile=p, filtstr="~~"
-            )
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(sa, streamfile=tdir)
+            with pytest.raises("invalid filter"):
+                tctx.configure(sa, streamfile=p, filtstr="~~")
             tctx.configure(sa, filtstr="foo")
             assert sa.filt
             tctx.configure(sa, filtstr=None)

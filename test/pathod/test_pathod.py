@@ -36,7 +36,8 @@ class TestTimeout(tservers.DaemonTests):
         # increase test performance
         # This is a bodge - we have some platform difference that causes
         # different exceptions to be raised here.
-        tutils.raises(Exception, self.pathoc, ["get:/:p1,1"])
+        with pytest.raises(Exception):
+            self.pathoc(["get:/:p1,1"])
         assert self.d.last_log()["type"] == "timeout"
 
 
@@ -133,7 +134,8 @@ class CommonTests(tservers.DaemonTests):
         assert len(self.d.log()) == 0
 
     def test_disconnect(self):
-        tutils.raises("unexpected eof", self.get, "202:b@100k:d200")
+        with pytest.raises("unexpected eof"):
+            self.get("202:b@100k:d200")
 
     def test_parserr(self):
         rsp = self.get("400:msg,b:")
@@ -160,17 +162,15 @@ class CommonTests(tservers.DaemonTests):
             assert "foo" in l["msg"]
 
     def test_invalid_content_length(self):
-        tutils.raises(
-            exceptions.HttpException,
-            self.pathoc,
-            ["get:/:h'content-length'='foo'"]
-        )
+        with pytest.raises(exceptions.HttpException):
+            self.pathoc(["get:/:h'content-length'='foo'"])
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "Unparseable Content Length" in l["msg"]
 
     def test_invalid_headers(self):
-        tutils.raises(exceptions.HttpException, self.pathoc, ["get:/:h'\t'='foo'"])
+        with pytest.raises(exceptions.HttpException):
+            self.pathoc(["get:/:h'\t'='foo'"])
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "Invalid headers" in l["msg"]
@@ -228,12 +228,8 @@ class TestDaemon(CommonTests):
         assert r[0].status_code == 202
 
     def test_connect_err(self):
-        tutils.raises(
-            exceptions.HttpException,
-            self.pathoc,
-            [r"get:'http://foo.com/p/202':da"],
-            connect_to=("localhost", self.d.port)
-        )
+        with pytest.raises(exceptions.HttpException):
+            self.pathoc([r"get:'http://foo.com/p/202':da"], connect_to=("localhost", self.d.port))
 
 
 class TestDaemonSSL(CommonTests):
@@ -245,7 +241,8 @@ class TestDaemonSSL(CommonTests):
         c.wbufsize = 0
         with c.connect():
             c.wfile.write(b"\0\0\0\0")
-            tutils.raises(exceptions.TlsException, c.convert_to_ssl)
+            with pytest.raises(exceptions.TlsException):
+                c.convert_to_ssl()
             l = self.d.last_log()
             assert l["type"] == "error"
             assert "SSL" in l["msg"]

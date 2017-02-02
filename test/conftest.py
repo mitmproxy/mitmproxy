@@ -1,6 +1,7 @@
 import os
 import pytest
 import OpenSSL
+import functools
 
 import mitmproxy.net.tcp
 
@@ -8,6 +9,53 @@ import mitmproxy.net.tcp
 requires_alpn = pytest.mark.skipif(
     not mitmproxy.net.tcp.HAS_ALPN,
     reason='requires OpenSSL with ALPN support')
+
+skip_windows = pytest.mark.skipif(
+    os.name == "nt",
+    reason='Skipping due to Windows'
+)
+
+skip_not_windows = pytest.mark.skipif(
+    os.name != "nt",
+    reason='Skipping due to not Windows'
+)
+
+skip_appveyor = pytest.mark.skipif(
+    "APPVEYOR" in os.environ,
+    reason='Skipping due to Appveyor'
+)
+
+
+original_pytest_raises = pytest.raises
+
+
+def raises(exc, *args, **kwargs):
+    functools.wraps(original_pytest_raises)
+    if isinstance(exc, str):
+        return RaisesContext(exc)
+    else:
+        return original_pytest_raises(exc, *args, **kwargs)
+
+
+pytest.raises = raises
+
+
+class RaisesContext:
+    def __init__(self, expected_exception):
+        self.expected_exception = expected_exception
+
+    def __enter__(self):
+        return
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not exc_type:
+            raise AssertionError("No exception raised.")
+        else:
+            if self.expected_exception.lower() not in str(exc_val).lower():
+                raise AssertionError(
+                    "Expected %s, but caught %s" % (repr(self.expected_exception), repr(exc_val))
+                )
+        return True
 
 
 @pytest.fixture()
@@ -68,7 +116,7 @@ def pytest_runtestloop(session):
     prefix = os.getcwd()
     excluded_files = [os.path.normpath(f) for f in pytest.config.option.no_full_cov]
     measured_files = [os.path.normpath(os.path.relpath(f, prefix)) for f in cov.get_data().measured_files()]
-    measured_files = [f for f in measured_files if f not in excluded_files]
+    measured_files = [f for f in measured_files if not any(f.startswith(excluded_f) for excluded_f in excluded_files)]
 
     for name in pytest.config.option.full_cov:
         files = [f for f in measured_files if f.startswith(os.path.normpath(name))]

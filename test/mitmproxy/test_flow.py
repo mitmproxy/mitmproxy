@@ -1,7 +1,7 @@
-from mitmproxy.test import tflow
 import io
+import pytest
 
-from mitmproxy.test import tutils
+from mitmproxy.test import tflow
 from mitmproxy.net.http import Headers
 import mitmproxy.io
 from mitmproxy import flowfilter, options
@@ -54,7 +54,8 @@ class TestHTTPFlow:
         f = tflow.tflow(err=True)
         assert flowfilter.match("~e", f)
 
-        tutils.raises(ValueError, flowfilter.match, "~", f)
+        with pytest.raises(ValueError):
+            flowfilter.match("~", f)
 
     def test_backup(self):
         f = tflow.tflow()
@@ -166,7 +167,8 @@ class TestTCPFlow:
         f = tflow.ttcpflow(err=True)
         assert flowfilter.match("~e", f)
 
-        tutils.raises(ValueError, flowfilter.match, "~", f)
+        with pytest.raises(ValueError):
+            flowfilter.match("~", f)
 
 
 class TestSerialize:
@@ -249,7 +251,8 @@ class TestSerialize:
         sio.write(b"bogus")
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        tutils.raises(FlowReadException, list, r.stream())
+        with pytest.raises(FlowReadException):
+            list(r.stream())
 
         f = FlowReadException("foo")
         assert str(f) == "foo"
@@ -263,7 +266,8 @@ class TestSerialize:
         sio.seek(0)
 
         r = mitmproxy.io.FlowReader(sio)
-        tutils.raises("version", list, r.stream())
+        with pytest.raises("version"):
+            list(r.stream())
 
 
 class TestFlowMaster:
@@ -272,13 +276,16 @@ class TestFlowMaster:
         fm = master.Master(None, DummyServer())
         f = tflow.tflow(resp=True)
         f.request.content = None
-        tutils.raises("missing", fm.replay_request, f)
+        with pytest.raises("missing"):
+            fm.replay_request(f)
 
         f.intercepted = True
-        tutils.raises("intercepted", fm.replay_request, f)
+        with pytest.raises("intercepted"):
+            fm.replay_request(f)
 
         f.live = True
-        tutils.raises("live", fm.replay_request, f)
+        with pytest.raises("live"):
+            fm.replay_request(f)
 
     def test_create_flow(self):
         fm = master.Master(None, DummyServer())
@@ -313,7 +320,8 @@ class TestRequest:
         r = f.request
         u = r.url
         r.url = u
-        tutils.raises(ValueError, setattr, r, "url", "")
+        with pytest.raises(ValueError):
+            setattr(r, "url", "")
         assert r.url == u
         r2 = r.copy()
         assert r.get_state() == r2.get_state()

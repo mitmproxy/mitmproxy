@@ -197,14 +197,15 @@ class TestSSLv3Only(tservers.ServerTestBase):
     def test_failure(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises(exceptions.TlsException, c.convert_to_ssl, sni="foo.com")
+            with pytest.raises(exceptions.TlsException):
+                c.convert_to_ssl(sni="foo.com")
 
 
 class TestInvalidTrustFile(tservers.ServerTestBase):
     def test_invalid_trust_file_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            with tutils.raises(exceptions.TlsException):
+            with pytest.raises(exceptions.TlsException):
                 c.convert_to_ssl(
                     sni="example.mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
@@ -250,7 +251,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
     def test_mode_strict_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            with tutils.raises(exceptions.InvalidCertificateException):
+            with pytest.raises(exceptions.InvalidCertificateException):
                 c.convert_to_ssl(
                     sni="example.mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
@@ -275,7 +276,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
     def test_should_fail_without_sni(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            with tutils.raises(exceptions.TlsException):
+            with pytest.raises(exceptions.TlsException):
                 c.convert_to_ssl(
                     verify_options=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
@@ -284,7 +285,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
     def test_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            with tutils.raises(exceptions.InvalidCertificateException):
+            with pytest.raises(exceptions.InvalidCertificateException):
                 c.convert_to_ssl(
                     sni="mitmproxy.org",
                     verify_options=SSL.VERIFY_PEER,
@@ -361,11 +362,8 @@ class TestSSLClientCert(tservers.ServerTestBase):
     def test_clientcert_err(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises(
-                exceptions.TlsException,
-                c.convert_to_ssl,
-                cert=tutils.test_data.path("mitmproxy/net/data/clientcert/make")
-            )
+            with pytest.raises(exceptions.TlsException):
+                c.convert_to_ssl(cert=tutils.test_data.path("mitmproxy/net/data/clientcert/make"))
 
 
 class TestSNI(tservers.ServerTestBase):
@@ -432,7 +430,8 @@ class TestServerCipherListError(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises("handshake error", c.convert_to_ssl, sni="foo.com")
+            with pytest.raises("handshake error"):
+                c.convert_to_ssl(sni="foo.com")
 
 
 class TestClientCipherListError(tservers.ServerTestBase):
@@ -444,12 +443,8 @@ class TestClientCipherListError(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises(
-                "cipher specification",
-                c.convert_to_ssl,
-                sni="foo.com",
-                cipher_list="bogus"
-            )
+            with pytest.raises("cipher specification"):
+                c.convert_to_ssl(sni="foo.com", cipher_list="bogus")
 
 
 class TestSSLDisconnect(tservers.ServerTestBase):
@@ -468,8 +463,10 @@ class TestSSLDisconnect(tservers.ServerTestBase):
             # Excercise SSL.ZeroReturnError
             c.rfile.read(10)
             c.close()
-            tutils.raises(exceptions.TcpDisconnect, c.wfile.write, b"foo")
-            tutils.raises(queue.Empty, self.q.get_nowait)
+            with pytest.raises(exceptions.TcpDisconnect):
+                c.wfile.write(b"foo")
+            with pytest.raises(queue.Empty):
+                self.q.get_nowait()
 
 
 class TestSSLHardDisconnect(tservers.ServerTestBase):
@@ -483,7 +480,8 @@ class TestSSLHardDisconnect(tservers.ServerTestBase):
             # Exercise SSL.SysCallError
             c.rfile.read(10)
             c.close()
-            tutils.raises(exceptions.TcpDisconnect, c.wfile.write, b"foo")
+            with pytest.raises(exceptions.TcpDisconnect):
+                c.wfile.write(b"foo")
 
 
 class TestDisconnect(tservers.ServerTestBase):
@@ -524,7 +522,8 @@ class TestTimeOut(tservers.ServerTestBase):
         with c.connect():
             c.settimeout(0.1)
             assert c.gettimeout() == 0.1
-            tutils.raises(exceptions.TcpTimeout, c.rfile.read, 10)
+            with pytest.raises(exceptions.TcpTimeout):
+                c.rfile.read(10)
 
 
 class TestCryptographyALPN:
@@ -583,7 +582,8 @@ class TestSSLTimeOut(tservers.ServerTestBase):
         with c.connect():
             c.convert_to_ssl()
             c.settimeout(0.1)
-            tutils.raises(exceptions.TcpTimeout, c.rfile.read, 10)
+            with pytest.raises(exceptions.TcpTimeout):
+                c.rfile.read(10)
 
 
 class TestDHParams(tservers.ServerTestBase):
@@ -613,7 +613,8 @@ class TestTCPClient:
 
     def test_conerr(self):
         c = tcp.TCPClient(("127.0.0.1", 0))
-        tutils.raises(exceptions.TcpException, c.connect)
+        with pytest.raises(exceptions.TcpException):
+            c.connect()
 
 
 class TestFileLike:
@@ -664,7 +665,8 @@ class TestFileLike:
         s.read(1)
         assert s.get_log() == b"o"
         s.stop_log()
-        tutils.raises(ValueError, s.get_log)
+        with pytest.raises(ValueError):
+            s.get_log()
 
     def test_writelog(self):
         s = BytesIO()
@@ -682,7 +684,8 @@ class TestFileLike:
         o = mock.MagicMock()
         o.flush = mock.MagicMock(side_effect=socket.error)
         s.o = o
-        tutils.raises(exceptions.TcpDisconnect, s.flush)
+        with pytest.raises(exceptions.TcpDisconnect):
+            s.flush()
 
     def test_reader_read_error(self):
         s = BytesIO(b"foobar\nfoobar")
@@ -690,7 +693,8 @@ class TestFileLike:
         o = mock.MagicMock()
         o.read = mock.MagicMock(side_effect=socket.error)
         s.o = o
-        tutils.raises(exceptions.TcpDisconnect, s.read, 10)
+        with pytest.raises(exceptions.TcpDisconnect):
+            s.read(10)
 
     def test_reset_timestamps(self):
         s = BytesIO(b"foobar\nfoobar")
@@ -721,24 +725,28 @@ class TestFileLike:
         s = mock.MagicMock()
         s.read = mock.MagicMock(side_effect=SSL.Error())
         s = tcp.Reader(s)
-        tutils.raises(exceptions.TlsException, s.read, 1)
+        with pytest.raises(exceptions.TlsException):
+            s.read(1)
 
     def test_read_syscall_ssl_error(self):
         s = mock.MagicMock()
         s.read = mock.MagicMock(side_effect=SSL.SysCallError())
         s = tcp.Reader(s)
-        tutils.raises(exceptions.TlsException, s.read, 1)
+        with pytest.raises(exceptions.TlsException):
+            s.read(1)
 
     def test_reader_readline_disconnect(self):
         o = mock.MagicMock()
         o.read = mock.MagicMock(side_effect=socket.error)
         s = tcp.Reader(o)
-        tutils.raises(exceptions.TcpDisconnect, s.readline, 10)
+        with pytest.raises(exceptions.TcpDisconnect):
+            s.readline(10)
 
     def test_reader_incomplete_error(self):
         s = BytesIO(b"foobar")
         s = tcp.Reader(s)
-        tutils.raises(exceptions.TcpReadIncomplete, s.safe_read, 10)
+        with pytest.raises(exceptions.TcpReadIncomplete):
+            s.safe_read(10)
 
 
 class TestPeek(tservers.ServerTestBase):
@@ -759,7 +767,7 @@ class TestPeek(tservers.ServerTestBase):
             assert c.rfile.readline() == testval
 
             c.close()
-            with tutils.raises(exceptions.NetlibException):
+            with pytest.raises(exceptions.NetlibException):
                 if c.rfile.peek(1) == b"":
                     # Workaround for Python 2 on Unix:
                     # Peeking a closed connection does not raise an exception here.
@@ -830,8 +838,5 @@ class TestSSLInvalidMethod(tservers.ServerTestBase):
         fake_ssl_method = 100500
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            tutils.raises(
-                exceptions.TlsException,
-                c.convert_to_ssl,
-                method=fake_ssl_method
-            )
+            with pytest.raises(exceptions.TlsException):
+                c.convert_to_ssl(method=fake_ssl_method)
