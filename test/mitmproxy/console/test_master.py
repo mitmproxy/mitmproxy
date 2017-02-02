@@ -40,7 +40,7 @@ class TestMaster(mastertest.MasterTest):
         m = self.mkmaster()
         f = tflow.tflow(resp=True)
         m.run_script_once("nonexistent", [f])
-        assert "Input error" in str(m.logbuffer[0])
+        assert any("Input error" in str(l) for l in m.logbuffer)
 
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
