@@ -53,7 +53,11 @@ class Png(KaitaiStruct):
             self.len = self._io.read_u4be()
             self.type = self._io.read_str_byte_limit(4, "UTF-8")
             _on = self.type
-            if _on == u"gAMA":
+            if _on == u"iTXt":
+                self._raw_body = self._io.read_bytes(self.len)
+                io = KaitaiStream(BytesIO(self._raw_body))
+                self.body = self._root.InternationalTextChunk(io, self, self._root)
+            elif _on == u"gAMA":
                 self._raw_body = self._io.read_bytes(self.len)
                 io = KaitaiStream(BytesIO(self._raw_body))
                 self.body = self._root.GamaChunk(io, self, self._root)
@@ -85,6 +89,10 @@ class Png(KaitaiStruct):
                 self._raw_body = self._io.read_bytes(self.len)
                 io = KaitaiStream(BytesIO(self._raw_body))
                 self.body = self._root.SrgbChunk(io, self, self._root)
+            elif _on == u"zTXt":
+                self._raw_body = self._io.read_bytes(self.len)
+                io = KaitaiStream(BytesIO(self._raw_body))
+                self.body = self._root.CompressedTextChunk(io, self, self._root)
             else:
                 self.body = self._io.read_bytes(self.len)
             self.crc = self._io.read_bytes(4)
@@ -181,6 +189,17 @@ class Png(KaitaiStruct):
             self.render_intent = self._root.Intent(self._io.read_u1())
 
 
+    class CompressedTextChunk(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self.keyword = self._io.read_strz("UTF-8", 0, False, True, True)
+            self.compression_method = self._io.read_u1()
+            self._raw_text_datastream = self._io.read_bytes_full()
+            self.text_datastream = zlib.decompress(self._raw_text_datastream)
+
+
     class BkgdTruecolor(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -233,6 +252,19 @@ class Png(KaitaiStruct):
             self.pixels_per_unit_x = self._io.read_u4be()
             self.pixels_per_unit_y = self._io.read_u4be()
             self.unit = self._root.PhysUnit(self._io.read_u1())
+
+
+    class InternationalTextChunk(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self.keyword = self._io.read_strz("UTF-8", 0, False, True, True)
+            self.compression_flag = self._io.read_u1()
+            self.compression_method = self._io.read_u1()
+            self.language_tag = self._io.read_strz("iso8859-1", 0, False, True, True)
+            self.translated_keyword = self._io.read_strz("UTF-8", 0, False, True, True)
+            self.text = self._io.read_str_eos("UTF-8")
 
 
     class TextChunk(KaitaiStruct):

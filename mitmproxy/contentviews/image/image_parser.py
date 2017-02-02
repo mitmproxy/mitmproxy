@@ -19,4 +19,8 @@ def parse_png(data: bytes) -> Metadata:
             parts.append(tuple(['aspect', str(aspectx) + " x " + str(aspecty)]))
         elif chunk.type == 'tEXt':
             parts.append(tuple([chunk.body.keyword, chunk.body.text]))
+        elif chunk.type == 'iTXt':
+            parts.append(tuple([chunk.body.keyword, chunk.body.text]))
+        elif chunk.type == 'zTXt':
+            parts.append(tuple([chunk.body.keyword, chunk.body.text_datastream.decode('iso8859-1')]))
     return parts
