@@ -295,13 +295,16 @@ class TestFlowMaster:
         fm = master.Master(None, DummyServer())
         f = tflow.tflow(resp=True)
         f.request.content = None
-        tutils.raises("missing", fm.new_request, f.request.method, f)
+        with pytest.raises("missing"):
+            fm.new_request(f.request.method, f)
 
         f.intercepted = True
-        tutils.raises("intercepted", fm.new_request, f.request.method, f)
+        with pytest.raises("intercepted"):
+            fm.new_request(f.request.method, f)
 
         f.live = True
-        tutils.raises("live", fm.new_request, f.request.method, f)
+        with pytest.raises("live"):
+            fm.new_request(f.request.method, f)
 
     def test_all(self):
         s = tservers.TestState()
