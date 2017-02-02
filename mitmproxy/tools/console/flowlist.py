@@ -396,7 +396,7 @@ class FlowListBox(urwid.ListBox):
             )
         elif key == "F":
             o = self.master.options
-            o.focus_follow = not o.focus_follow
+            o.console_focus_follow = not o.console_focus_follow
         elif key == "v":
             val = not self.master.options.console_order_reversed
             self.master.options.console_order_reversed = val
