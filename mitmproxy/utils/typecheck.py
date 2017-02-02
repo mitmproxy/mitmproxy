@@ -58,6 +58,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         except AttributeError:
             # Python 3.5.0
             T = typeinfo.__parameters__[0]
+
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:

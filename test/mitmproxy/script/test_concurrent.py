@@ -8,7 +8,6 @@ from mitmproxy.addons import script
 import time
 
 from test.mitmproxy import mastertest
-from test.mitmproxy import tutils as ttutils
 
 
 class Thing:
@@ -18,7 +17,6 @@ class Thing:
 
 
 class TestConcurrent(mastertest.MasterTest):
-    @ttutils.skip_appveyor
     def test_concurrent(self):
         with taddons.context() as tctx:
             sc = script.Script(
