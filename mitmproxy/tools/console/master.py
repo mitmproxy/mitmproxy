@@ -20,7 +20,6 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy.addons import view
 from mitmproxy.addons import intercept
-import mitmproxy.options
 from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
