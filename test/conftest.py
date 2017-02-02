@@ -116,7 +116,7 @@ def pytest_runtestloop(session):
     prefix = os.getcwd()
     excluded_files = [os.path.normpath(f) for f in pytest.config.option.no_full_cov]
     measured_files = [os.path.normpath(os.path.relpath(f, prefix)) for f in cov.get_data().measured_files()]
-    measured_files = [f for f in measured_files if f not in excluded_files]
+    measured_files = [f for f in measured_files if not any(f.startswith(excluded_f) for excluded_f in excluded_files)]
 
     for name in pytest.config.option.full_cov:
         files = [f for f in measured_files if f.startswith(os.path.normpath(name))]
