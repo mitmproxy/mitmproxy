@@ -230,6 +230,17 @@ class View(collections.Sequence):
         self.sig_view_refresh.send(self)
         self.sig_store_refresh.send(self)
 
+    def clear_not_marked(self):
+        """
+            Clears only the unmarked flows.
+        """
+        for flow in self._store.copy().values():
+            if not flow.marked:
+                self._store.pop(flow.id)
+
+        self._refilter()
+        self.sig_store_refresh.send(self)
+
     def add(self, f: mitmproxy.flow.Flow) -> bool:
         """
             Adds a flow to the state. If the flow already exists, it is

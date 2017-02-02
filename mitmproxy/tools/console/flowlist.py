@@ -35,6 +35,7 @@ def _mkhelp():
         ("W", "stream flows to file"),
         ("X", "kill and delete flow, even if it's mid-intercept"),
         ("z", "clear flow list or eventlog"),
+        ("Z", "clear unmarked flows"),
         ("tab", "tab between eventlog and flow list"),
         ("enter", "view flow"),
         ("|", "run script on this flow"),
@@ -354,6 +355,8 @@ class FlowListBox(urwid.ListBox):
                     self.master.view.update(f)
         elif key == "z":
             self.master.view.clear()
+        elif key == "Z":
+            self.master.view.clear_not_marked()
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "g":
