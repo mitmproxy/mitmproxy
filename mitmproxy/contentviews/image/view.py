@@ -23,8 +23,8 @@ class ViewImage(base.View):
 
     def __call__(self, data, **metadata):
         if imghdr.what('', h=data) == 'png':
-            f, parts = image_parser.get_png(io.BytesIO(data))
-            parts = image_parser.format_contentviews(parts)
+            f = "PNG"
+            parts = image_parser.parse_png(io.BytesIO(data))
             fmt = base.format_dict(multidict.MultiDict(parts))
             return "%s image" % f, fmt
         try:

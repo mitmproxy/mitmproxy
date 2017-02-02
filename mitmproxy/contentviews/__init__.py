@@ -23,9 +23,8 @@ from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, html_outline, wbxml, javascript, css,
-    urlencoded, multipart, query, protobuf
+    urlencoded, multipart, image, query, protobuf
 )
-from .image import pillow
 from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict
 
 views = []  # type: List[View]
@@ -171,7 +170,7 @@ add(javascript.ViewJavaScript())
 add(css.ViewCSS())
 add(urlencoded.ViewURLEncoded())
 add(multipart.ViewMultipart())
-add(pillow.ViewImage())
+add(image.ViewImage())
 add(query.ViewQuery())
 
 if protobuf.ViewProtobuf.is_available():
