@@ -291,6 +291,18 @@ class TestFlowMaster:
         fm = master.Master(None, DummyServer())
         assert fm.create_request("GET", "http", "example.com", 80, "/")
 
+    def test_new_request(self):
+        fm = master.Master(None, DummyServer())
+        f = tflow.tflow(resp=True)
+        f.request.content = None
+        tutils.raises("missing", fm.new_request, f.request.method, f)
+
+        f.intercepted = True
+        tutils.raises("intercepted", fm.new_request, f.request.method, f)
+
+        f.live = True
+        tutils.raises("live", fm.new_request, f.request.method, f)
+
     def test_all(self):
         s = tservers.TestState()
         fm = master.Master(None, DummyServer())
