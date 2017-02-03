@@ -503,6 +503,7 @@ class TestSocks5(tservers.SocksModeTest):
             f = p.request("get:/p/200")
         assert f.status_code == 502
         assert b"SOCKS5 mode failure" in f.content
+        assert b"Invalid SOCKS version. Expected 0x05, got 0x47" in f.content
 
     def test_no_connect(self):
         """
@@ -526,6 +527,27 @@ class TestSocks5(tservers.SocksModeTest):
             f = p.request("get:/p/200")  # the request doesn't matter, error response from handshake will be read anyway.
         assert f.status_code == 502
         assert b"SOCKS5 mode failure" in f.content
+        assert b"mitmproxy only supports SOCKS5 CONNECT" in f.content
+
+    def test_with_authentication(self):
+        p = self.pathoc()
+        with p.connect():
+            socks.ClientGreeting(
+                socks.VERSION.SOCKS5,
+                [socks.METHOD.USERNAME_PASSWORD]
+            ).to_file(p.wfile)
+            socks.Message(
+                socks.VERSION.SOCKS5,
+                socks.CMD.BIND,
+                socks.ATYP.DOMAINNAME,
+                ("example.com", 8080)
+            ).to_file(p.wfile)
+
+            p.wfile.flush()
+            f = p.request("get:/p/200")  # the request doesn't matter, error response from handshake will be read anyway.
+        assert f.status_code == 502
+        assert b"SOCKS5 mode failure" in f.content
+        assert b"mitmproxy only supports SOCKS without authentication" in f.content
 
 
 class TestSocks5SSL(tservers.SocksModeTest):
