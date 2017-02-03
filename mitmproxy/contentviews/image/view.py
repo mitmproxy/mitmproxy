@@ -1,10 +1,13 @@
 import io
+import imghdr
 
 from PIL import ExifTags
 from PIL import Image
 
 from mitmproxy.types import multidict
-from . import base
+from . import image_parser
+
+from mitmproxy.contentviews import base
 
 
 class ViewImage(base.View):
@@ -19,6 +22,11 @@ class ViewImage(base.View):
     ]
 
     def __call__(self, data, **metadata):
+        if imghdr.what('', h=data) == 'png':
+            f = "PNG"
+            parts = image_parser.parse_png(data)
+            fmt = base.format_dict(multidict.MultiDict(parts))
+            return "%s image" % f, fmt
         try:
             img = Image.open(io.BytesIO(data))
         except IOError:
