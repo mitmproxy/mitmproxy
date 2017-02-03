@@ -30,7 +30,7 @@ class Socks5Proxy(protocol.Layer, protocol.ServerConnectionMixin):
             if connect_request.msg != socks.CMD.CONNECT:
                 raise socks.SocksError(
                     socks.REP.COMMAND_NOT_SUPPORTED,
-                    "mitmproxy only supports SOCKS5 CONNECT."
+                    "mitmproxy only supports SOCKS5 CONNECT"
                 )
 
             # We always connect lazily, but we need to pretend to the client that we connected.
