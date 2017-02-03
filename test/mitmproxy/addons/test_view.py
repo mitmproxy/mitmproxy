@@ -108,6 +108,13 @@ def test_simple():
     assert list(v) == [f, f3, f2]
     assert len(v._store) == 3
 
+    f.marked = not f.marked
+    f2.marked = not f2.marked
+    v.clear_not_marked()
+    assert list(v) == [f, f2]
+    assert len(v) == 2
+    assert len(v._store) == 2
+
     v.clear()
     assert len(v) == 0
     assert len(v._store) == 0
