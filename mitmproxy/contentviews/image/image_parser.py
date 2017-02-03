@@ -1,3 +1,4 @@
+import io
 import typing
 
 from kaitaistruct import KaitaiStream
@@ -6,8 +7,9 @@ from mitmproxy.contrib.kaitaistruct import png
 
 Metadata = typing.List[typing.Tuple[str, str]]
 
+
 def parse_png(data: bytes) -> Metadata:
-    img = png.Png(KaitaiStream(data))
+    img = png.Png(KaitaiStream(io.BytesIO(data)))
     parts = [
         ('Format', 'Portable network graphics')
     ]

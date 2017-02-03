@@ -1,9 +1,8 @@
-import io
-
 import pytest
 
 from mitmproxy.contentviews.image import image_parser
 from mitmproxy.test import tutils
+
 
 @pytest.mark.parametrize("filename, metadata", {
     # no textual data
@@ -20,7 +19,12 @@ from mitmproxy.test import tutils
         ('Title', 'PngSuite'),
         ('Author', 'Willem A.J. van Schaik\n(willem@schaik.com)'),
         ('Copyright', 'Copyright Willem van Schaik, Singapore 1995-96'),
-        ('Description', 'A compilation of a set of images created to test the\nvarious color-types of the PNG format. Included are\nblack&white, color, paletted, with alpha channel, with\ntransparency formats. All bit-depths allowed according\nto the spec are present.'), ('Software', 'Created on a NeXTstation color using "pnmtopng".'), ('Disclaimer', 'Freeware.')
+        ('Description', 'A compilation of a set of images created to test the\n'
+         'various color-types of the PNG format. Included are\nblack&white, color,'
+         ' paletted, with alpha channel, with\ntransparency formats. All bit-depths'
+         ' allowed according\nto the spec are present.'),
+        ('Software', 'Created on a NeXTstation color using "pnmtopng".'),
+        ('Disclaimer', 'Freeware.')
     ],
     # with compressed textual data
     "mitmproxy/data/png_parser/ctzn0g04.png": [
@@ -30,7 +34,12 @@ from mitmproxy.test import tutils
         ('Title', 'PngSuite'),
         ('Author', 'Willem A.J. van Schaik\n(willem@schaik.com)'),
         ('Copyright', 'Copyright Willem van Schaik, Singapore 1995-96'),
-        ('Description', 'A compilation of a set of images created to test the\nvarious color-types of the PNG format. Included are\nblack&white, color, paletted, with alpha channel, with\ntransparency formats. All bit-depths allowed according\nto the spec are present.'), ('Software', 'Created on a NeXTstation color using "pnmtopng".'), ('Disclaimer', 'Freeware.')
+        ('Description', 'A compilation of a set of images created to test the\n'
+         'various color-types of the PNG format. Included are\nblack&white, color,'
+         ' paletted, with alpha channel, with\ntransparency formats. All bit-depths'
+         ' allowed according\nto the spec are present.'),
+        ('Software', 'Created on a NeXTstation color using "pnmtopng".'),
+        ('Disclaimer', 'Freeware.')
     ],
     # UTF-8 international text - english
     "mitmproxy/data/png_parser/cten0g04.png": [
@@ -40,7 +49,12 @@ from mitmproxy.test import tutils
         ('Title', 'PngSuite'),
         ('Author', 'Willem van Schaik (willem@schaik.com)'),
         ('Copyright', 'Copyright Willem van Schaik, Canada 2011'),
-        ('Description', 'A compilation of a set of images created to test the various color-types of the PNG format. Included are black&white, color, paletted, with alpha channel, with transparency formats. All bit-depths allowed according to the spec are present.'), ('Software', 'Created on a NeXTstation color using "pnmtopng".'), ('Disclaimer', 'Freeware.')
+        ('Description', 'A compilation of a set of images created to test the '
+         'various color-types of the PNG format. Included are black&white, color,'
+         ' paletted, with alpha channel, with transparency formats. All bit-depths'
+         ' allowed according to the spec are present.'),
+        ('Software', 'Created on a NeXTstation color using "pnmtopng".'),
+        ('Disclaimer', 'Freeware.')
     ],
     # check gamma value
     "mitmproxy/data/png_parser/g07n0g16.png": [
@@ -59,4 +73,4 @@ from mitmproxy.test import tutils
 }.items())
 def test_parse_png(filename, metadata):
     with open(tutils.test_data.path(filename), "rb") as f:
-         assert metadata == image_parser.parse_png(io.BytesIO(f.read()))
+        assert metadata == image_parser.parse_png(f.read())

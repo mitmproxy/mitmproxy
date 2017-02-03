@@ -1,4 +1,5 @@
-import io, imghdr
+import io
+import imghdr
 
 from PIL import ExifTags
 from PIL import Image
@@ -7,7 +8,6 @@ from mitmproxy.types import multidict
 from . import image_parser
 
 from mitmproxy.contentviews import base
-from kaitaistruct import KaitaiStream
 
 
 class ViewImage(base.View):
@@ -24,7 +24,7 @@ class ViewImage(base.View):
     def __call__(self, data, **metadata):
         if imghdr.what('', h=data) == 'png':
             f = "PNG"
-            parts = image_parser.parse_png(io.BytesIO(data))
+            parts = image_parser.parse_png(data)
             fmt = base.format_dict(multidict.MultiDict(parts))
             return "%s image" % f, fmt
         try:

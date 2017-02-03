@@ -1,1 +1,1 @@
-from .view import ViewImage
+from .view import ViewImage  # noqa

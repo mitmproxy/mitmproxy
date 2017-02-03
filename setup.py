@@ -71,7 +71,7 @@ setup(
         "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=4.0.1, <5",
         "jsbeautifier>=1.6.3, <1.7",
-        "kaitaistruct>=0.5",
+        "kaitaistruct>=0.5, <0.6",
         "Pillow>=3.2, <4.1",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.2",
