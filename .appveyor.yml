@@ -44,12 +44,12 @@ test_script:
         if (!(Test-Path "C:\projects\mitmproxy\release\installbuilder-installer.exe")) {
           "Download InstallBuilder..."
           (New-Object System.Net.WebClient).DownloadFile(
-            "https://installbuilder.bitrock.com/installbuilder-enterprise-16.11.1-windows-installer.exe",
+            "https://installbuilder.bitrock.com/installbuilder-enterprise-17.1.0-windows-installer.exe",
             "C:\projects\mitmproxy\release\installbuilder-installer.exe"
           )
         }
         Start-Process "C:\projects\mitmproxy\release\installbuilder-installer.exe" "--mode unattended --unattendedmodeui none" -Wait
-        & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 16.11.1\bin\builder-cli.exe' `
+        & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 17.1.0\bin\builder-cli.exe' `
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
