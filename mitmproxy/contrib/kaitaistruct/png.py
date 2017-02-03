@@ -1,5 +1,5 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
-# The source was png.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/tree/master/image
+# The source was png.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/blob/9370c720b7d2ad329102d89bdc880ba6a706ef26/image/png.ksy
 
 import array
 import struct
@@ -262,7 +262,7 @@ class Png(KaitaiStruct):
             self.keyword = self._io.read_strz("UTF-8", 0, False, True, True)
             self.compression_flag = self._io.read_u1()
             self.compression_method = self._io.read_u1()
-            self.language_tag = self._io.read_strz("iso8859-1", 0, False, True, True)
+            self.language_tag = self._io.read_strz("ASCII", 0, False, True, True)
             self.translated_keyword = self._io.read_strz("UTF-8", 0, False, True, True)
             self.text = self._io.read_str_eos("UTF-8")
 
