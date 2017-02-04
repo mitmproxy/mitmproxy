@@ -74,16 +74,6 @@ class Layer(_LayerCodeCompletion):
         """
         return getattr(self.ctx, name)
 
-    @property
-    def layers(self):
-        """
-        List of all layers, including the current layer (``[self, self.ctx, self.ctx.ctx, ...]``)
-        """
-        return [self] + self.ctx.layers
-
-    def __repr__(self):
-        return type(self).__name__
-
 
 class ServerConnectionMixin:
 

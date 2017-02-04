@@ -110,10 +110,3 @@ class RootContext:
             full_msg.append("  -> " + i)
         full_msg = "\n".join(full_msg)
         self.channel.tell("log", log.LogEntry(full_msg, level))
-
-    @property
-    def layers(self):
-        return []
-
-    def __repr__(self):
-        return "RootContext"

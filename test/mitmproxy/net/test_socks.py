@@ -179,6 +179,13 @@ def test_message_ipv6():
     assert msg.addr.host == ipv6_addr
 
 
+def test_message_invalid_host():
+    raw = tutils.treader(b"\xEE\x01\x00\x03\x0bexample@com\xDE\xAD\xBE\xEF")
+    with pytest.raises(socks.SocksError) as exc_info:
+        socks.Message.from_file(raw)
+    assert exc_info.match("Invalid hostname: b'example@com'")
+
+
 def test_message_invalid_rsv():
     raw = tutils.treader(b"\x05\x01\xFF\x01\x7f\x00\x00\x01\xDE\xAD\xBE\xEF")
     with pytest.raises(socks.SocksError):
