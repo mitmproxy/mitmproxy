@@ -102,7 +102,7 @@ orders = [
 class View(collections.Sequence):
     def __init__(self):
         super().__init__()
-        self._store = {}
+        self._store = collections.OrderedDict()
         self.filter = matchall
         # Should we show only marked flows?
         self.show_marked = False
