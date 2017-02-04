@@ -251,8 +251,19 @@ class TestSerialize:
         sio.write(b"bogus")
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        with pytest.raises(FlowReadException):
+        with pytest.raises(FlowReadException) as exc_info:
             list(r.stream())
+        assert exc_info.match('Invalid data format')
+
+        sio = io.BytesIO()
+        f = tflow.tdummyflow()
+        w = mitmproxy.io.FlowWriter(sio)
+        w.add(f)
+        sio.seek(0)
+        r = mitmproxy.io.FlowReader(sio)
+        with pytest.raises(FlowReadException) as exc_info:
+            list(r.stream())
+        assert exc_info.match('Unknown flow type')
 
         f = FlowReadException("foo")
         assert str(f) == "foo"
