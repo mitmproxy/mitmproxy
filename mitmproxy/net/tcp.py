@@ -333,11 +333,11 @@ class Address(serializable.Serializable):
         return Address(**state)
 
     @classmethod
-    def wrap(cls, t):
+    def wrap(cls, t, **kw):
         if isinstance(t, cls):
             return t
         else:
-            return cls(t)
+            return cls(t, **kw)
 
     def __call__(self):
         return self.address
@@ -923,7 +923,7 @@ class TCPServer:
     request_queue_size = 20
 
     def __init__(self, address, use_ipv6=None):
-        self.address = Address(address, use_ipv6)
+        self.address = Address.wrap(address, use_ipv6=use_ipv6)
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
         self.socket = socket.socket(self.address.family, socket.SOCK_STREAM)
