@@ -6,6 +6,8 @@ import threading
 import time
 import traceback
 import binascii
+from ipaddress import ip_address, IPv6Address
+
 from ssl import match_hostname
 from ssl import CertificateError
 
@@ -306,9 +308,15 @@ class Address(serializable.Serializable):
         ipv6 information.
     """
 
-    def __init__(self, address, use_ipv6=False):
+    def __init__(self, address, use_ipv6=None):
         self.address = tuple(address)
-        self.use_ipv6 = use_ipv6
+        if use_ipv6 is None:
+            try:
+                self.use_ipv6 = isinstance(ip_address(address[0]), IPv6Address)
+            except ValueError:
+                self.use_ipv6 = False
+        else:
+            self.use_ipv6 = use_ipv6
 
     def get_state(self):
         return {
@@ -914,8 +922,8 @@ class Counter:
 class TCPServer:
     request_queue_size = 20
 
-    def __init__(self, address):
-        self.address = Address.wrap(address)
+    def __init__(self, address, use_ipv6=None):
+        self.address = Address(address, use_ipv6)
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
         self.socket = socket.socket(self.address.family, socket.SOCK_STREAM)
