@@ -2977,6 +2977,7 @@ function Footer(_ref) {
     var stream_large_bodies = settings.stream_large_bodies;
     var listen_host = settings.listen_host;
     var listen_port = settings.listen_port;
+    var version = settings.version;
 
     return _react2.default.createElement(
         'footer',
@@ -3056,6 +3057,18 @@ function Footer(_ref) {
                 listen_host || "*",
                 ':',
                 listen_port,
+                ']'
+            )
+        ),
+        _react2.default.createElement(
+            'div',
+            { className: 'pull-right' },
+            _react2.default.createElement(
+                'span',
+                { className: 'label label-warning', title: 'mitmweb Version Number' },
+                '[',
+                "version: ",
+                version,
                 ']'
             )
         )
