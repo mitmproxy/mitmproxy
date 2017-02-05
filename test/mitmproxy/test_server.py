@@ -536,13 +536,6 @@ class TestSocks5(tservers.SocksModeTest):
                 socks.VERSION.SOCKS5,
                 [socks.METHOD.USERNAME_PASSWORD]
             ).to_file(p.wfile)
-            socks.Message(
-                socks.VERSION.SOCKS5,
-                socks.CMD.BIND,
-                socks.ATYP.DOMAINNAME,
-                ("example.com", 8080)
-            ).to_file(p.wfile)
-
             p.wfile.flush()
             f = p.request("get:/p/200")  # the request doesn't matter, error response from handshake will be read anyway.
         assert f.status_code == 502
