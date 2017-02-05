@@ -21,16 +21,14 @@ def test_identity(encoder):
     'deflate',
 ])
 def test_encoders(encoder):
-    assert "" == encoding.decode("", encoder)
+    """
+        This test is for testing byte->byte encoding/decoding
+    """
+    assert encoding.decode(None, encoder) is None
+    assert encoding.encode(None, encoder) is None
+
     assert b"" == encoding.decode(b"", encoder)
 
-    assert "string" == encoding.decode(
-        encoding.encode(
-            "string",
-            encoder
-        ),
-        encoder
-    )
     assert b"string" == encoding.decode(
         encoding.encode(
             b"string",
@@ -39,8 +37,39 @@ def test_encoders(encoder):
         encoder
     )
 
+    with pytest.raises(TypeError):
+        encoding.encode("string", encoder)
+
+    with pytest.raises(TypeError):
+        encoding.decode("string", encoder)
     with pytest.raises(ValueError):
         encoding.decode(b"foobar", encoder)
+
+
+@pytest.mark.parametrize("encoder", [
+    'utf8',
+    'latin-1'
+])
+def test_encoders_strings(encoder):
+    """
+        This test is for testing byte->str decoding
+        and str->byte encoding
+    """
+    assert "" == encoding.decode(b"", encoder)
+
+    assert "string" == encoding.decode(
+        encoding.encode(
+            "string",
+            encoder
+        ),
+        encoder
+    )
+
+    with pytest.raises(TypeError):
+        encoding.encode(b"string", encoder)
+
+    with pytest.raises(TypeError):
+        encoding.decode("foobar", encoder)
 
 
 def test_cache():
