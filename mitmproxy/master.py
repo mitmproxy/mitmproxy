@@ -68,7 +68,10 @@ class Master:
             level: debug, info, warn, error
         """
         with self.handlecontext():
-            self.addons("log", log.LogEntry(e, level))
+            if isinstance(e, list):
+                self.addons("log", log.LogEntry(e[0], level))
+            else:
+                self.addons("log", log.LogEntry(e, level))
 
     def start(self):
         self.should_exit.clear()
