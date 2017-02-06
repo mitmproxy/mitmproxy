@@ -22,9 +22,15 @@ class ViewImage(base.View):
     ]
 
     def __call__(self, data, **metadata):
-        if imghdr.what('', h=data) == 'png':
+        image_type = imghdr.what('', h=data)
+        if image_type == 'png':
             f = "PNG"
             parts = image_parser.parse_png(data)
+            fmt = base.format_dict(multidict.MultiDict(parts))
+            return "%s image" % f, fmt
+        elif image_type == 'gif':
+            f = "GIF"
+            parts = image_parser.parse_gif(data)
             fmt = base.format_dict(multidict.MultiDict(parts))
             return "%s image" % f, fmt
         try:
