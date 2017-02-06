@@ -16,7 +16,7 @@ class TestStickyCookie:
     def test_config(self):
         sc = stickycookie.StickyCookie()
         with taddons.context() as tctx:
-            with pytest.raises("invalid filter"):
+            with pytest.raises(Exception, match="invalid filter"):
                 tctx.configure(sc, stickycookie="~b")
 
             tctx.configure(sc, stickycookie="foo")

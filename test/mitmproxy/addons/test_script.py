@@ -64,11 +64,11 @@ class TestParseCommand:
             script.parse_command("  ")
 
     def test_no_script_file(self):
-        with pytest.raises("not found"):
+        with pytest.raises(Exception, match="not found"):
             script.parse_command("notfound")
 
         with tutils.tmpdir() as dir:
-            with pytest.raises("not a file"):
+            with pytest.raises(Exception, match="Not a file"):
                 script.parse_command(dir)
 
     def test_parse_args(self):
@@ -204,7 +204,7 @@ class TestScriptLoader:
 
         f = tflow.tflow(resp=True)
         with m.handlecontext():
-            with pytest.raises("file not found"):
+            with pytest.raises(Exception, match="file not found"):
                 sl.run_once("nonexistent", [f])
 
     def test_simple(self):

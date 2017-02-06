@@ -430,7 +430,7 @@ class TestServerCipherListError(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            with pytest.raises("handshake error"):
+            with pytest.raises(Exception, match="handshake error"):
                 c.convert_to_ssl(sni="foo.com")
 
 
@@ -443,7 +443,7 @@ class TestClientCipherListError(tservers.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            with pytest.raises("cipher specification"):
+            with pytest.raises(Exception, match="cipher specification"):
                 c.convert_to_ssl(sni="foo.com", cipher_list="bogus")
 
 

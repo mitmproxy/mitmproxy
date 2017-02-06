@@ -134,7 +134,7 @@ class CommonTests(tservers.DaemonTests):
         assert len(self.d.log()) == 0
 
     def test_disconnect(self):
-        with pytest.raises("unexpected eof"):
+        with pytest.raises(Exception, match="Unexpected EOF"):
             self.get("202:b@100k:d200")
 
     def test_parserr(self):

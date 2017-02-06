@@ -18,7 +18,7 @@ def test_configure():
             p = os.path.join(tdir, "foo")
             with pytest.raises(exceptions.OptionsError):
                 tctx.configure(sa, streamfile=tdir)
-            with pytest.raises("invalid filter"):
+            with pytest.raises(Exception, match="Invalid filter"):
                 tctx.configure(sa, streamfile=p, filtstr="~~")
             tctx.configure(sa, filtstr="foo")
             assert sa.filt

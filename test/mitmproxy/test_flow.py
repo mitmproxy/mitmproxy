@@ -251,9 +251,8 @@ class TestSerialize:
         sio.write(b"bogus")
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        with pytest.raises(FlowReadException) as exc_info:
+        with pytest.raises(FlowReadException, match='Invalid data format'):
             list(r.stream())
-        assert exc_info.match('Invalid data format')
 
         sio = io.BytesIO()
         f = tflow.tdummyflow()
@@ -261,9 +260,8 @@ class TestSerialize:
         w.add(f)
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        with pytest.raises(FlowReadException) as exc_info:
+        with pytest.raises(FlowReadException, match='Unknown flow type'):
             list(r.stream())
-        assert exc_info.match('Unknown flow type')
 
         f = FlowReadException("foo")
         assert str(f) == "foo"
@@ -277,7 +275,7 @@ class TestSerialize:
         sio.seek(0)
 
         r = mitmproxy.io.FlowReader(sio)
-        with pytest.raises("version"):
+        with pytest.raises(Exception, match="version"):
             list(r.stream())
 
 
@@ -287,15 +285,15 @@ class TestFlowMaster:
         fm = master.Master(None, DummyServer())
         f = tflow.tflow(resp=True)
         f.request.content = None
-        with pytest.raises("missing"):
+        with pytest.raises(Exception, match="missing"):
             fm.replay_request(f)
 
         f.intercepted = True
-        with pytest.raises("intercepted"):
+        with pytest.raises(Exception, match="intercepted"):
             fm.replay_request(f)
 
         f.live = True
-        with pytest.raises("live"):
+        with pytest.raises(Exception, match="live"):
             fm.replay_request(f)
 
     def test_create_flow(self):

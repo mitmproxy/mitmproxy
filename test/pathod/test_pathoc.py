@@ -173,12 +173,12 @@ class TestDaemon(PathocTestDaemon):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
         c.rfile, c.wfile = io.BytesIO(), io.BytesIO()
-        with pytest.raises("connect failed"):
+        with pytest.raises(Exception, match="CONNECT failed"):
             c.http_connect(to)
         c.rfile = io.BytesIO(
             b"HTTP/1.1 500 OK\r\n"
         )
-        with pytest.raises("connect failed"):
+        with pytest.raises(Exception, match="CONNECT failed"):
             c.http_connect(to)
         c.rfile = io.BytesIO(
             b"HTTP/1.1 200 OK\r\n"
@@ -195,14 +195,14 @@ class TestDaemon(PathocTestDaemon):
         c.rfile = tutils.treader(
             b"\x05\xEE"
         )
-        with pytest.raises("SOCKS without authentication"):
+        with pytest.raises(Exception, match="SOCKS without authentication"):
             c.socks_connect(("example.com", 0xDEAD))
 
         c.rfile = tutils.treader(
             b"\x05\x00" +
             b"\x05\xEE\x00\x03\x0bexample.com\xDE\xAD"
         )
-        with pytest.raises("SOCKS server error"):
+        with pytest.raises(Exception, match="SOCKS server error"):
             c.socks_connect(("example.com", 0xDEAD))
 
         c.rfile = tutils.treader(

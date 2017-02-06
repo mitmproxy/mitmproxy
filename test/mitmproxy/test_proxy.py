@@ -96,27 +96,27 @@ class TestProcessProxyOptions:
 
     @mock.patch("mitmproxy.platform.original_addr", None)
     def test_no_transparent(self):
-        with pytest.raises("transparent mode not supported"):
+        with pytest.raises(Exception, match="Transparent mode not supported"):
             self.p("-T")
 
     @mock.patch("mitmproxy.platform.original_addr")
     def test_modes(self, _):
         self.assert_noerr("-R", "http://localhost")
-        with pytest.raises("expected one argument"):
+        with pytest.raises(Exception, match="expected one argument"):
             self.p("-R")
-        with pytest.raises("Invalid server specification"):
+        with pytest.raises(Exception, match="Invalid server specification"):
             self.p("-R", "reverse")
 
         self.assert_noerr("-T")
 
         self.assert_noerr("-U", "http://localhost")
-        with pytest.raises("Invalid server specification"):
+        with pytest.raises(Exception, match="Invalid server specification"):
             self.p("-U", "upstream")
 
         self.assert_noerr("--upstream-auth", "test:test")
-        with pytest.raises("expected one argument"):
+        with pytest.raises(Exception, match="expected one argument"):
             self.p("--upstream-auth")
-        with pytest.raises("mutually exclusive"):
+        with pytest.raises(Exception, match="mutually exclusive"):
             self.p("-R", "http://localhost", "-T")
 
     def test_client_certs(self):
@@ -125,14 +125,14 @@ class TestProcessProxyOptions:
             self.assert_noerr(
                 "--client-certs",
                 os.path.join(tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem"))
-            with pytest.raises("path does not exist"):
+            with pytest.raises(Exception, match="path does not exist"):
                 self.p("--client-certs", "nonexistent")
 
     def test_certs(self):
         self.assert_noerr(
             "--cert",
             tutils.test_data.path("mitmproxy/data/testkey.pem"))
-        with pytest.raises("does not exist"):
+        with pytest.raises(Exception, match="does not exist"):
             self.p("--cert", "nonexistent")
 
     def test_insecure(self):
@@ -156,12 +156,12 @@ class TestProxyServer:
     def test_err(self):
         # binding to 0.0.0.0:1 works without special permissions on Windows
         conf = ProxyConfig(options.Options(listen_port=1))
-        with pytest.raises("error starting proxy server"):
+        with pytest.raises(Exception, match="Error starting proxy server"):
             ProxyServer(conf)
 
     def test_err_2(self):
         conf = ProxyConfig(options.Options(listen_host="invalidhost"))
-        with pytest.raises("error starting proxy server"):
+        with pytest.raises(Exception, match="Error starting proxy server"):
             ProxyServer(conf)
 
 

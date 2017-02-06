@@ -16,16 +16,16 @@ class TestReplace:
         assert x == ("foo", "bar", "vo/ing/")
         x = replace.parse_hook("/bar/voing")
         assert x == (".*", "bar", "voing")
-        with pytest.raises("invalid replacement"):
+        with pytest.raises(Exception, match="Invalid replacement"):
             replace.parse_hook("/")
 
     def test_configure(self):
         r = replace.Replace()
         with taddons.context() as tctx:
             tctx.configure(r, replacements=[("one", "two", "three")])
-            with pytest.raises("invalid filter pattern"):
+            with pytest.raises(Exception, match="Invalid filter pattern"):
                 tctx.configure(r, replacements=[("~b", "two", "three")])
-            with pytest.raises("invalid regular expression"):
+            with pytest.raises(Exception, match="Invalid regular expression"):
                 tctx.configure(r, replacements=[("foo", "+", "three")])
             tctx.configure(r, replacements=["/a/b/c/"])
 
