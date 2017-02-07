@@ -93,6 +93,13 @@ def test_parse_png(filename, metadata):
         ('background', '248'),
         ('comment', "b'Created with GIMP'")
     ],
+    # check working with color table
+    "mitmproxy/data/image_parser/iss634.gif": [
+        ('Format', 'Compuserve GIF'),
+        ('version', 'GIF89a'),
+        ('Size', '245 x 245 px'),
+        ('background', '0')
+    ],
 }.items())
 def test_parse_gif(filename, metadata):
     with open(tutils.test_data.path(filename), 'rb') as f:

@@ -1,4 +1,5 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
+# The source was png.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/blob/562154250bea0081fed4e232751b934bc270a0c7/image/gif.ksy
 
 import array
 import struct
@@ -28,22 +29,11 @@ class Gif(KaitaiStruct):
         if self.logical_screen_descriptor.has_color_table:
             self._raw_global_color_table = self._io.read_bytes((self.logical_screen_descriptor.color_table_size * 3))
             io = KaitaiStream(BytesIO(self._raw_global_color_table))
-            self.global_color_table = self._root.GlobalColorTable(io, self, self._root)
+            self.global_color_table = self._root.ColorTable(io, self, self._root)
 
         self.blocks = []
         while not self._io.is_eof():
             self.blocks.append(self._root.Block(self._io, self, self._root))
-
-
-    class GlobalColorTable(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self.entries = []
-            while not self._io.is_eof():
-                self.entries.append(self._root.ColorTableEntry(self._io, self, self._root))
-
 
 
     class ImageData(KaitaiStruct):
@@ -103,6 +93,11 @@ class Gif(KaitaiStruct):
             self.width = self._io.read_u2le()
             self.height = self._io.read_u2le()
             self.flags = self._io.read_u1()
+            if self.has_color_table:
+                self._raw_local_color_table = self._io.read_bytes((self.color_table_size * 3))
+                io = KaitaiStream(BytesIO(self._raw_local_color_table))
+                self.local_color_table = self._root.ColorTable(io, self, self._root)
+
             self.image_data = self._root.ImageData(self._io, self, self._root)
 
         @property
@@ -149,6 +144,17 @@ class Gif(KaitaiStruct):
                 self.body = self._root.Extension(self._io, self, self._root)
             elif _on == self._root.BlockType.local_image_descriptor:
                 self.body = self._root.LocalImageDescriptor(self._io, self, self._root)
+
+
+    class ColorTable(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self.entries = []
+            while not self._io.is_eof():
+                self.entries.append(self._root.ColorTableEntry(self._io, self, self._root))
+
 
 
     class Header(KaitaiStruct):
