@@ -1,3 +1,4 @@
+from mitmproxy.net import websockets
 from mitmproxy.test import tutils
 from mitmproxy import tcp
 from mitmproxy import websocket
@@ -70,8 +71,8 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
 
     if messages is True:
         messages = [
-            websocket.WebSocketBinaryMessage(f, True, b"hello binary"),
-            websocket.WebSocketTextMessage(f, False, "hello text".encode()),
+            websocket.WebSocketMessage(websockets.OPCODE.BINARY, True, b"hello binary"),
+            websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "hello text".encode()),
         ]
     if err is True:
         err = terr()

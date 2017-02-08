@@ -179,16 +179,15 @@ class TestSimple(_WebSocketTest):
         assert isinstance(self.master.state.flows[1], WebSocketFlow)
         assert len(self.master.state.flows[1].messages) == 5
         assert self.master.state.flows[1].messages[0].content == b'server-foobar'
-        assert self.master.state.flows[1].messages[0].type == 'text'
+        assert self.master.state.flows[1].messages[0].type == websockets.OPCODE.TEXT
         assert self.master.state.flows[1].messages[1].content == b'client-foobar'
-        assert self.master.state.flows[1].messages[1].type == 'text'
+        assert self.master.state.flows[1].messages[1].type == websockets.OPCODE.TEXT
         assert self.master.state.flows[1].messages[2].content == b'client-foobar'
-        assert self.master.state.flows[1].messages[2].type == 'text'
+        assert self.master.state.flows[1].messages[2].type == websockets.OPCODE.TEXT
         assert self.master.state.flows[1].messages[3].content == b'\xde\xad\xbe\xef'
-        assert self.master.state.flows[1].messages[3].type == 'binary'
+        assert self.master.state.flows[1].messages[3].type == websockets.OPCODE.BINARY
         assert self.master.state.flows[1].messages[4].content == b'\xde\xad\xbe\xef'
-        assert self.master.state.flows[1].messages[4].type == 'binary'
-        assert [m.info for m in self.master.state.flows[1].messages]
+        assert self.master.state.flows[1].messages[4].type == websockets.OPCODE.BINARY
 
 
 class TestSimpleTLS(_WebSocketTest):

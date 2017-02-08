@@ -39,7 +39,6 @@ class TestStickyCookie:
             assert "cookie" not in f.request.headers
 
             f = f.copy()
-            f.reply.acked = False
             sc.request(f)
             assert f.request.headers["cookie"] == "foo=bar"
 
