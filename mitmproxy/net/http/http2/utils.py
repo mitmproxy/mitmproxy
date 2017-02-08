@@ -21,7 +21,6 @@ def parse_headers(headers):
         first_line_format = "relative"
     else:
         first_line_format = "absolute"
-        # FIXME: verify if path or :host contains what we need
         scheme, host, port, _ = url.parse(path)
 
     if authority:
