@@ -89,7 +89,7 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 tab: action.tab ? action.tab : 'request',
                 displayLarge: false,
-                showFullContent: false
+                showFullContent: state.contentView == 'Edit'
             }
 
         case SET_CONTENT_VIEW:
