@@ -1,4 +1,5 @@
 from typing import List
+import pytest
 
 from mitmproxy.stateobject import StateObject
 
@@ -67,3 +68,14 @@ def test_container_list():
     assert len(copy.children) == 2
     assert copy.children is not a.children
     assert copy.children[0] is not a.children[0]
+
+
+def test_too_much_state():
+    a = Container()
+    a.child = Child(42)
+    s = a.get_state()
+    s['foo'] = 'bar'
+    b = Container()
+
+    with pytest.raises(RuntimeWarning):
+        b.set_state(s)
