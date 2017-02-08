@@ -88,6 +88,10 @@ class UpstreamConnectLayer(base.Layer):
         layer()
 
     def _send_connect_request(self):
+        self.log("Sending CONNECT request", "debug", [
+            "Proxy Server: {}".format(self.ctx.server_conn.address),
+            "Connect to: {}:{}".format(self.connect_request.host, self.connect_request.port)
+        ])
         self.send_request(self.connect_request)
         resp = self.read_response(self.connect_request)
         if resp.status_code != 200:
@@ -101,6 +105,7 @@ class UpstreamConnectLayer(base.Layer):
             pass  # swallow the message
 
     def change_upstream_proxy_server(self, address):
+        self.log("Changing upstream proxy to {} (CONNECTed)".format(repr(address)), "debug")
         if address != self.server_conn.via.address:
             self.ctx.set_server(address)
 
@@ -432,10 +437,13 @@ class HttpLayer(base.Layer):
         except (exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
             self.log("Failed to send error response to client: {}".format(message), "debug")
 
-    def change_upstream_proxy_server(self, address) -> None:
+    def change_upstream_proxy_server(self, address):
         # Make set_upstream_proxy_server always available,
         # even if there's no UpstreamConnectLayer
-        if address != self.server_conn.address:
+        if hasattr(self.ctx, "change_upstream_proxy_server"):
+            self.ctx.change_upstream_proxy_server(address)
+        elif address != self.server_conn.address:
+            self.log("Changing upstream proxy to {} (not CONNECTed)".format(repr(address)), "debug")
             self.set_server(address)
 
     def establish_server_connection(self, host: str, port: int, scheme: str):
