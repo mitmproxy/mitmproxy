@@ -12,13 +12,13 @@ ContentViewOptions.propTypes = {
 function ContentViewOptions({ flow, message, uploadContent, readonly, contentViewDescription }) {
     return (
         <div className="view-options">
-            <ViewSelector message={message}/>
+            {readonly ? <ViewSelector message={message}/> : <span><b>View:</b> edit</span>}
             &nbsp;
             <DownloadContentButton flow={flow} message={message}/>
             &nbsp;
             {!readonly && <UploadContentButton uploadContent={uploadContent}/> }
             &nbsp;
-            <span>{contentViewDescription}</span>
+            {readonly && <span>{contentViewDescription}</span>}
         </div>
     )
 }
