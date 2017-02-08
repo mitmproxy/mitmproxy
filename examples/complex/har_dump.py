@@ -7,6 +7,7 @@ import json
 import sys
 import base64
 import zlib
+import os
 
 from datetime import datetime
 import pytz
@@ -166,7 +167,7 @@ def done():
         if dump_file.endswith('.zhar'):
             raw = zlib.compress(raw, 9)
 
-        with open(dump_file, "wb") as f:
+        with open(os.path.expanduser(dump_file), "wb") as f:
             f.write(raw)
 
         mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
