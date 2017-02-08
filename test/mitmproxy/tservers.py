@@ -35,10 +35,6 @@ class TestState:
     #     if f not in self.flows:
     #         self.flows.append(f)
 
-    # FIXME: compat with old state - remove in favor of len(state.flows)
-    def flow_count(self):
-        return len(self.flows)
-
 
 class TestMaster(master.Master):
 

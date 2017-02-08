@@ -308,11 +308,11 @@ class TestFlowMaster:
         fm.clientconnect(f.client_conn)
         f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
         fm.request(f)
-        assert s.flow_count() == 1
+        assert len(s.flows) == 1
 
         f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         fm.response(f)
-        assert s.flow_count() == 1
+        assert len(s.flows) == 1
 
         fm.clientdisconnect(f.client_conn)
 

@@ -984,16 +984,16 @@ class TestUpstreamProxySSL(
         assert req.status_code == 418
 
         # CONNECT from pathoc to chain[0],
-        assert self.proxy.tmaster.state.flow_count() == 1
+        assert len(self.proxy.tmaster.state.flows) == 1
         assert self.proxy.tmaster.state.flows[0].server_conn.via
         # request from pathoc to chain[0]
         # CONNECT from proxy to chain[1],
-        assert self.chain[0].tmaster.state.flow_count() == 1
+        assert len(self.chain[0].tmaster.state.flows) == 1
         assert self.chain[0].tmaster.state.flows[0].server_conn.via
         # request from proxy to chain[1]
         # request from chain[0] (regular proxy doesn't store CONNECTs)
         assert not self.chain[1].tmaster.state.flows[0].server_conn.via
-        assert self.chain[1].tmaster.state.flow_count() == 1
+        assert len(self.chain[1].tmaster.state.flows) == 1
 
 
 class RequestKiller:
@@ -1027,17 +1027,17 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             assert req.status_code == 418
 
             # First request goes through all three proxies exactly once
-            assert self.proxy.tmaster.state.flow_count() == 1
-            assert self.chain[0].tmaster.state.flow_count() == 1
-            assert self.chain[1].tmaster.state.flow_count() == 1
+            assert len(self.proxy.tmaster.state.flows) == 1
+            assert len(self.chain[0].tmaster.state.flows) == 1
+            assert len(self.chain[1].tmaster.state.flows) == 1
 
             req = p.request("get:'/p/418:b\"content2\"'")
             assert req.status_code == 502
 
-            assert self.proxy.tmaster.state.flow_count() == 2
-            assert self.chain[0].tmaster.state.flow_count() == 2
+            assert len(self.proxy.tmaster.state.flows) == 2
+            assert len(self.chain[0].tmaster.state.flows) == 2
             # Upstream sees two requests due to reconnection attempt
-            assert self.chain[1].tmaster.state.flow_count() == 3
+            assert len(self.chain[1].tmaster.state.flows) == 3
             assert not self.chain[1].tmaster.state.flows[-1].response
             assert not self.chain[1].tmaster.state.flows[-2].response
 
