@@ -995,6 +995,29 @@ class TestUpstreamProxySSL(
         assert not self.chain[1].tmaster.state.flows[0].server_conn.via
         assert self.chain[1].tmaster.state.flow_count() == 1
 
+    def test_change_upstream_proxy_connect(self):
+        # skip chain[0].
+        self.proxy.tmaster.addons.add(
+            UpstreamProxyChanger(
+                ("127.0.0.1", self.chain[1].port)
+            )
+        )
+        p = self.pathoc()
+        with p.connect():
+            req = p.request("get:'/p/418'")
+
+        assert req.status_code == 418
+        assert self.chain[0].tmaster.state.flow_count() == 0
+        assert self.chain[1].tmaster.state.flow_count() == 1
+
+
+class UpstreamProxyChanger:
+    def __init__(self, addr):
+        self.address = addr
+
+    def request(self, f):
+        f.live.change_upstream_proxy_server(self.address)
+
 
 class RequestKiller:
     def __init__(self, exclude):
