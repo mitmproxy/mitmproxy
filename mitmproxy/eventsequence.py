@@ -37,7 +37,7 @@ Events = frozenset([
 ])
 
 
-def event_sequence(f):
+def iterate(f):
     if isinstance(f, http.HTTPFlow):
         if f.request:
             yield "requestheaders", f
@@ -70,4 +70,4 @@ def event_sequence(f):
             yield "tcp_error", f
         yield "tcp_end", f
     else:
-        raise NotImplementedError
+        raise ValueError
