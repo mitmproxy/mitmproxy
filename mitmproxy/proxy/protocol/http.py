@@ -145,7 +145,7 @@ def validate_request_form(mode, request):
     if request.first_line_format not in allowed_request_forms:
         if mode == HTTPMode.transparent:
             err_message = (
-                "Mitmproxy received an {} request even though it is not running in regular mode. 
+                "Mitmproxy received an {} request even though it is not running in regular mode. "
                 "This usually indicates a misconfiguration, please see "
                 "http://docs.mitmproxy.org/en/stable/modes.html for details."
             ).format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
