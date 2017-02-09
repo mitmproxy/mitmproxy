@@ -103,7 +103,7 @@ def pytest_runtestloop(session):
     measured_files = [os.path.normpath(os.path.relpath(f, prefix)) for f in cov.get_data().measured_files()]
     measured_files = [f for f in measured_files if not any(f.startswith(excluded_f) for excluded_f in excluded_files)]
 
-    for name in pytest.config.option.full_cov:
+    for name in coverage_values.keys():
         files = [f for f in measured_files if f.startswith(os.path.normpath(name))]
         try:
             with open(os.devnull, 'w') as null:
@@ -132,12 +132,12 @@ def pytest_terminal_summary(terminalreporter, exitstatus):
         msg = "FAIL: Full test coverage not reached!\n"
         terminalreporter.write(msg, **markup)
 
-        for name, value in coverage_values.items():
-            if value < 100:
+        for name in sorted(coverage_values.keys()):
+            if coverage_values[name] < 100:
                 markup = {'red': True, 'bold': True}
             else:
                 markup = {'green': True}
-            msg = 'Coverage for {}: {:.2f}%\n'.format(name, value)
+            msg = 'Coverage for {}: {:.2f}%\n'.format(name, coverage_values[name])
             terminalreporter.write(msg, **markup)
     else:
         markup = {'green': True}
@@ -146,5 +146,5 @@ def pytest_terminal_summary(terminalreporter, exitstatus):
         terminalreporter.write(msg, **markup)
 
     msg = 'Excluded files:\n'
-    msg += '{}\n'.format('\n'.join(pytest.config.option.no_full_cov))
+    msg += '{}\n'.format('\n'.join(sorted(pytest.config.option.no_full_cov)))
     terminalreporter.write(msg)
