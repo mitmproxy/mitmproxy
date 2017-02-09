@@ -17,6 +17,9 @@ class Child(StateObject):
         obj.set_state(state)
         return obj
 
+    def __eq__(self, other):
+        return isinstance(other, Child) and self.x == other.x
+
 
 class Container(StateObject):
     def __init__(self):
@@ -60,4 +63,7 @@ def test_container_list():
         "child": None,
         "children": [{"x": 42}, {"x": 44}]
     }
-    assert len(a.copy().children) == 2
+    copy = a.copy()
+    assert len(copy.children) == 2
+    assert copy.children is not a.children
+    assert copy.children[0] is not a.children[0]
