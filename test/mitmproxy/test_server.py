@@ -1007,8 +1007,8 @@ class TestUpstreamProxySSL(
             req = p.request("get:'/p/418'")
 
         assert req.status_code == 418
-        assert self.chain[0].tmaster.state.flow_count() == 0
-        assert self.chain[1].tmaster.state.flow_count() == 1
+        assert len(self.chain[0].tmaster.state.flows) == 0
+        assert len(self.chain[1].tmaster.state.flows) == 1
 
 
 class UpstreamProxyChanger:
