@@ -131,7 +131,7 @@ class HTTPMode(enum.Enum):
 # At this point, we see only a subset of the proxy modes
 MODE_REQUEST_FORMS = {
     HTTPMode.regular: ("authority", "absolute"),
-    HTTPMode.transparent: ("relative"),
+    HTTPMode.transparent: ("relative",),
     HTTPMode.upstream: ("authority", "absolute"),
 }
 
@@ -143,9 +143,14 @@ def validate_request_form(mode, request):
         )
     allowed_request_forms = MODE_REQUEST_FORMS[mode]
     if request.first_line_format not in allowed_request_forms:
-        err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
-            " or ".join(allowed_request_forms), request.first_line_format
-        )
+        if mode == HTTPMode.transparent:
+            err_message = "Mitmproxy received an (absolute-form|HTTP CONNECT) request even though" \
+                          " it is not running in regular mode. This usually indicates a misconfiguration, " \
+                          "please see http://docs.mitmproxy.org/en/stable/modes.html for details."
+        else:
+            err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
+                " or ".join(allowed_request_forms), request.first_line_format
+            )
         raise exceptions.HttpException(err_message)
 
 

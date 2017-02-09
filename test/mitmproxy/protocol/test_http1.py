@@ -30,6 +30,16 @@ class TestInvalidRequests(tservers.HTTPProxyTest):
         assert b"Invalid HTTP request form" in r.content
 
 
+class TestProxyMisconfiguration(tservers.TransparentProxyTest):
+
+    def test_absolute_request(self):
+        p = self.pathoc()
+        with p.connect():
+            r = p.request("get:'http://localhost:%d/p/200'" % self.server.port)
+        assert r.status_code == 400
+        assert b"misconfiguration" in r.content
+
+
 class TestExpectHeader(tservers.HTTPProxyTest):
 
     def test_simple(self):
