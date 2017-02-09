@@ -1,5 +1,4 @@
 import time
-import copy
 import uuid
 
 from mitmproxy import controller  # noqa
@@ -7,7 +6,7 @@ from mitmproxy import stateobject
 from mitmproxy import connections
 from mitmproxy import version
 
-import typing # noqa
+import typing  # noqa
 
 
 class Error(stateobject.StateObject):
@@ -52,10 +51,6 @@ class Error(stateobject.StateObject):
         f = cls(None)
         f.set_state(state)
         return f
-
-    def copy(self):
-        c = copy.copy(self)
-        return c
 
 
 class Flow(stateobject.StateObject):
@@ -116,16 +111,9 @@ class Flow(stateobject.StateObject):
         return f
 
     def copy(self):
-        f = copy.copy(self)
-
+        f = super().copy()
         f.id = str(uuid.uuid4())
         f.live = False
-        f.client_conn = self.client_conn.copy()
-        f.server_conn = self.server_conn.copy()
-        f.metadata = self.metadata.copy()
-
-        if self.error:
-            f.error = self.error.copy()
         return f
 
     def modified(self):
