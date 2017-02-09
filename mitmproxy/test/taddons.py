@@ -3,7 +3,7 @@ import contextlib
 import mitmproxy.master
 import mitmproxy.options
 from mitmproxy import proxy
-from mitmproxy import events
+from mitmproxy import eventsequence
 from mitmproxy import exceptions
 
 
@@ -57,7 +57,7 @@ class context:
             is taken (as in flow interception).
         """
         f.reply._state = "handled"
-        for evt, arg in events.event_sequence(f):
+        for evt, arg in eventsequence.iterate(f):
             h = getattr(addon, evt, None)
             if h:
                 h(arg)

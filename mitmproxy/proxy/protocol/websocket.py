@@ -8,7 +8,7 @@ from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
-from mitmproxy.websocket import WebSocketFlow, WebSocketBinaryMessage, WebSocketTextMessage
+from mitmproxy.websocket import WebSocketFlow, WebSocketMessage
 
 
 class WebSocketLayer(base.Layer):
@@ -65,12 +65,7 @@ class WebSocketLayer(base.Layer):
             compressed_message = fb[0].header.rsv1
             fb.clear()
 
-            if message_type == websockets.OPCODE.TEXT:
-                t = WebSocketTextMessage
-            else:
-                t = WebSocketBinaryMessage
-
-            websocket_message = t(self.flow, not is_server, payload)
+            websocket_message = WebSocketMessage(message_type, not is_server, payload)
             length = len(websocket_message.content)
             self.flow.messages.append(websocket_message)
             self.channel.ask("websocket_message", self.flow)

@@ -238,7 +238,7 @@ class Dumper:
     def websocket_message(self, f):
         if self.match(f):
             message = f.messages[-1]
-            self.echo(message.info)
+            self.echo(f.message_info(message))
             if self.flow_detail >= 3:
                 self._echo_message(message)
 

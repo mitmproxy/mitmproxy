@@ -7,7 +7,7 @@ import sys
 from mitmproxy import addonmanager
 from mitmproxy import options
 from mitmproxy import controller
-from mitmproxy import events
+from mitmproxy import eventsequence
 from mitmproxy import exceptions
 from mitmproxy import connections
 from mitmproxy import http
@@ -91,7 +91,7 @@ class Master:
         changed = False
         try:
             mtype, obj = self.event_queue.get(timeout=timeout)
-            if mtype not in events.Events:
+            if mtype not in eventsequence.Events:
                 raise exceptions.ControlException(
                     "Unknown event %s" % repr(mtype)
                 )
@@ -153,7 +153,7 @@ class Master:
                 f.request.port = self.server.config.upstream_server.address.port
                 f.request.scheme = self.server.config.upstream_server.scheme
         f.reply = controller.DummyReply()
-        for e, o in events.event_sequence(f):
+        for e, o in eventsequence.iterate(f):
             getattr(self, e)(o)
 
     def load_flows(self, fr: io.FlowReader) -> int:

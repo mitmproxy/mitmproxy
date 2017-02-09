@@ -9,8 +9,8 @@ from mitmproxy.types import serializable
 class TCPMessage(serializable.Serializable):
 
     def __init__(self, from_client, content, timestamp=None):
-        self.content = content
         self.from_client = from_client
+        self.content = content
         self.timestamp = timestamp or time.time()
 
     @classmethod
@@ -21,9 +21,7 @@ class TCPMessage(serializable.Serializable):
         return self.from_client, self.content, self.timestamp
 
     def set_state(self, state):
-        self.from_client = state.pop("from_client")
-        self.content = state.pop("content")
-        self.timestamp = state.pop("timestamp")
+        self.from_client, self.content, self.timestamp = state
 
     def __repr__(self):
         return "{direction} {content}".format(

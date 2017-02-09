@@ -1,6 +1,5 @@
 import time
 
-import copy
 import os
 
 from mitmproxy import stateobject
@@ -81,9 +80,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         alpn_proto_negotiated=bytes,
         tls_version=str,
     )
-
-    def copy(self):
-        return copy.copy(self)
 
     def send(self, message):
         if isinstance(message, list):
@@ -221,9 +217,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             timestamp_end=None,
             via=None
         ))
-
-    def copy(self):
-        return copy.copy(self)
 
     def connect(self):
         self.timestamp_start = time.time()
