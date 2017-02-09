@@ -107,11 +107,13 @@ def pytest_runtestloop(session):
         files = [f for f in measured_files if f.startswith(os.path.normpath(name))]
         try:
             with open(os.devnull, 'w') as null:
-                coverage_values[name] = cov.report(files, ignore_errors=True, file=null)
+                overall = cov.report(files, ignore_errors=True, file=null)
+                singles = [(s, cov.report(s, ignore_errors=True, file=null)) for s in files]
+                coverage_values[name] = (overall, singles)
         except:
             pass
 
-    if any(v < 100 for v in coverage_values.values()):
+    if any(v < 100 for v, _ in coverage_values.values()):
         # make sure we get the EXIT_TESTSFAILED exit code
         session.testsfailed += 1
     else:
@@ -133,11 +135,14 @@ def pytest_terminal_summary(terminalreporter, exitstatus):
         terminalreporter.write(msg, **markup)
 
         for name in sorted(coverage_values.keys()):
-            if coverage_values[name] < 100:
+            msg = 'Coverage for {}: {:.2f}%\n'.format(name, coverage_values[name][0])
+            if coverage_values[name][0] < 100:
                 markup = {'red': True, 'bold': True}
+                for s, v in sorted(coverage_values[name][1]):
+                    if v < 100:
+                        msg += '  {}: {:.2f}%\n'.format(s, v)
             else:
                 markup = {'green': True}
-            msg = 'Coverage for {}: {:.2f}%\n'.format(name, coverage_values[name])
             terminalreporter.write(msg, **markup)
     else:
         markup = {'green': True}
@@ -145,6 +150,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus):
         msg += '{}\n\n'.format('\n'.join(pytest.config.option.full_cov))
         terminalreporter.write(msg, **markup)
 
-    msg = 'Excluded files:\n'
-    msg += '{}\n'.format('\n'.join(sorted(pytest.config.option.no_full_cov)))
+    msg = '\nExcluded files:\n'
+    for s in sorted(pytest.config.option.no_full_cov):
+        msg += "  {}\n".format(s)
     terminalreporter.write(msg)
