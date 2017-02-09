@@ -53,5 +53,5 @@ def test_tcp_flow(err):
 
 
 def test_invalid():
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         next(eventsequence.iterate(42))

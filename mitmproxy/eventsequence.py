@@ -70,4 +70,4 @@ def iterate(f):
             yield "tcp_error", f
         yield "tcp_end", f
     else:
-        raise ValueError
+        raise TypeError()
