@@ -149,11 +149,11 @@ class TestTokValueFile:
             v = base.TokValue.parseString("<path2")[0]
             with pytest.raises(exceptions.FileAccessDenied):
                 v.get_generator(language.Settings(staticdir=t))
-            with pytest.raises("access disabled"):
+            with pytest.raises(Exception, match="access disabled"):
                 v.get_generator(language.Settings())
 
             v = base.TokValue.parseString("</outside")[0]
-            with pytest.raises("outside"):
+            with pytest.raises(Exception, match="outside"):
                 v.get_generator(language.Settings(staticdir=t))
 
     def test_spec(self):
@@ -194,32 +194,27 @@ class TestMisc:
         v3 = v2.freeze({})
         assert v2.value.val == v3.value.val
 
-    def test_fixedlengthvalue(self):
+    def test_fixedlengthvalue(self, tmpdir):
         class TT(base.FixedLengthValue):
             preamble = "m"
             length = 4
 
         e = TT.expr()
         assert e.parseString("m@4")
-        with pytest.raises("invalid value length"):
+        with pytest.raises(Exception, match="Invalid value length"):
             e.parseString("m@100")
-        with pytest.raises("invalid value length"):
+        with pytest.raises(Exception, match="Invalid value length"):
             e.parseString("m@1")
 
-        with tutils.tmpdir() as t:
-            p = os.path.join(t, "path")
-            s = base.Settings(staticdir=t)
-            with open(p, "wb") as f:
-                f.write(b"a" * 20)
-            v = e.parseString("m<path")[0]
-            with pytest.raises("invalid value length"):
-                v.values(s)
+        s = base.Settings(staticdir=str(tmpdir))
+        tmpdir.join("path").write_binary(b"a" * 20, ensure=True)
+        v = e.parseString("m<path")[0]
+        with pytest.raises(Exception, match="Invalid value length"):
+            v.values(s)
 
-            p = os.path.join(t, "path")
-            with open(p, "wb") as f:
-                f.write(b"a" * 4)
-            v = e.parseString("m<path")[0]
-            assert v.values(s)
+        tmpdir.join("path2").write_binary(b"a" * 4, ensure=True)
+        v = e.parseString("m<path2")[0]
+        assert v.values(s)
 
 
 class TKeyValue(base.KeyValue):
@@ -282,7 +277,7 @@ def test_intfield():
     assert v.value == 4
     assert v.spec() == "t4"
 
-    with pytest.raises("can't exceed"):
+    with pytest.raises(Exception, match="can't exceed"):
         e.parseString("t5")
 
 
@@ -324,9 +319,9 @@ def test_integer():
     class BInt(base.Integer):
         bounds = (1, 5)
 
-    with pytest.raises("must be between"):
+    with pytest.raises(Exception, match="must be between"):
         BInt(0)
-    with pytest.raises("must be between"):
+    with pytest.raises(Exception, match="must be between"):
         BInt(6)
     assert BInt(5)
     assert BInt(1)

@@ -396,11 +396,11 @@ def test_configure():
     v = view.View()
     with taddons.context(options=Options()) as tctx:
         tctx.configure(v, filter="~q")
-        with pytest.raises("invalid interception filter"):
+        with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, filter="~~")
 
         tctx.configure(v, console_order="method")
-        with pytest.raises("unknown flow order"):
+        with pytest.raises(Exception, match="Unknown flow order"):
             tctx.configure(v, console_order="no")
 
         tctx.configure(v, console_order_reversed=True)

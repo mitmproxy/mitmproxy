@@ -108,9 +108,9 @@ class TestFrameHeader:
         assert not f2.mask
 
     def test_violations(self):
-        with pytest.raises("opcode"):
+        with pytest.raises(Exception, match="opcode"):
             websockets.FrameHeader(opcode=17)
-        with pytest.raises("masking key"):
+        with pytest.raises(Exception, match="Masking key"):
             websockets.FrameHeader(masking_key=b"x")
 
     def test_automask(self):

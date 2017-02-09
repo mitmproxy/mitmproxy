@@ -20,7 +20,7 @@ def test_make_error_response():
 class TestRequest:
 
     def test_nonascii(self):
-        with pytest.raises("ascii"):
+        with pytest.raises(Exception, match="ASCII"):
             parse_request("get:\xf0")
 
     def test_err(self):
@@ -226,7 +226,7 @@ class TestResponse:
             assert str(v)
 
     def test_nonascii(self):
-        with pytest.raises("ascii"):
+        with pytest.raises(Exception, match="ASCII"):
             language.parse_pathod("foo:b\xf0")
 
     def test_parse_header(self):
@@ -263,7 +263,7 @@ class TestResponse:
 
     def test_websockets(self):
         r = next(language.parse_pathod("ws"))
-        with pytest.raises("no websocket key"):
+        with pytest.raises(Exception, match="No websocket key"):
             r.resolve(language.Settings())
         res = r.resolve(language.Settings(websocket_key=b"foo"))
         assert res.status_code.string() == b"101"
@@ -351,5 +351,5 @@ def test_nested_response_freeze():
 
 
 def test_unique_components():
-    with pytest.raises("multiple body clauses"):
+    with pytest.raises(Exception, match="multiple body clauses"):
         language.parse_pathod("400:b@1:b@1")

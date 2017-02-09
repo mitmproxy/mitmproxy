@@ -71,9 +71,9 @@ def test_options():
 
     with pytest.raises(TypeError):
         TO(nonexistent = "value")
-    with pytest.raises("no such option"):
+    with pytest.raises(Exception, match="No such option"):
         o.nonexistent = "value"
-    with pytest.raises("no such option"):
+    with pytest.raises(Exception, match="No such option"):
         o.update(nonexistent = "value")
 
     rec = []
@@ -97,7 +97,7 @@ def test_setter():
     f = o.setter("two")
     f("xxx")
     assert o.two == "xxx"
-    with pytest.raises("no such option"):
+    with pytest.raises(Exception, match="No such option"):
         o.setter("nonexistent")
 
 
@@ -108,7 +108,7 @@ def test_toggler():
     assert o.two is False
     f()
     assert o.two is True
-    with pytest.raises("no such option"):
+    with pytest.raises(Exception, match="No such option"):
         o.toggler("nonexistent")
 
 
@@ -193,11 +193,11 @@ def test_serialize():
     assert o2 == o
 
     t = "invalid: foo\ninvalid"
-    with pytest.raises("config error"):
+    with pytest.raises(Exception, match="Config error"):
         o2.load(t)
 
     t = "invalid"
-    with pytest.raises("config error"):
+    with pytest.raises(Exception, match="Config error"):
         o2.load(t)
 
     t = ""

@@ -2,6 +2,7 @@ import os
 import pytest
 import OpenSSL
 import functools
+from contextlib import contextmanager
 
 import mitmproxy.net.tcp
 
@@ -29,33 +30,17 @@ skip_appveyor = pytest.mark.skipif(
 original_pytest_raises = pytest.raises
 
 
+# TODO: remove this wrapper when pytest 3.1.0 is released
+@contextmanager
 @functools.wraps(original_pytest_raises)
 def raises(exc, *args, **kwargs):
-    if isinstance(exc, str):
-        return RaisesContext(exc)
-    else:
-        return original_pytest_raises(exc, *args, **kwargs)
+    with original_pytest_raises(exc, *args, **kwargs) as exc_info:
+        yield
+    if 'match' in kwargs:
+        assert exc_info.match(kwargs['match'])
 
 
 pytest.raises = raises
-
-
-class RaisesContext:
-    def __init__(self, expected_exception):
-        self.expected_exception = expected_exception
-
-    def __enter__(self):
-        return
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if not exc_type:
-            raise AssertionError("No exception raised.")
-        else:
-            if self.expected_exception.lower() not in str(exc_val).lower():
-                raise AssertionError(
-                    "Expected %s, but caught %s" % (repr(self.expected_exception), repr(exc_val))
-                )
-        return True
 
 
 @pytest.fixture()

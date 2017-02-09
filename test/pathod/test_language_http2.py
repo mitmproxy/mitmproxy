@@ -39,7 +39,7 @@ class TestRequest:
         assert req.values(default_settings()) == req.values(default_settings())
 
     def test_nonascii(self):
-        with pytest.raises("ascii"):
+        with pytest.raises(Exception, match="ASCII"):
             parse_request("get:\xf0")
 
     def test_err(self):
@@ -168,7 +168,7 @@ class TestResponse:
         assert res.values(default_settings()) == res.values(default_settings())
 
     def test_nonascii(self):
-        with pytest.raises("ascii"):
+        with pytest.raises(Exception, match="ASCII"):
             parse_response("200:\xf0")
 
     def test_err(self):

@@ -14,13 +14,13 @@ class TestSetHeaders:
         assert x == ("foo", "bar", "vo/ing/")
         x = setheaders.parse_setheader("/bar/voing")
         assert x == (".*", "bar", "voing")
-        with pytest.raises("invalid replacement"):
+        with pytest.raises(Exception, match="Invalid replacement"):
             setheaders.parse_setheader("/")
 
     def test_configure(self):
         sh = setheaders.SetHeaders()
         with taddons.context() as tctx:
-            with pytest.raises("invalid setheader filter pattern"):
+            with pytest.raises(Exception, match="Invalid setheader filter pattern"):
                 tctx.configure(sh, setheaders = [("~b", "one", "two")])
             tctx.configure(sh, setheaders = ["/foo/bar/voing"])
 

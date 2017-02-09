@@ -14,7 +14,7 @@ class TestLookup:
             p = tutils.test_data.path("mitmproxy/data/pf01")
             d = open(p, "rb").read()
         assert pf.lookup("192.168.1.111", 40000, d) == ("5.5.5.5", 80)
-        with pytest.raises("Could not resolve original destination"):
+        with pytest.raises(Exception, match="Could not resolve original destination"):
             pf.lookup("192.168.1.112", 40000, d)
-        with pytest.raises("Could not resolve original destination"):
+        with pytest.raises(Exception, match="Could not resolve original destination"):
             pf.lookup("192.168.1.111", 40001, d)

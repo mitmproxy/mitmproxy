@@ -130,7 +130,7 @@ class TestWebsocketFrame:
         assert frm.payload == b"abc"
 
     def test_knone(self):
-        with pytest.raises("expected 4 bytes"):
+        with pytest.raises(Exception, match="Expected 4 bytes"):
             self.fr("wf:b'foo':mask:knone")
 
     def test_length(self):
@@ -138,5 +138,5 @@ class TestWebsocketFrame:
         frm = self.fr("wf:l2:b'foo'")
         assert frm.header.payload_length == 2
         assert frm.payload == b"fo"
-        with pytest.raises("expected 1024 bytes"):
+        with pytest.raises(Exception, match="Expected 1024 bytes"):
             self.fr("wf:l1024:b'foo'")

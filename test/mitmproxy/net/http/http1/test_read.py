@@ -356,11 +356,11 @@ def test_read_chunked():
     assert b"".join(_read_chunked(BytesIO(data))) == b"ab"
 
     data = b"\r\n"
-    with pytest.raises("closed prematurely"):
+    with pytest.raises(Exception, match="closed prematurely"):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"1\r\nfoo"
-    with pytest.raises("malformed chunked body"):
+    with pytest.raises(Exception, match="Malformed chunked body"):
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"foo\r\nfoo"
@@ -368,5 +368,5 @@ def test_read_chunked():
         b"".join(_read_chunked(BytesIO(data)))
 
     data = b"5\r\naaaaa\r\n0\r\n\r\n"
-    with pytest.raises("too large"):
+    with pytest.raises(Exception, match="too large"):
         b"".join(_read_chunked(BytesIO(data), limit=2))
