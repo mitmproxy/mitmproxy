@@ -5,7 +5,8 @@ env:
   global:
     - CI_DEPS=codecov>=2.0.5
     - CI_COMMANDS=codecov
-
+git:
+  depth: 10000
 matrix:
   fast_finish: true
   include:
@@ -43,8 +44,6 @@ matrix:
             - libssl-dev
     - python: 3.5
       env: TOXENV=docs
-      git:
-        depth: 10000
   allow_failures:
     - python: pypy
 
