@@ -110,11 +110,16 @@ class ReloadHandler(watchdog.events.FileSystemEventHandler):
         self.callback = callback
 
     def filter(self, event):
+        """
+            Returns True only when .py file is changed
+        """
         if event.is_directory:
             return False
         if os.path.basename(event.src_path).startswith("."):
             return False
-        return True
+        if event.src_path.endswith(".py"):
+            return True
+        return False
 
     def on_modified(self, event):
         if self.filter(event):
