@@ -14,7 +14,7 @@ from mitmproxy.test import tutils
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import cookies
 
-from . import mastertest
+from . import tservers
 
 example_dir = tutils.test_data.push("../examples")
 
@@ -38,7 +38,7 @@ def tscript(cmd, args=""):
     return m, sc
 
 
-class TestScripts(mastertest.MasterTest):
+class TestScripts(tservers.MasterTest):
     def test_add_header(self):
         m, _ = tscript("simple/add_header.py")
         f = tflow.tflow(resp=tutils.tresp())

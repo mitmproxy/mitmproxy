@@ -1,6 +1,7 @@
 import email
 import time
 import pytest
+from unittest import mock
 
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import Response
@@ -13,6 +14,12 @@ class TestResponseData:
     def test_init(self):
         with pytest.raises(ValueError):
             tresp(headers="foobar")
+        with pytest.raises(UnicodeEncodeError):
+            tresp(http_version="föö/bä.r")
+        with pytest.raises(UnicodeEncodeError):
+            tresp(reason="fööbär")
+        with pytest.raises(ValueError):
+            tresp(content="foobar")
 
         assert isinstance(tresp(headers=()).headers, Headers)
 
@@ -133,9 +140,10 @@ class TestResponseUtils:
     def test_set_cookies(self):
         resp = tresp()
         resp.cookies["foo"] = ("bar", {})
-
         assert len(resp.cookies) == 1
         assert resp.cookies["foo"] == ("bar", CookieAttrs())
+        resp.cookies = [["one", ("uno", CookieAttrs())], ["two", ("due", CookieAttrs())]]
+        assert list(resp.cookies.keys()) == ["one", "two"]
 
     def test_refresh(self):
         r = tresp()
@@ -156,3 +164,7 @@ class TestResponseUtils:
         r.refresh()
         # Cookie refreshing is tested in test_cookies, we just make sure that it's triggered here.
         assert cookie != r.headers["set-cookie"]
+
+        with mock.patch('mitmproxy.net.http.cookies.refresh_set_cookie_header') as m:
+            m.side_effect = ValueError
+            r.refresh(n)

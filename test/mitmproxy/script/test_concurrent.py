@@ -7,7 +7,7 @@ from mitmproxy.addons import script
 
 import time
 
-from test.mitmproxy import mastertest
+from .. import tservers
 
 
 class Thing:
@@ -16,7 +16,7 @@ class Thing:
         self.live = True
 
 
-class TestConcurrent(mastertest.MasterTest):
+class TestConcurrent(tservers.MasterTest):
     def test_concurrent(self):
         with taddons.context() as tctx:
             sc = script.Script(

@@ -7,11 +7,43 @@ import mitmproxy.platform
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy import master
-import pathod.test
-import pathod.pathoc
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy import exceptions
+from mitmproxy import io
+from mitmproxy import http
+import pathod.test
+import pathod.pathoc
+
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
+
+
+class MasterTest:
+
+    def cycle(self, master, content):
+        f = tflow.tflow(req=tutils.treq(content=content))
+        master.clientconnect(f.client_conn)
+        master.serverconnect(f.server_conn)
+        master.request(f)
+        if not f.error:
+            f.response = http.HTTPResponse.wrap(
+                tutils.tresp(content=content)
+            )
+            master.response(f)
+        master.clientdisconnect(f)
+        return f
+
+    def dummy_cycle(self, master, n, content):
+        for i in range(n):
+            self.cycle(master, content)
+        master.shutdown()
+
+    def flowfile(self, path):
+        with open(path, "wb") as f:
+            fw = io.FlowWriter(f)
+            t = tflow.tflow(resp=True)
+            fw.add(t)
 
 
 class TestState:
