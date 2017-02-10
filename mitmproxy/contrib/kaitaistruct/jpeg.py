@@ -1,4 +1,5 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
+# The source was jpeg.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/blob/24e2d00048b8084ceec30a187a79cb87a79a48ba/image/jpeg.ksy
 
 import array
 import struct
@@ -44,9 +45,23 @@ class Jpeg(KaitaiStruct):
             dqt = 219
             dnl = 220
             dri = 221
+            dhp = 222
             app0 = 224
             app1 = 225
             app2 = 226
+            app3 = 227
+            app4 = 228
+            app5 = 229
+            app6 = 230
+            app7 = 231
+            app8 = 232
+            app9 = 233
+            app10 = 234
+            app11 = 235
+            app12 = 236
+            app13 = 237
+            app14 = 238
+            app15 = 239
             com = 254
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io

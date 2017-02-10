@@ -124,6 +124,29 @@ def test_parse_gif(filename, metadata):
         ('comment', "b'mitmproxy test image'"),
         ('Size', '256 x 256 px')
     ],
+    # check app1
+    "mitmproxy/data/image_parser/app1.jpeg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(72, 72)'),
+        ('jfif_unit', '1'),
+        ('make', 'Canon'),
+        ('model', 'Canon PowerShot A60'),
+        ('modify_date', '2004:07:16 18:46:04'),
+        ('Size', '717 x 558 px')
+    ],
+    # check multiple segments
+    "mitmproxy/data/image_parser/image-err1.jpg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(72, 72)'),
+        ('jfif_unit', '1'),
+        ('image_description', '<<enter caption here>> on December 4, 2009 in Washington, DC.'),
+        ('make', 'Canon'), ('model', 'Canon EOS-1D Mark III'),
+        ('artist', 'Alex Wong'),
+        ('primary_chromaticities', '@\x00\x00\x00d'),
+        ('copyright', '2009 Getty Images')
+    ],
 }.items())
 def test_parse_jpeg(filename, metadata):
     with open(tutils.test_data.path(filename), 'rb') as f:
