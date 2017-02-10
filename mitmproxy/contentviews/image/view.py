@@ -33,6 +33,11 @@ class ViewImage(base.View):
             parts = image_parser.parse_gif(data)
             fmt = base.format_dict(multidict.MultiDict(parts))
             return "%s image" % f, fmt
+        elif image_type == 'jpeg':
+            f = "JPEG"
+            parts = image_parser.parse_jpeg(data)
+            fmt = base.format_dict(multidict.MultiDict(parts))
+            return "%s image" % f, fmt
         try:
             img = Image.open(io.BytesIO(data))
         except IOError:

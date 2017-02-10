@@ -104,3 +104,27 @@ def test_parse_png(filename, metadata):
 def test_parse_gif(filename, metadata):
     with open(tutils.test_data.path(filename), 'rb') as f:
         assert metadata == image_parser.parse_gif(f.read())
+
+
+@pytest.mark.parametrize("filename, metadata", {
+    # check app0
+    "mitmproxy/data/image_parser/example.jpg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(96, 96)'),
+        ('jfif_unit', '1'),
+        ('Size', '256 x 256 px')
+    ],
+    # check com
+    "mitmproxy/data/image_parser/comment.jpg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(96, 96)'),
+        ('jfif_unit', '1'),
+        ('comment', "b'mitmproxy test image'"),
+        ('Size', '256 x 256 px')
+    ],
+}.items())
+def test_parse_jpeg(filename, metadata):
+    with open(tutils.test_data.path(filename), 'rb') as f:
+        assert metadata == image_parser.parse_jpeg(f.read())
