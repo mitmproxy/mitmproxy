@@ -74,7 +74,7 @@ setup(
         "kaitaistruct>=0.5, <0.6",
         "Pillow>=3.2, <4.1",
         "passlib>=1.6.5, <1.8",
-        "pyasn1>=0.1.9, <0.2",
+        "pyasn1>=0.1.9, <0.3",
         "pyOpenSSL>=16.0, <17.0",
         "pyparsing>=2.1.3, <2.2",
         "pyperclip>=1.5.22, <1.6",
@@ -97,7 +97,7 @@ setup(
         ],
         'dev': [
             "Flask>=0.10.1, <0.13",
-            "flake8>=3.2.1, <3.3",
+            "flake8>=3.2.1, <3.4",
             "mypy-lang>=0.4.6, <0.5",
             "rstcheck>=2.2, <4.0",
             "tox>=2.3, <3",
@@ -112,7 +112,7 @@ setup(
             "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [
-            "protobuf>=3.1.0, <3.2",
+            "protobuf>=3.1.0, <3.3",
             # TODO: Find Python 3 replacement
             # "pyamf>=0.8.0, <0.9",
         ],
