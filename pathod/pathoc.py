@@ -127,8 +127,8 @@ class WebsocketFrameReader(basethread.BaseThread):
                     return
                 try:
                     r, _, _ = select.select([self.rfile], [], [], 0.05)
-                except OSError:
-                    return
+                except OSError:  # pragma: no cover
+                    return  # this is not reliably triggered due to its nature, so we exclude it from coverage.
                 delta = time.time() - starttime
                 if not r and self.timeout and delta > self.timeout:
                     return
