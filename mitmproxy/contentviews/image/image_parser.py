@@ -73,10 +73,8 @@ def parse_jpeg(data: bytes) -> Metadata:
         if segment.marker._name_ == 'com':
             parts.append(('comment', str(segment.data)))
         if segment.marker._name_ == 'app1':
-            try:
+            if hasattr(segment.data, 'body'):
                 for field in segment.data.body.data.body.ifd0.fields:
                     if field.data is not None:
                         parts.append((field.tag._name_, field.data.decode('UTF-8').strip('\x00')))
-            except AttributeError:
-                pass
     return parts
