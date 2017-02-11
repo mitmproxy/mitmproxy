@@ -104,3 +104,66 @@ def test_parse_png(filename, metadata):
 def test_parse_gif(filename, metadata):
     with open(tutils.test_data.path(filename), 'rb') as f:
         assert metadata == image_parser.parse_gif(f.read())
+
+
+@pytest.mark.parametrize("filename, metadata", {
+    # check app0
+    "mitmproxy/data/image_parser/example.jpg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(96, 96)'),
+        ('jfif_unit', '1'),
+        ('Size', '256 x 256 px')
+    ],
+    # check com
+    "mitmproxy/data/image_parser/comment.jpg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(96, 96)'),
+        ('jfif_unit', '1'),
+        ('comment', "b'mitmproxy test image'"),
+        ('Size', '256 x 256 px')
+    ],
+    # check app1
+    "mitmproxy/data/image_parser/app1.jpeg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(72, 72)'),
+        ('jfif_unit', '1'),
+        ('make', 'Canon'),
+        ('model', 'Canon PowerShot A60'),
+        ('modify_date', '2004:07:16 18:46:04'),
+        ('Size', '717 x 558 px')
+    ],
+    # check multiple segments
+    "mitmproxy/data/image_parser/all.jpeg": [
+        ('Format', 'JPEG (ISO 10918)'),
+        ('jfif_version', '(1, 1)'),
+        ('jfif_density', '(300, 300)'),
+        ('jfif_unit', '1'),
+        ('comment', 'b\'BARTOLOMEO DI FRUOSINO\\r\\n(b. ca. 1366, Firenze, d. 1441, '
+         'Firenze)\\r\\n\\r\\nInferno, from the Divine Comedy by Dante (Folio 1v)'
+         '\\r\\n1430-35\\r\\nTempera, gold, and silver on parchment, 365 x 265 mm'
+         '\\r\\nBiblioth\\xe8que Nationale, Paris\\r\\n\\r\\nThe codex in Paris '
+         'contains the text of the Inferno, the first of three books of the Divine '
+         'Comedy, the masterpiece of the Florentine poet Dante Alighieri (1265-1321).'
+         ' The codex begins with two full-page illuminations. On folio 1v Dante and '
+         'Virgil stand within the doorway of Hell at the upper left and observe its '
+         'nine different zones. Dante and Virgil are to wade through successive '
+         'circles teeming with images of the damned. The gates of Hell appear  in '
+         'the middle, a scarlet row of open sarcophagi before them. Devils orchestrate'
+         ' the movements of the wretched souls.\\r\\n\\r\\nThe vision of the fiery '
+         'inferno follows a convention established by <A onclick="return OpenOther'
+         '(\\\'/html/n/nardo/strozzi3.html\\\')" HREF="/html/n/nardo/strozzi3.html">'
+         'Nardo di Cione\\\'s fresco</A> in the church of Santa Maria Novella, Florence.'
+         ' Of remarkable vivacity and intensity of expression, the illumination is '
+         'executed in Bartolomeo\\\'s late style.\\r\\n\\r\\n\\r\\n\\r\\n\\r\\n\\r\\n\\r\\n'
+         '--- Keywords: --------------\\r\\n\\r\\nAuthor: BARTOLOMEO DI FRUOSINO'
+         '\\r\\nTitle: Inferno, from the Divine Comedy by Dante (Folio 1v)\\r\\nTime-line:'
+         ' 1401-1450\\r\\nSchool: Italian\\r\\nForm: illumination\\r\\nType: other\\r\\n\''),
+        ('Size', '750 x 1055 px')
+    ],
+}.items())
+def test_parse_jpeg(filename, metadata):
+    with open(tutils.test_data.path(filename), 'rb') as f:
+        assert metadata == image_parser.parse_jpeg(f.read())

@@ -25,9 +25,9 @@ class Png(KaitaiStruct):
         self._io = _io
         self._parent = _parent
         self._root = _root if _root else self
-        self.magic = self._io.ensure_fixed_contents(8, struct.pack('8b', -119, 80, 78, 71, 13, 10, 26, 10))
-        self.ihdr_len = self._io.ensure_fixed_contents(4, struct.pack('4b', 0, 0, 0, 13))
-        self.ihdr_type = self._io.ensure_fixed_contents(4, struct.pack('4b', 73, 72, 68, 82))
+        self.magic = self._io.ensure_fixed_contents(struct.pack('8b', -119, 80, 78, 71, 13, 10, 26, 10))
+        self.ihdr_len = self._io.ensure_fixed_contents(struct.pack('4b', 0, 0, 0, 13))
+        self.ihdr_type = self._io.ensure_fixed_contents(struct.pack('4b', 73, 72, 68, 82))
         self.ihdr = self._root.IhdrChunk(self._io, self, self._root)
         self.ihdr_crc = self._io.read_bytes(4)
         self.chunks = []
@@ -117,18 +117,18 @@ class Png(KaitaiStruct):
         @property
         def x(self):
             if hasattr(self, '_m_x'):
-                return self._m_x
+                return self._m_x if hasattr(self, '_m_x') else None
 
             self._m_x = (self.x_int / 100000.0)
-            return self._m_x
+            return self._m_x if hasattr(self, '_m_x') else None
 
         @property
         def y(self):
             if hasattr(self, '_m_y'):
-                return self._m_y
+                return self._m_y if hasattr(self, '_m_y') else None
 
             self._m_y = (self.y_int / 100000.0)
-            return self._m_y
+            return self._m_y if hasattr(self, '_m_y') else None
 
 
     class BkgdGreyscale(KaitaiStruct):
@@ -186,7 +186,7 @@ class Png(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.render_intent = self._root.Intent(self._io.read_u1())
+            self.render_intent = self._root.SrgbChunk.Intent(self._io.read_u1())
 
 
     class CompressedTextChunk(KaitaiStruct):
@@ -220,10 +220,10 @@ class Png(KaitaiStruct):
         @property
         def gamma_ratio(self):
             if hasattr(self, '_m_gamma_ratio'):
-                return self._m_gamma_ratio
+                return self._m_gamma_ratio if hasattr(self, '_m_gamma_ratio') else None
 
             self._m_gamma_ratio = (100000.0 / self.gamma_int)
-            return self._m_gamma_ratio
+            return self._m_gamma_ratio if hasattr(self, '_m_gamma_ratio') else None
 
 
     class BkgdChunk(KaitaiStruct):

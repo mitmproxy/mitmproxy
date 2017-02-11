@@ -69,18 +69,18 @@ class Gif(KaitaiStruct):
         @property
         def has_color_table(self):
             if hasattr(self, '_m_has_color_table'):
-                return self._m_has_color_table
+                return self._m_has_color_table if hasattr(self, '_m_has_color_table') else None
 
             self._m_has_color_table = (self.flags & 128) != 0
-            return self._m_has_color_table
+            return self._m_has_color_table if hasattr(self, '_m_has_color_table') else None
 
         @property
         def color_table_size(self):
             if hasattr(self, '_m_color_table_size'):
-                return self._m_color_table_size
+                return self._m_color_table_size if hasattr(self, '_m_color_table_size') else None
 
             self._m_color_table_size = (2 << (self.flags & 7))
-            return self._m_color_table_size
+            return self._m_color_table_size if hasattr(self, '_m_color_table_size') else None
 
 
     class LocalImageDescriptor(KaitaiStruct):
@@ -103,34 +103,34 @@ class Gif(KaitaiStruct):
         @property
         def has_color_table(self):
             if hasattr(self, '_m_has_color_table'):
-                return self._m_has_color_table
+                return self._m_has_color_table if hasattr(self, '_m_has_color_table') else None
 
             self._m_has_color_table = (self.flags & 128) != 0
-            return self._m_has_color_table
+            return self._m_has_color_table if hasattr(self, '_m_has_color_table') else None
 
         @property
         def has_interlace(self):
             if hasattr(self, '_m_has_interlace'):
-                return self._m_has_interlace
+                return self._m_has_interlace if hasattr(self, '_m_has_interlace') else None
 
             self._m_has_interlace = (self.flags & 64) != 0
-            return self._m_has_interlace
+            return self._m_has_interlace if hasattr(self, '_m_has_interlace') else None
 
         @property
         def has_sorted_color_table(self):
             if hasattr(self, '_m_has_sorted_color_table'):
-                return self._m_has_sorted_color_table
+                return self._m_has_sorted_color_table if hasattr(self, '_m_has_sorted_color_table') else None
 
             self._m_has_sorted_color_table = (self.flags & 32) != 0
-            return self._m_has_sorted_color_table
+            return self._m_has_sorted_color_table if hasattr(self, '_m_has_sorted_color_table') else None
 
         @property
         def color_table_size(self):
             if hasattr(self, '_m_color_table_size'):
-                return self._m_color_table_size
+                return self._m_color_table_size if hasattr(self, '_m_color_table_size') else None
 
             self._m_color_table_size = (2 << (self.flags & 7))
-            return self._m_color_table_size
+            return self._m_color_table_size if hasattr(self, '_m_color_table_size') else None
 
 
     class Block(KaitaiStruct):
@@ -162,7 +162,7 @@ class Gif(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.magic = self._io.ensure_fixed_contents(3, struct.pack('3b', 71, 73, 70))
+            self.magic = self._io.ensure_fixed_contents(struct.pack('3b', 71, 73, 70))
             self.version = self._io.read_bytes(3)
 
 
@@ -171,27 +171,27 @@ class Gif(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.block_size = self._io.ensure_fixed_contents(1, struct.pack('1b', 4))
+            self.block_size = self._io.ensure_fixed_contents(struct.pack('1b', 4))
             self.flags = self._io.read_u1()
             self.delay_time = self._io.read_u2le()
             self.transparent_idx = self._io.read_u1()
-            self.terminator = self._io.ensure_fixed_contents(1, struct.pack('1b', 0))
+            self.terminator = self._io.ensure_fixed_contents(struct.pack('1b', 0))
 
         @property
         def transparent_color_flag(self):
             if hasattr(self, '_m_transparent_color_flag'):
-                return self._m_transparent_color_flag
+                return self._m_transparent_color_flag if hasattr(self, '_m_transparent_color_flag') else None
 
             self._m_transparent_color_flag = (self.flags & 1) != 0
-            return self._m_transparent_color_flag
+            return self._m_transparent_color_flag if hasattr(self, '_m_transparent_color_flag') else None
 
         @property
         def user_input_flag(self):
             if hasattr(self, '_m_user_input_flag'):
-                return self._m_user_input_flag
+                return self._m_user_input_flag if hasattr(self, '_m_user_input_flag') else None
 
             self._m_user_input_flag = (self.flags & 2) != 0
-            return self._m_user_input_flag
+            return self._m_user_input_flag if hasattr(self, '_m_user_input_flag') else None
 
 
     class Subblock(KaitaiStruct):

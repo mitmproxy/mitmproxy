@@ -5,6 +5,7 @@ from kaitaistruct import KaitaiStream
 
 from mitmproxy.contrib.kaitaistruct import png
 from mitmproxy.contrib.kaitaistruct import gif
+from mitmproxy.contrib.kaitaistruct import jpeg
 
 Metadata = typing.List[typing.Tuple[str, str]]
 
@@ -54,4 +55,26 @@ def parse_gif(data: bytes) -> Metadata:
             comment = entry.bytes
             if comment is not b'':
                 parts.append(('comment', str(comment)))
+    return parts
+
+
+def parse_jpeg(data: bytes) -> Metadata:
+    img = jpeg.Jpeg(KaitaiStream(io.BytesIO(data)))
+    parts = [
+        ('Format', 'JPEG (ISO 10918)')
+    ]
+    for segment in img.segments:
+        if segment.marker._name_ == 'sof0':
+            parts.append(('Size', "{0} x {1} px".format(segment.data.image_width, segment.data.image_height)))
+        if segment.marker._name_ == 'app0':
+            parts.append(('jfif_version', "({0}, {1})".format(segment.data.version_major, segment.data.version_minor)))
+            parts.append(('jfif_density', "({0}, {1})".format(segment.data.density_x, segment.data.density_y)))
+            parts.append(('jfif_unit', str(segment.data.density_units._value_)))
+        if segment.marker._name_ == 'com':
+            parts.append(('comment', str(segment.data)))
+        if segment.marker._name_ == 'app1':
+            if hasattr(segment.data, 'body'):
+                for field in segment.data.body.data.body.ifd0.fields:
+                    if field.data is not None:
+                        parts.append((field.tag._name_, field.data.decode('UTF-8').strip('\x00')))
     return parts

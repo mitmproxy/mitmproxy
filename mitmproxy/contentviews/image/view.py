@@ -1,7 +1,6 @@
 import io
 import imghdr
 
-from PIL import ExifTags
 from PIL import Image
 
 from mitmproxy.types import multidict
@@ -33,6 +32,11 @@ class ViewImage(base.View):
             parts = image_parser.parse_gif(data)
             fmt = base.format_dict(multidict.MultiDict(parts))
             return "%s image" % f, fmt
+        elif image_type == 'jpeg':
+            f = "JPEG"
+            parts = image_parser.parse_jpeg(data)
+            fmt = base.format_dict(multidict.MultiDict(parts))
+            return "%s image" % f, fmt
         try:
             img = Image.open(io.BytesIO(data))
         except IOError:
@@ -47,13 +51,5 @@ class ViewImage(base.View):
                 parts.append(
                     (str(i), str(img.info[i]))
                 )
-        if hasattr(img, "_getexif"):
-            ex = img._getexif()
-            if ex:
-                for i in sorted(ex.keys()):
-                    tag = ExifTags.TAGS.get(i, i)
-                    parts.append(
-                        (str(tag), str(ex[i]))
-                    )
         fmt = base.format_dict(multidict.MultiDict(parts))
         return "%s image" % img.format, fmt
