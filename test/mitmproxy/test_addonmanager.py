@@ -1,5 +1,6 @@
 import pytest
 
+from mitmproxy import addons
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import options
@@ -17,6 +18,10 @@ class TAddon:
 
     def noop(self):
         pass
+
+
+def test_defaults():
+    assert addons.default_addons()
 
 
 def test_simple():

@@ -4,7 +4,6 @@ from unittest import mock
 from OpenSSL import SSL
 import pytest
 
-
 from mitmproxy.tools import cmdline
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
