@@ -145,7 +145,7 @@ with the following command:
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |mitmproxy_docs| image:: https://readthedocs.org/projects/mitmproxy/badge/
+.. |mitmproxy_docs| image:: https://shields.mitmproxy.org/api/docs-latest-brightgreen.svg
     :target: http://docs.mitmproxy.org/en/latest/
     :alt: mitmproxy documentation
 
@@ -157,15 +157,15 @@ with the following command:
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
-.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg?label=Travis%20build
+.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg?label=travis%20ci
     :target: https://travis-ci.org/mitmproxy/mitmproxy
     :alt: Travis Build Status
 
-.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mhils/mitmproxy/master.svg?label=Appveyor%20build
+.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mhils/mitmproxy/master.svg?label=appveyor%20ci
     :target: https://ci.appveyor.com/project/mhils/mitmproxy
     :alt: Appveyor Build Status
 
-.. |coverage| image:: https://codecov.io/gh/mitmproxy/mitmproxy/branch/master/graph/badge.svg
+.. |coverage| image:: https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov
     :target: https://codecov.io/gh/mitmproxy/mitmproxy
     :alt: Coverage Status
 
