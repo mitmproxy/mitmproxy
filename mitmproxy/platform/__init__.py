@@ -25,6 +25,10 @@ elif sys.platform == "darwin" or sys.platform.startswith("freebsd"):
     from . import osx
 
     original_addr = osx.original_addr  # noqa
+elif sys.platform.startswith("openbsd"):
+    from . import openbsd
+
+    original_addr = openbsd.original_addr  # noqa
 elif sys.platform == "win32":
     from . import windows
 

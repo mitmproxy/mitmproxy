@@ -63,7 +63,7 @@ Note that this means we don't support transparent mode for earlier versions of O
     running pf itself.** We can't distinguish between an outbound connection from a
     non-mitmproxy app, and an outbound connection from mitmproxy itself - if you
     want to intercept your OSX traffic, you should use an external host to run
-    mitmproxy. None the less, pf is flexible to cater for a range of creative
+    mitmproxy. Nonetheless, pf is flexible to cater for a range of creative
     possibilities, like intercepting traffic emanating from VMs.  See the
     **pf.conf** man page for more.
 

@@ -47,6 +47,7 @@
     transparent
     transparent/linux
     transparent/osx
+    transparent/openbsd
 
 .. toctree::
     :hidden:
