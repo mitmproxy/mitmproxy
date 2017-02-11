@@ -8,10 +8,10 @@ from mitmproxy import controller
 from mitmproxy.tools import dump
 
 from mitmproxy.test import tutils
-from . import mastertest
+from . import tservers
 
 
-class TestDumpMaster(mastertest.MasterTest):
+class TestDumpMaster(tservers.MasterTest):
     def mkmaster(self, flt, **options):
         o = dump.Options(filtstr=flt, verbosity=-1, flow_detail=0, **options)
         m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)

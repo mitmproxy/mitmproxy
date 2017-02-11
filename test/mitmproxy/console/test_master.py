@@ -4,7 +4,7 @@ from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
-from .. import mastertest
+from .. import tservers
 
 
 def test_format_keyvals():
@@ -23,7 +23,7 @@ def test_options():
     assert options.Options(replay_kill_extra=True)
 
 
-class TestMaster(mastertest.MasterTest):
+class TestMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         if "verbosity" not in opts:
             opts["verbosity"] = 1

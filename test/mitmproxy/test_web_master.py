@@ -3,10 +3,10 @@ from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
-from . import mastertest
+from . import tservers
 
 
-class TestWebMaster(mastertest.MasterTest):
+class TestWebMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         o = options.Options(**opts)
         c = ProxyConfig(o)
