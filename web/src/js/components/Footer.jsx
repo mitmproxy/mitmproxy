@@ -52,7 +52,7 @@ function Footer({ settings }) {
             [{listen_host || "*"}:{listen_port}]
             </span>
             <span className="label label-info" title="Version">
-            ["version:"{version}]
+            [version:{version}]
             </span>
             </div>
         </footer>
