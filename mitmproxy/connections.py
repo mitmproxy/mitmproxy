@@ -17,6 +17,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         address: Remote address
         ssl_established: True if TLS is established, False otherwise
         clientcert: The TLS client certificate
+        mitmcert: The MITM'ed TLS server certificate presented to the client
         timestamp_start: Connection start timestamp
         timestamp_ssl_setup: TLS established timestamp
         timestamp_end: Connection end timestamp
@@ -40,6 +41,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             self.clientcert = None
             self.ssl_established = None
 
+        self.mitmcert = None
         self.timestamp_start = time.time()
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
@@ -72,6 +74,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         address=tcp.Address,
         ssl_established=bool,
         clientcert=certs.SSLCert,
+        mitmcert=certs.SSLCert,
         timestamp_start=float,
         timestamp_ssl_setup=float,
         timestamp_end=float,
@@ -98,6 +101,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return cls.from_state(dict(
             address=dict(address=address, use_ipv6=False),
             clientcert=None,
+            mitmcert=None,
             ssl_established=False,
             timestamp_start=None,
             timestamp_end=None,

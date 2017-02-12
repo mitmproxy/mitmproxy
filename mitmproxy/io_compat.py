@@ -88,6 +88,7 @@ def convert_019_100(data):
 
 def convert_100_200(data):
     data["version"] = (2, 0, 0)
+    data["client_conn"]["mitmcert"] = None
     return data
 
 
