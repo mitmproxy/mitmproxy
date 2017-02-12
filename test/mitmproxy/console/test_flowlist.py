@@ -2,7 +2,7 @@ import mitmproxy.tools.console.flowlist as flowlist
 from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
-from .. import mastertest
+from .. import tservers
 import pytest
 from unittest import mock
 
@@ -15,7 +15,7 @@ def mock_add_log(message):
     raise ScriptError(message)
 
 
-class TestFlowlist(mastertest.MasterTest):
+class TestFlowlist(tservers.MasterTest):
     def mkmaster(self, **opts):
         if "verbosity" not in opts:
             opts["verbosity"] = 1
