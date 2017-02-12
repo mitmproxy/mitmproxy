@@ -1,15 +1,16 @@
 import json as _json
+from unittest import mock
 
-import mock
 import tornado.testing
+from tornado import httpclient
+from tornado import websocket
+
 from mitmproxy import exceptions
 from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
-from tornado import httpclient
-from tornado import websocket
 
 
 def json(resp: httpclient.HTTPResponse):
@@ -18,7 +19,7 @@ def json(resp: httpclient.HTTPResponse):
 
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
-        o = options.Options()
+        o = options.Options(http2=False)
         m = webmaster.WebMaster(o, proxy.DummyServer(), with_termlog=False)
         f = tflow.tflow(resp=True)
         f.id = "42"
@@ -129,7 +130,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "content": "req",
             },
             "response": {
-                "msg": "Not Found",
+                "msg": "Non-Authorisé",
                 "code": 404,
                 "headers": [("bar", "baz")],
                 "content": "resp",
@@ -140,7 +141,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.request.port == 123
         assert f.request.headers["foo"] == "bar"
         assert f.request.text == "req"
-        assert f.response.msg == "Not Found"
+        assert f.response.msg == "Non-Authorisé"
         assert f.response.status_code == 404
         assert f.response.headers["bar"] == "baz"
         assert f.response.text == "resp"

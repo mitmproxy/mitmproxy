@@ -1,6 +1,7 @@
 import re
 
-_label_valid = re.compile(b"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+# Allow underscore in host name
+_label_valid = re.compile(b"(?!-)[A-Z\d\-_]{1,63}(?<!-)$", re.IGNORECASE)
 
 
 def is_valid_host(host: bytes) -> bool:

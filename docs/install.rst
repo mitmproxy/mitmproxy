@@ -20,7 +20,7 @@ You can use Homebrew to install everything:
 
     brew install mitmproxy
 
-Or you can download the pre-built binary packages from `mitmproxy.org`_.
+Or you can download the pre-built binary packages from our `releases`_.
 
 
 .. _install-windows:
@@ -35,7 +35,7 @@ Both executables are  added to your PATH and can be invoked from the command
 line.
 
 .. note::
-    mitmproxy's console interface is not supported on Windows, but you can use
+    Mitmproxy's console interface is not supported on Windows, but you can use
     mitmweb (the web-based interface) and mitmdump.
 
 .. _install-linux:
@@ -44,7 +44,7 @@ Installation on Linux
 ---------------------
 
 The recommended way to run mitmproxy on Linux is to use the pre-built binaries
-provided at `mitmproxy.org`_.
+provided at `releases`_.
 
 Our pre-built binaries provide you with the latest version of mitmproxy, a
 self-contained Python 3.5 environment and a recent version of OpenSSL that
@@ -117,13 +117,13 @@ Make sure to have an up-to-date version of pip by running ``pip3 install -U pip`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
-    mitmproxy's console interface is not supported on Windows, but you can use
+    Mitmproxy's console interface is not supported on Windows, but you can use
     mitmweb (the web-based interface) and mitmdump.
 
 First, install the latest version of Python 3.5 or later from the `Python
 website`_. During installation, make sure to select `Add Python to PATH`.
 
-Now, you can install mitmproxy by running
+Mitmproxy has no other dependencies on Windows. You can now install mitmproxy by running
 
 .. code:: powershell
 
@@ -139,11 +139,12 @@ Latest Development Version
 If you would like to install mitmproxy directly from the master branch on GitHub
 or would like to get set up to contribute to the project, install the
 dependencies as you would for a regular installation from source. Then see the
-Hacking_ section of the README on GitHub. You can check your system information
-by running: ``mitmproxy --sysinfo``
+project's README_ on GitHub. You can check your system information
+by running: ``mitmproxy --version``
 
 
-.. _Hacking: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst#hacking
+.. _README: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst
+.. _releases: https://github.com/mitmproxy/mitmproxy/releases
 .. _mitmproxy.org: https://mitmproxy.org/
 .. _`Python website`: https://www.python.org/downloads/windows/
 .. _pip: https://pip.pypa.io/en/latest/installing.html

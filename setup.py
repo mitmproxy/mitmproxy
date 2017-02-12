@@ -67,12 +67,11 @@ setup(
         "construct>=2.8, <2.9",
         "cryptography>=1.3, <1.8",
         "cssutils>=1.0.1, <1.1",
-        "Flask>=0.10.1, <0.12",
         "h2>=2.5.1, <3",
         "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=4.0.1, <5",
         "jsbeautifier>=1.6.3, <1.7",
-        "Pillow>=3.2, <3.5",
+        "Pillow>=3.2, <4.1",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.2",
         "pyOpenSSL>=16.0, <17.0",
@@ -96,11 +95,11 @@ setup(
         ':sys_platform != "win32"': [
         ],
         'dev': [
+            "Flask>=0.10.1, <0.13",
             "flake8>=3.2.1, <3.3",
             "mypy-lang>=0.4.6, <0.5",
-            "rstcheck>=2.2, <3.0",
+            "rstcheck>=2.2, <4.0",
             "tox>=2.3, <3",
-            "mock>=2.0, <2.1",
             "pytest>=3, <3.1",
             "pytest-cov>=2.2.1, <3",
             "pytest-timeout>=1.0.0, <2",
@@ -108,8 +107,7 @@ setup(
             "pytest-faulthandler>=1.3.0, <2",
             "sphinx>=1.3.5, <1.6",
             "sphinx-autobuild>=0.5.2, <0.7",
-            "sphinxcontrib-documentedlist>=0.4.0, <0.5",
-            "docutils==0.12",  # temporary pin, https://github.com/chintal/sphinxcontrib-documentedlist/pull/3
+            "sphinxcontrib-documentedlist>=0.5.0, <0.6",
             "sphinx_rtd_theme>=0.1.9, <0.2",
         ],
         'contentviews': [

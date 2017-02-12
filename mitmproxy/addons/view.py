@@ -298,19 +298,19 @@ class View(collections.Sequence):
                         "Invalid interception filter: %s" % opts.filter
                     )
             self.set_filter(filt)
-        if "order" in updated:
-            if opts.order is None:
+        if "console_order" in updated:
+            if opts.console_order is None:
                 self.set_order(self.default_order)
             else:
-                if opts.order not in self.orders:
+                if opts.console_order not in self.orders:
                     raise exceptions.OptionsError(
-                        "Unknown flow order: %s" % opts.order
+                        "Unknown flow order: %s" % opts.console_order
                     )
-                self.set_order(self.orders[opts.order])
-        if "order_reversed" in updated:
-            self.set_reversed(opts.order_reversed)
-        if "focus_follow" in updated:
-            self.focus_follow = opts.focus_follow
+                self.set_order(self.orders[opts.console_order])
+        if "console_order_reversed" in updated:
+            self.set_reversed(opts.console_order_reversed)
+        if "console_focus_follow" in updated:
+            self.focus_follow = opts.console_focus_follow
 
     def request(self, f):
         self.add(f)

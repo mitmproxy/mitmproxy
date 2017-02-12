@@ -1,5 +1,5 @@
 import io
-import mock
+from unittest import mock
 
 from pathod import pathoc_cmdline as cmdline
 

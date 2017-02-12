@@ -1,9 +1,11 @@
 from mitmproxy.test import tutils
 from mitmproxy import tcp
+from mitmproxy import websocket
 from mitmproxy import controller
 from mitmproxy import http
 from mitmproxy import connections
 from mitmproxy import flow
+from mitmproxy.net import http as net_http
 
 
 def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
@@ -20,6 +22,60 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
         err = terr()
 
     f = tcp.TCPFlow(client_conn, server_conn)
+    f.messages = messages
+    f.error = err
+    f.reply = controller.DummyReply()
+    return f
+
+
+def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, handshake_flow=True):
+
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    if handshake_flow is True:
+        req = http.HTTPRequest(
+            "relative",
+            "GET",
+            "http",
+            "example.com",
+            "80",
+            "/ws",
+            "HTTP/1.1",
+            headers=net_http.Headers(
+                connection="upgrade",
+                upgrade="websocket",
+                sec_websocket_version="13",
+                sec_websocket_key="1234",
+            ),
+            content=b''
+        )
+        resp = http.HTTPResponse(
+            "HTTP/1.1",
+            101,
+            reason=net_http.status_codes.RESPONSES.get(101),
+            headers=net_http.Headers(
+                connection='upgrade',
+                upgrade='websocket',
+                sec_websocket_accept=b'',
+            ),
+            content=b'',
+        )
+        handshake_flow = http.HTTPFlow(client_conn, server_conn)
+        handshake_flow.request = req
+        handshake_flow.response = resp
+
+    f = websocket.WebSocketFlow(client_conn, server_conn, handshake_flow)
+
+    if messages is True:
+        messages = [
+            websocket.WebSocketBinaryMessage(f, True, b"hello binary"),
+            websocket.WebSocketTextMessage(f, False, "hello text".encode()),
+        ]
+    if err is True:
+        err = terr()
+
     f.messages = messages
     f.error = err
     f.reply = controller.DummyReply()

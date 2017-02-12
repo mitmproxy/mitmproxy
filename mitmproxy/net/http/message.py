@@ -7,15 +7,6 @@ from mitmproxy.types import serializable
 from mitmproxy.net.http import headers
 
 
-# While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-def _native(x):
-    return x.decode("utf-8", "surrogateescape")
-
-
-def _always_bytes(x):
-    return strutils.always_bytes(x, "utf-8", "surrogateescape")
-
-
 class MessageData(serializable.Serializable):
     def __eq__(self, other):
         if isinstance(other, MessageData):
@@ -142,11 +133,11 @@ class Message(serializable.Serializable):
         """
         Version string, e.g. "HTTP/1.1"
         """
-        return _native(self.data.http_version)
+        return self.data.http_version.decode("utf-8", "surrogateescape")
 
     @http_version.setter
     def http_version(self, http_version):
-        self.data.http_version = _always_bytes(http_version)
+        self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
 
     @property
     def timestamp_start(self):

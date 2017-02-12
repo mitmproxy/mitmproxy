@@ -12,7 +12,7 @@
 | nonblocking.py           | Demonstrate parallel processing with a blocking script                                        |
 | remote_debug.py          | This script enables remote debugging of the mitmproxy _UI_ with PyCharm.                      |
 | sslstrip.py              | sslstrip-like funtionality implemented with mitmproxy                                         |
-| stream                   | Enable streaming for all responses.                                                           |
+| stream.py                | Enable streaming for all responses.                                                           |
 | stream_modify.py         | Modify a streamed response body.                                                              |
 | tcp_message.py           | Modify a raw TCP connection                                                                   |
 | tls_passthrough.py       | Use conditional TLS interception based on a user-defined strategy.                            |

@@ -78,10 +78,9 @@
 
 .. toctree::
     :hidden:
-    :caption: Hacking
+    :caption: Development
 
-    dev/architecture
-    dev/testing
+    dev/contributing
     dev/sslkeylogfile
 
 ..  Indices and tables

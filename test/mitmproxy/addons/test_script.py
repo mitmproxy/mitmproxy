@@ -10,6 +10,7 @@ from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import master
+from mitmproxy import utils
 
 from mitmproxy.addons import script
 
@@ -72,7 +73,7 @@ class TestParseCommand:
                 script.parse_command(dir)
 
     def test_parse_args(self):
-        with tutils.chdir(tutils.test_data.dirname):
+        with utils.chdir(tutils.test_data.dirname):
             assert script.parse_command(
                 "mitmproxy/data/addonscripts/recorder.py"
             ) == ("mitmproxy/data/addonscripts/recorder.py", [])
@@ -85,7 +86,7 @@ class TestParseCommand:
 
     @ttutils.skip_not_windows
     def test_parse_windows(self):
-        with tutils.chdir(tutils.test_data.dirname):
+        with utils.chdir(tutils.test_data.dirname):
             assert script.parse_command(
                 "mitmproxy/data\\addonscripts\\recorder.py"
             ) == ("mitmproxy/data\\addonscripts\\recorder.py", [])
@@ -202,6 +203,7 @@ class TestScriptLoader:
         evts = [i[1] for i in sc.ns.call_log]
         assert evts == ['start', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
 
+        f = tflow.tflow(resp=True)
         with m.handlecontext():
             tutils.raises(
                 "file not found",

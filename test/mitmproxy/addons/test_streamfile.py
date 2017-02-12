@@ -22,6 +22,10 @@ def test_configure():
                 "invalid filter",
                 tctx.configure, sa, streamfile=p, filtstr="~~"
             )
+            tctx.configure(sa, filtstr="foo")
+            assert sa.filt
+            tctx.configure(sa, filtstr=None)
+            assert not sa.filt
 
 
 def rd(p):

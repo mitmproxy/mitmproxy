@@ -69,6 +69,30 @@ function responseCode(code){
     responseCodeFilter.desc = "resp. code is " + code;
     return responseCodeFilter;
 }
+function body(regex){
+    regex = new RegExp(regex, "i");
+    function bodyFilter(flow){
+        return True;
+    }
+    bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return bodyFilter;
+}
+function requestBody(regex){
+    regex = new RegExp(regex, "i");
+    function requestBodyFilter(flow){
+        return True;
+    }
+    requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return requestBodyFilter;
+}
+function responseBody(regex){
+    regex = new RegExp(regex, "i");
+    function responseBodyFilter(flow){
+        return True;
+    }
+    responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return responseBodyFilter;
+}
 function domain(regex){
     regex = new RegExp(regex, "i");
     function domainFilter(flow){
@@ -76,6 +100,16 @@ function domain(regex){
     }
     domainFilter.desc = "domain matches " + regex;
     return domainFilter;
+}
+function destination(regex){
+    regex = new RegExp(regex, "i");
+    function destinationFilter(flow){
+    return (!!flow.server_conn.address)
+           &&
+           regex.test(flow.server_conn.address.address[0] + ":" + flow.server_conn.address.address[1]);
+    }
+    destinationFilter.desc = "destination address matches " + regex;
+    return destinationFilter;
 }
 function errorFilter(flow){
     return !!flow.error;
@@ -109,6 +143,10 @@ function responseHeader(regex){
     responseHeaderFilter.desc = "resp. header matches " + regex;
     return responseHeaderFilter;
 }
+function httpFilter(flow){
+    return flow.type === "http";
+}
+httpFilter.desc = "is an HTTP Flow";
 function method(regex){
     regex = new RegExp(regex, "i");
     function methodFilter(flow){
@@ -117,6 +155,10 @@ function method(regex){
     methodFilter.desc = "method matches " + regex;
     return methodFilter;
 }
+function markedFilter(flow){
+    return flow.marked;
+}
+markedFilter.desc = "is marked";
 function noResponseFilter(flow){
     return flow.request && !flow.response;
 }
@@ -125,7 +167,16 @@ function responseFilter(flow){
     return !!flow.response;
 }
 responseFilter.desc = "has response";
-
+function source(regex){
+    regex = new RegExp(regex, "i");
+    function sourceFilter(flow){
+        return (!!flow.client_conn.address)
+               &&
+               regex.test(flow.client_conn.address.address[0] + ":" + flow.client_conn.address.address[1]);
+    }
+    sourceFilter.desc = "source address matches " + regex;
+    return sourceFilter;
+}
 function contentType(regex){
     regex = new RegExp(regex, "i");
     function contentTypeFilter(flow){
@@ -138,6 +189,10 @@ function contentType(regex){
     contentTypeFilter.desc = "content type matches " + regex;
     return contentTypeFilter;
 }
+function tcpFilter(flow){
+    return flow.type === "tcp";
+}
+tcpFilter.desc = "is a TCP Flow";
 function requestContentType(regex){
     regex = new RegExp(regex, "i");
     function requestContentTypeFilter(flow){
@@ -172,54 +227,57 @@ cc "control character" = [|&!()~"]
 __ "optional whitespace" = ws*
 
 OrExpr
-  = first:AndExpr __ "|" __ second:OrExpr 
+  = first:AndExpr __ "|" __ second:OrExpr
     { return or(first, second); }
   / AndExpr
 
 AndExpr
-  = first:NotExpr __ "&" __ second:AndExpr 
+  = first:NotExpr __ "&" __ second:AndExpr
     { return and(first, second); }
-  / first:NotExpr ws+ second:AndExpr 
+  / first:NotExpr ws+ second:AndExpr
     { return and(first, second); }
   / NotExpr
 
 NotExpr
-  = "!" __ expr:NotExpr 
+  = "!" __ expr:NotExpr
     { return not(expr); }
   / BindingExpr
 
 BindingExpr
-  = "(" __ expr:OrExpr __ ")" 
+  = "(" __ expr:OrExpr __ ")"
     { return binding(expr); }
   / Expr
 
+/* All the filters except "~s" and "~src" are arranged in the ascending order as
+   given in the docs(http://docs.mitmproxy.org/en/latest/features/filters.html).
+   "~s" and "~src" are so arranged as "~s" caused problems in the evaluation of
+   "~src". */
+
 Expr
-  = NullaryExpr
-  / UnaryExpr
-
-NullaryExpr
-  = BooleanLiteral
-  / "~a" { return assetFilter; }
-  / "~e" { return errorFilter; }
-  / "~q" { return noResponseFilter; }
-  / "~s" { return responseFilter; }
-
-
-BooleanLiteral
   = "true" { return trueFilter; }
   / "false" { return falseFilter; }
-
-UnaryExpr
-  = "~c"  ws+ s:IntegerLiteral { return responseCode(s); }
-  / "~d"  ws+ s:StringLiteral { return domain(s); }
-  / "~h"  ws+ s:StringLiteral { return header(s); }
+  / "~a" { return assetFilter; }
+  / "~b" ws+ s:StringLiteral { return body(s); }
+  / "~bq" ws+ s:StringLiteral { return requestBody(s); }
+  / "~bs" ws+ s:StringLiteral { return responseBody(s); }
+  / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
+  / "~d" ws+ s:StringLiteral { return domain(s); }
+  / "~dst" ws+ s:StringLiteral { return destination(s); }
+  / "~e" { return errorFilter; }
+  / "~h" ws+ s:StringLiteral { return header(s); }
   / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
   / "~hs" ws+ s:StringLiteral { return responseHeader(s); }
-  / "~m"  ws+ s:StringLiteral { return method(s); }
-  / "~t"  ws+ s:StringLiteral { return contentType(s); }
+  / "~http" { return httpFilter; }
+  / "~m" ws+ s:StringLiteral { return method(s); }
+  / "~marked" { return markedFilter; }
+  / "~q" { return noResponseFilter; }
+  / "~src" ws+ s:StringLiteral { return source(s); }
+  / "~s" { return responseFilter; }
+  / "~t" ws+ s:StringLiteral { return contentType(s); }
+  / "~tcp" { return tcpFilter; }
   / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
   / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
-  / "~u"  ws+ s:StringLiteral { return url(s); }
+  / "~u" ws+ s:StringLiteral { return url(s); }
   / s:StringLiteral { return url(s); }
 
 IntegerLiteral "integer"

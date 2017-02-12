@@ -538,7 +538,7 @@ class _Connection:
                     self.ssl_verification_error = exceptions.InvalidCertificateException(
                         "Certificate Verification Error for {}: {} (errno: {}, depth: {})".format(
                             sni,
-                            strutils.native(SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(errno)), "utf8"),
+                            strutils.always_str(SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(errno)), "utf8"),
                             errno,
                             err_depth
                         )

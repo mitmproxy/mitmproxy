@@ -1,6 +1,7 @@
 import io
+from unittest.mock import patch
+
 from mitmproxy.test import tflow
-from mock import patch
 
 from mitmproxy import flowfilter
 from . import tutils as ttutils

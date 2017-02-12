@@ -44,7 +44,7 @@ class SSLInfo:
 
     def __str__(self):
         parts = [
-            "Application Layer Protocol: %s" % strutils.native(self.alp, "utf8"),
+            "Application Layer Protocol: %s" % strutils.always_str(self.alp, "utf8"),
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
@@ -53,24 +53,24 @@ class SSLInfo:
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
                 parts.append("\t\t%s=%s" % (
-                    strutils.native(cn[0], "utf8"),
-                    strutils.native(cn[1], "utf8"))
+                    strutils.always_str(cn[0], "utf8"),
+                    strutils.always_str(cn[1], "utf8"))
                 )
             parts.append("\tIssuer: ")
             for cn in i.get_issuer().get_components():
                 parts.append("\t\t%s=%s" % (
-                    strutils.native(cn[0], "utf8"),
-                    strutils.native(cn[1], "utf8"))
+                    strutils.always_str(cn[0], "utf8"),
+                    strutils.always_str(cn[1], "utf8"))
                 )
             parts.extend(
                 [
                     "\tVersion: %s" % i.get_version(),
                     "\tValidity: %s - %s" % (
-                        strutils.native(i.get_notBefore(), "utf8"),
-                        strutils.native(i.get_notAfter(), "utf8")
+                        strutils.always_str(i.get_notBefore(), "utf8"),
+                        strutils.always_str(i.get_notAfter(), "utf8")
                     ),
                     "\tSerial: %s" % i.get_serial_number(),
-                    "\tAlgorithm: %s" % strutils.native(i.get_signature_algorithm(), "utf8")
+                    "\tAlgorithm: %s" % strutils.always_str(i.get_signature_algorithm(), "utf8")
                 ]
             )
             pk = i.get_pubkey()
@@ -82,7 +82,7 @@ class SSLInfo:
             parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
             s = certs.SSLCert(i)
             if s.altnames:
-                parts.append("\tSANs: %s" % " ".join(strutils.native(n, "utf8") for n in s.altnames))
+                parts.append("\tSANs: %s" % " ".join(strutils.always_str(n, "utf8") for n in s.altnames))
         return "\n".join(parts)
 
 

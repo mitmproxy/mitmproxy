@@ -1,57 +1,59 @@
+import os.path
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
 from .. import tservers
 from mitmproxy.addons import replace
-from mitmproxy import master
-from mitmproxy import options
-from mitmproxy import proxy
+from mitmproxy.test import taddons
 
 
 class TestReplace:
+    def test_parse_hook(self):
+        x = replace.parse_hook("/foo/bar/voing")
+        assert x == ("foo", "bar", "voing")
+        x = replace.parse_hook("/foo/bar/vo/ing/")
+        assert x == ("foo", "bar", "vo/ing/")
+        x = replace.parse_hook("/bar/voing")
+        assert x == (".*", "bar", "voing")
+        tutils.raises("invalid replacement", replace.parse_hook, "/")
+
     def test_configure(self):
         r = replace.Replace()
-        updated = set(["replacements"])
-        r.configure(options.Options(
-            replacements=[("one", "two", "three")]
-        ), updated)
-        tutils.raises(
-            "invalid filter pattern",
-            r.configure,
-            options.Options(
+        with taddons.context() as tctx:
+            tctx.configure(r, replacements=[("one", "two", "three")])
+            tutils.raises(
+                "invalid filter pattern",
+                tctx.configure,
+                r,
                 replacements=[("~b", "two", "three")]
-            ),
-            updated
-        )
-        tutils.raises(
-            "invalid regular expression",
-            r.configure,
-            options.Options(
+            )
+            tutils.raises(
+                "invalid regular expression",
+                tctx.configure,
+                r,
                 replacements=[("foo", "+", "three")]
-            ),
-            updated
-        )
+            )
+            tctx.configure(r, replacements=["/a/b/c/"])
 
     def test_simple(self):
-        o = options.Options(
-            replacements = [
-                ("~q", "foo", "bar"),
-                ("~s", "foo", "bar"),
-            ]
-        )
-        m = master.Master(o, proxy.DummyServer())
-        sa = replace.Replace()
-        m.addons.add(sa)
+        r = replace.Replace()
+        with taddons.context() as tctx:
+            tctx.configure(
+                r,
+                replacements = [
+                    ("~q", "foo", "bar"),
+                    ("~s", "foo", "bar"),
+                ]
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            r.request(f)
+            assert f.request.content == b"bar"
 
-        f = tflow.tflow()
-        f.request.content = b"foo"
-        m.request(f)
-        assert f.request.content == b"bar"
-
-        f = tflow.tflow(resp=True)
-        f.response.content = b"foo"
-        m.response(f)
-        assert f.response.content == b"bar"
+            f = tflow.tflow(resp=True)
+            f.response.content = b"foo"
+            r.response(f)
+            assert f.response.content == b"bar"
 
 
 class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
@@ -72,3 +74,36 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
             req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
         assert req.content == b"ORLY"
         assert req.status_code == 418
+
+
+class TestReplaceFile:
+    def test_simple(self):
+        r = replace.ReplaceFile()
+        with tutils.tmpdir() as td:
+            rp = os.path.join(td, "replacement")
+            with open(rp, "w") as f:
+                f.write("bar")
+            with taddons.context() as tctx:
+                tctx.configure(
+                    r,
+                    replacement_files = [
+                        ("~q", "foo", rp),
+                        ("~s", "foo", rp),
+                        ("~b nonexistent", "nonexistent", "nonexistent"),
+                    ]
+                )
+                f = tflow.tflow()
+                f.request.content = b"foo"
+                r.request(f)
+                assert f.request.content == b"bar"
+
+                f = tflow.tflow(resp=True)
+                f.response.content = b"foo"
+                r.response(f)
+                assert f.response.content == b"bar"
+
+                f = tflow.tflow()
+                f.request.content = b"nonexistent"
+                assert not tctx.master.event_log
+                r.request(f)
+                assert tctx.master.event_log

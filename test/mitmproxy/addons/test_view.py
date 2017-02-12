@@ -19,15 +19,15 @@ class Options(options.Options):
         self,
         *,
         filter=None,
-        order=None,
-        order_reversed=False,
-        focus_follow=False,
+        console_order=None,
+        console_order_reversed=False,
+        console_focus_follow=False,
         **kwargs
     ):
         self.filter = filter
-        self.order = order
-        self.order_reversed = order_reversed
-        self.focus_follow = focus_follow
+        self.console_order = console_order
+        self.console_order_reversed = console_order_reversed
+        self.console_focus_follow = console_focus_follow
         super().__init__(**kwargs)
 
 
@@ -42,7 +42,7 @@ def test_order_refresh():
 
     tf = tflow.tflow(resp=True)
     with taddons.context(options=Options()) as tctx:
-        tctx.configure(v, order="time")
+        tctx.configure(v, console_order="time")
         v.add(tf)
         tf.request.timestamp_start = 1
         assert not sargs
@@ -73,12 +73,15 @@ def test_simple():
     assert v.store_count() == 0
     v.request(f)
     assert list(v) == [f]
+    assert v.get_by_id(f.id)
+    assert not v.get_by_id("nonexistent")
 
     # These all just call udpate
     v.error(f)
     v.response(f)
     v.intercept(f)
     v.resume(f)
+    v.kill(f)
     assert list(v) == [f]
 
     v.request(f)
@@ -145,12 +148,12 @@ def test_order():
         v.request(tft(method="put", start=4))
         assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
-        tctx.configure(v, order="method")
+        tctx.configure(v, console_order="method")
         assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
         v.set_reversed(True)
         assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
 
-        tctx.configure(v, order="time")
+        tctx.configure(v, console_order="time")
         assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
 
         v.set_reversed(False)
@@ -268,7 +271,7 @@ def test_signals():
 def test_focus_follow():
     v = view.View()
     with taddons.context(options=Options()) as tctx:
-        tctx.configure(v, focus_follow=True, filter="~m get")
+        tctx.configure(v, console_focus_follow=True, filter="~m get")
 
         v.add(tft(start=5))
         assert v.focus.index == 0
@@ -381,12 +384,12 @@ def test_configure():
         tctx.configure(v, filter="~q")
         tutils.raises("invalid interception filter", tctx.configure, v, filter="~~")
 
-        tctx.configure(v, order="method")
-        tutils.raises("unknown flow order", tctx.configure, v, order="no")
+        tctx.configure(v, console_order="method")
+        tutils.raises("unknown flow order", tctx.configure, v, console_order="no")
 
-        tctx.configure(v, order_reversed=True)
+        tctx.configure(v, console_order_reversed=True)
 
-        tctx.configure(v, order=None)
+        tctx.configure(v, console_order=None)
 
-        tctx.configure(v, focus_follow=True)
+        tctx.configure(v, console_focus_follow=True)
         assert v.focus_follow

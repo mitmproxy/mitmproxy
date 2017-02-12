@@ -9,7 +9,7 @@ import Prompt from './Prompt'
 
 import { selectTab } from '../ducks/ui/flow'
 
-export default class FlowView extends Component {
+class FlowView extends Component {
 
     static allTabs = { Request, Response, Error, Details }
 

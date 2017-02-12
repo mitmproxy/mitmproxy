@@ -1,28 +1,28 @@
 import re
 import codecs
+from typing import AnyStr, Optional
 
 
-def always_bytes(unicode_or_bytes, *encode_args):
-    if isinstance(unicode_or_bytes, str):
-        return unicode_or_bytes.encode(*encode_args)
-    elif isinstance(unicode_or_bytes, bytes) or unicode_or_bytes is None:
-        return unicode_or_bytes
+def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes]:
+    if isinstance(str_or_bytes, bytes) or str_or_bytes is None:
+        return str_or_bytes
+    elif isinstance(str_or_bytes, str):
+        return str_or_bytes.encode(*encode_args)
     else:
-        raise TypeError("Expected str or bytes, but got {}.".format(type(unicode_or_bytes).__name__))
+        raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
-def native(s, *encoding_opts):
+def always_str(str_or_bytes: Optional[AnyStr], *decode_args) -> Optional[str]:
     """
-    Convert :py:class:`bytes` or :py:class:`unicode` to the native
-    :py:class:`str` type, using latin1 encoding if conversion is necessary.
-
-    https://www.python.org/dev/peps/pep-3333/#a-note-on-string-types
+    Returns,
+        str_or_bytes unmodified, if
     """
-    if not isinstance(s, (bytes, str)):
-        raise TypeError("%r is neither bytes nor unicode" % s)
-    if isinstance(s, bytes):
-        return s.decode(*encoding_opts)
-    return s
+    if isinstance(str_or_bytes, str) or str_or_bytes is None:
+        return str_or_bytes
+    elif isinstance(str_or_bytes, bytes):
+        return str_or_bytes.decode(*decode_args)
+    else:
+        raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
 # Translate control characters to "safe" characters. This implementation initially
@@ -135,7 +135,7 @@ def hexdump(s):
         part = s[i:i + 16]
         x = " ".join("{:0=2x}".format(i) for i in part)
         x = x.ljust(47)  # 16*2 + 15
-        part_repr = native(escape_control_characters(
+        part_repr = always_str(escape_control_characters(
             part.decode("ascii", "replace").replace(u"\ufffd", u"."),
             False
         ))

@@ -3,7 +3,6 @@ from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 
 from mitmproxy.addons import stickycookie
-from mitmproxy import options
 from mitmproxy.test import tutils as ntutils
 
 
@@ -15,11 +14,15 @@ def test_domain_match():
 class TestStickyCookie:
     def test_config(self):
         sc = stickycookie.StickyCookie()
-        o = options.Options(stickycookie = "~b")
-        tutils.raises(
-            "invalid filter",
-            sc.configure, o, o.keys()
-        )
+        with taddons.context() as tctx:
+            tutils.raises(
+                "invalid filter", tctx.configure, sc, stickycookie="~b"
+            )
+
+            tctx.configure(sc, stickycookie="foo")
+            assert sc.flt
+            tctx.configure(sc, stickycookie=None)
+            assert not sc.flt
 
     def test_simple(self):
         sc = stickycookie.StickyCookie()

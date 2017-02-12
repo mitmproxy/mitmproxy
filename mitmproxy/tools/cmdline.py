@@ -1,9 +1,7 @@
 import argparse
-import re
 import os
 
 from mitmproxy import exceptions
-from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy import platform
 from mitmproxy.utils import human
@@ -19,91 +17,6 @@ class ParseException(Exception):
     pass
 
 
-def _parse_hook(s):
-    sep, rem = s[0], s[1:]
-    parts = rem.split(sep, 2)
-    if len(parts) == 2:
-        patt = ".*"
-        a, b = parts
-    elif len(parts) == 3:
-        patt, a, b = parts
-    else:
-        raise ParseException(
-            "Malformed hook specifier - too few clauses: %s" % s
-        )
-
-    if not a:
-        raise ParseException("Empty clause: %s" % str(patt))
-
-    if not flowfilter.parse(patt):
-        raise ParseException("Malformed filter pattern: %s" % patt)
-
-    return patt, a, b
-
-
-def parse_replace_hook(s):
-    """
-        Returns a (pattern, regex, replacement) tuple.
-
-        The general form for a replacement hook is as follows:
-
-            /patt/regex/replacement
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the pattern is set to match
-        universally (i.e. ".*"). Example:
-
-            /foo/bar/
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the replacement clause below is
-        "foo/bar/":
-
-            /one/two/foo/bar/
-
-        Checks that pattern and regex are both well-formed. Raises
-        ParseException on error.
-    """
-    patt, regex, replacement = _parse_hook(s)
-    try:
-        re.compile(regex)
-    except re.error as e:
-        raise ParseException("Malformed replacement regex: %s" % str(e))
-    return patt, regex, replacement
-
-
-def parse_setheader(s):
-    """
-        Returns a (pattern, header, value) tuple.
-
-        The general form for a replacement hook is as follows:
-
-            /patt/header/value
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the pattern is set to match
-        universally (i.e. ".*"). Example:
-
-            /foo/bar/
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the value clause below is
-        "foo/bar/":
-
-            /one/two/foo/bar/
-
-        Checks that pattern and regex are both well-formed. Raises
-        ParseException on error.
-    """
-    return _parse_hook(s)
-
-
 def get_common_options(args):
     stickycookie, stickyauth = None, None
     if args.stickycookie_filt:
@@ -115,34 +28,6 @@ def get_common_options(args):
     stream_large_bodies = args.stream_large_bodies
     if stream_large_bodies:
         stream_large_bodies = human.parse_size(stream_large_bodies)
-
-    reps = []
-    for i in args.replace or []:
-        try:
-            p = parse_replace_hook(i)
-        except ParseException as e:
-            raise exceptions.OptionsError(e)
-        reps.append(p)
-    for i in args.replace_file or []:
-        try:
-            patt, rex, path = parse_replace_hook(i)
-        except ParseException as e:
-            raise exceptions.OptionsError(e)
-        try:
-            v = open(path, "rb").read()
-        except IOError as e:
-            raise exceptions.OptionsError(
-                "Could not read replace file: %s" % path
-            )
-        reps.append((patt, rex, v))
-
-    setheaders = []
-    for i in args.setheader or []:
-        try:
-            p = parse_setheader(i)
-        except ParseException as e:
-            raise exceptions.OptionsError(e)
-        setheaders.append(p)
 
     if args.streamfile and args.streamfile[0] == args.rfile:
         if args.streamfile[1] == "wb":
@@ -212,9 +97,9 @@ def get_common_options(args):
         args.verbose = 0
 
     return dict(
-        app=args.app,
-        app_host=args.app_host,
-        app_port=args.app_port,
+        onboarding=args.onboarding,
+        onboarding_host=args.onboarding_host,
+        onboarding_port=args.onboarding_port,
 
         anticache=args.anticache,
         anticomp=args.anticomp,
@@ -224,8 +109,9 @@ def get_common_options(args):
         refresh_server_playback=not args.norefresh,
         server_replay_use_headers=args.server_replay_use_headers,
         rfile=args.rfile,
-        replacements=reps,
-        setheaders=setheaders,
+        replacements=args.replacements,
+        replacement_files=args.replacement_files,
+        setheaders=args.setheaders,
         server_replay=args.server_replay,
         scripts=args.scripts,
         stickycookie=stickycookie,
@@ -275,13 +161,8 @@ def get_common_options(args):
 def basic_options(parser):
     parser.add_argument(
         '--version',
-        action='version',
-        version="%(prog)s" + " " + version.VERSION
-    )
-    parser.add_argument(
-        '--sysinfo',
         action='store_true',
-        dest='sysinfo',
+        dest='version',
     )
     parser.add_argument(
         '--shortversion',
@@ -573,13 +454,13 @@ def proxy_ssl_options(parser):
 def onboarding_app(parser):
     group = parser.add_argument_group("Onboarding App")
     group.add_argument(
-        "--noapp",
-        action="store_false", dest="app",
+        "--no-onboarding",
+        action="store_false", dest="onboarding",
         help="Disable the mitmproxy onboarding app."
     )
     group.add_argument(
-        "--app-host",
-        action="store", dest="app_host",
+        "--onboarding-host",
+        action="store", dest="onboarding_host",
         help="""
             Domain to serve the onboarding app from. For transparent mode, use
             an IP when a DNS entry for the app domain is not present. Default:
@@ -587,9 +468,9 @@ def onboarding_app(parser):
         """ % options.APP_HOST
     )
     group.add_argument(
-        "--app-port",
+        "--onboarding-port",
         action="store",
-        dest="app_port",
+        dest="onboarding_port",
         type=int,
         metavar="80",
         help="Port to serve the onboarding app from."
@@ -681,13 +562,13 @@ def replacements(parser):
     )
     group.add_argument(
         "--replace",
-        action="append", type=str, dest="replace",
+        action="append", type=str, dest="replacements",
         metavar="PATTERN",
         help="Replacement pattern."
     )
     group.add_argument(
         "--replace-from-file",
-        action="append", type=str, dest="replace_file",
+        action="append", type=str, dest="replacement_files",
         metavar="PATH",
         help="""
             Replacement pattern, where the replacement clause is a path to a
@@ -707,7 +588,7 @@ def set_headers(parser):
     )
     group.add_argument(
         "--setheader",
-        action="append", type=str, dest="setheader",
+        action="append", type=str, dest="setheaders",
         metavar="PATTERN",
         help="Header set pattern."
     )
@@ -767,42 +648,42 @@ def common_options(parser):
 
 
 def mitmproxy():
-    # Don't import mitmproxy.tools.console for mitmdump, urwid is not available on all
-    # platforms.
+    # Don't import mitmproxy.tools.console for mitmdump, urwid is not available
+    # on all platforms.
     from .console import palettes
 
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
     common_options(parser)
     parser.add_argument(
         "--palette", type=str,
-        action="store", dest="palette",
+        action="store", dest="console_palette",
         choices=sorted(palettes.palettes.keys()),
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
     parser.add_argument(
         "--palette-transparent",
-        action="store_true", dest="palette_transparent",
+        action="store_true", dest="console_palette_transparent",
         help="Set transparent background for palette."
     )
     parser.add_argument(
         "-e", "--eventlog",
-        action="store_true", dest="eventlog",
+        action="store_true", dest="console_eventlog",
         help="Show event log."
     )
     parser.add_argument(
         "--follow",
-        action="store_true", dest="focus_follow",
+        action="store_true", dest="console_focus_follow",
         help="Focus follows new flows."
     )
     parser.add_argument(
         "--order",
-        type=str, dest="order",
+        type=str, dest="console_order",
         choices=[o[1] for o in view.orders],
         help="Flow sort order."
     )
     parser.add_argument(
         "--no-mouse",
-        action="store_true", dest="no_mouse",
+        action="store_true", dest="console_no_mouse",
         help="Disable mouse interaction."
     )
     group = parser.add_argument_group(
@@ -856,24 +737,24 @@ def mitmweb():
     group = parser.add_argument_group("Mitmweb")
     group.add_argument(
         "--no-browser",
-        action="store_false", dest="open_browser",
+        action="store_false", dest="web_open_browser",
         help="Don't start a browser"
     )
     group.add_argument(
-        "--wport",
-        action="store", type=int, dest="wport",
+        "--web-port",
+        action="store", type=int, dest="web_port",
         metavar="PORT",
         help="Mitmweb port."
     )
     group.add_argument(
-        "--wiface",
-        action="store", dest="wiface",
+        "--web-iface",
+        action="store", dest="web_iface",
         metavar="IFACE",
         help="Mitmweb interface."
     )
     group.add_argument(
-        "--wdebug",
-        action="store_true", dest="wdebug",
+        "--web-debug",
+        action="store_true", dest="web_debug",
         help="Turn on mitmweb debugging"
     )
 

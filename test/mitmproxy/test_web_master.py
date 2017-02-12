@@ -1,13 +1,16 @@
 from mitmproxy.tools.web import master
 from mitmproxy import proxy
 from mitmproxy import options
+from mitmproxy.proxy.config import ProxyConfig
+
 from . import mastertest
 
 
 class TestWebMaster(mastertest.MasterTest):
     def mkmaster(self, **opts):
         o = options.Options(**opts)
-        return master.WebMaster(o, proxy.DummyServer(o))
+        c = ProxyConfig(o)
+        return master.WebMaster(o, proxy.DummyServer(c))
 
     def test_basic(self):
         m = self.mkmaster()

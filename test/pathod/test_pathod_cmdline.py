@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from pathod import pathod_cmdline as cmdline
 

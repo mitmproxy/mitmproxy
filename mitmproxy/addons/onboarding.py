@@ -8,9 +8,9 @@ class Onboarding(wsgiapp.WSGIApp):
         self.enabled = False
 
     def configure(self, options, updated):
-        self.host = options.app_host
-        self.port = options.app_port
-        self.enabled = options.app
+        self.host = options.onboarding_host
+        self.port = options.onboarding_port
+        self.enabled = options.onboarding
 
     def request(self, f):
         if self.enabled:

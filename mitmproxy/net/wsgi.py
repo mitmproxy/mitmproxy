@@ -57,38 +57,38 @@ class WSGIAdaptor:
         Raises:
             ValueError, if the content-encoding is invalid.
         """
-        path = strutils.native(flow.request.path, "latin-1")
+        path = strutils.always_str(flow.request.path, "latin-1")
         if '?' in path:
-            path_info, query = strutils.native(path, "latin-1").split('?', 1)
+            path_info, query = strutils.always_str(path, "latin-1").split('?', 1)
         else:
             path_info = path
             query = ''
         environ = {
             'wsgi.version': (1, 0),
-            'wsgi.url_scheme': strutils.native(flow.request.scheme, "latin-1"),
+            'wsgi.url_scheme': strutils.always_str(flow.request.scheme, "latin-1"),
             'wsgi.input': io.BytesIO(flow.request.content or b""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,
             'wsgi.run_once': False,
             'SERVER_SOFTWARE': self.sversion,
-            'REQUEST_METHOD': strutils.native(flow.request.method, "latin-1"),
+            'REQUEST_METHOD': strutils.always_str(flow.request.method, "latin-1"),
             'SCRIPT_NAME': '',
             'PATH_INFO': urllib.parse.unquote(path_info),
             'QUERY_STRING': query,
-            'CONTENT_TYPE': strutils.native(flow.request.headers.get('Content-Type', ''), "latin-1"),
-            'CONTENT_LENGTH': strutils.native(flow.request.headers.get('Content-Length', ''), "latin-1"),
+            'CONTENT_TYPE': strutils.always_str(flow.request.headers.get('Content-Type', ''), "latin-1"),
+            'CONTENT_LENGTH': strutils.always_str(flow.request.headers.get('Content-Length', ''), "latin-1"),
             'SERVER_NAME': self.domain,
             'SERVER_PORT': str(self.port),
-            'SERVER_PROTOCOL': strutils.native(flow.request.http_version, "latin-1"),
+            'SERVER_PROTOCOL': strutils.always_str(flow.request.http_version, "latin-1"),
         }
         environ.update(extra)
         if flow.client_conn.address:
-            environ["REMOTE_ADDR"] = strutils.native(flow.client_conn.address.host, "latin-1")
+            environ["REMOTE_ADDR"] = strutils.always_str(flow.client_conn.address.host, "latin-1")
             environ["REMOTE_PORT"] = flow.client_conn.address.port
 
         for key, value in flow.request.headers.items():
-            key = 'HTTP_' + strutils.native(key, "latin-1").upper().replace('-', '_')
+            key = 'HTTP_' + strutils.always_str(key, "latin-1").upper().replace('-', '_')
             if key not in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
                 environ[key] = value
         return environ

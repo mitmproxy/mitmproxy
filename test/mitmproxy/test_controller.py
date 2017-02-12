@@ -1,6 +1,6 @@
 from threading import Thread, Event
 
-from mock import Mock
+from unittest.mock import Mock
 
 from mitmproxy import controller
 import queue

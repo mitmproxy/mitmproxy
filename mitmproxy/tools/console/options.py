@@ -6,6 +6,9 @@ from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import select
 from mitmproxy.tools.console import signals
 
+from mitmproxy.addons import replace
+from mitmproxy.addons import setheaders
+
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
     ('heading_key', "C"), ":clear all ",
@@ -75,7 +78,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Palette",
                     "P",
-                    checker("palette", master.options),
+                    checker("console_palette", master.options),
                     self.palette
                 ),
                 select.Option(
@@ -188,10 +191,16 @@ class Options(urwid.WidgetWrap):
         )
 
     def setheaders(self):
+        data = []
+        for d in self.master.options.setheaders:
+            if isinstance(d, str):
+                data.append(setheaders.parse_setheader(d))
+            else:
+                data.append(d)
         self.master.view_grideditor(
             grideditor.SetHeadersEditor(
                 self.master,
-                self.master.options.setheaders,
+                data,
                 self.master.options.setter("setheaders")
             )
         )
@@ -215,10 +224,16 @@ class Options(urwid.WidgetWrap):
         )
 
     def replacepatterns(self):
+        data = []
+        for d in self.master.options.replacements:
+            if isinstance(d, str):
+                data.append(replace.parse_hook(d))
+            else:
+                data.append(d)
         self.master.view_grideditor(
             grideditor.ReplaceEditor(
                 self.master,
-                self.master.options.replacements,
+                data,
                 self.master.options.setter("replacements")
             )
         )

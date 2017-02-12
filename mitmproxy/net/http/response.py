@@ -6,6 +6,7 @@ from mitmproxy.net.http import cookies
 from mitmproxy.net.http import headers as nheaders
 from mitmproxy.net.http import message
 from mitmproxy.net.http import status_codes
+from mitmproxy.utils import strutils
 from typing import AnyStr
 from typing import Dict
 from typing import Iterable
@@ -121,11 +122,12 @@ class Response(message.Message):
         HTTP Reason Phrase, e.g. "Not Found".
         This is always :py:obj:`None` for HTTP2 requests, because HTTP2 responses do not contain a reason phrase.
         """
-        return message._native(self.data.reason)
+        # Encoding: http://stackoverflow.com/a/16674906/934719
+        return self.data.reason.decode("ISO-8859-1", "surrogateescape")
 
     @reason.setter
     def reason(self, reason):
-        self.data.reason = message._always_bytes(reason)
+        self.data.reason = strutils.always_bytes(reason, "ISO-8859-1", "surrogateescape")
 
     @property
     def cookies(self) -> multidict.MultiDictView:

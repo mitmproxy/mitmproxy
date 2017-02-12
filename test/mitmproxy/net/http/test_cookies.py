@@ -1,9 +1,9 @@
 import time
+from unittest import mock
 
 from mitmproxy.net.http import cookies
 from mitmproxy.test.tutils import raises
 
-import mock
 
 cookie_pairs = [
     [

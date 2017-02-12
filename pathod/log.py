@@ -61,7 +61,7 @@ class LogCtx:
             for line in strutils.hexdump(data):
                 self("\t%s %s %s" % line)
         else:
-            data = strutils.native(
+            data = strutils.always_str(
                 strutils.escape_control_characters(
                     data
                         .decode("ascii", "replace")

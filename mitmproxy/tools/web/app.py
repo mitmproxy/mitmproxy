@@ -33,6 +33,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "server_conn": flow.server_conn.get_state(),
         "type": flow.type,
         "modified": flow.modified(),
+        "marked": flow.marked,
     }
     # .alpn_proto_negotiated is bytes, we need to decode that.
     for conn in "client_conn", "server_conn":
@@ -45,6 +46,12 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
 
     if isinstance(flow, http.HTTPFlow):
         if flow.request:
+            if flow.request.raw_content:
+                content_length = len(flow.request.raw_content)
+                content_hash = hashlib.sha256(flow.request.raw_content).hexdigest()
+            else:
+                content_length = None
+                content_hash = None
             f["request"] = {
                 "method": flow.request.method,
                 "scheme": flow.request.scheme,
@@ -53,24 +60,26 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "path": flow.request.path,
                 "http_version": flow.request.http_version,
                 "headers": tuple(flow.request.headers.items(True)),
-                "contentLength": len(
-                    flow.request.raw_content) if flow.request.raw_content is not None else None,
-                "contentHash": hashlib.sha256(
-                    flow.request.raw_content).hexdigest() if flow.request.raw_content is not None else None,
+                "contentLength": content_length,
+                "contentHash": content_hash,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
             }
         if flow.response:
+            if flow.response.raw_content:
+                content_length = len(flow.response.raw_content)
+                content_hash = hashlib.sha256(flow.response.raw_content).hexdigest()
+            else:
+                content_length = None
+                content_hash = None
             f["response"] = {
                 "http_version": flow.response.http_version,
                 "status_code": flow.response.status_code,
                 "reason": flow.response.reason,
                 "headers": tuple(flow.response.headers.items(True)),
-                "contentLength": len(
-                    flow.response.raw_content) if flow.response.raw_content is not None else None,
-                "contentHash": hashlib.sha256(
-                    flow.response.raw_content).hexdigest() if flow.response.raw_content is not None else None,
+                "contentLength": content_length,
+                "contentHash": content_hash,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
@@ -185,7 +194,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs, ensure_ascii=False)
+        message = json.dumps(kwargs, ensure_ascii=False).encode("utf8", "surrogateescape")
 
         for conn in cls.connections:
             try:

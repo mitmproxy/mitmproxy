@@ -40,7 +40,9 @@ start of mitmproxy.
 iOS
 ^^^
 
-http://kb.mit.edu/confluence/pages/viewpage.action?pageId=152600377
+See http://jasdev.me/intercepting-ios-traffic
+
+and http://web.archive.org/web/20150920082614/http://kb.mit.edu/confluence/pages/viewpage.action?pageId=152600377
 
 iOS Simulator
 ^^^^^^^^^^^^^

@@ -11,11 +11,12 @@ def test_always_bytes():
         strutils.always_bytes(42, "ascii")
 
 
-def test_native():
+def test_always_str():
     with tutils.raises(TypeError):
-        strutils.native(42)
-    assert strutils.native(u"foo") == u"foo"
-    assert strutils.native(b"foo") == u"foo"
+        strutils.always_str(42)
+    assert strutils.always_str("foo") == "foo"
+    assert strutils.always_str(b"foo") == "foo"
+    assert strutils.always_str(None) is None
 
 
 def test_escape_control_characters():

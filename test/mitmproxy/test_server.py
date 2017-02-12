@@ -2,7 +2,7 @@ import os
 import socket
 import time
 
-import mock
+from unittest import mock
 
 from mitmproxy.test import tutils
 from mitmproxy import controller
