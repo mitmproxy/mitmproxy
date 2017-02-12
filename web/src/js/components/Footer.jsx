@@ -8,7 +8,7 @@ Footer.propTypes = {
 
 function Footer({ settings }) {
     let {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, websocket, anticache, anticomp,
-            stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port} = settings;
+            stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, version} = settings;
     return (
         <footer>
             {mode && mode != "regular" && (
@@ -50,6 +50,9 @@ function Footer({ settings }) {
             <div className="pull-right">
             <span className="label label-primary" title="HTTP Proxy Server Address">
             [{listen_host || "*"}:{listen_port}]
+            </span>
+            <span className="label label-info" title="Version">
+            [version:{version}]
             </span>
             </div>
         </footer>
