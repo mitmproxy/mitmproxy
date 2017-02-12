@@ -165,6 +165,7 @@ def tserver_conn():
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=dict(address=("address", 22), use_ipv6=True),
         ip_address=None,
+        mitmcert=None,
         cert=None,
         timestamp_start=1,
         timestamp_tcp_setup=2,
