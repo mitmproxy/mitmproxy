@@ -342,9 +342,6 @@ class FlowListBox(urwid.ListBox):
         except ValueError as e:
             signals.status_message.send(message=str(e))
             return
-        if not parts:
-            signals.status_message.send(message="Invalid Url")
-            return
         scheme, host, port, path = parts
         f = self.master.create_request(method, scheme, host, port, path)
         self.master.view.focus.flow = f
