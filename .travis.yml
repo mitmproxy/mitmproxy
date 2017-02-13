@@ -7,6 +7,7 @@ env:
     - CI_COMMANDS=codecov
 git:
   depth: 10000
+
 matrix:
   fast_finish: true
   include:
@@ -44,8 +45,6 @@ matrix:
             - libssl-dev
     - python: 3.5
       env: TOXENV=docs
-  allow_failures:
-    - python: pypy
 
 install:
   - |
