@@ -7,12 +7,12 @@ import pytest
 from unittest import mock
 
 
-class ScriptError(Exception):
+class UrlError(Exception):
     pass
 
 
 def mock_add_log(message):
-    raise ScriptError(message)
+    raise UrlError(message)
 
 
 class TestFlowlist(tservers.MasterTest):
@@ -26,6 +26,6 @@ class TestFlowlist(tservers.MasterTest):
     def test_new_request(self, test_func):
         m = self.mkmaster()
         x = flowlist.FlowListBox(m)
-        with pytest.raises(ScriptError) as e:
+        with pytest.raises(UrlError) as e:
             x.new_request("nonexistent url", "GET")
         assert "Invalid URL" in str(e)
