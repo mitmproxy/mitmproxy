@@ -28,4 +28,3 @@ class TestFlowlist(tservers.MasterTest):
         x = flowlist.FlowListBox(m)
         with pytest.raises(UrlError) as e:
             x.new_request("nonexistent url", "GET")
-        assert "Invalid URL" in str(e)
