@@ -1,4 +1,4 @@
-5054:8:response,1815:11:httpversion,8:1:1#1:1#]13:timestamp_end,14:1469208634.797^3:msg,2:OK,15:timestamp_start,14:1469208634.761^7:headers,392:35:13:Cache-Control,14:max-age=604800,]28:12:Content-Type,9:text/html,]40:4:Date,29:Fri, 22 Jul 2016 17:30:39 GMT,]33:4:Etag,22:"359670651+gzip+ident",]43:7:Expires,29:Fri, 29 Jul 2016 17:30:39 GMT,]50:13:Last-Modified,29:Fri, 09 Aug 2013 23:54:35 GMT,]27:6:Server,14:ECS (rhv/8199),]26:4:Vary,15:Accept-Encoding,]16:7:X-Cache,3:HIT,]25:17:x-ec-custom-error,1:1,]25:14:Content-Length,4:1270,]]7:content,1270:<!doctype html>
+5040:8:response,1815:11:httpversion,8:1:1#1:1#]13:timestamp_end,14:1469208634.797^3:msg,2:OK,15:timestamp_start,14:1469208634.761^7:headers,392:35:13:Cache-Control,14:max-age=604800,]28:12:Content-Type,9:text/html,]40:4:Date,29:Fri, 22 Jul 2016 17:30:39 GMT,]33:4:Etag,22:"359670651+gzip+ident",]43:7:Expires,29:Fri, 29 Jul 2016 17:30:39 GMT,]50:13:Last-Modified,29:Fri, 09 Aug 2013 23:54:35 GMT,]27:6:Server,14:ECS (rhv/8199),]26:4:Vary,15:Accept-Encoding,]16:7:X-Cache,3:HIT,]25:17:x-ec-custom-error,1:1,]25:14:Content-Length,4:1270,]]7:content,1270:<!doctype html>
 <html>
 <head>
     <title>Example Domain</title>
@@ -48,7 +48,7 @@
 </div>
 </body>
 </html>
-,4:code,3:200#}4:type,4:http,2:id,36:e072a53a-711a-46b7-aaa5-ad61ac7e4459,5:error,0:~7:version,13:1:0#2:11#1:3#]11:client_conn,208:15:ssl_established,4:true!10:clientcert,0:~13:timestamp_end,0:~19:timestamp_ssl_setup,14:1469208634.706^7:address,53:7:address,20:9:127.0.0.1,5:60786#]8:use_ipv6,5:false!}15:timestamp_start,14:1469208633.936^}11:server_conn,2494:15:ssl_established,4:true!14:source_address,58:7:address,25:13:192.168.10.90,5:60788#]8:use_ipv6,5:false!}13:timestamp_end,0:~7:address,54:7:address,21:11:example.com,3:443#]8:use_ipv6,5:false!}15:timestamp_start,14:1469208634.252^3:sni,11:example.com,8:mitmcert,0:~4:cert,2122:-----BEGIN CERTIFICATE-----
+,4:code,3:200#}4:type,4:http,2:id,36:e072a53a-711a-46b7-aaa5-ad61ac7e4459,5:error,0:~7:version,13:1:0#2:11#1:3#]11:client_conn,208:15:ssl_established,4:true!10:clientcert,0:~13:timestamp_end,0:~19:timestamp_ssl_setup,14:1469208634.706^7:address,53:7:address,20:9:127.0.0.1,5:60786#]8:use_ipv6,5:false!}15:timestamp_start,14:1469208633.936^}11:server_conn,2480:15:ssl_established,4:true!14:source_address,58:7:address,25:13:192.168.10.90,5:60788#]8:use_ipv6,5:false!}13:timestamp_end,0:~7:address,54:7:address,21:11:example.com,3:443#]8:use_ipv6,5:false!}15:timestamp_start,14:1469208634.252^3:sni,11:example.com,4:cert,2122:-----BEGIN CERTIFICATE-----
 MIIF8jCCBNqgAwIBAgIQDmTF+8I2reFLFyrrQceMsDANBgkqhkiG9w0BAQsFADBw
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
 d3cuZGlnaWNlcnQuY29tMS8wLQYDVQQDEyZEaWdpQ2VydCBTSEEyIEhpZ2ggQXNz
