@@ -17,6 +17,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         address: Remote address
         ssl_established: True if TLS is established, False otherwise
         clientcert: The TLS client certificate
+        mitmcert: The MITM'ed TLS server certificate presented to the client
         timestamp_start: Connection start timestamp
         timestamp_ssl_setup: TLS established timestamp
         timestamp_end: Connection end timestamp
@@ -38,6 +39,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             self.rfile = None
             self.address = None
             self.clientcert = None
+            self.mitmcert = None
             self.ssl_established = None
 
         self.timestamp_start = time.time()
@@ -72,6 +74,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         address=tcp.Address,
         ssl_established=bool,
         clientcert=certs.SSLCert,
+        mitmcert=certs.SSLCert,
         timestamp_start=float,
         timestamp_ssl_setup=float,
         timestamp_end=float,
@@ -98,6 +101,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return cls.from_state(dict(
             address=dict(address=address, use_ipv6=False),
             clientcert=None,
+            mitmcert=None,
             ssl_established=False,
             timestamp_start=None,
             timestamp_end=None,
@@ -136,7 +140,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         source_address: Local IP address or client's source IP address.
         ssl_established: True if TLS is established, False otherwise
         cert: The certificate presented by the remote during the TLS handshake
-        mitmcert: The certificate presented by mitmproxy to the client
         sni: Server Name Indication sent by the proxy during the TLS handshake
         alpn_proto_negotiated: The negotiated application protocol
         via: The underlying server connection (e.g. the connection to the upstream proxy in upstream proxy mode)
@@ -188,7 +191,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         source_address=tcp.Address,
         ssl_established=bool,
         cert=certs.SSLCert,
-        mitmcert=certs.SSLCert,
         sni=str,
         alpn_proto_negotiated=bytes,
         timestamp_start=float,
@@ -209,7 +211,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             address=dict(address=address, use_ipv6=False),
             ip_address=dict(address=address, use_ipv6=False),
             cert=None,
-            mitmcert=None,
             sni=None,
             alpn_proto_negotiated=None,
             source_address=dict(address=('', 0), use_ipv6=False),
