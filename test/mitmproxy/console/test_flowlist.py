@@ -11,8 +11,9 @@ class UrlError(Exception):
     pass
 
 
-def mock_add_log(message):
-    raise UrlError(message)
+def mock_log(message):
+    if "Invalid URL" in message:
+        raise UrlError(message)
 
 
 class TestFlowlist(tservers.MasterTest):
@@ -22,9 +23,9 @@ class TestFlowlist(tservers.MasterTest):
         o = options.Options(**opts)
         return console.master.ConsoleMaster(o, proxy.DummyServer())
 
-    @mock.patch('mitmproxy.tools.console.signals.status_message.send', side_effect = mock_add_log)
+    @mock.patch('mitmproxy.tools.console.signals.status_message.send', side_effect = mock_log)
     def test_new_request(self, test_func):
         m = self.mkmaster()
         x = flowlist.FlowListBox(m)
-        with pytest.raises(UrlError) as e:
+        with pytest.raises(UrlError):
             x.new_request("nonexistent url", "GET")
