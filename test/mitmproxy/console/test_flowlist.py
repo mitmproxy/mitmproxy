@@ -3,8 +3,7 @@ from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
 from .. import tservers
-import pytest
-from unittest import mock as Mock
+from unittest import mock
 
 
 class TestFlowlist(tservers.MasterTest):
@@ -17,6 +16,6 @@ class TestFlowlist(tservers.MasterTest):
     def test_new_request(self):
         m = self.mkmaster()
         x = flowlist.FlowListBox(m)
-        with Mock.patch('mitmproxy.tools.console.signals.status_message.send') as mock:
+        with mock.patch('mitmproxy.tools.console.signals.status_message.send') as mock_thing:
             x.new_request("nonexistent url", "GET")
-        mock.assert_called_once_with(message = "Invalid URL: No hostname given")
+        mock_thing.assert_called_once_with(message="Invalid URL: No hostname given")
