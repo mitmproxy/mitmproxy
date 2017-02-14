@@ -412,7 +412,7 @@ class ConsoleMaster(master.Master):
     def websocket_message(self, f):
         super().websocket_message(f)
         message = f.messages[-1]
-        signals.add_log(message.info, "info")
+        signals.add_log(f.message_info(message), "info")
         signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
     @controller.handler
