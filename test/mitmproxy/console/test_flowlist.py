@@ -4,16 +4,7 @@ from mitmproxy import proxy
 from mitmproxy import options
 from .. import tservers
 import pytest
-from unittest import mock
-
-
-class UrlError(Exception):
-    pass
-
-
-def mock_log(message):
-    if "Invalid URL" in message:
-        raise UrlError(message)
+from unittest import mock as Mock
 
 
 class TestFlowlist(tservers.MasterTest):
@@ -23,9 +14,9 @@ class TestFlowlist(tservers.MasterTest):
         o = options.Options(**opts)
         return console.master.ConsoleMaster(o, proxy.DummyServer())
 
-    @mock.patch('mitmproxy.tools.console.signals.status_message.send', side_effect = mock_log)
-    def test_new_request(self, test_func):
+    def test_new_request(self):
         m = self.mkmaster()
         x = flowlist.FlowListBox(m)
-        with pytest.raises(UrlError):
+        with Mock.patch('mitmproxy.tools.console.signals.status_message.send') as mock:
             x.new_request("nonexistent url", "GET")
+        mock.assert_called_once_with(message = "Invalid URL: No hostname given")
