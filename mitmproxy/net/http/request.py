@@ -426,8 +426,6 @@ class Request(message.Message):
         self.headers["content-type"] = "application/x-www-form-urlencoded"
         #self.content = mitmproxy.net.http.url.encode(form_data).encode()
         self._sanitized_form_data_replacement(form_data)
-        # only raw_content should be URL encoded, content should be decoded
-
         
     @urlencoded_form.setter
     def urlencoded_form(self, value):
