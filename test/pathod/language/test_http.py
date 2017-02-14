@@ -4,7 +4,7 @@ import pytest
 from pathod import language
 from pathod.language import http, base
 
-from . import tservers
+from .. import tservers
 
 
 def parse_request(s):

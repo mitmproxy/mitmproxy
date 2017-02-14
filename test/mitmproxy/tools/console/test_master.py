@@ -1,10 +1,10 @@
 from mitmproxy.test import tflow
-import mitmproxy.test.tutils
+from mitmproxy.test import tutils
 from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
-from .. import tservers
+from ... import tservers
 
 
 def test_format_keyvals():
@@ -45,12 +45,12 @@ class TestMaster(tservers.MasterTest):
     def test_intercept(self):
         """regression test for https://github.com/mitmproxy/mitmproxy/issues/1605"""
         m = self.mkmaster(intercept="~b bar")
-        f = tflow.tflow(req=mitmproxy.test.tutils.treq(content=b"foo"))
+        f = tflow.tflow(req=tutils.treq(content=b"foo"))
         m.request(f)
         assert not m.view[0].intercepted
-        f = tflow.tflow(req=mitmproxy.test.tutils.treq(content=b"bar"))
+        f = tflow.tflow(req=tutils.treq(content=b"bar"))
         m.request(f)
         assert m.view[1].intercepted
-        f = tflow.tflow(resp=mitmproxy.test.tutils.tresp(content=b"bar"))
+        f = tflow.tflow(resp=tutils.tresp(content=b"bar"))
         m.request(f)
         assert m.view[2].intercepted

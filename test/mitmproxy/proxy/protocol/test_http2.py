@@ -11,12 +11,12 @@ from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
 import mitmproxy.net
-from ...mitmproxy.net import tservers as net_tservers
+from ....mitmproxy.net import tservers as net_tservers
 from mitmproxy import exceptions
 from mitmproxy.net.http import http1, http2
 
-from .. import tservers
-from ...conftest import requires_alpn
+from ... import tservers
+from ....conftest import requires_alpn
 
 import logging
 logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)

@@ -8,7 +8,7 @@ from mitmproxy import controller
 from mitmproxy.tools import dump
 
 from mitmproxy.test import tutils
-from . import tservers
+from .. import tservers
 
 
 class TestDumpMaster(tservers.MasterTest):

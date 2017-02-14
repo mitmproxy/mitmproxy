@@ -1,6 +1,6 @@
 from mitmproxy.contentviews import image
 from mitmproxy.test import tutils
-from . import full_eval
+from .. import full_eval
 
 
 def test_view_image():

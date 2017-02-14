@@ -2,7 +2,7 @@ from mitmproxy.test import tflow
 from mitmproxy.net.http import http1
 from mitmproxy.net.tcp import TCPClient
 from mitmproxy.test.tutils import treq
-from .. import tservers
+from ... import tservers
 
 
 class TestHTTPFlow:

@@ -1,7 +1,7 @@
 from mitmproxy.test import tflow
 from mitmproxy.tools.console import common
 
-from ...conftest import skip_appveyor
+from ....conftest import skip_appveyor
 
 
 @skip_appveyor
