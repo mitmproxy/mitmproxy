@@ -7,11 +7,11 @@ from mitmproxy.net import tcp, http
 from mitmproxy.net.http import http2
 from mitmproxy import exceptions
 
-from ..mitmproxy.net import tservers as net_tservers
+from ...mitmproxy.net import tservers as net_tservers
 
 from pathod.protocols.http2 import HTTP2StateProtocol, TCPHandler
 
-from ..conftest import requires_alpn
+from ...conftest import requires_alpn
 
 
 class TestTCPHandlerWrapper:

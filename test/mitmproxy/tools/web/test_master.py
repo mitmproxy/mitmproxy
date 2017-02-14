@@ -3,7 +3,7 @@ from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
-from . import tservers
+from ... import tservers
 
 
 class TestWebMaster(tservers.MasterTest):

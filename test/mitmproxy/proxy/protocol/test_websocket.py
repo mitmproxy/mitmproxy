@@ -9,17 +9,17 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.websocket import WebSocketFlow
 from mitmproxy.proxy.config import ProxyConfig
 
-import mitmproxy.net
+from mitmproxy.net import tcp
 from mitmproxy.net import http
-from ...mitmproxy.net import tservers as net_tservers
-from .. import tservers
+from ....mitmproxy.net import tservers as net_tservers
+from ... import tservers
 
 from mitmproxy.net import websockets
 
 
 class _WebSocketServerBase(net_tservers.ServerTestBase):
 
-    class handler(mitmproxy.net.tcp.BaseHandler):
+    class handler(tcp.BaseHandler):
 
         def handle(self):
             try:
@@ -80,7 +80,7 @@ class _WebSocketTestBase:
         self.server.server.handle_websockets = self.handle_websockets
 
     def _setup_connection(self):
-        client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))
+        client = tcp.TCPClient(("127.0.0.1", self.proxy.port))
         client.connect()
 
         request = http.Request(

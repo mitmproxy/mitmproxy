@@ -21,8 +21,8 @@ from mitmproxy.net.tcp import Address
 from pathod import pathoc
 from pathod import pathod
 
-from . import tservers
-from ..conftest import skip_appveyor
+from .. import tservers
+from ...conftest import skip_appveyor
 
 
 """

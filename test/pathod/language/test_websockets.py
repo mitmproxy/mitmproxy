@@ -4,7 +4,7 @@ from pathod import language
 from pathod.language import websockets
 import mitmproxy.net.websockets
 
-from . import tservers
+from .. import tservers
 
 
 def parse_request(s):
