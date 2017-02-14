@@ -9,7 +9,6 @@ def test_view_image():
         "mitmproxy/data/image.png",
         "mitmproxy/data/image.gif",
         "mitmproxy/data/all.jpeg",
-        "mitmproxy/data/image.ico"
     ]:
         with open(tutils.test_data.path(img), "rb") as f:
             assert v(f.read())

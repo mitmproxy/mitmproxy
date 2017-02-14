@@ -23,8 +23,6 @@ logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)
 logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
 logging.getLogger("passlib.utils.compat").setLevel(logging.WARNING)
 logging.getLogger("passlib.registry").setLevel(logging.WARNING)
-logging.getLogger("PIL.Image").setLevel(logging.WARNING)
-logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
 
 # inspect the log:
