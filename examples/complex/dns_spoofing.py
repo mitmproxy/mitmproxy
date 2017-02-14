@@ -1,5 +1,5 @@
 """
-This inline scripts makes it possible to use mitmproxy in scenarios where IP spoofing has been used to redirect
+This script makes it possible to use mitmproxy in scenarios where IP spoofing has been used to redirect
 connections to mitmproxy. The way this works is that we rely on either the TLS Server Name Indication (SNI) or the
 Host header of the HTTP request.
 Of course, this is not foolproof - if an HTTPS connection comes without SNI, we don't
