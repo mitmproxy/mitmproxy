@@ -44,6 +44,8 @@ matrix:
           packages:
             - libssl-dev
     - python: 3.5
+      env: TOXENV=individual_coverage
+    - python: 3.5
       env: TOXENV=docs
 
 install:
