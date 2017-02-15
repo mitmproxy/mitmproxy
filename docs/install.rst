@@ -85,7 +85,7 @@ libraries. This was tested on a fully patched installation of Ubuntu 16.04.
 
 .. code:: bash
 
-   sudo apt-get install python3-pip python3-dev libffi-dev libssl-dev zlib1g-dev
+   sudo apt-get install python3-dev python3-pip libffi-dev libssl-dev
    sudo pip3 install mitmproxy  # or pip3 install --user mitmproxy
 
 On older Ubuntu versions, e.g., **12.04** and **14.04**, you may need to install
@@ -104,7 +104,7 @@ libraries. This was tested on a fully patched installation of Fedora 24.
 
 .. code:: bash
 
-   sudo dnf install make gcc redhat-rpm-config python3-pip python3-devel libffi-devel openssl-devel zlib-devel
+   sudo dnf install make gcc redhat-rpm-config python3-devel python3-pip libffi-devel openssl-devel
    sudo pip3 install mitmproxy  # or pip3 install --user mitmproxy
 
 Make sure to have an up-to-date version of pip by running ``pip3 install -U pip``.
