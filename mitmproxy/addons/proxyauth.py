@@ -10,6 +10,7 @@ import mitmproxy.net.http
 from mitmproxy import connections  # noqa
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy.net.http import status_codes
 
 REALM = "mitmproxy"
 
@@ -68,15 +69,13 @@ class ProxyAuth:
     def auth_required_response(self) -> http.HTTPResponse:
         if self.is_proxy_auth():
             return http.make_error_response(
-                407,
-                "Proxy Authentication Required",
-                mitmproxy.net.http.Headers(Proxy_Authenticate='Basic realm="{}"'.format(REALM)),
+                status_codes.PROXY_AUTH_REQUIRED,
+                headers=mitmproxy.net.http.Headers(Proxy_Authenticate='Basic realm="{}"'.format(REALM)),
             )
         else:
             return http.make_error_response(
-                401,
-                "Authentication Required",
-                mitmproxy.net.http.Headers(WWW_Authenticate='Basic realm="{}"'.format(REALM)),
+                status_codes.UNAUTHORIZED,
+                headers=mitmproxy.net.http.Headers(WWW_Authenticate='Basic realm="{}"'.format(REALM)),
             )
 
     def check(self, f: http.HTTPFlow) -> Optional[Tuple[str, str]]:
@@ -95,7 +94,7 @@ class ProxyAuth:
         if self.nonanonymous:
             return username, password
         elif self.singleuser:
-            if [username, password] == self.singleuser:
+            if self.singleuser == [username, password]:
                 return username, password
         elif self.htpasswd:
             if self.htpasswd.check_password(username, password):
