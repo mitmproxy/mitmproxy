@@ -18,6 +18,8 @@ class ViewAuto(base.View):
                 return contentviews.content_types_map[ct][0](data, **metadata)
             elif strutils.is_xml(data):
                 return contentviews.get("XML/HTML")(data, **metadata)
+            elif ct.startswith("image/"):
+                return contentviews.get("Image")(data, **metadata)
         if metadata.get("query"):
             return contentviews.get("Query")(data, **metadata)
         if data and strutils.is_mostly_bin(data):
