@@ -1,1 +1,3 @@
-from .view import ViewImage  # noqa
+from .view import ViewImage
+
+__all__ = ["ViewImage"]

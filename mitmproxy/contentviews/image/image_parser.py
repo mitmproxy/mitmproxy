@@ -13,9 +13,9 @@ Metadata = typing.List[typing.Tuple[str, str]]
 def parse_png(data: bytes) -> Metadata:
     img = png.Png(KaitaiStream(io.BytesIO(data)))
     parts = [
-        ('Format', 'Portable network graphics')
+        ('Format', 'Portable network graphics'),
+        ('Size', "{0} x {1} px".format(img.ihdr.width, img.ihdr.height))
     ]
-    parts.append(('Size', "{0} x {1} px".format(img.ihdr.width, img.ihdr.height)))
     for chunk in img.chunks:
         if chunk.type == 'gAMA':
             parts.append(('gamma', str(chunk.body.gamma_int / 100000)))
@@ -34,13 +34,13 @@ def parse_png(data: bytes) -> Metadata:
 
 def parse_gif(data: bytes) -> Metadata:
     img = gif.Gif(KaitaiStream(io.BytesIO(data)))
-    parts = [
-        ('Format', 'Compuserve GIF')
-    ]
-    parts.append(('version', "GIF{0}".format(img.header.version.decode('ASCII'))))
     descriptor = img.logical_screen_descriptor
-    parts.append(('Size', "{0} x {1} px".format(descriptor.screen_width, descriptor.screen_height)))
-    parts.append(('background', str(descriptor.bg_color_index)))
+    parts = [
+        ('Format', 'Compuserve GIF'),
+        ('Version', "GIF{}".format(img.header.version.decode('ASCII'))),
+        ('Size', "{} x {} px".format(descriptor.screen_width, descriptor.screen_height)),
+        ('background', str(descriptor.bg_color_index))
+    ]
     ext_blocks = []
     for block in img.blocks:
         if block.block_type.name == 'extension':
