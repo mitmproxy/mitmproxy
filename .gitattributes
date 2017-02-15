@@ -1,2 +1,2 @@
-mitmproxy/tools/web/static/**/* -diff
+mitmproxy/tools/web/static/**/* -diff linguist-vendored
 web/src/js/filt/filt.js -diff
