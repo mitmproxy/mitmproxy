@@ -1,4 +1,5 @@
-import cgi
+import html
+from typing import Optional
 
 from mitmproxy import flow
 
@@ -203,16 +204,27 @@ class HTTPFlow(flow.Flow):
         return c
 
 
-def make_error_response(status_code, message, headers=None):
-    response = http.status_codes.RESPONSES.get(status_code, "Unknown")
+def make_error_response(
+        status_code: int,
+        message: str="",
+        headers: Optional[http.Headers]=None,
+) -> HTTPResponse:
+    reason = http.status_codes.RESPONSES.get(status_code, "Unknown")
     body = """
         <html>
             <head>
-                <title>%d %s</title>
+                <title>{status_code} {reason}</title>
             </head>
-            <body>%s</body>
+            <body>
+            <h1>{status_code} {reason}</h1>
+            <p>{message}</p>
+            </body>
         </html>
-    """.strip() % (status_code, response, cgi.escape(message))
+    """.strip().format(
+        status_code=status_code,
+        reason=reason,
+        message=html.escape(message),
+    )
     body = body.encode("utf8", "replace")
 
     if not headers:
@@ -226,7 +238,7 @@ def make_error_response(status_code, message, headers=None):
     return HTTPResponse(
         b"HTTP/1.1",
         status_code,
-        response,
+        reason,
         headers,
         body,
     )

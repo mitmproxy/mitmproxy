@@ -1,21 +1,27 @@
 import binascii
+
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.addons import proxyauth
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.addons import proxyauth
 
 
 def test_parse_http_basic_auth():
     assert proxyauth.parse_http_basic_auth(
         proxyauth.mkauth("test", "test")
     ) == ("basic", "test", "test")
-    assert not proxyauth.parse_http_basic_auth("")
-    assert not proxyauth.parse_http_basic_auth("foo bar")
-    v = "basic " + binascii.b2a_base64(b"foo").decode("ascii")
-    assert not proxyauth.parse_http_basic_auth(v)
+    with pytest.raises(ValueError):
+        proxyauth.parse_http_basic_auth("")
+    with pytest.raises(ValueError):
+        proxyauth.parse_http_basic_auth("foo bar")
+    with pytest.raises(ValueError):
+        proxyauth.parse_http_basic_auth("basic abc")
+    with pytest.raises(ValueError):
+        v = "basic " + binascii.b2a_base64(b"foo").decode("ascii")
+        proxyauth.parse_http_basic_auth(v)
 
 
 def test_configure():
@@ -42,14 +48,14 @@ def test_configure():
 
         ctx.configure(
             up,
-            auth_htpasswd = tutils.test_data.path(
+            auth_htpasswd=tutils.test_data.path(
                 "mitmproxy/net/data/htpasswd"
             )
         )
         assert up.htpasswd
         assert up.htpasswd.check_password("test", "test")
         assert not up.htpasswd.check_password("test", "foo")
-        ctx.configure(up, auth_htpasswd = None)
+        ctx.configure(up, auth_htpasswd=None)
         assert not up.htpasswd
 
         with pytest.raises(exceptions.OptionsError):
@@ -57,11 +63,14 @@ def test_configure():
         with pytest.raises(exceptions.OptionsError):
             ctx.configure(up, auth_nonanonymous=True, mode="socks5")
 
+        ctx.configure(up, mode="regular")
+        assert up.mode == "regular"
+
 
 def test_check():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        ctx.configure(up, auth_nonanonymous=True)
+        ctx.configure(up, auth_nonanonymous=True, mode="regular")
         f = tflow.tflow()
         assert not up.check(f)
         f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
@@ -73,7 +82,7 @@ def test_check():
         assert not up.check(f)
 
         f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-            "test", "test", scheme = "unknown"
+            "test", "test", scheme="unknown"
         )
         assert not up.check(f)
 
@@ -87,8 +96,8 @@ def test_check():
 
         ctx.configure(
             up,
-            auth_singleuser = None,
-            auth_htpasswd = tutils.test_data.path(
+            auth_singleuser=None,
+            auth_htpasswd=tutils.test_data.path(
                 "mitmproxy/net/data/htpasswd"
             )
         )
@@ -105,7 +114,7 @@ def test_check():
 def test_authenticate():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        ctx.configure(up, auth_nonanonymous=True)
+        ctx.configure(up, auth_nonanonymous=True, mode="regular")
 
         f = tflow.tflow()
         assert not f.response
@@ -121,13 +130,12 @@ def test_authenticate():
         assert not f.request.headers.get("Proxy-Authorization")
 
         f = tflow.tflow()
-        f.mode = "transparent"
+        ctx.configure(up, mode="reverse")
         assert not f.response
         up.authenticate(f)
         assert f.response.status_code == 401
 
         f = tflow.tflow()
-        f.mode = "transparent"
         f.request.headers["Authorization"] = proxyauth.mkauth(
             "test", "test"
         )
@@ -139,7 +147,7 @@ def test_authenticate():
 def test_handlers():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        ctx.configure(up, auth_nonanonymous=True)
+        ctx.configure(up, auth_nonanonymous=True, mode="regular")
 
         f = tflow.tflow()
         assert not f.response
@@ -151,3 +159,15 @@ def test_handlers():
         assert not f.response
         up.http_connect(f)
         assert f.response.status_code == 407
+
+        f = tflow.tflow()
+        f.request.method = "CONNECT"
+        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+            "test", "test"
+        )
+        up.http_connect(f)
+        assert not f.response
+
+        f2 = tflow.tflow(client_conn=f.client_conn)
+        up.requestheaders(f2)
+        assert not f2.response
