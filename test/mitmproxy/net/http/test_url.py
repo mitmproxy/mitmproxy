@@ -85,6 +85,26 @@ surrogates_quoted = (
 )
 
 
+def test_empty_key_trailing_equal_sign():
+    """
+    Some HTTP clients don't send trailing equal signs for parameters without assigned value, e.g. they send
+        foo=bar&baz&qux=quux
+    instead of
+        foo=bar&baz=&qux=quux
+    The respective behavior of encode() should be driven by a reference string given in similar_to parameter
+    """
+    reference_without_equal = "key1=val1&key2&key3=val3"
+    reference_with_equal = "key1=val1&key2=&key3=val3"
+
+    post_data_empty_key_middle = [('one', 'two'), ('emptykey', ''), ('three', 'four')]
+    post_data_empty_key_end = [('one', 'two'), ('three', 'four'), ('emptykey', '')]
+
+    assert url.encode(post_data_empty_key_middle, similar_to = reference_with_equal) == "one=two&emptykey=&three=four"
+    assert url.encode(post_data_empty_key_end, similar_to = reference_with_equal) == "one=two&three=four&emptykey="
+    assert url.encode(post_data_empty_key_middle, similar_to = reference_without_equal) == "one=two&emptykey&three=four"
+    assert url.encode(post_data_empty_key_end, similar_to = reference_without_equal) == "one=two&three=four&emptykey"
+
+
 def test_encode():
     assert url.encode([('foo', 'bar')])
     assert url.encode([('foo', surrogates)])

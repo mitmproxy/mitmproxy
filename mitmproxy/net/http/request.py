@@ -373,7 +373,7 @@ class Request(message.Message):
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = mitmproxy.net.http.url.encode(form_data).encode()
+        self.content = mitmproxy.net.http.url.encode(form_data, self.content.decode()).encode()
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):
