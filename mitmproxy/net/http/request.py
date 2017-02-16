@@ -367,64 +367,13 @@ class Request(message.Message):
                 pass
         return ()
 
-    def _sanitized_form_data_replacement(self, form_data):
-        # check if unmodified content changes with URL encoding
-        url_decoded_content = urllib.parse.parse_qsl(self.content, keep_blank_values=True)
-        url_reencoded_content = urllib.parse.urlencode(url_decoded_content, doseq=True).encode()
-        if self.content == url_reencoded_content:
-            # encoding the unmodified content doesn't change anything, so we should be good to go on as usual
-            self.content = mitmproxy.net.http.url.encode(form_data).encode()
-        else:
-            # if we are here, we have to alter encoding behavior to mimic the one used in unmodified POST request
-
-            # check if content isn't encoded at all
-            if self.content == urllib.parse.unquote(url_reencoded_content.decode()).encode():
-                # if we land here, the new content mustn't be URL encoded thus we decode the result before setting new content
-                # this is the case for "https://www.facebook.com/ajax/updatestatus.php" but additionally the "=" sign is
-                # omitted on SOME empty keys
-                self.content = urllib.parse.unquote(mitmproxy.net.http.url.encode(form_data)).encode()
-            # check if content isn't encoded at all and equal signs are omitted
-            elif self.content == urllib.parse.unquote(url_reencoded_content.decode()).replace("=&", "&").encode():
-                # remove equal sign for keys without value
-                self.content = urllib.parse.unquote(mitmproxy.net.http.url.encode(form_data)).replace("=&", "&").encode()
-            # the next check should address the facebook issue, which is an absolute weird corner case:
-            # here's a real, but trimmed down data section of a POST request to "https://www.facebook.com/ajax/updatestatus.php"
-            # with content-type 'application/x-www-form-urlencoded'
-            #
-            # self.content:
-            # b'attachment&backdated_date[year]&composer_source_surface=newsfeed&multilingual_specified_lang=&__pc=PHASED%3ADEFAULT'
-            #    * the first two keys have no value, but no equal sign appended
-            #    * the second key shows that no URL encoding ist used ("[" and "]")
-            #    * the third key shows a key=value pair
-            #    * the next key "multilingual_specified_lang" again has no value, but this time an equal sign is appended
-            #    * the last key has assigned a value, which is URL encoded ("%3A" == ":")
-            #
-            # To cope with that, a somehow hacky approach is used
-            #    If unmodified and unquoted POST data contains ONE SINGLE key without a value, which hasn't an equal sign appended
-            #    we remove all equal signs on empty keys in modified data
-            elif any("=" not in param for param in urllib.parse.unquote(self.content.decode()).split("&")):
-                # if we are here, there was at least one key without value but no equal sign appended in unquoted POST form data
-                # thus we remove "=" for all keys without value
-
-                # unquote
-                modified_content = mitmproxy.net.http.url.encode(form_data)
-                # remove equal sign
-                modified_content = modified_content.replace("=&", "&").encode()
-                self.content = modified_content
-
-            # additional corner cases could be added to with new "elif" statements
-            else:
-                # if we are here we trigger default behavior again
-                self.content = mitmproxy.net.http.url.encode(form_data).encode()
-
     def _set_urlencoded_form(self, form_data):
         """
         Sets the body to the URL-encoded form data, and adds the appropriate content-type header.
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        # self.content = mitmproxy.net.http.url.encode(form_data).encode()
-        self._sanitized_form_data_replacement(form_data)
+        self.content = mitmproxy.net.http.url.encode(form_data, self.content.decode()).encode()
 
     @urlencoded_form.setter
     def urlencoded_form(self, value):
