@@ -39,9 +39,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             self.rfile = None
             self.address = None
             self.clientcert = None
-            self.mitmcert = None
             self.ssl_established = None
 
+        self.mitmcert = None
         self.timestamp_start = time.time()
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
