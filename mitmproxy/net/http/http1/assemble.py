@@ -78,8 +78,9 @@ def _assemble_request_headers(request_data):
     Args:
         request_data (mitmproxy.net.http.request.RequestData)
     """
-    headers = request_data.headers.copy()
+    headers = request_data.headers
     if "host" not in headers and request_data.scheme and request_data.host and request_data.port:
+        headers = headers.copy()
         headers["host"] = mitmproxy.net.http.url.hostport(
             request_data.scheme,
             request_data.host,

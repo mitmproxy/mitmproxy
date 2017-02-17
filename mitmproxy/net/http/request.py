@@ -165,11 +165,8 @@ class Request(message.Message):
         self.data.host = host
 
         # Update host header
-        if "host" in self.headers:
-            if host:
-                self.headers["host"] = host
-            else:
-                self.headers.pop("host")
+        if self.host_header is not None:
+            self.host_header = host
 
     @property
     def host_header(self) -> Optional[str]:
@@ -248,9 +245,10 @@ class Request(message.Message):
 
     def _parse_host_header(self):
         """Extract the host and port from Host header"""
-        if "host" not in self.headers:
+        host = self.host_header
+        if not host:
             return None, None
-        host, port = self.headers["host"], None
+        port = None
         m = host_header_re.match(host)
         if m:
             host = m.group("host").strip("[]")

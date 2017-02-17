@@ -291,7 +291,7 @@ class HttpLayer(base.Layer):
 
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse":
-            f.request.headers["Host"] = self.config.upstream_server.address.host
+            f.request.host_header = self.config.upstream_server.address.host
 
         # Determine .scheme, .host and .port attributes for inline scripts. For
         # absolute-form requests, they are directly given in the request. For
@@ -301,11 +301,10 @@ class HttpLayer(base.Layer):
         if self.mode is HTTPMode.transparent:
             # Setting request.host also updates the host header, which we want
             # to preserve
-            host_header = f.request.headers.get("host", None)
+            host_header = f.request.host_header
             f.request.host = self.__initial_server_conn.address.host
             f.request.port = self.__initial_server_conn.address.port
-            if host_header:
-                f.request.headers["host"] = host_header
+            f.request.host_header = host_header  # set again as .host overwrites this.
             f.request.scheme = "https" if self.__initial_server_tls else "http"
         self.channel.ask("request", f)
 
