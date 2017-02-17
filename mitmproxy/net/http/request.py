@@ -1,5 +1,6 @@
 import re
 import urllib
+from typing import Optional
 
 from mitmproxy.types import multidict
 from mitmproxy.utils import strutils
@@ -169,6 +170,42 @@ class Request(message.Message):
                 self.headers["host"] = host
             else:
                 self.headers.pop("host")
+
+    @property
+    def host_header(self) -> Optional[str]:
+        """
+        The request's host/authority header.
+
+        This property maps to either ``request.headers["Host"]`` or
+        ``request.headers[":authority"]``, depending on whether it's HTTP/1.x or HTTP/2.0.
+        """
+        if ":authority" in self.headers:
+            return self.headers[":authority"]
+        if "Host" in self.headers:
+            return self.headers["Host"]
+        return None
+
+    @host_header.setter
+    def host_header(self, val: Optional[str]) -> None:
+        if val is None:
+            self.headers.pop("Host", None)
+            self.headers.pop(":authority", None)
+        elif self.host_header is not None:
+            # Update any existing headers.
+            if ":authority" in self.headers:
+                self.headers[":authority"] = val
+            if "Host" in self.headers:
+                self.headers["Host"] = val
+        else:
+            # Only add the correct new header.
+            if self.http_version.upper().startswith("HTTP/2"):
+                self.headers[":authority"] = val
+            else:
+                self.headers["Host"] = val
+
+    @host_header.deleter
+    def host_header(self):
+        self.host_header = None
 
     @property
     def port(self):
