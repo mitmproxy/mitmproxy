@@ -2,6 +2,8 @@ import os
 import configparser
 import pytest
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 
 enable_coverage = False
 coverage_values = []
@@ -36,7 +38,7 @@ def pytest_configure(config):
     )
 
     c = configparser.ConfigParser()
-    c.read('setup.cfg')
+    c.read(os.path.join(here, "..", "setup.cfg"))
     fs = c['tool:full_coverage']['exclude'].split('\n')
     no_full_cov = config.option.no_full_cov + [f.strip() for f in fs]
 
