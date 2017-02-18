@@ -137,7 +137,6 @@ def get_common_options(args):
         ciphers_client = args.ciphers_client,
         ciphers_server = args.ciphers_server,
         clientcerts = args.clientcerts,
-        http2 = args.http2,
         ignore_hosts = args.ignore_hosts,
         listen_host = args.addr,
         listen_port = args.port,
@@ -145,8 +144,12 @@ def get_common_options(args):
         mode = mode,
         no_upstream_cert = args.no_upstream_cert,
         spoof_source_address = args.spoof_source_address,
-        rawtcp = args.rawtcp,
+
+        http2 = args.http2,
+        http2_priority = args.http2_priority,
         websocket = args.websocket,
+        rawtcp = args.rawtcp,
+
         upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
         ssl_version_client = args.ssl_version_client,
@@ -334,18 +337,26 @@ def proxy_options(parser):
     )
 
     http2 = group.add_mutually_exclusive_group()
-    http2.add_argument("--no-http2", action="store_false", dest="http2",
+    http2.add_argument("--no-http2", action="store_false", dest="http2")
+    http2.add_argument("--http2", action="store_true", dest="http2",
                        help="Explicitly enable/disable HTTP/2 support. "
-                            "Enabled by default."
+                            "HTTP/2 support is enabled by default.",
                        )
-    http2.add_argument("--http2", action="store_true", dest="http2")
+
+    http2_priority = group.add_mutually_exclusive_group()
+    http2_priority.add_argument("--http2-priority", action="store_true", dest="http2_priority")
+    http2_priority.add_argument("--no-http2-priority", action="store_false", dest="http2_priority",
+                                help="Explicitly enable/disable PRIORITY forwarding for HTTP/2 connections. "
+                                     "PRIORITY forwarding is disabled by default, "
+                                     "because some webservers fail at implementing the RFC properly.",
+                                )
 
     websocket = group.add_mutually_exclusive_group()
-    websocket.add_argument("--no-websocket", action="store_false", dest="websocket",
+    websocket.add_argument("--no-websocket", action="store_false", dest="websocket")
+    websocket.add_argument("--websocket", action="store_true", dest="websocket",
                            help="Explicitly enable/disable WebSocket support. "
-                                "Enabled by default."
+                                "WebSocket support is enabled by default.",
                            )
-    websocket.add_argument("--websocket", action="store_true", dest="websocket")
 
     parser.add_argument(
         "--upstream-auth",

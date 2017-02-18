@@ -54,6 +54,7 @@ class Options(optmanager.OptManager):
         server_replay_ignore_params: Sequence[str] = [],
         server_replay_ignore_payload_params: Sequence[str] = [],
         server_replay_ignore_host: bool = False,
+
         # Proxy options
         auth_nonanonymous: bool = False,
         auth_singleuser: Optional[str] = None,
@@ -65,15 +66,18 @@ class Options(optmanager.OptManager):
         ciphers_client: str=DEFAULT_CLIENT_CIPHERS,
         ciphers_server: Optional[str]=None,
         clientcerts: Optional[str] = None,
-        http2: bool = True,
         ignore_hosts: Sequence[str] = [],
         listen_host: str = "",
         listen_port: int = LISTEN_PORT,
         upstream_bind_address: str = "",
         mode: str = "regular",
         no_upstream_cert: bool = False,
-        rawtcp: bool = False,
+
+        http2: bool = True,
+        http2_priority: bool = False,
         websocket: bool = True,
+        rawtcp: bool = False,
+
         spoof_source_address: bool = False,
         upstream_server: Optional[str] = None,
         upstream_auth: Optional[str] = None,
@@ -152,15 +156,18 @@ class Options(optmanager.OptManager):
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
-        self.http2 = http2
         self.ignore_hosts = ignore_hosts
         self.listen_host = listen_host
         self.listen_port = listen_port
         self.upstream_bind_address = upstream_bind_address
         self.mode = mode
         self.no_upstream_cert = no_upstream_cert
-        self.rawtcp = rawtcp
+
+        self.http2 = http2
+        self.http2_priority = http2_priority
         self.websocket = websocket
+        self.rawtcp = rawtcp
+
         self.spoof_source_address = spoof_source_address
         self.upstream_server = upstream_server
         self.upstream_auth = upstream_auth

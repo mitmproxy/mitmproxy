@@ -268,6 +268,10 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_priority_updated(self, eid, event):
+        if not self.config.options.http2_priority:
+            self.log("HTTP/2 PRIORITY frame surpressed. Use --http2-priority to enable forwarding.", "debug")
+            return True
+
         if eid in self.streams and self.streams[eid].handled_priority_event is event:
             # this event was already handled during stream creation
             # HeadersFrame + Priority information as RequestReceived
@@ -527,9 +531,12 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         if self.handled_priority_event:
             # only send priority information if they actually came with the original HeadersFrame
             # and not if they got updated before/after with a PriorityFrame
-            priority_exclusive = self.priority_exclusive
-            priority_depends_on = self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on)
-            priority_weight = self.priority_weight
+            if not self.config.options.http2_priority:
+                self.log("HTTP/2 PRIORITY information in HEADERS frame surpressed. Use --http2-priority to enable forwarding.", "debug")
+            else:
+                priority_exclusive = self.priority_exclusive
+                priority_depends_on = self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on)
+                priority_weight = self.priority_weight
 
         try:
             self.connections[self.server_conn].safe_send_headers(
@@ -610,7 +617,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             chunks
         )
 
-    def __call__(self):
+    def __call__(self):  # pragma: no cover
         raise EnvironmentError('Http2SingleStreamLayer must be run as thread')
 
     def run(self):
