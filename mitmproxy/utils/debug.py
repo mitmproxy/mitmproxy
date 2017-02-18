@@ -37,8 +37,12 @@ def dump_system_info():
         except:
             pass
 
+    bin_indicator = ""  # PyInstaller builds indicator, if using precompiled binary
+    if getattr(sys, 'frozen', False):
+        bin_indicator = "Precompiled Binary"
+
     data = [
-        "Mitmproxy version: {} ({})".format(version.VERSION, git_describe),
+        "Mitmproxy version: {} ({}) {}".format(version.VERSION, git_describe, bin_indicator),
         "Python version: {}".format(platform.python_version()),
         "Platform: {}".format(platform.platform()),
         "SSL version: {}".format(SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode()),
