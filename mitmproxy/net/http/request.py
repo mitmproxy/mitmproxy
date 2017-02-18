@@ -138,13 +138,14 @@ class Request(message.Message):
     def host(self):
         """
         Target host. This may be parsed from the raw request
-        (e.g. from a ``GET http://example.com/ HTTP/1.1`` request line)
+        (e.g. from a ``GET http://example.com/ HTTP/1.1`` request line),
+        or taken from the HTTP/2 pseudo-header ``:authority``,
         or inferred from the proxy mode (e.g. an IP in transparent mode).
 
         Setting the host attribute also updates the host header, if present.
         """
         if not self.data.host:
-            return self.data.host
+            return None
         try:
             return self.data.host.decode("idna")
         except UnicodeError:
@@ -163,12 +164,13 @@ class Request(message.Message):
 
         self.data.host = host
 
-        # Update host header
-        if "host" in self.headers:
-            if host:
-                self.headers["host"] = host
-            else:
-                self.headers.pop("host")
+        # Update :authority header (HTTP/2) and host header (HTTP/1.*)
+        for header in ':authority', 'host':
+            if header in self.headers:
+                if host:
+                    self.headers[header] = host
+                else:
+                    self.headers.pop(header)
 
     @property
     def port(self):
@@ -210,10 +212,15 @@ class Request(message.Message):
         self.scheme, self.host, self.port, self.path = mitmproxy.net.http.url.parse(url)
 
     def _parse_host_header(self):
-        """Extract the host and port from Host header"""
-        if "host" not in self.headers:
+        """Extract the host and port from headers"""
+        if ':authority' in self.headers:
+            host = self.headers[':authority']
+        elif 'host' in self.headers:
+            host = self.headers['host']
+        else:
             return None, None
-        host, port = self.headers["host"], None
+
+        port = None
         m = host_header_re.match(host)
         if m:
             host = m.group("host").strip("[]")
@@ -224,7 +231,7 @@ class Request(message.Message):
     @property
     def pretty_host(self):
         """
-        Similar to :py:attr:`host`, but using the Host headers as an additional preferred data source.
+        Similar to :py:attr:`host`, but using headers as an additional preferred data source.
         This is useful in transparent mode where :py:attr:`host` is only an IP address,
         but may not reflect the actual destination as the Host header could be spoofed.
         """

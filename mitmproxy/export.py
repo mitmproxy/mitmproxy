@@ -73,7 +73,7 @@ def python_code(flow: http.HTTPFlow):
 
     headers = flow.request.headers.copy()
     # requests adds those by default.
-    for x in ("host", "content-length"):
+    for x in (":authority", "host", "content-length"):
         headers.pop(x, None)
     writearg("headers", dict(headers))
     try:
@@ -130,7 +130,7 @@ def locust_code(flow):
     if flow.request.headers:
         lines = [
             (_native(k), _native(v)) for k, v in flow.request.headers.fields
-            if _native(k).lower() not in ["host", "cookie"]
+            if _native(k).lower() not in [":authority", "host", "cookie"]
         ]
         lines = ["            '%s': '%s',\n" % (k, v) for k, v in lines]
         headers += "\n        headers = {\n%s        }\n" % "".join(lines)
