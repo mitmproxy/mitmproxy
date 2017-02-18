@@ -34,7 +34,7 @@ class Rerouter:
         The original host header is retrieved early
         before flow.request is replaced by mitmproxy new outgoing request
         """
-        flow.metadata["original_host"] = flow.request.headers["Host"]
+        flow.metadata["original_host"] = flow.request.host_header
 
     def request(self, flow):
         if flow.client_conn.ssl_established:
@@ -53,7 +53,7 @@ class Rerouter:
             if m.group("port"):
                 port = int(m.group("port"))
 
-        flow.request.headers["Host"] = host_header
+        flow.request.host_header = host_header
         flow.request.host = sni or host_header
         flow.request.port = port
 
