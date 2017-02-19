@@ -159,6 +159,7 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
     return desc, safe_to_print(content), error
 
 
+# The order in which ContentViews are added is important!
 add(auto.ViewAuto())
 add(raw.ViewRaw())
 add(hex.ViewHex())
@@ -172,9 +173,7 @@ add(urlencoded.ViewURLEncoded())
 add(multipart.ViewMultipart())
 add(image.ViewImage())
 add(query.ViewQuery())
-
-if protobuf.ViewProtobuf.is_available():
-    add(protobuf.ViewProtobuf())
+add(protobuf.ViewProtobuf())
 
 __all__ = [
     "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict",
