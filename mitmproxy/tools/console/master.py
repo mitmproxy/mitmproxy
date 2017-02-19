@@ -145,7 +145,11 @@ class ConsoleMaster(master.Master):
         try:
             with self.handlecontext():
                 sc.run_once(command, [f])
+<<<<<<< HEAD
+        except mitmproxy.exceptions.AddonError as e:
+=======
         except ValueError as e:
+>>>>>>> b34b2b48924a6883b8b314ed245ed4660e215a2a
             signals.add_log("Input error: %s" % e, "warn")
 
     def toggle_eventlog(self):

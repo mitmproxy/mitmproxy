@@ -213,7 +213,11 @@ class ScriptLoader:
         try:
             sc = Script(command)
         except ValueError as e:
+<<<<<<< HEAD
+            raise exceptions.OptionsError(str(e))
+=======
             raise ValueError(str(e))
+>>>>>>> b34b2b48924a6883b8b314ed245ed4660e215a2a
         sc.load_script()
         for f in flows:
             for evt, o in eventsequence.iterate(f):

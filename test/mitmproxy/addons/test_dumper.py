@@ -11,6 +11,11 @@ from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy.tools import dump
 from mitmproxy import http
+<<<<<<< HEAD
+import shutil
+import mock
+=======
+>>>>>>> b34b2b48924a6883b8b314ed245ed4660e215a2a
 
 
 def test_configure():
