@@ -88,6 +88,11 @@ def convert_019_100(data):
 
 def convert_100_200(data):
     data["version"] = (2, 0, 0)
+    data["client_conn"]["address"] = data["client_conn"]["address"]["address"]
+    data["server_conn"]["address"] = data["server_conn"]["address"]["address"]
+    data["server_conn"]["source_address"] = data["server_conn"]["source_address"]["address"]
+    if data["server_conn"]["ip_address"]:
+        data["server_conn"]["ip_address"] = data["server_conn"]["ip_address"]["address"]
     return data
 
 

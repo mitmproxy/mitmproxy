@@ -19,7 +19,6 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy.utils import version_check
-from mitmproxy.types import serializable
 from mitmproxy import exceptions
 from mitmproxy.types import basethread
 
@@ -28,6 +27,11 @@ from mitmproxy.types import basethread
 version_check.check_pyopenssl_version()
 
 socket_fileobject = socket.SocketIO
+
+# workaround for https://bugs.python.org/issue29515
+# Python 3.5 and 3.6 for Windows is missing a constant
+if not hasattr(socket, 'IPV6_V6ONLY'):
+    socket.IPV6_V6ONLY = 41
 
 EINTR = 4
 HAS_ALPN = SSL._lib.Cryptography_HAS_ALPN
@@ -299,73 +303,6 @@ class Reader(_FileLike):
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
 
-class Address(serializable.Serializable):
-
-    """
-        This class wraps an IPv4/IPv6 tuple to provide named attributes and
-        ipv6 information.
-    """
-
-    def __init__(self, address, use_ipv6=False):
-        self.address = tuple(address)
-        self.use_ipv6 = use_ipv6
-
-    def get_state(self):
-        return {
-            "address": self.address,
-            "use_ipv6": self.use_ipv6
-        }
-
-    def set_state(self, state):
-        self.address = state["address"]
-        self.use_ipv6 = state["use_ipv6"]
-
-    @classmethod
-    def from_state(cls, state):
-        return Address(**state)
-
-    @classmethod
-    def wrap(cls, t):
-        if isinstance(t, cls):
-            return t
-        else:
-            return cls(t)
-
-    def __call__(self):
-        return self.address
-
-    @property
-    def host(self):
-        return self.address[0]
-
-    @property
-    def port(self):
-        return self.address[1]
-
-    @property
-    def use_ipv6(self):
-        return self.family == socket.AF_INET6
-
-    @use_ipv6.setter
-    def use_ipv6(self, b):
-        self.family = socket.AF_INET6 if b else socket.AF_INET
-
-    def __repr__(self):
-        return "{}:{}".format(self.host, self.port)
-
-    def __eq__(self, other):
-        if not other:
-            return False
-        other = Address.wrap(other)
-        return (self.address, self.family) == (other.address, other.family)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.address) ^ 42  # different hash than the tuple alone.
-
-
 def ssl_read_select(rlist, timeout):
     """
     This is a wrapper around select.select() which also works for SSL.Connections
@@ -452,7 +389,7 @@ class _Connection:
     def __init__(self, connection):
         if connection:
             self.connection = connection
-            self.ip_address = Address(connection.getpeername())
+            self.ip_address = connection.getpeername()
             self._makefile()
         else:
             self.connection = None
@@ -629,28 +566,6 @@ class TCPClient(_Connection):
         self.sni = None
         self.spoof_source_address = spoof_source_address
 
-    @property
-    def address(self):
-        return self.__address
-
-    @address.setter
-    def address(self, address):
-        if address:
-            self.__address = Address.wrap(address)
-        else:
-            self.__address = None
-
-    @property
-    def source_address(self):
-        return self.__source_address
-
-    @source_address.setter
-    def source_address(self, source_address):
-        if source_address:
-            self.__source_address = Address.wrap(source_address)
-        else:
-            self.__source_address = None
-
     def close(self):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
@@ -741,34 +656,57 @@ class TCPClient(_Connection):
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
-    def makesocket(self):
+    def makesocket(self, family, type, proto):
         # some parties (cuckoo sandbox) need to hook this
-        return socket.socket(self.address.family, socket.SOCK_STREAM)
+        return socket.socket(family, type, proto)
+
+    def create_connection(self, timeout=None):
+        # Based on the official socket.create_connection implementation of Python 3.6.
+        # https://github.com/python/cpython/blob/3cc5817cfaf5663645f4ee447eaed603d2ad290a/Lib/socket.py
+
+        err = None
+        for res in socket.getaddrinfo(self.address[0], self.address[1], 0, socket.SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = self.makesocket(af, socktype, proto)
+                if timeout:
+                    sock.settimeout(timeout)
+                if self.source_address:
+                    sock.bind(self.source_address)
+                if self.spoof_source_address:
+                    try:
+                        if not sock.getsockopt(socket.SOL_IP, socket.IP_TRANSPARENT):
+                            sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)
+                    except Exception as e:
+                        # socket.IP_TRANSPARENT might not be available on every OS and Python version
+                        raise exceptions.TcpException(
+                            "Failed to spoof the source address: " + e.strerror
+                        )
+                sock.connect(sa)
+                return sock
+
+            except socket.error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+
+        if err is not None:
+            raise err
+        else:
+            raise socket.error("getaddrinfo returns an empty list")
 
     def connect(self):
         try:
-            connection = self.makesocket()
-
-            if self.spoof_source_address:
-                try:
-                    # 19 is `IP_TRANSPARENT`, which is only available on Python 3.3+ on some OSes
-                    if not connection.getsockopt(socket.SOL_IP, 19):
-                        connection.setsockopt(socket.SOL_IP, 19, 1)
-                except socket.error as e:
-                    raise exceptions.TcpException(
-                        "Failed to spoof the source address: " + e.strerror
-                    )
-            if self.source_address:
-                connection.bind(self.source_address())
-            connection.connect(self.address())
-            self.source_address = Address(connection.getsockname())
+            connection = self.create_connection()
         except (socket.error, IOError) as err:
             raise exceptions.TcpException(
                 'Error connecting to "%s": %s' %
-                (self.address.host, err)
+                (self.address[0], err)
             )
         self.connection = connection
-        self.ip_address = Address(connection.getpeername())
+        self.source_address = connection.getsockname()
+        self.ip_address = connection.getpeername()
         self._makefile()
         return ConnectionCloser(self)
 
@@ -793,7 +731,7 @@ class BaseHandler(_Connection):
 
     def __init__(self, connection, address, server):
         super().__init__(connection)
-        self.address = Address.wrap(address)
+        self.address = address
         self.server = server
         self.clientcert = None
 
@@ -915,19 +853,36 @@ class TCPServer:
     request_queue_size = 20
 
     def __init__(self, address):
-        self.address = Address.wrap(address)
+        self.address = address
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
-        self.socket = socket.socket(self.address.family, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.address())
-        self.address = Address.wrap(self.socket.getsockname())
+
+        if self.address == 'localhost':
+            raise socket.error("Binding to 'localhost' is prohibited. Please use '::1' or '127.0.0.1' directly.")
+
+        try:
+            # First try to bind an IPv6 socket, with possible IPv4 if the OS supports it.
+            # This allows us to accept connections for ::1 and 127.0.0.1 on the same socket.
+            # Only works if self.address == ""
+            self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            self.socket.bind(self.address)
+        except:
+            self.socket = None
+
+        if not self.socket:
+            # Binding to an IPv6 socket failed, lets fall back to IPv4.
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(self.address)
+
+        self.address = self.socket.getsockname()
         self.socket.listen(self.request_queue_size)
         self.handler_counter = Counter()
 
     def connection_thread(self, connection, client_address):
         with self.handler_counter:
-            client_address = Address(client_address)
             try:
                 self.handle_client_connection(connection, client_address)
             except:
@@ -954,8 +909,8 @@ class TCPServer:
                             self.__class__.__name__,
                             client_address[0],
                             client_address[1],
-                            self.address.host,
-                            self.address.port
+                            self.address[0],
+                            self.address[1],
                         ),
                         target=self.connection_thread,
                         args=(connection, client_address),
@@ -964,7 +919,7 @@ class TCPServer:
                     try:
                         t.start()
                     except threading.ThreadError:
-                        self.handle_error(connection, Address(client_address))
+                        self.handle_error(connection, client_address)
                         connection.close()
         finally:
             self.__shutdown_request = False

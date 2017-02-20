@@ -2046,7 +2046,7 @@ function ConnectionInfo(_ref2) {
                 _react2.default.createElement(
                     'td',
                     null,
-                    conn.address.address.join(':')
+                    conn.address.join(':')
                 )
             ),
             conn.sni && _react2.default.createElement(
@@ -8449,7 +8449,7 @@ module.exports = function () {
     function destination(regex) {
       regex = new RegExp(regex, "i");
       function destinationFilter(flow) {
-        return !!flow.server_conn.address && regex.test(flow.server_conn.address.address[0] + ":" + flow.server_conn.address.address[1]);
+        return !!flow.server_conn.address && regex.test(flow.server_conn.address[0] + ":" + flow.server_conn.address[1]);
       }
       destinationFilter.desc = "destination address matches " + regex;
       return destinationFilter;
@@ -8509,7 +8509,7 @@ module.exports = function () {
     function source(regex) {
       regex = new RegExp(regex, "i");
       function sourceFilter(flow) {
-        return !!flow.client_conn.address && regex.test(flow.client_conn.address.address[0] + ":" + flow.client_conn.address.address[1]);
+        return !!flow.client_conn.address && regex.test(flow.client_conn.address[0] + ":" + flow.client_conn.address[1]);
       }
       sourceFilter.desc = "source address matches " + regex;
       return sourceFilter;

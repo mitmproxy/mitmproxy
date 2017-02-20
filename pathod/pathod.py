@@ -166,7 +166,7 @@ class PathodHandler(tcp.BaseHandler):
                     headers=headers.fields,
                     http_version=http_version,
                     sni=self.sni,
-                    remote_address=self.address(),
+                    remote_address=self.address,
                     clientcert=clientcert,
                     first_line_format=first_line_format
                 ),

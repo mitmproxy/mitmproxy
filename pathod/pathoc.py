@@ -239,7 +239,7 @@ class Pathoc(tcp.TCPClient):
             is_client=True,
             staticdir=os.getcwd(),
             unconstrained_file_access=True,
-            request_host=self.address.host,
+            request_host=self.address[0],
             protocol=self.protocol,
         )
 
@@ -286,7 +286,7 @@ class Pathoc(tcp.TCPClient):
                 socks.VERSION.SOCKS5,
                 socks.CMD.CONNECT,
                 socks.ATYP.DOMAINNAME,
-                tcp.Address.wrap(connect_to)
+                connect_to,
             )
             connect_request.to_file(self.wfile)
             self.wfile.flush()

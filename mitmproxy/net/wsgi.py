@@ -4,14 +4,13 @@ import urllib
 import io
 
 from mitmproxy.net import http
-from mitmproxy.net import tcp
 from mitmproxy.utils import strutils
 
 
 class ClientConn:
 
     def __init__(self, address):
-        self.address = tcp.Address.wrap(address)
+        self.address = address
 
 
 class Flow:
@@ -84,8 +83,8 @@ class WSGIAdaptor:
         }
         environ.update(extra)
         if flow.client_conn.address:
-            environ["REMOTE_ADDR"] = strutils.always_str(flow.client_conn.address.host, "latin-1")
-            environ["REMOTE_PORT"] = flow.client_conn.address.port
+            environ["REMOTE_ADDR"] = strutils.always_str(flow.client_conn.address[0], "latin-1")
+            environ["REMOTE_PORT"] = flow.client_conn.address[1]
 
         for key, value in flow.request.headers.items():
             key = 'HTTP_' + strutils.always_str(key, "latin-1").upper().replace('-', '_')

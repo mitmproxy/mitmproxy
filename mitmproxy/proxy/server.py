@@ -1,4 +1,3 @@
-import socket
 import sys
 import traceback
 
@@ -46,10 +45,10 @@ class ProxyServer(tcp.TCPServer):
             )
             if config.options.mode == "transparent":
                 platform.init_transparent_mode()
-        except socket.error as e:
+        except Exception as e:
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
-            )
+            ) from e
         self.channel = None
 
     def set_channel(self, channel):

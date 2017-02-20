@@ -68,7 +68,7 @@ class RootContext:
                 top_layer,
                 client_tls,
                 top_layer.server_tls,
-                top_layer.server_conn.address.host
+                top_layer.server_conn.address[0]
             )
         if isinstance(top_layer, protocol.ServerConnectionMixin) or isinstance(top_layer, protocol.UpstreamConnectLayer):
             return protocol.TlsLayer(top_layer, client_tls, client_tls)
@@ -104,7 +104,7 @@ class RootContext:
         Send a log message to the master.
         """
         full_msg = [
-            "{}: {}".format(repr(self.client_conn.address), msg)
+            "{}:{}: {}".format(self.client_conn.address[0], self.client_conn.address[1], msg)
         ]
         for i in subs:
             full_msg.append("  -> " + i)

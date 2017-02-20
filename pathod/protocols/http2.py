@@ -172,9 +172,9 @@ class HTTP2StateProtocol:
     def assemble_request(self, request):
         assert isinstance(request, mitmproxy.net.http.request.Request)
 
-        authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
-        if self.tcp_handler.address.port != 443:
-            authority += ":%d" % self.tcp_handler.address.port
+        authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address[0]
+        if self.tcp_handler.address[1] != 443:
+            authority += ":%d" % self.tcp_handler.address[1]
 
         headers = request.headers.copy()
 

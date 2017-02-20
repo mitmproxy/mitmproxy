@@ -26,7 +26,7 @@ export function ConnectionInfo({ conn }) {
             <tbody>
                 <tr key="address">
                     <td>Address:</td>
-                    <td>{conn.address.address.join(':')}</td>
+                    <td>{conn.address.join(':')}</td>
                 </tr>
                 {conn.sni && (
                     <tr key="sni">

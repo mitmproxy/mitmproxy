@@ -109,7 +109,7 @@ class WebMaster(master.Master):
         tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
 
         self.add_log(
-            "Proxy server listening at http://{}/".format(self.server.address),
+            "Proxy server listening at http://{}:{}/".format(self.server.address[0], self.server.address[1]),
             "info"
         )
 

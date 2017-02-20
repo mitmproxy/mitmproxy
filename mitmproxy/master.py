@@ -149,8 +149,8 @@ class Master:
         """
         if isinstance(f, http.HTTPFlow):
             if self.server and self.options.mode == "reverse":
-                f.request.host = self.server.config.upstream_server.address.host
-                f.request.port = self.server.config.upstream_server.address.port
+                f.request.host = self.server.config.upstream_server.address[0]
+                f.request.port = self.server.config.upstream_server.address[1]
                 f.request.scheme = self.server.config.upstream_server.scheme
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):

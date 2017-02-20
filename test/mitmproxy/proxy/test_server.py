@@ -17,7 +17,6 @@ from mitmproxy.net import socks
 from mitmproxy import certs
 from mitmproxy import exceptions
 from mitmproxy.net.http import http1
-from mitmproxy.net.tcp import Address
 from pathod import pathoc
 from pathod import pathod
 
@@ -561,7 +560,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     def get_options(cls):
         opts = super().get_options()
         s = parse_server_spec(opts.upstream_server)
-        opts.upstream_server = "http://%s" % s.address
+        opts.upstream_server = "http://{}:{}".format(s.address[0], s.address[1])
         return opts
 
     def pathoc(self, ssl, sni=None):
@@ -720,7 +719,7 @@ class MasterRedirectRequest(tservers.TestMaster):
 
             # This part should have no impact, but it should also not cause any exceptions.
             addr = f.live.server_conn.address
-            addr2 = Address(("127.0.0.1", self.redirect_port))
+            addr2 = ("127.0.0.1", self.redirect_port)
             f.live.set_server(addr2)
             f.live.set_server(addr)
 
@@ -730,8 +729,8 @@ class MasterRedirectRequest(tservers.TestMaster):
 
     @controller.handler
     def response(self, f):
-        f.response.content = bytes(f.client_conn.address.port)
-        f.response.headers["server-conn-id"] = str(f.server_conn.source_address.port)
+        f.response.content = bytes(f.client_conn.address[1])
+        f.response.headers["server-conn-id"] = str(f.server_conn.source_address[1])
         super().response(f)
 
 
