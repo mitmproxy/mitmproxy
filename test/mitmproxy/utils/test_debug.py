@@ -1,11 +1,13 @@
 import io
 import subprocess
+import sys
 from unittest import mock
 
 from mitmproxy.utils import debug
 
 
 def test_dump_system_info():
+    setattr(sys, 'frozen', True)
     assert debug.dump_system_info()
 
     with mock.patch('subprocess.check_output') as m:
