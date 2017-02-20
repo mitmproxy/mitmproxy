@@ -1,12 +1,12 @@
+from unittest import mock
+
 import mitmproxy.tools.console.flowlist as flowlist
 from mitmproxy.tools import console
 from mitmproxy import proxy
 from mitmproxy import options
-from .. import tservers
-from unittest import mock
 
 
-class TestFlowlist(tservers.MasterTest):
+class TestFlowlist:
     def mkmaster(self, **opts):
         if "verbosity" not in opts:
             opts["verbosity"] = 1
