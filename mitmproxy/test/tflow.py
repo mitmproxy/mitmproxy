@@ -144,6 +144,7 @@ def tclient_conn():
     c = connections.ClientConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         clientcert=None,
+        mitmcert=None,
         ssl_established=False,
         timestamp_start=1,
         timestamp_ssl_setup=2,
