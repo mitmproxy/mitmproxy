@@ -1,3 +1,26 @@
+21 February 2017: mitmproxy 2.0
+
+    * HTTP/2 is now enabled by default.
+
+    * Image ContentView: Parse images with Kaitai Struct (kaitai.io) instead of Pillow. 
+      This simplifies installation, reduces binary size, and allows parsing in pure Python.
+
+    * Web: Add missing flow filters.
+
+    * Add transparent proxy support for OpenBSD.
+
+    * Check the mitmproxy CA for expiration and warn the user to regenerate it if necessary.
+
+    * Testing: Tremendous improvements, enforced 100% coverage for large parts of the 
+      codebase, increased overall coverage.
+
+    * Enforce individual coverage: one source file -> one test file with 100% coverage.
+
+    * A myriad of other small improvements throughout the project.
+
+    * Numerous bugfixes.
+
+
 26 December 2016: mitmproxy 1.0
 
     * All mitmproxy tools are now Python 3 only! We plan to support Python 3.5 and higher.
