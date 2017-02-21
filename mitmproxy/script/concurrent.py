@@ -29,4 +29,8 @@ def concurrent(fn):
             "script.concurrent (%s)" % fn.__name__,
             target=run
         ).start()
-    return _concurrent
+    # Support @concurrent for class-based addons
+    if "." in fn.__qualname__:
+        return staticmethod(_concurrent)
+    else:
+        return _concurrent
