@@ -49,10 +49,10 @@ function Footer({ settings }) {
             )}
             <div className="pull-right">
             <span className="label label-primary" title="HTTP Proxy Server Address">
-            [{listen_host || "*"}:{listen_port}]
+            {listen_host || "*"}:{listen_port}
             </span>
-            <span className="label label-info" title="Version">
-            [version:{version}]
+            <span className="label label-info" title="Mitmproxy Version">
+            v{version}
             </span>
             </div>
         </footer>

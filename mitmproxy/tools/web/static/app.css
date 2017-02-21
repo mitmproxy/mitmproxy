@@ -564,7 +564,6 @@ footer .label {
 .CodeMirror {
   border: 1px solid #ccc;
   height: auto !important;
-  max-height: 2048px !important;
 }
 /* BASICS */
 
