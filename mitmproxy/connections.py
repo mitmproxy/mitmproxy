@@ -112,9 +112,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             tls_version=None,
         ))
 
-    def convert_to_ssl(self, *args, **kwargs):
-        super().convert_to_ssl(*args, **kwargs)
+    def convert_to_ssl(self, cert, *args, **kwargs):
+        super().convert_to_ssl(cert, *args, **kwargs)
         self.timestamp_ssl_setup = time.time()
+        self.mitmcert = cert
         sni = self.connection.get_servername()
         if sni:
             self.sni = sni.decode("idna")
