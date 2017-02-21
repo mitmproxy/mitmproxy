@@ -90,9 +90,11 @@ def convert_100_200(data):
     data["version"] = (2, 0, 0)
     return data
 
+
 def convert_200_300(data):
     data["version"] = (3, 0, 0)
     return data
+
 
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
