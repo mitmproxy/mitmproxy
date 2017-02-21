@@ -1,5 +1,6 @@
 # Release Checklist
 
+- Update CHANGELOG
 - Verify that all CI tests pass for current master
 - Tag the release, and push to Github
 - Wait for tag CI to complete
