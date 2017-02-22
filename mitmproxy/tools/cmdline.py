@@ -391,7 +391,7 @@ def proxy_options(parser):
     group.add_argument(
         "--keep-host-header",
         action="store_true", dest="keep_host_header",
-        help="Keep the host header as proxy addres"
+        help="Reverse Proxy: Keep the original host header instead of rewriting it to the reverse proxy target."
     )
 
 
