@@ -112,6 +112,7 @@ def get_common_options(args):
         replacements=args.replacements,
         replacement_files=args.replacement_files,
         setheaders=args.setheaders,
+        keep_host_header=args.keep_host_header,
         server_replay=args.server_replay,
         scripts=args.scripts,
         stickycookie=stickycookie,
@@ -386,6 +387,11 @@ def proxy_options(parser):
         "--upstream-bind-address",
         action="store", type=str, dest="upstream_bind_address",
         help="Address to bind upstream requests to (defaults to none)"
+    )
+    group.add_argument(
+        "--keep-host-header",
+        action="store_true", dest="keep_host_header",
+        help="Keep the host header as proxy addres"
     )
 
 

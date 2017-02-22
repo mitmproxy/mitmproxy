@@ -290,7 +290,7 @@ class HttpLayer(base.Layer):
             request.first_line_format = "relative"
 
         # update host header in reverse proxy mode
-        if self.config.options.mode == "reverse":
+        if self.config.options.mode == "reverse" and not self.config.options.keep_host_header:
             f.request.host_header = self.config.upstream_server.address.host
 
         # Determine .scheme, .host and .port attributes for inline scripts. For
