@@ -30,8 +30,7 @@ socket_fileobject = socket.SocketIO
 
 # workaround for https://bugs.python.org/issue29515
 # Python 3.5 and 3.6 for Windows is missing a constant
-if not hasattr(socket, 'IPV6_V6ONLY'):
-    socket.IPV6_V6ONLY = 41
+IPPROTO_IPV6 = getattr(socket, "IPPROTO_IPV6", 41)
 
 EINTR = 4
 HAS_ALPN = SSL._lib.Cryptography_HAS_ALPN
@@ -866,9 +865,9 @@ class TCPServer:
             # Only works if self.address == ""
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             self.socket.bind(self.address)
-        except:
+        except socket.error:
             self.socket = None
 
         if not self.socket:
