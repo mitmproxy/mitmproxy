@@ -140,6 +140,7 @@ def get_common_options(args):
         ignore_hosts = args.ignore_hosts,
         listen_host = args.addr,
         listen_port = args.port,
+        listen_ipv6 = args.listen_ipv6,
         upstream_bind_address = args.upstream_bind_address,
         mode = mode,
         no_upstream_cert = args.no_upstream_cert,
@@ -301,6 +302,16 @@ def proxy_options(parser):
         "-b", "--bind-address",
         action="store", type=str, dest="addr",
         help="Address to bind proxy to (defaults to all interfaces)"
+    )
+    group.add_argument(
+        "-6", "--bind-ipv6",
+        action="store_true", dest="listen_ipv6",
+        help="Listen on IPv6 interface only"
+    )
+    group.add_argument(
+        "-4", "--bind-ipv4",
+        action="store_false", dest="listen_ipv6",
+        help="Listen on IPv4 interface only"
     )
     group.add_argument(
         "-I", "--ignore",

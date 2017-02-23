@@ -42,7 +42,8 @@ class ProxyServer(tcp.TCPServer):
         self.config = config
         try:
             super().__init__(
-                (config.options.listen_host, config.options.listen_port)
+                (config.options.listen_host, config.options.listen_port),
+                config.options.listen_ipv6
             )
             if config.options.mode == "transparent":
                 platform.init_transparent_mode()
