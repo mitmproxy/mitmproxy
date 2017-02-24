@@ -21,6 +21,7 @@ class TestHTTPRequest:
         assert r.url == u
         r2 = r.copy()
         assert r.get_state() == r2.get_state()
+        assert hash(r)
 
     def test_get_url(self):
         r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
@@ -95,6 +96,7 @@ class TestHTTPFlow:
 
     def test_copy(self):
         f = tflow.tflow(resp=True)
+        assert repr(f)
         f.get_state()
         f2 = f.copy()
         a = f.get_state()
@@ -229,3 +231,26 @@ class TestHTTPFlow:
         assert f.response.raw_content != b"abarb"
         f.response.decode()
         assert f.response.raw_content == b"abarb"
+
+
+def test_make_error_response():
+    resp = http.make_error_response(543, 'foobar', Headers())
+    assert resp
+
+
+def test_make_connect_request():
+    req = http.make_connect_request(('invalidhost', 1234))
+    assert req.first_line_format == 'authority'
+    assert req.method == 'CONNECT'
+    assert req.http_version == 'HTTP/1.1'
+
+
+def test_make_connect_response():
+    resp = http.make_connect_response('foobar')
+    assert resp.http_version == 'foobar'
+    assert resp.status_code == 200
+
+
+def test_expect_continue_response():
+    assert http.expect_continue_response.http_version == 'HTTP/1.1'
+    assert http.expect_continue_response.status_code == 100
