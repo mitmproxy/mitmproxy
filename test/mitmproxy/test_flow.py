@@ -9,7 +9,6 @@ from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException, Kill
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy import connections
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy import master
@@ -409,23 +408,4 @@ class TestError:
     def test_repr(self):
         e = flow.Error("yay")
         assert repr(e)
-
-
-class TestClientConnection:
-    def test_state(self):
-        c = tflow.tclient_conn()
-        assert connections.ClientConnection.from_state(c.get_state()).get_state() == \
-            c.get_state()
-
-        c2 = tflow.tclient_conn()
-        c2.address = (c2.address[0], 4242)
-        assert not c == c2
-
-        c2.timestamp_start = 42
-        c.set_state(c2.get_state())
-        assert c.timestamp_start == 42
-
-        c3 = c.copy()
-        assert c3.get_state() == c.get_state()
-
-        assert str(c)
+        assert str(e)
