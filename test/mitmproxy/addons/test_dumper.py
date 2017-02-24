@@ -176,7 +176,7 @@ def test_websocket():
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.twebsocketflow()
         d.websocket_message(f)
-        assert "hello text" in sio.getvalue()
+        assert "it's me" in sio.getvalue()
         sio.truncate(0)
 
         d.websocket_end(f)
