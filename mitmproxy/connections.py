@@ -60,10 +60,11 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             )
         else:
             alpn = ""
-        return "<ClientConnection: {ssl}{alpn}{address}>".format(
+        return "<ClientConnection: {ssl}{alpn}{host}:{port}>".format(
             ssl="[ssl] " if self.ssl_established else "",
             alpn=alpn,
-            address=repr(self.address)
+            host=self.address[0],
+            port=self.address[1],
         )
 
     @property
@@ -71,7 +72,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return self.ssl_established
 
     _stateobject_attributes = dict(
-        address=tcp.Address,
+        address=tuple,
         ssl_established=bool,
         clientcert=certs.SSLCert,
         mitmcert=certs.SSLCert,
@@ -176,10 +177,11 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             )
         else:
             alpn = ""
-        return "<ServerConnection: {ssl}{alpn}{address}>".format(
+        return "<ServerConnection: {ssl}{alpn}{host}:{port}>".format(
             ssl=ssl,
             alpn=alpn,
-            address=repr(self.address)
+            host=self.address[0],
+            port=self.address[1],
         )
 
     @property
@@ -187,9 +189,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         return self.ssl_established
 
     _stateobject_attributes = dict(
-        address=tcp.Address,
-        ip_address=tcp.Address,
-        source_address=tcp.Address,
+        address=tuple,
+        ip_address=tuple,
+        source_address=tuple,
         ssl_established=bool,
         cert=certs.SSLCert,
         sni=str,
@@ -244,7 +246,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             else:
                 path = os.path.join(
                     clientcerts,
-                    self.address.host.encode("idna").decode()) + ".pem"
+                    self.address[0].encode("idna").decode()) + ".pem"
                 if os.path.exists(path):
                     clientcert = path
 

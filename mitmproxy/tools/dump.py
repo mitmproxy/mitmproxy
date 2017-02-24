@@ -46,7 +46,7 @@ class DumpMaster(master.Master):
 
         if not self.options.no_server:
             self.add_log(
-                "Proxy server listening at http://{}".format(server.address),
+                "Proxy server listening at http://{}:{}".format(server.address[0], server.address[1]),
                 "info"
             )
 

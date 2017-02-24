@@ -160,7 +160,7 @@ class TestProxyServer:
             ProxyServer(conf)
 
     def test_err_2(self):
-        conf = ProxyConfig(options.Options(listen_host="invalidhost"))
+        conf = ProxyConfig(options.Options(listen_host="256.256.256.256"))
         with pytest.raises(Exception, match="Error starting proxy server"):
             ProxyServer(conf)
 

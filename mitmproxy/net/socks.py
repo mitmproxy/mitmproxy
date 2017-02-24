@@ -2,7 +2,6 @@ import struct
 import array
 import ipaddress
 
-from mitmproxy.net import tcp
 from mitmproxy.net import check
 from mitmproxy.types import bidi
 
@@ -179,7 +178,7 @@ class Message:
         self.ver = ver
         self.msg = msg
         self.atyp = atyp
-        self.addr = tcp.Address.wrap(addr)
+        self.addr = addr
 
     def assert_socks5(self):
         if self.ver != VERSION.SOCKS5:
@@ -199,37 +198,34 @@ class Message:
         if atyp == ATYP.IPV4_ADDRESS:
             # We use tnoa here as ntop is not commonly available on Windows.
             host = ipaddress.IPv4Address(f.safe_read(4)).compressed
-            use_ipv6 = False
         elif atyp == ATYP.IPV6_ADDRESS:
             host = ipaddress.IPv6Address(f.safe_read(16)).compressed
-            use_ipv6 = True
         elif atyp == ATYP.DOMAINNAME:
             length, = struct.unpack("!B", f.safe_read(1))
             host = f.safe_read(length)
             if not check.is_valid_host(host):
                 raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, "Invalid hostname: %s" % host)
             host = host.decode("idna")
-            use_ipv6 = False
         else:
             raise SocksError(REP.ADDRESS_TYPE_NOT_SUPPORTED,
                              "Socks Request: Unknown ATYP: %s" % atyp)
 
         port, = struct.unpack("!H", f.safe_read(2))
-        addr = tcp.Address((host, port), use_ipv6=use_ipv6)
+        addr = (host, port)
         return cls(ver, msg, atyp, addr)
 
     def to_file(self, f):
         f.write(struct.pack("!BBBB", self.ver, self.msg, 0x00, self.atyp))
         if self.atyp == ATYP.IPV4_ADDRESS:
-            f.write(ipaddress.IPv4Address(self.addr.host).packed)
+            f.write(ipaddress.IPv4Address(self.addr[0]).packed)
         elif self.atyp == ATYP.IPV6_ADDRESS:
-            f.write(ipaddress.IPv6Address(self.addr.host).packed)
+            f.write(ipaddress.IPv6Address(self.addr[0]).packed)
         elif self.atyp == ATYP.DOMAINNAME:
-            f.write(struct.pack("!B", len(self.addr.host)))
-            f.write(self.addr.host.encode("idna"))
+            f.write(struct.pack("!B", len(self.addr[0])))
+            f.write(self.addr[0].encode("idna"))
         else:
             raise SocksError(
                 REP.ADDRESS_TYPE_NOT_SUPPORTED,
                 "Unknown ATYP: %s" % self.atyp
             )
-        f.write(struct.pack("!H", self.addr.port))
+        f.write(struct.pack("!H", self.addr[1]))

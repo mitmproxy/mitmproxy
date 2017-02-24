@@ -124,10 +124,10 @@ class _Http2TestBase:
             b'CONNECT',
             b'',
             b'localhost',
-            self.server.server.address.port,
+            self.server.server.address[1],
             b'/',
             b'HTTP/1.1',
-            [(b'host', b'localhost:%d' % self.server.server.address.port)],
+            [(b'host', b'localhost:%d' % self.server.server.address[1])],
             b'',
         )))
         client.wfile.flush()
@@ -231,7 +231,7 @@ class TestSimple(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -307,7 +307,7 @@ class TestForbiddenHeaders(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -384,7 +384,7 @@ class TestRequestWithPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -469,7 +469,7 @@ class TestPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -527,7 +527,7 @@ class TestStreamResetFromServer(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -576,7 +576,7 @@ class TestBodySizeLimit(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -672,7 +672,7 @@ class TestPushPromise(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -728,7 +728,7 @@ class TestPushPromise(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -791,7 +791,7 @@ class TestConnectionLost(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -848,7 +848,7 @@ class TestMaxConcurrentStreams(_Http2Test):
             # this will exceed MAX_CONCURRENT_STREAMS on the server connection
             # and cause mitmproxy to throttle stream creation to the server
             self._send_request(client.wfile, h2_conn, stream_id=stream_id, headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -894,7 +894,7 @@ class TestConnectionTerminated(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),

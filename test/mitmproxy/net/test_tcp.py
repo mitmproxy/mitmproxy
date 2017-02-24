@@ -116,11 +116,11 @@ class TestServerBind(tservers.ServerTestBase):
 
 class TestServerIPv6(tservers.ServerTestBase):
     handler = EchoHandler
-    addr = tcp.Address(("localhost", 0), use_ipv6=True)
+    addr = ("::1", 0)
 
     def test_echo(self):
         testval = b"echo!\n"
-        c = tcp.TCPClient(tcp.Address(("::1", self.port), use_ipv6=True))
+        c = tcp.TCPClient(("::1", self.port))
         with c.connect():
             c.wfile.write(testval)
             c.wfile.flush()
@@ -132,7 +132,7 @@ class TestEcho(tservers.ServerTestBase):
 
     def test_echo(self):
         testval = b"echo!\n"
-        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c = tcp.TCPClient(("localhost", self.port))
         with c.connect():
             c.wfile.write(testval)
             c.wfile.flush()
@@ -781,18 +781,6 @@ class TestPeekSSL(TestPeek):
         with c.connect() as conn:
             c.convert_to_ssl()
             return conn.pop()
-
-
-class TestAddress:
-    def test_simple(self):
-        a = tcp.Address(("localhost", 80), True)
-        assert a.use_ipv6
-        b = tcp.Address(("foo.com", 80), True)
-        assert not a == b
-        c = tcp.Address(("localhost", 80), True)
-        assert a == c
-        assert not a != c
-        assert repr(a) == "localhost:80"
 
 
 class TestSSLKeyLogger(tservers.ServerTestBase):

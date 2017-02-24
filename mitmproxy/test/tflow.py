@@ -142,7 +142,7 @@ def tclient_conn():
     @return: mitmproxy.proxy.connection.ClientConnection
     """
     c = connections.ClientConnection.from_state(dict(
-        address=dict(address=("address", 22), use_ipv6=True),
+        address=("address", 22),
         clientcert=None,
         mitmcert=None,
         ssl_established=False,
@@ -163,8 +163,8 @@ def tserver_conn():
     @return: mitmproxy.proxy.connection.ServerConnection
     """
     c = connections.ServerConnection.from_state(dict(
-        address=dict(address=("address", 22), use_ipv6=True),
-        source_address=dict(address=("address", 22), use_ipv6=True),
+        address=("address", 22),
+        source_address=("address", 22),
         ip_address=None,
         cert=None,
         timestamp_start=1,

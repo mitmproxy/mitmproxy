@@ -101,7 +101,7 @@ class ServerConnectionMixin:
         self.server_conn = None
         if self.config.options.spoof_source_address and self.config.options.upstream_bind_address == '':
             self.server_conn = connections.ServerConnection(
-                server_address, (self.ctx.client_conn.address.host, 0), True)
+                server_address, (self.ctx.client_conn.address[0], 0), True)
         else:
             self.server_conn = connections.ServerConnection(
                 server_address, (self.config.options.upstream_bind_address, 0),
@@ -118,8 +118,8 @@ class ServerConnectionMixin:
         address = self.server_conn.address
         if address:
             self_connect = (
-                address.port == self.config.options.listen_port and
-                address.host in ("localhost", "127.0.0.1", "::1")
+                address[1] == self.config.options.listen_port and
+                address[0] in ("localhost", "127.0.0.1", "::1")
             )
             if self_connect:
                 raise exceptions.ProtocolException(
@@ -133,7 +133,7 @@ class ServerConnectionMixin:
         """
         if self.server_conn.connected():
             self.disconnect()
-        self.log("Set new server address: " + repr(address), "debug")
+        self.log("Set new server address: {}:{}".format(address[0], address[1]), "debug")
         self.server_conn.address = address
         self.__check_self_connect()
 
@@ -150,7 +150,7 @@ class ServerConnectionMixin:
 
         self.server_conn = connections.ServerConnection(
             address,
-            (self.server_conn.source_address.host, 0),
+            (self.server_conn.source_address[0], 0),
             self.config.options.spoof_source_address
         )
 

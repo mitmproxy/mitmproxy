@@ -221,6 +221,11 @@ class TestMatchingHTTPFlow:
         assert not self.q("~src :99", q)
         assert self.q("~src address:22", q)
 
+        q.client_conn.address = None
+        assert not self.q('~src address:22', q)
+        q.client_conn = None
+        assert not self.q('~src address:22', q)
+
     def test_dst(self):
         q = self.req()
         q.server_conn = tflow.tserver_conn()
@@ -229,6 +234,11 @@ class TestMatchingHTTPFlow:
         assert self.q("~dst :22", q)
         assert not self.q("~dst :99", q)
         assert self.q("~dst address:22", q)
+
+        q.server_conn.address = None
+        assert not self.q('~dst address:22', q)
+        q.server_conn = None
+        assert not self.q('~dst address:22', q)
 
     def test_and(self):
         s = self.resp()

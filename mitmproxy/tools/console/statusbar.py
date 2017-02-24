@@ -238,8 +238,8 @@ class StatusBar(urwid.WidgetWrap):
             dst = self.master.server.config.upstream_server
             r.append("[dest:%s]" % mitmproxy.net.http.url.unparse(
                 dst.scheme,
-                dst.address.host,
-                dst.address.port
+                dst.address[0],
+                dst.address[1],
             ))
         if self.master.options.scripts:
             r.append("[")
@@ -272,10 +272,10 @@ class StatusBar(urwid.WidgetWrap):
         ]
 
         if self.master.server.bound:
-            host = self.master.server.address.host
+            host = self.master.server.address[0]
             if host == "0.0.0.0":
                 host = "*"
-            boundaddr = "[%s:%s]" % (host, self.master.server.address.port)
+            boundaddr = "[%s:%s]" % (host, self.master.server.address[1])
         else:
             boundaddr = ""
         t.extend(self.get_status())

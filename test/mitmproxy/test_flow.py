@@ -418,7 +418,7 @@ class TestClientConnection:
             c.get_state()
 
         c2 = tflow.tclient_conn()
-        c2.address.address = (c2.address.host, 4242)
+        c2.address = (c2.address[0], 4242)
         assert not c == c2
 
         c2.timestamp_start = 42
