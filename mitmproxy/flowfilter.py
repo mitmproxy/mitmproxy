@@ -431,6 +431,7 @@ filter_unary = [
     FReq,
     FResp,
     FTCP,
+    FWebSocket,
 ]
 filter_rex = [
     FBod,
