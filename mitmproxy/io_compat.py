@@ -99,6 +99,9 @@ def convert_100_200(data):
 def convert_200_300(data):
     data["version"] = (3, 0, 0)
     data["client_conn"]["mitmcert"] = None
+    data["server_conn"]["tls_version"] = None
+    if data["server_conn"]["via"]:
+        data["server_conn"]["via"]["tls_version"] = None
     return data
 
 

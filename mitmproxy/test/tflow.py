@@ -1,3 +1,5 @@
+import io
+
 from mitmproxy.net import websockets
 from mitmproxy.test import tutils
 from mitmproxy import tcp
@@ -156,6 +158,8 @@ def tclient_conn():
         tls_version="TLSv1.2",
     ))
     c.reply = controller.DummyReply()
+    c.rfile = io.BytesIO()
+    c.wfile = io.BytesIO()
     return c
 
 
@@ -175,9 +179,12 @@ def tserver_conn():
         ssl_established=False,
         sni="address",
         alpn_proto_negotiated=None,
+        tls_version=None,
         via=None,
     ))
     c.reply = controller.DummyReply()
+    c.rfile = io.BytesIO()
+    c.wfile = io.BytesIO()
     return c
 
 
