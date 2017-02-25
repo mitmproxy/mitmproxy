@@ -30,6 +30,14 @@ class TD2(TD):
         super().__init__(three=three, **kwargs)
 
 
+class TM(optmanager.OptManager):
+    def __init__(self, one="one", two=["foo"], three=None):
+        self.one = one
+        self.two = two
+        self.three = three
+        super().__init__()
+
+
 def test_defaults():
     assert TD2.default("one") == "done"
     assert TD2.default("two") == "dtwo"
@@ -203,6 +211,9 @@ def test_serialize():
     t = ""
     o2.load(t)
 
+    with pytest.raises(exceptions.OptionsError, matches='No such option: foobar'):
+        o2.load("foobar: '123'")
+
 
 def test_serialize_defaults():
     o = options.Options()
@@ -224,13 +235,10 @@ def test_saving():
         o.load_paths(dst)
         assert o.three == "foo"
 
-
-class TM(optmanager.OptManager):
-    def __init__(self, one="one", two=["foo"], three=None):
-        self.one = one
-        self.two = two
-        self.three = three
-        super().__init__()
+        with open(dst, 'a') as f:
+            f.write("foobar: '123'")
+        with pytest.raises(exceptions.OptionsError, matches=''):
+            o.load_paths(dst)
 
 
 def test_merge():
