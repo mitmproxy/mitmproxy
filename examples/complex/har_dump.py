@@ -10,7 +10,7 @@ import zlib
 import os
 
 from datetime import datetime
-import pytz
+from datetime import timezone
 
 import mitmproxy
 
@@ -89,7 +89,7 @@ def response(flow):
     # Timings set to -1 will be ignored as per spec.
     full_time = sum(v for v in timings.values() if v > -1)
 
-    started_date_time = format_datetime(datetime.utcfromtimestamp(flow.request.timestamp_start))
+    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
     # Response body size and encoding
     response_body_size = len(flow.response.raw_content)
@@ -173,10 +173,6 @@ def done():
         mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
 
-def format_datetime(dt):
-    return dt.replace(tzinfo=pytz.timezone("UTC")).isoformat()
-
-
 def format_cookies(cookie_list):
     rv = []
 
@@ -198,7 +194,7 @@ def format_cookies(cookie_list):
         # Expiration time needs to be formatted
         expire_ts = cookies.get_expiration_ts(attrs)
         if expire_ts is not None:
-            cookie_har["expires"] = format_datetime(datetime.fromtimestamp(expire_ts))
+            cookie_har["expires"] = datetime.fromtimestamp(expire_ts, timezone.utc).isoformat()
 
         rv.append(cookie_har)
 
