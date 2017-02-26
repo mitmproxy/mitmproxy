@@ -117,6 +117,12 @@ class TestCertStore:
             ret = ca1.get_cert(b"foo.com", [])
             assert ret[0].serial == dc[0].serial
 
+    def test_create_dhparams(self):
+        with tutils.tmpdir() as d:
+            filename = os.path.join(d, "dhparam.pem")
+            certs.CertStore.load_dhparam(filename)
+            assert os.path.exists(filename)
+
 
 class TestDummyCert:
 
@@ -127,9 +133,10 @@ class TestDummyCert:
                 ca.default_privatekey,
                 ca.default_ca,
                 b"foo.com",
-                [b"one.com", b"two.com", b"*.three.com"]
+                [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"]
             )
             assert r.cn == b"foo.com"
+            assert r.altnames == [b'one.com', b'two.com', b'*.three.com', b'127.0.0.1']
 
             r = certs.dummy_cert(
                 ca.default_privatekey,
@@ -138,6 +145,7 @@ class TestDummyCert:
                 []
             )
             assert r.cn is None
+            assert r.altnames == []
 
 
 class TestSSLCert:
@@ -179,3 +187,20 @@ class TestSSLCert:
             d = f.read()
         s = certs.SSLCert.from_der(d)
         assert s.cn
+
+    def test_state(self):
+        with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
+            d = f.read()
+        c = certs.SSLCert.from_pem(d)
+
+        c.get_state()
+        c2 = c.copy()
+        a = c.get_state()
+        b = c2.get_state()
+        assert a == b
+        assert c == c2
+        assert c is not c2
+
+        x = certs.SSLCert('')
+        x.set_state(a)
+        assert x == c
