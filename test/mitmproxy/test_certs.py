@@ -136,7 +136,7 @@ class TestDummyCert:
                 [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"]
             )
             assert r.cn == b"foo.com"
-            assert r.altnames == [b'one.com', b'two.com', b'*.three.com', b'127.0.0.1']
+            assert r.altnames == [b'one.com', b'two.com', b'*.three.com']
 
             r = certs.dummy_cert(
                 ca.default_privatekey,
