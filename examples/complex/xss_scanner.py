@@ -351,7 +351,7 @@ def get_XSS_data(body: str, request_URL: str, injection_point: str) -> Optional[
 def response(flow: http.HTTPFlow) -> None:
     cookiesDict = get_cookies(flow)
     # Example: http://xss.guru/unclaimedScriptTag.html
-    log_XSS_data(find_unclaimed_URLs(flow.response.content, flow.request.url))
+    find_unclaimed_URLs(flow.response.content, flow.request.url)
     results = test_end_of_URL_injection(flow.response.content.decode('utf-8'), flow.request.url, cookiesDict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
