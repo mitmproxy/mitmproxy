@@ -681,7 +681,7 @@ class FlowView(tabs.Tabs):
         encoding_map = {
             "z": "gzip",
             "d": "deflate",
-            "b": "brotli",
+            "b": "br",
         }
         conn.encode(encoding_map[key])
         signals.flow_change.send(self, flow = self.flow)
