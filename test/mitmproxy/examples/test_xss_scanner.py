@@ -4,29 +4,6 @@ from examples.complex import xss_scanner as xss
 from mitmproxy.test import tflow, tutils
 
 
-class MockResponseOrRequest:
-    def __init__(self, cookies):
-        self.cookies = MockLoCT(cookies)
-        self.content = "<html></html>"
-        self.url = "https://example.com/index.html?q=1"
-
-
-class MockLoCT:
-    def __init__(self, cookies):
-        self.fields = cookies
-
-
-class MockCookieValue:
-    def __init__(self, value):
-        self.value = value
-
-
-class MockFlow:
-    def __init__(self):
-        self.response = MockResponseOrRequest([("cookieName1", MockCookieValue("cookieValue1"))])
-        self.request = MockResponseOrRequest([("cookieName2", "cookieValue2")])
-
-
 class TestXSSScanner():
     def test_get_XSS_info(self):
         # First type of exploit: <script>PAYLOAD</script>
@@ -369,27 +346,10 @@ class TestXSSScanner():
         assert logger.args[2] == 'Injection Point: Location'
         assert logger.args[3] == 'Regex used: Oracle.*Driver'
 
-    class MockResponseOrRequest:
-        def __init__(self, cookies):
-            self.cookies = MockLoCT(cookies)
-            self.content = "<html></html>"
-            self.url = "https://example.com/index.html?q=1"
-
-    class MockLoCT:
-        def __init__(self, cookies):
-            self.fields = cookies
-
-    class MockCookieValue:
-        def __init__(self, value):
-            self.value = value
-
-    class MockFlow:
-        def __init__(self):
-            self.response = MockResponseOrRequest([("cookieName1", MockCookieValue("cookieValue1"))])
-            self.request = MockResponseOrRequest([("cookieName2", "cookieValue2")])
-
     def test_get_cookies(self):
-        mocked_flow = MockFlow()
+        mocked_req = tutils.treq()
+        mocked_req.cookies = [("cookieName2", "cookieValue2")]
+        mocked_flow = tflow.tflow(req=mocked_req)
         # It only uses the request cookies
         assert xss.get_cookies(mocked_flow) == {"cookieName2": "cookieValue2"}
 
