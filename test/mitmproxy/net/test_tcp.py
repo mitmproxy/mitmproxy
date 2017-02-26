@@ -602,12 +602,6 @@ class TestDHParams(tservers.ServerTestBase):
             ret = c.get_current_cipher()
             assert ret[0] == "DHE-RSA-AES256-SHA"
 
-    def test_create_dhparams(self):
-        with tutils.tmpdir() as d:
-            filename = os.path.join(d, "dhparam.pem")
-            certs.CertStore.load_dhparam(filename)
-            assert os.path.exists(filename)
-
 
 class TestTCPClient:
 
