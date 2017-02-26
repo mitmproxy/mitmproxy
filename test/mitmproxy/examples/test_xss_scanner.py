@@ -35,19 +35,19 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD,
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.decode('utf-8'),
-                             'Exploit': '</script><script>alert(0)</script><script>',
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData('https://example.com',
+                                        "End of URL",
+                                        '</script><script>alert(0)</script><script>',
+                                        xss.FULL_PAYLOAD.decode('utf-8'))
         assert xss_info == expected_xss_info
         xss_info = xss.get_XSS_data(b"<html><script>%s</script><html>" %
                                     xss.FULL_PAYLOAD.replace(b"'", b"%27").replace(b'"', b"%22"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"'", b"%27").replace(b'"', b"%22").decode('utf-8'),
-                             'Exploit': '</script><script>alert(0)</script><script>',
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        '</script><script>alert(0)</script><script>',
+                                        xss.FULL_PAYLOAD.replace(b"'", b"%27").replace(b'"', b"%22").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><script>%s</script><html>" %
@@ -61,10 +61,11 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").replace(b"\"", b"%22"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").replace(b"\"", b"%22").decode('utf-8'),
-                             'Exploit': "';alert(0);g='",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "';alert(0);g='",
+                                        xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E")
+                                        .replace(b"\"", b"%22").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><script>t='%s';</script></html>" %
@@ -78,10 +79,11 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").replace(b"'", b"%27"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").replace(b"'", b"%27").decode('utf-8'),
-                             'Exploit': '";alert(0);g="',
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        '";alert(0);g="',
+                                        xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E")
+                                        .replace(b"'", b"%27").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><script>t=\"%s\";</script></html>" %
@@ -95,10 +97,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD,
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.decode('utf-8'),
-                             'Exploit': "'><script>alert(0)</script>",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "'><script>alert(0)</script>",
+                                        xss.FULL_PAYLOAD.decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><a href='OtherStuff%s'>Test</a></html>" %
@@ -112,10 +114,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"'", b"%27"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"'", b"%27").decode('utf-8'),
-                             'Exploit': "\"><script>alert(0)</script>",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "\"><script>alert(0)</script>",
+                                        xss.FULL_PAYLOAD.replace(b"'", b"%27").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><a href=\"OtherStuff%s\">Test</a></html>" %
@@ -129,10 +131,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD,
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.decode('utf-8'),
-                             'Exploit': "><script>alert(0)</script>",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "><script>alert(0)</script>",
+                                        xss.FULL_PAYLOAD.decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable
         xss_info = xss.get_XSS_data(b"<html><a href=OtherStuff%s>Test</a></html>" %
@@ -147,10 +149,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD,
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.decode('utf-8'),
-                             'Exploit': "<script>alert(0)</script>",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "<script>alert(0)</script>",
+                                        xss.FULL_PAYLOAD.decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable
         xss_info = xss.get_XSS_data(b"<html><b>%s</b></html>" %
@@ -164,10 +166,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'),
-                             'Exploit': "Javascript:alert(0)",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "Javascript:alert(0)",
+                                        xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><a href=OtherStuff%s>Test</a></html>" %
@@ -182,10 +184,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'),
-                             'Exploit': '" onmouseover="alert(0)" t="',
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        '" onmouseover="alert(0)" t="',
+                                        xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><a href=\"STUFF %s\">Test</a></html>" %
@@ -200,10 +202,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'),
-                             'Exploit': "' onmouseover='alert(0)' t='",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        "' onmouseover='alert(0)' t='",
+                                        xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><a href='STUFF %s'>Test</a></html>" %
@@ -218,10 +220,10 @@ class TestXSSScanner():
                                     xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E"),
                                     "https://example.com",
                                     "End of URL")
-        expected_xss_info = {'Line': xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'),
-                             'Exploit': " onmouseover=alert(0) t=",
-                             'URL': 'https://example.com',
-                             'Injection Point': "End of URL"}
+        expected_xss_info = xss.XSSData("https://example.com",
+                                        "End of URL",
+                                        " onmouseover=alert(0) t=",
+                                        xss.FULL_PAYLOAD.replace(b"<", b"%3C").replace(b">", b"%3E").decode('utf-8'))
         assert xss_info == expected_xss_info
         # Non-Exploitable:
         xss_info = xss.get_XSS_data(b"<html><a href=STUFF_%s>Test</a></html>" %
@@ -236,10 +238,10 @@ class TestXSSScanner():
                                       "<html></html>",
                                       "https://example.com",
                                       "End of URL")
-        expected_sqli_data = {'URL': b"https://example.com",
-                              'Injection Point': b"End of URL",
-                              'Regex': b"SQL syntax.*MySQL",
-                              'DBMS': b"MySQL"}
+        expected_sqli_data = xss.SQLiData("https://example.com",
+                                          "End of URL",
+                                          "SQL syntax.*MySQL",
+                                          "MySQL")
         assert sqli_data == expected_sqli_data
         sqli_data = xss.get_SQLi_data("<html>SQL syntax MySQL</html>",
                                       "<html>SQL syntax MySQL</html>",
@@ -276,10 +278,10 @@ class TestXSSScanner():
     def test_test_end_of_url_injection(self, monkeypatch):
         monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
         xss_info = xss.test_end_of_URL_injection("<html></html>", "https://example.com/index.html", {})[0]
-        expected_xss_info = {'Exploit': '<script>alert(0)</script>',
-                             'Injection Point': 'End of URL',
-                             'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd',
-                             'URL': 'https://example.com/index.html/1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\eq=3847asd'}
+        expected_xss_info = xss.XSSData('https://example.com/index.html/1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\eq=3847asd',
+                                        'End of URL',
+                                        '<script>alert(0)</script>',
+                                        '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd')
         sqli_info = xss.test_end_of_URL_injection("<html></html>", "https://example.com/", {})[1]
         assert xss_info == expected_xss_info
         assert sqli_info is None
@@ -287,10 +289,10 @@ class TestXSSScanner():
     def test_test_referer_injection(self, monkeypatch):
         monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
         xss_info = xss.test_referer_injection("<html></html>", "https://example.com/", {})[0]
-        expected_xss_info = {'Exploit': '<script>alert(0)</script>',
-                             'Injection Point': 'Referer',
-                             'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd',
-                             'URL': 'https://example.com/'}
+        expected_xss_info = xss.XSSData('https://example.com/',
+                                        'Referer',
+                                        '<script>alert(0)</script>',
+                                        '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd')
         sqli_info = xss.test_referer_injection("<html></html>", "https://example.com/", {})[1]
         assert xss_info == expected_xss_info
         assert sqli_info is None
@@ -298,10 +300,10 @@ class TestXSSScanner():
     def test_test_user_agent_injection(self, monkeypatch):
         monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
         xss_info = xss.test_user_agent_injection("<html></html>", "https://example.com/", {})[0]
-        expected_xss_info = {'Exploit': '<script>alert(0)</script>',
-                             'Injection Point': 'User Agent',
-                             'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd',
-                             'URL': 'https://example.com/'}
+        expected_xss_info = xss.XSSData('https://example.com/',
+                                        'User Agent',
+                                        '<script>alert(0)</script>',
+                                        '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd')
         sqli_info = xss.test_user_agent_injection("<html></html>", "https://example.com/", {})[1]
         assert xss_info == expected_xss_info
         assert sqli_info is None
@@ -309,10 +311,10 @@ class TestXSSScanner():
     def test_test_query_injection(self, monkeypatch):
         monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
         xss_info = xss.test_query_injection("<html></html>", "https://example.com/vuln.php?cmd=ls", {})[0]
-        expected_xss_info = {'Exploit': '<script>alert(0)</script>',
-                             'Injection Point': 'Query',
-                             'URL': 'https://example.com/vuln.php?cmd=1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\eq=3847asd',
-                             'Line': '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd'}
+        expected_xss_info = xss.XSSData('https://example.com/vuln.php?cmd=1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\eq=3847asd',
+                                        'Query',
+                                        '<script>alert(0)</script>',
+                                        '1029zxcs\\\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\\\eq=3847asd')
         sqli_info = xss.test_query_injection("<html></html>", "https://example.com/vuln.php?cmd=ls", {})[1]
         assert xss_info == expected_xss_info
         assert sqli_info is None

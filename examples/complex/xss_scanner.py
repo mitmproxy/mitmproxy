@@ -5,7 +5,7 @@ import requests
 import re
 from html.parser import HTMLParser
 from mitmproxy import http
-from typing import Dict, Union, Tuple, Optional, List
+from typing import Dict, Union, Tuple, Optional, List, NamedTuple
 
 # The actual payload is put between a frontWall and a backWall to make it easy
 # to locate the payload with regular expressions
@@ -14,57 +14,25 @@ BACK_WALL = b"3847asd"
 PAYLOAD = b"""s'd"ao<ac>so[sb]po(pc)se;sl/bsl\\eq="""
 FULL_PAYLOAD = FRONT_WALL + PAYLOAD + BACK_WALL
 
-# A XSSData is an object with the following fields:
+# A XSSData is a named tuple with the following fields:
 #   - url -> str
 #   - injection_point -> str
 #   - exploit -> str
 #   - line -> str
+XSSData = NamedTuple('XSSData', [('url', str),
+                                 ('injection_point', str),
+                                 ('exploit', str),
+                                 ('line', str)])
 
-
-class XSSData:
-    def __init__(self, url: str, injection_point: str, exploit: str, line: str):
-        self.url = url
-        self.injection_point = injection_point
-        self.exploit = exploit
-        self.line = line
-
-    def _dict(self):
-        return {'Line': self.line,
-                'Exploit': self.exploit,
-                'URL': self.url,
-                'Injection Point': self.injection_point}
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        self_dict = self._dict()
-        return self_dict == other
-
-# A SQLiData is an object with the following fields:
+# A SQLiData is named tuple with the following fields:
 #   - url -> str
 #   - injection_point -> str
 #   - regex -> str
 #   - dbms -> str
-
-
-class SQLiData:
-    def __init__(self, url: bytes, injection_point: bytes, regex: bytes, dbms: bytes):
-        self.url = url
-        self.injection_point = injection_point
-        self.regex = regex
-        self.dbms = dbms
-
-    def _dict(self):
-        return {'DBMS': self.dbms,
-                'Regex': self.regex,
-                'URL': self.url,
-                'Injection Point': self.injection_point}
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        self_dict = self._dict()
-        return self_dict == other
+SQLiData = NamedTuple('SQLiData', [('url', str),
+                                   ('injection_point', str),
+                                   ('regex', str),
+                                   ('dbms', str)])
 
 
 VulnData = Tuple[Optional[XSSData], Optional[SQLiData]]
@@ -194,34 +162,34 @@ def get_SQLi_data(new_body: str, original_body: str, request_URL: str, injection
     for dbms, regexes in DBMS_ERRORS.items():
         for regex in regexes:
             if re.search(regex, new_body) and not re.search(regex, original_body):
-                return SQLiData(request_URL.encode('utf-8'),
-                                injection_point.encode('utf-8'),
-                                regex.encode('utf-8'),
-                                dbms.encode('utf-8'))
+                return SQLiData(request_URL,
+                                injection_point,
+                                regex,
+                                dbms)
 
 
 # A qc is either ' or "
 def inside_quote(qc: str, substring: bytes, text_index: int, body: bytes) -> bool:
     """ Whether the Numberth occurence of the first string in the second
         string is inside quotes as defined by the supplied QuoteChar """
-    def next_part_is_substring(index):
-        if index + len(substring) > len(body):
-            return False
-        return body[index:index + len(substring)] == substring
-
-    def is_not_escaped(index):
-        if index - 1 < 0 or index - 1 > len(body):
-            return True
-        return body[index - 1] != "\\"
-
     substring = substring.decode('utf-8')
     body = body.decode('utf-8')
     num_substrings_found = 0
     in_quote = False
     for index, char in enumerate(body):
-        if char == qc and is_not_escaped(index):
+        # Whether the next chunk of len(substring) chars is the substring
+        next_part_is_substring = (
+            (not (index + len(substring) > len(body))) and
+            (body[index:index + len(substring)] == substring)
+        )
+        # Whether this char is escaped with a \
+        is_not_escaped = (
+            (index - 1 < 0 or index - 1 > len(body)) or
+            (body[index - 1] != "\\")
+        )
+        if char == qc and is_not_escaped:
             in_quote = not in_quote
-        if next_part_is_substring(index):
+        if next_part_is_substring:
             if num_substrings_found == text_index:
                 return in_quote
             num_substrings_found += 1
