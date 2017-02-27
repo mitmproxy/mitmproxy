@@ -85,6 +85,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "is_replay": flow.response.is_replay,
             }
     f.get("server_conn", {}).pop("cert", None)
+    f.get("client_conn", {}).pop("mitmcert", None)
 
     return f
 
