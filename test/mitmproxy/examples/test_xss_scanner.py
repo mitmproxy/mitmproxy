@@ -310,10 +310,10 @@ class TestXSSScanner():
         logger.args = []
         monkeypatch.setattr("mitmproxy.ctx.log", logger)
         xss.find_unclaimed_URLs("<html><script src=\"http://google.com\"></script></html>",
-                                b"https://example.com")
+                                "https://example.com")
         assert logger.args == []
         xss.find_unclaimed_URLs("<html><script src=\"http://unclaimedDomainName.com\"></script></html>",
-                                b"https://example.com")
+                                "https://example.com")
         assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com" in script tag.'
 
     def test_log_XSS_data(self, monkeypatch, logger):

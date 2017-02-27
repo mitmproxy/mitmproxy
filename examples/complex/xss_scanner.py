@@ -25,6 +25,14 @@ The 4 places it injects the payload into are:
 3. Referers     (e.g. The referer changes from https://example.com to PAYLOAD)
 4. User Agents  (e.g. The UA changes from Chrome to PAYLOAD)
 
+Reports from this script show up in the event log (viewable by pressing e) and formatted like:
+
+===== XSS Found ====
+XSS URL: http://daviddworken.com/vulnerableUA.php
+Injection Point: User Agent
+Suggested Exploit: <script>alert(0)</script>
+Line: 1029zxcs'd"ao<ac>so[sb]po(pc)se;sl/bsl\eq=3847asd
+
 """
 
 from mitmproxy import ctx
@@ -97,7 +105,7 @@ def find_unclaimed_URLs(body: Union[str, bytes], requestUrl: bytes) -> None:
         try:
             gethostbyname(domain)
         except gaierror:
-            ctx.log.error("XSS found in %s due to unclaimed URL \"%s\" in script tag." % (requestUrl.decode('utf-8'), url))
+            ctx.log.error("XSS found in %s due to unclaimed URL \"%s\" in script tag." % (requestUrl, url))
 
 
 def test_end_of_URL_injection(original_body: str, request_URL: str, cookies: Cookies) -> VulnData:
