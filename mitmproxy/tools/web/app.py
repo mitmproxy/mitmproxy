@@ -65,6 +65,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
+                "pretty_host": flow.request.pretty_host,
             }
         if flow.response:
             if flow.response.raw_content:
