@@ -276,6 +276,8 @@ class HttpLayer(base.Layer):
             # We optimistically guess there might be an HTTP client on the
             # other end
             self.send_error_response(400, repr(e))
+            f.error = flow.Error(str(e))
+            self.channel.ask("error", f)
             raise exceptions.ProtocolException(
                 "HTTP protocol error in client request: {}".format(e)
             )
