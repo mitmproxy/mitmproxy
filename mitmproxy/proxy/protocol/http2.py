@@ -599,9 +599,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
     def send_response_headers(self, response):
         headers = response.headers.copy()
         headers.insert(0, ":status", str(response.status_code))
-        for forbidden_header in h2.utilities.CONNECTION_HEADERS:
-            if forbidden_header in headers:
-                del headers[forbidden_header]
         with self.connections[self.client_conn].lock:
             self.connections[self.client_conn].safe_send_headers(
                 self.raise_zombie,
