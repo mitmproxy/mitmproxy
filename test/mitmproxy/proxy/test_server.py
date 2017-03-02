@@ -482,6 +482,26 @@ class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
 class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
     reverse = True
 
+    def test_host_header(self):
+        self.config.options.keep_host_header = True
+        p = self.pathoc()
+        with p.connect():
+            resp = p.request("get:/p/200:h'Host'='example.com'")
+        assert resp.status_code == 200
+
+        req = self.master.state.flows[0].request
+        assert req.host_header == "example.com"
+
+    def test_overridden_host_header(self):
+        self.config.options.keep_host_header = False  # default value
+        p = self.pathoc()
+        with p.connect():
+            resp = p.request("get:/p/200:h'Host'='example.com'")
+        assert resp.status_code == 200
+
+        req = self.master.state.flows[0].request
+        assert req.host_header == "127.0.0.1"
+
 
 class TestReverseSSL(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
     reverse = True
