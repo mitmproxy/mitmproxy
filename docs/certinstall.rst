@@ -89,7 +89,7 @@ See https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox
 Chrome on Linux
 ^^^^^^^^^^^^^^^
 
-See https://code.google.com/p/chromium/wiki/LinuxCertManagement
+See http://stackoverflow.com/a/15076602/198996
 
 
 The mitmproxy certificate authority
