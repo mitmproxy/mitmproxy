@@ -11,7 +11,7 @@ export default class FilterDocs extends Component {
 
     constructor(props, context) {
         super(props, context)
-        this.state = { doc: FilterDocs.doc }
+        this.state = { doc: FilterDocs.doc, selectHandler: props.selectHandler}
     }
 
     componentWillMount() {
@@ -29,6 +29,10 @@ export default class FilterDocs extends Component {
         }
     }
 
+    handleClick(e, value){
+        this.state.selectHandler(value.split(" ")[0] + " ")
+    }
+
     render() {
         const { doc } = this.state
         return !doc ? (
@@ -37,7 +41,7 @@ export default class FilterDocs extends Component {
             <table className="table table-condensed">
                 <tbody>
                     {doc.commands.map(cmd => (
-                        <tr key={cmd[1]}>
+                        <tr key={cmd[1]} onClick={e => this.handleClick(e, cmd[0])}>
                             <td>{cmd[0].replace(' ', '\u00a0')}</td>
                             <td>{cmd[1]}</td>
                         </tr>
