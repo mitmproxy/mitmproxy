@@ -2,10 +2,19 @@ from typing import Tuple, Optional, Sequence, Union
 
 from mitmproxy import optmanager
 
+import socket;
+from contextlib import closing
+
+def check_port(port):
+	with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+		return sock.connect_ex(('127.0.0.1', port)) == 0
+
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
-LISTEN_PORT = 8080
+LISTEN_PORT = 9050
+while(check_port(LISTEN_PORT)):
+	LISTEN_PORT = LISTEN_PORT + 1
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
