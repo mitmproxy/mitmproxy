@@ -1,4 +1,5 @@
 import io
+import pytest
 from unittest.mock import patch
 
 from mitmproxy.test import tflow
@@ -134,6 +135,12 @@ class TestMatchingHTTPFlow:
         e = self.err()
         assert self.q("~e", e)
 
+    def test_fmarked(self):
+        q = self.req()
+        assert not self.q("~marked", q)
+        q.marked = True
+        assert self.q("~marked", q)
+
     def test_head(self):
         q = self.req()
         s = self.resp()
@@ -221,6 +228,11 @@ class TestMatchingHTTPFlow:
         assert not self.q("~src :99", q)
         assert self.q("~src address:22", q)
 
+        q.client_conn.address = None
+        assert not self.q('~src address:22', q)
+        q.client_conn = None
+        assert not self.q('~src address:22', q)
+
     def test_dst(self):
         q = self.req()
         q.server_conn = tflow.tserver_conn()
@@ -229,6 +241,11 @@ class TestMatchingHTTPFlow:
         assert self.q("~dst :22", q)
         assert not self.q("~dst :99", q)
         assert self.q("~dst address:22", q)
+
+        q.server_conn.address = None
+        assert not self.q('~dst address:22', q)
+        q.server_conn = None
+        assert not self.q('~dst address:22', q)
 
     def test_and(self):
         s = self.resp()
@@ -269,6 +286,7 @@ class TestMatchingTCPFlow:
         f = self.flow()
         assert self.q("~tcp", f)
         assert not self.q("~http", f)
+        assert not self.q("~websocket", f)
 
     def test_ferr(self):
         e = self.err()
@@ -378,6 +396,87 @@ class TestMatchingTCPFlow:
         assert not self.q("~u whatever", f)
 
 
+class TestMatchingWebSocketFlow:
+
+    def flow(self):
+        return tflow.twebsocketflow()
+
+    def err(self):
+        return tflow.twebsocketflow(err=True)
+
+    def q(self, q, o):
+        return flowfilter.parse(q)(o)
+
+    def test_websocket(self):
+        f = self.flow()
+        assert self.q("~websocket", f)
+        assert not self.q("~tcp", f)
+        assert not self.q("~http", f)
+
+    def test_ferr(self):
+        e = self.err()
+        assert self.q("~e", e)
+
+    def test_body(self):
+        f = self.flow()
+
+        # Messages sent by client or server
+        assert self.q("~b hello", f)
+        assert self.q("~b me", f)
+        assert not self.q("~b nonexistent", f)
+
+        # Messages sent by client
+        assert self.q("~bq hello", f)
+        assert not self.q("~bq me", f)
+        assert not self.q("~bq nonexistent", f)
+
+        # Messages sent by server
+        assert self.q("~bs me", f)
+        assert not self.q("~bs hello", f)
+        assert not self.q("~bs nonexistent", f)
+
+    def test_src(self):
+        f = self.flow()
+        assert self.q("~src address", f)
+        assert not self.q("~src foobar", f)
+        assert self.q("~src :22", f)
+        assert not self.q("~src :99", f)
+        assert self.q("~src address:22", f)
+
+    def test_dst(self):
+        f = self.flow()
+        f.server_conn = tflow.tserver_conn()
+        assert self.q("~dst address", f)
+        assert not self.q("~dst foobar", f)
+        assert self.q("~dst :22", f)
+        assert not self.q("~dst :99", f)
+        assert self.q("~dst address:22", f)
+
+    def test_and(self):
+        f = self.flow()
+        f.server_conn = tflow.tserver_conn()
+        assert self.q("~b hello & ~b me", f)
+        assert not self.q("~src wrongaddress & ~b hello", f)
+        assert self.q("(~src :22 & ~dst :22) & ~b hello", f)
+        assert not self.q("(~src address:22 & ~dst :22) & ~b nonexistent", f)
+        assert not self.q("(~src address:22 & ~dst :99) & ~b hello", f)
+
+    def test_or(self):
+        f = self.flow()
+        f.server_conn = tflow.tserver_conn()
+        assert self.q("~b hello | ~b me", f)
+        assert self.q("~src :22 | ~b me", f)
+        assert not self.q("~src :99 | ~dst :99", f)
+        assert self.q("(~src :22 | ~dst :22) | ~b me", f)
+
+    def test_not(self):
+        f = self.flow()
+        assert not self.q("! ~src :22", f)
+        assert self.q("! ~src :99", f)
+        assert self.q("!~src :99 !~src :99", f)
+        assert not self.q("!~src :99 !~src :22", f)
+
+
 class TestMatchingDummyFlow:
 
     def flow(self):
@@ -411,6 +510,8 @@ class TestMatchingDummyFlow:
         assert not self.q("~e", f)
 
         assert not self.q("~http", f)
+        assert not self.q("~tcp", f)
+        assert not self.q("~websocket", f)
 
         assert not self.q("~h whatever", f)
         assert not self.q("~hq whatever", f)
@@ -440,3 +541,11 @@ def test_pyparsing_bug(extract_tb):
     # The text is a string with leading and trailing whitespace stripped; if the source is not available it is None.
     extract_tb.return_value = [("", 1, "test", None)]
     assert flowfilter.parse("test")
+
+
+def test_match():
+    with pytest.raises(ValueError):
+        flowfilter.match('[foobar', None)
+
+    assert flowfilter.match(None, None)
+    assert not flowfilter.match('foobar', None)

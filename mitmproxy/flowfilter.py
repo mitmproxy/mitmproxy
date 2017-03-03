@@ -348,7 +348,10 @@ class FSrc(_Rex):
     is_binary = False
 
     def __call__(self, f):
-        return f.client_conn.address and self.re.search(repr(f.client_conn.address))
+        if not f.client_conn or not f.client_conn.address:
+            return False
+        r = "{}:{}".format(f.client_conn.address[0], f.client_conn.address[1])
+        return f.client_conn.address and self.re.search(r)
 
 
 class FDst(_Rex):
@@ -357,7 +360,10 @@ class FDst(_Rex):
     is_binary = False
 
     def __call__(self, f):
-        return f.server_conn.address and self.re.search(repr(f.server_conn.address))
+        if not f.server_conn or not f.server_conn.address:
+            return False
+        r = "{}:{}".format(f.server_conn.address[0], f.server_conn.address[1])
+        return f.server_conn.address and self.re.search(r)
 
 
 class _Int(_Action):
@@ -425,6 +431,7 @@ filter_unary = [
     FReq,
     FResp,
     FTCP,
+    FWebSocket,
 ]
 filter_rex = [
     FBod,

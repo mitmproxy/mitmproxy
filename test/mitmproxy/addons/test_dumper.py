@@ -70,7 +70,7 @@ def test_simple():
         flow.request = tutils.treq()
         flow.request.stickycookie = True
         flow.client_conn = mock.MagicMock()
-        flow.client_conn.address.host = "foo"
+        flow.client_conn.address[0] = "foo"
         flow.response = tutils.tresp(content=None)
         flow.response.is_replay = True
         flow.response.status_code = 300
@@ -176,7 +176,7 @@ def test_websocket():
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.twebsocketflow()
         d.websocket_message(f)
-        assert "hello text" in sio.getvalue()
+        assert "it's me" in sio.getvalue()
         sio.truncate(0)
 
         d.websocket_end(f)

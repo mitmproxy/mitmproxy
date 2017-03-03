@@ -3,7 +3,6 @@ from io import BytesIO
 import pytest
 
 from mitmproxy.net import socks
-from mitmproxy.net import tcp
 from mitmproxy.test import tutils
 
 
@@ -176,7 +175,7 @@ def test_message_ipv6():
     msg.to_file(out)
 
     assert out.getvalue() == raw.getvalue()[:-2]
-    assert msg.addr.host == ipv6_addr
+    assert msg.addr[0] == ipv6_addr
 
 
 def test_message_invalid_host():
@@ -196,6 +195,6 @@ def test_message_unknown_atyp():
     with pytest.raises(socks.SocksError):
         socks.Message.from_file(raw)
 
-    m = socks.Message(5, 1, 0x02, tcp.Address(("example.com", 5050)))
+    m = socks.Message(5, 1, 0x02, ("example.com", 5050))
     with pytest.raises(socks.SocksError):
         m.to_file(BytesIO())

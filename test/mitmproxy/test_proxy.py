@@ -4,60 +4,15 @@ from unittest import mock
 from OpenSSL import SSL
 import pytest
 
-from mitmproxy.test import tflow
 
 from mitmproxy.tools import cmdline
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
-from mitmproxy import connections
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
-from mitmproxy import exceptions
-from pathod import test
-from mitmproxy.net.http import http1
 from mitmproxy.test import tutils
 
 from ..conftest import skip_windows
-
-
-class TestServerConnection:
-
-    def test_simple(self):
-        self.d = test.Daemon()
-        sc = connections.ServerConnection((self.d.IFACE, self.d.port))
-        sc.connect()
-        f = tflow.tflow()
-        f.server_conn = sc
-        f.request.path = "/p/200:da"
-
-        # use this protocol just to assemble - not for actual sending
-        sc.wfile.write(http1.assemble_request(f.request))
-        sc.wfile.flush()
-
-        assert http1.read_response(sc.rfile, f.request, 1000)
-        assert self.d.last_log()
-
-        sc.finish()
-        self.d.shutdown()
-
-    def test_terminate_error(self):
-        self.d = test.Daemon()
-        sc = connections.ServerConnection((self.d.IFACE, self.d.port))
-        sc.connect()
-        sc.connection = mock.Mock()
-        sc.connection.recv = mock.Mock(return_value=False)
-        sc.connection.flush = mock.Mock(side_effect=exceptions.TcpDisconnect)
-        sc.finish()
-        self.d.shutdown()
-
-    def test_repr(self):
-        sc = tflow.tserver_conn()
-        assert "address:22" in repr(sc)
-        assert "ssl" not in repr(sc)
-        sc.ssl_established = True
-        assert "ssl" in repr(sc)
-        sc.sni = "foo"
-        assert "foo" in repr(sc)
 
 
 class MockParser(argparse.ArgumentParser):
@@ -160,7 +115,7 @@ class TestProxyServer:
             ProxyServer(conf)
 
     def test_err_2(self):
-        conf = ProxyConfig(options.Options(listen_host="invalidhost"))
+        conf = ProxyConfig(options.Options(listen_host="256.256.256.256"))
         with pytest.raises(Exception, match="Error starting proxy server"):
             ProxyServer(conf)
 

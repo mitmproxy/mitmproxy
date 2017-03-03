@@ -97,8 +97,8 @@ class _PaThread(basethread.BaseThread):
             **self.daemonargs
         )
         self.name = "PathodThread (%s:%s)" % (
-            self.server.address.host,
-            self.server.address.port
+            self.server.address[0],
+            self.server.address[1],
         )
-        self.q.put(self.server.address.port)
+        self.q.put(self.server.address[1])
         self.server.serve_forever()

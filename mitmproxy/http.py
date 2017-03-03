@@ -5,7 +5,6 @@ from mitmproxy import flow
 
 from mitmproxy.net import http
 from mitmproxy import version
-from mitmproxy.net import tcp
 from mitmproxy import connections  # noqa
 
 
@@ -245,9 +244,8 @@ def make_error_response(
 
 
 def make_connect_request(address):
-    address = tcp.Address.wrap(address)
     return HTTPRequest(
-        "authority", b"CONNECT", None, address.host, address.port, None, b"HTTP/1.1",
+        "authority", b"CONNECT", None, address[0], address[1], None, b"HTTP/1.1",
         http.Headers(), b""
     )
 

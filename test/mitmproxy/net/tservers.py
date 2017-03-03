@@ -86,13 +86,13 @@ class _TServer(tcp.TCPServer):
 class ServerTestBase:
     ssl = None
     handler = None
-    addr = ("localhost", 0)
+    addr = ("127.0.0.1", 0)
 
     @classmethod
     def setup_class(cls, **kwargs):
         cls.q = queue.Queue()
         s = cls.makeserver(**kwargs)
-        cls.port = s.address.port
+        cls.port = s.address[1]
         cls.server = _ServerThread(s)
         cls.server.start()
 

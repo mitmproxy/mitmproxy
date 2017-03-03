@@ -97,7 +97,6 @@ class Http2Layer(base.Layer):
             client_side=False,
             header_encoding=False,
             validate_outbound_headers=False,
-            normalize_outbound_headers=False,
             validate_inbound_headers=False)
         self.connections[self.client_conn] = SafeH2Connection(self.client_conn, config=config)
 
@@ -107,7 +106,6 @@ class Http2Layer(base.Layer):
                 client_side=True,
                 header_encoding=False,
                 validate_outbound_headers=False,
-                normalize_outbound_headers=False,
                 validate_inbound_headers=False)
             self.connections[self.server_conn] = SafeH2Connection(self.server_conn, config=config)
         self.connections[self.server_conn].initiate_connection()
@@ -599,9 +597,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
     def send_response_headers(self, response):
         headers = response.headers.copy()
         headers.insert(0, ":status", str(response.status_code))
-        for forbidden_header in h2.utilities.CONNECTION_HEADERS:
-            if forbidden_header in headers:
-                del headers[forbidden_header]
         with self.connections[self.client_conn].lock:
             self.connections[self.client_conn].safe_send_headers(
                 self.raise_zombie,

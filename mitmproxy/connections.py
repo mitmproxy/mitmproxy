@@ -54,24 +54,35 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return bool(self.connection) and not self.finished
 
     def __repr__(self):
+        if self.ssl_established:
+            tls = "[{}] ".format(self.tls_version)
+        else:
+            tls = ""
+
         if self.alpn_proto_negotiated:
             alpn = "[ALPN: {}] ".format(
                 strutils.bytes_to_escaped_str(self.alpn_proto_negotiated)
             )
         else:
             alpn = ""
-        return "<ClientConnection: {ssl}{alpn}{address}>".format(
-            ssl="[ssl] " if self.ssl_established else "",
+
+        return "<ClientConnection: {tls}{alpn}{host}:{port}>".format(
+            tls=tls,
             alpn=alpn,
-            address=repr(self.address)
+            host=self.address[0],
+            port=self.address[1],
         )
 
     @property
     def tls_established(self):
         return self.ssl_established
 
+    @tls_established.setter
+    def tls_established(self, value):
+        self.ssl_established = value
+
     _stateobject_attributes = dict(
-        address=tcp.Address,
+        address=tuple,
         ssl_established=bool,
         clientcert=certs.SSLCert,
         mitmcert=certs.SSLCert,
@@ -99,7 +110,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     @classmethod
     def make_dummy(cls, address):
         return cls.from_state(dict(
-            address=dict(address=address, use_ipv6=False),
+            address=address,
             clientcert=None,
             mitmcert=None,
             ssl_established=False,
@@ -143,6 +154,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         cert: The certificate presented by the remote during the TLS handshake
         sni: Server Name Indication sent by the proxy during the TLS handshake
         alpn_proto_negotiated: The negotiated application protocol
+        tls_version: TLS version
         via: The underlying server connection (e.g. the connection to the upstream proxy in upstream proxy mode)
         timestamp_start: Connection start timestamp
         timestamp_tcp_setup: TCP ACK received timestamp
@@ -154,6 +166,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         tcp.TCPClient.__init__(self, address, source_address, spoof_source_address)
 
         self.alpn_proto_negotiated = None
+        self.tls_version = None
         self.via = None
         self.timestamp_start = None
         self.timestamp_end = None
@@ -165,35 +178,41 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
     def __repr__(self):
         if self.ssl_established and self.sni:
-            ssl = "[ssl: {0}] ".format(self.sni)
+            tls = "[{}: {}] ".format(self.tls_version or "TLS", self.sni)
         elif self.ssl_established:
-            ssl = "[ssl] "
+            tls = "[{}] ".format(self.tls_version or "TLS")
         else:
-            ssl = ""
+            tls = ""
         if self.alpn_proto_negotiated:
             alpn = "[ALPN: {}] ".format(
                 strutils.bytes_to_escaped_str(self.alpn_proto_negotiated)
             )
         else:
             alpn = ""
-        return "<ServerConnection: {ssl}{alpn}{address}>".format(
-            ssl=ssl,
+        return "<ServerConnection: {tls}{alpn}{host}:{port}>".format(
+            tls=tls,
             alpn=alpn,
-            address=repr(self.address)
+            host=self.address[0],
+            port=self.address[1],
         )
 
     @property
     def tls_established(self):
         return self.ssl_established
 
+    @tls_established.setter
+    def tls_established(self, value):
+        self.ssl_established = value
+
     _stateobject_attributes = dict(
-        address=tcp.Address,
-        ip_address=tcp.Address,
-        source_address=tcp.Address,
+        address=tuple,
+        ip_address=tuple,
+        source_address=tuple,
         ssl_established=bool,
         cert=certs.SSLCert,
         sni=str,
         alpn_proto_negotiated=bytes,
+        tls_version=str,
         timestamp_start=float,
         timestamp_tcp_setup=float,
         timestamp_ssl_setup=float,
@@ -209,12 +228,13 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     @classmethod
     def make_dummy(cls, address):
         return cls.from_state(dict(
-            address=dict(address=address, use_ipv6=False),
-            ip_address=dict(address=address, use_ipv6=False),
+            address=address,
+            ip_address=address,
             cert=None,
             sni=None,
             alpn_proto_negotiated=None,
-            source_address=dict(address=('', 0), use_ipv6=False),
+            tls_version=None,
+            source_address=('', 0),
             ssl_established=False,
             timestamp_start=None,
             timestamp_tcp_setup=None,
@@ -244,13 +264,14 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             else:
                 path = os.path.join(
                     clientcerts,
-                    self.address.host.encode("idna").decode()) + ".pem"
+                    self.address[0].encode("idna").decode()) + ".pem"
                 if os.path.exists(path):
                     clientcert = path
 
         self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni
         self.alpn_proto_negotiated = self.get_alpn_proto_negotiated()
+        self.tls_version = self.connection.get_protocol_version_name()
         self.timestamp_ssl_setup = time.time()
 
     def finish(self):

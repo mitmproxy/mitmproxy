@@ -23,8 +23,7 @@ class HostMatcher:
     def __call__(self, address):
         if not address:
             return False
-        address = tcp.Address.wrap(address)
-        host = "%s:%s" % (address.host, address.port)
+        host = "%s:%s" % address
         if any(rex.search(host) for rex in self.regexes):
             return True
         else:
@@ -47,7 +46,7 @@ def parse_server_spec(spec):
             "Invalid server specification: %s" % spec
         )
     host, port = p[1:3]
-    address = tcp.Address((host.decode("ascii"), port))
+    address = (host.decode("ascii"), port)
     scheme = p[0].decode("ascii").lower()
     return ServerSpec(scheme, address)
 

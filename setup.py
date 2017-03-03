@@ -113,7 +113,6 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.6",
-            "pytz>=2015.07.0, <=2016.10",
             "Pillow>=3.2, <4.1",
         ]
     }

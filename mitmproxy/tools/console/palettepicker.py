@@ -43,7 +43,7 @@ class PalettePicker(urwid.WidgetWrap):
                 i,
                 None,
                 lambda: self.master.options.console_palette == name,
-                lambda: setattr(self.master.options, "palette", name)
+                lambda: setattr(self.master.options, "console_palette", name)
             )
 
         for i in high:
@@ -59,7 +59,7 @@ class PalettePicker(urwid.WidgetWrap):
                     "Transparent",
                     "T",
                     lambda: master.options.console_palette_transparent,
-                    master.options.toggler("palette_transparent")
+                    master.options.toggler("console_palette_transparent")
                 )
             ]
         )

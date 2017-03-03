@@ -32,6 +32,8 @@ def test_websocket_flow(err):
     assert len(f.messages) == 1
     assert next(i) == ("websocket_message", f)
     assert len(f.messages) == 2
+    assert next(i) == ("websocket_message", f)
+    assert len(f.messages) == 3
     if err:
         assert next(i) == ("websocket_error", f)
     assert next(i) == ("websocket_end", f)

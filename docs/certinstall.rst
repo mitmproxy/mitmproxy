@@ -42,7 +42,7 @@ iOS
 
 See http://jasdev.me/intercepting-ios-traffic
 
-and http://web.archive.org/web/20150920082614/http://kb.mit.edu/confluence/pages/viewpage.action?pageId=152600377
+and https://web.archive.org/web/20150920082614/http://kb.mit.edu/confluence/pages/viewpage.action?pageId=152600377
 
 iOS Simulator
 ^^^^^^^^^^^^^
@@ -52,7 +52,7 @@ See https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore
 Java
 ^^^^
 
-See http://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html
+See https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html
 
 Android/Android Simulator
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -62,7 +62,7 @@ See http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets
 Windows
 ^^^^^^^
 
-See http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7
+See https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7
 
 Windows (automated)
 ^^^^^^^^^^^^^^^^^^^
@@ -79,7 +79,7 @@ See https://support.apple.com/kb/PH7297?locale=en_US
 Ubuntu/Debian
 ^^^^^^^^^^^^^
 
-See http://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861
+See https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861
 
 Mozilla Firefox
 ^^^^^^^^^^^^^^^
@@ -89,7 +89,7 @@ See https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox
 Chrome on Linux
 ^^^^^^^^^^^^^^^
 
-See https://code.google.com/p/chromium/wiki/LinuxCertManagement
+See https://stackoverflow.com/a/15076602/198996
 
 
 The mitmproxy certificate authority
@@ -205,4 +205,4 @@ directory and uses this as the client cert.
 
 
 
-.. _Certificate Pinning: http://security.stackexchange.com/questions/29988/what-is-certificate-pinning/
+.. _Certificate Pinning: https://security.stackexchange.com/questions/29988/what-is-certificate-pinning/

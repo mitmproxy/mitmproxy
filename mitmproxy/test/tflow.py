@@ -1,3 +1,5 @@
+import io
+
 from mitmproxy.net import websockets
 from mitmproxy.test import tutils
 from mitmproxy import tcp
@@ -72,7 +74,8 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
     if messages is True:
         messages = [
             websocket.WebSocketMessage(websockets.OPCODE.BINARY, True, b"hello binary"),
-            websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "hello text".encode()),
+            websocket.WebSocketMessage(websockets.OPCODE.TEXT, True, "hello text".encode()),
+            websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "it's me".encode()),
         ]
     if err is True:
         err = terr()
@@ -142,7 +145,7 @@ def tclient_conn():
     @return: mitmproxy.proxy.connection.ClientConnection
     """
     c = connections.ClientConnection.from_state(dict(
-        address=dict(address=("address", 22), use_ipv6=True),
+        address=("address", 22),
         clientcert=None,
         mitmcert=None,
         ssl_established=False,
@@ -155,6 +158,8 @@ def tclient_conn():
         tls_version="TLSv1.2",
     ))
     c.reply = controller.DummyReply()
+    c.rfile = io.BytesIO()
+    c.wfile = io.BytesIO()
     return c
 
 
@@ -163,8 +168,8 @@ def tserver_conn():
     @return: mitmproxy.proxy.connection.ServerConnection
     """
     c = connections.ServerConnection.from_state(dict(
-        address=dict(address=("address", 22), use_ipv6=True),
-        source_address=dict(address=("address", 22), use_ipv6=True),
+        address=("address", 22),
+        source_address=("address", 22),
         ip_address=None,
         cert=None,
         timestamp_start=1,
@@ -174,9 +179,12 @@ def tserver_conn():
         ssl_established=False,
         sni="address",
         alpn_proto_negotiated=None,
+        tls_version=None,
         via=None,
     ))
     c.reply = controller.DummyReply()
+    c.rfile = io.BytesIO()
+    c.wfile = io.BytesIO()
     return c
 
 

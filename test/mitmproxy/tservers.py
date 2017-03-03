@@ -98,13 +98,14 @@ class ProxyThread(threading.Thread):
         threading.Thread.__init__(self)
         self.tmaster = tmaster
         self.name = "ProxyThread (%s:%s)" % (
-            tmaster.server.address.host, tmaster.server.address.port
+            tmaster.server.address[0],
+            tmaster.server.address[1],
         )
         controller.should_exit = False
 
     @property
     def port(self):
-        return self.tmaster.server.address.port
+        return self.tmaster.server.address[1]
 
     @property
     def tlog(self):

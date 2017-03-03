@@ -429,9 +429,11 @@ class ConsoleMaster(master.Master):
         super().tcp_message(f)
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        signals.add_log("{client} {direction} tcp {direction} {server}".format(
-            client=repr(f.client_conn.address),
-            server=repr(f.server_conn.address),
+        signals.add_log("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
+            client_host=f.client_conn.address[0],
+            client_port=f.client_conn.address[1],
+            server_host=f.server_conn.address[0],
+            server_port=f.server_conn.address[1],
             direction=direction,
         ), "info")
         signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")

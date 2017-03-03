@@ -87,8 +87,8 @@ class _WebSocketTestBase:
             "authority",
             "CONNECT",
             "",
-            "localhost",
-            self.server.server.address.port,
+            "127.0.0.1",
+            self.server.server.address[1],
             "",
             "HTTP/1.1",
             content=b'')
@@ -105,8 +105,8 @@ class _WebSocketTestBase:
             "relative",
             "GET",
             "http",
-            "localhost",
-            self.server.server.address.port,
+            "127.0.0.1",
+            self.server.server.address[1],
             "/ws",
             "HTTP/1.1",
             headers=http.Headers(

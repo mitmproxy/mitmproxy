@@ -8,7 +8,6 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.websocket import WebSocketLayer
-from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 
 
@@ -59,7 +58,7 @@ class ConnectServerConnection:
     """
 
     def __init__(self, address, ctx):
-        self.address = tcp.Address.wrap(address)
+        self.address = address
         self._ctx = ctx
 
     @property
@@ -112,9 +111,8 @@ class UpstreamConnectLayer(base.Layer):
     def set_server(self, address):
         if self.ctx.server_conn.connected():
             self.ctx.disconnect()
-        address = tcp.Address.wrap(address)
-        self.connect_request.host = address.host
-        self.connect_request.port = address.port
+        self.connect_request.host = address[0]
+        self.connect_request.port = address[1]
         self.server_conn.address = address
 
 
@@ -291,7 +289,7 @@ class HttpLayer(base.Layer):
 
         # update host header in reverse proxy mode
         if self.config.options.mode == "reverse" and not self.config.options.keep_host_header:
-            f.request.host_header = self.config.upstream_server.address.host
+            f.request.host_header = self.config.upstream_server.address[0]
 
         # Determine .scheme, .host and .port attributes for inline scripts. For
         # absolute-form requests, they are directly given in the request. For
@@ -302,8 +300,8 @@ class HttpLayer(base.Layer):
             # Setting request.host also updates the host header, which we want
             # to preserve
             host_header = f.request.host_header
-            f.request.host = self.__initial_server_conn.address.host
-            f.request.port = self.__initial_server_conn.address.port
+            f.request.host = self.__initial_server_conn.address[0]
+            f.request.port = self.__initial_server_conn.address[1]
             f.request.host_header = host_header  # set again as .host overwrites this.
             f.request.scheme = "https" if self.__initial_server_tls else "http"
         self.channel.ask("request", f)
@@ -453,14 +451,14 @@ class HttpLayer(base.Layer):
             self.set_server(address)
 
     def establish_server_connection(self, host: str, port: int, scheme: str):
-        address = tcp.Address((host, port))
         tls = (scheme == "https")
 
         if self.mode is HTTPMode.regular or self.mode is HTTPMode.transparent:
             # If there's an existing connection that doesn't match our expectations, kill it.
+            address = (host, port)
             if address != self.server_conn.address or tls != self.server_tls:
                 self.set_server(address)
-                self.set_server_tls(tls, address.host)
+                self.set_server_tls(tls, address[0])
             # Establish connection is neccessary.
             if not self.server_conn.connected():
                 self.connect()

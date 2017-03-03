@@ -124,10 +124,10 @@ class _Http2TestBase:
             b'CONNECT',
             b'',
             b'localhost',
-            self.server.server.address.port,
+            self.server.server.address[1],
             b'/',
             b'HTTP/1.1',
-            [(b'host', b'localhost:%d' % self.server.server.address.port)],
+            [(b'host', b'localhost:%d' % self.server.server.address[1])],
             b'',
         )))
         client.wfile.flush()
@@ -231,7 +231,7 @@ class TestSimple(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -269,75 +269,6 @@ class TestSimple(_Http2Test):
         assert self.master.state.flows[0].response.content == b'response body'
         assert self.request_body_buffer == b'request body'
         assert response_body_buffer == b'response body'
-
-
-@requires_alpn
-class TestForbiddenHeaders(_Http2Test):
-
-    @classmethod
-    def handle_server_event(cls, event, h2_conn, rfile, wfile):
-        if isinstance(event, h2.events.ConnectionTerminated):
-            return False
-        elif isinstance(event, h2.events.StreamEnded):
-            import warnings
-            with warnings.catch_warnings():
-                # Ignore UnicodeWarning:
-                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
-                # failed to convert both arguments to Unicode - interpreting
-                # them as being unequal.
-                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
-
-                warnings.simplefilter("ignore")
-
-                h2_conn.config.validate_outbound_headers = False
-                h2_conn.send_headers(event.stream_id, [
-                    (':status', '200'),
-                    ('keep-alive', 'foobar'),
-                ])
-            h2_conn.send_data(event.stream_id, b'response body')
-            h2_conn.end_stream(event.stream_id)
-            wfile.write(h2_conn.data_to_send())
-            wfile.flush()
-        return True
-
-    def test_forbidden_headers(self):
-        client, h2_conn = self._setup_connection()
-
-        self._send_request(
-            client.wfile,
-            h2_conn,
-            headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
-                (':method', 'GET'),
-                (':scheme', 'https'),
-                (':path', '/'),
-            ])
-
-        done = False
-        while not done:
-            try:
-                raw = b''.join(http2.read_raw_frame(client.rfile))
-                events = h2_conn.receive_data(raw)
-            except exceptions.HttpException:
-                print(traceback.format_exc())
-                assert False
-
-            client.wfile.write(h2_conn.data_to_send())
-            client.wfile.flush()
-
-            for event in events:
-                if isinstance(event, h2.events.ResponseReceived):
-                    assert 'keep-alive' not in event.headers
-                elif isinstance(event, h2.events.StreamEnded):
-                    done = True
-
-        h2_conn.close_connection()
-        client.wfile.write(h2_conn.data_to_send())
-        client.wfile.flush()
-
-        assert len(self.master.state.flows) == 1
-        assert self.master.state.flows[0].response.status_code == 200
-        assert self.master.state.flows[0].response.headers['keep-alive'] == 'foobar'
 
 
 @requires_alpn
@@ -384,7 +315,7 @@ class TestRequestWithPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -469,7 +400,7 @@ class TestPriority(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -527,7 +458,7 @@ class TestStreamResetFromServer(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -576,7 +507,7 @@ class TestBodySizeLimit(_Http2Test):
             client.wfile,
             h2_conn,
             headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -672,7 +603,7 @@ class TestPushPromise(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -728,7 +659,7 @@ class TestPushPromise(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -791,7 +722,7 @@ class TestConnectionLost(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, stream_id=1, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),
@@ -848,7 +779,7 @@ class TestMaxConcurrentStreams(_Http2Test):
             # this will exceed MAX_CONCURRENT_STREAMS on the server connection
             # and cause mitmproxy to throttle stream creation to the server
             self._send_request(client.wfile, h2_conn, stream_id=stream_id, headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
@@ -894,7 +825,7 @@ class TestConnectionTerminated(_Http2Test):
         client, h2_conn = self._setup_connection()
 
         self._send_request(client.wfile, h2_conn, headers=[
-            (':authority', "127.0.0.1:{}".format(self.server.server.address.port)),
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
             (':method', 'GET'),
             (':scheme', 'https'),
             (':path', '/'),

@@ -545,8 +545,9 @@ class TlsLayer(base.Layer):
             raise exceptions.InvalidServerCertificate(str(e))
         except exceptions.TlsException as e:
             raise exceptions.TlsProtocolException(
-                "Cannot establish TLS with {address} (sni: {sni}): {e}".format(
-                    address=repr(self.server_conn.address),
+                "Cannot establish TLS with {host}:{port} (sni: {sni}): {e}".format(
+                    host=self.server_conn.address[0],
+                    port=self.server_conn.address[1],
                     sni=self.server_sni,
                     e=repr(e)
                 )
@@ -567,7 +568,7 @@ class TlsLayer(base.Layer):
         # However, we may just want to establish TLS so that we can send an error message to the client,
         # in which case the address can be None.
         if self.server_conn.address:
-            host = self.server_conn.address.host.encode("idna")
+            host = self.server_conn.address[0].encode("idna")
 
         # Should we incorporate information from the server certificate?
         use_upstream_cert = (
