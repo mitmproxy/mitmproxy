@@ -54,16 +54,12 @@ export var MessageUtils = {
 };
 
 export var RequestUtils = _.extend(MessageUtils, {
-    pretty_host: function (request) {
-        //FIXME: Add hostheader
-        return request.host;
-    },
     pretty_url: function (request) {
         var port = "";
         if (defaultPorts[request.scheme] !== request.port) {
             port = ":" + request.port;
         }
-        return request.scheme + "://" + this.pretty_host(request) + port + request.path;
+        return request.scheme + "://" + request.pretty_host + port + request.path;
     }
 });
 
