@@ -88,6 +88,7 @@ export default class FilterInput extends Component {
 
     selectFilter(cmd) {
         this.setState({value: cmd})
+        ReactDOM.findDOMNode(this.refs.input).focus()
     }
 
     blur() {
