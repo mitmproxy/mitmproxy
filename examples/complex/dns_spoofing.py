@@ -13,6 +13,8 @@ Usage:
         -s dns_spoofing.py
         # Used as the target location if neither SNI nor host header are present.
         -R http://example.com/
+        # To avoid auto rewriting of host header by the reverse proxy target.
+        --keep-host-header
     mitmdump
         -p 80
         -R http://localhost:443/
@@ -29,13 +31,6 @@ parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
 class Rerouter:
-    def requestheaders(self, flow):
-        """
-        The original host header is retrieved early
-        before flow.request is replaced by mitmproxy new outgoing request
-        """
-        flow.metadata["original_host"] = flow.request.host_header
-
     def request(self, flow):
         if flow.client_conn.ssl_established:
             flow.request.scheme = "https"
@@ -46,7 +41,7 @@ class Rerouter:
             sni = None
             port = 80
 
-        host_header = flow.metadata["original_host"]
+        host_header = flow.request.host_header
         m = parse_host_header.match(host_header)
         if m:
             host_header = m.group("host").strip("[]")
