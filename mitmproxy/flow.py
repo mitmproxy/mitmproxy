@@ -76,7 +76,7 @@ class Flow(stateobject.StateObject):
         self.error = None  # type: typing.Optional[Error]
         self.intercepted = False  # type: bool
         self._backup = None  # type: typing.Optional[Flow]
-        self.reply = None  # type: typing.Optional[controller.Reply]
+        self.reply = controller.Reply  # type: typing.Optional[controller.Reply]
         self.marked = False  # type: bool
         self.metadata = dict()  # type: typing.Dict[str, str]
 
