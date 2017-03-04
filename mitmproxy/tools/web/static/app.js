@@ -1,6 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // shim for using process in browser
-
 var process = module.exports = {};
 
 // cached from whatever global is present so that test runners that stub it
@@ -11,22 +10,84 @@ var process = module.exports = {};
 var cachedSetTimeout;
 var cachedClearTimeout;
 
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
 (function () {
-  try {
-    cachedSetTimeout = setTimeout;
-  } catch (e) {
-    cachedSetTimeout = function () {
-      throw new Error('setTimeout is not defined');
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
     }
-  }
-  try {
-    cachedClearTimeout = clearTimeout;
-  } catch (e) {
-    cachedClearTimeout = function () {
-      throw new Error('clearTimeout is not defined');
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
     }
-  }
 } ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -51,7 +112,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = cachedSetTimeout(cleanUpNextTick);
+    var timeout = runTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -68,7 +129,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    cachedClearTimeout(timeout);
+    runClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -80,7 +141,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        cachedSetTimeout(drainQueue, 0);
+        runTimeout(drainQueue);
     }
 };
 
@@ -347,13 +408,13 @@ ContentView.isContentTooLarge = function (msg) {
 };
 
 function ContentView(props) {
-    var flow = props.flow;
-    var message = props.message;
-    var contentView = props.contentView;
-    var isDisplayLarge = props.isDisplayLarge;
-    var displayLarge = props.displayLarge;
-    var onContentChange = props.onContentChange;
-    var readonly = props.readonly;
+    var flow = props.flow,
+        message = props.message,
+        contentView = props.contentView,
+        isDisplayLarge = props.isDisplayLarge,
+        displayLarge = props.displayLarge,
+        onContentChange = props.onContentChange,
+        readonly = props.readonly;
 
 
     if (message.contentLength === 0 && readonly) {
@@ -411,8 +472,8 @@ CodeEditor.propTypes = {
 };
 
 function CodeEditor(_ref) {
-    var content = _ref.content;
-    var onChange = _ref.onChange;
+    var content = _ref.content,
+        onChange = _ref.onChange;
 
 
     var options = {
@@ -461,7 +522,7 @@ exports.default = function (View) {
         function _class(props) {
             _classCallCheck(this, _class);
 
-            var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, props));
+            var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
 
             _this.state = {
                 content: undefined,
@@ -589,11 +650,11 @@ ContentViewOptions.propTypes = {
 };
 
 function ContentViewOptions(_ref) {
-    var flow = _ref.flow;
-    var message = _ref.message;
-    var uploadContent = _ref.uploadContent;
-    var readonly = _ref.readonly;
-    var contentViewDescription = _ref.contentViewDescription;
+    var flow = _ref.flow,
+        message = _ref.message,
+        uploadContent = _ref.uploadContent,
+        readonly = _ref.readonly,
+        contentViewDescription = _ref.contentViewDescription;
 
     return _react2.default.createElement(
         'div',
@@ -608,11 +669,11 @@ function ContentViewOptions(_ref) {
             ),
             ' edit'
         ),
-        ' ',
+        '\xA0',
         _react2.default.createElement(_DownloadContentButton2.default, { flow: flow, message: message }),
-        ' ',
+        '\xA0',
         !readonly && _react2.default.createElement(_UploadContentButton2.default, { uploadContent: uploadContent }),
-        ' ',
+        '\xA0',
         readonly && _react2.default.createElement(
             'span',
             null,
@@ -675,8 +736,8 @@ ViewImage.propTypes = {
     message: _react.PropTypes.object.isRequired
 };
 function ViewImage(_ref) {
-    var flow = _ref.flow;
-    var message = _ref.message;
+    var flow = _ref.flow,
+        message = _ref.message;
 
     return _react2.default.createElement(
         'div',
@@ -690,8 +751,8 @@ Edit.propTypes = {
 };
 
 function Edit(_ref2) {
-    var content = _ref2.content;
-    var onChange = _ref2.onChange;
+    var content = _ref2.content,
+        onChange = _ref2.onChange;
 
     return _react2.default.createElement(_CodeEditor2.default, { content: content, onChange: onChange });
 }
@@ -703,7 +764,7 @@ var ViewServer = function (_Component) {
     function ViewServer() {
         _classCallCheck(this, ViewServer);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(ViewServer).apply(this, arguments));
+        return _possibleConstructorReturn(this, (ViewServer.__proto__ || Object.getPrototypeOf(ViewServer)).apply(this, arguments));
     }
 
     _createClass(ViewServer, [{
@@ -733,11 +794,11 @@ var ViewServer = function (_Component) {
     }, {
         key: 'render',
         value: function render() {
-            var _props = this.props;
-            var content = _props.content;
-            var contentView = _props.contentView;
-            var message = _props.message;
-            var maxLines = _props.maxLines;
+            var _props = this.props,
+                content = _props.content,
+                contentView = _props.contentView,
+                message = _props.message,
+                maxLines = _props.maxLines;
 
             var lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, maxLines);
             return _react2.default.createElement(
@@ -752,10 +813,9 @@ var ViewServer = function (_Component) {
                             'div',
                             { key: 'line' + i },
                             line.map(function (element, j) {
-                                var _element = _slicedToArray(element, 2);
-
-                                var style = _element[0];
-                                var text = _element[1];
+                                var _element = _slicedToArray(element, 2),
+                                    style = _element[0],
+                                    text = _element[1];
 
                                 return _react2.default.createElement(
                                     'span',
@@ -813,8 +873,8 @@ DownloadContentButton.propTypes = {
 };
 
 function DownloadContentButton(_ref) {
-    var flow = _ref.flow;
-    var message = _ref.message;
+    var flow = _ref.flow,
+        message = _ref.message;
 
 
     return React.createElement(
@@ -853,8 +913,8 @@ var _DownloadContentButton2 = _interopRequireDefault(_DownloadContentButton);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function ContentEmpty(_ref) {
-    var flow = _ref.flow;
-    var message = _ref.message;
+    var flow = _ref.flow,
+        message = _ref.message;
 
     return _react2.default.createElement(
         'div',
@@ -866,8 +926,8 @@ function ContentEmpty(_ref) {
 }
 
 function ContentMissing(_ref2) {
-    var flow = _ref2.flow;
-    var message = _ref2.message;
+    var flow = _ref2.flow,
+        message = _ref2.message;
 
     return _react2.default.createElement(
         'div',
@@ -878,10 +938,10 @@ function ContentMissing(_ref2) {
 }
 
 function ContentTooLarge(_ref3) {
-    var message = _ref3.message;
-    var onClick = _ref3.onClick;
-    var uploadContent = _ref3.uploadContent;
-    var flow = _ref3.flow;
+    var message = _ref3.message,
+        onClick = _ref3.onClick,
+        uploadContent = _ref3.uploadContent,
+        flow = _ref3.flow;
 
     return _react2.default.createElement(
         'div',
@@ -901,7 +961,7 @@ function ContentTooLarge(_ref3) {
             'div',
             { className: 'view-options text-center' },
             _react2.default.createElement(_UploadContentButton2.default, { uploadContent: uploadContent }),
-            ' ',
+            '\xA0',
             _react2.default.createElement(_DownloadContentButton2.default, { flow: flow, message: message })
         )
     );
@@ -936,10 +996,10 @@ ShowFullContentButton.propTypes = {
 };
 
 function ShowFullContentButton(_ref) {
-    var setShowFullContent = _ref.setShowFullContent;
-    var showFullContent = _ref.showFullContent;
-    var visibleLines = _ref.visibleLines;
-    var contentLines = _ref.contentLines;
+    var setShowFullContent = _ref.setShowFullContent,
+        showFullContent = _ref.showFullContent,
+        visibleLines = _ref.visibleLines,
+        contentLines = _ref.contentLines;
 
 
     return !showFullContent && _react2.default.createElement(
@@ -959,7 +1019,7 @@ function ShowFullContentButton(_ref) {
             visibleLines,
             '/',
             contentLines,
-            ' are visible   '
+            ' are visible \xA0 '
         )
     );
 }
@@ -1034,9 +1094,9 @@ ViewSelector.propTypes = {
 };
 
 function ViewSelector(_ref) {
-    var contentViews = _ref.contentViews;
-    var activeView = _ref.activeView;
-    var setContentView = _ref.setContentView;
+    var contentViews = _ref.contentViews,
+        activeView = _ref.activeView,
+        setContentView = _ref.setContentView;
 
     var inner = _react2.default.createElement(
         'span',
@@ -1117,7 +1177,7 @@ var EventLog = function (_Component) {
     function EventLog(props, context) {
         _classCallCheck(this, EventLog);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLog).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (EventLog.__proto__ || Object.getPrototypeOf(EventLog)).call(this, props, context));
 
         _this.state = { height: _this.props.defaultHeight };
 
@@ -1152,11 +1212,11 @@ var EventLog = function (_Component) {
         key: 'render',
         value: function render() {
             var height = this.state.height;
-            var _props = this.props;
-            var filters = _props.filters;
-            var events = _props.events;
-            var toggleFilter = _props.toggleFilter;
-            var close = _props.close;
+            var _props = this.props,
+                filters = _props.filters,
+                events = _props.events,
+                toggleFilter = _props.toggleFilter,
+                close = _props.close;
 
 
             return _react2.default.createElement(
@@ -1246,7 +1306,7 @@ var EventLogList = function (_Component) {
     function EventLogList(props) {
         _classCallCheck(this, EventLogList);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EventLogList).call(this, props));
+        var _this = _possibleConstructorReturn(this, (EventLogList.__proto__ || Object.getPrototypeOf(EventLogList)).call(this, props));
 
         _this.heights = {};
         _this.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
@@ -1405,7 +1465,7 @@ var FlowTable = function (_React$Component) {
     function FlowTable(props, context) {
         _classCallCheck(this, FlowTable);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowTable).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (FlowTable.__proto__ || Object.getPrototypeOf(FlowTable)).call(this, props, context));
 
         _this.state = { vScroll: (0, _VirtualScroll.calcVScroll)() };
         _this.onViewportUpdate = _this.onViewportUpdate.bind(_this);
@@ -1433,10 +1493,10 @@ var FlowTable = function (_React$Component) {
 
             this.shouldScrollIntoView = false;
 
-            var _props = this.props;
-            var rowHeight = _props.rowHeight;
-            var flows = _props.flows;
-            var selected = _props.selected;
+            var _props = this.props,
+                rowHeight = _props.rowHeight,
+                flows = _props.flows,
+                selected = _props.selected;
 
             var viewport = _reactDom2.default.findDOMNode(this);
             var head = _reactDom2.default.findDOMNode(this.refs.head);
@@ -1485,13 +1545,13 @@ var FlowTable = function (_React$Component) {
         value: function render() {
             var _this2 = this;
 
-            var _state = this.state;
-            var vScroll = _state.vScroll;
-            var viewportTop = _state.viewportTop;
-            var _props2 = this.props;
-            var flows = _props2.flows;
-            var selected = _props2.selected;
-            var highlight = _props2.highlight;
+            var _state = this.state,
+                vScroll = _state.vScroll,
+                viewportTop = _state.viewportTop;
+            var _props2 = this.props,
+                flows = _props2.flows,
+                selected = _props2.selected,
+                highlight = _props2.highlight;
 
             var isHighlighted = highlight ? _filt2.default.parse(highlight) : function () {
                 return false;
@@ -1741,10 +1801,10 @@ FlowRow.propTypes = {
 };
 
 function FlowRow(_ref) {
-    var flow = _ref.flow;
-    var selected = _ref.selected;
-    var highlighted = _ref.highlighted;
-    var onSelect = _ref.onSelect;
+    var flow = _ref.flow,
+        selected = _ref.selected,
+        highlighted = _ref.highlighted,
+        onSelect = _ref.onSelect;
 
     var className = (0, _classnames2.default)({
         'selected': selected,
@@ -1799,9 +1859,9 @@ FlowTableHead.propTypes = {
 };
 
 function FlowTableHead(_ref) {
-    var sortColumn = _ref.sortColumn;
-    var sortDesc = _ref.sortDesc;
-    var setSort = _ref.setSort;
+    var sortColumn = _ref.sortColumn,
+        sortDesc = _ref.sortDesc,
+        setSort = _ref.setSort;
 
     var sortType = sortDesc ? 'sort-desc' : 'sort-asc';
 
@@ -1880,7 +1940,7 @@ var FlowView = function (_Component) {
     function FlowView(props, context) {
         _classCallCheck(this, FlowView);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FlowView).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (FlowView.__proto__ || Object.getPrototypeOf(FlowView)).call(this, props, context));
 
         _this.onPromptFinish = _this.onPromptFinish.bind(_this);
         return _this;
@@ -1919,10 +1979,10 @@ var FlowView = function (_Component) {
         value: function render() {
             var _this2 = this;
 
-            var _props = this.props;
-            var flow = _props.flow;
-            var active = _props.tab;
-            var updateFlow = _props.updateFlow;
+            var _props = this.props,
+                flow = _props.flow,
+                active = _props.tab,
+                updateFlow = _props.updateFlow;
 
             var tabs = ['request', 'response', 'error'].filter(function (k) {
                 return flow[k];
@@ -1998,9 +2058,9 @@ var _utils = require('../../utils.js');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function TimeStamp(_ref) {
-    var t = _ref.t;
-    var deltaTo = _ref.deltaTo;
-    var title = _ref.title;
+    var t = _ref.t,
+        deltaTo = _ref.deltaTo,
+        title = _ref.title;
 
     return t ? _react2.default.createElement(
         'tr',
@@ -2101,10 +2161,10 @@ function CertificateInfo(_ref3) {
 
 function Timing(_ref4) {
     var flow = _ref4.flow;
-    var sc = flow.server_conn;
-    var cc = flow.client_conn;
-    var req = flow.request;
-    var res = flow.response;
+    var sc = flow.server_conn,
+        cc = flow.client_conn,
+        req = flow.request,
+        res = flow.response;
 
 
     var timestamps = [{
@@ -2234,7 +2294,7 @@ var HeaderEditor = function (_Component) {
     function HeaderEditor(props) {
         _classCallCheck(this, HeaderEditor);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(HeaderEditor).call(this, props));
+        var _this = _possibleConstructorReturn(this, (HeaderEditor.__proto__ || Object.getPrototypeOf(HeaderEditor)).call(this, props));
 
         _this.onKeyDown = _this.onKeyDown.bind(_this);
         return _this;
@@ -2243,10 +2303,9 @@ var HeaderEditor = function (_Component) {
     _createClass(HeaderEditor, [{
         key: 'render',
         value: function render() {
-            var _props = this.props;
-            var onTab = _props.onTab;
-
-            var props = _objectWithoutProperties(_props, ['onTab']);
+            var _props = this.props,
+                onTab = _props.onTab,
+                props = _objectWithoutProperties(_props, ['onTab']);
 
             return _react2.default.createElement(_ValueEditor2.default, _extends({}, props, {
                 onKeyDown: this.onKeyDown
@@ -2286,7 +2345,7 @@ var Headers = function (_Component2) {
     function Headers() {
         _classCallCheck(this, Headers);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Headers).apply(this, arguments));
+        return _possibleConstructorReturn(this, (Headers.__proto__ || Object.getPrototypeOf(Headers)).apply(this, arguments));
     }
 
     _createClass(Headers, [{
@@ -2362,9 +2421,9 @@ var Headers = function (_Component2) {
         value: function render() {
             var _this3 = this;
 
-            var _props2 = this.props;
-            var message = _props2.message;
-            var readonly = _props2.readonly;
+            var _props2 = this.props,
+                message = _props2.message,
+                readonly = _props2.readonly;
 
 
             return _react2.default.createElement(
@@ -2499,9 +2558,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function RequestLine(_ref) {
-    var flow = _ref.flow;
-    var readonly = _ref.readonly;
-    var updateFlow = _ref.updateFlow;
+    var flow = _ref.flow,
+        readonly = _ref.readonly,
+        updateFlow = _ref.updateFlow;
 
     return _react2.default.createElement(
         'div',
@@ -2516,7 +2575,7 @@ function RequestLine(_ref) {
                     return updateFlow({ request: { method: method } });
                 }
             }),
-            ' ',
+            '\xA0',
             _react2.default.createElement(_ValidateEditor2.default, {
                 content: _utils.RequestUtils.pretty_url(flow.request),
                 readonly: readonly,
@@ -2527,7 +2586,7 @@ function RequestLine(_ref) {
                     return !!(0, _utils.parseUrl)(url).host;
                 }
             }),
-            ' ',
+            '\xA0',
             _react2.default.createElement(_ValidateEditor2.default, {
                 content: flow.request.http_version,
                 readonly: readonly,
@@ -2541,9 +2600,9 @@ function RequestLine(_ref) {
 }
 
 function ResponseLine(_ref2) {
-    var flow = _ref2.flow;
-    var readonly = _ref2.readonly;
-    var updateFlow = _ref2.updateFlow;
+    var flow = _ref2.flow,
+        readonly = _ref2.readonly,
+        updateFlow = _ref2.updateFlow;
 
     return _react2.default.createElement(
         'div',
@@ -2556,7 +2615,7 @@ function ResponseLine(_ref2) {
             },
             isValid: _utils.isValidHttpVersion
         }),
-        ' ',
+        '\xA0',
         _react2.default.createElement(_ValidateEditor2.default, {
             content: flow.response.status_code + '',
             readonly: readonly,
@@ -2568,7 +2627,7 @@ function ResponseLine(_ref2) {
                 );
             }
         }),
-        ' ',
+        '\xA0',
         _react2.default.createElement(_ValueEditor2.default, {
             content: flow.response.reason,
             readonly: readonly,
@@ -2595,17 +2654,17 @@ var Request = exports.Request = function (_Component) {
     function Request() {
         _classCallCheck(this, Request);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Request).apply(this, arguments));
+        return _possibleConstructorReturn(this, (Request.__proto__ || Object.getPrototypeOf(Request)).apply(this, arguments));
     }
 
     _createClass(Request, [{
         key: 'render',
         value: function render() {
-            var _props = this.props;
-            var flow = _props.flow;
-            var isEdit = _props.isEdit;
-            var updateFlow = _props.updateFlow;
-            var _uploadContent = _props.uploadContent;
+            var _props = this.props,
+                flow = _props.flow,
+                isEdit = _props.isEdit,
+                updateFlow = _props.updateFlow,
+                _uploadContent = _props.uploadContent;
 
             var noContent = !isEdit && (flow.request.contentLength == 0 || flow.request.contentLength == null);
             return _react2.default.createElement(
@@ -2684,17 +2743,17 @@ var Response = exports.Response = function (_Component2) {
     function Response() {
         _classCallCheck(this, Response);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Response).apply(this, arguments));
+        return _possibleConstructorReturn(this, (Response.__proto__ || Object.getPrototypeOf(Response)).apply(this, arguments));
     }
 
     _createClass(Response, [{
         key: 'render',
         value: function render() {
-            var _props2 = this.props;
-            var flow = _props2.flow;
-            var isEdit = _props2.isEdit;
-            var updateFlow = _props2.updateFlow;
-            var _uploadContent2 = _props2.uploadContent;
+            var _props2 = this.props,
+                flow = _props2.flow,
+                isEdit = _props2.isEdit,
+                updateFlow = _props2.updateFlow,
+                _uploadContent2 = _props2.uploadContent;
 
             var noContent = !isEdit && (flow.response.contentLength == 0 || flow.response.contentLength == null);
 
@@ -2823,9 +2882,9 @@ NavAction.propTypes = {
 };
 
 function NavAction(_ref) {
-    var icon = _ref.icon;
-    var title = _ref.title;
-    var _onClick = _ref.onClick;
+    var icon = _ref.icon,
+        title = _ref.title,
+        _onClick = _ref.onClick;
 
     return _react2.default.createElement(
         'a',
@@ -2847,9 +2906,9 @@ Nav.propTypes = {
 };
 
 function Nav(_ref2) {
-    var active = _ref2.active;
-    var tabs = _ref2.tabs;
-    var onSelectTab = _ref2.onSelectTab;
+    var active = _ref2.active,
+        tabs = _ref2.tabs,
+        onSelectTab = _ref2.onSelectTab;
 
     return _react2.default.createElement(
         'nav',
@@ -2895,11 +2954,11 @@ ToggleEdit.propTypes = {
 };
 
 function ToggleEdit(_ref) {
-    var isEdit = _ref.isEdit;
-    var startEdit = _ref.startEdit;
-    var stopEdit = _ref.stopEdit;
-    var flow = _ref.flow;
-    var modifiedFlow = _ref.modifiedFlow;
+    var isEdit = _ref.isEdit,
+        startEdit = _ref.startEdit,
+        stopEdit = _ref.stopEdit,
+        flow = _ref.flow,
+        modifiedFlow = _ref.modifiedFlow;
 
     return _react2.default.createElement(
         'div',
@@ -2954,21 +3013,21 @@ Footer.propTypes = {
 
 function Footer(_ref) {
     var settings = _ref.settings;
-    var mode = settings.mode;
-    var intercept = settings.intercept;
-    var showhost = settings.showhost;
-    var no_upstream_cert = settings.no_upstream_cert;
-    var rawtcp = settings.rawtcp;
-    var http2 = settings.http2;
-    var websocket = settings.websocket;
-    var anticache = settings.anticache;
-    var anticomp = settings.anticomp;
-    var stickyauth = settings.stickyauth;
-    var stickycookie = settings.stickycookie;
-    var stream_large_bodies = settings.stream_large_bodies;
-    var listen_host = settings.listen_host;
-    var listen_port = settings.listen_port;
-    var version = settings.version;
+    var mode = settings.mode,
+        intercept = settings.intercept,
+        showhost = settings.showhost,
+        no_upstream_cert = settings.no_upstream_cert,
+        rawtcp = settings.rawtcp,
+        http2 = settings.http2,
+        websocket = settings.websocket,
+        anticache = settings.anticache,
+        anticomp = settings.anticomp,
+        stickyauth = settings.stickyauth,
+        stickycookie = settings.stickycookie,
+        stream_large_bodies = settings.stream_large_bodies,
+        listen_host = settings.listen_host,
+        listen_port = settings.listen_port,
+        version = settings.version;
 
     return _react2.default.createElement(
         'footer',
@@ -3117,7 +3176,7 @@ var Header = function (_Component) {
     function Header() {
         _classCallCheck(this, Header);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Header).apply(this, arguments));
+        return _possibleConstructorReturn(this, (Header.__proto__ || Object.getPrototypeOf(Header)).apply(this, arguments));
     }
 
     _createClass(Header, [{
@@ -3131,9 +3190,9 @@ var Header = function (_Component) {
         value: function render() {
             var _this2 = this;
 
-            var _props = this.props;
-            var selectedFlowId = _props.selectedFlowId;
-            var activeMenu = _props.activeMenu;
+            var _props = this.props,
+                selectedFlowId = _props.selectedFlowId,
+                activeMenu = _props.activeMenu;
 
 
             var entries = [].concat(_toConsumableArray(Header.entries));
@@ -3228,9 +3287,9 @@ FileMenu.onNewClick = function (e, clearFlows) {
 };
 
 function FileMenu(_ref) {
-    var clearFlows = _ref.clearFlows;
-    var loadFlows = _ref.loadFlows;
-    var saveFlows = _ref.saveFlows;
+    var clearFlows = _ref.clearFlows,
+        loadFlows = _ref.loadFlows,
+        saveFlows = _ref.saveFlows;
 
     return _react2.default.createElement(
         _Dropdown2.default,
@@ -3241,11 +3300,11 @@ function FileMenu(_ref) {
                     return FileMenu.onNewClick(e, clearFlows);
                 } },
             _react2.default.createElement('i', { className: 'fa fa-fw fa-file' }),
-            ' New'
+            '\xA0New'
         ),
         _react2.default.createElement(_FileChooser2.default, {
             icon: 'fa-folder-open',
-            text: ' Open...',
+            text: '\xA0Open...',
             onOpenFile: function onOpenFile(file) {
                 return loadFlows(file);
             }
@@ -3256,14 +3315,14 @@ function FileMenu(_ref) {
                     e.preventDefault();saveFlows();
                 } },
             _react2.default.createElement('i', { className: 'fa fa-fw fa-floppy-o' }),
-            ' Save...'
+            '\xA0Save...'
         ),
         _react2.default.createElement(_Dropdown.Divider, null),
         _react2.default.createElement(
             'a',
             { href: 'http://mitm.it/', target: '_blank' },
             _react2.default.createElement('i', { className: 'fa fa-fw fa-external-link' }),
-            ' Install Certificates...'
+            '\xA0Install Certificates...'
         )
     );
 }
@@ -3305,7 +3364,7 @@ var FilterDocs = function (_Component) {
     function FilterDocs(props, context) {
         _classCallCheck(this, FilterDocs);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FilterDocs).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (FilterDocs.__proto__ || Object.getPrototypeOf(FilterDocs)).call(this, props, context));
 
         _this.state = { doc: FilterDocs.doc };
         return _this;
@@ -3349,7 +3408,7 @@ var FilterDocs = function (_Component) {
                             _react2.default.createElement(
                                 'td',
                                 null,
-                                cmd[0].replace(' ', ' ')
+                                cmd[0].replace(' ', '\xA0')
                             ),
                             _react2.default.createElement(
                                 'td',
@@ -3369,7 +3428,7 @@ var FilterDocs = function (_Component) {
                                 { href: 'http://docs.mitmproxy.org/en/stable/features/filters.html',
                                     target: '_blank' },
                                 _react2.default.createElement('i', { className: 'fa fa-external-link' }),
-                                '  mitmproxy docs'
+                                '\xA0 mitmproxy docs'
                             )
                         )
                     )
@@ -3433,8 +3492,7 @@ var FilterInput = function (_Component) {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
         // finalized, hiding the tooltip just as the user clicks on it.
-
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FilterInput).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (FilterInput.__proto__ || Object.getPrototypeOf(FilterInput)).call(this, props, context));
 
         _this.state = { value: _this.props.value, focus: false, mousefocus: false };
 
@@ -3531,14 +3589,14 @@ var FilterInput = function (_Component) {
     }, {
         key: 'render',
         value: function render() {
-            var _props = this.props;
-            var type = _props.type;
-            var color = _props.color;
-            var placeholder = _props.placeholder;
-            var _state = this.state;
-            var value = _state.value;
-            var focus = _state.focus;
-            var mousefocus = _state.mousefocus;
+            var _props = this.props,
+                type = _props.type,
+                color = _props.color,
+                placeholder = _props.placeholder;
+            var _state = this.state,
+                value = _state.value,
+                focus = _state.focus,
+                mousefocus = _state.mousefocus;
 
             return _react2.default.createElement(
                 'div',
@@ -3620,13 +3678,13 @@ FlowMenu.propTypes = {
 };
 
 function FlowMenu(_ref) {
-    var flow = _ref.flow;
-    var resumeFlow = _ref.resumeFlow;
-    var killFlow = _ref.killFlow;
-    var replayFlow = _ref.replayFlow;
-    var duplicateFlow = _ref.duplicateFlow;
-    var removeFlow = _ref.removeFlow;
-    var revertFlow = _ref.revertFlow;
+    var flow = _ref.flow,
+        resumeFlow = _ref.resumeFlow,
+        killFlow = _ref.killFlow,
+        replayFlow = _ref.replayFlow,
+        duplicateFlow = _ref.duplicateFlow,
+        removeFlow = _ref.removeFlow,
+        revertFlow = _ref.revertFlow;
 
     if (!flow) return _react2.default.createElement("div", null);
     return _react2.default.createElement(
@@ -3835,9 +3893,9 @@ MenuToggle.propTypes = {
 };
 
 function MenuToggle(_ref) {
-    var value = _ref.value;
-    var onChange = _ref.onChange;
-    var children = _ref.children;
+    var value = _ref.value,
+        onChange = _ref.onChange,
+        children = _ref.children;
 
     return React.createElement(
         "div",
@@ -3859,10 +3917,10 @@ SettingsToggle.propTypes = {
 };
 
 function SettingsToggle(_ref2) {
-    var setting = _ref2.setting;
-    var children = _ref2.children;
-    var settings = _ref2.settings;
-    var updateSettings = _ref2.updateSettings;
+    var setting = _ref2.setting,
+        children = _ref2.children,
+        settings = _ref2.settings,
+        updateSettings = _ref2.updateSettings;
 
     return React.createElement(
         MenuToggle,
@@ -3884,8 +3942,8 @@ exports.SettingsToggle = SettingsToggle = (0, _reactRedux.connect)(function (sta
 })(SettingsToggle);
 
 function EventlogToggle(_ref3) {
-    var toggleVisibility = _ref3.toggleVisibility;
-    var eventLogVisible = _ref3.eventLogVisible;
+    var toggleVisibility = _ref3.toggleVisibility,
+        eventLogVisible = _ref3.eventLogVisible;
 
     return React.createElement(
         MenuToggle,
@@ -4057,7 +4115,7 @@ var MainView = function (_Component) {
     function MainView() {
         _classCallCheck(this, MainView);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(MainView).apply(this, arguments));
+        return _possibleConstructorReturn(this, (MainView.__proto__ || Object.getPrototypeOf(MainView)).apply(this, arguments));
     }
 
     _createClass(MainView, [{
@@ -4065,10 +4123,10 @@ var MainView = function (_Component) {
         value: function render() {
             var _this2 = this;
 
-            var _props = this.props;
-            var flows = _props.flows;
-            var selectedFlow = _props.selectedFlow;
-            var highlight = _props.highlight;
+            var _props = this.props,
+                flows = _props.flows,
+                selectedFlow = _props.selectedFlow,
+                highlight = _props.highlight;
 
             return _react2.default.createElement(
                 'div',
@@ -4144,9 +4202,9 @@ Prompt.propTypes = {
 };
 
 function Prompt(_ref) {
-    var prompt = _ref.prompt;
-    var done = _ref.done;
-    var options = _ref.options;
+    var prompt = _ref.prompt,
+        done = _ref.done,
+        options = _ref.options;
 
     var opts = [];
 
@@ -4261,7 +4319,7 @@ var ProxyAppMain = function (_Component) {
     function ProxyAppMain() {
         _classCallCheck(this, ProxyAppMain);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(ProxyAppMain).apply(this, arguments));
+        return _possibleConstructorReturn(this, (ProxyAppMain.__proto__ || Object.getPrototypeOf(ProxyAppMain)).apply(this, arguments));
     }
 
     _createClass(ProxyAppMain, [{
@@ -4277,11 +4335,11 @@ var ProxyAppMain = function (_Component) {
     }, {
         key: 'render',
         value: function render() {
-            var _props = this.props;
-            var showEventLog = _props.showEventLog;
-            var location = _props.location;
-            var filter = _props.filter;
-            var highlight = _props.highlight;
+            var _props = this.props,
+                showEventLog = _props.showEventLog,
+                location = _props.location,
+                filter = _props.filter,
+                highlight = _props.highlight;
 
             return _react2.default.createElement(
                 'div',
@@ -4340,7 +4398,7 @@ var ValidateEditor = function (_Component) {
     function ValidateEditor(props) {
         _classCallCheck(this, ValidateEditor);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ValidateEditor).call(this, props));
+        var _this = _possibleConstructorReturn(this, (ValidateEditor.__proto__ || Object.getPrototypeOf(ValidateEditor)).call(this, props));
 
         _this.state = { valid: props.isValid(props.content) };
         _this.onInput = _this.onInput.bind(_this);
@@ -4438,7 +4496,7 @@ var ValueEditor = function (_Component) {
     function ValueEditor(props) {
         _classCallCheck(this, ValueEditor);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ValueEditor).call(this, props));
+        var _this = _possibleConstructorReturn(this, (ValueEditor.__proto__ || Object.getPrototypeOf(ValueEditor)).call(this, props));
 
         _this.state = { editable: false };
 
@@ -4640,12 +4698,12 @@ Button.propTypes = {
 };
 
 function Button(_ref) {
-    var onClick = _ref.onClick;
-    var children = _ref.children;
-    var icon = _ref.icon;
-    var disabled = _ref.disabled;
-    var className = _ref.className;
-    var title = _ref.title;
+    var onClick = _ref.onClick,
+        children = _ref.children,
+        icon = _ref.icon,
+        disabled = _ref.disabled,
+        className = _ref.className,
+        title = _ref.title;
 
     return _react2.default.createElement(
         "div",
@@ -4673,8 +4731,8 @@ DocsLink.propTypes = {
 };
 
 function DocsLink(_ref) {
-    var children = _ref.children;
-    var resource = _ref.resource;
+    var children = _ref.children,
+        resource = _ref.resource;
 
     var url = "http://docs.mitmproxy.org/en/stable/" + resource;
     return React.createElement(
@@ -4720,7 +4778,7 @@ var Dropdown = function (_Component) {
     function Dropdown(props, context) {
         _classCallCheck(this, Dropdown);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Dropdown).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (Dropdown.__proto__ || Object.getPrototypeOf(Dropdown)).call(this, props, context));
 
         _this.state = { open: false };
         _this.close = _this.close.bind(_this);
@@ -4747,12 +4805,12 @@ var Dropdown = function (_Component) {
     }, {
         key: 'render',
         value: function render() {
-            var _props = this.props;
-            var dropup = _props.dropup;
-            var className = _props.className;
-            var btnClass = _props.btnClass;
-            var text = _props.text;
-            var children = _props.children;
+            var _props = this.props,
+                dropup = _props.dropup,
+                className = _props.className,
+                btnClass = _props.btnClass,
+                text = _props.text,
+                children = _props.children;
 
             return _react2.default.createElement(
                 'div',
@@ -4816,11 +4874,11 @@ FileChooser.propTypes = {
 };
 
 function FileChooser(_ref) {
-    var icon = _ref.icon;
-    var text = _ref.text;
-    var className = _ref.className;
-    var title = _ref.title;
-    var onOpenFile = _ref.onOpenFile;
+    var icon = _ref.icon,
+        text = _ref.text,
+        className = _ref.className,
+        title = _ref.title,
+        onOpenFile = _ref.onOpenFile;
 
     var fileInput = void 0;
     return _react2.default.createElement(
@@ -4880,7 +4938,7 @@ var Splitter = function (_Component) {
     function Splitter(props, context) {
         _classCallCheck(this, Splitter);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Splitter).call(this, props, context));
+        var _this = _possibleConstructorReturn(this, (Splitter.__proto__ || Object.getPrototypeOf(Splitter)).call(this, props, context));
 
         _this.state = { applied: false, startX: false, startY: false };
 
@@ -5011,15 +5069,15 @@ ToggleButton.propTypes = {
 };
 
 function ToggleButton(_ref) {
-    var checked = _ref.checked;
-    var onToggle = _ref.onToggle;
-    var text = _ref.text;
+    var checked = _ref.checked,
+        onToggle = _ref.onToggle,
+        text = _ref.text;
 
     return _react2.default.createElement(
         "div",
         { className: "btn btn-toggle " + (checked ? "btn-primary" : "btn-default"), onClick: onToggle },
         _react2.default.createElement("i", { className: "fa fa-fw " + (checked ? "fa-check-square-o" : "fa-square-o") }),
-        " ",
+        "\xA0",
         text
     );
 }
@@ -5065,7 +5123,7 @@ exports.default = function (Component) {
         function AutoScrollWrapper() {
             _classCallCheck(this, AutoScrollWrapper);
 
-            return _possibleConstructorReturn(this, Object.getPrototypeOf(AutoScrollWrapper).apply(this, arguments));
+            return _possibleConstructorReturn(this, (AutoScrollWrapper.__proto__ || Object.getPrototypeOf(AutoScrollWrapper)).apply(this, arguments));
         }
 
         _createClass(AutoScrollWrapper, [{
@@ -5073,7 +5131,7 @@ exports.default = function (Component) {
             value: function componentWillUpdate() {
                 var viewport = _reactDom2.default.findDOMNode(this);
                 this[symShouldStick] = viewport.scrollTop && isAtBottom(viewport);
-                _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentWillUpdate", this) && _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentWillUpdate", this).call(this);
+                _get(AutoScrollWrapper.prototype.__proto__ || Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentWillUpdate", this) && _get(AutoScrollWrapper.prototype.__proto__ || Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentWillUpdate", this).call(this);
             }
         }, {
             key: "componentDidUpdate",
@@ -5082,7 +5140,7 @@ exports.default = function (Component) {
                 if (this[symShouldStick] && !isAtBottom(viewport)) {
                     viewport.scrollTop = viewport.scrollHeight;
                 }
-                _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentDidUpdate", this) && _get(Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentDidUpdate", this).call(this);
+                _get(AutoScrollWrapper.prototype.__proto__ || Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentDidUpdate", this) && _get(AutoScrollWrapper.prototype.__proto__ || Object.getPrototypeOf(AutoScrollWrapper.prototype), "componentDidUpdate", this).call(this);
             }
         }]);
 
@@ -5122,11 +5180,11 @@ function calcVScroll(opts) {
         return { start: 0, end: 0, paddingTop: 0, paddingBottom: 0 };
     }
 
-    var itemCount = opts.itemCount;
-    var rowHeight = opts.rowHeight;
-    var viewportTop = opts.viewportTop;
-    var viewportHeight = opts.viewportHeight;
-    var itemHeights = opts.itemHeights;
+    var itemCount = opts.itemCount,
+        rowHeight = opts.rowHeight,
+        viewportTop = opts.viewportTop,
+        viewportHeight = opts.viewportHeight,
+        itemHeights = opts.itemHeights;
 
     var viewportBottom = viewportTop + viewportHeight;
 
@@ -5177,8 +5235,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TOGGLE_FILTER = exports.TOGGLE_VISIBILITY = exports.RECEIVE = exports.ADD = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = reduce;
@@ -5205,45 +5261,33 @@ var defaultState = _extends({
 }, (0, storeActions.default)(undefined, {}));
 
 function reduce() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
 
-    var _ret = function () {
-        switch (action.type) {
+    switch (action.type) {
 
-            case TOGGLE_VISIBILITY:
-                return {
-                    v: _extends({}, state, {
-                        visible: !state.visible
-                    })
-                };
+        case TOGGLE_VISIBILITY:
+            return _extends({}, state, {
+                visible: !state.visible
+            });
 
-            case TOGGLE_FILTER:
-                var filters = _extends({}, state.filters, _defineProperty({}, action.filter, !state.filters[action.filter]));
-                return {
-                    v: _extends({}, state, {
-                        filters: filters
-                    }, (0, storeActions.default)(state, storeActions.setFilter(function (log) {
-                        return filters[log.level];
-                    })))
-                };
+        case TOGGLE_FILTER:
+            var filters = _extends({}, state.filters, _defineProperty({}, action.filter, !state.filters[action.filter]));
+            return _extends({}, state, {
+                filters: filters
+            }, (0, storeActions.default)(state, storeActions.setFilter(function (log) {
+                return filters[log.level];
+            })));
 
-            case ADD:
-            case RECEIVE:
-                return {
-                    v: _extends({}, state, (0, storeActions.default)(state, storeActions[action.cmd](action.data, function (log) {
-                        return state.filters[log.level];
-                    })))
-                };
+        case ADD:
+        case RECEIVE:
+            return _extends({}, state, (0, storeActions.default)(state, storeActions[action.cmd](action.data, function (log) {
+                return state.filters[log.level];
+            })));
 
-            default:
-                return {
-                    v: state
-                };
-        }
-    }();
-
-    if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+        default:
+            return state;
+    }
 }
 
 function toggleFilter(filter) {
@@ -5255,7 +5299,7 @@ function toggleVisibility() {
 }
 
 function add(message) {
-    var level = arguments.length <= 1 || arguments[1] === undefined ? 'web' : arguments[1];
+    var level = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'web';
 
     var data = {
         id: Math.random().toString(),
@@ -5335,7 +5379,7 @@ var defaultState = _extends({
 }, (0, storeActions.default)(undefined, {}));
 
 function reduce() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
 
     switch (action.type) {
@@ -5438,8 +5482,8 @@ function makeFilter(filter) {
 }
 
 function makeSort(_ref) {
-    var column = _ref.column;
-    var desc = _ref.desc;
+    var column = _ref.column,
+        desc = _ref.desc;
 
     var sortKeyFun = sortKeyFuns[column];
     if (!sortKeyFun) {
@@ -5634,7 +5678,7 @@ var UNKNOWN_CMD = exports.UNKNOWN_CMD = 'SETTINGS_UNKNOWN_CMD';
 var defaultState = {};
 
 function reducer() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
 
     switch (action.type) {
@@ -5712,7 +5756,7 @@ var defaultState = {
 };
 
 function reducer() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
 
     var wasInEditMode = !!state.modifiedFlow;
@@ -5858,7 +5902,7 @@ var defaultState = {
 };
 
 function reducer() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
 
     switch (action.type) {
@@ -6126,13 +6170,13 @@ var defaultState = {
  *
  */
 function reduce() {
-    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
-    var byId = state.byId;
-    var list = state.list;
-    var listIndex = state.listIndex;
-    var view = state.view;
-    var viewIndex = state.viewIndex;
+    var byId = state.byId,
+        list = state.list,
+        listIndex = state.listIndex,
+        view = state.view,
+        viewIndex = state.viewIndex;
 
 
     switch (action.type) {
@@ -6233,28 +6277,28 @@ function reduce() {
 }
 
 function setFilter() {
-    var filter = arguments.length <= 0 || arguments[0] === undefined ? defaultFilter : arguments[0];
-    var sort = arguments.length <= 1 || arguments[1] === undefined ? defaultSort : arguments[1];
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultFilter;
+    var sort = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultSort;
 
     return { type: SET_FILTER, filter: filter, sort: sort };
 }
 
 function setSort() {
-    var sort = arguments.length <= 0 || arguments[0] === undefined ? defaultSort : arguments[0];
+    var sort = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultSort;
 
     return { type: SET_SORT, sort: sort };
 }
 
 function add(item) {
-    var filter = arguments.length <= 1 || arguments[1] === undefined ? defaultFilter : arguments[1];
-    var sort = arguments.length <= 2 || arguments[2] === undefined ? defaultSort : arguments[2];
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultFilter;
+    var sort = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultSort;
 
     return { type: ADD, item: item, filter: filter, sort: sort };
 }
 
 function update(item) {
-    var filter = arguments.length <= 1 || arguments[1] === undefined ? defaultFilter : arguments[1];
-    var sort = arguments.length <= 2 || arguments[2] === undefined ? defaultSort : arguments[2];
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultFilter;
+    var sort = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultSort;
 
     return { type: UPDATE, item: item, filter: filter, sort: sort };
 }
@@ -6264,8 +6308,8 @@ function remove(id) {
 }
 
 function receive(list) {
-    var filter = arguments.length <= 1 || arguments[1] === undefined ? defaultFilter : arguments[1];
-    var sort = arguments.length <= 2 || arguments[2] === undefined ? defaultSort : arguments[2];
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultFilter;
+    var sort = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultSort;
 
     return { type: RECEIVE, list: list, filter: filter, sort: sort };
 }
@@ -8722,23 +8766,19 @@ var Query = {
 };
 
 function updateStoreFromUrl(store) {
-    var _window$location$hash = window.location.hash.substr(1).split("?", 2);
-
-    var _window$location$hash2 = _slicedToArray(_window$location$hash, 2);
-
-    var path = _window$location$hash2[0];
-    var query = _window$location$hash2[1];
+    var _window$location$hash = window.location.hash.substr(1).split("?", 2),
+        _window$location$hash2 = _slicedToArray(_window$location$hash, 2),
+        path = _window$location$hash2[0],
+        query = _window$location$hash2[1];
 
     var path_components = path.substr(1).split("/");
 
     if (path_components[0] === "flows") {
         if (path_components.length == 3) {
-            var _path_components$slic = path_components.slice(1);
-
-            var _path_components$slic2 = _slicedToArray(_path_components$slic, 2);
-
-            var flowId = _path_components$slic2[0];
-            var tab = _path_components$slic2[1];
+            var _path_components$slic = path_components.slice(1),
+                _path_components$slic2 = _slicedToArray(_path_components$slic, 2),
+                flowId = _path_components$slic2[0],
+                tab = _path_components$slic2[1];
 
             store.dispatch((0, _flows.select)(flowId));
             store.dispatch((0, _flow.selectTab)(tab));
@@ -8747,12 +8787,10 @@ function updateStoreFromUrl(store) {
 
     if (query) {
         query.split("&").forEach(function (x) {
-            var _x$split = x.split("=", 2);
-
-            var _x$split2 = _slicedToArray(_x$split, 2);
-
-            var key = _x$split2[0];
-            var value = _x$split2[1];
+            var _x$split = x.split("=", 2),
+                _x$split2 = _slicedToArray(_x$split, 2),
+                key = _x$split2[0],
+                value = _x$split2[1];
 
             switch (key) {
                 case Query.SEARCH:
@@ -8911,7 +8949,7 @@ function getCookie(name) {
 var xsrf = '_xsrf=' + getCookie("_xsrf");
 
 function fetchApi(url) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     if (options.method && options.method !== "GET") {
         if (url.indexOf("?") === -1) {
@@ -8954,7 +8992,7 @@ var pure = exports.pure = function pure(renderFn) {
         function _class() {
             _classCallCheck(this, _class);
 
-            return _possibleConstructorReturn(this, Object.getPrototypeOf(_class).apply(this, arguments));
+            return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
         }
 
         _createClass(_class, [{
@@ -8974,6 +9012,5 @@ var pure = exports.pure = function pure(renderFn) {
 };
 
 },{"lodash":"lodash","react":"react","shallowequal":"shallowequal"}]},{},[2])
-
 
 //# sourceMappingURL=app.js.map
