@@ -31,8 +31,8 @@ Host Header
 
 In reverse proxy mode, mitmproxy automatically rewrites the Host header to match the
 upstream server. This allows mitmproxy to easily connect to existing endpoints on the
-open web (e.g. ``mitmproxy -R https://example.com``). But this behaviour can be
-be disabled by passing ``--keep-host-header`` on the console.
+open web (e.g. ``mitmproxy -R https://example.com``). You can disable this behaviour
+by passing ``--keep-host-header`` on the console.
 
 However, keep in mind that absolute URLs within the returned document or HTTP redirects will
 NOT be rewritten by mitmproxy. This means that if you click on a link for "http://example.com"
