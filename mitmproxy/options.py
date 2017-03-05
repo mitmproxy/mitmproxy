@@ -28,7 +28,10 @@ class Options(optmanager.OptManager):
             "Toggle the mitmproxy onboarding app."
         )
         self.add_option("onboarding_host", APP_HOST, str)
-        self.add_option("onboarding_port", APP_PORT, int)
+        self.add_option(
+            "onboarding_port", APP_PORT, int,
+            help="Port to serve the onboarding app from."
+        )
         self.add_option(
             "anticache", False, bool,
             """
@@ -75,7 +78,10 @@ class Options(optmanager.OptManager):
         self.add_option("stickycookie", None, Optional[str])
         self.add_option("stickyauth", None, Optional[str])
         self.add_option("stream_large_bodies", None, Optional[int])
-        self.add_option("verbosity", 2, int)
+        self.add_option(
+            "verbosity", 2, int,
+            "Log verbosity."
+        )
         self.add_option("default_contentview", "auto", str)
         self.add_option("streamfile", None, Optional[str])
         self.add_option("streamfile_append", False, bool)
@@ -111,7 +117,10 @@ class Options(optmanager.OptManager):
         self.add_option("clientcerts", None, Optional[str])
         self.add_option("ignore_hosts", [], Sequence[str])
         self.add_option("listen_host", "", str)
-        self.add_option("listen_port", LISTEN_PORT, int)
+        self.add_option(
+            "listen_port", LISTEN_PORT, int,
+            "Proxy service port."
+        )
         self.add_option("upstream_bind_address", "", str)
         self.add_option("mode", "regular", str)
         self.add_option(
@@ -199,11 +208,17 @@ class Options(optmanager.OptManager):
             "web_debug", False, bool,
             "Mitmweb debugging"
         )
-        self.add_option("web_port", 8081, int)
+        self.add_option(
+            "web_port", 8081, int,
+            "Mitmweb port."
+        )
         self.add_option("web_iface", "127.0.0.1", str)
 
         # Dump options
         self.add_option("filtstr", None, Optional[str])
-        self.add_option("flow_detail", 1, int)
+        self.add_option(
+            "flow_detail", 1, int,
+            "Flow detail display level"
+        )
 
         self.update(**kwargs)

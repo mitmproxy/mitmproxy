@@ -312,7 +312,7 @@ class OptManager:
             options=options
         )
 
-    def make_parser(self, parser, option):
+    def make_parser(self, parser, option, metavar=None):
         o = self._options[option]
         f = option.replace("_", "-")
         if o.typespec == bool:
@@ -330,5 +330,14 @@ class OptManager:
                 help=o.help
             )
             parser.set_defaults(**{option: o.default})
+        elif o.typespec == int:
+            parser.add_argument(
+                "--%s" % f,
+                action="store",
+                type=int,
+                dest=option,
+                help=o.help,
+                metavar=metavar
+            )
         else:
             raise ValueError("Unsupported option type: %s", o.typespec)

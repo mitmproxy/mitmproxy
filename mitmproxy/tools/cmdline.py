@@ -139,8 +139,8 @@ def get_common_options(args):
         ciphers_server = args.ciphers_server,
         clientcerts = args.clientcerts,
         ignore_hosts = args.ignore_hosts,
-        listen_host = args.addr,
-        listen_port = args.port,
+        listen_host = args.listen_addr,
+        listen_port = args.listen_port,
         upstream_bind_address = args.upstream_bind_address,
         mode = mode,
         upstream_cert = args.upstream_cert,
@@ -285,7 +285,7 @@ def proxy_options(parser, opts):
     group = parser.add_argument_group("Proxy Options")
     group.add_argument(
         "-b", "--bind-address",
-        action="store", type=str, dest="addr",
+        action="store", type=str, dest="listen_addr",
         help="Address to bind proxy to (defaults to all interfaces)"
     )
     group.add_argument(
@@ -312,11 +312,7 @@ def proxy_options(parser, opts):
         """
     )
     opts.make_parser(group, "no_server")
-    group.add_argument(
-        "-p", "--port",
-        action="store", type=int, dest="port",
-        help="Proxy service port."
-    )
+    opts.make_parser(group, "listen_port", metavar="PORT")
 
     http2 = group.add_mutually_exclusive_group()
     opts.make_parser(http2, "http2")
@@ -418,14 +414,7 @@ def onboarding_app(parser, opts):
             %s
         """ % options.APP_HOST
     )
-    group.add_argument(
-        "--onboarding-port",
-        action="store",
-        dest="onboarding_port",
-        type=int,
-        metavar="80",
-        help="Port to serve the onboarding app from."
-    )
+    opts.make_parser(group, "onboarding_port", metavar="PORT")
 
 
 def client_replay(parser, opts):
@@ -611,11 +600,7 @@ def mitmdump(opts):
 
     common_options(parser, opts)
     opts.make_parser(parser, "keepserving")
-    parser.add_argument(
-        "-d", "--detail",
-        action="count", dest="flow_detail",
-        help="Increase flow detail display level. Can be passed multiple times."
-    )
+    opts.make_parser(parser, "flow_detail", metavar = "LEVEL")
     parser.add_argument(
         'filter',
         nargs="...",
@@ -632,12 +617,7 @@ def mitmweb(opts):
 
     group = parser.add_argument_group("Mitmweb")
     opts.make_parser(group, "web_open_browser")
-    group.add_argument(
-        "--web-port",
-        action="store", type=int, dest="web_port",
-        metavar="PORT",
-        help="Mitmweb port."
-    )
+    opts.make_parser(parser, "web_port", metavar="PORT")
     group.add_argument(
         "--web-iface",
         action="store", dest="web_iface",
