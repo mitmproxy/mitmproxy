@@ -31,6 +31,7 @@ class RequestReplayThread(basethread.BaseThread):
 
     def run(self):
         r = self.f.request
+        bsl = self.config.options._processed.get("body_size_limit")
         first_line_format_backup = r.first_line_format
         server = None
         try:
@@ -55,7 +56,7 @@ class RequestReplayThread(basethread.BaseThread):
                         resp = http1.read_response(
                             server.rfile,
                             connect_request,
-                            body_size_limit=self.config.options.body_size_limit
+                            body_size_limit=bsl
                         )
                         if resp.status_code != 200:
                             raise exceptions.ReplayException("Upstream server refuses CONNECT request")
@@ -87,7 +88,7 @@ class RequestReplayThread(basethread.BaseThread):
                     http1.read_response(
                         server.rfile,
                         r,
-                        body_size_limit=self.config.options.body_size_limit
+                        body_size_limit=bsl
                     )
                 )
             if self.channel:

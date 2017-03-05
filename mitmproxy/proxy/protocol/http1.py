@@ -19,7 +19,7 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         return http1.read_body(
             self.client_conn.rfile,
             expected_size,
-            self.config.options.body_size_limit
+            self.config.options._processed.get("body_size_limit")
         )
 
     def send_request(self, request):
@@ -35,7 +35,7 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         return http1.read_body(
             self.server_conn.rfile,
             expected_size,
-            self.config.options.body_size_limit
+            self.config.options._processed.get("body_size_limit")
         )
 
     def send_response_headers(self, response):

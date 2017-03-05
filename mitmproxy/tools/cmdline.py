@@ -4,7 +4,6 @@ import os
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import platform
-from mitmproxy.utils import human
 from mitmproxy.net import tcp
 from mitmproxy import version
 from mitmproxy.addons import view
@@ -25,10 +24,6 @@ def get_common_options(args):
     if args.stickyauth_filt:
         stickyauth = args.stickyauth_filt
 
-    stream_large_bodies = args.stream_large_bodies
-    if stream_large_bodies:
-        stream_large_bodies = human.parse_size(stream_large_bodies)
-
     if args.streamfile and args.streamfile[0] == args.rfile:
         if args.streamfile[1] == "wb":
             raise exceptions.OptionsError(
@@ -48,15 +43,6 @@ def get_common_options(args):
         if len(parts) == 1:
             parts = ["*", parts[0]]
         certs.append(parts)
-
-    body_size_limit = args.body_size_limit
-    if body_size_limit:
-        try:
-            body_size_limit = human.parse_size(body_size_limit)
-        except ValueError as e:
-            raise exceptions.OptionsError(
-                "Invalid body size limit specification: %s" % body_size_limit
-            )
 
     # Establish proxy mode
     c = 0
@@ -117,7 +103,7 @@ def get_common_options(args):
         scripts=args.scripts,
         stickycookie=stickycookie,
         stickyauth=stickyauth,
-        stream_large_bodies=stream_large_bodies,
+        stream_large_bodies=args.stream_large_bodies,
         showhost=args.showhost,
         streamfile=args.streamfile[0] if args.streamfile else None,
         streamfile_append=True if args.streamfile and args.streamfile[1] == "a" else False,
@@ -132,7 +118,7 @@ def get_common_options(args):
         auth_singleuser = args.auth_singleuser,
         auth_htpasswd = args.auth_htpasswd,
         add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
-        body_size_limit = body_size_limit,
+        body_size_limit = args.body_size_limit,
         cadir = args.cadir,
         certs = certs,
         ciphers_client = args.ciphers_client,
@@ -229,23 +215,8 @@ def basic_options(parser, opts):
         help="Append flows to file."
     )
     opts.make_parser(parser, "anticomp")
-    parser.add_argument(
-        "-Z", "--body-size-limit",
-        action="store", dest="body_size_limit",
-        metavar="SIZE",
-        help="Byte size limit of HTTP request and response bodies."
-             " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
-    )
-    parser.add_argument(
-        "--stream",
-        action="store", dest="stream_large_bodies",
-        metavar="SIZE",
-        help="""
-            Stream data to the client if response body exceeds the given
-            threshold. If streamed, the body will not be stored in any way.
-            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
-         """
-    )
+    opts.make_parser(parser, "body_size_limit", metavar="SIZE")
+    opts.make_parser(parser, "stream_large_bodies")
 
 
 def proxy_modes(parser, opts):

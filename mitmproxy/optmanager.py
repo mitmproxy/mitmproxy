@@ -12,7 +12,6 @@ import ruamel.yaml
 from mitmproxy import exceptions
 from mitmproxy.utils import typecheck
 
-
 """
     The base implementation for Options.
 """
@@ -92,6 +91,7 @@ class OptManager:
         self.__dict__["_options"] = {}
         self.__dict__["changed"] = blinker.Signal()
         self.__dict__["errored"] = blinker.Signal()
+        self.__dict__["_processed"] = {}
 
     def add_option(
         self,
@@ -330,11 +330,20 @@ class OptManager:
                 help=o.help
             )
             parser.set_defaults(**{option: o.default})
-        elif o.typespec == int:
+        elif o.typespec in (int, typing.Optional[int]):
             parser.add_argument(
                 "--%s" % f,
                 action="store",
                 type=int,
+                dest=option,
+                help=o.help,
+                metavar=metavar
+            )
+        elif o.typespec in (str, typing.Optional[str]):
+            parser.add_argument(
+                "--%s" % f,
+                action="store",
+                type=str,
                 dest=option,
                 help=o.help,
                 metavar=metavar

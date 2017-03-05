@@ -77,7 +77,14 @@ class Options(optmanager.OptManager):
         self.add_option("server_replay", [], Sequence[str])
         self.add_option("stickycookie", None, Optional[str])
         self.add_option("stickyauth", None, Optional[str])
-        self.add_option("stream_large_bodies", None, Optional[int])
+        self.add_option(
+            "stream_large_bodies", None, Optional[str],
+            """
+                Stream data to the client if response body exceeds the given
+                threshold. If streamed, the body will not be stored in any way.
+                Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
+        )
         self.add_option(
             "verbosity", 2, int,
             "Log verbosity."
@@ -109,7 +116,11 @@ class Options(optmanager.OptManager):
             "Add all certificates of the upstream server to the certificate chain "
             "that will be served to the proxy client, as extras."
         )
-        self.add_option("body_size_limit", None, Optional[int])
+        self.add_option(
+            "body_size_limit", None, Optional[str],
+            "Byte size limit of HTTP request and response bodies."
+            " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
+        )
         self.add_option("cadir", CA_DIR, str)
         self.add_option("certs", [], Sequence[Tuple[str, str]])
         self.add_option("ciphers_client", DEFAULT_CLIENT_CIPHERS, str)

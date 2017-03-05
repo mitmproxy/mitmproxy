@@ -499,7 +499,8 @@ class TestBodySizeLimit(_Http2Test):
         return True
 
     def test_body_size_limit(self):
-        self.config.options.body_size_limit = 20
+        self.config.options.body_size_limit = "20"
+        self.config.options._processed["body_size_limit"] = 20
 
         client, h2_conn = self._setup_connection()
 
