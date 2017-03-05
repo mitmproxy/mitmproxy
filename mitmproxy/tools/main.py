@@ -61,11 +61,11 @@ def mitmproxy(args=None):  # pragma: no cover
     version_check.check_pyopenssl_version()
     assert_utf8_env()
 
-    parser = cmdline.mitmproxy()
+    console_options = options.Options()
+    parser = cmdline.mitmproxy(console_options)
     args = parser.parse_args(args)
 
     try:
-        console_options = options.Options()
         console_options.load_paths(args.conf)
         console_options.merge(cmdline.get_common_options(args))
         console_options.merge(
@@ -74,7 +74,7 @@ def mitmproxy(args=None):  # pragma: no cover
                 console_palette_transparent = args.console_palette_transparent,
                 console_eventlog = args.console_eventlog,
                 console_focus_follow = args.console_focus_follow,
-                console_no_mouse = args.console_no_mouse,
+                console_mouse = args.console_mouse,
                 console_order = args.console_order,
 
                 filter = args.filter,
@@ -98,14 +98,14 @@ def mitmdump(args=None):  # pragma: no cover
 
     version_check.check_pyopenssl_version()
 
-    parser = cmdline.mitmdump()
+    dump_options = options.Options()
+    parser = cmdline.mitmdump(dump_options)
     args = parser.parse_args(args)
     if args.quiet:
         args.flow_detail = 0
 
     master = None
     try:
-        dump_options = options.Options()
         dump_options.load_paths(args.conf)
         dump_options.merge(cmdline.get_common_options(args))
         dump_options.merge(
@@ -139,12 +139,11 @@ def mitmweb(args=None):  # pragma: no cover
 
     version_check.check_pyopenssl_version()
 
-    parser = cmdline.mitmweb()
-
+    web_options = options.Options()
+    parser = cmdline.mitmweb(web_options)
     args = parser.parse_args(args)
 
     try:
-        web_options = options.Options()
         web_options.load_paths(args.conf)
         web_options.merge(cmdline.get_common_options(args))
         web_options.merge(

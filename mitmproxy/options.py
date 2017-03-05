@@ -23,20 +23,50 @@ DEFAULT_CLIENT_CIPHERS = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA
 class Options(optmanager.OptManager):
     def __init__(self, **kwargs) -> None:
         super().__init__()
-        self.add_option("onboarding", True, bool)
+        self.add_option(
+            "onboarding", True, bool,
+            "Toggle the mitmproxy onboarding app."
+        )
         self.add_option("onboarding_host", APP_HOST, str)
         self.add_option("onboarding_port", APP_PORT, int)
-        self.add_option("anticache", False, bool)
-        self.add_option("anticomp", False, bool)
+        self.add_option(
+            "anticache", False, bool,
+            """
+                Strip out request headers that might cause the server to return
+                304-not-modified.
+            """
+        )
+        self.add_option(
+            "anticomp", False, bool,
+            "Try to convince servers to send us un-compressed data."
+        )
         self.add_option("client_replay", [], Sequence[str])
-        self.add_option("replay_kill_extra", False, bool)
-        self.add_option("keepserving", True, bool)
-        self.add_option("no_server", False, bool)
-        self.add_option("server_replay_nopop", False, bool)
-        self.add_option("refresh_server_playback", True, bool)
+        self.add_option(
+            "replay_kill_extra", False, bool,
+            "Kill extra requests during replay."
+        )
+        self.add_option(
+            "keepserving", True, bool,
+            "Continue serving after client playback or file read."
+        )
+        self.add_option(
+            "no_server", False, bool,
+            "Don't start a proxy server."
+        )
+        self.add_option(
+            "server_replay_nopop", False, bool,
+            "Disable response pop from response flow. "
+            "This makes it possible to replay same response multiple times."
+        )
+        self.add_option(
+            "refresh_server_playback", True, bool,
+        )
         self.add_option("rfile", None, Optional[str])
         self.add_option("scripts", [], Sequence[str])
-        self.add_option("showhost", False, bool)
+        self.add_option(
+            "showhost", False, bool,
+            "Use the Host header to construct URLs for display."
+        )
         self.add_option("replacements", [], Sequence[Union[Tuple[str, str, str], str]])
         self.add_option("replacement_files", [], Sequence[Union[Tuple[str, str, str], str]])
         self.add_option("server_replay_use_headers", [], Sequence[str])
@@ -49,16 +79,30 @@ class Options(optmanager.OptManager):
         self.add_option("default_contentview", "auto", str)
         self.add_option("streamfile", None, Optional[str])
         self.add_option("streamfile_append", False, bool)
-        self.add_option("server_replay_ignore_content", False, bool)
+        self.add_option(
+            "server_replay_ignore_content", False, bool,
+            "Ignore request's content while searching for a saved flow to replay."
+        )
         self.add_option("server_replay_ignore_params", [], Sequence[str])
         self.add_option("server_replay_ignore_payload_params", [], Sequence[str])
-        self.add_option("server_replay_ignore_host", False, bool)
+        self.add_option(
+            "server_replay_ignore_host", False, bool,
+            "Ignore request's destination host while searching for a saved"
+            " flow to replay"
+        )
 
         # Proxy options
-        self.add_option("auth_nonanonymous", False, bool)
+        self.add_option(
+            "auth_nonanonymous", False, bool,
+            "Allow access to any user long as a credentials are specified."
+        )
         self.add_option("auth_singleuser", None, Optional[str])
         self.add_option("auth_htpasswd", None, Optional[str])
-        self.add_option("add_upstream_certs_to_client_chain", False, bool)
+        self.add_option(
+            "add_upstream_certs_to_client_chain", False, bool,
+            "Add all certificates of the upstream server to the certificate chain "
+            "that will be served to the proxy client, as extras."
+        )
         self.add_option("body_size_limit", None, Optional[int])
         self.add_option("cadir", CA_DIR, str)
         self.add_option("certs", [], Sequence[Tuple[str, str]])
@@ -70,20 +114,51 @@ class Options(optmanager.OptManager):
         self.add_option("listen_port", LISTEN_PORT, int)
         self.add_option("upstream_bind_address", "", str)
         self.add_option("mode", "regular", str)
-        self.add_option("no_upstream_cert", False, bool)
-        self.add_option("keep_host_header", False, bool)
+        self.add_option(
+            "upstream_cert", True, bool,
+            "Connect to upstream server to look up certificate details."
+        )
+        self.add_option(
+            "keep_host_header", False, bool,
+            "Reverse Proxy: Keep the original host header instead of rewriting it"
+            " to the reverse proxy target."
+        )
 
-        self.add_option("http2", True, bool)
-        self.add_option("http2_priority", False, bool)
-        self.add_option("websocket", True, bool)
-        self.add_option("rawtcp", False, bool)
+        self.add_option(
+            "http2", True, bool,
+            "Enable/disable HTTP/2 support. "
+            "HTTP/2 support is enabled by default.",
+        )
+        self.add_option(
+            "http2_priority", False, bool,
+            "Enable/disable PRIORITY forwarding for HTTP/2 connections. "
+            "PRIORITY forwarding is disabled by default, "
+            "because some webservers fail to implement the RFC properly.",
+        )
+        self.add_option(
+            "websocket", True, bool,
+            "Enable/disable WebSocket support. "
+            "WebSocket support is enabled by default.",
+        )
+        self.add_option(
+            "rawtcp", False, bool,
+            "Enable/disable experimental raw TCP support. "
+            "Disabled by default. "
+        )
 
-        self.add_option("spoof_source_address", False, bool)
+        self.add_option(
+            "spoof_source_address", False, bool,
+            "Use the client's IP for server-side connections. "
+            "Combine with --upstream-bind-address to spoof a fixed source address."
+        )
         self.add_option("upstream_server", None, Optional[str])
         self.add_option("upstream_auth", None, Optional[str])
         self.add_option("ssl_version_client", "secure", str)
         self.add_option("ssl_version_server", "secure", str)
-        self.add_option("ssl_insecure", False, bool)
+        self.add_option(
+            "ssl_insecure", False, bool,
+            "Do not verify upstream server SSL/TLS certificates."
+        )
         self.add_option("ssl_verify_upstream_trusted_cadir", None, Optional[str])
         self.add_option("ssl_verify_upstream_trusted_ca", None, Optional[str])
         self.add_option("tcp_hosts", [], Sequence[str])
@@ -91,19 +166,39 @@ class Options(optmanager.OptManager):
         self.add_option("intercept", None, Optional[str])
 
         # Console options
-        self.add_option("console_eventlog", False, bool)
-        self.add_option("console_focus_follow", False, bool)
+        self.add_option(
+            "console_eventlog", False, bool,
+            help="Show event log."
+        )
+        self.add_option(
+            "console_focus_follow", False, bool,
+            "Focus follows new flows."
+        )
         self.add_option("console_palette", "dark", Optional[str])
-        self.add_option("console_palette_transparent", False, bool)
-        self.add_option("console_no_mouse", False, bool)
+        self.add_option(
+            "console_palette_transparent", False, bool,
+            "Set transparent background for palette."
+        )
+        self.add_option(
+            "console_mouse", True, bool,
+            "Console mouse interaction."
+        )
         self.add_option("console_order", None, Optional[str])
-        self.add_option("console_order_reversed", False, bool)
+        self.add_option(
+            "console_order_reversed", False, bool,
+        )
 
         self.add_option("filter", None, Optional[str])
 
         # Web options
-        self.add_option("web_open_browser", True, bool)
-        self.add_option("web_debug", False, bool)
+        self.add_option(
+            "web_open_browser", True, bool,
+            "Start a browser"
+        )
+        self.add_option(
+            "web_debug", False, bool,
+            "Mitmweb debugging"
+        )
         self.add_option("web_port", 8081, int)
         self.add_option("web_iface", "127.0.0.1", str)
 

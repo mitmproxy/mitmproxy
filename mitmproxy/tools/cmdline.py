@@ -85,7 +85,7 @@ def get_common_options(args):
             "are mutually exclusive. Read the docs on proxy modes "
             "to understand why."
         )
-    if args.add_upstream_certs_to_client_chain and args.no_upstream_cert:
+    if args.add_upstream_certs_to_client_chain and not args.upstream_cert:
         raise exceptions.OptionsError(
             "The no-upstream-cert and add-upstream-certs-to-client-chain "
             "options are mutually exclusive. If no-upstream-cert is enabled "
@@ -106,7 +106,7 @@ def get_common_options(args):
         client_replay=args.client_replay,
         replay_kill_extra=args.replay_kill_extra,
         no_server=args.no_server,
-        refresh_server_playback=not args.norefresh,
+        refresh_server_playback=args.refresh_server_playback,
         server_replay_use_headers=args.server_replay_use_headers,
         rfile=args.rfile,
         replacements=args.replacements,
@@ -143,7 +143,7 @@ def get_common_options(args):
         listen_port = args.port,
         upstream_bind_address = args.upstream_bind_address,
         mode = mode,
-        no_upstream_cert = args.no_upstream_cert,
+        upstream_cert = args.upstream_cert,
         spoof_source_address = args.spoof_source_address,
 
         http2 = args.http2,
@@ -162,7 +162,7 @@ def get_common_options(args):
     )
 
 
-def basic_options(parser):
+def basic_options(parser, opts):
     parser.add_argument(
         '--version',
         action='store_true',
@@ -174,24 +174,13 @@ def basic_options(parser):
         help="show program's short version number and exit",
         version=version.VERSION
     )
-    parser.add_argument(
-        "--anticache",
-        action="store_true", dest="anticache",
-        help="""
-            Strip out request headers that might cause the server to return
-            304-not-modified.
-        """
-    )
+    opts.make_parser(parser, "anticache")
     parser.add_argument(
         "--cadir",
         action="store", type=str, dest="cadir",
         help="Location of the default mitmproxy CA files. (%s)" % options.CA_DIR
     )
-    parser.add_argument(
-        "--host",
-        action="store_true", dest="showhost",
-        help="Use the Host header to construct URLs for display."
-    )
+    opts.make_parser(parser, "showhost")
     parser.add_argument(
         "-q", "--quiet",
         action="store_true", dest="quiet",
@@ -239,11 +228,7 @@ def basic_options(parser):
         action="store", dest="streamfile", type=lambda f: (f, "a"),
         help="Append flows to file."
     )
-    parser.add_argument(
-        "-z", "--anticomp",
-        action="store_true", dest="anticomp",
-        help="Try to convince servers to send us un-compressed data."
-    )
+    opts.make_parser(parser, "anticomp")
     parser.add_argument(
         "-Z", "--body-size-limit",
         action="store", dest="body_size_limit",
@@ -263,7 +248,7 @@ def basic_options(parser):
     )
 
 
-def proxy_modes(parser):
+def proxy_modes(parser, opts):
     group = parser.add_argument_group("Proxy Modes")
     group.add_argument(
         "-R", "--reverse",
@@ -296,7 +281,7 @@ def proxy_modes(parser):
     )
 
 
-def proxy_options(parser):
+def proxy_options(parser, opts):
     group = parser.add_argument_group("Proxy Options")
     group.add_argument(
         "-b", "--bind-address",
@@ -326,11 +311,7 @@ def proxy_options(parser):
             communication contents are printed to the log in verbose mode.
         """
     )
-    group.add_argument(
-        "-n", "--no-server",
-        action="store_true", dest="no_server",
-        help="Don't start a proxy server."
-    )
+    opts.make_parser(group, "no_server")
     group.add_argument(
         "-p", "--port",
         action="store", type=int, dest="port",
@@ -338,26 +319,11 @@ def proxy_options(parser):
     )
 
     http2 = group.add_mutually_exclusive_group()
-    http2.add_argument("--no-http2", action="store_false", dest="http2")
-    http2.add_argument("--http2", action="store_true", dest="http2",
-                       help="Explicitly enable/disable HTTP/2 support. "
-                            "HTTP/2 support is enabled by default.",
-                       )
-
-    http2_priority = group.add_mutually_exclusive_group()
-    http2_priority.add_argument("--http2-priority", action="store_true", dest="http2_priority")
-    http2_priority.add_argument("--no-http2-priority", action="store_false", dest="http2_priority",
-                                help="Explicitly enable/disable PRIORITY forwarding for HTTP/2 connections. "
-                                     "PRIORITY forwarding is disabled by default, "
-                                     "because some webservers fail at implementing the RFC properly.",
-                                )
+    opts.make_parser(http2, "http2")
+    opts.make_parser(http2, "http2_priority")
 
     websocket = group.add_mutually_exclusive_group()
-    websocket.add_argument("--no-websocket", action="store_false", dest="websocket")
-    websocket.add_argument("--websocket", action="store_true", dest="websocket",
-                           help="Explicitly enable/disable WebSocket support. "
-                                "WebSocket support is enabled by default.",
-                           )
+    opts.make_parser(websocket, "websocket")
 
     parser.add_argument(
         "--upstream-auth",
@@ -369,33 +335,18 @@ def proxy_options(parser):
         """
     )
 
-    rawtcp = group.add_mutually_exclusive_group()
-    rawtcp.add_argument("--raw-tcp", action="store_true", dest="rawtcp")
-    rawtcp.add_argument("--no-raw-tcp", action="store_false", dest="rawtcp",
-                        help="Explicitly enable/disable experimental raw tcp support. "
-                        "Disabled by default. "
-                        "Default value will change in a future version."
-                        )
+    opts.make_parser(group, "rawtcp")
 
-    group.add_argument(
-        "--spoof-source-address",
-        action="store_true", dest="spoof_source_address",
-        help="Use the client's IP for server-side connections. "
-             "Combine with --upstream-bind-address to spoof a fixed source address."
-    )
+    opts.make_parser(group, "spoof_source_address")
     group.add_argument(
         "--upstream-bind-address",
         action="store", type=str, dest="upstream_bind_address",
         help="Address to bind upstream requests to (defaults to none)"
     )
-    group.add_argument(
-        "--keep-host-header",
-        action="store_true", dest="keep_host_header",
-        help="Reverse Proxy: Keep the original host header instead of rewriting it to the reverse proxy target."
-    )
+    opts.make_parser(group, "keep_host_header")
 
 
-def proxy_ssl_options(parser):
+def proxy_ssl_options(parser, opts):
     # TODO: Agree to consistently either use "upstream" or "server".
     group = parser.add_argument_group("SSL")
     group.add_argument(
@@ -425,22 +376,9 @@ def proxy_ssl_options(parser):
         type=str, dest="clientcerts",
         help="Client certificate file or directory."
     )
-    group.add_argument(
-        "--no-upstream-cert",
-        action="store_true", dest="no_upstream_cert",
-        help="Don't connect to upstream server to look up certificate details."
-    )
-    group.add_argument(
-        "--add-upstream-certs-to-client-chain",
-        action="store_true", dest="add_upstream_certs_to_client_chain",
-        help="Add all certificates of the upstream server to the certificate chain "
-             "that will be served to the proxy client, as extras."
-    )
-    group.add_argument(
-        "--insecure",
-        action="store_true", dest="ssl_insecure",
-        help="Do not verify upstream server SSL/TLS certificates."
-    )
+    opts.make_parser(group, "upstream_cert")
+    opts.make_parser(group, "add_upstream_certs_to_client_chain")
+    opts.make_parser(group, "ssl_insecure")
     group.add_argument(
         "--upstream-trusted-cadir", action="store",
         dest="ssl_verify_upstream_trusted_cadir",
@@ -468,13 +406,9 @@ def proxy_ssl_options(parser):
     )
 
 
-def onboarding_app(parser):
+def onboarding_app(parser, opts):
     group = parser.add_argument_group("Onboarding App")
-    group.add_argument(
-        "--no-onboarding",
-        action="store_false", dest="onboarding",
-        help="Disable the mitmproxy onboarding app."
-    )
+    opts.make_parser(parser, "onboarding")
     group.add_argument(
         "--onboarding-host",
         action="store", dest="onboarding_host",
@@ -494,7 +428,7 @@ def onboarding_app(parser):
     )
 
 
-def client_replay(parser):
+def client_replay(parser, opts):
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
         "-c", "--client-replay",
@@ -503,46 +437,24 @@ def client_replay(parser):
     )
 
 
-def server_replay(parser):
+def server_replay(parser, opts):
     group = parser.add_argument_group("Server Replay")
     group.add_argument(
         "-S", "--server-replay",
         action="append", dest="server_replay", metavar="PATH",
         help="Replay server responses from a saved file."
     )
-    group.add_argument(
-        "-k", "--replay-kill-extra",
-        action="store_true", dest="replay_kill_extra",
-        help="Kill extra requests during replay."
-    )
+    opts.make_parser(parser, "replay_kill_extra")
     group.add_argument(
         "--server-replay-use-header",
         action="append", dest="server_replay_use_headers", type=str,
         help="Request headers to be considered during replay. "
              "Can be passed multiple times."
     )
-    group.add_argument(
-        "--norefresh",
-        action="store_true", dest="norefresh",
-        help="""
-            Disable response refresh, which updates times in cookies and headers
-            for replayed responses.
-        """
-    )
-    group.add_argument(
-        "--no-pop",
-        action="store_true", dest="server_replay_nopop",
-        help="Disable response pop from response flow. "
-             "This makes it possible to replay same response multiple times."
-    )
+    opts.make_parser(group, "refresh_server_playback")
+    opts.make_parser(group, "server_replay_nopop")
     payload = group.add_mutually_exclusive_group()
-    payload.add_argument(
-        "--replay-ignore-content",
-        action="store_true", dest="server_replay_ignore_content",
-        help="""
-            Ignore request's content while searching for a saved flow to replay
-        """
-    )
+    opts.make_parser(payload, "server_replay_ignore_content")
     payload.add_argument(
         "--replay-ignore-payload-param",
         action="append", dest="server_replay_ignore_payload_params", type=str,
@@ -561,14 +473,10 @@ def server_replay(parser):
             to replay. Can be passed multiple times.
         """
     )
-    group.add_argument(
-        "--replay-ignore-host",
-        action="store_true",
-        dest="server_replay_ignore_host",
-        help="Ignore request's destination host while searching for a saved flow to replay")
+    opts.make_parser(parser, "server_replay_ignore_host")
 
 
-def replacements(parser):
+def replacements(parser, opts):
     group = parser.add_argument_group(
         "Replacements",
         """
@@ -594,7 +502,7 @@ def replacements(parser):
     )
 
 
-def set_headers(parser):
+def set_headers(parser, opts):
     group = parser.add_argument_group(
         "Set Headers",
         """
@@ -611,7 +519,7 @@ def set_headers(parser):
     )
 
 
-def proxy_authentication(parser):
+def proxy_authentication(parser, opts):
     group = parser.add_argument_group(
         "Proxy Authentication",
         """
@@ -619,12 +527,7 @@ def proxy_authentication(parser):
             used for authenticating them.
         """
     ).add_mutually_exclusive_group()
-    group.add_argument(
-        "--nonanonymous",
-        action="store_true", dest="auth_nonanonymous",
-        help="Allow access to any user long as a credentials are specified."
-    )
-
+    opts.make_parser(group, "auth_nonanonymous")
     group.add_argument(
         "--singleuser",
         action="store", dest="auth_singleuser", type=str,
@@ -642,7 +545,7 @@ def proxy_authentication(parser):
     )
 
 
-def common_options(parser):
+def common_options(parser, opts):
     parser.add_argument(
         "--conf",
         type=str, dest="conf", default=CONFIG_PATH,
@@ -651,58 +554,41 @@ def common_options(parser):
             Configuration file
         """
     )
+    basic_options(parser, opts)
+    proxy_modes(parser, opts)
+    proxy_options(parser, opts)
+    proxy_ssl_options(parser, opts)
+    onboarding_app(parser, opts)
+    client_replay(parser, opts)
+    server_replay(parser, opts)
+    replacements(parser, opts)
+    set_headers(parser, opts)
+    proxy_authentication(parser, opts)
 
-    basic_options(parser)
-    proxy_modes(parser)
-    proxy_options(parser)
-    proxy_ssl_options(parser)
-    onboarding_app(parser)
-    client_replay(parser)
-    server_replay(parser)
-    replacements(parser)
-    set_headers(parser)
-    proxy_authentication(parser)
 
-
-def mitmproxy():
+def mitmproxy(opts):
     # Don't import mitmproxy.tools.console for mitmdump, urwid is not available
     # on all platforms.
     from .console import palettes
 
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
-    common_options(parser)
+    common_options(parser, opts)
     parser.add_argument(
         "--palette", type=str,
         action="store", dest="console_palette",
         choices=sorted(palettes.palettes.keys()),
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
-    parser.add_argument(
-        "--palette-transparent",
-        action="store_true", dest="console_palette_transparent",
-        help="Set transparent background for palette."
-    )
-    parser.add_argument(
-        "-e", "--eventlog",
-        action="store_true", dest="console_eventlog",
-        help="Show event log."
-    )
-    parser.add_argument(
-        "--follow",
-        action="store_true", dest="console_focus_follow",
-        help="Focus follows new flows."
-    )
+    opts.make_parser(parser, "console_palette_transparent")
+    opts.make_parser(parser, "console_eventlog")
+    opts.make_parser(parser, "console_focus_follow")
     parser.add_argument(
         "--order",
         type=str, dest="console_order",
         choices=[o[1] for o in view.orders],
         help="Flow sort order."
     )
-    parser.add_argument(
-        "--no-mouse",
-        action="store_true", dest="console_no_mouse",
-        help="Disable mouse interaction."
-    )
+    opts.make_parser(parser, "console_mouse")
     group = parser.add_argument_group(
         "Filters",
         "See help in mitmproxy for filter expression syntax."
@@ -720,18 +606,11 @@ def mitmproxy():
     return parser
 
 
-def mitmdump():
+def mitmdump(opts):
     parser = argparse.ArgumentParser(usage="%(prog)s [options] [filter]")
 
-    common_options(parser)
-    parser.add_argument(
-        "--keepserving",
-        action="store_true", dest="keepserving",
-        help="""
-            Continue serving after client playback or file read. We exit by
-            default.
-        """
-    )
+    common_options(parser, opts)
+    opts.make_parser(parser, "keepserving")
     parser.add_argument(
         "-d", "--detail",
         action="count", dest="flow_detail",
@@ -748,15 +627,11 @@ def mitmdump():
     return parser
 
 
-def mitmweb():
+def mitmweb(opts):
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
 
     group = parser.add_argument_group("Mitmweb")
-    group.add_argument(
-        "--no-browser",
-        action="store_false", dest="web_open_browser",
-        help="Don't start a browser"
-    )
+    opts.make_parser(group, "web_open_browser")
     group.add_argument(
         "--web-port",
         action="store", type=int, dest="web_port",
@@ -769,13 +644,9 @@ def mitmweb():
         metavar="IFACE",
         help="Mitmweb interface."
     )
-    group.add_argument(
-        "--web-debug",
-        action="store_true", dest="web_debug",
-        help="Turn on mitmweb debugging"
-    )
+    opts.make_parser(group, "web_debug")
 
-    common_options(parser)
+    common_options(parser, opts)
     group = parser.add_argument_group(
         "Filters",
         "See help in mitmproxy for filter expression syntax."

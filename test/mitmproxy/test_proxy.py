@@ -30,9 +30,9 @@ class TestProcessProxyOptions:
 
     def p(self, *args):
         parser = MockParser()
-        cmdline.common_options(parser)
-        args = parser.parse_args(args=args)
         opts = options.Options()
+        cmdline.common_options(parser, opts)
+        args = parser.parse_args(args=args)
         opts.merge(cmdline.get_common_options(args))
         pconf = config.ProxyConfig(opts)
         return parser, pconf
@@ -91,7 +91,7 @@ class TestProcessProxyOptions:
             self.p("--cert", "nonexistent")
 
     def test_insecure(self):
-        p = self.assert_noerr("--insecure")
+        p = self.assert_noerr("--ssl-insecure")
         assert p.openssl_verification_mode_server == SSL.VERIFY_NONE
 
     def test_upstream_trusted_cadir(self):

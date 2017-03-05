@@ -408,7 +408,7 @@ class Settings(RequestHandler):
             mode=str(self.master.options.mode),
             intercept=self.master.options.intercept,
             showhost=self.master.options.showhost,
-            no_upstream_cert=self.master.options.no_upstream_cert,
+            upstream_cert=self.master.options.upstream_cert,
             rawtcp=self.master.options.rawtcp,
             http2=self.master.options.http2,
             websocket=self.master.options.websocket,
@@ -425,7 +425,7 @@ class Settings(RequestHandler):
     def put(self):
         update = self.json
         option_whitelist = {
-            "intercept", "showhost", "no_upstream_cert",
+            "intercept", "showhost", "upstream_cert",
             "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }

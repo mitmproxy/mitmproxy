@@ -870,11 +870,11 @@ class TestServerConnect(tservers.HTTPProxyTest):
     @classmethod
     def get_options(cls):
         opts = tservers.HTTPProxyTest.get_options()
-        opts.no_upstream_cert = True
+        opts.upstream_cert = False
         return opts
 
     def test_unnecessary_serverconnect(self):
-        """A replayed/fake response with no_upstream_cert should not connect to an upstream server"""
+        """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
         assert self.pathod("200").status_code == 200
         for msg in self.proxy.tmaster.tlog:
             assert "serverconnect" not in msg

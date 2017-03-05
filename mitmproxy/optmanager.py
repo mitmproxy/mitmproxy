@@ -21,19 +21,21 @@ unset = object()
 
 
 class _Option:
-    __slots__ = ("name", "typespec", "value", "_default")
+    __slots__ = ("name", "typespec", "value", "_default", "help")
 
     def __init__(
         self,
         name: str,
         default: typing.Any,
-        typespec: typing.Type
+        typespec: typing.Type,
+        help: typing.Optional[str]
     ) -> None:
         typecheck.check_type(name, default, typespec)
         self.name = name
         self._default = default
         self.typespec = typespec
         self.value = unset
+        self.help = help
 
     def __repr__(self):
         return "{value} [{type}]".format(value=self.current(), type=self.typespec)
@@ -66,7 +68,7 @@ class _Option:
         return True
 
     def __deepcopy__(self, _):
-        o = _Option(self.name, self.default, self.typespec)
+        o = _Option(self.name, self.default, self.typespec, self.help)
         if self.has_changed():
             o.value = self.current()
         return o
@@ -91,10 +93,16 @@ class OptManager:
         self.__dict__["changed"] = blinker.Signal()
         self.__dict__["errored"] = blinker.Signal()
 
-    def add_option(self, name: str, default: typing.Any, typespec: typing.Type) -> None:
+    def add_option(
+        self,
+        name: str,
+        default: typing.Any,
+        typespec: typing.Type,
+        help: str = None
+    ) -> None:
         if name in self._options:
             raise ValueError("Option %s already exists" % name)
-        self._options[name] = _Option(name, default, typespec)
+        self._options[name] = _Option(name, default, typespec, help)
 
     @contextlib.contextmanager
     def rollback(self, updated):
@@ -303,3 +311,24 @@ class OptManager:
             cls=type(self).__name__,
             options=options
         )
+
+    def make_parser(self, parser, option):
+        o = self._options[option]
+        f = option.replace("_", "-")
+        if o.typespec == bool:
+            g = parser.add_mutually_exclusive_group(required=False)
+            g.add_argument(
+                "--%s" % f,
+                action="store_true",
+                dest=option,
+                help=o.help
+            )
+            g.add_argument(
+                "--no-%s" % f,
+                action="store_false",
+                dest=option,
+                help=o.help
+            )
+            parser.set_defaults(**{option: o.default})
+        else:
+            raise ValueError("Unsupported option type: %s", o.typespec)

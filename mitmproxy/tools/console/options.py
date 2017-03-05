@@ -90,10 +90,10 @@ class Options(urwid.WidgetWrap):
 
                 select.Heading("Network"),
                 select.Option(
-                    "No Upstream Certs",
+                    "Upstream Certs",
                     "U",
-                    checker("no_upstream_cert", master.options),
-                    master.options.toggler("no_upstream_cert")
+                    checker("upstream_cert", master.options),
+                    master.options.toggler("upstream_cert")
                 ),
                 select.Option(
                     "TCP Proxying",
