@@ -17,13 +17,6 @@ class ParseException(Exception):
 
 
 def get_common_options(args):
-    stickycookie, stickyauth = None, None
-    if args.stickycookie_filt:
-        stickycookie = args.stickycookie_filt
-
-    if args.stickyauth_filt:
-        stickyauth = args.stickyauth_filt
-
     if args.streamfile and args.streamfile[0] == args.rfile:
         if args.streamfile[1] == "wb":
             raise exceptions.OptionsError(
@@ -101,8 +94,8 @@ def get_common_options(args):
         keep_host_header=args.keep_host_header,
         server_replay=args.server_replay,
         scripts=args.scripts,
-        stickycookie=stickycookie,
-        stickyauth=stickyauth,
+        stickycookie=args.stickycookie,
+        stickyauth=args.stickyauth,
         stream_large_bodies=args.stream_large_bodies,
         showhost=args.showhost,
         streamfile=args.streamfile[0] if args.streamfile else None,
@@ -123,9 +116,9 @@ def get_common_options(args):
         certs = certs,
         ciphers_client = args.ciphers_client,
         ciphers_server = args.ciphers_server,
-        clientcerts = args.clientcerts,
+        client_certs = args.client_certs,
         ignore_hosts = args.ignore_hosts,
-        listen_host = args.listen_addr,
+        listen_host = args.listen_host,
         listen_port = args.listen_port,
         upstream_bind_address = args.upstream_bind_address,
         mode = mode,
@@ -161,22 +154,14 @@ def basic_options(parser, opts):
         version=version.VERSION
     )
     opts.make_parser(parser, "anticache")
-    parser.add_argument(
-        "--cadir",
-        action="store", type=str, dest="cadir",
-        help="Location of the default mitmproxy CA files. (%s)" % options.CA_DIR
-    )
+    opts.make_parser(parser, "cadir")
     opts.make_parser(parser, "showhost")
     parser.add_argument(
         "-q", "--quiet",
         action="store_true", dest="quiet",
         help="Quiet."
     )
-    parser.add_argument(
-        "-r", "--read-flows",
-        action="store", dest="rfile",
-        help="Read flows from file."
-    )
+    opts.make_parser(parser, "rfile")
     parser.add_argument(
         "-s", "--script",
         action="append", type=str, dest="scripts",
@@ -186,18 +171,8 @@ def basic_options(parser, opts):
             passed multiple times.
         """
     )
-    parser.add_argument(
-        "-t", "--stickycookie",
-        action="store",
-        dest="stickycookie_filt",
-        metavar="FILTER",
-        help="Set sticky cookie filter. Matched against requests."
-    )
-    parser.add_argument(
-        "-u", "--stickyauth",
-        action="store", dest="stickyauth_filt", metavar="FILTER",
-        help="Set sticky auth filter. Matched against requests."
-    )
+    opts.make_parser(parser, "stickycookie", metavar="FILTER")
+    opts.make_parser(parser, "stickyauth", metavar="FILTER")
     parser.add_argument(
         "-v", "--verbose",
         action="store_const", dest="verbose", const=3,
@@ -254,11 +229,7 @@ def proxy_modes(parser, opts):
 
 def proxy_options(parser, opts):
     group = parser.add_argument_group("Proxy Options")
-    group.add_argument(
-        "-b", "--bind-address",
-        action="store", type=str, dest="listen_addr",
-        help="Address to bind proxy to (defaults to all interfaces)"
-    )
+    opts.make_parser(group, "listen_host")
     group.add_argument(
         "-I", "--ignore",
         action="append", type=str, dest="ignore_hosts",
@@ -292,24 +263,10 @@ def proxy_options(parser, opts):
     websocket = group.add_mutually_exclusive_group()
     opts.make_parser(websocket, "websocket")
 
-    parser.add_argument(
-        "--upstream-auth",
-        action="store", dest="upstream_auth",
-        type=str,
-        help="""
-            Add HTTP Basic authentcation to upstream proxy and reverse proxy
-            requests. Format: username:password
-        """
-    )
-
+    opts.make_parser(group, "upstream_auth", metavar="USER:PASS")
     opts.make_parser(group, "rawtcp")
-
     opts.make_parser(group, "spoof_source_address")
-    group.add_argument(
-        "--upstream-bind-address",
-        action="store", type=str, dest="upstream_bind_address",
-        help="Address to bind upstream requests to (defaults to none)"
-    )
+    opts.make_parser(group, "upstream_bind_address", metavar="ADDR")
     opts.make_parser(group, "keep_host_header")
 
 
@@ -328,35 +285,14 @@ def proxy_ssl_options(parser, opts):
              'in the PEM, it is used, else the default key in the conf dir is used. '
              'The PEM file should contain the full certificate chain, with the leaf certificate '
              'as the first entry. Can be passed multiple times.')
-    group.add_argument(
-        "--ciphers-client", action="store",
-        type=str, dest="ciphers_client",
-        help="Set supported ciphers for client connections. (OpenSSL Syntax)"
-    )
-    group.add_argument(
-        "--ciphers-server", action="store",
-        type=str, dest="ciphers_server",
-        help="Set supported ciphers for server connections. (OpenSSL Syntax)"
-    )
-    group.add_argument(
-        "--client-certs", action="store",
-        type=str, dest="clientcerts",
-        help="Client certificate file or directory."
-    )
+    opts.make_parser(group, "ciphers_server", metavar="CIPHERS")
+    opts.make_parser(group, "ciphers_client", metavar="CIPHERS")
+    opts.make_parser(group, "client_certs")
     opts.make_parser(group, "upstream_cert")
     opts.make_parser(group, "add_upstream_certs_to_client_chain")
     opts.make_parser(group, "ssl_insecure")
-    group.add_argument(
-        "--upstream-trusted-cadir", action="store",
-        dest="ssl_verify_upstream_trusted_cadir",
-        help="Path to a directory of trusted CA certificates for upstream "
-             "server verification prepared using the c_rehash tool."
-    )
-    group.add_argument(
-        "--upstream-trusted-ca", action="store",
-        dest="ssl_verify_upstream_trusted_ca",
-        help="Path to a PEM formatted trusted CA certificate."
-    )
+    opts.make_parser(group, "ssl_verify_upstream_trusted_cadir", metavar="PATH")
+    opts.make_parser(group, "ssl_verify_upstream_trusted_ca", metavar="PATH")
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client",
         action="store",
@@ -375,16 +311,8 @@ def proxy_ssl_options(parser, opts):
 
 def onboarding_app(parser, opts):
     group = parser.add_argument_group("Onboarding App")
-    opts.make_parser(parser, "onboarding")
-    group.add_argument(
-        "--onboarding-host",
-        action="store", dest="onboarding_host",
-        help="""
-            Domain to serve the onboarding app from. For transparent mode, use
-            an IP when a DNS entry for the app domain is not present. Default:
-            %s
-        """ % options.APP_HOST
-    )
+    opts.make_parser(group, "onboarding")
+    opts.make_parser(group, "onboarding_host", metavar="HOST")
     opts.make_parser(group, "onboarding_port", metavar="PORT")
 
 
@@ -488,21 +416,8 @@ def proxy_authentication(parser, opts):
         """
     ).add_mutually_exclusive_group()
     opts.make_parser(group, "auth_nonanonymous")
-    group.add_argument(
-        "--singleuser",
-        action="store", dest="auth_singleuser", type=str,
-        metavar="USER",
-        help="""
-            Allows access to a a single user, specified in the form
-            username:password.
-        """
-    )
-    group.add_argument(
-        "--htpasswd",
-        action="store", dest="auth_htpasswd", type=str,
-        metavar="PATH",
-        help="Allow access to users specified in an Apache htpasswd file."
-    )
+    opts.make_parser(group, "auth_singleuser", metavar="USER:PASS")
+    opts.make_parser(group, "auth_htpasswd", metavar="PATH")
 
 
 def common_options(parser, opts):
@@ -553,16 +468,8 @@ def mitmproxy(opts):
         "Filters",
         "See help in mitmproxy for filter expression syntax."
     )
-    group.add_argument(
-        "-i", "--intercept", action="store",
-        type=str, dest="intercept",
-        help="Intercept filter expression."
-    )
-    group.add_argument(
-        "-f", "--filter", action="store",
-        type=str, dest="filter",
-        help="Filter view expression."
-    )
+    opts.make_parser(group, "intercept", metavar="FILTER")
+    opts.make_parser(group, "filter", metavar="FILTER")
     return parser
 
 
@@ -588,13 +495,8 @@ def mitmweb(opts):
 
     group = parser.add_argument_group("Mitmweb")
     opts.make_parser(group, "web_open_browser")
-    opts.make_parser(parser, "web_port", metavar="PORT")
-    group.add_argument(
-        "--web-iface",
-        action="store", dest="web_iface",
-        metavar="IFACE",
-        help="Mitmweb interface."
-    )
+    opts.make_parser(group, "web_port", metavar="PORT")
+    opts.make_parser(group, "web_iface", metavar="INTERFACE")
     opts.make_parser(group, "web_debug")
 
     common_options(parser, opts)
@@ -602,9 +504,5 @@ def mitmweb(opts):
         "Filters",
         "See help in mitmproxy for filter expression syntax."
     )
-    group.add_argument(
-        "-i", "--intercept", action="store",
-        type=str, dest="intercept",
-        help="Intercept filter expression."
-    )
+    opts.make_parser(group, "intercept", metavar="FILTER")
     return parser

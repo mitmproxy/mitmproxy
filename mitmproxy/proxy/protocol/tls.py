@@ -527,7 +527,7 @@ class TlsLayer(base.Layer):
                 ciphers_server = ':'.join(ciphers_server)
 
             self.server_conn.establish_ssl(
-                self.config.clientcerts,
+                self.config.client_certs,
                 self.server_sni,
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,

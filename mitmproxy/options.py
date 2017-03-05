@@ -27,7 +27,14 @@ class Options(optmanager.OptManager):
             "onboarding", True, bool,
             "Toggle the mitmproxy onboarding app."
         )
-        self.add_option("onboarding_host", APP_HOST, str)
+        self.add_option(
+            "onboarding_host", APP_HOST, str,
+            """
+                Domain to serve the onboarding app from. For transparent mode, use
+                an IP when a DNS entry for the app domain is not present. Default:
+                %s
+            """ % APP_HOST
+        )
         self.add_option(
             "onboarding_port", APP_PORT, int,
             help="Port to serve the onboarding app from."
@@ -64,7 +71,10 @@ class Options(optmanager.OptManager):
         self.add_option(
             "refresh_server_playback", True, bool,
         )
-        self.add_option("rfile", None, Optional[str])
+        self.add_option(
+            "rfile", None, Optional[str],
+            "Read flows from file."
+        )
         self.add_option("scripts", [], Sequence[str])
         self.add_option(
             "showhost", False, bool,
@@ -75,8 +85,14 @@ class Options(optmanager.OptManager):
         self.add_option("server_replay_use_headers", [], Sequence[str])
         self.add_option("setheaders", [], Sequence[Union[Tuple[str, str, str], str]])
         self.add_option("server_replay", [], Sequence[str])
-        self.add_option("stickycookie", None, Optional[str])
-        self.add_option("stickyauth", None, Optional[str])
+        self.add_option(
+            "stickycookie", None, Optional[str],
+            "Set sticky cookie filter. Matched against requests."
+        )
+        self.add_option(
+            "stickyauth", None, Optional[str],
+            "Set sticky auth filter. Matched against requests."
+        )
         self.add_option(
             "stream_large_bodies", None, Optional[str],
             """
@@ -109,8 +125,17 @@ class Options(optmanager.OptManager):
             "auth_nonanonymous", False, bool,
             "Allow access to any user long as a credentials are specified."
         )
-        self.add_option("auth_singleuser", None, Optional[str])
-        self.add_option("auth_htpasswd", None, Optional[str])
+        self.add_option(
+            "auth_singleuser", None, Optional[str],
+            """
+                Allows access to a a single user, specified in the form
+                username:password.
+            """
+        )
+        self.add_option(
+            "auth_htpasswd", None, Optional[str],
+            "Allow access to users specified in an Apache htpasswd file."
+        )
         self.add_option(
             "add_upstream_certs_to_client_chain", False, bool,
             "Add all certificates of the upstream server to the certificate chain "
@@ -121,18 +146,36 @@ class Options(optmanager.OptManager):
             "Byte size limit of HTTP request and response bodies."
             " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
         )
-        self.add_option("cadir", CA_DIR, str)
+        self.add_option(
+            "cadir", CA_DIR, str,
+            "Location of the default mitmproxy CA files. (%s)" % CA_DIR
+        )
         self.add_option("certs", [], Sequence[Tuple[str, str]])
-        self.add_option("ciphers_client", DEFAULT_CLIENT_CIPHERS, str)
-        self.add_option("ciphers_server", None, Optional[str])
-        self.add_option("clientcerts", None, Optional[str])
+        self.add_option(
+            "ciphers_client", DEFAULT_CLIENT_CIPHERS, str,
+            "Set supported ciphers for client connections. (OpenSSL Syntax)"
+        )
+        self.add_option(
+            "ciphers_server", None, Optional[str],
+            "Set supported ciphers for server connections. (OpenSSL Syntax)"
+        )
+        self.add_option(
+            "client_certs", None, Optional[str],
+            "Client certificate file or directory."
+        )
         self.add_option("ignore_hosts", [], Sequence[str])
-        self.add_option("listen_host", "", str)
+        self.add_option(
+            "listen_host", "", str,
+            "Address to bind proxy to (defaults to all interfaces)"
+        )
         self.add_option(
             "listen_port", LISTEN_PORT, int,
             "Proxy service port."
         )
-        self.add_option("upstream_bind_address", "", str)
+        self.add_option(
+            "upstream_bind_address", "", str,
+            "Address to bind upstream requests to (defaults to none)"
+        )
         self.add_option("mode", "regular", str)
         self.add_option(
             "upstream_cert", True, bool,
@@ -172,23 +215,39 @@ class Options(optmanager.OptManager):
             "Combine with --upstream-bind-address to spoof a fixed source address."
         )
         self.add_option("upstream_server", None, Optional[str])
-        self.add_option("upstream_auth", None, Optional[str])
+        self.add_option(
+            "upstream_auth", None, Optional[str],
+            """
+                Add HTTP Basic authentcation to upstream proxy and reverse proxy
+                requests. Format: username:password
+            """
+        )
         self.add_option("ssl_version_client", "secure", str)
         self.add_option("ssl_version_server", "secure", str)
         self.add_option(
             "ssl_insecure", False, bool,
             "Do not verify upstream server SSL/TLS certificates."
         )
-        self.add_option("ssl_verify_upstream_trusted_cadir", None, Optional[str])
-        self.add_option("ssl_verify_upstream_trusted_ca", None, Optional[str])
+        self.add_option(
+            "ssl_verify_upstream_trusted_cadir", None, Optional[str],
+            "Path to a directory of trusted CA certificates for upstream "
+            "server verification prepared using the c_rehash tool."
+        )
+        self.add_option(
+            "ssl_verify_upstream_trusted_ca", None, Optional[str],
+            "Path to a PEM formatted trusted CA certificate."
+        )
         self.add_option("tcp_hosts", [], Sequence[str])
 
-        self.add_option("intercept", None, Optional[str])
+        self.add_option(
+            "intercept", None, Optional[str],
+            "Intercept filter expression."
+        )
 
         # Console options
         self.add_option(
             "console_eventlog", False, bool,
-            help="Show event log."
+            "Show event log."
         )
         self.add_option(
             "console_focus_follow", False, bool,
@@ -208,7 +267,10 @@ class Options(optmanager.OptManager):
             "console_order_reversed", False, bool,
         )
 
-        self.add_option("filter", None, Optional[str])
+        self.add_option(
+            "filter", None, Optional[str],
+            "Filter view expression."
+        )
 
         # Web options
         self.add_option(
@@ -223,7 +285,10 @@ class Options(optmanager.OptManager):
             "web_port", 8081, int,
             "Mitmweb port."
         )
-        self.add_option("web_iface", "127.0.0.1", str)
+        self.add_option(
+            "web_iface", "127.0.0.1", str,
+            "Mitmweb interface."
+        )
 
         # Dump options
         self.add_option("filtstr", None, Optional[str])

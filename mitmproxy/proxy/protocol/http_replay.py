@@ -61,7 +61,7 @@ class RequestReplayThread(basethread.BaseThread):
                         if resp.status_code != 200:
                             raise exceptions.ReplayException("Upstream server refuses CONNECT request")
                         server.establish_ssl(
-                            self.config.clientcerts,
+                            self.config.client_certs,
                             sni=self.f.server_conn.sni
                         )
                         r.first_line_format = "relative"
@@ -76,7 +76,7 @@ class RequestReplayThread(basethread.BaseThread):
                     server.connect()
                     if r.scheme == "https":
                         server.establish_ssl(
-                            self.config.clientcerts,
+                            self.config.client_certs,
                             sni=self.f.server_conn.sni
                         )
                     r.first_line_format = "relative"

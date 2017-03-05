@@ -11,8 +11,8 @@ def test_common():
 
     assert cmdline.get_common_options(args)
 
-    args.stickycookie_filt = "foo"
-    args.stickyauth_filt = "foo"
+    args.stickycookie = "foo"
+    args.stickyauth = "foo"
     v = cmdline.get_common_options(args)
     assert v["stickycookie"] == "foo"
     assert v["stickyauth"] == "foo"

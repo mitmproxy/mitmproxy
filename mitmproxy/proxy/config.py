@@ -59,7 +59,7 @@ class ProxyConfig:
         self.check_ignore = None
         self.check_tcp = None
         self.certstore = None
-        self.clientcerts = None
+        self.client_certs = None
         self.openssl_verification_mode_server = None
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
@@ -96,14 +96,14 @@ class ProxyConfig:
             CONF_BASENAME
         )
 
-        if options.clientcerts:
-            clientcerts = os.path.expanduser(options.clientcerts)
-            if not os.path.exists(clientcerts):
+        if options.client_certs:
+            client_certs = os.path.expanduser(options.client_certs)
+            if not os.path.exists(client_certs):
                 raise exceptions.OptionsError(
                     "Client certificate path does not exist: %s" %
-                    options.clientcerts
+                    options.client_certs
                 )
-            self.clientcerts = clientcerts
+            self.client_certs = client_certs
 
         for spec, cert in options.certs:
             cert = os.path.expanduser(cert)

@@ -342,22 +342,22 @@ class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
 
     def test_clientcert_file(self):
         try:
-            self.config.clientcerts = os.path.join(
+            self.config.client_certs = os.path.join(
                 tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
-            self.config.clientcerts = None
+            self.config.client_certs = None
 
     def test_clientcert_dir(self):
         try:
-            self.config.clientcerts = tutils.test_data.path("mitmproxy/data/clientcert")
+            self.config.client_certs = tutils.test_data.path("mitmproxy/data/clientcert")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
-            self.config.clientcerts = None
+            self.config.client_certs = None
 
     def test_error_post_connect(self):
         p = self.pathoc()

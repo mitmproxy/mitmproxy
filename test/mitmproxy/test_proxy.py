@@ -96,12 +96,12 @@ class TestProcessProxyOptions:
 
     def test_upstream_trusted_cadir(self):
         expected_dir = "/path/to/a/ca/dir"
-        p = self.assert_noerr("--upstream-trusted-cadir", expected_dir)
+        p = self.assert_noerr("--ssl-verify-upstream-trusted-cadir", expected_dir)
         assert p.options.ssl_verify_upstream_trusted_cadir == expected_dir
 
     def test_upstream_trusted_ca(self):
         expected_file = "/path/to/a/cert/file"
-        p = self.assert_noerr("--upstream-trusted-ca", expected_file)
+        p = self.assert_noerr("--ssl-verify-upstream-trusted-ca", expected_file)
         assert p.options.ssl_verify_upstream_trusted_ca == expected_file
 
 
