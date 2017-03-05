@@ -15,23 +15,6 @@ def tft(*, method="get", start=0):
     return f
 
 
-class Options(options.Options):
-    def __init__(
-        self,
-        *,
-        filter=None,
-        console_order=None,
-        console_order_reversed=False,
-        console_focus_follow=False,
-        **kwargs
-    ):
-        self.filter = filter
-        self.console_order = console_order
-        self.console_order_reversed = console_order_reversed
-        self.console_focus_follow = console_focus_follow
-        super().__init__(**kwargs)
-
-
 def test_order_refresh():
     v = view.View()
     sargs = []
@@ -42,7 +25,7 @@ def test_order_refresh():
     v.sig_view_refresh.connect(save)
 
     tf = tflow.tflow(resp=True)
-    with taddons.context(options=Options()) as tctx:
+    with taddons.context(options=options.Options()) as tctx:
         tctx.configure(v, console_order="time")
         v.add(tf)
         tf.request.timestamp_start = 1
@@ -149,7 +132,7 @@ def test_filter():
 
 def test_order():
     v = view.View()
-    with taddons.context(options=Options()) as tctx:
+    with taddons.context(options=options.Options()) as tctx:
         v.request(tft(method="get", start=1))
         v.request(tft(method="put", start=2))
         v.request(tft(method="get", start=3))
@@ -280,7 +263,7 @@ def test_signals():
 
 def test_focus_follow():
     v = view.View()
-    with taddons.context(options=Options()) as tctx:
+    with taddons.context(options=options.Options()) as tctx:
         tctx.configure(v, console_focus_follow=True, filter="~m get")
 
         v.add(tft(start=5))
@@ -394,7 +377,7 @@ def test_settings():
 
 def test_configure():
     v = view.View()
-    with taddons.context(options=Options()) as tctx:
+    with taddons.context(options=options.Options()) as tctx:
         tctx.configure(v, filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, filter="~~")

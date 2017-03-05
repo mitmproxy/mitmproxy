@@ -1,5 +1,3 @@
-from typing import Optional
-
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import addons
@@ -12,26 +10,11 @@ class DumpError(Exception):
     pass
 
 
-class Options(options.Options):
-    def __init__(
-            self,
-            *,  # all args are keyword-only.
-            keepserving: bool = False,
-            filtstr: Optional[str] = None,
-            flow_detail: int = 1,
-            **kwargs
-    ) -> None:
-        self.filtstr = filtstr
-        self.flow_detail = flow_detail
-        self.keepserving = keepserving
-        super().__init__(**kwargs)
-
-
 class DumpMaster(master.Master):
 
     def __init__(
             self,
-            options: Options,
+            options: options.Options,
             server,
             with_termlog=True,
             with_dumper=True,

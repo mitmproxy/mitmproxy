@@ -1,6 +1,7 @@
 import copy
 import os
 import pytest
+import typing
 
 from mitmproxy import options
 from mitmproxy import optmanager
@@ -9,48 +10,45 @@ from mitmproxy.test import tutils
 
 
 class TO(optmanager.OptManager):
-    def __init__(self, one=None, two=None):
-        self.one = one
-        self.two = two
+    def __init__(self):
         super().__init__()
+        self.add_option("one", None, typing.Optional[int])
+        self.add_option("two", 2, typing.Optional[int])
+        self.add_option("bool", False, bool)
 
 
 class TD(optmanager.OptManager):
-    def __init__(self, *, one="done", two="dtwo", three="error"):
-        self.one = one
-        self.two = two
-        self.three = three
+    def __init__(self):
         super().__init__()
+        self.add_option("one", "done", str)
+        self.add_option("two", "dtwo", str)
 
 
 class TD2(TD):
-    def __init__(self, *, three="dthree", four="dfour", **kwargs):
-        self.three = three
-        self.four = four
-        super().__init__(three=three, **kwargs)
+    def __init__(self):
+        super().__init__()
+        self.add_option("three", "dthree", str)
+        self.add_option("four", "dfour", str)
 
 
 class TM(optmanager.OptManager):
-    def __init__(self, one="one", two=["foo"], three=None):
-        self.one = one
-        self.two = two
-        self.three = three
+    def __init__(self):
         super().__init__()
+        self.add_option("two", ["foo"], typing.Sequence[str])
+        self.add_option("one", None, typing.Optional[str])
 
 
 def test_defaults():
-    assert TD2.default("one") == "done"
-    assert TD2.default("two") == "dtwo"
-    assert TD2.default("three") == "dthree"
-    assert TD2.default("four") == "dfour"
-
     o = TD2()
-    assert o._defaults == {
+    defaults = {
         "one": "done",
         "two": "dtwo",
         "three": "dthree",
         "four": "dfour",
     }
+    for k, v in defaults.items():
+        assert o.default(k) == v
+
     assert not o.has_changed("one")
     newvals = dict(
         one="xone",
@@ -64,18 +62,19 @@ def test_defaults():
         assert v == getattr(o, k)
     o.reset()
     assert not o.has_changed("one")
-    for k, v in o._defaults.items():
-        assert v == getattr(o, k)
+
+    for k in o.keys():
+        assert not o.has_changed(k)
 
 
 def test_options():
-    o = TO(two="three")
-    assert o.keys() == set(["one", "two"])
+    o = TO()
+    assert o.keys() == set(["bool", "one", "two"])
 
     assert o.one is None
-    assert o.two == "three"
-    o.one = "one"
-    assert o.one == "one"
+    assert o.two == 2
+    o.one = 1
+    assert o.one == 1
 
     with pytest.raises(TypeError):
         TO(nonexistent = "value")
@@ -91,33 +90,37 @@ def test_options():
 
     o.changed.connect(sub)
 
-    o.one = "ninety"
+    o.one = 90
     assert len(rec) == 1
-    assert rec[-1].one == "ninety"
+    assert rec[-1].one == 90
 
-    o.update(one="oink")
+    o.update(one=3)
     assert len(rec) == 2
-    assert rec[-1].one == "oink"
+    assert rec[-1].one == 3
 
 
 def test_setter():
-    o = TO(two="three")
+    o = TO()
     f = o.setter("two")
-    f("xxx")
-    assert o.two == "xxx"
+    f(99)
+    assert o.two == 99
     with pytest.raises(Exception, match="No such option"):
         o.setter("nonexistent")
 
 
 def test_toggler():
-    o = TO(two=True)
-    f = o.toggler("two")
+    o = TO()
+    f = o.toggler("bool")
+    assert o.bool is False
     f()
-    assert o.two is False
+    assert o.bool is True
     f()
-    assert o.two is True
+    assert o.bool is False
     with pytest.raises(Exception, match="No such option"):
         o.toggler("nonexistent")
+
+    with pytest.raises(Exception, match="boolean options"):
+        o.toggler("one")
 
 
 class Rec():
@@ -132,19 +135,19 @@ def test_subscribe():
     o = TO()
     r = Rec()
     o.subscribe(r, ["two"])
-    o.one = "foo"
+    o.one = 2
     assert not r.called
-    o.two = "foo"
+    o.two = 3
     assert r.called
 
     assert len(o.changed.receivers) == 1
     del r
-    o.two = "bar"
+    o.two = 4
     assert len(o.changed.receivers) == 0
 
 
 def test_rollback():
-    o = TO(one="two")
+    o = TO()
 
     rec = []
 
@@ -157,27 +160,24 @@ def test_rollback():
         recerr.append(kwargs)
 
     def err(opts, updated):
-        if opts.one == "ten":
+        if opts.one == 10:
             raise exceptions.OptionsError()
 
     o.changed.connect(sub)
     o.changed.connect(err)
     o.errored.connect(errsub)
 
-    o.one = "ten"
+    assert o.one is None
+    o.one = 10
     assert isinstance(recerr[0]["exc"], exceptions.OptionsError)
-    assert o.one == "two"
+    assert o.one is None
     assert len(rec) == 2
-    assert rec[0].one == "ten"
-    assert rec[1].one == "two"
+    assert rec[0].one == 10
+    assert rec[1].one is None
 
 
 def test_repr():
-    assert repr(TO()) == "test.mitmproxy.test_optmanager.TO({'one': None, 'two': None})"
-    assert repr(TO(one='x' * 60)) == """test.mitmproxy.test_optmanager.TO({
-    'one': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    'two': None
-})"""
+    assert repr(TO())
 
 
 def test_serialize():
@@ -249,3 +249,17 @@ def test_merge():
     assert m.one == "two"
     m.merge(dict(two=["bar"]))
     assert m.two == ["foo", "bar"]
+
+
+def test_option():
+    o = optmanager._Option("test", 1, int)
+    assert o.current() == 1
+    with pytest.raises(TypeError):
+        o.set("foo")
+    with pytest.raises(TypeError):
+        optmanager._Option("test", 1, str)
+
+    o2 = optmanager._Option("test", 1, int)
+    assert o2 == o
+    o2.set(5)
+    assert o2 != o

@@ -4,12 +4,12 @@ import click
 from mitmproxy.addons import dumper
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
-from mitmproxy.tools import dump
+from mitmproxy.tools import options
 
 
 def show(flow_detail, flows):
     d = dumper.Dumper()
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, flow_detail=flow_detail)
         for f in flows:
             ctx.cycle(d, f)

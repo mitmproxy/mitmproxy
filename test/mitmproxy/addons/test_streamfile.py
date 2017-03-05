@@ -7,13 +7,13 @@ from mitmproxy.test import taddons
 
 from mitmproxy import io
 from mitmproxy import exceptions
-from mitmproxy.tools import dump
+from mitmproxy import options
 from mitmproxy.addons import streamfile
 
 
 def test_configure():
     sa = streamfile.StreamFile()
-    with taddons.context(options=dump.Options()) as tctx:
+    with taddons.context(options=options.Options()) as tctx:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
             with pytest.raises(exceptions.OptionsError):

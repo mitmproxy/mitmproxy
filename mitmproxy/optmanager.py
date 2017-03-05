@@ -1,11 +1,11 @@
 import contextlib
 import blinker
 import pprint
-import inspect
 import copy
 import functools
 import weakref
 import os
+import typing
 
 import ruamel.yaml
 
@@ -17,21 +17,62 @@ from mitmproxy.utils import typecheck
     The base implementation for Options.
 """
 
-
-class _DefaultsMeta(type):
-    def __new__(cls, name, bases, namespace, **kwds):
-        ret = type.__new__(cls, name, bases, dict(namespace))
-        defaults = {}
-        for klass in reversed(inspect.getmro(ret)):
-            for p in inspect.signature(klass.__init__).parameters.values():
-                if p.kind in (p.KEYWORD_ONLY, p.POSITIONAL_OR_KEYWORD):
-                    if not p.default == p.empty:
-                        defaults[p.name] = p.default
-        ret._defaults = defaults
-        return ret
+unset = object()
 
 
-class OptManager(metaclass=_DefaultsMeta):
+class _Option:
+    __slots__ = ("name", "typespec", "value", "_default")
+
+    def __init__(
+        self,
+        name: str,
+        default: typing.Any,
+        typespec: typing.Type
+    ) -> None:
+        typecheck.check_type(name, default, typespec)
+        self.name = name
+        self._default = default
+        self.typespec = typespec
+        self.value = unset
+
+    def __repr__(self):
+        return "{value} [{type}]".format(value=self.current(), type=self.typespec)
+
+    @property
+    def default(self):
+        return copy.deepcopy(self._default)
+
+    def current(self) -> typing.Any:
+        if self.value is unset:
+            v = self.default
+        else:
+            v = self.value
+        return copy.deepcopy(v)
+
+    def set(self, value: typing.Any) -> None:
+        typecheck.check_type(self.name, value, self.typespec)
+        self.value = value
+
+    def reset(self) -> None:
+        self.value = unset
+
+    def has_changed(self) -> bool:
+        return self.value is not unset
+
+    def __eq__(self, other) -> bool:
+        for i in self.__slots__:
+            if getattr(self, i) != getattr(other, i):
+                return False
+        return True
+
+    def __deepcopy__(self, _):
+        o = _Option(self.name, self.default, self.typespec)
+        if self.has_changed():
+            o.value = self.current()
+        return o
+
+
+class OptManager:
     """
         OptManager is the base class from which Options objects are derived.
         Note that the __init__ method of all child classes must force all
@@ -45,32 +86,26 @@ class OptManager(metaclass=_DefaultsMeta):
         Optmanager always returns a deep copy of options to ensure that
         mutation doesn't change the option state inadvertently.
     """
-    _initialized = False
-    attributes = []
-
-    def __new__(cls, *args, **kwargs):
-        # Initialize instance._opts before __init__ is called.
-        # This allows us to call super().__init__() last, which then sets
-        # ._initialized = True as the final operation.
-        instance = super().__new__(cls)
-        instance.__dict__["_opts"] = {}
-        return instance
-
     def __init__(self):
+        self.__dict__["_options"] = {}
         self.__dict__["changed"] = blinker.Signal()
         self.__dict__["errored"] = blinker.Signal()
-        self.__dict__["_initialized"] = True
+
+    def add_option(self, name: str, default: typing.Any, typespec: typing.Type) -> None:
+        if name in self._options:
+            raise ValueError("Option %s already exists" % name)
+        self._options[name] = _Option(name, default, typespec)
 
     @contextlib.contextmanager
     def rollback(self, updated):
-        old = self._opts.copy()
+        old = copy.deepcopy(self._options)
         try:
             yield
         except exceptions.OptionsError as e:
             # Notify error handlers
             self.errored.send(self, exc=e)
             # Rollback
-            self.__dict__["_opts"] = old
+            self.__dict__["_options"] = old
             self.changed.send(self, updated=updated)
 
     def subscribe(self, func, opts):
@@ -95,61 +130,48 @@ class OptManager(metaclass=_DefaultsMeta):
         self.changed.connect(_call, weak=False)
 
     def __eq__(self, other):
-        return self._opts == other._opts
+        return self._options == other._options
 
     def __copy__(self):
-        return self.__class__(**self._opts)
+        o = OptManager()
+        o.__dict__["_options"] = copy.deepcopy(self._options)
+        return o
 
     def __getattr__(self, attr):
-        if attr in self._opts:
-            return copy.deepcopy(self._opts[attr])
+        if attr in self._options:
+            return self._options[attr].current()
         else:
             raise AttributeError("No such option: %s" % attr)
 
     def __setattr__(self, attr, value):
-        if not self._initialized:
-            self._typecheck(attr, value)
-            self._opts[attr] = value
-            return
         self.update(**{attr: value})
 
-    def _typecheck(self, attr, value):
-        expected_type = typecheck.get_arg_type_from_constructor_annotation(
-            type(self), attr
-        )
-        if expected_type is None:
-            return  # no type info :(
-        typecheck.check_type(attr, value, expected_type)
-
     def keys(self):
-        return set(self._opts.keys())
+        return set(self._options.keys())
 
     def reset(self):
         """
             Restore defaults for all options.
         """
-        self.update(**self._defaults)
-
-    @classmethod
-    def default(klass, opt):
-        return copy.deepcopy(klass._defaults[opt])
+        for o in self._options.values():
+            o.reset()
 
     def update(self, **kwargs):
         updated = set(kwargs.keys())
-        for k, v in kwargs.items():
-            if k not in self._opts:
-                raise KeyError("No such option: %s" % k)
-            self._typecheck(k, v)
         with self.rollback(updated):
-            self._opts.update(kwargs)
+            for k, v in kwargs.items():
+                if k not in self._options:
+                    raise KeyError("No such option: %s" % k)
+                self._options[k].set(v)
             self.changed.send(self, updated=updated)
+        return self
 
     def setter(self, attr):
         """
             Generate a setter for a given attribute. This returns a callable
             taking a single argument.
         """
-        if attr not in self._opts:
+        if attr not in self._options:
             raise KeyError("No such option: %s" % attr)
 
         def setter(x):
@@ -161,19 +183,24 @@ class OptManager(metaclass=_DefaultsMeta):
             Generate a toggler for a boolean attribute. This returns a callable
             that takes no arguments.
         """
-        if attr not in self._opts:
+        if attr not in self._options:
             raise KeyError("No such option: %s" % attr)
+        o = self._options[attr]
+        if o.typespec != bool:
+            raise ValueError("Toggler can only be used with boolean options")
 
         def toggle():
             setattr(self, attr, not getattr(self, attr))
         return toggle
 
+    def default(self, option: str) -> typing.Any:
+        return self._options[option].default
+
     def has_changed(self, option):
         """
             Has the option changed from the default?
         """
-        if getattr(self, option) != self._defaults[option]:
-            return True
+        return self._options[option].has_changed()
 
     def save(self, path, defaults=False):
         """
@@ -204,7 +231,7 @@ class OptManager(metaclass=_DefaultsMeta):
             if defaults or self.has_changed(k):
                 data[k] = getattr(self, k)
         for k in list(data.keys()):
-            if k not in self._opts:
+            if k not in self._options:
                 del data[k]
         return ruamel.yaml.round_trip_dump(data)
 
@@ -268,7 +295,7 @@ class OptManager(metaclass=_DefaultsMeta):
         self.update(**toset)
 
     def __repr__(self):
-        options = pprint.pformat(self._opts, indent=4).strip(" {}")
+        options = pprint.pformat(self._options, indent=4).strip(" {}")
         if "\n" in options:
             options = "\n    " + options + "\n"
         return "{mod}.{cls}({{{options}}})".format(

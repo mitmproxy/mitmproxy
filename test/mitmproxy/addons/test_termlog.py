@@ -3,7 +3,7 @@ import pytest
 
 from mitmproxy.addons import termlog
 from mitmproxy import log
-from mitmproxy.tools.dump import Options
+from mitmproxy.options import Options
 from mitmproxy.test import taddons
 
 
