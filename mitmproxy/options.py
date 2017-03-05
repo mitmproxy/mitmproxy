@@ -12,7 +12,7 @@ def check_port(port):
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
-LISTEN_PORT = 9050
+LISTEN_PORT = 8080
 while(check_port(LISTEN_PORT)):
 	LISTEN_PORT = LISTEN_PORT + 1
 
