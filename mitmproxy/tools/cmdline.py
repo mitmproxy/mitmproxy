@@ -162,15 +162,7 @@ def basic_options(parser, opts):
         help="Quiet."
     )
     opts.make_parser(parser, "rfile")
-    parser.add_argument(
-        "-s", "--script",
-        action="append", type=str, dest="scripts",
-        metavar='"script.py --bar"',
-        help="""
-            Run a script. Surround with quotes to pass script arguments. Can be
-            passed multiple times.
-        """
-    )
+    opts.make_parser(parser, "scripts", metavar="SCRIPT")
     opts.make_parser(parser, "stickycookie", metavar="FILTER")
     opts.make_parser(parser, "stickyauth", metavar="FILTER")
     parser.add_argument(
@@ -230,29 +222,8 @@ def proxy_modes(parser, opts):
 def proxy_options(parser, opts):
     group = parser.add_argument_group("Proxy Options")
     opts.make_parser(group, "listen_host")
-    group.add_argument(
-        "-I", "--ignore",
-        action="append", type=str, dest="ignore_hosts",
-        metavar="HOST",
-        help="""
-            Ignore host and forward all traffic without processing it. In
-            transparent mode, it is recommended to use an IP address (range),
-            not the hostname. In regular mode, only SSL traffic is ignored and
-            the hostname should be used. The supplied value is interpreted as a
-            regular expression and matched on the ip or the hostname. Can be
-            passed multiple times.
-        """
-    )
-    group.add_argument(
-        "--tcp",
-        action="append", type=str, dest="tcp_hosts",
-        metavar="HOST",
-        help="""
-            Generic TCP SSL proxy mode for all hosts that match the pattern.
-            Similar to --ignore, but SSL connections are intercepted. The
-            communication contents are printed to the log in verbose mode.
-        """
-    )
+    opts.make_parser(group, "ignore_hosts", metavar="HOST")
+    opts.make_parser(group, "tcp_hosts", metavar="HOST")
     opts.make_parser(group, "no_server")
     opts.make_parser(group, "listen_port", metavar="PORT")
 
@@ -318,50 +289,22 @@ def onboarding_app(parser, opts):
 
 def client_replay(parser, opts):
     group = parser.add_argument_group("Client Replay")
-    group.add_argument(
-        "-c", "--client-replay",
-        action="append", dest="client_replay", metavar="PATH",
-        help="Replay client requests from a saved file."
-    )
+    opts.make_parser(group, "client_replay", metavar="PATH")
 
 
 def server_replay(parser, opts):
     group = parser.add_argument_group("Server Replay")
-    group.add_argument(
-        "-S", "--server-replay",
-        action="append", dest="server_replay", metavar="PATH",
-        help="Replay server responses from a saved file."
-    )
-    opts.make_parser(parser, "replay_kill_extra")
-    group.add_argument(
-        "--server-replay-use-header",
-        action="append", dest="server_replay_use_headers", type=str,
-        help="Request headers to be considered during replay. "
-             "Can be passed multiple times."
-    )
+    opts.make_parser(group, "server_replay", metavar="PATH")
+    opts.make_parser(group, "replay_kill_extra")
+    opts.make_parser(group, "server_replay_use_headers", metavar="HEADER")
     opts.make_parser(group, "refresh_server_playback")
     opts.make_parser(group, "server_replay_nopop")
+
     payload = group.add_mutually_exclusive_group()
     opts.make_parser(payload, "server_replay_ignore_content")
-    payload.add_argument(
-        "--replay-ignore-payload-param",
-        action="append", dest="server_replay_ignore_payload_params", type=str,
-        help="""
-            Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
-            be ignored while searching for a saved flow to replay.
-            Can be passed multiple times.
-        """
-    )
-
-    group.add_argument(
-        "--replay-ignore-param",
-        action="append", dest="server_replay_ignore_params", type=str,
-        help="""
-            Request's parameters to be ignored while searching for a saved flow
-            to replay. Can be passed multiple times.
-        """
-    )
-    opts.make_parser(parser, "server_replay_ignore_host")
+    opts.make_parser(payload, "server_replay_ignore_payload_params")
+    opts.make_parser(payload, "server_replay_ignore_params")
+    opts.make_parser(payload, "server_replay_ignore_host")
 
 
 def replacements(parser, opts):

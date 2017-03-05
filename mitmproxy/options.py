@@ -50,7 +50,10 @@ class Options(optmanager.OptManager):
             "anticomp", False, bool,
             "Try to convince servers to send us un-compressed data."
         )
-        self.add_option("client_replay", [], Sequence[str])
+        self.add_option(
+            "client_replay", [], Sequence[str],
+            "Replay client requests from a saved file."
+        )
         self.add_option(
             "replay_kill_extra", False, bool,
             "Kill extra requests during replay."
@@ -75,16 +78,29 @@ class Options(optmanager.OptManager):
             "rfile", None, Optional[str],
             "Read flows from file."
         )
-        self.add_option("scripts", [], Sequence[str])
+        self.add_option(
+            "scripts", [], Sequence[str],
+            """
+                Run a script. Surround with quotes to pass script arguments. Can
+                be passed multiple times.
+            """
+        )
         self.add_option(
             "showhost", False, bool,
             "Use the Host header to construct URLs for display."
         )
         self.add_option("replacements", [], Sequence[Union[Tuple[str, str, str], str]])
         self.add_option("replacement_files", [], Sequence[Union[Tuple[str, str, str], str]])
-        self.add_option("server_replay_use_headers", [], Sequence[str])
+        self.add_option(
+            "server_replay_use_headers", [], Sequence[str],
+            "Request headers to be considered during replay. "
+            "Can be passed multiple times."
+        )
         self.add_option("setheaders", [], Sequence[Union[Tuple[str, str, str], str]])
-        self.add_option("server_replay", [], Sequence[str])
+        self.add_option(
+            "server_replay", [], Sequence[str],
+            "Replay server responses from a saved file."
+        )
         self.add_option(
             "stickycookie", None, Optional[str],
             "Set sticky cookie filter. Matched against requests."
@@ -112,8 +128,21 @@ class Options(optmanager.OptManager):
             "server_replay_ignore_content", False, bool,
             "Ignore request's content while searching for a saved flow to replay."
         )
-        self.add_option("server_replay_ignore_params", [], Sequence[str])
-        self.add_option("server_replay_ignore_payload_params", [], Sequence[str])
+        self.add_option(
+            "server_replay_ignore_params", [], Sequence[str],
+            """
+                Request's parameters to be ignored while searching for a saved flow
+                to replay. Can be passed multiple times.
+            """
+        )
+        self.add_option(
+            "server_replay_ignore_payload_params", [], Sequence[str],
+            """
+                Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
+                be ignored while searching for a saved flow to replay.
+                Can be passed multiple times.
+            """
+        )
         self.add_option(
             "server_replay_ignore_host", False, bool,
             "Ignore request's destination host while searching for a saved"
@@ -163,7 +192,16 @@ class Options(optmanager.OptManager):
             "client_certs", None, Optional[str],
             "Client certificate file or directory."
         )
-        self.add_option("ignore_hosts", [], Sequence[str])
+        self.add_option(
+            "ignore_hosts", [], Sequence[str],
+            """
+                Ignore host and forward all traffic without processing it. In
+                transparent mode, it is recommended to use an IP address (range),
+                not the hostname. In regular mode, only SSL traffic is ignored and
+                the hostname should be used. The supplied value is interpreted as a
+                regular expression and matched on the ip or the hostname.
+            """
+        )
         self.add_option(
             "listen_host", "", str,
             "Address to bind proxy to (defaults to all interfaces)"
@@ -237,7 +275,14 @@ class Options(optmanager.OptManager):
             "ssl_verify_upstream_trusted_ca", None, Optional[str],
             "Path to a PEM formatted trusted CA certificate."
         )
-        self.add_option("tcp_hosts", [], Sequence[str])
+        self.add_option(
+            "tcp_hosts", [], Sequence[str],
+            """
+                Generic TCP SSL proxy mode for all hosts that match the pattern.
+                Similar to --ignore, but SSL connections are intercepted. The
+                communication contents are printed to the log in verbose mode.
+            """
+        )
 
         self.add_option(
             "intercept", None, Optional[str],

@@ -348,5 +348,14 @@ class OptManager:
                 help=o.help,
                 metavar=metavar
             )
+        elif o.typespec == typing.Sequence[str]:
+            parser.add_argument(
+                "--%s" % f,
+                action="append",
+                type=str,
+                dest=option,
+                help=o.help,
+                metavar=metavar
+            )
         else:
             raise ValueError("Unsupported option type: %s", o.typespec)
