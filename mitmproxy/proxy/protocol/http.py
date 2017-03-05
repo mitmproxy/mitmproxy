@@ -276,6 +276,8 @@ class HttpLayer(base.Layer):
             # We optimistically guess there might be an HTTP client on the
             # other end
             self.send_error_response(400, repr(e))
+            f.error = flow.Error(str(e))
+            self.channel.ask("error", f)
             raise exceptions.ProtocolException(
                 "HTTP protocol error in client request: {}".format(e)
             )
@@ -288,7 +290,7 @@ class HttpLayer(base.Layer):
             request.first_line_format = "relative"
 
         # update host header in reverse proxy mode
-        if self.config.options.mode == "reverse":
+        if self.config.options.mode == "reverse" and not self.config.options.keep_host_header:
             f.request.host_header = self.config.upstream_server.address[0]
 
         # Determine .scheme, .host and .port attributes for inline scripts. For

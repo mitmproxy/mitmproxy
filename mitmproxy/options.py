@@ -81,6 +81,7 @@ class Options(optmanager.OptManager):
         upstream_bind_address: str = "",
         mode: str = "regular",
         no_upstream_cert: bool = False,
+        keep_host_header: bool = False,
 
         http2: bool = True,
         http2_priority: bool = False,
@@ -171,6 +172,7 @@ class Options(optmanager.OptManager):
         self.upstream_bind_address = upstream_bind_address
         self.mode = mode
         self.no_upstream_cert = no_upstream_cert
+        self.keep_host_header = keep_host_header
 
         self.http2 = http2
         self.http2_priority = http2_priority
