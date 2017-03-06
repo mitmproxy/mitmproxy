@@ -15,14 +15,6 @@ class ParseException(Exception):
 
 
 def get_common_options(args):
-    # Proxy config
-    certs = []
-    for i in args.certs or []:
-        parts = i.split("=", 1)
-        if len(parts) == 1:
-            parts = ["*", parts[0]]
-        certs.append(parts)
-
     # Establish proxy mode
     c = 0
     mode, upstream_server = "regular", None
@@ -50,6 +42,7 @@ def get_common_options(args):
             "are mutually exclusive. Read the docs on proxy modes "
             "to understand why."
         )
+
     if args.add_upstream_certs_to_client_chain and not args.upstream_cert:
         raise exceptions.OptionsError(
             "The no-upstream-cert and add-upstream-certs-to-client-chain "
@@ -98,7 +91,7 @@ def get_common_options(args):
         add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
         body_size_limit = args.body_size_limit,
         cadir = args.cadir,
-        certs = certs,
+        certs = args.certs,
         ciphers_client = args.ciphers_client,
         ciphers_server = args.ciphers_server,
         client_certs = args.client_certs,
@@ -219,18 +212,7 @@ def proxy_options(parser, opts):
 def proxy_ssl_options(parser, opts):
     # TODO: Agree to consistently either use "upstream" or "server".
     group = parser.add_argument_group("SSL")
-    group.add_argument(
-        "--cert",
-        dest='certs',
-        type=str,
-        metavar="SPEC",
-        action="append",
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '
-             'The domain may include a wildcard, and is equal to "*" if not specified. '
-             'The file at path is a certificate in PEM format. If a private key is included '
-             'in the PEM, it is used, else the default key in the conf dir is used. '
-             'The PEM file should contain the full certificate chain, with the leaf certificate '
-             'as the first entry. Can be passed multiple times.')
+    opts.make_parser(group, "certs", metavar="SPEC")
     opts.make_parser(group, "ciphers_server", metavar="CIPHERS")
     opts.make_parser(group, "ciphers_client", metavar="CIPHERS")
     opts.make_parser(group, "client_certs")
@@ -331,9 +313,7 @@ def common_options(parser, opts):
         "--conf",
         type=str, dest="conf", default=CONFIG_PATH,
         metavar="PATH",
-        help="""
-            Configuration file
-        """
+        help="Configuration file"
     )
     basic_options(parser, opts)
     proxy_modes(parser, opts)
@@ -348,8 +328,6 @@ def common_options(parser, opts):
 
 
 def mitmproxy(opts):
-    # Don't import mitmproxy.tools.console for mitmdump, urwid is not available
-    # on all platforms.
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
     common_options(parser, opts)
 

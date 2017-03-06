@@ -201,7 +201,18 @@ class Options(optmanager.OptManager):
             "cadir", CA_DIR, str,
             "Location of the default mitmproxy CA files. (%s)" % CA_DIR
         )
-        self.add_option("certs", [], Sequence[Tuple[str, str]])
+        self.add_option(
+            "certs", [], Sequence[str],
+            """
+            Add an SSL certificate. SPEC is of the form "[domain=]path". The
+            domain may include a wildcard, and is equal to "*" if not specified.
+            The file at path is a certificate in PEM format. If a private key is
+            included in the PEM, it is used, else the default key in the conf
+            dir is used. The PEM file should contain the full certificate chain,
+            with the leaf certificate as the first entry. Can be passed multiple
+            times.
+            """
+        )
         self.add_option(
             "ciphers_client", DEFAULT_CLIENT_CIPHERS, str,
             "Set supported ciphers for client connections. (OpenSSL Syntax)"
