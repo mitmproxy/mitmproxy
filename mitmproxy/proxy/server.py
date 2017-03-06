@@ -85,14 +85,14 @@ class ConnectionHandler:
         )
 
         mode = self.config.options.mode
-        if mode == "upstream":
+        if mode.startswith("upstream:"):
             return modes.HttpUpstreamProxy(
                 root_ctx,
                 self.config.upstream_server.address
             )
         elif mode == "transparent":
             return modes.TransparentProxy(root_ctx)
-        elif mode == "reverse":
+        elif mode.startswith("reverse:"):
             server_tls = self.config.upstream_server.scheme == "https"
             return modes.ReverseProxy(
                 root_ctx,

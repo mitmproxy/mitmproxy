@@ -45,7 +45,7 @@ class RequestReplayThread(basethread.BaseThread):
 
             if not self.f.response:
                 # In all modes, we directly connect to the server displayed
-                if self.config.options.mode == "upstream":
+                if self.config.options.mode.startswith("upstream:"):
                     server_address = self.config.upstream_server.address
                     server = connections.ServerConnection(server_address, (self.config.options.listen_host, 0))
                     server.connect()

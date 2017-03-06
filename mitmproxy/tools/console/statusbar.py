@@ -2,7 +2,6 @@ import os.path
 
 import urwid
 
-import mitmproxy.net.http.url
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
@@ -234,13 +233,8 @@ class StatusBar(urwid.WidgetWrap):
         if opts:
             r.append("[%s]" % (":".join(opts)))
 
-        if self.master.options.mode in ["reverse", "upstream"]:
-            dst = self.master.server.config.upstream_server
-            r.append("[dest:%s]" % mitmproxy.net.http.url.unparse(
-                dst.scheme,
-                dst.address[0],
-                dst.address[1],
-            ))
+        if self.master.options.mode != "regular":
+            r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
             r.append("[")
             r.append(("heading_key", "s"))

@@ -10,7 +10,7 @@ from mitmproxy import options
 from mitmproxy.addons import script
 from mitmproxy.addons import proxyauth
 from mitmproxy import http
-from mitmproxy.proxy.config import HostMatcher, parse_server_spec
+from mitmproxy.proxy.config import HostMatcher
 import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.net import socks
@@ -579,8 +579,6 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     @classmethod
     def get_options(cls):
         opts = super().get_options()
-        s = parse_server_spec(opts.upstream_server)
-        opts.upstream_server = "http://{}:{}".format(s.address[0], s.address[1])
         return opts
 
     def pathoc(self, ssl, sni=None):

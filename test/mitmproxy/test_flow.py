@@ -63,8 +63,7 @@ class TestSerialize:
         r = self._treader()
         s = tservers.TestState()
         opts = options.Options(
-            mode="reverse",
-            upstream_server="https://use-this-domain"
+            mode="reverse:https://use-this-domain"
         )
         conf = ProxyConfig(opts)
         fm = master.Master(opts, DummyServer(conf))

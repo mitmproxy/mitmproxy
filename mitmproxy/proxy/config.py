@@ -121,7 +121,7 @@ class ProxyConfig:
                 raise exceptions.OptionsError(
                     "Invalid certificate format: %s" % cert
                 )
-
-        self.upstream_server = None
-        if options.upstream_server:
-            self.upstream_server = parse_server_spec(options.upstream_server)
+        m = options.mode
+        if m.startswith("upstream:") or m.startswith("reverse:"):
+            spec = moptions.get_mode_spec(options.mode)
+            self.upstream_server = parse_server_spec(spec)

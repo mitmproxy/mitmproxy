@@ -49,31 +49,6 @@ class TestProcessProxyOptions:
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--cadir", cadir)
 
-    @mock.patch("mitmproxy.platform.original_addr", None)
-    def test_no_transparent(self):
-        with pytest.raises(Exception, match="Transparent mode not supported"):
-            self.p("-T")
-
-    @mock.patch("mitmproxy.platform.original_addr")
-    def test_modes(self, _):
-        self.assert_noerr("-R", "http://localhost")
-        with pytest.raises(Exception, match="expected one argument"):
-            self.p("-R")
-        with pytest.raises(Exception, match="Invalid server specification"):
-            self.p("-R", "reverse")
-
-        self.assert_noerr("-T")
-
-        self.assert_noerr("-U", "http://localhost")
-        with pytest.raises(Exception, match="Invalid server specification"):
-            self.p("-U", "upstream")
-
-        self.assert_noerr("--upstream-auth", "test:test")
-        with pytest.raises(Exception, match="expected one argument"):
-            self.p("--upstream-auth")
-        with pytest.raises(Exception, match="mutually exclusive"):
-            self.p("-R", "http://localhost", "-T")
-
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--client-certs", cadir)
@@ -131,19 +106,19 @@ class TestDummyServer:
 class TestConnectionHandler:
 
     def test_fatal_error(self, capsys):
-        config = mock.Mock()
-        root_layer = mock.Mock()
-        root_layer.side_effect = RuntimeError
-        config.options.mode.return_value = root_layer
+        opts = options.Options()
+        pconf = config.ProxyConfig(opts)
+
         channel = mock.Mock()
 
         def ask(_, x):
-            return x
+            raise RuntimeError
+
         channel.ask = ask
         c = ConnectionHandler(
             mock.MagicMock(),
             ("127.0.0.1", 8080),
-            config,
+            pconf,
             channel
         )
         c.handle()

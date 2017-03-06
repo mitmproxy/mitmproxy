@@ -148,7 +148,7 @@ class Master:
         Loads a flow
         """
         if isinstance(f, http.HTTPFlow):
-            if self.server and self.options.mode == "reverse":
+            if self.server and self.options.mode.startswith("reverse:"):
                 f.request.host = self.server.config.upstream_server.address[0]
                 f.request.port = self.server.config.upstream_server.address[1]
                 f.request.scheme = self.server.config.upstream_server.scheme

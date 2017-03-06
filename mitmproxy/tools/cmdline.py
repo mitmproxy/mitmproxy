@@ -3,7 +3,6 @@ import os
 
 from mitmproxy import exceptions
 from mitmproxy import options
-from mitmproxy import platform
 from mitmproxy import version
 
 
@@ -15,34 +14,6 @@ class ParseException(Exception):
 
 
 def get_common_options(args):
-    # Establish proxy mode
-    c = 0
-    mode, upstream_server = "regular", None
-    if args.transparent_proxy:
-        c += 1
-        if not platform.original_addr:
-            raise exceptions.OptionsError(
-                "Transparent mode not supported on this platform."
-            )
-        mode = "transparent"
-    if args.socks_proxy:
-        c += 1
-        mode = "socks5"
-    if args.reverse_proxy:
-        c += 1
-        mode = "reverse"
-        upstream_server = args.reverse_proxy
-    if args.upstream_proxy:
-        c += 1
-        mode = "upstream"
-        upstream_server = args.upstream_proxy
-    if c > 1:
-        raise exceptions.OptionsError(
-            "Transparent, SOCKS5, reverse and upstream proxy mode "
-            "are mutually exclusive. Read the docs on proxy modes "
-            "to understand why."
-        )
-
     if args.add_upstream_certs_to_client_chain and not args.upstream_cert:
         raise exceptions.OptionsError(
             "The no-upstream-cert and add-upstream-certs-to-client-chain "
@@ -99,7 +70,7 @@ def get_common_options(args):
         listen_host = args.listen_host,
         listen_port = args.listen_port,
         upstream_bind_address = args.upstream_bind_address,
-        mode = mode,
+        mode = args.mode,
         upstream_cert = args.upstream_cert,
         spoof_source_address = args.spoof_source_address,
 
@@ -108,7 +79,6 @@ def get_common_options(args):
         websocket = args.websocket,
         rawtcp = args.rawtcp,
 
-        upstream_server = upstream_server,
         upstream_auth = args.upstream_auth,
         ssl_version_client = args.ssl_version_client,
         ssl_version_server = args.ssl_version_server,
@@ -152,39 +122,6 @@ def basic_options(parser, opts):
     opts.make_parser(parser, "anticomp")
     opts.make_parser(parser, "body_size_limit", metavar="SIZE")
     opts.make_parser(parser, "stream_large_bodies")
-
-
-def proxy_modes(parser, opts):
-    group = parser.add_argument_group("Proxy Modes")
-    group.add_argument(
-        "-R", "--reverse",
-        action="store",
-        type=str,
-        dest="reverse_proxy",
-        help="""
-            Forward all requests to upstream HTTP server:
-            http[s]://host[:port]. Clients can always connect both
-            via HTTPS and HTTP, the connection to the server is
-            determined by the specified scheme.
-        """
-    )
-    group.add_argument(
-        "--socks",
-        action="store_true", dest="socks_proxy",
-        help="Set SOCKS5 proxy mode."
-    )
-    group.add_argument(
-        "-T", "--transparent",
-        action="store_true", dest="transparent_proxy",
-        help="Set transparent proxy mode."
-    )
-    group.add_argument(
-        "-U", "--upstream",
-        action="store",
-        type=str,
-        dest="upstream_proxy",
-        help="Forward all requests to upstream proxy server: http://host[:port]"
-    )
 
 
 def proxy_options(parser, opts):
@@ -315,8 +252,8 @@ def common_options(parser, opts):
         metavar="PATH",
         help="Configuration file"
     )
+    opts.make_parser(parser, "mode")
     basic_options(parser, opts)
-    proxy_modes(parser, opts)
     proxy_options(parser, opts)
     proxy_ssl_options(parser, opts)
     onboarding_app(parser, opts)

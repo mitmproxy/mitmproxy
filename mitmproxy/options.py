@@ -22,6 +22,11 @@ view_orders = [
     "size",
 ]
 
+
+def get_mode_spec(m):
+    return m.split(":", maxsplit=1)[1]
+
+
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
@@ -247,7 +252,14 @@ class Options(optmanager.OptManager):
             "upstream_bind_address", "", str,
             "Address to bind upstream requests to (defaults to none)"
         )
-        self.add_option("mode", "regular", str)
+        self.add_option(
+            "mode", "regular", str,
+            """
+                Mode can be "regular", "transparent", "socks5", "reverse:SPEC",
+                or "upstream:SPEC". For reverse and upstream proxy modes, SPEC
+                is proxy specification in the form of "http[s]://host[:port]".
+            """
+        )
         self.add_option(
             "upstream_cert", True, bool,
             "Connect to upstream server to look up certificate details."
@@ -285,7 +297,6 @@ class Options(optmanager.OptManager):
             "Use the client's IP for server-side connections. "
             "Combine with --upstream-bind-address to spoof a fixed source address."
         )
-        self.add_option("upstream_server", None, Optional[str])
         self.add_option(
             "upstream_auth", None, Optional[str],
             """
