@@ -22,11 +22,11 @@ class TestReplace:
     def test_configure(self):
         r = replace.Replace()
         with taddons.context() as tctx:
-            tctx.configure(r, replacements=[("one", "two", "three")])
+            tctx.configure(r, replacements=["one/two/three"])
             with pytest.raises(Exception, match="Invalid filter pattern"):
-                tctx.configure(r, replacements=[("~b", "two", "three")])
+                tctx.configure(r, replacements=["/~b/two/three"])
             with pytest.raises(Exception, match="Invalid regular expression"):
-                tctx.configure(r, replacements=[("foo", "+", "three")])
+                tctx.configure(r, replacements=["/foo/+/three"])
             tctx.configure(r, replacements=["/a/b/c/"])
 
     def test_simple(self):
@@ -35,8 +35,8 @@ class TestReplace:
             tctx.configure(
                 r,
                 replacements = [
-                    ("~q", "foo", "bar"),
-                    ("~s", "foo", "bar"),
+                    "/~q/foo/bar",
+                    "/~s/foo/bar",
                 ]
             )
             f = tflow.tflow()
@@ -58,10 +58,10 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
         self.proxy.tmaster.addons.add(sa)
 
         self.proxy.tmaster.options.replacements = [
-            ("~q", "foo", "bar"),
-            ("~q", "bar", "baz"),
-            ("~q", "foo", "oh noes!"),
-            ("~s", "baz", "ORLY")
+            "/~q/foo/bar",
+            "/~q/bar/baz",
+            "/~q/foo/oh noes!",
+            "/~s/baz/ORLY"
         ]
         p = self.pathoc()
         with p.connect():
@@ -81,9 +81,9 @@ class TestReplaceFile:
                 tctx.configure(
                     r,
                     replacement_files = [
-                        ("~q", "foo", rp),
-                        ("~s", "foo", rp),
-                        ("~b nonexistent", "nonexistent", "nonexistent"),
+                        "/~q/foo/" + rp,
+                        "/~s/foo/" + rp,
+                        "/~b nonexistent/nonexistent/nonexistent",
                     ]
                 )
                 f = tflow.tflow()

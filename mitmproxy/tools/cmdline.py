@@ -198,21 +198,8 @@ def replacements(parser, opts):
             for more information.
         """.strip()
     )
-    group.add_argument(
-        "--replace",
-        action="append", type=str, dest="replacements",
-        metavar="PATTERN",
-        help="Replacement pattern."
-    )
-    group.add_argument(
-        "--replace-from-file",
-        action="append", type=str, dest="replacement_files",
-        metavar="PATH",
-        help="""
-            Replacement pattern, where the replacement clause is a path to a
-            file.
-        """
-    )
+    opts.make_parser(group, "replacements", metavar="PATTERN")
+    opts.make_parser(group, "replacement_files", metavar="PATTERN")
 
 
 def set_headers(parser, opts):
@@ -224,12 +211,7 @@ def set_headers(parser, opts):
             documentation for more information.
         """.strip()
     )
-    group.add_argument(
-        "--setheader",
-        action="append", type=str, dest="setheaders",
-        metavar="PATTERN",
-        help="Header set pattern."
-    )
+    opts.make_parser(group, "setheaders", metavar="PATTERN")
 
 
 def proxy_authentication(parser, opts):

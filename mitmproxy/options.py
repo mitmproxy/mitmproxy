@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from mitmproxy.net import tcp
 from mitmproxy import optmanager
@@ -114,14 +114,26 @@ class Options(optmanager.OptManager):
             "showhost", False, bool,
             "Use the Host header to construct URLs for display."
         )
-        self.add_option("replacements", [], Sequence[Union[Tuple[str, str, str], str]])
-        self.add_option("replacement_files", [], Sequence[Union[Tuple[str, str, str], str]])
+        self.add_option(
+            "replacements", [], Sequence[str],
+            "Replacement patterns."
+        )
+        self.add_option(
+            "replacement_files", [], Sequence[str],
+            """
+                Replacement pattern, where the replacement clause is a path to a
+                file.
+            """
+        )
         self.add_option(
             "server_replay_use_headers", [], Sequence[str],
             "Request headers to be considered during replay. "
             "Can be passed multiple times."
         )
-        self.add_option("setheaders", [], Sequence[Union[Tuple[str, str, str], str]])
+        self.add_option(
+            "setheaders", [], Sequence[str],
+            help="Header set pattern."
+        )
         self.add_option(
             "server_replay", [], Sequence[str],
             "Replay server responses from a saved file."
