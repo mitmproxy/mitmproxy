@@ -20,14 +20,15 @@ unset = object()
 
 
 class _Option:
-    __slots__ = ("name", "typespec", "value", "_default", "help")
+    __slots__ = ("name", "typespec", "value", "_default", "choices", "help")
 
     def __init__(
         self,
         name: str,
         default: typing.Any,
         typespec: typing.Type,
-        help: typing.Optional[str]
+        help: typing.Optional[str],
+        choices: typing.Optional[typing.Sequence[str]]
     ) -> None:
         typecheck.check_type(name, default, typespec)
         self.name = name
@@ -35,6 +36,7 @@ class _Option:
         self.typespec = typespec
         self.value = unset
         self.help = help
+        self.choices = choices
 
     def __repr__(self):
         return "{value} [{type}]".format(value=self.current(), type=self.typespec)
@@ -67,7 +69,9 @@ class _Option:
         return True
 
     def __deepcopy__(self, _):
-        o = _Option(self.name, self.default, self.typespec, self.help)
+        o = _Option(
+            self.name, self.default, self.typespec, self.help, self.choices
+        )
         if self.has_changed():
             o.value = self.current()
         return o
@@ -98,11 +102,12 @@ class OptManager:
         name: str,
         default: typing.Any,
         typespec: typing.Type,
-        help: str = None
+        help: typing.Optional[str] = None,
+        choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
         if name in self._options:
             raise ValueError("Option %s already exists" % name)
-        self._options[name] = _Option(name, default, typespec, help)
+        self._options[name] = _Option(name, default, typespec, help, choices)
 
     @contextlib.contextmanager
     def rollback(self, updated):
@@ -337,7 +342,7 @@ class OptManager:
                 type=int,
                 dest=option,
                 help=o.help,
-                metavar=metavar
+                metavar=metavar,
             )
         elif o.typespec in (str, typing.Optional[str]):
             parser.add_argument(
@@ -346,7 +351,8 @@ class OptManager:
                 type=str,
                 dest=option,
                 help=o.help,
-                metavar=metavar
+                metavar=metavar,
+                choices=o.choices
             )
         elif o.typespec == typing.Sequence[str]:
             parser.add_argument(
@@ -355,7 +361,8 @@ class OptManager:
                 type=str,
                 dest=option,
                 help=o.help,
-                metavar=metavar
+                metavar=metavar,
+                choices=o.choices,
             )
         else:
             raise ValueError("Unsupported option type: %s", o.typespec)

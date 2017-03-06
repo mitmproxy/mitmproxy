@@ -1,6 +1,26 @@
 from typing import Tuple, Optional, Sequence, Union
 
+from mitmproxy.net import tcp
 from mitmproxy import optmanager
+
+
+# We redefine these here for now to avoid importing Urwid-related guff on
+# platforms that don't support it, and circular imports. We can do better using
+# a lazy checker down the track.
+console_palettes = [
+    "lowlight",
+    "lowdark",
+    "light",
+    "dark",
+    "solarized_light",
+    "solarized_dark"
+]
+view_orders = [
+    "time",
+    "method",
+    "url",
+    "size",
+]
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -260,8 +280,20 @@ class Options(optmanager.OptManager):
                 requests. Format: username:password
             """
         )
-        self.add_option("ssl_version_client", "secure", str)
-        self.add_option("ssl_version_server", "secure", str)
+        self.add_option(
+            "ssl_version_client", "secure", str,
+            "Set supported SSL/TLS versions for client connections. "
+            "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which "
+            "is TLS1.0+.",
+            choices=tcp.sslversion_choices.keys(),
+        )
+        self.add_option(
+            "ssl_version_server", "secure", str,
+            "Set supported SSL/TLS versions for server connections. "
+            "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, "
+            "which is TLS1.0+.",
+            choices=tcp.sslversion_choices.keys(),
+        )
         self.add_option(
             "ssl_insecure", False, bool,
             "Do not verify upstream server SSL/TLS certificates."
@@ -298,7 +330,11 @@ class Options(optmanager.OptManager):
             "console_focus_follow", False, bool,
             "Focus follows new flows."
         )
-        self.add_option("console_palette", "dark", Optional[str])
+        self.add_option(
+            "console_palette", "dark", Optional[str],
+            help="Select color palette: " + ", ".join(console_palettes),
+            choices=sorted(console_palettes),
+        )
         self.add_option(
             "console_palette_transparent", False, bool,
             "Set transparent background for palette."
@@ -307,10 +343,12 @@ class Options(optmanager.OptManager):
             "console_mouse", True, bool,
             "Console mouse interaction."
         )
-        self.add_option("console_order", None, Optional[str])
         self.add_option(
-            "console_order_reversed", False, bool,
+            "console_order", None, Optional[str],
+            "Flow sort order.",
+            choices=view_orders,
         )
+        self.add_option("console_order_reversed", False, bool)
 
         self.add_option(
             "filter", None, Optional[str],

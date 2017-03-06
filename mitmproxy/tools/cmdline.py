@@ -4,9 +4,7 @@ import os
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import platform
-from mitmproxy.net import tcp
 from mitmproxy import version
-from mitmproxy.addons import view
 
 
 CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
@@ -264,20 +262,8 @@ def proxy_ssl_options(parser, opts):
     opts.make_parser(group, "ssl_insecure")
     opts.make_parser(group, "ssl_verify_upstream_trusted_cadir", metavar="PATH")
     opts.make_parser(group, "ssl_verify_upstream_trusted_ca", metavar="PATH")
-    group.add_argument(
-        "--ssl-version-client", dest="ssl_version_client",
-        action="store",
-        choices=tcp.sslversion_choices.keys(),
-        help="Set supported SSL/TLS versions for client connections. "
-             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
-    )
-    group.add_argument(
-        "--ssl-version-server", dest="ssl_version_server",
-        action="store",
-        choices=tcp.sslversion_choices.keys(),
-        help="Set supported SSL/TLS versions for server connections. "
-             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
-    )
+    opts.make_parser(group, "ssl_version_client", metavar="VERSION")
+    opts.make_parser(group, "ssl_version_server", metavar="VERSION")
 
 
 def onboarding_app(parser, opts):
@@ -387,25 +373,14 @@ def common_options(parser, opts):
 def mitmproxy(opts):
     # Don't import mitmproxy.tools.console for mitmdump, urwid is not available
     # on all platforms.
-    from .console import palettes
-
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
     common_options(parser, opts)
-    parser.add_argument(
-        "--palette", type=str,
-        action="store", dest="console_palette",
-        choices=sorted(palettes.palettes.keys()),
-        help="Select color palette: " + ", ".join(palettes.palettes.keys())
-    )
+
+    opts.make_parser(parser, "console_palette")
     opts.make_parser(parser, "console_palette_transparent")
     opts.make_parser(parser, "console_eventlog")
     opts.make_parser(parser, "console_focus_follow")
-    parser.add_argument(
-        "--order",
-        type=str, dest="console_order",
-        choices=[o[1] for o in view.orders],
-        help="Flow sort order."
-    )
+    opts.make_parser(parser, "console_order")
     opts.make_parser(parser, "console_mouse")
     group = parser.add_argument_group(
         "Filters",
