@@ -47,7 +47,6 @@ def process_options(parser, options, args):
             adict[n] = getattr(args, n)
     options.merge(adict)
 
-    debug.register_info_dumpers()
     pconf = config.ProxyConfig(options)
     if options.no_server:
         return server.DummyServer(pconf)
@@ -59,46 +58,18 @@ def process_options(parser, options, args):
             sys.exit(1)
 
 
-def mitmproxy(args=None):  # pragma: no cover
-    if os.name == "nt":
-        print("Error: mitmproxy's console interface is not supported on Windows. "
-              "You can run mitmdump or mitmweb instead.", file=sys.stderr)
-        sys.exit(1)
-    from mitmproxy.tools import console
-
+def run(MasterKlass, args):  # pragma: no cover
     version_check.check_pyopenssl_version()
-    assert_utf8_env()
+    debug.register_info_dumpers()
 
-    console_options = options.Options()
-    parser = cmdline.mitmproxy(console_options)
-    args = parser.parse_args(args)
-
-    try:
-        console_options.load_paths(args.conf)
-        server = process_options(parser, console_options, args)
-        m = console.master.ConsoleMaster(console_options, server)
-    except exceptions.OptionsError as e:
-        print("mitmproxy: %s" % e, file=sys.stderr)
-        sys.exit(1)
-    try:
-        m.run()
-    except (KeyboardInterrupt, RuntimeError):
-        pass
-
-
-def mitmdump(args=None):  # pragma: no cover
-    from mitmproxy.tools import dump
-
-    version_check.check_pyopenssl_version()
-
-    dump_options = options.Options()
-    parser = cmdline.mitmdump(dump_options)
+    opts = options.Options()
+    parser = cmdline.mitmdump(opts)
     args = parser.parse_args(args)
     master = None
     try:
-        dump_options.load_paths(args.conf)
-        server = process_options(parser, dump_options, args)
-        master = dump.DumpMaster(dump_options, server)
+        opts.load_paths(args.conf)
+        server = process_options(parser, opts, args)
+        master = MasterKlass(opts, server)
 
         def cleankill(*args, **kwargs):
             master.shutdown()
@@ -106,32 +77,31 @@ def mitmdump(args=None):  # pragma: no cover
         signal.signal(signal.SIGTERM, cleankill)
         master.run()
     except exceptions.OptionsError as e:
-        print("mitmdump: %s" % e, file=sys.stderr)
+        print("%s: %s" % (sys.argv[0], e), file=sys.stderr)
         sys.exit(1)
     except (KeyboardInterrupt, RuntimeError):
         pass
-    if master is None or master.has_errored:
-        print("mitmdump: errors occurred during run", file=sys.stderr)
+    if master is None or getattr(master, "has_errored", None):
+        print("%s: errors occurred during run" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
+
+
+def mitmproxy(args=None):  # pragma: no cover
+    if os.name == "nt":
+        print("Error: mitmproxy's console interface is not supported on Windows. "
+              "You can run mitmdump or mitmweb instead.", file=sys.stderr)
+        sys.exit(1)
+    assert_utf8_env()
+
+    from mitmproxy.tools import console
+    run(console.master.ConsoleMaster, args)
+
+
+def mitmdump(args=None):  # pragma: no cover
+    from mitmproxy.tools import dump
+    run(dump.DumpMaster, args)
 
 
 def mitmweb(args=None):  # pragma: no cover
     from mitmproxy.tools import web
-
-    version_check.check_pyopenssl_version()
-
-    web_options = options.Options()
-    parser = cmdline.mitmweb(web_options)
-    args = parser.parse_args(args)
-
-    try:
-        web_options.load_paths(args.conf)
-        server = process_options(parser, web_options, args)
-        m = web.master.WebMaster(web_options, server)
-    except exceptions.OptionsError as e:
-        print("mitmweb: %s" % e, file=sys.stderr)
-        sys.exit(1)
-    try:
-        m.run()
-    except (KeyboardInterrupt, RuntimeError):
-        pass
+    run(web.master.WebMaster, args)

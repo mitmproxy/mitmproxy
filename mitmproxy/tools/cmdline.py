@@ -8,7 +8,7 @@ from mitmproxy import version
 CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
 
 
-def basic_options(parser, opts):
+def common_options(parser, opts):
     parser.add_argument(
         '--version',
         action='store_true',
@@ -20,30 +20,38 @@ def basic_options(parser, opts):
         help="show program's short version number and exit",
         version=version.VERSION
     )
-    opts.make_parser(parser, "anticache")
-    opts.make_parser(parser, "cadir")
-    opts.make_parser(parser, "showhost")
     parser.add_argument(
         "-q", "--quiet",
         action="store_true", dest="quiet",
         help="Quiet."
     )
-    opts.make_parser(parser, "rfile")
-    opts.make_parser(parser, "scripts", metavar="SCRIPT")
-    opts.make_parser(parser, "stickycookie", metavar="FILTER")
-    opts.make_parser(parser, "stickyauth", metavar="FILTER")
     parser.add_argument(
         "-v", "--verbose",
         action="store_const", dest="verbose", const=3,
         help="Increase log verbosity."
     )
+    parser.add_argument(
+        "--conf",
+        type=str, dest="conf", default=CONFIG_PATH,
+        metavar="PATH",
+        help="Configuration file"
+    )
+
+    # Basic options
+    opts.make_parser(parser, "mode")
+    opts.make_parser(parser, "anticache")
+    opts.make_parser(parser, "cadir")
+    opts.make_parser(parser, "showhost")
+    opts.make_parser(parser, "rfile")
+    opts.make_parser(parser, "scripts", metavar="SCRIPT")
+    opts.make_parser(parser, "stickycookie", metavar="FILTER")
+    opts.make_parser(parser, "stickyauth", metavar="FILTER")
     opts.make_parser(parser, "streamfile")
     opts.make_parser(parser, "anticomp")
     opts.make_parser(parser, "body_size_limit", metavar="SIZE")
     opts.make_parser(parser, "stream_large_bodies")
 
-
-def proxy_options(parser, opts):
+    # Proxy options
     group = parser.add_argument_group("Proxy Options")
     opts.make_parser(group, "listen_host")
     opts.make_parser(group, "ignore_hosts", metavar="HOST")
@@ -64,9 +72,7 @@ def proxy_options(parser, opts):
     opts.make_parser(group, "upstream_bind_address", metavar="ADDR")
     opts.make_parser(group, "keep_host_header")
 
-
-def proxy_ssl_options(parser, opts):
-    # TODO: Agree to consistently either use "upstream" or "server".
+    # Proxy SSL options
     group = parser.add_argument_group("SSL")
     opts.make_parser(group, "certs", metavar="SPEC")
     opts.make_parser(group, "ciphers_server", metavar="CIPHERS")
@@ -80,20 +86,17 @@ def proxy_ssl_options(parser, opts):
     opts.make_parser(group, "ssl_version_client", metavar="VERSION")
     opts.make_parser(group, "ssl_version_server", metavar="VERSION")
 
-
-def onboarding_app(parser, opts):
+    # Onboarding app
     group = parser.add_argument_group("Onboarding App")
     opts.make_parser(group, "onboarding")
     opts.make_parser(group, "onboarding_host", metavar="HOST")
     opts.make_parser(group, "onboarding_port", metavar="PORT")
 
-
-def client_replay(parser, opts):
+    # Client replay
     group = parser.add_argument_group("Client Replay")
     opts.make_parser(group, "client_replay", metavar="PATH")
 
-
-def server_replay(parser, opts):
+    # Server replay
     group = parser.add_argument_group("Server Replay")
     opts.make_parser(group, "server_replay", metavar="PATH")
     opts.make_parser(group, "replay_kill_extra")
@@ -107,8 +110,7 @@ def server_replay(parser, opts):
     opts.make_parser(payload, "server_replay_ignore_params")
     opts.make_parser(payload, "server_replay_ignore_host")
 
-
-def replacements(parser, opts):
+    # Replacements
     group = parser.add_argument_group(
         "Replacements",
         """
@@ -120,8 +122,7 @@ def replacements(parser, opts):
     opts.make_parser(group, "replacements", metavar="PATTERN")
     opts.make_parser(group, "replacement_files", metavar="PATTERN")
 
-
-def set_headers(parser, opts):
+    # Set headers
     group = parser.add_argument_group(
         "Set Headers",
         """
@@ -132,8 +133,7 @@ def set_headers(parser, opts):
     )
     opts.make_parser(group, "setheaders", metavar="PATTERN")
 
-
-def proxy_authentication(parser, opts):
+    # Proxy authentication
     group = parser.add_argument_group(
         "Proxy Authentication",
         """
@@ -144,25 +144,6 @@ def proxy_authentication(parser, opts):
     opts.make_parser(group, "auth_nonanonymous")
     opts.make_parser(group, "auth_singleuser", metavar="USER:PASS")
     opts.make_parser(group, "auth_htpasswd", metavar="PATH")
-
-
-def common_options(parser, opts):
-    parser.add_argument(
-        "--conf",
-        type=str, dest="conf", default=CONFIG_PATH,
-        metavar="PATH",
-        help="Configuration file"
-    )
-    opts.make_parser(parser, "mode")
-    basic_options(parser, opts)
-    proxy_options(parser, opts)
-    proxy_ssl_options(parser, opts)
-    onboarding_app(parser, opts)
-    client_replay(parser, opts)
-    server_replay(parser, opts)
-    replacements(parser, opts)
-    set_headers(parser, opts)
-    proxy_authentication(parser, opts)
 
 
 def mitmproxy(opts):
