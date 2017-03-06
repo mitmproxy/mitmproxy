@@ -68,7 +68,7 @@ class LogBufferBox(urwid.ListBox):
             self.set_focus(0)
         elif key == "F":
             o = self.master.options
-            o.focus_follow = not o.focus_follow
+            o.console_focus_follow = not o.console_focus_follow
         return urwid.ListBox.keypress(self, size, key)
 
 
