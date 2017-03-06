@@ -110,7 +110,7 @@ class OptManager:
         self._options[name] = _Option(name, default, typespec, help, choices)
 
     @contextlib.contextmanager
-    def rollback(self, updated):
+    def rollback(self, updated, reraise=False):
         old = copy.deepcopy(self._options)
         try:
             yield
@@ -120,6 +120,8 @@ class OptManager:
             # Rollback
             self.__dict__["_options"] = old
             self.changed.send(self, updated=updated)
+            if reraise:
+                raise e
 
     def subscribe(self, func, opts):
         """
@@ -337,7 +339,7 @@ class OptManager:
                 dest=option,
                 help=o.help
             )
-            parser.set_defaults(**{option: o.default})
+            parser.set_defaults(**{option: None})
         elif o.typespec in (int, typing.Optional[int]):
             parser.add_argument(
                 "--%s" % f,

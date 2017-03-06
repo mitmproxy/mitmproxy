@@ -38,6 +38,12 @@ class TM(optmanager.OptManager):
         self.add_option("one", None, typing.Optional[str])
 
 
+def test_add_option():
+    o = TO()
+    with pytest.raises(ValueError, match="already exists"):
+        o.add_option("one", None, typing.Optional[int])
+
+
 def test_defaults():
     o = TD2()
     defaults = {
@@ -162,6 +168,8 @@ def test_rollback():
     def err(opts, updated):
         if opts.one == 10:
             raise exceptions.OptionsError()
+        if opts.bool is True:
+            raise exceptions.OptionsError()
 
     o.changed.connect(sub)
     o.changed.connect(err)
@@ -169,15 +177,24 @@ def test_rollback():
 
     assert o.one is None
     o.one = 10
+    o.bool = True
     assert isinstance(recerr[0]["exc"], exceptions.OptionsError)
     assert o.one is None
-    assert len(rec) == 2
+    assert o.bool is False
+    assert len(rec) == 4
     assert rec[0].one == 10
     assert rec[1].one is None
+    assert rec[2].bool is True
+    assert rec[3].bool is False
+
+    with pytest.raises(exceptions.OptionsError):
+        with o.rollback(set(["one"]), reraise=True):
+            raise exceptions.OptionsError()
 
 
-def test_repr():
+def test_simple():
     assert repr(TO())
+    assert "one" in TO()
 
 
 def test_serialize():

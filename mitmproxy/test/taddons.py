@@ -61,5 +61,6 @@ class context:
             Options object with the given keyword arguments, then calls the
             configure method on the addon with the updated value.
         """
-        self.options.update(**kwargs)
-        addon.configure(self.options, kwargs.keys())
+        with self.options.rollback(kwargs.keys(), reraise=True):
+            self.options.update(**kwargs)
+            addon.configure(self.options, kwargs.keys())

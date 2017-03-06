@@ -13,6 +13,18 @@ def test_simple():
         tctx.configure(sa, body_size_limit = "1m")
         assert tctx.options._processed["body_size_limit"]
 
+        with pytest.raises(exceptions.OptionsError, match="mutually exclusive"):
+            tctx.configure(
+                sa,
+                add_upstream_certs_to_client_chain = True,
+                upstream_cert = False
+            )
+        with pytest.raises(exceptions.OptionsError, match="Invalid mode"):
+            tctx.configure(
+                sa,
+                mode = "Flibble"
+            )
+
 
 @mock.patch("mitmproxy.platform.original_addr", None)
 def test_no_transparent():

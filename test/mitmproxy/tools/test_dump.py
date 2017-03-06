@@ -3,6 +3,7 @@ import pytest
 from unittest import mock
 
 from mitmproxy import proxy
+from mitmproxy import exceptions
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import options
@@ -26,9 +27,9 @@ class TestDumpMaster(tservers.MasterTest):
                 self.mkmaster(None, rfile=p),
                 1, b"",
             )
-            with pytest.raises(dump.DumpError):
+            with pytest.raises(exceptions.OptionsError):
                 self.mkmaster(None, rfile="/nonexistent")
-            with pytest.raises(dump.DumpError):
+            with pytest.raises(exceptions.OptionsError):
                 self.mkmaster(None, rfile="test_dump.py")
 
     def test_has_error(self):

@@ -6,10 +6,6 @@ from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
 
 
-class DumpError(Exception):
-    pass
-
-
 class DumpMaster(master.Master):
 
     def __init__(
@@ -38,7 +34,7 @@ class DumpMaster(master.Master):
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
                 self.add_log("Flow file corrupted.", "error")
-                raise DumpError(v)
+                raise exceptions.OptionsError(v)
 
     @controller.handler
     def log(self, e):

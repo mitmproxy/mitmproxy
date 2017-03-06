@@ -105,7 +105,7 @@ def mitmdump(args=None):  # pragma: no cover
 
         signal.signal(signal.SIGTERM, cleankill)
         master.run()
-    except (dump.DumpError, exceptions.OptionsError) as e:
+    except exceptions.OptionsError as e:
         print("mitmdump: %s" % e, file=sys.stderr)
         sys.exit(1)
     except (KeyboardInterrupt, RuntimeError):

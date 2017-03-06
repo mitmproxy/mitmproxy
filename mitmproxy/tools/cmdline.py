@@ -8,10 +8,6 @@ from mitmproxy import version
 CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
 
 
-class ParseException(Exception):
-    pass
-
-
 def basic_options(parser, opts):
     parser.add_argument(
         '--version',
