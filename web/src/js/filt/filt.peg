@@ -217,6 +217,10 @@ function url(regex){
     urlFilter.desc = "url matches " + regex;
     return urlFilter;
 }
+function websocketFilter(flow){
+    return flow.type === "websocket";
+}
+websocketFilter.desc = "is a Websocket Flow";
 }
 
 start "filter expression"
@@ -278,6 +282,7 @@ Expr
   / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
   / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
   / "~u" ws+ s:StringLiteral { return url(s); }
+  / "~websocket" { return websocketFilter; }
   / s:StringLiteral { return url(s); }
 
 IntegerLiteral "integer"
