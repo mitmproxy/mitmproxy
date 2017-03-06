@@ -59,7 +59,7 @@ def test_simple():
             tctx.configure(sa, streamfile=None)
             assert rd(p)[0].response
 
-            tctx.configure(sa, streamfile=p, streamfile_append=True)
+            tctx.configure(sa, streamfile="+" + p)
             f = tflow.tflow()
             sa.request(f)
             tctx.configure(sa, streamfile=None)

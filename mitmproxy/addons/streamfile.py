@@ -35,11 +35,13 @@ class StreamFile:
             if self.stream:
                 self.done()
             if options.streamfile:
-                if options.streamfile_append:
+                if options.streamfile.startswith("+"):
+                    path = options.streamfile[1:]
                     mode = "ab"
                 else:
+                    path = options.streamfile
                     mode = "wb"
-                self.start_stream_to_path(options.streamfile, mode, self.filt)
+                self.start_stream_to_path(path, mode, self.filt)
 
     def tcp_start(self, flow):
         if self.stream:

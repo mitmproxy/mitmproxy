@@ -142,8 +142,10 @@ class Options(optmanager.OptManager):
             "Log verbosity."
         )
         self.add_option("default_contentview", "auto", str)
-        self.add_option("streamfile", None, Optional[str])
-        self.add_option("streamfile_append", False, bool)
+        self.add_option(
+            "streamfile", None, Optional[str],
+            help="Write flows to file. Prefix path with + to append."
+        )
         self.add_option(
             "server_replay_ignore_content", False, bool,
             "Ignore request's content while searching for a saved flow to replay."

@@ -15,18 +15,6 @@ class ParseException(Exception):
 
 
 def get_common_options(args):
-    if args.streamfile and args.streamfile[0] == args.rfile:
-        if args.streamfile[1] == "wb":
-            raise exceptions.OptionsError(
-                "Cannot use '{}' for both reading and writing flows. "
-                "Are you looking for --afile?".format(args.rfile)
-            )
-        else:
-            raise exceptions.OptionsError(
-                "Cannot use '{}' for both reading and appending flows. "
-                "That would trigger an infinite loop."
-            )
-
     # Proxy config
     certs = []
     for i in args.certs or []:
@@ -96,8 +84,7 @@ def get_common_options(args):
         stickyauth=args.stickyauth,
         stream_large_bodies=args.stream_large_bodies,
         showhost=args.showhost,
-        streamfile=args.streamfile[0] if args.streamfile else None,
-        streamfile_append=True if args.streamfile and args.streamfile[1] == "a" else False,
+        streamfile=args.streamfile,
         verbosity=args.verbose,
         server_replay_nopop=args.server_replay_nopop,
         server_replay_ignore_content=args.server_replay_ignore_content,
@@ -168,17 +155,7 @@ def basic_options(parser, opts):
         action="store_const", dest="verbose", const=3,
         help="Increase log verbosity."
     )
-    streamfile = parser.add_mutually_exclusive_group()
-    streamfile.add_argument(
-        "-w", "--wfile",
-        action="store", dest="streamfile", type=lambda f: (f, "w"),
-        help="Write flows to file."
-    )
-    streamfile.add_argument(
-        "-a", "--afile",
-        action="store", dest="streamfile", type=lambda f: (f, "a"),
-        help="Append flows to file."
-    )
+    opts.make_parser(parser, "streamfile")
     opts.make_parser(parser, "anticomp")
     opts.make_parser(parser, "body_size_limit", metavar="SIZE")
     opts.make_parser(parser, "stream_large_bodies")
