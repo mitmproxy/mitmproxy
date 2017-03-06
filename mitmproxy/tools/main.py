@@ -38,6 +38,14 @@ def process_options(parser, options, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
+    if args.quiet:
+        args.flow_detail = 0
+
+    adict = {}
+    for n in dir(args):
+        if n in options:
+            adict[n] = getattr(args, n)
+    options.merge(adict)
 
     debug.register_info_dumpers()
     pconf = config.ProxyConfig(options)
@@ -67,21 +75,6 @@ def mitmproxy(args=None):  # pragma: no cover
 
     try:
         console_options.load_paths(args.conf)
-        console_options.merge(cmdline.get_common_options(args))
-        console_options.merge(
-            dict(
-                console_palette = args.console_palette,
-                console_palette_transparent = args.console_palette_transparent,
-                console_eventlog = args.console_eventlog,
-                console_focus_follow = args.console_focus_follow,
-                console_mouse = args.console_mouse,
-                console_order = args.console_order,
-
-                filter = args.filter,
-                intercept = args.intercept,
-            )
-        )
-
         server = process_options(parser, console_options, args)
         m = console.master.ConsoleMaster(console_options, server)
     except exceptions.OptionsError as e:
@@ -101,21 +94,9 @@ def mitmdump(args=None):  # pragma: no cover
     dump_options = options.Options()
     parser = cmdline.mitmdump(dump_options)
     args = parser.parse_args(args)
-    if args.quiet:
-        args.flow_detail = 0
-
     master = None
     try:
         dump_options.load_paths(args.conf)
-        dump_options.merge(cmdline.get_common_options(args))
-        dump_options.merge(
-            dict(
-                flow_detail = args.flow_detail,
-                keepserving = args.keepserving,
-                filtstr = " ".join(args.filter) if args.filter else None,
-            )
-        )
-
         server = process_options(parser, dump_options, args)
         master = dump.DumpMaster(dump_options, server)
 
@@ -145,16 +126,6 @@ def mitmweb(args=None):  # pragma: no cover
 
     try:
         web_options.load_paths(args.conf)
-        web_options.merge(cmdline.get_common_options(args))
-        web_options.merge(
-            dict(
-                intercept = args.intercept,
-                web_open_browser = args.web_open_browser,
-                web_debug = args.web_debug,
-                web_iface = args.web_iface,
-                web_port = args.web_port,
-            )
-        )
         server = process_options(parser, web_options, args)
         m = web.master.WebMaster(web_options, server)
     except exceptions.OptionsError as e:

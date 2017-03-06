@@ -10,6 +10,13 @@ from mitmproxy.utils import human
 
 class Core:
     def configure(self, opts, updated):
+        if opts.add_upstream_certs_to_client_chain and not opts.upstream_cert:
+            raise exceptions.OptionsError(
+                "The no-upstream-cert and add-upstream-certs-to-client-chain "
+                "options are mutually exclusive. If no-upstream-cert is enabled "
+                "then the upstream certificate is not retrieved before generating "
+                "the client certificate chain."
+            )
         if "body_size_limit" in updated and opts.body_size_limit:
             try:
                 opts._processed["body_size_limit"] = human.parse_size(

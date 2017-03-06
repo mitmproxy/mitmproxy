@@ -6,6 +6,7 @@ import pytest
 
 
 from mitmproxy.tools import cmdline
+from mitmproxy.tools import main
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
@@ -33,7 +34,7 @@ class TestProcessProxyOptions:
         opts = options.Options()
         cmdline.common_options(parser, opts)
         args = parser.parse_args(args=args)
-        opts.merge(cmdline.get_common_options(args))
+        main.process_options(parser, opts, args)
         pconf = config.ProxyConfig(opts)
         return parser, pconf
 

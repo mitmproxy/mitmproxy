@@ -1,5 +1,6 @@
 import argparse
 from mitmproxy.tools import cmdline
+from mitmproxy.tools import main
 from mitmproxy import options
 
 
@@ -8,14 +9,7 @@ def test_common():
     opts = options.Options()
     cmdline.common_options(parser, opts)
     args = parser.parse_args(args=[])
-
-    assert cmdline.get_common_options(args)
-
-    args.stickycookie = "foo"
-    args.stickyauth = "foo"
-    v = cmdline.get_common_options(args)
-    assert v["stickycookie"] == "foo"
-    assert v["stickyauth"] == "foo"
+    assert main.process_options(parser, opts, args)
 
 
 def test_mitmproxy():

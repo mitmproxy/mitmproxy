@@ -162,6 +162,9 @@ class OptManager:
     def keys(self):
         return set(self._options.keys())
 
+    def __contains__(self, k):
+        return k in self._options
+
     def reset(self):
         """
             Restore defaults for all options.

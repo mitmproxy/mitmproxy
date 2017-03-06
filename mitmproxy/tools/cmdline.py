@@ -1,7 +1,6 @@
 import argparse
 import os
 
-from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import version
 
@@ -11,82 +10,6 @@ CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
 
 class ParseException(Exception):
     pass
-
-
-def get_common_options(args):
-    if args.add_upstream_certs_to_client_chain and not args.upstream_cert:
-        raise exceptions.OptionsError(
-            "The no-upstream-cert and add-upstream-certs-to-client-chain "
-            "options are mutually exclusive. If no-upstream-cert is enabled "
-            "then the upstream certificate is not retrieved before generating "
-            "the client certificate chain."
-        )
-
-    if args.quiet:
-        args.verbose = 0
-
-    return dict(
-        onboarding=args.onboarding,
-        onboarding_host=args.onboarding_host,
-        onboarding_port=args.onboarding_port,
-
-        anticache=args.anticache,
-        anticomp=args.anticomp,
-        client_replay=args.client_replay,
-        replay_kill_extra=args.replay_kill_extra,
-        no_server=args.no_server,
-        refresh_server_playback=args.refresh_server_playback,
-        server_replay_use_headers=args.server_replay_use_headers,
-        rfile=args.rfile,
-        replacements=args.replacements,
-        replacement_files=args.replacement_files,
-        setheaders=args.setheaders,
-        keep_host_header=args.keep_host_header,
-        server_replay=args.server_replay,
-        scripts=args.scripts,
-        stickycookie=args.stickycookie,
-        stickyauth=args.stickyauth,
-        stream_large_bodies=args.stream_large_bodies,
-        showhost=args.showhost,
-        streamfile=args.streamfile,
-        verbosity=args.verbose,
-        server_replay_nopop=args.server_replay_nopop,
-        server_replay_ignore_content=args.server_replay_ignore_content,
-        server_replay_ignore_params=args.server_replay_ignore_params,
-        server_replay_ignore_payload_params=args.server_replay_ignore_payload_params,
-        server_replay_ignore_host=args.server_replay_ignore_host,
-
-        auth_nonanonymous = args.auth_nonanonymous,
-        auth_singleuser = args.auth_singleuser,
-        auth_htpasswd = args.auth_htpasswd,
-        add_upstream_certs_to_client_chain = args.add_upstream_certs_to_client_chain,
-        body_size_limit = args.body_size_limit,
-        cadir = args.cadir,
-        certs = args.certs,
-        ciphers_client = args.ciphers_client,
-        ciphers_server = args.ciphers_server,
-        client_certs = args.client_certs,
-        ignore_hosts = args.ignore_hosts,
-        listen_host = args.listen_host,
-        listen_port = args.listen_port,
-        upstream_bind_address = args.upstream_bind_address,
-        mode = args.mode,
-        upstream_cert = args.upstream_cert,
-        spoof_source_address = args.spoof_source_address,
-
-        http2 = args.http2,
-        http2_priority = args.http2_priority,
-        websocket = args.websocket,
-        rawtcp = args.rawtcp,
-
-        upstream_auth = args.upstream_auth,
-        ssl_version_client = args.ssl_version_client,
-        ssl_version_server = args.ssl_version_server,
-        ssl_insecure = args.ssl_insecure,
-        ssl_verify_upstream_trusted_cadir = args.ssl_verify_upstream_trusted_cadir,
-        ssl_verify_upstream_trusted_ca = args.ssl_verify_upstream_trusted_ca,
-        tcp_hosts = args.tcp_hosts,
-    )
 
 
 def basic_options(parser, opts):
@@ -272,7 +195,7 @@ def mitmdump(opts):
     opts.make_parser(parser, "keepserving")
     opts.make_parser(parser, "flow_detail", metavar = "LEVEL")
     parser.add_argument(
-        'filter',
+        'filter_args',
         nargs="...",
         help="""
             Filter view expression, used to only show flows that match a certain filter.
