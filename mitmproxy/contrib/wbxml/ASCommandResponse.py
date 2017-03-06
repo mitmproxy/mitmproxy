@@ -41,7 +41,7 @@ class ASCommandResponse:
 				raise ValueError("Empty WBXML body passed")
 		except Exception as e:
 			self.xmlString = None
-			raise ValueError("Error: {0}".format(e.message))
+			raise ValueError("Error: {0}".format(e))
 
 	def getWBXMLBytes(self):
 		return self.wbxmlBytes
