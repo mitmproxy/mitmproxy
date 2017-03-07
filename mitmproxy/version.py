@@ -1,4 +1,4 @@
-IVERSION = (3, 0, 0, 'dev')
+IVERSION = (3, 0, 0)
 VERSION = ".".join(str(i) for i in IVERSION)
 PATHOD = "pathod " + VERSION
 MITMPROXY = "mitmproxy " + VERSION
