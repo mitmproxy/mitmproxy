@@ -21,6 +21,11 @@ def common_options(parser, opts):
         version=version.VERSION
     )
     parser.add_argument(
+        '--options',
+        action='store_true',
+        help="Dump all options",
+    )
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true", dest="quiet",
         help="Quiet."

@@ -6,6 +6,7 @@ import functools
 import weakref
 import os
 import typing
+import textwrap
 
 import ruamel.yaml
 
@@ -371,3 +372,22 @@ class OptManager:
             )
         else:
             raise ValueError("Unsupported option type: %s", o.typespec)
+
+
+def dump(opts):
+    """
+        Dumps an annotated file with all options.
+    """
+    # Sort data
+    s = ruamel.yaml.comments.CommentedMap()
+    for k in sorted(opts.keys()):
+        o = opts._options[k]
+        s[k] = o.default
+        if o.help:
+            s.yaml_set_comment_before_after_key(
+                k,
+                before = "\n" + "\n".join(textwrap.wrap(
+                    textwrap.dedent(o.help.strip())
+                )),
+            )
+    return ruamel.yaml.round_trip_dump(s)

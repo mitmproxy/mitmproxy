@@ -280,3 +280,8 @@ def test_option():
     assert o2 == o
     o2.set(5)
     assert o2 != o
+
+
+def test_dump():
+    o = options.Options()
+    assert optmanager.dump(o)

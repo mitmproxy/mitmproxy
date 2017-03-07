@@ -12,6 +12,7 @@ import signal  # noqa
 from mitmproxy.tools import cmdline  # noqa
 from mitmproxy import exceptions  # noqa
 from mitmproxy import options  # noqa
+from mitmproxy import optmanager  # noqa
 from mitmproxy.proxy import config  # noqa
 from mitmproxy.proxy import server  # noqa
 from mitmproxy.utils import version_check  # noqa
@@ -34,21 +35,24 @@ def assert_utf8_env():
         sys.exit(1)
 
 
-def process_options(parser, options, args):
+def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
+        sys.exit(0)
+    if args.options:
+        print(optmanager.dump(opts))
         sys.exit(0)
     if args.quiet:
         args.flow_detail = 0
 
     adict = {}
     for n in dir(args):
-        if n in options:
+        if n in opts:
             adict[n] = getattr(args, n)
-    options.merge(adict)
+    opts.merge(adict)
 
-    pconf = config.ProxyConfig(options)
-    if options.no_server:
+    pconf = config.ProxyConfig(opts)
+    if opts.no_server:
         return server.DummyServer(pconf)
     else:
         try:
