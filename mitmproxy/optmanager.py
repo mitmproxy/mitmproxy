@@ -323,6 +323,45 @@ class OptManager:
             options=options
         )
 
+    def set(self, spec):
+        parts = spec.split("=", maxsplit=1)
+        if len(parts) == 1:
+            optname, optval = parts[0], None
+        else:
+            optname, optval = parts[0], parts[1]
+        o = self._options[optname]
+
+        if o.typespec in (str, typing.Optional[str]):
+            setattr(self, optname, optval)
+        elif o.typespec in (int, typing.Optional[int]):
+            if optval:
+                try:
+                    optval = int(optval)
+                except ValueError:
+                    raise exceptions.OptionsError("Not an integer: %s" % optval)
+            setattr(self, optname, optval)
+        elif o.typespec == bool:
+            if not optval or optval == "true":
+                v = True
+            elif optval == "false":
+                v = False
+            else:
+                raise exceptions.OptionsError(
+                    "Boolean must be \"true\", \"false\", or have the value " "omitted (a synonym for \"true\")."
+                )
+            setattr(self, optname, v)
+        elif o.typespec == typing.Sequence[str]:
+            if not optval:
+                setattr(self, optname, [])
+            else:
+                setattr(
+                    self,
+                    optname,
+                    getattr(self, optname) + [optval]
+                )
+        else:
+            raise ValueError("Unsupported option type: %s", o.typespec)
+
     def make_parser(self, parser, optname, metavar=None):
         o = self._options[optname]
         f = optname.replace("_", "-")

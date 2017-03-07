@@ -45,6 +45,9 @@ def process_options(parser, opts, args):
     if args.quiet:
         args.flow_detail = 0
 
+    for i in args.setoptions:
+        opts.set(i)
+
     adict = {}
     for n in dir(args):
         if n in opts:

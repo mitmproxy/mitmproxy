@@ -26,6 +26,24 @@ def common_options(parser, opts):
         help="Dump all options",
     )
     parser.add_argument(
+        "--conf",
+        type=str, dest="conf", default=CONFIG_PATH,
+        metavar="PATH",
+        help="Read options from a configuration file"
+    )
+    parser.add_argument(
+        "--set",
+        type=str, dest="setoptions", default=[],
+        action="append",
+        metavar="option[=value]",
+        help="""
+            Set an option. When the value is omitted, booleans are set to true,
+            strings and integers are set to None (if permitted), and sequences
+            are emptied.
+        """
+    )
+
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true", dest="quiet",
         help="Quiet."
@@ -34,12 +52,6 @@ def common_options(parser, opts):
         "-v", "--verbose",
         action="store_const", dest="verbose", const=3,
         help="Increase log verbosity."
-    )
-    parser.add_argument(
-        "--conf",
-        type=str, dest="conf", default=CONFIG_PATH,
-        metavar="PATH",
-        help="Configuration file"
     )
 
     # Basic options

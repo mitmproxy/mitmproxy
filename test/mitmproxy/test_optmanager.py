@@ -292,8 +292,10 @@ class TTypes(optmanager.OptManager):
     def __init__(self):
         super().__init__()
         self.add_option("str", "str", str)
+        self.add_option("optstr", "optstr", typing.Optional[str])
         self.add_option("bool", False, bool)
         self.add_option("int", 0, int)
+        self.add_option("optint", 0, typing.Optional[int])
         self.add_option("seqstr", [], typing.Sequence[str])
         self.add_option("unknown", 0.0, float)
 
@@ -307,3 +309,41 @@ def test_make_parser():
     opts.make_parser(parser, "seqstr")
     with pytest.raises(ValueError):
         opts.make_parser(parser, "unknown")
+
+
+def test_set():
+    opts = TTypes()
+
+    opts.set("str=foo")
+    assert opts.str == "foo"
+    with pytest.raises(TypeError):
+        opts.set("str")
+
+    opts.set("optstr=foo")
+    assert opts.optstr == "foo"
+    opts.set("optstr")
+    assert opts.optstr is None
+
+    opts.set("bool=false")
+    assert opts.bool is False
+    opts.set("bool")
+    assert opts.bool is True
+    opts.set("bool=true")
+    assert opts.bool is True
+    with pytest.raises(exceptions.OptionsError):
+        opts.set("bool=wobble")
+
+    opts.set("int=1")
+    assert opts.int == 1
+    with pytest.raises(exceptions.OptionsError):
+        opts.set("int=wobble")
+    opts.set("optint")
+    assert opts.optint is None
+
+    assert opts.seqstr == []
+    opts.set("seqstr=foo")
+    assert opts.seqstr == ["foo"]
+    opts.set("seqstr=bar")
+    assert opts.seqstr == ["foo", "bar"]
+    opts.set("seqstr")
+    assert opts.seqstr == []
