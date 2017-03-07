@@ -61,12 +61,12 @@ times.
 Interactively
 -------------
 
-The :kbd:`R` shortcut key in the mitmproxy options menu (:kbd:`o`) lets you add and edit
+The :kbd:`R` shortcut key in the mitmproxy options menu (:kbd:`O`) lets you add and edit
 replacement hooks using a built-in editor. The context-sensitive help (:kbd:`?`) has
 complete usage information.
 
 ================== =======================
 command-line       ``--replace``,
                    ``--replace-from-file``
-mitmproxy shortcut :kbd:`o` then :kbd:`R`
+mitmproxy shortcut :kbd:`O` then :kbd:`R`
 ================== =======================
