@@ -302,7 +302,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
 class TestHTTPAuth(tservers.HTTPProxyTest):
     def test_auth(self):
         self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.options.auth_singleuser = "test:test"
+        self.master.options.proxyauth = "test:test"
         assert self.pathod("202").status_code == 407
         p = self.pathoc()
         with p.connect():
@@ -321,7 +321,7 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
 class TestHTTPReverseAuth(tservers.ReverseProxyTest):
     def test_auth(self):
         self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.options.auth_singleuser = "test:test"
+        self.master.options.proxyauth = "test:test"
         assert self.pathod("202").status_code == 401
         p = self.pathoc()
         with p.connect():

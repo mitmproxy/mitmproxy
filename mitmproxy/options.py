@@ -203,19 +203,14 @@ class Options(optmanager.OptManager):
 
         # Proxy options
         self.add_option(
-            "auth_nonanonymous", False, bool,
-            "Allow access to any user long as a credentials are specified."
-        )
-        self.add_option(
-            "auth_singleuser", None, Optional[str],
+            "proxyauth", None, Optional[str],
             """
-            Allows access to a a single user, specified in the form
-            username:password.
+            Require authentication before proxying requests. If the value is
+            "any", we prompt for authentication, but permit any values. If it
+            starts with an "@", it is treated as a path to an Apache htpasswd
+            file. If its is of the form "username:password", it is treated as a
+            single-user credential.
             """
-        )
-        self.add_option(
-            "auth_htpasswd", None, Optional[str],
-            "Allow access to users specified in an Apache htpasswd file."
         )
         self.add_option(
             "add_upstream_certs_to_client_chain", False, bool,

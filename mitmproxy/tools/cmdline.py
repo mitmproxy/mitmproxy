@@ -107,9 +107,7 @@ def common_options(parser, opts):
             used for authenticating them.
         """
     ).add_mutually_exclusive_group()
-    opts.make_parser(group, "auth_nonanonymous")
-    opts.make_parser(group, "auth_singleuser", metavar="USER:PASS")
-    opts.make_parser(group, "auth_htpasswd", metavar="PATH")
+    opts.make_parser(group, "proxyauth", metavar="SPEC")
 
 
 def mitmproxy(opts):
