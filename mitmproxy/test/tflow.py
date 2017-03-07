@@ -70,6 +70,7 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
         handshake_flow.response = resp
 
     f = websocket.WebSocketFlow(client_conn, server_conn, handshake_flow)
+    handshake_flow.metadata['websocket_flow'] = f
 
     if messages is True:
         messages = [
