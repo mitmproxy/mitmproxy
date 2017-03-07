@@ -359,8 +359,8 @@ class OptManager:
                     optname,
                     getattr(self, optname) + [optval]
                 )
-        else:
-            raise ValueError("Unsupported option type: %s", o.typespec)
+        else:  # pragma: no cover
+            raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     def make_parser(self, parser, optname, metavar=None):
         o = self._options[optname]
@@ -421,10 +421,25 @@ def dump(opts):
     for k in sorted(opts.keys()):
         o = opts._options[k]
         s[k] = o.default
-        s.yaml_set_comment_before_after_key(
-            k,
-            before = "\n" + "\n".join(textwrap.wrap(
-                textwrap.dedent(o.help.strip())
-            )),
+        txt = o.help.strip()
+
+        if o.choices:
+            txt += " Valid values are %s." % ", ".join(repr(c) for c in o.choices)
+        else:
+            if o.typespec in (str, int, bool):
+                t = o.typespec.__name__
+            elif o.typespec == typing.Optional[str]:
+                t = "optional str"
+            elif o.typespec == typing.Sequence[str]:
+                t = "sequence of str"
+            else:  # pragma: no cover
+                raise NotImplementedError
+            txt += " Type %s." % t
+
+        txt = "\n".join(
+            textwrap.wrap(
+                textwrap.dedent(txt)
+            )
         )
+        s.yaml_set_comment_before_after_key(k, before = "\n" + txt)
     return ruamel.yaml.round_trip_dump(s)

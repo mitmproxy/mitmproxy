@@ -56,9 +56,7 @@ class Options(optmanager.OptManager):
             "onboarding_host", APP_HOST, str,
             """
             Domain to serve the onboarding app from. For transparent mode, use
-            an IP when a DNS entry for the app domain is not present. Default:
-            %s
-            """ % APP_HOST
+            an IP when a DNS entry for the app domain is not present.             """
         )
         self.add_option(
             "onboarding_port", APP_PORT, int,
@@ -235,7 +233,7 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "cadir", CA_DIR, str,
-            "Location of the default mitmproxy CA files. (%s)" % CA_DIR
+            "Location of the default mitmproxy CA files."
         )
         self.add_option(
             "certs", [], Sequence[str],
@@ -251,11 +249,11 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "ciphers_client", DEFAULT_CLIENT_CIPHERS, str,
-            "Set supported ciphers for client connections. (OpenSSL Syntax)"
+            "Set supported ciphers for client connections using OpenSSL syntax."
         )
         self.add_option(
             "ciphers_server", None, Optional[str],
-            "Set supported ciphers for server connections. (OpenSSL Syntax)"
+            "Set supported ciphers for server connections using OpenSSL syntax."
         )
         self.add_option(
             "client_certs", None, Optional[str],
@@ -273,7 +271,7 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "listen_host", "", str,
-            "Address to bind proxy to (defaults to all interfaces)"
+            "Address to bind proxy to."
         )
         self.add_option(
             "listen_port", LISTEN_PORT, int,
@@ -281,7 +279,7 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "upstream_bind_address", "", str,
-            "Address to bind upstream requests to (defaults to none)"
+            "Address to bind upstream requests to."
         )
         self.add_option(
             "mode", "regular", str,
@@ -338,7 +336,7 @@ class Options(optmanager.OptManager):
             "upstream_auth", None, Optional[str],
             """
             Add HTTP Basic authentcation to upstream proxy and reverse proxy
-            requests. Format: username:password
+            requests. Format: username:password.
             """
         )
         self.add_option(
@@ -396,7 +394,7 @@ class Options(optmanager.OptManager):
             "Focus follows new flows."
         )
         self.add_option(
-            "console_palette", "dark", Optional[str],
+            "console_palette", "dark", str,
             "Color palette.",
             choices=sorted(console_palettes),
         )
@@ -426,11 +424,11 @@ class Options(optmanager.OptManager):
         # Web options
         self.add_option(
             "web_open_browser", True, bool,
-            "Start a browser"
+            "Start a browser."
         )
         self.add_option(
             "web_debug", False, bool,
-            "Mitmweb debugging"
+            "Mitmweb debugging."
         )
         self.add_option(
             "web_port", 8081, int,
@@ -444,11 +442,11 @@ class Options(optmanager.OptManager):
         # Dump options
         self.add_option(
             "filtstr", None, Optional[str],
-            "The filter string for mitmdump"
+            "The filter string for mitmdump."
         )
         self.add_option(
             "flow_detail", 1, int,
-            "Flow detail display level"
+            "Flow detail display level."
         )
 
         self.update(**kwargs)
