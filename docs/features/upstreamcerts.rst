@@ -19,5 +19,5 @@ Upstream cert sniffing is on by default, and can optionally be turned off.
 
 ================== ======================
 command-line       ``--no-upstream-cert``
-mitmproxy shortcut :kbd:`o` then :kbd:`U`
+mitmproxy shortcut :kbd:`O` then :kbd:`U`
 ================== ======================

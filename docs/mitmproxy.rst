@@ -66,7 +66,7 @@ At the moment, the Grid Editor is used in four parts of mitmproxy:
   - Editing request or response headers (:kbd:`e` for edit, then :kbd:`h` for headers in flow view)
   - Editing a query string (:kbd:`e` for edit, then :kbd:`q` for query in flow view)
   - Editing a URL-encoded form (:kbd:`e` for edit, then :kbd:`f` for form in flow view)
-  - Editing replacement patterns (:kbd:`o` for options, then :kbd:`R` for Replacement Patterns)
+  - Editing replacement patterns (:kbd:`O` for options, then :kbd:`R` for Replacement Patterns)
 
 If there is is no data, an empty editor will be started to let you add some.
 Here is the editor showing the headers from a request:
