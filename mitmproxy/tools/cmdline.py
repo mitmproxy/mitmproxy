@@ -91,26 +91,12 @@ def common_options(parser, opts):
     opts.make_parser(group, "server_replay_nopop")
 
     # Replacements
-    group = parser.add_argument_group(
-        "Replacements",
-        """
-            Replacements are of the form "/pattern/regex/replacement", where
-            the separator can be any character. Please see the documentation
-            for more information.
-        """.strip()
-    )
+    group = parser.add_argument_group("Replacements")
     opts.make_parser(group, "replacements", metavar="PATTERN")
     opts.make_parser(group, "replacement_files", metavar="PATTERN")
 
     # Set headers
-    group = parser.add_argument_group(
-        "Set Headers",
-        """
-            Header specifications are of the form "/pattern/header/value",
-            where the separator can be any character. Please see the
-            documentation for more information.
-        """.strip()
-    )
+    group = parser.add_argument_group("Set Headers")
     opts.make_parser(group, "setheaders", metavar="PATTERN")
 
     # Proxy authentication
@@ -149,8 +135,8 @@ def mitmdump(opts):
         'filter_args',
         nargs="...",
         help="""
-            Filter view expression, used to only show flows that match a certain filter.
-            See help in mitmproxy for filter expression syntax.
+            Filter view expression, used to only show flows that match a certain
+            filter. See help in mitmproxy for filter expression syntax.
         """
     )
     return parser

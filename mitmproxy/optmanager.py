@@ -28,7 +28,7 @@ class _Option:
         name: str,
         default: typing.Any,
         typespec: typing.Type,
-        help: typing.Optional[str],
+        help: str,
         choices: typing.Optional[typing.Sequence[str]]
     ) -> None:
         typecheck.check_type(name, default, typespec)
@@ -103,7 +103,7 @@ class OptManager:
         name: str,
         default: typing.Any,
         typespec: typing.Type,
-        help: typing.Optional[str] = None,
+        help: str,
         choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
         if name in self._options:
@@ -404,7 +404,7 @@ class OptManager:
                 action="append",
                 type=str,
                 dest=optname,
-                help=o.help,
+                help=o.help + " May be passed multiple times.",
                 metavar=metavar,
                 choices=o.choices,
             )
@@ -421,11 +421,10 @@ def dump(opts):
     for k in sorted(opts.keys()):
         o = opts._options[k]
         s[k] = o.default
-        if o.help:
-            s.yaml_set_comment_before_after_key(
-                k,
-                before = "\n" + "\n".join(textwrap.wrap(
-                    textwrap.dedent(o.help.strip())
-                )),
-            )
+        s.yaml_set_comment_before_after_key(
+            k,
+            before = "\n" + "\n".join(textwrap.wrap(
+                textwrap.dedent(o.help.strip())
+            )),
+        )
     return ruamel.yaml.round_trip_dump(s)

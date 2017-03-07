@@ -55,20 +55,20 @@ class Options(optmanager.OptManager):
         self.add_option(
             "onboarding_host", APP_HOST, str,
             """
-                Domain to serve the onboarding app from. For transparent mode, use
-                an IP when a DNS entry for the app domain is not present. Default:
-                %s
+            Domain to serve the onboarding app from. For transparent mode, use
+            an IP when a DNS entry for the app domain is not present. Default:
+            %s
             """ % APP_HOST
         )
         self.add_option(
             "onboarding_port", APP_PORT, int,
-            help="Port to serve the onboarding app from."
+            "Port to serve the onboarding app from."
         )
         self.add_option(
             "anticache", False, bool,
             """
-                Strip out request headers that might cause the server to return
-                304-not-modified.
+            Strip out request headers that might cause the server to return
+            304-not-modified.
             """
         )
         self.add_option(
@@ -93,11 +93,17 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "server_replay_nopop", False, bool,
-            "Disable response pop from response flow. "
-            "This makes it possible to replay same response multiple times."
+            """
+            Disable response pop from response flow. This makes it possible to
+            replay same response multiple times.
+            """
         )
         self.add_option(
             "refresh_server_playback", True, bool,
+            """
+            Refresh server replay responses by adjusting date, expires and
+            last-modified headers, as well as adjusting cookie expiration.
+            """
         )
         self.add_option(
             "rfile", None, Optional[str],
@@ -106,8 +112,7 @@ class Options(optmanager.OptManager):
         self.add_option(
             "scripts", [], Sequence[str],
             """
-                Run a script. Surround with quotes to pass script arguments. Can
-                be passed multiple times.
+            Execute a script.
             """
         )
         self.add_option(
@@ -116,23 +121,28 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "replacements", [], Sequence[str],
-            "Replacement patterns."
+            """
+            Replacement patterns of the form "/pattern/regex/replacement", where
+            the separator can be any character.
+            """
         )
         self.add_option(
             "replacement_files", [], Sequence[str],
             """
-                Replacement pattern, where the replacement clause is a path to a
-                file.
+            Replacement pattern, where the replacement clause is a path to a
+            file.
             """
         )
         self.add_option(
             "server_replay_use_headers", [], Sequence[str],
-            "Request headers to be considered during replay. "
-            "Can be passed multiple times."
+            "Request headers to be considered during replay."
         )
         self.add_option(
             "setheaders", [], Sequence[str],
-            help="Header set pattern."
+            """
+            Header set pattern of the form "/pattern/header/value", where the
+            separator can be any character.
+            """
         )
         self.add_option(
             "server_replay", [], Sequence[str],
@@ -149,19 +159,22 @@ class Options(optmanager.OptManager):
         self.add_option(
             "stream_large_bodies", None, Optional[str],
             """
-                Stream data to the client if response body exceeds the given
-                threshold. If streamed, the body will not be stored in any way.
-                Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            Stream data to the client if response body exceeds the given
+            threshold. If streamed, the body will not be stored in any way.
+            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
             """
         )
         self.add_option(
             "verbosity", 2, int,
             "Log verbosity."
         )
-        self.add_option("default_contentview", "auto", str)
+        self.add_option(
+            "default_contentview", "auto", str,
+            "The default content view mode."
+        )
         self.add_option(
             "streamfile", None, Optional[str],
-            help="Write flows to file. Prefix path with + to append."
+            "Write flows to file. Prefix path with + to append."
         )
         self.add_option(
             "server_replay_ignore_content", False, bool,
@@ -170,22 +183,24 @@ class Options(optmanager.OptManager):
         self.add_option(
             "server_replay_ignore_params", [], Sequence[str],
             """
-                Request's parameters to be ignored while searching for a saved
-                flow to replay. Can be passed multiple times.
+            Request's parameters to be ignored while searching for a saved flow
+            to replay. Can be passed multiple times.
             """
         )
         self.add_option(
             "server_replay_ignore_payload_params", [], Sequence[str],
             """
-                Request's payload parameters (application/x-www-form-urlencoded
-                or multipart/form-data) to be ignored while searching for a
-                saved flow to replay. Can be passed multiple times.
+            Request's payload parameters (application/x-www-form-urlencoded or
+            multipart/form-data) to be ignored while searching for a saved flow
+            to replay.
             """
         )
         self.add_option(
             "server_replay_ignore_host", False, bool,
-            "Ignore request's destination host while searching for a saved"
-            " flow to replay"
+            """
+            Ignore request's destination host while searching for a saved flow
+            to replay.
+            """
         )
 
         # Proxy options
@@ -196,8 +211,8 @@ class Options(optmanager.OptManager):
         self.add_option(
             "auth_singleuser", None, Optional[str],
             """
-                Allows access to a a single user, specified in the form
-                username:password.
+            Allows access to a a single user, specified in the form
+            username:password.
             """
         )
         self.add_option(
@@ -206,13 +221,17 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "add_upstream_certs_to_client_chain", False, bool,
-            "Add all certificates of the upstream server to the certificate chain "
-            "that will be served to the proxy client, as extras."
+            """
+            Add all certificates of the upstream server to the certificate chain
+            that will be served to the proxy client, as extras.
+            """
         )
         self.add_option(
             "body_size_limit", None, Optional[str],
-            "Byte size limit of HTTP request and response bodies."
-            " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
+            """
+            Byte size limit of HTTP request and response bodies. Understands
+            k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
         )
         self.add_option(
             "cadir", CA_DIR, str,
@@ -221,7 +240,7 @@ class Options(optmanager.OptManager):
         self.add_option(
             "certs", [], Sequence[str],
             """
-            Add an SSL certificate. SPEC is of the form "[domain=]path". The
+            SSL certificates. SPEC is of the form "[domain=]path". The
             domain may include a wildcard, and is equal to "*" if not specified.
             The file at path is a certificate in PEM format. If a private key is
             included in the PEM, it is used, else the default key in the conf
@@ -245,11 +264,11 @@ class Options(optmanager.OptManager):
         self.add_option(
             "ignore_hosts", [], Sequence[str],
             """
-                Ignore host and forward all traffic without processing it. In
-                transparent mode, it is recommended to use an IP address (range),
-                not the hostname. In regular mode, only SSL traffic is ignored and
-                the hostname should be used. The supplied value is interpreted as a
-                regular expression and matched on the ip or the hostname.
+            Ignore host and forward all traffic without processing it. In
+            transparent mode, it is recommended to use an IP address (range),
+            not the hostname. In regular mode, only SSL traffic is ignored and
+            the hostname should be used. The supplied value is interpreted as a
+            regular expression and matched on the ip or the hostname.
             """
         )
         self.add_option(
@@ -267,9 +286,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "mode", "regular", str,
             """
-                Mode can be "regular", "transparent", "socks5", "reverse:SPEC",
-                or "upstream:SPEC". For reverse and upstream proxy modes, SPEC
-                is proxy specification in the form of "http[s]://host[:port]".
+            Mode can be "regular", "transparent", "socks5", "reverse:SPEC",
+            or "upstream:SPEC". For reverse and upstream proxy modes, SPEC
+            is proxy specification in the form of "http[s]://host[:port]".
             """
         )
         self.add_option(
@@ -278,8 +297,10 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "keep_host_header", False, bool,
-            "Reverse Proxy: Keep the original host header instead of rewriting it"
-            " to the reverse proxy target."
+            """
+            Reverse Proxy: Keep the original host header instead of rewriting it
+            to the reverse proxy target.
+            """
         )
 
         self.add_option(
@@ -289,9 +310,11 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "http2_priority", False, bool,
-            "Enable/disable PRIORITY forwarding for HTTP/2 connections. "
-            "PRIORITY forwarding is disabled by default, "
-            "because some webservers fail to implement the RFC properly.",
+            """
+            PRIORITY forwarding for HTTP/2 connections. PRIORITY forwarding is
+            disabled by default, because some webservers fail to implement the
+            RFC properly.
+            """
         )
         self.add_option(
             "websocket", True, bool,
@@ -306,28 +329,32 @@ class Options(optmanager.OptManager):
 
         self.add_option(
             "spoof_source_address", False, bool,
-            "Use the client's IP for server-side connections. "
-            "Combine with --upstream-bind-address to spoof a fixed source address."
+            """
+            Use the client's IP for server-side connections. Combine with
+            --upstream-bind-address to spoof a fixed source address.
+            """
         )
         self.add_option(
             "upstream_auth", None, Optional[str],
             """
-                Add HTTP Basic authentcation to upstream proxy and reverse proxy
-                requests. Format: username:password
+            Add HTTP Basic authentcation to upstream proxy and reverse proxy
+            requests. Format: username:password
             """
         )
         self.add_option(
             "ssl_version_client", "secure", str,
-            "Set supported SSL/TLS versions for client connections. "
-            "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which "
-            "is TLS1.0+.",
+            """
+            Set supported SSL/TLS versions for client connections. SSLv2, SSLv3
+            and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
+            """,
             choices=tcp.sslversion_choices.keys(),
         )
         self.add_option(
             "ssl_version_server", "secure", str,
-            "Set supported SSL/TLS versions for server connections. "
-            "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, "
-            "which is TLS1.0+.",
+            """
+            Set supported SSL/TLS versions for server connections. SSLv2, SSLv3
+            and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
+            """,
             choices=tcp.sslversion_choices.keys(),
         )
         self.add_option(
@@ -336,8 +363,10 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "ssl_verify_upstream_trusted_cadir", None, Optional[str],
-            "Path to a directory of trusted CA certificates for upstream "
-            "server verification prepared using the c_rehash tool."
+            """
+            Path to a directory of trusted CA certificates for upstream server
+            verification prepared using the c_rehash tool.
+            """
         )
         self.add_option(
             "ssl_verify_upstream_trusted_ca", None, Optional[str],
@@ -346,9 +375,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "tcp_hosts", [], Sequence[str],
             """
-                Generic TCP SSL proxy mode for all hosts that match the pattern.
-                Similar to --ignore, but SSL connections are intercepted. The
-                communication contents are printed to the log in verbose mode.
+            Generic TCP SSL proxy mode for all hosts that match the pattern.
+            Similar to --ignore, but SSL connections are intercepted. The
+            communication contents are printed to the log in verbose mode.
             """
         )
 
@@ -368,7 +397,7 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "console_palette", "dark", Optional[str],
-            help="Select color palette: " + ", ".join(console_palettes),
+            "Color palette.",
             choices=sorted(console_palettes),
         )
         self.add_option(
@@ -384,7 +413,10 @@ class Options(optmanager.OptManager):
             "Flow sort order.",
             choices=view_orders,
         )
-        self.add_option("console_order_reversed", False, bool)
+        self.add_option(
+            "console_order_reversed", False, bool,
+            "Reverse the sorting order."
+        )
 
         self.add_option(
             "filter", None, Optional[str],
@@ -410,7 +442,10 @@ class Options(optmanager.OptManager):
         )
 
         # Dump options
-        self.add_option("filtstr", None, Optional[str])
+        self.add_option(
+            "filtstr", None, Optional[str],
+            "The filter string for mitmdump"
+        )
         self.add_option(
             "flow_detail", 1, int,
             "Flow detail display level"

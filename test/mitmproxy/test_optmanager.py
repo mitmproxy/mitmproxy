@@ -13,36 +13,36 @@ from mitmproxy.test import tutils
 class TO(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("one", None, typing.Optional[int])
-        self.add_option("two", 2, typing.Optional[int])
-        self.add_option("bool", False, bool)
+        self.add_option("one", None, typing.Optional[int], "help")
+        self.add_option("two", 2, typing.Optional[int], "help")
+        self.add_option("bool", False, bool, "help")
 
 
 class TD(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("one", "done", str)
-        self.add_option("two", "dtwo", str)
+        self.add_option("one", "done", str, "help")
+        self.add_option("two", "dtwo", str, "help")
 
 
 class TD2(TD):
     def __init__(self):
         super().__init__()
-        self.add_option("three", "dthree", str)
-        self.add_option("four", "dfour", str)
+        self.add_option("three", "dthree", str, "help")
+        self.add_option("four", "dfour", str, "help")
 
 
 class TM(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("two", ["foo"], typing.Sequence[str])
-        self.add_option("one", None, typing.Optional[str])
+        self.add_option("two", ["foo"], typing.Sequence[str], "help")
+        self.add_option("one", None, typing.Optional[str], "help")
 
 
 def test_add_option():
     o = TO()
     with pytest.raises(ValueError, match="already exists"):
-        o.add_option("one", None, typing.Optional[int])
+        o.add_option("one", None, typing.Optional[int], "help")
 
 
 def test_defaults():
@@ -291,13 +291,13 @@ def test_dump():
 class TTypes(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("str", "str", str)
-        self.add_option("optstr", "optstr", typing.Optional[str])
-        self.add_option("bool", False, bool)
-        self.add_option("int", 0, int)
-        self.add_option("optint", 0, typing.Optional[int])
-        self.add_option("seqstr", [], typing.Sequence[str])
-        self.add_option("unknown", 0.0, float)
+        self.add_option("str", "str", str, "help")
+        self.add_option("optstr", "optstr", typing.Optional[str], "help", "help")
+        self.add_option("bool", False, bool, "help")
+        self.add_option("int", 0, int, "help")
+        self.add_option("optint", 0, typing.Optional[int], "help")
+        self.add_option("seqstr", [], typing.Sequence[str], "help")
+        self.add_option("unknown", 0.0, float, "help")
 
 
 def test_make_parser():
