@@ -119,7 +119,7 @@ class ConsoleMaster(master.Master):
             the current view rather tha creating a new stack entry.
         """
         if len(self.view_stack) > 1:
-            del self.view_stack[1]
+            del self.view_stack[-2]
 
     def sig_pop_view_state(self, sender):
         """
