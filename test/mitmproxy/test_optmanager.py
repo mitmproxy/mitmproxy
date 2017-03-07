@@ -13,36 +13,36 @@ from mitmproxy.test import tutils
 class TO(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("one", None, typing.Optional[int], "help")
-        self.add_option("two", 2, typing.Optional[int], "help")
-        self.add_option("bool", False, bool, "help")
+        self.add_option("one", typing.Optional[int], None, "help")
+        self.add_option("two", typing.Optional[int], 2, "help")
+        self.add_option("bool", bool, False, "help")
 
 
 class TD(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("one", "done", str, "help")
-        self.add_option("two", "dtwo", str, "help")
+        self.add_option("one", str, "done", "help")
+        self.add_option("two", str, "dtwo", "help")
 
 
 class TD2(TD):
     def __init__(self):
         super().__init__()
-        self.add_option("three", "dthree", str, "help")
-        self.add_option("four", "dfour", str, "help")
+        self.add_option("three", str, "dthree", "help")
+        self.add_option("four", str, "dfour", "help")
 
 
 class TM(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("two", ["foo"], typing.Sequence[str], "help")
-        self.add_option("one", None, typing.Optional[str], "help")
+        self.add_option("two", typing.Sequence[str], ["foo"], "help")
+        self.add_option("one", typing.Optional[str], None, "help")
 
 
 def test_add_option():
     o = TO()
     with pytest.raises(ValueError, match="already exists"):
-        o.add_option("one", None, typing.Optional[int], "help")
+        o.add_option("one", typing.Optional[int], None, "help")
 
 
 def test_defaults():
@@ -76,7 +76,7 @@ def test_defaults():
 
 def test_options():
     o = TO()
-    assert o.keys() == set(["bool", "one", "two"])
+    assert o.keys() == {"bool", "one", "two"}
 
     assert o.one is None
     assert o.two == 2
@@ -189,7 +189,7 @@ def test_rollback():
     assert rec[3].bool is False
 
     with pytest.raises(exceptions.OptionsError):
-        with o.rollback(set(["one"]), reraise=True):
+        with o.rollback({"one"}, reraise=True):
             raise exceptions.OptionsError()
 
 
@@ -270,14 +270,14 @@ def test_merge():
 
 
 def test_option():
-    o = optmanager._Option("test", 1, int, None, None)
+    o = optmanager._Option("test", int, 1, None, None)
     assert o.current() == 1
     with pytest.raises(TypeError):
         o.set("foo")
     with pytest.raises(TypeError):
-        optmanager._Option("test", 1, str, None, None)
+        optmanager._Option("test", str, 1, None, None)
 
-    o2 = optmanager._Option("test", 1, int, None, None)
+    o2 = optmanager._Option("test", int, 1, None, None)
     assert o2 == o
     o2.set(5)
     assert o2 != o
@@ -291,14 +291,14 @@ def test_dump():
 class TTypes(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("str", "str", str, "help")
-        self.add_option("optstr", "optstr", typing.Optional[str], "help", "help")
-        self.add_option("bool", False, bool, "help")
-        self.add_option("bool_on", True, bool, "help")
-        self.add_option("int", 0, int, "help")
-        self.add_option("optint", 0, typing.Optional[int], "help")
-        self.add_option("seqstr", [], typing.Sequence[str], "help")
-        self.add_option("unknown", 0.0, float, "help")
+        self.add_option("str", str, "str", "help")
+        self.add_option("optstr", typing.Optional[str], "optstr", "help", "help")
+        self.add_option("bool", bool, False, "help")
+        self.add_option("bool_on", bool, True, "help")
+        self.add_option("int", int, 0, "help")
+        self.add_option("optint", typing.Optional[int], 0, "help")
+        self.add_option("seqstr", typing.Sequence[str], [], "help")
+        self.add_option("unknown", float, 0.0, "help")
 
 
 def test_make_parser():

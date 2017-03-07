@@ -39,5 +39,5 @@ def test_modes(m):
     sa = core.Core()
     with taddons.context() as tctx:
         tctx.configure(sa, mode = "reverse:http://localhost")
-        with pytest.raises(Exception, match="Invalid mode"):
+        with pytest.raises(Exception, match="Invalid server specification"):
             tctx.configure(sa, mode = "reverse:")

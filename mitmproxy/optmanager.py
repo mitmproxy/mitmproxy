@@ -26,15 +26,15 @@ class _Option:
     def __init__(
         self,
         name: str,
-        default: typing.Any,
         typespec: typing.Type,
+        default: typing.Any,
         help: str,
         choices: typing.Optional[typing.Sequence[str]]
     ) -> None:
         typecheck.check_type(name, default, typespec)
         self.name = name
-        self._default = default
         self.typespec = typespec
+        self._default = default
         self.value = unset
         self.help = help
         self.choices = choices
@@ -71,7 +71,7 @@ class _Option:
 
     def __deepcopy__(self, _):
         o = _Option(
-            self.name, self.default, self.typespec, self.help, self.choices
+            self.name, self.typespec, self.default, self.help, self.choices
         )
         if self.has_changed():
             o.value = self.current()
@@ -101,14 +101,14 @@ class OptManager:
     def add_option(
         self,
         name: str,
-        default: typing.Any,
         typespec: typing.Type,
+        default: typing.Any,
         help: str,
         choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
         if name in self._options:
             raise ValueError("Option %s already exists" % name)
-        self._options[name] = _Option(name, default, typespec, help, choices)
+        self._options[name] = _Option(name, typespec, default, help, choices)
 
     @contextlib.contextmanager
     def rollback(self, updated, reraise=False):
