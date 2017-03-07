@@ -2,6 +2,7 @@ import copy
 import os
 import pytest
 import typing
+import argparse
 
 from mitmproxy import options
 from mitmproxy import optmanager
@@ -285,3 +286,24 @@ def test_option():
 def test_dump():
     o = options.Options()
     assert optmanager.dump(o)
+
+
+class TTypes(optmanager.OptManager):
+    def __init__(self):
+        super().__init__()
+        self.add_option("str", "str", str)
+        self.add_option("bool", False, bool)
+        self.add_option("int", 0, int)
+        self.add_option("seqstr", [], typing.Sequence[str])
+        self.add_option("unknown", 0.0, float)
+
+
+def test_make_parser():
+    parser = argparse.ArgumentParser()
+    opts = TTypes()
+    opts.make_parser(parser, "str")
+    opts.make_parser(parser, "bool")
+    opts.make_parser(parser, "int")
+    opts.make_parser(parser, "seqstr")
+    with pytest.raises(ValueError):
+        opts.make_parser(parser, "unknown")

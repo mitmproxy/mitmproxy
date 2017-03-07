@@ -323,30 +323,30 @@ class OptManager:
             options=options
         )
 
-    def make_parser(self, parser, option, metavar=None):
-        o = self._options[option]
-        f = option.replace("_", "-")
+    def make_parser(self, parser, optname, metavar=None):
+        o = self._options[optname]
+        f = optname.replace("_", "-")
         if o.typespec == bool:
             g = parser.add_mutually_exclusive_group(required=False)
             g.add_argument(
                 "--%s" % f,
                 action="store_true",
-                dest=option,
+                dest=optname,
                 help=o.help
             )
             g.add_argument(
                 "--no-%s" % f,
                 action="store_false",
-                dest=option,
+                dest=optname,
                 help=o.help
             )
-            parser.set_defaults(**{option: None})
+            parser.set_defaults(**{optname: None})
         elif o.typespec in (int, typing.Optional[int]):
             parser.add_argument(
                 "--%s" % f,
                 action="store",
                 type=int,
-                dest=option,
+                dest=optname,
                 help=o.help,
                 metavar=metavar,
             )
@@ -355,7 +355,7 @@ class OptManager:
                 "--%s" % f,
                 action="store",
                 type=str,
-                dest=option,
+                dest=optname,
                 help=o.help,
                 metavar=metavar,
                 choices=o.choices
@@ -365,7 +365,7 @@ class OptManager:
                 "--%s" % f,
                 action="append",
                 type=str,
-                dest=option,
+                dest=optname,
                 help=o.help,
                 metavar=metavar,
                 choices=o.choices,

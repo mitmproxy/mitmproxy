@@ -170,16 +170,16 @@ class Options(optmanager.OptManager):
         self.add_option(
             "server_replay_ignore_params", [], Sequence[str],
             """
-                Request's parameters to be ignored while searching for a saved flow
-                to replay. Can be passed multiple times.
+                Request's parameters to be ignored while searching for a saved
+                flow to replay. Can be passed multiple times.
             """
         )
         self.add_option(
             "server_replay_ignore_payload_params", [], Sequence[str],
             """
-                Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
-                be ignored while searching for a saved flow to replay.
-                Can be passed multiple times.
+                Request's payload parameters (application/x-www-form-urlencoded
+                or multipart/form-data) to be ignored while searching for a
+                saved flow to replay. Can be passed multiple times.
             """
         )
         self.add_option(
