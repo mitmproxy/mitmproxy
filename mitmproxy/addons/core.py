@@ -3,8 +3,8 @@
     checked by other addons.
 """
 from mitmproxy import exceptions
-from mitmproxy import options
 from mitmproxy import platform
+from mitmproxy.net import server_spec
 from mitmproxy.utils import human
 
 
@@ -30,11 +30,10 @@ class Core:
         if "mode" in updated:
             mode = opts.mode
             if mode.startswith("reverse:") or mode.startswith("upstream:"):
-                spec = options.get_mode_spec(mode)
-                if not spec:
-                    raise exceptions.OptionsError(
-                        "Invalid mode specification: %s" % mode
-                    )
+                try:
+                    server_spec.parse_with_mode(mode)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
             elif mode == "transparent":
                 if not platform.original_addr:
                     raise exceptions.OptionsError(

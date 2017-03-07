@@ -22,11 +22,6 @@ view_orders = [
     "size",
 ]
 
-
-def get_mode_spec(m):
-    return m.split(":", maxsplit=1)[1]
-
-
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"

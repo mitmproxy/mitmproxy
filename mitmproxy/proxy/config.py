@@ -1,4 +1,3 @@
-import collections
 import os
 import re
 from typing import Any
@@ -9,7 +8,7 @@ from mitmproxy import exceptions
 from mitmproxy import options as moptions
 from mitmproxy import certs
 from mitmproxy.net import tcp
-from mitmproxy.net.http import url
+from mitmproxy.net import server_spec
 
 CONF_BASENAME = "mitmproxy"
 
@@ -31,24 +30,6 @@ class HostMatcher:
 
     def __bool__(self):
         return bool(self.patterns)
-
-
-ServerSpec = collections.namedtuple("ServerSpec", "scheme address")
-
-
-def parse_server_spec(spec):
-    try:
-        p = url.parse(spec)
-        if p[0] not in (b"http", b"https"):
-            raise ValueError()
-    except ValueError:
-        raise exceptions.OptionsError(
-            "Invalid server specification: %s" % spec
-        )
-    host, port = p[1:3]
-    address = (host.decode("ascii"), port)
-    scheme = p[0].decode("ascii").lower()
-    return ServerSpec(scheme, address)
 
 
 class ProxyConfig:
@@ -123,5 +104,5 @@ class ProxyConfig:
                 )
         m = options.mode
         if m.startswith("upstream:") or m.startswith("reverse:"):
-            spec = moptions.get_mode_spec(options.mode)
-            self.upstream_server = parse_server_spec(spec)
+            _, spec = server_spec.parse_with_mode(options.mode)
+            self.upstream_server = spec
