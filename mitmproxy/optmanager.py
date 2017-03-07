@@ -362,18 +362,35 @@ class OptManager:
         else:  # pragma: no cover
             raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
-    def make_parser(self, parser, optname, metavar=None):
+    def make_parser(self, parser, optname, metavar=None, short=None):
         o = self._options[optname]
-        f = optname.replace("_", "-")
+
+        def mkf(l, s):
+            l = l.replace("_", "-")
+            f = ["--%s" % l]
+            if s:
+                f.append("-" + s)
+            return f
+
+        flags = mkf(optname, short)
+
         if o.typespec == bool:
             g = parser.add_mutually_exclusive_group(required=False)
+            onf = mkf(optname, None)
+            offf = mkf("no-" + optname, None)
+            # The short option for a bool goes to whatever is NOT the default
+            if short:
+                if o.default:
+                    offf = mkf("no-" + optname, short)
+                else:
+                    onf = mkf(optname, short)
             g.add_argument(
-                "--no-%s" % f,
+                *offf,
                 action="store_false",
                 dest=optname,
             )
             g.add_argument(
-                "--%s" % f,
+                *onf,
                 action="store_true",
                 dest=optname,
                 help=o.help
@@ -381,7 +398,7 @@ class OptManager:
             parser.set_defaults(**{optname: None})
         elif o.typespec in (int, typing.Optional[int]):
             parser.add_argument(
-                "--%s" % f,
+                *flags,
                 action="store",
                 type=int,
                 dest=optname,
@@ -390,7 +407,7 @@ class OptManager:
             )
         elif o.typespec in (str, typing.Optional[str]):
             parser.add_argument(
-                "--%s" % f,
+                *flags,
                 action="store",
                 type=str,
                 dest=optname,
@@ -400,7 +417,7 @@ class OptManager:
             )
         elif o.typespec == typing.Sequence[str]:
             parser.add_argument(
-                "--%s" % f,
+                *flags,
                 action="append",
                 type=str,
                 dest=optname,

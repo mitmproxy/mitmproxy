@@ -23,7 +23,7 @@ class DumpMaster(master.Master):
         if with_dumper:
             self.addons.add(dumper.Dumper())
 
-        if not self.options.no_server:
+        if self.options.server:
             self.add_log(
                 "Proxy server listening at http://{}:{}".format(server.address[0], server.address[1]),
                 "info"

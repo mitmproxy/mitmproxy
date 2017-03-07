@@ -55,14 +55,14 @@ def process_options(parser, opts, args):
     opts.merge(adict)
 
     pconf = config.ProxyConfig(opts)
-    if opts.no_server:
-        return server.DummyServer(pconf)
-    else:
+    if opts.server:
         try:
             return server.ProxyServer(pconf)
         except exceptions.ServerException as v:
             print(str(v), file=sys.stderr)
             sys.exit(1)
+    else:
+        return server.DummyServer(pconf)
 
 
 def run(MasterKlass, args):  # pragma: no cover

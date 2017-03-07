@@ -294,6 +294,7 @@ class TTypes(optmanager.OptManager):
         self.add_option("str", "str", str, "help")
         self.add_option("optstr", "optstr", typing.Optional[str], "help", "help")
         self.add_option("bool", False, bool, "help")
+        self.add_option("bool_on", True, bool, "help")
         self.add_option("int", 0, int, "help")
         self.add_option("optint", 0, typing.Optional[int], "help")
         self.add_option("seqstr", [], typing.Sequence[str], "help")
@@ -303,10 +304,11 @@ class TTypes(optmanager.OptManager):
 def test_make_parser():
     parser = argparse.ArgumentParser()
     opts = TTypes()
-    opts.make_parser(parser, "str")
-    opts.make_parser(parser, "bool")
-    opts.make_parser(parser, "int")
-    opts.make_parser(parser, "seqstr")
+    opts.make_parser(parser, "str", short="a")
+    opts.make_parser(parser, "bool", short="b")
+    opts.make_parser(parser, "int", short="c")
+    opts.make_parser(parser, "seqstr", short="d")
+    opts.make_parser(parser, "bool_on", short="e")
     with pytest.raises(ValueError):
         opts.make_parser(parser, "unknown")
 

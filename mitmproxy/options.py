@@ -86,8 +86,8 @@ class Options(optmanager.OptManager):
             "Continue serving after client playback or file read."
         )
         self.add_option(
-            "no_server", False, bool,
-            "Don't start a proxy server."
+            "server", True, bool,
+            "Start a proxy server."
         )
         self.add_option(
             "server_replay_nopop", False, bool,

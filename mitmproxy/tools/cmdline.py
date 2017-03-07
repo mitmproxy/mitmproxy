@@ -42,7 +42,6 @@ def common_options(parser, opts):
             are emptied.
         """
     )
-
     parser.add_argument(
         "-q", "--quiet",
         action="store_true", dest="quiet",
@@ -55,59 +54,50 @@ def common_options(parser, opts):
     )
 
     # Basic options
-    opts.make_parser(parser, "mode")
+    opts.make_parser(parser, "mode", short="m")
     opts.make_parser(parser, "anticache")
     opts.make_parser(parser, "showhost")
-    opts.make_parser(parser, "rfile")
-    opts.make_parser(parser, "scripts", metavar="SCRIPT")
+    opts.make_parser(parser, "rfile", metavar="PATH", short="r")
+    opts.make_parser(parser, "scripts", metavar="SCRIPT", short="s")
     opts.make_parser(parser, "stickycookie", metavar="FILTER")
     opts.make_parser(parser, "stickyauth", metavar="FILTER")
-    opts.make_parser(parser, "streamfile")
+    opts.make_parser(parser, "streamfile", metavar="PATH", short="w")
     opts.make_parser(parser, "anticomp")
 
     # Proxy options
     group = parser.add_argument_group("Proxy Options")
     opts.make_parser(group, "listen_host", metavar="HOST")
+    opts.make_parser(group, "listen_port", metavar="PORT", short="p")
+    opts.make_parser(group, "server", short="n")
     opts.make_parser(group, "ignore_hosts", metavar="HOST")
     opts.make_parser(group, "tcp_hosts", metavar="HOST")
-    opts.make_parser(group, "no_server")
-    opts.make_parser(group, "listen_port", metavar="PORT")
     opts.make_parser(group, "upstream_auth", metavar="USER:PASS")
+    opts.make_parser(group, "proxyauth", metavar="SPEC")
     opts.make_parser(group, "rawtcp")
 
     # Proxy SSL options
     group = parser.add_argument_group("SSL")
     opts.make_parser(group, "certs", metavar="SPEC")
-    opts.make_parser(group, "ssl_insecure")
+    opts.make_parser(group, "ssl_insecure", short="k")
 
     # Client replay
     group = parser.add_argument_group("Client Replay")
-    opts.make_parser(group, "client_replay", metavar="PATH")
+    opts.make_parser(group, "client_replay", metavar="PATH", short="C")
 
     # Server replay
     group = parser.add_argument_group("Server Replay")
-    opts.make_parser(group, "server_replay", metavar="PATH")
+    opts.make_parser(group, "server_replay", metavar="PATH", short="S")
     opts.make_parser(group, "replay_kill_extra")
     opts.make_parser(group, "server_replay_nopop")
 
     # Replacements
     group = parser.add_argument_group("Replacements")
-    opts.make_parser(group, "replacements", metavar="PATTERN")
+    opts.make_parser(group, "replacements", metavar="PATTERN", short="R")
     opts.make_parser(group, "replacement_files", metavar="PATTERN")
 
     # Set headers
     group = parser.add_argument_group("Set Headers")
-    opts.make_parser(group, "setheaders", metavar="PATTERN")
-
-    # Proxy authentication
-    group = parser.add_argument_group(
-        "Proxy Authentication",
-        """
-            Specify which users are allowed to access the proxy and the method
-            used for authenticating them.
-        """
-    ).add_mutually_exclusive_group()
-    opts.make_parser(group, "proxyauth", metavar="SPEC")
+    opts.make_parser(group, "setheaders", metavar="PATTERN", short="H")
 
 
 def mitmproxy(opts):
