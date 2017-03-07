@@ -40,7 +40,7 @@ class ASWBXMLByteQueue(Queue):
         Queue.__init__(self)
 
         for byte in wbxmlBytes:
-            self.put(ord(byte))
+            self.put(byte)
             self.bytesEnqueued += 1
 
 

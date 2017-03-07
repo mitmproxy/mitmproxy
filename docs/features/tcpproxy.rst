@@ -19,7 +19,7 @@ How it works
 
 ================== ======================
 command-line       ``--tcp HOST``
-mitmproxy shortcut :kbd:`o` then :kbd:`T`
+mitmproxy shortcut :kbd:`O` then :kbd:`T`
 ================== ======================
 
 For a detailed description how the hostname pattern works, please look at the :ref:`passthrough`

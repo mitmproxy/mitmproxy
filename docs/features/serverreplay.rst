@@ -31,7 +31,7 @@ in the past at the time of replay, and vice versa. Cookie expiry times are
 updated in a similar way.
 
 You can turn off response refreshing using the ``--norefresh`` argument, or using
-the :kbd:`o` options shortcut within :program:`mitmproxy`.
+the :kbd:`O` options shortcut within :program:`mitmproxy`.
 
 
 Replaying a session recorded in Reverse-proxy Mode
