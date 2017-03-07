@@ -368,14 +368,13 @@ class OptManager:
         if o.typespec == bool:
             g = parser.add_mutually_exclusive_group(required=False)
             g.add_argument(
-                "--%s" % f,
-                action="store_true",
-                dest=optname,
-                help=o.help
-            )
-            g.add_argument(
                 "--no-%s" % f,
                 action="store_false",
+                dest=optname,
+            )
+            g.add_argument(
+                "--%s" % f,
+                action="store_true",
                 dest=optname,
                 help=o.help
             )

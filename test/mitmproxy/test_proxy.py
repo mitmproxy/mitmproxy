@@ -1,4 +1,3 @@
-import os
 import argparse
 from unittest import mock
 from OpenSSL import SSL
@@ -46,19 +45,6 @@ class TestProcessProxyOptions:
     def test_simple(self):
         assert self.p()
 
-    def test_cadir(self):
-        with tutils.tmpdir() as cadir:
-            self.assert_noerr("--cadir", cadir)
-
-    def test_client_certs(self):
-        with tutils.tmpdir() as cadir:
-            self.assert_noerr("--client-certs", cadir)
-            self.assert_noerr(
-                "--client-certs",
-                os.path.join(tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem"))
-            with pytest.raises(Exception, match="path does not exist"):
-                self.p("--client-certs", "nonexistent")
-
     def test_certs(self):
         self.assert_noerr(
             "--cert",
@@ -69,16 +55,6 @@ class TestProcessProxyOptions:
     def test_insecure(self):
         p = self.assert_noerr("--ssl-insecure")
         assert p.openssl_verification_mode_server == SSL.VERIFY_NONE
-
-    def test_upstream_trusted_cadir(self):
-        expected_dir = "/path/to/a/ca/dir"
-        p = self.assert_noerr("--ssl-verify-upstream-trusted-cadir", expected_dir)
-        assert p.options.ssl_verify_upstream_trusted_cadir == expected_dir
-
-    def test_upstream_trusted_ca(self):
-        expected_file = "/path/to/a/cert/file"
-        p = self.assert_noerr("--ssl-verify-upstream-trusted-ca", expected_file)
-        assert p.options.ssl_verify_upstream_trusted_ca == expected_file
 
 
 class TestProxyServer:
