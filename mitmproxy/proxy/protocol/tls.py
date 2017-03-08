@@ -358,7 +358,7 @@ class TlsLayer(base.Layer):
         #  2.5 The client did not sent a SNI value, we don't know the certificate subject.
         client_tls_requires_server_connection = (
             self._server_tls and
-            not self.config.options.no_upstream_cert and
+            self.config.options.upstream_cert and
             (
                 self.config.options.add_upstream_certs_to_client_chain or
                 self._client_tls and (
@@ -527,7 +527,7 @@ class TlsLayer(base.Layer):
                 ciphers_server = ':'.join(ciphers_server)
 
             self.server_conn.establish_ssl(
-                self.config.clientcerts,
+                self.config.client_certs,
                 self.server_sni,
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,
@@ -574,7 +574,7 @@ class TlsLayer(base.Layer):
         use_upstream_cert = (
             self.server_conn and
             self.server_conn.tls_established and
-            (not self.config.options.no_upstream_cert)
+            self.config.options.upstream_cert
         )
         if use_upstream_cert:
             upstream_cert = self.server_conn.cert

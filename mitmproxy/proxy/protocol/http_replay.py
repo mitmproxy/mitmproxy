@@ -31,6 +31,7 @@ class RequestReplayThread(basethread.BaseThread):
 
     def run(self):
         r = self.f.request
+        bsl = self.config.options._processed.get("body_size_limit")
         first_line_format_backup = r.first_line_format
         server = None
         try:
@@ -44,7 +45,7 @@ class RequestReplayThread(basethread.BaseThread):
 
             if not self.f.response:
                 # In all modes, we directly connect to the server displayed
-                if self.config.options.mode == "upstream":
+                if self.config.options.mode.startswith("upstream:"):
                     server_address = self.config.upstream_server.address
                     server = connections.ServerConnection(server_address, (self.config.options.listen_host, 0))
                     server.connect()
@@ -55,12 +56,12 @@ class RequestReplayThread(basethread.BaseThread):
                         resp = http1.read_response(
                             server.rfile,
                             connect_request,
-                            body_size_limit=self.config.options.body_size_limit
+                            body_size_limit=bsl
                         )
                         if resp.status_code != 200:
                             raise exceptions.ReplayException("Upstream server refuses CONNECT request")
                         server.establish_ssl(
-                            self.config.clientcerts,
+                            self.config.client_certs,
                             sni=self.f.server_conn.sni
                         )
                         r.first_line_format = "relative"
@@ -75,7 +76,7 @@ class RequestReplayThread(basethread.BaseThread):
                     server.connect()
                     if r.scheme == "https":
                         server.establish_ssl(
-                            self.config.clientcerts,
+                            self.config.client_certs,
                             sni=self.f.server_conn.sni
                         )
                     r.first_line_format = "relative"
@@ -87,7 +88,7 @@ class RequestReplayThread(basethread.BaseThread):
                     http1.read_response(
                         server.rfile,
                         r,
-                        body_size_limit=self.config.options.body_size_limit
+                        body_size_limit=bsl
                     )
                 )
             if self.channel:

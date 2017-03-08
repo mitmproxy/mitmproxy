@@ -252,7 +252,7 @@ class ConsoleMaster(master.Master):
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             screen = self.ui,
-            handle_mouse = not self.options.console_no_mouse,
+            handle_mouse = self.options.console_mouse,
         )
         self.ab = statusbar.ActionBar()
 

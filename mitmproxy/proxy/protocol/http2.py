@@ -183,7 +183,7 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_data_received(self, eid, event, source_conn):
-        bsl = self.config.options.body_size_limit
+        bsl = self.config.options._processed.get("body_size_limit")
         if bsl and self.streams[eid].queued_data_length > bsl:
             self.streams[eid].kill()
             self.connections[source_conn].safe_reset_stream(

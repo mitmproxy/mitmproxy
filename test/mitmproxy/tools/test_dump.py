@@ -3,8 +3,10 @@ import pytest
 from unittest import mock
 
 from mitmproxy import proxy
+from mitmproxy import exceptions
 from mitmproxy import log
 from mitmproxy import controller
+from mitmproxy import options
 from mitmproxy.tools import dump
 
 from mitmproxy.test import tutils
@@ -12,8 +14,8 @@ from .. import tservers
 
 
 class TestDumpMaster(tservers.MasterTest):
-    def mkmaster(self, flt, **options):
-        o = dump.Options(filtstr=flt, verbosity=-1, flow_detail=0, **options)
+    def mkmaster(self, flt, **opts):
+        o = options.Options(filtstr=flt, verbosity=-1, flow_detail=0, **opts)
         m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)
         return m
 
@@ -25,9 +27,9 @@ class TestDumpMaster(tservers.MasterTest):
                 self.mkmaster(None, rfile=p),
                 1, b"",
             )
-            with pytest.raises(dump.DumpError):
+            with pytest.raises(exceptions.OptionsError):
                 self.mkmaster(None, rfile="/nonexistent")
-            with pytest.raises(dump.DumpError):
+            with pytest.raises(exceptions.OptionsError):
                 self.mkmaster(None, rfile="test_dump.py")
 
     def test_has_error(self):
@@ -40,13 +42,13 @@ class TestDumpMaster(tservers.MasterTest):
     @pytest.mark.parametrize("termlog", [False, True])
     def test_addons_termlog(self, termlog):
         with mock.patch('sys.stdout'):
-            o = dump.Options()
+            o = options.Options()
             m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=termlog)
             assert (m.addons.get('termlog') is not None) == termlog
 
     @pytest.mark.parametrize("dumper", [False, True])
     def test_addons_dumper(self, dumper):
         with mock.patch('sys.stdout'):
-            o = dump.Options()
+            o = options.Options()
             m = dump.DumpMaster(o, proxy.DummyServer(), with_dumper=dumper)
             assert (m.addons.get('dumper') is not None) == dumper

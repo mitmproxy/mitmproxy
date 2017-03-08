@@ -4,7 +4,6 @@ import mitmproxy.master
 import mitmproxy.options
 from mitmproxy import proxy
 from mitmproxy import eventsequence
-from mitmproxy import exceptions
 
 
 class RecordingMaster(mitmproxy.master.Master):
@@ -43,14 +42,6 @@ class context:
         return False
 
     @contextlib.contextmanager
-    def _rollback(self, opts, updates):
-        old = opts._opts.copy()
-        try:
-            yield
-        except exceptions.OptionsError as e:
-            opts.__dict__["_opts"] = old
-            raise
-
     def cycle(self, addon, f):
         """
             Cycles the flow through the events for the flow. Stops if a reply
@@ -70,6 +61,6 @@ class context:
             Options object with the given keyword arguments, then calls the
             configure method on the addon with the updated value.
         """
-        with self._rollback(self.options, kwargs):
+        with self.options.rollback(kwargs.keys(), reraise=True):
             self.options.update(**kwargs)
             addon.configure(self.options, kwargs.keys())

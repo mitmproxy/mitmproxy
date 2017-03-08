@@ -1,5 +1,3 @@
-from typing import Optional
-
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import addons
@@ -8,30 +6,11 @@ from mitmproxy import master
 from mitmproxy.addons import dumper, termlog
 
 
-class DumpError(Exception):
-    pass
-
-
-class Options(options.Options):
-    def __init__(
-            self,
-            *,  # all args are keyword-only.
-            keepserving: bool = False,
-            filtstr: Optional[str] = None,
-            flow_detail: int = 1,
-            **kwargs
-    ) -> None:
-        self.filtstr = filtstr
-        self.flow_detail = flow_detail
-        self.keepserving = keepserving
-        super().__init__(**kwargs)
-
-
 class DumpMaster(master.Master):
 
     def __init__(
             self,
-            options: Options,
+            options: options.Options,
             server,
             with_termlog=True,
             with_dumper=True,
@@ -44,7 +23,7 @@ class DumpMaster(master.Master):
         if with_dumper:
             self.addons.add(dumper.Dumper())
 
-        if not self.options.no_server:
+        if self.options.server:
             self.add_log(
                 "Proxy server listening at http://{}:{}".format(server.address[0], server.address[1]),
                 "info"
@@ -55,7 +34,7 @@ class DumpMaster(master.Master):
                 self.load_flows_file(options.rfile)
             except exceptions.FlowReadException as v:
                 self.add_log("Flow file corrupted.", "error")
-                raise DumpError(v)
+                raise exceptions.OptionsError(v)
 
     @controller.handler
     def log(self, e):

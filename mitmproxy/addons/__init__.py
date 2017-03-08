@@ -3,6 +3,7 @@ from mitmproxy.addons import anticomp
 from mitmproxy.addons import check_alpn
 from mitmproxy.addons import check_ca
 from mitmproxy.addons import clientplayback
+from mitmproxy.addons import core_option_validation
 from mitmproxy.addons import disable_h2c_upgrade
 from mitmproxy.addons import onboarding
 from mitmproxy.addons import proxyauth
@@ -19,6 +20,7 @@ from mitmproxy.addons import upstream_auth
 
 def default_addons():
     return [
+        core_option_validation.CoreOptionValidation(),
         anticache.AntiCache(),
         anticomp.AntiComp(),
         check_alpn.CheckALPN(),

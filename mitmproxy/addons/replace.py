@@ -57,10 +57,7 @@ class _ReplaceBase:
         if self.optionName in updated:
             lst = []
             for rep in getattr(options, self.optionName):
-                if isinstance(rep, str):
-                    fpatt, rex, s = parse_hook(rep)
-                else:
-                    fpatt, rex, s = rep
+                fpatt, rex, s = parse_hook(rep)
 
                 flt = flowfilter.parse(fpatt)
                 if not flt:
