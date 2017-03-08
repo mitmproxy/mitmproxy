@@ -10,6 +10,9 @@ git:
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - language: node_js
+      node_js: "node"
   include:
     - python: 3.5
       env: TOXENV=lint
@@ -47,6 +50,15 @@ matrix:
       env: TOXENV=individual_coverage
     - python: 3.5
       env: TOXENV=docs
+    - language: node_js
+      node_js: "node"
+      before_install: npm install -g yarn
+      install: cd web && yarn
+      script: npm test
+      cache:
+          yarn: true
+          directories:
+              - web/node_modules
 
 install:
   - |
