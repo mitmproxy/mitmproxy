@@ -110,6 +110,20 @@ libraries. This was tested on a fully patched installation of Fedora 24.
 Make sure to have an up-to-date version of pip by running ``pip3 install -U pip``.
 
 
+.. _install-source-opensuse:
+
+Installation from Source on openSUSE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This was tested on a fully patched installation of openSUSE Tumbleweed.
+Please note that openSUSE Leap 42.2 only comes with Python 3.4.x, whereas mitmproxy requires Python 3.5 or above.
+You can check you Python version by running ``python3 --version``.
+
+.. code:: bash
+
+   sudo zypper install python3-pip python3-devel libffi-devel openssl-devel gcc-c++
+   sudo pip3 install mitmproxy
+   
 
 .. _install-source-windows:
 
