@@ -5,11 +5,17 @@ env:
   global:
     - CI_DEPS=codecov>=2.0.5
     - CI_COMMANDS=codecov
+    - MITMWEB_DIR=web
 git:
   depth: 10000
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - language: node_js
+      node_js:
+          - "6"
+          - "iojs"
   include:
     - python: 3.5
       env: TOXENV=lint
@@ -47,6 +53,15 @@ matrix:
       env: TOXENV=individual_coverage
     - python: 3.5
       env: TOXENV=docs
+    - language: node_js
+      node_js:
+          - "6"
+          - "iojs"
+      install: cd $MITMWEB_DIR && npm install
+      script: npm test
+      cache:
+          directories:
+              - $MITMWEB_DIR/node_modules
 
 install:
   - |
