@@ -174,6 +174,7 @@ class OptManager:
         """
         for o in self._options.values():
             o.reset()
+        self.changed.send(self._options.keys())
 
     def update(self, **kwargs):
         updated = set(kwargs.keys())
