@@ -1,12 +1,12 @@
 from mitmproxy import exceptions
-from mitmproxy.addons import core
+from mitmproxy.addons import core_option_validation
 from mitmproxy.test import taddons
 import pytest
 from unittest import mock
 
 
 def test_simple():
-    sa = core.Core()
+    sa = core_option_validation.CoreOptionValidation()
     with taddons.context() as tctx:
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(sa, body_size_limit = "invalid")
@@ -28,7 +28,7 @@ def test_simple():
 
 @mock.patch("mitmproxy.platform.original_addr", None)
 def test_no_transparent():
-    sa = core.Core()
+    sa = core_option_validation.CoreOptionValidation()
     with taddons.context() as tctx:
         with pytest.raises(Exception, match="Transparent mode not supported"):
             tctx.configure(sa, mode = "transparent")
@@ -36,7 +36,7 @@ def test_no_transparent():
 
 @mock.patch("mitmproxy.platform.original_addr")
 def test_modes(m):
-    sa = core.Core()
+    sa = core_option_validation.CoreOptionValidation()
     with taddons.context() as tctx:
         tctx.configure(sa, mode = "reverse:http://localhost")
         with pytest.raises(Exception, match="Invalid server specification"):

@@ -8,7 +8,7 @@ from mitmproxy.net import server_spec
 from mitmproxy.utils import human
 
 
-class Core:
+class CoreOptionValidation:
     def configure(self, opts, updated):
         if opts.add_upstream_certs_to_client_chain and not opts.upstream_cert:
             raise exceptions.OptionsError(
