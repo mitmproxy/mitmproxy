@@ -155,7 +155,7 @@ class ProxyAuth:
     def http_connect(self, f: http.HTTPFlow) -> None:
         if self.enabled():
             if self.authenticate(f):
-                self.authenticated[f.client_conn]=f.metadata["proxyauth"]
+                self.authenticated[f.client_conn] = f.metadata["proxyauth"]
 
     def requestheaders(self, f: http.HTTPFlow) -> None:
         if self.enabled():
