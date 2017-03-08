@@ -46,7 +46,7 @@ class ProxyAuth:
         self.htpasswd = None
         self.singleuser = None
         self.mode = None
-        self.authenticated = weakref.WeakSet()  # type: Set[connections.ClientConnection]
+        self.authenticated = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def enabled(self) -> bool:
@@ -155,11 +155,12 @@ class ProxyAuth:
     def http_connect(self, f: http.HTTPFlow) -> None:
         if self.enabled():
             if self.authenticate(f):
-                self.authenticated.add(f.client_conn)
+                self.authenticated[f.client_conn]=f.metadata["proxyauth"]
 
     def requestheaders(self, f: http.HTTPFlow) -> None:
         if self.enabled():
             # Is this connection authenticated by a previous HTTP CONNECT?
             if f.client_conn in self.authenticated:
+                f.metadata["proxyauth"] = self.authenticated[f.client_conn]
                 return
             self.authenticate(f)
