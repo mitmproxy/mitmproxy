@@ -93,7 +93,6 @@ def common_options(parser, opts):
     # Replacements
     group = parser.add_argument_group("Replacements")
     opts.make_parser(group, "replacements", metavar="PATTERN", short="R")
-    opts.make_parser(group, "replacement_files", metavar="PATTERN")
 
     # Set headers
     group = parser.add_argument_group("Set Headers")

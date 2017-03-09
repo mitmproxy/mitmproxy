@@ -1,3 +1,4 @@
+import os
 import re
 
 from mitmproxy import exceptions
@@ -58,7 +59,6 @@ class _ReplaceBase:
             lst = []
             for rep in getattr(options, self.optionName):
                 fpatt, rex, s = parse_hook(rep)
-
                 flt = flowfilter.parse(fpatt)
                 if not flt:
                     raise exceptions.OptionsError(
@@ -94,16 +94,11 @@ class Replace(_ReplaceBase):
     optionName = "replacements"
 
     def replace(self, obj, rex, s):
+        if s.startswith("@"):
+            s = s.replace("@", "")
+            try:
+                s = open(os.path.expanduser(s), "rb").read()
+            except IOError as e:
+                ctx.log.warn("Could not read replacement file: %s" % s)
+                return
         obj.replace(rex, s, flags=re.DOTALL)
-
-
-class ReplaceFile(_ReplaceBase):
-    optionName = "replacement_files"
-
-    def replace(self, obj, rex, s):
-        try:
-            v = open(s, "rb").read()
-        except IOError as e:
-            ctx.log.warn("Could not read replacement file: %s" % s)
-            return
-        obj.replace(rex, v, flags=re.DOTALL)
