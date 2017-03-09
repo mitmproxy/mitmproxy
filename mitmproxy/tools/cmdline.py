@@ -23,7 +23,7 @@ def common_options(parser, opts):
     parser.add_argument(
         '--options',
         action='store_true',
-        help="Dump all options",
+        help="Show all options and their default values",
     )
     parser.add_argument(
         "--conf",

@@ -39,10 +39,8 @@ def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
-    if args.options:
-        print(optmanager.dump(opts))
-        sys.exit(0)
-    if args.quiet:
+    if args.quiet or args.options:
+        args.verbosity = 0
         args.flow_detail = 0
 
     adict = {}
@@ -75,6 +73,9 @@ def run(MasterKlass, args):  # pragma: no cover
         server = process_options(parser, opts, args)
         master = MasterKlass(opts, server)
         master.addons.configure_all(opts, opts.keys())
+        if args.options:
+            print(optmanager.dump_defaults(opts))
+            sys.exit(0)
         opts.set(*args.setoptions)
 
         def cleankill(*args, **kwargs):

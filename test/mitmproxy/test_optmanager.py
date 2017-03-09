@@ -280,9 +280,9 @@ def test_option():
     assert o2 != o
 
 
-def test_dump():
+def test_dump_defaults():
     o = options.Options()
-    assert optmanager.dump(o)
+    assert optmanager.dump_defaults(o)
 
 
 class TTypes(optmanager.OptManager):

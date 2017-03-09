@@ -435,7 +435,7 @@ class OptManager:
             raise ValueError("Unsupported option type: %s", o.typespec)
 
 
-def dump(opts):
+def dump_defaults(opts):
     """
         Dumps an annotated file with all options.
     """
