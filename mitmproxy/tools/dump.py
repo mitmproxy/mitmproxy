@@ -3,7 +3,7 @@ from mitmproxy import exceptions
 from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
-from mitmproxy.addons import dumper, termlog
+from mitmproxy.addons import dumper, termlog, termstatus
 
 
 class DumpMaster(master.Master):
@@ -18,16 +18,10 @@ class DumpMaster(master.Master):
         master.Master.__init__(self, options, server)
         self.has_errored = False
         if with_termlog:
-            self.addons.add(termlog.TermLog())
+            self.addons.add(termlog.TermLog(), termstatus.TermStatus())
         self.addons.add(*addons.default_addons())
         if with_dumper:
             self.addons.add(dumper.Dumper())
-
-        if self.options.server:
-            self.add_log(
-                "Proxy server listening at http://{}:{}".format(server.address[0], server.address[1]),
-                "info"
-            )
 
         if options.rfile:
             try:

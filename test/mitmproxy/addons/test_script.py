@@ -116,9 +116,7 @@ class TestScript:
                 )
             )
             sc.load_script()
-            assert sc.ns.call_log == [
-                ("solo", "start", (), {}),
-            ]
+            assert sc.ns.call_log[0][0:2] == ("solo", "start")
 
             sc.ns.call_log = []
             f = tflow.tflow(resp=True)
@@ -146,7 +144,7 @@ class TestScript:
             sc = script.Script(
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
             )
-            sc.start()
+            sc.start(tctx.options)
             f = tflow.tflow(resp=True)
             sc.request(f)
             assert tctx.master.event_log[0][0] == "error"
@@ -162,7 +160,7 @@ class TestScript:
                     "mitmproxy/data/addonscripts/addon.py"
                 )
             )
-            sc.start()
+            sc.start(tctx.options)
             tctx.configure(sc)
             assert sc.ns.event_log == [
                 'scriptstart', 'addonstart', 'addonconfigure'
@@ -225,24 +223,31 @@ class TestScriptLoader:
         assert len(m.addons) == 1
 
     def test_dupes(self):
-        o = options.Options(scripts=["one", "one"])
-        m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        with pytest.raises(exceptions.OptionsError):
-            m.addons.add(o, sc)
+        with taddons.context() as tctx:
+            tctx.master.addons.add(sc)
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(
+                    sc,
+                    scripts = ["one", "one"]
+                )
 
     def test_nonexistent(self):
-        o = options.Options(scripts=["nonexistent"])
-        m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        with pytest.raises(exceptions.OptionsError):
-            m.addons.add(o, sc)
+        with taddons.context() as tctx:
+            tctx.master.addons.add(sc)
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(
+                    sc,
+                    scripts = ["nonexistent"]
+                )
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
         sc = script.ScriptLoader()
         with taddons.context() as tctx:
             tctx.master.addons.add(sc)
+            sc.running()
             tctx.configure(
                 sc,
                 scripts = [
@@ -253,9 +258,17 @@ class TestScriptLoader:
             )
             debug = [(i[0], i[1]) for i in tctx.master.event_log if i[0] == "debug"]
             assert debug == [
-                ('debug', 'a start'), ('debug', 'a configure'),
-                ('debug', 'b start'), ('debug', 'b configure'),
-                ('debug', 'c start'), ('debug', 'c configure')
+                ('debug', 'a start'),
+                ('debug', 'a configure'),
+                ('debug', 'a running'),
+
+                ('debug', 'b start'),
+                ('debug', 'b configure'),
+                ('debug', 'b running'),
+
+                ('debug', 'c start'),
+                ('debug', 'c configure'),
+                ('debug', 'c running'),
             ]
             tctx.master.event_log = []
             tctx.configure(
@@ -284,4 +297,5 @@ class TestScriptLoader:
                 ('debug', 'b done'),
                 ('debug', 'x start'),
                 ('debug', 'x configure'),
+                ('debug', 'x running'),
             ]

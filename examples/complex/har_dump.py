@@ -25,7 +25,7 @@ HAR = {}
 SERVERS_SEEN = set()
 
 
-def start():
+def start(opts):
     """
         Called once on script startup before any other events.
     """

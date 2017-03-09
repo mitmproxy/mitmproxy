@@ -1,4 +1,5 @@
 from mitmproxy import exceptions
+from mitmproxy import eventsequence
 import pprint
 
 
@@ -10,7 +11,7 @@ class AddonManager:
     def __init__(self, master):
         self.chain = []
         self.master = master
-        master.options.changed.connect(self._options_update)
+        master.options.changed.connect(self.configure_all)
 
     def clear(self):
         """
@@ -29,22 +30,14 @@ class AddonManager:
             if name == _get_name(i):
                 return i
 
-    def _options_update(self, options, updated):
-        for i in self.chain:
-            with self.master.handlecontext():
-                self.invoke_with_context(i, "configure", options, updated)
+    def configure_all(self, options, updated):
+        self.invoke_all_with_context("configure", options, updated)
 
     def startup(self, s):
         """
             Run startup events on addon.
         """
-        self.invoke_with_context(s, "start")
-        self.invoke_with_context(
-            s,
-            "configure",
-            self.master.options,
-            self.master.options.keys()
-        )
+        self.invoke_with_context(s, "start", self.master.options)
 
     def add(self, *addons):
         """
@@ -62,8 +55,7 @@ class AddonManager:
         self.invoke_with_context(addon, "done")
 
     def done(self):
-        for i in self.chain:
-            self.invoke_with_context(i, "done")
+        self.invoke_all_with_context("done")
 
     def __len__(self):
         return len(self.chain)
@@ -75,7 +67,14 @@ class AddonManager:
         with self.master.handlecontext():
             self.invoke(addon, name, *args, **kwargs)
 
+    def invoke_all_with_context(self, name, *args, **kwargs):
+        with self.master.handlecontext():
+            for i in self.chain:
+                self.invoke(i, name, *args, **kwargs)
+
     def invoke(self, addon, name, *args, **kwargs):
+        if name not in eventsequence.Events:  # prama: no cover
+            raise NotImplementedError("Unknown event")
         func = getattr(addon, name, None)
         if func:
             if not callable(func):

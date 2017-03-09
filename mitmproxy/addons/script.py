@@ -170,22 +170,23 @@ class Script:
 
     def load_script(self):
         self.ns = load_script(self.path, self.args)
-        ret = self.run("start")
+        ret = self.run("start", self.last_options)
         if ret:
             self.ns = ret
-            self.run("start")
+            self.run("start", self.last_options)
 
     def tick(self):
         if self.should_reload.is_set():
             self.should_reload.clear()
             ctx.log.info("Reloading script: %s" % self.name)
             self.ns = load_script(self.path, self.args)
-            self.start()
+            self.start(self.last_options)
             self.configure(self.last_options, self.last_options.keys())
         else:
             self.run("tick")
 
-    def start(self):
+    def start(self, opts):
+        self.last_options = opts
         self.load_script()
 
     def configure(self, options, updated):
@@ -209,6 +210,12 @@ class ScriptLoader:
     """
         An addon that manages loading scripts from options.
     """
+    def __init__(self):
+        self.is_running = False
+
+    def running(self):
+        self.is_running = True
+
     def run_once(self, command, flows):
         try:
             sc = Script(command)
@@ -267,3 +274,10 @@ class ScriptLoader:
 
             for s in newscripts:
                 ctx.master.addons.startup(s)
+                if self.is_running:
+                    # If we're already running, we configure and tell the addon
+                    # we're up and running.
+                    ctx.master.addons.invoke_with_context(
+                        s, "configure", options, options.keys()
+                    )
+                    ctx.master.addons.invoke_with_context(s, "running")

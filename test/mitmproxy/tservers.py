@@ -79,6 +79,8 @@ class TestMaster(master.Master):
         self.state = TestState()
         self.addons.add(self.state)
         self.addons.add(*addons)
+        self.addons.configure_all(self.options, self.options.keys())
+        self.addons.invoke_all_with_context("running")
 
     def clear_log(self):
         self.tlog = []

@@ -324,7 +324,15 @@ class OptManager:
             options=options
         )
 
-    def set(self, spec):
+    def set(self, *spec):
+        vals = {}
+        for i in spec:
+            vals.update(self._setspec(i))
+        self.update(**vals)
+
+    def _setspec(self, spec):
+        d = {}
+
         parts = spec.split("=", maxsplit=1)
         if len(parts) == 1:
             optname, optval = parts[0], None
@@ -333,14 +341,14 @@ class OptManager:
         o = self._options[optname]
 
         if o.typespec in (str, typing.Optional[str]):
-            setattr(self, optname, optval)
+            d[optname] = optval
         elif o.typespec in (int, typing.Optional[int]):
             if optval:
                 try:
                     optval = int(optval)
                 except ValueError:
                     raise exceptions.OptionsError("Not an integer: %s" % optval)
-            setattr(self, optname, optval)
+            d[optname] = optval
         elif o.typespec == bool:
             if not optval or optval == "true":
                 v = True
@@ -350,18 +358,15 @@ class OptManager:
                 raise exceptions.OptionsError(
                     "Boolean must be \"true\", \"false\", or have the value " "omitted (a synonym for \"true\")."
                 )
-            setattr(self, optname, v)
+            d[optname] = v
         elif o.typespec == typing.Sequence[str]:
             if not optval:
-                setattr(self, optname, [])
+                d[optname] = []
             else:
-                setattr(
-                    self,
-                    optname,
-                    getattr(self, optname) + [optval]
-                )
+                d[optname] = getattr(self, optname) + [optval]
         else:  # pragma: no cover
             raise NotImplementedError("Unsupported option type: %s", o.typespec)
+        return d
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         o = self._options[optname]

@@ -45,9 +45,6 @@ def process_options(parser, opts, args):
     if args.quiet:
         args.flow_detail = 0
 
-    for i in args.setoptions:
-        opts.set(i)
-
     adict = {}
     for n in dir(args):
         if n in opts:
@@ -77,6 +74,8 @@ def run(MasterKlass, args):  # pragma: no cover
         opts.load_paths(args.conf)
         server = process_options(parser, opts, args)
         master = MasterKlass(opts, server)
+        master.addons.configure_all(opts, opts.keys())
+        opts.set(*args.setoptions)
 
         def cleankill(*args, **kwargs):
             master.shutdown()

@@ -22,5 +22,5 @@ class CallLogger:
         raise AttributeError
 
 
-def start():
+def start(opts):
     return CallLogger(*sys.argv[1:])
