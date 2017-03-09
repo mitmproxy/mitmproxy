@@ -59,6 +59,7 @@ class _ReplaceBase:
             lst = []
             for rep in getattr(options, self.optionName):
                 fpatt, rex, s = parse_hook(rep)
+
                 flt = flowfilter.parse(fpatt)
                 if not flt:
                     raise exceptions.OptionsError(

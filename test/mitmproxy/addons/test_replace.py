@@ -72,7 +72,7 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
 
 class TestReplaceFile:
     def test_simple(self):
-        r = replace.ReplaceFile()
+        r = replace.Replace()
         with tutils.tmpdir() as td:
             rp = os.path.join(td, "replacement")
             with open(rp, "w") as f:
@@ -80,10 +80,10 @@ class TestReplaceFile:
             with taddons.context() as tctx:
                 tctx.configure(
                     r,
-                    replacement_files = [
-                        "/~q/foo/" + rp,
-                        "/~s/foo/" + rp,
-                        "/~b nonexistent/nonexistent/nonexistent",
+                    replacements = [
+                        "/~q/foo/@" + rp,
+                        "/~s/foo/@" + rp,
+                        "/~b nonexistent/nonexistent/@nonexistent",
                     ]
                 )
                 f = tflow.tflow()

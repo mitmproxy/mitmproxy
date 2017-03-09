@@ -120,7 +120,6 @@ class Options(optmanager.OptManager):
             the separator can be any character.
             """
         )
-
         self.add_option(
             "server_replay_use_headers", Sequence[str], [],
             "Request headers to be considered during replay."
