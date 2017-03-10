@@ -78,7 +78,7 @@ class Flow(stateobject.StateObject):
         self._backup = None  # type: typing.Optional[Flow]
         self.reply = None  # type: typing.Optional[controller.Reply]
         self.marked = False  # type: bool
-        self.metadata = dict()  # type: typing.Dict[str, str]
+        self.metadata = dict()  # type: typing.Dict[str, typing.Any]
 
     _stateobject_attributes = dict(
         id=str,
