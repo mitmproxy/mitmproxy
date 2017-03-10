@@ -1,7 +1,7 @@
 import binascii
 import weakref
 from typing import Optional
-from typing import Mapping  # noqa
+from typing import MutableMapping  # noqa
 from typing import Tuple
 
 import passlib.apache
@@ -46,7 +46,7 @@ class ProxyAuth:
         self.htpasswd = None
         self.singleuser = None
         self.mode = None
-        self.authenticated = weakref.WeakKeyDictionary()  # type: Mapping[connections.ClientConnection, Tuple[str, str]]
+        self.authenticated = weakref.WeakKeyDictionary()  # type: MutableMapping[connections.ClientConnection, Tuple[str, str]]
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def enabled(self) -> bool:
