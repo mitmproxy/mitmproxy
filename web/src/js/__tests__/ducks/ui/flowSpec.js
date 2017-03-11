@@ -8,7 +8,8 @@ import reducer, {
                     setContentViewDescription,
                     setShowFullContent,
                     setContent,
-                    updateEdit
+                    updateEdit,
+                    stopEdit
                 } from '../../../ducks/ui/flow'
 
 import { select, updateFlow } from '../../../ducks/flows'
@@ -65,12 +66,12 @@ describe('flow reducer', () => {
     it('should not change the state when a flow is updated which is not selected', () => {
         let modifiedFlow = {id: 1}
         let updatedFlow = {id: 0}
-        expect(reducer({modifiedFlow}, updateFlow(updatedFlow)).modifiedFlow).toEqual(modifiedFlow)
+        expect(reducer({modifiedFlow}, stopEdit(updatedFlow, modifiedFlow)).modifiedFlow).toEqual(modifiedFlow)
     })
 
-     it('should stop editing when the selected flow is updated', () => {
+    it('should stop editing when the selected flow is updated', () => {
         let modifiedFlow = {id: 1}
         let updatedFlow = {id: 1}
-        expect(reducer({modifiedFlow}, updateFlow(updatedFlow)).modifiedFlow).toBeFalsy()
+        expect(reducer({modifiedFlow}, stopEdit(updatedFlow, modifiedFlow)).modifiedFlow).toBeFalsy()
     })
 })

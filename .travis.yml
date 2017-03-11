@@ -10,9 +10,6 @@ git:
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - language: node_js
-      node_js: "node"
   include:
     - python: 3.5
       env: TOXENV=lint
