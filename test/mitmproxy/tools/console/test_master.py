@@ -60,8 +60,10 @@ class TestMaster(tservers.MasterTest):
         w2 = console.window.Window(self, None, None, None, None)
         m = self.mkmaster()
         m.view_stack.append(w1)
-        m.view_stack.append(w2)
+        assert len(m.view_stack) == 1
+        assert m.view_stack[-1] == w1
 
-        assert len(m.view_stack) == 2
+        m.view_stack.append(w2)
         console.signals.replace_view_state.send(self)
         assert len(m.view_stack) == 1
+        assert m.view_stack[-1] == w2
