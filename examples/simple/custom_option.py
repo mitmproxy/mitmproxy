@@ -3,7 +3,7 @@ from mitmproxy import ctx
 
 def start(options):
     ctx.log.info("Registering option 'custom'")
-    options.add_option("custom", str, "default", "A custom option")
+    options.add_option("custom", bool, False, "A custom option")
 
 
 def configure(options, updated):

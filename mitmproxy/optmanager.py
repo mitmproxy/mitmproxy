@@ -338,6 +338,8 @@ class OptManager:
             optname, optval = parts[0], None
         else:
             optname, optval = parts[0], parts[1]
+        if optname not in self._options:
+            raise exceptions.OptionsError("No such option %s" % optname)
         o = self._options[optname]
 
         if o.typespec in (str, typing.Optional[str]):

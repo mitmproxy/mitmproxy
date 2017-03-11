@@ -346,3 +346,6 @@ def test_set():
     assert opts.seqstr == ["foo", "bar"]
     opts.set("seqstr")
     assert opts.seqstr == []
+
+    with pytest.raises(exceptions.OptionsError):
+        opts.set("nonexistent=wobble")
