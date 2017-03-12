@@ -1,11 +1,11 @@
 import os.path
-import pytest
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 
-from .. import tservers
+import pytest
+
 from mitmproxy.addons import replace
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
 class TestReplace:
@@ -34,7 +34,7 @@ class TestReplace:
         with taddons.context() as tctx:
             tctx.configure(
                 r,
-                replacements = [
+                replacements=[
                     "/~q/foo/bar",
                     "/~s/foo/bar",
                 ]
@@ -49,25 +49,22 @@ class TestReplace:
             r.response(f)
             assert f.response.content == b"bar"
 
-
-class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
-    ssl = False
-
     def test_order(self):
-        sa = replace.Replace()
-        self.proxy.tmaster.addons.add(sa)
-
-        self.proxy.tmaster.options.replacements = [
-            "/~q/foo/bar",
-            "/~q/bar/baz",
-            "/~q/foo/oh noes!",
-            "/~s/baz/ORLY"
-        ]
-        p = self.pathoc()
-        with p.connect():
-            req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
-        assert req.content == b"ORLY"
-        assert req.status_code == 418
+        r = replace.Replace()
+        with taddons.context() as tctx:
+            tctx.configure(
+                r,
+                replacements=[
+                    "/foo/bar",
+                    "/bar/baz",
+                    "/foo/oh noes!",
+                    "/bar/oh noes!",
+                ]
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            r.request(f)
+            assert f.request.content == b"baz"
 
 
 class TestReplaceFile:
@@ -80,7 +77,7 @@ class TestReplaceFile:
             with taddons.context() as tctx:
                 tctx.configure(
                     r,
-                    replacements = [
+                    replacements=[
                         "/~q/foo/@" + rp,
                         "/~s/foo/@" + rp,
                         "/~b nonexistent/nonexistent/@nonexistent",

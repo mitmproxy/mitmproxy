@@ -46,19 +46,18 @@ def parse_hook(s):
 class Replace:
     def __init__(self):
         self.lst = []
-        self.optionName = "replacements"
 
     def configure(self, options, updated):
         """
             .replacements is a list of tuples (fpat, rex, s):
 
             fpatt: a string specifying a filter pattern.
-            rex: a regular expression, as bytes.
-            s: the replacement string, as bytes
+            rex: a regular expression, as string.
+            s: the replacement string
         """
-        if self.optionName in updated:
+        if "replacements" in updated:
             lst = []
-            for rep in getattr(options, self.optionName):
+            for rep in options.replacements:
                 fpatt, rex, s = parse_hook(rep)
 
                 flt = flowfilter.parse(fpatt)
@@ -67,6 +66,7 @@ class Replace:
                         "Invalid filter pattern: %s" % fpatt
                     )
                 try:
+                    # We should ideally escape here before trying to compile
                     re.compile(rex)
                 except re.error as e:
                     raise exceptions.OptionsError(
@@ -93,10 +93,11 @@ class Replace:
 
     def replace(self, obj, rex, s):
         if s.startswith("@"):
-            s = s.replace("@", "")
+            s = os.path.expanduser(s[1:])
             try:
-                s = open(os.path.expanduser(s), "rb").read()
-            except IOError as e:
+                with open(s, "rb") as f:
+                    s = f.read()
+            except IOError:
                 ctx.log.warn("Could not read replacement file: %s" % s)
                 return
         obj.replace(rex, s, flags=re.DOTALL)

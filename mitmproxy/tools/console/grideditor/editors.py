@@ -91,7 +91,7 @@ class ReplaceEditor(base.GridEditor):
             except re.error:
                 return "Invalid regular expression."
         elif col == 2:
-            if val.startswith("@") and not os.path.isfile(os.path.expanduser(val.replace("@", ""))):
+            if val.startswith("@") and not os.path.isfile(os.path.expanduser(val[1:])):
                 return "Invalid file path"
         return False
 
