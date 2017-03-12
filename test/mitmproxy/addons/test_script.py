@@ -68,13 +68,12 @@ class TestParseCommand:
         with pytest.raises(ValueError):
             script.parse_command("  ")
 
-    def test_no_script_file(self):
+    def test_no_script_file(self, tmpdir):
         with pytest.raises(Exception, match="not found"):
             script.parse_command("notfound")
 
-        with tutils.tmpdir() as dir:
-            with pytest.raises(Exception, match="Not a file"):
-                script.parse_command(dir)
+        with pytest.raises(Exception, match="Not a file"):
+            script.parse_command(str(tmpdir))
 
     def test_parse_args(self):
         with utils.chdir(tutils.test_data.dirname):
@@ -128,21 +127,19 @@ class TestScript:
             recf = sc.ns.call_log[0]
             assert recf[1] == "request"
 
-    def test_reload(self):
+    def test_reload(self, tmpdir):
         with taddons.context() as tctx:
-            with tutils.tmpdir():
-                with open("foo.py", "w"):
-                    pass
-                sc = script.Script("foo.py")
-                tctx.configure(sc)
-                for _ in range(100):
-                    with open("foo.py", "a") as f:
-                        f.write(".")
-                    sc.tick()
-                    time.sleep(0.1)
-                    if tctx.master.event_log:
-                        return
-                raise AssertionError("Change event not detected.")
+            f = tmpdir.join("foo.py")
+            f.ensure(file=True)
+            sc = script.Script(str(f))
+            tctx.configure(sc)
+            for _ in range(100):
+                f.write(".")
+                sc.tick()
+                time.sleep(0.1)
+                if tctx.master.event_log:
+                    return
+            raise AssertionError("Change event not detected.")
 
     def test_exception(self):
         with taddons.context() as tctx:

@@ -1,4 +1,3 @@
-import os
 import pytest
 from unittest import mock
 
@@ -9,7 +8,6 @@ from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.tools import dump
 
-from mitmproxy.test import tutils
 from .. import tservers
 
 
@@ -19,18 +17,17 @@ class TestDumpMaster(tservers.MasterTest):
         m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)
         return m
 
-    def test_read(self):
-        with tutils.tmpdir() as t:
-            p = os.path.join(t, "read")
-            self.flowfile(p)
-            self.dummy_cycle(
-                self.mkmaster(None, rfile=p),
-                1, b"",
-            )
-            with pytest.raises(exceptions.OptionsError):
-                self.mkmaster(None, rfile="/nonexistent")
-            with pytest.raises(exceptions.OptionsError):
-                self.mkmaster(None, rfile="test_dump.py")
+    def test_read(self, tmpdir):
+        p = str(tmpdir.join("read"))
+        self.flowfile(p)
+        self.dummy_cycle(
+            self.mkmaster(None, rfile=p),
+            1, b"",
+        )
+        with pytest.raises(exceptions.OptionsError):
+            self.mkmaster(None, rfile="/nonexistent")
+        with pytest.raises(exceptions.OptionsError):
+            self.mkmaster(None, rfile="test_dump.py")
 
     def test_has_error(self):
         m = self.mkmaster(None)

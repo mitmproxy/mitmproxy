@@ -1,11 +1,9 @@
-import os.path
 import pytest
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 
 from .. import tservers
 from mitmproxy.addons import replace
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class TestReplace:
@@ -71,33 +69,31 @@ class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
 
 
 class TestReplaceFile:
-    def test_simple(self):
+    def test_simple(self, tmpdir):
         r = replace.ReplaceFile()
-        with tutils.tmpdir() as td:
-            rp = os.path.join(td, "replacement")
-            with open(rp, "w") as f:
-                f.write("bar")
-            with taddons.context() as tctx:
-                tctx.configure(
-                    r,
-                    replacement_files = [
-                        "/~q/foo/" + rp,
-                        "/~s/foo/" + rp,
-                        "/~b nonexistent/nonexistent/nonexistent",
-                    ]
-                )
-                f = tflow.tflow()
-                f.request.content = b"foo"
-                r.request(f)
-                assert f.request.content == b"bar"
+        rp = tmpdir.join("replacement")
+        rp.write("bar")
+        with taddons.context() as tctx:
+            tctx.configure(
+                r,
+                replacement_files = [
+                    "/~q/foo/" + str(rp),
+                    "/~s/foo/" + str(rp),
+                    "/~b nonexistent/nonexistent/nonexistent",
+                ]
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            r.request(f)
+            assert f.request.content == b"bar"
 
-                f = tflow.tflow(resp=True)
-                f.response.content = b"foo"
-                r.response(f)
-                assert f.response.content == b"bar"
+            f = tflow.tflow(resp=True)
+            f.response.content = b"foo"
+            r.response(f)
+            assert f.response.content == b"bar"
 
-                f = tflow.tflow()
-                f.request.content = b"nonexistent"
-                assert not tctx.master.event_log
-                r.request(f)
-                assert tctx.master.event_log
+            f = tflow.tflow()
+            f.request.content = b"nonexistent"
+            assert not tctx.master.event_log
+            r.request(f)
+            assert tctx.master.event_log
