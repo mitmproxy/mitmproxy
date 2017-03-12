@@ -72,6 +72,10 @@ class Replace:
                     raise exceptions.OptionsError(
                         "Invalid regular expression: %s - %s" % (rex, str(e))
                     )
+                if s.startswith("@") and not os.path.isfile(s[1:]):
+                    raise exceptions.OptionsError(
+                        "Invalid file path: {}".format(s[1:])
+                    )
                 lst.append((rex, s, flt))
             self.lst = lst
 

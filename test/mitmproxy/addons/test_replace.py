@@ -1,11 +1,8 @@
-import os.path
-
 import pytest
 
 from mitmproxy.addons import replace
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 
 
 class TestReplace:
@@ -68,33 +65,38 @@ class TestReplace:
 
 
 class TestReplaceFile:
-    def test_simple(self):
+    def test_simple(self, tmpdir):
         r = replace.Replace()
-        with tutils.tmpdir() as td:
-            rp = os.path.join(td, "replacement")
-            with open(rp, "w") as f:
-                f.write("bar")
-            with taddons.context() as tctx:
+        with taddons.context() as tctx:
+            tmpfile = tmpdir.join("replacement")
+            tmpfile.write("bar")
+            tctx.configure(
+                r,
+                replacements=["/~q/foo/@" + str(tmpfile)]
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            r.request(f)
+            assert f.request.content == b"bar"
+
+    def test_nonexistent(self, tmpdir):
+        r = replace.Replace()
+        with taddons.context() as tctx:
+            with pytest.raises(Exception, match="Invalid file path"):
                 tctx.configure(
                     r,
-                    replacements=[
-                        "/~q/foo/@" + rp,
-                        "/~s/foo/@" + rp,
-                        "/~b nonexistent/nonexistent/@nonexistent",
-                    ]
+                    replacements=["/~q/foo/@nonexistent"]
                 )
-                f = tflow.tflow()
-                f.request.content = b"foo"
-                r.request(f)
-                assert f.request.content == b"bar"
 
-                f = tflow.tflow(resp=True)
-                f.response.content = b"foo"
-                r.response(f)
-                assert f.response.content == b"bar"
-
-                f = tflow.tflow()
-                f.request.content = b"nonexistent"
-                assert not tctx.master.event_log
-                r.request(f)
-                assert tctx.master.event_log
+            tmpfile = tmpdir.join("replacement")
+            tmpfile.write("bar")
+            tctx.configure(
+                r,
+                replacements=["/~q/foo/@" + str(tmpfile)]
+            )
+            tmpfile.remove()
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            assert not tctx.master.event_log
+            r.request(f)
+            assert tctx.master.event_log
