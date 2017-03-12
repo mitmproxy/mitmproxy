@@ -173,3 +173,4 @@ def test_handlers():
         f2 = tflow.tflow(client_conn=f.client_conn)
         up.requestheaders(f2)
         assert not f2.response
+        assert f2.metadata["proxyauth"] == ('test', 'test')

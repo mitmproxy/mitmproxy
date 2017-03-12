@@ -1,10 +1,8 @@
-import os
 import urllib
 import pytest
 
-from mitmproxy.test import tutils
-from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 import mitmproxy.test.tutils
 from mitmproxy.addons import serverplayback
@@ -19,15 +17,14 @@ def tdump(path, flows):
         w.add(i)
 
 
-def test_config():
+def test_config(tmpdir):
     s = serverplayback.ServerPlayback()
-    with tutils.tmpdir() as p:
-        with taddons.context() as tctx:
-            fpath = os.path.join(p, "flows")
-            tdump(fpath, [tflow.tflow(resp=True)])
-            tctx.configure(s, server_replay=[fpath])
-            with pytest.raises(exceptions.OptionsError):
-                tctx.configure(s, server_replay=[p])
+    with taddons.context() as tctx:
+        fpath = str(tmpdir.join("flows"))
+        tdump(fpath, [tflow.tflow(resp=True)])
+        tctx.configure(s, server_replay=[fpath])
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(s, server_replay=[str(tmpdir)])
 
 
 def test_tick():

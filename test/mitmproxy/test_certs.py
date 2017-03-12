@@ -34,118 +34,106 @@ from mitmproxy.test import tutils
 
 class TestCertStore:
 
-    def test_create_explicit(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            assert ca.get_cert(b"foo", [])
+    def test_create_explicit(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        assert ca.get_cert(b"foo", [])
 
-            ca2 = certs.CertStore.from_store(d, "test")
-            assert ca2.get_cert(b"foo", [])
+        ca2 = certs.CertStore.from_store(str(tmpdir), "test")
+        assert ca2.get_cert(b"foo", [])
 
-            assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+        assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
-    def test_create_no_common_name(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            assert ca.get_cert(None, [])[0].cn is None
+    def test_create_no_common_name(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        assert ca.get_cert(None, [])[0].cn is None
 
-    def test_create_tmp(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            assert ca.get_cert(b"foo.com", [])
-            assert ca.get_cert(b"foo.com", [])
-            assert ca.get_cert(b"*.foo.com", [])
+    def test_create_tmp(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        assert ca.get_cert(b"foo.com", [])
+        assert ca.get_cert(b"foo.com", [])
+        assert ca.get_cert(b"*.foo.com", [])
 
-            r = ca.get_cert(b"*.foo.com", [])
-            assert r[1] == ca.default_privatekey
+        r = ca.get_cert(b"*.foo.com", [])
+        assert r[1] == ca.default_privatekey
 
-    def test_sans(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            c1 = ca.get_cert(b"foo.com", [b"*.bar.com"])
-            ca.get_cert(b"foo.bar.com", [])
-            # assert c1 == c2
-            c3 = ca.get_cert(b"bar.com", [])
-            assert not c1 == c3
+    def test_sans(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        c1 = ca.get_cert(b"foo.com", [b"*.bar.com"])
+        ca.get_cert(b"foo.bar.com", [])
+        # assert c1 == c2
+        c3 = ca.get_cert(b"bar.com", [])
+        assert not c1 == c3
 
-    def test_sans_change(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            ca.get_cert(b"foo.com", [b"*.bar.com"])
-            cert, key, chain_file = ca.get_cert(b"foo.bar.com", [b"*.baz.com"])
-            assert b"*.baz.com" in cert.altnames
+    def test_sans_change(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca.get_cert(b"foo.com", [b"*.bar.com"])
+        cert, key, chain_file = ca.get_cert(b"foo.bar.com", [b"*.baz.com"])
+        assert b"*.baz.com" in cert.altnames
 
-    def test_expire(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            ca.STORE_CAP = 3
-            ca.get_cert(b"one.com", [])
-            ca.get_cert(b"two.com", [])
-            ca.get_cert(b"three.com", [])
+    def test_expire(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca.STORE_CAP = 3
+        ca.get_cert(b"one.com", [])
+        ca.get_cert(b"two.com", [])
+        ca.get_cert(b"three.com", [])
 
-            assert (b"one.com", ()) in ca.certs
-            assert (b"two.com", ()) in ca.certs
-            assert (b"three.com", ()) in ca.certs
+        assert (b"one.com", ()) in ca.certs
+        assert (b"two.com", ()) in ca.certs
+        assert (b"three.com", ()) in ca.certs
 
-            ca.get_cert(b"one.com", [])
+        ca.get_cert(b"one.com", [])
 
-            assert (b"one.com", ()) in ca.certs
-            assert (b"two.com", ()) in ca.certs
-            assert (b"three.com", ()) in ca.certs
+        assert (b"one.com", ()) in ca.certs
+        assert (b"two.com", ()) in ca.certs
+        assert (b"three.com", ()) in ca.certs
 
-            ca.get_cert(b"four.com", [])
+        ca.get_cert(b"four.com", [])
 
-            assert (b"one.com", ()) not in ca.certs
-            assert (b"two.com", ()) in ca.certs
-            assert (b"three.com", ()) in ca.certs
-            assert (b"four.com", ()) in ca.certs
+        assert (b"one.com", ()) not in ca.certs
+        assert (b"two.com", ()) in ca.certs
+        assert (b"three.com", ()) in ca.certs
+        assert (b"four.com", ()) in ca.certs
 
-    def test_overrides(self):
-        with tutils.tmpdir() as d:
-            ca1 = certs.CertStore.from_store(os.path.join(d, "ca1"), "test")
-            ca2 = certs.CertStore.from_store(os.path.join(d, "ca2"), "test")
-            assert not ca1.default_ca.get_serial_number(
-            ) == ca2.default_ca.get_serial_number()
+    def test_overrides(self, tmpdir):
+        ca1 = certs.CertStore.from_store(str(tmpdir.join("ca1")), "test")
+        ca2 = certs.CertStore.from_store(str(tmpdir.join("ca2")), "test")
+        assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
-            dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
-            dcp = os.path.join(d, "dc")
-            f = open(dcp, "wb")
-            f.write(dc[0].to_pem())
-            f.close()
-            ca1.add_cert_file(b"foo.com", dcp)
+        dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
+        dcp = tmpdir.join("dc")
+        dcp.write(dc[0].to_pem())
+        ca1.add_cert_file(b"foo.com", str(dcp))
 
-            ret = ca1.get_cert(b"foo.com", [])
-            assert ret[0].serial == dc[0].serial
+        ret = ca1.get_cert(b"foo.com", [])
+        assert ret[0].serial == dc[0].serial
 
-    def test_create_dhparams(self):
-        with tutils.tmpdir() as d:
-            filename = os.path.join(d, "dhparam.pem")
-            certs.CertStore.load_dhparam(filename)
-            assert os.path.exists(filename)
+    def test_create_dhparams(self, tmpdir):
+        filename = str(tmpdir.join("dhparam.pem"))
+        certs.CertStore.load_dhparam(filename)
+        assert os.path.exists(filename)
 
 
 class TestDummyCert:
 
-    def test_with_ca(self):
-        with tutils.tmpdir() as d:
-            ca = certs.CertStore.from_store(d, "test")
-            r = certs.dummy_cert(
-                ca.default_privatekey,
-                ca.default_ca,
-                b"foo.com",
-                [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"]
-            )
-            assert r.cn == b"foo.com"
-            assert r.altnames == [b'one.com', b'two.com', b'*.three.com']
+    def test_with_ca(self, tmpdir):
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        r = certs.dummy_cert(
+            ca.default_privatekey,
+            ca.default_ca,
+            b"foo.com",
+            [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"]
+        )
+        assert r.cn == b"foo.com"
+        assert r.altnames == [b'one.com', b'two.com', b'*.three.com']
 
-            r = certs.dummy_cert(
-                ca.default_privatekey,
-                ca.default_ca,
-                None,
-                []
-            )
-            assert r.cn is None
-            assert r.altnames == []
+        r = certs.dummy_cert(
+            ca.default_privatekey,
+            ca.default_ca,
+            None,
+            []
+        )
+        assert r.cn is None
+        assert r.altnames == []
 
 
 class TestSSLCert:
