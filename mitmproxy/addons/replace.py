@@ -43,9 +43,10 @@ def parse_hook(s):
     return patt, a, b
 
 
-class _ReplaceBase:
+class Replace:
     def __init__(self):
         self.lst = []
+        self.optionName = "replacements"
 
     def configure(self, options, updated):
         """
@@ -89,10 +90,6 @@ class _ReplaceBase:
     def response(self, flow):
         if not flow.reply.has_message:
             self.execute(flow)
-
-
-class Replace(_ReplaceBase):
-    optionName = "replacements"
 
     def replace(self, obj, rex, s):
         if s.startswith("@"):
