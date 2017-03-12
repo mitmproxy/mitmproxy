@@ -1,5 +1,4 @@
 import copy
-import os
 import pytest
 import typing
 import argparse
@@ -7,7 +6,6 @@ import argparse
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy import exceptions
-from mitmproxy.test import tutils
 
 
 class TO(optmanager.OptManager):
@@ -238,25 +236,24 @@ def test_serialize_defaults():
     assert o.serialize(None, defaults=True)
 
 
-def test_saving():
+def test_saving(tmpdir):
     o = TD2()
     o.three = "set"
-    with tutils.tmpdir() as tdir:
-        dst = os.path.join(tdir, "conf")
-        o.save(dst, defaults=True)
+    dst = str(tmpdir.join("conf"))
+    o.save(dst, defaults=True)
 
-        o2 = TD2()
-        o2.load_paths(dst)
-        o2.three = "foo"
-        o2.save(dst, defaults=True)
+    o2 = TD2()
+    o2.load_paths(dst)
+    o2.three = "foo"
+    o2.save(dst, defaults=True)
 
+    o.load_paths(dst)
+    assert o.three == "foo"
+
+    with open(dst, 'a') as f:
+        f.write("foobar: '123'")
+    with pytest.raises(exceptions.OptionsError, matches=''):
         o.load_paths(dst)
-        assert o.three == "foo"
-
-        with open(dst, 'a') as f:
-            f.write("foobar: '123'")
-        with pytest.raises(exceptions.OptionsError, matches=''):
-            o.load_paths(dst)
 
 
 def test_merge():

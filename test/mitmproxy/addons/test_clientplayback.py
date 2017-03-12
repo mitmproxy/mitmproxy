@@ -1,9 +1,7 @@
-import os
 import pytest
 from unittest import mock
 
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 from mitmproxy import io
 from mitmproxy import exceptions
 
@@ -49,14 +47,13 @@ class TestClientPlayback:
                 cp.tick()
                 assert cp.current_thread is None
 
-    def test_configure(self):
+    def test_configure(self, tmpdir):
         cp = clientplayback.ClientPlayback()
         with taddons.context() as tctx:
-            with tutils.tmpdir() as td:
-                path = os.path.join(td, "flows")
-                tdump(path, [tflow.tflow()])
-                tctx.configure(cp, client_replay=[path])
-                tctx.configure(cp, client_replay=[])
-                tctx.configure(cp)
-                with pytest.raises(exceptions.OptionsError):
-                    tctx.configure(cp, client_replay=["nonexistent"])
+            path = str(tmpdir.join("flows"))
+            tdump(path, [tflow.tflow()])
+            tctx.configure(cp, client_replay=[path])
+            tctx.configure(cp, client_replay=[])
+            tctx.configure(cp)
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(cp, client_replay=["nonexistent"])
