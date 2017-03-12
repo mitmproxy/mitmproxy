@@ -222,83 +222,6 @@ class OptManager:
         """
         return self._options[option].has_changed()
 
-    def save(self, path, defaults=False):
-        """
-            Save to path. If the destination file exists, modify it in-place.
-        """
-        if os.path.exists(path) and os.path.isfile(path):
-            with open(path, "r") as f:
-                data = f.read()
-        else:
-            data = ""
-        data = self.serialize(data, defaults)
-        with open(path, "w") as f:
-            f.write(data)
-
-    def serialize(self, text, defaults=False):
-        """
-            Performs a round-trip serialization. If text is not None, it is
-            treated as a previous serialization that should be modified
-            in-place.
-
-            - If "defaults" is False, only options with non-default values are
-              serialized. Default values in text are preserved.
-            - Unknown options in text are removed.
-            - Raises OptionsError if text is invalid.
-        """
-        data = self._load(text)
-        for k in self.keys():
-            if defaults or self.has_changed(k):
-                data[k] = getattr(self, k)
-        for k in list(data.keys()):
-            if k not in self._options:
-                del data[k]
-        return ruamel.yaml.round_trip_dump(data)
-
-    def _load(self, text):
-        if not text:
-            return {}
-        try:
-            data = ruamel.yaml.load(text, ruamel.yaml.RoundTripLoader)
-        except ruamel.yaml.error.YAMLError as v:
-            snip = v.problem_mark.get_snippet()
-            raise exceptions.OptionsError(
-                "Config error at line %s:\n%s\n%s" %
-                (v.problem_mark.line + 1, snip, v.problem)
-            )
-        if isinstance(data, str):
-            raise exceptions.OptionsError("Config error - no keys found.")
-        return data
-
-    def load(self, text):
-        """
-            Load configuration from text, over-writing options already set in
-            this object. May raise OptionsError if the config file is invalid.
-        """
-        data = self._load(text)
-        try:
-            self.update(**data)
-        except KeyError as v:
-            raise exceptions.OptionsError(v)
-
-    def load_paths(self, *paths):
-        """
-            Load paths in order. Each path takes precedence over the previous
-            path. Paths that don't exist are ignored, errors raise an
-            OptionsError.
-        """
-        for p in paths:
-            p = os.path.expanduser(p)
-            if os.path.exists(p) and os.path.isfile(p):
-                with open(p, "r") as f:
-                    txt = f.read()
-                try:
-                    self.load(txt)
-                except exceptions.OptionsError as e:
-                    raise exceptions.OptionsError(
-                        "Error reading %s: %s" % (p, e)
-                    )
-
     def merge(self, opts):
         """
             Merge a dict of options into this object. Options that have None
@@ -468,3 +391,85 @@ def dump_defaults(opts):
         )
         s.yaml_set_comment_before_after_key(k, before = "\n" + txt)
     return ruamel.yaml.round_trip_dump(s)
+
+
+def parse(text):
+    if not text:
+        return {}
+    try:
+        data = ruamel.yaml.load(text, ruamel.yaml.RoundTripLoader)
+    except ruamel.yaml.error.YAMLError as v:
+        snip = v.problem_mark.get_snippet()
+        raise exceptions.OptionsError(
+            "Config error at line %s:\n%s\n%s" %
+            (v.problem_mark.line + 1, snip, v.problem)
+        )
+    if isinstance(data, str):
+        raise exceptions.OptionsError("Config error - no keys found.")
+    return data
+
+
+def load(opts, text):
+    """
+        Load configuration from text, over-writing options already set in
+        this object. May raise OptionsError if the config file is invalid.
+    """
+    data = parse(text)
+    try:
+        opts.update(**data)
+    except KeyError as v:
+        raise exceptions.OptionsError(v)
+
+
+def load_paths(opts, *paths):
+    """
+        Load paths in order. Each path takes precedence over the previous
+        path. Paths that don't exist are ignored, errors raise an
+        OptionsError.
+    """
+    for p in paths:
+        p = os.path.expanduser(p)
+        if os.path.exists(p) and os.path.isfile(p):
+            with open(p, "r") as f:
+                txt = f.read()
+            try:
+                load(opts, txt)
+            except exceptions.OptionsError as e:
+                raise exceptions.OptionsError(
+                    "Error reading %s: %s" % (p, e)
+                )
+
+
+def serialize(opts, text, defaults=False):
+    """
+        Performs a round-trip serialization. If text is not None, it is
+        treated as a previous serialization that should be modified
+        in-place.
+
+        - If "defaults" is False, only options with non-default values are
+            serialized. Default values in text are preserved.
+        - Unknown options in text are removed.
+        - Raises OptionsError if text is invalid.
+    """
+    data = parse(text)
+    for k in opts.keys():
+        if defaults or opts.has_changed(k):
+            data[k] = getattr(opts, k)
+    for k in list(data.keys()):
+        if k not in opts._options:
+            del data[k]
+    return ruamel.yaml.round_trip_dump(data)
+
+
+def save(opts, path, defaults=False):
+    """
+        Save to path. If the destination file exists, modify it in-place.
+    """
+    if os.path.exists(path) and os.path.isfile(path):
+        with open(path, "r") as f:
+            data = f.read()
+    else:
+        data = ""
+    data = serialize(opts, data, defaults)
+    with open(path, "w") as f:
+        f.write(data)

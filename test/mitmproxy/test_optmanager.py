@@ -199,61 +199,61 @@ def test_simple():
 def test_serialize():
     o = TD2()
     o.three = "set"
-    assert "dfour" in o.serialize(None, defaults=True)
+    assert "dfour" in optmanager.serialize(o, None, defaults=True)
 
-    data = o.serialize(None)
+    data = optmanager.serialize(o, None)
     assert "dfour" not in data
 
     o2 = TD2()
-    o2.load(data)
+    optmanager.load(o2, data)
     assert o2 == o
 
     t = """
         unknown: foo
     """
-    data = o.serialize(t)
+    data = optmanager.serialize(o, t)
     o2 = TD2()
-    o2.load(data)
+    optmanager.load(o2, data)
     assert o2 == o
 
     t = "invalid: foo\ninvalid"
     with pytest.raises(Exception, match="Config error"):
-        o2.load(t)
+        optmanager.load(o2, t)
 
     t = "invalid"
     with pytest.raises(Exception, match="Config error"):
-        o2.load(t)
+        optmanager.load(o2, t)
 
     t = ""
-    o2.load(t)
+    optmanager.load(o2, t)
 
     with pytest.raises(exceptions.OptionsError, matches='No such option: foobar'):
-        o2.load("foobar: '123'")
+        optmanager.load(o2, "foobar: '123'")
 
 
 def test_serialize_defaults():
     o = options.Options()
-    assert o.serialize(None, defaults=True)
+    assert optmanager.serialize(o, None, defaults=True)
 
 
 def test_saving(tmpdir):
     o = TD2()
     o.three = "set"
     dst = str(tmpdir.join("conf"))
-    o.save(dst, defaults=True)
+    optmanager.save(o, dst, defaults=True)
 
     o2 = TD2()
-    o2.load_paths(dst)
+    optmanager.load_paths(o2, dst)
     o2.three = "foo"
-    o2.save(dst, defaults=True)
+    optmanager.save(o2, dst, defaults=True)
 
-    o.load_paths(dst)
+    optmanager.load_paths(o, dst)
     assert o.three == "foo"
 
     with open(dst, 'a') as f:
         f.write("foobar: '123'")
     with pytest.raises(exceptions.OptionsError, matches=''):
-        o.load_paths(dst)
+        optmanager.load_paths(o, dst)
 
 
 def test_merge():

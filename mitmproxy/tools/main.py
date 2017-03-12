@@ -69,7 +69,7 @@ def run(MasterKlass, args):  # pragma: no cover
     args = parser.parse_args(args)
     master = None
     try:
-        opts.load_paths(args.conf)
+        optmanager.load_paths(opts, args.conf)
         server = process_options(parser, opts, args)
         master = MasterKlass(opts, server)
         master.addons.configure_all(opts, opts.keys())
