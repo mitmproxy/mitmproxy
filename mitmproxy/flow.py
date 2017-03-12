@@ -113,7 +113,9 @@ class Flow(stateobject.StateObject):
     def copy(self):
         f = super().copy()
         f.id = str(uuid.uuid4())
-        f.live = False
+        f.live = False;
+        if self.reply != None:
+            f.reply = controller.DummyReply()
         return f
 
     def modified(self):
