@@ -1,3 +1,4 @@
+import warnings
 from io import BytesIO
 import tempfile
 import os
@@ -15,6 +16,11 @@ test_data = data.Data(__name__).push("../../test/")
 
 @contextmanager
 def tmpdir(*args, **kwargs):
+    warnings.warn(
+        "tutils.tmpdir is deprecated, use pytest's tmpdir fixture instead",
+        DeprecationWarning
+    )
+
     orig_workdir = os.getcwd()
     temp_workdir = tempfile.mkdtemp(*args, **kwargs)
     os.chdir(temp_workdir)
