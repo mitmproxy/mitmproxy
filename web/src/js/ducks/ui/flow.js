@@ -60,7 +60,7 @@ export default function reducer(state = defaultState, action) {
             // There is no explicit "stop edit" event.
             // We stop editing when we receive an update for
             // the currently edited flow from the server
-            if (action.flow.id === state.modifiedFlow.id) {
+            if (action.data.id === state.modifiedFlow.id) {
                 return {
                     ...state,
                     modifiedFlow: false,
@@ -148,7 +148,7 @@ export function setContent(content){
     return { type: SET_CONTENT, content }
 }
 
-export function stopEdit(flow, modifiedFlow) {
-    let diff = getDiff(flow, modifiedFlow)
-    return {type: flowsActions.UPDATE, flow, diff }
+export function stopEdit(data, modifiedFlow) {
+    let diff = getDiff(data, modifiedFlow)
+    return {type: flowsActions.UPDATE, data, diff }
 }
