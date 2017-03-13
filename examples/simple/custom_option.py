@@ -7,4 +7,5 @@ def start(options):
 
 
 def configure(options, updated):
-    ctx.log.info("custom option value: %s" % options.custom)
+    if "custom" in updated:
+        ctx.log.info("custom option value: %s" % options.custom)

@@ -83,10 +83,11 @@ def test_options():
 
     with pytest.raises(TypeError):
         TO(nonexistent = "value")
-    with pytest.raises(Exception, match="No such option"):
+    with pytest.raises(Exception, match="Unknown options"):
         o.nonexistent = "value"
-    with pytest.raises(Exception, match="No such option"):
+    with pytest.raises(Exception, match="Unknown options"):
         o.update(nonexistent = "value")
+    assert o.update_known(nonexistent = "value") == {"nonexistent": "value"}
 
     rec = []
 
@@ -226,9 +227,7 @@ def test_serialize():
 
     t = ""
     optmanager.load(o2, t)
-
-    with pytest.raises(exceptions.OptionsError, matches='No such option: foobar'):
-        optmanager.load(o2, "foobar: '123'")
+    assert optmanager.load(o2, "foobar: '123'") == {"foobar": "123"}
 
 
 def test_serialize_defaults():
@@ -252,7 +251,11 @@ def test_saving(tmpdir):
 
     with open(dst, 'a') as f:
         f.write("foobar: '123'")
-    with pytest.raises(exceptions.OptionsError, matches=''):
+    assert optmanager.load_paths(o, dst) == {"foobar": "123"}
+
+    with open(dst, 'a') as f:
+        f.write("'''")
+    with pytest.raises(exceptions.OptionsError):
         optmanager.load_paths(o, dst)
 
 

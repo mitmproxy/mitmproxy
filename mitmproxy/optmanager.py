@@ -81,8 +81,6 @@ class _Option:
 class OptManager:
     """
         OptManager is the base class from which Options objects are derived.
-        Note that the __init__ method of all child classes must force all
-        arguments to be positional only, by including a "*" argument.
 
         .changed is a blinker Signal that triggers whenever options are
         updated. If any handler in the chain raises an exceptions.OptionsError
@@ -176,15 +174,29 @@ class OptManager:
             o.reset()
         self.changed.send(self._options.keys())
 
+    def update_known(self, **kwargs):
+        """
+            Update and set all known options from kwargs. Returns a dictionary
+            of unknown options.
+        """
+        known, unknown = {}, {}
+        for k, v in kwargs.items():
+            if k in self._options:
+                known[k] = v
+            else:
+                unknown[k] = v
+        updated = set(known.keys())
+        if updated:
+            with self.rollback(updated):
+                for k, v in known.items():
+                    self._options[k].set(v)
+                self.changed.send(self, updated=updated)
+        return unknown
+
     def update(self, **kwargs):
-        updated = set(kwargs.keys())
-        with self.rollback(updated):
-            for k, v in kwargs.items():
-                if k not in self._options:
-                    raise KeyError("No such option: %s" % k)
-                self._options[k].set(v)
-            self.changed.send(self, updated=updated)
-        return self
+        u = self.update_known(**kwargs)
+        if u:
+            raise KeyError("Unknown options: %s" % ", ".join(u.keys()))
 
     def setter(self, attr):
         """
@@ -413,12 +425,11 @@ def load(opts, text):
     """
         Load configuration from text, over-writing options already set in
         this object. May raise OptionsError if the config file is invalid.
+
+        Returns a dictionary of all unknown options.
     """
     data = parse(text)
-    try:
-        opts.update(**data)
-    except KeyError as v:
-        raise exceptions.OptionsError(v)
+    return opts.update_known(**data)
 
 
 def load_paths(opts, *paths):
@@ -426,18 +437,22 @@ def load_paths(opts, *paths):
         Load paths in order. Each path takes precedence over the previous
         path. Paths that don't exist are ignored, errors raise an
         OptionsError.
+
+        Returns a dictionary of unknown options.
     """
+    ret = {}
     for p in paths:
         p = os.path.expanduser(p)
         if os.path.exists(p) and os.path.isfile(p):
             with open(p, "r") as f:
                 txt = f.read()
             try:
-                load(opts, txt)
+                ret.update(load(opts, txt))
             except exceptions.OptionsError as e:
                 raise exceptions.OptionsError(
                     "Error reading %s: %s" % (p, e)
                 )
+    return ret
 
 
 def serialize(opts, text, defaults=False):
