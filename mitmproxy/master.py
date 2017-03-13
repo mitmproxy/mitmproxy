@@ -42,6 +42,7 @@ class Master:
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.server = server
+        self.first_tick = True
         channel = controller.Channel(self.event_queue, self.should_exit)
         server.set_channel(channel)
 
@@ -76,20 +77,19 @@ class Master:
 
     def run(self):
         self.start()
-        running = False
         try:
             while not self.should_exit.is_set():
                 # Don't choose a very small timeout in Python 2:
                 # https://github.com/mitmproxy/mitmproxy/issues/443
                 # TODO: Lower the timeout value if we move to Python 3.
                 self.tick(0.1)
-                if not running:
-                    running = True
-                    self.addons.invoke_all_with_context("running")
         finally:
             self.shutdown()
 
     def tick(self, timeout):
+        if self.first_tick:
+            self.first_tick = False
+            self.addons.invoke_all_with_context("running")
         with self.handlecontext():
             self.addons("tick")
         changed = False
