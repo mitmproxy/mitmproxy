@@ -93,7 +93,7 @@ class Flow(stateobject.StateObject):
 
     def get_state(self):
         d = super().get_state()
-        d.update(version=version.IVERSION)
+        d.update(version=version.FLOW_FORMAT_VERSION)
         if self._backup and self._backup != d:
             d.update(backup=self._backup)
         return d
