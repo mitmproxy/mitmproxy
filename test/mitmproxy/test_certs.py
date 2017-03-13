@@ -160,7 +160,6 @@ class TestSSLCert:
         assert c2.to_pem()
         assert c2.has_expired is not None
 
-        assert not c1 == c2
         assert c1 != c2
 
     def test_err_broken_sans(self):

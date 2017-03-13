@@ -384,9 +384,6 @@ class SSLCert(serializable.Serializable):
     def __eq__(self, other):
         return self.digest("sha256") == other.digest("sha256")
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def get_state(self):
         return self.to_pem()
 
