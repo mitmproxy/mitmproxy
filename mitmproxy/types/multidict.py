@@ -4,7 +4,7 @@ from collections.abc import MutableMapping
 from mitmproxy.types import serializable
 
 
-class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
+class _MultiDict(MutableMapping, metaclass=ABCMeta):
     def __repr__(self):
         fields = (
             repr(field)
@@ -171,18 +171,8 @@ class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
                 coll.append([key, values])
         return coll
 
-    def get_state(self):
-        return self.fields
 
-    def set_state(self, state):
-        self.fields = tuple(tuple(x) for x in state)
-
-    @classmethod
-    def from_state(cls, state):
-        return cls(state)
-
-
-class MultiDict(_MultiDict):
+class MultiDict(_MultiDict, serializable.Serializable):
     def __init__(self, fields=()):
         super().__init__()
         self.fields = tuple(
@@ -196,6 +186,16 @@ class MultiDict(_MultiDict):
     @staticmethod
     def _kconv(key):
         return key
+
+    def get_state(self):
+        return self.fields
+
+    def set_state(self, state):
+        self.fields = tuple(tuple(x) for x in state)
+
+    @classmethod
+    def from_state(cls, state):
+        return cls(state)
 
 
 class MultiDictView(_MultiDict):
@@ -227,3 +227,6 @@ class MultiDictView(_MultiDict):
     @fields.setter
     def fields(self, value):
         self._setter(value)
+
+    def copy(self):
+        return MultiDict(self.fields)

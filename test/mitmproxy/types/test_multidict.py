@@ -200,3 +200,12 @@ class TestMultiDictView:
         tv["c"] = "b"
         assert p.vals == (("a", "b"), ("c", "b"))
         assert tv["a"] == "b"
+
+    def test_copy(self):
+        p = TParent()
+        tv = multidict.MultiDictView(p.getter, p.setter)
+        c = tv.copy()
+        assert isinstance(c, multidict.MultiDict)
+        assert tv.items() == c.items()
+        c["foo"] = "bar"
+        assert tv.items() != c.items()
