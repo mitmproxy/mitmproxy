@@ -121,13 +121,6 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "replacement_files", Sequence[str], [],
-            """
-            Replacement pattern, where the replacement clause is a path to a
-            file.
-            """
-        )
-        self.add_option(
             "server_replay_use_headers", Sequence[str], [],
             "Request headers to be considered during replay."
         )

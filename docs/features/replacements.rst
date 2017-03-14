@@ -48,14 +48,14 @@ In practice, it's pretty common for the replacement literal to be long and
 complex. For instance, it might be an XSS exploit that weighs in at hundreds or
 thousands of characters. To cope with this, there's a variation of the
 replacement hook specifier that lets you load the replacement text from a file.
-So, you might start **mitmdump** as follows:
+To specify a file as replacement, prefix the file path with ``@``.
+You might start **mitmdump** as follows:
 
->>> mitmdump --replace-from-file :~q:foo:~/xss-exploit
+>>> mitmdump --replacements :~q:foo:@~/xss-exploit
 
 This will load the replacement text from the file ``~/xss-exploit``.
 
-Both the ``--replace`` and ``--replace-from-file`` flags can be passed multiple
-times.
+The ``--replacements`` flag can be passed multiple times.
 
 
 Interactively
@@ -66,7 +66,6 @@ replacement hooks using a built-in editor. The context-sensitive help (:kbd:`?`)
 complete usage information.
 
 ================== =======================
-command-line       ``--replace``,
-                   ``--replace-from-file``
+command-line       ``--replacements``
 mitmproxy shortcut :kbd:`O` then :kbd:`R`
 ================== =======================

@@ -1,3 +1,4 @@
+import os
 import re
 
 from mitmproxy import exceptions
@@ -42,7 +43,7 @@ def parse_hook(s):
     return patt, a, b
 
 
-class _ReplaceBase:
+class Replace:
     def __init__(self):
         self.lst = []
 
@@ -51,12 +52,12 @@ class _ReplaceBase:
             .replacements is a list of tuples (fpat, rex, s):
 
             fpatt: a string specifying a filter pattern.
-            rex: a regular expression, as bytes.
-            s: the replacement string, as bytes
+            rex: a regular expression, as string.
+            s: the replacement string
         """
-        if self.optionName in updated:
+        if "replacements" in updated:
             lst = []
-            for rep in getattr(options, self.optionName):
+            for rep in options.replacements:
                 fpatt, rex, s = parse_hook(rep)
 
                 flt = flowfilter.parse(fpatt)
@@ -65,10 +66,15 @@ class _ReplaceBase:
                         "Invalid filter pattern: %s" % fpatt
                     )
                 try:
+                    # We should ideally escape here before trying to compile
                     re.compile(rex)
                 except re.error as e:
                     raise exceptions.OptionsError(
                         "Invalid regular expression: %s - %s" % (rex, str(e))
+                    )
+                if s.startswith("@") and not os.path.isfile(s[1:]):
+                    raise exceptions.OptionsError(
+                        "Invalid file path: {}".format(s[1:])
                     )
                 lst.append((rex, s, flt))
             self.lst = lst
@@ -89,21 +95,13 @@ class _ReplaceBase:
         if not flow.reply.has_message:
             self.execute(flow)
 
-
-class Replace(_ReplaceBase):
-    optionName = "replacements"
-
     def replace(self, obj, rex, s):
+        if s.startswith("@"):
+            s = os.path.expanduser(s[1:])
+            try:
+                with open(s, "rb") as f:
+                    s = f.read()
+            except IOError:
+                ctx.log.warn("Could not read replacement file: %s" % s)
+                return
         obj.replace(rex, s, flags=re.DOTALL)
-
-
-class ReplaceFile(_ReplaceBase):
-    optionName = "replacement_files"
-
-    def replace(self, obj, rex, s):
-        try:
-            v = open(s, "rb").read()
-        except IOError as e:
-            ctx.log.warn("Could not read replacement file: %s" % s)
-            return
-        obj.replace(rex, v, flags=re.DOTALL)
