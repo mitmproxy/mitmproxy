@@ -78,7 +78,7 @@ class Options(optmanager.OptManager):
             "Kill extra requests during replay."
         )
         self.add_option(
-            "keepserving", bool, True,
+            "keepserving", bool, False,
             "Continue serving after client playback or file read."
         )
         self.add_option(
