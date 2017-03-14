@@ -42,6 +42,7 @@ class Master:
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.server = server
+        self.first_tick = True
         channel = controller.Channel(self.event_queue, self.should_exit)
         server.set_channel(channel)
 
@@ -86,6 +87,9 @@ class Master:
             self.shutdown()
 
     def tick(self, timeout):
+        if self.first_tick:
+            self.first_tick = False
+            self.addons.invoke_all_with_context("running")
         with self.handlecontext():
             self.addons("tick")
         changed = False

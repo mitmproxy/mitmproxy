@@ -28,7 +28,9 @@ class TestMaster(tservers.MasterTest):
         if "verbosity" not in opts:
             opts["verbosity"] = 1
         o = options.Options(**opts)
-        return console.master.ConsoleMaster(o, proxy.DummyServer())
+        m = console.master.ConsoleMaster(o, proxy.DummyServer())
+        m.addons.configure_all(o, o.keys())
+        return m
 
     def test_basic(self):
         m = self.mkmaster()

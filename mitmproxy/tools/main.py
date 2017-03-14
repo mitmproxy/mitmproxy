@@ -39,14 +39,9 @@ def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
-    if args.options:
-        print(optmanager.dump(opts))
-        sys.exit(0)
-    if args.quiet:
+    if args.quiet or args.options:
+        args.verbosity = 0
         args.flow_detail = 0
-
-    for i in args.setoptions:
-        opts.set(i)
 
     adict = {}
     for n in dir(args):
@@ -74,9 +69,17 @@ def run(MasterKlass, args):  # pragma: no cover
     args = parser.parse_args(args)
     master = None
     try:
-        opts.load_paths(args.conf)
+        unknown = optmanager.load_paths(opts, args.conf)
         server = process_options(parser, opts, args)
         master = MasterKlass(opts, server)
+        master.addons.configure_all(opts, opts.keys())
+        remaining = opts.update_known(**unknown)
+        if remaining and opts.verbosity > 1:
+            print("Ignored options: %s" % remaining)
+        if args.options:
+            print(optmanager.dump_defaults(opts))
+            sys.exit(0)
+        opts.set(*args.setoptions)
 
         def cleankill(*args, **kwargs):
             master.shutdown()

@@ -1,11 +1,12 @@
 """
-This script makes it possible to use mitmproxy in scenarios where IP spoofing has been used to redirect
-connections to mitmproxy. The way this works is that we rely on either the TLS Server Name Indication (SNI) or the
-Host header of the HTTP request.
-Of course, this is not foolproof - if an HTTPS connection comes without SNI, we don't
-know the actual target and cannot construct a certificate that looks valid.
-Similarly, if there's no Host header or a spoofed Host header, we're out of luck as well.
-Using transparent mode is the better option most of the time.
+This script makes it possible to use mitmproxy in scenarios where IP spoofing
+has been used to redirect connections to mitmproxy. The way this works is that
+we rely on either the TLS Server Name Indication (SNI) or the Host header of the
+HTTP request. Of course, this is not foolproof - if an HTTPS connection comes
+without SNI, we don't know the actual target and cannot construct a certificate
+that looks valid. Similarly, if there's no Host header or a spoofed Host header,
+we're out of luck as well. Using transparent mode is the better option most of
+the time.
 
 Usage:
     mitmproxy
@@ -53,5 +54,5 @@ class Rerouter:
         flow.request.port = port
 
 
-def start():
+def start(opts):
     return Rerouter()

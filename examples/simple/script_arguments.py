@@ -9,7 +9,7 @@ class Replacer:
         flow.response.replace(self.src, self.dst)
 
 
-def start():
+def start(opts):
     parser = argparse.ArgumentParser()
     parser.add_argument("src", type=str)
     parser.add_argument("dst", type=str)
