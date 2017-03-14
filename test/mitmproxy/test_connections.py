@@ -78,6 +78,7 @@ class TestClientConnection:
         assert c != 42
         assert hash(c) != hash(c2)
 
+
 class TestServerConnection:
 
     def test_send(self):

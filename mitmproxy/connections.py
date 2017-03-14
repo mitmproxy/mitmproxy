@@ -83,11 +83,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     def __hash__(self):
         return hash(self.id)
 
-    def copy(self):
-        f = super().copy()
-        f.id = str(uuid.uuid4())
-        return f
-
     @property
     def tls_established(self):
         return self.ssl_established
@@ -221,11 +216,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
 
     def __hash__(self):
         return hash(self.id)
-
-    def copy(self):
-        f = super().copy()
-        f.id = str(uuid.uuid4())
-        return f
 
     @property
     def tls_established(self):
