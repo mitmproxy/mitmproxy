@@ -230,3 +230,6 @@ class MultiDictView(_MultiDict):
     @fields.setter
     def fields(self, value):
         self._setter(value)
+
+    def copy(self):
+        return MultiDict(self.fields)
