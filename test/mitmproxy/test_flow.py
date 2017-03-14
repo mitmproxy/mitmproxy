@@ -3,35 +3,19 @@ import pytest
 
 from mitmproxy.test import tflow
 import mitmproxy.io
-from mitmproxy import flowfilter, options
+from mitmproxy import flowfilter
+from mitmproxy import options
+from mitmproxy.proxy import config
 from mitmproxy.contrib import tnetstring
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy import master
 from . import tservers
 
 
 class TestSerialize:
-
-    def _treader(self):
-        sio = io.BytesIO()
-        w = mitmproxy.io.FlowWriter(sio)
-        for i in range(3):
-            f = tflow.tflow(resp=True)
-            w.add(f)
-        for i in range(3):
-            f = tflow.tflow(err=True)
-            w.add(f)
-        f = tflow.ttcpflow()
-        w.add(f)
-        f = tflow.ttcpflow(err=True)
-        w.add(f)
-
-        sio.seek(0)
-        return mitmproxy.io.FlowReader(sio)
 
     def test_roundtrip(self):
         sio = io.BytesIO()
@@ -50,26 +34,6 @@ class TestSerialize:
         assert f2.get_state() == f.get_state()
         assert f2.request == f.request
         assert f2.marked
-
-    def test_load_flows(self):
-        r = self._treader()
-        s = tservers.TestState()
-        fm = master.Master(None, DummyServer())
-        fm.addons.add(s)
-        fm.load_flows(r)
-        assert len(s.flows) == 6
-
-    def test_load_flows_reverse(self):
-        r = self._treader()
-        s = tservers.TestState()
-        opts = options.Options(
-            mode="reverse:https://use-this-domain"
-        )
-        conf = ProxyConfig(opts)
-        fm = master.Master(opts, DummyServer(conf))
-        fm.addons.add(s)
-        fm.load_flows(r)
-        assert s.flows[0].request.host == "use-this-domain"
 
     def test_filter(self):
         sio = io.BytesIO()
@@ -122,6 +86,17 @@ class TestSerialize:
 
 
 class TestFlowMaster:
+    def test_load_flow_reverse(self):
+        s = tservers.TestState()
+        opts = options.Options(
+            mode="reverse:https://use-this-domain"
+        )
+        conf = config.ProxyConfig(opts)
+        fm = master.Master(opts, DummyServer(conf))
+        fm.addons.add(s)
+        f = tflow.tflow(resp=True)
+        fm.load_flow(f)
+        assert s.flows[0].request.host == "use-this-domain"
 
     def test_replay(self):
         fm = master.Master(None, DummyServer())

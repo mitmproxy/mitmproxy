@@ -1,8 +1,6 @@
-import os
 import threading
 import contextlib
 import queue
-import sys
 
 from mitmproxy import addonmanager
 from mitmproxy import options
@@ -12,7 +10,6 @@ from mitmproxy import exceptions
 from mitmproxy import connections
 from mitmproxy import http
 from mitmproxy import log
-from mitmproxy import io
 from mitmproxy.proxy.protocol import http_replay
 from mitmproxy.types import basethread
 import mitmproxy.net.http
@@ -159,33 +156,6 @@ class Master:
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
             getattr(self, e)(o)
-
-    def load_flows(self, fr: io.FlowReader) -> int:
-        """
-            Load flows from a FlowReader object.
-        """
-        cnt = 0
-        for i in fr.stream():
-            cnt += 1
-            self.load_flow(i)
-        return cnt
-
-    def load_flows_file(self, path: str) -> int:
-        path = os.path.expanduser(path)
-        try:
-            if path == "-":
-                try:
-                    sys.stdin.buffer.read(0)
-                except Exception as e:
-                    raise IOError("Cannot read from stdin: {}".format(e))
-                freader = io.FlowReader(sys.stdin.buffer)
-                return self.load_flows(freader)
-            else:
-                with open(path, "rb") as f:
-                    freader = io.FlowReader(f)
-                    return self.load_flows(freader)
-        except IOError as v:
-            raise exceptions.FlowReadException(v.strerror)
 
     def replay_request(
             self,

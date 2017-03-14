@@ -3,7 +3,6 @@ import webbrowser
 import tornado.httpserver
 import tornado.ioloop
 from mitmproxy import addons
-from mitmproxy import exceptions
 from mitmproxy import log
 from mitmproxy import master
 from mitmproxy.addons import eventstore
@@ -42,14 +41,6 @@ class WebMaster(master.Master):
         )
         # This line is just for type hinting
         self.options = self.options  # type: Options
-        if options.rfile:
-            try:
-                self.load_flows_file(options.rfile)
-            except exceptions.FlowReadException as v:
-                self.add_log(
-                    "Could not read flow file: %s" % v,
-                    "error"
-                )
 
     def _sig_view_add(self, view, flow):
         app.ClientConnection.broadcast(

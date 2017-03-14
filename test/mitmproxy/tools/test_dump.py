@@ -2,7 +2,6 @@ import pytest
 from unittest import mock
 
 from mitmproxy import proxy
-from mitmproxy import exceptions
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import options
@@ -16,18 +15,6 @@ class TestDumpMaster(tservers.MasterTest):
         o = options.Options(filtstr=flt, verbosity=-1, flow_detail=0, **opts)
         m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)
         return m
-
-    def test_read(self, tmpdir):
-        p = str(tmpdir.join("read"))
-        self.flowfile(p)
-        self.dummy_cycle(
-            self.mkmaster(None, rfile=p),
-            1, b"",
-        )
-        with pytest.raises(exceptions.OptionsError):
-            self.mkmaster(None, rfile="/nonexistent")
-        with pytest.raises(exceptions.OptionsError):
-            self.mkmaster(None, rfile="test_dump.py")
 
     def test_has_error(self):
         m = self.mkmaster(None)

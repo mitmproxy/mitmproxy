@@ -230,7 +230,8 @@ class DumpFlows(RequestHandler):
     def post(self):
         self.view.clear()
         bio = BytesIO(self.filecontents)
-        self.master.load_flows(io.FlowReader(bio))
+        for i in io.FlowReader(bio).stream():
+            self.master.load_flow(i)
         bio.close()
 
 
