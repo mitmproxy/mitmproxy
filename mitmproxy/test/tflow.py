@@ -1,4 +1,5 @@
 import io
+import uuid
 
 from mitmproxy.net import websockets
 from mitmproxy.test import tutils
@@ -146,6 +147,7 @@ def tclient_conn():
     @return: mitmproxy.proxy.connection.ClientConnection
     """
     c = connections.ClientConnection.from_state(dict(
+        id=str(uuid.uuid4()),
         address=("address", 22),
         clientcert=None,
         mitmcert=None,
@@ -169,6 +171,7 @@ def tserver_conn():
     @return: mitmproxy.proxy.connection.ServerConnection
     """
     c = connections.ServerConnection.from_state(dict(
+        id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),
         ip_address=None,
