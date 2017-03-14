@@ -67,9 +67,6 @@ class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
             return self.fields == other.fields
         return False
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def get_all(self, key):
         """
         Return the list of all values for a given key.

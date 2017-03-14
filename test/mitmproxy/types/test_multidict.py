@@ -93,11 +93,6 @@ class TestMultiDict:
         md1.fields = md1.fields[1:] + md1.fields[:1]
         assert not (md1 == md2)
 
-    def test_ne(self):
-        assert not TMultiDict() != TMultiDict()
-        assert TMultiDict() != self._multi()
-        assert TMultiDict() != 42
-
     def test_hash(self):
         """
         If a class defines mutable objects and implements an __eq__() method,
