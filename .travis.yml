@@ -49,7 +49,9 @@ matrix:
       env: TOXENV=docs
     - language: node_js
       node_js: "node"
-      before_install: npm install -g yarn
+      before_install:
+          - curl -o- -L https://yarnpkg.com/install.sh | bash
+          - export PATH=$HOME/.yarn/bin:$PATH
       install: cd web && yarn
       script: npm test
       cache:
