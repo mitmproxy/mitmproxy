@@ -15,7 +15,6 @@ from mitmproxy import log
 from mitmproxy import io
 from mitmproxy.proxy.protocol import http_replay
 from mitmproxy.types import basethread
-import mitmproxy.net.http
 
 from . import ctx as mitmproxy_ctx
 
@@ -122,27 +121,18 @@ class Master:
         self.should_exit.set()
         self.addons.done()
 
-    def create_request(self, method, scheme, host, port, path):
+    def create_request(self, method, url):
         """
-            this method creates a new artificial and minimalist request also adds it to flowlist
+        Create a new artificial and minimalist request also adds it to flowlist.
+
+        Raises:
+            ValueError, if the url is malformed.
         """
+        req = http.HTTPRequest.make(method, url)
         c = connections.ClientConnection.make_dummy(("", 0))
-        s = connections.ServerConnection.make_dummy((host, port))
+        s = connections.ServerConnection.make_dummy((req.host, req.port))
 
         f = http.HTTPFlow(c, s)
-        headers = mitmproxy.net.http.Headers()
-
-        req = http.HTTPRequest(
-            "absolute",
-            method,
-            scheme,
-            host,
-            port,
-            path,
-            b"HTTP/1.1",
-            headers,
-            b""
-        )
         f.request = req
         self.load_flow(f)
         return f

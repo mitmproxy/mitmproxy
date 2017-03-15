@@ -1,6 +1,5 @@
 import urwid
 
-import mitmproxy.net.http.url
 from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
@@ -339,12 +338,10 @@ class FlowListBox(urwid.ListBox):
 
     def new_request(self, url, method):
         try:
-            parts = mitmproxy.net.http.url.parse(str(url))
+            f = self.master.create_request(method, url)
         except ValueError as e:
             signals.status_message.send(message = "Invalid URL: " + str(e))
             return
-        scheme, host, port, path = parts
-        f = self.master.create_request(method, scheme, host, port, path)
         self.master.view.focus.flow = f
 
     def keypress(self, size, key):
