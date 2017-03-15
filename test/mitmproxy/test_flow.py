@@ -140,7 +140,7 @@ class TestFlowMaster:
 
     def test_create_flow(self):
         fm = master.Master(None, DummyServer())
-        assert fm.create_request("GET", "http", "example.com", 80, "/")
+        assert fm.create_request("GET", "http://example.com/")
 
     def test_all(self):
         s = tservers.TestState()

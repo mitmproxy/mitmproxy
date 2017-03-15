@@ -1,7 +1,7 @@
 from unittest import mock
 import pytest
 
-from mitmproxy.net.http import Headers
+from mitmproxy.net.http import Headers, Request
 from mitmproxy.test.tutils import treq
 from .test_message import _test_decoded_attr, _test_passthrough_attr
 
@@ -34,6 +34,32 @@ class TestRequestCore:
         assert repr(request) == "Request(GET address:22/path)"
         request.host = None
         assert repr(request) == "Request(GET /path)"
+
+    def test_make(self):
+        r = Request.make("GET", "https://example.com/")
+        assert r.method == "GET"
+        assert r.scheme == "https"
+        assert r.host == "example.com"
+        assert r.port == 443
+        assert r.path == "/"
+
+        r = Request.make("GET", "https://example.com/", "content", {"Foo": "bar"})
+        assert r.content == b"content"
+        assert r.headers["content-length"] == "7"
+        assert r.headers["Foo"] == "bar"
+
+        Request.make("GET", "https://example.com/", content=b"content")
+        with pytest.raises(TypeError):
+            Request.make("GET", "https://example.com/", content=42)
+
+        r = Request.make("GET", "https://example.com/", headers=[(b"foo", b"bar")])
+        assert r.headers["foo"] == "bar"
+
+        r = Request.make("GET", "https://example.com/", headers=({"foo": "baz"}))
+        assert r.headers["foo"] == "baz"
+
+        with pytest.raises(TypeError):
+            Request.make("GET", "https://example.com/", headers=42)
 
     def test_replace(self):
         r = treq()
