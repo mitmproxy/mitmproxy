@@ -242,6 +242,26 @@ class Master:
             rt.join()
         return rt
 
+    def new_request(
+            self,
+            method,
+            f: http.HTTPFlow,
+            block: bool = False
+    ) -> http_replay.RequestReplayThread:
+        """
+        Replay a HTTP request with a different method to receive a new response from the server.
+        Args:
+            method: Request method
+            f: The flow to replay.
+            block: If True, this function will wait for the replay to finish.
+                This causes a deadlock if activated in the main thread.
+
+        Returns:
+            The thread object doing the replay.
+        """
+        f.request.method = method
+        return self.replay_request(f, block)
+
     @controller.handler
     def log(self, l):
         pass
