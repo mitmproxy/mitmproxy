@@ -12,7 +12,7 @@ class TestCheckALPN:
         with taddons.context() as tctx:
             a = check_alpn.CheckALPN()
             tctx.configure(a)
-            assert not any(msg in m for l, m in tctx.master.logs)
+            assert not tctx.master.has_log(msg)
 
     def test_check_no_alpn(self, disable_alpn):
         msg = 'ALPN support missing'
@@ -20,4 +20,4 @@ class TestCheckALPN:
         with taddons.context() as tctx:
             a = check_alpn.CheckALPN()
             tctx.configure(a)
-            assert any(msg in m for l, m in tctx.master.logs)
+            assert tctx.master.has_log(msg)

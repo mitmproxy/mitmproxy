@@ -6,7 +6,6 @@ import sys
 import mitmproxy.platform
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
-from mitmproxy import master
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy import exceptions
@@ -17,6 +16,7 @@ import pathod.pathoc
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
+from mitmproxy.test import taddons
 
 
 class MasterTest:
@@ -68,11 +68,11 @@ class TestState:
     #         self.flows.append(f)
 
 
-class TestMaster(master.Master):
+class TestMaster(taddons.RecordingMaster):
 
     def __init__(self, opts, config):
         s = ProxyServer(config)
-        master.Master.__init__(self, opts, s)
+        super().__init__(opts, s)
 
     def clear_addons(self, addons):
         self.addons.clear()
@@ -82,16 +82,9 @@ class TestMaster(master.Master):
         self.addons.configure_all(self.options, self.options.keys())
         self.addons.trigger("running")
 
-    def clear_log(self):
-        self.tlog = []
-
     def reset(self, addons):
         self.clear_addons(addons)
-        self.clear_log()
-
-    @controller.handler
-    def log(self, e):
-        self.tlog.append(e.msg)
+        self.clear()
 
 
 class ProxyThread(threading.Thread):
@@ -111,7 +104,7 @@ class ProxyThread(threading.Thread):
 
     @property
     def tlog(self):
-        return self.tmaster.tlog
+        return self.tmaster.logs
 
     def run(self):
         self.tmaster.run()

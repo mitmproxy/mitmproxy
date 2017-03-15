@@ -12,7 +12,10 @@ class _AddonWrapper:
         self.addons = addons
 
     def trigger(self, event, *args, **kwargs):
-        self.master.events.append((event, args, kwargs))
+        if event == "log":
+            self.master.logs.append(args[0])
+        else:
+            self.master.events.append((event, args, kwargs))
         return self.addons.trigger(event, *args, **kwargs)
 
     def __getattr__(self, attr):
@@ -26,13 +29,19 @@ class RecordingMaster(mitmproxy.master.Master):
         self.events = []
         self.logs = []
 
+    def has_log(self, txt, level=None):
+        for i in self.logs:
+            if level and i.level != level:
+                continue
+            if txt.lower() in i.msg.lower():
+                return True
+        return False
+
     def has_event(self, name):
         for i in self.events:
             if i[0] == name:
                 return True
-
-    def add_log(self, e, level):
-        self.logs.append((level, e))
+        return False
 
     def clear(self):
         self.logs = []

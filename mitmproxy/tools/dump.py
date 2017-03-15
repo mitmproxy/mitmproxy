@@ -1,4 +1,3 @@
-from mitmproxy import ctx
 from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master

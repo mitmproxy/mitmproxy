@@ -7,6 +7,7 @@ from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import controller
 from mitmproxy import master
 from mitmproxy import proxy
+from mitmproxy.test import taddons
 
 
 class TMsg:
@@ -15,22 +16,18 @@ class TMsg:
 
 class TestMaster:
     def test_simple(self):
-        class DummyMaster(master.Master):
-            @controller.handler
+        class tAddon:
             def log(self, _):
-                m.should_exit.set()
+                ctx.master.should_exit.set()
 
-            def tick(self, timeout):
-                # Speed up test
-                super().tick(0)
-
-        m = DummyMaster(None, proxy.DummyServer(None))
-        assert not m.should_exit.is_set()
-        msg = TMsg()
-        msg.reply = controller.DummyReply()
-        m.event_queue.put(("log", msg))
-        m.run()
-        assert m.should_exit.is_set()
+        with taddons.context() as ctx:
+            ctx.master.addons.add(tAddon())
+            assert not ctx.master.should_exit.is_set()
+            msg = TMsg()
+            msg.reply = controller.DummyReply()
+            ctx.master.event_queue.put(("log", msg))
+            ctx.master.run()
+            assert ctx.master.should_exit.is_set()
 
     def test_server_simple(self):
         m = master.Master(None, proxy.DummyServer(None))

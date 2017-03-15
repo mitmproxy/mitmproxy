@@ -13,7 +13,6 @@ import traceback
 import urwid
 
 from mitmproxy import addons
-from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io

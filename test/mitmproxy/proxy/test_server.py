@@ -250,17 +250,12 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             assert p.request(req)
 
     def test_get_connection_switching(self):
-        def switched(l):
-            for i in l:
-                if "serverdisconnect" in i:
-                    return True
-
         req = "get:'%s/p/200:b@1'"
         p = self.pathoc()
         with p.connect():
             assert p.request(req % self.server.urlbase)
             assert p.request(req % self.server2.urlbase)
-        assert switched(self.proxy.tlog)
+        assert self.proxy.tmaster.has_log("serverdisconnect")
 
     def test_blank_leading_line(self):
         p = self.pathoc()
@@ -602,7 +597,7 @@ class TestHttps2Http(tservers.ReverseProxyTest):
         p = self.pathoc(ssl=True, sni="example.com")
         with p.connect():
             assert p.request("get:'/p/200'").status_code == 200
-            assert all("Error in handle_sni" not in msg for msg in self.proxy.tlog)
+            assert not self.proxy.tmaster.has_log("error in handle_sni")
 
     def test_http(self):
         p = self.pathoc(ssl=False)
@@ -877,8 +872,7 @@ class TestServerConnect(tservers.HTTPProxyTest):
     def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
         assert self.pathod("200").status_code == 200
-        for msg in self.proxy.tmaster.tlog:
-            assert "serverconnect" not in msg
+        assert not self.proxy.tmaster.has_log("serverconnect")
 
 
 class MasterKillRequest(tservers.TestMaster):
