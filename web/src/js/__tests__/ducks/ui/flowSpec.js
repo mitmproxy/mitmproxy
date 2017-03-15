@@ -9,12 +9,28 @@ import reducer, {
                     setShowFullContent,
                     setContent,
                     updateEdit,
-                    stopEdit
+                    stopEdit,
+                    setContentView,
+                    selectTab,
+                    displayLarge
                 } from '../../../ducks/ui/flow'
 
 import { select, updateFlow } from '../../../ducks/flows'
 
 describe('flow reducer', () => {
+    it('should return initial state', () => {
+        expect(reducer(undefined, {})).toEqual({
+            displayLarge: false,
+            viewDescription: '',
+            showFullContent: false,
+            modifiedFlow: false,
+            contentView: 'Auto',
+            tab: 'request',
+            content: [],
+            maxContentLines: 80,
+        })
+    })
+
     it('should change to edit mode', () => {
         let testFlow = {flow : 'foo'}
         const newState = reducer(undefined, startEdit({ flow: 'foo' }))
@@ -73,5 +89,22 @@ describe('flow reducer', () => {
         let modifiedFlow = {id: 1}
         let updatedFlow = {id: 1}
         expect(reducer({modifiedFlow}, stopEdit(updatedFlow, modifiedFlow)).modifiedFlow).toBeFalsy()
+    })
+
+    it('should set content view', () => {
+        let state = reducer(undefined, setContentView('Edit'))
+        expect(state.contentView).toEqual('Edit')
+        expect(state.showFullContent).toBeTruthy()
+    })
+
+    it('should select different tabs', () => {
+        let state = reducer(undefined, selectTab('response'))
+        expect(state.tab).toEqual('response')
+        expect(state.displayLarge).toBeFalsy()
+        expect(state.showFullContent).toBeFalsy()
+    })
+
+    it('should display large', () => {
+        expect(reducer(undefined, displayLarge()).displayLarge).toBeTruthy()
     })
 })
