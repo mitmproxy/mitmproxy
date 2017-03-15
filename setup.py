@@ -68,7 +68,7 @@ setup(
         "cssutils>=1.0.1, <1.1",
         "h2>=2.5.1, <3",
         "html2text>=2016.1.8, <=2016.9.19",
-        "hyperframe>=4.0.1, <5",
+        "hyperframe>=4.0.1",  # upper bound is transitive from hyper-h2
         "jsbeautifier>=1.6.3, <1.7",
         "kaitaistruct>=0.6, <0.7",
         "passlib>=1.6.5, <1.8",
