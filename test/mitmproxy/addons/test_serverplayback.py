@@ -34,7 +34,7 @@ def test_tick():
         s.final_flow = tflow.tflow()
         s.final_flow.live = False
         s.tick()
-        assert tctx.master.should_exit.is_set()
+        assert tctx.master.has_event("processing_complete")
 
 
 def test_server_playback():
@@ -315,7 +315,6 @@ def test_server_playback_full():
         tctx.configure(
             s,
             refresh_server_playback = True,
-            keepserving=False
         )
 
         f = tflow.tflow()

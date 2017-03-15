@@ -9,13 +9,6 @@ class ReadStdin:
         An addon that reads from stdin if we're not attached to (someting like)
         a tty.
     """
-    def __init__(self):
-        self.keepserving = False
-
-    def configure(self, options, updated):
-        if "keepserving" in updated:
-            self.keepserving = options.keepserving
-
     def running(self, stdin = sys.stdin):
         if not stdin.isatty():
             ctx.log.info("Reading from stdin")
@@ -30,5 +23,4 @@ class ReadStdin:
                     ctx.master.load_flow(i)
             except exceptions.FlowReadException as e:
                 ctx.log.error("Error reading from stdin: %s" % e)
-            if not self.keepserving:
-                ctx.master.shutdown()
+            ctx.master.addons.trigger("processing_complete")

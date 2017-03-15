@@ -23,7 +23,7 @@ class MockThread():
 class TestClientPlayback:
     def test_playback(self):
         cp = clientplayback.ClientPlayback()
-        with taddons.context():
+        with taddons.context() as tctx:
             assert cp.count() == 0
             f = tflow.tflow(resp=True)
             cp.load([f])
@@ -35,17 +35,14 @@ class TestClientPlayback:
                 assert rp.called
                 assert cp.current_thread
 
-            cp.keepserving = False
             cp.flows = None
             cp.current_thread = None
-            with mock.patch("mitmproxy.master.Master.shutdown") as sd:
-                cp.tick()
-                assert sd.called
+            cp.tick()
+            assert tctx.master.has_event("processing_complete")
 
             cp.current_thread = MockThread()
-            with mock.patch("mitmproxy.master.Master.shutdown") as sd:
-                cp.tick()
-                assert cp.current_thread is None
+            cp.tick()
+            assert cp.current_thread is None
 
     def test_configure(self, tmpdir):
         cp = clientplayback.ClientPlayback()

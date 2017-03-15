@@ -26,12 +26,6 @@ def gen_data(corrupt=False):
     return tf
 
 
-def test_configure(tmpdir):
-    rf = readstdin.ReadStdin()
-    with taddons.context() as tctx:
-        tctx.configure(rf, keepserving=False)
-
-
 class mStdin:
     def __init__(self, d):
         self.buffer = d
@@ -49,11 +43,11 @@ def test_read(m, tmpdir):
         assert m.called
 
         rf.running(stdin=mStdin(None))
-        assert tctx.master.event_log
+        assert tctx.master.logs
         tctx.master.clear()
 
         m.reset_mock()
         assert not m.called
         rf.running(stdin=mStdin(gen_data(corrupt=True)))
         assert m.called
-        assert tctx.master.event_log
+        assert tctx.master.logs

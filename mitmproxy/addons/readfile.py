@@ -11,7 +11,6 @@ class ReadFile:
     """
     def __init__(self):
         self.path = None
-        self.keepserving = False
 
     def load_flows_file(self, path: str) -> int:
         path = os.path.expanduser(path)
@@ -33,8 +32,6 @@ class ReadFile:
             raise exceptions.FlowReadException(v)
 
     def configure(self, options, updated):
-        if "keepserving" in updated:
-            self.keepserving = options.keepserving
         if "rfile" in updated and options.rfile:
             self.path = options.rfile
 
@@ -46,5 +43,4 @@ class ReadFile:
                 raise exceptions.OptionsError(v)
             finally:
                 self.path = None
-                if not self.keepserving:
-                    ctx.master.shutdown()
+                ctx.master.addons.trigger("processing_complete")

@@ -32,13 +32,13 @@ def test_configure(mck, tmpdir):
     with taddons.context() as tctx:
         tf = str(tmpdir.join("tfile"))
         write_data(tf)
-        tctx.configure(rf, rfile=str(tf), keepserving=False)
+        tctx.configure(rf, rfile=str(tf))
         assert not mck.called
         rf.running()
         assert mck.called
 
         write_data(tf, corrupt=True)
-        tctx.configure(rf, rfile=str(tf), keepserving=False)
+        tctx.configure(rf, rfile=str(tf))
         with pytest.raises(exceptions.OptionsError):
             rf.running()
 
@@ -51,7 +51,7 @@ def test_corruption(mck, tmpdir):
         with pytest.raises(exceptions.FlowReadException):
             rf.load_flows_file("nonexistent")
         assert not mck.called
-        assert len(tctx.master.event_log) == 1
+        assert len(tctx.master.logs) == 1
 
         tfc = str(tmpdir.join("tfile"))
         write_data(tfc, corrupt=True)
@@ -59,4 +59,4 @@ def test_corruption(mck, tmpdir):
         with pytest.raises(exceptions.FlowReadException):
             rf.load_flows_file(tfc)
         assert mck.called
-        assert len(tctx.master.event_log) == 2
+        assert len(tctx.master.logs) == 2

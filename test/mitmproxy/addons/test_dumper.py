@@ -151,7 +151,7 @@ class TestContentView:
         with taddons.context(options=options.Options()) as ctx:
             ctx.configure(d, flow_detail=4, verbosity=3)
             d.response(tflow.tflow())
-            assert "Content viewer failed" in ctx.master.event_log[0][1]
+            assert "Content viewer failed" in ctx.master.logs[0][1]
 
 
 def test_tcp():

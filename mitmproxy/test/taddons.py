@@ -6,16 +6,36 @@ from mitmproxy import proxy
 from mitmproxy import eventsequence
 
 
+class _AddonWrapper:
+    def __init__(self, master, addons):
+        self.master = master
+        self.addons = addons
+
+    def trigger(self, event, *args, **kwargs):
+        self.master.events.append((event, args, kwargs))
+        return self.addons.trigger(event, *args, **kwargs)
+
+    def __getattr__(self, attr):
+        return getattr(self.addons, attr)
+
+
 class RecordingMaster(mitmproxy.master.Master):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.event_log = []
+        self.addons = _AddonWrapper(self, self.addons)
+        self.events = []
+        self.logs = []
+
+    def has_event(self, name):
+        for i in self.events:
+            if i[0] == name:
+                return True
 
     def add_log(self, e, level):
-        self.event_log.append((level, e))
+        self.logs.append((level, e))
 
     def clear(self):
-        self.event_log = []
+        self.logs = []
 
 
 class context:

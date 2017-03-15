@@ -69,8 +69,8 @@ class AddonManager:
             raise exceptions.AddonError(
                 "invoke_addon called without a handler context."
             )
-        if name not in eventsequence.Events:  # prama: no cover
-            raise NotImplementedError("Unknown event")
+        if name not in eventsequence.Events:
+            name = "event_" + name
         func = getattr(addon, name, None)
         if func:
             if not callable(func):
@@ -89,4 +89,3 @@ class AddonManager:
                     self.invoke_addon(i, name, *args, **kwargs)
                 except exceptions.AddonHalt:
                     return
-

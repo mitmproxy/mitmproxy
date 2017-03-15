@@ -10,7 +10,6 @@ class ClientPlayback:
     def __init__(self):
         self.flows = None
         self.current_thread = None
-        self.keepserving = False
         self.has_replayed = False
 
     def count(self) -> int:
@@ -32,7 +31,6 @@ class ClientPlayback:
                 self.load(flows)
             else:
                 self.flows = None
-        self.keepserving = options.keepserving
 
     def tick(self):
         if self.current_thread and not self.current_thread.is_alive():
@@ -41,5 +39,5 @@ class ClientPlayback:
             self.current_thread = ctx.master.replay_request(self.flows.pop(0))
             self.has_replayed = True
         if self.has_replayed:
-            if not self.flows and not self.current_thread and not self.keepserving:
-                ctx.master.shutdown()
+            if not self.flows and not self.current_thread:
+                ctx.master.addons.trigger("processing_complete")

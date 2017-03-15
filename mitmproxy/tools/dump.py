@@ -2,7 +2,7 @@ from mitmproxy import controller
 from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
-from mitmproxy.addons import dumper, termlog, termstatus, readstdin
+from mitmproxy.addons import dumper, termlog, termstatus, readstdin, keepserving
 
 
 class DumpMaster(master.Master):
@@ -21,7 +21,7 @@ class DumpMaster(master.Master):
         self.addons.add(*addons.default_addons())
         if with_dumper:
             self.addons.add(dumper.Dumper())
-        self.addons.add(readstdin.ReadStdin())
+        self.addons.add(readstdin.ReadStdin(), keepserving.KeepServing())
 
     @controller.handler
     def log(self, e):

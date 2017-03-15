@@ -22,14 +22,14 @@ def test_scriptenv():
     with taddons.context() as tctx:
         with script.scriptenv("path", []):
             raise SystemExit
-        assert tctx.master.event_log[0][0] == "error"
-        assert "exited" in tctx.master.event_log[0][1]
+        assert tctx.master.logs[0][0] == "error"
+        assert "exited" in tctx.master.logs[0][1]
 
         tctx.master.clear()
         with script.scriptenv("path", []):
             raise ValueError("fooo")
-        assert tctx.master.event_log[0][0] == "error"
-        assert "foo" in tctx.master.event_log[0][1]
+        assert tctx.master.logs[0][0] == "error"
+        assert "foo" in tctx.master.logs[0][1]
 
 
 class Called:
@@ -135,7 +135,7 @@ class TestScript:
                 f.write(".")
                 sc.tick()
                 time.sleep(0.1)
-                if tctx.master.event_log:
+                if tctx.master.logs:
                     return
             raise AssertionError("Change event not detected.")
 
@@ -147,11 +147,11 @@ class TestScript:
             sc.start(tctx.options)
             f = tflow.tflow(resp=True)
             sc.request(f)
-            assert tctx.master.event_log[0][0] == "error"
-            assert len(tctx.master.event_log[0][1].splitlines()) == 6
-            assert re.search(r'addonscripts[\\/]error.py", line \d+, in request', tctx.master.event_log[0][1])
-            assert re.search(r'addonscripts[\\/]error.py", line \d+, in mkerr', tctx.master.event_log[0][1])
-            assert tctx.master.event_log[0][1].endswith("ValueError: Error!\n")
+            assert tctx.master.logs[0][0] == "error"
+            assert len(tctx.master.logs[0][1].splitlines()) == 6
+            assert re.search(r'addonscripts[\\/]error.py", line \d+, in request', tctx.master.logs[0][1])
+            assert re.search(r'addonscripts[\\/]error.py", line \d+, in mkerr', tctx.master.logs[0][1])
+            assert tctx.master.logs[0][1].endswith("ValueError: Error!\n")
 
     def test_addon(self):
         with taddons.context() as tctx:
@@ -256,7 +256,7 @@ class TestScriptLoader:
                     "%s %s" % (rec, "c"),
                 ]
             )
-            debug = [(i[0], i[1]) for i in tctx.master.event_log if i[0] == "debug"]
+            debug = [(i[0], i[1]) for i in tctx.master.logs if i[0] == "debug"]
             assert debug == [
                 ('debug', 'a start'),
                 ('debug', 'a configure'),
@@ -270,7 +270,7 @@ class TestScriptLoader:
                 ('debug', 'c configure'),
                 ('debug', 'c running'),
             ]
-            tctx.master.event_log = []
+            tctx.master.logs = []
             tctx.configure(
                 sc,
                 scripts = [
@@ -279,11 +279,11 @@ class TestScriptLoader:
                     "%s %s" % (rec, "b"),
                 ]
             )
-            debug = [(i[0], i[1]) for i in tctx.master.event_log if i[0] == "debug"]
+            debug = [(i[0], i[1]) for i in tctx.master.logs if i[0] == "debug"]
             # No events, only order has changed
             assert debug == []
 
-            tctx.master.event_log = []
+            tctx.master.logs = []
             tctx.configure(
                 sc,
                 scripts = [
@@ -291,7 +291,7 @@ class TestScriptLoader:
                     "%s %s" % (rec, "a"),
                 ]
             )
-            debug = [(i[0], i[1]) for i in tctx.master.event_log if i[0] == "debug"]
+            debug = [(i[0], i[1]) for i in tctx.master.logs if i[0] == "debug"]
             assert debug == [
                 ('debug', 'c done'),
                 ('debug', 'b done'),
