@@ -145,7 +145,7 @@ class TestHARDump:
         path = str(tmpdir.join("somefile"))
 
         m, sc = tscript("complex/har_dump.py", shlex.quote(path))
-        m.addons.invoke(m, "response", self.flow())
+        m.addons.trigger("response", self.flow())
         m.addons.remove(sc)
 
         with open(path, "r") as inp:
@@ -156,7 +156,9 @@ class TestHARDump:
         path = str(tmpdir.join("somefile"))
 
         m, sc = tscript("complex/har_dump.py", shlex.quote(path))
-        m.addons.invoke(m, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10))
+        m.addons.trigger(
+            "response", self.flow(resp_content=b"foo" + b"\xFF" * 10)
+        )
         m.addons.remove(sc)
 
         with open(path, "r") as inp:
@@ -194,7 +196,7 @@ class TestHARDump:
         path = str(tmpdir.join("somefile"))
 
         m, sc = tscript("complex/har_dump.py", shlex.quote(path))
-        m.addons.invoke(m, "response", f)
+        m.addons.trigger("response", f)
         m.addons.remove(sc)
 
         with open(path, "r") as inp:

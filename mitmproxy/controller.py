@@ -66,8 +66,7 @@ def handler(f):
 
         with master.handlecontext():
             ret = f(master, message)
-            if handling:
-                master.addons(f.__name__, message)
+        master.addons.trigger(f.__name__, message)
 
         # Reset the handled flag - it's common for us to feed the same object
         # through handlers repeatedly, so we don't want this to persist across

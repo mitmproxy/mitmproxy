@@ -65,8 +65,7 @@ class Master:
         """
             level: debug, info, warn, error
         """
-        with self.handlecontext():
-            self.addons("log", log.LogEntry(e, level))
+        self.addons.trigger("log", log.LogEntry(e, level))
 
     def start(self):
         self.should_exit.clear()
@@ -86,9 +85,8 @@ class Master:
     def tick(self, timeout):
         if self.first_tick:
             self.first_tick = False
-            self.addons.invoke_all_with_context("running")
-        with self.handlecontext():
-            self.addons("tick")
+            self.addons.trigger("running")
+        self.addons.trigger("tick")
         changed = False
         try:
             mtype, obj = self.event_queue.get(timeout=timeout)

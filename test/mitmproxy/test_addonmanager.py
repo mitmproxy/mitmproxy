@@ -30,6 +30,6 @@ def test_simple():
     assert not a.chain
 
     a.add(TAddon("one"))
-    a("done")
+    a.trigger("done")
     with pytest.raises(exceptions.AddonError):
-        a("tick")
+        a.trigger("tick")
