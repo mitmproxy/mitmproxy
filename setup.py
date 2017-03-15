@@ -74,7 +74,7 @@ setup(
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.3",
         "pyOpenSSL>=16.0, <17.0",
-        "pyparsing>=2.1.3, <2.2",
+        "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
         "ruamel.yaml>=0.13.2, <0.14",
