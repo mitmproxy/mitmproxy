@@ -241,7 +241,7 @@ class View(collections.Sequence):
         self._refilter()
         self.sig_store_refresh.send(self)
 
-    def add(self, f: mitmproxy.flow.Flow) -> bool:
+    def add(self, f: mitmproxy.flow.Flow) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
@@ -371,6 +371,7 @@ class Focus:
     def index(self) -> typing.Optional[int]:
         if self.flow:
             return self.view.index(self.flow)
+        return None
 
     @index.setter
     def index(self, idx):
