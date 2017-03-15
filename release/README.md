@@ -1,16 +1,25 @@
 # Release Checklist
 
+Make sure run all these steps on the correct branch you want to create a new release for!
+- Verify `mitmproxy/version.py`
 - Update CHANGELOG
-- Verify that all CI tests pass for current master
-- Tag the release, and push to Github
+- Verify that all CI tests pass
+- Tag the release and push to Github
 - Wait for tag CI to complete
-- Download assets from https://snapshots.mitmproxy.org
-- Create release notice on Github
-- Upload wheel to pypi (`twine upload wheelname`)
+
+## GitHub Release
+- Create release notice on Github [https://github.com/mitmproxy/mitmproxy/releases/new](here)
+- Attach all files from the new release folder on https://snapshots.mitmproxy.org
+
+## PyPi
+- Upload wheel to pypi: `twine upload <mitmproxy-...-.whl`
+
+## Docker
 - Update docker-releases repo
   - Create a new branch based of master for major versions.
-  - Add a commit that pins dependencies like so: https://github.com/mitmproxy/docker-releases/commit/3d6a9989fde068ad0aea257823ac3d7986ff1613. 
-    * The requirements can be obtained by creating a fresh venv, pip-installing the new wheel in there, and then running `pip freeze`.
-    * `virtualenv -ppython3.5 venv && source venv/bin/activate && pip install mitmproxy && pip freeze`
-- Update `latest` tag on https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/
-- Bump the version in https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py and update https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/io_compat.py in the next commit
+  - Update the dependencies in [alpine/requirements.txt](https://github.com/mitmproxy/docker-releases/commit/3d6a9989fde068ad0aea257823ac3d7986ff1613#diff-9b7e0eea8ae74688b1ac13ea080549ba)
+    * Creating a fresh venv, pip-installing the new wheel in there, and then export all packages:
+    * `virtualenv -ppython3.5 venv && source venv/bin/activate && pip install mitmproxy && pip freeze`
+- Update `latest` tag [https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/](here)
+
+After everything is done, you might want to bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) if you just created a major release.
