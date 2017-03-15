@@ -13,9 +13,6 @@ class MessageData(serializable.Serializable):
             return self.__dict__ == other.__dict__
         return False
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def set_state(self, state):
         for k, v in state.items():
             if k == "headers":
@@ -38,9 +35,6 @@ class Message(serializable.Serializable):
         if isinstance(other, Message):
             return self.data == other.data
         return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def get_state(self):
         return self.data.get_state()

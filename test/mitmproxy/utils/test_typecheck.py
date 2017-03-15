@@ -16,12 +16,6 @@ class T(TBase):
         super(T, self).__init__(42)
 
 
-def test_get_arg_type_from_constructor_annotation():
-    assert typecheck.get_arg_type_from_constructor_annotation(T, "foo") == str
-    assert typecheck.get_arg_type_from_constructor_annotation(T, "bar") == int
-    assert not typecheck.get_arg_type_from_constructor_annotation(T, "baz")
-
-
 def test_check_type():
     typecheck.check_type("foo", 42, int)
     with pytest.raises(TypeError):

@@ -1,7 +1,7 @@
 import binascii
 import weakref
 from typing import Optional
-from typing import Set  # noqa
+from typing import MutableMapping  # noqa
 from typing import Tuple
 
 import passlib.apache
@@ -46,7 +46,7 @@ class ProxyAuth:
         self.htpasswd = None
         self.singleuser = None
         self.mode = None
-        self.authenticated = weakref.WeakSet()  # type: Set[connections.ClientConnection]
+        self.authenticated = weakref.WeakKeyDictionary()  # type: MutableMapping[connections.ClientConnection, Tuple[str, str]]
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def enabled(self) -> bool:
@@ -114,30 +114,28 @@ class ProxyAuth:
 
     # Handlers
     def configure(self, options, updated):
-        if "auth_nonanonymous" in updated:
-            self.nonanonymous = options.auth_nonanonymous
-        if "auth_singleuser" in updated:
-            if options.auth_singleuser:
-                parts = options.auth_singleuser.split(':')
-                if len(parts) != 2:
-                    raise exceptions.OptionsError(
-                        "Invalid single-user auth specification."
-                    )
-                self.singleuser = parts
-            else:
-                self.singleuser = None
-        if "auth_htpasswd" in updated:
-            if options.auth_htpasswd:
-                try:
-                    self.htpasswd = passlib.apache.HtpasswdFile(
-                        options.auth_htpasswd
-                    )
-                except (ValueError, OSError) as v:
-                    raise exceptions.OptionsError(
-                        "Could not open htpasswd file: %s" % v
-                    )
-            else:
-                self.htpasswd = None
+        if "proxyauth" in updated:
+            self.nonanonymous = False
+            self.singleuser = None
+            self.htpasswd = None
+            if options.proxyauth:
+                if options.proxyauth == "any":
+                    self.nonanonymous = True
+                elif options.proxyauth.startswith("@"):
+                    p = options.proxyauth[1:]
+                    try:
+                        self.htpasswd = passlib.apache.HtpasswdFile(p)
+                    except (ValueError, OSError) as v:
+                        raise exceptions.OptionsError(
+                            "Could not open htpasswd file: %s" % p
+                        )
+                else:
+                    parts = options.proxyauth.split(':')
+                    if len(parts) != 2:
+                        raise exceptions.OptionsError(
+                            "Invalid single-user auth specification."
+                        )
+                    self.singleuser = parts
         if "mode" in updated:
             self.mode = options.mode
         if self.enabled():
@@ -155,11 +153,12 @@ class ProxyAuth:
     def http_connect(self, f: http.HTTPFlow) -> None:
         if self.enabled():
             if self.authenticate(f):
-                self.authenticated.add(f.client_conn)
+                self.authenticated[f.client_conn] = f.metadata["proxyauth"]
 
     def requestheaders(self, f: http.HTTPFlow) -> None:
         if self.enabled():
             # Is this connection authenticated by a previous HTTP CONNECT?
             if f.client_conn in self.authenticated:
+                f.metadata["proxyauth"] = self.authenticated[f.client_conn]
                 return
             self.authenticate(f)

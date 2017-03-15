@@ -2,5 +2,5 @@ from mitmproxy.script import concurrent
 
 
 @concurrent
-def start():
+def start(opts):
     pass

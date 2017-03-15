@@ -54,10 +54,7 @@ class SetHeaders:
         if "setheaders" in updated:
             self.lst = []
             for shead in options.setheaders:
-                if isinstance(shead, str):
-                    fpatt, header, value = parse_setheader(shead)
-                else:
-                    fpatt, header, value = shead
+                fpatt, header, value = parse_setheader(shead)
 
                 flt = flowfilter.parse(fpatt)
                 if not flt:

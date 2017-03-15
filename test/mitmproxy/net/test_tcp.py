@@ -11,8 +11,8 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy.net import tcp
-from mitmproxy.test import tutils
 from mitmproxy import exceptions
+from mitmproxy.test import tutils
 
 from . import tservers
 from ...conftest import requires_alpn
@@ -783,25 +783,24 @@ class TestSSLKeyLogger(tservers.ServerTestBase):
         cipher_list="AES256-SHA"
     )
 
-    def test_log(self):
+    def test_log(self, tmpdir):
         testval = b"echo!\n"
         _logfun = tcp.log_ssl_key
 
-        with tutils.tmpdir() as d:
-            logfile = os.path.join(d, "foo", "bar", "logfile")
-            tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
+        logfile = str(tmpdir.join("foo", "bar", "logfile"))
+        tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
 
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl()
-                c.wfile.write(testval)
-                c.wfile.flush()
-                assert c.rfile.readline() == testval
-                c.finish()
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl()
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
+            c.finish()
 
-                tcp.log_ssl_key.close()
-                with open(logfile, "rb") as f:
-                    assert f.read().count(b"CLIENT_RANDOM") == 2
+            tcp.log_ssl_key.close()
+            with open(logfile, "rb") as f:
+                assert f.read().count(b"CLIENT_RANDOM") == 2
 
         tcp.log_ssl_key = _logfun
 

@@ -9,13 +9,13 @@ from mitmproxy.test import tutils
 
 from mitmproxy.addons import dumper
 from mitmproxy import exceptions
-from mitmproxy.tools import dump
 from mitmproxy import http
+from mitmproxy import options
 
 
 def test_configure():
     d = dumper.Dumper()
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, filtstr="~b foo")
         assert d.filter
 
@@ -34,7 +34,7 @@ def test_configure():
 def test_simple():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, flow_detail=0)
         d.response(tflow.tflow(resp=True))
         assert not sio.getvalue()
@@ -103,7 +103,7 @@ def test_echo_body():
 
     sio = io.StringIO()
     d = dumper.Dumper(sio)
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, flow_detail=3)
         d._echo_message(f.response)
         t = sio.getvalue()
@@ -113,7 +113,7 @@ def test_echo_body():
 def test_echo_request_line():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
         f.request.is_replay = True
@@ -148,7 +148,7 @@ class TestContentView:
         view_auto.side_effect = exceptions.ContentViewException("")
         sio = io.StringIO()
         d = dumper.Dumper(sio)
-        with taddons.context(options=dump.Options()) as ctx:
+        with taddons.context(options=options.Options()) as ctx:
             ctx.configure(d, flow_detail=4, verbosity=3)
             d.response(tflow.tflow())
             assert "Content viewer failed" in ctx.master.event_log[0][1]
@@ -157,7 +157,7 @@ class TestContentView:
 def test_tcp():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.ttcpflow()
         d.tcp_message(f)
@@ -172,7 +172,7 @@ def test_tcp():
 def test_websocket():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
-    with taddons.context(options=dump.Options()) as ctx:
+    with taddons.context(options=options.Options()) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.twebsocketflow()
         d.websocket_message(f)

@@ -38,14 +38,12 @@ def _test_decoded_attr(message, attr):
 
 
 class TestMessageData:
-    def test_eq_ne(self):
+    def test_eq(self):
         data = tutils.tresp(timestamp_start=42, timestamp_end=42).data
         same = tutils.tresp(timestamp_start=42, timestamp_end=42).data
         assert data == same
-        assert not data != same
 
         other = tutils.tresp(content=b"foo").data
-        assert not data == other
         assert data != other
 
         assert data != 0
@@ -61,10 +59,8 @@ class TestMessage:
         resp = tutils.tresp(timestamp_start=42, timestamp_end=42)
         same = tutils.tresp(timestamp_start=42, timestamp_end=42)
         assert resp == same
-        assert not resp != same
 
         other = tutils.tresp(timestamp_start=0, timestamp_end=0)
-        assert not resp == other
         assert resp != other
 
         assert resp != 0

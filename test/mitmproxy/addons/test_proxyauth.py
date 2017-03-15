@@ -28,40 +28,43 @@ def test_configure():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, auth_singleuser="foo")
+            ctx.configure(up, proxyauth="foo")
 
-        ctx.configure(up, auth_singleuser="foo:bar")
+        ctx.configure(up, proxyauth="foo:bar")
         assert up.singleuser == ["foo", "bar"]
 
-        ctx.configure(up, auth_singleuser=None)
+        ctx.configure(up, proxyauth=None)
         assert up.singleuser is None
 
-        ctx.configure(up, auth_nonanonymous=True)
+        ctx.configure(up, proxyauth="any")
         assert up.nonanonymous
-        ctx.configure(up, auth_nonanonymous=False)
+        ctx.configure(up, proxyauth=None)
         assert not up.nonanonymous
 
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, auth_htpasswd=tutils.test_data.path("mitmproxy/net/data/server.crt"))
+            ctx.configure(
+                up,
+                proxyauth= "@" + tutils.test_data.path("mitmproxy/net/data/server.crt")
+            )
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, auth_htpasswd="nonexistent")
+            ctx.configure(up, proxyauth="@nonexistent")
 
         ctx.configure(
             up,
-            auth_htpasswd=tutils.test_data.path(
+            proxyauth= "@" + tutils.test_data.path(
                 "mitmproxy/net/data/htpasswd"
             )
         )
         assert up.htpasswd
         assert up.htpasswd.check_password("test", "test")
         assert not up.htpasswd.check_password("test", "foo")
-        ctx.configure(up, auth_htpasswd=None)
+        ctx.configure(up, proxyauth=None)
         assert not up.htpasswd
 
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, auth_nonanonymous=True, mode="transparent")
+            ctx.configure(up, proxyauth="any", mode="transparent")
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, auth_nonanonymous=True, mode="socks5")
+            ctx.configure(up, proxyauth="any", mode="socks5")
 
         ctx.configure(up, mode="regular")
         assert up.mode == "regular"
@@ -70,7 +73,7 @@ def test_configure():
 def test_check():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        ctx.configure(up, auth_nonanonymous=True, mode="regular")
+        ctx.configure(up, proxyauth="any", mode="regular")
         f = tflow.tflow()
         assert not up.check(f)
         f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
@@ -86,18 +89,17 @@ def test_check():
         )
         assert not up.check(f)
 
-        ctx.configure(up, auth_nonanonymous=False, auth_singleuser="test:test")
+        ctx.configure(up, proxyauth="test:test")
         f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
             "test", "test"
         )
         assert up.check(f)
-        ctx.configure(up, auth_nonanonymous=False, auth_singleuser="test:foo")
+        ctx.configure(up, proxyauth="test:foo")
         assert not up.check(f)
 
         ctx.configure(
             up,
-            auth_singleuser=None,
-            auth_htpasswd=tutils.test_data.path(
+            proxyauth="@" + tutils.test_data.path(
                 "mitmproxy/net/data/htpasswd"
             )
         )
@@ -114,7 +116,7 @@ def test_check():
 def test_authenticate():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        ctx.configure(up, auth_nonanonymous=True, mode="regular")
+        ctx.configure(up, proxyauth="any", mode="regular")
 
         f = tflow.tflow()
         assert not f.response
@@ -147,7 +149,7 @@ def test_authenticate():
 def test_handlers():
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
-        ctx.configure(up, auth_nonanonymous=True, mode="regular")
+        ctx.configure(up, proxyauth="any", mode="regular")
 
         f = tflow.tflow()
         assert not f.response
@@ -171,3 +173,4 @@ def test_handlers():
         f2 = tflow.tflow(client_conn=f.client_conn)
         up.requestheaders(f2)
         assert not f2.response
+        assert f2.metadata["proxyauth"] == ('test', 'test')

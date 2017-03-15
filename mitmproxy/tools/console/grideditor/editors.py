@@ -1,5 +1,8 @@
+import os
 import re
+
 import urwid
+
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy.addons import script
@@ -87,6 +90,9 @@ class ReplaceEditor(base.GridEditor):
                 re.compile(val)
             except re.error:
                 return "Invalid regular expression."
+        elif col == 2:
+            if val.startswith("@") and not os.path.isfile(os.path.expanduser(val[1:])):
+                return "Invalid file path"
         return False
 
 

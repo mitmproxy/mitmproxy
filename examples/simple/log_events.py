@@ -7,6 +7,6 @@ If you want to help us out: https://github.com/mitmproxy/mitmproxy/issues/1530 :
 from mitmproxy import ctx
 
 
-def start():
+def start(opts):
     ctx.log.info("This is some informative text.")
     ctx.log.error("This is an error.")

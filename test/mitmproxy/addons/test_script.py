@@ -68,13 +68,12 @@ class TestParseCommand:
         with pytest.raises(ValueError):
             script.parse_command("  ")
 
-    def test_no_script_file(self):
+    def test_no_script_file(self, tmpdir):
         with pytest.raises(Exception, match="not found"):
             script.parse_command("notfound")
 
-        with tutils.tmpdir() as dir:
-            with pytest.raises(Exception, match="Not a file"):
-                script.parse_command(dir)
+        with pytest.raises(Exception, match="Not a file"):
+            script.parse_command(str(tmpdir))
 
     def test_parse_args(self):
         with utils.chdir(tutils.test_data.dirname):
@@ -117,9 +116,7 @@ class TestScript:
                 )
             )
             sc.load_script()
-            assert sc.ns.call_log == [
-                ("solo", "start", (), {}),
-            ]
+            assert sc.ns.call_log[0][0:2] == ("solo", "start")
 
             sc.ns.call_log = []
             f = tflow.tflow(resp=True)
@@ -128,28 +125,26 @@ class TestScript:
             recf = sc.ns.call_log[0]
             assert recf[1] == "request"
 
-    def test_reload(self):
+    def test_reload(self, tmpdir):
         with taddons.context() as tctx:
-            with tutils.tmpdir():
-                with open("foo.py", "w"):
-                    pass
-                sc = script.Script("foo.py")
-                tctx.configure(sc)
-                for _ in range(100):
-                    with open("foo.py", "a") as f:
-                        f.write(".")
-                    sc.tick()
-                    time.sleep(0.1)
-                    if tctx.master.event_log:
-                        return
-                raise AssertionError("Change event not detected.")
+            f = tmpdir.join("foo.py")
+            f.ensure(file=True)
+            sc = script.Script(str(f))
+            tctx.configure(sc)
+            for _ in range(100):
+                f.write(".")
+                sc.tick()
+                time.sleep(0.1)
+                if tctx.master.event_log:
+                    return
+            raise AssertionError("Change event not detected.")
 
     def test_exception(self):
         with taddons.context() as tctx:
             sc = script.Script(
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
             )
-            sc.start()
+            sc.start(tctx.options)
             f = tflow.tflow(resp=True)
             sc.request(f)
             assert tctx.master.event_log[0][0] == "error"
@@ -165,7 +160,7 @@ class TestScript:
                     "mitmproxy/data/addonscripts/addon.py"
                 )
             )
-            sc.start()
+            sc.start(tctx.options)
             tctx.configure(sc)
             assert sc.ns.event_log == [
                 'scriptstart', 'addonstart', 'addonconfigure'
@@ -228,24 +223,31 @@ class TestScriptLoader:
         assert len(m.addons) == 1
 
     def test_dupes(self):
-        o = options.Options(scripts=["one", "one"])
-        m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        with pytest.raises(exceptions.OptionsError):
-            m.addons.add(o, sc)
+        with taddons.context() as tctx:
+            tctx.master.addons.add(sc)
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(
+                    sc,
+                    scripts = ["one", "one"]
+                )
 
     def test_nonexistent(self):
-        o = options.Options(scripts=["nonexistent"])
-        m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
-        with pytest.raises(exceptions.OptionsError):
-            m.addons.add(o, sc)
+        with taddons.context() as tctx:
+            tctx.master.addons.add(sc)
+            with pytest.raises(exceptions.OptionsError):
+                tctx.configure(
+                    sc,
+                    scripts = ["nonexistent"]
+                )
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
         sc = script.ScriptLoader()
         with taddons.context() as tctx:
             tctx.master.addons.add(sc)
+            sc.running()
             tctx.configure(
                 sc,
                 scripts = [
@@ -256,9 +258,17 @@ class TestScriptLoader:
             )
             debug = [(i[0], i[1]) for i in tctx.master.event_log if i[0] == "debug"]
             assert debug == [
-                ('debug', 'a start'), ('debug', 'a configure'),
-                ('debug', 'b start'), ('debug', 'b configure'),
-                ('debug', 'c start'), ('debug', 'c configure')
+                ('debug', 'a start'),
+                ('debug', 'a configure'),
+                ('debug', 'a running'),
+
+                ('debug', 'b start'),
+                ('debug', 'b configure'),
+                ('debug', 'b running'),
+
+                ('debug', 'c start'),
+                ('debug', 'c configure'),
+                ('debug', 'c running'),
             ]
             tctx.master.event_log = []
             tctx.configure(
@@ -287,4 +297,5 @@ class TestScriptLoader:
                 ('debug', 'b done'),
                 ('debug', 'x start'),
                 ('debug', 'x configure'),
+                ('debug', 'x running'),
             ]

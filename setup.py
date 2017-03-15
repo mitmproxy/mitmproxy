@@ -64,7 +64,7 @@ setup(
         "click>=6.2, <7",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "construct>=2.8, <2.9",
-        "cryptography>=1.3, <1.8",
+        "cryptography>=1.3, <1.9",
         "cssutils>=1.0.1, <1.1",
         "h2>=2.5.1, <3",
         "html2text>=2016.1.8, <=2016.9.19",
@@ -74,7 +74,7 @@ setup(
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.3",
         "pyOpenSSL>=16.0, <17.0",
-        "pyparsing>=2.1.3, <2.2",
+        "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
         "ruamel.yaml>=0.13.2, <0.14",

@@ -1,7 +1,7 @@
 import typing
 
 
-def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
+def check_type(name: str, value: typing.Any, typeinfo: type) -> None:
     """
     This function checks if the provided value is an instance of typeinfo
     and raises a TypeError otherwise.
@@ -17,7 +17,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
 
     e = TypeError("Expected {} for {}, but got {}.".format(
         typeinfo,
-        attr_name,
+        name,
         type(value)
     ))
 
@@ -32,7 +32,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
 
         for T in types:
             try:
-                check_type(attr_name, value, T)
+                check_type(name, value, T)
             except TypeError:
                 pass
             else:
@@ -50,7 +50,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         if len(types) != len(value):
             raise e
         for i, (x, T) in enumerate(zip(value, types)):
-            check_type("{}[{}]".format(attr_name, i), x, T)
+            check_type("{}[{}]".format(name, i), x, T)
         return
     elif typename.startswith("typing.Sequence"):
         try:
@@ -62,7 +62,7 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:
-            check_type(attr_name, v, T)
+            check_type(name, v, T)
     elif typename.startswith("typing.IO"):
         if hasattr(value, "read"):
             return
@@ -70,12 +70,3 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
             raise e
     elif not isinstance(value, typeinfo):
         raise e
-
-
-def get_arg_type_from_constructor_annotation(cls: type, attr: str) -> typing.Optional[type]:
-    """
-    Returns the first type annotation for attr in the class hierarchy.
-    """
-    for c in cls.mro():
-        if attr in getattr(c.__init__, "__annotations__", ()):
-            return c.__init__.__annotations__[attr]

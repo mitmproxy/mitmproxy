@@ -1,10 +1,7 @@
-import os
 import pytest
 
 from pathod import language
 from pathod.language import base, exceptions
-
-from mitmproxy.test import tutils
 
 
 def parse_request(s):
@@ -137,24 +134,22 @@ class TestTokValueFile:
         v = base.TokValue.parseString("<path")[0]
         assert v.path == "path"
 
-    def test_access_control(self):
+    def test_access_control(self, tmpdir):
         v = base.TokValue.parseString("<path")[0]
-        with tutils.tmpdir() as t:
-            p = os.path.join(t, "path")
-            with open(p, "wb") as f:
-                f.write(b"x" * 10000)
+        f = tmpdir.join("path")
+        f.write(b"x" * 10000)
 
-            assert v.get_generator(language.Settings(staticdir=t))
+        assert v.get_generator(language.Settings(staticdir=str(tmpdir)))
 
-            v = base.TokValue.parseString("<path2")[0]
-            with pytest.raises(exceptions.FileAccessDenied):
-                v.get_generator(language.Settings(staticdir=t))
-            with pytest.raises(Exception, match="access disabled"):
-                v.get_generator(language.Settings())
+        v = base.TokValue.parseString("<path2")[0]
+        with pytest.raises(exceptions.FileAccessDenied):
+            v.get_generator(language.Settings(staticdir=str(tmpdir)))
+        with pytest.raises(Exception, match="access disabled"):
+            v.get_generator(language.Settings())
 
-            v = base.TokValue.parseString("</outside")[0]
-            with pytest.raises(Exception, match="outside"):
-                v.get_generator(language.Settings(staticdir=t))
+        v = base.TokValue.parseString("</outside")[0]
+        with pytest.raises(Exception, match="outside"):
+            v.get_generator(language.Settings(staticdir=str(tmpdir)))
 
     def test_spec(self):
         v = base.TokValue.parseString("<'one two'")[0]

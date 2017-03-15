@@ -78,7 +78,7 @@ class Flow(stateobject.StateObject):
         self._backup = None  # type: typing.Optional[Flow]
         self.reply = None  # type: typing.Optional[controller.Reply]
         self.marked = False  # type: bool
-        self.metadata = dict()  # type: typing.Dict[str, str]
+        self.metadata = dict()  # type: typing.Dict[str, typing.Any]
 
     _stateobject_attributes = dict(
         id=str,
@@ -93,7 +93,7 @@ class Flow(stateobject.StateObject):
 
     def get_state(self):
         d = super().get_state()
-        d.update(version=version.IVERSION)
+        d.update(version=version.FLOW_FORMAT_VERSION)
         if self._backup and self._backup != d:
             d.update(backup=self._backup)
         return d
@@ -112,8 +112,9 @@ class Flow(stateobject.StateObject):
 
     def copy(self):
         f = super().copy()
-        f.id = str(uuid.uuid4())
         f.live = False
+        if self.reply is not None:
+            f.reply = controller.DummyReply()
         return f
 
     def modified(self):

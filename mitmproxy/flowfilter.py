@@ -319,10 +319,14 @@ class FDomain(_Rex):
     code = "d"
     help = "Domain"
     flags = re.IGNORECASE
+    is_binary = False
 
     @only(http.HTTPFlow)
     def __call__(self, f):
-        return bool(self.re.search(f.request.data.host))
+        return bool(
+            self.re.search(f.request.host) or
+            self.re.search(f.request.pretty_host)
+        )
 
 
 class FUrl(_Rex):
@@ -339,7 +343,7 @@ class FUrl(_Rex):
 
     @only(http.HTTPFlow)
     def __call__(self, f):
-        return self.re.search(f.request.url)
+        return self.re.search(f.request.pretty_url)
 
 
 class FSrc(_Rex):

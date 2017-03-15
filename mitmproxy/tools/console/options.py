@@ -1,6 +1,7 @@
 import urwid
 
 from mitmproxy import contentviews
+from mitmproxy import optmanager
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import select
@@ -90,10 +91,10 @@ class Options(urwid.WidgetWrap):
 
                 select.Heading("Network"),
                 select.Option(
-                    "No Upstream Certs",
+                    "Upstream Certs",
                     "U",
-                    checker("no_upstream_cert", master.options),
-                    master.options.toggler("no_upstream_cert")
+                    checker("upstream_cert", master.options),
+                    master.options.toggler("upstream_cert")
                 ),
                 select.Option(
                     "TCP Proxying",
@@ -173,7 +174,7 @@ class Options(urwid.WidgetWrap):
         return super().keypress(size, key)
 
     def do_save(self, path):
-        self.master.options.save(path)
+        optmanager.save(self.master.options, path)
         return "Saved"
 
     def save(self):

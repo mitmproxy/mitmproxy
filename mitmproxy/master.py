@@ -15,7 +15,6 @@ from mitmproxy import log
 from mitmproxy import io
 from mitmproxy.proxy.protocol import http_replay
 from mitmproxy.types import basethread
-import mitmproxy.net.http
 
 from . import ctx as mitmproxy_ctx
 
@@ -42,6 +41,7 @@ class Master:
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.server = server
+        self.first_tick = True
         channel = controller.Channel(self.event_queue, self.should_exit)
         server.set_channel(channel)
 
@@ -86,6 +86,9 @@ class Master:
             self.shutdown()
 
     def tick(self, timeout):
+        if self.first_tick:
+            self.first_tick = False
+            self.addons.invoke_all_with_context("running")
         with self.handlecontext():
             self.addons("tick")
         changed = False
@@ -118,27 +121,18 @@ class Master:
         self.should_exit.set()
         self.addons.done()
 
-    def create_request(self, method, scheme, host, port, path):
+    def create_request(self, method, url):
         """
-            this method creates a new artificial and minimalist request also adds it to flowlist
+        Create a new artificial and minimalist request also adds it to flowlist.
+
+        Raises:
+            ValueError, if the url is malformed.
         """
+        req = http.HTTPRequest.make(method, url)
         c = connections.ClientConnection.make_dummy(("", 0))
-        s = connections.ServerConnection.make_dummy((host, port))
+        s = connections.ServerConnection.make_dummy((req.host, req.port))
 
         f = http.HTTPFlow(c, s)
-        headers = mitmproxy.net.http.Headers()
-
-        req = http.HTTPRequest(
-            "absolute",
-            method,
-            scheme,
-            host,
-            port,
-            path,
-            b"HTTP/1.1",
-            headers,
-            b""
-        )
         f.request = req
         self.load_flow(f)
         return f
@@ -148,7 +142,7 @@ class Master:
         Loads a flow
         """
         if isinstance(f, http.HTTPFlow):
-            if self.server and self.options.mode == "reverse":
+            if self.server and self.options.mode.startswith("reverse:"):
                 f.request.host = self.server.config.upstream_server.address[0]
                 f.request.port = self.server.config.upstream_server.address[1]
                 f.request.scheme = self.server.config.upstream_server.scheme

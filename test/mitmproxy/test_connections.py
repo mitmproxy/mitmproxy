@@ -66,7 +66,17 @@ class TestClientConnection:
         assert c.timestamp_start == 42
 
         c3 = c.copy()
+        assert c3.get_state() != c.get_state()
+        c.id = c3.id = "foo"
         assert c3.get_state() == c.get_state()
+
+    def test_eq(self):
+        c = tflow.tclient_conn()
+        c2 = c.copy()
+        assert c == c
+        assert c != c2
+        assert c != 42
+        assert hash(c) != hash(c2)
 
 
 class TestServerConnection:
@@ -146,6 +156,21 @@ class TestServerConnection:
         c = connections.ServerConnection(('', 1234))
         with pytest.raises(ValueError, matches='sni must be str, not '):
             c.establish_ssl(None, b'foobar')
+
+    def test_state(self):
+        c = tflow.tserver_conn()
+        c2 = c.copy()
+        assert c2.get_state() != c.get_state()
+        c.id = c2.id = "foo"
+        assert c2.get_state() == c.get_state()
+
+    def test_eq(self):
+        c = tflow.tserver_conn()
+        c2 = c.copy()
+        assert c == c
+        assert c != c2
+        assert c != 42
+        assert hash(c) != hash(c2)
 
 
 class TestClientConnectionTLS:

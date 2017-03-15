@@ -63,8 +63,7 @@ class TestSerialize:
         r = self._treader()
         s = tservers.TestState()
         opts = options.Options(
-            mode="reverse",
-            upstream_server="https://use-this-domain"
+            mode="reverse:https://use-this-domain"
         )
         conf = ProxyConfig(opts)
         fm = master.Master(opts, DummyServer(conf))
@@ -141,7 +140,7 @@ class TestFlowMaster:
 
     def test_create_flow(self):
         fm = master.Master(None, DummyServer())
-        assert fm.create_request("GET", "http", "example.com", 80, "/")
+        assert fm.create_request("GET", "http://example.com/")
 
     def test_all(self):
         s = tservers.TestState()

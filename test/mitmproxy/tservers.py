@@ -79,6 +79,8 @@ class TestMaster(master.Master):
         self.state = TestState()
         self.addons.add(self.state)
         self.addons.add(*addons)
+        self.addons.configure_all(self.options, self.options.keys())
+        self.addons.invoke_all_with_context("running")
 
     def clear_log(self):
         self.tlog = []
@@ -288,7 +290,7 @@ class ReverseProxyTest(ProxyTestBase):
     @classmethod
     def get_options(cls):
         opts = ProxyTestBase.get_options()
-        opts.upstream_server = "".join(
+        s = "".join(
             [
                 "https" if cls.ssl else "http",
                 "://",
@@ -296,7 +298,7 @@ class ReverseProxyTest(ProxyTestBase):
                 str(cls.server.port)
             ]
         )
-        opts.mode = "reverse"
+        opts.mode = "reverse:" + s
         return opts
 
     def pathoc(self, sni=None):
@@ -373,9 +375,9 @@ class ChainProxyTest(ProxyTestBase):
     def get_options(cls):
         opts = super().get_options()
         if cls.chain:  # First proxy is in normal mode.
+            s = "http://127.0.0.1:%s" % cls.chain[0].port
             opts.update(
-                mode="upstream",
-                upstream_server="http://127.0.0.1:%s" % cls.chain[0].port
+                mode="upstream:" + s,
             )
         return opts
 

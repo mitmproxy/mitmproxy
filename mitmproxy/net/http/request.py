@@ -1,6 +1,6 @@
 import re
 import urllib
-from typing import Optional
+from typing import Optional, AnyStr, Dict, Iterable, Tuple, Union
 
 from mitmproxy.types import multidict
 from mitmproxy.utils import strutils
@@ -76,6 +76,53 @@ class Request(message.Message):
         return "Request({} {}{})".format(
             self.method, hostport, path
         )
+
+    @classmethod
+    def make(
+            cls,
+            method: str,
+            url: str,
+            content: AnyStr = b"",
+            headers: Union[Dict[AnyStr, AnyStr], Iterable[Tuple[bytes, bytes]]] = ()
+    ):
+        """
+        Simplified API for creating request objects.
+        """
+        req = cls(
+            "absolute",
+            method,
+            "",
+            "",
+            "",
+            "",
+            "HTTP/1.1",
+            (),
+            b""
+        )
+
+        req.url = url
+
+        # Headers can be list or dict, we differentiate here.
+        if isinstance(headers, dict):
+            req.headers = nheaders.Headers(**headers)
+        elif isinstance(headers, Iterable):
+            req.headers = nheaders.Headers(headers)
+        else:
+            raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
+                type(headers).__name__
+            ))
+
+        # Assign this manually to update the content-length header.
+        if isinstance(content, bytes):
+            req.content = content
+        elif isinstance(content, str):
+            req.text = content
+        else:
+            raise TypeError("Expected content to be str or bytes, but is {}.".format(
+                type(content).__name__
+            ))
+
+        return req
 
     def replace(self, pattern, repl, flags=0, count=0):
         """

@@ -10,12 +10,12 @@ from mitmproxy import proxy
 class TAddon:
     def __init__(self, name):
         self.name = name
-        self.noop_member = True
+        self.tick = True
 
     def __repr__(self):
         return "Addon(%s)" % self.name
 
-    def noop(self):
+    def done(self):
         pass
 
 
@@ -30,6 +30,6 @@ def test_simple():
     assert not a.chain
 
     a.add(TAddon("one"))
-    a("noop")
+    a("done")
     with pytest.raises(exceptions.AddonError):
-        a("noop_member")
+        a("tick")

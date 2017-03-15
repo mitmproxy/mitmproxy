@@ -1,6 +1,7 @@
 import time
 
 import os
+import uuid
 
 from mitmproxy import stateobject
 from mitmproxy import certs
@@ -41,6 +42,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             self.clientcert = None
             self.ssl_established = None
 
+        self.id = str(uuid.uuid4())
         self.mitmcert = None
         self.timestamp_start = time.time()
         self.timestamp_end = None
@@ -73,6 +75,14 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             port=self.address[1],
         )
 
+    def __eq__(self, other):
+        if isinstance(other, ClientConnection):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
     @property
     def tls_established(self):
         return self.ssl_established
@@ -82,6 +92,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.ssl_established = value
 
     _stateobject_attributes = dict(
+        id=str,
         address=tuple,
         ssl_established=bool,
         clientcert=certs.SSLCert,
@@ -110,6 +121,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     @classmethod
     def make_dummy(cls, address):
         return cls.from_state(dict(
+            id=str(uuid.uuid4()),
             address=address,
             clientcert=None,
             mitmcert=None,
@@ -165,6 +177,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def __init__(self, address, source_address=None, spoof_source_address=None):
         tcp.TCPClient.__init__(self, address, source_address, spoof_source_address)
 
+        self.id = str(uuid.uuid4())
         self.alpn_proto_negotiated = None
         self.tls_version = None
         self.via = None
@@ -196,6 +209,14 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             port=self.address[1],
         )
 
+    def __eq__(self, other):
+        if isinstance(other, ServerConnection):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
     @property
     def tls_established(self):
         return self.ssl_established
@@ -205,6 +226,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.ssl_established = value
 
     _stateobject_attributes = dict(
+        id=str,
         address=tuple,
         ip_address=tuple,
         source_address=tuple,
@@ -228,6 +250,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     @classmethod
     def make_dummy(cls, address):
         return cls.from_state(dict(
+            id=str(uuid.uuid4()),
             address=address,
             ip_address=address,
             cert=None,

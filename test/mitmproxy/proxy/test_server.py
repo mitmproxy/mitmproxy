@@ -10,7 +10,7 @@ from mitmproxy import options
 from mitmproxy.addons import script
 from mitmproxy.addons import proxyauth
 from mitmproxy import http
-from mitmproxy.proxy.config import HostMatcher, parse_server_spec
+from mitmproxy.proxy.config import HostMatcher
 import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.net import socks
@@ -302,7 +302,10 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
 class TestHTTPAuth(tservers.HTTPProxyTest):
     def test_auth(self):
         self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.options.auth_singleuser = "test:test"
+        self.master.addons.configure_all(
+            self.master.options, self.master.options.keys()
+        )
+        self.master.options.proxyauth = "test:test"
         assert self.pathod("202").status_code == 407
         p = self.pathoc()
         with p.connect():
@@ -321,7 +324,7 @@ class TestHTTPAuth(tservers.HTTPProxyTest):
 class TestHTTPReverseAuth(tservers.ReverseProxyTest):
     def test_auth(self):
         self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.options.auth_singleuser = "test:test"
+        self.master.options.proxyauth = "test:test"
         assert self.pathod("202").status_code == 401
         p = self.pathoc()
         with p.connect():
@@ -342,22 +345,22 @@ class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
 
     def test_clientcert_file(self):
         try:
-            self.config.clientcerts = os.path.join(
+            self.config.client_certs = os.path.join(
                 tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
-            self.config.clientcerts = None
+            self.config.client_certs = None
 
     def test_clientcert_dir(self):
         try:
-            self.config.clientcerts = tutils.test_data.path("mitmproxy/data/clientcert")
+            self.config.client_certs = tutils.test_data.path("mitmproxy/data/clientcert")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
-            self.config.clientcerts = None
+            self.config.client_certs = None
 
     def test_error_post_connect(self):
         p = self.pathoc()
@@ -579,8 +582,6 @@ class TestHttps2Http(tservers.ReverseProxyTest):
     @classmethod
     def get_options(cls):
         opts = super().get_options()
-        s = parse_server_spec(opts.upstream_server)
-        opts.upstream_server = "http://{}:{}".format(s.address[0], s.address[1])
         return opts
 
     def pathoc(self, ssl, sni=None):
@@ -870,11 +871,11 @@ class TestServerConnect(tservers.HTTPProxyTest):
     @classmethod
     def get_options(cls):
         opts = tservers.HTTPProxyTest.get_options()
-        opts.no_upstream_cert = True
+        opts.upstream_cert = False
         return opts
 
     def test_unnecessary_serverconnect(self):
-        """A replayed/fake response with no_upstream_cert should not connect to an upstream server"""
+        """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
         assert self.pathod("200").status_code == 200
         for msg in self.proxy.tmaster.tlog:
             assert "serverconnect" not in msg

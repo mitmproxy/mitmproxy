@@ -15,5 +15,5 @@ Example: Set the **Host** header to "example.com" for all requests.
 
 ================== =======================
 command-line       ``--setheader PATTERN``
-mitmproxy shortcut :kbd:`o` then :kbd:`H`
+mitmproxy shortcut :kbd:`O` then :kbd:`H`
 ================== =======================

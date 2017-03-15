@@ -64,7 +64,7 @@ class _WebSocketTestBase:
     def get_options(cls):
         opts = options.Options(
             listen_port=0,
-            no_upstream_cert=False,
+            upstream_cert=True,
             ssl_insecure=True,
             websocket=True,
         )

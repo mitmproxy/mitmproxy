@@ -1,13 +1,14 @@
 jest.unmock('../../ducks/flows');
 
 import reduceFlows, * as flowActions from '../../ducks/flows'
+import * as storeActions from '../../ducks/utils/store'
 
 
 describe('select flow', () => {
 
     let state = reduceFlows(undefined, {})
     for (let i of [1, 2, 3, 4]) {
-        state = reduceFlows(state, flowActions.addFlow({ id: i }))
+        state = reduceFlows(state, storeActions.add({ id: i }))
     }
 
     it('should be possible to select a single flow', () => {
