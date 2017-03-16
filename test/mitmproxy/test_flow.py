@@ -122,19 +122,19 @@ class TestFlowMaster:
         fm = master.Master(None, DummyServer())
         fm.addons.add(s)
         f = tflow.tflow(req=None)
-        fm.clientconnect(f.client_conn)
+        fm.addons.handle_lifecycle("clientconnect", f.client_conn)
         f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
-        fm.request(f)
+        fm.addons.handle_lifecycle("request", f)
         assert len(s.flows) == 1
 
         f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
-        fm.response(f)
+        fm.addons.handle_lifecycle("response", f)
         assert len(s.flows) == 1
 
-        fm.clientdisconnect(f.client_conn)
+        fm.addons.handle_lifecycle("clientdisconnect", f.client_conn)
 
         f.error = flow.Error("msg")
-        fm.error(f)
+        fm.addons.handle_lifecycle("error", f)
 
         fm.shutdown()
 

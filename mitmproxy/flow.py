@@ -144,7 +144,7 @@ class Flow(stateobject.StateObject):
 
     @property
     def killable(self):
-        return self.reply and self.reply.state in {"handled", "taken"}
+        return self.reply and self.reply.state == "taken"
 
     def kill(self):
         """
@@ -152,8 +152,9 @@ class Flow(stateobject.StateObject):
         """
         self.error = Error("Connection killed")
         self.intercepted = False
-        # reply.state should only be "handled" or "taken" here.
-        # if none of this is the case, .take() will raise an exception.
+
+        # reply.state should be "taken" here, or .take() will raise an
+        # exception.
         if self.reply.state != "taken":
             self.reply.take()
         self.reply.kill(force=True)

@@ -93,18 +93,7 @@ class Master:
                 raise exceptions.ControlException(
                     "Unknown event %s" % repr(mtype)
                 )
-            handle_func = getattr(self, mtype)
-            if not callable(handle_func):
-                raise exceptions.ControlException(
-                    "Handler %s not callable" % mtype
-                )
-            if not handle_func.__dict__.get("__handler"):
-                raise exceptions.ControlException(
-                    "Handler function %s is not decorated with controller.handler" % (
-                        handle_func
-                    )
-                )
-            handle_func(obj)
+            self.addons.handle_lifecycle(mtype, obj)
             self.event_queue.task_done()
             changed = True
         except queue.Empty:
@@ -143,7 +132,7 @@ class Master:
                 f.request.scheme = self.server.config.upstream_server.scheme
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
-            getattr(self, e)(o)
+            self.addons.handle_lifecycle(e, o)
 
     def replay_request(
             self,
@@ -199,87 +188,3 @@ class Master:
         if block:
             rt.join()
         return rt
-
-    @controller.handler
-    def log(self, l):
-        pass
-
-    @controller.handler
-    def clientconnect(self, root_layer):
-        pass
-
-    @controller.handler
-    def clientdisconnect(self, root_layer):
-        pass
-
-    @controller.handler
-    def serverconnect(self, server_conn):
-        pass
-
-    @controller.handler
-    def serverdisconnect(self, server_conn):
-        pass
-
-    @controller.handler
-    def next_layer(self, top_layer):
-        pass
-
-    @controller.handler
-    def http_connect(self, f):
-        pass
-
-    @controller.handler
-    def error(self, f):
-        pass
-
-    @controller.handler
-    def requestheaders(self, f):
-        pass
-
-    @controller.handler
-    def request(self, f):
-        pass
-
-    @controller.handler
-    def responseheaders(self, f):
-        pass
-
-    @controller.handler
-    def response(self, f):
-        pass
-
-    @controller.handler
-    def websocket_handshake(self, f):
-        pass
-
-    @controller.handler
-    def websocket_start(self, flow):
-        pass
-
-    @controller.handler
-    def websocket_message(self, flow):
-        pass
-
-    @controller.handler
-    def websocket_error(self, flow):
-        pass
-
-    @controller.handler
-    def websocket_end(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_start(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_message(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_error(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_end(self, flow):
-        pass

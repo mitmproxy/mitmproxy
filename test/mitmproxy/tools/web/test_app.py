@@ -83,7 +83,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_resume(self):
         for f in self.view:
-            f.reply.handle()
             f.intercept()
 
         assert self.fetch(
@@ -95,7 +94,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_kill(self):
         for f in self.view:
             f.backup()
-            f.reply.handle()
             f.intercept()
 
         assert self.fetch("/flows/42/kill", method="POST").code == 200
@@ -109,7 +107,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f = self.view.get_by_id("42")
         assert f
 
-        f.reply.handle()
         assert self.fetch("/flows/42", method="DELETE").code == 200
 
         assert not self.view.get_by_id("42")

@@ -20,7 +20,7 @@ class TestDumpMaster(tservers.MasterTest):
         m = self.mkmaster(None)
         ent = log.LogEntry("foo", "error")
         ent.reply = controller.DummyReply()
-        m.log(ent)
+        m.addons.trigger("log", ent)
         assert m.errorcheck.has_errored
 
     @pytest.mark.parametrize("termlog", [False, True])

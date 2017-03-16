@@ -60,7 +60,6 @@ class TestChannel:
         def reply():
             m, obj = q.get()
             assert m == "test"
-            obj.reply.handle()
             obj.reply.send(42)
             obj.reply.take()
             obj.reply.commit()
@@ -82,10 +81,7 @@ class TestChannel:
 class TestReply:
     def test_simple(self):
         reply = controller.Reply(42)
-        assert reply.state == "unhandled"
-
-        reply.handle()
-        assert reply.state == "handled"
+        assert reply.state == "start"
 
         reply.send("foo")
         assert reply.value == "foo"
@@ -101,7 +97,6 @@ class TestReply:
 
     def test_kill(self):
         reply = controller.Reply(43)
-        reply.handle()
         reply.kill()
         reply.take()
         reply.commit()
@@ -109,7 +104,6 @@ class TestReply:
 
     def test_ack(self):
         reply = controller.Reply(44)
-        reply.handle()
         reply.ack()
         reply.take()
         reply.commit()
@@ -117,7 +111,6 @@ class TestReply:
 
     def test_reply_none(self):
         reply = controller.Reply(45)
-        reply.handle()
         reply.send(None)
         reply.take()
         reply.commit()
@@ -125,7 +118,6 @@ class TestReply:
 
     def test_commit_no_reply(self):
         reply = controller.Reply(46)
-        reply.handle()
         reply.take()
         with pytest.raises(ControlException):
             reply.commit()
@@ -134,7 +126,6 @@ class TestReply:
 
     def test_double_send(self):
         reply = controller.Reply(47)
-        reply.handle()
         reply.send(1)
         with pytest.raises(ControlException):
             reply.send(2)
@@ -142,12 +133,11 @@ class TestReply:
         reply.commit()
 
     def test_state_transitions(self):
-        states = {"unhandled", "handled", "taken", "committed"}
+        states = {"start", "taken", "committed"}
         accept = {
-            "handle": {"unhandled"},
-            "take": {"handled"},
+            "take": {"start"},
             "commit": {"taken"},
-            "ack": {"handled", "taken"},
+            "ack": {"start", "taken"},
         }
         for fn, ok in accept.items():
             for state in states:
@@ -166,7 +156,6 @@ class TestReply:
         reply = controller.Reply(47)
         with pytest.raises(ControlException):
             reply.__del__()
-        reply.handle()
         reply.ack()
         reply.take()
         reply.commit()
@@ -176,24 +165,22 @@ class TestDummyReply:
     def test_simple(self):
         reply = controller.DummyReply()
         for _ in range(2):
-            reply.handle()
             reply.ack()
             reply.take()
             reply.commit()
             reply.mark_reset()
             reply.reset()
-        assert reply.state == "unhandled"
+        assert reply.state == "start"
 
     def test_reset(self):
         reply = controller.DummyReply()
-        reply.handle()
         reply.ack()
         reply.take()
         reply.commit()
         reply.mark_reset()
         assert reply.state == "committed"
         reply.reset()
-        assert reply.state == "unhandled"
+        assert reply.state == "start"
 
     def test_del(self):
         reply = controller.DummyReply()

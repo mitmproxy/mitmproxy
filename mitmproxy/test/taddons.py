@@ -3,29 +3,26 @@ import contextlib
 import mitmproxy.master
 import mitmproxy.options
 from mitmproxy import proxy
+from mitmproxy import addonmanager
 from mitmproxy import eventsequence
 
 
-class _AddonWrapper:
-    def __init__(self, master, addons):
-        self.master = master
-        self.addons = addons
+class TestAddons(addonmanager.AddonManager):
+    def __init__(self, master):
+        super().__init__(master)
 
     def trigger(self, event, *args, **kwargs):
         if event == "log":
             self.master.logs.append(args[0])
         else:
             self.master.events.append((event, args, kwargs))
-        return self.addons.trigger(event, *args, **kwargs)
-
-    def __getattr__(self, attr):
-        return getattr(self.addons, attr)
+        super().trigger(event, *args, **kwargs)
 
 
 class RecordingMaster(mitmproxy.master.Master):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.addons = _AddonWrapper(self, self.addons)
+        self.addons = TestAddons(self)
         self.events = []
         self.logs = []
 
@@ -76,7 +73,7 @@ class context:
             Cycles the flow through the events for the flow. Stops if a reply
             is taken (as in flow interception).
         """
-        f.reply._state = "handled"
+        f.reply._state = "start"
         for evt, arg in eventsequence.iterate(f):
             h = getattr(addon, evt, None)
             if h:

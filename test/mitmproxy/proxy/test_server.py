@@ -5,7 +5,6 @@ import pytest
 from unittest import mock
 
 from mitmproxy.test import tutils
-from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.addons import script
 from mitmproxy.addons import proxyauth

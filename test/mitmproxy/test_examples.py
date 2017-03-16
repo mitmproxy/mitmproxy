@@ -41,7 +41,7 @@ class TestScripts(tservers.MasterTest):
     def test_add_header(self):
         m, _ = tscript("simple/add_header.py")
         f = tflow.tflow(resp=tutils.tresp())
-        m.response(f)
+        m.addons.handle_lifecycle("response", f)
         assert f.response.headers["newheader"] == "foo"
 
     def test_custom_contentviews(self):
@@ -56,7 +56,7 @@ class TestScripts(tservers.MasterTest):
 
         m, sc = tscript("simple/modify_body_inject_iframe.py", "http://example.org/evil_iframe")
         f = tflow.tflow(resp=tutils.tresp(content=b"<html><body>mitmproxy</body></html>"))
-        m.response(f)
+        m.addons.handle_lifecycle("response", f)
         content = f.response.content
         assert b'iframe' in content and b'evil_iframe' in content
 
@@ -65,41 +65,41 @@ class TestScripts(tservers.MasterTest):
 
         form_header = Headers(content_type="application/x-www-form-urlencoded")
         f = tflow.tflow(req=tutils.treq(headers=form_header))
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
 
         assert f.request.urlencoded_form["mitmproxy"] == "rocks"
 
         f.request.headers["content-type"] = ""
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
         assert list(f.request.urlencoded_form.items()) == [("foo", "bar")]
 
     def test_modify_querystring(self):
         m, sc = tscript("simple/modify_querystring.py")
         f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
         assert f.request.query["mitmproxy"] == "rocks"
 
         f.request.path = "/"
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
         assert f.request.query["mitmproxy"] == "rocks"
 
     def test_arguments(self):
         m, sc = tscript("simple/script_arguments.py", "mitmproxy rocks")
         f = tflow.tflow(resp=tutils.tresp(content=b"I <3 mitmproxy"))
-        m.response(f)
+        m.addons.handle_lifecycle("response", f)
         assert f.response.content == b"I <3 rocks"
 
     def test_redirect_requests(self):
         m, sc = tscript("simple/redirect_requests.py")
         f = tflow.tflow(req=tutils.treq(host="example.org"))
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
         assert f.request.host == "mitmproxy.org"
 
     def test_send_reply_from_proxy(self):
         m, sc = tscript("simple/send_reply_from_proxy.py")
         f = tflow.tflow(req=tutils.treq(host="example.com", port=80))
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
         assert f.response.content == b"Hello World"
 
     def test_dns_spoofing(self):
@@ -109,13 +109,13 @@ class TestScripts(tservers.MasterTest):
         host_header = Headers(host=original_host)
         f = tflow.tflow(req=tutils.treq(headers=host_header, port=80))
 
-        m.requestheaders(f)
+        m.addons.handle_lifecycle("requestheaders", f)
 
         # Rewrite by reverse proxy mode
         f.request.scheme = "https"
         f.request.port = 443
 
-        m.request(f)
+        m.addons.handle_lifecycle("request", f)
 
         assert f.request.scheme == "http"
         assert f.request.port == 80

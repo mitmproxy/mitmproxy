@@ -31,7 +31,6 @@ class TestDisableH2CleartextUpgrade:
             b = io.BytesIO(b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
             f = tflow.tflow()
             f.request = http.HTTPRequest.wrap(http1.read_request(b))
-            f.reply.handle()
             f.intercept()
 
             a.request(f)
