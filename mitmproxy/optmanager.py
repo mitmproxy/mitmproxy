@@ -61,7 +61,7 @@ class _Option:
         self.value = unset
 
     def has_changed(self) -> bool:
-        return self.value is not unset
+        return self.current() != self.default
 
     def __eq__(self, other) -> bool:
         for i in self.__slots__:
@@ -172,7 +172,7 @@ class OptManager:
         """
         for o in self._options.values():
             o.reset()
-        self.changed.send(self._options.keys())
+        self.changed.send(self, updated=set(self._options.keys()))
 
     def update_known(self, **kwargs):
         """

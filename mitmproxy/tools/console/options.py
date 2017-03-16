@@ -6,17 +6,18 @@ from mitmproxy.tools.console import common
 
 
 footer = [
-    ('heading_key', "enter/space"), ":toggle ",
-    ('heading_key', "C"), ":clear all ",
-    ('heading_key', "W"), ":save ",
+    ('heading_key', "enter"), ":edit ",
+    ('heading_key', "?"), ":help ",
 ]
 
 
 def _mkhelp():
     text = []
     keys = [
-        ("enter/space", "activate option"),
-        ("C", "clear all options"),
+        ("enter", "edit option"),
+        ("D", "reset all to defaults"),
+        ("g", "go to start of list"),
+        ("G", "go to end of list"),
         ("w", "save options"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
@@ -81,11 +82,7 @@ class OptionItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         if key == "enter":
             if self.opt.typespec == bool:
-                setattr(
-                    self.master.options,
-                    self.opt.name,
-                    not self.opt.current()
-                )
+                self.master.options.toggler(self.opt.name)()
         else:
             return key
 
@@ -135,7 +132,18 @@ class OptionListWalker(urwid.ListWalker):
 class OptionsList(urwid.ListBox):
     def __init__(self, master):
         self.master = master
-        super().__init__(OptionListWalker(master))
+        self.walker = OptionListWalker(master)
+        super().__init__(self.walker)
+
+    def keypress(self, size, key):
+        if key == "g":
+            self.set_focus(0)
+            self.walker._modified()
+        elif key == "G":
+            self.set_focus(len(self.walker.opts) - 1)
+            self.walker._modified()
+        else:
+            return urwid.ListBox.keypress(self, size, key)
 
 
 class OptionHelp(urwid.Frame):
@@ -185,6 +193,9 @@ class Options(urwid.Pile):
                 self.focus_position + 1
             ) % len(self.widget_list)
             self.widget_list[1].active(self.focus_position == 1)
+            key = None
+        elif key == "D":
+            self.master.options.reset()
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
