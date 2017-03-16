@@ -8,11 +8,13 @@ from mitmproxy.utils import strutils
 
 
 class WebSocketMessage(serializable.Serializable):
-    def __init__(self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None):
+    def __init__(
+        self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None
+    ) -> None:
         self.type = type
         self.from_client = from_client
         self.content = content
-        self.timestamp = timestamp or time.time()  # type: int
+        self.timestamp = timestamp or int(time.time())  # type: int
 
     @classmethod
     def from_state(cls, state):
@@ -62,7 +64,8 @@ class WebSocketFlow(flow.Flow):
         self.handshake_flow = handshake_flow
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes.update(
+    # mypy doesn't support update with kwargs
+    _stateobject_attributes.update(dict(
         messages=List[WebSocketMessage],
         close_sender=str,
         close_code=str,
@@ -77,7 +80,7 @@ class WebSocketFlow(flow.Flow):
         # Do not include handshake_flow, to prevent recursive serialization!
         # Since mitmproxy-console currently only displays HTTPFlows,
         # dumping the handshake_flow will include the WebSocketFlow too.
-    )
+    ))
 
     @classmethod
     def from_state(cls, state):

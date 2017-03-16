@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Optional, Union  # noqa
 
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import encoding
@@ -8,6 +8,8 @@ from mitmproxy.net.http import headers
 
 
 class MessageData(serializable.Serializable):
+    content = None  # type: bytes
+
     def __eq__(self, other):
         if isinstance(other, MessageData):
             return self.__dict__ == other.__dict__
@@ -31,6 +33,8 @@ class MessageData(serializable.Serializable):
 
 
 class Message(serializable.Serializable):
+    data = None  # type: MessageData
+
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
@@ -159,6 +163,7 @@ class Message(serializable.Serializable):
         ct = headers.parse_content_type(self.headers.get("content-type", ""))
         if ct:
             return ct[2].get("charset")
+        return None
 
     def _guess_encoding(self) -> str:
         enc = self._get_content_type_charset()

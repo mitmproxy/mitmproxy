@@ -1,4 +1,3 @@
-
 from mitmproxy.test import taddons
 from mitmproxy import ctx
 

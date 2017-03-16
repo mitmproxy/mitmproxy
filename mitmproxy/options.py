@@ -332,7 +332,7 @@ class Options(optmanager.OptManager):
             Set supported SSL/TLS versions for client connections. SSLv2, SSLv3
             and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
             """,
-            choices=tcp.sslversion_choices.keys(),
+            choices=list(tcp.sslversion_choices.keys()),
         )
         self.add_option(
             "ssl_version_server", str, "secure",
@@ -340,7 +340,7 @@ class Options(optmanager.OptManager):
             Set supported SSL/TLS versions for server connections. SSLv2, SSLv3
             and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
             """,
-            choices=tcp.sslversion_choices.keys(),
+            choices=list(tcp.sslversion_choices.keys()),
         )
         self.add_option(
             "ssl_insecure", bool, False,

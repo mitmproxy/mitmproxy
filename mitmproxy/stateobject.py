@@ -1,5 +1,6 @@
 from typing import Any
 from typing import List
+from typing import MutableMapping  # noqa
 
 from mitmproxy.types import serializable
 
@@ -19,7 +20,7 @@ class StateObject(serializable.Serializable):
     or StateObject instances themselves.
     """
 
-    _stateobject_attributes = None
+    _stateobject_attributes = None  # type: MutableMapping[str, Any]
     """
     An attribute-name -> class-or-type dict containing all attributes that
     should be serialized. If the attribute is a class, it must implement the

@@ -3,10 +3,11 @@ import traceback
 
 from mitmproxy import exceptions
 from mitmproxy import connections
+from mitmproxy import controller  # noqa
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import platform
-from mitmproxy.proxy import ProxyConfig
+from mitmproxy.proxy import config
 from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
 from mitmproxy.net import tcp
@@ -34,7 +35,7 @@ class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
 
-    def __init__(self, config: ProxyConfig):
+    def __init__(self, config: config.ProxyConfig) -> None:
         """
             Raises ServerException if there's a startup problem.
         """
@@ -49,7 +50,7 @@ class ProxyServer(tcp.TCPServer):
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
             ) from e
-        self.channel = None
+        self.channel = None  # type: controller.Channel
 
     def set_channel(self, channel):
         self.channel = channel
@@ -67,8 +68,7 @@ class ProxyServer(tcp.TCPServer):
 class ConnectionHandler:
 
     def __init__(self, client_conn, client_address, config, channel):
-        self.config = config
-        """@type: mitmproxy.proxy.config.ProxyConfig"""
+        self.config = config  # type: config.ProxyConfig
         self.client_conn = connections.ClientConnection(
             client_conn,
             client_address,

@@ -10,18 +10,22 @@ import gzip
 import zlib
 import brotli
 
-from typing import Union
+from typing import Union, Optional, AnyStr  # noqa
 
 
 # We have a shared single-element cache for encoding and decoding.
 # This is quite useful in practice, e.g.
 # flow.request.content = flow.request.content.replace(b"foo", b"bar")
 # does not require an .encode() call if content does not contain b"foo"
-CachedDecode = collections.namedtuple("CachedDecode", "encoded encoding errors decoded")
+CachedDecode = collections.namedtuple(
+    "CachedDecode", "encoded encoding errors decoded"
+)
 _cache = CachedDecode(None, None, None, None)
 
 
-def decode(encoded: Union[str, bytes], encoding: str, errors: str='strict') -> Union[str, bytes]:
+def decode(
+    encoded: Optional[bytes], encoding: str, errors: str='strict'
+) -> Optional[AnyStr]:
     """
     Decode the given input object
 
@@ -62,7 +66,7 @@ def decode(encoded: Union[str, bytes], encoding: str, errors: str='strict') -> U
         ))
 
 
-def encode(decoded: Union[str, bytes], encoding: str, errors: str='strict') -> Union[str, bytes]:
+def encode(decoded: Optional[str], encoding: str, errors: str='strict') -> Optional[AnyStr]:
     """
     Encode the given input object
 
