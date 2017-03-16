@@ -106,8 +106,8 @@ setup(
             "pytest-faulthandler>=1.3.0, <2",
             "sphinx>=1.3.5, <1.6",
             "sphinx-autobuild>=0.5.2, <0.7",
-            "sphinxcontrib-documentedlist>=0.6,<0.7",
-            "sphinx-rtd-theme>=0.2,<0.3",
+            "sphinxcontrib-documentedlist>=0.5.0, <0.7",
+            "sphinx_rtd_theme>=0.1.9, <0.3",
         ],
         'contentviews': [
         ],
