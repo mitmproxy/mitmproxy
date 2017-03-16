@@ -43,8 +43,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "onboarding_host", str, APP_HOST,
             """
-            Domain to serve the onboarding app from. For transparent mode, use
-            an IP when a DNS entry for the app domain is not present.             """
+            Onboarding app domain. For transparent mode, use an IP when a DNS
+            entry for the app domain is not present.
+            """
         )
         self.add_option(
             "onboarding_port", int, APP_PORT,
@@ -72,9 +73,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "keepserving", bool, False,
             """
-            Instructs mitmdump to continue serving after client playback, server
-            playback or file read. This option is ignored by interactive tools,
-            which always keep serving.
+            Continue serving after client playback, server playback or file
+            read. This option is ignored by interactive tools, which always keep
+            serving.
             """
         )
         self.add_option(
@@ -84,8 +85,8 @@ class Options(optmanager.OptManager):
         self.add_option(
             "server_replay_nopop", bool, False,
             """
-            Disable response pop from response flow. This makes it possible to
-            replay same response multiple times.
+            Don't remove flows from server replay state after use. This makes it
+            possible to replay same response multiple times.
             """
         )
         self.add_option(
@@ -190,11 +191,10 @@ class Options(optmanager.OptManager):
         self.add_option(
             "proxyauth", Optional[str], None,
             """
-            Require authentication before proxying requests. If the value is
-            "any", we prompt for authentication, but permit any values. If it
-            starts with an "@", it is treated as a path to an Apache htpasswd
-            file. If its is of the form "username:password", it is treated as a
-            single-user credential.
+            Require proxy authentication. Value may be "any" to require
+            authenticaiton but accept any credentials, start with "@" to specify
+            a path to an Apache htpasswd file, or be of the form
+            "username:password".
             """
         )
         self.add_option(
@@ -218,12 +218,12 @@ class Options(optmanager.OptManager):
         self.add_option(
             "certs", Sequence[str], [],
             """
-            SSL certificates. SPEC is of the form "[domain=]path". The
-            domain may include a wildcard, and is equal to "*" if not specified.
-            The file at path is a certificate in PEM format. If a private key is
-            included in the PEM, it is used, else the default key in the conf
-            dir is used. The PEM file should contain the full certificate chain,
-            with the leaf certificate as the first entry.
+            SSL certificates of the form "[domain=]path". The domain may include
+            a wildcard, and is equal to "*" if not specified. The file at path
+            is a certificate in PEM format. If a private key is included in the
+            PEM, it is used, else the default key in the conf dir is used. The
+            PEM file should contain the full certificate chain, with the leaf
+            certificate as the first entry.
             """
         )
         self.add_option(
