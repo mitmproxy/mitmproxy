@@ -106,9 +106,17 @@ header {
 
 .filter-input .popover {
     top: 27px;
+    left: 43px;
     display: block;
     max-width: none;
     opacity: 0.9;
+
+    @media (max-width: @screen-xs-max) {
+
+        top: 16px;
+        left: 29px;
+        right: 2px;
+    }
 
     .popover-content {
         max-height: 500px;
