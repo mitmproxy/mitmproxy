@@ -23,7 +23,7 @@ def test_format_xml(filename):
     path = data.path(filename)
     with open(path) as f:
         input = f.read()
-    with open(path.replace(".", "-formatted.")) as f:
+    with open("-formatted.".join(path.rsplit(".", 1))) as f:
         expected = f.read()
     tokens = xml_html.tokenize(input)
     assert xml_html.format_xml(tokens) == expected
