@@ -1,9 +1,9 @@
 import os
 from os.path import normpath
+from unittest import mock
+
 from mitmproxy.tools.console import pathedit
 from mitmproxy.test import tutils
-
-from unittest.mock import patch
 
 
 class TestPathCompleter:
@@ -56,8 +56,8 @@ class TestPathEdit:
 
         pe = pathedit.PathEdit("", "")
 
-        with patch('urwid.widget.Edit.get_edit_text') as get_text, \
-                patch('urwid.widget.Edit.set_edit_text') as set_text:
+        with mock.patch('urwid.widget.Edit.get_edit_text') as get_text, \
+                mock.patch('urwid.widget.Edit.set_edit_text') as set_text:
 
             cd = os.path.normpath(tutils.test_data.path("mitmproxy/completion"))
             get_text.return_value = os.path.join(cd, "a")
