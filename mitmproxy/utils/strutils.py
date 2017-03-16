@@ -1,11 +1,11 @@
 import re
 import codecs
-from typing import AnyStr, Optional
+from typing import AnyStr, Optional, cast
 
 
 def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes]:
     if isinstance(str_or_bytes, bytes) or str_or_bytes is None:
-        return str_or_bytes
+        return cast(Optional[bytes], str_or_bytes)
     elif isinstance(str_or_bytes, str):
         return str_or_bytes.encode(*encode_args)
     else:
@@ -18,7 +18,7 @@ def always_str(str_or_bytes: Optional[AnyStr], *decode_args) -> Optional[str]:
         str_or_bytes unmodified, if
     """
     if isinstance(str_or_bytes, str) or str_or_bytes is None:
-        return str_or_bytes
+        return cast(Optional[str], str_or_bytes)
     elif isinstance(str_or_bytes, bytes):
         return str_or_bytes.decode(*decode_args)
     else:

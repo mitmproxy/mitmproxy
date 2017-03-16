@@ -37,11 +37,11 @@ class ProxyConfig:
     def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
-        self.check_ignore = None
-        self.check_tcp = None
-        self.certstore = None
-        self.client_certs = None
-        self.openssl_verification_mode_server = None
+        self.check_ignore = None  # type: HostMatcher
+        self.check_tcp = None  # type: HostMatcher
+        self.certstore = None  # type: certs.CertStore
+        self.client_certs = None  # type: str
+        self.openssl_verification_mode_server = None  # type: int
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
 

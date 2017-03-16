@@ -52,9 +52,7 @@ class HTTPRequest(http.Request):
 
     def get_state(self):
         state = super().get_state()
-        state.update(
-            is_replay=self.is_replay
-        )
+        state["is_replay"] = self.is_replay
         return state
 
     def set_state(self, state):
@@ -167,11 +165,12 @@ class HTTPFlow(flow.Flow):
         """ What mode was the proxy layer in when receiving this request? """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes.update(
+    # mypy doesn't support update with kwargs
+    _stateobject_attributes.update(dict(
         request=HTTPRequest,
         response=HTTPResponse,
         mode=str
-    )
+    ))
 
     def __repr__(self):
         s = "<HTTPFlow"
@@ -223,8 +222,7 @@ def make_error_response(
         status_code=status_code,
         reason=reason,
         message=html.escape(message),
-    )
-    body = body.encode("utf8", "replace")
+    ).encode("utf8", "replace")
 
     if not headers:
         headers = http.Headers(

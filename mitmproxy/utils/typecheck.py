@@ -25,10 +25,10 @@ def check_type(name: str, value: typing.Any, typeinfo: type) -> None:
 
     if typename.startswith("typing.Union"):
         try:
-            types = typeinfo.__args__
+            types = typeinfo.__args__  # type: ignore
         except AttributeError:
             # Python 3.5.x
-            types = typeinfo.__union_params__
+            types = typeinfo.__union_params__  # type: ignore
 
         for T in types:
             try:
@@ -40,10 +40,10 @@ def check_type(name: str, value: typing.Any, typeinfo: type) -> None:
         raise e
     elif typename.startswith("typing.Tuple"):
         try:
-            types = typeinfo.__args__
+            types = typeinfo.__args__  # type: ignore
         except AttributeError:
             # Python 3.5.x
-            types = typeinfo.__tuple_params__
+            types = typeinfo.__tuple_params__  # type: ignore
 
         if not isinstance(value, (tuple, list)):
             raise e
@@ -54,10 +54,10 @@ def check_type(name: str, value: typing.Any, typeinfo: type) -> None:
         return
     elif typename.startswith("typing.Sequence"):
         try:
-            T = typeinfo.__args__[0]
+            T = typeinfo.__args__[0]  # type: ignore
         except AttributeError:
             # Python 3.5.0
-            T = typeinfo.__parameters__[0]
+            T = typeinfo.__parameters__[0]  # type: ignore
 
         if not isinstance(value, (tuple, list)):
             raise e

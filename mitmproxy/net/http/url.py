@@ -1,4 +1,4 @@
-import urllib
+import urllib.parse
 from typing import Sequence
 from typing import Tuple
 

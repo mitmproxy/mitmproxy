@@ -1,5 +1,7 @@
 from mitmproxy import exceptions
 from mitmproxy import connections
+from mitmproxy import controller  # noqa
+from mitmproxy.proxy import config  # noqa
 
 
 class _LayerCodeCompletion:
@@ -12,14 +14,10 @@ class _LayerCodeCompletion:
         super().__init__(**mixin_args)
         if True:
             return
-        self.config = None
-        """@type: mitmproxy.proxy.ProxyConfig"""
-        self.client_conn = None
-        """@type: mitmproxy.connections.ClientConnection"""
-        self.server_conn = None
-        """@type: mitmproxy.connections.ServerConnection"""
-        self.channel = None
-        """@type: mitmproxy.controller.Channel"""
+        self.config = None  # type: config.ProxyConfig
+        self.client_conn = None  # type: connections.ClientConnection
+        self.server_conn = None  # type: connections.ServerConnection
+        self.channel = None  # type: controller.Channel
         self.ctx = None
         """@type: mitmproxy.proxy.protocol.Layer"""
 
