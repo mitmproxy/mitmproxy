@@ -1,5 +1,6 @@
 from mitmproxy import exceptions
 from mitmproxy import eventsequence
+from . import ctx
 import pprint
 
 
@@ -31,31 +32,27 @@ class AddonManager:
                 return i
 
     def configure_all(self, options, updated):
-        self.invoke_all_with_context("configure", options, updated)
-
-    def startup(self, s):
-        """
-            Run startup events on addon.
-        """
-        self.invoke_with_context(s, "start", self.master.options)
+        self.trigger("configure", options, updated)
 
     def add(self, *addons):
         """
             Add addons to the end of the chain, and run their startup events.
         """
         self.chain.extend(addons)
-        for i in addons:
-            self.startup(i)
+        with self.master.handlecontext():
+            for i in addons:
+                self.invoke_addon(i, "start", self.master.options)
 
     def remove(self, addon):
         """
             Remove an addon from the chain, and run its done events.
         """
         self.chain = [i for i in self.chain if i is not addon]
-        self.invoke_with_context(addon, "done")
+        with self.master.handlecontext():
+            self.invoke_addon(addon, "done")
 
     def done(self):
-        self.invoke_all_with_context("done")
+        self.trigger("done")
 
     def __len__(self):
         return len(self.chain)
@@ -63,18 +60,17 @@ class AddonManager:
     def __str__(self):
         return pprint.pformat([str(i) for i in self.chain])
 
-    def invoke_with_context(self, addon, name, *args, **kwargs):
-        with self.master.handlecontext():
-            self.invoke(addon, name, *args, **kwargs)
-
-    def invoke_all_with_context(self, name, *args, **kwargs):
-        with self.master.handlecontext():
-            for i in self.chain:
-                self.invoke(i, name, *args, **kwargs)
-
-    def invoke(self, addon, name, *args, **kwargs):
-        if name not in eventsequence.Events:  # prama: no cover
-            raise NotImplementedError("Unknown event")
+    def invoke_addon(self, addon, name, *args, **kwargs):
+        """
+            Invoke an event on an addon. This method must run within an
+            established handler context.
+        """
+        if not ctx.master:
+            raise exceptions.AddonError(
+                "invoke_addon called without a handler context."
+            )
+        if name not in eventsequence.Events:
+            name = "event_" + name
         func = getattr(addon, name, None)
         if func:
             if not callable(func):
@@ -83,9 +79,13 @@ class AddonManager:
                 )
             func(*args, **kwargs)
 
-    def __call__(self, name, *args, **kwargs):
-        for i in self.chain:
-            try:
-                self.invoke(i, name, *args, **kwargs)
-            except exceptions.AddonHalt:
-                return
+    def trigger(self, name, *args, **kwargs):
+        """
+            Establish a handler context and trigger an event across all addons
+        """
+        with self.master.handlecontext():
+            for i in self.chain:
+                try:
+                    self.invoke_addon(i, name, *args, **kwargs)
+                except exceptions.AddonHalt:
+                    return

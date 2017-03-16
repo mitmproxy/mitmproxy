@@ -79,7 +79,10 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "keepserving", bool, False,
-            "Continue serving after client playback or file read."
+            """
+                Instructs mitmdump to continue serving after client playback,
+                server playback or file read. This option is ignored by interactive tools, which always keep serving.
+            """
         )
         self.add_option(
             "server", bool, True,

@@ -97,6 +97,6 @@ class TestReplaceFile:
             tmpfile.remove()
             f = tflow.tflow()
             f.request.content = b"foo"
-            assert not tctx.master.event_log
+            assert not tctx.master.logs
             r.request(f)
-            assert tctx.master.event_log
+            assert tctx.master.logs

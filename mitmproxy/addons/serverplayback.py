@@ -104,7 +104,7 @@ class ServerPlayback:
 
     def tick(self):
         if self.stop and not self.final_flow.live:
-            ctx.master.shutdown()
+            ctx.master.addons.trigger("processing_complete")
 
     def request(self, f):
         if self.flowmap:
@@ -115,7 +115,7 @@ class ServerPlayback:
                 if self.options.refresh_server_playback:
                     response.refresh()
                 f.response = response
-                if not self.flowmap and not self.options.keepserving:
+                if not self.flowmap:
                     self.final_flow = f
                     self.stop = True
             elif self.options.replay_kill_extra:

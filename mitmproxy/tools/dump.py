@@ -1,9 +1,8 @@
 from mitmproxy import controller
-from mitmproxy import exceptions
 from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
-from mitmproxy.addons import dumper, termlog, termstatus
+from mitmproxy.addons import dumper, termlog, termstatus, readstdin, keepserving
 
 
 class DumpMaster(master.Master):
@@ -22,21 +21,9 @@ class DumpMaster(master.Master):
         self.addons.add(*addons.default_addons())
         if with_dumper:
             self.addons.add(dumper.Dumper())
-
-        if options.rfile:
-            try:
-                self.load_flows_file(options.rfile)
-            except exceptions.FlowReadException as v:
-                self.add_log("Flow file corrupted.", "error")
-                raise exceptions.OptionsError(v)
+        self.addons.add(readstdin.ReadStdin(), keepserving.KeepServing())
 
     @controller.handler
     def log(self, e):
         if e.level == "error":
             self.has_errored = True
-
-    def run(self):  # pragma: no cover
-        if self.options.rfile and not self.options.keepserving:
-            self.addons.done()
-            return
-        super().run()

@@ -43,7 +43,7 @@ class TestConcurrent(tservers.MasterTest):
                 )
             )
             sc.start(tctx.options)
-            assert "decorator not supported" in tctx.master.event_log[0][1]
+            assert "decorator not supported" in tctx.master.logs[0][1]
 
     def test_concurrent_class(self):
             with taddons.context() as tctx:

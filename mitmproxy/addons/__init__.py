@@ -8,6 +8,7 @@ from mitmproxy.addons import disable_h2c
 from mitmproxy.addons import onboarding
 from mitmproxy.addons import proxyauth
 from mitmproxy.addons import replace
+from mitmproxy.addons import readfile
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
 from mitmproxy.addons import setheaders
@@ -37,5 +38,6 @@ def default_addons():
         stickycookie.StickyCookie(),
         streambodies.StreamBodies(),
         streamfile.StreamFile(),
+        readfile.ReadFile(),
         upstream_auth.UpstreamAuth(),
     ]

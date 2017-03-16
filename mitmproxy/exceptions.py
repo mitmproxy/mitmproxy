@@ -102,6 +102,9 @@ class AddonError(MitmproxyException):
 
 
 class AddonHalt(MitmproxyException):
+    """
+        Raised by addons to signal that no further handlers should handle this event.
+    """
     pass
 
 

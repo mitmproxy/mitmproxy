@@ -256,19 +256,6 @@ class ConsoleMaster(master.Master):
         )
         self.ab = statusbar.ActionBar()
 
-        if self.options.rfile:
-            ret = self.load_flows_path(self.options.rfile)
-            if ret and self.view.store_count():
-                signals.add_log(
-                    "File truncated or corrupted. "
-                    "Loaded as many flows as possible.",
-                    "error"
-                )
-            elif ret and not self.view.store_count():
-                self.shutdown()
-                print("Could not load file: {}".format(ret), file=sys.stderr)
-                sys.exit(1)
-
         self.loop.set_alarm_in(0.01, self.ticker)
 
         self.loop.set_alarm_in(
@@ -289,7 +276,10 @@ class ConsoleMaster(master.Master):
             print("Shutting down...", file=sys.stderr)
         finally:
             sys.stderr.flush()
-            self.shutdown()
+            super().shutdown()
+
+    def shutdown(self):
+        raise urwid.ExitMainLoop
 
     def view_help(self, helpctx):
         signals.push_view_state.send(
@@ -402,7 +392,7 @@ class ConsoleMaster(master.Master):
 
     def quit(self, a):
         if a != "n":
-            raise urwid.ExitMainLoop
+            self.shutdown()
 
     def clear_events(self):
         self.logbuffer[:] = []

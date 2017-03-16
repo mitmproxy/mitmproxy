@@ -5,6 +5,7 @@ from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.tools.console import common
 from ... import tservers
+import urwid
 
 
 def test_format_keyvals():
@@ -35,7 +36,10 @@ class TestMaster(tservers.MasterTest):
     def test_basic(self):
         m = self.mkmaster()
         for i in (1, 2, 3):
-            self.dummy_cycle(m, 1, b"")
+            try:
+                self.dummy_cycle(m, 1, b"")
+            except urwid.ExitMainLoop:
+                pass
             assert len(m.view) == i
 
     def test_run_script_once(self):
