@@ -36,7 +36,7 @@ class _Option:
         self.typespec = typespec
         self._default = default
         self.value = unset
-        self.help = help
+        self.help = textwrap.dedent(help or "").strip()
         self.choices = choices
 
     def __repr__(self):
@@ -397,9 +397,7 @@ def dump_defaults(opts):
             txt += " Type %s." % t
 
         txt = "\n".join(
-            textwrap.wrap(
-                textwrap.dedent(txt)
-            )
+            textwrap.wrap(txt)
         )
         s.yaml_set_comment_before_after_key(k, before = "\n" + txt)
     return ruamel.yaml.round_trip_dump(s)

@@ -1,14 +1,9 @@
 import urwid
+import blinker
+import textwrap
 
-from mitmproxy import contentviews
-from mitmproxy import optmanager
 from mitmproxy.tools.console import common
-from mitmproxy.tools.console import grideditor
-from mitmproxy.tools.console import select
-from mitmproxy.tools.console import signals
 
-from mitmproxy.addons import replace
-from mitmproxy.addons import setheaders
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
@@ -31,251 +26,127 @@ def _mkhelp():
 help_context = _mkhelp()
 
 
-def checker(opt, options):
-    def _check():
-        return options.has_changed(opt)
-    return _check
+def fcol(s, width, attr):
+    s = str(s)
+    return (
+        "fixed",
+        width,
+        urwid.Text((attr, s))
+    )
 
 
-class Options(urwid.WidgetWrap):
+option_focus_change = blinker.Signal()
 
+
+class OptionItem(urwid.WidgetWrap):
+    def __init__(self, master, opt, focused, namewidth):
+        self.master, self.opt, self.focused = master, opt, focused
+        self.namewidth = namewidth
+        w = self.get_text()
+        urwid.WidgetWrap.__init__(self, w)
+
+    def get_text(self):
+        val = self.opt.current()
+        if self.opt.typespec == bool:
+            displayval = "true" if val else "false"
+        elif val is None:
+            displayval = ""
+        else:
+            displayval = str(val)
+
+        changed = self.master.options.has_changed(self.opt.name)
+        namestyle = "option_selected" if self.focused else "title"
+        valstyle = "option_active" if changed else "text"
+        return urwid.Columns(
+            [
+                (
+                    self.namewidth,
+                    urwid.Text([(namestyle, self.opt.name.ljust(self.namewidth))])
+                ),
+                urwid.Text([(valstyle, displayval)])
+            ],
+            dividechars=2
+        )
+
+    def selectable(self):
+        return True
+
+    def keypress(self, xxx_todo_changeme, key):
+        key = common.shortcuts(key)
+        return key
+
+
+class OptionListWalker(urwid.ListWalker):
     def __init__(self, master):
         self.master = master
-        self.lb = select.Select(
+        self.index = 0
+        self.opts = sorted(master.options.keys())
+        self.maxlen = max(len(i) for i in self.opts)
+
+        # Trigger a help text update for the first selected item
+        first = self.master.options._options[self.opts[0]]
+        option_focus_change.send(first.help)
+
+    def _get(self, pos):
+        name = self.opts[pos]
+        opt = self.master.options._options[name]
+        return OptionItem(self.master, opt, pos == self.index, self.maxlen)
+
+    def get_focus(self):
+        return self._get(self.index), self.index
+
+    def set_focus(self, index):
+        name = self.opts[index]
+        opt = self.master.options._options[name]
+        self.index = index
+        option_focus_change.send(opt.help)
+
+    def get_next(self, pos):
+        if pos >= len(self.opts) - 1:
+            return None, None
+        pos = pos + 1
+        return self._get(pos), pos
+
+    def get_prev(self, pos):
+        pos = pos - 1
+        if pos < 0:
+            return None, None
+        return self._get(pos), pos
+
+
+class OptionsList(urwid.ListBox):
+    def __init__(self, master):
+        self.master = master
+        super().__init__(OptionListWalker(master))
+
+
+class OptionHelp(urwid.Frame):
+    def __init__(self):
+        h = urwid.Text("Option Help")
+        h = urwid.Padding(h, align="left", width=("relative", 100))
+        h = urwid.AttrWrap(h, "heading")
+        super().__init__(self.widget(""), header=h)
+        option_focus_change.connect(self.sig_mod)
+
+    def selectable(self):
+        return False
+
+    def widget(self, txt):
+        return urwid.ListBox(
+            [urwid.Text(i) for i in textwrap.wrap(txt)]
+        )
+
+    def sig_mod(self, txt):
+        self.set_body(self.widget(txt))
+
+
+class Options(urwid.Pile):
+    def __init__(self, master):
+        oh = OptionHelp()
+        super().__init__(
             [
-                select.Heading("Traffic Manipulation"),
-                select.Option(
-                    "Header Set Patterns",
-                    "H",
-                    checker("setheaders", master.options),
-                    self.setheaders
-                ),
-                select.Option(
-                    "Ignore Patterns",
-                    "I",
-                    checker("ignore_hosts", master.options),
-                    self.ignore_hosts
-                ),
-                select.Option(
-                    "Replacement Patterns",
-                    "R",
-                    checker("replacements", master.options),
-                    self.replacepatterns
-                ),
-                select.Option(
-                    "Scripts",
-                    "S",
-                    checker("scripts", master.options),
-                    self.scripts
-                ),
-
-                select.Heading("Interface"),
-                select.Option(
-                    "Default Display Mode",
-                    "M",
-                    checker("default_contentview", master.options),
-                    self.default_displaymode
-                ),
-                select.Option(
-                    "Palette",
-                    "P",
-                    checker("console_palette", master.options),
-                    self.palette
-                ),
-                select.Option(
-                    "Show Host",
-                    "w",
-                    checker("showhost", master.options),
-                    master.options.toggler("showhost")
-                ),
-
-                select.Heading("Network"),
-                select.Option(
-                    "Upstream Certs",
-                    "U",
-                    checker("upstream_cert", master.options),
-                    master.options.toggler("upstream_cert")
-                ),
-                select.Option(
-                    "TCP Proxying",
-                    "T",
-                    checker("tcp_hosts", master.options),
-                    self.tcp_hosts
-                ),
-                select.Option(
-                    "Don't Verify SSL/TLS Certificates",
-                    "V",
-                    checker("ssl_insecure", master.options),
-                    master.options.toggler("ssl_insecure")
-                ),
-
-                select.Heading("Utility"),
-                select.Option(
-                    "Anti-Cache",
-                    "a",
-                    checker("anticache", master.options),
-                    master.options.toggler("anticache")
-                ),
-                select.Option(
-                    "Anti-Compression",
-                    "o",
-                    checker("anticomp", master.options),
-                    master.options.toggler("anticomp")
-                ),
-                select.Option(
-                    "Kill Extra",
-                    "x",
-                    checker("replay_kill_extra", master.options),
-                    master.options.toggler("replay_kill_extra")
-                ),
-                select.Option(
-                    "No Refresh",
-                    "f",
-                    checker("refresh_server_playback", master.options),
-                    master.options.toggler("refresh_server_playback")
-                ),
-                select.Option(
-                    "Sticky Auth",
-                    "A",
-                    checker("stickyauth", master.options),
-                    self.sticky_auth
-                ),
-                select.Option(
-                    "Sticky Cookies",
-                    "t",
-                    checker("stickycookie", master.options),
-                    self.sticky_cookie
-                ),
+                OptionsList(master),
+                (5, oh),
             ]
         )
-        title = urwid.Text("Options")
-        title = urwid.Padding(title, align="left", width=("relative", 100))
-        title = urwid.AttrWrap(title, "heading")
-        w = urwid.Frame(
-            self.lb,
-            header = title
-        )
-        super().__init__(w)
-
-        self.master.loop.widget.footer.update("")
-        signals.update_settings.connect(self.sig_update_settings)
-        master.options.changed.connect(self.sig_update_settings)
-
-    def sig_update_settings(self, sender, updated=None):
-        self.lb.walker._modified()
-
-    def keypress(self, size, key):
-        if key == "C":
-            self.clearall()
-            return None
-        if key == "W":
-            self.save()
-            return None
-        return super().keypress(size, key)
-
-    def do_save(self, path):
-        optmanager.save(self.master.options, path)
-        return "Saved"
-
-    def save(self):
-        signals.status_prompt_path.send(
-            prompt = "Save options to file",
-            callback = self.do_save
-        )
-
-    def clearall(self):
-        self.master.options.reset()
-        signals.update_settings.send(self)
-        signals.status_message.send(
-            message = "Options cleared",
-            expire = 1
-        )
-
-    def setheaders(self):
-        data = []
-        for d in self.master.options.setheaders:
-            if isinstance(d, str):
-                data.append(setheaders.parse_setheader(d))
-            else:
-                data.append(d)
-        self.master.view_grideditor(
-            grideditor.SetHeadersEditor(
-                self.master,
-                data,
-                self.master.options.setter("setheaders")
-            )
-        )
-
-    def tcp_hosts(self):
-        self.master.view_grideditor(
-            grideditor.HostPatternEditor(
-                self.master,
-                self.master.options.tcp_hosts,
-                self.master.options.setter("tcp_hosts")
-            )
-        )
-
-    def ignore_hosts(self):
-        self.master.view_grideditor(
-            grideditor.HostPatternEditor(
-                self.master,
-                self.master.options.ignore_hosts,
-                self.master.options.setter("ignore_hosts")
-            )
-        )
-
-    def replacepatterns(self):
-        data = []
-        for d in self.master.options.replacements:
-            if isinstance(d, str):
-                data.append(replace.parse_hook(d))
-            else:
-                data.append(d)
-        self.master.view_grideditor(
-            grideditor.ReplaceEditor(
-                self.master,
-                data,
-                self.master.options.setter("replacements")
-            )
-        )
-
-    def scripts(self):
-        def edit_scripts(scripts):
-            self.master.options.scripts = [x[0] for x in scripts]
-        self.master.view_grideditor(
-            grideditor.ScriptEditor(
-                self.master,
-                [[i] for i in self.master.options.scripts],
-                edit_scripts
-            )
-        )
-
-    def default_displaymode(self):
-        signals.status_prompt_onekey.send(
-            prompt = "Global default display mode",
-            keys = contentviews.view_prompts,
-            callback = self.change_default_display_mode
-        )
-
-    def change_default_display_mode(self, t):
-        v = contentviews.get_by_shortcut(t)
-        self.master.options.default_contentview = v.name
-        if self.master.view.focus.flow:
-            signals.flow_change.send(self, flow = self.master.view.focus.flow)
-
-    def sticky_auth(self):
-        signals.status_prompt.send(
-            prompt = "Sticky auth filter",
-            text = self.master.options.stickyauth,
-            callback = self.master.options.setter("stickyauth")
-        )
-
-    def sticky_cookie(self):
-        signals.status_prompt.send(
-            prompt = "Sticky cookie filter",
-            text = self.master.options.stickycookie,
-            callback = self.master.options.setter("stickycookie")
-        )
-
-    def palette(self):
-        self.master.view_palette_picker()
+        self.master = master
