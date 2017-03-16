@@ -270,14 +270,14 @@ def test_merge():
 
 
 def test_option():
-    o = optmanager._Option("test", int, 1, None, None)
+    o = optmanager._Option("test", int, 1, "help", None)
     assert o.current() == 1
     with pytest.raises(TypeError):
         o.set("foo")
     with pytest.raises(TypeError):
-        optmanager._Option("test", str, 1, None, None)
+        optmanager._Option("test", str, 1, "help", None)
 
-    o2 = optmanager._Option("test", int, 1, None, None)
+    o2 = optmanager._Option("test", int, 1, "help", None)
     assert o2 == o
     o2.set(5)
     assert o2 != o

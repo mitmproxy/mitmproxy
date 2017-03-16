@@ -26,19 +26,11 @@ APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
 
-# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
-DEFAULT_CLIENT_CIPHERS = (
-    "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:"
-    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:"
-    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:"
-    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:"
-    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:"
-    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:"
-    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:"
-    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:"
-    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
-)
+# Some help text style guidelines:
+#
+# - Should be a single paragraph with no linebreaks. Help will be reflowed by
+# tools.
+# - Avoid adding information about the data type - we can generate that.
 
 
 class Options(optmanager.OptManager):
@@ -80,8 +72,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "keepserving", bool, False,
             """
-                Instructs mitmdump to continue serving after client playback,
-                server playback or file read. This option is ignored by interactive tools, which always keep serving.
+            Instructs mitmdump to continue serving after client playback, server
+            playback or file read. This option is ignored by interactive tools,
+            which always keep serving.
             """
         )
         self.add_option(
@@ -174,7 +167,7 @@ class Options(optmanager.OptManager):
             "server_replay_ignore_params", Sequence[str], [],
             """
             Request's parameters to be ignored while searching for a saved flow
-            to replay. Can be passed multiple times.
+            to replay.
             """
         )
         self.add_option(
@@ -230,12 +223,11 @@ class Options(optmanager.OptManager):
             The file at path is a certificate in PEM format. If a private key is
             included in the PEM, it is used, else the default key in the conf
             dir is used. The PEM file should contain the full certificate chain,
-            with the leaf certificate as the first entry. Can be passed multiple
-            times.
+            with the leaf certificate as the first entry.
             """
         )
         self.add_option(
-            "ciphers_client", str, DEFAULT_CLIENT_CIPHERS,
+            "ciphers_client", Optional[str], None,
             "Set supported ciphers for client connections using OpenSSL syntax."
         )
         self.add_option(
