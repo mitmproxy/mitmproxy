@@ -36,12 +36,14 @@ def get(name: str) -> Optional[View]:
     for i in views:
         if i.name.lower() == name.lower():
             return i
+    return None
 
 
 def get_by_shortcut(c: str) -> Optional[View]:
     for i in views:
         if i.prompt[1] == c:
             return i
+    return None
 
 
 def add(view: View) -> None:
