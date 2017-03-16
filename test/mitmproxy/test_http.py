@@ -175,7 +175,6 @@ class TestHTTPFlow:
 
     def test_kill(self):
         f = tflow.tflow()
-        f.reply.handle()
         f.intercept()
         assert f.killable
         f.kill()
@@ -184,7 +183,6 @@ class TestHTTPFlow:
 
     def test_resume(self):
         f = tflow.tflow()
-        f.reply.handle()
         f.intercept()
         assert f.reply.state == "taken"
         f.resume()

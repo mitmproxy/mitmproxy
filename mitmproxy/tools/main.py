@@ -91,9 +91,7 @@ def run(MasterKlass, args):  # pragma: no cover
         sys.exit(1)
     except (KeyboardInterrupt, RuntimeError):
         pass
-    if master is None or getattr(master, "has_errored", None):
-        print("%s: errors occurred during run" % sys.argv[0], file=sys.stderr)
-        sys.exit(1)
+    return master
 
 
 def mitmproxy(args=None):  # pragma: no cover
@@ -109,7 +107,9 @@ def mitmproxy(args=None):  # pragma: no cover
 
 def mitmdump(args=None):  # pragma: no cover
     from mitmproxy.tools import dump
-    run(dump.DumpMaster, args)
+    m = run(dump.DumpMaster, args)
+    if m and m.errorcheck.has_errored:
+        sys.exit(1)
 
 
 def mitmweb(args=None):  # pragma: no cover

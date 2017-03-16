@@ -29,6 +29,5 @@ def test_simple():
         assert not f.intercepted
 
         f = tflow.tflow(resp=True)
-        f.reply._state = "handled"
         r.response(f)
         assert f.intercepted

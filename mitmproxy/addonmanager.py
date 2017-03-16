@@ -1,5 +1,6 @@
 from mitmproxy import exceptions
 from mitmproxy import eventsequence
+from mitmproxy import controller
 from . import ctx
 import pprint
 
@@ -59,6 +60,32 @@ class AddonManager:
 
     def __str__(self):
         return pprint.pformat([str(i) for i in self.chain])
+
+    def handle_lifecycle(self, name, message):
+        """
+            Handle a lifecycle event.
+        """
+        if not hasattr(message, "reply"):  # pragma: no cover
+            raise exceptions.ControlException(
+                "Message %s has no reply attribute" % message
+            )
+
+        # We can use DummyReply objects multiple times. We only clear them up on
+        # the next handler so that we can access value and state in the
+        # meantime.
+        if isinstance(message.reply, controller.DummyReply):
+            message.reply.reset()
+
+        self.trigger(name, message)
+
+        if message.reply.state != "taken":
+            message.reply.take()
+            if not message.reply.has_message:
+                message.reply.ack()
+            message.reply.commit()
+
+            if isinstance(message.reply, controller.DummyReply):
+                message.reply.mark_reset()
 
     def invoke_addon(self, addon, name, *args, **kwargs):
         """

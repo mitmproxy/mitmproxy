@@ -13,7 +13,6 @@ import traceback
 import urwid
 
 from mitmproxy import addons
-from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io
@@ -40,6 +39,35 @@ class Logger:
         signals.add_log(evt.msg, evt.level)
 
 
+class UnsupportedLog:
+    """
+        A small addon to dump info on flow types we don't support yet.
+    """
+    def websocket_message(self, f):
+        message = f.messages[-1]
+        signals.add_log(f.message_info(message), "info")
+        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+
+    def websocket_end(self, f):
+        signals.add_log("WebSocket connection closed by {}: {} {}, {}".format(
+            f.close_sender,
+            f.close_code,
+            f.close_message,
+            f.close_reason), "info")
+
+    def tcp_message(self, f):
+        message = f.messages[-1]
+        direction = "->" if message.from_client else "<-"
+        signals.add_log("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
+            client_host=f.client_conn.address[0],
+            client_port=f.client_conn.address[1],
+            server_host=f.server_conn.address[0],
+            server_port=f.server_conn.address[1],
+            direction=direction,
+        ), "info")
+        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+
+
 class ConsoleMaster(master.Master):
     palette = []
 
@@ -63,7 +91,7 @@ class ConsoleMaster(master.Master):
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(Logger())
         self.addons.add(*addons.default_addons())
-        self.addons.add(intercept.Intercept(), self.view)
+        self.addons.add(intercept.Intercept(), self.view, UnsupportedLog())
 
         def sigint_handler(*args, **kwargs):
             self.prompt_for_exit()
@@ -396,34 +424,3 @@ class ConsoleMaster(master.Master):
 
     def clear_events(self):
         self.logbuffer[:] = []
-
-    # Handlers
-    @controller.handler
-    def websocket_message(self, f):
-        super().websocket_message(f)
-        message = f.messages[-1]
-        signals.add_log(f.message_info(message), "info")
-        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
-
-    @controller.handler
-    def websocket_end(self, f):
-        super().websocket_end(f)
-        signals.add_log("WebSocket connection closed by {}: {} {}, {}".format(
-            f.close_sender,
-            f.close_code,
-            f.close_message,
-            f.close_reason), "info")
-
-    @controller.handler
-    def tcp_message(self, f):
-        super().tcp_message(f)
-        message = f.messages[-1]
-        direction = "->" if message.from_client else "<-"
-        signals.add_log("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
-            client_host=f.client_conn.address[0],
-            client_port=f.client_conn.address[1],
-            server_host=f.server_conn.address[0],
-            server_port=f.server_conn.address[1],
-            direction=direction,
-        ), "info")
-        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
