@@ -265,44 +265,50 @@ class OptManager:
             vals.update(self._setspec(i))
         self.update(**vals)
 
-    def _setspec(self, spec):
-        d = {}
-
-        parts = spec.split("=", maxsplit=1)
-        if len(parts) == 1:
-            optname, optval = parts[0], None
-        else:
-            optname, optval = parts[0], parts[1]
+    def parse_setval(self, optname: str, optstr: typing.Optional[str]) -> typing.Any:
+        """
+            Convert a string to a value appropriate for the option type.
+        """
         if optname not in self._options:
             raise exceptions.OptionsError("No such option %s" % optname)
         o = self._options[optname]
 
         if o.typespec in (str, typing.Optional[str]):
-            d[optname] = optval
+            return optstr
         elif o.typespec in (int, typing.Optional[int]):
-            if optval:
+            if optstr:
                 try:
-                    optval = int(optval)
+                    return int(optstr)
                 except ValueError:
-                    raise exceptions.OptionsError("Not an integer: %s" % optval)
-            d[optname] = optval
+                    raise exceptions.OptionsError("Not an integer: %s" % optstr)
+            elif o.typespec == int:
+                raise exceptions.OptionsError("Option is required: %s" % optname)
+            else:
+                return None
         elif o.typespec == bool:
-            if not optval or optval == "true":
-                v = True
-            elif optval == "false":
-                v = False
+            if not optstr or optstr == "true":
+                return True
+            elif optstr == "false":
+                return False
             else:
                 raise exceptions.OptionsError(
                     "Boolean must be \"true\", \"false\", or have the value " "omitted (a synonym for \"true\")."
                 )
-            d[optname] = v
         elif o.typespec == typing.Sequence[str]:
-            if not optval:
-                d[optname] = []
+            if not optstr:
+                return []
             else:
-                d[optname] = getattr(self, optname) + [optval]
-        else:  # pragma: no cover
-            raise NotImplementedError("Unsupported option type: %s", o.typespec)
+                return getattr(self, optname) + [optstr]
+        raise NotImplementedError("Unsupported option type: %s", o.typespec)
+
+    def _setspec(self, spec):
+        d = {}
+        parts = spec.split("=", maxsplit=1)
+        if len(parts) == 1:
+            optname, optval = parts[0], None
+        else:
+            optname, optval = parts[0], parts[1]
+        d[optname] = self.parse_setval(optname, optval)
         return d
 
     def make_parser(self, parser, optname, metavar=None, short=None):

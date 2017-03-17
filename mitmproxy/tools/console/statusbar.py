@@ -224,11 +224,7 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.options.console_focus_follow:
             opts.append("following")
         if self.master.options.stream_large_bodies:
-            opts.append(
-                "stream:%s" % human.pretty_size(
-                    self.master.options.stream_large_bodies
-                )
-            )
+            opts.append(self.master.options.stream_large_bodies)
 
         if opts:
             r.append("[%s]" % (":".join(opts)))
