@@ -6,6 +6,7 @@ from typing import Optional
 from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import overlay
 
 
 def can_edit_inplace(opt):
@@ -121,6 +122,7 @@ class OptionListWalker(urwid.ListWalker):
 
     def sig_mod(self, *args, **kwargs):
         self._modified()
+        self.set_focus(self.index)
 
     def start_editing(self):
         self.editing = True
@@ -202,6 +204,15 @@ class OptionsList(urwid.ListBox):
                 elif can_edit_inplace(foc.opt):
                     self.walker.start_editing()
                     self.walker._modified()
+                elif foc.opt.choices:
+                    self.master.overlay(
+                        overlay.Chooser(
+                            foc.opt.name,
+                            foc.opt.choices,
+                            foc.opt.current(),
+                            self.master.options.setter(foc.opt.name)
+                        )
+                    )
         return super().keypress(size, key)
 
 
