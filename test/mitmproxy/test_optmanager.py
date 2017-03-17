@@ -151,6 +151,21 @@ def test_subscribe():
     o.two = 4
     assert len(o.changed.receivers) == 0
 
+    class binder:
+        def __init__(self):
+            self.o = TO()
+            self.called = False
+            self.o.subscribe(self.bound, ["two"])
+
+        def bound(self, *args, **kwargs):
+            self.called = True
+
+    t = binder()
+    t.o.one = 3
+    assert not t.called
+    t.o.two = 3
+    assert t.called
+
 
 def test_rollback():
     o = TO()

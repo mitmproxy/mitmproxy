@@ -1,9 +1,9 @@
 import contextlib
 import blinker
+import blinker._saferef
 import pprint
 import copy
 import functools
-import weakref
 import os
 import typing
 import textwrap
@@ -127,15 +127,24 @@ class OptManager:
             Subscribe a callable to the .changed signal, but only for a
             specified list of options. The callable should accept arguments
             (options, updated), and may raise an OptionsError.
+
+            The event will automatically be unsubscribed if the callable goes out of scope.
         """
-        func = weakref.proxy(func)
+        for i in opts:
+            if i not in self._options:
+                raise exceptions.OptionsError("No such option: %s" % i)
+
+        # We reuse blinker's safe reference functionality to cope with weakrefs
+        # to bound methods.
+        func = blinker._saferef.safe_ref(func)
 
         @functools.wraps(func)
         def _call(options, updated):
             if updated.intersection(set(opts)):
-                try:
-                    func(options, updated)
-                except ReferenceError:
+                f = func()
+                if f:
+                    f(options, updated)
+                else:
                     self.changed.disconnect(_call)
 
         # Our wrapper function goes out of scope immediately, so we have to set

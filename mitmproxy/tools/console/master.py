@@ -276,7 +276,7 @@ class ConsoleMaster(master.Master):
         self.set_palette(self.options, None)
         self.options.subscribe(
             self.set_palette,
-            ["palette", "palette_transparent"]
+            ["console_palette", "console_palette_transparent"]
         )
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
