@@ -309,13 +309,15 @@ class ConsoleMaster(master.Master):
     def shutdown(self):
         raise urwid.ExitMainLoop
 
-    def overlay(self, widget):
+    def overlay(self, widget, **kwargs):
         signals.push_view_state.send(
             self,
             window = overlay.SimpleOverlay(
+                self,
                 widget,
                 self.loop.widget,
                 widget.width,
+                **kwargs
             )
         )
 

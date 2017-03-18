@@ -8,13 +8,15 @@ from mitmproxy.tools.console import grideditor
 
 
 class SimpleOverlay(urwid.Overlay):
-    def __init__(self, widget, parent, width):
+    def __init__(self, master, widget, parent, width, valign="middle"):
+        self.widget = widget
+        self.master = master
         super().__init__(
             widget,
             parent,
             align="center",
             width=width,
-            valign="middle",
+            valign=valign,
             height="pack"
         )
 
@@ -22,6 +24,8 @@ class SimpleOverlay(urwid.Overlay):
         key = super().keypress(size, key)
         if key == "esc":
             signals.pop_view_state.send(self)
+        if key == "?":
+            self.master.view_help(self.widget.make_help())
         else:
             return key
 
@@ -105,20 +109,33 @@ class Chooser(urwid.WidgetWrap):
             signals.pop_view_state.send(self)
         return super().keypress(size, key)
 
+    def make_help(self):
+        text = []
+        keys = [
+            ("enter", "choose option"),
+            ("esc", "exit chooser"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        return text
+
 
 class OptionsOverlay(urwid.WidgetWrap):
-    def __init__(self, master, name, vals):
+    def __init__(self, master, name, vals, vspace):
+        """
+            vspace: how much vertical space to keep clear
+        """
         cols, rows = master.ui.get_cols_rows()
+        self.ge = grideditor.OptionsEditor(master, name, vals)
         super().__init__(
             urwid.AttrWrap(
                 urwid.LineBox(
-                    urwid.BoxAdapter(
-                        grideditor.OptionsEditor(master, name, vals),
-                        math.ceil(rows * 0.5)
-                    ),
-                    title="text"
+                    urwid.BoxAdapter(self.ge, rows - vspace),
+                    title=name
                 ),
                 "background"
             )
         )
         self.width = math.ceil(cols * 0.8)
+
+    def make_help(self):
+        return self.ge.make_help()

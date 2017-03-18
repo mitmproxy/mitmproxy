@@ -30,7 +30,7 @@ call_in = blinker.Signal()
 # Focus the body, footer or header of the main window
 focus = blinker.Signal()
 
-# Focus the body, footer or header of the main window
+# Set the mini help text in the footer of the main window
 footer_help = blinker.Signal()
 
 # Fired when settings change

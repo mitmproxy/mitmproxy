@@ -1,12 +1,15 @@
 import urwid
 import blinker
 import textwrap
+import pprint
 from typing import Optional, Sequence
 
 from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
+
+HELP_HEIGHT = 5
 
 
 def can_edit_inplace(opt):
@@ -27,8 +30,6 @@ def _mkhelp():
     keys = [
         ("enter", "edit option"),
         ("D", "reset all to defaults"),
-        ("g", "go to start of list"),
-        ("G", "go to end of list"),
         ("w", "save options"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
@@ -62,8 +63,10 @@ class OptionItem(urwid.WidgetWrap):
         val = self.opt.current()
         if self.opt.typespec == bool:
             displayval = "true" if val else "false"
-        elif val is None:
+        elif not val:
             displayval = ""
+        elif self.opt.typespec == Sequence[str]:
+            displayval = pprint.pformat(val, indent=1)
         else:
             displayval = str(val)
 
@@ -218,8 +221,10 @@ class OptionsList(urwid.ListBox):
                         overlay.OptionsOverlay(
                             self.master,
                             foc.opt.name,
-                            foc.opt.current()
-                        )
+                            foc.opt.current(),
+                            HELP_HEIGHT + 5
+                        ),
+                        valign="top"
                     )
                 else:
                     raise NotImplementedError()
@@ -254,7 +259,7 @@ class Options(urwid.Pile):
         super().__init__(
             [
                 OptionsList(master),
-                (5, oh),
+                (HELP_HEIGHT, oh),
             ]
         )
         self.master = master
