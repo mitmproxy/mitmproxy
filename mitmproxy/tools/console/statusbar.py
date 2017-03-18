@@ -5,7 +5,6 @@ import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
-from mitmproxy.utils import human
 
 
 class PromptPath:
@@ -143,8 +142,13 @@ class StatusBar(urwid.WidgetWrap):
         super().__init__(urwid.Pile([self.ib, self.master.ab]))
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
+        signals.footer_help.connect(self.sig_footer_help)
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
+        self.redraw()
+
+    def sig_footer_help(self, sender, helptext):
+        self.helptext = helptext
         self.redraw()
 
     def sig_update(self, sender, updated=None):
@@ -280,11 +284,6 @@ class StatusBar(urwid.WidgetWrap):
             ),
         ]), "heading")
         self.ib._w = status
-
-    def update(self, text):
-        self.helptext = text
-        self.redraw()
-        self.master.loop.draw_screen()
 
     def selectable(self):
         return True

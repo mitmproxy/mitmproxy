@@ -1,7 +1,7 @@
 import urwid
 import blinker
 import textwrap
-from typing import Optional
+from typing import Optional, Sequence
 
 from mitmproxy import exceptions
 from mitmproxy.tools.console import common
@@ -213,6 +213,16 @@ class OptionsList(urwid.ListBox):
                             self.master.options.setter(foc.opt.name)
                         )
                     )
+                elif foc.opt.typespec == Sequence[str]:
+                    self.master.overlay(
+                        overlay.OptionsOverlay(
+                            self.master,
+                            foc.opt.name,
+                            foc.opt.current()
+                        )
+                    )
+                else:
+                    raise NotImplementedError()
         return super().keypress(size, key)
 
 
@@ -269,4 +279,3 @@ class Options(urwid.Pile):
         i = self.widget_list.index(self.focus_item)
         tsize = self.get_item_size(size, i, True, item_rows)
         return self.focus_item.keypress(tsize, key)
-

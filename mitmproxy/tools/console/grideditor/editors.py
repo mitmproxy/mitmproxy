@@ -245,3 +245,20 @@ class SetCookieEditor(base.GridEditor):
                 ]
             )
         return vals
+
+
+class OptionsEditor(base.GridEditor):
+    title = None
+    columns = [
+        col_text.Column("")
+    ]
+
+    def __init__(self, master, name, vals):
+        self.name = name
+        super().__init__(master, [[i] for i in vals], self.callback)
+
+    def callback(self, vals):
+        setattr(self.master.options, self.name, [i[0] for i in vals])
+
+    def is_error(self, col, val):
+        pass

@@ -140,6 +140,18 @@ class Rec():
 def test_subscribe():
     o = TO()
     r = Rec()
+
+    # pytest.raises keeps a reference here that interferes with the cleanup test
+    # further down.
+    try:
+        o.subscribe(r, ["unknown"])
+    except exceptions.OptionsError:
+        pass
+    else:
+        raise AssertionError
+
+    assert len(o.changed.receivers) == 0
+
     o.subscribe(r, ["two"])
     o.one = 2
     assert not r.called

@@ -1,6 +1,10 @@
+import math
+
+import urwid
+
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
-import urwid
+from mitmproxy.tools.console import grideditor
 
 
 class SimpleOverlay(urwid.Overlay):
@@ -15,9 +19,11 @@ class SimpleOverlay(urwid.Overlay):
         )
 
     def keypress(self, size, key):
+        key = super().keypress(size, key)
         if key == "esc":
             signals.pop_view_state.send(self)
-        return super().keypress(size, key)
+        else:
+            return key
 
 
 class Choice(urwid.WidgetWrap):
@@ -98,3 +104,21 @@ class Chooser(urwid.WidgetWrap):
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
         return super().keypress(size, key)
+
+
+class OptionsOverlay(urwid.WidgetWrap):
+    def __init__(self, master, name, vals):
+        cols, rows = master.ui.get_cols_rows()
+        super().__init__(
+            urwid.AttrWrap(
+                urwid.LineBox(
+                    urwid.BoxAdapter(
+                        grideditor.OptionsEditor(master, name, vals),
+                        math.ceil(rows * 0.5)
+                    ),
+                    title="text"
+                ),
+                "background"
+            )
+        )
+        self.width = math.ceil(cols * 0.8)
