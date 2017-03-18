@@ -1,7 +1,7 @@
 import typing
 
 
-def check_type(name: str, value: typing.Any, typeinfo: type) -> None:
+def check_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
     """
     This function checks if the provided value is an instance of typeinfo
     and raises a TypeError otherwise.

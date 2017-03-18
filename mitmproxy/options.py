@@ -26,19 +26,11 @@ APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
 
-# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
-DEFAULT_CLIENT_CIPHERS = (
-    "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:"
-    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:"
-    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:"
-    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:"
-    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:"
-    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:"
-    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:"
-    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:"
-    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
-)
+# Some help text style guidelines:
+#
+# - Should be a single paragraph with no linebreaks. Help will be reflowed by
+# tools.
+# - Avoid adding information about the data type - we can generate that.
 
 
 class Options(optmanager.OptManager):
@@ -51,8 +43,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "onboarding_host", str, APP_HOST,
             """
-            Domain to serve the onboarding app from. For transparent mode, use
-            an IP when a DNS entry for the app domain is not present.             """
+            Onboarding app domain. For transparent mode, use an IP when a DNS
+            entry for the app domain is not present.
+            """
         )
         self.add_option(
             "onboarding_port", int, APP_PORT,
@@ -80,8 +73,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "keepserving", bool, False,
             """
-                Instructs mitmdump to continue serving after client playback,
-                server playback or file read. This option is ignored by interactive tools, which always keep serving.
+            Continue serving after client playback, server playback or file
+            read. This option is ignored by interactive tools, which always keep
+            serving.
             """
         )
         self.add_option(
@@ -91,8 +85,8 @@ class Options(optmanager.OptManager):
         self.add_option(
             "server_replay_nopop", bool, False,
             """
-            Disable response pop from response flow. This makes it possible to
-            replay same response multiple times.
+            Don't remove flows from server replay state after use. This makes it
+            possible to replay same response multiple times.
             """
         )
         self.add_option(
@@ -174,7 +168,7 @@ class Options(optmanager.OptManager):
             "server_replay_ignore_params", Sequence[str], [],
             """
             Request's parameters to be ignored while searching for a saved flow
-            to replay. Can be passed multiple times.
+            to replay.
             """
         )
         self.add_option(
@@ -197,11 +191,10 @@ class Options(optmanager.OptManager):
         self.add_option(
             "proxyauth", Optional[str], None,
             """
-            Require authentication before proxying requests. If the value is
-            "any", we prompt for authentication, but permit any values. If it
-            starts with an "@", it is treated as a path to an Apache htpasswd
-            file. If its is of the form "username:password", it is treated as a
-            single-user credential.
+            Require proxy authentication. Value may be "any" to require
+            authenticaiton but accept any credentials, start with "@" to specify
+            a path to an Apache htpasswd file, or be of the form
+            "username:password".
             """
         )
         self.add_option(
@@ -225,17 +218,16 @@ class Options(optmanager.OptManager):
         self.add_option(
             "certs", Sequence[str], [],
             """
-            SSL certificates. SPEC is of the form "[domain=]path". The
-            domain may include a wildcard, and is equal to "*" if not specified.
-            The file at path is a certificate in PEM format. If a private key is
-            included in the PEM, it is used, else the default key in the conf
-            dir is used. The PEM file should contain the full certificate chain,
-            with the leaf certificate as the first entry. Can be passed multiple
-            times.
+            SSL certificates of the form "[domain=]path". The domain may include
+            a wildcard, and is equal to "*" if not specified. The file at path
+            is a certificate in PEM format. If a private key is included in the
+            PEM, it is used, else the default key in the conf dir is used. The
+            PEM file should contain the full certificate chain, with the leaf
+            certificate as the first entry.
             """
         )
         self.add_option(
-            "ciphers_client", str, DEFAULT_CLIENT_CIPHERS,
+            "ciphers_client", Optional[str], None,
             "Set supported ciphers for client connections using OpenSSL syntax."
         )
         self.add_option(

@@ -24,6 +24,7 @@ from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import help
 from mitmproxy.tools.console import options
+from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import palettepicker
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
@@ -275,7 +276,7 @@ class ConsoleMaster(master.Master):
         self.set_palette(self.options, None)
         self.options.subscribe(
             self.set_palette,
-            ["palette", "palette_transparent"]
+            ["console_palette", "console_palette_transparent"]
         )
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
@@ -285,7 +286,6 @@ class ConsoleMaster(master.Master):
         self.ab = statusbar.ActionBar()
 
         self.loop.set_alarm_in(0.01, self.ticker)
-
         self.loop.set_alarm_in(
             0.0001,
             lambda *args: self.view_flowlist()
@@ -308,6 +308,18 @@ class ConsoleMaster(master.Master):
 
     def shutdown(self):
         raise urwid.ExitMainLoop
+
+    def overlay(self, widget, **kwargs):
+        signals.push_view_state.send(
+            self,
+            window = overlay.SimpleOverlay(
+                self,
+                widget,
+                self.loop.widget,
+                widget.width,
+                **kwargs
+            )
+        )
 
     def view_help(self, helpctx):
         signals.push_view_state.send(

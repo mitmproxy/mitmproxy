@@ -182,12 +182,12 @@ class GridWalker(urwid.ListWalker):
             self.edit_row = GridRow(
                 self.focus_col, True, self.editor, self.lst[self.focus]
             )
-            self.editor.master.loop.widget.footer.update(FOOTER_EDITING)
+            signals.footer_help.send(self, helptext=FOOTER_EDITING)
             self._modified()
 
     def stop_edit(self):
         if self.edit_row:
-            self.editor.master.loop.widget.footer.update(FOOTER)
+            signals.footer_help.send(self, helptext=FOOTER)
             try:
                 val = self.edit_row.edit_col.get_data()
             except ValueError:
@@ -276,9 +276,11 @@ class GridEditor(urwid.WidgetWrap):
                 first_width = max(len(r), first_width)
         self.first_width = min(first_width, FIRST_WIDTH_MAX)
 
-        title = urwid.Text(self.title)
-        title = urwid.Padding(title, align="left", width=("relative", 100))
-        title = urwid.AttrWrap(title, "heading")
+        title = None
+        if self.title:
+            title = urwid.Text(self.title)
+            title = urwid.Padding(title, align="left", width=("relative", 100))
+            title = urwid.AttrWrap(title, "heading")
 
         headings = []
         for i, col in enumerate(self.columns):
@@ -297,10 +299,10 @@ class GridEditor(urwid.WidgetWrap):
         self.lb = GridListBox(self.walker)
         w = urwid.Frame(
             self.lb,
-            header=urwid.Pile([title, h])
+            header=urwid.Pile([title, h]) if title else None
         )
         super().__init__(w)
-        self.master.loop.widget.footer.update("")
+        signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
 
     def show_empty_msg(self):

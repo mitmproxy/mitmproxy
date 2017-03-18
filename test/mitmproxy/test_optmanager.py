@@ -14,6 +14,7 @@ class TO(optmanager.OptManager):
         self.add_option("one", typing.Optional[int], None, "help")
         self.add_option("two", typing.Optional[int], 2, "help")
         self.add_option("bool", bool, False, "help")
+        self.add_option("required_int", int, 2, "help")
 
 
 class TD(optmanager.OptManager):
@@ -72,9 +73,15 @@ def test_defaults():
         assert not o.has_changed(k)
 
 
+def test_required_int():
+    o = TO()
+    with pytest.raises(exceptions.OptionsError):
+        o.parse_setval("required_int", None)
+
+
 def test_options():
     o = TO()
-    assert o.keys() == {"bool", "one", "two"}
+    assert o.keys() == {"bool", "one", "two", "required_int"}
 
     assert o.one is None
     assert o.two == 2
@@ -140,6 +147,18 @@ class Rec():
 def test_subscribe():
     o = TO()
     r = Rec()
+
+    # pytest.raises keeps a reference here that interferes with the cleanup test
+    # further down.
+    try:
+        o.subscribe(r, ["unknown"])
+    except exceptions.OptionsError:
+        pass
+    else:
+        raise AssertionError
+
+    assert len(o.changed.receivers) == 0
+
     o.subscribe(r, ["two"])
     o.one = 2
     assert not r.called
@@ -150,6 +169,21 @@ def test_subscribe():
     del r
     o.two = 4
     assert len(o.changed.receivers) == 0
+
+    class binder:
+        def __init__(self):
+            self.o = TO()
+            self.called = False
+            self.o.subscribe(self.bound, ["two"])
+
+        def bound(self, *args, **kwargs):
+            self.called = True
+
+    t = binder()
+    t.o.one = 3
+    assert not t.called
+    t.o.two = 3
+    assert t.called
 
 
 def test_rollback():
@@ -270,14 +304,14 @@ def test_merge():
 
 
 def test_option():
-    o = optmanager._Option("test", int, 1, None, None)
+    o = optmanager._Option("test", int, 1, "help", None)
     assert o.current() == 1
     with pytest.raises(TypeError):
         o.set("foo")
     with pytest.raises(TypeError):
-        optmanager._Option("test", str, 1, None, None)
+        optmanager._Option("test", str, 1, "help", None)
 
-    o2 = optmanager._Option("test", int, 1, None, None)
+    o2 = optmanager._Option("test", int, 1, "help", None)
     assert o2 == o
     o2.set(5)
     assert o2 != o

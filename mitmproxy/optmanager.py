@@ -1,9 +1,9 @@
 import contextlib
 import blinker
+import blinker._saferef
 import pprint
 import copy
 import functools
-import weakref
 import os
 import typing
 import textwrap
@@ -36,7 +36,7 @@ class _Option:
         self.typespec = typespec
         self._default = default
         self.value = unset
-        self.help = help
+        self.help = textwrap.dedent(help).strip().replace("\n", " ")
         self.choices = choices
 
     def __repr__(self):
@@ -61,7 +61,7 @@ class _Option:
         self.value = unset
 
     def has_changed(self) -> bool:
-        return self.value is not unset
+        return self.current() != self.default
 
     def __eq__(self, other) -> bool:
         for i in self.__slots__:
@@ -127,15 +127,24 @@ class OptManager:
             Subscribe a callable to the .changed signal, but only for a
             specified list of options. The callable should accept arguments
             (options, updated), and may raise an OptionsError.
+
+            The event will automatically be unsubscribed if the callable goes out of scope.
         """
-        func = weakref.proxy(func)
+        for i in opts:
+            if i not in self._options:
+                raise exceptions.OptionsError("No such option: %s" % i)
+
+        # We reuse blinker's safe reference functionality to cope with weakrefs
+        # to bound methods.
+        func = blinker._saferef.safe_ref(func)
 
         @functools.wraps(func)
         def _call(options, updated):
             if updated.intersection(set(opts)):
-                try:
-                    func(options, updated)
-                except ReferenceError:
+                f = func()
+                if f:
+                    f(options, updated)
+                else:
                     self.changed.disconnect(_call)
 
         # Our wrapper function goes out of scope immediately, so we have to set
@@ -172,7 +181,7 @@ class OptManager:
         """
         for o in self._options.values():
             o.reset()
-        self.changed.send(self._options.keys())
+        self.changed.send(self, updated=set(self._options.keys()))
 
     def update_known(self, **kwargs):
         """
@@ -265,44 +274,50 @@ class OptManager:
             vals.update(self._setspec(i))
         self.update(**vals)
 
-    def _setspec(self, spec):
-        d = {}
-
-        parts = spec.split("=", maxsplit=1)
-        if len(parts) == 1:
-            optname, optval = parts[0], None
-        else:
-            optname, optval = parts[0], parts[1]
+    def parse_setval(self, optname: str, optstr: typing.Optional[str]) -> typing.Any:
+        """
+            Convert a string to a value appropriate for the option type.
+        """
         if optname not in self._options:
             raise exceptions.OptionsError("No such option %s" % optname)
         o = self._options[optname]
 
         if o.typespec in (str, typing.Optional[str]):
-            d[optname] = optval
+            return optstr
         elif o.typespec in (int, typing.Optional[int]):
-            if optval:
+            if optstr:
                 try:
-                    optval = int(optval)
+                    return int(optstr)
                 except ValueError:
-                    raise exceptions.OptionsError("Not an integer: %s" % optval)
-            d[optname] = optval
+                    raise exceptions.OptionsError("Not an integer: %s" % optstr)
+            elif o.typespec == int:
+                raise exceptions.OptionsError("Option is required: %s" % optname)
+            else:
+                return None
         elif o.typespec == bool:
-            if not optval or optval == "true":
-                v = True
-            elif optval == "false":
-                v = False
+            if not optstr or optstr == "true":
+                return True
+            elif optstr == "false":
+                return False
             else:
                 raise exceptions.OptionsError(
                     "Boolean must be \"true\", \"false\", or have the value " "omitted (a synonym for \"true\")."
                 )
-            d[optname] = v
         elif o.typespec == typing.Sequence[str]:
-            if not optval:
-                d[optname] = []
+            if not optstr:
+                return []
             else:
-                d[optname] = getattr(self, optname) + [optval]
-        else:  # pragma: no cover
-            raise NotImplementedError("Unsupported option type: %s", o.typespec)
+                return getattr(self, optname) + [optstr]
+        raise NotImplementedError("Unsupported option type: %s", o.typespec)
+
+    def _setspec(self, spec):
+        d = {}
+        parts = spec.split("=", maxsplit=1)
+        if len(parts) == 1:
+            optname, optval = parts[0], None
+        else:
+            optname, optval = parts[0], parts[1]
+        d[optname] = self.parse_setval(optname, optval)
         return d
 
     def make_parser(self, parser, optname, metavar=None, short=None):
@@ -396,11 +411,7 @@ def dump_defaults(opts):
                 raise NotImplementedError
             txt += " Type %s." % t
 
-        txt = "\n".join(
-            textwrap.wrap(
-                textwrap.dedent(txt)
-            )
-        )
+        txt = "\n".join(textwrap.wrap(txt))
         s.yaml_set_comment_before_after_key(k, before = "\n" + txt)
     return ruamel.yaml.round_trip_dump(s)
 
