@@ -14,6 +14,7 @@ class TO(optmanager.OptManager):
         self.add_option("one", typing.Optional[int], None, "help")
         self.add_option("two", typing.Optional[int], 2, "help")
         self.add_option("bool", bool, False, "help")
+        self.add_option("required_int", int, 2, "help")
 
 
 class TD(optmanager.OptManager):
@@ -72,9 +73,15 @@ def test_defaults():
         assert not o.has_changed(k)
 
 
+def test_required_int():
+    o = TO()
+    with pytest.raises(exceptions.OptionsError):
+        o.parse_setval("required_int", None)
+
+
 def test_options():
     o = TO()
-    assert o.keys() == {"bool", "one", "two"}
+    assert o.keys() == {"bool", "one", "two", "required_int"}
 
     assert o.one is None
     assert o.two == 2
