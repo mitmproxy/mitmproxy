@@ -83,7 +83,12 @@ class EventLogList extends Component {
 }
 
 function LogIcon({ event }) {
-    const icon = { web: 'html5', debug: 'bug' }[event.level] || 'info'
+    const icon = {
+      web: 'html5',
+      debug: 'bug',
+      warn: 'exclamation-triangle',
+      error: 'ban'
+    }[event.level] || 'info'
     return <i className={`fa fa-fw fa-${icon}`}></i>
 }
 
