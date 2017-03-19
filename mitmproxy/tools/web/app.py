@@ -421,6 +421,7 @@ class Settings(RequestHandler):
             contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
             listen_host=self.master.options.listen_host,
             listen_port=self.master.options.listen_port,
+            server=self.master.options.server,
         ))
 
     def put(self):

@@ -9,6 +9,7 @@ from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
+from mitmproxy.addons import termstatus
 from mitmproxy.options import Options  # noqa
 from mitmproxy.tools.web import app
 
@@ -35,7 +36,7 @@ class WebMaster(master.Master):
             self.events,
         )
         if with_termlog:
-            self.addons.add(termlog.TermLog())
+            self.addons.add(termlog.TermLog(), termstatus.TermStatus())
         self.app = app.Application(
             self, self.options.web_debug
         )
@@ -98,11 +99,6 @@ class WebMaster(master.Master):
 
         iol.add_callback(self.start)
         tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
-
-        self.add_log(
-            "Proxy server listening at http://{}:{}/".format(self.server.address[0], self.server.address[1]),
-            "info"
-        )
 
         web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
         self.add_log(
