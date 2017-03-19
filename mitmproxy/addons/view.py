@@ -109,7 +109,7 @@ class View(collections.Sequence):
 
         self.default_order = OrderRequestStart(self)
         self.orders = dict(
-            time = self.default_order,
+            time = OrderRequestStart(self),
             method = OrderRequestMethod(self),
             url = OrderRequestURL(self),
             size = OrderKeySize(self),
@@ -310,14 +310,11 @@ class View(collections.Sequence):
                     )
             self.set_filter(filt)
         if "console_order" in updated:
-            if opts.console_order is None:
-                self.set_order(self.default_order)
-            else:
-                if opts.console_order not in self.orders:
-                    raise exceptions.OptionsError(
-                        "Unknown flow order: %s" % opts.console_order
-                    )
-                self.set_order(self.orders[opts.console_order])
+            if opts.console_order not in self.orders:
+                raise exceptions.OptionsError(
+                    "Unknown flow order: %s" % opts.console_order
+                )
+            self.set_order(self.orders[opts.console_order])
         if "console_order_reversed" in updated:
             self.set_reversed(opts.console_order_reversed)
         if "console_focus_follow" in updated:
