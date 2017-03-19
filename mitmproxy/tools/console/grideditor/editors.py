@@ -248,7 +248,7 @@ class SetCookieEditor(base.GridEditor):
 
 
 class OptionsEditor(base.GridEditor):
-    title = None
+    title = None  # type: str
     columns = [
         col_text.Column("")
     ]

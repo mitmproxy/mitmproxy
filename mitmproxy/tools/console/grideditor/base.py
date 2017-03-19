@@ -7,10 +7,12 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import Set # noqa
 
 import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
+import mitmproxy.tools.console.master # noqa
 
 FOOTER = [
     ('heading_key', "enter"), ":edit ",
@@ -34,7 +36,7 @@ class Cell(urwid.WidgetWrap):
 
 
 class Column(metaclass=abc.ABCMeta):
-    subeditor = None
+    subeditor = None  # type: urwid.Edit
 
     def __init__(self, heading):
         self.heading = heading
@@ -62,13 +64,13 @@ class GridRow(urwid.WidgetWrap):
             editing: bool,
             editor: "GridEditor",
             values: Tuple[Iterable[bytes], Container[int]]
-    ):
+    ) -> None:
         self.focused = focused
         self.editor = editor
         self.edit_col = None  # type: Optional[Cell]
 
         errors = values[1]
-        self.fields = []
+        self.fields = []  # type: Sequence[Any]
         for i, v in enumerate(values[0]):
             if focused == i and editing:
                 self.edit_col = self.editor.columns[i].Edit(v)
@@ -116,8 +118,8 @@ class GridWalker(urwid.ListWalker):
             self,
             lst: Iterable[list],
             editor: "GridEditor"
-    ):
-        self.lst = [(i, set()) for i in lst]
+    ) -> None:
+        self.lst = [(i, set()) for i in lst]  # type: Sequence[Tuple[Any, Set]]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
@@ -256,12 +258,12 @@ class GridEditor(urwid.WidgetWrap):
 
     def __init__(
             self,
-            master: "mitmproxy.console.master.ConsoleMaster",
+            master: "mitmproxy.tools.console.master.ConsoleMaster",
             value: Any,
             callback: Callable[..., None],
             *cb_args,
             **cb_kwargs
-    ):
+    ) -> None:
         value = self.data_in(copy.deepcopy(value))
         self.master = master
         self.value = value
@@ -380,7 +382,7 @@ class GridEditor(urwid.WidgetWrap):
         """
             Return None, or a string error message.
         """
-        return False
+        return None
 
     def handle_key(self, key):
         return False

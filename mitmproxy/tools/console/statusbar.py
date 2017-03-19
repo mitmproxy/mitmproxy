@@ -5,6 +5,7 @@ import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
+import mitmproxy.tools.console.master # noqa
 
 
 class PromptPath:
@@ -135,7 +136,9 @@ class ActionBar(urwid.WidgetWrap):
 
 class StatusBar(urwid.WidgetWrap):
 
-    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", helptext):
+    def __init__(
+        self, master: "mitmproxy.tools.console.master.ConsoleMaster", helptext
+    ) -> None:
         self.master = master
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
