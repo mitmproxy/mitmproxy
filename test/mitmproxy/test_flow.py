@@ -6,7 +6,7 @@ import mitmproxy.io
 from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.proxy import config
-from mitmproxy.contrib import tnetstring
+from mitmproxy.io import tnetstring
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy import flow
 from mitmproxy import http

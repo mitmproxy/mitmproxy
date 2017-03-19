@@ -7,9 +7,9 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy.contrib import tnetstring
-from mitmproxy import io_compat
 
+from mitmproxy.io import compat
+from mitmproxy.io import tnetstring
 
 FLOW_TYPES = dict(
     http=http.HTTPFlow,
@@ -43,7 +43,7 @@ class FlowReader:
                     tnetstring.load(self.fo),
                 )
                 try:
-                    mdata = io_compat.migrate_flow(loaded)
+                    mdata = compat.migrate_flow(loaded)
                 except ValueError as e:
                     raise exceptions.FlowReadException(str(e))
                 if mdata["type"] not in FLOW_TYPES:
