@@ -161,6 +161,10 @@ class Options(optmanager.OptManager):
             "Write flows to file. Prefix path with + to append."
         )
         self.add_option(
+            "streamfile_filter", Optional[str], None,
+            "Filter which flows are written to file."
+        )
+        self.add_option(
             "server_replay_ignore_content", bool, False,
             "Ignore request's content while searching for a saved flow to replay."
         )

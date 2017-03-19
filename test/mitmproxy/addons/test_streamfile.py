@@ -15,10 +15,12 @@ def test_configure(tmpdir):
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(sa, streamfile=str(tmpdir))
         with pytest.raises(Exception, match="Invalid filter"):
-            tctx.configure(sa, streamfile=str(tmpdir.join("foo")), filtstr="~~")
-        tctx.configure(sa, filtstr="foo")
+            tctx.configure(
+                sa, streamfile=str(tmpdir.join("foo")), streamfile_filter="~~"
+            )
+        tctx.configure(sa, streamfile_filter="foo")
         assert sa.filt
-        tctx.configure(sa, filtstr=None)
+        tctx.configure(sa, streamfile_filter=None)
         assert not sa.filt
 
 
