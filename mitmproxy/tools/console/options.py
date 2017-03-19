@@ -107,6 +107,7 @@ class OptionItem(urwid.WidgetWrap):
     def keypress(self, size, key):
         if self.editing:
             self._w[1].keypress(size, key)
+            return
         return key
 
 
