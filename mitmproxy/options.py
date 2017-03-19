@@ -156,7 +156,7 @@ class Options(optmanager.OptManager):
         self.add_option(
             "default_contentview", str, "auto",
             "The default content view mode.",
-            choices = [i.name for i in contentviews.views]
+            choices = [i.name.lower() for i in contentviews.views]
         )
         self.add_option(
             "streamfile", Optional[str], None,
