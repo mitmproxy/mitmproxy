@@ -60,7 +60,11 @@ def process_options(parser, opts, args):
         return server.DummyServer(pconf)
 
 
-def run(MasterKlass, args):  # pragma: no cover
+def run(MasterKlass, args, extra=None):  # pragma: no cover
+    """
+        extra: Extra argument processing callable which returns a dict of
+        options.
+    """
     version_check.check_pyopenssl_version()
     debug.register_info_dumpers()
 
@@ -80,6 +84,8 @@ def run(MasterKlass, args):  # pragma: no cover
             print(optmanager.dump_defaults(opts))
             sys.exit(0)
         opts.set(*args.setoptions)
+        if extra:
+            opts.update(**extra(args))
 
         def cleankill(*args, **kwargs):
             master.shutdown()
@@ -107,7 +113,17 @@ def mitmproxy(args=None):  # pragma: no cover
 
 def mitmdump(args=None):  # pragma: no cover
     from mitmproxy.tools import dump
-    m = run(dump.DumpMaster, args)
+
+    def extra(args):
+        if args.filter_args:
+            v = " ".join(args.filter_args)
+            return dict(
+                view_filter = v,
+                streamfile_filter = v,
+            )
+        return {}
+
+    m = run(dump.DumpMaster, args, extra)
     if m and m.errorcheck.has_errored:
         sys.exit(1)
 

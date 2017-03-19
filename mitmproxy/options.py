@@ -424,10 +424,6 @@ class Options(optmanager.OptManager):
 
         # Dump options
         self.add_option(
-            "filtstr", Optional[str], None,
-            "The filter string for mitmdump."
-        )
-        self.add_option(
             "flow_detail", int, 1,
             "Flow detail display level."
         )

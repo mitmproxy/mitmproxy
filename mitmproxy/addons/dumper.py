@@ -35,12 +35,12 @@ class Dumper:
         self.default_contentview = "auto"  # type: str
 
     def configure(self, options, updated):
-        if "filtstr" in updated:
-            if options.filtstr:
-                self.filter = flowfilter.parse(options.filtstr)
+        if "view_filter" in updated:
+            if options.view_filter:
+                self.filter = flowfilter.parse(options.view_filter)
                 if not self.filter:
                     raise exceptions.OptionsError(
-                        "Invalid filter expression: %s" % options.filtstr
+                        "Invalid filter expression: %s" % options.view_filter
                     )
             else:
                 self.filter = None
