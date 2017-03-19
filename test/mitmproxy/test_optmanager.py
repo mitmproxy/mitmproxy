@@ -210,8 +210,12 @@ def test_rollback():
     o.errored.connect(errsub)
 
     assert o.one is None
-    o.one = 10
-    o.bool = True
+    with pytest.raises(exceptions.OptionsError):
+        o.one = 10
+    assert o.one is None
+    with pytest.raises(exceptions.OptionsError):
+        o.bool = True
+    assert o.bool is False
     assert isinstance(recerr[0]["exc"], exceptions.OptionsError)
     assert o.one is None
     assert o.bool is False

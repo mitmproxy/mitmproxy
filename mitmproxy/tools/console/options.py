@@ -186,10 +186,9 @@ class OptionsList(urwid.ListBox):
                 v = self.walker.get_edit_text()
                 try:
                     d = self.master.options.parse_setval(foc.opt.name, v)
+                    self.master.options.update(**{foc.opt.name: d})
                 except exceptions.OptionsError as v:
                     signals.status_message.send(message=str(v))
-                else:
-                    self.master.options.update(**{foc.opt.name: d})
                 self.walker.stop_editing()
             elif key == "esc":
                 self.walker.stop_editing()

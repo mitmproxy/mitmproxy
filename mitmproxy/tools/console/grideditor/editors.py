@@ -258,7 +258,10 @@ class OptionsEditor(base.GridEditor):
         super().__init__(master, [[i] for i in vals], self.callback)
 
     def callback(self, vals):
-        setattr(self.master.options, self.name, [i[0] for i in vals])
+        try:
+            setattr(self.master.options, self.name, [i[0] for i in vals])
+        except exceptions.OptionsError as v:
+            signals.status_message.send(message=str(v))
 
     def is_error(self, col, val):
         pass
