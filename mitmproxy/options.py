@@ -396,8 +396,8 @@ class Options(optmanager.OptManager):
         )
 
         self.add_option(
-            "filter", Optional[str], None,
-            "Filter view expression."
+            "view_filter", Optional[str], None,
+            "Limit which flows are displayed."
         )
 
         # Web options

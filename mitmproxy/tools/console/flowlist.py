@@ -366,8 +366,8 @@ class FlowListBox(urwid.ListBox):
         elif key == "f":
             signals.status_prompt.send(
                 prompt = "Filter View",
-                text = self.master.options.filter,
-                callback = self.master.options.setter("filter")
+                text = self.master.options.view_filter,
+                callback = self.master.options.setter("view_filter")
             )
         elif key == "L":
             signals.status_prompt_path.send(
