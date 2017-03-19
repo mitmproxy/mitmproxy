@@ -1,6 +1,7 @@
 from typing import Optional, Sequence
 
 from mitmproxy import optmanager
+from mitmproxy import contentviews
 from mitmproxy.net import tcp
 
 # We redefine these here for now to avoid importing Urwid-related guff on
@@ -154,7 +155,8 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "default_contentview", str, "auto",
-            "The default content view mode."
+            "The default content view mode.",
+            choices = [i.name for i in contentviews.views]
         )
         self.add_option(
             "streamfile", Optional[str], None,
@@ -390,7 +392,7 @@ class Options(optmanager.OptManager):
             "Console mouse interaction."
         )
         self.add_option(
-            "console_order", Optional[str], None,
+            "console_order", str, "time",
             "Flow sort order.",
             choices=view_orders,
         )
