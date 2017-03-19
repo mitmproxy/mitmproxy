@@ -264,7 +264,7 @@ def test_signals():
 def test_focus_follow():
     v = view.View()
     with taddons.context(options=options.Options()) as tctx:
-        tctx.configure(v, console_focus_follow=True, filter="~m get")
+        tctx.configure(v, console_focus_follow=True, view_filter="~m get")
 
         v.add(tft(start=5))
         assert v.focus.index == 0
@@ -378,17 +378,15 @@ def test_settings():
 def test_configure():
     v = view.View()
     with taddons.context(options=options.Options()) as tctx:
-        tctx.configure(v, filter="~q")
+        tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
-            tctx.configure(v, filter="~~")
+            tctx.configure(v, view_filter="~~")
 
         tctx.configure(v, console_order="method")
         with pytest.raises(Exception, match="Unknown flow order"):
             tctx.configure(v, console_order="no")
 
         tctx.configure(v, console_order_reversed=True)
-
-        tctx.configure(v, console_order=None)
 
         tctx.configure(v, console_focus_follow=True)
         assert v.focus_follow

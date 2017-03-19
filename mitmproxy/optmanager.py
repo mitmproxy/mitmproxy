@@ -196,7 +196,7 @@ class OptManager:
                 unknown[k] = v
         updated = set(known.keys())
         if updated:
-            with self.rollback(updated):
+            with self.rollback(updated, reraise=True):
                 for k, v in known.items():
                     self._options[k].set(v)
                 self.changed.send(self, updated=updated)

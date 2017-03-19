@@ -1,10 +1,10 @@
 import itertools
-from typing import TypeVar, Iterator, Tuple, Optional
+from typing import TypeVar, Iterable, Iterator, Tuple, Optional
 
 T = TypeVar('T')
 
 
-def window(iterator: Iterator[T], behind: int = 0, ahead: int = 0) -> Iterator[Tuple[Optional[T]]]:
+def window(iterator: Iterable[T], behind: int = 0, ahead: int = 0) -> Iterator[Tuple[Optional[T], ...]]:
     """
     Sliding window for an iterator.
 

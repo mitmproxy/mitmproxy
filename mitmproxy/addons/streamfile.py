@@ -22,12 +22,12 @@ class StreamFile:
 
     def configure(self, options, updated):
         # We're already streaming - stop the previous stream and restart
-        if "filtstr" in updated:
-            if options.filtstr:
-                self.filt = flowfilter.parse(options.filtstr)
+        if "streamfile_filter" in updated:
+            if options.streamfile_filter:
+                self.filt = flowfilter.parse(options.streamfile_filter)
                 if not self.filt:
                     raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % options.filtstr
+                        "Invalid filter specification: %s" % options.streamfile_filter
                     )
             else:
                 self.filt = None

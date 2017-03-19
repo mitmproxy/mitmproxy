@@ -30,6 +30,7 @@ def _mkhelp():
     keys = [
         ("enter", "edit option"),
         ("D", "reset all to defaults"),
+        ("d", "reset this option to default"),
         ("w", "save options"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
@@ -107,6 +108,7 @@ class OptionItem(urwid.WidgetWrap):
     def keypress(self, size, key):
         if self.editing:
             self._w[1].keypress(size, key)
+            return
         return key
 
 
@@ -184,15 +186,21 @@ class OptionsList(urwid.ListBox):
                 v = self.walker.get_edit_text()
                 try:
                     d = self.master.options.parse_setval(foc.opt.name, v)
+                    self.master.options.update(**{foc.opt.name: d})
                 except exceptions.OptionsError as v:
                     signals.status_message.send(message=str(v))
-                else:
-                    self.master.options.update(**{foc.opt.name: d})
                 self.walker.stop_editing()
             elif key == "esc":
                 self.walker.stop_editing()
         else:
-            if key == "g":
+            if key == "d":
+                foc, idx = self.get_focus()
+                setattr(
+                    self.master.options,
+                    foc.opt.name,
+                    self.master.options.default(foc.opt.name)
+                )
+            elif key == "g":
                 self.set_focus(0)
                 self.walker._modified()
             elif key == "G":

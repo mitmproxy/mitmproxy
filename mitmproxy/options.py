@@ -1,6 +1,7 @@
 from typing import Optional, Sequence
 
 from mitmproxy import optmanager
+from mitmproxy import contentviews
 from mitmproxy.net import tcp
 
 # We redefine these here for now to avoid importing Urwid-related guff on
@@ -154,11 +155,16 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "default_contentview", str, "auto",
-            "The default content view mode."
+            "The default content view mode.",
+            choices = [i.name.lower() for i in contentviews.views]
         )
         self.add_option(
             "streamfile", Optional[str], None,
             "Write flows to file. Prefix path with + to append."
+        )
+        self.add_option(
+            "streamfile_filter", Optional[str], None,
+            "Filter which flows are written to file."
         )
         self.add_option(
             "server_replay_ignore_content", bool, False,
@@ -386,7 +392,7 @@ class Options(optmanager.OptManager):
             "Console mouse interaction."
         )
         self.add_option(
-            "console_order", Optional[str], None,
+            "console_order", str, "time",
             "Flow sort order.",
             choices=view_orders,
         )
@@ -396,8 +402,8 @@ class Options(optmanager.OptManager):
         )
 
         self.add_option(
-            "filter", Optional[str], None,
-            "Filter view expression."
+            "view_filter", Optional[str], None,
+            "Limit which flows are displayed."
         )
 
         # Web options
@@ -419,10 +425,6 @@ class Options(optmanager.OptManager):
         )
 
         # Dump options
-        self.add_option(
-            "filtstr", Optional[str], None,
-            "The filter string for mitmdump."
-        )
         self.add_option(
             "flow_detail", int, 1,
             "Flow detail display level."

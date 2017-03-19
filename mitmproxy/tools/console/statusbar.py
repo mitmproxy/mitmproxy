@@ -191,10 +191,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "i"))
             r.append(":%s]" % self.master.options.intercept)
-        if self.master.options.filter:
+        if self.master.options.view_filter:
             r.append("[")
             r.append(("heading_key", "f"))
-            r.append(":%s]" % self.master.options.filter)
+            r.append(":%s]" % self.master.options.view_filter)
         if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
@@ -207,7 +207,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.options.default_contentview)
-        if self.master.options.console_order:
+        if self.master.options.has_changed("console_order"):
             r.append("[")
             r.append(("heading_key", "o"))
             r.append(":%s]" % self.master.options.console_order)

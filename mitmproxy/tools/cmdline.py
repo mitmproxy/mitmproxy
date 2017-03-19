@@ -109,7 +109,7 @@ def mitmproxy(opts):
         "See help in mitmproxy for filter expression syntax."
     )
     opts.make_parser(group, "intercept", metavar="FILTER")
-    opts.make_parser(group, "filter", metavar="FILTER")
+    opts.make_parser(group, "view_filter", metavar="FILTER")
     return parser
 
 
@@ -122,8 +122,8 @@ def mitmdump(opts):
         'filter_args',
         nargs="...",
         help="""
-            Filter view expression, used to only show flows that match a certain
-            filter. See help in mitmproxy for filter expression syntax.
+            Filter expression, equivalent to setting both the view_filter
+            and streamfile_filter options.
         """
     )
     return parser
