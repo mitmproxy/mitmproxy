@@ -433,7 +433,10 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "flow_detail", int, 1,
-            "Flow detail display level."
+            """
+            Flow detail display level. LEVEL == 1 : Only Request and Response URL with response code.  LEVEL == 2 :
+            All in 1 + Headers. LEVEL >= 3 : All in 2 + Full Response Text.
+            """
         )
 
         self.update(**kwargs)
