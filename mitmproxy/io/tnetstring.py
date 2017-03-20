@@ -41,9 +41,9 @@ all other strings are returned as plain bytes.
 """
 
 import collections
-from typing import io, Union, Tuple
+import typing
 
-TSerializable = Union[None, bool, int, float, bytes, list, tuple, dict]
+TSerializable = typing.Union[None, str, bool, int, float, bytes, list, tuple, dict]
 
 
 def dumps(value: TSerializable) -> bytes:
@@ -53,12 +53,12 @@ def dumps(value: TSerializable) -> bytes:
     #  This uses a deque to collect output fragments in reverse order,
     #  then joins them together at the end.  It's measurably faster
     #  than creating all the intermediate strings.
-    q = collections.deque()
+    q = collections.deque()  # type: collections.deque
     _rdumpq(q, 0, value)
     return b''.join(q)
 
 
-def dump(value: TSerializable, file_handle: io.BinaryIO) -> None:
+def dump(value: TSerializable, file_handle: typing.BinaryIO) -> None:
     """
     This function dumps a python object as a tnetstring and
     writes it to the given file.
@@ -156,7 +156,7 @@ def loads(string: bytes) -> TSerializable:
     return pop(string)[0]
 
 
-def load(file_handle: io.BinaryIO) -> TSerializable:
+def load(file_handle: typing.BinaryIO) -> TSerializable:
     """load(file) -> object
 
     This function reads a tnetstring from a file and parses it into a
@@ -213,19 +213,19 @@ def parse(data_type: int, data: bytes) -> TSerializable:
         l = []
         while data:
             item, data = pop(data)
-            l.append(item)
+            l.append(item)  # type: ignore
         return l
     if data_type == ord(b'}'):
         d = {}
         while data:
             key, data = pop(data)
             val, data = pop(data)
-            d[key] = val
+            d[key] = val  # type: ignore
         return d
     raise ValueError("unknown type tag: {}".format(data_type))
 
 
-def pop(data: bytes) -> Tuple[TSerializable, bytes]:
+def pop(data: bytes) -> typing.Tuple[TSerializable, bytes]:
     """
     This function parses a tnetstring into a python object.
     It returns a tuple giving the parsed object and a string
@@ -233,8 +233,8 @@ def pop(data: bytes) -> Tuple[TSerializable, bytes]:
     """
     #  Parse out data length, type and remaining string.
     try:
-        length, data = data.split(b':', 1)
-        length = int(length)
+        blength, data = data.split(b':', 1)
+        length = int(blength)
     except ValueError:
         raise ValueError("not a tnetstring: missing or invalid length prefix: {}".format(data))
     try:
