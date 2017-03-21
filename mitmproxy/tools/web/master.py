@@ -28,14 +28,15 @@ class WebMaster(master.Master):
 
         self.options.changed.connect(self._sig_options_update)
 
+        if with_termlog:
+            self.addons.add(termlog.TermLog())
+
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
             self.view,
             self.events,
         )
-        if with_termlog:
-            self.addons.add(termlog.TermLog())
         self.app = app.Application(
             self, self.options.web_debug
         )
