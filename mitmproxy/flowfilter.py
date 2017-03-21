@@ -44,7 +44,7 @@ from mitmproxy import flow
 from mitmproxy.utils import strutils
 
 import pyparsing as pp
-from typing import Callable
+from typing import Callable, Sequence, Type  # noqa
 
 
 def only(*types):
@@ -69,6 +69,8 @@ class _Token:
 
 
 class _Action(_Token):
+    code = None  # type: str
+    help = None  # type: str
 
     @classmethod
     def make(klass, s, loc, toks):
@@ -162,15 +164,14 @@ def _check_content_type(rex, message):
 class FAsset(_Action):
     code = "a"
     help = "Match asset in response: CSS, Javascript, Flash, images."
-    ASSET_TYPES = [
+    ASSET_TYPES = [re.compile(x) for x in [
         b"text/javascript",
         b"application/x-javascript",
         b"application/javascript",
         b"text/css",
         b"image/.*",
         b"application/x-shockwave-flash"
-    ]
-    ASSET_TYPES = [re.compile(x) for x in ASSET_TYPES]
+    ]]
 
     @only(http.HTTPFlow)
     def __call__(self, f):
@@ -436,7 +437,7 @@ filter_unary = [
     FResp,
     FTCP,
     FWebSocket,
-]
+]  # type: Sequence[Type[_Action]]
 filter_rex = [
     FBod,
     FBodRequest,
@@ -452,7 +453,7 @@ filter_rex = [
     FMethod,
     FSrc,
     FUrl,
-]
+]  # type: Sequence[Type[_Rex]]
 filter_int = [
     FCode
 ]
@@ -538,17 +539,17 @@ def match(flt, flow):
 
 
 help = []
-for i in filter_unary:
+for a in filter_unary:
     help.append(
-        ("~%s" % i.code, i.help)
+        ("~%s" % a.code, a.help)
     )
-for i in filter_rex:
+for b in filter_rex:
     help.append(
-        ("~%s regex" % i.code, i.help)
+        ("~%s regex" % b.code, b.help)
     )
-for i in filter_int:
+for c in filter_int:
     help.append(
-        ("~%s int" % i.code, i.help)
+        ("~%s int" % c.code, c.help)
     )
 help.sort()
 help.extend(

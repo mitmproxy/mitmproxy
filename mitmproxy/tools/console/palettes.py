@@ -1,3 +1,4 @@
+import typing  # noqa
 # Low-color themes should ONLY use the standard foreground and background
 # colours listed here:
 #
@@ -32,7 +33,7 @@ class Palette:
         # Grid Editor
         'focusfield', 'focusfield_error', 'field_error', 'editfield',
     ]
-    high = None
+    high = None  # type: typing.Mapping[str, typing.Sequence[str]]
 
     def palette(self, transparent):
         l = []

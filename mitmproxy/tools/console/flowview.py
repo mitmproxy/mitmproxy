@@ -19,6 +19,7 @@ from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
+import mitmproxy.tools.console.master # noqa
 
 
 class SearchError(Exception):
@@ -103,7 +104,11 @@ footer = [
 
 class FlowViewHeader(urwid.WidgetWrap):
 
-    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", f: http.HTTPFlow):
+    def __init__(
+        self,
+        master: "mitmproxy.tools.console.master.ConsoleMaster",
+        f: http.HTTPFlow
+    ) -> None:
         self.master = master
         self.flow = f
         self._w = common.format_flow(
@@ -651,8 +656,8 @@ class FlowView(tabs.Tabs):
                     )
         elif key == "z":
             self.flow.backup()
-            e = conn.headers.get("content-encoding", "identity")
-            if e != "identity":
+            enc = conn.headers.get("content-encoding", "identity")
+            if enc != "identity":
                 try:
                     conn.decode()
                 except ValueError:

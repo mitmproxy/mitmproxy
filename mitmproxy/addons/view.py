@@ -18,6 +18,7 @@ import sortedcontainers
 import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -34,7 +35,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:  # pragma: no cover
+    def generate(self, f: http.HTTPFlow) -> typing.Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
@@ -64,22 +65,22 @@ class _OrderKey:
 
 
 class OrderRequestStart(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> datetime.datetime:
+    def generate(self, f: http.HTTPFlow) -> datetime.datetime:
         return f.request.timestamp_start or 0
 
 
 class OrderRequestMethod(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> str:
+    def generate(self, f: http.HTTPFlow) -> str:
         return f.request.method
 
 
 class OrderRequestURL(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> str:
+    def generate(self, f: http.HTTPFlow) -> str:
         return f.request.url
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: mitmproxy.flow.Flow) -> int:
+    def generate(self, f: http.HTTPFlow) -> int:
         s = 0
         if f.request.raw_content:
             s += len(f.request.raw_content)
@@ -118,7 +119,9 @@ class View(collections.Sequence):
         self.order_reversed = False
         self.focus_follow = False
 
-        self._view = sortedcontainers.SortedListWithKey(key = self.order_key)
+        self._view = sortedcontainers.SortedListWithKey(
+            key = self.order_key
+        )
 
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
@@ -165,7 +168,7 @@ class View(collections.Sequence):
     def __len__(self):
         return len(self._view)
 
-    def __getitem__(self, offset) -> mitmproxy.flow.Flow:
+    def __getitem__(self, offset) -> typing.Any:
         return self._view[self._rev(offset)]
 
     # Reflect some methods to the efficient underlying implementation
@@ -177,7 +180,7 @@ class View(collections.Sequence):
     def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None) -> int:
         return self._rev(self._view.index(f, start, stop))
 
-    def __contains__(self, f: mitmproxy.flow.Flow) -> bool:
+    def __contains__(self, f: typing.Any) -> bool:
         return self._view.__contains__(f)
 
     def _order_key_name(self):
@@ -402,7 +405,7 @@ class Focus:
 class Settings(collections.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
-        self._values = {}  # type: typing.MutableMapping[str, mitmproxy.flow.Flow]
+        self._values = {}  # type: typing.MutableMapping[str, typing.Dict]
         view.sig_store_remove.connect(self._sig_store_remove)
         view.sig_store_refresh.connect(self._sig_store_refresh)
 

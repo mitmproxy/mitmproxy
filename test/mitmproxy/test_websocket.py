@@ -1,7 +1,7 @@
 import io
 import pytest
 
-from mitmproxy.contrib import tnetstring
+from mitmproxy.io import tnetstring
 from mitmproxy import flowfilter
 from mitmproxy.test import tflow
 

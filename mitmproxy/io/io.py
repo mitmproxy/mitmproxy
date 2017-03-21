@@ -1,5 +1,5 @@
 import os
-from typing import Iterable
+from typing import Type, Iterable, Dict, Union, Any, cast  # noqa
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -7,15 +7,15 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy.contrib import tnetstring
-from mitmproxy import io_compat
 
+from mitmproxy.io import compat
+from mitmproxy.io import tnetstring
 
 FLOW_TYPES = dict(
     http=http.HTTPFlow,
     websocket=websocket.WebSocketFlow,
     tcp=tcp.TCPFlow,
-)
+)  # type: Dict[str, Type[flow.Flow]]
 
 
 class FlowWriter:
@@ -37,14 +37,18 @@ class FlowReader:
         """
         try:
             while True:
-                data = tnetstring.load(self.fo)
+                # FIXME: This cast hides a lack of dynamic type checking
+                loaded = cast(
+                    Dict[Union[bytes, str], Any],
+                    tnetstring.load(self.fo),
+                )
                 try:
-                    data = io_compat.migrate_flow(data)
+                    mdata = compat.migrate_flow(loaded)
                 except ValueError as e:
                     raise exceptions.FlowReadException(str(e))
-                if data["type"] not in FLOW_TYPES:
-                    raise exceptions.FlowReadException("Unknown flow type: {}".format(data["type"]))
-                yield FLOW_TYPES[data["type"]].from_state(data)
+                if mdata["type"] not in FLOW_TYPES:
+                    raise exceptions.FlowReadException("Unknown flow type: {}".format(mdata["type"]))
+                yield FLOW_TYPES[mdata["type"]].from_state(mdata)
         except ValueError as e:
             if str(e) == "not a tnetstring: empty file":
                 return  # Error is due to EOF

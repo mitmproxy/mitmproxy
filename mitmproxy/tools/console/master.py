@@ -70,7 +70,6 @@ class UnsupportedLog:
 
 
 class ConsoleMaster(master.Master):
-    palette = []
 
     def __init__(self, options, server):
         super().__init__(options, server)
