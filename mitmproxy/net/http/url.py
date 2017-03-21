@@ -77,9 +77,11 @@ def unparse(scheme, host, port, path=""):
     Args:
         All args must be str.
     """
-    if path == "*":
+    if not path or path == "*":
         path = ""
-    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
+    if not scheme:
+        scheme = "<unknown-scheme>"
+    return "{}://{}{}".format(scheme, hostport(scheme, host, port), path)
 
 
 def encode(s: Sequence[Tuple[str, str]], similar_to: str=None) -> str:
@@ -131,10 +133,14 @@ def hostport(scheme, host, port):
     """
         Returns the host component, with a port specifcation if needed.
     """
+    if not host:
+        host = "<unknown-host>"
+    if not port:
+        port = "<unknown-port>"
     if (port, scheme) in [(80, "http"), (443, "https"), (80, b"http"), (443, b"https")]:
         return host
     else:
         if isinstance(host, bytes):
-            return b"%s:%d" % (host, port)
+            return b':'.join([host, str(port).encode()])
         else:
-            return "%s:%d" % (host, port)
+            return "{}:{}".format(host, port)

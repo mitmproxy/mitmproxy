@@ -33,7 +33,7 @@ class TestRequestCore:
         request = treq()
         assert repr(request) == "Request(GET address:22/path)"
         request.host = None
-        assert repr(request) == "Request(GET /path)"
+        assert repr(request) == "Request(GET <unknown-host>:22/path)"
 
     def test_make(self):
         r = Request.make("GET", "https://example.com/")
