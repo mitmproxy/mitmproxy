@@ -77,7 +77,7 @@ setup(
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
-        "ruamel.yaml>=0.13.2, <0.14",
+        "ruamel.yaml>=0.13.2, <0.15",
         "tornado>=4.3, <4.5",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
