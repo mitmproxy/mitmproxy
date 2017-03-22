@@ -48,9 +48,11 @@ function Footer({ settings }) {
                 <span className="label label-success">stream: {formatSize(stream_large_bodies)}</span>
             )}
             <div className="pull-right">
-            <span className="label label-primary" title="HTTP Proxy Server Address">
-                { server ? ((listen_host||"*") + ":" + listen_port) : "" }
-            </span>
+                {server && (
+                    <span className="label label-primary" title="HTTP Proxy Server Address">
+                        {listen_host||"*"}:{listen_port}
+                    </span>
+                )}
             <span className="label label-info" title="Mitmproxy Version">
             v{version}
             </span>
