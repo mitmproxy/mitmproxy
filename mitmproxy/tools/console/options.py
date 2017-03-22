@@ -5,6 +5,7 @@ import pprint
 from typing import Optional, Sequence
 
 from mitmproxy import exceptions
+from mitmproxy import optmanager
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
@@ -31,7 +32,8 @@ def _mkhelp():
         ("enter", "edit option"),
         ("D", "reset all to defaults"),
         ("d", "reset this option to default"),
-        ("w", "save options"),
+        ("l", "load options from file"),
+        ("w", "save options to file"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
@@ -179,6 +181,13 @@ class OptionsList(urwid.ListBox):
         self.walker = OptionListWalker(master)
         super().__init__(self.walker)
 
+    def save_config(self, path):
+        optmanager.save(self.master.options, path)
+
+    def load_config(self, path):
+        txt = open(path, "r").read()
+        optmanager.load(self.master.options, txt)
+
     def keypress(self, size, key):
         if self.walker.editing:
             if key == "enter":
@@ -206,6 +215,16 @@ class OptionsList(urwid.ListBox):
             elif key == "G":
                 self.set_focus(len(self.walker.opts) - 1)
                 self.walker._modified()
+            elif key == "l":
+                signals.status_prompt_path.send(
+                    prompt = "Load config from",
+                    callback = self.load_config
+                )
+            elif key == "w":
+                signals.status_prompt_path.send(
+                    prompt = "Save config to",
+                    callback = self.save_config
+                )
             elif key == "enter":
                 foc, idx = self.get_focus()
                 if foc.opt.typespec == bool:
