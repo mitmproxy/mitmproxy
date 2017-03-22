@@ -182,11 +182,16 @@ class OptionsList(urwid.ListBox):
         super().__init__(self.walker)
 
     def save_config(self, path):
-        optmanager.save(self.master.options, path)
+        try:
+            optmanager.save(self.master.options, path)
+        except exceptions.OptionsError as e:
+            signals.status_message.send(message=str(e))
 
     def load_config(self, path):
-        txt = open(path, "r").read()
-        optmanager.load(self.master.options, txt)
+        try:
+            optmanager.load_paths(self.master.options, path)
+        except exceptions.OptionsError as e:
+            signals.status_message.send(message=str(e))
 
     def keypress(self, size, key):
         if self.walker.editing:
