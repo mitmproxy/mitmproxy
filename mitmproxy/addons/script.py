@@ -65,14 +65,28 @@ def cut_traceback(tb, func_name):
         return tb
 
 
+class StreamLog:
+    """
+        A class for redirecting output using contextlib.
+    """
+    def __init__(self, log):
+        self.log = log
+
+    def write(self, buf):
+        if buf.strip():
+            self.log(buf)
+
+
 @contextlib.contextmanager
 def scriptenv(path, args):
     oldargs = sys.argv
     sys.argv = [path] + args
     script_dir = os.path.dirname(os.path.abspath(path))
     sys.path.append(script_dir)
+    stdout_replacement = StreamLog(ctx.log.warn)
     try:
-        yield
+        with contextlib.redirect_stdout(stdout_replacement):
+            yield
     except SystemExit as v:
         ctx.log.error("Script exited with code %s" % v.code)
     except Exception:
