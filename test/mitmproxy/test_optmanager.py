@@ -296,6 +296,20 @@ def test_saving(tmpdir):
     with pytest.raises(exceptions.OptionsError):
         optmanager.load_paths(o, dst)
 
+    with open(dst, 'wb') as f:
+        f.write(b"\x01\x02\x03")
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.load_paths(o, dst)
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.save(o, dst)
+
+    with open(dst, 'wb') as f:
+        f.write(b"\xff\xff\xff")
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.load_paths(o, dst)
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.save(o, dst)
+
 
 def test_merge():
     m = TM()

@@ -422,11 +422,14 @@ def parse(text):
     try:
         data = ruamel.yaml.load(text, ruamel.yaml.RoundTripLoader)
     except ruamel.yaml.error.YAMLError as v:
-        snip = v.problem_mark.get_snippet()
-        raise exceptions.OptionsError(
-            "Config error at line %s:\n%s\n%s" %
-            (v.problem_mark.line + 1, snip, v.problem)
-        )
+        if hasattr(v, "problem_mark"):
+            snip = v.problem_mark.get_snippet()
+            raise exceptions.OptionsError(
+                "Config error at line %s:\n%s\n%s" %
+                (v.problem_mark.line + 1, snip, v.problem)
+            )
+        else:
+            raise exceptions.OptionsError("Could not parse options.")
     if isinstance(data, str):
         raise exceptions.OptionsError("Config error - no keys found.")
     return data
@@ -455,8 +458,13 @@ def load_paths(opts, *paths):
     for p in paths:
         p = os.path.expanduser(p)
         if os.path.exists(p) and os.path.isfile(p):
-            with open(p, "r") as f:
-                txt = f.read()
+            with open(p, "rt", encoding="utf8") as f:
+                try:
+                    txt = f.read()
+                except UnicodeDecodeError as e:
+                    raise exceptions.OptionsError(
+                        "Error reading %s: %s" % (p, e)
+                    )
             try:
                 ret.update(load(opts, txt))
             except exceptions.OptionsError as e:
@@ -490,12 +498,19 @@ def serialize(opts, text, defaults=False):
 def save(opts, path, defaults=False):
     """
         Save to path. If the destination file exists, modify it in-place.
+
+        Raises OptionsError if the existing data is corrupt.
     """
     if os.path.exists(path) and os.path.isfile(path):
-        with open(path, "r") as f:
-            data = f.read()
+        with open(path, "rt", encoding="utf8") as f:
+            try:
+                data = f.read()
+            except UnicodeDecodeError as e:
+                raise exceptions.OptionsError(
+                    "Error trying to modify %s: %s" % (path, e)
+                )
     else:
         data = ""
     data = serialize(opts, data, defaults)
-    with open(path, "w") as f:
+    with open(path, "wt", encoding="utf8") as f:
         f.write(data)
