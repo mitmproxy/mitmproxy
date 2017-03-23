@@ -143,9 +143,11 @@ def validate_request_form(mode, request):
     if request.first_line_format not in allowed_request_forms:
         if mode == HTTPMode.transparent:
             err_message = (
-                "Mitmproxy received an {} request even though it is not running in regular mode. "
-                "This usually indicates a misconfiguration, please see "
-                "http://docs.mitmproxy.org/en/stable/modes.html for details."
+                """
+                Mitmproxy received an {} request even though it is not running
+                in regular mode. This usually indicates a misconfiguration,
+                please see the mitmproxy mode documentation for details.
+                """
             ).format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
         else:
             err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
@@ -260,7 +262,10 @@ class HttpLayer(base.Layer):
                     self.send_error_response(400, msg)
                     raise exceptions.ProtocolException(msg)
 
+            validate_request_form(self.mode, request)
             self.channel.ask("requestheaders", f)
+            # Re-validate request form in case the user has changed something.
+            validate_request_form(self.mode, request)
 
             if request.headers.get("expect", "").lower() == "100-continue":
                 # TODO: We may have to use send_response_headers for HTTP2
@@ -270,12 +275,12 @@ class HttpLayer(base.Layer):
 
             request.data.content = b"".join(self.read_request_body(request))
             request.timestamp_end = time.time()
-
-            validate_request_form(self.mode, request)
         except exceptions.HttpException as e:
             # We optimistically guess there might be an HTTP client on the
             # other end
             self.send_error_response(400, repr(e))
+            # Request may be malformed at this point, so we unset it.
+            f.request = None
             f.error = flow.Error(str(e))
             self.channel.ask("error", f)
             raise exceptions.ProtocolException(
