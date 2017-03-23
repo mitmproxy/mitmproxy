@@ -6,6 +6,7 @@ import threading
 import traceback
 import types
 
+from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import ctx
 from mitmproxy import eventsequence
@@ -184,10 +185,11 @@ class Script:
 
     def load_script(self):
         self.ns = load_script(self.path, self.args)
-        ret = self.run("load", self.last_options)
+        l = addonmanager.Loader(ctx.master)
+        ret = self.run("load", l)
         if ret:
             self.ns = ret
-            self.run("load", self.last_options)
+            self.run("load", l)
 
     def tick(self):
         if self.should_reload.is_set():

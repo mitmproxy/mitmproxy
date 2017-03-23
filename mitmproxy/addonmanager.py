@@ -1,3 +1,5 @@
+import typing
+
 from mitmproxy import exceptions
 from mitmproxy import eventsequence
 from mitmproxy import controller
@@ -7,6 +9,30 @@ import pprint
 
 def _get_name(itm):
     return getattr(itm, "name", itm.__class__.__name__.lower())
+
+
+class Loader:
+    """
+        A loader object is passed to the load() event when addons start up.
+    """
+    def __init__(self, master):
+        self.master = master
+
+    def add_option(
+        self,
+        name: str,
+        typespec: type,
+        default: typing.Any,
+        help: str,
+        choices: typing.Optional[typing.Sequence[str]] = None
+    ) -> None:
+        self.master.options.add_option(
+            name,
+            typespec,
+            default,
+            help,
+            choices
+        )
 
 
 class AddonManager:
@@ -41,8 +67,9 @@ class AddonManager:
         """
         self.chain.extend(addons)
         with self.master.handlecontext():
+            l = Loader(self.master)
             for i in addons:
-                self.invoke_addon(i, "load", self.master.options)
+                self.invoke_addon(i, "load", l)
 
     def remove(self, addon):
         """
