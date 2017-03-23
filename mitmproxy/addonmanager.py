@@ -42,7 +42,7 @@ class AddonManager:
         self.chain.extend(addons)
         with self.master.handlecontext():
             for i in addons:
-                self.invoke_addon(i, "start", self.master.options)
+                self.invoke_addon(i, "load", self.master.options)
 
     def remove(self, addon):
         """

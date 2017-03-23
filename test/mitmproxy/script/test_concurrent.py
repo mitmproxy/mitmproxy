@@ -24,7 +24,7 @@ class TestConcurrent(tservers.MasterTest):
                     "mitmproxy/data/addonscripts/concurrent_decorator.py"
                 )
             )
-            sc.start(tctx.options)
+            sc.load(tctx.options)
 
             f1, f2 = tflow.tflow(), tflow.tflow()
             tctx.cycle(sc, f1)
@@ -42,7 +42,7 @@ class TestConcurrent(tservers.MasterTest):
                     "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
                 )
             )
-            sc.start(tctx.options)
+            sc.load(tctx.options)
             assert tctx.master.has_log("decorator not supported")
 
     def test_concurrent_class(self):
@@ -52,7 +52,7 @@ class TestConcurrent(tservers.MasterTest):
                         "mitmproxy/data/addonscripts/concurrent_decorator_class.py"
                     )
                 )
-                sc.start(tctx.options)
+                sc.load(tctx.options)
 
                 f1, f2 = tflow.tflow(), tflow.tflow()
                 tctx.cycle(sc, f1)

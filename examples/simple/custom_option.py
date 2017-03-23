@@ -1,7 +1,7 @@
 from mitmproxy import ctx
 
 
-def start(options):
+def load(options):
     ctx.log.info("Registering option 'custom'")
     options.add_option("custom", bool, False, "A custom option")
 

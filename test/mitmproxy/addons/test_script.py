@@ -104,7 +104,7 @@ def test_load_script():
                 "mitmproxy/data/addonscripts/recorder.py"
             ), []
         )
-        assert ns.start
+        assert ns.load
 
 
 def test_script_print_stdout():
@@ -129,7 +129,7 @@ class TestScript:
                 )
             )
             sc.load_script()
-            assert sc.ns.call_log[0][0:2] == ("solo", "start")
+            assert sc.ns.call_log[0][0:2] == ("solo", "load")
 
             sc.ns.call_log = []
             f = tflow.tflow(resp=True)
@@ -157,7 +157,7 @@ class TestScript:
             sc = script.Script(
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
             )
-            sc.start(tctx.options)
+            sc.load(tctx.options)
             f = tflow.tflow(resp=True)
             sc.request(f)
             assert tctx.master.logs[0].level == "error"
@@ -173,10 +173,10 @@ class TestScript:
                     "mitmproxy/data/addonscripts/addon.py"
                 )
             )
-            sc.start(tctx.options)
+            sc.load(tctx.options)
             tctx.configure(sc)
             assert sc.ns.event_log == [
-                'scriptstart', 'addonstart', 'addonconfigure'
+                'scriptload', 'addonload', 'addonconfigure'
             ]
 
 
@@ -213,7 +213,7 @@ class TestScriptLoader:
                 ), [f]
             )
         evts = [i[1] for i in sc.ns.call_log]
-        assert evts == ['start', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
+        assert evts == ['load', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
 
         f = tflow.tflow(resp=True)
         with m.handlecontext():
@@ -271,15 +271,15 @@ class TestScriptLoader:
             )
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
-                'a start',
+                'a load',
                 'a configure',
                 'a running',
 
-                'b start',
+                'b load',
                 'b configure',
                 'b running',
 
-                'c start',
+                'c load',
                 'c configure',
                 'c running',
             ]
@@ -307,7 +307,7 @@ class TestScriptLoader:
             assert debug == [
                 'c done',
                 'b done',
-                'x start',
+                'x load',
                 'x configure',
                 'x running',
             ]

@@ -32,7 +32,7 @@ Events = frozenset([
     "configure",
     "done",
     "log",
-    "start",
+    "load",
     "running",
     "tick",
 ])

@@ -12,7 +12,7 @@ class ScriptThread(basethread.BaseThread):
 
 
 def concurrent(fn):
-    if fn.__name__ not in eventsequence.Events - {"start", "configure", "tick"}:
+    if fn.__name__ not in eventsequence.Events - {"load", "configure", "tick"}:
         raise NotImplementedError(
             "Concurrent decorator not supported for '%s' method." % fn.__name__
         )

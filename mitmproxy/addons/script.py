@@ -184,22 +184,22 @@ class Script:
 
     def load_script(self):
         self.ns = load_script(self.path, self.args)
-        ret = self.run("start", self.last_options)
+        ret = self.run("load", self.last_options)
         if ret:
             self.ns = ret
-            self.run("start", self.last_options)
+            self.run("load", self.last_options)
 
     def tick(self):
         if self.should_reload.is_set():
             self.should_reload.clear()
             ctx.log.info("Reloading script: %s" % self.name)
             self.ns = load_script(self.path, self.args)
-            self.start(self.last_options)
+            self.load(self.last_options)
             self.configure(self.last_options, self.last_options.keys())
         else:
             self.run("tick")
 
-    def start(self, opts):
+    def load(self, opts):
         self.last_options = opts
         self.load_script()
 
@@ -287,7 +287,7 @@ class ScriptLoader:
             ctx.master.addons.chain = ochain[:pos + 1] + ordered + ochain[pos + 1:]
 
             for s in newscripts:
-                ctx.master.addons.invoke_addon(s, "start", options)
+                ctx.master.addons.invoke_addon(s, "load", options)
                 if self.is_running:
                     # If we're already running, we configure and tell the addon
                     # we're up and running.

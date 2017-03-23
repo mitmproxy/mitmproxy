@@ -16,7 +16,7 @@ class ServerPlayback:
         self.stop = False
         self.final_flow = None
 
-    def load(self, flows):
+    def load_flows(self, flows):
         for i in flows:
             if i.response:
                 l = self.flowmap.setdefault(self._hash(i), [])
@@ -100,7 +100,7 @@ class ServerPlayback:
                     flows = io.read_flows_from_paths(options.server_replay)
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
-                self.load(flows)
+                self.load_flows(flows)
 
     def tick(self):
         if self.stop and not self.final_flow.live:

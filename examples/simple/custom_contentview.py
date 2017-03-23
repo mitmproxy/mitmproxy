@@ -20,7 +20,7 @@ class ViewSwapCase(contentviews.View):
 view = ViewSwapCase()
 
 
-def start(opts):
+def load(opts):
     contentviews.add(view)
 
 

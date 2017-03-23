@@ -9,5 +9,5 @@ class ConcurrentClass:
         time.sleep(0.1)
 
 
-def start(opts):
+def load(opts):
     return ConcurrentClass()
