@@ -3,5 +3,5 @@ class AddHeader:
         flow.response.headers["newheader"] = "foo"
 
 
-def load(opts):
-    return AddHeader()
+def load(l):
+    return l.boot_into(AddHeader())

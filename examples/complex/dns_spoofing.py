@@ -54,5 +54,5 @@ class Rerouter:
         flow.request.port = port
 
 
-def load(opts):
-    return Rerouter()
+def load(l):
+    l.boot_into(Rerouter())

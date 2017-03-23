@@ -9,5 +9,5 @@ class ConcurrentClass:
         time.sleep(0.1)
 
 
-def load(opts):
-    return ConcurrentClass()
+def load(l):
+    l.boot_into(ConcurrentClass())

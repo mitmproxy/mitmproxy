@@ -9,6 +9,7 @@ from unittest import mock
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
+from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import proxy
@@ -116,7 +117,7 @@ def test_script_print_stdout():
                         "mitmproxy/data/addonscripts/print.py"
                     ), []
                 )
-                ns.start(tctx.options)
+                ns.load(addonmanager.Loader(tctx.master))
         mock_warn.assert_called_once_with("stdoutprint")
 
 
@@ -157,7 +158,8 @@ class TestScript:
             sc = script.Script(
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
             )
-            sc.load(tctx.options)
+            l = addonmanager.Loader(tctx.master)
+            sc.load(l)
             f = tflow.tflow(resp=True)
             sc.request(f)
             assert tctx.master.logs[0].level == "error"
@@ -173,7 +175,8 @@ class TestScript:
                     "mitmproxy/data/addonscripts/addon.py"
                 )
             )
-            sc.load(tctx.options)
+            l = addonmanager.Loader(tctx.master)
+            sc.load(l)
             tctx.configure(sc)
             assert sc.ns.event_log == [
                 'scriptload', 'addonload', 'addonconfigure'

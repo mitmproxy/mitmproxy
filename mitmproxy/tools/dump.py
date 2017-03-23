@@ -16,11 +16,11 @@ class ErrorCheck:
 class DumpMaster(master.Master):
 
     def __init__(
-            self,
-            options: options.Options,
-            server,
-            with_termlog=True,
-            with_dumper=True,
+        self,
+        options: options.Options,
+        server,
+        with_termlog=True,
+        with_dumper=True,
     ) -> None:
         master.Master.__init__(self, options, server)
         self.errorcheck = ErrorCheck()

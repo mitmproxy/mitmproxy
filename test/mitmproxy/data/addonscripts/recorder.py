@@ -22,5 +22,5 @@ class CallLogger:
         raise AttributeError
 
 
-def load(opts):
-    return CallLogger(*sys.argv[1:])
+def load(l):
+    l.boot_into(CallLogger(*sys.argv[1:]))

@@ -25,7 +25,7 @@ HAR = {}
 SERVERS_SEEN = set()
 
 
-def load(opts):
+def load(l):
     """
         Called once on script startup before any other events.
     """

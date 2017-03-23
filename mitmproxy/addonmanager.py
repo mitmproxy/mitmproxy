@@ -17,6 +17,7 @@ class Loader:
     """
     def __init__(self, master):
         self.master = master
+        self.boot_into_addon = None
 
     def add_option(
         self,
@@ -33,6 +34,12 @@ class Loader:
             help,
             choices
         )
+
+    def boot_into(self, addon):
+        self.boot_into_addon = addon
+        func = getattr(addon, "load", None)
+        if func:
+            func(self)
 
 
 class AddonManager:
@@ -65,11 +72,14 @@ class AddonManager:
         """
             Add addons to the end of the chain, and run their startup events.
         """
-        self.chain.extend(addons)
         with self.master.handlecontext():
-            l = Loader(self.master)
             for i in addons:
+                l = Loader(self.master)
                 self.invoke_addon(i, "load", l)
+                if l.boot_into_addon:
+                    self.chain.append(l.boot_into_addon)
+                else:
+                    self.chain.append(i)
 
     def remove(self, addon):
         """

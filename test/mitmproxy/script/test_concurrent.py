@@ -2,6 +2,7 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 
+from mitmproxy import addonmanager
 from mitmproxy import controller
 from mitmproxy.addons import script
 
@@ -24,7 +25,8 @@ class TestConcurrent(tservers.MasterTest):
                     "mitmproxy/data/addonscripts/concurrent_decorator.py"
                 )
             )
-            sc.load(tctx.options)
+            l = addonmanager.Loader(tctx.master)
+            sc.load(l)
 
             f1, f2 = tflow.tflow(), tflow.tflow()
             tctx.cycle(sc, f1)
@@ -42,7 +44,8 @@ class TestConcurrent(tservers.MasterTest):
                     "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
                 )
             )
-            sc.load(tctx.options)
+            l = addonmanager.Loader(tctx.master)
+            sc.load(l)
             assert tctx.master.has_log("decorator not supported")
 
     def test_concurrent_class(self):
@@ -52,7 +55,8 @@ class TestConcurrent(tservers.MasterTest):
                         "mitmproxy/data/addonscripts/concurrent_decorator_class.py"
                     )
                 )
-                sc.load(tctx.options)
+                l = addonmanager.Loader(tctx.master)
+                sc.load(l)
 
                 f1, f2 = tflow.tflow(), tflow.tflow()
                 tctx.cycle(sc, f1)
