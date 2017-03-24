@@ -188,7 +188,7 @@ class Http2Layer(base.Layer):
             self.streams[eid].kill()
             self.connections[source_conn].safe_reset_stream(
                 event.stream_id,
-                h2.errors.REFUSED_STREAM
+                h2.errors.ErrorCodes.REFUSED_STREAM
             )
             self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
         else:
@@ -207,7 +207,7 @@ class Http2Layer(base.Layer):
 
     def _handle_stream_reset(self, eid, event, is_server, other_conn):
         self.streams[eid].kill()
-        if eid in self.streams and event.error_code == h2.errors.CANCEL:
+        if eid in self.streams and event.error_code == h2.errors.ErrorCodes.CANCEL:
             if is_server:
                 other_stream_id = self.streams[eid].client_stream_id
             else:
@@ -228,7 +228,7 @@ class Http2Layer(base.Layer):
             event.last_stream_id,
             event.additional_data), "info")
 
-        if event.error_code != h2.errors.NO_ERROR:
+        if event.error_code != h2.errors.ErrorCodes.NO_ERROR:
             # Something terrible has happened - kill everything!
             self.connections[self.client_conn].close_connection(
                 error_code=event.error_code,

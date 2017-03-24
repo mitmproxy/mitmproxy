@@ -36,7 +36,11 @@ class _Http2ServerBase(net_tservers.ServerTestBase):
     class handler(mitmproxy.net.tcp.BaseHandler):
 
         def handle(self):
-            h2_conn = h2.connection.H2Connection(client_side=False, header_encoding=False)
+            config = h2.config.H2Configuration(
+                client_side=False,
+                validate_outbound_headers=False,
+                validate_inbound_headers=False)
+            h2_conn = h2.connection.H2Connection(config)
 
             preamble = self.rfile.read(24)
             h2_conn.initiate_connection()
@@ -138,7 +142,11 @@ class _Http2TestBase:
 
         client.convert_to_ssl(alpn_protos=[b'h2'])
 
-        h2_conn = h2.connection.H2Connection(client_side=True, header_encoding=False)
+        config = h2.config.H2Configuration(
+            client_side=True,
+            validate_outbound_headers=False,
+            validate_inbound_headers=False)
+        h2_conn = h2.connection.H2Connection(config)
         h2_conn.initiate_connection()
         client.wfile.write(h2_conn.data_to_send())
         client.wfile.flush()
@@ -756,7 +764,7 @@ class TestMaxConcurrentStreams(_Http2Test):
     @classmethod
     def setup_class(cls):
         _Http2TestBase.setup_class()
-        _Http2ServerBase.setup_class(h2_server_settings={h2.settings.MAX_CONCURRENT_STREAMS: 2})
+        _Http2ServerBase.setup_class(h2_server_settings={h2.settings.SettingCodes.MAX_CONCURRENT_STREAMS: 2})
 
     @classmethod
     def handle_server_event(cls, event, h2_conn, rfile, wfile):
