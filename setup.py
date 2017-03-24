@@ -66,7 +66,7 @@ setup(
         "construct>=2.8, <2.9",
         "cryptography>=1.3, <1.9",
         "cssutils>=1.0.1, <1.1",
-        "h2>=2.6.1, <3",
+        "h2>=3.0,<3.1",
         "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=4.0.2, <6",
         "jsbeautifier>=1.6.3, <1.7",
