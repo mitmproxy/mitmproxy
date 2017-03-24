@@ -70,6 +70,9 @@ def test_lifecycle():
     a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
 
+    with pytest.raises(exceptions.AddonError):
+        a.add(TAddon("one"))
+
     f = tflow.tflow()
     a.handle_lifecycle("request", f)
 

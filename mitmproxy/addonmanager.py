@@ -44,6 +44,7 @@ class Loader:
 
 class AddonManager:
     def __init__(self, master):
+        self.lookup = {}
         self.chain = []
         self.master = master
         master.options.changed.connect(self._configure_all)
@@ -64,9 +65,25 @@ class AddonManager:
             attribute on the instance, or the lower case class name if that
             does not exist.
         """
-        for i in self.chain:
-            if name == _get_name(i):
-                return i
+        return self.lookup.get(name, None)
+
+    def register(self, addon):
+        """
+            Register an addon with the manager without adding it to the chain.
+            This should be used by addons that manage addons. Must be called
+            within a current context.
+        """
+        l = Loader(self.master)
+        self.invoke_addon(addon, "load", l)
+        if l.boot_into_addon:
+            addon = l.boot_into_addon
+        name = _get_name(addon)
+        if name in self.lookup:
+            raise exceptions.AddonError(
+                "An addon called '%s' already exists." % name
+            )
+        self.lookup[name] = addon
+        return addon
 
     def add(self, *addons):
         """
@@ -74,18 +91,17 @@ class AddonManager:
         """
         with self.master.handlecontext():
             for i in addons:
-                l = Loader(self.master)
-                self.invoke_addon(i, "load", l)
-                if l.boot_into_addon:
-                    self.chain.append(l.boot_into_addon)
-                else:
-                    self.chain.append(i)
+                self.chain.append(self.register(i))
 
     def remove(self, addon):
         """
             Remove an addon from the chain, and run its done events.
         """
+        n = _get_name(addon)
+        if n not in self.lookup:
+            raise exceptions.AddonError("No such addon: %s" % n)
         self.chain = [i for i in self.chain if i is not addon]
+        del self.lookup[_get_name(addon)]
         with self.master.handlecontext():
             self.invoke_addon(addon, "done")
 

@@ -287,8 +287,7 @@ class ScriptLoader:
             ctx.master.addons.chain = ochain[:pos + 1] + ordered + ochain[pos + 1:]
 
             for s in newscripts:
-                l = addonmanager.Loader(ctx.master)
-                ctx.master.addons.invoke_addon(s, "load", l)
+                ctx.master.addons.register(s)
                 if self.is_running:
                     # If we're already running, we configure and tell the addon
                     # we're up and running.
