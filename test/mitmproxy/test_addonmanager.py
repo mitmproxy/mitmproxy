@@ -73,7 +73,7 @@ def test_lifecycle():
     f = tflow.tflow()
     a.handle_lifecycle("request", f)
 
-    a.configure_all(o, o.keys())
+    a._configure_all(o, o.keys())
 
 
 def test_simple():

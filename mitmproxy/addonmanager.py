@@ -46,14 +46,17 @@ class AddonManager:
     def __init__(self, master):
         self.chain = []
         self.master = master
-        master.options.changed.connect(self.configure_all)
+        master.options.changed.connect(self._configure_all)
+
+    def _configure_all(self, options, updated):
+        self.trigger("configure", options, updated)
 
     def clear(self):
         """
             Remove all addons.
         """
-        self.done()
-        self.chain = []
+        for i in self.chain:
+            self.remove(i)
 
     def get(self, name):
         """
@@ -65,12 +68,9 @@ class AddonManager:
             if name == _get_name(i):
                 return i
 
-    def configure_all(self, options, updated):
-        self.trigger("configure", options, updated)
-
     def add(self, *addons):
         """
-            Add addons to the end of the chain, and run their startup events.
+            Add addons to the end of the chain, and run their load event.
         """
         with self.master.handlecontext():
             for i in addons:
@@ -88,9 +88,6 @@ class AddonManager:
         self.chain = [i for i in self.chain if i is not addon]
         with self.master.handlecontext():
             self.invoke_addon(addon, "done")
-
-    def done(self):
-        self.trigger("done")
 
     def __len__(self):
         return len(self.chain)
