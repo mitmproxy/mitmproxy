@@ -6,6 +6,7 @@ from typing import Optional, Sequence
 
 from mitmproxy import exceptions
 from mitmproxy import optmanager
+from mitmproxy.optmanager import Path
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
@@ -16,7 +17,7 @@ HELP_HEIGHT = 5
 def can_edit_inplace(opt):
     if opt.choices:
         return False
-    if opt.typespec in [str, int, Optional[str], Optional[int]]:
+    if opt.typespec in [str, int, Path, Optional[str], Optional[int]]:
         return True
 
 

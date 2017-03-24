@@ -7,6 +7,8 @@ from mitmproxy.net import tcp
 # We redefine these here for now to avoid importing Urwid-related guff on
 # platforms that don't support it, and circular imports. We can do better using
 # a lazy checker down the track.
+from mitmproxy.optmanager import Path
+
 console_palettes = [
     "lowlight",
     "lowdark",
@@ -24,7 +26,7 @@ view_orders = [
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
-CA_DIR = "~/.mitmproxy"
+CA_DIR = Path("~/.mitmproxy")
 LISTEN_PORT = 8080
 
 # Some help text style guidelines:
@@ -218,7 +220,7 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "cadir", str, CA_DIR,
+            "cadir", Path, CA_DIR,
             "Location of the default mitmproxy CA files."
         )
         self.add_option(
