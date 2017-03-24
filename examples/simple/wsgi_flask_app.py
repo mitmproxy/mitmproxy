@@ -14,7 +14,7 @@ def hello_world():
     return 'Hello World!'
 
 
-def start(opts):
+def load(l):
     # Host app at the magic domain "proxapp" on port 80. Requests to this
     # domain and port combination will now be routed to the WSGI app instance.
     return wsgiapp.WSGIApp(app, "proxapp", 80)

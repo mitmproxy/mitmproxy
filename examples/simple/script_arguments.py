@@ -9,9 +9,9 @@ class Replacer:
         flow.response.replace(self.src, self.dst)
 
 
-def start(opts):
+def load(l):
     parser = argparse.ArgumentParser()
     parser.add_argument("src", type=str)
     parser.add_argument("dst", type=str)
     args = parser.parse_args()
-    return Replacer(args.src, args.dst)
+    l.boot_into(Replacer(args.src, args.dst))

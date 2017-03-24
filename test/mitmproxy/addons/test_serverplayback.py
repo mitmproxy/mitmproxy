@@ -44,12 +44,12 @@ def test_server_playback():
 
     assert not sp.flowmap
 
-    sp.load([f])
+    sp.load_flows([f])
     assert sp.flowmap
     assert sp.next_flow(f)
     assert not sp.flowmap
 
-    sp.load([f])
+    sp.load_flows([f])
     assert sp.flowmap
     sp.clear()
     assert not sp.flowmap
@@ -192,7 +192,7 @@ def test_load():
     r2 = tflow.tflow(resp=True)
     r2.request.headers["key"] = "two"
 
-    s.load([r, r2])
+    s.load_flows([r, r2])
 
     assert s.count() == 2
 
@@ -218,7 +218,7 @@ def test_load_with_server_replay_nopop():
     r2 = tflow.tflow(resp=True)
     r2.request.headers["key"] = "two"
 
-    s.load([r, r2])
+    s.load_flows([r, r2])
 
     assert s.count() == 2
     s.next_flow(r)
@@ -319,7 +319,7 @@ def test_server_playback_full():
 
         f = tflow.tflow()
         f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
-        s.load([f, f])
+        s.load_flows([f, f])
 
         tf = tflow.tflow()
         assert not tf.response
@@ -352,7 +352,7 @@ def test_server_playback_kill():
 
         f = tflow.tflow()
         f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
-        s.load([f])
+        s.load_flows([f])
 
         f = tflow.tflow()
         f.request.host = "nonexistent"

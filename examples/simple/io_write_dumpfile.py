@@ -23,7 +23,7 @@ class Writer:
             self.w.add(flow)
 
 
-def start(opts):
+def load(l):
     if len(sys.argv) != 2:
         raise ValueError('Usage: -s "flowriter.py filename"')
-    return Writer(sys.argv[1])
+    l.boot_into(Writer(sys.argv[1]))

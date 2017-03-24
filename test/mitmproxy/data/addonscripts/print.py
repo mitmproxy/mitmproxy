@@ -1,2 +1,2 @@
-def start(opts):
+def load(l):
     print("stdoutprint")
