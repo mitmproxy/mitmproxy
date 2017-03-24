@@ -5,6 +5,7 @@ import re
 import watchdog.events
 import pytest
 
+from unittest import mock
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
@@ -97,12 +98,26 @@ class TestParseCommand:
 
 
 def test_load_script():
-    ns = script.load_script(
-        tutils.test_data.path(
-            "mitmproxy/data/addonscripts/recorder.py"
-        ), []
-    )
-    assert ns.start
+    with taddons.context():
+        ns = script.load_script(
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/recorder.py"
+            ), []
+        )
+        assert ns.start
+
+
+def test_script_print_stdout():
+    with taddons.context() as tctx:
+        with mock.patch('mitmproxy.ctx.log.warn') as mock_warn:
+            with script.scriptenv("path", []):
+                ns = script.load_script(
+                    tutils.test_data.path(
+                        "mitmproxy/data/addonscripts/print.py"
+                    ), []
+                )
+                ns.start(tctx.options)
+        mock_warn.assert_called_once_with("stdoutprint")
 
 
 class TestScript:
