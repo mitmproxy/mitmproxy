@@ -62,7 +62,7 @@ class SafeH2Connection(connection.H2Connection):
                 raise_zombie(self.lock.release)
                 max_outbound_frame_size = self.max_outbound_frame_size
                 frame_chunk = chunk[position:position + max_outbound_frame_size]
-                if self.local_flow_control_window(stream_id) < len(frame_chunk):
+                if self.local_flow_control_window(stream_id) < len(frame_chunk):  # pragma: no cover
                     self.lock.release()
                     time.sleep(0.1)
                     continue
@@ -362,7 +362,7 @@ class Http2Layer(base.Layer):
             self._kill_all_streams()
 
 
-def detect_zombie_stream(func):
+def detect_zombie_stream(func):  # pragma: no cover
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         self.raise_zombie()
@@ -454,7 +454,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         else:
             return self.request_data_finished
 
-    def raise_zombie(self, pre_command=None):
+    def raise_zombie(self, pre_command=None):  # pragma: no cover
         connection_closed = self.h2_connection.state_machine.state == h2.connection.ConnectionState.CLOSED
         if self.zombie is not None or connection_closed:
             if pre_command is not None:
@@ -626,7 +626,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.log(repr(e), "info")
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
             self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
-        except exceptions.Kill:
+        except exceptions.Kill:  # pragma: no cover
             self.log("Connection killed", "info")
 
         self.kill()
