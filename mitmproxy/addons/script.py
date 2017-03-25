@@ -226,6 +226,7 @@ class ScriptLoader:
     """
     def __init__(self):
         self.is_running = False
+        self.addons = []
 
     def running(self):
         self.is_running = True
@@ -248,25 +249,21 @@ class ScriptLoader:
                 if options.scripts.count(s) > 1:
                     raise exceptions.OptionsError("Duplicate script: %s" % s)
 
-            for a in ctx.master.addons.chain[:]:
-                if isinstance(a, Script) and a.name not in options.scripts:
+            for a in self.addons:
+                if a.name not in options.scripts:
                     ctx.log.info("Un-loading script: %s" % a.name)
                     ctx.master.addons.remove(a)
+                    self.addons.remove(a)
 
             # The machinations below are to ensure that:
             #   - Scripts remain in the same order
-            #   - Scripts are listed directly after the script addon. This is
-            #   needed to ensure that interactions with, for instance, flow
-            #   serialization remains correct.
             #   - Scripts are not initialized un-necessarily. If only a
-            #   script's order in the script list has changed, it should simply
-            #   be moved.
+            #   script's order in the script list has changed, it is just
+            #   moved.
 
             current = {}
-            for a in ctx.master.addons.chain[:]:
-                if isinstance(a, Script):
-                    current[a.name] = a
-                    ctx.master.addons.chain.remove(a)
+            for a in self.addons:
+                current[a.name] = a
 
             ordered = []
             newscripts = []
@@ -282,9 +279,7 @@ class ScriptLoader:
                     ordered.append(sc)
                     newscripts.append(sc)
 
-            ochain = ctx.master.addons.chain
-            pos = ochain.index(self)
-            ctx.master.addons.chain = ochain[:pos + 1] + ordered + ochain[pos + 1:]
+            self.addons = ordered
 
             for s in newscripts:
                 ctx.master.addons.register(s)

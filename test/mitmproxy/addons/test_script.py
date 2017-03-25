@@ -234,9 +234,11 @@ class TestScriptLoader:
                 tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
             ]
         )
-        assert len(m.addons) == 2
+        assert len(m.addons) == 1
+        assert len(sc.addons) == 1
         o.update(scripts = [])
         assert len(m.addons) == 1
+        assert len(sc.addons) == 0
 
     def test_dupes(self):
         sc = script.ScriptLoader()
