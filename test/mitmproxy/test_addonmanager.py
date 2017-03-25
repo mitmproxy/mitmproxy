@@ -9,10 +9,12 @@ from mitmproxy.test import tflow
 
 
 class TAddon:
-    def __init__(self, name):
+    def __init__(self, name, addons=None):
         self.name = name
         self.tick = True
         self.custom_called = False
+        if addons:
+            self.addons = addons
 
     def __repr__(self):
         return "Addon(%s)" % self.name
@@ -72,6 +74,8 @@ def test_lifecycle():
 
     with pytest.raises(exceptions.AddonError):
         a.add(TAddon("one"))
+    with pytest.raises(exceptions.AddonError):
+        a.remove(TAddon("nonexistent"))
 
     f = tflow.tflow()
     a.handle_lifecycle("request", f)
@@ -143,3 +147,35 @@ def test_loadchain():
     assert not a.get("three")
     assert a.get("four")
     a.clear()
+
+
+def test_nesting():
+
+    o = options.Options()
+    m = master.Master(o, proxy.DummyServer(o))
+    a = addonmanager.AddonManager(m)
+
+    a.add(
+        TAddon(
+            "one",
+            addons=[
+                TAddon("two"),
+                TAddon("three", addons=[TAddon("four")])
+            ]
+        )
+    )
+    assert len(a.chain) == 1
+    assert a.get("one")
+    assert a.get("two")
+    assert a.get("three")
+    assert a.get("four")
+
+    a.trigger("custom")
+    assert a.get("one").custom_called
+    assert a.get("two").custom_called
+    assert a.get("three").custom_called
+    assert a.get("four").custom_called
+
+    a.remove(a.get("three"))
+    assert not a.get("three")
+    assert not a.get("four")

@@ -52,6 +52,12 @@ class AddonManager:
     def _configure_all(self, options, updated):
         self.trigger("configure", options, updated)
 
+    def _traverse(self, chain):
+        for a in chain:
+            yield a
+            if hasattr(a, "addons"):
+                yield from self._traverse(a.addons)
+
     def clear(self):
         """
             Remove all addons.
@@ -70,8 +76,8 @@ class AddonManager:
     def register(self, addon):
         """
             Register an addon with the manager without adding it to the chain.
-            This should be used by addons that manage addons. Must be called
-            within a current context.
+            This should be used by addons that dynamically manage addons. Must
+            be called within a current context.
         """
         l = Loader(self.master)
         self.invoke_addon(addon, "load", l)
@@ -88,22 +94,31 @@ class AddonManager:
     def add(self, *addons):
         """
             Add addons to the end of the chain, and run their load event.
+            If any addon has sub-addons, they are registered.
         """
         with self.master.handlecontext():
             for i in addons:
                 self.chain.append(self.register(i))
+                if hasattr(i, "addons"):
+                    for sub in self._traverse(i.addons):
+                        self.register(sub)
 
     def remove(self, addon):
         """
-            Remove an addon from the chain, and run its done events.
+            Remove an addon and all its sub-addons.
+
+            If the addon is not in the chain - that is, if it's managed by a
+            parent addon - it's the parent's responsibility to remove it from
+            its own addons attribute.
         """
-        n = _get_name(addon)
-        if n not in self.lookup:
-            raise exceptions.AddonError("No such addon: %s" % n)
-        self.chain = [i for i in self.chain if i is not addon]
-        del self.lookup[_get_name(addon)]
-        with self.master.handlecontext():
-            self.invoke_addon(addon, "done")
+        for a in self._traverse([addon]):
+            n = _get_name(a)
+            if n not in self.lookup:
+                raise exceptions.AddonError("No such addon: %s" % n)
+            self.chain = [i for i in self.chain if i is not a]
+            del self.lookup[_get_name(a)]
+            with self.master.handlecontext():
+                self.invoke_addon(a, "done")
 
     def __len__(self):
         return len(self.chain)
@@ -161,7 +176,7 @@ class AddonManager:
             Establish a handler context and trigger an event across all addons
         """
         with self.master.handlecontext():
-            for i in self.chain:
+            for i in self._traverse(self.chain):
                 try:
                     self.invoke_addon(i, name, *args, **kwargs)
                 except exceptions.AddonHalt:
