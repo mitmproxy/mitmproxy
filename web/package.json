@@ -13,7 +13,9 @@
     ],
     "unmockedModulePathPatterns": [
       "react"
-    ]
+    ],
+      "coverageDirectory":"./coverage",
+      "collectCoverage": true
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
