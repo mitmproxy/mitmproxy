@@ -15,9 +15,9 @@ def hello_world():
 
 
 def load(l):
-    # Host app at the magic domain "proxapp" on port 80. Requests to this
+    # Host app at the magic domain "proxapp.local" on port 80. Requests to this
     # domain and port combination will now be routed to the WSGI app instance.
-    return wsgiapp.WSGIApp(app, "proxapp", 80)
+    return wsgiapp.WSGIApp(app, "proxapp.local", 80)
 
     # SSL works too, but the magic domain needs to be resolvable from the mitmproxy machine due to mitmproxy's design.
     # mitmproxy will connect to said domain and use serve its certificate (unless --no-upstream-cert is set)
