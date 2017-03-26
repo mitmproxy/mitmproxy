@@ -15,7 +15,10 @@
       "react"
     ],
       "coverageDirectory":"./coverage",
-      "collectCoverage": true
+      "collectCoverage": true,
+      "coveragePathIgnorePatterns": [
+          "<rootDir>/src/js/filt/filt.js"
+      ]
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
