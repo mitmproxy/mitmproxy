@@ -13,6 +13,11 @@
     ],
     "unmockedModulePathPatterns": [
       "react"
+    ],
+    "coverageDirectory":"./coverage",
+    "collectCoverage": true,
+    "coveragePathIgnorePatterns": [
+        "<rootDir>/src/js/filt/filt.js"
     ]
   },
   "dependencies": {

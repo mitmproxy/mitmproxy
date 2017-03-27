@@ -52,8 +52,10 @@ matrix:
       before_install:
           - curl -o- -L https://yarnpkg.com/install.sh | bash
           - export PATH=$HOME/.yarn/bin:$PATH
-      install: cd web && yarn
-      script: npm test
+      install:
+          - cd web && yarn
+          - yarn global add codecov
+      script: npm test && codecov
       cache:
           yarn: true
           directories:
