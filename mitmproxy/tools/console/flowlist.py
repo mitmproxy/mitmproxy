@@ -57,6 +57,10 @@ class LogBufferBox(urwid.ListBox):
         self.master = master
         urwid.ListBox.__init__(self, master.logbuffer)
 
+    def set_focus(self, index):
+        if 0 <= index < len(self.master.logbuffer):
+            super().set_focus(index)
+
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "z":
