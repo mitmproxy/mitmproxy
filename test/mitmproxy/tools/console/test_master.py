@@ -60,3 +60,16 @@ class TestMaster(tservers.MasterTest):
         f = tflow.tflow(resp=tutils.tresp(content=b"bar"))
         m.addons.handle_lifecycle("request", f)
         assert m.view[2].intercepted
+
+    def test_replace_view_state(self):
+        w1 = console.window.Window(self, None, None, None, None)
+        w2 = console.window.Window(self, None, None, None, None)
+        m = self.mkmaster()
+        m.view_stack.append(w1)
+        assert len(m.view_stack) == 1
+        assert m.view_stack[-1] == w1
+
+        m.view_stack.append(w2)
+        console.signals.replace_view_state.send(self)
+        assert len(m.view_stack) == 1
+        assert m.view_stack[-1] == w2
