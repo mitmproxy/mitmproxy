@@ -97,6 +97,7 @@ class Window(urwid.Frame):
             raise urwid.ExitMainLoop
         elif k == "q":
             signals.pop_view_state.send(self)
+            self.master.options.console_eventlog = False
         elif k == "R":
             signals.status_prompt_onekey.send(
                 self,

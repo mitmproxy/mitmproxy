@@ -20,6 +20,7 @@ from mitmproxy import log
 from mitmproxy.addons import view
 from mitmproxy.addons import intercept
 from mitmproxy.tools.console import flowlist
+from mitmproxy.tools.console import eventlog
 from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import help
@@ -178,8 +179,20 @@ class ConsoleMaster(master.Master):
 
     def toggle_eventlog(self):
         self.options.console_eventlog = not self.options.console_eventlog
-        self.view_flowlist()
-        signals.replace_view_state.send(self)
+        if self.options.console_eventlog:
+            signals.push_view_state.send(
+                self,
+                window = window.Window(
+                    self,
+                    eventlog.EventLogBox(self),
+                    eventlog.EventLogHeader(),
+                    statusbar.StatusBar(self, eventlog.footer),
+                    eventlog.help_context
+                )
+            )
+        else:
+            signals.pop_view_state.send(self)
+
 
     def _readflows(self, path):
         """
@@ -375,16 +388,11 @@ class ConsoleMaster(master.Master):
         if self.ui.started:
             self.ui.clear()
 
-        if self.options.console_eventlog:
-            body = flowlist.BodyPile(self)
-        else:
-            body = flowlist.FlowListBox(self)
-
         signals.push_view_state.send(
             self,
             window = window.Window(
                 self,
-                body,
+                flowlist.FlowListBox(self),
                 None,
                 statusbar.StatusBar(self, flowlist.footer),
                 flowlist.help_context
