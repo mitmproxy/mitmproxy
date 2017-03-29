@@ -62,7 +62,7 @@ Development Setup
 
 To get started hacking on mitmproxy, please follow the `advanced installation`_ steps to install mitmproxy from source, but stop right before running ``pip3 install mitmproxy``. Instead, do the following:
 
-.. code-block:: text
+.. code-block:: bash
 
     git clone https://github.com/mitmproxy/mitmproxy.git
     cd mitmproxy
@@ -80,7 +80,7 @@ The main executables for the project - ``mitmdump``, ``mitmproxy``,
 virtualenv. After activating the virtualenv, they will be on your $PATH, and
 you can run them like any other command:
 
-.. code-block:: text
+.. code-block:: bash
 
     . venv/bin/activate  # "venv\Scripts\activate" on Windows
     mitmdump --version
@@ -91,13 +91,13 @@ Testing
 If you've followed the procedure above, you already have all the development
 requirements installed, and you can run the full test suite (including tests for code style and documentation) with tox_:
 
-.. code-block:: text
+.. code-block:: bash
 
     tox
 
 For speedier testing, we recommend you run `pytest`_ directly on individual test files or folders:
 
-.. code-block:: text
+.. code-block:: bash
 
     cd test/mitmproxy/addons
     pytest --cov mitmproxy.addons.anticache --looponfail test_anticache.py
@@ -114,7 +114,7 @@ The mitmproxy documentation is build using Sphinx_, which is installed
 automatically if you set up a development environment as described above. After
 installation, you can render the documentation like this:
 
-.. code-block:: text
+.. code-block:: bash
 
     cd docs
     make clean
@@ -136,7 +136,7 @@ This is automatically enforced on every PR. If we detect a linting error, the
 PR checks will fail and block merging. You can run our lint checks yourself
 with the following command:
 
-.. code-block:: text
+.. code-block:: bash
 
     tox -e lint
 
