@@ -3208,7 +3208,7 @@ function updateWidgetHeight(line) {
 }
 
 // Compute the lines that are visible in a given viewport (defaults
-// the the current scroll position). viewport may contain top,
+// to the current scroll position). viewport may contain top,
 // height, and ensure (see op.scrollToPos) properties.
 function visibleLines(display, doc, viewport) {
   var top = viewport && viewport.top != null ? Math.max(0, viewport.top) : display.scroller.scrollTop
