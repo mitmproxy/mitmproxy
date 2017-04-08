@@ -29,10 +29,18 @@ def flowdetails(state, flow: http.HTTPFlow):
 
     if sc is not None:
         text.append(urwid.Text([("head", "Server Connection:")]))
-        parts = [
-            ["Address", "{}:{}".format(sc.address[0], sc.address[1])],
-            ["Resolved Address", "{}:{}".format(sc.ip_address[0], sc.ip_address[1])],
-        ]
+        if sc.address:
+            parts = [
+                ["Address", "{}:{}".format(sc.address[0], sc.address[1])],
+            ]
+        else:
+            parts = [
+                ["Address", "Couldn't Resolve"],
+            ]
+        if sc.ip_address:
+            parts.append(["Resolved Address", "{}:{}".format(sc.ip_address[0], sc.ip_address[1])])
+        else:
+            parts.append(["Resolved Address", "Couldn't Resolve"])
         if resp:
             parts.append(["HTTP Version", resp.http_version])
         if sc.alpn_proto_negotiated:
