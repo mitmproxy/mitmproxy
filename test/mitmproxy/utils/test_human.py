@@ -46,3 +46,8 @@ def test_pretty_duration():
     assert human.pretty_duration(10000) == "10000s"
     assert human.pretty_duration(1.123) == "1.12s"
     assert human.pretty_duration(0.123) == "123ms"
+
+
+def test_format_address():
+    assert human.format_address(('::1','55700','0','0')) == "[::1]:55700"
+    assert human.format_address(('::ffff:127.0.0.1','55700','0','0')) == "127.0.0.1:55700"

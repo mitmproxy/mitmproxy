@@ -62,3 +62,10 @@ def format_timestamp(s):
 def format_timestamp_with_milli(s):
     d = datetime.datetime.fromtimestamp(s)
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+
+def format_address(s):
+    # s is the address tuple
+    if "." in s[0]:
+        return s[0].split(":")[-1]+":"+str(s[1])
+    return "["+s[0]+"]:"+str(s[1])

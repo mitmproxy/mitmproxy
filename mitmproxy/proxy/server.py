@@ -12,6 +12,7 @@ from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
 from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
+from mitmproxy.utils import human
 
 
 class DummyServer:
@@ -152,5 +153,5 @@ class ConnectionHandler:
         self.client_conn.finish()
 
     def log(self, msg, level):
-        msg = "{}: {}".format(repr(self.client_conn.address), msg)
+        msg = "{}: {}".format(human.format_address(self.client_conn.address), msg)
         self.channel.tell("log", log.LogEntry(msg, level))
