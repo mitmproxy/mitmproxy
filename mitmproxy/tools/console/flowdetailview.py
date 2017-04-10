@@ -30,8 +30,8 @@ def flowdetails(state, flow: http.HTTPFlow):
     if sc is not None:
         text.append(urwid.Text([("head", "Server Connection:")]))
         parts = [
-            ["Address", "{}:{}".format(sc.address[0], sc.address[1])],
-            ["Resolved Address", "{}:{}".format(sc.ip_address[0], sc.ip_address[1])],
+            ["Address", "{}".format(human.format_address(sc.address))],
+            ["Resolved Address", "{}".format(human.format_address(sc.ip_address))],
         ]
         if resp:
             parts.append(["HTTP Version", resp.http_version])

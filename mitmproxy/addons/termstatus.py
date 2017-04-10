@@ -1,4 +1,5 @@
 from mitmproxy import ctx
+from mitmproxy.utils import human
 
 """
     A tiny addon to print the proxy status to terminal. Eventually this could
@@ -17,7 +18,7 @@ class TermStatus:
     def running(self):
         if self.server:
             ctx.log.info(
-                "Proxy server listening at http://{}:{}".format(
-                    *ctx.master.server.address,
+                "Proxy server listening at http://{}".format(
+                    human.format_address(ctx.master.server.address)
                 )
             )
