@@ -12,7 +12,8 @@ from kaitaistruct import __version__ as ks_version, KaitaiStruct, KaitaiStream, 
 if parse_version(ks_version) < parse_version('0.7'):
     raise Exception("Incompatible Kaitai Struct Python API: 0.7 or later is required, but you have %s" % (ks_version))
 
-from exif import Exif
+from .exif import Exif
+
 class Jpeg(KaitaiStruct):
 
     class ComponentId(Enum):
@@ -207,6 +208,3 @@ class Jpeg(KaitaiStruct):
             self.thumbnail_x = self._io.read_u1()
             self.thumbnail_y = self._io.read_u1()
             self.thumbnail = self._io.read_bytes(((self.thumbnail_x * self.thumbnail_y) * 3))
-
-
-
