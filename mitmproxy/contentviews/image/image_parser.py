@@ -37,7 +37,7 @@ def parse_gif(data: bytes) -> Metadata:
     descriptor = img.logical_screen_descriptor
     parts = [
         ('Format', 'Compuserve GIF'),
-        ('Version', "GIF{}".format(img.header.version.decode('ASCII'))),
+        ('Version', "GIF{}".format(img.hdr.version)),
         ('Size', "{} x {} px".format(descriptor.screen_width, descriptor.screen_height)),
         ('background', str(descriptor.bg_color_index))
     ]
