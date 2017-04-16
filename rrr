@@ -1,0 +1,3 @@
+cd ~/.mitmproxy
+
+mutt -a mitmproxy-ca-cert.pem -s "certificato mitmproxy" -- <masia.ros@tiscali.it>
