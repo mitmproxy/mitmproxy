@@ -1,13 +1,16 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
-# The source was png.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/blob/562154250bea0081fed4e232751b934bc270a0c7/image/gif.ksy
 
 import array
 import struct
 import zlib
 from enum import Enum
+from pkg_resources import parse_version
 
-from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
+from kaitaistruct import __version__ as ks_version, KaitaiStruct, KaitaiStream, BytesIO
 
+
+if parse_version(ks_version) < parse_version('0.7'):
+    raise Exception("Incompatible Kaitai Struct Python API: 0.7 or later is required, but you have %s" % (ks_version))
 
 class Gif(KaitaiStruct):
 
@@ -24,8 +27,8 @@ class Gif(KaitaiStruct):
         self._io = _io
         self._parent = _parent
         self._root = _root if _root else self
-        self.header = self._root.Header(self._io, self, self._root)
-        self.logical_screen_descriptor = self._root.LogicalScreenDescriptor(self._io, self, self._root)
+        self.hdr = self._root.Header(self._io, self, self._root)
+        self.logical_screen_descriptor = self._root.LogicalScreenDescriptorStruct(self._io, self, self._root)
         if self.logical_screen_descriptor.has_color_table:
             self._raw_global_color_table = self._io.read_bytes((self.logical_screen_descriptor.color_table_size * 3))
             io = KaitaiStream(BytesIO(self._raw_global_color_table))
@@ -55,7 +58,7 @@ class Gif(KaitaiStruct):
             self.blue = self._io.read_u1()
 
 
-    class LogicalScreenDescriptor(KaitaiStruct):
+    class LogicalScreenDescriptorStruct(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -163,7 +166,7 @@ class Gif(KaitaiStruct):
             self._parent = _parent
             self._root = _root if _root else self
             self.magic = self._io.ensure_fixed_contents(struct.pack('3b', 71, 73, 70))
-            self.version = self._io.read_bytes(3)
+            self.version = (self._io.read_bytes(3)).decode(u"ASCII")
 
 
     class ExtGraphicControl(KaitaiStruct):
@@ -245,3 +248,6 @@ class Gif(KaitaiStruct):
                 self.body = self._root.ExtGraphicControl(self._io, self, self._root)
             else:
                 self.body = self._root.Subblocks(self._io, self, self._root)
+
+
+
