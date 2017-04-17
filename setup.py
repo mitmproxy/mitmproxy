@@ -78,7 +78,7 @@ setup(
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
         "ruamel.yaml>=0.13.2, <0.15",
-        "tornado>=4.3, <4.5",
+        "tornado>=4.3, <4.6",
         "urwid>=1.3.1, <1.4",
         "watchdog>=0.8.3, <0.9",
         "brotlipy>=0.5.1, <0.7",
@@ -113,7 +113,7 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.6",
-            "Pillow>=3.2,<4.2",
+            "Pillow>=3.2, <4.2",
         ]
     }
 )
