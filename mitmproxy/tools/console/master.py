@@ -298,7 +298,7 @@ class ConsoleMaster(master.Master):
             sys.stdout.flush()
             print(traceback.format_exc(), file=sys.stderr)
             print("mitmproxy has crashed!", file=sys.stderr)
-            print("Please lodge a bug report at:", file=sys.stderr)
+            print("Please log a bug report at:", file=sys.stderr)
             print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
             print("Shutting down...", file=sys.stderr)
         finally:
