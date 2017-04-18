@@ -146,7 +146,7 @@ class ConnectionHandler:
             self.log(traceback.format_exc(), "error")
             print(traceback.format_exc(), file=sys.stderr)
             print("mitmproxy has crashed!", file=sys.stderr)
-            print("Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+            print("Please log a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
 
         self.log("clientdisconnect", "info")
         self.channel.tell("clientdisconnect", root_layer)
