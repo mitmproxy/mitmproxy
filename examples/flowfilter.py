@@ -10,7 +10,7 @@ class Filter:
         self.filter = flowfilter.parse(spec)
 
     def response(self, flow):
-        if flowfilter.match(flow, self.filter):
+        if flowfilter.match(self.filter, flow):
             print("Flow matches filter:")
             print(flow)
 
