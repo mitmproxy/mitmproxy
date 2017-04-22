@@ -30,7 +30,7 @@ class TestMaster(tservers.MasterTest):
             opts["verbosity"] = 1
         o = options.Options(**opts)
         m = console.master.ConsoleMaster(o, proxy.DummyServer())
-        m.addons.configure_all(o, o.keys())
+        m.addons.trigger("configure", o, o.keys())
         return m
 
     def test_basic(self):
