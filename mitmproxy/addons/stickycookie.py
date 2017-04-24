@@ -1,14 +1,14 @@
 import collections
 from http import cookiejar
+from typing import List, Tuple, Dict, Optional  # noqa
 
+from mitmproxy import http, flowfilter, ctx, exceptions
 from mitmproxy.net.http import cookies
 
-from mitmproxy import exceptions
-from mitmproxy import flowfilter
-from mitmproxy import ctx
+TOrigin = Tuple[str, int, str]
 
 
-def ckey(attrs, f):
+def ckey(attrs: Dict[str, str], f: http.HTTPFlow) -> TOrigin:
     """
         Returns a (domain, port, path) tuple.
     """
@@ -21,18 +21,18 @@ def ckey(attrs, f):
     return (domain, f.request.port, path)
 
 
-def domain_match(a, b):
-    if cookiejar.domain_match(a, b):
+def domain_match(a: str, b: str) -> bool:
+    if cookiejar.domain_match(a, b):  # type: ignore
         return True
-    elif cookiejar.domain_match(a, b.strip(".")):
+    elif cookiejar.domain_match(a, b.strip(".")):  # type: ignore
         return True
     return False
 
 
 class StickyCookie:
     def __init__(self):
-        self.jar = collections.defaultdict(dict)
-        self.flt = None
+        self.jar = collections.defaultdict(dict)  # type: Dict[TOrigin, Dict[str, str]]
+        self.flt = None  # type: Optional[flowfilter.TFilter]
 
     def configure(self, updated):
         if "stickycookie" in updated:
@@ -46,7 +46,7 @@ class StickyCookie:
             else:
                 self.flt = None
 
-    def response(self, flow):
+    def response(self, flow: http.HTTPFlow):
         if self.flt:
             for name, (value, attrs) in flow.response.cookies.items(multi=True):
                 # FIXME: We now know that Cookie.py screws up some cookies with
@@ -63,24 +63,21 @@ class StickyCookie:
                         if not self.jar[dom_port_path]:
                             self.jar.pop(dom_port_path, None)
                     else:
-                        b = attrs.copy()
-                        b.insert(0, name, value)
-                        self.jar[dom_port_path][name] = b
+                        self.jar[dom_port_path][name] = value
 
-    def request(self, flow):
+    def request(self, flow: http.HTTPFlow):
         if self.flt:
-            l = []
+            cookie_list = []  # type: List[Tuple[str,str]]
             if flowfilter.match(self.flt, flow):
-                for domain, port, path in self.jar.keys():
+                for (domain, port, path), c in self.jar.items():
                     match = [
                         domain_match(flow.request.host, domain),
                         flow.request.port == port,
                         flow.request.path.startswith(path)
                     ]
                     if all(match):
-                        c = self.jar[(domain, port, path)]
-                        l.extend([cookies.format_cookie_header(c[name].items(multi=True)) for name in c.keys()])
-            if l:
+                        cookie_list.extend(c.items())
+            if cookie_list:
                 # FIXME: we need to formalise this...
-                flow.request.stickycookie = True
-                flow.request.headers["cookie"] = "; ".join(l)
+                flow.metadata["stickycookie"] = True
+                flow.request.headers["cookie"] = cookies.format_cookie_header(cookie_list)
