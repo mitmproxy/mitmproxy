@@ -36,7 +36,6 @@ class Script:
         self.path = path
         self.ns = None
 
-        self.last_options = None
         self.last_load = 0
         self.last_mtime = 0
 
@@ -60,14 +59,12 @@ class Script:
                     ctx.master.addons.invoke_addon(
                         self.ns,
                         "configure",
-                        self.last_options,
-                        self.last_options.keys()
+                        ctx.options,
+                        ctx.options.keys()
                     )
                 self.last_load = time.time()
                 self.last_mtime = mtime
 
-    def configure(self, options, updated):
-        self.last_options = options
 
 
 class ScriptLoader:

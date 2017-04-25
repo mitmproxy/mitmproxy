@@ -2,6 +2,7 @@ import re
 import base64
 
 from mitmproxy import exceptions
+from mitmproxy import ctx
 from mitmproxy.utils import strutils
 
 
@@ -26,15 +27,12 @@ class UpstreamAuth():
     """
     def __init__(self):
         self.auth = None
-        self.root_mode = None
 
     def configure(self, options, updated):
         # FIXME: We're doing this because our proxy core is terminally confused
         # at the moment. Ideally, we should be able to check if we're in
         # reverse proxy mode at the HTTP layer, so that scripts can put the
         # proxy in reverse proxy mode for specific reuests.
-        if "mode" in updated:
-            self.root_mode = options.mode
         if "upstream_auth" in updated:
             if options.upstream_auth is None:
                 self.auth = None
@@ -49,5 +47,5 @@ class UpstreamAuth():
         if self.auth:
             if f.mode == "upstream" and not f.server_conn.via:
                 f.request.headers["Proxy-Authorization"] = self.auth
-            elif self.root_mode == "reverse":
+            elif ctx.options.mode == "reverse":
                 f.request.headers["Proxy-Authorization"] = self.auth

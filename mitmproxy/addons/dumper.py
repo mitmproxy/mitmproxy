@@ -29,10 +29,7 @@ def colorful(line, styles):
 class Dumper:
     def __init__(self, outfile=sys.stdout):
         self.filter = None  # type: flowfilter.TFilter
-        self.flow_detail = None  # type: int
         self.outfp = outfile  # type: typing.io.TextIO
-        self.showhost = None  # type: bool
-        self.default_contentview = "auto"  # type: str
 
     def configure(self, options, updated):
         if "view_filter" in updated:
@@ -44,9 +41,6 @@ class Dumper:
                     )
             else:
                 self.filter = None
-        self.flow_detail = options.flow_detail
-        self.showhost = options.showhost
-        self.default_contentview = options.default_contentview
 
     def echo(self, text, ident=None, **style):
         if ident:
@@ -67,13 +61,13 @@ class Dumper:
 
     def _echo_message(self, message):
         _, lines, error = contentviews.get_message_content_view(
-            self.default_contentview,
+            ctx.options.default_contentview,
             message
         )
         if error:
             ctx.log.debug(error)
 
-        if self.flow_detail == 3:
+        if ctx.options.flow_detail == 3:
             lines_to_echo = itertools.islice(lines, 70)
         else:
             lines_to_echo = lines
@@ -95,7 +89,7 @@ class Dumper:
         if next(lines, None):
             self.echo("(cut off)", ident=4, dim=True)
 
-        if self.flow_detail >= 2:
+        if ctx.options.flow_detail >= 2:
             self.echo("")
 
     def _echo_request_line(self, flow):
@@ -121,12 +115,12 @@ class Dumper:
             fg=method_color,
             bold=True
         )
-        if self.showhost:
+        if ctx.options.showhost:
             url = flow.request.pretty_url
         else:
             url = flow.request.url
         terminalWidthLimit = max(shutil.get_terminal_size()[0] - 25, 50)
-        if self.flow_detail < 1 and len(url) > terminalWidthLimit:
+        if ctx.options.flow_detail < 1 and len(url) > terminalWidthLimit:
             url = url[:terminalWidthLimit] + "…"
         url = click.style(strutils.escape_control_characters(url), bold=True)
 
@@ -176,7 +170,7 @@ class Dumper:
         size = click.style(size, bold=True)
 
         arrows = click.style(" <<", bold=True)
-        if self.flow_detail == 1:
+        if ctx.options.flow_detail == 1:
             # This aligns the HTTP response code with the HTTP request method:
             # 127.0.0.1:59519: GET http://example.com/
             #               << 304 Not Modified 0b
@@ -194,16 +188,16 @@ class Dumper:
     def echo_flow(self, f):
         if f.request:
             self._echo_request_line(f)
-            if self.flow_detail >= 2:
+            if ctx.options.flow_detail >= 2:
                 self._echo_headers(f.request.headers)
-            if self.flow_detail >= 3:
+            if ctx.options.flow_detail >= 3:
                 self._echo_message(f.request)
 
         if f.response:
             self._echo_response_line(f)
-            if self.flow_detail >= 2:
+            if ctx.options.flow_detail >= 2:
                 self._echo_headers(f.response.headers)
-            if self.flow_detail >= 3:
+            if ctx.options.flow_detail >= 3:
                 self._echo_message(f.response)
 
         if f.error:
@@ -211,7 +205,7 @@ class Dumper:
             self.echo(" << {}".format(msg), bold=True, fg="red")
 
     def match(self, f):
-        if self.flow_detail == 0:
+        if ctx.options.flow_detail == 0:
             return False
         if not self.filter:
             return True
@@ -239,7 +233,7 @@ class Dumper:
         if self.match(f):
             message = f.messages[-1]
             self.echo(f.message_info(message))
-            if self.flow_detail >= 3:
+            if ctx.options.flow_detail >= 3:
                 self._echo_message(message)
 
     def websocket_end(self, f):
@@ -267,5 +261,5 @@ class Dumper:
                 server=repr(f.server_conn.address),
                 direction=direction,
             ))
-            if self.flow_detail >= 3:
+            if ctx.options.flow_detail >= 3:
                 self._echo_message(message)

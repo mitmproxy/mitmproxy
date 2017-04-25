@@ -39,86 +39,88 @@ def test_tick():
 
 def test_server_playback():
     sp = serverplayback.ServerPlayback()
-    sp.configure(options.Options(), [])
-    f = tflow.tflow(resp=True)
+    with taddons.context() as tctx:
+        tctx.configure(sp)
+        f = tflow.tflow(resp=True)
 
-    assert not sp.flowmap
+        assert not sp.flowmap
 
-    sp.load_flows([f])
-    assert sp.flowmap
-    assert sp.next_flow(f)
-    assert not sp.flowmap
+        sp.load_flows([f])
+        assert sp.flowmap
+        assert sp.next_flow(f)
+        assert not sp.flowmap
 
-    sp.load_flows([f])
-    assert sp.flowmap
-    sp.clear()
-    assert not sp.flowmap
+        sp.load_flows([f])
+        assert sp.flowmap
+        sp.clear()
+        assert not sp.flowmap
 
 
 def test_ignore_host():
     sp = serverplayback.ServerPlayback()
-    sp.configure(options.Options(server_replay_ignore_host=True), [])
+    with taddons.context() as tctx:
+        tctx.configure(sp, server_replay_ignore_host=True)
 
-    r = tflow.tflow(resp=True)
-    r2 = tflow.tflow(resp=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
 
-    r.request.host = "address"
-    r2.request.host = "address"
-    assert sp._hash(r) == sp._hash(r2)
-    r2.request.host = "wrong_address"
-    assert sp._hash(r) == sp._hash(r2)
+        r.request.host = "address"
+        r2.request.host = "address"
+        assert sp._hash(r) == sp._hash(r2)
+        r2.request.host = "wrong_address"
+        assert sp._hash(r) == sp._hash(r2)
 
 
 def test_ignore_content():
     s = serverplayback.ServerPlayback()
-    s.configure(options.Options(server_replay_ignore_content=False), [])
+    with taddons.context() as tctx:
+        tctx.configure(s, server_replay_ignore_content=False)
 
-    r = tflow.tflow(resp=True)
-    r2 = tflow.tflow(resp=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
 
-    r.request.content = b"foo"
-    r2.request.content = b"foo"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.content = b"bar"
-    assert not s._hash(r) == s._hash(r2)
+        r.request.content = b"foo"
+        r2.request.content = b"foo"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.content = b"bar"
+        assert not s._hash(r) == s._hash(r2)
 
-    s.configure(options.Options(server_replay_ignore_content=True), [])
-    r = tflow.tflow(resp=True)
-    r2 = tflow.tflow(resp=True)
-    r.request.content = b"foo"
-    r2.request.content = b"foo"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.content = b"bar"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.content = b""
-    assert s._hash(r) == s._hash(r2)
-    r2.request.content = None
-    assert s._hash(r) == s._hash(r2)
+        tctx.configure(s, server_replay_ignore_content=True)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
+        r.request.content = b"foo"
+        r2.request.content = b"foo"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.content = b"bar"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.content = b""
+        assert s._hash(r) == s._hash(r2)
+        r2.request.content = None
+        assert s._hash(r) == s._hash(r2)
 
 
 def test_ignore_content_wins_over_params():
     s = serverplayback.ServerPlayback()
-    s.configure(
-        options.Options(
+    with taddons.context() as tctx:
+        tctx.configure(
+            s,
             server_replay_ignore_content=True,
             server_replay_ignore_payload_params=[
                 "param1", "param2"
             ]
-        ),
-        []
-    )
-    # NOTE: parameters are mutually exclusive in options
+        )
 
-    r = tflow.tflow(resp=True)
-    r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-    r.request.content = b"paramx=y"
+        # NOTE: parameters are mutually exclusive in options
+        r = tflow.tflow(resp=True)
+        r.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        r.request.content = b"paramx=y"
 
-    r2 = tflow.tflow(resp=True)
-    r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-    r2.request.content = b"paramx=x"
+        r2 = tflow.tflow(resp=True)
+        r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        r2.request.content = b"paramx=x"
 
-    # same parameters
-    assert s._hash(r) == s._hash(r2)
+        # same parameters
+        assert s._hash(r) == s._hash(r2)
 
 
 def test_ignore_payload_params_other_content_type():
@@ -147,136 +149,139 @@ def test_ignore_payload_params_other_content_type():
 
 def test_hash():
     s = serverplayback.ServerPlayback()
-    s.configure(options.Options(), [])
+    with taddons.context() as tctx:
+        tctx.configure(s)
 
-    r = tflow.tflow()
-    r2 = tflow.tflow()
+        r = tflow.tflow()
+        r2 = tflow.tflow()
 
-    assert s._hash(r)
-    assert s._hash(r) == s._hash(r2)
-    r.request.headers["foo"] = "bar"
-    assert s._hash(r) == s._hash(r2)
-    r.request.path = "voing"
-    assert s._hash(r) != s._hash(r2)
+        assert s._hash(r)
+        assert s._hash(r) == s._hash(r2)
+        r.request.headers["foo"] = "bar"
+        assert s._hash(r) == s._hash(r2)
+        r.request.path = "voing"
+        assert s._hash(r) != s._hash(r2)
 
-    r.request.path = "path?blank_value"
-    r2.request.path = "path?"
-    assert s._hash(r) != s._hash(r2)
+        r.request.path = "path?blank_value"
+        r2.request.path = "path?"
+        assert s._hash(r) != s._hash(r2)
 
 
 def test_headers():
     s = serverplayback.ServerPlayback()
-    s.configure(options.Options(server_replay_use_headers=["foo"]), [])
+    with taddons.context() as tctx:
+        tctx.configure(s, server_replay_use_headers=["foo"])
 
-    r = tflow.tflow(resp=True)
-    r.request.headers["foo"] = "bar"
-    r2 = tflow.tflow(resp=True)
-    assert not s._hash(r) == s._hash(r2)
-    r2.request.headers["foo"] = "bar"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.headers["oink"] = "bar"
-    assert s._hash(r) == s._hash(r2)
+        r = tflow.tflow(resp=True)
+        r.request.headers["foo"] = "bar"
+        r2 = tflow.tflow(resp=True)
+        assert not s._hash(r) == s._hash(r2)
+        r2.request.headers["foo"] = "bar"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.headers["oink"] = "bar"
+        assert s._hash(r) == s._hash(r2)
 
-    r = tflow.tflow(resp=True)
-    r2 = tflow.tflow(resp=True)
-    assert s._hash(r) == s._hash(r2)
+        r = tflow.tflow(resp=True)
+        r2 = tflow.tflow(resp=True)
+        assert s._hash(r) == s._hash(r2)
 
 
 def test_load():
     s = serverplayback.ServerPlayback()
-    s.configure(options.Options(), [])
+    with taddons.context() as tctx:
+        tctx.configure(s)
 
-    r = tflow.tflow(resp=True)
-    r.request.headers["key"] = "one"
+        r = tflow.tflow(resp=True)
+        r.request.headers["key"] = "one"
 
-    r2 = tflow.tflow(resp=True)
-    r2.request.headers["key"] = "two"
+        r2 = tflow.tflow(resp=True)
+        r2.request.headers["key"] = "two"
 
-    s.load_flows([r, r2])
+        s.load_flows([r, r2])
 
-    assert s.count() == 2
+        assert s.count() == 2
 
-    n = s.next_flow(r)
-    assert n.request.headers["key"] == "one"
-    assert s.count() == 1
+        n = s.next_flow(r)
+        assert n.request.headers["key"] == "one"
+        assert s.count() == 1
 
-    n = s.next_flow(r)
-    assert n.request.headers["key"] == "two"
-    assert not s.flowmap
-    assert s.count() == 0
+        n = s.next_flow(r)
+        assert n.request.headers["key"] == "two"
+        assert not s.flowmap
+        assert s.count() == 0
 
-    assert not s.next_flow(r)
+        assert not s.next_flow(r)
 
 
 def test_load_with_server_replay_nopop():
     s = serverplayback.ServerPlayback()
-    s.configure(options.Options(server_replay_nopop=True), [])
+    with taddons.context() as tctx:
+        tctx.configure(s, server_replay_nopop=True)
 
-    r = tflow.tflow(resp=True)
-    r.request.headers["key"] = "one"
+        r = tflow.tflow(resp=True)
+        r.request.headers["key"] = "one"
 
-    r2 = tflow.tflow(resp=True)
-    r2.request.headers["key"] = "two"
+        r2 = tflow.tflow(resp=True)
+        r2.request.headers["key"] = "two"
 
-    s.load_flows([r, r2])
+        s.load_flows([r, r2])
 
-    assert s.count() == 2
-    s.next_flow(r)
-    assert s.count() == 2
+        assert s.count() == 2
+        s.next_flow(r)
+        assert s.count() == 2
 
 
 def test_ignore_params():
     s = serverplayback.ServerPlayback()
-    s.configure(
-        options.Options(
+    with taddons.context() as tctx:
+        tctx.configure(
+            s,
             server_replay_ignore_params=["param1", "param2"]
-        ),
-        []
-    )
+        )
 
-    r = tflow.tflow(resp=True)
-    r.request.path = "/test?param1=1"
-    r2 = tflow.tflow(resp=True)
-    r2.request.path = "/test"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.path = "/test?param1=2"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.path = "/test?param2=1"
-    assert s._hash(r) == s._hash(r2)
-    r2.request.path = "/test?param3=2"
-    assert not s._hash(r) == s._hash(r2)
+        r = tflow.tflow(resp=True)
+        r.request.path = "/test?param1=1"
+        r2 = tflow.tflow(resp=True)
+        r2.request.path = "/test"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.path = "/test?param1=2"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.path = "/test?param2=1"
+        assert s._hash(r) == s._hash(r2)
+        r2.request.path = "/test?param3=2"
+        assert not s._hash(r) == s._hash(r2)
 
 
 def thash(r, r2, setter):
     s = serverplayback.ServerPlayback()
-    s.configure(
-        options.Options(
+    with taddons.context() as tctx:
+        s = serverplayback.ServerPlayback()
+        tctx.configure(
+            s,
             server_replay_ignore_payload_params=["param1", "param2"]
-        ),
-        []
-    )
+        )
 
-    setter(r, paramx="x", param1="1")
+        setter(r, paramx="x", param1="1")
 
-    setter(r2, paramx="x", param1="1")
-    # same parameters
-    assert s._hash(r) == s._hash(r2)
-    # ignored parameters !=
-    setter(r2, paramx="x", param1="2")
-    assert s._hash(r) == s._hash(r2)
-    # missing parameter
-    setter(r2, paramx="x")
-    assert s._hash(r) == s._hash(r2)
-    # ignorable parameter added
-    setter(r2, paramx="x", param1="2")
-    assert s._hash(r) == s._hash(r2)
-    # not ignorable parameter changed
-    setter(r2, paramx="y", param1="1")
-    assert not s._hash(r) == s._hash(r2)
-    # not ignorable parameter missing
-    setter(r2, param1="1")
-    r2.request.content = b"param1=1"
-    assert not s._hash(r) == s._hash(r2)
+        setter(r2, paramx="x", param1="1")
+        # same parameters
+        assert s._hash(r) == s._hash(r2)
+        # ignored parameters !=
+        setter(r2, paramx="x", param1="2")
+        assert s._hash(r) == s._hash(r2)
+        # missing parameter
+        setter(r2, paramx="x")
+        assert s._hash(r) == s._hash(r2)
+        # ignorable parameter added
+        setter(r2, paramx="x", param1="2")
+        assert s._hash(r) == s._hash(r2)
+        # not ignorable parameter changed
+        setter(r2, paramx="y", param1="1")
+        assert not s._hash(r) == s._hash(r2)
+        # not ignorable parameter missing
+        setter(r2, param1="1")
+        r2.request.content = b"param1=1"
+        assert not s._hash(r) == s._hash(r2)
 
 
 def test_ignore_payload_params():

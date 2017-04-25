@@ -10,6 +10,7 @@ import mitmproxy.net.http
 from mitmproxy import connections  # noqa
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy import ctx
 from mitmproxy.net.http import status_codes
 
 REALM = "mitmproxy"
@@ -45,7 +46,6 @@ class ProxyAuth:
         self.nonanonymous = False
         self.htpasswd = None
         self.singleuser = None
-        self.mode = None
         self.authenticated = weakref.WeakKeyDictionary()  # type: MutableMapping[connections.ClientConnection, Tuple[str, str]]
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
@@ -58,7 +58,7 @@ class ProxyAuth:
             - True, if authentication is done as if mitmproxy is a proxy
             - False, if authentication is done as if mitmproxy is a HTTP server
         """
-        return self.mode in ("regular", "upstream")
+        return ctx.options.mode in ("regular", "upstream")
 
     def which_auth_header(self) -> str:
         if self.is_proxy_auth():
@@ -136,8 +136,6 @@ class ProxyAuth:
                             "Invalid single-user auth specification."
                         )
                     self.singleuser = parts
-        if "mode" in updated:
-            self.mode = options.mode
         if self.enabled():
             if options.mode == "transparent":
                 raise exceptions.OptionsError(

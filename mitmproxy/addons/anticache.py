@@ -1,10 +1,7 @@
+from mitmproxy import ctx
+
+
 class AntiCache:
-    def __init__(self):
-        self.enabled = False
-
-    def configure(self, options, updated):
-        self.enabled = options.anticache
-
     def request(self, flow):
-        if self.enabled:
+        if ctx.options.anticache:
             flow.request.anticache()

@@ -9,9 +9,6 @@ class ReadFile:
     """
         An addon that handles reading from file on startup.
     """
-    def __init__(self):
-        self.path = None
-
     def load_flows_file(self, path: str) -> int:
         path = os.path.expanduser(path)
         cnt = 0
@@ -31,16 +28,11 @@ class ReadFile:
                 ctx.log.error("Flow file corrupted.")
             raise exceptions.FlowReadException(v)
 
-    def configure(self, options, updated):
-        if "rfile" in updated and options.rfile:
-            self.path = options.rfile
-
     def running(self):
-        if self.path:
+        if ctx.options.rfile:
             try:
-                self.load_flows_file(self.path)
+                self.load_flows_file(ctx.options.rfile)
             except exceptions.FlowReadException as v:
                 raise exceptions.OptionsError(v)
             finally:
-                self.path = None
                 ctx.master.addons.trigger("processing_complete")
