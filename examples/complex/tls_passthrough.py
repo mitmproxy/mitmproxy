@@ -23,10 +23,10 @@ Authors: Maximilian Hils, Matthew Tuusberg
 import collections
 import random
 
-import sys
 from enum import Enum
 
 import mitmproxy
+from mitmproxy import ctx
 from mitmproxy.exceptions import TlsProtocolException
 from mitmproxy.proxy.protocol import TlsLayer, RawTCPLayer
 
@@ -113,9 +113,15 @@ tls_strategy = None
 
 
 def load(l):
+    l.add_option(
+        "tlsstrat", int, 0, "TLS passthrough strategy (0-100)",
+    )
+
+
+def configure(updated):
     global tls_strategy
-    if len(sys.argv) == 2:
-        tls_strategy = ProbabilisticStrategy(float(sys.argv[1]))
+    if ctx.options.tlsstrat > 0:
+        tls_strategy = ProbabilisticStrategy(float(ctx.options.tlsstrat) / 100.0)
     else:
         tls_strategy = ConservativeStrategy()
 

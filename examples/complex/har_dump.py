@@ -4,7 +4,6 @@ This inline script can be used to dump flows as HAR files.
 
 
 import json
-import sys
 import base64
 import zlib
 import os
@@ -15,6 +14,7 @@ from datetime import timezone
 import mitmproxy
 
 from mitmproxy import version
+from mitmproxy import ctx
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 
@@ -26,16 +26,12 @@ SERVERS_SEEN = set()
 
 
 def load(l):
-    """
-        Called once on script startup before any other events.
-    """
-    if len(sys.argv) != 2:
-        raise ValueError(
-            'Usage: -s "har_dump.py filename" '
-            '(- will output to stdout, filenames ending with .zhar '
-            'will result in compressed har)'
-        )
+    l.add_option(
+        "hardump", str, "", "HAR dump path.",
+    )
 
+
+def configure(updated):
     HAR.update({
         "log": {
             "version": "1.2",
@@ -156,21 +152,20 @@ def done():
     """
         Called once on script shutdown, after any other events.
     """
-    dump_file = sys.argv[1]
+    if ctx.options.hardump:
+        json_dump = json.dumps(HAR, indent=2)  # type: str
 
-    json_dump = json.dumps(HAR, indent=2)  # type: str
+        if ctx.options.hardump == '-':
+            mitmproxy.ctx.log(json_dump)
+        else:
+            raw = json_dump.encode()  # type: bytes
+            if ctx.options.hardump.endswith('.zhar'):
+                raw = zlib.compress(raw, 9)
 
-    if dump_file == '-':
-        mitmproxy.ctx.log(json_dump)
-    else:
-        raw = json_dump.encode()  # type: bytes
-        if dump_file.endswith('.zhar'):
-            raw = zlib.compress(raw, 9)
+            with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
+                f.write(raw)
 
-        with open(os.path.expanduser(dump_file), "wb") as f:
-            f.write(raw)
-
-        mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+            mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
 
 def format_cookies(cookie_list):

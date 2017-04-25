@@ -47,7 +47,7 @@ class Script:
         if time.time() - self.last_load > self.ReloadInterval:
             mtime = os.stat(self.path).st_mtime
             if mtime > self.last_mtime:
-                ctx.log.info("Loading script: %s" % self.name)
+                ctx.log.info("Loading script: %s" % self.path)
                 if self.ns:
                     ctx.master.addons.remove(self.ns)
                 self.ns = load_script(ctx, self.path)
@@ -108,7 +108,6 @@ class ScriptLoader:
                 if s in current:
                     ordered.append(current[s])
                 else:
-                    ctx.log.info("Loading script: %s" % s)
                     sc = Script(s)
                     ordered.append(sc)
                     newscripts.append(sc)
