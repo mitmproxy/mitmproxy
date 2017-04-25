@@ -22,3 +22,4 @@ sslkeylogfile.log
 .tox/
 .python-version
 coverage.xml
+web/coverage/
