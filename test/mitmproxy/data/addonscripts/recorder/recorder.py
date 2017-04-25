@@ -1,13 +1,12 @@
 from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import ctx
-import sys
 
 
-class CallLogger:
+class Recorder:
     call_log = []
 
-    def __init__(self, name = "solo"):
+    def __init__(self, name = "recorder"):
         self.name = name
 
     def __getattr__(self, attr):
@@ -22,5 +21,4 @@ class CallLogger:
         raise AttributeError
 
 
-def load(l):
-    l.boot_into(CallLogger(*sys.argv[1:]))
+addons = [Recorder()]

@@ -17,7 +17,4 @@ class Filter:
             print(flow)
 
 
-def load(l):
-    if len(sys.argv) != 2:
-        raise ValueError("Usage: -s 'filt.py FILTER'")
-    l.boot_into(Filter(sys.argv[1]))
+addons = [Filter(sys.argv[1])]

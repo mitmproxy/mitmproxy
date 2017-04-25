@@ -3,6 +3,8 @@ from mitmproxy.addons.onboardingapp import app
 
 
 class Onboarding(wsgiapp.WSGIApp):
+    name = "onboarding"
+
     def __init__(self):
         super().__init__(app.Adapter(app.application), None, None)
         self.enabled = False

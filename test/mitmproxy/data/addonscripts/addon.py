@@ -19,4 +19,6 @@ def configure(options, updated):
 
 def load(l):
     event_log.append("scriptload")
-    l.boot_into(Addon())
+
+
+addons = [Addon()]

@@ -11,7 +11,7 @@ def test_simple():
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(sa, body_size_limit = "invalid")
         tctx.configure(sa, body_size_limit = "1m")
-        assert tctx.options._processed["body_size_limit"]
+        assert tctx.master.options._processed["body_size_limit"]
 
         with pytest.raises(exceptions.OptionsError, match="mutually exclusive"):
             tctx.configure(

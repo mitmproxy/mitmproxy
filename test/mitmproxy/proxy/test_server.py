@@ -296,8 +296,8 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
 class TestHTTPAuth(tservers.HTTPProxyTest):
     def test_auth(self):
         self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.addons.configure_all(
-            self.master.options, self.master.options.keys()
+        self.master.addons.trigger(
+            "configure", self.master.options, self.master.options.keys()
         )
         self.master.options.proxyauth = "test:test"
         assert self.pathod("202").status_code == 407

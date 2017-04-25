@@ -74,7 +74,7 @@ class TestMaster(taddons.RecordingMaster):
         self.state = TestState()
         self.addons.add(self.state)
         self.addons.add(*addons)
-        self.addons.configure_all(self.options, self.options.keys())
+        self.addons.trigger("configure", self.options, self.options.keys())
         self.addons.trigger("running")
 
     def reset(self, addons):

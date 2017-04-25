@@ -76,7 +76,7 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
         unknown = optmanager.load_paths(opts, args.conf)
         server = process_options(parser, opts, args)
         master = MasterKlass(opts, server)
-        master.addons.configure_all(opts, opts.keys())
+        master.addons.trigger("configure", opts, opts.keys())
         remaining = opts.update_known(**unknown)
         if remaining and opts.verbosity > 1:
             print("Ignored options: %s" % remaining)

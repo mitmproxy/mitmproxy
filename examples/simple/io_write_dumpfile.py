@@ -23,7 +23,4 @@ class Writer:
             self.w.add(flow)
 
 
-def load(l):
-    if len(sys.argv) != 2:
-        raise ValueError('Usage: -s "flowriter.py filename"')
-    l.boot_into(Writer(sys.argv[1]))
+addons = [Writer(sys.argv[1])]
