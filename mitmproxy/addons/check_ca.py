@@ -5,7 +5,7 @@ class CheckCA:
     def __init__(self):
         self.failed = False
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         has_ca = (
             mitmproxy.ctx.master.server and
             mitmproxy.ctx.master.server.config and

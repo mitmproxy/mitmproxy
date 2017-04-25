@@ -107,7 +107,6 @@ class context:
             self.master.addons.invoke_addon(
                 addon,
                 "configure",
-                self.options,
                 kwargs.keys()
             )
 

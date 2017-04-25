@@ -18,6 +18,7 @@ import sortedcontainers
 import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import ctx
 from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -302,26 +303,26 @@ class View(collections.Sequence):
         return self._store.get(flow_id)
 
     # Event handlers
-    def configure(self, opts, updated):
+    def configure(self, updated):
         if "view_filter" in updated:
             filt = None
-            if opts.view_filter:
-                filt = flowfilter.parse(opts.view_filter)
+            if ctx.options.view_filter:
+                filt = flowfilter.parse(ctx.options.view_filter)
                 if not filt:
                     raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % opts.view_filter
+                        "Invalid interception filter: %s" % ctx.options.view_filter
                     )
             self.set_filter(filt)
         if "console_order" in updated:
-            if opts.console_order not in self.orders:
+            if ctx.options.console_order not in self.orders:
                 raise exceptions.OptionsError(
-                    "Unknown flow order: %s" % opts.console_order
+                    "Unknown flow order: %s" % ctx.options.console_order
                 )
-            self.set_order(self.orders[opts.console_order])
+            self.set_order(self.orders[ctx.options.console_order])
         if "console_order_reversed" in updated:
-            self.set_reversed(opts.console_order_reversed)
+            self.set_reversed(ctx.options.console_order_reversed)
         if "console_focus_follow" in updated:
-            self.focus_follow = opts.console_focus_follow
+            self.focus_follow = ctx.options.console_focus_follow
 
     def request(self, f):
         self.add(f)

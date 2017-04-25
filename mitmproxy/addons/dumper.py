@@ -31,13 +31,13 @@ class Dumper:
         self.filter = None  # type: flowfilter.TFilter
         self.outfp = outfile  # type: typing.io.TextIO
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "view_filter" in updated:
-            if options.view_filter:
-                self.filter = flowfilter.parse(options.view_filter)
+            if ctx.options.view_filter:
+                self.filter = flowfilter.parse(ctx.options.view_filter)
                 if not self.filter:
                     raise exceptions.OptionsError(
-                        "Invalid filter expression: %s" % options.view_filter
+                        "Invalid filter expression: %s" % ctx.options.view_filter
                     )
             else:
                 self.filter = None

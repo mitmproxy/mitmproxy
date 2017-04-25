@@ -6,6 +6,6 @@ def load(l):
     l.add_option("custom", bool, False, "A custom option")
 
 
-def configure(options, updated):
+def configure(updated):
     if "custom" in updated:
-        ctx.log.info("custom option value: %s" % options.custom)
+        ctx.log.info("custom option value: %s" % ctx.options.custom)

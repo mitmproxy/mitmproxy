@@ -47,7 +47,7 @@ class Replace:
     def __init__(self):
         self.lst = []
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         """
             .replacements is a list of tuples (fpat, rex, s):
 
@@ -57,7 +57,7 @@ class Replace:
         """
         if "replacements" in updated:
             lst = []
-            for rep in options.replacements:
+            for rep in ctx.options.replacements:
                 fpatt, rex, s = parse_hook(rep)
 
                 flt = flowfilter.parse(fpatt)

@@ -1,26 +1,21 @@
 # (this script works best with --anticache)
 from bs4 import BeautifulSoup
+from mitmproxy import ctx
 
 
 class Injector:
-    def __init__(self):
-        self.iframe_url = None
-
     def load(self, loader):
         loader.add_option(
             "iframe", str, "", "IFrame to inject"
         )
 
-    def configure(self, options, updated):
-        self.iframe_url = options.iframe
-
     def response(self, flow):
-        if self.iframe_url:
+        if ctx.options.iframe:
             html = BeautifulSoup(flow.response.content, "html.parser")
             if html.body:
                 iframe = html.new_tag(
                     "iframe",
-                    src=self.iframe_url,
+                    src=ctx.options.iframe,
                     frameborder=0,
                     height=0,
                     width=0)

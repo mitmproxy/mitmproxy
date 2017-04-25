@@ -1,5 +1,6 @@
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
+from mitmproxy import ctx
 
 
 class StickyAuth:
@@ -7,13 +8,13 @@ class StickyAuth:
         self.flt = None
         self.hosts = {}
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "stickyauth" in updated:
-            if options.stickyauth:
-                flt = flowfilter.parse(options.stickyauth)
+            if ctx.options.stickyauth:
+                flt = flowfilter.parse(ctx.options.stickyauth)
                 if not flt:
                     raise exceptions.OptionsError(
-                        "stickyauth: invalid filter expression: %s" % options.stickyauth
+                        "stickyauth: invalid filter expression: %s" % ctx.options.stickyauth
                     )
                 self.flt = flt
             else:

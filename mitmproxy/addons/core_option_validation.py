@@ -4,12 +4,14 @@
 """
 from mitmproxy import exceptions
 from mitmproxy import platform
+from mitmproxy import ctx
 from mitmproxy.net import server_spec
 from mitmproxy.utils import human
 
 
 class CoreOptionValidation:
-    def configure(self, opts, updated):
+    def configure(self, updated):
+        opts = ctx.options
         if opts.add_upstream_certs_to_client_chain and not opts.upstream_cert:
             raise exceptions.OptionsError(
                 "The no-upstream-cert and add-upstream-certs-to-client-chain "

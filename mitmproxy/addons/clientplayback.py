@@ -20,12 +20,12 @@ class ClientPlayback:
     def load(self, flows: typing.Sequence[flow.Flow]):
         self.flows = flows
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "client_replay" in updated:
-            if options.client_replay:
-                ctx.log.info("Client Replay: {}".format(options.client_replay))
+            if ctx.options.client_replay:
+                ctx.log.info("Client Replay: {}".format(ctx.options.client_replay))
                 try:
-                    flows = io.read_flows_from_paths(options.client_replay)
+                    flows = io.read_flows_from_paths(ctx.options.client_replay)
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
                 self.load(flows)

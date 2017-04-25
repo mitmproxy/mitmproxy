@@ -59,12 +59,10 @@ class Script:
                     ctx.master.addons.invoke_addon(
                         self.ns,
                         "configure",
-                        ctx.options,
                         ctx.options.keys()
                     )
                 self.last_load = time.time()
                 self.last_mtime = mtime
-
 
 
 class ScriptLoader:
@@ -82,14 +80,14 @@ class ScriptLoader:
         # Returning once we have proper commands
         raise NotImplementedError
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "scripts" in updated:
-            for s in options.scripts:
-                if options.scripts.count(s) > 1:
+            for s in ctx.options.scripts:
+                if ctx.options.scripts.count(s) > 1:
                     raise exceptions.OptionsError("Duplicate script: %s" % s)
 
             for a in self.addons[:]:
-                if a.path not in options.scripts:
+                if a.path not in ctx.options.scripts:
                     ctx.log.info("Un-loading script: %s" % a.name)
                     ctx.master.addons.remove(a)
                     self.addons.remove(a)
@@ -106,7 +104,7 @@ class ScriptLoader:
 
             ordered = []
             newscripts = []
-            for s in options.scripts:
+            for s in ctx.options.scripts:
                 if s in current:
                     ordered.append(current[s])
                 else:

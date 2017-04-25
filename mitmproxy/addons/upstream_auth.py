@@ -28,16 +28,16 @@ class UpstreamAuth():
     def __init__(self):
         self.auth = None
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         # FIXME: We're doing this because our proxy core is terminally confused
         # at the moment. Ideally, we should be able to check if we're in
         # reverse proxy mode at the HTTP layer, so that scripts can put the
         # proxy in reverse proxy mode for specific reuests.
         if "upstream_auth" in updated:
-            if options.upstream_auth is None:
+            if ctx.options.upstream_auth is None:
                 self.auth = None
             else:
-                self.auth = parse_upstream_auth(options.upstream_auth)
+                self.auth = parse_upstream_auth(ctx.options.upstream_auth)
 
     def http_connect(self, f):
         if self.auth and f.mode == "upstream":

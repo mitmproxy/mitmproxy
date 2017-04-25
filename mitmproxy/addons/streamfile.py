@@ -3,6 +3,7 @@ import os.path
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
+from mitmproxy import ctx
 
 
 class StreamFile:
@@ -20,26 +21,26 @@ class StreamFile:
         self.stream = io.FilteredFlowWriter(f, flt)
         self.active_flows = set()
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         # We're already streaming - stop the previous stream and restart
         if "streamfile_filter" in updated:
-            if options.streamfile_filter:
-                self.filt = flowfilter.parse(options.streamfile_filter)
+            if ctx.options.streamfile_filter:
+                self.filt = flowfilter.parse(ctx.options.streamfile_filter)
                 if not self.filt:
                     raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % options.streamfile_filter
+                        "Invalid filter specification: %s" % ctx.options.streamfile_filter
                     )
             else:
                 self.filt = None
         if "streamfile" in updated:
             if self.stream:
                 self.done()
-            if options.streamfile:
-                if options.streamfile.startswith("+"):
-                    path = options.streamfile[1:]
+            if ctx.options.streamfile:
+                if ctx.options.streamfile.startswith("+"):
+                    path = ctx.options.streamfile[1:]
                     mode = "ab"
                 else:
-                    path = options.streamfile
+                    path = ctx.options.streamfile
                     mode = "wb"
                 self.start_stream_to_path(path, mode, self.filt)
 

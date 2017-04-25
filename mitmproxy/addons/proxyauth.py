@@ -113,16 +113,16 @@ class ProxyAuth:
             return False
 
     # Handlers
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "proxyauth" in updated:
             self.nonanonymous = False
             self.singleuser = None
             self.htpasswd = None
-            if options.proxyauth:
-                if options.proxyauth == "any":
+            if ctx.options.proxyauth:
+                if ctx.options.proxyauth == "any":
                     self.nonanonymous = True
-                elif options.proxyauth.startswith("@"):
-                    p = options.proxyauth[1:]
+                elif ctx.options.proxyauth.startswith("@"):
+                    p = ctx.options.proxyauth[1:]
                     try:
                         self.htpasswd = passlib.apache.HtpasswdFile(p)
                     except (ValueError, OSError) as v:
@@ -130,18 +130,18 @@ class ProxyAuth:
                             "Could not open htpasswd file: %s" % p
                         )
                 else:
-                    parts = options.proxyauth.split(':')
+                    parts = ctx.options.proxyauth.split(':')
                     if len(parts) != 2:
                         raise exceptions.OptionsError(
                             "Invalid single-user auth specification."
                         )
                     self.singleuser = parts
         if self.enabled():
-            if options.mode == "transparent":
+            if ctx.options.mode == "transparent":
                 raise exceptions.OptionsError(
                     "Proxy Authentication not supported in transparent mode."
                 )
-            if options.mode == "socks5":
+            if ctx.options.mode == "socks5":
                 raise exceptions.OptionsError(
                     "Proxy Authentication not supported in SOCKS mode. "
                     "https://github.com/mitmproxy/mitmproxy/issues/738"

@@ -110,7 +110,7 @@ class AddonManager:
         master.options.changed.connect(self._configure_all)
 
     def _configure_all(self, options, updated):
-        self.trigger("configure", options, updated)
+        self.trigger("configure", updated)
 
     def clear(self):
         """

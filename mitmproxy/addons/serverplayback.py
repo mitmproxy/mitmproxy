@@ -89,12 +89,12 @@ class ServerPlayback:
                     del self.flowmap[hsh]
                 return ret
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "server_replay" in updated:
             self.clear()
-            if options.server_replay:
+            if ctx.options.server_replay:
                 try:
-                    flows = io.read_flows_from_paths(options.server_replay)
+                    flows = io.read_flows_from_paths(ctx.options.server_replay)
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
                 self.load_flows(flows)

@@ -6,7 +6,6 @@ from mitmproxy.test import tflow
 
 import mitmproxy.test.tutils
 from mitmproxy.addons import serverplayback
-from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy import io
 

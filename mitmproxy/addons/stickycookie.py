@@ -5,6 +5,7 @@ from mitmproxy.net.http import cookies
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
+from mitmproxy import ctx
 
 
 def ckey(attrs, f):
@@ -33,13 +34,13 @@ class StickyCookie:
         self.jar = collections.defaultdict(dict)
         self.flt = None
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "stickycookie" in updated:
-            if options.stickycookie:
-                flt = flowfilter.parse(options.stickycookie)
+            if ctx.options.stickycookie:
+                flt = flowfilter.parse(ctx.options.stickycookie)
                 if not flt:
                     raise exceptions.OptionsError(
-                        "stickycookie: invalid filter expression: %s" % options.stickycookie
+                        "stickycookie: invalid filter expression: %s" % ctx.options.stickycookie
                     )
                 self.flt = flt
             else:
