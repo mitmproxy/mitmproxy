@@ -1,13 +1,16 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
-# The source was png.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/blob/9370c720b7d2ad329102d89bdc880ba6a706ef26/image/png.ksy
 
 import array
 import struct
 import zlib
 from enum import Enum
+from pkg_resources import parse_version
 
-from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
+from kaitaistruct import __version__ as ks_version, KaitaiStruct, KaitaiStream, BytesIO
 
+
+if parse_version(ks_version) < parse_version('0.7'):
+    raise Exception("Incompatible Kaitai Struct Python API: 0.7 or later is required, but you have %s" % (ks_version))
 
 class Png(KaitaiStruct):
 
@@ -51,7 +54,7 @@ class Png(KaitaiStruct):
             self._parent = _parent
             self._root = _root if _root else self
             self.len = self._io.read_u4be()
-            self.type = self._io.read_str_byte_limit(4, "UTF-8")
+            self.type = (self._io.read_bytes(4)).decode(u"UTF-8")
             _on = self.type
             if _on == u"iTXt":
                 self._raw_body = self._io.read_bytes(self.len)
@@ -194,7 +197,7 @@ class Png(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.keyword = self._io.read_strz("UTF-8", 0, False, True, True)
+            self.keyword = (self._io.read_bytes_term(0, False, True, True)).decode(u"UTF-8")
             self.compression_method = self._io.read_u1()
             self._raw_text_datastream = self._io.read_bytes_full()
             self.text_datastream = zlib.decompress(self._raw_text_datastream)
@@ -259,12 +262,12 @@ class Png(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.keyword = self._io.read_strz("UTF-8", 0, False, True, True)
+            self.keyword = (self._io.read_bytes_term(0, False, True, True)).decode(u"UTF-8")
             self.compression_flag = self._io.read_u1()
             self.compression_method = self._io.read_u1()
-            self.language_tag = self._io.read_strz("ASCII", 0, False, True, True)
-            self.translated_keyword = self._io.read_strz("UTF-8", 0, False, True, True)
-            self.text = self._io.read_str_eos("UTF-8")
+            self.language_tag = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+            self.translated_keyword = (self._io.read_bytes_term(0, False, True, True)).decode(u"UTF-8")
+            self.text = (self._io.read_bytes_full()).decode(u"UTF-8")
 
 
     class TextChunk(KaitaiStruct):
@@ -272,8 +275,8 @@ class Png(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.keyword = self._io.read_strz("iso8859-1", 0, False, True, True)
-            self.text = self._io.read_str_eos("iso8859-1")
+            self.keyword = (self._io.read_bytes_term(0, False, True, True)).decode(u"iso8859-1")
+            self.text = (self._io.read_bytes_full()).decode(u"iso8859-1")
 
 
     class TimeChunk(KaitaiStruct):
@@ -287,3 +290,6 @@ class Png(KaitaiStruct):
             self.hour = self._io.read_u1()
             self.minute = self._io.read_u1()
             self.second = self._io.read_u1()
+
+
+

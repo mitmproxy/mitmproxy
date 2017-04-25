@@ -1,15 +1,19 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
-# The source was jpeg.ksy from here - https://github.com/kaitai-io/kaitai_struct_formats/blob/24e2d00048b8084ceec30a187a79cb87a79a48ba/image/jpeg.ksy
 
 import array
 import struct
 import zlib
 from enum import Enum
+from pkg_resources import parse_version
 
-from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
+from kaitaistruct import __version__ as ks_version, KaitaiStruct, KaitaiStream, BytesIO
 
+
+if parse_version(ks_version) < parse_version('0.7'):
+    raise Exception("Incompatible Kaitai Struct Python API: 0.7 or later is required, but you have %s" % (ks_version))
 
 from .exif import Exif
+
 class Jpeg(KaitaiStruct):
 
     class ComponentId(Enum):
@@ -127,7 +131,7 @@ class Jpeg(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.magic = self._io.read_strz("ASCII", 0, False, True, True)
+            self.magic = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
             _on = self.magic
             if _on == u"Exif":
                 self.body = self._root.ExifInJpeg(self._io, self, self._root)
@@ -195,7 +199,7 @@ class Jpeg(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.magic = self._io.read_str_byte_limit(5, "ASCII")
+            self.magic = (self._io.read_bytes(5)).decode(u"ASCII")
             self.version_major = self._io.read_u1()
             self.version_minor = self._io.read_u1()
             self.density_units = self._root.SegmentApp0.DensityUnit(self._io.read_u1())

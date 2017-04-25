@@ -102,7 +102,7 @@ class Dumper:
         if flow.client_conn:
             client = click.style(
                 strutils.escape_control_characters(
-                    repr(flow.client_conn.address)
+                    human.format_address(flow.client_conn.address)
                 )
             )
         elif flow.request.is_replay:

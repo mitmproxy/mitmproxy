@@ -271,7 +271,9 @@ def _parse_authority_form(hostport):
             ValueError, if the input is malformed
     """
     try:
-        host, port = hostport.split(b":")
+        host, port = hostport.rsplit(b":", 1)
+        if host.startswith(b"[") and host.endswith(b"]"):
+            host = host[1:-1]
         port = int(port)
         if not check.is_valid_host(host) or not check.is_valid_port(port):
             raise ValueError()
