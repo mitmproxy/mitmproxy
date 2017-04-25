@@ -209,7 +209,7 @@ export function uploadContent(flow, file, type) {
     const body = new FormData()
     file       = new window.Blob([file], { type: 'plain/text' })
     body.append('file', file)
-    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, { method: 'post', body })
+    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, { method: 'POST', body })
 }
 
 
@@ -225,7 +225,7 @@ export function download() {
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
-    return dispatch => fetchApi('/flows/dump', { method: 'post', body })
+    return dispatch => fetchApi('/flows/dump', { method: 'POST', body })
 }
 
 
