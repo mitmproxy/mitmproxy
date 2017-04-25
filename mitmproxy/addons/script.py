@@ -70,12 +70,18 @@ class StreamLog:
     """
         A class for redirecting output using contextlib.
     """
-    def __init__(self, log):
+    def __init__(self, log, orig_stdout):
         self.log = log
+        self.orig_stdout = orig_stdout
 
     def write(self, buf):
         if buf.strip():
-            self.log(buf)
+            # Prevent recursively calling self.log because of underlying stdout writes.
+            with contextlib.redirect_stdout(self.orig_stdout):
+                self.log(buf)
+
+    def flush(self):
+        self.orig_stdout.flush()
 
 
 @contextlib.contextmanager
@@ -84,7 +90,7 @@ def scriptenv(path, args):
     sys.argv = [path] + args
     script_dir = os.path.dirname(os.path.abspath(path))
     sys.path.append(script_dir)
-    stdout_replacement = StreamLog(ctx.log.warn)
+    stdout_replacement = StreamLog(ctx.log.warn, sys.stdout)
     try:
         with contextlib.redirect_stdout(stdout_replacement):
             yield
