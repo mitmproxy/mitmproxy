@@ -8,10 +8,10 @@ class StreamBodies:
     def __init__(self):
         self.max_size = None
 
-    def configure(self, options, updated):
-        if "stream_large_bodies" in updated and options.stream_large_bodies:
+    def configure(self, updated):
+        if "stream_large_bodies" in updated and ctx.options.stream_large_bodies:
             try:
-                self.max_size = human.parse_size(options.stream_large_bodies)
+                self.max_size = human.parse_size(ctx.options.stream_large_bodies)
             except ValueError as e:
                 raise exceptions.OptionsError(e)
 

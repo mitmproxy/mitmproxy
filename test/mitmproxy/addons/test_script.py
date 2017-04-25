@@ -1,7 +1,6 @@
 import traceback
 import sys
 import time
-import watchdog.events
 import pytest
 
 from unittest import mock
@@ -14,34 +13,6 @@ from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import master
 from mitmproxy.addons import script
-
-
-class Called:
-    def __init__(self):
-        self.called = False
-
-    def __call__(self, *args, **kwargs):
-        self.called = True
-
-
-def test_reloadhandler():
-    rh = script.ReloadHandler(Called())
-    assert not rh.filter(watchdog.events.DirCreatedEvent("path"))
-    assert not rh.filter(watchdog.events.FileModifiedEvent("/foo/.bar"))
-    assert not rh.filter(watchdog.events.FileModifiedEvent("/foo/bar"))
-    assert rh.filter(watchdog.events.FileModifiedEvent("/foo/bar.py"))
-
-    assert not rh.callback.called
-    rh.on_modified(watchdog.events.FileModifiedEvent("/foo/bar"))
-    assert not rh.callback.called
-    rh.on_modified(watchdog.events.FileModifiedEvent("/foo/bar.py"))
-    assert rh.callback.called
-    rh.callback.called = False
-
-    rh.on_created(watchdog.events.FileCreatedEvent("foo"))
-    assert not rh.callback.called
-    rh.on_created(watchdog.events.FileCreatedEvent("foo.py"))
-    assert rh.callback.called
 
 
 def test_load_script():
@@ -89,6 +60,8 @@ class TestScript:
                 )
             )
             tctx.master.addons.add(sc)
+            tctx.configure(sc)
+            sc.tick()
 
             rec = tctx.master.addons.get("recorder")
 
@@ -107,10 +80,12 @@ class TestScript:
             f.write("\n")
             sc = script.Script(str(f))
             tctx.configure(sc)
-            for _ in range(5):
-                sc.reload()
+            sc.tick()
+            for _ in range(3):
+                sc.last_load, sc.last_mtime = 0, 0
                 sc.tick()
                 time.sleep(0.1)
+            tctx.master.has_log("Loading")
 
     def test_exception(self):
         with taddons.context() as tctx:
@@ -118,10 +93,12 @@ class TestScript:
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
             )
             tctx.master.addons.add(sc)
+            tctx.configure(sc)
+            sc.tick()
+
             f = tflow.tflow(resp=True)
             tctx.master.addons.trigger("request", f)
 
-            assert tctx.master.logs[0].level == "error"
             tctx.master.has_log("ValueError: Error!")
             tctx.master.has_log("error.py")
 
@@ -133,8 +110,10 @@ class TestScript:
                 )
             )
             tctx.master.addons.add(sc)
+            tctx.configure(sc)
+            sc.tick()
             assert sc.ns.event_log == [
-                'scriptload', 'addonload'
+                'scriptload', 'addonload', 'scriptconfigure', 'addonconfigure'
             ]
 
 
@@ -207,21 +186,23 @@ class TestScriptLoader:
                     "%s/c.py" % rec,
                 ]
             )
-
+            tctx.master.addons.invoke_addon(sc, "tick")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'a load',
                 'a running',
+                'a configure',
+                'a tick',
 
                 'b load',
                 'b running',
+                'b configure',
+                'b tick',
 
                 'c load',
                 'c running',
-
-                'a configure',
-                'b configure',
                 'c configure',
+                'c tick',
             ]
 
             tctx.master.logs = []
@@ -233,6 +214,7 @@ class TestScriptLoader:
                     "%s/b.py" % rec,
                 ]
             )
+
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c configure',
@@ -248,13 +230,16 @@ class TestScriptLoader:
                     "%s/a.py" % rec,
                 ]
             )
+            tctx.master.addons.invoke_addon(sc, "tick")
 
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c done',
                 'b done',
+                'a configure',
                 'e load',
                 'e running',
                 'e configure',
-                'a configure',
+                'e tick',
+                'a tick',
             ]

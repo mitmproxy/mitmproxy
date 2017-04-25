@@ -7,7 +7,7 @@ class CheckALPN:
     def __init__(self):
         self.failed = False
 
-    def configure(self, options, updated):
+    def configure(self, updated):
         self.failed = mitmproxy.ctx.master.options.http2 and not tcp.HAS_ALPN
         if self.failed:
             ctx.log.warn(

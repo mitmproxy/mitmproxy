@@ -66,9 +66,6 @@ def test_configure():
         with pytest.raises(exceptions.OptionsError):
             ctx.configure(up, proxyauth="any", mode="socks5")
 
-        ctx.configure(up, mode="regular")
-        assert up.mode == "regular"
-
 
 def test_check():
     up = proxyauth.ProxyAuth()

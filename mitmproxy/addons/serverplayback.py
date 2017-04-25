@@ -10,8 +10,6 @@ from mitmproxy import io
 
 class ServerPlayback:
     def __init__(self):
-        self.options = None
-
         self.flowmap = {}
         self.stop = False
         self.final_flow = None
@@ -38,27 +36,27 @@ class ServerPlayback:
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
         key = [str(r.port), str(r.scheme), str(r.method), str(path)]  # type: List[Any]
-        if not self.options.server_replay_ignore_content:
-            if self.options.server_replay_ignore_payload_params and r.multipart_form:
+        if not ctx.options.server_replay_ignore_content:
+            if ctx.options.server_replay_ignore_payload_params and r.multipart_form:
                 key.extend(
                     (k, v)
                     for k, v in r.multipart_form.items(multi=True)
-                    if k.decode(errors="replace") not in self.options.server_replay_ignore_payload_params
+                    if k.decode(errors="replace") not in ctx.options.server_replay_ignore_payload_params
                 )
-            elif self.options.server_replay_ignore_payload_params and r.urlencoded_form:
+            elif ctx.options.server_replay_ignore_payload_params and r.urlencoded_form:
                 key.extend(
                     (k, v)
                     for k, v in r.urlencoded_form.items(multi=True)
-                    if k not in self.options.server_replay_ignore_payload_params
+                    if k not in ctx.options.server_replay_ignore_payload_params
                 )
             else:
                 key.append(str(r.raw_content))
 
-        if not self.options.server_replay_ignore_host:
+        if not ctx.options.server_replay_ignore_host:
             key.append(r.host)
 
         filtered = []
-        ignore_params = self.options.server_replay_ignore_params or []
+        ignore_params = ctx.options.server_replay_ignore_params or []
         for p in queriesArray:
             if p[0] not in ignore_params:
                 filtered.append(p)
@@ -66,9 +64,9 @@ class ServerPlayback:
             key.append(p[0])
             key.append(p[1])
 
-        if self.options.server_replay_use_headers:
+        if ctx.options.server_replay_use_headers:
             headers = []
-            for i in self.options.server_replay_use_headers:
+            for i in ctx.options.server_replay_use_headers:
                 v = r.headers.get(i)
                 headers.append((i, v))
             key.append(headers)
@@ -83,7 +81,7 @@ class ServerPlayback:
         """
         hsh = self._hash(request)
         if hsh in self.flowmap:
-            if self.options.server_replay_nopop:
+            if ctx.options.server_replay_nopop:
                 return self.flowmap[hsh][0]
             else:
                 ret = self.flowmap[hsh].pop(0)
@@ -91,13 +89,12 @@ class ServerPlayback:
                     del self.flowmap[hsh]
                 return ret
 
-    def configure(self, options, updated):
-        self.options = options
+    def configure(self, updated):
         if "server_replay" in updated:
             self.clear()
-            if options.server_replay:
+            if ctx.options.server_replay:
                 try:
-                    flows = io.read_flows_from_paths(options.server_replay)
+                    flows = io.read_flows_from_paths(ctx.options.server_replay)
                 except exceptions.FlowReadException as e:
                     raise exceptions.OptionsError(str(e))
                 self.load_flows(flows)
@@ -112,13 +109,13 @@ class ServerPlayback:
             if rflow:
                 response = rflow.response.copy()
                 response.is_replay = True
-                if self.options.refresh_server_playback:
+                if ctx.options.refresh_server_playback:
                     response.refresh()
                 f.response = response
                 if not self.flowmap:
                     self.final_flow = f
                     self.stop = True
-            elif self.options.replay_kill_extra:
+            elif ctx.options.replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url

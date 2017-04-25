@@ -8,15 +8,8 @@ from mitmproxy.utils import human
 
 
 class TermStatus:
-    def __init__(self):
-        self.server = False
-
-    def configure(self, options, updated):
-        if "server" in updated:
-            self.server = options.server
-
     def running(self):
-        if self.server:
+        if ctx.options.server:
             ctx.log.info(
                 "Proxy server listening at http://{}".format(
                     human.format_address(ctx.master.server.address)

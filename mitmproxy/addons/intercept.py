@@ -1,20 +1,21 @@
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import ctx
 
 
 class Intercept:
     def __init__(self):
         self.filt = None
 
-    def configure(self, opts, updated):
+    def configure(self, updated):
         if "intercept" in updated:
-            if not opts.intercept:
+            if not ctx.options.intercept:
                 self.filt = None
                 return
-            self.filt = flowfilter.parse(opts.intercept)
+            self.filt = flowfilter.parse(ctx.options.intercept)
             if not self.filt:
                 raise exceptions.OptionsError(
-                    "Invalid interception filter: %s" % opts.intercept
+                    "Invalid interception filter: %s" % ctx.options.intercept
                 )
 
     def process_flow(self, f):

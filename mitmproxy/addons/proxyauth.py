@@ -10,6 +10,7 @@ import mitmproxy.net.http
 from mitmproxy import connections  # noqa
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy import ctx
 from mitmproxy.net.http import status_codes
 
 REALM = "mitmproxy"
@@ -45,7 +46,6 @@ class ProxyAuth:
         self.nonanonymous = False
         self.htpasswd = None
         self.singleuser = None
-        self.mode = None
         self.authenticated = weakref.WeakKeyDictionary()  # type: MutableMapping[connections.ClientConnection, Tuple[str, str]]
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
@@ -58,7 +58,7 @@ class ProxyAuth:
             - True, if authentication is done as if mitmproxy is a proxy
             - False, if authentication is done as if mitmproxy is a HTTP server
         """
-        return self.mode in ("regular", "upstream")
+        return ctx.options.mode in ("regular", "upstream")
 
     def which_auth_header(self) -> str:
         if self.is_proxy_auth():
@@ -113,16 +113,16 @@ class ProxyAuth:
             return False
 
     # Handlers
-    def configure(self, options, updated):
+    def configure(self, updated):
         if "proxyauth" in updated:
             self.nonanonymous = False
             self.singleuser = None
             self.htpasswd = None
-            if options.proxyauth:
-                if options.proxyauth == "any":
+            if ctx.options.proxyauth:
+                if ctx.options.proxyauth == "any":
                     self.nonanonymous = True
-                elif options.proxyauth.startswith("@"):
-                    p = options.proxyauth[1:]
+                elif ctx.options.proxyauth.startswith("@"):
+                    p = ctx.options.proxyauth[1:]
                     try:
                         self.htpasswd = passlib.apache.HtpasswdFile(p)
                     except (ValueError, OSError) as v:
@@ -130,20 +130,18 @@ class ProxyAuth:
                             "Could not open htpasswd file: %s" % p
                         )
                 else:
-                    parts = options.proxyauth.split(':')
+                    parts = ctx.options.proxyauth.split(':')
                     if len(parts) != 2:
                         raise exceptions.OptionsError(
                             "Invalid single-user auth specification."
                         )
                     self.singleuser = parts
-        if "mode" in updated:
-            self.mode = options.mode
         if self.enabled():
-            if options.mode == "transparent":
+            if ctx.options.mode == "transparent":
                 raise exceptions.OptionsError(
                     "Proxy Authentication not supported in transparent mode."
                 )
-            if options.mode == "socks5":
+            if ctx.options.mode == "socks5":
                 raise exceptions.OptionsError(
                     "Proxy Authentication not supported in SOCKS mode. "
                     "https://github.com/mitmproxy/mitmproxy/issues/738"

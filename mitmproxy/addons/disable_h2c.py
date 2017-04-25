@@ -14,9 +14,6 @@ class DisableH2C:
     by sending the connection preface. We just kill those flows.
     """
 
-    def configure(self, options, updated):
-        pass
-
     def process_flow(self, f):
         if f.request.headers.get('upgrade', '') == 'h2c':
             mitmproxy.ctx.log.warn("HTTP/2 cleartext connections (h2c upgrade requests) are currently not supported.")

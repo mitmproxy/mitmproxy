@@ -50,11 +50,13 @@ class Master:
             return
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = log.Log(self)
+        mitmproxy_ctx.options = self.options
         try:
             yield
         finally:
             mitmproxy_ctx.master = None
             mitmproxy_ctx.log = None
+            mitmproxy_ctx.options = None
 
     def tell(self, mtype, m):
         m.reply = controller.DummyReply()
