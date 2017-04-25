@@ -13,6 +13,10 @@ class WSGIApp:
     def __init__(self, app, host, port):
         self.app, self.host, self.port = app, host, port
 
+    @property
+    def name(self):
+        return "wsgiapp:%s:%s" % (self.host, self.port)
+
     def serve(self, app, flow):
         """
             Serves app on flow, and prevents further handling of the flow.

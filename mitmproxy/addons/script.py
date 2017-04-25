@@ -1,123 +1,31 @@
-import contextlib
 import os
-import shlex
-import sys
+import importlib
 import threading
-import traceback
-import types
+import sys
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import ctx
-from mitmproxy import eventsequence
-
 
 import watchdog.events
 from watchdog.observers import polling
 
 
-def parse_command(command):
-    """
-        Returns a (path, args) tuple.
-    """
-    if not command or not command.strip():
-        raise ValueError("Empty script command.")
-    # Windows: escape all backslashes in the path.
-    if os.name == "nt":  # pragma: no cover
-        backslashes = shlex.split(command, posix=False)[0].count("\\")
-        command = command.replace("\\", "\\\\", backslashes)
-    args = shlex.split(command)  # pragma: no cover
-    args[0] = os.path.expanduser(args[0])
-    if not os.path.exists(args[0]):
-        raise ValueError(
-            ("Script file not found: %s.\r\n"
-             "If your script path contains spaces, "
-             "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") %
-            args[0])
-    elif os.path.isdir(args[0]):
-        raise ValueError("Not a file: %s" % args[0])
-    return args[0], args[1:]
-
-
-def cut_traceback(tb, func_name):
-    """
-    Cut off a traceback at the function with the given name.
-    The func_name's frame is excluded.
-
-    Args:
-        tb: traceback object, as returned by sys.exc_info()[2]
-        func_name: function name
-
-    Returns:
-        Reduced traceback.
-    """
-    tb_orig = tb
-
-    for _, _, fname, _ in traceback.extract_tb(tb):
-        tb = tb.tb_next
-        if fname == func_name:
-            break
-
-    if tb is None:
-        # We could not find the method, take the full stack trace.
-        # This may happen on some Python interpreters/flavors (e.g. PyInstaller).
-        return tb_orig
-    else:
-        return tb
-
-
-class StreamLog:
-    """
-        A class for redirecting output using contextlib.
-    """
-    def __init__(self, log):
-        self.log = log
-
-    def write(self, buf):
-        if buf.strip():
-            self.log(buf)
-
-
-@contextlib.contextmanager
-def scriptenv(path, args):
-    oldargs = sys.argv
-    sys.argv = [path] + args
-    script_dir = os.path.dirname(os.path.abspath(path))
-    sys.path.append(script_dir)
-    stdout_replacement = StreamLog(ctx.log.warn)
+def load_script(actx, path):
+    if not os.path.exists(path):
+        ctx.log.info("No such file: %s" % path)
+        return
+    loader = importlib.machinery.SourceFileLoader(os.path.basename(path), path)
     try:
-        with contextlib.redirect_stdout(stdout_replacement):
-            yield
-    except SystemExit as v:
-        ctx.log.error("Script exited with code %s" % v.code)
-    except Exception:
-        etype, value, tb = sys.exc_info()
-        tb = cut_traceback(tb, "scriptenv").tb_next
-        ctx.log.error(
-            "Script error: %s" % "".join(
-                traceback.format_exception(etype, value, tb)
-            )
-        )
+        oldpath = sys.path
+        sys.path.insert(0, os.path.dirname(path))
+        with addonmanager.safecall():
+            m = loader.load_module()
+            if not getattr(m, "name", None):
+                m.name = path
+            return m
     finally:
-        sys.argv = oldargs
-        sys.path.pop()
-
-
-def load_script(path, args):
-    with open(path, "rb") as f:
-        try:
-            code = compile(f.read(), path, 'exec')
-        except SyntaxError as e:
-            ctx.log.error(
-                "Script error: %s line %s: %s" % (
-                    e.filename, e.lineno, e.msg
-                )
-            )
-            return
-    ns = {'__file__': os.path.abspath(path)}
-    with scriptenv(path, args):
-        exec(code, ns)
-    return types.SimpleNamespace(**ns)
+        sys.path[:] = oldpath
 
 
 class ReloadHandler(watchdog.events.FileSystemEventHandler):
@@ -149,59 +57,39 @@ class Script:
     """
         An addon that manages a single script.
     """
-    def __init__(self, command):
-        self.name = command
-
-        self.command = command
-        self.path, self.args = parse_command(command)
+    def __init__(self, path):
+        self.name = "scriptmanager:" + path
+        self.path = path
         self.ns = None
         self.observer = None
-        self.dead = False
 
         self.last_options = None
         self.should_reload = threading.Event()
 
-        for i in eventsequence.Events:
-            if not hasattr(self, i):
-                def mkprox():
-                    evt = i
+    def load(self, l):
+        self.ns = load_script(ctx, self.path)
 
-                    def prox(*args, **kwargs):
-                        self.run(evt, *args, **kwargs)
-                    return prox
-                setattr(self, i, mkprox())
-
-    def run(self, name, *args, **kwargs):
-        # It's possible for ns to be un-initialised if we failed during
-        # configure
-        if self.ns is not None and not self.dead:
-            func = getattr(self.ns, name, None)
-            if func:
-                with scriptenv(self.path, self.args):
-                    return func(*args, **kwargs)
+    @property
+    def addons(self):
+        if self.ns is not None:
+            return [self.ns]
+        return []
 
     def reload(self):
         self.should_reload.set()
-
-    def load_script(self):
-        self.ns = load_script(self.path, self.args)
-        l = addonmanager.Loader(ctx.master)
-        self.run("load", l)
-        if l.boot_into_addon:
-            self.ns = l.boot_into_addon
 
     def tick(self):
         if self.should_reload.is_set():
             self.should_reload.clear()
             ctx.log.info("Reloading script: %s" % self.name)
-            self.ns = load_script(self.path, self.args)
-            self.configure(self.last_options, self.last_options.keys())
-        else:
-            self.run("tick")
-
-    def load(self, l):
-        self.last_options = ctx.master.options
-        self.load_script()
+            if self.ns:
+                ctx.master.addons.remove(self.ns)
+            self.ns = load_script(ctx, self.path)
+            if self.ns:
+                # We're already running, so we have to explicitly register and
+                # configure the addon
+                ctx.master.addons.register(self.ns)
+                self.configure(self.last_options, self.last_options.keys())
 
     def configure(self, options, updated):
         self.last_options = options
@@ -213,11 +101,6 @@ class Script:
                 os.path.dirname(self.path) or "."
             )
             self.observer.start()
-        self.run("configure", options, updated)
-
-    def done(self):
-        self.run("done")
-        self.dead = True
 
 
 class ScriptLoader:
@@ -226,21 +109,14 @@ class ScriptLoader:
     """
     def __init__(self):
         self.is_running = False
+        self.addons = []
 
     def running(self):
         self.is_running = True
 
     def run_once(self, command, flows):
-        try:
-            sc = Script(command)
-        except ValueError as e:
-            raise ValueError(str(e))
-        sc.load_script()
-        for f in flows:
-            for evt, o in eventsequence.iterate(f):
-                sc.run(evt, o)
-        sc.done()
-        return sc
+        # Returning once we have proper commands
+        raise NotImplementedError
 
     def configure(self, options, updated):
         if "scripts" in updated:
@@ -248,25 +124,21 @@ class ScriptLoader:
                 if options.scripts.count(s) > 1:
                     raise exceptions.OptionsError("Duplicate script: %s" % s)
 
-            for a in ctx.master.addons.chain[:]:
-                if isinstance(a, Script) and a.name not in options.scripts:
+            for a in self.addons[:]:
+                if a.path not in options.scripts:
                     ctx.log.info("Un-loading script: %s" % a.name)
                     ctx.master.addons.remove(a)
+                    self.addons.remove(a)
 
             # The machinations below are to ensure that:
             #   - Scripts remain in the same order
-            #   - Scripts are listed directly after the script addon. This is
-            #   needed to ensure that interactions with, for instance, flow
-            #   serialization remains correct.
             #   - Scripts are not initialized un-necessarily. If only a
-            #   script's order in the script list has changed, it should simply
-            #   be moved.
+            #   script's order in the script list has changed, it is just
+            #   moved.
 
             current = {}
-            for a in ctx.master.addons.chain[:]:
-                if isinstance(a, Script):
-                    current[a.name] = a
-                    ctx.master.addons.chain.remove(a)
+            for a in self.addons:
+                current[a.path] = a
 
             ordered = []
             newscripts = []
@@ -275,24 +147,15 @@ class ScriptLoader:
                     ordered.append(current[s])
                 else:
                     ctx.log.info("Loading script: %s" % s)
-                    try:
-                        sc = Script(s)
-                    except ValueError as e:
-                        raise exceptions.OptionsError(str(e))
+                    sc = Script(s)
                     ordered.append(sc)
                     newscripts.append(sc)
 
-            ochain = ctx.master.addons.chain
-            pos = ochain.index(self)
-            ctx.master.addons.chain = ochain[:pos + 1] + ordered + ochain[pos + 1:]
+            self.addons = ordered
 
             for s in newscripts:
-                l = addonmanager.Loader(ctx.master)
-                ctx.master.addons.invoke_addon(s, "load", l)
+                ctx.master.addons.register(s)
                 if self.is_running:
                     # If we're already running, we configure and tell the addon
                     # we're up and running.
-                    ctx.master.addons.invoke_addon(
-                        s, "configure", options, options.keys()
-                    )
                     ctx.master.addons.invoke_addon(s, "running")

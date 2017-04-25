@@ -1,5 +1,3 @@
-import pytest
-
 from mitmproxy import options
 from mitmproxy import contentviews
 from mitmproxy import proxy
@@ -8,6 +6,7 @@ from mitmproxy.addons import script
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
+from mitmproxy.test import taddons
 from mitmproxy.net.http import Headers
 
 from ..mitmproxy import tservers
@@ -27,7 +26,7 @@ class RaiseMaster(master.Master):
 
 def tscript(cmd, args=""):
     o = options.Options()
-    cmd = example_dir.path(cmd) + " " + args
+    cmd = example_dir.path(cmd)
     m = RaiseMaster(o, proxy.DummyServer())
     sc = script.Script(cmd)
     m.addons.add(sc)
@@ -48,14 +47,18 @@ class TestScripts(tservers.MasterTest):
         assert any(b'tEST!' in val[0][1] for val in fmt)
 
     def test_iframe_injector(self):
-        with pytest.raises(ScriptError):
-            tscript("simple/modify_body_inject_iframe.py")
-
-        m, sc = tscript("simple/modify_body_inject_iframe.py", "http://example.org/evil_iframe")
-        f = tflow.tflow(resp=tutils.tresp(content=b"<html><body>mitmproxy</body></html>"))
-        m.addons.handle_lifecycle("response", f)
-        content = f.response.content
-        assert b'iframe' in content and b'evil_iframe' in content
+        with taddons.context() as tctx:
+            sc = tctx.script(example_dir.path("simple/modify_body_inject_iframe.py"))
+            tctx.configure(
+                sc,
+                iframe = "http://example.org/evil_iframe"
+            )
+            f = tflow.tflow(
+                resp=tutils.tresp(content=b"<html><body>mitmproxy</body></html>")
+            )
+            tctx.master.addons.invoke_addon(sc, "response", f)
+            content = f.response.content
+            assert b'iframe' in content and b'evil_iframe' in content
 
     def test_modify_form(self):
         m, sc = tscript("simple/modify_form.py")
@@ -80,12 +83,6 @@ class TestScripts(tservers.MasterTest):
         f.request.path = "/"
         m.addons.handle_lifecycle("request", f)
         assert f.request.query["mitmproxy"] == "rocks"
-
-    def test_arguments(self):
-        m, sc = tscript("simple/script_arguments.py", "mitmproxy rocks")
-        f = tflow.tflow(resp=tutils.tresp(content=b"I <3 mitmproxy"))
-        m.addons.handle_lifecycle("response", f)
-        assert f.response.content == b"I <3 rocks"
 
     def test_redirect_requests(self):
         m, sc = tscript("simple/redirect_requests.py")

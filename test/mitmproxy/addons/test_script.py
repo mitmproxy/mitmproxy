@@ -1,7 +1,6 @@
 import traceback
 import sys
 import time
-import re
 import watchdog.events
 import pytest
 
@@ -14,22 +13,7 @@ from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import proxy
 from mitmproxy import master
-from mitmproxy import utils
 from mitmproxy.addons import script
-
-from ...conftest import skip_not_windows
-
-
-def test_scriptenv():
-    with taddons.context() as tctx:
-        with script.scriptenv("path", []):
-            raise SystemExit
-        assert tctx.master.has_log("exited", "error")
-
-        tctx.master.clear()
-        with script.scriptenv("path", []):
-            raise ValueError("fooo")
-        assert tctx.master.has_log("fooo", "error")
 
 
 class Called:
@@ -60,113 +44,86 @@ def test_reloadhandler():
     assert rh.callback.called
 
 
-class TestParseCommand:
-    def test_empty_command(self):
-        with pytest.raises(ValueError):
-            script.parse_command("")
-
-        with pytest.raises(ValueError):
-            script.parse_command("  ")
-
-    def test_no_script_file(self, tmpdir):
-        with pytest.raises(Exception, match="not found"):
-            script.parse_command("notfound")
-
-        with pytest.raises(Exception, match="Not a file"):
-            script.parse_command(str(tmpdir))
-
-    def test_parse_args(self):
-        with utils.chdir(tutils.test_data.dirname):
-            assert script.parse_command(
-                "mitmproxy/data/addonscripts/recorder.py"
-            ) == ("mitmproxy/data/addonscripts/recorder.py", [])
-            assert script.parse_command(
-                "mitmproxy/data/addonscripts/recorder.py foo bar"
-            ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo", "bar"])
-            assert script.parse_command(
-                "mitmproxy/data/addonscripts/recorder.py 'foo bar'"
-            ) == ("mitmproxy/data/addonscripts/recorder.py", ["foo bar"])
-
-    @skip_not_windows
-    def test_parse_windows(self):
-        with utils.chdir(tutils.test_data.dirname):
-            assert script.parse_command(
-                "mitmproxy/data\\addonscripts\\recorder.py"
-            ) == ("mitmproxy/data\\addonscripts\\recorder.py", [])
-            assert script.parse_command(
-                "mitmproxy/data\\addonscripts\\recorder.py 'foo \\ bar'"
-            ) == ("mitmproxy/data\\addonscripts\\recorder.py", ['foo \\ bar'])
-
-
 def test_load_script():
-    with taddons.context():
+    with taddons.context() as tctx:
         ns = script.load_script(
+            tctx.ctx(),
             tutils.test_data.path(
-                "mitmproxy/data/addonscripts/recorder.py"
-            ), []
+                "mitmproxy/data/addonscripts/recorder/recorder.py"
+            )
         )
-        assert ns.load
+        assert ns.addons
+
+        ns = script.load_script(
+            tctx.ctx(),
+            "nonexistent"
+        )
+        assert not ns
 
 
 def test_script_print_stdout():
     with taddons.context() as tctx:
         with mock.patch('mitmproxy.ctx.log.warn') as mock_warn:
-            with script.scriptenv("path", []):
+            with addonmanager.safecall():
                 ns = script.load_script(
+                    tctx.ctx(),
                     tutils.test_data.path(
                         "mitmproxy/data/addonscripts/print.py"
-                    ), []
+                    )
                 )
                 ns.load(addonmanager.Loader(tctx.master))
         mock_warn.assert_called_once_with("stdoutprint")
 
 
 class TestScript:
+    def test_notfound(self):
+        with taddons.context() as tctx:
+            sc = script.Script("nonexistent")
+            tctx.master.addons.add(sc)
+
     def test_simple(self):
-        with taddons.context():
+        with taddons.context() as tctx:
             sc = script.Script(
                 tutils.test_data.path(
-                    "mitmproxy/data/addonscripts/recorder.py"
+                    "mitmproxy/data/addonscripts/recorder/recorder.py"
                 )
             )
-            sc.load_script()
-            assert sc.ns.call_log[0][0:2] == ("solo", "load")
+            tctx.master.addons.add(sc)
 
-            sc.ns.call_log = []
+            rec = tctx.master.addons.get("recorder")
+
+            assert rec.call_log[0][0:2] == ("recorder", "load")
+
+            rec.call_log = []
             f = tflow.tflow(resp=True)
-            sc.request(f)
+            tctx.master.addons.trigger("request", f)
 
-            recf = sc.ns.call_log[0]
-            assert recf[1] == "request"
+            assert rec.call_log[0][1] == "request"
 
     def test_reload(self, tmpdir):
         with taddons.context() as tctx:
             f = tmpdir.join("foo.py")
             f.ensure(file=True)
+            f.write("\n")
             sc = script.Script(str(f))
             tctx.configure(sc)
-            for _ in range(100):
-                f.write(".")
+            for _ in range(5):
+                sc.reload()
                 sc.tick()
                 time.sleep(0.1)
-                if tctx.master.logs:
-                    return
-            raise AssertionError("Change event not detected.")
 
     def test_exception(self):
         with taddons.context() as tctx:
             sc = script.Script(
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
             )
-            l = addonmanager.Loader(tctx.master)
-            sc.load(l)
+            tctx.master.addons.add(sc)
             f = tflow.tflow(resp=True)
-            sc.request(f)
+            tctx.master.addons.trigger("request", f)
+
             assert tctx.master.logs[0].level == "error"
-            assert len(tctx.master.logs[0].msg.splitlines()) == 6
-            assert re.search(r'addonscripts[\\/]error.py", line \d+, in request', tctx.master.logs[0].msg)
-            assert re.search(r'addonscripts[\\/]error.py", line \d+, in mkerr', tctx.master.logs[0].msg)
-            assert tctx.master.logs[0].msg.endswith("ValueError: Error!\n")
+            tctx.master.has_log("ValueError: Error!")
+            tctx.master.has_log("error.py")
 
     def test_addon(self):
         with taddons.context() as tctx:
@@ -175,11 +132,9 @@ class TestScript:
                     "mitmproxy/data/addonscripts/addon.py"
                 )
             )
-            l = addonmanager.Loader(tctx.master)
-            sc.load(l)
-            tctx.configure(sc)
+            tctx.master.addons.add(sc)
             assert sc.ns.event_log == [
-                'scriptload', 'addonload', 'addonconfigure'
+                'scriptload', 'addonload'
             ]
 
 
@@ -194,49 +149,33 @@ class TestCutTraceback:
             self.raise_(4)
         except RuntimeError:
             tb = sys.exc_info()[2]
-            tb_cut = script.cut_traceback(tb, "test_simple")
+            tb_cut = addonmanager.cut_traceback(tb, "test_simple")
             assert len(traceback.extract_tb(tb_cut)) == 5
 
-            tb_cut2 = script.cut_traceback(tb, "nonexistent")
+            tb_cut2 = addonmanager.cut_traceback(tb, "nonexistent")
             assert len(traceback.extract_tb(tb_cut2)) == len(traceback.extract_tb(tb))
 
 
 class TestScriptLoader:
-    def test_run_once(self):
-        o = options.Options(scripts=[])
-        m = master.Master(o, proxy.DummyServer())
-        sl = script.ScriptLoader()
-        m.addons.add(sl)
-
-        f = tflow.tflow(resp=True)
-        with m.handlecontext():
-            sc = sl.run_once(
-                tutils.test_data.path(
-                    "mitmproxy/data/addonscripts/recorder.py"
-                ), [f]
-            )
-        evts = [i[1] for i in sc.ns.call_log]
-        assert evts == ['load', 'requestheaders', 'request', 'responseheaders', 'response', 'done']
-
-        f = tflow.tflow(resp=True)
-        with m.handlecontext():
-            with pytest.raises(Exception, match="file not found"):
-                sl.run_once("nonexistent", [f])
-
     def test_simple(self):
         o = options.Options(scripts=[])
         m = master.Master(o, proxy.DummyServer())
         sc = script.ScriptLoader()
+        sc.running()
         m.addons.add(sc)
         assert len(m.addons) == 1
         o.update(
             scripts = [
-                tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
+                tutils.test_data.path(
+                    "mitmproxy/data/addonscripts/recorder/recorder.py"
+                )
             ]
         )
-        assert len(m.addons) == 2
+        assert len(m.addons) == 1
+        assert len(sc.addons) == 1
         o.update(scripts = [])
         assert len(m.addons) == 1
+        assert len(sc.addons) == 0
 
     def test_dupes(self):
         sc = script.ScriptLoader()
@@ -252,65 +191,70 @@ class TestScriptLoader:
         sc = script.ScriptLoader()
         with taddons.context() as tctx:
             tctx.master.addons.add(sc)
-            with pytest.raises(exceptions.OptionsError):
-                tctx.configure(
-                    sc,
-                    scripts = ["nonexistent"]
-                )
+            tctx.configure(sc, scripts = ["nonexistent"])
+            tctx.master.has_log("nonexistent: file not found")
 
     def test_order(self):
-        rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder.py")
+        rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")
         sc = script.ScriptLoader()
+        sc.is_running = True
         with taddons.context() as tctx:
-            tctx.master.addons.add(sc)
-            sc.running()
             tctx.configure(
                 sc,
                 scripts = [
-                    "%s %s" % (rec, "a"),
-                    "%s %s" % (rec, "b"),
-                    "%s %s" % (rec, "c"),
+                    "%s/a.py" % rec,
+                    "%s/b.py" % rec,
+                    "%s/c.py" % rec,
+                ]
+            )
+
+            debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
+            assert debug == [
+                'a load',
+                'a running',
+
+                'b load',
+                'b running',
+
+                'c load',
+                'c running',
+
+                'a configure',
+                'b configure',
+                'c configure',
+            ]
+
+            tctx.master.logs = []
+            tctx.configure(
+                sc,
+                scripts = [
+                    "%s/c.py" % rec,
+                    "%s/a.py" % rec,
+                    "%s/b.py" % rec,
                 ]
             )
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
-                'a load',
-                'a configure',
-                'a running',
-
-                'b load',
-                'b configure',
-                'b running',
-
-                'c load',
                 'c configure',
-                'c running',
+                'a configure',
+                'b configure',
             ]
-            tctx.master.logs = []
-            tctx.configure(
-                sc,
-                scripts = [
-                    "%s %s" % (rec, "c"),
-                    "%s %s" % (rec, "a"),
-                    "%s %s" % (rec, "b"),
-                ]
-            )
-            debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
-            assert debug == []
 
             tctx.master.logs = []
             tctx.configure(
                 sc,
                 scripts = [
-                    "%s %s" % (rec, "x"),
-                    "%s %s" % (rec, "a"),
+                    "%s/e.py" % rec,
+                    "%s/a.py" % rec,
                 ]
             )
+
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c done',
                 'b done',
-                'x load',
-                'x configure',
-                'x running',
+                'e load',
+                'e running',
+                'e configure',
+                'a configure',
             ]

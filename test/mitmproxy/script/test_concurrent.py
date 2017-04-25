@@ -20,14 +20,11 @@ class Thing:
 class TestConcurrent(tservers.MasterTest):
     def test_concurrent(self):
         with taddons.context() as tctx:
-            sc = script.Script(
+            sc = tctx.script(
                 tutils.test_data.path(
                     "mitmproxy/data/addonscripts/concurrent_decorator.py"
                 )
             )
-            l = addonmanager.Loader(tctx.master)
-            sc.load(l)
-
             f1, f2 = tflow.tflow(), tflow.tflow()
             tctx.cycle(sc, f1)
             tctx.cycle(sc, f2)

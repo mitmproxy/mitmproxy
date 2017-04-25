@@ -103,7 +103,7 @@ class Master:
     def shutdown(self):
         self.server.shutdown()
         self.should_exit.set()
-        self.addons.done()
+        self.addons.trigger("done")
 
     def create_request(self, method, url):
         """

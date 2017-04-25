@@ -123,12 +123,12 @@ You can check you Python version by running ``python3 --version``.
 
    sudo zypper install python3-pip python3-devel libffi-devel openssl-devel gcc-c++
    sudo pip3 install mitmproxy
-   
+
 
 .. _install-source-windows:
 
-🐱💻 Installation from Source on Windows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation from Source on Windows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
     Mitmproxy's console interface is not supported on Windows, but you can use

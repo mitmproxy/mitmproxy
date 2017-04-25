@@ -9,5 +9,4 @@ class ConcurrentClass:
         time.sleep(0.1)
 
 
-def load(l):
-    l.boot_into(ConcurrentClass())
+addons = [ConcurrentClass()]
