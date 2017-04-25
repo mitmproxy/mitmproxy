@@ -14,7 +14,7 @@ class Addon:
 
 
 def configure(options, updated):
-    event_log.append("addonconfigure")
+    event_log.append("scriptconfigure")
 
 
 def load(l):

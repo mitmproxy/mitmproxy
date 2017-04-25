@@ -80,7 +80,6 @@ setup(
         "ruamel.yaml>=0.13.2, <0.15",
         "tornado>=4.3, <4.6",
         "urwid>=1.3.1, <1.4",
-        "watchdog>=0.8.3, <0.9",
         "brotlipy>=0.5.1, <0.7",
         "sortedcontainers>=1.5.4, <1.6",
         # transitive from cryptography, we just blacklist here.

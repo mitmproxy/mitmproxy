@@ -112,9 +112,12 @@ class context:
             )
 
     def script(self, path):
+        """
+            Loads a script from path, and returns the enclosed addon.
+        """
         sc = script.Script(path)
         loader = addonmanager.Loader(self.master)
-        sc.load(loader)
-        for a in addonmanager.traverse(sc.addons):
-            getattr(a, "load", lambda x: None)(loader)
-        return sc
+        self.master.addons.invoke_addon(sc, "load", loader)
+        self.configure(sc)
+        self.master.addons.invoke_addon(sc, "tick")
+        return sc.addons[0] if sc.addons else None

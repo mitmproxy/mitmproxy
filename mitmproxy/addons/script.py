@@ -1,14 +1,11 @@
 import os
 import importlib
-import threading
+import time
 import sys
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import ctx
-
-import watchdog.events
-from watchdog.observers import polling
 
 
 def load_script(actx, path):
@@ -28,79 +25,49 @@ def load_script(actx, path):
         sys.path[:] = oldpath
 
 
-class ReloadHandler(watchdog.events.FileSystemEventHandler):
-    def __init__(self, callback):
-        self.callback = callback
-
-    def filter(self, event):
-        """
-            Returns True only when .py file is changed
-        """
-        if event.is_directory:
-            return False
-        if os.path.basename(event.src_path).startswith("."):
-            return False
-        if event.src_path.endswith(".py"):
-            return True
-        return False
-
-    def on_modified(self, event):
-        if self.filter(event):
-            self.callback()
-
-    def on_created(self, event):
-        if self.filter(event):
-            self.callback()
-
-
 class Script:
     """
         An addon that manages a single script.
     """
+    ReloadInterval = 2
+
     def __init__(self, path):
         self.name = "scriptmanager:" + path
         self.path = path
         self.ns = None
-        self.observer = None
 
         self.last_options = None
-        self.should_reload = threading.Event()
-
-    def load(self, l):
-        self.ns = load_script(ctx, self.path)
+        self.last_load = 0
+        self.last_mtime = 0
 
     @property
     def addons(self):
-        if self.ns is not None:
-            return [self.ns]
-        return []
-
-    def reload(self):
-        self.should_reload.set()
+        return [self.ns] if self.ns else []
 
     def tick(self):
-        if self.should_reload.is_set():
-            self.should_reload.clear()
-            ctx.log.info("Reloading script: %s" % self.name)
-            if self.ns:
-                ctx.master.addons.remove(self.ns)
-            self.ns = load_script(ctx, self.path)
-            if self.ns:
-                # We're already running, so we have to explicitly register and
-                # configure the addon
-                ctx.master.addons.register(self.ns)
-                self.configure(self.last_options, self.last_options.keys())
+        if time.time() - self.last_load > self.ReloadInterval:
+            mtime = os.stat(self.path).st_mtime
+            if mtime > self.last_mtime:
+                ctx.log.info("Loading script: %s" % self.name)
+                if self.ns:
+                    ctx.master.addons.remove(self.ns)
+                self.ns = load_script(ctx, self.path)
+                if self.ns:
+                    # We're already running, so we have to explicitly register and
+                    # configure the addon
+                    ctx.master.addons.register(self.ns)
+                    ctx.master.addons.invoke_addon(self.ns, "running")
+                    ctx.master.addons.invoke_addon(
+                        self.ns,
+                        "configure",
+                        self.last_options,
+                        self.last_options.keys()
+                    )
+                self.last_load = time.time()
+                self.last_mtime = mtime
 
     def configure(self, options, updated):
         self.last_options = options
-        if not self.observer:
-            self.observer = polling.PollingObserver()
-            # Bind the handler to the real underlying master object
-            self.observer.schedule(
-                ReloadHandler(self.reload),
-                os.path.dirname(self.path) or "."
-            )
-            self.observer.start()
 
 
 class ScriptLoader:

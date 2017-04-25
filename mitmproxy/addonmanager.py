@@ -129,9 +129,13 @@ class AddonManager:
 
     def register(self, addon):
         """
-            Register an addon and all its sub-addons with the manager without
-            adding it to the chain. This should be used by addons that
-            dynamically manage addons. Must be called within a current context.
+            Register an addon, call its load event, and then register all its
+            sub-addons. This should be used by addons that dynamically manage
+            addons.
+
+            If the calling addon is already running, it should follow with
+            running and configure events. Must be called within a current
+            context.
         """
         for a in traverse([addon]):
             name = _get_name(a)
