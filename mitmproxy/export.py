@@ -6,19 +6,7 @@ import textwrap
 from typing import Any
 
 from mitmproxy import http
-
-
-def _native(s):
-    if isinstance(s, bytes):
-        return s.decode()
-    return s
-
-
-def dictstr(items, indent: str) -> str:
-    lines = []
-    for k, v in items:
-        lines.append(indent + "%s: %s,\n" % (repr(_native(k)), repr(_native(v))))
-    return "{\n%s}\n" % "".join(lines)
+from mitmproxy.utils import strutils
 
 
 def curl_command(flow: http.HTTPFlow) -> str:
@@ -36,7 +24,10 @@ def curl_command(flow: http.HTTPFlow) -> str:
     data += "'%s'" % request.url
 
     if request.content:
-        data += " --data-binary '%s'" % _native(request.content)
+        data += " --data-binary '%s'" % strutils.bytes_to_escaped_str(
+            request.content,
+            escape_single_quotes=True
+        )
 
     return data
 
@@ -127,10 +118,14 @@ def locust_code(flow):
 
     args = ""
     headers = ""
+
+    def conv(x):
+        return strutils.bytes_to_escaped_str(x, escape_single_quotes=True)
+
     if flow.request.headers:
         lines = [
-            (_native(k), _native(v)) for k, v in flow.request.headers.fields
-            if _native(k).lower() not in [":authority", "host", "cookie"]
+            (conv(k), conv(v)) for k, v in flow.request.headers.fields
+            if conv(k).lower() not in [":authority", "host", "cookie"]
         ]
         lines = ["            '%s': '%s',\n" % (k, v) for k, v in lines]
         headers += "\n        headers = {\n%s        }\n" % "".join(lines)
@@ -148,7 +143,7 @@ def locust_code(flow):
 
     data = ""
     if flow.request.content:
-        data = "\n        data = '''%s'''\n" % _native(flow.request.content)
+        data = "\n        data = '''%s'''\n" % conv(flow.request.content)
         args += "\n            data=data,"
 
     code = code.format(
