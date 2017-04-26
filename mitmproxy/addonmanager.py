@@ -93,6 +93,9 @@ class Loader:
             choices
         )
 
+    def add_command(self, path: str, func: typing.Callable) -> None:
+        self.master.commands.add_command(path, func)
+
 
 def traverse(chain):
     """

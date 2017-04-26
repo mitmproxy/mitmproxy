@@ -8,6 +8,7 @@ from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import exceptions
 from mitmproxy import connections
+from mitmproxy import command
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy.proxy.protocol import http_replay
@@ -34,6 +35,7 @@ class Master:
     """
     def __init__(self, opts, server):
         self.options = opts or options.Options()
+        self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()

@@ -1,20 +1,21 @@
 import typing
 
 
-def check_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
+def check_command_return_type(value: typing.Any, typeinfo: typing.Any) -> bool:
     """
-    This function checks if the provided value is an instance of typeinfo
-    and raises a TypeError otherwise.
-
-    The following types from the typing package have specialized support:
-
-    - Union
-    - Tuple
-    - IO
+    Check if the provided value is an instance of typeinfo. Returns True if the
+    types match, False otherwise. This function supports only those types
+    required for command return values.
     """
-    # If we realize that we need to extend this list substantially, it may make sense
-    # to use typeguard for this, but right now it's not worth the hassle for 16 lines of code.
+    return True
 
+
+def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
+    """
+    Check if the provided value is an instance of typeinfo and raises a
+    TypeError otherwise. This function supports only those types required for
+    options.
+    """
     e = TypeError("Expected {} for {}, but got {}.".format(
         typeinfo,
         name,
@@ -32,7 +33,7 @@ def check_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
 
         for T in types:
             try:
-                check_type(name, value, T)
+                check_option_type(name, value, T)
             except TypeError:
                 pass
             else:
@@ -50,7 +51,7 @@ def check_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
         if len(types) != len(value):
             raise e
         for i, (x, T) in enumerate(zip(value, types)):
-            check_type("{}[{}]".format(name, i), x, T)
+            check_option_type("{}[{}]".format(name, i), x, T)
         return
     elif typename.startswith("typing.Sequence"):
         try:
@@ -58,11 +59,10 @@ def check_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
         except AttributeError:
             # Python 3.5.0
             T = typeinfo.__parameters__[0]  # type: ignore
-
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:
-            check_type(name, v, T)
+            check_option_type(name, v, T)
     elif typename.startswith("typing.IO"):
         if hasattr(value, "read"):
             return
