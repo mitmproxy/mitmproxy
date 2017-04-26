@@ -11,7 +11,7 @@ from mitmproxy.proxy.config import ProxyConfig
 
 from mitmproxy.net import tcp
 from mitmproxy.net import http
-from ....mitmproxy.net import tservers as net_tservers
+from ...net import tservers as net_tservers
 from ... import tservers
 
 from mitmproxy.net import websockets

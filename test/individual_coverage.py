@@ -26,20 +26,20 @@ def run_tests(src, test, fail):
 
     if e == 0:
         if fail:
-            print("SUCCESS but should have FAILED:", src, "Please remove this file from setup.cfg tool:individual_coverage/exclude.")
+            print("UNEXPECTED SUCCESS:", src, "Please remove this file from setup.cfg tool:individual_coverage/exclude.")
             e = 42
         else:
-            print("SUCCESS:", src)
+            print("SUCCESS:           ", src)
     else:
         if fail:
-            print("Ignoring fail:", src)
+            print("IGNORING FAIL:     ", src)
             e = 0
         else:
             cov = [l for l in stdout.getvalue().split("\n") if (src in l) or ("was never imported" in l)]
             if len(cov) == 1:
-                print("FAIL:", cov[0])
+                print("FAIL:              ", cov[0])
             else:
-                print("FAIL:", src, test, stdout.getvalue(), stdout.getvalue())
+                print("FAIL:              ", src, test, stdout.getvalue(), stdout.getvalue())
                 print(stderr.getvalue())
                 print(stdout.getvalue())
 

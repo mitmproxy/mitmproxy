@@ -11,7 +11,7 @@ from mitmproxy import options
 from mitmproxy.proxy.config import ProxyConfig
 
 import mitmproxy.net
-from ....mitmproxy.net import tservers as net_tservers
+from ...net import tservers as net_tservers
 from mitmproxy import exceptions
 from mitmproxy.net.http import http1, http2
 

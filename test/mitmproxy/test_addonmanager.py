@@ -1,5 +1,6 @@
 import pytest
 
+from mitmproxy import addons
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import options
@@ -69,6 +70,10 @@ def test_lifecycle():
     a.handle_lifecycle("request", f)
 
     a._configure_all(o, o.keys())
+
+
+def test_defaults():
+    assert addons.default_addons()
 
 
 def test_simple():
